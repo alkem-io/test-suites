@@ -3,7 +3,7 @@ import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { TemplateType } from '@test/generated/alkemio-schema';
 
-export const createWhiteboardTemplateCodegen = async (
+export const createWhiteboardTemplate = async (
   templatesSetID: string,
   displayName: string,
   content: string,

@@ -57,13 +57,13 @@ beforeAll(async () => {
     CommunityRoleType.Member
   );
 
-  await sendMessageToRoomCodegen(
+  await sendMessageToRoom(
     entitiesId.opportunity.updatesId,
     'test',
     TestUser.GLOBAL_ADMIN
   );
 
-  await createRelationCodegen(
+  await createRelation(
     entitiesId.opportunity.collaborationId,
     'incoming',
     'relationDescription',
@@ -73,7 +73,7 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
 
-  await createPostOnCalloutCodegen(
+  await createPostOnCallout(
     entitiesId.opportunity.calloutId,
     { displayName: 'postDisplayName' },
     'postnameid',
@@ -82,8 +82,8 @@ beforeAll(async () => {
   await assignUserAsGlobalCommunityAdmin(users.spaceMember.id);
 });
 afterAll(async () => {
-  await deleteOpportunityCodegen(entitiesId.opportunity.id);
-  await deleteChallengeCodegen(entitiesId.challenge.id);
+  await deleteOpportunity(entitiesId.opportunity.id);
+  await deleteChallenge(entitiesId.challenge.id);
   await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
   await removeUserAsGlobalCommunityAdmin(users.spaceMember.id);
@@ -92,7 +92,7 @@ afterAll(async () => {
 describe('myPrivileges', () => {
   test('GlobalCommunityAdmin privileges to Opportunity', async () => {
     // Act
-    const response = await getOpportunityDataCodegen(
+    const response = await getOpportunityData(
       entitiesId.opportunity.id,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
@@ -106,7 +106,7 @@ describe('myPrivileges', () => {
   describe('Community', () => {
     test('GlobalCommunityAdmin privileges to Opportunity / Community', async () => {
       // Act
-      const response = await getOpportunityDataCodegen(
+      const response = await getOpportunityData(
         entitiesId.opportunity.id,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
@@ -122,7 +122,7 @@ describe('myPrivileges', () => {
 
     test('GlobalCommunityAdmin privileges to Opportunity / Community / Communication', async () => {
       // Act
-      const response = await getOpportunityDataCodegen(
+      const response = await getOpportunityData(
         entitiesId.opportunity.id,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
@@ -138,7 +138,7 @@ describe('myPrivileges', () => {
 
     test.skip('GlobalCommunityAdmin privileges to Opportunity / Community / Communication / Discussion', async () => {
       // Act
-      const response = await getOpportunityDataCodegen(
+      const response = await getOpportunityData(
         entitiesId.opportunity.id,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
@@ -155,7 +155,7 @@ describe('myPrivileges', () => {
 
     test('GlobalCommunityAdmin privileges to Opportunity / Community / Communication / Updates', async () => {
       // Act
-      const response = await getOpportunityDataCodegen(
+      const response = await getOpportunityData(
         entitiesId.opportunity.id,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
@@ -174,7 +174,7 @@ describe('myPrivileges', () => {
   describe('Collaboration', () => {
     test('GlobalCommunityAdmin privileges to Opportunity / Collaboration', async () => {
       // Act
-      const response = await getOpportunityDataCodegen(
+      const response = await getOpportunityData(
         entitiesId.opportunity.id,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
@@ -189,7 +189,7 @@ describe('myPrivileges', () => {
 
     test('GlobalCommunityAdmin privileges to Opportunity / Collaboration / Relations', async () => {
       // Act
-      const response = await getOpportunityDataCodegen(
+      const response = await getOpportunityData(
         entitiesId.opportunity.id,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
@@ -204,7 +204,7 @@ describe('myPrivileges', () => {
 
     test('GlobalCommunityAdmin privileges to Opportunity / Collaboration / Callout', async () => {
       // Act
-      const response = await getOpportunityDataCodegen(
+      const response = await getOpportunityData(
         entitiesId.opportunity.id,
         TestUser.GLOBAL_COMMUNITY_ADMIN
       );
@@ -218,7 +218,7 @@ describe('myPrivileges', () => {
 
     test('GlobalCommunityAdmin privileges to Opportunity / Collaboration / Callout / Post', async () => {
       // Act
-      const response = await getDataPerOpportunityCalloutCodegen(
+      const response = await getDataPerOpportunityCallout(
         entitiesId.opportunity.id,
         entitiesId.opportunity.calloutId,
         TestUser.GLOBAL_COMMUNITY_ADMIN
@@ -236,7 +236,7 @@ describe('myPrivileges', () => {
     // ToDo
     test.skip('GlobalCommunityAdmin privileges to Opportunity / Collaboration / Callout / Whiteboard', async () => {
       // Act
-      // const response = await getDataPerSpaceCalloutCodegen(
+      // const response = await getDataPerSpaceCallout(
       //   entitiesId.spaceId,
       //   entitiesId.space.calloutId,
       //   TestUser.GLOBAL_COMMUNITY_ADMIN

@@ -128,7 +128,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   for (const config of preferencesConfig)
-    await changePreferenceUserCodegen(config.userID, config.type, 'false');
+    await changePreferenceUser(config.userID, config.type, 'false');
   await deleteUser(spaceMemOnly);
   await deleteUser(challengeAndSpaceMemOnly);
   await deleteUser(opportunityAndChallengeAndSpaceMem);
@@ -140,19 +140,19 @@ afterAll(async () => {
 // skipping the tests as they need to be updated
 describe.skip('Notifications - discussions', () => {
   beforeAll(async () => {
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.notificationsAdmin.id,
       UserPreferenceType.NotificationForumDiscussionCreated,
       'false'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.notificationsAdmin.id,
       UserPreferenceType.NotificationCommunicationDiscussionCreatedAdmin,
       'false'
     );
 
     for (const config of preferencesConfig)
-      await changePreferenceUserCodegen(config.userID, config.type, 'true');
+      await changePreferenceUser(config.userID, config.type, 'true');
   });
 
   beforeEach(async () => {
@@ -161,10 +161,10 @@ describe.skip('Notifications - discussions', () => {
 
   test('GA create space discussion and send message - GA(1), HA(1), HM(6) get notifications', async () => {
     // Act
-    const res = await createDiscussionCodegen(entitiesId.space.communicationId);
+    const res = await createDiscussion(entitiesId.space.communicationId);
     entitiesId.discussionId = res?.data?.createDiscussion.id ?? '';
 
-    await sendMessageToRoomCodegen(entitiesId.discussionId, 'test message');
+    await sendMessageToRoom(entitiesId.discussionId, 'test message');
 
     await delay(6000);
     const getEmailsData = await getMailsData();
@@ -219,13 +219,13 @@ describe.skip('Notifications - discussions', () => {
 
   test('EM create space discussion and send message - GA(1), HA(1), HM(6) get notifications', async () => {
     // Act
-    const res = await createDiscussionCodegen(
+    const res = await createDiscussion(
       entitiesId.space.communicationId,
       TestUser.QA_USER
     );
     entitiesId.discussionId = res?.data?.createDiscussion.id ?? '';
 
-    await sendMessageToRoomCodegen(entitiesId.discussionId, 'test message');
+    await sendMessageToRoom(entitiesId.discussionId, 'test message');
 
     await delay(6000);
     const getEmailsData = await getMailsData();
@@ -280,12 +280,12 @@ describe.skip('Notifications - discussions', () => {
 
   test('GA create challenge discussion and send message - GA(1), HA(1), CA(1), CM(4) get notifications', async () => {
     // Act
-    const res = await createDiscussionCodegen(
+    const res = await createDiscussion(
       entitiesId.challenge.communicationId
     );
     entitiesId.discussionId = res?.data?.createDiscussion.id ?? '';
 
-    await sendMessageToRoomCodegen(entitiesId.discussionId, 'test message');
+    await sendMessageToRoom(entitiesId.discussionId, 'test message');
 
     await delay(6000);
     const getEmailsData = await getMailsData();
@@ -330,13 +330,13 @@ describe.skip('Notifications - discussions', () => {
   // Note: users.globalAdmin.idEmail receives email twice, as it member and admin for the entity. Only ones is asserted as the subject of the mail is the same
   test('EM create challenge discussion and send message - GA(1), HA(1), CA(1), CM(4), get notifications', async () => {
     // Act
-    const res = await createDiscussionCodegen(
+    const res = await createDiscussion(
       entitiesId.challenge.communicationId,
       TestUser.QA_USER
     );
     entitiesId.discussionId = res?.data?.createDiscussion.id ?? '';
 
-    await sendMessageToRoomCodegen(entitiesId.discussionId, 'test message');
+    await sendMessageToRoom(entitiesId.discussionId, 'test message');
 
     await delay(6000);
     const getEmailsData = await getMailsData();
@@ -384,16 +384,16 @@ describe.skip('Notifications - discussions', () => {
 
     preferencesConfig.forEach(
       async config =>
-        await changePreferenceUserCodegen(config.userID, config.type, 'false')
+        await changePreferenceUser(config.userID, config.type, 'false')
     );
 
-    const res = await createDiscussionCodegen(
+    const res = await createDiscussion(
       entitiesId.space.communicationId,
       TestUser.QA_USER
     );
     entitiesId.discussionId = res?.data?.createDiscussion.id ?? '';
 
-    await sendMessageToRoomCodegen(entitiesId.discussionId, 'test message');
+    await sendMessageToRoom(entitiesId.discussionId, 'test message');
 
     // Act
     await delay(1500);

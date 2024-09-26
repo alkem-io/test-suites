@@ -80,11 +80,11 @@ beforeEach(async () => {
 
 describe('Activity logs - Opportunity', () => {
   afterEach(async () => {
-    await deleteCalloutCodegen(calloutId);
+    await deleteCallout(calloutId);
   });
   test('should return empty arrays', async () => {
     // Act
-    const resActivity = await getActivityLogOnCollaborationCodegen(
+    const resActivity = await getActivityLogOnCollaboration(
       entitiesId.opportunity.collaborationId,
       5
     );
@@ -96,13 +96,13 @@ describe('Activity logs - Opportunity', () => {
 
   test('should NOT return CALLOUT_PUBLISHED, when created', async () => {
     // Arrange
-    const res = await createCalloutOnCollaborationCodegen(
+    const res = await createCalloutOnCollaboration(
       entitiesId.opportunity.collaborationId,
       { framing: { profile: { displayName: callDN } } }
     );
     calloutId = res?.data?.createCalloutOnCollaboration.id ?? '';
 
-    const resActivity = await getActivityLogOnCollaborationCodegen(
+    const resActivity = await getActivityLogOnCollaboration(
       entitiesId.opportunity.collaborationId,
       5
     );
@@ -120,7 +120,7 @@ describe('Activity logs - Opportunity', () => {
     );
 
     // Act
-    const resActivity = await getActivityLogOnCollaborationCodegen(
+    const resActivity = await getActivityLogOnCollaboration(
       entitiesId.opportunity.collaborationId,
       5
     );
@@ -154,18 +154,18 @@ describe('Activity logs - Opportunity', () => {
   // To be updated with the changes related to whiteboard callouts
   test.skip('should return CALLOUT_PUBLISHED, POST_CREATED, POST_COMMENT, DISCUSSION_COMMENT, WHITEBOARD_CREATED', async () => {
     // Arrange
-    const res = await createCalloutOnCollaborationCodegen(
+    const res = await createCalloutOnCollaboration(
       entitiesId.opportunity.collaborationId,
       { framing: { profile: { displayName: callDN } } }
     );
     calloutId = res?.data?.createCalloutOnCollaboration.id ?? '';
 
-    await updateCalloutVisibilityCodegen(
+    await updateCalloutVisibility(
       calloutId,
       CalloutVisibility.Published
     );
 
-    const resPostonSpace = await createPostOnCalloutCodegen(
+    const resPostonSpace = await createPostOnCallout(
       calloutId,
       { displayName: postDisplayName },
       postNameID,
@@ -175,14 +175,14 @@ describe('Activity logs - Opportunity', () => {
     const postDataCreate = resPostonSpace?.data?.createContributionOnCallout;
     const postCommentsIdSpace = postDataCreate?.post?.comments.id ?? '';
 
-    const messageRes = await sendMessageToRoomCodegen(
+    const messageRes = await sendMessageToRoom(
       postCommentsIdSpace,
       'test message on space post',
       TestUser.GLOBAL_ADMIN
     );
     messageRes?.data?.sendMessageToRoom.id;
 
-    const resDiscussion = await createCalloutOnCollaborationCodegen(
+    const resDiscussion = await createCalloutOnCollaboration(
       entitiesId.opportunity.collaborationId,
       {
         framing: {
@@ -200,17 +200,17 @@ describe('Activity logs - Opportunity', () => {
     const calloutIdDiscussion =
       resDiscussion?.data?.createCalloutOnCollaboration.id ?? '';
 
-    await updateCalloutVisibilityCodegen(
+    await updateCalloutVisibility(
       calloutIdDiscussion,
       CalloutVisibility.Published
     );
 
-    await sendMessageToRoomCodegen(
+    await sendMessageToRoom(
       calloutIdDiscussion,
       'comment on discussion callout'
     );
 
-    const resWhiteboard = await createCalloutOnCollaborationCodegen(
+    const resWhiteboard = await createCalloutOnCollaboration(
       entitiesId.opportunity.collaborationId,
       {
         framing: {
@@ -228,14 +228,14 @@ describe('Activity logs - Opportunity', () => {
     const calloutIdWhiteboard =
       resWhiteboard?.data?.createCalloutOnCollaboration.id ?? '';
 
-    await updateCalloutVisibilityCodegen(
+    await updateCalloutVisibility(
       calloutIdWhiteboard,
       CalloutVisibility.Published
     );
-    await createWhiteboardOnCalloutCodegen(calloutIdWhiteboard);
+    await createWhiteboardOnCallout(calloutIdWhiteboard);
 
     // Act
-    const resActivity = await getActivityLogOnCollaborationCodegen(
+    const resActivity = await getActivityLogOnCollaboration(
       entitiesId.opportunity.collaborationId,
       7
     );
@@ -332,7 +332,7 @@ describe('Access to Activity logs - Opportunity', () => {
       'User: "$userRole" get message: "$message", when intend to access Public Opportunity activity logs of a Private space',
       async ({ userRole, message }) => {
         // Act
-        const resActivity = await getActivityLogOnCollaborationCodegen(
+        const resActivity = await getActivityLogOnCollaboration(
           entitiesId.opportunity.collaborationId,
           5,
           userRole
@@ -352,7 +352,7 @@ describe('Access to Activity logs - Opportunity', () => {
       'User: "$userRole" get Error message: "$message", when intend to access Public Opportunity activity logs of a Private space',
       async ({ userRole, message }) => {
         // Act
-        const resActivity = await getActivityLogOnCollaborationCodegen(
+        const resActivity = await getActivityLogOnCollaboration(
           entitiesId.opportunity.collaborationId,
           5,
           userRole
@@ -388,7 +388,7 @@ describe('Access to Activity logs - Opportunity', () => {
       'User: "$userRole" get message: "$message", when intend to access Public Opportunity activity logs of a Public space',
       async ({ userRole, message }) => {
         // Act
-        const resActivity = await getActivityLogOnCollaborationCodegen(
+        const resActivity = await getActivityLogOnCollaboration(
           entitiesId.opportunity.collaborationId,
           5,
           userRole

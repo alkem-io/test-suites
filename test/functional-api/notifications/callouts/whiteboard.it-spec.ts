@@ -59,7 +59,7 @@ beforeAll(async () => {
   );
   await createChallengeWithUsers(challengeName);
   await createOpportunityWithUsers(opportunityName);
-  const resSpace = await createWhiteboardCalloutOnCollaborationCodegen(
+  const resSpace = await createWhiteboardCalloutOnCollaboration(
     entitiesId.space.collaborationId,
     {
       framing: {
@@ -75,12 +75,12 @@ beforeAll(async () => {
   whiteboardCollectionSpaceCalloutId =
     resSpace?.data?.createCalloutOnCollaboration.id ?? '';
 
-  await updateCalloutVisibilityCodegen(
+  await updateCalloutVisibility(
     whiteboardCollectionSpaceCalloutId,
     CalloutVisibility.Published
   );
 
-  const resChallenge = await createWhiteboardCalloutOnCollaborationCodegen(
+  const resChallenge = await createWhiteboardCalloutOnCollaboration(
     entitiesId.challenge.collaborationId,
     {
       framing: {
@@ -96,12 +96,12 @@ beforeAll(async () => {
   whiteboardCollectionChallengeCalloutId =
     resChallenge?.data?.createCalloutOnCollaboration.id ?? '';
 
-  await updateCalloutVisibilityCodegen(
+  await updateCalloutVisibility(
     whiteboardCollectionChallengeCalloutId,
     CalloutVisibility.Published
   );
 
-  const resOpportunity = await createWhiteboardCalloutOnCollaborationCodegen(
+  const resOpportunity = await createWhiteboardCalloutOnCollaboration(
     entitiesId.opportunity.collaborationId,
     {
       framing: {
@@ -117,7 +117,7 @@ beforeAll(async () => {
   whiteboardCollectionOpportunityCalloutId =
     resOpportunity?.data?.createCalloutOnCollaboration.id ?? '';
 
-  await updateCalloutVisibilityCodegen(
+  await updateCalloutVisibility(
     whiteboardCollectionOpportunityCalloutId,
     CalloutVisibility.Published
   );
@@ -179,14 +179,14 @@ describe('Notifications - whiteboard', () => {
   });
 
   beforeAll(async () => {
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.notificationsAdmin.id,
       UserPreferenceType.NotificationWhiteboardCreated,
       'false'
     );
     preferencesConfig.forEach(
       async config =>
-        await changePreferenceUserCodegen(config.userID, config.type, 'true')
+        await changePreferenceUser(config.userID, config.type, 'true')
     );
     await deleteMailSlurperMails();
   });
@@ -197,7 +197,7 @@ describe('Notifications - whiteboard', () => {
     const subjectTextMember = `${spaceName}: New Whiteboard created by admin, have a look!`;
 
     // Act
-    const res = await createWhiteboardOnCalloutCodegen(
+    const res = await createWhiteboardOnCallout(
       whiteboardCollectionSpaceCalloutId,
       TestUser.GLOBAL_ADMIN
     );
@@ -239,7 +239,7 @@ describe('Notifications - whiteboard', () => {
       await expectedDataFunc(subjectTextMember, [users.opportunityMember.email])
     );
 
-    await deleteWhiteboardCodegen(spaceWhiteboardId);
+    await deleteWhiteboard(spaceWhiteboardId);
   });
 
   // ToDo: fix test
@@ -247,7 +247,7 @@ describe('Notifications - whiteboard', () => {
     const subjectTextAdmin = `${spaceName}: New Whiteboard created by space`;
     const subjectTextMember = `${spaceName}: New Whiteboard created by space, have a look!`;
     // Act
-    const res = await createWhiteboardOnCalloutCodegen(
+    const res = await createWhiteboardOnCallout(
       whiteboardCollectionSpaceCalloutId,
       TestUser.HUB_ADMIN
     );
@@ -295,7 +295,7 @@ describe('Notifications - whiteboard', () => {
     const subjectTextAdmin = `${challengeName}: New Whiteboard created by space`;
     const subjectTextMember = `${challengeName}: New Whiteboard created by space, have a look!`;
     // Act
-    const res = await createWhiteboardOnCalloutCodegen(
+    const res = await createWhiteboardOnCallout(
       whiteboardCollectionChallengeCalloutId,
       TestUser.HUB_ADMIN
     );
@@ -352,7 +352,7 @@ describe('Notifications - whiteboard', () => {
     const subjectTextAdmin = `${opportunityName}: New Whiteboard created by opportunity`;
     const subjectTextMember = `${opportunityName}: New Whiteboard created by opportunity, have a look!`;
     // Act
-    const res = await createWhiteboardOnCalloutCodegen(
+    const res = await createWhiteboardOnCallout(
       whiteboardCollectionOpportunityCalloutId,
       TestUser.OPPORTUNITY_MEMBER
     );
@@ -411,10 +411,10 @@ describe('Notifications - whiteboard', () => {
   test('OA create opportunity whiteboard - 0 notifications - all roles with notifications disabled', async () => {
     preferencesConfig.forEach(
       async config =>
-        await changePreferenceUserCodegen(config.userID, config.type, 'false')
+        await changePreferenceUser(config.userID, config.type, 'false')
     );
     // Act
-    const res = await createWhiteboardOnCalloutCodegen(
+    const res = await createWhiteboardOnCallout(
       whiteboardCollectionOpportunityCalloutId,
       TestUser.OPPORTUNITY_ADMIN
     );

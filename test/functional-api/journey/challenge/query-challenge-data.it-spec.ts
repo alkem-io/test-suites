@@ -75,7 +75,7 @@ beforeEach(async () => {
   opportunityNameId = `opp${uniqueTextId}`;
   organizationNameTest = `organizationNameTest ${uniqueTextId}`;
   // Create Challenge
-  const responseCreateChallenge = await createSubspaceCodegen(
+  const responseCreateChallenge = await createSubspace(
     challengeName,
     uniqueTextId,
     entitiesId.spaceId
@@ -86,7 +86,7 @@ beforeEach(async () => {
 describe('Query Challenge data', () => {
   test('should query community through challenge', async () => {
     // Act
-    const responseQueryData = await getSubspaceDataCodegen(
+    const responseQueryData = await getSubspaceData(
       entitiesId.spaceId,
       challengeId
     );
@@ -100,7 +100,7 @@ describe('Query Challenge data', () => {
   test('should query opportunity through challenge', async () => {
     // Act
     // Create Opportunity
-    const responseCreateOpportunityOnChallenge = await createSubspaceCodegen(
+    const responseCreateOpportunityOnChallenge = await createSubspace(
       opportunityName,
       opportunityNameId,
       challengeId
@@ -110,7 +110,7 @@ describe('Query Challenge data', () => {
       responseCreateOpportunityOnChallenge.data?.createSubspace.id ?? '';
 
     // Query Opportunity data through Challenge query
-    const responseQueryData = await getSubspaceDataCodegen(
+    const responseQueryData = await getSubspaceData(
       entitiesId.spaceId,
       challengeId
     );
@@ -131,7 +131,7 @@ describe('Query Challenge data', () => {
   test('should create opportunity and query the data', async () => {
     // Act
     // Create Opportunity
-    const responseCreateOpportunityOnChallenge = await createSubspaceCodegen(
+    const responseCreateOpportunityOnChallenge = await createSubspace(
       opportunityName,
       opportunityNameId,
       challengeId
@@ -144,7 +144,7 @@ describe('Query Challenge data', () => {
       responseCreateOpportunityOnChallenge.data?.createSubspace.id ?? '';
 
     // Query Opportunity data
-    const requestQueryOpportunity = await getSubspaceDataCodegen(
+    const requestQueryOpportunity = await getSubspaceData(
       entitiesId.spaceId,
       opportunityId
     );
@@ -169,7 +169,7 @@ describe('Query Challenge data', () => {
     const updatedChallenge = response.data?.updateSpace;
 
     // Act
-    const getChallengeDatas = await getSubspaceDataCodegen(
+    const getChallengeDatas = await getSubspaceData(
       entitiesId.spaceId,
       challengeId
     );

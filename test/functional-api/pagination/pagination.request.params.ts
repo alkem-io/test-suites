@@ -3,7 +3,7 @@ import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { OrganizationFilterInput, UserFilterInput } from '@alkemio/client-lib';
 
-export const paginatedUserCodegen = async (
+export const paginatedUser = async (
   options: {
     first?: number | undefined;
     last?: number | undefined;
@@ -26,7 +26,7 @@ export const paginatedUserCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const paginatedOrganizationCodegen = async (
+export const paginatedOrganization = async (
   options: {
     first?: number | undefined;
     last?: number | undefined;

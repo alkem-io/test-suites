@@ -3,7 +3,7 @@ import { setAuthHeader } from '@test/utils/graphql.authorization.header';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 
-export const calloutStorageConfigCodegen = async (
+export const calloutStorageConfig = async (
   calloutId: string,
   userRole?: TestUser
 ) => {
@@ -20,7 +20,7 @@ export const calloutStorageConfigCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const calloutPostCardStorageConfigCodegen = async (
+export const calloutPostCardStorageConfig = async (
   postId: string,
   calloutId: string,
   userRole?: TestUser
@@ -38,7 +38,7 @@ export const calloutPostCardStorageConfigCodegen = async (
 
   return graphqlErrorWrapper(callback, userRole);
 };
-export const calloutLinkContributionStorageConfigCodegen = async (
+export const calloutLinkContributionStorageConfig = async (
   linkId: string,
   calloutId: string,
   userRole?: TestUser
@@ -57,7 +57,7 @@ export const calloutLinkContributionStorageConfigCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const calloutWhiteboardStorageConfigCodegen = async (
+export const calloutWhiteboardStorageConfig = async (
   whiteboardId: string,
   calloutId: string,
   //spaceNameId: string,
@@ -77,7 +77,7 @@ export const calloutWhiteboardStorageConfigCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const whiteboardCalloutStorageConfigCodegen = async (
+export const whiteboardCalloutStorageConfig = async (
   calloutId: string,
   userRole?: TestUser
 ) => {

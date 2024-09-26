@@ -29,23 +29,23 @@ beforeAll(async () => {
     spaceName,
     spaceNameId
   );
-  await changePreferenceSpaceCodegen(
+  await changePreferenceSpace(
     entitiesId.spaceId,
     SpacePreferenceType.AuthorizationAnonymousReadAccess,
     'false'
   );
 
-  await changePreferenceSpaceCodegen(
+  await changePreferenceSpace(
     entitiesId.spaceId,
     SpacePreferenceType.MembershipApplicationsFromAnyone,
     'true'
   );
-  await changePreferenceSpaceCodegen(
+  await changePreferenceSpace(
     entitiesId.spaceId,
     SpacePreferenceType.MembershipJoinSpaceFromAnyone,
     'true'
   );
-  await changePreferenceSpaceCodegen(
+  await changePreferenceSpace(
     entitiesId.spaceId,
     SpacePreferenceType.MembershipJoinSpaceFromHostOrganizationMembers,
     'true'
@@ -56,13 +56,13 @@ beforeAll(async () => {
     TestUser.QA_USER
   );
 
-  await sendMessageToRoomCodegen(
+  await sendMessageToRoom(
     entitiesId.space.updateId,
     'test',
     TestUser.GLOBAL_ADMIN
   );
 
-  await createRelationCodegen(
+  await createRelation(
     entitiesId.space.collaborationId,
     'incoming',
     'relationDescription',
@@ -72,7 +72,7 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
 
-  await createPostOnCalloutCodegen(
+  await createPostOnCallout(
     entitiesId.space.calloutId,
     { displayName: 'postDisplayName' },
     'postnameid',

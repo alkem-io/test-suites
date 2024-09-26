@@ -130,23 +130,23 @@ afterAll(async () => {
 // Skip tests due to bug: #193
 describe.skip('Notifications - updates', () => {
   beforeAll(async () => {
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.notificationsAdmin.id,
       UserPreferenceType.NotificationCommunicationUpdates,
       'false'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.notificationsAdmin.id,
       UserPreferenceType.NotificationCommunicationUpdateSentAdmin,
       'false'
     );
 
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationCommunicationUpdates,
       'false'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationCommunicationUpdateSentAdmin,
       'false'
@@ -154,7 +154,7 @@ describe.skip('Notifications - updates', () => {
 
     preferencesConfig.forEach(
       async config =>
-        await changePreferenceUserCodegen(config.userID, config.type, 'true')
+        await changePreferenceUser(config.userID, config.type, 'true')
     );
   });
 
@@ -164,7 +164,7 @@ describe.skip('Notifications - updates', () => {
 
   test('GA create space update - GA(1), HA (1), HM(6) get notifications', async () => {
     // Act
-    await sendMessageToRoomCodegen(
+    await sendMessageToRoom(
       entitiesId.space.updatesId,
       'GA space update '
     );
@@ -208,7 +208,7 @@ describe.skip('Notifications - updates', () => {
 
   test('HA create space update - GA(1), HA (1), HM(6) get notifications', async () => {
     // Act
-    await sendMessageToRoomCodegen(
+    await sendMessageToRoom(
       entitiesId.space.updatesId,
       'EA space update ',
       TestUser.HUB_ADMIN
@@ -254,7 +254,7 @@ describe.skip('Notifications - updates', () => {
 
   test('CA create challenge update - GA(1), HA (1), CA(1), CM(3),  get notifications', async () => {
     // Act
-    await sendMessageToRoomCodegen(
+    await sendMessageToRoom(
       entitiesId.challenge.updatesId,
       'CA challenge update ',
       TestUser.CHALLENGE_ADMIN
@@ -303,7 +303,7 @@ describe.skip('Notifications - updates', () => {
 
   test('OA create opportunity update - GA(1), HA(1), CA(1), OA(1), OM(1), get notifications', async () => {
     // Act
-    await sendMessageToRoomCodegen(
+    await sendMessageToRoom(
       entitiesId.opportunity.updatesId,
       'OA opportunity update ',
       TestUser.OPPORTUNITY_ADMIN
@@ -360,10 +360,10 @@ describe.skip('Notifications - updates', () => {
   test('OA create opportunity update - 0 notifications - all roles with notifications disabled', async () => {
     preferencesConfig.forEach(
       async config =>
-        await changePreferenceUserCodegen(config.userID, config.type, 'false')
+        await changePreferenceUser(config.userID, config.type, 'false')
     );
     // Act
-    await sendMessageToRoomCodegen(
+    await sendMessageToRoom(
       entitiesId.opportunity.updatesId,
       'OA opportunity update 2',
       TestUser.OPPORTUNITY_ADMIN

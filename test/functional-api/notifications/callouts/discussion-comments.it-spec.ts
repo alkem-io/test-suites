@@ -119,7 +119,7 @@ describe('Notifications - callout comments', () => {
   });
 
   beforeAll(async () => {
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.notificationsAdmin.id,
       UserPreferenceType.NotificationDiscussionCommentCreated,
       'false'
@@ -127,14 +127,14 @@ describe('Notifications - callout comments', () => {
 
     preferencesConfig.forEach(
       async config =>
-        await changePreferenceUserCodegen(config.userID, config.type, 'true')
+        await changePreferenceUser(config.userID, config.type, 'true')
     );
   });
 
   // ToDo: fix test
   test.skip('GA create space callout comment - HM(7) get notifications', async () => {
     // Act
-    await sendMessageToRoomCodegen(
+    await sendMessageToRoom(
       entitiesId.space.discussionCalloutCommentsId,
       'comment on discussion callout',
       TestUser.GLOBAL_ADMIN
@@ -168,7 +168,7 @@ describe('Notifications - callout comments', () => {
   // ToDo: fix test
   test.skip('HA create space callout comment - HM(7) get notifications', async () => {
     // Act
-    await sendMessageToRoomCodegen(
+    await sendMessageToRoom(
       entitiesId.space.discussionCalloutCommentsId,
       'comment on discussion callout',
       TestUser.HUB_ADMIN
@@ -201,7 +201,7 @@ describe('Notifications - callout comments', () => {
 
   test('HA create challenge callout comment - HM(5),  get notifications', async () => {
     // Act
-    await sendMessageToRoomCodegen(
+    await sendMessageToRoom(
       entitiesId.challenge.discussionCalloutCommentsId,
       'comment on discussion callout',
       TestUser.HUB_ADMIN
@@ -238,7 +238,7 @@ describe('Notifications - callout comments', () => {
 
   test('OM create opportunity callout comment - HM(3), get notifications', async () => {
     // Act
-    await sendMessageToRoomCodegen(
+    await sendMessageToRoom(
       entitiesId.opportunity.discussionCalloutCommentsId,
       'comment on discussion callout',
       TestUser.OPPORTUNITY_MEMBER
@@ -276,10 +276,10 @@ describe('Notifications - callout comments', () => {
   test('OA create opportunity callout comment - 0 notifications - all roles with notifications disabled', async () => {
     preferencesConfig.forEach(
       async config =>
-        await changePreferenceUserCodegen(config.userID, config.type, 'false')
+        await changePreferenceUser(config.userID, config.type, 'false')
     );
     // Act
-    await sendMessageToRoomCodegen(
+    await sendMessageToRoom(
       entitiesId.opportunity.discussionCalloutCommentsId,
       'comment on discussion callout',
       TestUser.OPPORTUNITY_ADMIN

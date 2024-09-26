@@ -8,7 +8,7 @@ import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { getSpaceData } from '../../journey/space/space.request.params';
 import { TemplateType } from '@test/generated/alkemio-schema';
 
-export const updateInnovationFlowStateCodegen = async (
+export const updateInnovationFlowState = async (
   innovationFlowId: string,
   selectedState: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
@@ -27,7 +27,7 @@ export const updateInnovationFlowStateCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const updateInnovationFlowStatesFromTemplateCodegen = async (
+export const updateInnovationFlowStatesFromTemplate = async (
   innovationFlowID: string,
   innovationFlowTemplateID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
@@ -48,7 +48,7 @@ export const updateInnovationFlowStatesFromTemplateCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const createInnovationFlowTemplateCodegen = async (
+export const createInnovationFlowTemplate = async (
   templatesSetId: string,
   profile: any = templateDefaultInfo,
   states: {
@@ -78,7 +78,7 @@ export const createInnovationFlowTemplateCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const updateInnovationFlowTemplateCodegen = async (
+export const updateInnovationFlowTemplate = async (
   templateId: string,
   profile: any = templateDefaultInfo,
   states: {
@@ -104,7 +104,7 @@ export const updateInnovationFlowTemplateCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const deleteInnovationFlowTemplateCodegen = async (
+export const deleteInnovationFlowTemplate = async (
   ID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {

@@ -2,7 +2,7 @@ import { TestUser } from '@test/utils';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 
-export const sendMessageReplyToRoomCodegen = async (
+export const sendMessageReplyToRoom = async (
   threadID: string,
   roomID: string,
   message: string,

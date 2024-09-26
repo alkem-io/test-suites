@@ -31,7 +31,7 @@ afterAll(async () => {
 describe('myPrivileges', () => {
   test('GlobalCommunityAdmin privileges to Organization', async () => {
     // Act
-    const response = await getOrganizationDataCodegen(
+    const response = await getOrganizationData(
       entitiesId.organization.id,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
@@ -43,7 +43,7 @@ describe('myPrivileges', () => {
 
   test('GlobalCommunityAdmin privileges to Organization / Verification', async () => {
     // Act
-    const response = await getOrganizationDataCodegen(
+    const response = await getOrganizationData(
       entitiesId.organization.id,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
@@ -57,7 +57,7 @@ describe('myPrivileges', () => {
 
   test('GlobalCommunityAdmin privileges to Organization / Profile', async () => {
     // Act
-    const response = await getOrganizationDataCodegen(
+    const response = await getOrganizationData(
       entitiesId.organization.id,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
@@ -70,7 +70,7 @@ describe('myPrivileges', () => {
 
   test('GlobalCommunityAdmin privileges to Organization / Profile / References', async () => {
     // Act
-    const response = await getOrganizationDataCodegen(
+    const response = await getOrganizationData(
       entitiesId.organization.id,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
@@ -84,7 +84,7 @@ describe('myPrivileges', () => {
 
   test('GlobalCommunityAdmin privileges to Organization / Profile / Tagsets', async () => {
     // Act
-    const response = await getOrganizationDataCodegen(
+    const response = await getOrganizationData(
       entitiesId.organization.id,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
@@ -98,7 +98,7 @@ describe('myPrivileges', () => {
 
   test('GlobalCommunityAdmin privileges to Organization / Preferences', async () => {
     // Act
-    const response = await getOrganizationDataCodegen(
+    const response = await getOrganizationData(
       entitiesId.organization.id,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );

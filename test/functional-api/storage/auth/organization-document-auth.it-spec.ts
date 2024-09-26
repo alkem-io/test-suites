@@ -44,7 +44,7 @@ beforeAll(async () => {
     spaceNameId
   );
 
-  await assignUserAsOrganizationAdminCodegen(
+  await assignUserAsOrganizationAdmin(
     users.challengeAdmin.email,
     entitiesId.organization.id
   );
@@ -54,7 +54,7 @@ beforeAll(async () => {
     entitiesId.organization.id
   );
 
-  await assignUserToOrganizationCodegen(
+  await assignUserToOrganization(
     users.spaceMember.email,
     entitiesId.organization.id
   );
@@ -67,7 +67,7 @@ afterAll(async () => {
 describe('Organization - documents', () => {
   describe('Access to Organization Profile visual', () => {
     afterAll(async () => {
-      await deleteDocumentCodegen(documentId);
+      await deleteDocument(documentId);
     });
     beforeAll(async () => {
       const visualData = await lookupProfileVisuals(
@@ -147,10 +147,10 @@ describe('Organization - documents', () => {
 
   describe('Access to Organization Profile reference document', () => {
     afterAll(async () => {
-      await deleteDocumentCodegen(documentId);
+      await deleteDocument(documentId);
     });
     beforeAll(async () => {
-      const refData = await createReferenceOnProfileCodegen(
+      const refData = await createReferenceOnProfile(
         entitiesId.organization.profileId
       );
       refId = refData?.data?.createReferenceOnProfile?.id ?? '';
@@ -228,7 +228,7 @@ describe('Organization - documents', () => {
 
   describe('Access to Organization storage bucket', () => {
     afterAll(async () => {
-      await deleteDocumentCodegen(documentId);
+      await deleteDocument(documentId);
     });
     beforeAll(async () => {
       const getSpaceStorageId = await getOrganizationProfileDocuments(

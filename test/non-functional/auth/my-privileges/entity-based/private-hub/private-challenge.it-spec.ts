@@ -57,7 +57,7 @@ beforeAll(async () => {
 
   await createOpportunityWithUsers(opportunityName);
 
-  await changePreferenceSpaceCodegen(
+  await changePreferenceSpace(
     entitiesId.spaceId,
     SpacePreferenceType.AuthorizationAnonymousReadAccess,
     'false'
@@ -69,8 +69,8 @@ beforeAll(async () => {
 afterAll(async () => {
   await removeUserAsGlobalAdmin(users.qaUser.id);
 
-  await deleteOpportunityCodegen(entitiesId.opportunity.id);
-  await deleteChallengeCodegen(entitiesId.challenge.id);
+  await deleteOpportunity(entitiesId.opportunity.id);
+  await deleteChallenge(entitiesId.challenge.id);
   await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });

@@ -105,7 +105,7 @@ afterAll(async () => {
 describe('Post comments subscription', () => {
   describe('Space comments subscription ', () => {
     beforeAll(async () => {
-      const resPostonSpace = await createPostOnCalloutCodegen(
+      const resPostonSpace = await createPostOnCallout(
         entitiesId.space.calloutId,
         { displayName: postDisplayName },
         postNameID,
@@ -138,21 +138,21 @@ describe('Post comments subscription', () => {
 
     it('receives message after new comment is created - 3 sender / 3 receivers', async () => {
       // create comment
-      const messageGA = await sendMessageToRoomCodegen(
+      const messageGA = await sendMessageToRoom(
         postCommentsIdSpace,
         messageGAText,
         TestUser.GLOBAL_ADMIN
       );
       messageGaId = messageGA?.data?.sendMessageToRoom.id;
 
-      const messageHA = await sendMessageToRoomCodegen(
+      const messageHA = await sendMessageToRoom(
         postCommentsIdSpace,
         messageHAText,
         TestUser.HUB_ADMIN
       );
       messageHaId = messageHA?.data?.sendMessageToRoom.id;
 
-      const messageHM = await sendMessageToRoomCodegen(
+      const messageHM = await sendMessageToRoom(
         postCommentsIdSpace,
         messageHMText,
         TestUser.HUB_MEMBER
@@ -185,7 +185,7 @@ describe('Post comments subscription', () => {
 
   describe('Challenge comments subscription ', () => {
     beforeAll(async () => {
-      const resPostonChallenge = await createPostOnCalloutCodegen(
+      const resPostonChallenge = await createPostOnCallout(
         entitiesId.challenge.calloutId,
         { displayName: postDisplayName + 'ch' },
         postNameID + 'ch',
@@ -217,21 +217,21 @@ describe('Post comments subscription', () => {
     });
     it('receives message after new comment is created - 3 sender / 3 receivers', async () => {
       // create comment
-      const messageGA = await sendMessageToRoomCodegen(
+      const messageGA = await sendMessageToRoom(
         postCommentsIdChallenge,
         messageGAText,
         TestUser.GLOBAL_ADMIN
       );
       messageGaId = messageGA?.data?.sendMessageToRoom.id;
 
-      const messageHA = await sendMessageToRoomCodegen(
+      const messageHA = await sendMessageToRoom(
         postCommentsIdChallenge,
         messageHAText,
         TestUser.HUB_ADMIN
       );
       messageHaId = messageHA?.data?.sendMessageToRoom.id;
 
-      const messageHM = await sendMessageToRoomCodegen(
+      const messageHM = await sendMessageToRoom(
         postCommentsIdChallenge,
         messageHMText,
         TestUser.HUB_MEMBER
@@ -265,7 +265,7 @@ describe('Post comments subscription', () => {
 
   describe('Opportunity comments subscription ', () => {
     beforeAll(async () => {
-      const resPostonChallenge = await createPostOnCalloutCodegen(
+      const resPostonChallenge = await createPostOnCallout(
         entitiesId.opportunity.calloutId,
         { displayName: postDisplayName + 'opp' },
         postNameID + 'opp',
@@ -298,21 +298,21 @@ describe('Post comments subscription', () => {
     });
     it('receives message after new comment is created - 3 sender / 3 receivers', async () => {
       // create comment
-      const messageGA = await sendMessageToRoomCodegen(
+      const messageGA = await sendMessageToRoom(
         postCommentsIdOpportunity,
         messageGAText,
         TestUser.GLOBAL_ADMIN
       );
       messageGaId = messageGA?.data?.sendMessageToRoom.id;
 
-      const messageHA = await sendMessageToRoomCodegen(
+      const messageHA = await sendMessageToRoom(
         postCommentsIdOpportunity,
         messageHAText,
         TestUser.HUB_ADMIN
       );
       messageHaId = messageHA?.data?.sendMessageToRoom.id;
 
-      const messageHM = await sendMessageToRoomCodegen(
+      const messageHM = await sendMessageToRoom(
         postCommentsIdOpportunity,
         messageHMText,
         TestUser.HUB_MEMBER

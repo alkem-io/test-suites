@@ -91,7 +91,7 @@ beforeAll(async () => {
     CommunityRoleType.Lead
   );
 
-  await assignUserAsOrganizationAdminCodegen(
+  await assignUserAsOrganizationAdmin(
     users.spaceAdmin.id,
     entitiesId.organization.id
   );
@@ -116,7 +116,7 @@ describe('Notifications - send messages to Private Space, Opportunity Community 
 
   test.only('NOT space member sends message to Opportunity community (2 User Leads, 1 Org Lead) - 3 messages sent', async () => {
     // Act
-    await sendMessageToCommunityLeadsCodegen(
+    await sendMessageToCommunityLeads(
       entitiesId.opportunity.communityId,
       'Test message',
       TestUser.NON_HUB_MEMBER
@@ -147,7 +147,7 @@ describe('Notifications - send messages to Private Space, Opportunity Community 
 
   test('Opportunity member send message to Opportunity community (2 User Leads, 1 Org Lead) - 3 messages sent', async () => {
     // Act
-    await sendMessageToCommunityLeadsCodegen(
+    await sendMessageToCommunityLeads(
       entitiesId.opportunity.communityId,
       'Test message',
       TestUser.OPPORTUNITY_MEMBER
@@ -204,7 +204,7 @@ describe('Notifications - send messages to Private Space, Public Challenge, Oppo
 
   test('NOT space member sends message to Challenge community (0 User Leads, 0 Org Lead) - 1 messages sent', async () => {
     // Act
-    await sendMessageToCommunityLeadsCodegen(
+    await sendMessageToCommunityLeads(
       entitiesId.opportunity.communityId,
       'Test message',
       TestUser.NON_HUB_MEMBER

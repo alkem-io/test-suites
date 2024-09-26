@@ -49,7 +49,7 @@ afterAll(async () => {
 describe('User - documents', () => {
   describe('Access to User Profile visual', () => {
     afterAll(async () => {
-      await deleteDocumentCodegen(documentId);
+      await deleteDocument(documentId);
     });
     beforeAll(async () => {
       const visualData = await lookupProfileVisuals(users.qaUser.profileId);
@@ -118,11 +118,11 @@ describe('User - documents', () => {
 
   describe('Access to User Profile reference document', () => {
     afterAll(async () => {
-      await deleteDocumentCodegen(documentId);
-      await deleteReferenceOnProfileCodegen(refId);
+      await deleteDocument(documentId);
+      await deleteReferenceOnProfile(refId);
     });
     beforeAll(async () => {
-      const refData = await createReferenceOnProfileCodegen(
+      const refData = await createReferenceOnProfile(
         users.qaUser.profileId,
         TestUser.QA_USER
       );
@@ -190,8 +190,8 @@ describe('User - documents', () => {
 
   describe('Access to User storage bucket', () => {
     afterAll(async () => {
-      await deleteDocumentCodegen(documentId);
-      await deleteReferenceOnProfileCodegen(refId);
+      await deleteDocument(documentId);
+      await deleteReferenceOnProfile(refId);
     });
     beforeAll(async () => {
       const getSpaceStorageId = await getUserProfileDocuments(

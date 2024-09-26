@@ -20,13 +20,13 @@ let discussionCommentsId = '';
 let messageId = '';
 
 beforeAll(async () => {
-  const res = await getPlatformForumDataCodegen();
+  const res = await getPlatformForumData();
   platformDiscussionId = res?.data?.platform.forum.id ?? '';
 });
 
 describe('Reaction - Discussion messages', () => {
   beforeAll(async () => {
-    const res = await createDiscussionCodegen(
+    const res = await createDiscussion(
       platformDiscussionId,
       `test-${uniqueId}`
     );
@@ -36,25 +36,25 @@ describe('Reaction - Discussion messages', () => {
   });
 
   afterAll(async () => {
-    await deleteDiscussionCodegen(discussionId);
+    await deleteDiscussion(discussionId);
   });
 
   afterEach(async () => {
-    await removeMessageOnRoomCodegen(discussionCommentsId, messageId);
+    await removeMessageOnRoom(discussionCommentsId, messageId);
   });
 
   test('React on own message', async () => {
     // Act
-    const res = await sendMessageToRoomCodegen(discussionCommentsId);
+    const res = await sendMessageToRoom(discussionCommentsId);
     messageId = res?.data?.sendMessageToRoom.id;
 
-    const reactionData = await addReactionCodegen(
+    const reactionData = await addReaction(
       discussionCommentsId,
       messageId,
       '👏'
     );
 
-    const discussionMessageData = await getPlatformDiscussionsDataByIdCodegen(
+    const discussionMessageData = await getPlatformDiscussionsDataById(
       discussionId
     );
 
@@ -67,20 +67,20 @@ describe('Reaction - Discussion messages', () => {
 
   test('React on other user message', async () => {
     // Act
-    const res = await sendMessageToRoomCodegen(
+    const res = await sendMessageToRoom(
       discussionCommentsId,
       'Test message',
       TestUser.HUB_ADMIN
     );
     messageId = res?.data?.sendMessageToRoom.id;
 
-    const reactionData = await addReactionCodegen(
+    const reactionData = await addReaction(
       discussionCommentsId,
       messageId,
       '👏'
     );
 
-    const discussionMessageData = await getPlatformDiscussionsDataByIdCodegen(
+    const discussionMessageData = await getPlatformDiscussionsDataById(
       discussionId
     );
 
@@ -93,26 +93,26 @@ describe('Reaction - Discussion messages', () => {
 
   test('Add multiple reaction to a message', async () => {
     // Act
-    const res = await sendMessageToRoomCodegen(
+    const res = await sendMessageToRoom(
       discussionCommentsId,
       'Test message',
       TestUser.HUB_ADMIN
     );
     messageId = res?.data?.sendMessageToRoom.id;
 
-    const reactionDataOne = await addReactionCodegen(
+    const reactionDataOne = await addReaction(
       discussionCommentsId,
       messageId,
       '👏'
     );
 
-    const reactionDataTwo = await addReactionCodegen(
+    const reactionDataTwo = await addReaction(
       discussionCommentsId,
       messageId,
       '😁'
     );
 
-    const discussionMessageData = await getPlatformDiscussionsDataByIdCodegen(
+    const discussionMessageData = await getPlatformDiscussionsDataById(
       discussionId
     );
     const discussionData =
@@ -130,24 +130,24 @@ describe('Reaction - Discussion messages', () => {
 
   test('Should fail to add same reaction twice to a message', async () => {
     // Act
-    const res = await sendMessageToRoomCodegen(
+    const res = await sendMessageToRoom(
       discussionCommentsId,
       'Test message',
       TestUser.HUB_ADMIN
     );
     messageId = res?.data?.sendMessageToRoom.id;
 
-    const reactionDataOne = await addReactionCodegen(
+    const reactionDataOne = await addReaction(
       discussionCommentsId,
       messageId,
       '👏'
     );
-    const reactionDataTwo = await addReactionCodegen(
+    const reactionDataTwo = await addReaction(
       discussionCommentsId,
       messageId,
       '👏'
     );
-    const discussionMessageData = await getPlatformDiscussionsDataByIdCodegen(
+    const discussionMessageData = await getPlatformDiscussionsDataById(
       discussionId
     );
 
@@ -163,10 +163,10 @@ describe('Reaction - Discussion messages', () => {
 
   test('Remove reaction on own message', async () => {
     // Arrange
-    const res = await sendMessageToRoomCodegen(discussionCommentsId);
+    const res = await sendMessageToRoom(discussionCommentsId);
     messageId = res?.data?.sendMessageToRoom.id;
 
-    const reactionData = await addReactionCodegen(
+    const reactionData = await addReaction(
       discussionCommentsId,
       messageId,
       '👏'
@@ -175,11 +175,11 @@ describe('Reaction - Discussion messages', () => {
 
     // Act
 
-    const resRemove = await removeReactionCodegen(
+    const resRemove = await removeReaction(
       reactionId,
       discussionCommentsId
     );
-    const discussionMessageData = await getPlatformDiscussionsDataByIdCodegen(
+    const discussionMessageData = await getPlatformDiscussionsDataById(
       discussionId
     );
 
@@ -193,14 +193,14 @@ describe('Reaction - Discussion messages', () => {
 
   test('Remove reaction added by other user on own message', async () => {
     // Arrange
-    const res = await sendMessageToRoomCodegen(
+    const res = await sendMessageToRoom(
       discussionCommentsId,
       'Test message',
       TestUser.HUB_ADMIN
     );
     messageId = res?.data?.sendMessageToRoom.id;
 
-    const reactionData = await addReactionCodegen(
+    const reactionData = await addReaction(
       discussionCommentsId,
       messageId,
       '👏'
@@ -209,13 +209,13 @@ describe('Reaction - Discussion messages', () => {
 
     // Act
 
-    const resRemove = await removeReactionCodegen(
+    const resRemove = await removeReaction(
       reactionId,
       discussionCommentsId,
       TestUser.HUB_ADMIN
     );
 
-    const discussionMessageData = await getPlatformDiscussionsDataByIdCodegen(
+    const discussionMessageData = await getPlatformDiscussionsDataById(
       discussionId
     );
 

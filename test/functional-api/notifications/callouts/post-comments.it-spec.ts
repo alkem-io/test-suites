@@ -177,51 +177,51 @@ describe('Notifications - post comments', () => {
   });
 
   beforeAll(async () => {
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.notificationsAdmin.id,
       UserPreferenceType.NotificationPostCommentCreated,
       'false'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.notificationsAdmin.id,
       UserPreferenceType.NotificationPostCreated,
       'false'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.notificationsAdmin.id,
       UserPreferenceType.NotificationPostCreatedAdmin,
       'false'
     );
 
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationPostCommentCreated,
       'false'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationPostCreated,
       'false'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationPostCreatedAdmin,
       'false'
     );
     preferencesPostConfig.forEach(
       async config =>
-        await changePreferenceUserCodegen(config.userID, config.type, 'false')
+        await changePreferenceUser(config.userID, config.type, 'false')
     );
 
     preferencesPostCommentsConfig.forEach(
       async config =>
-        await changePreferenceUserCodegen(config.userID, config.type, 'true')
+        await changePreferenceUser(config.userID, config.type, 'true')
     );
   });
 
   afterEach(async () => {
     await delay(6000);
-    await removeMessageOnRoomCodegen(
+    await removeMessageOnRoom(
       postCommentsIdSpace,
       messageId,
       TestUser.GLOBAL_ADMIN
@@ -229,7 +229,7 @@ describe('Notifications - post comments', () => {
   });
   describe('GA create post on space  ', () => {
     beforeAll(async () => {
-      const resPostonSpace = await createPostOnCalloutCodegen(
+      const resPostonSpace = await createPostOnCallout(
         entitiesId.space.calloutId,
         { displayName: postDisplayName },
         postNameID,
@@ -243,11 +243,11 @@ describe('Notifications - post comments', () => {
     });
 
     afterAll(async () => {
-      await deletePostCodegen(spacePostId);
+      await deletePost(spacePostId);
     });
     test('GA create comment - GA(1) get notifications', async () => {
       // Act
-      const messageRes = await sendMessageToRoomCodegen(
+      const messageRes = await sendMessageToRoom(
         postCommentsIdSpace,
         'test message on space post',
         TestUser.GLOBAL_ADMIN
@@ -262,7 +262,7 @@ describe('Notifications - post comments', () => {
     test('HM create comment - GA(1) get notifications', async () => {
       const spacePostSubjectText = `${spaceName} - New comment received on your Post &#34;${postDisplayName}&#34;, have a look!`;
       // Act
-      const messageRes = await sendMessageToRoomCodegen(
+      const messageRes = await sendMessageToRoom(
         postCommentsIdSpace,
         'test message on space post',
         TestUser.HUB_MEMBER
@@ -287,7 +287,7 @@ describe('Notifications - post comments', () => {
 
   describe('HM create post on space  ', () => {
     beforeAll(async () => {
-      const resPostonSpace = await createPostOnCalloutCodegen(
+      const resPostonSpace = await createPostOnCallout(
         entitiesId.space.calloutId,
         { displayName: postDisplayName },
         postNameID,
@@ -301,11 +301,11 @@ describe('Notifications - post comments', () => {
     });
 
     afterAll(async () => {
-      await deletePostCodegen(spacePostId);
+      await deletePost(spacePostId);
     });
     test('HM create comment - HM(1) get notifications', async () => {
       // Act
-      const messageRes = await sendMessageToRoomCodegen(
+      const messageRes = await sendMessageToRoom(
         postCommentsIdSpace,
         'test message on space post',
         TestUser.HUB_MEMBER
@@ -321,7 +321,7 @@ describe('Notifications - post comments', () => {
     test('HA create comment - HM(1) get notifications', async () => {
       const spacePostSubjectText = `${spaceName} - New comment received on your Post &#34;${postDisplayName}&#34;, have a look!`;
       // Act
-      const messageRes = await sendMessageToRoomCodegen(
+      const messageRes = await sendMessageToRoom(
         postCommentsIdSpace,
         'test message on space post',
         TestUser.HUB_ADMIN
@@ -346,7 +346,7 @@ describe('Notifications - post comments', () => {
 
   describe('CM create post on challenge  ', () => {
     beforeAll(async () => {
-      const resPostonSpace = await createPostOnCalloutCodegen(
+      const resPostonSpace = await createPostOnCallout(
         entitiesId.challenge.calloutId,
         { displayName: postDisplayName },
         postNameID,
@@ -360,11 +360,11 @@ describe('Notifications - post comments', () => {
     });
 
     afterAll(async () => {
-      await deletePostCodegen(challengePostId);
+      await deletePost(challengePostId);
     });
     test('CM create comment - CM(1) get notifications', async () => {
       // Act
-      const messageRes = await sendMessageToRoomCodegen(
+      const messageRes = await sendMessageToRoom(
         postCommentsIdChallenge,
         'test message on challenge post',
         TestUser.CHALLENGE_MEMBER
@@ -380,7 +380,7 @@ describe('Notifications - post comments', () => {
     test('CA create comment - CM(1) get notifications', async () => {
       const challengePostSubjectText = `${challengeName} - New comment received on your Post &#34;${postDisplayName}&#34;, have a look!`;
       // Act
-      const messageRes = await sendMessageToRoomCodegen(
+      const messageRes = await sendMessageToRoom(
         postCommentsIdChallenge,
         'test message on challenge post',
         TestUser.CHALLENGE_ADMIN
@@ -405,7 +405,7 @@ describe('Notifications - post comments', () => {
 
   describe('OM create post on opportunity  ', () => {
     beforeAll(async () => {
-      const resPostonSpace = await createPostOnCalloutCodegen(
+      const resPostonSpace = await createPostOnCallout(
         entitiesId.opportunity.calloutId,
         { displayName: postDisplayName },
         postNameID,
@@ -419,11 +419,11 @@ describe('Notifications - post comments', () => {
     });
 
     afterAll(async () => {
-      await deletePostCodegen(opportunityPostId);
+      await deletePost(opportunityPostId);
     });
     test('OM create comment - OM(1) get notifications', async () => {
       // Act
-      const messageRes = await sendMessageToRoomCodegen(
+      const messageRes = await sendMessageToRoom(
         postCommentsIdOpportunity,
         'test message on opportunity post',
         TestUser.OPPORTUNITY_MEMBER
@@ -439,7 +439,7 @@ describe('Notifications - post comments', () => {
     test('CA create comment - OM(1) get notifications', async () => {
       const opportunityPostSubjectText = `${opportunityName} - New comment received on your Post &#34;${postDisplayName}&#34;, have a look!`;
       // Act
-      const messageRes = await sendMessageToRoomCodegen(
+      const messageRes = await sendMessageToRoom(
         postCommentsIdOpportunity,
         'test message on opportunity post',
         TestUser.CHALLENGE_ADMIN
@@ -465,10 +465,10 @@ describe('Notifications - post comments', () => {
   test('OA create post on opportunity and comment - 0 notifications - all roles with notifications disabled', async () => {
     preferencesPostCommentsConfig.forEach(
       async config =>
-        await changePreferenceUserCodegen(config.userID, config.type, 'false')
+        await changePreferenceUser(config.userID, config.type, 'false')
     );
     // Act
-    const resPostonSpace = await createPostOnCalloutCodegen(
+    const resPostonSpace = await createPostOnCallout(
       entitiesId.opportunity.calloutId,
       { displayName: postDisplayName },
       postNameID,
@@ -478,7 +478,7 @@ describe('Notifications - post comments', () => {
       resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
     postCommentsIdOpportunity =
       resPostonSpace.data?.createContributionOnCallout.post?.comments.id ?? '';
-    await sendMessageToRoomCodegen(
+    await sendMessageToRoom(
       postCommentsIdOpportunity,
       'test message on opportunity post',
       TestUser.OPPORTUNITY_ADMIN

@@ -42,7 +42,7 @@ export const inviteExternalUser = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const deleteInvitationCodegen = async (
+export const deleteInvitation = async (
   invitationId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -61,7 +61,7 @@ export const deleteInvitationCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const deleteExternalInvitationCodegen = async (
+export const deleteExternalInvitation = async (
   invitationId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -78,7 +78,7 @@ export const deleteExternalInvitationCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const getSpaceInvitationCodegen = async (
+export const getSpaceInvitation = async (
   spaceId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {

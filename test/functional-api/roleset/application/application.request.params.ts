@@ -79,7 +79,7 @@ export const getChallengeApplications = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const meQueryCodegen = async (
+export const meQuery = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();

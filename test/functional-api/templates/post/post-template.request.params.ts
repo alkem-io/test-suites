@@ -4,7 +4,7 @@ import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { TemplateType } from '@test/generated/alkemio-schema';
 
-export const createPostTemplateCodegen = async (
+export const createPostTemplate = async (
   templatesSetID: string,
   defaultDescription = 'Default post template description',
   displayName = 'Default post template title',
@@ -31,7 +31,7 @@ export const createPostTemplateCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const updatePostTemplateCodegen = async (
+export const updatePostTemplate = async (
   ID: string,
   defaultDescription = 'Default post template description - Update',
   displayName = 'Default post template title - Update',
@@ -57,7 +57,7 @@ export const updatePostTemplateCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const deletePostTemplateCodegen = async (
+export const deletePostTemplate = async (
   postTemplateId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {

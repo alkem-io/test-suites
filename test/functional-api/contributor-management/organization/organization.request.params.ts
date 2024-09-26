@@ -106,19 +106,6 @@ export const getOrganizationData = async (
   organizationId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
-  const requestParams = {
-    operationName: null,
-    query: `query{organization(ID: "${organizationId}") ${organizationData}}`,
-    variables: null,
-  };
-
-  return await graphqlRequestAuth(requestParams, userRole);
-};
-
-export const getOrganizationDataCodegen = async (
-  organizationId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
-) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
     graphqlClient.getOrganizationData(

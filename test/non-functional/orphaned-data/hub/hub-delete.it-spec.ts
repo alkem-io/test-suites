@@ -46,32 +46,32 @@ describe('Full Space Deletion', () => {
     });
 
     // Send space community update
-    await sendMessageToRoomCodegen(
+    await sendMessageToRoom(
       entitiesId.space.updatesId,
       'test',
       TestUser.GLOBAL_ADMIN
     );
 
     // Create callout
-    await createCalloutOnCollaborationCodegen(entitiesId.space.collaborationId);
+    await createCalloutOnCollaboration(entitiesId.space.collaborationId);
 
     // Create whiteboard on callout
-    await createWhiteboardOnCalloutCodegen(
+    await createWhiteboardOnCallout(
       entitiesId.space.whiteboardCalloutId
     );
 
     // Create post on callout and comment to it
-    const resPostonSpace = await createPostOnCalloutCodegen(
+    const resPostonSpace = await createPostOnCallout(
       entitiesId.space.calloutId,
       { displayName: postDisplayName },
       postNameID
     );
     const commentId =
       resPostonSpace?.data?.createContributionOnCallout.post?.comments.id ?? '';
-    await sendMessageToRoomCodegen(commentId, 'test message on post');
+    await sendMessageToRoom(commentId, 'test message on post');
 
     // Create comment on callout
-    await sendMessageToRoomCodegen(
+    await sendMessageToRoom(
       entitiesId.space.discussionCalloutId,
       'comment on discussion callout'
     );

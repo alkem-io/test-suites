@@ -2,7 +2,7 @@ import { TestUser } from '@test/utils/token.helper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 
-export const eventOnOrganizationVerificationCodegen = async (
+export const eventOnOrganizationVerification = async (
   organizationVerificationID: string,
   eventName: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN

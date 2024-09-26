@@ -49,7 +49,7 @@ describe('Update user', () => {
   test('should update user "phone" only', async () => {
     // Act
     const responseUpdateUser = await updateUser(userId, '359777777777');
-    getUserData = await getUserDataCodegen(userId);
+    getUserData = await getUserData(userId);
 
     // Assert
     expect(responseUpdateUser.status).toBe(200);
@@ -70,7 +70,7 @@ describe('Update user', () => {
       }
     );
     const userData = responseUpdateUser?.data?.updateUser;
-    getUserData = await getUserDataCodegen(userId);
+    getUserData = await getUserData(userId);
 
     // Assert
     expect(userData?.profile?.location).toEqual({

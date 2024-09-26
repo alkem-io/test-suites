@@ -63,7 +63,7 @@ describe('Update space platform settings', () => {
   });
 
   afterAll(async () => {
-    await deleteOpportunityCodegen(entitiesId.opportunity.id);
+    await deleteOpportunity(entitiesId.opportunity.id);
     await deleteSpace(entitiesId.challenge.id);
     await deleteSpace(entitiesId.spaceId);
     await deleteOrganization(entitiesId.organization.id);

@@ -100,10 +100,10 @@ test('user successful registration email', async ({ page }) => {
     page.getByRole('heading', { name: 'Welcome back Test!' })
   ).toBeVisible();
 
-  // const getUserId = await getUserDataCodegen(userEmail);
+  // const getUserId = await getUserData(userEmail);
   // const registeredUserId = getUserId.data?.user.id ?? '';
 
-  // await deleteUserCodegen(registeredUserId);
+  // await deleteUser(registeredUserId);
 });
 
 test('user successful password recovery', async ({ page }) => {

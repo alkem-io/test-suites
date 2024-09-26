@@ -51,7 +51,7 @@ describe('Communities', () => {
         CommunityRoleType.Member
       );
 
-      const res = await sendMessageToRoomCodegen(
+      const res = await sendMessageToRoom(
         entitiesId.space.updatesId,
         'test'
       );
@@ -59,7 +59,7 @@ describe('Communities', () => {
     });
 
     afterAll(async () => {
-      await removeMessageOnRoomCodegen(
+      await removeMessageOnRoom(
         entitiesId.space.updatesId,
         entitiesId.messageId
       );
@@ -175,7 +175,7 @@ describe('Communities', () => {
   describe('Community updates - create / delete', () => {
     test('should create community update', async () => {
       // Act
-      const res = await sendMessageToRoomCodegen(
+      const res = await sendMessageToRoom(
         entitiesId.space.updatesId,
         'test'
       );
@@ -195,7 +195,7 @@ describe('Communities', () => {
         threadID: null,
       });
 
-      await removeMessageOnRoomCodegen(
+      await removeMessageOnRoom(
         entitiesId.space.updatesId,
         entitiesId.messageId
       );
@@ -203,14 +203,14 @@ describe('Communities', () => {
 
     test('should delete community update', async () => {
       // Arrange
-      const res = await sendMessageToRoomCodegen(
+      const res = await sendMessageToRoom(
         entitiesId.space.updatesId,
         'test'
       );
       entitiesId.messageId = res?.data?.sendMessageToRoom.id;
       await delay(600);
       // Act
-      await removeMessageOnRoomCodegen(
+      await removeMessageOnRoom(
         entitiesId.space.updatesId,
         entitiesId.messageId
       );

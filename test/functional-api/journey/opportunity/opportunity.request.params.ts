@@ -4,7 +4,7 @@ import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 export const opportunityNameId = `oppNaId${uniqueId}`;
 
-export const createOpportunityCodegen = async (
+export const createOpportunity = async (
   opportunityName: string,
   opportunityNameId: string,
   challengeID: string,
@@ -33,7 +33,7 @@ export const createOpportunityCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const updateOpportunityCodegen = async (
+export const updateOpportunity = async (
   opportunityId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -41,7 +41,7 @@ export const updateOpportunityCodegen = async (
   const callback = (authToken: string | undefined) =>
     graphqlClient.updateSpace(
       {
-        spaceData: opportunityVariablesDataCodegen(opportunityId),
+        spaceData: opportunityVariablesData(opportunityId),
       },
       {
         authorization: `Bearer ${authToken}`,
@@ -51,7 +51,7 @@ export const updateOpportunityCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const opportunityVariablesDataCodegen = (opportunityId: string) => {
+export const opportunityVariablesData = (opportunityId: string) => {
   const variables = {
     ID: opportunityId,
     profileData: {
@@ -69,7 +69,7 @@ export const opportunityVariablesDataCodegen = (opportunityId: string) => {
   return variables;
 };
 
-export const deleteOpportunityCodegen = async (opportunityId: string) => {
+export const deleteOpportunity = async (opportunityId: string) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
     graphqlClient.deleteSpace(
@@ -86,7 +86,7 @@ export const deleteOpportunityCodegen = async (opportunityId: string) => {
   return graphqlErrorWrapper(callback, TestUser.GLOBAL_ADMIN);
 };
 
-export const getOpportunityDataCodegen = async (
+export const getOpportunityData = async (
   opportunityId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {

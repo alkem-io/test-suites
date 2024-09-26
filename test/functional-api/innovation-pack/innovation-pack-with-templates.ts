@@ -21,14 +21,14 @@ const main = async () => {
   const firstAvailableOrganizationId =
     organizationsData.body.data.organizations[0].id;
   const providerId = process.env.ORG_ID || firstAvailableOrganizationId;
-  const packData = await createInnovationPackOnLibraryCodegen(
+  const packData = await createInnovationPackOnLibrary(
     packName,
     packNameId,
     providerId
   );
   const templateSetId =
     packData?.data?.createInnovationPack.templatesSet?.id ?? '';
-  await createWhiteboardTemplateCodegen(
+  await createWhiteboardTemplate(
     templateSetId,
     whiteboardTemplateTitle,
     whiteboardTemplateValues

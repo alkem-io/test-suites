@@ -55,7 +55,7 @@ describe('Invitations', () => {
     emailExternalUser = `external${uniqueId}@alkem.io`;
   });
   afterEach(async () => {
-    await deleteExternalInvitationCodegen(invitationId);
+    await deleteExternalInvitation(invitationId);
   });
   test('should create external invitation', async () => {
     // Arrange
@@ -167,7 +167,7 @@ describe('Invitations', () => {
     );
 
     // Act
-    await deleteExternalInvitationCodegen(invitationId);
+    await deleteExternalInvitation(invitationId);
 
     const invitationData2 = await inviteExternalUser(
       entitiesId.space.roleSetId,

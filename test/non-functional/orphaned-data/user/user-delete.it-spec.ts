@@ -29,7 +29,7 @@ describe('Full User Deletion', () => {
     const a = await registerVerifiedUser(email, firstName, lastName);
     console.log(a);
 
-    const userData = await getUserDataCodegen(email);
+    const userData = await getUserData(email);
     console.log(userData);
     userId = userData?.data?.user.id ?? '';
 
@@ -74,16 +74,16 @@ describe('Full User Deletion', () => {
     );
 
     // Assign user as organization member
-    await assignUserToOrganizationCodegen(orgId, userId);
+    await assignUserToOrganization(orgId, userId);
 
     // Assign organization owner
     await assignUserAsOrganizationOwner(userId, orgId);
 
     // Assign organization admin
-    await assignUserAsOrganizationAdminCodegen(userId, orgId);
+    await assignUserAsOrganizationAdmin(userId, orgId);
 
     // Remove user as organization owner
-    await removeUserAsOrganizationOwnerCodegen(userId, orgId);
+    await removeUserAsOrganizationOwner(userId, orgId);
 
     // Act
     const resDelete = await deleteUser(userId);

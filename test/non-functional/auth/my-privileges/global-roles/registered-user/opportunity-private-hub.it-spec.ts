@@ -39,7 +39,7 @@ beforeAll(async () => {
   await createChallengeForOrgSpace(challengeName);
   await createOpportunityForChallenge(opportunityName);
 
-  await changePreferenceSpaceCodegen(
+  await changePreferenceSpace(
     entitiesId.spaceId,
     SpacePreferenceType.AuthorizationAnonymousReadAccess,
     'false'
@@ -51,13 +51,13 @@ beforeAll(async () => {
     CommunityRoleType.Member
   );
 
-  await sendMessageToRoomCodegen(
+  await sendMessageToRoom(
     entitiesId.opportunity.updatesId,
     'test',
     TestUser.GLOBAL_ADMIN
   );
 
-  await createRelationCodegen(
+  await createRelation(
     entitiesId.opportunity.collaborationId,
     'incoming',
     'relationDescription',
@@ -67,7 +67,7 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
 
-  await createPostOnCalloutCodegen(
+  await createPostOnCallout(
     entitiesId.opportunity.calloutId,
     { displayName: 'postDisplayName' },
     'postnameid',
@@ -75,8 +75,8 @@ beforeAll(async () => {
   );
 });
 afterAll(async () => {
-  await deleteOpportunityCodegen(entitiesId.opportunity.id);
-  await deleteChallengeCodegen(entitiesId.challenge.id);
+  await deleteOpportunity(entitiesId.opportunity.id);
+  await deleteChallenge(entitiesId.challenge.id);
   await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
@@ -84,7 +84,7 @@ afterAll(async () => {
 describe('myPrivileges - Opportunity of Public Space', () => {
   test('RegisteredUser privileges to Opportunity', async () => {
     // Act
-    const response = await getOpportunityDataCodegen(
+    const response = await getOpportunityData(
       entitiesId.opportunity.id,
       TestUser.NON_HUB_MEMBER
     );

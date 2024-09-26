@@ -60,7 +60,7 @@ describe.skip('Conversions', () => {
     const numberOfSpacesBeforeConversion = await getSpacesCount();
 
     // Act
-    const res = await convertChallengeToSpaceCodegen(entitiesId.challenge.id);
+    const res = await convertChallengeToSpace(entitiesId.challenge.id);
     const numberOfSpacesAfterConversion = await getSpacesCount();
 
     // Assert
@@ -89,7 +89,7 @@ describe.skip('Conversions', () => {
     const numberOfSpacesBeforeConversion = await getSpacesCount();
 
     // Act
-    const res = await convertChallengeToSpaceCodegen(entitiesId.challenge.id);
+    const res = await convertChallengeToSpace(entitiesId.challenge.id);
     const numberOfSpacesAfterConversion = await getSpacesCount();
 
     // Assert
@@ -103,7 +103,7 @@ describe.skip('Conversions', () => {
 
   test('Convert Challenge with 1 lead Organization to Space and Opportunities to Challenges', async () => {
     // create challenge
-    const resCh = await createChallengeCodegen(
+    const resCh = await createChallenge(
       challengeName,
       `success-chnameid${uniqueId}`,
       entitiesId.spaceId
@@ -129,7 +129,7 @@ describe.skip('Conversions', () => {
       newChCommunityId,
       CommunityRoleType.Lead
     );
-    const chalRes = await getChallengeDataCodegen(newChallId);
+    const chalRes = await getChallengeData(newChallId);
 
     // challange data
     const challengeData = chalRes?.data?.lookup.challenge;
@@ -147,7 +147,7 @@ describe.skip('Conversions', () => {
     const chalDataDisplayName = challengeData?.profile?.displayName;
 
     // create Opportunity
-    const resOpp = await createOpportunityCodegen(
+    const resOpp = await createOpportunity(
       opportunityName,
       `success-oppnameid${uniqueId}`,
       newChallId
@@ -174,7 +174,7 @@ describe.skip('Conversions', () => {
       CommunityRoleType.Lead
     );
 
-    const oppRes = await getOpportunityDataCodegen(newOppId);
+    const oppRes = await getOpportunityData(newOppId);
 
     // opportunity data
     const opportunityData = oppRes?.data?.lookup?.opportunity;
@@ -194,7 +194,7 @@ describe.skip('Conversions', () => {
     const oppDataDisplayName = opportunityData?.profile.displayName;
 
     // Act
-    const res = await convertChallengeToSpaceCodegen(newChallId);
+    const res = await convertChallengeToSpace(newChallId);
 
     // converted data to assert old challenge
     const convertedChallengeData = res?.data?.convertChallengeToSpace;
@@ -301,12 +301,12 @@ describe.skip('Conversions', () => {
     // expect(newSpaceDataNameIdOpp).toEqual(oppDataNameId); // changed nameId after conversion
     expect(newSpaceDataDisplayNameOpp).toEqual(oppDataDisplayName);
 
-    await deleteChallengeCodegen(newChallengeId);
+    await deleteChallenge(newChallengeId);
     await deleteSpace(newSpaceId);
   });
 
   test('Convert Challenge with 1 lead Organization to Space', async () => {
-    const resCh = await createChallengeCodegen(
+    const resCh = await createChallenge(
       challengeName,
       `success-chnameid${uniqueId}`,
       entitiesId.spaceId
@@ -334,7 +334,7 @@ describe.skip('Conversions', () => {
       CommunityRoleType.Lead
     );
 
-    const chalRes = await getChallengeDataCodegen(newChallId);
+    const chalRes = await getChallengeData(newChallId);
 
     const challengeData = chalRes?.data?.lookup.challenge;
 
@@ -352,7 +352,7 @@ describe.skip('Conversions', () => {
     const chalDataDisplayName = challengeData?.profile.displayName;
 
     // Act
-    const res = await convertChallengeToSpaceCodegen(newChallId);
+    const res = await convertChallengeToSpace(newChallId);
 
     const convertedChallengeData = res?.data?.convertChallengeToSpace;
 

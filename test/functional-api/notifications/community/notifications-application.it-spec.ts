@@ -92,28 +92,28 @@ afterAll(async () => {
 
 describe('Notifications - applications', () => {
   beforeAll(async () => {
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.notificationsAdmin.id,
       UserPreferenceType.NotificationApplicationSubmitted,
       'false'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.notificationsAdmin.id,
       UserPreferenceType.NotificationApplicationReceived,
       'false'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationApplicationSubmitted,
       'false'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationApplicationReceived,
       'false'
     );
     for (const config of preferencesConfig)
-      await changePreferenceUserCodegen(config.userID, config.type, 'true');
+      await changePreferenceUser(config.userID, config.type, 'true');
   });
 
   beforeEach(async () => {
@@ -195,7 +195,7 @@ describe('Notifications - applications', () => {
     // Arrange
     preferencesConfig.forEach(
       async config =>
-        await changePreferenceUserCodegen(config.userID, config.type, 'false')
+        await changePreferenceUser(config.userID, config.type, 'false')
     );
 
     await deleteApplication(entitiesId.space.applicationId);

@@ -73,13 +73,13 @@ beforeEach(async () => {
 
 describe('Posts - Create', () => {
   afterEach(async () => {
-    await deletePostCodegen(spacePostId);
-    await deletePostCodegen(challengePostId);
-    await deletePostCodegen(opportunityPostId);
+    await deletePost(spacePostId);
+    await deletePost(challengePostId);
+    await deletePost(opportunityPostId);
   });
   test('HM should create post on space callout', async () => {
     // Act
-    const resPostonSpace = await createPostOnCalloutCodegen(
+    const resPostonSpace = await createPostOnCallout(
       entitiesId.space.calloutId,
       { displayName: postDisplayName },
       postNameID,
@@ -90,7 +90,7 @@ describe('Posts - Create', () => {
     spacePostId =
       resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
 
-    const postsData = await getDataPerSpaceCalloutCodegen(
+    const postsData = await getDataPerSpaceCallout(
       entitiesId.spaceId,
       entitiesId.space.calloutId,
       TestUser.HUB_MEMBER
@@ -105,7 +105,7 @@ describe('Posts - Create', () => {
 
   test('GA should create post on space callout without setting nameId', async () => {
     // Act
-    const resPostonSpace = await createPostOnCalloutCodegen(
+    const resPostonSpace = await createPostOnCallout(
       entitiesId.space.calloutId,
       { displayName: postDisplayName },
       postNameID
@@ -122,7 +122,7 @@ describe('Posts - Create', () => {
 
   test('NON-SM should NOT create post on space callout', async () => {
     // Act
-    const resPostonSpace = await createPostOnCalloutCodegen(
+    const resPostonSpace = await createPostOnCallout(
       entitiesId.space.calloutId,
       { displayName: postDisplayName },
       postNameID,
@@ -137,7 +137,7 @@ describe('Posts - Create', () => {
 
   test('ChA should create post on challenge callout', async () => {
     // Act
-    const resPostonChallenge = await createPostOnCalloutCodegen(
+    const resPostonChallenge = await createPostOnCallout(
       entitiesId.challenge.calloutId,
       { displayName: postDisplayName },
       postNameID + 'ch',
@@ -149,7 +149,7 @@ describe('Posts - Create', () => {
     challengePostId =
       resPostonChallenge.data?.createContributionOnCallout.post?.id ?? '';
 
-    const post = await getPostDataCodegen(
+    const post = await getPostData(
       challengePostId,
       TestUser.CHALLENGE_ADMIN
     );
@@ -160,7 +160,7 @@ describe('Posts - Create', () => {
 
   test('GA should create post on opportunity callout', async () => {
     // Act
-    const resPostonOpportunity = await createPostOnCalloutCodegen(
+    const resPostonOpportunity = await createPostOnCallout(
       entitiesId.opportunity.calloutId,
       { displayName: postDisplayName },
       postNameID + 'op'
@@ -171,7 +171,7 @@ describe('Posts - Create', () => {
     opportunityPostId =
       resPostonOpportunity.data?.createContributionOnCallout.post?.id ?? '';
 
-    const post = await getPostDataCodegen(
+    const post = await getPostData(
       opportunityPostId,
       TestUser.GLOBAL_ADMIN
     );
@@ -183,7 +183,7 @@ describe('Posts - Create', () => {
 
 describe('Posts - Update', () => {
   beforeAll(async () => {
-    const resPostonSpace = await createPostOnCalloutCodegen(
+    const resPostonSpace = await createPostOnCallout(
       entitiesId.space.calloutId,
       { displayName: postDisplayName + 'forUpdates' },
       `post-name-id-up-${uniqueId}`
@@ -193,12 +193,12 @@ describe('Posts - Update', () => {
   });
 
   afterAll(async () => {
-    await deletePostCodegen(spacePostId);
+    await deletePost(spacePostId);
   });
 
   test('HM should NOT update post created on space callout from GA', async () => {
     // Act
-    const resPostonSpace = await updatePostCodegen(
+    const resPostonSpace = await updatePost(
       spacePostId,
       postNameID,
       { profileData: { displayName: postDisplayName + 'HM update' } },
@@ -211,7 +211,7 @@ describe('Posts - Update', () => {
 
   test('NON-HM should NOT update post created on space callout from GA', async () => {
     // Arrange
-    const resPostonSpace = await updatePostCodegen(
+    const resPostonSpace = await updatePost(
       spacePostId,
       postNameID,
       { profileData: { displayName: postDisplayName + 'Non-HM update' } },
@@ -224,7 +224,7 @@ describe('Posts - Update', () => {
 
   test('HA should update post created on space callout from GA', async () => {
     // Arrange
-    const resPostonSpace = await updatePostCodegen(
+    const resPostonSpace = await updatePost(
       spacePostId,
       postNameID,
       { profileData: { displayName: postDisplayName + 'HA update' } },
@@ -233,7 +233,7 @@ describe('Posts - Update', () => {
     const postDataUpdate = resPostonSpace.data?.updatePost;
 
     // Act
-    const postsData = await getDataPerSpaceCalloutCodegen(
+    const postsData = await getDataPerSpaceCallout(
       entitiesId.spaceId,
       entitiesId.space.calloutId,
       TestUser.HUB_ADMIN
@@ -247,7 +247,7 @@ describe('Posts - Update', () => {
   });
   test('GA should update post created on space callout from GA', async () => {
     // Arrange
-    const resPostonSpace = await updatePostCodegen(
+    const resPostonSpace = await updatePost(
       spacePostId,
       postNameID,
       { profileData: { displayName: postDisplayName + 'GA update' } },
@@ -256,7 +256,7 @@ describe('Posts - Update', () => {
     const postDataUpdate = resPostonSpace.data?.updatePost;
 
     // Act
-    const postsData = await getDataPerSpaceCalloutCodegen(
+    const postsData = await getDataPerSpaceCallout(
       entitiesId.spaceId,
       entitiesId.space.calloutId
     );
@@ -271,7 +271,7 @@ describe('Posts - Update', () => {
 
 test('HM should update post created on space callout from HM', async () => {
   // Arrange
-  const resPostonSpaceEM = await createPostOnCalloutCodegen(
+  const resPostonSpaceEM = await createPostOnCallout(
     entitiesId.space.calloutId,
     { displayName: postDisplayName + 'HM' },
     postNameID,
@@ -281,7 +281,7 @@ test('HM should update post created on space callout from HM', async () => {
     resPostonSpaceEM.data?.createContributionOnCallout.post?.id ?? 'ß';
 
   // Act
-  const resPostonSpace = await updatePostCodegen(
+  const resPostonSpace = await updatePost(
     spacePostIdEM,
     postNameID,
     { profileData: { displayName: postDisplayName + 'HM update' } },
@@ -292,7 +292,7 @@ test('HM should update post created on space callout from HM', async () => {
   const postDataUpdate = resPostonSpace.data?.updatePost;
 
   // Act
-  const postsData = await getDataPerSpaceCalloutCodegen(
+  const postsData = await getDataPerSpaceCallout(
     entitiesId.spaceId,
     entitiesId.space.calloutId,
     TestUser.HUB_MEMBER
@@ -304,13 +304,13 @@ test('HM should update post created on space callout from HM', async () => {
   // Assert
   expect(data).toEqual(postDataUpdate);
 
-  await deletePostCodegen(spacePostIdEM);
+  await deletePost(spacePostIdEM);
 });
 
 describe('Posts - Delete', () => {
   test('HM should NOT delete post created on space callout from GA', async () => {
     // Arrange
-    const resPostonSpace = await createPostOnCalloutCodegen(
+    const resPostonSpace = await createPostOnCallout(
       entitiesId.space.calloutId,
       { displayName: postDisplayName },
       postNameID
@@ -320,7 +320,7 @@ describe('Posts - Delete', () => {
       resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
 
     // Act
-    const responseRemove = await deletePostCodegen(
+    const responseRemove = await deletePost(
       spacePostId,
       TestUser.HUB_MEMBER
     );
@@ -335,12 +335,12 @@ describe('Posts - Delete', () => {
       `Authorization: unable to grant 'delete' privilege: delete post: ${spacePostId}`
     );
     expect(postsData).toHaveLength(1);
-    await deletePostCodegen(spacePostId);
+    await deletePost(spacePostId);
   });
 
   test('HM should delete post created on space callout from Himself', async () => {
     // Arrange
-    const resPostonSpace = await createPostOnCalloutCodegen(
+    const resPostonSpace = await createPostOnCallout(
       entitiesId.space.calloutId,
       { displayName: postDisplayName },
       postNameID,
@@ -351,7 +351,7 @@ describe('Posts - Delete', () => {
       resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
 
     // Act
-    await deletePostCodegen(spacePostId, TestUser.HUB_MEMBER);
+    await deletePost(spacePostId, TestUser.HUB_MEMBER);
     const postsData = await postDataPerSpaceCallout(
       entitiesId.spaceId,
       entitiesId.space.calloutId
@@ -363,7 +363,7 @@ describe('Posts - Delete', () => {
 
   test('HM should delete post created on space callout from EM', async () => {
     // Arrange
-    const resPostonSpace = await createPostOnCalloutCodegen(
+    const resPostonSpace = await createPostOnCallout(
       entitiesId.space.calloutId,
       { displayName: postDisplayName },
       postNameID,
@@ -373,7 +373,7 @@ describe('Posts - Delete', () => {
       resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
 
     // Act
-    await deletePostCodegen(spacePostId, TestUser.GLOBAL_ADMIN);
+    await deletePost(spacePostId, TestUser.GLOBAL_ADMIN);
     const postsData = await postDataPerSpaceCallout(
       entitiesId.spaceId,
       entitiesId.space.calloutId
@@ -384,7 +384,7 @@ describe('Posts - Delete', () => {
 
   test('NON-EM should NOT delete post created on space callout created from HM', async () => {
     // Arrange
-    const resPostonSpace = await createPostOnCalloutCodegen(
+    const resPostonSpace = await createPostOnCallout(
       entitiesId.space.calloutId,
       { displayName: postDisplayName },
       postNameID,
@@ -395,7 +395,7 @@ describe('Posts - Delete', () => {
       resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
 
     // Act
-    const responseRemove = await deletePostCodegen(
+    const responseRemove = await deletePost(
       spacePostId,
       TestUser.NON_HUB_MEMBER
     );
@@ -407,12 +407,12 @@ describe('Posts - Delete', () => {
     // Assert
     expect(responseRemove.error?.errors[0].code).toContain('FORBIDDEN_POLICY');
     expect(postsData).toHaveLength(1);
-    await deletePostCodegen(spacePostId);
+    await deletePost(spacePostId);
   });
 
   test('ChA should delete post created on challenge callout from GA', async () => {
     // Arrange
-    const resPostonChallenge = await createPostOnCalloutCodegen(
+    const resPostonChallenge = await createPostOnCallout(
       entitiesId.challenge.calloutId,
       { displayName: postDisplayName + 'ch' },
       postNameID + 'ch'
@@ -421,8 +421,8 @@ describe('Posts - Delete', () => {
       resPostonChallenge.data?.createContributionOnCallout.post?.id ?? '';
 
     // Act
-    await deletePostCodegen(challengePostId, TestUser.CHALLENGE_ADMIN);
-    const data = await getPostDataCodegen(challengePostId);
+    await deletePost(challengePostId, TestUser.CHALLENGE_ADMIN);
+    const data = await getPostData(challengePostId);
 
     // Assert
     expect(data.error?.errors[0].message).toEqual(
@@ -432,7 +432,7 @@ describe('Posts - Delete', () => {
 
   test('HA should delete post created on challenge callout from ChA', async () => {
     // Arrange
-    const resPostonChallenge = await createPostOnCalloutCodegen(
+    const resPostonChallenge = await createPostOnCallout(
       entitiesId.challenge.calloutId,
       { displayName: postDisplayName + 'ch' },
       postNameID + 'ch',
@@ -443,8 +443,8 @@ describe('Posts - Delete', () => {
       resPostonChallenge.data?.createContributionOnCallout.post?.id ?? '';
 
     // Act
-    await deletePostCodegen(challengePostId, TestUser.HUB_ADMIN);
-    const data = await getPostDataCodegen(challengePostId);
+    await deletePost(challengePostId, TestUser.HUB_ADMIN);
+    const data = await getPostData(challengePostId);
 
     // Assert
     expect(data.error?.errors[0].message).toEqual(
@@ -454,7 +454,7 @@ describe('Posts - Delete', () => {
 
   test('ChA should delete post created on opportunity callout from OM', async () => {
     // Act
-    const resPostonOpportunity = await createPostOnCalloutCodegen(
+    const resPostonOpportunity = await createPostOnCallout(
       entitiesId.opportunity.calloutId,
       { displayName: postDisplayName + 'opm' },
       postNameID + 'opm',
@@ -464,8 +464,8 @@ describe('Posts - Delete', () => {
       resPostonOpportunity.data?.createContributionOnCallout.post?.id ?? '';
 
     // Act
-    await deletePostCodegen(opportunityPostId, TestUser.CHALLENGE_ADMIN);
-    const data = await getPostDataCodegen(opportunityPostId);
+    await deletePost(opportunityPostId, TestUser.CHALLENGE_ADMIN);
+    const data = await getPostData(opportunityPostId);
 
     // Assert
     expect(data.error?.errors[0].message).toEqual(
@@ -475,7 +475,7 @@ describe('Posts - Delete', () => {
 
   test('ChM should not delete post created on challenge callout from ChA', async () => {
     // Arrange
-    const resPostonChallenge = await createPostOnCalloutCodegen(
+    const resPostonChallenge = await createPostOnCallout(
       entitiesId.challenge.calloutId,
       { displayName: postDisplayName + 'ch' },
       postNameID + 'ch',
@@ -486,24 +486,24 @@ describe('Posts - Delete', () => {
       resPostonChallenge.data?.createContributionOnCallout.post?.id ?? '';
 
     // Act
-    const responseRemove = await deletePostCodegen(
+    const responseRemove = await deletePost(
       challengePostId,
       TestUser.CHALLENGE_MEMBER
     );
 
-    const dataPost = await getPostDataCodegen(challengePostId);
+    const dataPost = await getPostData(challengePostId);
 
     // // Assert
     expect(responseRemove?.error?.errors[0].message).toContain(
       `Authorization: unable to grant 'delete' privilege: delete post: ${dataPost?.data?.lookup?.post?.id}`
     );
     expect(dataPost?.data?.lookup?.post?.id).toEqual(challengePostId);
-    await deletePostCodegen(challengePostId);
+    await deletePost(challengePostId);
   });
 
   test('OM should delete own post on opportunity callout', async () => {
     // Act
-    const resPostonOpportunity = await createPostOnCalloutCodegen(
+    const resPostonOpportunity = await createPostOnCallout(
       entitiesId.opportunity.calloutId,
       { displayName: postDisplayName + 'ch' },
       postNameID + 'op',
@@ -513,8 +513,8 @@ describe('Posts - Delete', () => {
       resPostonOpportunity.data?.createContributionOnCallout.post?.id ?? '';
 
     // Act
-    await deletePostCodegen(opportunityPostId, TestUser.OPPORTUNITY_MEMBER);
-    const data = await getPostDataCodegen(opportunityPostId);
+    await deletePost(opportunityPostId, TestUser.OPPORTUNITY_MEMBER);
+    const data = await getPostData(opportunityPostId);
 
     // Assert
     expect(data.error?.errors[0].message).toEqual(
@@ -524,7 +524,7 @@ describe('Posts - Delete', () => {
 
   test('GA should delete own post on opportunity callout', async () => {
     // Act
-    const resPostonOpportunity = await createPostOnCalloutCodegen(
+    const resPostonOpportunity = await createPostOnCallout(
       entitiesId.opportunity.calloutId,
       { displayName: postDisplayName + 'ch' },
       postNameID + 'op',
@@ -534,8 +534,8 @@ describe('Posts - Delete', () => {
       resPostonOpportunity.data?.createContributionOnCallout.post?.id ?? '';
 
     // Act
-    await deletePostCodegen(opportunityPostId, TestUser.GLOBAL_ADMIN);
-    const data = await getPostDataCodegen(opportunityPostId);
+    await deletePost(opportunityPostId, TestUser.GLOBAL_ADMIN);
+    const data = await getPostData(opportunityPostId);
 
     // Assert
     expect(data.error?.errors[0].message).toEqual(
@@ -547,7 +547,7 @@ describe('Posts - Delete', () => {
 describe('Posts - Messages', () => {
   describe('Send Message - Post created by GA on Space callout', () => {
     beforeAll(async () => {
-      const resPostonSpace = await createPostOnCalloutCodegen(
+      const resPostonSpace = await createPostOnCallout(
         entitiesId.space.calloutId,
         { displayName: `asp-nspace-mess-${uniqueId}` },
         `asp-dspace-mess-${uniqueId}`
@@ -559,7 +559,7 @@ describe('Posts - Messages', () => {
         resPostonSpace.data?.createContributionOnCallout.post?.comments.id ??
         '';
 
-      const resPostonChallenge = await createPostOnCalloutCodegen(
+      const resPostonChallenge = await createPostOnCallout(
         entitiesId.challenge.calloutId,
         { displayName: `asp-nchal-mess-${uniqueId}` },
         `asp-dchal-mess-${uniqueId}`
@@ -573,13 +573,13 @@ describe('Posts - Messages', () => {
     });
 
     afterAll(async () => {
-      await deletePostCodegen(spacePostId);
-      await deletePostCodegen(challengePostId);
+      await deletePost(spacePostId);
+      await deletePost(challengePostId);
     });
 
     afterEach(async () => {
       await delay(3000);
-      await removeMessageOnRoomCodegen(
+      await removeMessageOnRoom(
         postCommentsIdSpace,
         msessageId,
         TestUser.GLOBAL_ADMIN
@@ -588,13 +588,13 @@ describe('Posts - Messages', () => {
 
     test('ChA should send comment on post created on challenge callout from GA', async () => {
       // Arrange
-      const messageRes = await sendMessageToRoomCodegen(
+      const messageRes = await sendMessageToRoom(
         postCommentsIdChallenge,
         'test message on challenge post',
         TestUser.CHALLENGE_ADMIN
       );
       msessageId = messageRes?.data?.sendMessageToRoom.id;
-      const postsData = await getPostDataCodegen(challengePostId);
+      const postsData = await getPostData(challengePostId);
 
       // Assert
       expect(postsData.data?.lookup.post?.comments).toEqual({
@@ -612,13 +612,13 @@ describe('Posts - Messages', () => {
 
     test('HM should send comment on post created on space callout from GA', async () => {
       // Arrange
-      const messageRes = await sendMessageToRoomCodegen(
+      const messageRes = await sendMessageToRoom(
         postCommentsIdSpace,
         'test message',
         TestUser.HUB_MEMBER
       );
       msessageId = messageRes?.data?.sendMessageToRoom.id;
-      const postsData = await getPostDataCodegen(spacePostId);
+      const postsData = await getPostData(spacePostId);
 
       // Assert
       expect(postsData.data?.lookup.post?.comments).toEqual({
@@ -636,7 +636,7 @@ describe('Posts - Messages', () => {
 
     test('NON-HM should NOT send comment on post created on space callout from GA', async () => {
       // Arrange
-      const messageRes = await sendMessageToRoomCodegen(
+      const messageRes = await sendMessageToRoom(
         postCommentsIdSpace,
         'test message',
         TestUser.NON_HUB_MEMBER
@@ -650,13 +650,13 @@ describe('Posts - Messages', () => {
     describe('Messages - GA Send/Remove flow', () => {
       test('GA should send comment on post created on space callout from GA', async () => {
         // Act
-        const messageRes = await sendMessageToRoomCodegen(
+        const messageRes = await sendMessageToRoom(
           postCommentsIdSpace,
           'test message',
           TestUser.GLOBAL_ADMIN
         );
         msessageId = messageRes?.data?.sendMessageToRoom.id;
-        const postsData = await getPostDataCodegen(spacePostId);
+        const postsData = await getPostData(spacePostId);
 
         // Assert
         expect(postsData.data?.lookup.post?.comments).toEqual({
@@ -674,12 +674,12 @@ describe('Posts - Messages', () => {
 
       test('GA should remove comment on post created on space callout from GA', async () => {
         // Act
-        await removeMessageOnRoomCodegen(
+        await removeMessageOnRoom(
           postCommentsIdSpace,
           msessageId,
           TestUser.GLOBAL_ADMIN
         );
-        const postsData = await getPostDataCodegen(spacePostId);
+        const postsData = await getPostData(spacePostId);
 
         // Assert
         expect(postsData.data?.lookup.post?.comments.messages).toHaveLength(0);
@@ -688,7 +688,7 @@ describe('Posts - Messages', () => {
   });
   describe('Delete Message - Post created by HM on Space callout', () => {
     beforeAll(async () => {
-      const resPostonSpace = await createPostOnCalloutCodegen(
+      const resPostonSpace = await createPostOnCallout(
         entitiesId.space.calloutId,
         { displayName: `em-asp-d-space-mess-${uniqueId}` },
         `em-asp-n-spa-mess-${uniqueId}`,
@@ -700,7 +700,7 @@ describe('Posts - Messages', () => {
         resPostonSpace.data?.createContributionOnCallout.post?.comments.id ??
         '';
 
-      const messageRes = await sendMessageToRoomCodegen(
+      const messageRes = await sendMessageToRoom(
         postCommentsIdSpace,
         'test message',
         TestUser.GLOBAL_ADMIN
@@ -711,12 +711,12 @@ describe('Posts - Messages', () => {
     });
 
     afterAll(async () => {
-      await deletePostCodegen(spacePostId);
+      await deletePost(spacePostId);
     });
 
     test('HM should NOT delete comment sent from GA', async () => {
       // Act
-      const removeMessageRes = await removeMessageOnRoomCodegen(
+      const removeMessageRes = await removeMessageOnRoom(
         postCommentsIdSpace,
         msessageId,
         TestUser.HUB_MEMBER
@@ -730,7 +730,7 @@ describe('Posts - Messages', () => {
 
     test('NON-HM should NOT delete comment sent from GA', async () => {
       // Act
-      const removeMessageRes = await removeMessageOnRoomCodegen(
+      const removeMessageRes = await removeMessageOnRoom(
         postCommentsIdSpace,
         msessageId,
         TestUser.NON_HUB_MEMBER
@@ -744,19 +744,19 @@ describe('Posts - Messages', () => {
 
     test('GA should remove comment sent from GA', async () => {
       // Act
-      await removeMessageOnRoomCodegen(
+      await removeMessageOnRoom(
         postCommentsIdSpace,
         msessageId,
         TestUser.GLOBAL_ADMIN
       );
-      const postsData = await getPostDataCodegen(spacePostId);
+      const postsData = await getPostData(spacePostId);
 
       // Assert
       expect(postsData.data?.lookup.post?.comments.messages).toHaveLength(0);
     });
 
     test('HM should delete own comment', async () => {
-      const messageRes = await sendMessageToRoomCodegen(
+      const messageRes = await sendMessageToRoom(
         postCommentsIdSpace,
         'test message',
         TestUser.HUB_MEMBER
@@ -766,12 +766,12 @@ describe('Posts - Messages', () => {
       await delay(1000);
 
       // Act
-      await removeMessageOnRoomCodegen(
+      await removeMessageOnRoom(
         postCommentsIdSpace,
         msessageId,
         TestUser.HUB_MEMBER
       );
-      const postsData = await getPostDataCodegen(spacePostId);
+      const postsData = await getPostData(spacePostId);
 
       // Assert
       expect(postsData.data?.lookup.post?.comments.messages).toHaveLength(0);
@@ -785,7 +785,7 @@ describe('Posts - References', () => {
   let postProfileId = '';
 
   beforeAll(async () => {
-    const resPostonSpace = await createPostOnCalloutCodegen(
+    const resPostonSpace = await createPostOnCallout(
       entitiesId.space.calloutId,
 
       { displayName: 'test' },
@@ -798,12 +798,12 @@ describe('Posts - References', () => {
   });
 
   afterAll(async () => {
-    await deletePostCodegen(spacePostId);
+    await deletePost(spacePostId);
   });
 
   test('HM should NOT add reference to post created on space callout from GA', async () => {
     // Arrange
-    const createRef = await createReferenceOnProfileCodegen(
+    const createRef = await createReferenceOnProfile(
       postProfileId,
       refname,
       TestUser.HUB_MEMBER
@@ -817,7 +817,7 @@ describe('Posts - References', () => {
 
   test('NON-HM should NOT add reference to post created on space callout from GA', async () => {
     // Arrange
-    const createRef = await createReferenceOnProfileCodegen(
+    const createRef = await createReferenceOnProfile(
       postProfileId,
       refname,
       TestUser.NON_HUB_MEMBER
@@ -832,7 +832,7 @@ describe('Posts - References', () => {
   describe('References - EA Create/Remove flow', () => {
     test('HA should add reference to post created on space callout from GA', async () => {
       // Arrange
-      const createRef = await createReferenceOnProfileCodegen(
+      const createRef = await createReferenceOnProfile(
         postProfileId,
         refname,
         TestUser.HUB_ADMIN
@@ -840,7 +840,7 @@ describe('Posts - References', () => {
       refId = createRef?.data?.createReferenceOnProfile.id ?? '';
 
       // Act
-      const postsData = await getPostDataCodegen(spacePostId);
+      const postsData = await getPostData(spacePostId);
 
       // Assert
       expect(
@@ -853,10 +853,10 @@ describe('Posts - References', () => {
 
     test('HA should remove reference from post created EA', async () => {
       // Arrange
-      await deleteReferenceOnProfileCodegen(refId, TestUser.HUB_ADMIN);
+      await deleteReferenceOnProfile(refId, TestUser.HUB_ADMIN);
 
       // Act
-      const postsData = await getPostDataCodegen(spacePostId);
+      const postsData = await getPostData(spacePostId);
 
       // Assert
       expect(postsData.data?.lookup.post?.profile.references).toHaveLength(0);

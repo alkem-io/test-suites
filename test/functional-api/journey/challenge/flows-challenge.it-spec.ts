@@ -41,7 +41,7 @@ afterAll(async () => {
 beforeEach(async () => {
   challengeName = `fl-ch-dname-${uniqueId}`;
 
-  const responseCreateChallenge = await createSubspaceCodegen(
+  const responseCreateChallenge = await createSubspace(
     challengeName,
     uniqueId,
     entitiesId.spaceId
@@ -57,7 +57,7 @@ describe('Flows challenge', () => {
   // ToDo - update test - failing when run in parallel with other suites
   test.skip('should not result unassigned users to a challenge', async () => {
     // Act
-    const responseGroupQuery = await getSubspaceDataCodegen(
+    const responseGroupQuery = await getSubspaceData(
       entitiesId.spaceId,
       challengeId
     );
@@ -76,7 +76,7 @@ describe('Flows challenge', () => {
   test('should  modify challenge name to allready existing challenge name and/or textId', async () => {
     // Arrange
     // Create second challenge and get its id and name
-    const responseSecondChallenge = await createSubspaceCodegen(
+    const responseSecondChallenge = await createSubspace(
       challengeName + challengeName,
       uniqueId + uniqueId,
       entitiesId.spaceId
@@ -108,7 +108,7 @@ describe('Flows challenge', () => {
   test('should creating 2 challenges with same name', async () => {
     // Act
     // Create second challenge with same name
-    const response = await createSubspaceCodegen(
+    const response = await createSubspace(
       challengeName,
       `${uniqueId}-2`,
       entitiesId.spaceId
@@ -124,7 +124,7 @@ describe('Flows challenge', () => {
   test('should throw error - creating 2 challenges with different name and same nameId', async () => {
     // Act
     // Create second challenge with same textId
-    const response = await createSubspaceCodegen(
+    const response = await createSubspace(
       challengeName + challengeName,
       uniqueId,
       entitiesId.spaceId

@@ -27,7 +27,7 @@ afterAll(async () => {
 describe('myPrivileges User', () => {
   test('GlobalCommunityAdmin privileges to other User', async () => {
     // Act
-    const response = await getUserDataCodegen(
+    const response = await getUserData(
       userEmail,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
@@ -39,7 +39,7 @@ describe('myPrivileges User', () => {
 
   test('GlobalCommunityAdmin privileges to other User / Profile', async () => {
     // Act
-    const response = await getUserDataCodegen(
+    const response = await getUserData(
       userEmail,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
@@ -52,7 +52,7 @@ describe('myPrivileges User', () => {
 
   test('GlobalCommunityAdmin privileges to other User / References', async () => {
     // Act
-    const response = await getUserDataCodegen(
+    const response = await getUserData(
       userEmail,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
@@ -66,7 +66,7 @@ describe('myPrivileges User', () => {
 
   test('GlobalCommunityAdmin privileges to other User / Tagsets', async () => {
     // Act
-    const response = await getUserDataCodegen(
+    const response = await getUserData(
       userEmail,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
@@ -80,7 +80,7 @@ describe('myPrivileges User', () => {
 
   test('RegisteredUser privileges to my User / Preferences', async () => {
     // Act
-    const response = await getUserDataCodegen(
+    const response = await getUserData(
       userEmail,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );

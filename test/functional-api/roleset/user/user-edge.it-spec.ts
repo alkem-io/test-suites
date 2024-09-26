@@ -365,7 +365,7 @@ describe('Assign / Remove users to community', () => {
 
 describe('Assign different users as lead to same community', () => {
   beforeAll(async () => {
-    await assignUsersToSpaceAndOrgAsMembersCodegen();
+    await assignUsersToSpaceAndOrgAsMembers();
     await assignUsersToChallengeAsMembers();
     await assignUsersToOpportunityAsMembers();
 

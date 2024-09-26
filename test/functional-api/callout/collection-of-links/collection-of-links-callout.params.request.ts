@@ -3,7 +3,7 @@ import { TestUser } from '@test/utils';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 
-export const createLinkCollectionCalloutCodegen = async (
+export const createLinkCollectionCallout = async (
   collaborationID: string,
   nameID: string,
   displayName: string,
@@ -35,7 +35,7 @@ export const createLinkCollectionCalloutCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const createLinkOnCalloutCodegen = async (
+export const createLinkOnCallout = async (
   calloutID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {

@@ -30,7 +30,7 @@ afterAll(async () => {
 describe('myPrivileges', () => {
   test('RegisteredUser privileges to Organization', async () => {
     // Act
-    const response = await getOrganizationDataCodegen(
+    const response = await getOrganizationData(
       entitiesId.organization.id,
       TestUser.NON_HUB_MEMBER
     );
@@ -42,7 +42,7 @@ describe('myPrivileges', () => {
 
   test('RegisteredUser privileges to Organization / Verification', async () => {
     // Act
-    const response = await getOrganizationDataCodegen(
+    const response = await getOrganizationData(
       entitiesId.organization.id,
       TestUser.NON_HUB_MEMBER
     );
@@ -56,7 +56,7 @@ describe('myPrivileges', () => {
 
   test('RegisteredUser privileges to Organization / Profile', async () => {
     // Act
-    const response = await getOrganizationDataCodegen(
+    const response = await getOrganizationData(
       entitiesId.organization.id,
       TestUser.NON_HUB_MEMBER
     );
@@ -69,7 +69,7 @@ describe('myPrivileges', () => {
 
   test('RegisteredUser privileges to Organization / Profile / References', async () => {
     // Act
-    const response = await getOrganizationDataCodegen(
+    const response = await getOrganizationData(
       entitiesId.organization.id,
       TestUser.NON_HUB_MEMBER
     );
@@ -83,7 +83,7 @@ describe('myPrivileges', () => {
 
   test('RegisteredUser privileges to Organization / Profile / Tagsets', async () => {
     // Act
-    const response = await getOrganizationDataCodegen(
+    const response = await getOrganizationData(
       entitiesId.organization.id,
       TestUser.NON_HUB_MEMBER
     );
@@ -96,7 +96,7 @@ describe('myPrivileges', () => {
   });
   test('RegisteredUser privileges to Organization / Preferences', async () => {
     // Act
-    const response = await getOrganizationDataCodegen(
+    const response = await getOrganizationData(
       entitiesId.organization.id,
       TestUser.NON_HUB_MEMBER
     );

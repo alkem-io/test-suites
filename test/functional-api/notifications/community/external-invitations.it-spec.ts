@@ -94,23 +94,23 @@ afterAll(async () => {
 
 describe('Notifications - invitations', () => {
   beforeAll(async () => {
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.notificationsAdmin.id,
       UserPreferenceType.NotificationCommunityInvitationUser,
       'false'
     );
 
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationCommunityInvitationUser,
       'false'
     );
     for (const config of preferencesConfig)
-      await changePreferenceUserCodegen(config.userID, config.type, 'true');
+      await changePreferenceUser(config.userID, config.type, 'true');
   });
 
   afterEach(async () => {
-    await deleteExternalInvitationCodegen(invitationId);
+    await deleteExternalInvitation(invitationId);
   });
 
   beforeEach(async () => {

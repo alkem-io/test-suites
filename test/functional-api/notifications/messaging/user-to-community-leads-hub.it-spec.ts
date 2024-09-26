@@ -70,7 +70,7 @@ beforeAll(async () => {
     CommunityRoleType.Lead
   );
 
-  await assignUserAsOrganizationAdminCodegen(
+  await assignUserAsOrganizationAdmin(
     users.spaceAdmin.id,
     entitiesId.organization.id
   );
@@ -96,7 +96,7 @@ describe('Notifications - send messages to Private space hosts', () => {
   describe('Notifications - hosts (COMMUNICATION_MESSAGE pref: enabled)', () => {
     beforeAll(async () => {
       for (const config of preferencesConfig)
-        await changePreferenceUserCodegen(config.userID, config.type, 'true');
+        await changePreferenceUser(config.userID, config.type, 'true');
 
       await updateSpaceSettings(entitiesId.spaceId, {
         privacy: {
@@ -111,7 +111,7 @@ describe('Notifications - send messages to Private space hosts', () => {
 
     test('NOT space member sends message to Space community (2 hosts) - 3 messages sent', async () => {
       // Act
-      await sendMessageToCommunityLeadsCodegen(
+      await sendMessageToCommunityLeads(
         entitiesId.space.communityId,
         'Test message',
         TestUser.NON_HUB_MEMBER
@@ -143,7 +143,7 @@ describe('Notifications - send messages to Private space hosts', () => {
 
     test('Space member send message to Space community (2 hosts) - 3 messages sent', async () => {
       // Act
-      await sendMessageToCommunityLeadsCodegen(
+      await sendMessageToCommunityLeads(
         entitiesId.space.communityId,
         'Test message',
         TestUser.CHALLENGE_MEMBER
@@ -176,7 +176,7 @@ describe('Notifications - send messages to Private space hosts', () => {
   describe('Notifications - hosts (COMMUNICATION_MESSAGE pref: disabled)', () => {
     beforeAll(async () => {
       for (const config of preferencesConfig)
-        await changePreferenceUserCodegen(config.userID, config.type, 'false');
+        await changePreferenceUser(config.userID, config.type, 'false');
     });
 
     beforeEach(async () => {
@@ -185,7 +185,7 @@ describe('Notifications - send messages to Private space hosts', () => {
 
     test('NOT space member sends message to Space community (2 hosts) - 3 messages sent', async () => {
       // Act
-      await sendMessageToCommunityLeadsCodegen(
+      await sendMessageToCommunityLeads(
         entitiesId.space.communityId,
         'Test message',
         TestUser.NON_HUB_MEMBER
@@ -216,7 +216,7 @@ describe('Notifications - send messages to Private space hosts', () => {
 
     test('Space member send message to Space community (2 hosts) - 3 messages sent', async () => {
       // Act
-      await sendMessageToCommunityLeadsCodegen(
+      await sendMessageToCommunityLeads(
         entitiesId.space.communityId,
         'Test message',
         TestUser.CHALLENGE_MEMBER
@@ -257,7 +257,7 @@ describe('Notifications - messages to Public space hosts', () => {
   describe('Notifications - hosts (COMMUNICATION_MESSAGE pref: enabled)', () => {
     beforeAll(async () => {
       for (const config of preferencesConfig)
-        await changePreferenceUserCodegen(config.userID, config.type, 'true');
+        await changePreferenceUser(config.userID, config.type, 'true');
     });
 
     beforeEach(async () => {
@@ -266,7 +266,7 @@ describe('Notifications - messages to Public space hosts', () => {
 
     test('NOT space member sends message to Space community (2 hosts) - 3 messages sent', async () => {
       // Act
-      await sendMessageToCommunityLeadsCodegen(
+      await sendMessageToCommunityLeads(
         entitiesId.space.communityId,
         'Test message',
         TestUser.NON_HUB_MEMBER
@@ -297,7 +297,7 @@ describe('Notifications - messages to Public space hosts', () => {
 
     test('Space member send message to Space community (2 hosts) - 3 messages sent', async () => {
       // Act
-      await sendMessageToCommunityLeadsCodegen(
+      await sendMessageToCommunityLeads(
         entitiesId.space.communityId,
         'Test message',
         TestUser.CHALLENGE_MEMBER
@@ -330,7 +330,7 @@ describe('Notifications - messages to Public space hosts', () => {
   describe('Notifications - hosts (COMMUNICATION_MESSAGE pref: disabled)', () => {
     beforeAll(async () => {
       for (const config of preferencesConfig)
-        await changePreferenceUserCodegen(config.userID, config.type, 'false');
+        await changePreferenceUser(config.userID, config.type, 'false');
     });
 
     beforeEach(async () => {
@@ -339,7 +339,7 @@ describe('Notifications - messages to Public space hosts', () => {
 
     test('NOT space member sends message to Space community (2 hosts) - 3 messages sent', async () => {
       // Act
-      await sendMessageToCommunityLeadsCodegen(
+      await sendMessageToCommunityLeads(
         entitiesId.space.communityId,
         'Test message',
         TestUser.NON_HUB_MEMBER
@@ -370,7 +370,7 @@ describe('Notifications - messages to Public space hosts', () => {
 
     test('Space member send message to Space community (2 hosts) - 3 messages sent', async () => {
       // Act
-      await sendMessageToCommunityLeadsCodegen(
+      await sendMessageToCommunityLeads(
         entitiesId.space.communityId,
         'Test message',
         TestUser.CHALLENGE_MEMBER
@@ -427,7 +427,7 @@ describe('Notifications - messages to Public space NO hosts', () => {
 
   test('NOT space member sends message to Space community (0 hosts) - 1 messages sent', async () => {
     // Act
-    await sendMessageToCommunityLeadsCodegen(
+    await sendMessageToCommunityLeads(
       entitiesId.space.communityId,
       'Test message',
       TestUser.NON_HUB_MEMBER
@@ -450,7 +450,7 @@ describe('Notifications - messages to Public space NO hosts', () => {
 
   test('Space member send message to Space community (0 hosts) - 1 messages sent', async () => {
     // Act
-    await sendMessageToCommunityLeadsCodegen(
+    await sendMessageToCommunityLeads(
       entitiesId.space.communityId,
       'Test message',
       TestUser.QA_USER

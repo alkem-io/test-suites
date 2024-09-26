@@ -115,13 +115,13 @@ afterAll(async () => {
 // Skip until clear the behavior
 describe('Notifications - member join community', () => {
   beforeAll(async () => {
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.notificationsAdmin.id,
       UserPreferenceType.NotificationCommunityNewMemberAdmin,
       'false'
     );
     for (const config of preferencesConfig) {
-      await changePreferenceUserCodegen(config.userID, config.type, 'true');
+      await changePreferenceUser(config.userID, config.type, 'true');
     }
   });
 
@@ -220,7 +220,7 @@ describe('Notifications - member join community', () => {
     // Arrange
     preferencesConfig.forEach(
       async config =>
-        await changePreferenceUserCodegen(config.userID, config.type, 'false')
+        await changePreferenceUser(config.userID, config.type, 'false')
     );
 
     await removeRoleFromUser(

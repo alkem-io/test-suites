@@ -94,27 +94,27 @@ afterAll(async () => {
 
 describe('Notifications - invitations', () => {
   beforeAll(async () => {
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.notificationsAdmin.id,
       UserPreferenceType.NotificationCommunityInvitationUser,
       'false'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationCommunityInvitationUser,
       'false'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.globalAdmin.id,
       UserPreferenceType.NotificationCommunityInvitationUser,
       'false'
     );
     for (const config of preferencesConfig)
-      await changePreferenceUserCodegen(config.userID, config.type, 'true');
+      await changePreferenceUser(config.userID, config.type, 'true');
   });
 
   afterEach(async () => {
-    await deleteInvitationCodegen(invitationId);
+    await deleteInvitation(invitationId);
   });
 
   beforeEach(async () => {
@@ -273,7 +273,7 @@ describe('Notifications - invitations', () => {
   });
   test("non space user doesn't receive invitation for SPACE community from space admin", async () => {
     // Arrange
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.nonSpaceMember.id,
       UserPreferenceType.NotificationCommunityInvitationUser,
       'false'

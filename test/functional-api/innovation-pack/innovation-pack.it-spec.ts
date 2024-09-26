@@ -29,7 +29,7 @@ describe('Organization', () => {
 
   describe('Innovation pack library', () => {
     test('Create', async () => {
-      const packData = await createInnovationPackOnLibraryCodegen(
+      const packData = await createInnovationPackOnLibrary(
         packName,
         packNameId,
         orgId
@@ -37,37 +37,37 @@ describe('Organization', () => {
       const templateSetId =
         packData?.data?.createInnovationPack?.templatesSet?.id ?? '';
 
-      await createWhiteboardTemplateCodegen(
+      await createWhiteboardTemplate(
         templateSetId,
         whiteboardTemplateTitle,
         whiteboardTemplateValues1
       );
 
-      await createWhiteboardTemplateCodegen(
+      await createWhiteboardTemplate(
         templateSetId,
         whiteboardTemplateTitle,
         whiteboardTemplateValues2
       );
 
-      await createWhiteboardTemplateCodegen(
+      await createWhiteboardTemplate(
         templateSetId,
         whiteboardTemplateTitle,
         whiteboardTemplateValues3
       );
 
-      await createWhiteboardTemplateCodegen(
+      await createWhiteboardTemplate(
         templateSetId,
         whiteboardTemplateTitle,
         whiteboardTemplateValues4
       );
 
-      await createWhiteboardTemplateCodegen(
+      await createWhiteboardTemplate(
         templateSetId,
         whiteboardTemplateTitle,
         whiteboardTemplateValues5
       );
 
-      await createWhiteboardTemplateCodegen(
+      await createWhiteboardTemplate(
         templateSetId,
         whiteboardTemplateTitle,
         whiteboardTemplateValues6

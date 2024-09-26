@@ -2,23 +2,20 @@
 /* eslint-disable quotes */
 import { TestUser } from '@test/utils/token.helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { changePreferenceOrganizationCodegen } from '@test/utils/mutations/preferences-mutation';
-import { assignUserAsOrganizationOwner } from '@test/utils/mutations/authorization-mutation';
 import {
   deleteUser,
   registerVerifiedUser,
 } from '@test/functional-api/contributor-management/user/user.request.params';
-import { eventOnOrganizationVerificationCodegen } from '@test/functional-api/templates/lifecycle/innovation-flow.request.params';
 import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import { users } from '@test/utils/queries/users-data';
 import { createOrgAndSpaceWithUsers } from '@test/utils/data-setup/entities';
-import {
-  deleteOrganization,
-  getOrganizationDataCodegen,
-  updateOrganizationCodegen,
-} from '../organization/organization.request.params';
+
 import { OrganizationPreferenceType } from '@alkemio/client-lib';
 import { entitiesId } from '../../types/entities-helper';
+import { assignUserAsOrganizationOwner } from '@test/utils/mutations/authorization-organization-mutation';
+import { deleteOrganization, getOrganizationData, updateOrganization } from '../contributor-management/organization/organization.request.params';
+import { changePreferenceOrganization } from '@test/utils/mutations/preferences-mutation';
+import { eventOnOrganizationVerification } from '../contributor-management/organization/organization-verification.events.request.params';
 
 const organizationName = 'h-pref-org-name' + uniqueId;
 const hostNameId = 'h-pref-org-nameid' + uniqueId;
@@ -37,7 +34,7 @@ beforeAll(async () => {
     spaceNameId
   );
 
-  await updateOrganizationCodegen(entitiesId.organization.id, {
+  await updateOrganization(entitiesId.organization.id, {
     profileData: {
       displayName: organizationName,
     },
@@ -73,7 +70,7 @@ describe('Organization preferences', () => {
       'User: "$userRole" get message: "$message", when intend to update organization preference ',
       async ({ userRole, message }) => {
         // Act
-        const res = await changePreferenceOrganizationCodegen(
+        const res = await changePreferenceOrganization(
           entitiesId.organization.id,
           OrganizationPreferenceType.AuthorizationOrganizationMatchDomain,
           'false',
@@ -97,7 +94,7 @@ describe('Organization preferences', () => {
       'User: "$userRole" get message: "$message", when intend to update organization preference ',
       async ({ userRole, message }) => {
         // Act
-        const res = await changePreferenceOrganizationCodegen(
+        const res = await changePreferenceOrganization(
           entitiesId.organization.id,
           OrganizationPreferenceType.AuthorizationOrganizationMatchDomain,
           'false',
@@ -116,7 +113,7 @@ describe('Organization preferences', () => {
     });
     test("don't assign new user to organization,domain preference enabled", async () => {
       // Arrange
-      await changePreferenceOrganizationCodegen(
+      await changePreferenceOrganization(
         entitiesId.organization.id,
         OrganizationPreferenceType.AuthorizationOrganizationMatchDomain,
         'true'
@@ -126,7 +123,7 @@ describe('Organization preferences', () => {
       const email = `enm${uniqueId}@${domain}`;
       userId = await registerVerifiedUser(email, firstName, lastName);
 
-      const organizationData = await getOrganizationDataCodegen(
+      const organizationData = await getOrganizationData(
         entitiesId.organization.id
       );
       const organizationMembers =
@@ -145,7 +142,7 @@ describe('Organization preferences', () => {
 
     test("don't assign new user to organization, domain preference disabled", async () => {
       // Arrange
-      await changePreferenceOrganizationCodegen(
+      await changePreferenceOrganization(
         entitiesId.organization.id,
         OrganizationPreferenceType.AuthorizationOrganizationMatchDomain,
         'false'
@@ -155,7 +152,7 @@ describe('Organization preferences', () => {
       const email = `dism${uniqueId}@${domain}`;
       userId = await registerVerifiedUser(email, firstName, lastName);
 
-      const organizationData = await getOrganizationDataCodegen(
+      const organizationData = await getOrganizationData(
         entitiesId.organization.id
       );
       const organizationMembers =
@@ -174,7 +171,7 @@ describe('Organization preferences', () => {
 
     test("don't assign new user with different domain to organization,domain preference enabled", async () => {
       // Arrange
-      await changePreferenceOrganizationCodegen(
+      await changePreferenceOrganization(
         entitiesId.organization.id,
         OrganizationPreferenceType.AuthorizationOrganizationMatchDomain,
         'true'
@@ -184,7 +181,7 @@ describe('Organization preferences', () => {
       const email = `enms${uniqueId}@a${domain}`;
       userId = await registerVerifiedUser(email, firstName, lastName);
 
-      const organizationData = await getOrganizationDataCodegen(
+      const organizationData = await getOrganizationData(
         entitiesId.organization.id
       );
       const organizationMembers =
@@ -205,12 +202,12 @@ describe('Organization preferences', () => {
 
   describe('Verified organization - domain match', () => {
     beforeAll(async () => {
-      await eventOnOrganizationVerificationCodegen(
+      await eventOnOrganizationVerification(
         entitiesId.organization.verificationId,
         'VERIFICATION_REQUEST'
       );
 
-      await eventOnOrganizationVerificationCodegen(
+      await eventOnOrganizationVerification(
         entitiesId.organization.verificationId,
         'MANUALLY_VERIFY'
       );
@@ -221,7 +218,7 @@ describe('Organization preferences', () => {
     });
     test('assign new user to organization,domain preference enabled', async () => {
       // Arrange
-      await changePreferenceOrganizationCodegen(
+      await changePreferenceOrganization(
         entitiesId.organization.id,
         OrganizationPreferenceType.AuthorizationOrganizationMatchDomain,
         'true'
@@ -231,7 +228,7 @@ describe('Organization preferences', () => {
       const email = `en${uniqueId}@${domain}`;
       userId = await registerVerifiedUser(email, firstName, lastName);
 
-      const organizationData = await getOrganizationDataCodegen(
+      const organizationData = await getOrganizationData(
         entitiesId.organization.id
       );
       const organizationMembers =
@@ -250,7 +247,7 @@ describe('Organization preferences', () => {
 
     test("don't assign new user to organization, domain preference disabled", async () => {
       // Arrange
-      await changePreferenceOrganizationCodegen(
+      await changePreferenceOrganization(
         entitiesId.organization.id,
         OrganizationPreferenceType.AuthorizationOrganizationMatchDomain,
         'false'
@@ -260,7 +257,7 @@ describe('Organization preferences', () => {
       const email = `dis${uniqueId}@${domain}`;
       userId = await registerVerifiedUser(email, firstName, lastName);
 
-      const organizationData = await getOrganizationDataCodegen(
+      const organizationData = await getOrganizationData(
         entitiesId.organization.id
       );
       const organizationMembers =
@@ -279,7 +276,7 @@ describe('Organization preferences', () => {
 
     test("don't assign new user with different domain to organization,domain preference enabled", async () => {
       // Arrange
-      await changePreferenceOrganizationCodegen(
+      await changePreferenceOrganization(
         entitiesId.organization.id,
         OrganizationPreferenceType.AuthorizationOrganizationMatchDomain,
         'true'
@@ -289,7 +286,7 @@ describe('Organization preferences', () => {
       const email = `en${uniqueId}@a${domain}`;
       userId = await registerVerifiedUser(email, firstName, lastName);
 
-      const organizationData = await getOrganizationDataCodegen(
+      const organizationData = await getOrganizationData(
         entitiesId.organization.id
       );
       const organizationMembers =

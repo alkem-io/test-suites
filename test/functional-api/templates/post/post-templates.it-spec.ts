@@ -73,14 +73,14 @@ beforeEach(async () => {
 describe('Post templates - CRUD', () => {
   const typeFromSpacetemplate = 'testType';
   afterEach(async () => {
-    await deletePostTemplateCodegen(postTemplateId);
+    await deletePostTemplate(postTemplateId);
   });
   test('Create Post template', async () => {
     // Arrange
     const countBefore = await getPostTemplatesCountForSpace(entitiesId.spaceId);
 
     // Act
-    const resCreatePostTempl = await createPostTemplateCodegen(
+    const resCreatePostTempl = await createPostTemplate(
       entitiesId.space.templateSetId
     );
     const postDataCreate = resCreatePostTempl?.data?.createTemplate;
@@ -102,13 +102,13 @@ describe('Post templates - CRUD', () => {
 
   test('Update Post template', async () => {
     // Arrange
-    const resCreatePostTempl = await createPostTemplateCodegen(
+    const resCreatePostTempl = await createPostTemplate(
       entitiesId.space.templateSetId
     );
     postTemplateId = resCreatePostTempl?.data?.createTemplate.id ?? '';
 
     // Act
-    const resUpdatePostTempl = await updatePostTemplateCodegen(
+    const resUpdatePostTempl = await updatePostTemplate(
       postTemplateId,
       typeFromSpacetemplate + ' - Update'
     );
@@ -131,14 +131,14 @@ describe('Post templates - CRUD', () => {
 
   test('Delete Post template', async () => {
     // Arrange
-    const resCreatePostTempl = await createPostTemplateCodegen(
+    const resCreatePostTempl = await createPostTemplate(
       entitiesId.space.templateSetId
     );
     postTemplateId = resCreatePostTempl?.data?.createTemplate.id ?? '';
     const countBefore = await getPostTemplatesCountForSpace(entitiesId.spaceId);
 
     // Act
-    const remove = await deletePostTemplateCodegen(postTemplateId);
+    const remove = await deletePostTemplate(postTemplateId);
     const countAfter = await getPostTemplatesCountForSpace(entitiesId.spaceId);
 
     // Assert
@@ -149,26 +149,26 @@ describe('Post templates - CRUD', () => {
 
 describe('Post templates - Utilization in posts', () => {
   beforeAll(async () => {
-    const resCreatePostTempl = await createPostTemplateCodegen(
+    const resCreatePostTempl = await createPostTemplate(
       entitiesId.space.templateId
     );
     postTemplateId = resCreatePostTempl?.data?.createTemplate.id ?? '';
   });
 
   afterEach(async () => {
-    await deletePostTemplateCodegen(postTemplateId);
+    await deletePostTemplate(postTemplateId);
   });
 
   describe('Create post on all entities with newly created postTemplate', () => {
     afterAll(async () => {
-      await deletePostCodegen(spacePostId);
-      await deletePostCodegen(challengePostId);
-      await deletePostCodegen(opportunityPostId);
+      await deletePost(spacePostId);
+      await deletePost(challengePostId);
+      await deletePost(opportunityPostId);
     });
 
     test('Create Post on Space', async () => {
       // Act
-      const resPostonSpace = await createPostOnCalloutCodegen(
+      const resPostonSpace = await createPostOnCallout(
         entitiesId.space.calloutId,
         { displayName: `new-temp-d-name-${uniqueId}` },
         `new-temp-n-id-${uniqueId}`
@@ -178,7 +178,7 @@ describe('Post templates - Utilization in posts', () => {
       spacePostId =
         resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
 
-      const postsData = await getDataPerSpaceCalloutCodegen(
+      const postsData = await getDataPerSpaceCallout(
         entitiesId.spaceId,
         entitiesId.space.calloutId
       );
@@ -192,7 +192,7 @@ describe('Post templates - Utilization in posts', () => {
 
     test('Create Post on Challenge', async () => {
       // Act
-      const res = await createPostOnCalloutCodegen(
+      const res = await createPostOnCallout(
         entitiesId.challenge.calloutId,
         { displayName: `new-temp-d-name-${uniqueId}` },
         `new-temp-n-id-${uniqueId}`
@@ -200,7 +200,7 @@ describe('Post templates - Utilization in posts', () => {
       const postDataCreate = res.data?.createContributionOnCallout.post;
       challengePostId = res.data?.createContributionOnCallout.post?.id ?? '';
 
-      const postsData = await getPostDataCodegen(challengePostId);
+      const postsData = await getPostData(challengePostId);
 
       // Assert
       expect(postsData.data?.lookup.post).toEqual(postDataCreate);
@@ -208,7 +208,7 @@ describe('Post templates - Utilization in posts', () => {
 
     test('Create Post on Opportunity', async () => {
       // Act
-      const res = await createPostOnCalloutCodegen(
+      const res = await createPostOnCallout(
         entitiesId.opportunity.calloutId,
         { displayName: `new-temp-d-name-${uniqueId}` },
         `new-temp-n-id-${uniqueId}`
@@ -216,7 +216,7 @@ describe('Post templates - Utilization in posts', () => {
       const postDataCreate = res.data?.createContributionOnCallout.post;
       opportunityPostId = res.data?.createContributionOnCallout.post?.id ?? '';
 
-      const postsData = await getPostDataCodegen(opportunityPostId);
+      const postsData = await getPostData(opportunityPostId);
 
       // Assert
       expect(postsData.data?.lookup.post).toEqual(postDataCreate);
@@ -226,7 +226,7 @@ describe('Post templates - Utilization in posts', () => {
   describe('Update Post template already utilized by an post', () => {
     let postDataCreate: PostDataFragment | undefined;
     beforeAll(async () => {
-      const resPostonSpace = await createPostOnCalloutCodegen(
+      const resPostonSpace = await createPostOnCallout(
         entitiesId.space.calloutId,
         { displayName: `new-asp-d-name-${uniqueId}` },
         `new-asp-n-id-${uniqueId}`
@@ -236,16 +236,16 @@ describe('Post templates - Utilization in posts', () => {
         resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
     });
     afterAll(async () => {
-      await deletePostCodegen(spacePostId);
+      await deletePost(spacePostId);
     });
     test('Create post with existing post template, and update template defaultDescription, doesnt change the post description', async () => {
       // Act
-      await updatePostTemplateCodegen(
+      await updatePostTemplate(
         postTemplateId,
         'update default description - Updated'
       );
 
-      const postsData = await getDataPerSpaceCalloutCodegen(
+      const postsData = await getDataPerSpaceCallout(
         entitiesId.spaceId,
         entitiesId.space.calloutId
       );
@@ -260,13 +260,13 @@ describe('Post templates - Utilization in posts', () => {
     test('Update post to use the new post template type', async () => {
       // Act
 
-      const resPostonSpace = await updatePostCodegen(spacePostId, postNameID, {
+      const resPostonSpace = await updatePost(spacePostId, postNameID, {
         profileData: { displayName: postDisplayName + 'EA update' },
       });
       const postDataUpdate = resPostonSpace.data?.updatePost;
       spacePostId = resPostonSpace.data?.updatePost.id ?? '';
 
-      const postsData = await getDataPerSpaceCalloutCodegen(
+      const postsData = await getDataPerSpaceCallout(
         entitiesId.spaceId,
         entitiesId.space.calloutId
       );
@@ -282,7 +282,7 @@ describe('Post templates - Utilization in posts', () => {
   describe('Remove Post template already utilized by an post', () => {
     let postDataCreate: PostDataFragment | undefined;
     beforeAll(async () => {
-      const resPostonSpace = await createPostOnCalloutCodegen(
+      const resPostonSpace = await createPostOnCallout(
         entitiesId.space.calloutId,
         {
           displayName: postDisplayName + `rem-temp-asp-d-n-${uniqueId}`,
@@ -294,13 +294,13 @@ describe('Post templates - Utilization in posts', () => {
         resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
     });
     afterAll(async () => {
-      await deletePostCodegen(spacePostId);
+      await deletePost(spacePostId);
     });
     test('Create post with existing post template, and remove the post template, doesnt change the post', async () => {
       // Act
-      await deletePostTemplateCodegen(postTemplateId);
+      await deletePostTemplate(postTemplateId);
 
-      const postsData = await getDataPerSpaceCalloutCodegen(
+      const postsData = await getDataPerSpaceCallout(
         entitiesId.spaceId,
         entitiesId.space.calloutId
       );
@@ -322,7 +322,7 @@ describe('Post templates - CRUD Authorization', () => {
     describe('DDT user privileges to create space post template - positive', () => {
       // Arrange
       afterEach(async () => {
-        await deletePostTemplateCodegen(postTemplateId);
+        await deletePostTemplate(postTemplateId);
       });
       test.each`
         userRole
@@ -332,7 +332,7 @@ describe('Post templates - CRUD Authorization', () => {
         'User: "$userRole" get message: "$message", when intend to create space post template ',
         async ({ userRole }) => {
           // Act
-          const resCreatePostTempl = await createPostTemplateCodegen(
+          const resCreatePostTempl = await createPostTemplate(
             entitiesId.space.templateSetId,
             'test default description',
             'test title',
@@ -355,7 +355,7 @@ describe('Post templates - CRUD Authorization', () => {
         'User: "$userRole" get message: "$message", when intend to create space post template ',
         async ({ userRole, message }) => {
           // Act
-          const resCreatePostTempl = await createPostTemplateCodegen(
+          const resCreatePostTempl = await createPostTemplate(
             entitiesId.space.templateSetId,
             'test default description',
             'test title',
@@ -374,13 +374,13 @@ describe('Post templates - CRUD Authorization', () => {
 
   describe('Post templates - Update', () => {
     beforeAll(async () => {
-      const resCreatePostTempl = await createPostTemplateCodegen(
+      const resCreatePostTempl = await createPostTemplate(
         entitiesId.space.templateSetId
       );
       postTemplateId = resCreatePostTempl?.data?.createTemplate.id ?? '';
     });
     afterAll(async () => {
-      await deletePostTemplateCodegen(postTemplateId);
+      await deletePostTemplate(postTemplateId);
     });
     describe('DDT user privileges to update space post template - positive', () => {
       // Arrange
@@ -393,7 +393,7 @@ describe('Post templates - CRUD Authorization', () => {
         'User: "$userRole" get message: "$message", when intend to update space post template ',
         async ({ userRole }) => {
           // Act
-          const resUpdatePostTempl = await updatePostTemplateCodegen(
+          const resUpdatePostTempl = await updatePostTemplate(
             postTemplateId,
             'update default description test',
             'update title',
@@ -416,7 +416,7 @@ describe('Post templates - CRUD Authorization', () => {
         'User: "$userRole" get message: "$message", when intend to update space post template ',
         async ({ userRole, message }) => {
           // Act
-          const resUpdatePostTempl = await updatePostTemplateCodegen(
+          const resUpdatePostTempl = await updatePostTemplate(
             postTemplateId,
             'update default description',
             'update title',
@@ -437,7 +437,7 @@ describe('Post templates - CRUD Authorization', () => {
     describe('DDT user privileges to remove space post template - positive', () => {
       // Arrange
       afterEach(async () => {
-        await deletePostTemplateCodegen(postTemplateId);
+        await deletePostTemplate(postTemplateId);
       });
       test.each`
         userRole
@@ -447,12 +447,12 @@ describe('Post templates - CRUD Authorization', () => {
         'User: "$userRole" get message: "$message", whe intend to remova space post template ',
         async ({ userRole }) => {
           // Act
-          const resCreatePostTempl = await createPostTemplateCodegen(
+          const resCreatePostTempl = await createPostTemplate(
             entitiesId.space.templateSetId
           );
           postTemplateId = resCreatePostTempl?.data?.createTemplate.id ?? '';
 
-          const removeRes = await deletePostTemplateCodegen(
+          const removeRes = await deletePostTemplate(
             postTemplateId,
             userRole
           );
@@ -472,12 +472,12 @@ describe('Post templates - CRUD Authorization', () => {
         'User: "$userRole" get message: "$message", whe intend to remova space post template ',
         async ({ userRole, message }) => {
           // Act
-          const resCreatePostTempl = await createPostTemplateCodegen(
+          const resCreatePostTempl = await createPostTemplate(
             entitiesId.space.templateSetId
           );
           postTemplateId = resCreatePostTempl?.data?.createTemplate.id ?? '';
 
-          const removeRes = await deletePostTemplateCodegen(
+          const removeRes = await deletePostTemplate(
             postTemplateId,
             userRole
           );
@@ -492,13 +492,13 @@ describe('Post templates - CRUD Authorization', () => {
 
 describe('Post templates - Negative Scenarios', () => {
   afterEach(async () => {
-    await deletePostTemplateCodegen(postTemplateId);
+    await deletePostTemplate(postTemplateId);
   });
 
   test('Delete non existent Post template', async () => {
     // Act
 
-    const res = await deletePostTemplateCodegen(
+    const res = await deletePostTemplate(
       '0bade07d-6736-4ee2-93c0-b2af22a998ff'
     );
     expect(res.error?.errors[0].message).toContain(errorNoPostTemplate);

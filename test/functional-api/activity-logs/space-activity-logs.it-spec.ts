@@ -69,11 +69,11 @@ beforeEach(async () => {
 
 describe('Activity logs - Space', () => {
   afterEach(async () => {
-    await deleteCalloutCodegen(calloutId);
+    await deleteCallout(calloutId);
   });
   test('should return only memberJoined', async () => {
     // Act
-    const res = await getActivityLogOnCollaborationCodegen(
+    const res = await getActivityLogOnCollaboration(
       entitiesId.space.collaborationId,
       5
     );
@@ -85,12 +85,12 @@ describe('Activity logs - Space', () => {
 
   test('should NOT return CALLOUT_PUBLISHED, when created', async () => {
     // Arrange
-    const res = await createCalloutOnCollaborationCodegen(
+    const res = await createCalloutOnCollaboration(
       entitiesId.space.collaborationId
     );
     calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 
-    const resActivity = await getActivityLogOnCollaborationCodegen(
+    const resActivity = await getActivityLogOnCollaboration(
       entitiesId.space.collaborationId,
       5
     );
@@ -111,7 +111,7 @@ describe('Activity logs - Space', () => {
       CommunityRoleType.Member
     );
     // Act
-    const resActivity = await getActivityLogOnCollaborationCodegen(
+    const resActivity = await getActivityLogOnCollaboration(
       entitiesId.space.collaborationId,
       6
     );
@@ -159,17 +159,17 @@ describe('Activity logs - Space', () => {
   // To be updated with the changes related to whiteboard callouts
   test.skip('should return CALLOUT_PUBLISHED, POST_CREATED, POST_COMMENT, DISCUSSION_COMMENT, WHITEBOARD_CREATED', async () => {
     // Arrange
-    const res = await createCalloutOnCollaborationCodegen(
+    const res = await createCalloutOnCollaboration(
       entitiesId.space.collaborationId
     );
     calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 
-    await updateCalloutVisibilityCodegen(
+    await updateCalloutVisibility(
       calloutId,
       CalloutVisibility.Published
     );
 
-    const resPostonSpace = await createPostOnCalloutCodegen(
+    const resPostonSpace = await createPostOnCallout(
       calloutId,
       { displayName: postDisplayName },
       postNameID,
@@ -179,14 +179,14 @@ describe('Activity logs - Space', () => {
       resPostonSpace.data?.createContributionOnCallout.post;
     const postCommentsIdSpace = postDataCreate?.comments.id ?? '';
 
-    const messageRes = await sendMessageToRoomCodegen(
+    const messageRes = await sendMessageToRoom(
       postCommentsIdSpace,
       'test message on space post',
       TestUser.GLOBAL_ADMIN
     );
     messageRes?.data?.sendMessageToRoom.id;
 
-    const resDiscussion = await createCalloutOnCollaborationCodegen(
+    const resDiscussion = await createCalloutOnCollaboration(
       entitiesId.space.collaborationId,
       {
         framing: {
@@ -204,17 +204,17 @@ describe('Activity logs - Space', () => {
     const calloutIdDiscussion =
       resDiscussion.data?.createCalloutOnCollaboration.id ?? '';
 
-    await updateCalloutVisibilityCodegen(
+    await updateCalloutVisibility(
       calloutIdDiscussion,
       CalloutVisibility.Published
     );
 
-    await sendMessageToRoomCodegen(
+    await sendMessageToRoom(
       calloutIdDiscussion,
       'comment on discussion callout'
     );
 
-    const resWhiteboard = await createCalloutOnCollaborationCodegen(
+    const resWhiteboard = await createCalloutOnCollaboration(
       entitiesId.space.collaborationId,
       {
         framing: {
@@ -232,15 +232,15 @@ describe('Activity logs - Space', () => {
     const calloutIdWhiteboard =
       resWhiteboard.data?.createCalloutOnCollaboration.id ?? '';
 
-    await updateCalloutVisibilityCodegen(
+    await updateCalloutVisibility(
       calloutIdWhiteboard,
       CalloutVisibility.Published
     );
 
-    await createWhiteboardOnCalloutCodegen(calloutIdWhiteboard);
+    await createWhiteboardOnCallout(calloutIdWhiteboard);
 
     // Act
-    const resActivity = await getActivityLogOnCollaborationCodegen(
+    const resActivity = await getActivityLogOnCollaboration(
       entitiesId.space.collaborationId,
       7
     );
@@ -335,7 +335,7 @@ describe('Access to Activity logs - Space', () => {
       'User: "$userRole" get message: "$message", when intend to access Private space activity logs',
       async ({ userRole, message }) => {
         // Act
-        const resActivity = await getActivityLogOnCollaborationCodegen(
+        const resActivity = await getActivityLogOnCollaboration(
           entitiesId.space.collaborationId,
           5,
           userRole
@@ -355,7 +355,7 @@ describe('Access to Activity logs - Space', () => {
       'User: "$userRole" get Error message: "$message", when intend to access Private space activity logs',
       async ({ userRole, message }) => {
         // Act
-        const resActivity = await getActivityLogOnCollaborationCodegen(
+        const resActivity = await getActivityLogOnCollaboration(
           entitiesId.space.collaborationId,
           5,
           userRole
@@ -386,7 +386,7 @@ describe('Access to Activity logs - Space', () => {
       'User: "$userRole" get message: "$message", when intend to access Public space activity logs',
       async ({ userRole, message }) => {
         // Act
-        const resActivity = await getActivityLogOnCollaborationCodegen(
+        const resActivity = await getActivityLogOnCollaboration(
           entitiesId.space.collaborationId,
           5,
           userRole

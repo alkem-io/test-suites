@@ -1,16 +1,8 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
 import { createSpaceAndGetData } from '../../functional-api/journey/space/space.request.params';
-import {
-  createCalloutOnCollaborationCodegen as createCalloutOnCollaboration,
-  createWhiteboardCalloutOnCollaborationCodegen,
-  getCalloutDetailsCodegen,
-  getCollaborationCalloutsDataCodegen,
-  updateCalloutVisibilityCodegen,
-} from '../../functional-api/callout/callouts.request.params';
 import { createUser } from '../../functional-api/contributor-management/user/user.request.params';
-import { createChallengeCodegen } from '../mutations/journeys/challenge';
-import { createOpportunityCodegen as createOpportunity } from '../mutations/journeys/opportunity';
+import { createOpportunity } from '../mutations/journeys/opportunity';
 import { assignRoleToUser } from '@test/functional-api/roleset/roles-request.params';
 import {
   CalloutType,
@@ -21,6 +13,14 @@ import { TestUser } from '../token.helper';
 import { delay } from '../delay';
 import { createOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import { entitiesId } from '@test/types/entities-helper';
+import {
+  createCalloutOnCollaboration,
+  createWhiteboardCalloutOnCollaboration,
+  getCalloutDetails,
+  getCollaborationCalloutsData,
+  updateCalloutVisibility,
+} from '@test/functional-api/callout/callouts.request.params';
+import { createChallenge } from '../mutations/journeys/challenge';
 
 export const createOrgAndSpace = async (
   organizationName: string,
@@ -86,12 +86,12 @@ export const createOrgAndSpace = async (
   entitiesId.space.calloutId =
     callForPostCalloutData?.data?.createCalloutOnCollaboration?.id ?? '';
 
-  await updateCalloutVisibilityCodegen(
+  await updateCalloutVisibility(
     entitiesId.space.calloutId,
     CalloutVisibility.Published
   );
 
-  const whiteboardCalloutData = await createWhiteboardCalloutOnCollaborationCodegen(
+  const whiteboardCalloutData = await createWhiteboardCalloutOnCollaboration(
     entitiesId.space.collaborationId,
     {
       framing: {
@@ -108,7 +108,7 @@ export const createOrgAndSpace = async (
   entitiesId.space.whiteboardCalloutId =
     whiteboardCalloutData?.data?.createCalloutOnCollaboration?.id ?? '';
 
-  await updateCalloutVisibilityCodegen(
+  await updateCalloutVisibility(
     entitiesId.space.whiteboardCalloutId,
     CalloutVisibility.Published
   );
@@ -126,7 +126,7 @@ export const createOrgAndSpace = async (
   entitiesId.space.discussionCalloutId = postCalloutData?.id ?? '';
   entitiesId.space.discussionCalloutCommentsId =
     postCalloutData?.comments?.id ?? '';
-  await updateCalloutVisibilityCodegen(
+  await updateCalloutVisibility(
     entitiesId.space.discussionCalloutId,
     CalloutVisibility.Published
   );
@@ -135,12 +135,12 @@ export const createOrgAndSpace = async (
     responseEco.data?.space.library?.innovationFlowTemplates[0].id ?? '';
 };
 
-export const getDefaultSpaceCalloutByNameIdCodegen = async (
+export const getDefaultSpaceCalloutByNameId = async (
   collaborationId: string,
   nameID: string
 ) => {
   delay(100);
-  const calloutsPerSpace = await getCollaborationCalloutsDataCodegen(
+  const calloutsPerSpace = await getCollaborationCalloutsData(
     (collaborationId = entitiesId.space.collaborationId)
   );
 
@@ -150,11 +150,11 @@ export const getDefaultSpaceCalloutByNameIdCodegen = async (
     callout => callout.nameID.includes(nameID) || callout.id === nameID
   );
 
-  const colloutDetails = await getCalloutDetailsCodegen(filteredCallout[0].id);
+  const colloutDetails = await getCalloutDetails(filteredCallout[0].id);
   return colloutDetails;
 };
 
-export const assignUsersToSpaceAndOrgAsMembersCodegen = async () => {
+export const assignUsersToSpaceAndOrgAsMembers = async () => {
   const usersIdsToAssign: string[] = [
     users.spaceAdmin.id,
     users.spaceMember.id,
@@ -173,7 +173,7 @@ export const assignUsersToSpaceAndOrgAsMembersCodegen = async () => {
 };
 
 export const assignUsersToSpaceAndOrg = async () => {
-  await assignUsersToSpaceAndOrgAsMembersCodegen();
+  await assignUsersToSpaceAndOrgAsMembers();
   await assignRoleToUser(
     users.spaceAdmin.id,
     entitiesId.space.roleSetId,
@@ -192,7 +192,7 @@ export const createOrgAndSpaceWithUsers = async (
 };
 
 export const createChallengeForOrgSpace = async (challengeName: string) => {
-  const responseChallenge = await createChallengeCodegen(
+  const responseChallenge = await createChallenge(
     challengeName,
     `chnameid${uniqueId}`,
     entitiesId.spaceId
@@ -226,12 +226,12 @@ export const createChallengeForOrgSpace = async (challengeName: string) => {
   entitiesId.challenge.calloutId =
     callForPostCalloutData?.data?.createCalloutOnCollaboration?.id ?? '';
 
-  await updateCalloutVisibilityCodegen(
+  await updateCalloutVisibility(
     entitiesId.challenge.calloutId,
     CalloutVisibility.Published
   );
 
-  const whiteboardCalloutData = await createWhiteboardCalloutOnCollaborationCodegen(
+  const whiteboardCalloutData = await createWhiteboardCalloutOnCollaboration(
     entitiesId.challenge.collaborationId,
     {
       framing: {
@@ -248,7 +248,7 @@ export const createChallengeForOrgSpace = async (challengeName: string) => {
   entitiesId.challenge.whiteboardCalloutId =
     whiteboardCalloutData?.data?.createCalloutOnCollaboration?.id ?? '';
 
-  await updateCalloutVisibilityCodegen(
+  await updateCalloutVisibility(
     entitiesId.challenge.whiteboardCalloutId,
     CalloutVisibility.Published
   );
@@ -266,18 +266,18 @@ export const createChallengeForOrgSpace = async (challengeName: string) => {
   entitiesId.challenge.discussionCalloutId = postCalloutData?.id ?? '';
   entitiesId.challenge.discussionCalloutCommentsId =
     postCalloutData?.comments?.id ?? '';
-  await updateCalloutVisibilityCodegen(
+  await updateCalloutVisibility(
     entitiesId.challenge.discussionCalloutId,
     CalloutVisibility.Published
   );
 };
 
-export const getDefaultChallengeCalloutByNameIdCodegen = async (
+export const getDefaultChallengeCalloutByNameId = async (
   spaceId: string,
   collaborationId: string,
   nameID: string
 ) => {
-  const calloutsPerCollaboration = await getCollaborationCalloutsDataCodegen(
+  const calloutsPerCollaboration = await getCollaborationCalloutsData(
     (collaborationId = entitiesId.challenge.collaborationId)
   );
   const allCallouts =
@@ -285,7 +285,7 @@ export const getDefaultChallengeCalloutByNameIdCodegen = async (
   const filteredCallout = allCallouts.filter(
     callout => callout.nameID.includes(nameID) || callout.id === nameID
   );
-  const colloutDetails = await getCalloutDetailsCodegen(filteredCallout[0]?.id);
+  const colloutDetails = await getCalloutDetails(filteredCallout[0]?.id);
   return colloutDetails;
 };
 
@@ -320,12 +320,12 @@ export const createChallengeWithUsers = async (challengeName: string) => {
   await assignUsersToChallenge();
 };
 
-export const getDefaultOpportunityCalloutByNameIdCodegen = async (
+export const getDefaultOpportunityCalloutByNameId = async (
   spaceId: string,
   collaborationId: string,
   nameID: string
 ) => {
-  const calloutsPerCollaboration = await getCollaborationCalloutsDataCodegen(
+  const calloutsPerCollaboration = await getCollaborationCalloutsData(
     (collaborationId = entitiesId.opportunity.collaborationId)
   );
 
@@ -334,7 +334,7 @@ export const getDefaultOpportunityCalloutByNameIdCodegen = async (
   const filteredCallout = allCallouts.filter(
     callout => callout.nameID.includes(nameID) || callout.id === nameID
   );
-  const colloutDetails = await getCalloutDetailsCodegen(filteredCallout[0]?.id);
+  const colloutDetails = await getCalloutDetails(filteredCallout[0]?.id);
   return colloutDetails?.data?.lookup?.callout;
 };
 
@@ -379,12 +379,12 @@ export const createOpportunityForChallenge = async (
   entitiesId.opportunity.calloutId =
     callForPostCalloutData?.data?.createCalloutOnCollaboration?.id ?? '';
 
-  await updateCalloutVisibilityCodegen(
+  await updateCalloutVisibility(
     entitiesId.opportunity.calloutId,
     CalloutVisibility.Published
   );
 
-  const whiteboardCalloutData = await createWhiteboardCalloutOnCollaborationCodegen(
+  const whiteboardCalloutData = await createWhiteboardCalloutOnCollaboration(
     entitiesId.opportunity.collaborationId,
     {
       framing: {
@@ -401,7 +401,7 @@ export const createOpportunityForChallenge = async (
   entitiesId.opportunity.whiteboardCalloutId =
     whiteboardCalloutData?.data?.createCalloutOnCollaboration?.id ?? '';
 
-  await updateCalloutVisibilityCodegen(
+  await updateCalloutVisibility(
     entitiesId.opportunity.whiteboardCalloutId,
     CalloutVisibility.Published
   );
@@ -419,7 +419,7 @@ export const createOpportunityForChallenge = async (
   entitiesId.opportunity.discussionCalloutId = postCalloutData?.id ?? '';
   entitiesId.opportunity.discussionCalloutCommentsId =
     postCalloutData?.comments?.id ?? '';
-  await updateCalloutVisibilityCodegen(
+  await updateCalloutVisibility(
     entitiesId.opportunity.discussionCalloutId,
     CalloutVisibility.Published
   );

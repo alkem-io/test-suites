@@ -18,12 +18,12 @@ beforeEach(() => {
 
 describe('Create User', () => {
   afterEach(async () => {
-    await deleteUserCodegen(userId);
+    await deleteUser(userId);
   });
 
   test('should create a user', async () => {
     // Act
-    const response = await createUserCodegen({
+    const response = await createUser({
       profileData: { displayName: userName },
     });
 
@@ -38,13 +38,13 @@ describe('Create User', () => {
 
   test('should throw error - same user is created twice', async () => {
     // Arrange
-    const response = await createUserCodegen({
+    const response = await createUser({
       nameID: userName,
     });
     userId = response?.data?.createUser.id ?? '';
 
     // Act
-    const responseSecondTime = await createUserCodegen({
+    const responseSecondTime = await createUser({
       nameID: userName,
     });
 
@@ -56,14 +56,14 @@ describe('Create User', () => {
 
   test('should query created user', async () => {
     // Arrange
-    const response = await createUserCodegen({
+    const response = await createUser({
       profileData: { displayName: userName },
     });
     const userData = response?.data?.createUser;
     userId = userData?.id ?? '';
 
     // Act
-    const getUserData = await getUserDataCodegen(userId);
+    const getUserData = await getUserData(userId);
 
     // Assert
     expect(getUserData?.data?.user).toEqual(userData);
@@ -71,7 +71,7 @@ describe('Create User', () => {
 
   test('should throw error - create user with LONG NAME', async () => {
     // Act
-    const response = await createUserCodegen({
+    const response = await createUser({
       // nameID: 'taka',
       profileData: {
         displayName:
@@ -87,7 +87,7 @@ describe('Create User', () => {
 
   test('should throw error - create user with invalid email', async () => {
     // Act
-    const response = await createUserCodegen({ email: 'testEmail' });
+    const response = await createUser({ email: 'testEmail' });
 
     // Assert
     expect(response.error?.errors[0].message).toContain(

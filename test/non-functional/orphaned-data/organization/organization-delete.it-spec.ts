@@ -50,26 +50,26 @@ describe('Full Organization Deletion', () => {
     const organizationVerificationId = data?.verification.id ?? '';
 
     // Verify organization
-    await eventOnOrganizationVerificationCodegen(
+    await eventOnOrganizationVerification(
       organizationVerificationId,
       'VERIFICATION_REQUEST'
     );
 
     // Change organization preference
-    await changePreferenceOrganizationCodegen(
+    await changePreferenceOrganization(
       orgId,
       OrganizationPreferenceType.AuthorizationOrganizationMatchDomain,
       'true'
     );
     // Assign user as organization member
-    await assignUserToOrganizationCodegen(users.notificationsAdmin.id, orgId);
+    await assignUserToOrganization(users.notificationsAdmin.id, orgId);
 
     // Assign organization as space community member and lead
     await assignRoleToOrganization(
       spaceCommunityId,
       'eco1host'
     );
-    await assignOrganizationAsCommunityLeadCodegen(
+    await assignOrganizationAsCommunityLead(
       spaceCommunityId,
       'eco1host'
     );

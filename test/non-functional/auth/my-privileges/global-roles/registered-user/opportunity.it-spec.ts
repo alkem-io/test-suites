@@ -42,7 +42,7 @@ beforeAll(async () => {
   await createChallengeForOrgSpace(challengeName);
   await createOpportunityForChallenge(opportunityName);
 
-  await changePreferenceSpaceCodegen(
+  await changePreferenceSpace(
     entitiesId.spaceId,
     SpacePreferenceType.AuthorizationAnonymousReadAccess,
     'true'
@@ -53,13 +53,13 @@ beforeAll(async () => {
     CommunityRoleType.Member
   );
 
-  await sendMessageToRoomCodegen(
+  await sendMessageToRoom(
     entitiesId.opportunity.updatesId,
     'test',
     TestUser.GLOBAL_ADMIN
   );
 
-  await createRelationCodegen(
+  await createRelation(
     entitiesId.opportunity.collaborationId,
     'incoming',
     'relationDescription',
@@ -69,7 +69,7 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
 
-  await createPostOnCalloutCodegen(
+  await createPostOnCallout(
     entitiesId.opportunity.calloutId,
     { displayName: 'postDisplayName' },
     'postnameid',
@@ -77,8 +77,8 @@ beforeAll(async () => {
   );
 });
 afterAll(async () => {
-  await deleteOpportunityCodegen(entitiesId.opportunity.id);
-  await deleteChallengeCodegen(entitiesId.challenge.id);
+  await deleteOpportunity(entitiesId.opportunity.id);
+  await deleteChallenge(entitiesId.challenge.id);
   await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
@@ -86,7 +86,7 @@ afterAll(async () => {
 describe('myPrivileges - Opportunity of Public Space', () => {
   test('RegisteredUser privileges to Opportunity', async () => {
     // Act
-    const response = await getOpportunityDataCodegen(
+    const response = await getOpportunityData(
       entitiesId.opportunity.id,
       TestUser.NON_HUB_MEMBER
     );
@@ -100,7 +100,7 @@ describe('myPrivileges - Opportunity of Public Space', () => {
   describe('Community', () => {
     test('RegisteredUser privileges to Opportunity / Community', async () => {
       // Act
-      const response = await getOpportunityDataCodegen(
+      const response = await getOpportunityData(
         entitiesId.opportunity.id,
         TestUser.NON_HUB_MEMBER
       );
@@ -114,7 +114,7 @@ describe('myPrivileges - Opportunity of Public Space', () => {
 
     test('RegisteredUser privileges to Opportunity / Community / Communication', async () => {
       // Act
-      const response = await getOpportunityDataCodegen(
+      const response = await getOpportunityData(
         entitiesId.opportunity.id,
         TestUser.NON_HUB_MEMBER
       );
@@ -128,7 +128,7 @@ describe('myPrivileges - Opportunity of Public Space', () => {
 
     test.skip('RegisteredUser privileges to Opportunity / Community / Communication / Discussion', async () => {
       // Act
-      const response = await getOpportunityDataCodegen(
+      const response = await getOpportunityData(
         entitiesId.opportunity.id,
         TestUser.NON_HUB_MEMBER
       );
@@ -142,7 +142,7 @@ describe('myPrivileges - Opportunity of Public Space', () => {
 
     test('RegisteredUser privileges to Opportunity / Community / Communication / Updates', async () => {
       // Act
-      const response = await getOpportunityDataCodegen(
+      const response = await getOpportunityData(
         entitiesId.opportunity.id,
         TestUser.NON_HUB_MEMBER
       );
@@ -159,7 +159,7 @@ describe('myPrivileges - Opportunity of Public Space', () => {
   describe('Collaboration', () => {
     test('RegisteredUser privileges to Opportunity / Collaboration', async () => {
       // Act
-      const response = await getOpportunityDataCodegen(
+      const response = await getOpportunityData(
         entitiesId.opportunity.id,
         TestUser.NON_HUB_MEMBER
       );
@@ -174,7 +174,7 @@ describe('myPrivileges - Opportunity of Public Space', () => {
 
     test('RegisteredUser privileges to Opportunity / Collaboration / Relations', async () => {
       // Act
-      const response = await getOpportunityDataCodegen(
+      const response = await getOpportunityData(
         entitiesId.opportunity.id,
         TestUser.NON_HUB_MEMBER
       );
@@ -189,7 +189,7 @@ describe('myPrivileges - Opportunity of Public Space', () => {
 
     test('RegisteredUser privileges to Opportunity / Collaboration / Callout', async () => {
       // Act
-      const response = await getOpportunityDataCodegen(
+      const response = await getOpportunityData(
         entitiesId.opportunity.id,
         TestUser.NON_HUB_MEMBER
       );
@@ -203,7 +203,7 @@ describe('myPrivileges - Opportunity of Public Space', () => {
 
     test('RegisteredUser privileges to Opportunity / Collaboration / Callout / Post', async () => {
       // Act
-      const response = await getDataPerOpportunityCalloutCodegen(
+      const response = await getDataPerOpportunityCallout(
         entitiesId.opportunity.id,
         entitiesId.opportunity.calloutId,
         TestUser.NON_HUB_MEMBER
@@ -221,7 +221,7 @@ describe('myPrivileges - Opportunity of Public Space', () => {
     // ToDo
     test.skip('RegisteredUser privileges to Opportunity / Collaboration / Callout / Whiteboard', async () => {
       // Act
-      // const response = await getDataPerSpaceCalloutCodegen(
+      // const response = await getDataPerSpaceCallout(
       //   entitiesId.spaceId,
       //   entitiesId.space.calloutId,
       //   TestUser.NON_HUB_MEMBER

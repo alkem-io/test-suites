@@ -76,7 +76,7 @@ afterAll(async () => {
 describe('Organization role', () => {
   test('Organization role - assignment to 1 Organization, Space, Challenge, Opportunity', async () => {
     // Act
-    const res = await getOrganizationRoleCodegen(entitiesId.organization.id);
+    const res = await getOrganizationRole(entitiesId.organization.id);
     const spacesData = res?.data?.rolesOrganization.spaces ?? [];
 
     // Assert

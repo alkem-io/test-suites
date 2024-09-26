@@ -73,7 +73,7 @@ describe('Invitations', () => {
       entitiesId.space.roleSetId,
       CommunityRoleType.Member
     );
-    await deleteInvitationCodegen(invitationId);
+    await deleteInvitation(invitationId);
   });
   test('should create invitation', async () => {
     // Act
@@ -87,7 +87,7 @@ describe('Invitations', () => {
       invitationData?.data?.inviteContributorsForRoleSetMembership;
 
     invitationId = invitationInfo[0]?.id ?? '';
-    const getInv = await getSpaceInvitationCodegen(
+    const getInv = await getSpaceInvitation(
       entitiesId.spaceId,
       TestUser.GLOBAL_ADMIN
     );
@@ -125,7 +125,7 @@ describe('Invitations', () => {
       invitationDataTwo?.data?.inviteContributorsForRoleSetMembership[0];
     const invitationIdTwo = invitationInfoTwo?.id ?? '';
 
-    const userAppsData = await meQueryCodegen(TestUser.NON_HUB_MEMBER);
+    const userAppsData = await meQuery(TestUser.NON_HUB_MEMBER);
     const membershipData = userAppsData?.data?.me;
 
     // Assert
@@ -140,7 +140,7 @@ describe('Invitations', () => {
         }),
       ])
     );
-    await deleteInvitationCodegen(invitationIdTwo);
+    await deleteInvitation(invitationIdTwo);
   });
 
   test('should remove invitation', async () => {
@@ -155,7 +155,7 @@ describe('Invitations', () => {
     invitationId = invitationInfo?.id ?? '';
 
     // Act
-    const removeInv = await deleteInvitationCodegen(invitationId);
+    const removeInv = await deleteInvitation(invitationId);
     const getInv = await getRoleSetInvitationsApplications(
       entitiesId.space.roleSetId
     );
@@ -237,7 +237,7 @@ describe('Invitations-flows', () => {
       CommunityRoleType.Member
     );
 
-    await deleteInvitationCodegen(invitationId);
+    await deleteInvitation(invitationId);
   });
 
   test('invitee is able to ACCEPT invitation and access space data', async () => {
@@ -364,7 +364,7 @@ describe('Invitations-flows', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    const userDataOrig = await meQueryCodegen(TestUser.NON_HUB_MEMBER);
+    const userDataOrig = await meQuery(TestUser.NON_HUB_MEMBER);
 
     const membershipDataOrig = userDataOrig?.data?.me;
     const invitationsCountOrig = membershipDataOrig?.communityInvitations?.length || 0;
@@ -376,7 +376,7 @@ describe('Invitations-flows', () => {
 
     // Act
     const res = await createApplication(entitiesId.space.roleSetId);
-    const userAppsData = await meQueryCodegen(TestUser.NON_HUB_MEMBER);
+    const userAppsData = await meQuery(TestUser.NON_HUB_MEMBER);
 
     const membershipData = userAppsData?.data?.me;
 
@@ -403,7 +403,7 @@ describe('Invitations - Authorization', () => {
       CommunityRoleType.Member
     );
 
-    await deleteInvitationCodegen(invitationId);
+    await deleteInvitation(invitationId);
   });
   describe('DDT rights to change invitation state', () => {
     // Arrange

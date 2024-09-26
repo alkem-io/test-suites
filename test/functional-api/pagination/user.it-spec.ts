@@ -6,12 +6,12 @@ import { paginatedUserCodegen } from './pagination.request.params';
 describe('Pagination - user', () => {
   test('query filtered user and verify data', async () => {
     // Act
-    const requestPagination = await paginatedUserCodegen({
+    const requestPagination = await paginatedUser({
       first: 2,
       filter: { email: 'admin@alkem.io' },
     });
 
-    const requestUser = await getUserDataCodegen('admin@alkem.io');
+    const requestUser = await getUserData('admin@alkem.io');
 
     // Assert
     expect(requestPagination?.data?.usersPaginated.users[0]).toEqual(
@@ -34,7 +34,7 @@ describe('Pagination - user', () => {
       'Quering: "$pagination" with filter: "$filter", returns users: "$result1","$result2", and userCount: "$usersCount" ',
       async ({ first, filter, result1, result2, usersCount }) => {
         // Act
-        const request = await paginatedUserCodegen({
+        const request = await paginatedUser({
           first,
           filter,
         });
@@ -73,7 +73,7 @@ describe('Pagination - user', () => {
       async ({ first, last, result1, result2, usersCount }) => {
         // Act
 
-        const request = await paginatedUserCodegen({
+        const request = await paginatedUser({
           first,
           last,
         });
@@ -105,7 +105,7 @@ describe('Pagination - user', () => {
     let startCursor = '';
     let endCursor = '';
     beforeAll(async () => {
-      const request = await paginatedUserCodegen({
+      const request = await paginatedUser({
         first: 2,
       });
       const returnedData = request?.data?.usersPaginated.pageInfo;
@@ -115,7 +115,7 @@ describe('Pagination - user', () => {
 
     test('query users with parameter: first: "1", after = startCursor ', async () => {
       // Act
-      const request = await paginatedUserCodegen({
+      const request = await paginatedUser({
         first: 1,
         after: startCursor,
       });
@@ -135,7 +135,7 @@ describe('Pagination - user', () => {
 
     test('query users with parameter: first: "2", after = startCursor ', async () => {
       // Act
-      const request = await paginatedUserCodegen({
+      const request = await paginatedUser({
         first: 2,
         after: startCursor,
       });
@@ -153,7 +153,7 @@ describe('Pagination - user', () => {
 
     test('query users with parameter: first: "1", after = endCursor ', async () => {
       // Act
-      const request = await paginatedUserCodegen({
+      const request = await paginatedUser({
         first: 1,
         after: endCursor,
       });
@@ -173,7 +173,7 @@ describe('Pagination - user', () => {
 
     test('query users with parameter: first: "2", after = endCursor ', async () => {
       // Act
-      const request = await paginatedUserCodegen({
+      const request = await paginatedUser({
         first: 2,
         after: endCursor,
       });
@@ -193,7 +193,7 @@ describe('Pagination - user', () => {
 
     test('query users with parameter: first: "4", after = endCursor ', async () => {
       // Act
-      const request = await paginatedUserCodegen({
+      const request = await paginatedUser({
         first: 4,
         after: endCursor,
       });
@@ -213,7 +213,7 @@ describe('Pagination - user', () => {
 
     test('query users with parameter: first: "12", after = endCursor ', async () => {
       // Act
-      const request = await paginatedUserCodegen({
+      const request = await paginatedUser({
         first: 12,
         after: endCursor,
       });
@@ -244,7 +244,7 @@ describe('Pagination - user', () => {
       'Quering: first: "$first", last: "$last", before: "$before", after: "$after" returns error: "$error" ',
       async ({ first, last, before, after, error }) => {
         // Act
-        const request = await paginatedUserCodegen({
+        const request = await paginatedUser({
           first,
           last,
           before,

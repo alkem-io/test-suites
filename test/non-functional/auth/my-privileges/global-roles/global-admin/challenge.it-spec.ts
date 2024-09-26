@@ -50,13 +50,13 @@ beforeAll(async () => {
   );
   await createChallengeForOrgSpace(challengeName);
 
-  await changePreferenceChallengeCodegen(
+  await changePreferenceChallenge(
     entitiesId.challenge.id,
     ChallengePreferenceType.MembershipApplyChallengeFromSpaceMembers,
     'true'
   );
 
-  await changePreferenceChallengeCodegen(
+  await changePreferenceChallenge(
     entitiesId.challenge.id,
     ChallengePreferenceType.MembershipJoinChallengeFromSpaceMembers,
     'true'
@@ -78,13 +78,13 @@ beforeAll(async () => {
     TestUser.QA_USER
   );
 
-  await sendMessageToRoomCodegen(
+  await sendMessageToRoom(
     entitiesId.challenge.updatesId,
     'test',
     TestUser.GLOBAL_ADMIN
   );
 
-  await createRelationCodegen(
+  await createRelation(
     entitiesId.challenge.collaborationId,
     'incoming',
     'relationDescription',
@@ -94,7 +94,7 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
 
-  const createPost = await createPostOnCalloutCodegen(
+  const createPost = await createPostOnCallout(
     entitiesId.challenge.calloutId,
     { displayName: 'postDisplayName' },
     'postnameid',
@@ -103,7 +103,7 @@ beforeAll(async () => {
   postId = createPost.data?.createContributionOnCallout?.post?.id ?? '';
 });
 afterAll(async () => {
-  await deleteChallengeCodegen(entitiesId.challenge.id);
+  await deleteChallenge(entitiesId.challenge.id);
   await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
@@ -111,7 +111,7 @@ afterAll(async () => {
 describe('myPrivileges', () => {
   test('GlobalAdmin privileges to Challenge', async () => {
     // Act
-    const response = await getChallengeDataCodegen(entitiesId.challenge.id);
+    const response = await getChallengeData(entitiesId.challenge.id);
     const data =
       response.data?.lookup.challenge?.authorization?.myPrivileges ?? [];
 
@@ -124,7 +124,7 @@ describe('myPrivileges', () => {
   describe('Community', () => {
     test('GlobalAdmin privileges to Challenge / Community', async () => {
       // Act
-      const response = await getChallengeDataCodegen(entitiesId.challenge.id);
+      const response = await getChallengeData(entitiesId.challenge.id);
       const data =
         response?.data?.lookup?.challenge?.community?.authorization
           ?.myPrivileges;
@@ -137,7 +137,7 @@ describe('myPrivileges', () => {
 
     test('GlobalAdmin privileges to Challenge / Community / Application', async () => {
       // Act
-      const response = await getChallengeDataCodegen(entitiesId.challenge.id);
+      const response = await getChallengeData(entitiesId.challenge.id);
 
       const data =
         response?.data?.lookup?.challenge?.community?.applications?.[0]
@@ -149,7 +149,7 @@ describe('myPrivileges', () => {
 
     test('GlobalAdmin privileges to Challenge / Community / Communication', async () => {
       // Act
-      const response = await getChallengeDataCodegen(entitiesId.challenge.id);
+      const response = await getChallengeData(entitiesId.challenge.id);
       const data =
         response?.data?.lookup?.challenge?.community?.communication
           ?.authorization?.myPrivileges;
@@ -162,7 +162,7 @@ describe('myPrivileges', () => {
 
     test.skip('GlobalAdmin privileges to Challenge / Community / Communication / Discussion', async () => {
       // Act
-      const response = await getChallengeDataCodegen(entitiesId.challenge.id);
+      const response = await getChallengeData(entitiesId.challenge.id);
 
       const data =
         response?.data?.lookup?.challenge?.community?.communication
@@ -176,7 +176,7 @@ describe('myPrivileges', () => {
 
     test('GlobalAdmin privileges to Challenge / Community / Communication / Updates', async () => {
       // Act
-      const response = await getChallengeDataCodegen(entitiesId.challenge.id);
+      const response = await getChallengeData(entitiesId.challenge.id);
 
       const data =
         response?.data?.lookup?.challenge?.community?.communication?.updates
@@ -192,7 +192,7 @@ describe('myPrivileges', () => {
   describe('Collaboration', () => {
     test('GlobalAdmin privileges to Challenge / Collaboration', async () => {
       // Act
-      const response = await getChallengeDataCodegen(entitiesId.challenge.id);
+      const response = await getChallengeData(entitiesId.challenge.id);
       const data =
         response?.data?.lookup?.challenge?.collaboration?.authorization
           ?.myPrivileges;
@@ -205,7 +205,7 @@ describe('myPrivileges', () => {
 
     test('GlobalAdmin privileges to Challenge / Collaboration / Callout', async () => {
       // Act
-      const response = await getChallengeDataCodegen(entitiesId.challenge.id);
+      const response = await getChallengeData(entitiesId.challenge.id);
       const data =
         response?.data?.lookup?.challenge?.collaboration?.callouts?.[0]
           .authorization?.myPrivileges;
@@ -218,7 +218,7 @@ describe('myPrivileges', () => {
 
     test('GlobalAdmin privileges to Challenge / Collaboration / Callout / Post', async () => {
       // Act
-      const response = await getDataPerChallengeCalloutCodegen(
+      const response = await getDataPerChallengeCallout(
         entitiesId.challenge.id,
         entitiesId.challenge.calloutId
       );
@@ -237,7 +237,7 @@ describe('myPrivileges', () => {
     // ToDo
     test.skip('GlobalAdmin privileges to Challenge / Collaboration / Callout / Whiteboard', async () => {
       // Act
-      const response = await getDataPerChallengeCalloutCodegen(
+      const response = await getDataPerChallengeCallout(
         entitiesId.challenge.id,
         entitiesId.challenge.calloutId
       );
@@ -261,7 +261,7 @@ describe('myPrivileges', () => {
     // ToDo
     test.skip('GlobalAdmin privileges to Challenge / Collaboration / Callout / Comments', async () => {
       // Act
-      const response = await getDataPerChallengeCalloutCodegen(
+      const response = await getDataPerChallengeCallout(
         entitiesId.challenge.id,
         entitiesId.challenge.calloutId
       );
@@ -286,7 +286,7 @@ describe('myPrivileges', () => {
   describe('Preferences', () => {
     test('GlobalAdmin privileges to Challenge / Preferences', async () => {
       // Act
-      const response = await getChallengeDataCodegen(entitiesId.challenge.id);
+      const response = await getChallengeData(entitiesId.challenge.id);
       const data = response?.data?.lookup?.challenge?.preferences;
 
       data?.map((item: any) => {

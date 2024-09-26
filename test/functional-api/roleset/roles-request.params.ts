@@ -4,7 +4,7 @@ import { TestUser } from '@test/utils';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 
-export const getOrganizationRoleCodegen = async (
+export const getOrganizationRole = async (
   organizationID: string,
 
   userRole: TestUser = TestUser.GLOBAL_ADMIN
@@ -162,7 +162,7 @@ export const joinRoleSet = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const assignOrganizationAsCommunityLeadCodegen = async (
+export const assignOrganizationAsCommunityLead = async (
   roleSetID: string,
   organizationID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
@@ -186,7 +186,7 @@ export const assignOrganizationAsCommunityLeadCodegen = async (
 };
 
 /// TODO: This is a different context + should not be mixed up here
-export const assignUserToOrganizationCodegen = async (
+export const assignUserToOrganization = async (
   userID: string,
   organizationID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN

@@ -36,12 +36,12 @@ beforeAll(async () => {
     spaceNameId
   );
 
-  await assignUserAsOrganizationAdminCodegen(
+  await assignUserAsOrganizationAdmin(
     users.spaceAdmin.id,
     entitiesId.organization.id
   );
 
-  await assignUserAsOrganizationAdminCodegen(
+  await assignUserAsOrganizationAdmin(
     users.spaceMember.id,
     entitiesId.organization.id
   );
@@ -69,7 +69,7 @@ afterAll(async () => {
 describe('Notifications - user to organization messages', () => {
   beforeAll(async () => {
     for (const config of preferencesConfig)
-      await changePreferenceUserCodegen(config.userID, config.type, 'true');
+      await changePreferenceUser(config.userID, config.type, 'true');
   });
 
   beforeEach(async () => {
@@ -78,7 +78,7 @@ describe('Notifications - user to organization messages', () => {
 
   test("User 'A' sends message to Organization(both admins ORGANIZATION_MESSAGE:true) (3 admins) - 4 messages are sent", async () => {
     // Act
-    await sendMessageToOrganizationCodegen(
+    await sendMessageToOrganization(
       entitiesId.organization.id,
       'Test message',
       TestUser.NON_HUB_MEMBER
@@ -113,13 +113,13 @@ describe('Notifications - user to organization messages', () => {
 
   test("User 'A' sends message to Organization (3 admins, one admin has ORGANIZATION_MESSAGE:false) - 3 messages are sent", async () => {
     // Arrange
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.spaceAdmin.id,
       UserPreferenceType.NotificationOrganizationMessage,
       'false'
     );
     // Act
-    await sendMessageToOrganizationCodegen(
+    await sendMessageToOrganization(
       entitiesId.organization.id,
       'Test message',
       TestUser.NON_HUB_MEMBER
@@ -152,18 +152,18 @@ describe('Notifications - user to organization messages', () => {
   // second admin has ORGANIZATION_MESSAGE:true and COMMUNICATION_MESSAGE:false
   test("User 'A' sends message to Organization (3 admins, one admin has ORGANIZATION_MESSAGE:true and COMMUNICATION_MESSAGE:false) - 4 messages are sent", async () => {
     // Arrange
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.spaceAdmin.id,
       UserPreferenceType.NotificationOrganizationMessage,
       'true'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.spaceAdmin.id,
       UserPreferenceType.NotificationCommunicationMessage,
       'false'
     );
     // Act
-    await sendMessageToOrganizationCodegen(
+    await sendMessageToOrganization(
       entitiesId.organization.id,
       'Test message',
       TestUser.NON_HUB_MEMBER

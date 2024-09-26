@@ -42,27 +42,27 @@ beforeAll(async () => {
 describe('Full Challenge Deletion', () => {
   test('should delete all challenge related data', async () => {
     // Change challenge preference
-    await changePreferenceChallengeCodegen(
+    await changePreferenceChallenge(
       entitiesId.spaceId,
       ChallengePreferenceType.AllowContributorsToCreateOpportunities,
       'true'
     );
 
     // Send challenge community update
-    await sendMessageToRoomCodegen(entitiesId.challenge.updatesId, 'test');
+    await sendMessageToRoom(entitiesId.challenge.updatesId, 'test');
 
     // Create callout
-    await createCalloutOnCollaborationCodegen(
+    await createCalloutOnCollaboration(
       entitiesId.challenge.collaborationId
     );
 
     // Create whiteboard on callout
-    await createWhiteboardOnCalloutCodegen(
+    await createWhiteboardOnCallout(
       entitiesId.challenge.whiteboardCalloutId
     );
 
     // Create post on callout and comment to it
-    const resPostonSpace = await createPostOnCalloutCodegen(
+    const resPostonSpace = await createPostOnCallout(
       entitiesId.challenge.calloutId,
       { displayName: postDisplayName },
       postNameID
@@ -71,10 +71,10 @@ describe('Full Challenge Deletion', () => {
     const commentId =
       resPostonSpace?.data?.createContributionOnCallout.post?.comments.id ?? '';
 
-    await sendMessageToRoomCodegen(commentId, 'test message on post');
+    await sendMessageToRoom(commentId, 'test message on post');
 
     // Create comment on callout
-    await sendMessageToRoomCodegen(
+    await sendMessageToRoom(
       entitiesId.challenge.discussionCalloutId,
       'comment on discussion callout'
     );
@@ -108,7 +108,7 @@ describe('Full Challenge Deletion', () => {
     );
 
     // Act
-    const resDelete = await deleteChallengeCodegen(entitiesId.challenge.id);
+    const resDelete = await deleteChallenge(entitiesId.challenge.id);
     await deleteSpace(entitiesId.spaceId);
     await deleteOrganization(entitiesId.organization.id);
 

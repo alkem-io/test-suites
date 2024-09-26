@@ -46,13 +46,13 @@ describe('Organization verification status', () => {
     'should update organization verification status, when set event: "$setEvent" to state: "$state", nextEvents: "$nextEvents"',
     async ({ setEvent, state, nextEvents }) => {
       // Act
-      const updateState = await eventOnOrganizationVerificationCodegen(
+      const updateState = await eventOnOrganizationVerification(
         organizationVerificationId,
         setEvent
       );
 
       const data = updateState.data?.eventOnOrganizationVerification?.lifecycle;
-      const organizationData = await getOrganizationDataCodegen(organizationId);
+      const organizationData = await getOrganizationData(organizationId);
       const organizationDataResponse =
         organizationData?.data?.organization.verification.lifecycle;
 

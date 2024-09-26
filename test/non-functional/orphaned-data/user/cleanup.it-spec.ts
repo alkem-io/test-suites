@@ -5,8 +5,8 @@ import { deleteOrganization } from '@test/functional-api/contributor-management/
 import { entitiesId } from '@test/types/entities-helper';
 
 afterAll(async () => {
-  await deleteOpportunityCodegen(entitiesId.opportunity.id);
-  await deleteChallengeCodegen(entitiesId.challenge.id);
+  await deleteOpportunity(entitiesId.opportunity.id);
+  await deleteChallenge(entitiesId.challenge.id);
   await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });

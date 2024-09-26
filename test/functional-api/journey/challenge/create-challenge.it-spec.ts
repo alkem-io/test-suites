@@ -21,7 +21,7 @@ const spaceName = 'crechal-eco-name' + uniqueId;
 const spaceNameId = 'crechal-eco-nameid' + uniqueId;
 
 const challengeData = async (challengeId: string) => {
-  const subspaceData = await getSubspaceDataCodegen(
+  const subspaceData = await getSubspaceData(
     entitiesId.spaceId,
     challengeId
   );
@@ -29,7 +29,7 @@ const challengeData = async (challengeId: string) => {
 };
 
 const challengesList = async () => {
-  return await getSubspacesDataCodegen(entitiesId.spaceId);
+  return await getSubspacesData(entitiesId.spaceId);
 };
 
 beforeAll(async () => {
@@ -48,7 +48,7 @@ afterAll(async () => {
 
 beforeEach(async () => {
   challengeName = `cr-ch-dname-${uniqueId}`;
-  const response = await createSubspaceCodegen(
+  const response = await createSubspace(
     challengeName + 'xxx',
     `cr-ch-nameid-${uniqueId}`,
     entitiesId.spaceId
@@ -63,7 +63,7 @@ afterEach(async () => {
 describe('Create subspace', () => {
   test('should create a successfull challenge', async () => {
     // Act
-    const response = await createSubspaceCodegen(
+    const response = await createSubspace(
       'challengeName',
       `${uniqueId}cr`,
       entitiesId.spaceId
@@ -76,7 +76,7 @@ describe('Create subspace', () => {
     expect(response.status).toBe(200);
     expect(createSubspaceData?.profile.displayName).toEqual('challengeName');
     expect(createSubspaceData).toEqual(
-      (await getSubspaceDataCodegen(entitiesId.spaceId, additionalChallengeId))
+      (await getSubspaceData(entitiesId.spaceId, additionalChallengeId))
         .data?.space.subspace
     );
   });
@@ -99,14 +99,14 @@ describe('Create subspace', () => {
   // ToDo: unstable, passes randomly
   test.skip('should create 2 subspaces with different names and nameIDs', async () => {
     // Act
-    const response = await createSubspaceCodegen(
+    const response = await createSubspace(
       `${challengeName}cr23`,
       `${uniqueId}cr23`,
       entitiesId.spaceId
     );
     const challengeId1 = response.data?.createSubspace.id ?? '';
 
-    const responseChallengeTwo = await createSubspaceCodegen(
+    const responseChallengeTwo = await createSubspace(
       //  spaceId,
       `${challengeName}cc3`,
       `${uniqueId}cc3`,
@@ -135,7 +135,7 @@ describe('Create subspace', () => {
     `(
       'should throw error: "$expected" for nameId value: "$nameId"',
       async ({ nameId, expected }) => {
-        const response = await createSubspaceCodegen(
+        const response = await createSubspace(
           challengeName + 'd',
           nameId + 'd',
           entitiesId.spaceId

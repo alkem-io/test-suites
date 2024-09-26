@@ -46,19 +46,19 @@ beforeAll(async () => {
   );
   await createChallengeForOrgSpace(challengeName);
 
-  await changePreferenceSpaceCodegen(
+  await changePreferenceSpace(
     entitiesId.spaceId,
     SpacePreferenceType.AuthorizationAnonymousReadAccess,
     'true'
   );
 
-  await changePreferenceChallengeCodegen(
+  await changePreferenceChallenge(
     entitiesId.challenge.id,
     ChallengePreferenceType.MembershipApplyChallengeFromSpaceMembers,
     'true'
   );
 
-  await changePreferenceChallengeCodegen(
+  await changePreferenceChallenge(
     entitiesId.challenge.id,
     ChallengePreferenceType.MembershipJoinChallengeFromSpaceMembers,
     'true'
@@ -80,13 +80,13 @@ beforeAll(async () => {
     TestUser.QA_USER
   );
 
-  await sendMessageToRoomCodegen(
+  await sendMessageToRoom(
     entitiesId.challenge.updatesId,
     'test',
     TestUser.GLOBAL_ADMIN
   );
 
-  await createRelationCodegen(
+  await createRelation(
     entitiesId.challenge.collaborationId,
     'incoming',
     'relationDescription',
@@ -96,7 +96,7 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
 
-  await createPostOnCalloutCodegen(
+  await createPostOnCallout(
     entitiesId.challenge.calloutId,
     { displayName: 'postDisplayName' },
     'postnameid',
@@ -104,7 +104,7 @@ beforeAll(async () => {
   );
 });
 afterAll(async () => {
-  await deleteChallengeCodegen(entitiesId.challenge.id);
+  await deleteChallenge(entitiesId.challenge.id);
   await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
@@ -112,7 +112,7 @@ afterAll(async () => {
 describe('myPrivileges - Challenge of Public Space', () => {
   test('RegisteredUser privileges to Challenge', async () => {
     // Act
-    const response = await getChallengeDataCodegen(
+    const response = await getChallengeData(
       entitiesId.challenge.id,
       TestUser.NON_HUB_MEMBER
     );
@@ -126,7 +126,7 @@ describe('myPrivileges - Challenge of Public Space', () => {
   describe('Community', () => {
     test('RegisteredUser privileges to Challenge / Community', async () => {
       // Act
-      const response = await getChallengeDataCodegen(
+      const response = await getChallengeData(
         entitiesId.challenge.id,
         TestUser.NON_HUB_MEMBER
       );
@@ -140,7 +140,7 @@ describe('myPrivileges - Challenge of Public Space', () => {
 
     test('RegisteredUser privileges to Challenge / Community / Application', async () => {
       // Act
-      const response = await getChallengeDataCodegen(
+      const response = await getChallengeData(
         entitiesId.challenge.id,
         TestUser.NON_HUB_MEMBER
       );
@@ -155,7 +155,7 @@ describe('myPrivileges - Challenge of Public Space', () => {
 
     test('RegisteredUser privileges to Challenge / Community / Communication', async () => {
       // Act
-      const response = await getChallengeDataCodegen(
+      const response = await getChallengeData(
         entitiesId.challenge.id,
         TestUser.NON_HUB_MEMBER
       );
@@ -169,7 +169,7 @@ describe('myPrivileges - Challenge of Public Space', () => {
 
     test.skip('RegisteredUser privileges to Challenge / Community / Communication / Discussion', async () => {
       // Act
-      const response = await getChallengeDataCodegen(
+      const response = await getChallengeData(
         entitiesId.challenge.id,
         TestUser.NON_HUB_MEMBER
       );
@@ -184,7 +184,7 @@ describe('myPrivileges - Challenge of Public Space', () => {
 
     test('RegisteredUser privileges to Challenge / Community / Communication / Updates', async () => {
       // Act
-      const response = await getChallengeDataCodegen(
+      const response = await getChallengeData(
         entitiesId.challenge.id,
         TestUser.NON_HUB_MEMBER
       );
@@ -201,7 +201,7 @@ describe('myPrivileges - Challenge of Public Space', () => {
   describe('Collaboration', () => {
     test('RegisteredUser privileges to Challenge / Collaboration', async () => {
       // Act
-      const response = await getChallengeDataCodegen(
+      const response = await getChallengeData(
         entitiesId.challenge.id,
         TestUser.NON_HUB_MEMBER
       );
@@ -216,7 +216,7 @@ describe('myPrivileges - Challenge of Public Space', () => {
     // Skip due to bug: https://app.zenspace.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/alkem-io/server/2143
     test.skip('RegisteredUser privileges to Challenge / Collaboration / Relations', async () => {
       // Act
-      const response = await getChallengeDataCodegen(
+      const response = await getChallengeData(
         entitiesId.challenge.id,
         TestUser.NON_HUB_MEMBER
       );
@@ -238,7 +238,7 @@ describe('myPrivileges - Challenge of Public Space', () => {
 
     test('RegisteredUser privileges to Challenge / Collaboration / Callout', async () => {
       // Act
-      const response = await getChallengeDataCodegen(
+      const response = await getChallengeData(
         entitiesId.challenge.id,
         TestUser.NON_HUB_MEMBER
       );
@@ -252,7 +252,7 @@ describe('myPrivileges - Challenge of Public Space', () => {
 
     test('RegisteredUser privileges to Challenge / Collaboration / Callout / Post', async () => {
       // Act
-      const response = await getDataPerChallengeCalloutCodegen(
+      const response = await getDataPerChallengeCallout(
         entitiesId.challenge.id,
         entitiesId.challenge.calloutId,
         TestUser.NON_HUB_MEMBER
@@ -317,7 +317,7 @@ describe('myPrivileges - Challenge of Public Space', () => {
   describe('Preferences', () => {
     test('RegisteredUser privileges to Challenge / Preferences', async () => {
       // Act
-      const response = await getChallengeDataCodegen(
+      const response = await getChallengeData(
         entitiesId.challenge.id,
         TestUser.NON_HUB_MEMBER
       );

@@ -2,7 +2,7 @@ import { TestUser } from '@test/utils/token.helper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 
-export const getUserCommunityPrivilegeCodegen = async (
+export const getUserCommunityPrivilege = async (
   roleSetId: string,
   role = TestUser.GLOBAL_ADMIN
 ) => {
@@ -20,7 +20,7 @@ export const getUserCommunityPrivilegeCodegen = async (
   return graphqlErrorWrapper(callback, role);
 };
 
-// export const getUserCommunityPrivilegeToOpportunityCodegen = async (
+// export const getUserCommunityPrivilegeToOpportunity = async (
 //   spaceId: string,
 //   opportunityId: string,
 //   includeDetails: boolean,
@@ -42,7 +42,7 @@ export const getUserCommunityPrivilegeCodegen = async (
 //   return graphqlErrorWrapper(callback, role);
 // };
 
-// export const getUserCommunityPrivilegeToChallengeCodegen = async (
+// export const getUserCommunityPrivilegeToChallenge = async (
 //   spaceId: string,
 //   subspaceId: string,
 //   includeDetails: boolean,
@@ -101,7 +101,7 @@ export const getRoleSetMembersList = async (
   return graphqlErrorWrapper(callback, role);
 };
 
-// export const getChallengeCommunityDataCodegen = async (
+// export const getChallengeCommunityData = async (
 //   spaceId: string,
 //   challengeId: string,
 //   userRole: TestUser = TestUser.GLOBAL_ADMIN
@@ -128,7 +128,7 @@ export const getRoleSetMembersList = async (
 //   any | undefined,
 //   any | undefined
 // ]> => {
-//   const responseQuery = await getSpaceCommunityAvailableUsersDataCodegen(
+//   const responseQuery = await getSpaceCommunityAvailableUsersData(
 //     spaceId
 //   );
 
@@ -156,7 +156,7 @@ export const getRoleSetMembersList = async (
 //   any | undefined,
 //   any | undefined
 // ]> => {
-//   const responseQuery = await getChallengeCommunityAvailableUsersDataCodegen(
+//   const responseQuery = await getChallengeCommunityAvailableUsersData(
 //     spaceId,
 //     challengeId
 //   );
@@ -184,7 +184,7 @@ export const getRoleSetMembersList = async (
 //   any | undefined,
 //   any | undefined
 // ]> => {
-//   const responseQuery = await getOpportunityCommunityAvailableUsersDataCodegen(
+//   const responseQuery = await getOpportunityCommunityAvailableUsersData(
 //     spaceId,
 //     opportunityId
 //   );
@@ -234,7 +234,7 @@ export const getRoleSetUsersInLeadRole = async (
 //   spaceId: string,
 //   challengeId: string
 // ): Promise<Array<{ id: string; nameId: string }>> => {
-//   const query = await getChallengeCommunityAvailableUsersDataCodegen(
+//   const query = await getChallengeCommunityAvailableUsersData(
 //     spaceId,
 //     challengeId
 //   );
@@ -252,7 +252,7 @@ export const getRoleSetUsersInLeadRole = async (
 //   spaceId: string,
 //   challengeId: string
 // ): Promise<Array<{ id: string; nameId: string }>> => {
-//   const query = await getChallengeCommunityAvailableUsersDataCodegen(
+//   const query = await getChallengeCommunityAvailableUsersData(
 //     spaceId,
 //     challengeId
 //   );
@@ -270,7 +270,7 @@ export const getRoleSetUsersInLeadRole = async (
 //   spaceId: string,
 //   opportunityId: string
 // ): Promise<Array<{ id: string; nameId: string }>> => {
-//   const query = await getOpportunityCommunityAvailableUsersDataCodegen(
+//   const query = await getOpportunityCommunityAvailableUsersData(
 //     spaceId,
 //     opportunityId
 //   );
@@ -289,7 +289,7 @@ export const getRoleSetUsersInLeadRole = async (
 //   spaceId: string,
 //   opportunityId: string
 // ): Promise<Array<{ id: string; nameId: string }>> => {
-//   const query = await getOpportunityCommunityAvailableUsersDataCodegen(
+//   const query = await getOpportunityCommunityAvailableUsersData(
 //     spaceId,
 //     opportunityId
 //   );
@@ -303,7 +303,7 @@ export const getRoleSetUsersInLeadRole = async (
 //   return formattedUsers;
 // };
 
-// export const getChallengeCommunityAvailableUsersDataCodegen = async (
+// export const getChallengeCommunityAvailableUsersData = async (
 //   spaceId: string,
 //   challengeId: string,
 //   userRole: TestUser = TestUser.GLOBAL_ADMIN
@@ -322,7 +322,7 @@ export const getRoleSetUsersInLeadRole = async (
 //   return graphqlErrorWrapper(callback, userRole);
 // };
 
-// export const getOpportunityCommunityAvailableUsersDataCodegen = async (
+// export const getOpportunityCommunityAvailableUsersData = async (
 //   spaceId: string,
 //   opportunityId: string,
 //   userRole: TestUser = TestUser.GLOBAL_ADMIN
@@ -341,7 +341,7 @@ export const getRoleSetUsersInLeadRole = async (
 //   return graphqlErrorWrapper(callback, userRole);
 // };
 
-// export const getSpaceCommunityAvailableUsersDataCodegen = async (
+// export const getSpaceCommunityAvailableUsersData = async (
 //   spaceId: string,
 //   userRole: TestUser = TestUser.GLOBAL_ADMIN
 // ) => {

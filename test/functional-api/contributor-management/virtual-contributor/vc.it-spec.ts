@@ -65,7 +65,7 @@ beforeAll(async () => {
   );
   vcLicensePlanId = vcLicensePlan[0].id;
 
-  // await createChallengeForOrgSpaceCodegen(challengeName);
+  // await createChallengeForOrgSpace(challengeName);
   await updateSpaceSettings(entitiesId.spaceId, {
     privacy: {
       mode: SpacePrivacyMode.Public,
@@ -92,7 +92,7 @@ beforeAll(async () => {
   vcSpaceId = vcSpaceData?.id ?? '';
   vcSpaceAccountId = vcSpaceData?.account?.id ?? '';
 
-  const responseVCL1 = await createChallengeCodegen(
+  const responseVCL1 = await createChallenge(
     l1NameVC,
     l1NameIdVC,
     vcSpaceId
@@ -122,7 +122,7 @@ afterAll(async () => {
 describe('Virtual Contributor', () => {
   afterEach(async () => {
     await removeVirtualContributorFromRoleSet(entitiesId.space.roleSetId, vcId);
-    await deleteInvitationCodegen(invitationId);
+    await deleteInvitation(invitationId);
   });
 
   test('should not delete user who hosts an account', async () => {

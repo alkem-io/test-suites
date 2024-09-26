@@ -5,7 +5,7 @@ import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 const uniqueId = (Date.now() + Math.random()).toString();
 export const challengeNameId = `chalNaId${uniqueId}`;
 
-export const getSubspaceDataCodegen = async (
+export const getSubspaceData = async (
   spaceId: string,
   subspaceId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
@@ -25,7 +25,7 @@ export const getSubspaceDataCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const getSubspacesDataCodegen = async (spaceId: string) => {
+export const getSubspacesData = async (spaceId: string) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
     graphqlClient.GetSubspacesData(
@@ -40,7 +40,7 @@ export const getSubspacesDataCodegen = async (spaceId: string) => {
   return graphqlErrorWrapper(callback, TestUser.GLOBAL_ADMIN);
 };
 
-export const createSubspaceCodegen = async (
+export const createSubspace = async (
   challengeName: string,
   challengeNameId: string,
   parentId: string,
@@ -50,7 +50,7 @@ export const createSubspaceCodegen = async (
   const callback = (authToken: string | undefined) =>
     graphqlClient.CreateSubspace(
       {
-        subspaceData: challengeVariablesDataCodegen(
+        subspaceData: challengeVariablesData(
           challengeName,
           challengeNameId,
           parentId
@@ -64,7 +64,7 @@ export const createSubspaceCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const challengeVariablesDataCodegen = (
+export const challengeVariablesData = (
   displayName: string,
   nameId: string,
   spaceId: string

@@ -61,7 +61,7 @@ beforeAll(async () => {
   await createChallengeWithUsers(challengeName);
   await createOpportunityWithUsers(opportunityName);
 
-  await assignUserAsOrganizationAdminCodegen(
+  await assignUserAsOrganizationAdmin(
     users.qaUser.id,
     entitiesId.organization.id
   );
@@ -75,7 +75,7 @@ beforeAll(async () => {
 
   preferencesConfig.forEach(
     async config =>
-      await changePreferenceOrganizationCodegen(
+      await changePreferenceOrganization(
         config.organizationID,
         config.type,
         'true'
@@ -97,7 +97,7 @@ describe('Notifications - Mention Organization', () => {
   describe('Callout discussion', () => {
     test('GA mention Organization in Space comments callout - 2 notification to Organization admins are sent', async () => {
       // Act
-      await sendMessageToRoomCodegen(
+      await sendMessageToRoom(
         entitiesId.space.discussionCalloutCommentsId,
         `${mentionedOrganization(
           entitiesId.organization.displayName,
@@ -133,7 +133,7 @@ describe('Notifications - Mention Organization', () => {
 
     test('HM mention Organization in Space comments callout - 2 notification to Organization admins are sent', async () => {
       // Act
-      await sendMessageToRoomCodegen(
+      await sendMessageToRoom(
         entitiesId.space.discussionCalloutCommentsId,
         `${mentionedOrganization(
           entitiesId.organization.displayName,
@@ -169,7 +169,7 @@ describe('Notifications - Mention Organization', () => {
 
     test('GA mention Organization in Challenge comments callout - 2 notification to Organization admins are sent', async () => {
       // Act
-      await sendMessageToRoomCodegen(
+      await sendMessageToRoom(
         entitiesId.challenge.discussionCalloutCommentsId,
         `${mentionedOrganization(
           entitiesId.organization.displayName,
@@ -206,7 +206,7 @@ describe('Notifications - Mention Organization', () => {
     test('GA mention Organization in Opportunity comments callout - 2 notification to Organization admins are sent', async () => {
       // Act
 
-      await sendMessageToRoomCodegen(
+      await sendMessageToRoom(
         entitiesId.opportunity.discussionCalloutCommentsId,
         `${mentionedOrganization(
           entitiesId.organization.displayName,
@@ -246,7 +246,7 @@ describe('Notifications - Mention Organization', () => {
       let postNameID = '';
       postNameID = `post-name-id-${uniqueId}`;
       const postDisplayName = `post-d-name-${uniqueId}`;
-      const resPostonSpace = await createPostOnCalloutCodegen(
+      const resPostonSpace = await createPostOnCallout(
         entitiesId.space.calloutId,
         { displayName: postDisplayName },
         postNameID,
@@ -262,7 +262,7 @@ describe('Notifications - Mention Organization', () => {
 
     test('HA mention Organization in Space post - 2 notification to Organization admins are sent', async () => {
       // Act
-      await sendMessageToRoomCodegen(
+      await sendMessageToRoom(
         postCommentsIdSpace,
         `${mentionedOrganization(
           entitiesId.organization.displayName,
@@ -300,7 +300,7 @@ describe('Notifications - Mention Organization', () => {
       // Arrange
       preferencesConfig.forEach(
         async config =>
-          await changePreferenceOrganizationCodegen(
+          await changePreferenceOrganization(
             config.organizationID,
             config.type,
             'false'
@@ -308,7 +308,7 @@ describe('Notifications - Mention Organization', () => {
       );
 
       // Act
-      await sendMessageToRoomCodegen(
+      await sendMessageToRoom(
         postCommentsIdSpace,
         `${mentionedOrganization(
           entitiesId.organization.displayName,

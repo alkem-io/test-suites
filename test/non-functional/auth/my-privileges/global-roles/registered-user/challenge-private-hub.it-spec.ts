@@ -40,19 +40,19 @@ beforeAll(async () => {
     spaceName,
     spaceNameId
   );
-  await changePreferenceSpaceCodegen(
+  await changePreferenceSpace(
     entitiesId.spaceId,
     SpacePreferenceType.AuthorizationAnonymousReadAccess,
     'false'
   );
   await createChallengeForOrgSpace(challengeName);
-  await changePreferenceChallengeCodegen(
+  await changePreferenceChallenge(
     entitiesId.challenge.id,
     ChallengePreferenceType.MembershipApplyChallengeFromSpaceMembers,
     'true'
   );
 
-  await changePreferenceChallengeCodegen(
+  await changePreferenceChallenge(
     entitiesId.challenge.id,
     ChallengePreferenceType.MembershipJoinChallengeFromSpaceMembers,
     'true'
@@ -74,13 +74,13 @@ beforeAll(async () => {
     TestUser.QA_USER
   );
 
-  await sendMessageToRoomCodegen(
+  await sendMessageToRoom(
     entitiesId.challenge.updatesId,
     'test',
     TestUser.GLOBAL_ADMIN
   );
 
-  await createRelationCodegen(
+  await createRelation(
     entitiesId.challenge.collaborationId,
     'incoming',
     'relationDescription',
@@ -90,7 +90,7 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
 
-  await createPostOnCalloutCodegen(
+  await createPostOnCallout(
     entitiesId.challenge.calloutId,
     { displayName: 'postDisplayName' },
     'postnameid',
@@ -98,7 +98,7 @@ beforeAll(async () => {
   );
 });
 afterAll(async () => {
-  await deleteChallengeCodegen(entitiesId.challenge.id);
+  await deleteChallenge(entitiesId.challenge.id);
   await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
@@ -106,7 +106,7 @@ afterAll(async () => {
 describe('myPrivileges - Challenge of Private Space', () => {
   test('RegisteredUser privileges to Challenge', async () => {
     // Act
-    const response = await getChallengeDataCodegen(
+    const response = await getChallengeData(
       entitiesId.challenge.id,
       TestUser.NON_HUB_MEMBER
     );

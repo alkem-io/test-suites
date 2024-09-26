@@ -24,11 +24,11 @@ const spaceNameId = 'callout-eco-nameid' + uniqueId;
 
 describe('Limits on account resources creation', () => {
   // afterEach(async () => {
-  //   await deleteSpaceCodegen(spaceId);
+  //   await deleteSpace(spaceId);
   // });
   describe('Global Admin space creation', () => {
     // afterEach(async () => {
-    //   await deleteSpaceCodegen(spaceId);
+    //   await deleteSpace(spaceId);
     // });
     test.each`
       userRole | spaceName

@@ -80,7 +80,7 @@ beforeAll(async () => {
     CommunityRoleType.Lead
   );
 
-  await assignUserToOrganizationCodegen(
+  await assignUserToOrganization(
     users.nonSpaceMember.id,
     entitiesId.organization.id
   );
@@ -166,7 +166,7 @@ describe('User roles', () => {
       spaceId = spaceData?.id ?? '';
       spaceRoleSetId = spaceData?.community?.roleSet.id ?? '';
 
-      const chRes = await createChallengeCodegen(
+      const chRes = await createChallenge(
         challengeName + '1',
         challengeName + '1',
         spaceId,
@@ -178,7 +178,7 @@ describe('User roles', () => {
       chId = chResData?.id ?? '';
       subspaceRoleSetId = chResData?.community?.roleSet.id ?? '';
 
-      const chRes2 = await createChallengeCodegen(
+      const chRes2 = await createChallenge(
         challengeName + '2',
         challengeName + '2',
         spaceId,
@@ -189,7 +189,7 @@ describe('User roles', () => {
       chId2 = chRes2Data?.id ?? '';
       subspaceRoleSetId2 = chRes2Data?.community?.roleSet.id ?? '';
 
-      const oppRes = await createOpportunityCodegen(
+      const oppRes = await createOpportunity(
         opportunityName + '1',
         opportunityName + '1',
         chId
@@ -199,7 +199,7 @@ describe('User roles', () => {
       oppId = oppResData?.id ?? '';
       subsubspaceRoleSetId = oppResData?.community?.roleSet.id ?? '';
 
-      const oppRes2 = await createOpportunityCodegen(
+      const oppRes2 = await createOpportunity(
         opportunityName + '2',
         opportunityName + '2',
         chId2
@@ -209,7 +209,7 @@ describe('User roles', () => {
       oppId2 = oppRes2Data?.id ?? '';
       subsubspaceRoleSetId2 = oppRes2Data?.community?.roleSet.id ?? '';
 
-      const oppRes3 = await createOpportunityCodegen(
+      const oppRes3 = await createOpportunity(
         opportunityName + '3',
         opportunityName + '3',
         chId2
@@ -292,7 +292,7 @@ describe('User roles', () => {
         CommunityRoleType.Lead
       );
 
-      await assignUserToOrganizationCodegen(users.nonSpaceMember.id, orgId);
+      await assignUserToOrganization(users.nonSpaceMember.id, orgId);
     });
     afterAll(async () => {
       await deleteSpace(oppId);

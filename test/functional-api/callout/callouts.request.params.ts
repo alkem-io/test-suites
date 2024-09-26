@@ -36,23 +36,6 @@ export const defaultCallout = {
   },
 };
 
-export const defaultCalloutCodegen = {
-  framing: {
-    profile: {
-      displayName: `default callout display name ${uniqueId}`,
-      description: 'callout description',
-    },
-  },
-  contributionPolicy: {
-    state: CalloutState.Open,
-  },
-  type: CalloutType.Post,
-  enableComments: true,
-  contributionDefaults: {
-    postDescription: 'Please describe the knowledge that is relevant.',
-  },
-};
-
 export const defaultWhiteboard = {
   framing: {
     profile: {
@@ -70,7 +53,7 @@ export const defaultWhiteboard = {
   },
 };
 
-export const createCalloutOnCollaborationCodegen = async (
+export const createCalloutOnCollaboration = async (
   collaborationID: string,
   options?: {
     framing?: {
@@ -101,7 +84,7 @@ export const createCalloutOnCollaborationCodegen = async (
       {
         calloutData: {
           collaborationID,
-          ...defaultCalloutCodegen,
+          ...defaultCallout,
           ...options,
         },
       },
@@ -113,7 +96,7 @@ export const createCalloutOnCollaborationCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const getCollaborationCalloutsDataCodegen = async (
+export const getCollaborationCalloutsData = async (
   collaborationId: string,
   groups?: string[],
   calloutIds?: string[],
@@ -135,7 +118,7 @@ export const getCollaborationCalloutsDataCodegen = async (
   return graphqlErrorWrapper(callback, role);
 };
 
-export const getCalloutDetailsCodegen = async (
+export const getCalloutDetails = async (
   calloutId: string,
   role = TestUser.GLOBAL_ADMIN
 ) => {
@@ -153,7 +136,7 @@ export const getCalloutDetailsCodegen = async (
   return graphqlErrorWrapper(callback, role);
 };
 
-export const getCalloutsCodegen = async (
+export const getCallouts = async (
   collaborationId: string,
   role = TestUser.GLOBAL_ADMIN
 ) => {
@@ -171,7 +154,7 @@ export const getCalloutsCodegen = async (
   return graphqlErrorWrapper(callback, role);
 };
 
-export const createWhiteboardCalloutOnCollaborationCodegen = async (
+export const createWhiteboardCalloutOnCollaboration = async (
   collaborationID: string,
   options?: {
     framing: {
@@ -214,7 +197,7 @@ export const createWhiteboardCalloutOnCollaborationCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const updateCalloutCodegen = async (
+export const updateCallout = async (
   ID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN,
   options?: {
@@ -251,7 +234,7 @@ export const updateCalloutCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const updateCalloutVisibilityCodegen = async (
+export const updateCalloutVisibility = async (
   calloutID: string,
   visibility: CalloutVisibility = CalloutVisibility.Draft,
   userRole: TestUser = TestUser.GLOBAL_ADMIN,
@@ -275,7 +258,7 @@ export const updateCalloutVisibilityCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const deleteCalloutCodegen = async (
+export const deleteCallout = async (
   calloutId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {

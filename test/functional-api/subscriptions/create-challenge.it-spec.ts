@@ -68,14 +68,14 @@ describe('Create challenge subscription', () => {
 
   it('receive newly created challenges', async () => {
     // Create challenge
-    const resOne = await createChallengeCodegen(
+    const resOne = await createChallenge(
       challengeDisplayName1,
       challengeDisplayName1,
       entitiesId.spaceId
     );
     challengeIdOne = resOne?.data?.createSubspace.id ?? '';
 
-    const resTwo = await createChallengeCodegen(
+    const resTwo = await createChallenge(
       challengeDisplayName2,
       challengeDisplayName2,
       entitiesId.spaceId,

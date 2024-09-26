@@ -87,7 +87,7 @@ beforeAll(async () => {
     CommunityRoleType.Lead
   );
 
-  await assignUserAsOrganizationAdminCodegen(
+  await assignUserAsOrganizationAdmin(
     users.spaceAdmin.id,
     entitiesId.organization.id
   );
@@ -112,7 +112,7 @@ describe('Notifications - send messages to Private Space, Public Challenge Commu
   // ToDo: fix test
   test.skip('NOT space member sends message to Challenge community (2 User Leads, 1 Org Lead) - 3 messages sent', async () => {
     // Act
-    await sendMessageToCommunityLeadsCodegen(
+    await sendMessageToCommunityLeads(
       entitiesId.challenge.communityId,
       'Test message',
       TestUser.NON_HUB_MEMBER
@@ -143,7 +143,7 @@ describe('Notifications - send messages to Private Space, Public Challenge Commu
 
   test('Space member send message to Challenge community (2 User Leads, 1 Org Lead) - 3 messages sent', async () => {
     // Act
-    await sendMessageToCommunityLeadsCodegen(
+    await sendMessageToCommunityLeads(
       entitiesId.challenge.communityId,
       'Test message',
       TestUser.HUB_ADMIN
@@ -188,7 +188,7 @@ describe('Notifications - send messages to Private Space, Private Challenge Comm
 
   test('NOT space member sends message to Challenge community (2 User Leads, 1 Org Lead) - 3 messages sent', async () => {
     // Act
-    await sendMessageToCommunityLeadsCodegen(
+    await sendMessageToCommunityLeads(
       entitiesId.challenge.communityId,
       'Test message',
       TestUser.NON_HUB_MEMBER
@@ -219,7 +219,7 @@ describe('Notifications - send messages to Private Space, Private Challenge Comm
 
   test('Challenge member send message to Challenge community (2 User Leads, 1 Org Lead) - 3 messages sent', async () => {
     // Act
-    await sendMessageToCommunityLeadsCodegen(
+    await sendMessageToCommunityLeads(
       entitiesId.challenge.communityId,
       'Test message',
       TestUser.HUB_ADMIN
@@ -282,7 +282,7 @@ describe('Notifications - send messages to Private Space, Public Challenge NO Co
 
   test('NOT space member sends message to Challenge community (0 User Leads, 0 Org Lead) - 1 messages sent', async () => {
     // Act
-    await sendMessageToCommunityLeadsCodegen(
+    await sendMessageToCommunityLeads(
       entitiesId.challenge.communityId,
       'Test message',
       TestUser.NON_HUB_MEMBER

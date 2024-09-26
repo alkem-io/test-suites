@@ -40,23 +40,23 @@ beforeAll(async () => {
     spaceName,
     spaceNameId
   );
-  await changePreferenceSpaceCodegen(
+  await changePreferenceSpace(
     entitiesId.spaceId,
     SpacePreferenceType.AuthorizationAnonymousReadAccess,
     'false'
   );
 
-  await changePreferenceSpaceCodegen(
+  await changePreferenceSpace(
     entitiesId.spaceId,
     SpacePreferenceType.MembershipApplicationsFromAnyone,
     'true'
   );
-  await changePreferenceSpaceCodegen(
+  await changePreferenceSpace(
     entitiesId.spaceId,
     SpacePreferenceType.MembershipJoinSpaceFromAnyone,
     'true'
   );
-  await changePreferenceSpaceCodegen(
+  await changePreferenceSpace(
     entitiesId.spaceId,
     SpacePreferenceType.MembershipJoinSpaceFromHostOrganizationMembers,
     'true'
@@ -76,13 +76,13 @@ beforeAll(async () => {
   //   )
   // );
 
-  await sendMessageToRoomCodegen(
+  await sendMessageToRoom(
     entitiesId.space.updateId,
     'test',
     TestUser.GLOBAL_ADMIN
   );
 
-  await createRelationCodegen(
+  await createRelation(
     entitiesId.space.collaborationId,
     'incoming',
     'relationDescription',
@@ -92,7 +92,7 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
 
-  await createPostOnCalloutCodegen(
+  await createPostOnCallout(
     entitiesId.space.calloutId,
     { displayName: 'postDisplayName' },
     'postnameid',
@@ -256,7 +256,7 @@ describe('myPrivileges', () => {
 
     test('GlobalSpaceAdmin privileges to Space / Collaboration / Callout / Post', async () => {
       // Act
-      const response = await getDataPerSpaceCalloutCodegen(
+      const response = await getDataPerSpaceCallout(
         entitiesId.spaceId,
         entitiesId.space.calloutId,
         TestUser.GLOBAL_HUBS_ADMIN
@@ -275,7 +275,7 @@ describe('myPrivileges', () => {
     // ToDo
     test.skip('GlobalSpaceAdmin privileges to Space / Collaboration / Callout / Whiteboard', async () => {
       // Act
-      const response = await getDataPerSpaceCalloutCodegen(
+      const response = await getDataPerSpaceCallout(
         entitiesId.spaceId,
         entitiesId.space.calloutId,
         TestUser.GLOBAL_HUBS_ADMIN
@@ -300,7 +300,7 @@ describe('myPrivileges', () => {
     // ToDo
     test.skip('GlobalSpaceAdmin privileges to Space / Collaboration / Callout / Comments', async () => {
       // Act
-      const response = await getDataPerSpaceCalloutCodegen(
+      const response = await getDataPerSpaceCallout(
         entitiesId.spaceId,
         entitiesId.space.calloutId,
         TestUser.GLOBAL_HUBS_ADMIN

@@ -97,7 +97,7 @@ beforeAll(async () => {
     location: { country: country, city: city },
   });
 
-  await updateOrganizationCodegen(entitiesId.organization.id, {
+  await updateOrganization(entitiesId.organization.id, {
     legalEntityName: 'legalEntityName',
     domain: 'domain',
     website: 'website',
@@ -132,14 +132,14 @@ beforeAll(async () => {
   organizationIdTest =
     responseCreateOrganization.data?.createOrganization.id ?? '';
 
-  const resSpace = await createPostOnCalloutCodegen(
+  const resSpace = await createPostOnCallout(
     entitiesId.space.calloutId,
     { displayName: postNameIdSpace },
     postNameIdSpace
   );
   postSpaceId = resSpace.data?.createContributionOnCallout.post?.id ?? '';
 
-  const resChallenge = await createPostOnCalloutCodegen(
+  const resChallenge = await createPostOnCallout(
     entitiesId.challenge.calloutId,
     { displayName: postNameIdChallenge },
     postNameIdChallenge
@@ -147,7 +147,7 @@ beforeAll(async () => {
   postChallengeId =
     resChallenge.data?.createContributionOnCallout.post?.id ?? '';
 
-  const resOpportunity = await createPostOnCalloutCodegen(
+  const resOpportunity = await createPostOnCallout(
     entitiesId.opportunity.calloutId,
     { displayName: postNameIdOpportunity },
     postNameIdOpportunity

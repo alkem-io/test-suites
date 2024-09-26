@@ -49,13 +49,13 @@ beforeAll(async () => {
   );
   await createChallengeForOrgSpace(challengeName);
 
-  await changePreferenceChallengeCodegen(
+  await changePreferenceChallenge(
     entitiesId.challenge.id,
     ChallengePreferenceType.MembershipApplyChallengeFromSpaceMembers,
     'true'
   );
 
-  await changePreferenceChallengeCodegen(
+  await changePreferenceChallenge(
     entitiesId.challenge.id,
     ChallengePreferenceType.MembershipJoinChallengeFromSpaceMembers,
     'true'
@@ -77,13 +77,13 @@ beforeAll(async () => {
     TestUser.QA_USER
   );
 
-  await sendMessageToRoomCodegen(
+  await sendMessageToRoom(
     entitiesId.challenge.updatesId,
     'test',
     TestUser.GLOBAL_ADMIN
   );
 
-  await createRelationCodegen(
+  await createRelation(
     entitiesId.challenge.collaborationId,
     'incoming',
     'relationDescription',
@@ -93,7 +93,7 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
 
-  await createPostOnCalloutCodegen(
+  await createPostOnCallout(
     entitiesId.challenge.calloutId,
     { displayName: 'postDisplayName' },
     'postnameid',
@@ -101,7 +101,7 @@ beforeAll(async () => {
   );
 });
 afterAll(async () => {
-  await deleteChallengeCodegen(entitiesId.challenge.id);
+  await deleteChallenge(entitiesId.challenge.id);
   await deleteSpace(entitiesId.spaceId);
   await deleteOrganization(entitiesId.organization.id);
 });
@@ -109,7 +109,7 @@ afterAll(async () => {
 describe('myPrivileges', () => {
   test('GlobalSpaceAdmin privileges to Challenge', async () => {
     // Act
-    const response = await getChallengeDataCodegen(
+    const response = await getChallengeData(
       entitiesId.challenge.id,
       TestUser.GLOBAL_HUBS_ADMIN
     );
@@ -125,7 +125,7 @@ describe('myPrivileges', () => {
   describe('Community', () => {
     test('GlobalSpaceAdmin privileges to Challenge / Community', async () => {
       // Act
-      const response = await getChallengeDataCodegen(
+      const response = await getChallengeData(
         entitiesId.challenge.id,
         TestUser.GLOBAL_HUBS_ADMIN
       );
@@ -141,7 +141,7 @@ describe('myPrivileges', () => {
 
     test('GlobalSpaceAdmin privileges to Challenge / Community / Application', async () => {
       // Act
-      const response = await getChallengeDataCodegen(
+      const response = await getChallengeData(
         entitiesId.challenge.id,
         TestUser.GLOBAL_HUBS_ADMIN
       );
@@ -156,7 +156,7 @@ describe('myPrivileges', () => {
 
     test('GlobalSpaceAdmin privileges to Challenge / Community / Communication', async () => {
       // Act
-      const response = await getChallengeDataCodegen(
+      const response = await getChallengeData(
         entitiesId.challenge.id,
         TestUser.GLOBAL_HUBS_ADMIN
       );
@@ -172,7 +172,7 @@ describe('myPrivileges', () => {
 
     test.skip('GlobalSpaceAdmin privileges to Challenge / Community / Communication / Discussion', async () => {
       // Act
-      const response = await getChallengeDataCodegen(
+      const response = await getChallengeData(
         entitiesId.challenge.id,
         TestUser.GLOBAL_HUBS_ADMIN
       );
@@ -189,7 +189,7 @@ describe('myPrivileges', () => {
 
     test('GlobalSpaceAdmin privileges to Challenge / Community / Communication / Updates', async () => {
       // Act
-      const response = await getChallengeDataCodegen(
+      const response = await getChallengeData(
         entitiesId.challenge.id,
         TestUser.GLOBAL_HUBS_ADMIN
       );
@@ -208,7 +208,7 @@ describe('myPrivileges', () => {
   describe('Collaboration', () => {
     test('GlobalSpaceAdmin privileges to Challenge / Collaboration', async () => {
       // Act
-      const response = await getChallengeDataCodegen(
+      const response = await getChallengeData(
         entitiesId.challenge.id,
         TestUser.GLOBAL_HUBS_ADMIN
       );
@@ -225,7 +225,7 @@ describe('myPrivileges', () => {
     // Skip due to bug: https://app.zenspace.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/alkem-io/server/2143
     test.skip('GlobalSpaceAdmin privileges to Challenge / Collaboration / Relations', async () => {
       // Act
-      const response = await getChallengeDataCodegen(
+      const response = await getChallengeData(
         entitiesId.challenge.id,
         TestUser.GLOBAL_HUBS_ADMIN
       );
@@ -247,7 +247,7 @@ describe('myPrivileges', () => {
 
     test('GlobalSpaceAdmin privileges to Challenge / Collaboration / Callout', async () => {
       // Act
-      const response = await getChallengeDataCodegen(
+      const response = await getChallengeData(
         entitiesId.challenge.id,
         TestUser.GLOBAL_HUBS_ADMIN
       );
@@ -263,7 +263,7 @@ describe('myPrivileges', () => {
 
     test('GlobalSpaceAdmin privileges to Challenge / Collaboration / Callout / Post', async () => {
       // Act
-      const response = await getDataPerChallengeCalloutCodegen(
+      const response = await getDataPerChallengeCallout(
         entitiesId.challenge.id,
         entitiesId.challenge.calloutId,
         TestUser.GLOBAL_HUBS_ADMIN
@@ -283,7 +283,7 @@ describe('myPrivileges', () => {
     // ToDo
     test.skip('GlobalSpaceAdmin privileges to Challenge / Collaboration / Callout / Whiteboard', async () => {
       // Act
-      // const response = await getDataPerSpaceCalloutCodegen(
+      // const response = await getDataPerSpaceCallout(
       //   entitiesId.spaceId,
       //   entitiesId.space.calloutId,
       //   TestUser.GLOBAL_HUBS_ADMIN
@@ -306,7 +306,7 @@ describe('myPrivileges', () => {
     // ToDo
     test.skip('GlobalSpaceAdmin privileges to Challenge / Collaboration / Callout / Comments', async () => {
       // Act
-      // const response = await getDataPerSpaceCalloutCodegen(
+      // const response = await getDataPerSpaceCallout(
       //   entitiesId.spaceId,
       //   entitiesId.space.calloutId,
       //   TestUser.GLOBAL_HUBS_ADMIN
@@ -330,7 +330,7 @@ describe('myPrivileges', () => {
   describe('Preferences', () => {
     test('GlobalSpaceAdmin privileges to Challenge / Preferences', async () => {
       // Act
-      const response = await getChallengeDataCodegen(
+      const response = await getChallengeData(
         entitiesId.challenge.id,
         TestUser.GLOBAL_HUBS_ADMIN
       );

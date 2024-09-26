@@ -7,7 +7,7 @@ export const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
 
-export const createOpportunityCodegen = async (
+export const createOpportunity = async (
   opportunityName: string,
   opportunityNameId: string,
   parentId: string,
@@ -18,7 +18,7 @@ export const createOpportunityCodegen = async (
   const callback = (authToken: string | undefined) =>
     graphqlClient.CreateSubspace(
       {
-        subspaceData: opportunityVariablesDataCodegen(
+        subspaceData: opportunityVariablesData(
           opportunityName,
           opportunityNameId,
           parentId,
@@ -33,7 +33,7 @@ export const createOpportunityCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const opportunityVariablesDataCodegen = (
+export const opportunityVariablesData = (
   displayName: string,
   nameId: string,
   challengeId: string,

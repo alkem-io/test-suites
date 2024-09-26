@@ -81,7 +81,7 @@ describe('Application', () => {
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
     applicationId = applicationData?.data?.applyForCommunityMembership?.id;
-    const userAppsData = await meQueryCodegen(TestUser.GLOBAL_COMMUNITY_ADMIN);
+    const userAppsData = await meQuery(TestUser.GLOBAL_COMMUNITY_ADMIN);
 
     const getApp = userAppsData?.data?.me?.communityApplications;
 
@@ -126,7 +126,7 @@ describe('Application', () => {
     );
     applicationId = applicationData?.data?.applyForCommunityMembership?.id;
 
-    const userAppsData = await meQueryCodegen(TestUser.GLOBAL_COMMUNITY_ADMIN);
+    const userAppsData = await meQuery(TestUser.GLOBAL_COMMUNITY_ADMIN);
     const getApp = userAppsData?.data?.me?.communityApplications;
 
     // Assert
@@ -189,7 +189,7 @@ describe('Application', () => {
 
     // Act
     await deleteApplication(applicationId);
-    const userAppsData = await meQueryCodegen(TestUser.QA_USER);
+    const userAppsData = await meQuery(TestUser.QA_USER);
     const getApp = userAppsData?.data?.me?.communityApplications;
     const applicationsAfterCreateDelete = await getRoleSetInvitationsApplications(
       entitiesId.space.roleSetId
@@ -312,7 +312,7 @@ describe('Application-flows', () => {
     const createAppData = applicationData?.data?.applyForCommunityMembership;
     challengeApplicationId = createAppData?.id;
 
-    const userAppsData = await meQueryCodegen(TestUser.GLOBAL_COMMUNITY_ADMIN);
+    const userAppsData = await meQuery(TestUser.GLOBAL_COMMUNITY_ADMIN);
 
     const membershipData = userAppsData?.data?.me?.communityApplications;
     const challengeAppOb = [
@@ -350,7 +350,7 @@ describe('Application-flows', () => {
     // Update space application state
     await eventOnRoleSetApplication(applicationId, 'REJECT');
 
-    const userAppsDataAfter = await meQueryCodegen(
+    const userAppsDataAfter = await meQuery(
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
     const membershipDataAfter =

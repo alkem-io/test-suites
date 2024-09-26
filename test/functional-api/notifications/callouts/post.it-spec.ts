@@ -150,33 +150,33 @@ describe('Notifications - post', () => {
   });
 
   beforeAll(async () => {
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.notificationsAdmin.id,
       UserPreferenceType.NotificationPostCommentCreated,
       'false'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.notificationsAdmin.id,
       UserPreferenceType.NotificationPostCreated,
       'false'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.notificationsAdmin.id,
       UserPreferenceType.NotificationPostCreatedAdmin,
       'false'
     );
 
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationPostCommentCreated,
       'false'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationPostCreated,
       'false'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationPostCreatedAdmin,
       'false'
@@ -184,14 +184,14 @@ describe('Notifications - post', () => {
 
     preferencesConfig.forEach(
       async config =>
-        await changePreferenceUserCodegen(config.userID, config.type, 'true')
+        await changePreferenceUser(config.userID, config.type, 'true')
     );
   });
 
   afterEach(async () => {
-    await deletePostCodegen(spacePostId);
-    await deletePostCodegen(challengePostId);
-    await deletePostCodegen(opportunityPostId);
+    await deletePost(spacePostId);
+    await deletePost(challengePostId);
+    await deletePost(opportunityPostId);
   });
 
   //ToDo: fix test
@@ -200,7 +200,7 @@ describe('Notifications - post', () => {
     const postSubjectMember = `${spaceName}: New Post created by admin, have a look!`;
 
     // Act
-    const resPostonSpace = await createPostOnCalloutCodegen(
+    const resPostonSpace = await createPostOnCallout(
       entitiesId.space.calloutId,
       { displayName: postDisplayName },
       postNameID,
@@ -254,7 +254,7 @@ describe('Notifications - post', () => {
     const postSubjectAdmin = `${spaceName}: New Post created by space`;
     const postSubjectMember = `${spaceName}: New Post created by space, have a look!`;
     // Act
-    const resPostonSpace = await createPostOnCalloutCodegen(
+    const resPostonSpace = await createPostOnCallout(
       entitiesId.space.calloutId,
       { displayName: postDisplayName },
       postNameID,
@@ -310,7 +310,7 @@ describe('Notifications - post', () => {
     const postSubjectAdmin = `${challengeName}: New Post created by space`;
     const postSubjectMember = `${challengeName}: New Post created by space, have a look!`;
     // Act
-    const resPostonSpace = await createPostOnCalloutCodegen(
+    const resPostonSpace = await createPostOnCallout(
       entitiesId.challenge.calloutId,
       { displayName: postDisplayName },
       postNameID,
@@ -367,7 +367,7 @@ describe('Notifications - post', () => {
     const postSubjectAdmin = `${opportunityName}: New Post created by opportunity`;
     const postSubjectMember = `${opportunityName}: New Post created by opportunity, have a look!`;
     // Act
-    const resPostonSpace = await createPostOnCalloutCodegen(
+    const resPostonSpace = await createPostOnCallout(
       entitiesId.opportunity.calloutId,
       { displayName: postDisplayName },
       postNameID,
@@ -440,10 +440,10 @@ describe('Notifications - post', () => {
   test('OA create opportunity post - 0 notifications - all roles with notifications disabled', async () => {
     preferencesConfig.forEach(
       async config =>
-        await changePreferenceUserCodegen(config.userID, config.type, 'false')
+        await changePreferenceUser(config.userID, config.type, 'false')
     );
     // Act
-    const resPostonSpace = await createPostOnCalloutCodegen(
+    const resPostonSpace = await createPostOnCallout(
       entitiesId.opportunity.calloutId,
       { displayName: postDisplayName },
       postNameID,

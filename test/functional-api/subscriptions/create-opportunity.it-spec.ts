@@ -76,14 +76,14 @@ describe('Create opportunity subscription', () => {
 
   it('receive newly created opportunities', async () => {
     // Create opportunity
-    const resOne = await createOpportunityCodegen(
+    const resOne = await createOpportunity(
       opportunityDisplayName1,
       opportunityDisplayName1,
       entitiesId.challenge.id
     );
     opportunityIdOne = resOne?.data?.createSubspace.id ?? '';
 
-    const resTwo = await createOpportunityCodegen(
+    const resTwo = await createOpportunity(
       opportunityDisplayName2,
       opportunityDisplayName2,
       entitiesId.challenge.id,

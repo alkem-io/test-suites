@@ -20,13 +20,13 @@ let replyId = '';
 let threadId = '';
 
 beforeAll(async () => {
-  const res = await getPlatformForumDataCodegen();
+  const res = await getPlatformForumData();
   platformDiscussionId = res?.data?.platform.forum.id ?? '';
 });
 
 describe('Reply - Discussion messages', () => {
   beforeAll(async () => {
-    const res = await createDiscussionCodegen(
+    const res = await createDiscussion(
       platformDiscussionId,
       `test-${uniqueId}`
     );
@@ -36,21 +36,21 @@ describe('Reply - Discussion messages', () => {
   });
 
   afterAll(async () => {
-    await deleteDiscussionCodegen(discussionId);
+    await deleteDiscussion(discussionId);
   });
 
   afterEach(async () => {
-    await removeMessageOnRoomCodegen(discussionCommentsId, messageId);
-    await removeMessageOnRoomCodegen(discussionCommentsId, replyId);
+    await removeMessageOnRoom(discussionCommentsId, messageId);
+    await removeMessageOnRoom(discussionCommentsId, replyId);
   });
 
   test('Reply to own message', async () => {
     // Act
-    const res = await sendMessageToRoomCodegen(discussionCommentsId);
+    const res = await sendMessageToRoom(discussionCommentsId);
     const resComment = res?.data?.sendMessageToRoom;
     messageId = resComment?.id;
 
-    const replyData = await sendMessageReplyToRoomCodegen(
+    const replyData = await sendMessageReplyToRoom(
       messageId,
       discussionCommentsId,
       'test reply'
@@ -59,7 +59,7 @@ describe('Reply - Discussion messages', () => {
     replyId = replyInfo?.id;
     threadId = replyInfo?.threadID ?? '';
 
-    const discussionMessageData = await getPlatformDiscussionsDataByIdCodegen(
+    const discussionMessageData = await getPlatformDiscussionsDataById(
       discussionId
     );
 
@@ -73,11 +73,11 @@ describe('Reply - Discussion messages', () => {
 
   test('Reply to message created by other user', async () => {
     // Act
-    const res = await sendMessageToRoomCodegen(discussionCommentsId);
+    const res = await sendMessageToRoom(discussionCommentsId);
     const resComment = res?.data?.sendMessageToRoom;
     messageId = resComment?.id;
 
-    const replyData = await sendMessageReplyToRoomCodegen(
+    const replyData = await sendMessageReplyToRoom(
       messageId,
       discussionCommentsId,
       'test reply',
@@ -87,7 +87,7 @@ describe('Reply - Discussion messages', () => {
     replyId = replyInfo?.id;
     threadId = replyInfo?.threadID ?? '';
 
-    const discussionMessageData = await getPlatformDiscussionsDataByIdCodegen(
+    const discussionMessageData = await getPlatformDiscussionsDataById(
       discussionId
     );
 
@@ -101,11 +101,11 @@ describe('Reply - Discussion messages', () => {
 
   test('Should fail to delete message, when user raplied to a thread has been removed', async () => {
     // Arrange
-    const res1 = await sendMessageToRoomCodegen(discussionCommentsId);
+    const res1 = await sendMessageToRoom(discussionCommentsId);
     const resComment1 = res1?.data?.sendMessageToRoom;
     messageId = resComment1?.id;
 
-    const replyData1 = await sendMessageReplyToRoomCodegen(
+    const replyData1 = await sendMessageReplyToRoom(
       messageId,
       discussionCommentsId,
       'test reply',
@@ -114,15 +114,15 @@ describe('Reply - Discussion messages', () => {
     const replyInfo1 = replyData1?.data?.sendMessageReplyToRoom;
     replyId = replyInfo1?.id;
 
-    await removeMessageOnRoomCodegen(discussionCommentsId, messageId);
-    await removeMessageOnRoomCodegen(discussionCommentsId, replyId);
+    await removeMessageOnRoom(discussionCommentsId, messageId);
+    await removeMessageOnRoom(discussionCommentsId, replyId);
 
     // Act
-    const res2 = await sendMessageToRoomCodegen(discussionCommentsId);
+    const res2 = await sendMessageToRoom(discussionCommentsId);
     const resComment2 = res2?.data?.sendMessageToRoom;
     messageId = resComment2?.id;
 
-    const replyData = await sendMessageReplyToRoomCodegen(
+    const replyData = await sendMessageReplyToRoom(
       messageId,
       discussionCommentsId,
       'test reply',
@@ -132,7 +132,7 @@ describe('Reply - Discussion messages', () => {
     replyId = replyInfo2?.id;
     threadId = replyInfo2?.threadID ?? '';
 
-    const resDelete = await removeMessageOnRoomCodegen(
+    const resDelete = await removeMessageOnRoom(
       discussionCommentsId,
       messageId,
       TestUser.HUB_ADMIN
@@ -146,12 +146,12 @@ describe('Reply - Discussion messages', () => {
 
   test('User replaying to other user message fail to delete the other user message', async () => {
     // Arrange
-    const res = await sendMessageToRoomCodegen(discussionCommentsId);
+    const res = await sendMessageToRoom(discussionCommentsId);
     const resComment = res?.data?.sendMessageToRoom;
     messageId = resComment?.id;
 
     // Act
-    const replyData = await sendMessageReplyToRoomCodegen(
+    const replyData = await sendMessageReplyToRoom(
       messageId,
       discussionCommentsId,
       'test reply',
@@ -161,7 +161,7 @@ describe('Reply - Discussion messages', () => {
     replyId = replyInfo?.id;
     threadId = replyInfo?.threadID ?? '';
 
-    const resDelete = await removeMessageOnRoomCodegen(
+    const resDelete = await removeMessageOnRoom(
       discussionCommentsId,
       messageId,
       TestUser.NON_HUB_MEMBER
@@ -175,11 +175,11 @@ describe('Reply - Discussion messages', () => {
 
   test('Replies should not be deleted, when main message is removed', async () => {
     // Arrange
-    const res = await sendMessageToRoomCodegen(discussionCommentsId);
+    const res = await sendMessageToRoom(discussionCommentsId);
     const resComment = res?.data?.sendMessageToRoom;
     messageId = resComment?.id;
 
-    const replyData1 = await sendMessageReplyToRoomCodegen(
+    const replyData1 = await sendMessageReplyToRoom(
       messageId,
       discussionCommentsId,
       'test reply',
@@ -188,7 +188,7 @@ describe('Reply - Discussion messages', () => {
     const replyInfo1 = replyData1?.data?.sendMessageReplyToRoom;
     const replyId1 = replyInfo1?.id;
 
-    const replyData2 = await sendMessageReplyToRoomCodegen(
+    const replyData2 = await sendMessageReplyToRoom(
       messageId,
       discussionCommentsId,
       'test reply',
@@ -198,11 +198,11 @@ describe('Reply - Discussion messages', () => {
     replyId = replyInfo2?.id;
 
     // Act
-    const resDelete = await removeMessageOnRoomCodegen(
+    const resDelete = await removeMessageOnRoom(
       discussionCommentsId,
       messageId
     );
-    const discussionMessageData = await getPlatformDiscussionsDataByIdCodegen(
+    const discussionMessageData = await getPlatformDiscussionsDataById(
       discussionId
     );
 
@@ -213,17 +213,17 @@ describe('Reply - Discussion messages', () => {
         .messages
     ).toHaveLength(2);
 
-    await removeMessageOnRoomCodegen(discussionCommentsId, replyId1);
-    await removeMessageOnRoomCodegen(discussionCommentsId, replyId);
+    await removeMessageOnRoom(discussionCommentsId, replyId1);
+    await removeMessageOnRoom(discussionCommentsId, replyId);
   });
 
   test('Removing reply, removes reaction related to it', async () => {
     // Arrange
-    const res = await sendMessageToRoomCodegen(discussionCommentsId);
+    const res = await sendMessageToRoom(discussionCommentsId);
     const resComment = res?.data?.sendMessageToRoom;
     messageId = resComment?.id;
 
-    const replyData = await sendMessageReplyToRoomCodegen(
+    const replyData = await sendMessageReplyToRoom(
       messageId,
       discussionCommentsId,
       'test reply',
@@ -232,14 +232,14 @@ describe('Reply - Discussion messages', () => {
     const replyInfo = replyData?.data?.sendMessageReplyToRoom;
     const replyId = replyInfo?.id;
 
-    await addReactionCodegen(
+    await addReaction(
       discussionCommentsId,
       replyId,
       '👏',
       TestUser.CHALLENGE_ADMIN
     );
 
-    await addReactionCodegen(
+    await addReaction(
       discussionCommentsId,
       replyId,
       '👏',
@@ -247,13 +247,13 @@ describe('Reply - Discussion messages', () => {
     );
 
     // Act
-    await removeMessageOnRoomCodegen(
+    await removeMessageOnRoom(
       discussionCommentsId,
       replyId,
       TestUser.CHALLENGE_ADMIN
     );
 
-    const discussionMessageData = await getPlatformDiscussionsDataByIdCodegen(
+    const discussionMessageData = await getPlatformDiscussionsDataById(
       discussionId
     );
     const discussionMessages =

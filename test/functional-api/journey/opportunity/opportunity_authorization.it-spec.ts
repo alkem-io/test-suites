@@ -40,7 +40,7 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  const responseCreateOpportunityOnChallenge = await createSubspaceCodegen(
+  const responseCreateOpportunityOnChallenge = await createSubspace(
     opportunityName,
     opportunityNameId,
     entitiesId.challenge.id
@@ -84,7 +84,7 @@ describe('Opportunity Admin', () => {
 
   test('should add same user as admin of 2 opportunities', async () => {
     // Arrange
-    const responseOppTwo = await createSubspaceCodegen(
+    const responseOppTwo = await createSubspace(
       `oppdname-${uniqueId}`,
       `oppnameid-${uniqueId}`,
       entitiesId.challenge.id

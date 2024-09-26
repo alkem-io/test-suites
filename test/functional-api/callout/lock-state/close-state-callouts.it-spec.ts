@@ -83,11 +83,11 @@ beforeEach(async () => {
 
 describe('Callouts - Close State', () => {
   afterEach(async () => {
-    await deleteCalloutCodegen(calloutId);
+    await deleteCallout(calloutId);
   });
   test('Close callout that has not been published', async () => {
     // Act
-    const res = await createCalloutOnCollaborationCodegen(
+    const res = await createCalloutOnCollaboration(
       entitiesId.space.collaborationId,
       {
         framing: { profile: { displayName: 'check' } },
@@ -95,13 +95,13 @@ describe('Callouts - Close State', () => {
     );
     calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 
-    await updateCalloutCodegen(calloutId, TestUser.GLOBAL_ADMIN, {
+    await updateCallout(calloutId, TestUser.GLOBAL_ADMIN, {
       contributionPolicy: {
         state: CalloutState.Closed,
       },
     });
 
-    const postsData = await getDataPerSpaceCalloutCodegen(
+    const postsData = await getDataPerSpaceCallout(
       entitiesId.spaceId,
       calloutId
     );
@@ -113,22 +113,22 @@ describe('Callouts - Close State', () => {
 
   test('Close callout that has been published', async () => {
     // Act
-    const res = await createCalloutOnCollaborationCodegen(
+    const res = await createCalloutOnCollaboration(
       entitiesId.space.collaborationId
     );
     calloutId = res.data?.createCalloutOnCollaboration.id ?? '';
 
-    await updateCalloutVisibilityCodegen(
+    await updateCalloutVisibility(
       calloutId,
       CalloutVisibility.Published
     );
 
-    await updateCalloutCodegen(calloutId, TestUser.GLOBAL_ADMIN, {
+    await updateCallout(calloutId, TestUser.GLOBAL_ADMIN, {
       contributionPolicy: {
         state: CalloutState.Closed,
       },
     });
-    const postsData = await getDataPerSpaceCalloutCodegen(
+    const postsData = await getDataPerSpaceCallout(
       entitiesId.spaceId,
       calloutId
     );
@@ -150,14 +150,14 @@ describe('Callout - Close State - User Privileges Posts', () => {
 
   beforeAll(async () => {
     const preconditions = async (calloutId: string) => {
-      const resPostonSpace = await createPostOnCalloutCodegen(calloutId, {
+      const resPostonSpace = await createPostOnCallout(calloutId, {
         displayName: 'postDisplayName',
       });
       const postDataCreate =
         resPostonSpace.data?.createContributionOnCallout.post;
       const postCommentsId = postDataCreate?.comments.id ?? '';
 
-      await updateCalloutCodegen(calloutId, TestUser.GLOBAL_ADMIN, {
+      await updateCallout(calloutId, TestUser.GLOBAL_ADMIN, {
         contributionPolicy: {
           state: CalloutState.Closed,
         },
@@ -165,14 +165,14 @@ describe('Callout - Close State - User Privileges Posts', () => {
       return postCommentsId;
     };
 
-    const spaceCallout = await getDefaultSpaceCalloutByNameIdCodegen(
+    const spaceCallout = await getDefaultSpaceCalloutByNameId(
       entitiesId.spaceId,
       entitiesId.space.calloutId
     );
     spaceCalloutId = spaceCallout?.data?.lookup?.callout?.id ?? '';
     postCommentsIdSpace = await preconditions(spaceCalloutId);
 
-    const challengeCallout = await getDefaultChallengeCalloutByNameIdCodegen(
+    const challengeCallout = await getDefaultChallengeCalloutByNameId(
       entitiesId.spaceId,
       entitiesId.challenge.id,
       entitiesId.challenge.calloutId
@@ -180,7 +180,7 @@ describe('Callout - Close State - User Privileges Posts', () => {
     challengeCalloutId = challengeCallout?.data?.lookup?.callout?.id ?? '';
     postCommentsIdChallenge = await preconditions(challengeCalloutId);
 
-    const opportunityCallout = await getDefaultOpportunityCalloutByNameIdCodegen(
+    const opportunityCallout = await getDefaultOpportunityCalloutByNameId(
       entitiesId.spaceId,
       entitiesId.opportunity.id,
       entitiesId.opportunity.calloutId
@@ -190,9 +190,9 @@ describe('Callout - Close State - User Privileges Posts', () => {
   });
 
   afterAll(async () => {
-    await deleteCalloutCodegen(opportunityCalloutId);
-    await deleteCalloutCodegen(challengeCalloutId);
-    await deleteCalloutCodegen(spaceCalloutId);
+    await deleteCallout(opportunityCalloutId);
+    await deleteCallout(challengeCalloutId);
+    await deleteCallout(spaceCalloutId);
   });
 
   describe('Send Comment to Post - Callout Close State ', () => {
@@ -216,7 +216,7 @@ describe('Callout - Close State - User Privileges Posts', () => {
             postCommentsIdOpportunity
           );
 
-          const messageRes = await sendMessageToRoomCodegen(
+          const messageRes = await sendMessageToRoom(
             id,
             'sendComment',
             userRole
@@ -244,7 +244,7 @@ describe('Callout - Close State - User Privileges Posts', () => {
             postCommentsIdOpportunity
           );
 
-          const messageRes = await sendMessageToRoomCodegen(
+          const messageRes = await sendMessageToRoom(
             id,
             'sendComment',
             userRole
@@ -283,7 +283,7 @@ describe('Callout - Close State - User Privileges Posts', () => {
             opportunityCalloutId
           );
 
-          const res = await createPostOnCalloutCodegen(
+          const res = await createPostOnCallout(
             id,
             {
               displayName: 'postDisplayName',
@@ -310,14 +310,14 @@ describe('Callout - Close State - User Privileges Discussions', () => {
 
   beforeAll(async () => {
     const preconditions = async (calloutId: string) => {
-      await updateCalloutCodegen(calloutId, TestUser.GLOBAL_ADMIN, {
+      await updateCallout(calloutId, TestUser.GLOBAL_ADMIN, {
         contributionPolicy: {
           state: CalloutState.Closed,
         },
       });
     };
 
-    const spaceCallout = await getDefaultSpaceCalloutByNameIdCodegen(
+    const spaceCallout = await getDefaultSpaceCalloutByNameId(
       entitiesId.spaceId,
       entitiesId.space.discussionCalloutId
     );
@@ -327,7 +327,7 @@ describe('Callout - Close State - User Privileges Discussions', () => {
       spaceCallout?.data?.lookup?.callout?.comments?.id ?? '';
     await preconditions(spaceCalloutId);
 
-    const challengeCallout = await getDefaultChallengeCalloutByNameIdCodegen(
+    const challengeCallout = await getDefaultChallengeCalloutByNameId(
       entitiesId.spaceId,
       entitiesId.challenge.id,
       entitiesId.challenge.discussionCalloutId
@@ -337,7 +337,7 @@ describe('Callout - Close State - User Privileges Discussions', () => {
       challengeCallout?.data?.lookup?.callout?.comments?.id ?? '';
     await preconditions(challengeCalloutId);
 
-    const opportunityCallout = await getDefaultOpportunityCalloutByNameIdCodegen(
+    const opportunityCallout = await getDefaultOpportunityCalloutByNameId(
       entitiesId.spaceId,
       entitiesId.opportunity.id,
       entitiesId.opportunity.discussionCalloutId
@@ -348,9 +348,9 @@ describe('Callout - Close State - User Privileges Discussions', () => {
   });
 
   afterAll(async () => {
-    await deleteCalloutCodegen(opportunityCalloutId);
-    await deleteCalloutCodegen(challengeCalloutId);
-    await deleteCalloutCodegen(spaceCalloutId);
+    await deleteCallout(opportunityCalloutId);
+    await deleteCallout(challengeCalloutId);
+    await deleteCallout(spaceCalloutId);
   });
 
   describe('Discussion Callout - Close State ', () => {
@@ -377,7 +377,7 @@ describe('Callout - Close State - User Privileges Discussions', () => {
             opportunityCalloutCommentsId
           );
           // Act
-          const res = await sendMessageToRoomCodegen(
+          const res = await sendMessageToRoom(
             commentsId,
             'comment on discussion callout',
             userRole

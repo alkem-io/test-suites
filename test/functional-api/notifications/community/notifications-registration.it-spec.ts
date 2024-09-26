@@ -22,32 +22,32 @@ beforeAll(async () => {
 
 describe('Notifications - User registration', () => {
   beforeAll(async () => {
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.notificationsAdmin.id,
       UserPreferenceType.NotificationUserSignUp,
       'false'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.notificationsAdmin.id,
       UserPreferenceType.NotificationUserRemoved,
       'false'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.globalAdmin.id,
       UserPreferenceType.NotificationUserRemoved,
       'false'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.globalAdmin.id,
       UserPreferenceType.NotificationUserSignUp,
       'true'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.globalSpacesAdmin.id,
       UserPreferenceType.NotificationUserSignUp,
       'true'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationUserSignUp,
       'true'
@@ -96,17 +96,17 @@ describe('Notifications - User registration', () => {
   });
   test('User sign up - GA(0), New User(1) get notifications', async () => {
     // Arrange
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.globalAdmin.id,
       UserPreferenceType.NotificationUserSignUp,
       'false'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.globalSpacesAdmin.id,
       UserPreferenceType.NotificationUserSignUp,
       'false'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationUserSignUp,
       'false'
@@ -137,7 +137,7 @@ describe('Notifications - User registration', () => {
 describe('Notifications - User removal', () => {
   test('User removed - GA(1) get notifications', async () => {
     // Arrange
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.globalAdmin.id,
       UserPreferenceType.NotificationUserRemoved,
       'true'

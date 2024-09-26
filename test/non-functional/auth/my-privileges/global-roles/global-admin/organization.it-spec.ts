@@ -33,7 +33,7 @@ afterAll(async () => {
 describe('myPrivileges', () => {
   test('GlobalAdmin privileges to Organization', async () => {
     // Act
-    const response = await getOrganizationDataCodegen(
+    const response = await getOrganizationData(
       entitiesId.organization.id,
       TestUser.GLOBAL_ADMIN
     );
@@ -47,7 +47,7 @@ describe('myPrivileges', () => {
 
   test('GlobalAdmin privileges to Organization / Verification', async () => {
     // Act
-    const response = await getOrganizationDataCodegen(
+    const response = await getOrganizationData(
       entitiesId.organization.id,
       TestUser.GLOBAL_ADMIN
     );
@@ -61,7 +61,7 @@ describe('myPrivileges', () => {
 
   test('GlobalAdmin privileges to Organization / Profile', async () => {
     // Act
-    const response = await getOrganizationDataCodegen(
+    const response = await getOrganizationData(
       entitiesId.organization.id,
       TestUser.GLOBAL_ADMIN
     );
@@ -74,7 +74,7 @@ describe('myPrivileges', () => {
 
   test('GlobalAdmin privileges to Organization / Profile / References', async () => {
     // Act
-    const response = await getOrganizationDataCodegen(
+    const response = await getOrganizationData(
       entitiesId.organization.id,
       TestUser.GLOBAL_ADMIN
     );
@@ -88,7 +88,7 @@ describe('myPrivileges', () => {
 
   test('GlobalAdmin privileges to Organization / Profile / Tagsets', async () => {
     // Act
-    const response = await getOrganizationDataCodegen(
+    const response = await getOrganizationData(
       entitiesId.organization.id,
       TestUser.GLOBAL_ADMIN
     );
@@ -102,7 +102,7 @@ describe('myPrivileges', () => {
 
   test('GlobalAdmin privileges to Organization / Preferences', async () => {
     // Act
-    const response = await getOrganizationDataCodegen(
+    const response = await getOrganizationData(
       entitiesId.organization.id,
       TestUser.GLOBAL_ADMIN
     );

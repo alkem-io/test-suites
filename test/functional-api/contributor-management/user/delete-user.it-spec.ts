@@ -59,7 +59,7 @@ describe('Delete user', () => {
     await deleteUser(userId);
 
     // Act
-    userData = await getUserDataCodegen(userId);
+    userData = await getUserData(userId);
 
     // Assert
     expect(userData.error?.errors[0].message).toContain(

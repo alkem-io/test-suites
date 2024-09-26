@@ -128,7 +128,7 @@ export const getUsersData = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const getUserDataCodegen = async (
+export const getUserData = async (
   userId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -145,7 +145,7 @@ export const getUserDataCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const getUserPendingMembershipsCodegen = async (
+export const getUserPendingMemberships = async (
   fetchDetails: boolean,
   spaceId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
