@@ -142,7 +142,7 @@ describe('Invitations', () => {
       getInvAfter?.data?.lookup?.roleSet?.platformInvitations?.[0].email
     ).toEqual(userEmail);
     expect(invitationData2.error?.errors[0].message).toContain(
-      `An invitation with the provided email address (${userEmail}) already exists for the specified roleset: ${entitiesId.space.roleSetId}`
+      `An invitation with the provided email address (${userEmail}) already exists for the specified roleSet: ${entitiesId.space.roleSetId}`
     );
   });
 

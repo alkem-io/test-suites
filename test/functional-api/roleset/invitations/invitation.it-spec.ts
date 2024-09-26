@@ -84,7 +84,7 @@ describe('Invitations', () => {
     );
 
     const invitationInfo =
-      invitationData?.data?.inviteContributorsForCommunityMembership;
+      invitationData?.data?.inviteContributorsForRoleSetMembership;
 
     invitationId = invitationInfo[0]?.id ?? '';
     const getInv = await getSpaceInvitationCodegen(
@@ -106,7 +106,7 @@ describe('Invitations', () => {
     );
 
     const invitationInfo =
-      invitationData?.data?.inviteContributorsForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForRoleSetMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     // Reject and Archive Space invitation
@@ -151,7 +151,7 @@ describe('Invitations', () => {
       TestUser.GLOBAL_ADMIN
     );
     const invitationInfo =
-      invitationData?.data?.inviteContributorsForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForRoleSetMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     // Act
@@ -188,7 +188,7 @@ describe('Invitations', () => {
     );
 
     const invitationInfo =
-      invitationData?.data?.inviteContributorsForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForRoleSetMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     // Act
@@ -200,7 +200,7 @@ describe('Invitations', () => {
 
     // Assert
     expect(invitationDataTwo?.error?.errors[0].message).toContain(
-      `An open invitation (ID: ${invitationId}) already exists for contributor ${users.nonSpaceMember.id} (user) on RoleSet: ${entitiesId.space.roleSetId}.`
+      `Invitation not possible: An open invitation (ID: ${invitationId}) already exists for contributor ${users.nonSpaceMember.id} (user) on RoleSet: ${entitiesId.space.roleSetId}.`
     );
   });
 
@@ -212,7 +212,7 @@ describe('Invitations', () => {
       TestUser.GLOBAL_ADMIN
     );
     invitationId =
-      invitationData?.data?.inviteContributorsForCommunityMembership?.id;
+      invitationData?.data?.inviteContributorsForRoleSetMembership?.id;
 
     await deleteUser(users.qaUser.id);
 
@@ -248,7 +248,7 @@ describe('Invitations-flows', () => {
       TestUser.GLOBAL_ADMIN
     );
     const invitationInfo =
-      invitationData?.data?.inviteContributorsForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForRoleSetMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     // Approve Space invitation
@@ -280,7 +280,7 @@ describe('Invitations-flows', () => {
       TestUser.GLOBAL_ADMIN
     );
     const invitationInfo =
-      invitationData?.data?.inviteContributorsForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForRoleSetMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     // Approve Space invitation
@@ -330,7 +330,7 @@ describe('Invitations-flows', () => {
 
     // Assert
     expect(invitationData?.error?.errors[0].message).toContain(
-      `Contributor ${users.nonSpaceMember.id} is already a member of the Community: ${entitiesId.space.roleSetId}.`
+      `Invitation not possible: Contributor ${users.nonSpaceMember.id} is already a member of the RoleSet: ${entitiesId.space.roleSetId}.`
     );
   });
 
@@ -351,7 +351,7 @@ describe('Invitations-flows', () => {
 
     // Assert
     expect(invitationData?.error?.errors[0].message).toContain(
-      `An open application (ID: ${applicationId}) already exists for contributor ${users.nonSpaceMember.id} on RoleSet: ${entitiesId.space.roleSetId}.`
+      `Invitation not possible: An open invitation (ID: ${applicationId}) already exists for contributor ${users.nonSpaceMember.id} on RoleSet: ${entitiesId.space.roleSetId}.`
     );
     await deleteApplication(applicationId);
   });
@@ -364,7 +364,7 @@ describe('Invitations-flows', () => {
       TestUser.GLOBAL_ADMIN
     );
     const invitationInfo =
-      invitationData?.data?.inviteContributorsForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForRoleSetMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     // Act
@@ -376,7 +376,7 @@ describe('Invitations-flows', () => {
     // Assert
     expect(membershipData?.communityInvitations).toHaveLength(1);
     expect(res.error?.errors[0].message).toContain(
-      `An open invitation (ID: ${invitationId}) already exists for contributor ${users.nonSpaceMember.id} (user) on RoleSet: ${entitiesId.space.roleSetId}.`
+      `Invitation not possible: An open invitation (ID: ${invitationId}) already exists for contributor ${users.nonSpaceMember.id} (user) on RoleSet: ${entitiesId.space.roleSetId}.`
     );
   });
 });
@@ -415,7 +415,7 @@ describe('Invitations - Authorization', () => {
           TestUser.GLOBAL_ADMIN
         );
         const invitationInfo =
-          invitationData?.data?.inviteContributorsForCommunityMembership[0];
+          invitationData?.data?.inviteContributorsForRoleSetMembership[0];
         invitationId = invitationInfo?.id ?? '';
 
         const result = await eventOnRoleSetInvitation(
@@ -444,7 +444,7 @@ describe('Invitations - Authorization', () => {
           TestUser.GLOBAL_ADMIN
         );
         const invitationInfo =
-          invitationData?.data?.inviteContributorsForCommunityMembership[0];
+          invitationData?.data?.inviteContributorsForRoleSetMembership[0];
         invitationId = invitationInfo?.id ?? '';
 
         const result = await eventOnRoleSetInvitation(
@@ -476,12 +476,12 @@ describe('Invitations - Authorization', () => {
         );
 
         const invitationInfo =
-          invitationData?.data?.inviteContributorsForCommunityMembership[0];
+          invitationData?.data?.inviteContributorsForRoleSetMembership[0];
         invitationId = invitationInfo?.id ?? '';
 
         // Assert
         expect(
-          invitationData.data.inviteContributorsForCommunityMembership[0]
+          invitationData.data.inviteContributorsForRoleSetMembership[0]
             .lifecycle.state
         ).toContain(state);
       }
