@@ -351,7 +351,7 @@ describe('Invitations-flows', () => {
 
     // Assert
     expect(invitationData?.error?.errors[0].message).toContain(
-      `Invitation not possible: An open invitation (ID: ${applicationId}) already exists for contributor ${users.nonSpaceMember.id} on RoleSet: ${entitiesId.space.roleSetId}.`
+      `Invitation not possible: An open application (ID: ${applicationId}) already exists for contributor ${users.nonSpaceMember.id} on RoleSet: ${entitiesId.space.roleSetId}.`
     );
     await deleteApplication(applicationId);
   });
