@@ -1,4 +1,5 @@
 import '@test/utils/array.matcher';
+import { deleteOrganization } from '@test/ /organization/organization.request.params';
 import { TestUser } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import { createOrgAndSpace } from '@test/utils/data-setup/entities';

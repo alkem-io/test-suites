@@ -5,7 +5,7 @@ import {
   createOrganization,
   getOrganizationData,
 } from './organization.request.params';
-import { eventOnOrganizationVerification } from '..//lifecycle/innovation-flow.request.params';
+import { eventOnOrganizationVerificationCodegen } from './organization-verification.events.request.params';
 
 let organizationId = '';
 let organizationVerificationId = '';

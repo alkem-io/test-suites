@@ -2,14 +2,20 @@
 /* eslint-disable quotes */
 import { TestUser } from '@test/utils/token.helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
+import { changePreferenceOrganizationCodegen } from '@test/utils/mutations/preferences-mutation';
+import { assignUserAsOrganizationOwner } from '@test/utils/mutations/authorization-organization-mutation';
 import {
   deleteUser,
   registerVerifiedUser,
 } from '@test/functional-api/contributor-management/user/user.request.params';
+import { eventOnOrganizationVerificationCodegen } from '@test/functional-api/contributor-management/organization/organization-verification.events.request.params';
 import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import { users } from '@test/utils/queries/users-data';
 import { createOrgAndSpaceWithUsers } from '@test/utils/data-setup/entities';
-
+import {
+  deleteOrganization,
+  getOrganizationDataCodegen,
+} from '@test/functional-api/contributor-management/organization/organization.request.params';
 import { OrganizationPreferenceType } from '@alkemio/client-lib';
 import { entitiesId } from '../../types/entities-helper';
 import { assignUserAsOrganizationOwner } from '@test/utils/mutations/authorization-organization-mutation';
