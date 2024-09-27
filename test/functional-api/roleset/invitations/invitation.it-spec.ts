@@ -385,7 +385,7 @@ describe('Invitations-flows', () => {
     expect(invitationsCount > 0).toBeTruthy();
     expect(membershipData?.communityApplications).toHaveLength(applicationsCountOrig);
     expect(res.error?.errors[0].message).toContain(
-      `Invitation not possible: An open invitation (ID: ${invitationId}) already exists for contributor ${users.nonSpaceMember.id} (user) on RoleSet: ${entitiesId.space.roleSetId}.`
+      `"Application not possible: An open invitation (ID: ${invitationId}) already exists for contributor ${users.nonSpaceMember.id} (user) on RoleSet: ${entitiesId.space.roleSetId}.`
     );
   });
 });
