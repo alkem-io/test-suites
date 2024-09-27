@@ -1,9 +1,6 @@
 import '@test/utils/array.matcher';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
-import {
-  deleteSpace,
-  updateSpaceContext,
-} from '../space/space.request.params';
+import { deleteSpace, updateSpaceContext } from '../space/space.request.params';
 import {
   createSubspace,
   getSubspaceData,
@@ -39,12 +36,7 @@ beforeEach(async () => {
 beforeAll(async () => {
   opportunityName = 'post-opp';
   challengeName = 'post-chal';
-  await createOrgAndSpace(
-    organizationName,
-    hostNameId,
-    spaceName,
-    spaceNameId
-  );
+  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
   await createChallengeForOrgSpace(challengeName);
   await createOpportunityForChallenge(opportunityName);
 });
@@ -100,9 +92,7 @@ describe('Opportunities', () => {
       responseCreateOpportunityOnChallenge?.data?.createSubspace.id ?? '';
     // Act
     // Update the created Opportunity
-    const responseUpdateOpportunity = await updateSpaceContext(
-      opportunityId
-    );
+    const responseUpdateOpportunity = await updateSpaceContext(opportunityId);
     const updateOpportunityData = responseUpdateOpportunity?.data?.updateSpace;
 
     // Query Opportunity data

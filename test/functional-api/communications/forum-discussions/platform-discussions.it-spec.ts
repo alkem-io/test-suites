@@ -78,17 +78,13 @@ describe('Platform discussions - CRUD operations', () => {
     discussionCommentsId = discussionData?.comments.id ?? '';
 
     // Act
-    const update = await updateDiscussion(
-      discussionId,
-      TestUser.GLOBAL_ADMIN,
-      {
-        profileData: {
-          displayName: 'Updated',
-          description: 'Test',
-        },
-        category: ForumDiscussionCategory.Help,
-      }
-    );
+    const update = await updateDiscussion(discussionId, TestUser.GLOBAL_ADMIN, {
+      profileData: {
+        displayName: 'Updated',
+        description: 'Test',
+      },
+      category: ForumDiscussionCategory.Help,
+    });
 
     const discA = await getPlatformDiscussionsDataByTitle('Updated');
 
@@ -119,9 +115,7 @@ describe('Discussion messages', () => {
     const res = await sendMessageToRoom(discussionCommentsId);
     messageId = res?.data?.sendMessageToRoom.id;
 
-    const discussionRes = await getPlatformDiscussionsDataById(
-      discussionId
-    );
+    const discussionRes = await getPlatformDiscussionsDataById(discussionId);
     const getDiscussionData =
       discussionRes?.data?.platform?.forum?.discussion?.comments.messages[0];
 
@@ -144,9 +138,7 @@ describe('Discussion messages', () => {
     );
     const secondmessageId = secondMessageRes?.data?.sendMessageToRoom.id;
 
-    const discussionRes = await getPlatformDiscussionsDataById(
-      discussionId
-    );
+    const discussionRes = await getPlatformDiscussionsDataById(discussionId);
 
     const getDiscussions =
       discussionRes?.data?.platform?.forum?.discussion?.comments.messages;
@@ -162,9 +154,7 @@ describe('Discussion messages', () => {
     const res = await sendMessageToRoom(discussionCommentsId);
     messageId = res?.data?.sendMessageToRoom.id;
 
-    let discussionRes = await getPlatformDiscussionsDataById(
-      discussionId
-    );
+    let discussionRes = await getPlatformDiscussionsDataById(discussionId);
     const messagesBefore =
       discussionRes?.data?.platform?.forum?.discussion?.comments.messages;
 
@@ -205,13 +195,9 @@ describe('Authorization - Discussion / Messages', () => {
           discussionId = discussionData?.id ?? '';
           discussionCommentsId = discussionData?.comments.id ?? '';
 
-          const update = await updateDiscussion(
-            discussionId,
-            userRoleUpdate,
-            {
-              profileData: { displayName: messageUpdate },
-            }
-          );
+          const update = await updateDiscussion(discussionId, userRoleUpdate, {
+            profileData: { displayName: messageUpdate },
+          });
 
           // Assert
           expect(update.data?.updateDiscussion.profile.displayName).toContain(
@@ -238,13 +224,9 @@ describe('Authorization - Discussion / Messages', () => {
           discussionId = discussionData?.id ?? '';
           discussionCommentsId = discussionData?.comments.id ?? '';
 
-          const update = await updateDiscussion(
-            discussionId,
-            userRoleUpdate,
-            {
-              profileData: { displayName: 'Updated' },
-            }
-          );
+          const update = await updateDiscussion(discussionId, userRoleUpdate, {
+            profileData: { displayName: 'Updated' },
+          });
 
           // Assert
           expect(update.error?.errors[0].message).toContain(messageUpdate);
@@ -274,10 +256,7 @@ describe('Authorization - Discussion / Messages', () => {
           const discussionData = res?.data?.createDiscussion;
           discussionId = discussionData?.id ?? '';
           discussionCommentsId = discussionData?.comments.id ?? '';
-          const del = await deleteDiscussion(
-            discussionId,
-            userRoleDelete
-          );
+          const del = await deleteDiscussion(discussionId, userRoleDelete);
 
           // Assert
           expect(del.data?.deleteDiscussion?.id).toContain(discussionId);
@@ -301,10 +280,7 @@ describe('Authorization - Discussion / Messages', () => {
           const discussionData = res?.data?.createDiscussion;
           discussionId = discussionData?.id ?? '';
           discussionCommentsId = discussionData?.comments.id ?? '';
-          const del = await deleteDiscussion(
-            discussionId,
-            userRoleDelete
-          );
+          const del = await deleteDiscussion(discussionId, userRoleDelete);
 
           // Assert
           expect(del.error?.errors[0].message).toContain(messageDelete);

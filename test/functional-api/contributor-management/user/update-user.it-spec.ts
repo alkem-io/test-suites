@@ -3,6 +3,7 @@ import {
   createUser,
   deleteUser,
   getUserData,
+  getUsersData,
   updateUser,
 } from './user.request.params';
 import '@test/utils/array.matcher';
@@ -18,6 +19,7 @@ let userId: string;
 let userPhone = '';
 let userEmail = '';
 let phoneAfterUpdate = '';
+let userData: any;
 let userDataCreate: any;
 
 describe('Update user', () => {
@@ -46,14 +48,12 @@ describe('Update user', () => {
   test('should update user "phone" only', async () => {
     // Act
     const responseUpdateUser = await updateUser(userId, '359777777777');
-    getUserData = await getUserData(userId);
+    userData = await getUserData(userId);
 
     // Assert
     expect(responseUpdateUser.status).toBe(200);
     expect(userDataCreate).not.toEqual(responseUpdateUser?.data?.updateUser);
-    expect(getUserData?.data?.user).toEqual(
-      responseUpdateUser?.data?.updateUser
-    );
+    expect(userData?.data?.user).toEqual(responseUpdateUser?.data?.updateUser);
   });
 
   test('should update user "phone" and "location"', async () => {
@@ -62,16 +62,16 @@ describe('Update user', () => {
       location: { country: 'test country', city: 'test city' },
       description: 'test description',
     });
-    const userData = responseUpdateUser?.data?.updateUser;
-    getUserData = await getUserData(userId);
+    const updatedUserData = responseUpdateUser?.data?.updateUser;
+    userData = await getUserData(userId);
 
     // Assert
     expect(userData?.profile?.location).toEqual({
       country: 'test country',
       city: 'test city',
     });
-    expect(userData?.profile?.description).toEqual('test description');
-    expect(userData).toEqual(getUserData?.data?.user);
+    expect(updatedUserData?.profile?.description).toEqual('test description');
+    expect(updatedUserData).toEqual(userData?.data?.user);
   });
 
   test('should update user and be available in "users" query', async () => {
@@ -85,13 +85,13 @@ describe('Update user', () => {
       },
       TestUser.HUB_ADMIN
     );
-    const getUsersData = await getUsersData(
+    const usersData = await getUsersData(
       users.spaceAdmin.id,
       TestUser.GLOBAL_ADMIN
     );
 
     // Assert;
-    expect(getUsersData?.data?.users).toEqual(
+    expect(usersData?.data?.users).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           email: users.spaceAdmin.email,

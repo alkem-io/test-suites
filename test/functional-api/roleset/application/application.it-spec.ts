@@ -160,7 +160,7 @@ describe('Application', () => {
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
     applicationId =
-      applicationDataOne?.data?.applyForEntryRoleOnRoleSet?.id ?? '';
+      applicationDataOne?.data?.applyForEntryRoleOnRoleSet?.id ?? 'undefined';
     const applicationDataTwo = await createApplication(
       entitiesId.space.roleSetId,
       TestUser.GLOBAL_COMMUNITY_ADMIN
@@ -168,7 +168,7 @@ describe('Application', () => {
 
     // Assert
     expect(applicationDataTwo.error?.errors[0].message).toContain(
-      `An open application (ID: ${applicationId}) already exists for contributor ${users.globalCommunityAdmin.id} on RoleSet: ${entitiesId.space.roleSetId}.`
+      `Application not possible: An open application (ID: ${applicationId}) already exists for contributor ${users.globalCommunityAdmin.id} on RoleSet: ${entitiesId.space.roleSetId}.`
     );
   });
 
