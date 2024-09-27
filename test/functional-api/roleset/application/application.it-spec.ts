@@ -80,7 +80,7 @@ describe('Application', () => {
       entitiesId.space.roleSetId,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
-    applicationId = applicationData?.data?.applyForCommunityMembership?.id;
+    applicationId = applicationData?.data?.applyForEntryRoleOnRoleSet?.id;
     const userAppsData = await meQuery(TestUser.GLOBAL_COMMUNITY_ADMIN);
 
     const getApp = userAppsData?.data?.me?.communityApplications;
@@ -88,7 +88,7 @@ describe('Application', () => {
     // Assert
     expect(applicationData.status).toBe(200);
     expect(
-      applicationData?.data?.applyForCommunityMembership?.lifecycle?.state
+      applicationData?.data?.applyForEntryRoleOnRoleSet?.lifecycle?.state
     ).toEqual('new');
     expect(getApp).toEqual(
       expect.arrayContaining([
@@ -112,7 +112,7 @@ describe('Application', () => {
       entitiesId.space.roleSetId,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
-    applicationId = applicationData?.data?.applyForCommunityMembership?.id;
+    applicationId = applicationData?.data?.applyForEntryRoleOnRoleSet?.id;
 
     // Reject and Archive Space application
     await eventOnRoleSetApplication(applicationId, 'REJECT');
@@ -124,7 +124,7 @@ describe('Application', () => {
       entitiesId.space.roleSetId,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
-    applicationId = applicationData?.data?.applyForCommunityMembership?.id;
+    applicationId = applicationData?.data?.applyForEntryRoleOnRoleSet?.id;
 
     const userAppsData = await meQuery(TestUser.GLOBAL_COMMUNITY_ADMIN);
     const getApp = userAppsData?.data?.me?.communityApplications;
@@ -132,7 +132,7 @@ describe('Application', () => {
     // Assert
     expect(applicationData.status).toBe(200);
     expect(
-      applicationData?.data?.applyForCommunityMembership?.lifecycle?.state
+      applicationData?.data?.applyForEntryRoleOnRoleSet?.lifecycle?.state
     ).toEqual('new');
     expect(getApp).toEqual(
       expect.arrayContaining([
@@ -185,7 +185,7 @@ describe('Application', () => {
       entitiesId.space.roleSetId,
       TestUser.QA_USER
     );
-    applicationId = applicationData?.data?.applyForCommunityMembership?.id;
+    applicationId = applicationData?.data?.applyForEntryRoleOnRoleSet?.id;
 
     // Act
     await deleteApplication(applicationId);
@@ -216,7 +216,7 @@ describe('Application', () => {
     // Arrange
     // Create challenge application
     applicationData = await createApplication(entitiesId.challenge.roleSetId);
-    const createAppData = applicationData?.data?.applyForCommunityMembership;
+    const createAppData = applicationData?.data?.applyForEntryRoleOnRoleSet;
     challengeApplicationId = createAppData?.id;
 
     // Act
@@ -245,7 +245,7 @@ describe('Application', () => {
       TestUser.QA_USER
     );
 
-    applicationId = applicationData?.data?.applyForCommunityMembership?.id;
+    applicationId = applicationData?.data?.applyForEntryRoleOnRoleSet?.id;
 
     // Act
     await deleteUser(users.qaUser.id);
@@ -294,7 +294,7 @@ describe('Application-flows', () => {
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
 
-    const createAppData = applicationData.data?.applyForCommunityMembership;
+    const createAppData = applicationData.data?.applyForEntryRoleOnRoleSet;
     challengeApplicationId = createAppData?.id;
 
     // Assert
@@ -309,7 +309,7 @@ describe('Application-flows', () => {
       entitiesId.challenge.roleSetId,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
-    const createAppData = applicationData?.data?.applyForCommunityMembership;
+    const createAppData = applicationData?.data?.applyForEntryRoleOnRoleSet;
     challengeApplicationId = createAppData?.id;
 
     const userAppsData = await meQuery(TestUser.GLOBAL_COMMUNITY_ADMIN);
@@ -341,7 +341,7 @@ describe('Application-flows', () => {
       entitiesId.challenge.roleSetId,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
-    const createAppData = applicationData?.data?.applyForCommunityMembership;
+    const createAppData = applicationData?.data?.applyForEntryRoleOnRoleSet;
     challengeApplicationId = createAppData?.id;
 
     // Remove challenge application
@@ -377,7 +377,7 @@ describe('Application-flows', () => {
       entitiesId.challenge.roleSetId,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
-    const createAppData = applicationData?.data?.applyForCommunityMembership;
+    const createAppData = applicationData?.data?.applyForEntryRoleOnRoleSet;
     challengeApplicationId = createAppData?.id;
 
     // Act
@@ -413,7 +413,7 @@ describe('Application-flows', () => {
       entitiesId.challenge.roleSetId,
       TestUser.GLOBAL_COMMUNITY_ADMIN
     );
-    const createAppData = applicationData?.data?.applyForCommunityMembership;
+    const createAppData = applicationData?.data?.applyForEntryRoleOnRoleSet;
     challengeApplicationId = createAppData?.id;
 
     // Remove Space application
