@@ -38,7 +38,7 @@ let challengeApplicationId = '';
 let applicationData: any;
 const challengeName = `testChallenge ${uniqueId}`;
 let userMembeship: any;
-let isMember = '';
+const isMember = '';
 const organizationName = 'appl-org-name' + uniqueId;
 const hostNameId = 'appl-org-nameid' + uniqueId;
 const spaceName = 'appl-eco-name' + uniqueId;
@@ -392,7 +392,7 @@ describe('Application-flows', () => {
     userMembeship = await getRoleSetInvitationsApplications(
       entitiesId.challenge.roleSetId
     );
-    isMember = userMembeship.data.lookup.community.applications[0].id;
+    applicationId = userMembeship.data.lookup.roleSet.applications[0].id;
 
     // Assert
     expect(event.status).toBe(200);
@@ -424,10 +424,10 @@ describe('Application-flows', () => {
     userMembeship = await getRoleSetInvitationsApplications(
       entitiesId.challenge.roleSetId
     );
-    isMember = userMembeship?.data?.lookup.community.applications;
+    const applications = userMembeship?.data?.lookup.roleSet.applications;
 
     // Assert
-    expect(isMember).toHaveLength(0);
+    expect(applications).toHaveLength(0);
     expect(isMember).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
