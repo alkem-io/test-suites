@@ -86,6 +86,8 @@ export const createCalloutOnCollaboration = async (
           collaborationID,
           ...defaultCallout,
           ...options,
+          enableComments:
+            defaultCallout.type === CalloutType.Post ? true : false,
         },
       },
       {
