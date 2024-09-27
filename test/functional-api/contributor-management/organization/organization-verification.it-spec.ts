@@ -5,7 +5,7 @@ import {
   createOrganization,
   getOrganizationData,
 } from './organization.request.params';
-import { eventOnOrganizationVerificationCodegen } from './organization-verification.events.request.params';
+import { eventOnOrganizationVerification } from './organization-verification.events.request.params';
 
 let organizationId = '';
 let organizationVerificationId = '';
