@@ -1,6 +1,6 @@
 /* eslint-disable quotes */
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { deleteOrganization } from '../organization/organization.request.params';
+import { deleteOrganization } from '../contributor-management/organization/organization.request.params';
 import { TestUser, getAuthDocument } from '@test/utils';
 import {
   deleteDocument,
@@ -15,7 +15,7 @@ import {
   createInnovationHub,
   deleteInnovationHub,
 } from '../innovation-hub/innovation-hub-params';
-import { createOrganization } from '../organization/organization.request.params';
+import { createOrganization } from '../contributor-management/organization/organization.request.params';
 import {
   createReferenceOnProfile,
   deleteReferenceOnProfile,
@@ -164,10 +164,7 @@ describe('Upload document', () => {
     documentId = getLastPartOfUrl(documentEndPoint);
 
     await deleteDocument(documentId, TestUser.GLOBAL_ADMIN);
-    const resDelete = await deleteDocument(
-      documentId,
-      TestUser.GLOBAL_ADMIN
-    );
+    const resDelete = await deleteDocument(documentId, TestUser.GLOBAL_ADMIN);
 
     expect(resDelete.error?.errors[0].message).toContain(
       `Not able to locate document with the specified ID: ${documentId}`
@@ -208,10 +205,7 @@ describe('Upload document', () => {
   });
 
   test('read uploaded file after related reference is removed', async () => {
-    const refData = await createReferenceOnProfile(
-      orgProfileId,
-      'test2'
-    );
+    const refData = await createReferenceOnProfile(orgProfileId, 'test2');
     const refId2 = refData?.data?.createReferenceOnProfile?.id ?? '';
     const res = await uploadFileOnRef(
       path.join(__dirname, 'files-to-upload', 'image.png'),
@@ -266,10 +260,7 @@ describe('Upload document', () => {
 
     await deleteReferenceOnProfile(refId);
 
-    const resDelete = await deleteDocument(
-      documentId,
-      TestUser.GLOBAL_ADMIN
-    );
+    const resDelete = await deleteDocument(documentId, TestUser.GLOBAL_ADMIN);
 
     expect(resDelete?.data?.deleteDocument.id).toEqual(documentId);
   });

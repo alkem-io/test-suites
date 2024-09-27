@@ -10,7 +10,7 @@ import {
   uploadImageOnVisual,
 } from '../upload.params';
 import path from 'path';
-import { deleteOrganization } from '../../organization/organization.request.params';
+import { deleteOrganization } from '../../contributor-management/organization/organization.request.params';
 import {
   createChallengeWithUsers,
   createOrgAndSpaceWithUsers,
@@ -986,10 +986,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
     `(
       'User: "$userRole" has this privileges: "$privileges" to space challenge visual for whiteboard callout (storageBucket) document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
-        const res = await whiteboardCalloutStorageConfig(
-          calloutId,
-          userRole
-        );
+        const res = await whiteboardCalloutStorageConfig(calloutId, userRole);
         const data =
           res.data?.lookup.callout?.framing.whiteboard?.profile.storageBucket
             .documents[0].authorization;
@@ -1016,10 +1013,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
         anonymousReadAccess,
         parentEntityType,
       }) => {
-        const res = await whiteboardCalloutStorageConfig(
-          calloutId,
-          userRole
-        );
+        const res = await whiteboardCalloutStorageConfig(calloutId, userRole);
         const data =
           res.data?.lookup.callout?.framing.whiteboard?.profile.storageBucket;
 
@@ -1079,10 +1073,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
     `(
       'User: "$userRole" has this privileges: "$privileges" to space challenge visual for whiteboardRt callout (storageBucket) document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
-        const res = await whiteboardCalloutStorageConfig(
-          calloutId,
-          userRole
-        );
+        const res = await whiteboardCalloutStorageConfig(calloutId, userRole);
         const data =
           res.data?.lookup.callout?.framing.whiteboard?.profile.storageBucket
             .documents[0].authorization;
@@ -1109,10 +1100,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
         anonymousReadAccess,
         parentEntityType,
       }) => {
-        const res = await whiteboardCalloutStorageConfig(
-          calloutId,
-          userRole
-        );
+        const res = await whiteboardCalloutStorageConfig(calloutId, userRole);
         const data =
           res.data?.lookup.callout?.framing.whiteboard?.profile.storageBucket;
 

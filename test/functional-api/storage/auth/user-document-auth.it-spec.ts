@@ -9,7 +9,7 @@ import {
   uploadImageOnVisual,
 } from '../upload.params';
 import path from 'path';
-import { deleteOrganization } from '../../organization/organization.request.params';
+import { deleteOrganization } from '../../contributor-management/organization/organization.request.params';
 import { createOrgAndSpaceWithUsers } from '@test/utils/data-setup/entities';
 import { lookupProfileVisuals } from '../../lookup/lookup-request.params';
 import { deleteSpace } from '../../journey/space/space.request.params';
