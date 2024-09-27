@@ -101,7 +101,7 @@ describe('Opportunity Admin', () => {
     );
 
     const resTwo = await assignRoleToUser(
-      users.opportunityMember.email,
+      users.opportunityMember.id,
       opportunityRoleSetId2,
       CommunityRoleType.Admin
     );
