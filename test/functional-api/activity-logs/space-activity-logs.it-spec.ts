@@ -1,5 +1,5 @@
 import '@test/utils/array.matcher';
-import { deleteOrganization } from '@test/ /organization/organization.request.params';
+import { deleteOrganization } from '../contributor-management/organization/organization.request.params';
 import { TestUser } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import { createOrgAndSpace } from '@test/utils/data-setup/entities';
@@ -27,7 +27,6 @@ import { sendMessageToRoom } from '../communications/communication.params';
 import { createWhiteboardOnCallout } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 import { assignRoleToUser, joinRoleSet } from '../roleset/roles-request.params';
 import { entitiesId } from '../../types/entities-helper';
-import { deleteOrganization } from '../contributor-management/organization/organization.request.params';
 const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
