@@ -1,34 +1,34 @@
 /* eslint-disable prettier/prettier */
-import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import { delay } from '@test/utils/delay';
-import { TestUser } from '@test/utils';
-import { uniqueId } from '@test/utils/mutations/create-mutation';
+import { deleteMailSlurperMails } from '../../../utils/mailslurper.rest.requests';
+import { delay } from '../../../utils/delay';
+import { TestUser } from '../../../utils';
+import { uniqueId } from '../../../utils/mutations/create-mutation';
 import {
   deleteSpace,
   updateSpaceSettings,
-} from '@test/functional-api/journey/space/space.request.params';
-import { users } from '@test/utils/queries/users-data';
+} from '../../../functional-api/journey/space/space.request.params';
+import { users } from '../../../utils/queries/users-data';
 import {
   createChallengeWithUsers,
   createOrgAndSpaceWithUsers,
-} from '@test/utils/data-setup/entities';
-import { assignUserAsOrganizationAdmin } from '@test/utils/mutations/authorization-organization-mutation';
-import { sendMessageToCommunityLeads } from '@test/functional-api/communications/communication.params';
+} from '../../../utils/data-setup/entities';
+import { assignUserAsOrganizationAdmin } from '../../../utils/mutations/authorization-organization-mutation';
+import { sendMessageToCommunityLeads } from '../../../functional-api/communications/communication.params';
 import {
   entitiesId,
   getMailsData,
-} from '@test/types/entities-helper';
+} from '../../../types/entities-helper';
 import {
   removeRoleFromUser,
   assignRoleToUser,
   assignRoleToOrganization,
   removeRoleFromOrganization,
-} from '@test/functional-api/roleset/roles-request.params';
+} from '../../../functional-api/roleset/roles-request.params';
 import {
   CommunityRoleType,
   SpacePrivacyMode,
-} from '@test/generated/alkemio-schema';
-import { deleteOrganization, updateOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
+} from '../../../generated/alkemio-schema';
+import { deleteOrganization, updateOrganization } from '../../../functional-api/contributor-management/organization/organization.request.params';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;

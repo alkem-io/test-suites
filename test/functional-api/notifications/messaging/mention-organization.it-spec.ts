@@ -1,24 +1,24 @@
 /* eslint-disable prettier/prettier */
-import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import { delay } from '@test/utils/delay';
-import { TestUser } from '@test/utils';
-import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { deleteOrganization, updateOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
-import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
-import { assignUserAsOrganizationAdmin } from '@test/utils/mutations/authorization-organization-mutation';
-import { users } from '@test/utils/queries/users-data';
-import { changePreferenceOrganization } from '@test/utils/mutations/preferences-mutation';
+import { deleteMailSlurperMails } from '../../../utils/mailslurper.rest.requests';
+import { delay } from '../../../utils/delay';
+import { TestUser } from '../../../utils';
+import { uniqueId } from '../../../utils/mutations/create-mutation';
+import { deleteOrganization, updateOrganization } from '../../../functional-api/contributor-management/organization/organization.request.params';
+import { deleteSpace } from '../../../functional-api/journey/space/space.request.params';
+import { assignUserAsOrganizationAdmin } from '../../../utils/mutations/authorization-organization-mutation';
+import { users } from '../../../utils/queries/users-data';
+import { changePreferenceOrganization } from '../../../utils/mutations/preferences-mutation';
 import {
   createPostOnCallout,
-} from '@test/functional-api/callout/post/post.request.params';
+} from '../../../functional-api/callout/post/post.request.params';
 import {
   createChallengeWithUsers,
   createOpportunityWithUsers,
   createOrgAndSpaceWithUsers,
-} from '@test/utils/data-setup/entities';
+} from '../../../utils/data-setup/entities';
 import { UserPreferenceType } from '@alkemio/client-lib';
-import { sendMessageToRoom } from '@test/functional-api/communications/communication.params';
-import { entitiesId, getMailsData } from '@test/types/entities-helper';
+import { sendMessageToRoom } from '../../../functional-api/communications/communication.params';
+import { entitiesId, getMailsData } from '../../../types/entities-helper';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;

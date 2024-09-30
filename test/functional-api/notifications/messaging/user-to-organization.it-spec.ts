@@ -5,7 +5,7 @@ import { delay } from '@test/utils/delay';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
-import { assignUserAsOrganizationAdmin } from '@test/utils/mutations/authorization-mutation';
+import { assignUserAsOrganizationAdmin } from '@test/utils/mutations/authorization-organization-mutation';
 import { users } from '@test/utils/queries/users-data';
 import { createOrgAndSpaceWithUsers } from '@test/utils/data-setup/entities';
 import { UserPreferenceType } from '@alkemio/client-lib';
