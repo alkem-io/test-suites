@@ -20,9 +20,9 @@ install:
 script:
 - npm run test:organization
 - npm run test:preferences
-- npm run test:roles
+- npm run test:roleset
 - npm run test:lifecycle
-- npm run test:usermanagement
+- npm run test:contributormanagement
 - npm run test:callouts
 - npm run test:communication
 - npm run test:activity-logs
