@@ -3,7 +3,7 @@ import {
   deleteUser,
   getUserData,
   registerVerifiedUser,
-} from '../user.request.params';
+} from './user.request.params';
 import '@test/utils/array.matcher';
 export const uniqueId = Math.random()
   .toString(12)
@@ -63,10 +63,10 @@ describe('Create User', () => {
     userId = userData?.id ?? '';
 
     // Act
-    const getUserData = await getUserData(userId);
+    const { data } = await getUserData(userId);
 
     // Assert
-    expect(getUserData?.data?.user).toEqual(userData);
+    expect(data?.user).toEqual(userData);
   });
 
   test('should throw error - create user with LONG NAME', async () => {

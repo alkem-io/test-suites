@@ -5,7 +5,7 @@ import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteOrganization, updateOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
-import { assignUserAsOrganizationAdmin } from '@test/utils/mutations/authorization-mutation';
+import { assignUserAsOrganizationAdmin } from '@test/utils/mutations/authorization-organization-mutation';
 import { users } from '@test/utils/queries/users-data';
 import { changePreferenceOrganization } from '@test/utils/mutations/preferences-mutation';
 import {

@@ -22,7 +22,7 @@ import {
 import {
   assignUserAsOrganizationAdmin,
   assignUserAsOrganizationOwner,
-} from '@test/utils/mutations/authorization-mutation';
+} from '@test/utils/mutations/authorization-organization-mutation';
 import { users } from '@test/utils/queries/users-data';
 import { createReferenceOnProfile } from '../../references/references.request.params';
 import { entitiesId } from '../../../types/entities-helper';

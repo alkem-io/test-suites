@@ -1,4 +1,4 @@
-import { TestUser } from '@test/utils';
+import { TestUser } from '../../../utils/token.helper';
 import {
   createUser,
   deleteUser,
@@ -66,7 +66,7 @@ describe('Update user', () => {
     userData = await getUserData(userId);
 
     // Assert
-    expect(userData?.profile?.location).toEqual({
+    expect(userData?.data.user.profile?.location).toEqual({
       country: 'test country',
       city: 'test city',
     });

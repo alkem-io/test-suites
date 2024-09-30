@@ -19,7 +19,7 @@ import {
   getInnovationFlowTemplatesCountForSpace,
   updateInnovationFlowTemplate,
 } from '../lifecycle/innovation-flow.request.params';
-import { deleteOrganization } from '../../../organization/organization.request.params';
+import { deleteOrganization } from '../../contributor-management/organization/organization.request.params';
 import { createOrgAndSpaceWithUsers } from '@test/utils/data-setup/entities';
 import { entitiesId } from '@test/types/entities-helper';
 
