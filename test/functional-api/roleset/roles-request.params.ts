@@ -1,8 +1,7 @@
-import { OrganizationRole } from '@test/generated/alkemio-schema';
-import { CommunityRoleType } from '@test/generated/graphql';
-import { TestUser } from '@test/utils';
-import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
-import { getGraphqlClient } from '@test/utils/graphqlClient';
+import { CommunityRoleType, OrganizationRole } from '../../generated/alkemio-schema';
+import { TestUser } from '../../utils';
+import { graphqlErrorWrapper } from '../../utils/graphql.wrapper';
+import { getGraphqlClient } from '../../utils/graphqlClient';
 
 export const getOrganizationRole = async (
   organizationID: string,

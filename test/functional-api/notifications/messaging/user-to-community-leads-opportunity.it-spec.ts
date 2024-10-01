@@ -74,7 +74,7 @@ beforeAll(async () => {
   await createOpportunityWithUsers(opportunityName);
 
   await removeRoleFromUser(
-    users.globalAdmin.email,
+    users.globalAdmin.id,
     entitiesId.opportunity.roleSetId,
     CommunityRoleType.Lead
   );
@@ -180,13 +180,13 @@ describe('Notifications - send messages to Private Space, Opportunity Community 
 describe('Notifications - send messages to Private Space, Public Challenge, Opportunity with NO Community Leads', () => {
   beforeAll(async () => {
     await removeRoleFromUser(
-      users.opportunityMember.email,
+      users.opportunityMember.id,
       entitiesId.opportunity.roleSetId,
       CommunityRoleType.Lead
     );
 
     await removeRoleFromUser(
-      users.opportunityAdmin.email,
+      users.opportunityAdmin.id,
       entitiesId.opportunity.roleSetId,
       CommunityRoleType.Lead
     );

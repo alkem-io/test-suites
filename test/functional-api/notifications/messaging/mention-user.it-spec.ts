@@ -5,22 +5,13 @@ import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import { users } from '@test/utils/queries/users-data';
-import {
-  createPostOnCallout,
-} from '@test/functional-api/callout/post/post.request.params';
-import {
-  createChallengeWithUsers,
-  createOpportunityWithUsers,
-  createOrgAndSpaceWithUsers,
-} from '@test/utils/data-setup/entities';
+import { createPostOnCallout } from '@test/functional-api/callout/post/post.request.params';
 import { UserPreferenceType } from '@alkemio/client-lib';
 import { changePreferenceUser } from '@test/utils/mutations/preferences-mutation';
 import { sendMessageToRoom } from '@test/functional-api/communications/communication.params';
-import {
-  entitiesId,
-  getMailsData,
-} from '@test/types/entities-helper';
+import { entitiesId, getMailsData } from '@test/types/entities-helper';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
+import { createOrgAndSpaceWithUsers, createChallengeWithUsers, createOpportunityWithUsers } from '../../../utils/data-setup/entities';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
@@ -57,6 +48,12 @@ beforeAll(async () => {
 
   await createChallengeWithUsers(challengeName);
   await createOpportunityWithUsers(opportunityName);
+
+  await changePreferenceUser(
+    users.globalAdmin.id,
+    UserPreferenceType.NotificationPostCommentCreated,
+    'false'
+  );
 
   preferencesConfig = [
     {

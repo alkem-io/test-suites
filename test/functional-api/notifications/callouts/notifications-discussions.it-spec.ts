@@ -5,11 +5,7 @@ import { deleteSpace } from '@test/functional-api/journey/space/space.request.pa
 import { delay } from '@test/utils/delay';
 import { deleteUser } from '@test/functional-api/contributor-management/user/user.request.params';
 import { users } from '@test/utils/queries/users-data';
-import {
-  registerUsersAndAssignToAllEntitiesAsMembers,
-  createChallengeWithUsers,
-  createOrgAndSpaceWithUsers,
-} from '@test/utils/data-setup/entities';
+
 import { UserPreferenceType } from '@alkemio/client-lib';
 import { changePreferenceUser } from '@test/utils/mutations/preferences-mutation';
 import {
@@ -18,6 +14,7 @@ import {
 } from '@test/functional-api/communications/communication.params';
 import { entitiesId, getMailsData } from '@test/types/entities-helper';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
+import { createOrgAndSpaceWithUsers, createChallengeWithUsers, registerUsersAndAssignToAllEntitiesAsMembers } from '@test/utils/data-setup/entities';
 
 const organizationName = 'not-disc-org-name' + uniqueId;
 const hostNameId = 'not-disc-org-nameid' + uniqueId;

@@ -7,7 +7,7 @@ import { deleteOrganization, updateOrganization } from '../../../functional-api/
 import { deleteSpace } from '../../../functional-api/journey/space/space.request.params';
 import { assignUserAsOrganizationAdmin } from '../../../utils/mutations/authorization-organization-mutation';
 import { users } from '../../../utils/queries/users-data';
-import { changePreferenceOrganization } from '../../../utils/mutations/preferences-mutation';
+import { changePreferenceOrganization, changePreferenceUser } from '../../../utils/mutations/preferences-mutation';
 import {
   createPostOnCallout,
 } from '../../../functional-api/callout/post/post.request.params';
@@ -64,6 +64,12 @@ beforeAll(async () => {
   await assignUserAsOrganizationAdmin(
     users.qaUser.id,
     entitiesId.organization.id
+  );
+
+  await changePreferenceUser(
+    users.globalAdmin.id,
+    UserPreferenceType.NotificationPostCommentCreated,
+    'false'
   );
 
   preferencesConfig = [

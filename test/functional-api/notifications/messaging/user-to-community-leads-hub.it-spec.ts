@@ -13,10 +13,7 @@ import { users } from '../../../utils/queries/users-data';
 import { createOrgAndSpaceWithUsers } from '../../../utils/data-setup/entities';
 import { UserPreferenceType } from '@alkemio/client-lib';
 import { sendMessageToCommunityLeads } from '../../../functional-api/communications/communication.params';
-import {
-  entitiesId,
-  getMailsData,
-} from '../../../types/entities-helper';
+import { entitiesId, getMailsData } from '../../../types/entities-helper';
 import {
   removeRoleFromUser,
   assignRoleToUser,
@@ -53,19 +50,19 @@ beforeAll(async () => {
   );
 
   await removeRoleFromUser(
-    users.globalAdmin.email,
+    users.globalAdmin.id,
     entitiesId.space.roleSetId,
     CommunityRoleType.Lead
   );
 
   await assignRoleToUser(
-    users.spaceAdmin.email,
+    users.spaceAdmin.id,
     entitiesId.space.roleSetId,
     CommunityRoleType.Lead
   );
 
   await assignRoleToUser(
-    users.spaceMember.email,
+    users.spaceMember.id,
     entitiesId.space.roleSetId,
     CommunityRoleType.Lead
   );
@@ -410,12 +407,12 @@ describe('Notifications - messages to Public space NO hosts', () => {
     });
 
     await removeRoleFromUser(
-      users.spaceAdmin.email,
+      users.spaceAdmin.id,
       entitiesId.space.roleSetId,
       CommunityRoleType.Lead
     );
     await removeRoleFromUser(
-      users.spaceMember.email,
+      users.spaceMember.id,
       entitiesId.space.roleSetId,
       CommunityRoleType.Lead
     );

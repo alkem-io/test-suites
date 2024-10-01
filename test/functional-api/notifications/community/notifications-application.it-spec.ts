@@ -153,7 +153,7 @@ describe('Notifications - applications', () => {
   test('receive notification for non space user application to challenge- GA, EA, CA and Applicant', async () => {
     // Arrange
     await assignRoleToUser(
-      users.nonSpaceMember.email,
+      users.nonSpaceMember.id,
       entitiesId.space.roleSetId,
       CommunityRoleType.Member
     );

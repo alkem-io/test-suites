@@ -455,57 +455,61 @@ export const createOpportunityWithUsers = async (opportunityName: string) => {
 
 export const registerUsersAndAssignToAllEntitiesAsMembers = async (
   spaceMemberEmail: string,
-  challengeMemberEmal: string,
+  challengeMemberEmail: string,
   opportunityMemberEmail: string
 ) => {
-  await createUser({
+  const createSpaceMember = await createUser({
     firstName: 'space',
     lastName: 'mem',
     email: spaceMemberEmail,
   });
-  await createUser({
+  const spaceMemberId = createSpaceMember.data?.createUser.id ?? '';
+  const createChallengeMember = await createUser({
     firstName: 'chal',
     lastName: 'mem',
-    email: challengeMemberEmal,
+    email: challengeMemberEmail,
   });
-  await createUser({
+  const challengeMemberId = createChallengeMember.data?.createUser.id ?? '';
+
+  const createOpportunityMember = await createUser({
     firstName: 'opp',
     lastName: 'mem',
     email: opportunityMemberEmail,
   });
+  const opportunityMemberId = createOpportunityMember.data?.createUser.id ?? '';
 
   // Assign users to Space community
   await assignRoleToUser(
-    spaceMemberEmail,
+    spaceMemberId,
     entitiesId.space.roleSetId,
     CommunityRoleType.Member
   );
   await assignRoleToUser(
-    challengeMemberEmal,
+    challengeMemberId,
     entitiesId.space.roleSetId,
     CommunityRoleType.Member
   );
   await assignRoleToUser(
-    opportunityMemberEmail,
+    opportunityMemberId,
     entitiesId.space.roleSetId,
     CommunityRoleType.Member
   );
 
   // Assign users to Challenge community
   await assignRoleToUser(
-    opportunityMemberEmail,
+    opportunityMemberId,
     entitiesId.challenge.roleSetId,
     CommunityRoleType.Member
   );
   await assignRoleToUser(
-    challengeMemberEmal,
+    challengeMemberId,
     entitiesId.challenge.roleSetId,
     CommunityRoleType.Member
   );
 
   // Assign users to Opportunity community
   await assignRoleToUser(
-    opportunityMemberEmail,
+    opportunityMemberId,
     entitiesId.opportunity.roleSetId,
     CommunityRoleType.Member
   );

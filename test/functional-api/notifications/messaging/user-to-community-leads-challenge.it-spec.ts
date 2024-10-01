@@ -70,19 +70,19 @@ beforeAll(async () => {
   await createChallengeWithUsers(challengeName);
 
   await removeRoleFromUser(
-    users.globalAdmin.email,
+    users.globalAdmin.id,
     entitiesId.challenge.roleSetId,
     CommunityRoleType.Lead
   );
 
   await assignRoleToUser(
-    users.challengeMember.email,
+    users.challengeMember.id,
     entitiesId.challenge.roleSetId,
     CommunityRoleType.Lead
   );
 
   await assignRoleToUser(
-    users.challengeAdmin.email,
+    users.challengeAdmin.id,
     entitiesId.challenge.roleSetId,
     CommunityRoleType.Lead
   );
@@ -258,13 +258,13 @@ describe('Notifications - send messages to Private Space, Public Challenge NO Co
     });
 
     await removeRoleFromUser(
-      users.challengeAdmin.email,
+      users.challengeAdmin.id,
       entitiesId.challenge.roleSetId,
       CommunityRoleType.Lead
     );
 
     await removeRoleFromUser(
-      users.challengeMember.email,
+      users.challengeMember.id,
       entitiesId.challenge.roleSetId,
       CommunityRoleType.Lead
     );
