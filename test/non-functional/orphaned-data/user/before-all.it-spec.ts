@@ -1,7 +1,7 @@
 import {
-  createChallengeForOrgSpaceCodegen,
-  createOpportunityForChallengeCodegen,
-  createOrgAndSpaceCodegen,
+  createChallengeForOrgSpace,
+  createOpportunityForChallenge,
+  createOrgAndSpace,
 } from '@test/utils/data-setup/entities';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
@@ -13,14 +13,14 @@ const opportunityName = 'post-opp';
 const challengeName = 'post-chal';
 
 beforeAll(async () => {
-  await createOrgAndSpaceCodegen(
+  await createOrgAndSpace(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeForOrgSpaceCodegen(challengeName);
-  await createOpportunityForChallengeCodegen(opportunityName);
+  await createChallengeForOrgSpace(challengeName);
+  await createOpportunityForChallenge(opportunityName);
 });
 describe('User', () => {
   test('test', async () => {

@@ -2,7 +2,7 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils';
 import {
-  deleteDocumentCodegen,
+  deleteDocument,
   getChallengeProfileDocuments,
   uploadFileOnLink,
   uploadFileOnRef,
@@ -10,16 +10,16 @@ import {
   uploadImageOnVisual,
 } from '../upload.params';
 import path from 'path';
-import { deleteOrganizationCodegen } from '../../organization/organization.request.params';
+import { deleteOrganization } from '../../contributor-management/organization/organization.request.params';
 import {
-  createChallengeWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import { lookupProfileVisuals } from '../../lookup/lookup-request.params';
 import {
-  deleteSpaceCodegen,
-  updateSpacePlatformCodegen,
-  updateSpaceSettingsCodegen,
+  deleteSpace,
+  updateSpacePlatformSettings,
+  updateSpaceSettings,
 } from '../../journey/space/space.request.params';
 import {
   sorted__create_read_update_delete_grant,
@@ -31,28 +31,28 @@ import {
   sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent,
 } from '@test/non-functional/auth/my-privileges/common';
 import {
-  createLinkCollectionCalloutCodegen,
-  createLinkOnCalloutCodegen,
+  createLinkCollectionCallout,
+  createLinkOnCallout,
 } from '../../callout/collection-of-links/collection-of-links-callout.params.request';
 import {
-  calloutLinkContributionStorageConfigCodegen,
-  calloutPostCardStorageConfigCodegen,
-  calloutStorageConfigCodegen,
-  calloutWhiteboardStorageConfigCodegen,
-  whiteboardCalloutStorageConfigCodegen,
+  calloutLinkContributionStorageConfig,
+  calloutPostCardStorageConfig,
+  calloutStorageConfig,
+  calloutWhiteboardStorageConfig,
+  whiteboardCalloutStorageConfig,
 } from '../../callout/storage/callout-storage-config.params.request';
 import {
-  createPostCardOnCalloutCodegen,
-  createPostCollectionCalloutCodegen,
+  createPostCardOnCallout,
+  createPostCollectionCallout,
 } from '../../callout/post/post-collection-callout.params.request';
 import {
-  createWhiteboardCollectionCalloutCodegen,
-  createWhiteboardOnCalloutCodegen,
+  createWhiteboardCollectionCallout,
+  createWhiteboardOnCallout,
 } from '../../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
-import { createWhiteboardCalloutCodegen } from '../../callout/whiteboard/whiteboard-callout.params.request';
+import { createWhiteboardCallout } from '../../callout/whiteboard/whiteboard-callout.params.request';
 import { SpaceVisibility } from '@alkemio/client-lib/dist/types/alkemio-schema';
-import { createReferenceOnProfileCodegen } from '../../references/references.request.params';
-import { entitiesId } from '../../roles/community/communications-helper';
+import { createReferenceOnProfile } from '../../references/references.request.params';
+import { entitiesId } from '../../../types/entities-helper';
 import { SpacePrivacyMode } from '@test/generated/alkemio-schema';
 
 const organizationName = 'org-name' + uniqueId;
@@ -64,26 +64,26 @@ let refId = '';
 let documentId = '';
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
 
-  await createChallengeWithUsersCodegen(challengeName);
+  await createChallengeWithUsers(challengeName);
 
-  await updateSpacePlatformCodegen(
+  await updateSpacePlatformSettings(
     entitiesId.spaceId,
     spaceNameId,
     SpaceVisibility.Active
   );
 
-  await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+  await updateSpaceSettings(entitiesId.spaceId, {
     privacy: { mode: SpacePrivacyMode.Private },
   });
 
-  const a = await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
+  const a = await updateSpaceSettings(entitiesId.challenge.id, {
     privacy: { mode: SpacePrivacyMode.Private },
     collaboration: {
       inheritMembershipRights: true,
@@ -94,15 +94,15 @@ beforeAll(async () => {
   console.log(a.error);
 });
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteSpace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 describe('Private Space - Private Challenge - visual on profile', () => {
   describe('Access to Space Profile visual', () => {
     afterAll(async () => {
-      await deleteDocumentCodegen(documentId);
+      await deleteDocument(documentId);
     });
     beforeAll(async () => {
       const visualData = await lookupProfileVisuals(
@@ -189,10 +189,10 @@ describe('Private Space - Private Challenge - visual on profile', () => {
 
   describe('Access to Space Profile reference', () => {
     afterAll(async () => {
-      await deleteDocumentCodegen(documentId);
+      await deleteDocument(documentId);
     });
     beforeAll(async () => {
-      const refData = await createReferenceOnProfileCodegen(
+      const refData = await createReferenceOnProfile(
         entitiesId.challenge.profileId
       );
       refId = refData?.data?.createReferenceOnProfile?.id ?? '';
@@ -277,7 +277,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
 
   describe('Access to Space Context (space storage)', () => {
     afterAll(async () => {
-      await deleteDocumentCodegen(documentId);
+      await deleteDocument(documentId);
     });
     beforeAll(async () => {
       const getSpaceStorageId = await getChallengeProfileDocuments(
@@ -372,10 +372,10 @@ describe('Private Space - Private Challenge - visual on profile', () => {
   describe('Access to Link collections', () => {
     let calloutId: string;
     afterAll(async () => {
-      await deleteDocumentCodegen(documentId);
+      await deleteDocument(documentId);
     });
     beforeAll(async () => {
-      const linkCallout = await createLinkCollectionCalloutCodegen(
+      const linkCallout = await createLinkCollectionCallout(
         entitiesId.challenge.collaborationId,
         'link11',
         'Link collection Callout1',
@@ -383,13 +383,13 @@ describe('Private Space - Private Challenge - visual on profile', () => {
       );
       calloutId = linkCallout.data?.createCalloutOnCollaboration?.id ?? '';
 
-      const refData = await createLinkOnCalloutCodegen(calloutId);
+      const refData = await createLinkOnCallout(calloutId);
       refId = refData?.data?.createContributionOnCallout?.link?.id ?? '';
       await uploadFileOnLink(
         path.join(__dirname, 'files-to-upload', 'image.png'),
         refId
       );
-      const res = await calloutLinkContributionStorageConfigCodegen(
+      const res = await calloutLinkContributionStorageConfig(
         refId,
         calloutId,
         TestUser.GLOBAL_ADMIN
@@ -414,7 +414,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
     `(
       'User: "$userRole" has this privileges: "$privileges" to space link collection callout (storageBucket) document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
-        const res = await calloutLinkContributionStorageConfigCodegen(
+        const res = await calloutLinkContributionStorageConfig(
           refId,
           calloutId,
           userRole
@@ -445,7 +445,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
         anonymousReadAccess,
         parentEntityType,
       }) => {
-        const res = await calloutStorageConfigCodegen(calloutId, userRole);
+        const res = await calloutStorageConfig(calloutId, userRole);
         const data = res.data?.lookup?.callout?.framing.profile.storageBucket;
 
         expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
@@ -462,10 +462,10 @@ describe('Private Space - Private Challenge - visual on profile', () => {
     let postCardId: string;
 
     afterAll(async () => {
-      await deleteDocumentCodegen(documentId);
+      await deleteDocument(documentId);
     });
     beforeAll(async () => {
-      const callout = await createPostCollectionCalloutCodegen(
+      const callout = await createPostCollectionCallout(
         entitiesId.challenge.collaborationId,
         'post11',
         'Post collection Callout1',
@@ -474,7 +474,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
 
       calloutId = callout.data?.createCalloutOnCollaboration?.id ?? '';
 
-      const postData = await createPostCardOnCalloutCodegen(calloutId);
+      const postData = await createPostCardOnCallout(calloutId);
       const postDataBase = postData.data?.createContributionOnCallout?.post;
       const visualId = postDataBase?.profile?.visual?.id ?? '';
       postCardId = postDataBase?.id ?? '';
@@ -484,7 +484,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
         visualId
       );
 
-      const res = await calloutPostCardStorageConfigCodegen(
+      const res = await calloutPostCardStorageConfig(
         postCardId,
         calloutId,
         TestUser.GLOBAL_ADMIN
@@ -508,7 +508,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
     `(
       'User: "$userRole" has this privileges: "$privileges" to space challenge visual for post of call for post  callout (storageBucket) document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
-        const res = await calloutPostCardStorageConfigCodegen(
+        const res = await calloutPostCardStorageConfig(
           postCardId,
           calloutId,
           userRole
@@ -540,7 +540,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
         anonymousReadAccess,
         parentEntityType,
       }) => {
-        const res = await calloutPostCardStorageConfigCodegen(
+        const res = await calloutPostCardStorageConfig(
           postCardId,
           calloutId,
           userRole
@@ -564,10 +564,10 @@ describe('Private Space - Private Challenge - visual on profile', () => {
     let postCardId: string;
 
     afterAll(async () => {
-      await deleteDocumentCodegen(documentId);
+      await deleteDocument(documentId);
     });
     beforeAll(async () => {
-      const calloutData = await createPostCollectionCalloutCodegen(
+      const calloutData = await createPostCollectionCallout(
         entitiesId.challenge.collaborationId,
         'post12',
         'Post collection Callout12',
@@ -575,12 +575,12 @@ describe('Private Space - Private Challenge - visual on profile', () => {
       );
       calloutId = calloutData.data?.createCalloutOnCollaboration?.id ?? '';
 
-      const postData = await createPostCardOnCalloutCodegen(calloutId);
+      const postData = await createPostCardOnCallout(calloutId);
       const postDataBase = postData.data?.createContributionOnCallout?.post;
       const postCardProfilelId = postDataBase?.profile?.id ?? '';
       postCardId = postDataBase?.id ?? '';
 
-      const refData = await createReferenceOnProfileCodegen(postCardProfilelId);
+      const refData = await createReferenceOnProfile(postCardProfilelId);
       refId = refData?.data?.createReferenceOnProfile?.id ?? '';
 
       await uploadFileOnRef(
@@ -588,7 +588,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
         refId
       );
 
-      const res = await calloutPostCardStorageConfigCodegen(
+      const res = await calloutPostCardStorageConfig(
         postCardId,
         calloutId,
         TestUser.GLOBAL_ADMIN
@@ -612,7 +612,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
     `(
       'User: "$userRole" has this privileges: "$privileges" to space visual for post of call for post  callout (storageBucket) document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
-        const res = await calloutPostCardStorageConfigCodegen(
+        const res = await calloutPostCardStorageConfig(
           postCardId,
           calloutId,
           userRole
@@ -643,7 +643,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
         anonymousReadAccess,
         parentEntityType,
       }) => {
-        const res = await calloutPostCardStorageConfigCodegen(
+        const res = await calloutPostCardStorageConfig(
           postCardId,
           calloutId,
           userRole
@@ -667,10 +667,10 @@ describe('Private Space - Private Challenge - visual on profile', () => {
     let whiteboardCardId: string;
 
     afterAll(async () => {
-      await deleteDocumentCodegen(documentId);
+      await deleteDocument(documentId);
     });
     beforeAll(async () => {
-      const hu = await createWhiteboardCollectionCalloutCodegen(
+      const hu = await createWhiteboardCollectionCallout(
         entitiesId.challenge.collaborationId,
         'whiteboard11',
         'Whiteboard collection Callout1',
@@ -679,7 +679,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
 
       calloutId = hu.data?.createCalloutOnCollaboration?.id ?? '';
 
-      const whiteboardData = await createWhiteboardOnCalloutCodegen(calloutId);
+      const whiteboardData = await createWhiteboardOnCallout(calloutId);
       const whiteboardDataBase =
         whiteboardData.data?.createContributionOnCallout?.whiteboard;
       const visualId = whiteboardDataBase?.profile?.visual?.id ?? '';
@@ -690,7 +690,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
         visualId
       );
 
-      const res = await calloutWhiteboardStorageConfigCodegen(
+      const res = await calloutWhiteboardStorageConfig(
         whiteboardCardId,
         calloutId,
         TestUser.GLOBAL_ADMIN
@@ -714,7 +714,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
     `(
       'User: "$userRole" has this privileges: "$privileges" to space challenge visual for whiteboard of call for whiteboards callout (storageBucket) document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
-        const res = await calloutWhiteboardStorageConfigCodegen(
+        const res = await calloutWhiteboardStorageConfig(
           whiteboardCardId,
           calloutId,
           userRole
@@ -746,7 +746,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
         anonymousReadAccess,
         parentEntityType,
       }) => {
-        const res = await calloutWhiteboardStorageConfigCodegen(
+        const res = await calloutWhiteboardStorageConfig(
           whiteboardCardId,
           calloutId,
           userRole
@@ -769,10 +769,10 @@ describe('Private Space - Private Challenge - visual on profile', () => {
     let calloutId: string;
 
     afterAll(async () => {
-      await deleteDocumentCodegen(documentId);
+      await deleteDocument(documentId);
     });
     beforeAll(async () => {
-      const callout = await createPostCollectionCalloutCodegen(
+      const callout = await createPostCollectionCallout(
         entitiesId.challenge.collaborationId,
         'post3',
         'Post collection Callout3',
@@ -782,7 +782,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
       calloutId = calloutData?.id ?? '';
       const calloutProfileId = calloutData?.framing?.profile?.id ?? '';
 
-      const refData = await createReferenceOnProfileCodegen(calloutProfileId);
+      const refData = await createReferenceOnProfile(calloutProfileId);
       refId = refData?.data?.createReferenceOnProfile?.id ?? '';
 
       await uploadFileOnRef(
@@ -790,7 +790,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
         refId
       );
 
-      const getDocId = await calloutStorageConfigCodegen(
+      const getDocId = await calloutStorageConfig(
         calloutId,
         TestUser.GLOBAL_ADMIN
       );
@@ -813,7 +813,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
     `(
       'User: "$userRole" has this privileges: "$privileges" to space challenge visual for post of call for post  callout (storageBucket) document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
-        const res = await calloutStorageConfigCodegen(calloutId, userRole);
+        const res = await calloutStorageConfig(calloutId, userRole);
 
         const data =
           res.data?.lookup.callout?.framing.profile.storageBucket.documents[0]
@@ -841,7 +841,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
         anonymousReadAccess,
         parentEntityType,
       }) => {
-        const res = await calloutStorageConfigCodegen(calloutId, userRole);
+        const res = await calloutStorageConfig(calloutId, userRole);
         const data = res.data?.lookup.callout?.framing.profile.storageBucket;
 
         expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
@@ -857,10 +857,10 @@ describe('Private Space - Private Challenge - visual on profile', () => {
     let calloutId: string;
 
     afterAll(async () => {
-      await deleteDocumentCodegen(documentId);
+      await deleteDocument(documentId);
     });
     beforeAll(async () => {
-      const callout = await createPostCollectionCalloutCodegen(
+      const callout = await createPostCollectionCallout(
         entitiesId.challenge.collaborationId,
         'post4',
         'Post collection Callout4',
@@ -877,7 +877,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
         calloutStorageBucketId
       );
 
-      const getDocId = await calloutStorageConfigCodegen(
+      const getDocId = await calloutStorageConfig(
         calloutId,
         TestUser.GLOBAL_ADMIN
       );
@@ -900,7 +900,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
     `(
       'User: "$userRole" has this privileges: "$privileges" to space challenge visual for post of call for post  callout (storageBucket) document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
-        const res = await calloutStorageConfigCodegen(calloutId, userRole);
+        const res = await calloutStorageConfig(calloutId, userRole);
         const data =
           res.data?.lookup.callout?.framing.profile.storageBucket.documents[0]
             .authorization;
@@ -927,7 +927,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
         anonymousReadAccess,
         parentEntityType,
       }) => {
-        const res = await calloutStorageConfigCodegen(calloutId, userRole);
+        const res = await calloutStorageConfig(calloutId, userRole);
         const data = res.data?.lookup.callout?.framing.profile.storageBucket;
 
         expect(data?.authorization?.myPrivileges?.sort()).toEqual(privileges);
@@ -943,10 +943,10 @@ describe('Private Space - Private Challenge - visual on profile', () => {
     let calloutId: string;
 
     afterAll(async () => {
-      await deleteDocumentCodegen(documentId);
+      await deleteDocument(documentId);
     });
     beforeAll(async () => {
-      const callout = await createWhiteboardCalloutCodegen(
+      const callout = await createWhiteboardCallout(
         entitiesId.challenge.collaborationId,
         'whiteboard1',
         'Whiteboard Callout1',
@@ -963,7 +963,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
         calloutStorageBucketId
       );
 
-      const getDocId = await whiteboardCalloutStorageConfigCodegen(
+      const getDocId = await whiteboardCalloutStorageConfig(
         calloutId,
         TestUser.GLOBAL_ADMIN
       );
@@ -986,10 +986,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
     `(
       'User: "$userRole" has this privileges: "$privileges" to space challenge visual for whiteboard callout (storageBucket) document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
-        const res = await whiteboardCalloutStorageConfigCodegen(
-          calloutId,
-          userRole
-        );
+        const res = await whiteboardCalloutStorageConfig(calloutId, userRole);
         const data =
           res.data?.lookup.callout?.framing.whiteboard?.profile.storageBucket
             .documents[0].authorization;
@@ -1016,10 +1013,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
         anonymousReadAccess,
         parentEntityType,
       }) => {
-        const res = await whiteboardCalloutStorageConfigCodegen(
-          calloutId,
-          userRole
-        );
+        const res = await whiteboardCalloutStorageConfig(calloutId, userRole);
         const data =
           res.data?.lookup.callout?.framing.whiteboard?.profile.storageBucket;
 
@@ -1036,10 +1030,10 @@ describe('Private Space - Private Challenge - visual on profile', () => {
     let calloutId: string;
 
     afterAll(async () => {
-      await deleteDocumentCodegen(documentId);
+      await deleteDocument(documentId);
     });
     beforeAll(async () => {
-      const callout = await createWhiteboardCalloutCodegen(
+      const callout = await createWhiteboardCallout(
         entitiesId.challenge.collaborationId,
         'whiteboard2',
         'Whiteboard Callout2',
@@ -1056,7 +1050,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
         calloutStorageBucketId
       );
 
-      const getDocId = await whiteboardCalloutStorageConfigCodegen(
+      const getDocId = await whiteboardCalloutStorageConfig(
         calloutId,
         TestUser.GLOBAL_ADMIN
       );
@@ -1079,10 +1073,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
     `(
       'User: "$userRole" has this privileges: "$privileges" to space challenge visual for whiteboardRt callout (storageBucket) document',
       async ({ userRole, privileges, anonymousReadAccess }) => {
-        const res = await whiteboardCalloutStorageConfigCodegen(
-          calloutId,
-          userRole
-        );
+        const res = await whiteboardCalloutStorageConfig(calloutId, userRole);
         const data =
           res.data?.lookup.callout?.framing.whiteboard?.profile.storageBucket
             .documents[0].authorization;
@@ -1109,10 +1100,7 @@ describe('Private Space - Private Challenge - visual on profile', () => {
         anonymousReadAccess,
         parentEntityType,
       }) => {
-        const res = await whiteboardCalloutStorageConfigCodegen(
-          calloutId,
-          userRole
-        );
+        const res = await whiteboardCalloutStorageConfig(calloutId, userRole);
         const data =
           res.data?.lookup.callout?.framing.whiteboard?.profile.storageBucket;
 

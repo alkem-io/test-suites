@@ -4,8 +4,10 @@ query GetSubspaceAvailableMembers($spaceId: UUID_NAMEID!, $subspaceId: UUID_NAME
     subspace(ID: $subspaceId) {
       community {
         id
-        ...MembersAndLeadsData
-
+        roleSet {
+          id
+          ...MembersAndLeadsData
+        }
       }
     }
   }

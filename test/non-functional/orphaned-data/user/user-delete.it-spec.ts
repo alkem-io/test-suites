@@ -1,21 +1,22 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  deleteUserCodegen,
-  getUserDataCodegen,
+  deleteUser,
+  getUserData,
   registerVerifiedUser,
-} from '@test/functional-api/user-management/user.request.params';
+} from '@test/functional-api/contributor-management/user/user.request.params';
 import { orgId } from '@test/non-functional/auth/common-auth-variables';
-import { CommunityRole } from '@alkemio/client-lib';
+
+import { entitiesId } from '@test/types/entities-helper';
 import {
-  assignUserAsOrganizationAdminCodegen,
-  assignUserAsOrganizationOwnerCodegen,
-  removeUserAsOrganizationOwnerCodegen,
-} from '@test/utils/mutations/authorization-mutation';
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+  assignRoleToUser,
+  assignUserToOrganization,
+} from '@test/functional-api/roleset/roles-request.params';
+import { CommunityRoleType } from '@test/generated/graphql';
 import {
-  assignCommunityRoleToUserCodegen,
-  assignUserToOrganizationCodegen,
-} from '@test/functional-api/roles/roles-request.params';
+  assignUserAsOrganizationAdmin,
+  assignUserAsOrganizationOwner,
+  removeUserAsOrganizationOwner,
+} from '@test/utils/mutations/authorization-organization-mutation';
 
 const domain = 'alkem.io';
 const firstName = `fn${uniqueId}`;
@@ -29,7 +30,7 @@ describe('Full User Deletion', () => {
     const a = await registerVerifiedUser(email, firstName, lastName);
     console.log(a);
 
-    const userData = await getUserDataCodegen(email);
+    const userData = await getUserData(email);
     console.log(userData);
     userId = userData?.data?.user.id ?? '';
 
@@ -37,56 +38,56 @@ describe('Full User Deletion', () => {
     // const a = await createApplication(entitiesId.space.communityId, userId);
     // console.log(a.body);
 
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       userId,
       entitiesId.space.communityId,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
 
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       userId,
       entitiesId.challenge.communityId,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
 
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       userId,
       entitiesId.opportunity.communityId,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
 
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       userId,
       entitiesId.space.communityId,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
 
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       userId,
       entitiesId.challenge.communityId,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
 
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       userId,
       entitiesId.opportunity.communityId,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
 
     // Assign user as organization member
-    await assignUserToOrganizationCodegen(orgId, userId);
+    await assignUserToOrganization(orgId, userId);
 
     // Assign organization owner
-    await assignUserAsOrganizationOwnerCodegen(userId, orgId);
+    await assignUserAsOrganizationOwner(userId, orgId);
 
     // Assign organization admin
-    await assignUserAsOrganizationAdminCodegen(userId, orgId);
+    await assignUserAsOrganizationAdmin(userId, orgId);
 
     // Remove user as organization owner
-    await removeUserAsOrganizationOwnerCodegen(userId, orgId);
+    await removeUserAsOrganizationOwner(userId, orgId);
 
     // Act
-    const resDelete = await deleteUserCodegen(userId);
+    const resDelete = await deleteUser(userId);
 
     // Assert
     expect(resDelete?.data?.deleteUser.id).toEqual(userId);

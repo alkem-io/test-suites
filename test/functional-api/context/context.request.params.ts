@@ -2,7 +2,7 @@ import { TestUser } from '@test/utils';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 
-export const getContextDataCodegen = async (
+export const getContextData = async (
   spaceId: string,
   subspaceId?: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN

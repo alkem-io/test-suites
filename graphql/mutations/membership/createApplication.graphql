@@ -1,5 +1,0 @@
-mutation applyForCommunityMembership($applicationData: CommunityRoleApplyInput!) {
-  applyForCommunityMembership(applicationData: $applicationData) {
-    ...ApplicationData
-  }
-}

@@ -1,9 +1,5 @@
 import { test, expect } from '@playwright/test';
-import {
-  deleteUserCodegen,
-  getUserDataCodegen,
-  uniqueId,
-} from '@test/functional-api/user-management/user.request.params';
+import { uniqueId } from '@test/functional-api/contributor-management/user/user.request.params';
 import { delay } from '@test/utils';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { getEmails, getRecoveryCode } from '@test/utils/ui.test.helper';
@@ -104,10 +100,10 @@ test('user successful registration email', async ({ page }) => {
     page.getByRole('heading', { name: 'Welcome back Test!' })
   ).toBeVisible();
 
-  // const getUserId = await getUserDataCodegen(userEmail);
+  // const getUserId = await getUserData(userEmail);
   // const registeredUserId = getUserId.data?.user.id ?? '';
 
-  // await deleteUserCodegen(registeredUserId);
+  // await deleteUser(registeredUserId);
 });
 
 test('user successful password recovery', async ({ page }) => {

@@ -1,28 +1,24 @@
 /* eslint-disable prettier/prettier */
-import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import { delay } from '@test/utils/delay';
-import { TestUser } from '@test/utils';
-import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { updateOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
-import { assignUserAsOrganizationAdminCodegen } from '@test/utils/mutations/authorization-mutation';
-import { users } from '@test/utils/queries/users-data';
-import { changePreferenceOrganizationCodegen } from '@test/utils/mutations/preferences-mutation';
+import { deleteMailSlurperMails } from '../../../utils/mailslurper.rest.requests';
+import { delay } from '../../../utils/delay';
+import { TestUser } from '../../../utils';
+import { uniqueId } from '../../../utils/mutations/create-mutation';
+import { deleteOrganization, updateOrganization } from '../../../functional-api/contributor-management/organization/organization.request.params';
+import { deleteSpace } from '../../../functional-api/journey/space/space.request.params';
+import { assignUserAsOrganizationAdmin } from '../../../utils/mutations/authorization-organization-mutation';
+import { users } from '../../../utils/queries/users-data';
+import { changePreferenceOrganization, changePreferenceUser } from '../../../utils/mutations/preferences-mutation';
 import {
-  createPostOnCalloutCodegen,
-} from '@test/functional-api/callout/post/post.request.params';
+  createPostOnCallout,
+} from '../../../functional-api/callout/post/post.request.params';
 import {
-  createChallengeWithUsersCodegen,
-  createOpportunityWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
-} from '@test/utils/data-setup/entities';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+  createChallengeWithUsers,
+  createOpportunityWithUsers,
+  createOrgAndSpaceWithUsers,
+} from '../../../utils/data-setup/entities';
 import { UserPreferenceType } from '@alkemio/client-lib';
-import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
-import {
-  entitiesId,
-  getMailsData,
-} from '@test/functional-api/roles/community/communications-helper';
+import { sendMessageToRoom } from '../../../functional-api/communications/communication.params';
+import { entitiesId, getMailsData } from '../../../types/entities-helper';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
@@ -48,26 +44,32 @@ let preferencesConfig: any[] = [];
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
 
-  await updateOrganizationCodegen(entitiesId.organization.id, {
+  await updateOrganization(entitiesId.organization.id, {
     legalEntityName: 'legalEntityName',
     domain: 'domain',
     website: 'https://website.org',
     contactEmail: 'test-org@alkem.io',
   });
 
-  await createChallengeWithUsersCodegen(challengeName);
-  await createOpportunityWithUsersCodegen(opportunityName);
+  await createChallengeWithUsers(challengeName);
+  await createOpportunityWithUsers(opportunityName);
 
-  await assignUserAsOrganizationAdminCodegen(
+  await assignUserAsOrganizationAdmin(
     users.qaUser.id,
     entitiesId.organization.id
+  );
+
+  await changePreferenceUser(
+    users.globalAdmin.id,
+    UserPreferenceType.NotificationPostCommentCreated,
+    'false'
   );
 
   preferencesConfig = [
@@ -79,7 +81,7 @@ beforeAll(async () => {
 
   preferencesConfig.forEach(
     async config =>
-      await changePreferenceOrganizationCodegen(
+      await changePreferenceOrganization(
         config.organizationID,
         config.type,
         'true'
@@ -88,10 +90,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunity.id);
-  await deleteSpaceCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteSpace(entitiesId.opportunity.id);
+  await deleteSpace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
+  await deleteOrganization(entitiesId.organization.id);
 });
 describe('Notifications - Mention Organization', () => {
   beforeEach(async () => {
@@ -101,7 +103,7 @@ describe('Notifications - Mention Organization', () => {
   describe('Callout discussion', () => {
     test('GA mention Organization in Space comments callout - 2 notification to Organization admins are sent', async () => {
       // Act
-      await sendMessageToRoomCodegen(
+      await sendMessageToRoom(
         entitiesId.space.discussionCalloutCommentsId,
         `${mentionedOrganization(
           entitiesId.organization.displayName,
@@ -137,7 +139,7 @@ describe('Notifications - Mention Organization', () => {
 
     test('HM mention Organization in Space comments callout - 2 notification to Organization admins are sent', async () => {
       // Act
-      await sendMessageToRoomCodegen(
+      await sendMessageToRoom(
         entitiesId.space.discussionCalloutCommentsId,
         `${mentionedOrganization(
           entitiesId.organization.displayName,
@@ -173,7 +175,7 @@ describe('Notifications - Mention Organization', () => {
 
     test('GA mention Organization in Challenge comments callout - 2 notification to Organization admins are sent', async () => {
       // Act
-      await sendMessageToRoomCodegen(
+      await sendMessageToRoom(
         entitiesId.challenge.discussionCalloutCommentsId,
         `${mentionedOrganization(
           entitiesId.organization.displayName,
@@ -210,7 +212,7 @@ describe('Notifications - Mention Organization', () => {
     test('GA mention Organization in Opportunity comments callout - 2 notification to Organization admins are sent', async () => {
       // Act
 
-      await sendMessageToRoomCodegen(
+      await sendMessageToRoom(
         entitiesId.opportunity.discussionCalloutCommentsId,
         `${mentionedOrganization(
           entitiesId.organization.displayName,
@@ -250,7 +252,7 @@ describe('Notifications - Mention Organization', () => {
       let postNameID = '';
       postNameID = `post-name-id-${uniqueId}`;
       const postDisplayName = `post-d-name-${uniqueId}`;
-      const resPostonSpace = await createPostOnCalloutCodegen(
+      const resPostonSpace = await createPostOnCallout(
         entitiesId.space.calloutId,
         { displayName: postDisplayName },
         postNameID,
@@ -266,7 +268,7 @@ describe('Notifications - Mention Organization', () => {
 
     test('HA mention Organization in Space post - 2 notification to Organization admins are sent', async () => {
       // Act
-      await sendMessageToRoomCodegen(
+      await sendMessageToRoom(
         postCommentsIdSpace,
         `${mentionedOrganization(
           entitiesId.organization.displayName,
@@ -304,7 +306,7 @@ describe('Notifications - Mention Organization', () => {
       // Arrange
       preferencesConfig.forEach(
         async config =>
-          await changePreferenceOrganizationCodegen(
+          await changePreferenceOrganization(
             config.organizationID,
             config.type,
             'false'
@@ -312,7 +314,7 @@ describe('Notifications - Mention Organization', () => {
       );
 
       // Act
-      await sendMessageToRoomCodegen(
+      await sendMessageToRoom(
         postCommentsIdSpace,
         `${mentionedOrganization(
           entitiesId.organization.displayName,

@@ -1,0 +1,11 @@
+query RoleSetUserPrivileges($roleSetId: UUID!) {
+  lookup {
+    roleSet(ID: $roleSetId) {
+      id
+      authorization {
+        myPrivileges
+      }
+      myMembershipStatus
+    }
+  }
+}

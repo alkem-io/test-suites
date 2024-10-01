@@ -1,26 +1,25 @@
-import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
-import { deleteOpportunityCodegen } from '@test/functional-api/journey/opportunity/opportunity.request.params';
+import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
+import { deleteSubspace } from '@test/functional-api/journey/opportunity/opportunity.request.params';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import {
-  createChallengeWithUsersCodegen,
-  createOpportunityForChallengeCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeWithUsers,
+  createOpportunityForChallenge,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
-import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
-import { createCalloutOnCollaborationCodegen } from '@test/functional-api/callout/callouts.request.params';
-import { createWhiteboardOnCalloutCodegen } from '@test/functional-api/callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
-import { createPostOnCalloutCodegen } from '@test/functional-api/callout/post/post.request.params';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
+import { sendMessageToRoom } from '@test/functional-api/communications/communication.params';
+import { createCalloutOnCollaboration } from '@test/functional-api/callout/callouts.request.params';
+import { createWhiteboardOnCallout } from '@test/functional-api/callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
+import { createPostOnCallout } from '@test/functional-api/callout/post/post.request.params';
 
-import { CommunityRole } from '@alkemio/client-lib';
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import { entitiesId } from '@test/types/entities-helper';
 import {
-  assignCommunityRoleToUserCodegen,
-  assignCommunityRoleToOrganizationCodegen,
-} from '@test/functional-api/roles/roles-request.params';
+  assignRoleToUser,
+  assignRoleToOrganization,
+} from '@test/functional-api/roleset/roles-request.params';
 import { users } from '@test/utils/queries/users-data';
+import { CommunityRoleType } from '@test/generated/graphql';
 
 const organizationName = 'post-org-name' + uniqueId;
 const hostNameId = 'post-org-nameid' + uniqueId;
@@ -32,38 +31,34 @@ let postNameID = '';
 let postDisplayName = '';
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsersCodegen(challengeName);
-  await createOpportunityForChallengeCodegen(opportunityName);
+  await createChallengeWithUsers(challengeName);
+  await createOpportunityForChallenge(opportunityName);
   postNameID = `post-name-id-${uniqueId}`;
   postDisplayName = `post-d-name-${uniqueId}`;
 });
 describe('Full Opportunity Deletion', () => {
   test('should delete all opportunity related data', async () => {
     // Send opportunity community update
-    await sendMessageToRoomCodegen(
+    await sendMessageToRoom(
       entitiesId.opportunity.id,
       'test',
       TestUser.GLOBAL_ADMIN
     );
 
     // Create callout
-    await createCalloutOnCollaborationCodegen(
-      entitiesId.opportunity.collaborationId
-    );
+    await createCalloutOnCollaboration(entitiesId.opportunity.collaborationId);
 
     // Create whiteboard on callout
-    await createWhiteboardOnCalloutCodegen(
-      entitiesId.opportunity.whiteboardCalloutId
-    );
+    await createWhiteboardOnCallout(entitiesId.opportunity.whiteboardCalloutId);
 
     // Create post on callout and comment to it
-    const resPostonSpace = await createPostOnCalloutCodegen(
+    const resPostonSpace = await createPostOnCallout(
       entitiesId.challenge.calloutId,
       { displayName: postDisplayName },
       postNameID
@@ -71,44 +66,44 @@ describe('Full Opportunity Deletion', () => {
 
     const commentId =
       resPostonSpace?.data?.createContributionOnCallout.post?.comments.id ?? '';
-    await sendMessageToRoomCodegen(commentId, 'test message on post');
+    await sendMessageToRoom(commentId, 'test message on post');
 
     // Create comment on callout
-    await sendMessageToRoomCodegen(
+    await sendMessageToRoom(
       entitiesId.challenge.discussionCalloutId,
       'comment on discussion callout'
     );
 
     // Assign user as member and lead
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.notificationsAdmin.email,
       entitiesId.opportunity.communityId,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.notificationsAdmin.email,
       entitiesId.opportunity.communityId,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
 
     // Assign organization as opportunity community member and lead
-    await assignCommunityRoleToOrganizationCodegen(
+    await assignRoleToOrganization(
       entitiesId.opportunity.communityId,
       entitiesId.organization.id,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
 
-    await assignCommunityRoleToOrganizationCodegen(
+    await assignRoleToOrganization(
       entitiesId.opportunity.communityId,
       entitiesId.organization.id,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
 
     // Act
-    const resDelete = await deleteOpportunityCodegen(entitiesId.opportunity.id);
-    await deleteChallengeCodegen(entitiesId.challenge.id);
-    await deleteSpaceCodegen(entitiesId.spaceId);
-    await deleteOrganizationCodegen(entitiesId.organization.id);
+    const resDelete = await deleteSubspace(entitiesId.opportunity.id);
+    await deleteSubspace(entitiesId.challenge.id);
+    await deleteSpace(entitiesId.spaceId);
+    await deleteOrganization(entitiesId.organization.id);
 
     // Assert
     expect(resDelete?.data?.deleteOpportunity.id).toEqual(

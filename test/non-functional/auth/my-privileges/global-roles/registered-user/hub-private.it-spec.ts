@@ -1,21 +1,21 @@
 import {
-  createPostOnCalloutCodegen,
+  createPostOnCallout,
 } from '@test/functional-api/callout/post/post.request.params';
 import {
-  deleteSpaceCodegen,
-  getSpaceDataCodegen,
+  deleteSpace,
+  getSpaceData,
 } from '@test/functional-api/journey/space/space.request.params';
-import { createRelationCodegen } from '@test/functional-api/relations/relations.request.params';
-import { createApplicationCodegen } from '@test/functional-api/user-management/application/application.request.params';
+import { createRelation } from '@test/functional-api/relations/relations.request.params';
+import { createApplication } from '@test/functional-api/roleset/application/application.request.params';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
+import { changePreferenceSpace } from '@test/utils/mutations/preferences-mutation';
 import { sorted__applyToCommunity_joinCommunity } from '../../common';
-import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { createOrgAndSpace } from '@test/utils/data-setup/entities';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import { SpacePreferenceType } from '@alkemio/client-lib';
-import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import { sendMessageToRoom } from '@test/functional-api/communications/communication.params';
+import { entitiesId } from '@test/types/entities-helper';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -23,46 +23,46 @@ const spaceName = 'auth-ga-eco-name' + uniqueId;
 const spaceNameId = 'auth-ga-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpaceCodegen(
+  await createOrgAndSpace(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await changePreferenceSpaceCodegen(
+  await changePreferenceSpace(
     entitiesId.spaceId,
     SpacePreferenceType.AuthorizationAnonymousReadAccess,
     'false'
   );
 
-  await changePreferenceSpaceCodegen(
+  await changePreferenceSpace(
     entitiesId.spaceId,
     SpacePreferenceType.MembershipApplicationsFromAnyone,
     'true'
   );
-  await changePreferenceSpaceCodegen(
+  await changePreferenceSpace(
     entitiesId.spaceId,
     SpacePreferenceType.MembershipJoinSpaceFromAnyone,
     'true'
   );
-  await changePreferenceSpaceCodegen(
+  await changePreferenceSpace(
     entitiesId.spaceId,
     SpacePreferenceType.MembershipJoinSpaceFromHostOrganizationMembers,
     'true'
   );
 
-  await createApplicationCodegen(
+  await createApplication(
     entitiesId.space.communityId,
     TestUser.QA_USER
   );
 
-  await sendMessageToRoomCodegen(
+  await sendMessageToRoom(
     entitiesId.space.updateId,
     'test',
     TestUser.GLOBAL_ADMIN
   );
 
-  await createRelationCodegen(
+  await createRelation(
     entitiesId.space.collaborationId,
     'incoming',
     'relationDescription',
@@ -72,7 +72,7 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
 
-  await createPostOnCalloutCodegen(
+  await createPostOnCallout(
     entitiesId.space.calloutId,
     { displayName: 'postDisplayName' },
     'postnameid',
@@ -80,14 +80,14 @@ beforeAll(async () => {
   );
 });
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteSpace(entitiesId.spaceId);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 describe('myPrivileges - Private Space', () => {
   test('RegisteredUser privileges to Space', async () => {
     // Act
-    const response = await getSpaceDataCodegen(
+    const response = await getSpaceData(
       entitiesId.spaceId,
       TestUser.QA_USER
     );
@@ -100,7 +100,7 @@ describe('myPrivileges - Private Space', () => {
   describe('Community', () => {
     test('RegisteredUser privileges to Space / Community', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
@@ -118,7 +118,7 @@ describe('myPrivileges - Private Space', () => {
 
     test('RegisteredUser privileges to Space / Community / Application', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
@@ -130,7 +130,7 @@ describe('myPrivileges - Private Space', () => {
 
     test('RegisteredUser privileges to Space / Community / Communication', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
@@ -144,7 +144,7 @@ describe('myPrivileges - Private Space', () => {
   describe('Collaboration', () => {
     test('RegisteredUser privileges to Space / Collaboration', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
@@ -158,7 +158,7 @@ describe('myPrivileges - Private Space', () => {
   describe('Templates', () => {
     test('RegisteredUser privileges to Space / Templates', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );
@@ -172,7 +172,7 @@ describe('myPrivileges - Private Space', () => {
   describe('Preferences', () => {
     test('RegisteredUser privileges to Space / Preferences', async () => {
       // Act
-      const response = await getSpaceDataCodegen(
+      const response = await getSpaceData(
         entitiesId.spaceId,
         TestUser.NON_HUB_MEMBER
       );

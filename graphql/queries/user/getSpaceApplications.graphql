@@ -1,9 +1,12 @@
-query  getSpaceApplications($spaceId: UUID_NAMEID!){
+query getSpaceApplications($spaceId: UUID_NAMEID!) {
   space(ID: spaceId) {
     id
     community {
-      applications {
-        ...ApplicationData
+      roleSet {
+        id
+        applications {
+          ...ApplicationData
+        }
       }
     }
   }

@@ -3,24 +3,15 @@ import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { delay } from '@test/utils/delay';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import { users } from '@test/utils/queries/users-data';
-import {
-  createPostOnCalloutCodegen,
-} from '@test/functional-api/callout/post/post.request.params';
-import {
-  createChallengeWithUsersCodegen,
-  createOpportunityWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
-} from '@test/utils/data-setup/entities';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { createPostOnCallout } from '@test/functional-api/callout/post/post.request.params';
 import { UserPreferenceType } from '@alkemio/client-lib';
-import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
-import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
-import {
-  entitiesId,
-  getMailsData,
-} from '@test/functional-api/roles/community/communications-helper';
+import { changePreferenceUser } from '@test/utils/mutations/preferences-mutation';
+import { sendMessageToRoom } from '@test/functional-api/communications/communication.params';
+import { entitiesId, getMailsData } from '@test/types/entities-helper';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
+import { createOrgAndSpaceWithUsers, createChallengeWithUsers, createOpportunityWithUsers } from '../../../utils/data-setup/entities';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
@@ -48,15 +39,21 @@ let preferencesConfig: any[] = [];
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
 
-  await createChallengeWithUsersCodegen(challengeName);
-  await createOpportunityWithUsersCodegen(opportunityName);
+  await createChallengeWithUsers(challengeName);
+  await createOpportunityWithUsers(opportunityName);
+
+  await changePreferenceUser(
+    users.globalAdmin.id,
+    UserPreferenceType.NotificationPostCommentCreated,
+    'false'
+  );
 
   preferencesConfig = [
     {
@@ -95,15 +92,15 @@ beforeAll(async () => {
 
   preferencesConfig.forEach(
     async config =>
-      await changePreferenceUserCodegen(config.userID, config.type, 'true')
+      await changePreferenceUser(config.userID, config.type, 'true')
   );
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunity.id);
-  await deleteSpaceCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteSpace(entitiesId.opportunity.id);
+  await deleteSpace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
+  await deleteOrganization(entitiesId.organization.id);
 });
 describe('Notifications - Mention User', () => {
   beforeEach(async () => {
@@ -113,7 +110,7 @@ describe('Notifications - Mention User', () => {
   describe('Callout discussion', () => {
     test('GA mention HM in Space comments callout - 1 notification to HM is sent', async () => {
       // Act
-      await sendMessageToRoomCodegen(
+      await sendMessageToRoom(
         entitiesId.space.discussionCalloutCommentsId,
         `${mentionedUser(
           users.spaceMember.displayName,
@@ -139,7 +136,7 @@ describe('Notifications - Mention User', () => {
 
     test('HM mention Non Space member in Space comments callout - 1 notification to NonHM is sent', async () => {
       // Act
-      await sendMessageToRoomCodegen(
+      await sendMessageToRoom(
         entitiesId.space.discussionCalloutCommentsId,
         `${mentionedUser(
           users.nonSpaceMember.displayName,
@@ -165,7 +162,7 @@ describe('Notifications - Mention User', () => {
 
     test('HM mention Non Space member and Space Admin in Space comments callout - 2 notification to NonHM and HA is sent', async () => {
       // Act
-      await sendMessageToRoomCodegen(
+      await sendMessageToRoom(
         entitiesId.space.discussionCalloutCommentsId,
         `${mentionedUser(
           users.nonSpaceMember.displayName,
@@ -198,7 +195,7 @@ describe('Notifications - Mention User', () => {
 
     test('Non Space member mention HM in Space comments callout - 0 notification to HM is sent', async () => {
       // Act
-      await sendMessageToRoomCodegen(
+      await sendMessageToRoom(
         entitiesId.space.discussionCalloutCommentsId,
         `${mentionedUser(
           users.spaceMember.displayName,
@@ -216,7 +213,7 @@ describe('Notifications - Mention User', () => {
 
     test('GA mention HM in Challenge comments callout - 1 notification to HM is sent', async () => {
       // Act
-      await sendMessageToRoomCodegen(
+      await sendMessageToRoom(
         entitiesId.challenge.discussionCalloutCommentsId,
         `${mentionedUser(
           users.spaceMember.displayName,
@@ -243,7 +240,7 @@ describe('Notifications - Mention User', () => {
     test('GA mention HM in Opportunity comments callout - 1 notification to HM is sent', async () => {
       // Act
 
-      await sendMessageToRoomCodegen(
+      await sendMessageToRoom(
         entitiesId.opportunity.discussionCalloutCommentsId,
         `${mentionedUser(
           users.spaceMember.displayName,
@@ -273,7 +270,7 @@ describe('Notifications - Mention User', () => {
       let postNameID = '';
       postNameID = `post-name-id-${uniqueId}`;
       const postDisplayName = `post-d-name-${uniqueId}`;
-      const resPostonSpace = await createPostOnCalloutCodegen(
+      const resPostonSpace = await createPostOnCallout(
         entitiesId.space.calloutId,
         { displayName: postDisplayName },
         postNameID,
@@ -283,7 +280,7 @@ describe('Notifications - Mention User', () => {
         resPostonSpace.data?.createContributionOnCallout.post?.comments.id ??
         '';
 
-      const resPostonChallenge = await createPostOnCalloutCodegen(
+      const resPostonChallenge = await createPostOnCallout(
         entitiesId.challenge.calloutId,
         { displayName: postDisplayName },
         postNameID,
@@ -293,7 +290,7 @@ describe('Notifications - Mention User', () => {
         resPostonChallenge.data?.createContributionOnCallout.post?.comments
           .id ?? '';
 
-      const resPostonOpp = await createPostOnCalloutCodegen(
+      const resPostonOpp = await createPostOnCallout(
         entitiesId.opportunity.calloutId,
         { displayName: postDisplayName },
         postNameID,
@@ -308,7 +305,7 @@ describe('Notifications - Mention User', () => {
 
     test('HA mention HM in Space post - 1 notification to HM is sent', async () => {
       // Act
-      await sendMessageToRoomCodegen(
+      await sendMessageToRoom(
         postCommentsIdSpace,
         `${mentionedUser(
           users.spaceMember.displayName,
@@ -334,7 +331,7 @@ describe('Notifications - Mention User', () => {
 
     test('CA mention HM in Challenge post - 1 notification to HM is sent', async () => {
       // Act
-      await sendMessageToRoomCodegen(
+      await sendMessageToRoom(
         postCommentsIdChallenge,
         `${mentionedUser(
           users.spaceMember.displayName,
@@ -360,7 +357,7 @@ describe('Notifications - Mention User', () => {
 
     test('OA mention HM in Opportunity post - 1 notification to HM is sent', async () => {
       // Act
-      await sendMessageToRoomCodegen(
+      await sendMessageToRoom(
         postCommentsIdOpportunity,
         `${mentionedUser(
           users.spaceMember.displayName,
@@ -389,11 +386,11 @@ describe('Notifications - Mention User', () => {
       // Arrange
       preferencesConfig.forEach(
         async config =>
-          await changePreferenceUserCodegen(config.userID, config.type, 'false')
+          await changePreferenceUser(config.userID, config.type, 'false')
       );
 
       // Act
-      await sendMessageToRoomCodegen(
+      await sendMessageToRoom(
         postCommentsIdOpportunity,
         `${mentionedUser(
           users.spaceMember.displayName,

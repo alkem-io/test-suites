@@ -1,12 +1,12 @@
 import { delay, TestUser } from '@test/utils';
 import { SubscriptionClient } from '@test/utils/subscriptions';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { deleteSpaceCodegen } from '../journey/space/space.request.params';
+import { deleteSpace } from '../journey/space/space.request.params';
 import { subscriptionChallengeCreated } from './subscrition-queries';
-import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
-import { deleteOrganizationCodegen } from '../organization/organization.request.params';
-import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
-import { entitiesId } from '../roles/community/communications-helper';
+import { createOrgAndSpaceWithUsers } from '@test/utils/data-setup/entities';
+import { deleteOrganization } from '../organization/organization.request.params';
+import { createChallenge } from '@test/utils/mutations/journeys/challenge';
+import { entitiesId } from '../../types/entities-helper';
 
 const organizationName = 'com-sub-org-n' + uniqueId;
 const hostNameId = 'com-sub-org-nd' + uniqueId;
@@ -22,7 +22,7 @@ let subscription2: SubscriptionClient;
 let subscription3: SubscriptionClient;
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
@@ -35,8 +35,8 @@ afterAll(async () => {
   subscription2.terminate();
   subscription3.terminate();
 
-  await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteSpace(entitiesId.spaceId);
+  await deleteOrganization(entitiesId.organization.id);
 });
 describe('Create challenge subscription', () => {
   beforeAll(async () => {
@@ -62,20 +62,20 @@ describe('Create challenge subscription', () => {
   });
 
   afterEach(async () => {
-    await deleteSpaceCodegen(challengeIdOne);
-    await deleteSpaceCodegen(challengeIdTwo);
+    await deleteSpace(challengeIdOne);
+    await deleteSpace(challengeIdTwo);
   });
 
   it('receive newly created challenges', async () => {
     // Create challenge
-    const resOne = await createChallengeCodegen(
+    const resOne = await createChallenge(
       challengeDisplayName1,
       challengeDisplayName1,
       entitiesId.spaceId
     );
     challengeIdOne = resOne?.data?.createSubspace.id ?? '';
 
-    const resTwo = await createChallengeCodegen(
+    const resTwo = await createChallenge(
       challengeDisplayName2,
       challengeDisplayName2,
       entitiesId.spaceId,

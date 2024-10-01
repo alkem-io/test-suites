@@ -1,8 +1,8 @@
 import {
-  createUserCodegen,
-  getUserDataCodegen,
-  deleteUserCodegen,
-} from '@test/functional-api/user-management/user.request.params';
+  createUser,
+  getUserData,
+  deleteUser,
+} from '@test/functional-api/contributor-management/user/user.request.params';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 
@@ -10,18 +10,18 @@ const userEmail = `space${uniqueId}@alkem.io`;
 let userId = '';
 
 beforeAll(async () => {
-  const res = await createUserCodegen({ email: userEmail });
+  const res = await createUser({ email: userEmail });
   userId = res?.data?.createUser.id ?? '';
 });
 
 afterAll(async () => {
-  await deleteUserCodegen(userId);
+  await deleteUser(userId);
 });
 
 describe('myPrivileges User', () => {
   test('RegisteredUser privileges to other User', async () => {
     // Act
-    const response = await getUserDataCodegen(
+    const response = await getUserData(
       userEmail,
       TestUser.NON_HUB_MEMBER
     );
@@ -33,7 +33,7 @@ describe('myPrivileges User', () => {
 
   test('RegisteredUser privileges to other User / Profile', async () => {
     // Act
-    const response = await getUserDataCodegen(
+    const response = await getUserData(
       userEmail,
       TestUser.NON_HUB_MEMBER
     );
@@ -46,7 +46,7 @@ describe('myPrivileges User', () => {
 
   test('RegisteredUser privileges to other User / References', async () => {
     // Act
-    const response = await getUserDataCodegen(
+    const response = await getUserData(
       userEmail,
       TestUser.NON_HUB_MEMBER
     );
@@ -60,7 +60,7 @@ describe('myPrivileges User', () => {
 
   test('RegisteredUser privileges to other User / Tagsets', async () => {
     // Act
-    const response = await getUserDataCodegen(
+    const response = await getUserData(
       userEmail,
       TestUser.NON_HUB_MEMBER
     );
@@ -73,7 +73,7 @@ describe('myPrivileges User', () => {
 
   test('RegisteredUser privileges to my User / Preferences', async () => {
     // Act
-    const response = await getUserDataCodegen(
+    const response = await getUserData(
       userEmail,
       TestUser.NON_HUB_MEMBER
     );

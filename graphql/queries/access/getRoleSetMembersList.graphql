@@ -1,0 +1,77 @@
+query RoleSetMembersList(
+  $roleSetId: UUID!
+) {
+  lookup {
+    roleSet(ID: $roleSetId) {
+      ...RoleSetMembersDetails
+      __typename
+    }
+    __typename
+  }
+}
+
+fragment OrganizationDetails on Organization {
+  id
+  nameID
+  profile {
+    id
+    displayName
+    __typename
+  }
+  __typename
+}
+
+fragment RoleSetMembersDetails on RoleSet {
+  id
+  memberUsers: usersInRole(role: MEMBER) {
+    ...CommunityMemberUser
+    __typename
+  }
+  leadUsers: usersInRole(role: LEAD) {
+    ...CommunityMemberUser
+    __typename
+  }
+  memberOrganizations: organizationsInRole(role: MEMBER) {
+    ...OrganizationDetails
+    __typename
+  }
+  leadOrganizations: organizationsInRole(role: LEAD) {
+    ...OrganizationDetails
+    __typename
+  }
+  leadVirtualContributors: virtualContributorsInRole(role: MEMBER) {
+    ...CommunityMemberVirtualContributor
+    __typename
+  }
+
+  # authorization {
+  #   id
+  #   myPrivileges
+  #   __typename
+  # }
+  __typename
+}
+
+fragment CommunityMemberUser on User {
+  id
+  nameID
+  profile {
+    id
+    displayName
+  }
+  email
+  firstName
+  lastName
+  __typename
+}
+
+fragment CommunityMemberVirtualContributor on VirtualContributor {
+  id
+  nameID
+  profile {
+    id
+    displayName
+  }
+  __typename
+}
+

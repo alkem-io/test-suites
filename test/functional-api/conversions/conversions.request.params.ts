@@ -2,7 +2,7 @@ import { TestUser } from '@test/utils';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 
-export const convertChallengeToSpaceCodegen = async (
+export const convertChallengeToSpace = async (
   subspaceID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {

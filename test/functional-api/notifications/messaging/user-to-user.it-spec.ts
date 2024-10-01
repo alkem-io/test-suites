@@ -4,9 +4,9 @@ import { delay } from '@test/utils/delay';
 import { TestUser } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import { UserPreferenceType } from '@alkemio/client-lib';
-import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
-import { sendMessageToUserCodegen } from '@test/functional-api/communications/communication.params';
-import { getMailsData } from '@test/functional-api/roles/community/communications-helper';
+import { changePreferenceUser } from '@test/utils/mutations/preferences-mutation';
+import { sendMessageToUser } from '@test/functional-api/communications/communication.params';
+import { getMailsData } from '@test/types/entities-helper';
 
 let receiver_userDisplayName = '';
 let sender_userDisplayName = '';
@@ -46,7 +46,7 @@ beforeAll(async () => {
 describe('Notifications - user to user messages', () => {
   beforeAll(async () => {
     for (const config of preferencesConfig)
-      await changePreferenceUserCodegen(config.userID, config.type, 'true');
+      await changePreferenceUser(config.userID, config.type, 'true');
   });
 
   beforeEach(async () => {
@@ -55,7 +55,7 @@ describe('Notifications - user to user messages', () => {
 
   test("User 'A'(pref:true) send message to user 'B'(pref:true) - 2 messages are sent", async () => {
     // Act
-    await sendMessageToUserCodegen(
+    await sendMessageToUser(
       [users.globalAdmin.id],
       'Test message',
       TestUser.NON_HUB_MEMBER
@@ -83,7 +83,7 @@ describe('Notifications - user to user messages', () => {
   // Skipping until behavior is cleared, whather the bahavior of receiving email for each sent message is right
   test.skip("User 'A'(pref:true) send message to 2 users: 'B' and 'C'(pref:true) - 3 messages are sent", async () => {
     // Act
-    await sendMessageToUserCodegen(
+    await sendMessageToUser(
       [users.globalAdmin.id, users.qaUser.id],
       'Test message',
       TestUser.NON_HUB_MEMBER
@@ -115,14 +115,14 @@ describe('Notifications - user to user messages', () => {
   // Skipping until behavior is cleared, whather the bahavior of receiving email for each sent message is right
   test.skip("User 'A'(pref:true) send message to 2 users: 'B'(pref:true) and 'C'(pref:false) - 2 messages are sent", async () => {
     // Arrange
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.qaUser.id,
       UserPreferenceType.NotificationCommunicationMessage,
       'false'
     );
 
     // Act
-    await sendMessageToUserCodegen(
+    await sendMessageToUser(
       [users.globalAdmin.id, users.qaUser.id],
       'Test message',
       TestUser.NON_HUB_MEMBER
@@ -145,7 +145,7 @@ describe('Notifications - user to user messages', () => {
         }),
       ])
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.qaUser.id,
       UserPreferenceType.NotificationCommunicationMessage,
       'true'
@@ -154,14 +154,14 @@ describe('Notifications - user to user messages', () => {
 
   test("User 'A'(pref:true) send message to user 'B'(pref:false) - 1 messages are sent", async () => {
     // Arrange
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.globalAdmin.id,
       UserPreferenceType.NotificationCommunicationMessage,
       'false'
     );
 
     // Act
-    await sendMessageToUserCodegen(
+    await sendMessageToUser(
       [users.globalAdmin.id],
       'Test message',
       TestUser.NON_HUB_MEMBER
@@ -184,20 +184,20 @@ describe('Notifications - user to user messages', () => {
 
   test("User 'A'(pref:false) send message to user 'B'(pref:true) - 2 messages are sent", async () => {
     // Arrange
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.globalAdmin.id,
       UserPreferenceType.NotificationCommunicationMessage,
       'true'
     );
 
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.nonSpaceMember.id,
       UserPreferenceType.NotificationCommunicationMessage,
       'false'
     );
 
     // Act
-    await sendMessageToUserCodegen(
+    await sendMessageToUser(
       [users.globalAdmin.id],
       'Test message',
       TestUser.NON_HUB_MEMBER

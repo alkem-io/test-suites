@@ -2,17 +2,17 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils';
 import {
-  deleteDocumentCodegen,
+  deleteDocument,
   getOrganizationProfileDocuments,
   uploadFileOnRef,
   uploadFileOnStorageBucket,
   uploadImageOnVisual,
 } from '../upload.params';
 import path from 'path';
-import { deleteOrganizationCodegen } from '../../organization/organization.request.params';
-import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
+import { deleteOrganization } from '../../contributor-management/organization/organization.request.params';
+import { createOrgAndSpaceWithUsers } from '@test/utils/data-setup/entities';
 import { lookupProfileVisuals } from '../../lookup/lookup-request.params';
-import { deleteSpaceCodegen } from '../../journey/space/space.request.params';
+import { deleteSpace } from '../../journey/space/space.request.params';
 import {
   sorted__create_read_update_delete_grant,
   sorted__create_read_update_delete_grant_fileUp_fileDel,
@@ -20,13 +20,13 @@ import {
   sorted__create_read_update_delete_grant_platformAdmin,
 } from '@test/non-functional/auth/my-privileges/common';
 import {
-  assignUserAsOrganizationAdminCodegen,
-  assignUserAsOrganizationOwnerCodegen,
-} from '@test/utils/mutations/authorization-mutation';
+  assignUserAsOrganizationAdmin,
+  assignUserAsOrganizationOwner,
+} from '@test/utils/mutations/authorization-organization-mutation';
 import { users } from '@test/utils/queries/users-data';
-import { createReferenceOnProfileCodegen } from '../../references/references.request.params';
-import { entitiesId } from '../../roles/community/communications-helper';
-import { assignUserToOrganizationCodegen } from '../../roles/roles-request.params';
+import { createReferenceOnProfile } from '../../references/references.request.params';
+import { entitiesId } from '../../../types/entities-helper';
+import { assignUserToOrganization } from '../../roleset/roles-request.params';
 
 const organizationName = 'org-name' + uniqueId;
 const hostNameId = 'org-nameid' + uniqueId;
@@ -37,37 +37,37 @@ let refId = '';
 let documentId = '';
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
 
-  await assignUserAsOrganizationAdminCodegen(
+  await assignUserAsOrganizationAdmin(
     users.challengeAdmin.email,
     entitiesId.organization.id
   );
 
-  await assignUserAsOrganizationOwnerCodegen(
+  await assignUserAsOrganizationOwner(
     users.spaceAdmin.email,
     entitiesId.organization.id
   );
 
-  await assignUserToOrganizationCodegen(
+  await assignUserToOrganization(
     users.spaceMember.email,
     entitiesId.organization.id
   );
 });
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteSpace(entitiesId.spaceId);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 describe('Organization - documents', () => {
   describe('Access to Organization Profile visual', () => {
     afterAll(async () => {
-      await deleteDocumentCodegen(documentId);
+      await deleteDocument(documentId);
     });
     beforeAll(async () => {
       const visualData = await lookupProfileVisuals(
@@ -147,10 +147,10 @@ describe('Organization - documents', () => {
 
   describe('Access to Organization Profile reference document', () => {
     afterAll(async () => {
-      await deleteDocumentCodegen(documentId);
+      await deleteDocument(documentId);
     });
     beforeAll(async () => {
-      const refData = await createReferenceOnProfileCodegen(
+      const refData = await createReferenceOnProfile(
         entitiesId.organization.profileId
       );
       refId = refData?.data?.createReferenceOnProfile?.id ?? '';
@@ -228,7 +228,7 @@ describe('Organization - documents', () => {
 
   describe('Access to Organization storage bucket', () => {
     afterAll(async () => {
-      await deleteDocumentCodegen(documentId);
+      await deleteDocument(documentId);
     });
     beforeAll(async () => {
       const getSpaceStorageId = await getOrganizationProfileDocuments(

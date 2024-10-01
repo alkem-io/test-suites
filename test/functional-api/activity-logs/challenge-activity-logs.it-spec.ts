@@ -1,38 +1,35 @@
 import '@test/utils/array.matcher';
-import { deleteOrganizationCodegen } from '../organization/organization.request.params';
 import { TestUser } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import {
-  createChallengeForOrgSpaceCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeForOrgSpace,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import {
   CalloutState,
   CalloutType,
-  CommunityRole,
+  CommunityRoleType,
   ActivityEventType,
   CalloutVisibility,
   SpacePrivacyMode,
   CommunityMembershipPolicy,
 } from '@test/generated/alkemio-schema';
 import {
-  deleteSpaceCodegen,
-  updateSpaceSettingsCodegen,
+  deleteSpace,
+  updateSpaceSettings,
 } from '@test/functional-api/journey/space/space.request.params';
-import { getActivityLogOnCollaborationCodegen } from './activity-log-params';
+import { getActivityLogOnCollaboration } from './activity-log-params';
 import {
-  createCalloutOnCollaborationCodegen,
-  deleteCalloutCodegen,
-  updateCalloutVisibilityCodegen,
+  createCalloutOnCollaboration,
+  deleteCallout,
+  updateCalloutVisibility,
 } from '@test/functional-api/callout/callouts.request.params';
-import { createPostOnCalloutCodegen } from '@test/functional-api/callout/post/post.request.params';
-import { sendMessageToRoomCodegen } from '../communications/communication.params';
-import { createWhiteboardOnCalloutCodegen } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
-import {
-  assignCommunityRoleToUserCodegen,
-  joinCommunityCodegen,
-} from '../roles/roles-request.params';
-import { entitiesId } from '../roles/community/communications-helper';
+import { createPostOnCallout } from '@test/functional-api/callout/post/post.request.params';
+import { sendMessageToRoom } from '../communications/communication.params';
+import { createWhiteboardOnCallout } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
+import { assignRoleToUser, joinRoleSet } from '../roleset/roles-request.params';
+import { entitiesId } from '../../types/entities-helper';
+import { deleteOrganization } from '../contributor-management/organization/organization.request.params';
 export const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
@@ -49,25 +46,25 @@ const spaceName = 'callout-eco-name' + uniqueId;
 const spaceNameId = 'callout-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+  await updateSpaceSettings(entitiesId.spaceId, {
     membership: {
       policy: CommunityMembershipPolicy.Open,
     },
   });
 
-  await createChallengeForOrgSpaceCodegen(challengeName);
+  await createChallengeForOrgSpace(challengeName);
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteSpace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 beforeEach(async () => {
@@ -79,11 +76,11 @@ beforeEach(async () => {
 
 describe('Activity logs - Challenge', () => {
   afterEach(async () => {
-    await deleteCalloutCodegen(calloutId);
+    await deleteCallout(calloutId);
   });
   test('should return empty arrays', async () => {
     // Act
-    const res = await getActivityLogOnCollaborationCodegen(
+    const res = await getActivityLogOnCollaboration(
       entitiesId.challenge.collaborationId,
       5
     );
@@ -94,12 +91,12 @@ describe('Activity logs - Challenge', () => {
 
   test('should NOT return CALLOUT_PUBLISHED, when created', async () => {
     // Arrange
-    const res = await createCalloutOnCollaborationCodegen(
+    const res = await createCalloutOnCollaboration(
       entitiesId.challenge.collaborationId
     );
     calloutId = res?.data?.createCalloutOnCollaboration.id ?? '';
 
-    const resActivity = await getActivityLogOnCollaborationCodegen(
+    const resActivity = await getActivityLogOnCollaboration(
       entitiesId.challenge.collaborationId,
       5
     );
@@ -110,19 +107,16 @@ describe('Activity logs - Challenge', () => {
 
   test('should return MEMBER_JOINED, when user assigned from Admin or individually joined', async () => {
     // Arrange
-    await joinCommunityCodegen(
-      entitiesId.challenge.communityId,
-      TestUser.HUB_MEMBER
-    );
+    await joinRoleSet(entitiesId.challenge.roleSetId, TestUser.HUB_MEMBER);
 
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.spaceAdmin.id,
-      entitiesId.challenge.communityId,
-      CommunityRole.Member
+      entitiesId.challenge.roleSetId,
+      CommunityRoleType.Member
     );
 
     // Act
-    const resActivity = await getActivityLogOnCollaborationCodegen(
+    const resActivity = await getActivityLogOnCollaboration(
       entitiesId.challenge.collaborationId,
       3
     );
@@ -157,17 +151,14 @@ describe('Activity logs - Challenge', () => {
 
   test.skip('should return CALLOUT_PUBLISHED, POST_CREATED, POST_COMMENT, DISCUSSION_COMMENT, WHITEBOARD_CREATED', async () => {
     // Arrange
-    const res = await createCalloutOnCollaborationCodegen(
+    const res = await createCalloutOnCollaboration(
       entitiesId.challenge.collaborationId
     );
     calloutId = res?.data?.createCalloutOnCollaboration.id ?? '';
 
-    await updateCalloutVisibilityCodegen(
-      calloutId,
-      CalloutVisibility.Published
-    );
+    await updateCalloutVisibility(calloutId, CalloutVisibility.Published);
 
-    const resPostonSpace = await createPostOnCalloutCodegen(
+    const resPostonSpace = await createPostOnCallout(
       calloutId,
       { displayName: postDisplayName },
       postNameID,
@@ -177,14 +168,14 @@ describe('Activity logs - Challenge', () => {
       resPostonSpace?.data?.createContributionOnCallout.post;
     const postCommentsIdSpace = postDataCreate?.comments.id ?? '';
 
-    const messageRes = await sendMessageToRoomCodegen(
+    const messageRes = await sendMessageToRoom(
       postCommentsIdSpace,
       'test message on space post',
       TestUser.GLOBAL_ADMIN
     );
     messageRes?.data?.sendMessageToRoom.id;
 
-    const resDiscussion = await createCalloutOnCollaborationCodegen(
+    const resDiscussion = await createCalloutOnCollaboration(
       entitiesId.challenge.collaborationId,
       {
         framing: {
@@ -204,17 +195,17 @@ describe('Activity logs - Challenge', () => {
     const discussionCalloutCommentsId =
       resDiscussion?.data?.createCalloutOnCollaboration?.comments?.id ?? '';
 
-    await updateCalloutVisibilityCodegen(
+    await updateCalloutVisibility(
       calloutIdDiscussion,
       CalloutVisibility.Published
     );
 
-    await sendMessageToRoomCodegen(
+    await sendMessageToRoom(
       discussionCalloutCommentsId,
       'comment on discussion callout'
     );
 
-    const resWhiteboard = await createCalloutOnCollaborationCodegen(
+    const resWhiteboard = await createCalloutOnCollaboration(
       entitiesId.challenge.collaborationId,
       {
         framing: {
@@ -232,15 +223,15 @@ describe('Activity logs - Challenge', () => {
     const calloutIdWhiteboard =
       resWhiteboard?.data?.createCalloutOnCollaboration.id ?? '';
 
-    await updateCalloutVisibilityCodegen(
+    await updateCalloutVisibility(
       calloutIdWhiteboard,
       CalloutVisibility.Published
     );
 
-    await createWhiteboardOnCalloutCodegen(calloutIdWhiteboard);
+    await createWhiteboardOnCallout(calloutIdWhiteboard);
 
     // Act
-    const resActivity = await getActivityLogOnCollaborationCodegen(
+    const resActivity = await getActivityLogOnCollaboration(
       entitiesId.challenge.collaborationId,
       7
     );
@@ -308,19 +299,19 @@ describe('Activity logs - Challenge', () => {
 // Logs used in the tests below are from the previously executed tests in the file
 describe('Access to Activity logs - Challenge', () => {
   beforeAll(async () => {
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.spaceMember.id,
       entitiesId.challenge.id,
-      CommunityRole.Admin
+      CommunityRoleType.Admin
     );
   });
 
   describe('DDT user privileges to Public Challenge activity logs of Private Space', () => {
     beforeAll(async () => {
-      await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+      await updateSpaceSettings(entitiesId.spaceId, {
         privacy: { mode: SpacePrivacyMode.Private },
       });
-      await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
+      await updateSpaceSettings(entitiesId.challenge.id, {
         privacy: { mode: SpacePrivacyMode.Public },
       });
     });
@@ -334,7 +325,7 @@ describe('Access to Activity logs - Challenge', () => {
       'User: "$userRole" get message: "$message", when intend to access Public Challenge activity logs of a Private space',
       async ({ userRole, message }) => {
         // Act
-        const resActivity = await getActivityLogOnCollaborationCodegen(
+        const resActivity = await getActivityLogOnCollaboration(
           entitiesId.challenge.collaborationId,
           5,
           userRole
@@ -354,7 +345,7 @@ describe('Access to Activity logs - Challenge', () => {
       'User: "$userRole" get Error message: "$message", when intend to access Public Challenge activity logs of a Private space',
       async ({ userRole, message }) => {
         // Act
-        const resActivity = await getActivityLogOnCollaborationCodegen(
+        const resActivity = await getActivityLogOnCollaboration(
           entitiesId.challenge.collaborationId,
           5,
           userRole
@@ -368,10 +359,10 @@ describe('Access to Activity logs - Challenge', () => {
 
   describe('DDT user privileges to Public Challenge activity logs of Public Space', () => {
     beforeAll(async () => {
-      await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+      await updateSpaceSettings(entitiesId.spaceId, {
         privacy: { mode: SpacePrivacyMode.Public },
       });
-      await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
+      await updateSpaceSettings(entitiesId.challenge.id, {
         privacy: { mode: SpacePrivacyMode.Public },
       });
     });
@@ -386,7 +377,7 @@ describe('Access to Activity logs - Challenge', () => {
       'User: "$userRole" get message: "$message", when intend to access Public Challenge activity logs of a Public space',
       async ({ userRole, message }) => {
         // Act
-        const resActivity = await getActivityLogOnCollaborationCodegen(
+        const resActivity = await getActivityLogOnCollaboration(
           entitiesId.challenge.collaborationId,
           5,
           userRole

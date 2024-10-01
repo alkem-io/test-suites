@@ -1,23 +1,19 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import {
-  entitiesId,
-  getMailsData,
-} from '@test/functional-api/roles/community/communications-helper';
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import { delay } from '@test/utils/delay';
 import { users } from '@test/utils/queries/users-data';
 import {
-  createChallengeWithUsersCodegen,
-  createOpportunityWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeWithUsers,
+  createOpportunityWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { UserPreferenceType } from '@alkemio/client-lib';
-import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
-import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
-import { createCalloutOnCollaborationCodegen } from '@test/functional-api/callout/callouts.request.params';
+import { changePreferenceUser } from '@test/utils/mutations/preferences-mutation';
+import { sendMessageToRoom } from '@test/functional-api/communications/communication.params';
+import { entitiesId, getMailsData } from '@test/types/entities-helper';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 
 const organizationName = 'not-up-org-name' + uniqueId;
 const hostNameId = 'not-up-org-nameid' + uniqueId;
@@ -58,14 +54,14 @@ const expectedDataOpp = async (toAddresses: any[]) => {
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsersCodegen(challengeName);
-  await createOpportunityWithUsersCodegen(opportunityName);
+  await createChallengeWithUsers(challengeName);
+  await createOpportunityWithUsers(opportunityName);
 
   preferencesConfig = [
     {
@@ -111,10 +107,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunity.id);
-  await deleteSpaceCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteSpace(entitiesId.opportunity.id);
+  await deleteSpace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 describe('Notifications - callout comments', () => {
@@ -123,7 +119,7 @@ describe('Notifications - callout comments', () => {
   });
 
   beforeAll(async () => {
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.notificationsAdmin.id,
       UserPreferenceType.NotificationDiscussionCommentCreated,
       'false'
@@ -131,14 +127,14 @@ describe('Notifications - callout comments', () => {
 
     preferencesConfig.forEach(
       async config =>
-        await changePreferenceUserCodegen(config.userID, config.type, 'true')
+        await changePreferenceUser(config.userID, config.type, 'true')
     );
   });
 
   // ToDo: fix test
   test.skip('GA create space callout comment - HM(7) get notifications', async () => {
     // Act
-    await sendMessageToRoomCodegen(
+    await sendMessageToRoom(
       entitiesId.space.discussionCalloutCommentsId,
       'comment on discussion callout',
       TestUser.GLOBAL_ADMIN
@@ -172,7 +168,7 @@ describe('Notifications - callout comments', () => {
   // ToDo: fix test
   test.skip('HA create space callout comment - HM(7) get notifications', async () => {
     // Act
-    await sendMessageToRoomCodegen(
+    await sendMessageToRoom(
       entitiesId.space.discussionCalloutCommentsId,
       'comment on discussion callout',
       TestUser.HUB_ADMIN
@@ -205,7 +201,7 @@ describe('Notifications - callout comments', () => {
 
   test('HA create challenge callout comment - HM(5),  get notifications', async () => {
     // Act
-    await sendMessageToRoomCodegen(
+    await sendMessageToRoom(
       entitiesId.challenge.discussionCalloutCommentsId,
       'comment on discussion callout',
       TestUser.HUB_ADMIN
@@ -242,7 +238,7 @@ describe('Notifications - callout comments', () => {
 
   test('OM create opportunity callout comment - HM(3), get notifications', async () => {
     // Act
-    await sendMessageToRoomCodegen(
+    await sendMessageToRoom(
       entitiesId.opportunity.discussionCalloutCommentsId,
       'comment on discussion callout',
       TestUser.OPPORTUNITY_MEMBER
@@ -280,10 +276,10 @@ describe('Notifications - callout comments', () => {
   test('OA create opportunity callout comment - 0 notifications - all roles with notifications disabled', async () => {
     preferencesConfig.forEach(
       async config =>
-        await changePreferenceUserCodegen(config.userID, config.type, 'false')
+        await changePreferenceUser(config.userID, config.type, 'false')
     );
     // Act
-    await sendMessageToRoomCodegen(
+    await sendMessageToRoom(
       entitiesId.opportunity.discussionCalloutCommentsId,
       'comment on discussion callout',
       TestUser.OPPORTUNITY_ADMIN

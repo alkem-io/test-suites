@@ -3,7 +3,7 @@ import { TestUser } from '@test/utils';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 
-export const sendMessageToRoomCodegen = async (
+export const sendMessageToRoom = async (
   roomID: string,
   message = 'This is my message. :)',
   userRole: TestUser = TestUser.GLOBAL_ADMIN
@@ -25,7 +25,7 @@ export const sendMessageToRoomCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const sendMessageToUserCodegen = async (
+export const sendMessageToUser = async (
   receiverIds: string[],
   message = 'This is my message. :)',
   userRole: TestUser = TestUser.GLOBAL_ADMIN
@@ -47,7 +47,7 @@ export const sendMessageToUserCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const sendMessageToOrganizationCodegen = async (
+export const sendMessageToOrganization = async (
   organizationId: string,
   message = 'This is my message. :)',
   userRole: TestUser = TestUser.GLOBAL_ADMIN
@@ -69,7 +69,7 @@ export const sendMessageToOrganizationCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const sendMessageToCommunityLeadsCodegen = async (
+export const sendMessageToCommunityLeads = async (
   communityId: string,
   message = 'This is my message. :)',
   userRole: TestUser = TestUser.GLOBAL_ADMIN
@@ -91,7 +91,7 @@ export const sendMessageToCommunityLeadsCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const removeMessageOnRoomCodegen = async (
+export const removeMessageOnRoom = async (
   roomID: string,
   messageID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
@@ -113,7 +113,7 @@ export const removeMessageOnRoomCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const getPlatformForumDataCodegen = async (
+export const getPlatformForumData = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
@@ -128,7 +128,7 @@ export const getPlatformForumDataCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const getPlatformDiscussionsDataCodegen = async (
+export const getPlatformDiscussionsData = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
@@ -143,7 +143,7 @@ export const getPlatformDiscussionsDataCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const getPlatformDiscussionsDataByIdCodegen = async (
+export const getPlatformDiscussionsDataById = async (
   discussionId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -162,7 +162,7 @@ export const getPlatformDiscussionsDataByIdCodegen = async (
 };
 
 export const getPlatformDiscussionsDataByTitle = async (title: string) => {
-  const platformDiscussions = await getPlatformDiscussionsDataCodegen();
+  const platformDiscussions = await getPlatformDiscussionsData();
   const allDiscussions = platformDiscussions?.data?.platform.forum.discussions;
   const filteredDiscussion = allDiscussions?.filter(
     (obj: { profile: { displayName: string } }) => {
@@ -172,7 +172,7 @@ export const getPlatformDiscussionsDataByTitle = async (title: string) => {
   return filteredDiscussion;
 };
 
-export const deleteDiscussionCodegen = async (
+export const deleteDiscussion = async (
   ID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -192,7 +192,7 @@ export const deleteDiscussionCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const createDiscussionCodegen = async (
+export const createDiscussion = async (
   forumID: string,
   title = 'Default title',
   category: ForumDiscussionCategory = ForumDiscussionCategory.PlatformFunctionalities,
@@ -218,7 +218,7 @@ export const createDiscussionCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const updateDiscussionCodegen = async (
+export const updateDiscussion = async (
   ID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN,
   options?: {

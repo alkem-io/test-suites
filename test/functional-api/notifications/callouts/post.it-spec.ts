@@ -1,25 +1,22 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import { delay } from '@test/utils/delay';
 import {
-  createPostOnCalloutCodegen,
-  deletePostCodegen,
+  createPostOnCallout,
+  deletePost,
 } from '@test/functional-api/callout/post/post.request.params';
 import { users } from '@test/utils/queries/users-data';
 import {
-  createChallengeWithUsersCodegen,
-  createOpportunityWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeWithUsers,
+  createOpportunityWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { UserPreferenceType } from '@alkemio/client-lib';
-import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
-import {
-  entitiesId,
-  getMailsData,
-} from '@test/functional-api/roles/community/communications-helper';
+import { changePreferenceUser } from '@test/utils/mutations/preferences-mutation';
+import { entitiesId, getMailsData } from '@test/types/entities-helper';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 
 const organizationName = 'not-up-org-name' + uniqueId;
 const hostNameId = 'not-up-org-nameid' + uniqueId;
@@ -54,14 +51,14 @@ const templateMemberResult = async (entityName: string, userEmail: string) => {
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsersCodegen(challengeName);
-  await createOpportunityWithUsersCodegen(opportunityName);
+  await createChallengeWithUsers(challengeName);
+  await createOpportunityWithUsers(opportunityName);
 
   preferencesConfig = [
     {
@@ -136,10 +133,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunity.id);
-  await deleteSpaceCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteSpace(entitiesId.opportunity.id);
+  await deleteSpace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 describe('Notifications - post', () => {
@@ -153,33 +150,33 @@ describe('Notifications - post', () => {
   });
 
   beforeAll(async () => {
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.notificationsAdmin.id,
       UserPreferenceType.NotificationPostCommentCreated,
       'false'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.notificationsAdmin.id,
       UserPreferenceType.NotificationPostCreated,
       'false'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.notificationsAdmin.id,
       UserPreferenceType.NotificationPostCreatedAdmin,
       'false'
     );
 
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationPostCommentCreated,
       'false'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationPostCreated,
       'false'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationPostCreatedAdmin,
       'false'
@@ -187,14 +184,14 @@ describe('Notifications - post', () => {
 
     preferencesConfig.forEach(
       async config =>
-        await changePreferenceUserCodegen(config.userID, config.type, 'true')
+        await changePreferenceUser(config.userID, config.type, 'true')
     );
   });
 
   afterEach(async () => {
-    await deletePostCodegen(spacePostId);
-    await deletePostCodegen(challengePostId);
-    await deletePostCodegen(opportunityPostId);
+    await deletePost(spacePostId);
+    await deletePost(challengePostId);
+    await deletePost(opportunityPostId);
   });
 
   //ToDo: fix test
@@ -203,7 +200,7 @@ describe('Notifications - post', () => {
     const postSubjectMember = `${spaceName}: New Post created by admin, have a look!`;
 
     // Act
-    const resPostonSpace = await createPostOnCalloutCodegen(
+    const resPostonSpace = await createPostOnCallout(
       entitiesId.space.calloutId,
       { displayName: postDisplayName },
       postNameID,
@@ -257,7 +254,7 @@ describe('Notifications - post', () => {
     const postSubjectAdmin = `${spaceName}: New Post created by space`;
     const postSubjectMember = `${spaceName}: New Post created by space, have a look!`;
     // Act
-    const resPostonSpace = await createPostOnCalloutCodegen(
+    const resPostonSpace = await createPostOnCallout(
       entitiesId.space.calloutId,
       { displayName: postDisplayName },
       postNameID,
@@ -313,7 +310,7 @@ describe('Notifications - post', () => {
     const postSubjectAdmin = `${challengeName}: New Post created by space`;
     const postSubjectMember = `${challengeName}: New Post created by space, have a look!`;
     // Act
-    const resPostonSpace = await createPostOnCalloutCodegen(
+    const resPostonSpace = await createPostOnCallout(
       entitiesId.challenge.calloutId,
       { displayName: postDisplayName },
       postNameID,
@@ -370,7 +367,7 @@ describe('Notifications - post', () => {
     const postSubjectAdmin = `${opportunityName}: New Post created by opportunity`;
     const postSubjectMember = `${opportunityName}: New Post created by opportunity, have a look!`;
     // Act
-    const resPostonSpace = await createPostOnCalloutCodegen(
+    const resPostonSpace = await createPostOnCallout(
       entitiesId.opportunity.calloutId,
       { displayName: postDisplayName },
       postNameID,
@@ -443,10 +440,10 @@ describe('Notifications - post', () => {
   test('OA create opportunity post - 0 notifications - all roles with notifications disabled', async () => {
     preferencesConfig.forEach(
       async config =>
-        await changePreferenceUserCodegen(config.userID, config.type, 'false')
+        await changePreferenceUser(config.userID, config.type, 'false')
     );
     // Act
-    const resPostonSpace = await createPostOnCalloutCodegen(
+    const resPostonSpace = await createPostOnCallout(
       entitiesId.opportunity.calloutId,
       { displayName: postDisplayName },
       postNameID,

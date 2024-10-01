@@ -1,14 +1,14 @@
 import {
-  createPostOnCalloutCodegen,
-  getDataPerOpportunityCalloutCodegen,
+  createPostOnCallout,
+  getDataPerOpportunityCallout,
 } from '@test/functional-api/callout/post/post.request.params';
-import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import { deleteChallenge } from '@test/functional-api/journey/challenge/challenge.request.params';
+import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import {
-  getOpportunityDataCodegen,
-  deleteOpportunityCodegen,
+  getOpportunityData,
+  deleteSubspace,
 } from '@test/functional-api/journey/opportunity/opportunity.request.params';
-import { createRelationCodegen } from '@test/functional-api/relations/relations.request.params';
+import { createRelation } from '@test/functional-api/relations/relations.request.params';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
@@ -24,15 +24,15 @@ import {
   sorted__create_read_update_delete_grant_createPost_contribute_calloutPublished,
 } from '../../common';
 import {
-  createChallengeForOrgSpaceCodegen,
-  createOpportunityForChallengeCodegen,
-  createOrgAndSpaceCodegen,
+  createChallengeForOrgSpace,
+  createOpportunityForChallenge,
+  createOrgAndSpace,
 } from '@test/utils/data-setup/entities';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
-import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
+import { sendMessageToRoom } from '@test/functional-api/communications/communication.params';
 import { CommunityRole } from '@alkemio/client-lib';
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
-import { assignCommunityRoleToUserCodegen } from '@test/functional-api/roles/roles-request.params';
+import { entitiesId } from '@test/types/entities-helper';
+import { assignRoleToUser } from '@test/functional-api/roleset/roles-request.params';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -42,27 +42,27 @@ const opportunityName = 'auth-ga-opp';
 const challengeName = 'auth-ga-chal';
 
 beforeAll(async () => {
-  await createOrgAndSpaceCodegen(
+  await createOrgAndSpace(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeForOrgSpaceCodegen(challengeName);
-  await createOpportunityForChallengeCodegen(opportunityName);
-  await assignCommunityRoleToUserCodegen(
+  await createChallengeForOrgSpace(challengeName);
+  await createOpportunityForChallenge(opportunityName);
+  await assignRoleToUser(
     users.qaUser.id,
     entitiesId.space.communityId,
-    CommunityRole.Member
+    CommunityRoleType.Member
   );
 
-  await sendMessageToRoomCodegen(
+  await sendMessageToRoom(
     entitiesId.opportunity.updatesId,
     'test',
     TestUser.GLOBAL_ADMIN
   );
 
-  await createRelationCodegen(
+  await createRelation(
     entitiesId.opportunity.collaborationId,
     'incoming',
     'relationDescription',
@@ -72,7 +72,7 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
 
-  await createPostOnCalloutCodegen(
+  await createPostOnCallout(
     entitiesId.opportunity.calloutId,
     { displayName: 'postDisplayName' },
     'postnameid',
@@ -80,16 +80,16 @@ beforeAll(async () => {
   );
 });
 afterAll(async () => {
-  await deleteOpportunityCodegen(entitiesId.opportunity.id);
-  await deleteChallengeCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteSubspace(entitiesId.opportunity.id);
+  await deleteSubspace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 describe('myPrivileges', () => {
   test('GlobalSpaceAdmin privileges to Opportunity', async () => {
     // Act
-    const response = await getOpportunityDataCodegen(
+    const response = await getOpportunityData(
       entitiesId.opportunity.id,
       TestUser.GLOBAL_HUBS_ADMIN
     );
@@ -103,7 +103,7 @@ describe('myPrivileges', () => {
   describe('Community', () => {
     test('GlobalSpaceAdmin privileges to Opportunity / Community', async () => {
       // Act
-      const response = await getOpportunityDataCodegen(
+      const response = await getOpportunityData(
         entitiesId.opportunity.id,
         TestUser.GLOBAL_HUBS_ADMIN
       );
@@ -119,7 +119,7 @@ describe('myPrivileges', () => {
 
     test('GlobalSpaceAdmin privileges to Opportunity / Community / Communication', async () => {
       // Act
-      const response = await getOpportunityDataCodegen(
+      const response = await getOpportunityData(
         entitiesId.opportunity.id,
         TestUser.GLOBAL_HUBS_ADMIN
       );
@@ -135,7 +135,7 @@ describe('myPrivileges', () => {
 
     test.skip('GlobalSpaceAdmin privileges to Opportunity / Community / Communication / Discussion', async () => {
       // Act
-      const response = await getOpportunityDataCodegen(
+      const response = await getOpportunityData(
         entitiesId.opportunity.id,
         TestUser.GLOBAL_HUBS_ADMIN
       );
@@ -152,7 +152,7 @@ describe('myPrivileges', () => {
 
     test('GlobalSpaceAdmin privileges to Opportunity / Community / Communication / Updates', async () => {
       // Act
-      const response = await getOpportunityDataCodegen(
+      const response = await getOpportunityData(
         entitiesId.opportunity.id,
         TestUser.GLOBAL_HUBS_ADMIN
       );
@@ -171,7 +171,7 @@ describe('myPrivileges', () => {
   describe('Collaboration', () => {
     test('GlobalSpaceAdmin privileges to Opportunity / Collaboration', async () => {
       // Act
-      const response = await getOpportunityDataCodegen(
+      const response = await getOpportunityData(
         entitiesId.opportunity.id,
         TestUser.GLOBAL_HUBS_ADMIN
       );
@@ -188,7 +188,7 @@ describe('myPrivileges', () => {
 
     test('GlobalSpaceAdmin privileges to Opportunity / Collaboration / Relations', async () => {
       // Act
-      const response = await getOpportunityDataCodegen(
+      const response = await getOpportunityData(
         entitiesId.opportunity.id,
         TestUser.GLOBAL_HUBS_ADMIN
       );
@@ -205,7 +205,7 @@ describe('myPrivileges', () => {
 
     test('GlobalSpaceAdmin privileges to Opportunity / Collaboration / Callout', async () => {
       // Act
-      const response = await getOpportunityDataCodegen(
+      const response = await getOpportunityData(
         entitiesId.opportunity.id,
         TestUser.GLOBAL_HUBS_ADMIN
       );
@@ -221,7 +221,7 @@ describe('myPrivileges', () => {
 
     test('GlobalSpaceAdmin privileges to Opportunity / Collaboration / Callout / Post', async () => {
       // Act
-      const response = await getDataPerOpportunityCalloutCodegen(
+      const response = await getDataPerOpportunityCallout(
         entitiesId.opportunity.id,
         entitiesId.opportunity.calloutId,
         TestUser.GLOBAL_HUBS_ADMIN
@@ -241,7 +241,7 @@ describe('myPrivileges', () => {
     // ToDo
     test.skip('GlobalSpaceAdmin privileges to Opportunity / Collaboration / Callout / Whiteboard', async () => {
       // Act
-      // const response = await getDataPerSpaceCalloutCodegen(
+      // const response = await getDataPerSpaceCallout(
       //   entitiesId.spaceId,
       //   entitiesId.space.calloutId,
       //   TestUser.GLOBAL_HUBS_ADMIN

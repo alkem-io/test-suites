@@ -2,7 +2,7 @@ import { TestUser } from '@test/utils';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 
-export const getActivityLogOnCollaborationCodegen = async (
+export const getActivityLogOnCollaboration = async (
   collaborationID: string,
   limit: number,
   userRole: TestUser = TestUser.GLOBAL_ADMIN

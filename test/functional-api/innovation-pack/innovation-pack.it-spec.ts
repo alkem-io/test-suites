@@ -1,7 +1,6 @@
-import { createOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
-import { authorizationPolicyResetOnPlatform } from '@test/utils/mutations/authorization-mutation';
+import { createOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { createInnovationPackOnLibraryCodegen } from './innovation_pack.request.params';
+import { createInnovationPackOnLibrary } from './innovation_pack.request.params';
 import {
   whiteboardTemplateValues1,
   whiteboardTemplateValues2,
@@ -10,7 +9,8 @@ import {
   whiteboardTemplateValues5,
   whiteboardTemplateValues6,
 } from './whiteboard-values-fixed';
-import { createWhiteboardTemplateCodegen } from '../callout/templates/whiteboard/templates.request.params';
+import { createWhiteboardTemplate } from '../templates/whiteboard/templates.request.params';
+import { authorizationPolicyResetOnPlatform } from '@test/utils/mutations/authorization-platform-mutation';
 
 describe('Organization', () => {
   const organizationName = 'Organization with many whiteboardes' + uniqueId;
@@ -22,52 +22,52 @@ describe('Organization', () => {
   beforeAll(async () => {
     await authorizationPolicyResetOnPlatform();
 
-    const res = await createOrganizationCodegen(organizationName, hostNameId);
+    const res = await createOrganization(organizationName, hostNameId);
     orgId = res?.data?.createOrganization.id ?? '';
   });
   // afterAll(async () => await deleteOrganization(orgId));
 
   describe('Innovation pack library', () => {
     test('Create', async () => {
-      const packData = await createInnovationPackOnLibraryCodegen(
+      const packData = await createInnovationPackOnLibrary(
         packName,
         packNameId,
         orgId
       );
       const templateSetId =
-        packData?.data?.createInnovationPackOnLibrary?.templates?.id ?? '';
+        packData?.data?.createInnovationPack?.templatesSet?.id ?? '';
 
-      await createWhiteboardTemplateCodegen(
+      await createWhiteboardTemplate(
         templateSetId,
         whiteboardTemplateTitle,
         whiteboardTemplateValues1
       );
 
-      await createWhiteboardTemplateCodegen(
+      await createWhiteboardTemplate(
         templateSetId,
         whiteboardTemplateTitle,
         whiteboardTemplateValues2
       );
 
-      await createWhiteboardTemplateCodegen(
+      await createWhiteboardTemplate(
         templateSetId,
         whiteboardTemplateTitle,
         whiteboardTemplateValues3
       );
 
-      await createWhiteboardTemplateCodegen(
+      await createWhiteboardTemplate(
         templateSetId,
         whiteboardTemplateTitle,
         whiteboardTemplateValues4
       );
 
-      await createWhiteboardTemplateCodegen(
+      await createWhiteboardTemplate(
         templateSetId,
         whiteboardTemplateTitle,
         whiteboardTemplateValues5
       );
 
-      await createWhiteboardTemplateCodegen(
+      await createWhiteboardTemplate(
         templateSetId,
         whiteboardTemplateTitle,
         whiteboardTemplateValues6

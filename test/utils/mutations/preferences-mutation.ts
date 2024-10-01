@@ -6,7 +6,7 @@ import { graphqlErrorWrapper } from '../graphql.wrapper';
 import { getGraphqlClient } from '../graphqlClient';
 import { TestUser } from '../token.helper';
 
-export const changePreferenceOrganizationCodegen = async (
+export const changePreferenceOrganization = async (
   organizationID: string,
   type: OrganizationPreferenceType = OrganizationPreferenceType.AuthorizationOrganizationMatchDomain,
   value: string,
@@ -30,7 +30,7 @@ export const changePreferenceOrganizationCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const changePreferenceUserCodegen = async (
+export const changePreferenceUser = async (
   userID: string,
   type: UserPreferenceType = UserPreferenceType.NotificationUserSignUp,
   value: string,

@@ -1,13 +1,13 @@
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { readPrivilege } from '../../common';
-import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
+import { createOrgAndSpace } from '@test/utils/data-setup/entities';
 import {
-  deleteOrganizationCodegen,
-  getOrganizationDataCodegen,
-} from '@test/functional-api/organization/organization.request.params';
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+  deleteOrganization,
+  getOrganizationData,
+} from '@test/functional-api/contributor-management/organization/organization.request.params';
+import { entitiesId } from '@test/types/entities-helper';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -15,7 +15,7 @@ const spaceName = 'auth-ga-eco-name' + uniqueId;
 const spaceNameId = 'auth-ga-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpaceCodegen(
+  await createOrgAndSpace(
     organizationName,
     hostNameId,
     spaceName,
@@ -23,14 +23,14 @@ beforeAll(async () => {
   );
 });
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteSpace(entitiesId.spaceId);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 describe('myPrivileges', () => {
   test('RegisteredUser privileges to Organization', async () => {
     // Act
-    const response = await getOrganizationDataCodegen(
+    const response = await getOrganizationData(
       entitiesId.organization.id,
       TestUser.NON_HUB_MEMBER
     );
@@ -42,7 +42,7 @@ describe('myPrivileges', () => {
 
   test('RegisteredUser privileges to Organization / Verification', async () => {
     // Act
-    const response = await getOrganizationDataCodegen(
+    const response = await getOrganizationData(
       entitiesId.organization.id,
       TestUser.NON_HUB_MEMBER
     );
@@ -56,7 +56,7 @@ describe('myPrivileges', () => {
 
   test('RegisteredUser privileges to Organization / Profile', async () => {
     // Act
-    const response = await getOrganizationDataCodegen(
+    const response = await getOrganizationData(
       entitiesId.organization.id,
       TestUser.NON_HUB_MEMBER
     );
@@ -69,7 +69,7 @@ describe('myPrivileges', () => {
 
   test('RegisteredUser privileges to Organization / Profile / References', async () => {
     // Act
-    const response = await getOrganizationDataCodegen(
+    const response = await getOrganizationData(
       entitiesId.organization.id,
       TestUser.NON_HUB_MEMBER
     );
@@ -83,7 +83,7 @@ describe('myPrivileges', () => {
 
   test('RegisteredUser privileges to Organization / Profile / Tagsets', async () => {
     // Act
-    const response = await getOrganizationDataCodegen(
+    const response = await getOrganizationData(
       entitiesId.organization.id,
       TestUser.NON_HUB_MEMBER
     );
@@ -96,7 +96,7 @@ describe('myPrivileges', () => {
   });
   test('RegisteredUser privileges to Organization / Preferences', async () => {
     // Act
-    const response = await getOrganizationDataCodegen(
+    const response = await getOrganizationData(
       entitiesId.organization.id,
       TestUser.NON_HUB_MEMBER
     );

@@ -2,12 +2,12 @@ import { SpaceVisibility } from '@alkemio/client-lib';
 import '../../../utils/array.matcher';
 import {
   createSpaceAndGetData,
-  deleteSpaceCodegen,
-  getSpacesDataCodegen,
-  updateSpacePlatformCodegen,
+  deleteSpace,
+  getSpacesData,
+  updateSpacePlatformSettings,
 } from './space.request.params';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
-import { createOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
+import { createOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 export const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
@@ -22,10 +22,7 @@ const spaceNameId = 'space-namei' + uniqueId;
 
 describe('Space entity', () => {
   beforeAll(async () => {
-    const responseOrg = await createOrganizationCodegen(
-      organizationName,
-      hostNameId
-    );
+    const responseOrg = await createOrganization(organizationName, hostNameId);
     const orgData = responseOrg?.data?.createOrganization;
     organizationId = orgData?.id ?? '';
     orgAccountId = orgData?.account?.id ?? '';
@@ -38,8 +35,8 @@ describe('Space entity', () => {
   });
 
   afterAll(async () => {
-    await deleteSpaceCodegen(spaceId);
-    await deleteOrganizationCodegen(organizationId);
+    await deleteSpace(spaceId);
+    await deleteOrganization(organizationId);
   });
 
   test('should create space', async () => {
@@ -56,12 +53,12 @@ describe('Space entity', () => {
     expect(spaceData.status).toBe(200);
     expect(spaceData?.data?.space.profile.displayName).toEqual(spaceName + 'a');
 
-    await deleteSpaceCodegen(spaceIdTwo);
+    await deleteSpace(spaceIdTwo);
   });
 
   test('should update space nameId', async () => {
     // Act
-    const response = await updateSpacePlatformCodegen(
+    const response = await updateSpacePlatformSettings(
       spaceId,
       spaceNameId + 'b',
       SpaceVisibility.Active
@@ -84,7 +81,7 @@ describe('Space entity', () => {
     const spaceIdTwo = response?.data?.space.id ?? '';
 
     // Act
-    const responseUpdate = await updateSpacePlatformCodegen(
+    const responseUpdate = await updateSpacePlatformSettings(
       spaceId,
       spaceNameId + 'c',
       SpaceVisibility.Active
@@ -95,7 +92,7 @@ describe('Space entity', () => {
       `Unable to update Space nameID: the provided nameID is already taken: ${spaceNameId +
         'c'}`
     );
-    await deleteSpaceCodegen(spaceIdTwo);
+    await deleteSpace(spaceIdTwo);
   });
 
   test('should remove space', async () => {
@@ -107,8 +104,8 @@ describe('Space entity', () => {
     );
     const spaceIdTwo = response?.data?.space.id ?? '';
     // Act
-    await deleteSpaceCodegen(spaceIdTwo);
-    const spacesAfter = await getSpacesDataCodegen();
+    await deleteSpace(spaceIdTwo);
+    const spacesAfter = await getSpacesData();
     const spacesCountAfterRemove = spacesAfter?.data?.spaces;
 
     // Assert

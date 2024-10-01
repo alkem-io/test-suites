@@ -1,7 +1,0 @@
-mutation removeCommunityRoleFromUser(
-  $roleData: RemoveCommunityRoleFromUserInput!
-) {
-  removeCommunityRoleFromUser(roleData: $roleData) {
-    ...UserData
-  }
-}

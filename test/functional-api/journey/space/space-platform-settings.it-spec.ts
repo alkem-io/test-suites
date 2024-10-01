@@ -1,36 +1,36 @@
 import { TestUser } from '@test/utils';
 import '../../../utils/array.matcher';
 import {
-  getSpaceDataCodegen,
-  getUserRoleSpacesVisibilityCodegen,
-  getPrivateSpaceDataCodegen,
-  getSpacesFilteredByVisibilityWithAccessCodegen,
-  getSpacesFilteredByVisibilityNoAccessCodegen,
-  deleteSpaceCodegen,
-  updateSpaceSettingsCodegen,
-  updateSpacePlatformCodegen,
+  getSpaceData,
+  getUserRoleSpacesVisibility,
+  getPrivateSpaceData,
+  getSpacesFilteredByVisibilityWithAccess,
+  getSpacesFilteredByVisibilityNoAccess,
+  deleteSpace,
+  updateSpaceSettings,
+  updateSpacePlatformSettings,
 } from './space.request.params';
 import {
-  createOrganizationCodegen,
-  deleteOrganizationCodegen,
-} from '@test/functional-api/organization/organization.request.params';
+  createOrganization,
+  deleteOrganization,
+} from '@test/functional-api/contributor-management/organization/organization.request.params';
 import {
   readPrivilege,
   sorted__create_read_update_delete_grant_createSubspace,
   sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin,
   sorted__create_read_update_delete_grant_createSubspace_platformAdmin,
 } from '@test/non-functional/auth/my-privileges/common';
-import { deleteOpportunityCodegen } from '../opportunity/opportunity.request.params';
+import { deleteSubspace } from '../opportunity/opportunity.request.params';
 import {
-  createChallengeWithUsersCodegen,
-  createOpportunityWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeWithUsers,
+  createOpportunityWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import {
   SpacePrivacyMode,
   SpaceVisibility,
 } from '@test/generated/alkemio-schema';
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import { entitiesId } from '@test/types/entities-helper';
 
 const uniqueId = Math.random()
   .toString(12)
@@ -49,31 +49,31 @@ const organizationNameTwo = 'org2' + uniqueId;
 
 describe('Update space platform settings', () => {
   beforeAll(async () => {
-    await createOrgAndSpaceWithUsersCodegen(
+    await createOrgAndSpaceWithUsers(
       organizationName,
       hostNameId,
       spaceName,
       spaceNameId
     );
-    await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+    await updateSpaceSettings(entitiesId.spaceId, {
       privacy: { mode: SpacePrivacyMode.Private },
     });
-    await createChallengeWithUsersCodegen(challengeName);
-    await createOpportunityWithUsersCodegen(opportunityName);
+    await createChallengeWithUsers(challengeName);
+    await createOpportunityWithUsers(opportunityName);
   });
 
   afterAll(async () => {
-    await deleteOpportunityCodegen(entitiesId.opportunity.id);
-    await deleteSpaceCodegen(entitiesId.challenge.id);
-    await deleteSpaceCodegen(entitiesId.spaceId);
-    await deleteOrganizationCodegen(entitiesId.organization.id);
-    await deleteOrganizationCodegen(organizationIdTwo);
+    await deleteSubspace(entitiesId.opportunity.id);
+    await deleteSpace(entitiesId.challenge.id);
+    await deleteSpace(entitiesId.spaceId);
+    await deleteOrganization(entitiesId.organization.id);
+    await deleteOrganization(organizationIdTwo);
   });
 
   // Previously this was testing different host (account) for the space, to be updated after we have such mutation
   describe('Update space settings - functional', () => {
     beforeAll(async () => {
-      const orgData = await createOrganizationCodegen(
+      const orgData = await createOrganization(
         organizationNameTwo,
         organizationNameTwo
       );
@@ -82,7 +82,7 @@ describe('Update space platform settings', () => {
     });
 
     afterAll(async () => {
-      await updateSpacePlatformCodegen(
+      await updateSpacePlatformSettings(
         entitiesId.spaceId,
         spaceNameId,
         SpaceVisibility.Active
@@ -92,13 +92,13 @@ describe('Update space platform settings', () => {
     // Previously this was testing different host (account) for the space, to be updated after we have such mutation
     test('Update space settings', async () => {
       // Act
-      await updateSpacePlatformCodegen(
+      await updateSpacePlatformSettings(
         entitiesId.spaceId,
         spaceNameId,
         SpaceVisibility.Demo
       );
 
-      const spaceData = await getSpaceDataCodegen(entitiesId.spaceId);
+      const spaceData = await getSpaceData(entitiesId.spaceId);
       const spaceSettings = spaceData?.data?.space;
 
       // Assert
@@ -112,7 +112,7 @@ describe('Update space platform settings', () => {
 
   describe('Authorization - Update space platform settings', () => {
     beforeAll(async () => {
-      await updateSpacePlatformCodegen(
+      await updateSpacePlatformSettings(
         entitiesId.spaceId,
         spaceNameId,
         SpaceVisibility.Active
@@ -132,7 +132,7 @@ describe('Update space platform settings', () => {
       `(
         'User: "$user", should have private Space privileges: "$spaceMyPrivileges"',
         async ({ user, spaceMyPrivileges }) => {
-          const request = await getPrivateSpaceDataCodegen(
+          const request = await getPrivateSpaceData(
             entitiesId.spaceId,
             user
           );
@@ -149,13 +149,13 @@ describe('Update space platform settings', () => {
     describe('DDT role access to public Space', () => {
       // Arrange
       beforeAll(async () => {
-        await updateSpacePlatformCodegen(
+        await updateSpacePlatformSettings(
           entitiesId.spaceId,
           spaceNameId,
           SpaceVisibility.Active
         );
 
-        await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+        await updateSpaceSettings(entitiesId.spaceId, {
           privacy: { mode: SpacePrivacyMode.Public },
         });
       });
@@ -171,7 +171,7 @@ describe('Update space platform settings', () => {
       `(
         'User: "$user", should have private Space privileges: "$spaceMyPrivileges"',
         async ({ user, spaceMyPrivileges }) => {
-          const request = await getPrivateSpaceDataCodegen(
+          const request = await getPrivateSpaceData(
             entitiesId.spaceId,
             user
           );
@@ -190,7 +190,7 @@ describe('Update space platform settings', () => {
   describe.skip('DDT role WITH access to public archived Space', () => {
     // Arrange
     beforeEach(async () => {
-      await updateSpacePlatformCodegen(
+      await updateSpacePlatformSettings(
         entitiesId.spaceId,
         spaceNameId,
         SpaceVisibility.Active
@@ -198,7 +198,7 @@ describe('Update space platform settings', () => {
     });
 
     beforeAll(async () => {
-      await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+      await updateSpaceSettings(entitiesId.spaceId, {
         privacy: { mode: SpacePrivacyMode.Public },
       });
     });
@@ -212,7 +212,7 @@ describe('Update space platform settings', () => {
       'User role: "$user", have access to public archived Space',
       async ({ user, email, communicationMyPrivileges, challengesCount }) => {
         // Arrange
-        const getuserRoleSpaceDataBeforeArchive = await getUserRoleSpacesVisibilityCodegen(
+        const getuserRoleSpaceDataBeforeArchive = await getUserRoleSpacesVisibility(
           email,
           SpaceVisibility.Active
         );
@@ -223,13 +223,13 @@ describe('Update space platform settings', () => {
             return obj.nameID.includes(spaceNameId);
           }
         );
-        await updateSpacePlatformCodegen(
+        await updateSpacePlatformSettings(
           entitiesId.spaceId,
           spaceNameId,
           SpaceVisibility.Archived
         );
 
-        const getUserRoleSpaceDataAfterArchive = await getUserRoleSpacesVisibilityCodegen(
+        const getUserRoleSpaceDataAfterArchive = await getUserRoleSpacesVisibility(
           email,
           SpaceVisibility.Archived
         );
@@ -242,7 +242,7 @@ describe('Update space platform settings', () => {
           }
         );
 
-        const spaceDataAfterArchive = await getSpacesFilteredByVisibilityWithAccessCodegen(
+        const spaceDataAfterArchive = await getSpacesFilteredByVisibilityWithAccess(
           entitiesId.spaceId,
           user
         );
@@ -267,7 +267,7 @@ describe('Update space platform settings', () => {
   describe.skip('DDT role WITHOUT access to public archived Space', () => {
     // Arrange
     beforeEach(async () => {
-      await updateSpacePlatformCodegen(
+      await updateSpacePlatformSettings(
         entitiesId.spaceId,
         spaceNameId,
         SpaceVisibility.Active
@@ -275,7 +275,7 @@ describe('Update space platform settings', () => {
     });
 
     beforeAll(async () => {
-      await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+      await updateSpaceSettings(entitiesId.spaceId, {
         privacy: { mode: SpacePrivacyMode.Public },
       });
     });
@@ -288,7 +288,7 @@ describe('Update space platform settings', () => {
     `(
       'User role: "$user", have NO access to public archived Space',
       async ({ user, email, communicationMyPrivileges }) => {
-        const getuserRoleSpaceDataBeforeArchive = await getUserRoleSpacesVisibilityCodegen(
+        const getuserRoleSpaceDataBeforeArchive = await getUserRoleSpacesVisibility(
           email,
           SpaceVisibility.Active
         );
@@ -301,13 +301,13 @@ describe('Update space platform settings', () => {
         );
 
         // Act
-        await updateSpacePlatformCodegen(
+        await updateSpacePlatformSettings(
           entitiesId.spaceId,
           spaceNameId,
           SpaceVisibility.Archived
         );
 
-        const getUserRoleSpaceDataAfterArchive = await getUserRoleSpacesVisibilityCodegen(
+        const getUserRoleSpaceDataAfterArchive = await getUserRoleSpacesVisibility(
           email,
           SpaceVisibility.Archived
         );
@@ -323,7 +323,7 @@ describe('Update space platform settings', () => {
           }
         );
 
-        const spaceDataAfterArchive = await getSpacesFilteredByVisibilityNoAccessCodegen(
+        const spaceDataAfterArchive = await getSpacesFilteredByVisibilityNoAccess(
           entitiesId.spaceId,
           user
         );

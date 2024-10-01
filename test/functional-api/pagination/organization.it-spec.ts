@@ -1,9 +1,9 @@
 import {
-  createOrganizationCodegen,
-  deleteOrganizationCodegen,
+  createOrganization,
+  deleteOrganization,
 } from '../organization/organization.request.params';
-import { getOrganizationDataCodegen } from '../organization/organization.request.params';
-import { paginatedOrganizationCodegen } from './pagination.request.params';
+import { getOrganizationData } from '../organization/organization.request.params';
+import { paginatedOrganization } from './pagination.request.params';
 
 let organizationDataConf: any[] = [];
 
@@ -52,7 +52,7 @@ beforeAll(async () => {
   ];
 
   for (const config of organizationDataConf) {
-    await createOrganizationCodegen(
+    await createOrganization(
       config.orgName,
       config.orgNameId,
       config.legalEntityName,
@@ -64,7 +64,7 @@ beforeAll(async () => {
 });
 afterAll(async () => {
   for (const config of organizationDataConf) {
-    await deleteOrganizationCodegen(config.orgNameId);
+    await deleteOrganization(config.orgNameId);
   }
 });
 
@@ -74,11 +74,11 @@ describe('Pagination - organization', () => {
   test('query filtered organization and verify data', async () => {
     // Act
 
-    const requestPagination = await paginatedOrganizationCodegen({
+    const requestPagination = await paginatedOrganization({
       first: 2,
       filter: { nameID: 'eco1host' },
     });
-    const requestOrganization = await getOrganizationDataCodegen('eco1host');
+    const requestOrganization = await getOrganizationData('eco1host');
 
     // Assert
     expect(
@@ -101,7 +101,7 @@ describe('Pagination - organization', () => {
       'Quering: "$first" with filter: "$filter", returns organizations: "$result1","$result2", and organizationsCount: "$organizationsCount" ',
       async ({ first, filter, result1, result2, organizationsCount }) => {
         // Act
-        const request = await paginatedOrganizationCodegen({
+        const request = await paginatedOrganization({
           first: first,
           filter: filter,
         });
@@ -140,7 +140,7 @@ describe('Pagination - organization', () => {
       'Quering: first: "$first", last: "$last", returns organizations: "$result1","$result2", and organizationsCount: "$organizationsCount" ',
       async ({ first, last, result1, result2, organizationsCount }) => {
         // Act
-        const request = await paginatedOrganizationCodegen({
+        const request = await paginatedOrganization({
           first: first,
           last: last,
         });
@@ -173,7 +173,7 @@ describe('Pagination - organization', () => {
     let startCursor = '';
     let endCursor = '';
     beforeAll(async () => {
-      const request = await paginatedOrganizationCodegen({
+      const request = await paginatedOrganization({
         first: 2,
       });
       const returnedData = request?.data?.organizationsPaginated.pageInfo;
@@ -183,7 +183,7 @@ describe('Pagination - organization', () => {
 
     test('query organization with parameter: first: "1", after = startCursor ', async () => {
       // Act
-      const request = await paginatedOrganizationCodegen({
+      const request = await paginatedOrganization({
         first: 1,
         after: startCursor,
       });
@@ -201,7 +201,7 @@ describe('Pagination - organization', () => {
 
     test('query organization with parameter: first: "2", after = startCursor ', async () => {
       // Act
-      const request = await paginatedOrganizationCodegen({
+      const request = await paginatedOrganization({
         first: 2,
         after: startCursor,
       });
@@ -219,7 +219,7 @@ describe('Pagination - organization', () => {
 
     test('query organization with parameter: first: "1", after = endCursor ', async () => {
       // Act
-      const request = await paginatedOrganizationCodegen({
+      const request = await paginatedOrganization({
         first: 1,
         after: endCursor,
       });
@@ -239,7 +239,7 @@ describe('Pagination - organization', () => {
 
     test('query organization with parameter: first: "2", after = endCursor ', async () => {
       // Act
-      const request = await paginatedOrganizationCodegen({
+      const request = await paginatedOrganization({
         first: 2,
         after: endCursor,
       });
@@ -259,7 +259,7 @@ describe('Pagination - organization', () => {
 
     test('query organization with parameter: first: "4", after = endCursor ', async () => {
       // Act
-      const request = await paginatedOrganizationCodegen({
+      const request = await paginatedOrganization({
         first: 4,
         after: endCursor,
       });
@@ -290,7 +290,7 @@ describe('Pagination - organization', () => {
       'Quering: first: "$first", last: "$last", before: "$before", after: "$after" returns error: "$error" ',
       async ({ first, last, before, after, error }) => {
         // Act
-        const request = await paginatedOrganizationCodegen({
+        const request = await paginatedOrganization({
           first: first,
           last: last,
           before: before,

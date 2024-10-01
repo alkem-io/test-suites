@@ -2,7 +2,7 @@ import { TestUser } from '@test/utils';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 
-export const addReactionCodegen = async (
+export const addReaction = async (
   roomID: string,
   messageID: string,
   emoji: any,
@@ -26,7 +26,7 @@ export const addReactionCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const removeReactionCodegen = async (
+export const removeReaction = async (
   reactionID: string,
   roomID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN

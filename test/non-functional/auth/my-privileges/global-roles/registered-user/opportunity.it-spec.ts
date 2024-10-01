@@ -1,29 +1,23 @@
+import { createPostOnCallout } from '@test/functional-api/callout/post/post.request.params';
+import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import {
-  createPostOnCalloutCodegen,
-  getDataPerOpportunityCalloutCodegen,
-} from '@test/functional-api/callout/post/post.request.params';
-import { deleteChallengeCodegen } from '@test/functional-api/journey/challenge/challenge.request.params';
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
-import {
-  getOpportunityDataCodegen,
-  deleteOpportunityCodegen,
+  getOpportunityData,
+  deleteSubspace,
 } from '@test/functional-api/journey/opportunity/opportunity.request.params';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { changePreferenceSpaceCodegen } from '@test/utils/mutations/preferences-mutation';
 import { users } from '@test/utils/queries/users-data';
 import { readPrivilege, sorted__read_createRelation } from '../../common';
 import {
-  createChallengeForOrgSpaceCodegen,
-  createOpportunityForChallengeCodegen,
-  createOrgAndSpaceCodegen,
+  createChallengeForOrgSpace,
+  createOpportunityForChallenge,
+  createOrgAndSpace,
 } from '@test/utils/data-setup/entities';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
-import { CommunityRole, SpacePreferenceType } from '@alkemio/client-lib';
-import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
-import { createRelationCodegen } from '@test/functional-api/relations/relations.request.params';
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
-import { assignCommunityRoleToUserCodegen } from '@test/functional-api/roles/roles-request.params';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
+import { sendMessageToRoom } from '@test/functional-api/communications/communication.params';
+import { entitiesId } from '@test/types/entities-helper';
+import { assignRoleToUser } from '@test/functional-api/roleset/roles-request.params';
+import { CommunityRoleType } from '@test/generated/graphql';
 
 const organizationName = 'auth-ga-org-name' + uniqueId;
 const hostNameId = 'auth-ga-org-nameid' + uniqueId;
@@ -33,43 +27,28 @@ const opportunityName = 'auth-ga-opp';
 const challengeName = 'auth-ga-chal';
 
 beforeAll(async () => {
-  await createOrgAndSpaceCodegen(
-    organizationName,
-    hostNameId,
-    spaceName,
-    spaceNameId
-  );
-  await createChallengeForOrgSpaceCodegen(challengeName);
-  await createOpportunityForChallengeCodegen(opportunityName);
+  await createOrgAndSpace(organizationName, hostNameId, spaceName, spaceNameId);
+  await createChallengeForOrgSpace(challengeName);
+  await createOpportunityForChallenge(opportunityName);
 
-  await changePreferenceSpaceCodegen(
+  await changePreferenceSpace(
     entitiesId.spaceId,
     SpacePreferenceType.AuthorizationAnonymousReadAccess,
     'true'
   );
-  await assignCommunityRoleToUserCodegen(
+  await assignRoleToUser(
     users.qaUser.id,
     entitiesId.space.communityId,
-    CommunityRole.Member
+    CommunityRoleType.Member
   );
 
-  await sendMessageToRoomCodegen(
+  await sendMessageToRoom(
     entitiesId.opportunity.updatesId,
     'test',
     TestUser.GLOBAL_ADMIN
   );
 
-  await createRelationCodegen(
-    entitiesId.opportunity.collaborationId,
-    'incoming',
-    'relationDescription',
-    'relationActorName',
-    'relationActorRole',
-    'relationActorType',
-    TestUser.GLOBAL_ADMIN
-  );
-
-  await createPostOnCalloutCodegen(
+  await createPostOnCallout(
     entitiesId.opportunity.calloutId,
     { displayName: 'postDisplayName' },
     'postnameid',
@@ -77,16 +56,16 @@ beforeAll(async () => {
   );
 });
 afterAll(async () => {
-  await deleteOpportunityCodegen(entitiesId.opportunity.id);
-  await deleteChallengeCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteSubspace(entitiesId.opportunity.id);
+  await deleteSubspace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 describe('myPrivileges - Opportunity of Public Space', () => {
   test('RegisteredUser privileges to Opportunity', async () => {
     // Act
-    const response = await getOpportunityDataCodegen(
+    const response = await getOpportunityData(
       entitiesId.opportunity.id,
       TestUser.NON_HUB_MEMBER
     );
@@ -100,7 +79,7 @@ describe('myPrivileges - Opportunity of Public Space', () => {
   describe('Community', () => {
     test('RegisteredUser privileges to Opportunity / Community', async () => {
       // Act
-      const response = await getOpportunityDataCodegen(
+      const response = await getOpportunityData(
         entitiesId.opportunity.id,
         TestUser.NON_HUB_MEMBER
       );
@@ -114,7 +93,7 @@ describe('myPrivileges - Opportunity of Public Space', () => {
 
     test('RegisteredUser privileges to Opportunity / Community / Communication', async () => {
       // Act
-      const response = await getOpportunityDataCodegen(
+      const response = await getOpportunityData(
         entitiesId.opportunity.id,
         TestUser.NON_HUB_MEMBER
       );
@@ -128,7 +107,7 @@ describe('myPrivileges - Opportunity of Public Space', () => {
 
     test.skip('RegisteredUser privileges to Opportunity / Community / Communication / Discussion', async () => {
       // Act
-      const response = await getOpportunityDataCodegen(
+      const response = await getOpportunityData(
         entitiesId.opportunity.id,
         TestUser.NON_HUB_MEMBER
       );
@@ -142,7 +121,7 @@ describe('myPrivileges - Opportunity of Public Space', () => {
 
     test('RegisteredUser privileges to Opportunity / Community / Communication / Updates', async () => {
       // Act
-      const response = await getOpportunityDataCodegen(
+      const response = await getOpportunityData(
         entitiesId.opportunity.id,
         TestUser.NON_HUB_MEMBER
       );
@@ -159,7 +138,7 @@ describe('myPrivileges - Opportunity of Public Space', () => {
   describe('Collaboration', () => {
     test('RegisteredUser privileges to Opportunity / Collaboration', async () => {
       // Act
-      const response = await getOpportunityDataCodegen(
+      const response = await getOpportunityData(
         entitiesId.opportunity.id,
         TestUser.NON_HUB_MEMBER
       );
@@ -174,7 +153,7 @@ describe('myPrivileges - Opportunity of Public Space', () => {
 
     test('RegisteredUser privileges to Opportunity / Collaboration / Relations', async () => {
       // Act
-      const response = await getOpportunityDataCodegen(
+      const response = await getOpportunityData(
         entitiesId.opportunity.id,
         TestUser.NON_HUB_MEMBER
       );
@@ -189,7 +168,7 @@ describe('myPrivileges - Opportunity of Public Space', () => {
 
     test('RegisteredUser privileges to Opportunity / Collaboration / Callout', async () => {
       // Act
-      const response = await getOpportunityDataCodegen(
+      const response = await getOpportunityData(
         entitiesId.opportunity.id,
         TestUser.NON_HUB_MEMBER
       );
@@ -203,7 +182,7 @@ describe('myPrivileges - Opportunity of Public Space', () => {
 
     test('RegisteredUser privileges to Opportunity / Collaboration / Callout / Post', async () => {
       // Act
-      const response = await getDataPerOpportunityCalloutCodegen(
+      const response = await getDataPerOpportunityCallout(
         entitiesId.opportunity.id,
         entitiesId.opportunity.calloutId,
         TestUser.NON_HUB_MEMBER
@@ -221,7 +200,7 @@ describe('myPrivileges - Opportunity of Public Space', () => {
     // ToDo
     test.skip('RegisteredUser privileges to Opportunity / Collaboration / Callout / Whiteboard', async () => {
       // Act
-      // const response = await getDataPerSpaceCalloutCodegen(
+      // const response = await getDataPerSpaceCallout(
       //   entitiesId.spaceId,
       //   entitiesId.space.calloutId,
       //   TestUser.NON_HUB_MEMBER

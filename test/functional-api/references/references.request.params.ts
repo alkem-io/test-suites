@@ -2,7 +2,7 @@ import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { TestUser } from '@test/utils/token.helper';
 
-export const createReferenceOnProfileCodegen = async (
+export const createReferenceOnProfile = async (
   profileID: string,
   name?: string | 'Ref name new',
   userRole: TestUser = TestUser.GLOBAL_ADMIN
@@ -26,7 +26,7 @@ export const createReferenceOnProfileCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const deleteReferenceOnProfileCodegen = async (
+export const deleteReferenceOnProfile = async (
   profileID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {

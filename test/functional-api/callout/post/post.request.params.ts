@@ -9,7 +9,7 @@ export const options = {
   },
 };
 
-export const createPostOnCalloutCodegen = async (
+export const createPostOnCallout = async (
   calloutID: string,
   profileData: {
     displayName: string;
@@ -38,7 +38,7 @@ export const createPostOnCalloutCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const updatePostCodegen = async (
+export const updatePost = async (
   ID: string,
   nameID: string,
   options?: {
@@ -67,7 +67,7 @@ export const updatePostCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const deletePostCodegen = async (
+export const deletePost = async (
   ID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -87,7 +87,7 @@ export const deletePostCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const getDataPerSpaceCalloutCodegen = async (
+export const getDataPerSpaceCallout = async (
   spaceNameId: string,
   calloutId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
@@ -107,7 +107,7 @@ export const getDataPerSpaceCalloutCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const getCalloutPostsCodegen = async (
+export const getCalloutPosts = async (
   calloutId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -125,7 +125,7 @@ export const getCalloutPostsCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const getPostDataCodegen = async (
+export const getPostData = async (
   postId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -147,7 +147,7 @@ export const postDataPerSpaceCallout = async (
   spaceId: string,
   spaceCalloutId: string
 ): Promise<any[]> => {
-  const responseQuery = await getDataPerSpaceCalloutCodegen(
+  const responseQuery = await getDataPerSpaceCallout(
     spaceId,
     spaceCalloutId
   );

@@ -1,37 +1,34 @@
 /* eslint-disable prettier/prettier */
-import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import { delay } from '@test/utils/delay';
-import { TestUser } from '@test/utils';
-import { uniqueId } from '@test/utils/mutations/create-mutation';
+import { deleteMailSlurperMails } from '../../../utils/mailslurper.rest.requests';
+import { delay } from '../../../utils/delay';
+import { TestUser } from '../../../utils';
+import { uniqueId } from '../../../utils/mutations/create-mutation';
 import {
-  deleteOrganizationCodegen,
-  updateOrganizationCodegen,
-} from '@test/functional-api/organization/organization.request.params';
+  deleteSpace,
+  updateSpaceSettings,
+} from '../../../functional-api/journey/space/space.request.params';
+import { users } from '../../../utils/queries/users-data';
 import {
-  deleteSpaceCodegen,
-  updateSpaceSettingsCodegen,
-} from '@test/functional-api/journey/space/space.request.params';
-import { users } from '@test/utils/queries/users-data';
-import {
-  createChallengeWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
-} from '@test/utils/data-setup/entities';
-import { assignUserAsOrganizationAdminCodegen } from '@test/utils/mutations/authorization-mutation';
-import { sendMessageToCommunityLeadsCodegen } from '@test/functional-api/communications/communication.params';
+  createChallengeWithUsers,
+  createOrgAndSpaceWithUsers,
+} from '../../../utils/data-setup/entities';
+import { assignUserAsOrganizationAdmin } from '../../../utils/mutations/authorization-organization-mutation';
+import { sendMessageToCommunityLeads } from '../../../functional-api/communications/communication.params';
 import {
   entitiesId,
   getMailsData,
-} from '@test/functional-api/roles/community/communications-helper';
+} from '../../../types/entities-helper';
 import {
-  removeCommunityRoleFromUserCodegen,
-  assignCommunityRoleToUserCodegen,
-  assignCommunityRoleToOrganizationCodegen,
-  removeCommunityRoleFromOrganizationCodegen,
-} from '@test/functional-api/roles/roles-request.params';
+  removeRoleFromUser,
+  assignRoleToUser,
+  assignRoleToOrganization,
+  removeRoleFromOrganization,
+} from '../../../functional-api/roleset/roles-request.params';
 import {
-  CommunityRole,
+  CommunityRoleType,
   SpacePrivacyMode,
-} from '@test/generated/alkemio-schema';
+} from '../../../generated/alkemio-schema';
+import { deleteOrganization, updateOrganization } from '../../../functional-api/contributor-management/organization/organization.request.params';
 
 const organizationName = 'urole-org-name' + uniqueId;
 const hostNameId = 'urole-org-nameid' + uniqueId;
@@ -50,62 +47,62 @@ const receivers = (senderDisplayName: string) => {
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
 
-  await updateOrganizationCodegen(entitiesId.organization.id, {
+  await updateOrganization(entitiesId.organization.id, {
     legalEntityName: 'legalEntityName',
     domain: 'domain',
     website: 'https://website.org',
     contactEmail: 'test-org@alkem.io',
   });
 
-  await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+  await updateSpaceSettings(entitiesId.spaceId, {
     privacy: {
       mode: SpacePrivacyMode.Private,
     },
   });
 
-  await createChallengeWithUsersCodegen(challengeName);
+  await createChallengeWithUsers(challengeName);
 
-  await removeCommunityRoleFromUserCodegen(
-    users.globalAdmin.email,
-    entitiesId.challenge.communityId,
-    CommunityRole.Lead
+  await removeRoleFromUser(
+    users.globalAdmin.id,
+    entitiesId.challenge.roleSetId,
+    CommunityRoleType.Lead
   );
 
-  await assignCommunityRoleToUserCodegen(
-    users.challengeMember.email,
-    entitiesId.challenge.communityId,
-    CommunityRole.Lead
+  await assignRoleToUser(
+    users.challengeMember.id,
+    entitiesId.challenge.roleSetId,
+    CommunityRoleType.Lead
   );
 
-  await assignCommunityRoleToUserCodegen(
-    users.challengeAdmin.email,
-    entitiesId.challenge.communityId,
-    CommunityRole.Lead
+  await assignRoleToUser(
+    users.challengeAdmin.id,
+    entitiesId.challenge.roleSetId,
+    CommunityRoleType.Lead
   );
 
-  await assignUserAsOrganizationAdminCodegen(
+  await assignUserAsOrganizationAdmin(
     users.spaceAdmin.id,
     entitiesId.organization.id
   );
 
-  await assignCommunityRoleToOrganizationCodegen(
+  await assignRoleToOrganization(
     entitiesId.organization.id,
-    entitiesId.challenge.communityId,
-    CommunityRole.Lead
+    entitiesId.challenge.roleSetId,
+    CommunityRoleType.Lead
   );
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteSpace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
+  await deleteOrganization(entitiesId.organization.id);
 });
 describe('Notifications - send messages to Private Space, Public Challenge Community Leads', () => {
   beforeEach(async () => {
@@ -115,7 +112,7 @@ describe('Notifications - send messages to Private Space, Public Challenge Commu
   // ToDo: fix test
   test.skip('NOT space member sends message to Challenge community (2 User Leads, 1 Org Lead) - 3 messages sent', async () => {
     // Act
-    await sendMessageToCommunityLeadsCodegen(
+    await sendMessageToCommunityLeads(
       entitiesId.challenge.communityId,
       'Test message',
       TestUser.NON_HUB_MEMBER
@@ -146,7 +143,7 @@ describe('Notifications - send messages to Private Space, Public Challenge Commu
 
   test('Space member send message to Challenge community (2 User Leads, 1 Org Lead) - 3 messages sent', async () => {
     // Act
-    await sendMessageToCommunityLeadsCodegen(
+    await sendMessageToCommunityLeads(
       entitiesId.challenge.communityId,
       'Test message',
       TestUser.HUB_ADMIN
@@ -178,7 +175,7 @@ describe('Notifications - send messages to Private Space, Public Challenge Commu
 
 describe('Notifications - send messages to Private Space, Private Challenge Community Leads', () => {
   beforeAll(async () => {
-    await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
+    await updateSpaceSettings(entitiesId.challenge.id, {
       privacy: {
         mode: SpacePrivacyMode.Private,
       },
@@ -191,7 +188,7 @@ describe('Notifications - send messages to Private Space, Private Challenge Comm
 
   test('NOT space member sends message to Challenge community (2 User Leads, 1 Org Lead) - 3 messages sent', async () => {
     // Act
-    await sendMessageToCommunityLeadsCodegen(
+    await sendMessageToCommunityLeads(
       entitiesId.challenge.communityId,
       'Test message',
       TestUser.NON_HUB_MEMBER
@@ -222,7 +219,7 @@ describe('Notifications - send messages to Private Space, Private Challenge Comm
 
   test('Challenge member send message to Challenge community (2 User Leads, 1 Org Lead) - 3 messages sent', async () => {
     // Act
-    await sendMessageToCommunityLeadsCodegen(
+    await sendMessageToCommunityLeads(
       entitiesId.challenge.communityId,
       'Test message',
       TestUser.HUB_ADMIN
@@ -254,28 +251,28 @@ describe('Notifications - send messages to Private Space, Private Challenge Comm
 
 describe('Notifications - send messages to Private Space, Public Challenge NO Community Leads', () => {
   beforeAll(async () => {
-    await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
+    await updateSpaceSettings(entitiesId.challenge.id, {
       privacy: {
         mode: SpacePrivacyMode.Public,
       },
     });
 
-    await removeCommunityRoleFromUserCodegen(
-      users.challengeAdmin.email,
-      entitiesId.challenge.communityId,
-      CommunityRole.Lead
+    await removeRoleFromUser(
+      users.challengeAdmin.id,
+      entitiesId.challenge.roleSetId,
+      CommunityRoleType.Lead
     );
 
-    await removeCommunityRoleFromUserCodegen(
-      users.challengeMember.email,
-      entitiesId.challenge.communityId,
-      CommunityRole.Lead
+    await removeRoleFromUser(
+      users.challengeMember.id,
+      entitiesId.challenge.roleSetId,
+      CommunityRoleType.Lead
     );
 
-    await removeCommunityRoleFromOrganizationCodegen(
+    await removeRoleFromOrganization(
       entitiesId.organization.id,
-      entitiesId.challenge.communityId,
-      CommunityRole.Lead
+      entitiesId.challenge.roleSetId,
+      CommunityRoleType.Lead
     );
   });
 
@@ -285,7 +282,7 @@ describe('Notifications - send messages to Private Space, Public Challenge NO Co
 
   test('NOT space member sends message to Challenge community (0 User Leads, 0 Org Lead) - 1 messages sent', async () => {
     // Act
-    await sendMessageToCommunityLeadsCodegen(
+    await sendMessageToCommunityLeads(
       entitiesId.challenge.communityId,
       'Test message',
       TestUser.NON_HUB_MEMBER

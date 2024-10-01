@@ -1,33 +1,31 @@
-import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
+import { changePreferenceUser } from '@test/utils/mutations/preferences-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import {
-  deleteSpaceCodegen,
-  updateSpaceSettingsCodegen,
+  deleteSpace,
+  updateSpaceSettings,
 } from '@test/functional-api/journey/space/space.request.params';
 import { delay } from '@test/utils/delay';
 import { TestUser } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import {
-  createChallengeWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import { UserPreferenceType } from '@alkemio/client-lib/dist/types/alkemio-schema';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+
 import {
-  entitiesId,
-  getMailsData,
-} from '@test/functional-api/roles/community/communications-helper';
-import {
-  joinCommunityCodegen,
-  assignCommunityRoleToUserCodegen,
-  removeCommunityRoleFromUserCodegen,
-} from '@test/functional-api/roles/roles-request.params';
+  joinRoleSet,
+  assignRoleToUser,
+  removeRoleFromUser,
+} from '@test/functional-api/roleset/roles-request.params';
 import {
   CommunityMembershipPolicy,
-  CommunityRole,
   SpacePrivacyMode,
 } from '@test/generated/alkemio-schema';
+import { entitiesId, getMailsData } from '@test/types/entities-helper';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
+import { CommunityRoleType } from '@test/generated/graphql';
 
 const organizationName = 'not-app-org-name' + uniqueId;
 const hostNameId = 'not-app-org-nameid' + uniqueId;
@@ -45,14 +43,14 @@ const subjectAdminChallenge = `user &#34;non space&#34; joined ${challengeName}`
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
 
-  await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+  await updateSpaceSettings(entitiesId.spaceId, {
     privacy: {
       mode: SpacePrivacyMode.Private,
     },
@@ -61,8 +59,8 @@ beforeAll(async () => {
     },
   });
 
-  await createChallengeWithUsersCodegen(challengeName);
-  await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
+  await createChallengeWithUsers(challengeName);
+  await updateSpaceSettings(entitiesId.challenge.id, {
     membership: {
       policy: CommunityMembershipPolicy.Open,
     },
@@ -109,21 +107,21 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteSpace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 // Skip until clear the behavior
 describe('Notifications - member join community', () => {
   beforeAll(async () => {
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.notificationsAdmin.id,
       UserPreferenceType.NotificationCommunityNewMemberAdmin,
       'false'
     );
     for (const config of preferencesConfig) {
-      await changePreferenceUserCodegen(config.userID, config.type, 'true');
+      await changePreferenceUser(config.userID, config.type, 'true');
     }
   });
 
@@ -133,10 +131,7 @@ describe('Notifications - member join community', () => {
   // skip until bug is resolved: https://app.zenhub.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/gh/alkem-io/notifications/333
   test('Non-space member join a Space - GA, HA and Joiner receive notifications', async () => {
     // Act
-    await joinCommunityCodegen(
-      entitiesId.space.communityId,
-      TestUser.NON_HUB_MEMBER
-    );
+    await joinRoleSet(entitiesId.space.roleSetId, TestUser.NON_HUB_MEMBER);
     await delay(10000);
 
     const getEmailsData = await getMailsData();
@@ -163,10 +158,7 @@ describe('Notifications - member join community', () => {
   // skip until bug is resolved: https://app.zenhub.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/gh/alkem-io/notifications/333
   test('Non-space member join a Challenge - GA, HA, CA and Joiner receive notifications', async () => {
     // Act
-    await joinCommunityCodegen(
-      entitiesId.challenge.communityId,
-      TestUser.NON_HUB_MEMBER
-    );
+    await joinRoleSet(entitiesId.challenge.roleSetId, TestUser.NON_HUB_MEMBER);
 
     await delay(10000);
     const getEmailsData = await getMailsData();
@@ -194,10 +186,10 @@ describe('Notifications - member join community', () => {
   // skip until bug is resolved: https://app.zenhub.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/gh/alkem-io/notifications/333
   test('Admin adds user to Space community - GA, HA and Joiner receive notifications', async () => {
     // Act
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.qaUser.id,
-      entitiesId.space.communityId,
-      CommunityRole.Member,
+      entitiesId.space.roleSetId,
+      CommunityRoleType.Member,
       TestUser.GLOBAL_ADMIN
     );
 
@@ -228,23 +220,23 @@ describe('Notifications - member join community', () => {
     // Arrange
     preferencesConfig.forEach(
       async config =>
-        await changePreferenceUserCodegen(config.userID, config.type, 'false')
+        await changePreferenceUser(config.userID, config.type, 'false')
     );
 
-    await removeCommunityRoleFromUserCodegen(
+    await removeRoleFromUser(
       users.nonSpaceMember.id,
-      entitiesId.challenge.communityId,
-      CommunityRole.Member
+      entitiesId.challenge.roleSetId,
+      CommunityRoleType.Member
     );
 
-    await removeCommunityRoleFromUserCodegen(
+    await removeRoleFromUser(
       users.nonSpaceMember.id,
-      entitiesId.space.communityId,
-      CommunityRole.Member
+      entitiesId.space.roleSetId,
+      CommunityRoleType.Member
     );
 
     // Act
-    await joinCommunityCodegen(entitiesId.space.communityId, TestUser.QA_USER);
+    await joinRoleSet(entitiesId.space.roleSetId, TestUser.QA_USER);
 
     await delay(3000);
     const getEmailsData = await getMailsData();

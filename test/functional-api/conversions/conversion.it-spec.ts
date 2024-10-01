@@ -1,31 +1,32 @@
 import {
   getSpacesCount,
-  deleteSpaceCodegen,
+  deleteSpace,
 } from '../journey/space/space.request.params';
 import {
-  deleteOpportunityCodegen,
-  createOpportunityCodegen,
-  getOpportunityDataCodegen,
+  deleteSubspace,
+  createOpportunity,
+  getOpportunityData,
 } from '../journey/opportunity/opportunity.request.params';
-import { deleteOrganizationCodegen } from '../organization/organization.request.params';
-import { convertChallengeToSpaceCodegen } from './conversions.request.params';
+import { convertChallengeToSpace } from './conversions.request.params';
 import {
-  createChallengeWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
-import { createOrganizationCodegen } from '../organization/organization.request.params';
-import { createChallengeCodegen } from '@test/utils/mutations/journeys/challenge';
 import {
-  getChallengeData,
-  getChallengeDataCodegen,
-} from '../journey/challenge/challenge.request.params';
+  createChallenge,
+  createChallenge,
+} from '@test/utils/mutations/journeys/challenge';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { entitiesId, users } from '../roles/community/communications-helper';
 import {
-  assignCommunityRoleToOrganizationCodegen,
-  assignCommunityRoleToUserCodegen,
-} from '../roles/roles-request.params';
-import { CommunityRole } from '@test/generated/alkemio-schema';
+  assignRoleToOrganization,
+  assignRoleToUser,
+} from '../roleset/roles-request.params';
+import { CommunityRoleType } from '@test/generated/alkemio-schema';
+import {
+  createOrganization,
+  deleteOrganization,
+} from '../contributor-management/organization/organization.request.params';
+import { entitiesId } from '@test/types/entities-helper';
 
 const organizationName = 'conv-org-name' + uniqueId;
 const hostNameId = 'conv-org-nameid' + uniqueId;
@@ -39,30 +40,30 @@ const newOrgName = 'ha' + hostNameId;
 
 describe.skip('Conversions', () => {
   beforeAll(async () => {
-    await createOrgAndSpaceWithUsersCodegen(
+    await createOrgAndSpaceWithUsers(
       organizationName,
       hostNameId,
       spaceName,
       spaceNameId
     );
-    await createChallengeWithUsersCodegen(challengeName);
-    const res = await createOrganizationCodegen(newOrgName, newOrdNameId);
+    await createChallengeWithUsers(challengeName);
+    const res = await createOrganization(newOrgName, newOrdNameId);
     newOrgId = res?.data?.createOrganization.id ?? '';
   });
 
   afterAll(async () => {
-    await deleteSpaceCodegen(entitiesId.opportunity.id);
-    await deleteSpaceCodegen(entitiesId.challenge.id);
-    await deleteSpaceCodegen(entitiesId.spaceId);
-    await deleteOrganizationCodegen(entitiesId.organization.id);
-    await deleteOrganizationCodegen(newOrgId);
+    await deleteSpace(entitiesId.opportunity.id);
+    await deleteSpace(entitiesId.challenge.id);
+    await deleteSpace(entitiesId.spaceId);
+    await deleteOrganization(entitiesId.organization.id);
+    await deleteOrganization(newOrgId);
   });
   test('Convert Challenge without lead Organization to Space, throws an error', async () => {
     // Arrange
     const numberOfSpacesBeforeConversion = await getSpacesCount();
 
     // Act
-    const res = await convertChallengeToSpaceCodegen(entitiesId.challenge.id);
+    const res = await convertChallengeToSpace(entitiesId.challenge.id);
     const numberOfSpacesAfterConversion = await getSpacesCount();
 
     // Assert
@@ -76,22 +77,22 @@ describe.skip('Conversions', () => {
 
   test('Convert Challenge with 2 lead Organization to Space, throws an error', async () => {
     // Arrange
-    await assignCommunityRoleToOrganizationCodegen(
+    await assignRoleToOrganization(
       entitiesId.organization.id,
-      entitiesId.challenge.communityId,
-      CommunityRole.Lead
+      entitiesId.challenge.roleSetId,
+      CommunityRoleType.Lead
     );
 
-    await assignCommunityRoleToOrganizationCodegen(
+    await assignRoleToOrganization(
       newOrgId,
-      entitiesId.challenge.communityId,
-      CommunityRole.Lead
+      entitiesId.challenge.roleSetId,
+      CommunityRoleType.Lead
     );
 
     const numberOfSpacesBeforeConversion = await getSpacesCount();
 
     // Act
-    const res = await convertChallengeToSpaceCodegen(entitiesId.challenge.id);
+    const res = await convertChallengeToSpace(entitiesId.challenge.id);
     const numberOfSpacesAfterConversion = await getSpacesCount();
 
     // Assert
@@ -105,7 +106,7 @@ describe.skip('Conversions', () => {
 
   test('Convert Challenge with 1 lead Organization to Space and Opportunities to Challenges', async () => {
     // create challenge
-    const resCh = await createChallengeCodegen(
+    const resCh = await createChallenge(
       challengeName,
       `success-chnameid${uniqueId}`,
       entitiesId.spaceId
@@ -114,24 +115,24 @@ describe.skip('Conversions', () => {
     const chData = resCh?.data?.createSubspace;
     const newChallId = chData?.id ?? '';
     const newChCommunityId = chData?.community?.id ?? '';
-    await assignCommunityRoleToOrganizationCodegen(
+    await assignRoleToOrganization(
       entitiesId.organization.id,
       newChCommunityId,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
 
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.spaceMember.id,
       newChCommunityId,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
 
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.spaceMember.id,
       newChCommunityId,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
-    const chalRes = await getChallengeDataCodegen(newChallId);
+    const chalRes = await getChallengeData(newChallId);
 
     // challange data
     const challengeData = chalRes?.data?.lookup.challenge;
@@ -149,7 +150,7 @@ describe.skip('Conversions', () => {
     const chalDataDisplayName = challengeData?.profile?.displayName;
 
     // create Opportunity
-    const resOpp = await createOpportunityCodegen(
+    const resOpp = await createOpportunity(
       opportunityName,
       `success-oppnameid${uniqueId}`,
       newChallId
@@ -158,25 +159,25 @@ describe.skip('Conversions', () => {
     const newOppId = resOpp?.data?.createSubspace.id ?? '';
     const newOppCommunityId = resOpp?.data?.createSubspace?.community?.id ?? '';
 
-    const assignOpportunityOrgLead = await assignCommunityRoleToOrganizationCodegen(
+    const assignOpportunityOrgLead = await assignRoleToOrganization(
       entitiesId.organization.id,
       newOppCommunityId,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
 
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.spaceMember.id,
       newOppCommunityId,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
 
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.spaceMember.id,
       newOppCommunityId,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
 
-    const oppRes = await getOpportunityDataCodegen(newOppId);
+    const oppRes = await getOpportunityData(newOppId);
 
     // opportunity data
     const opportunityData = oppRes?.data?.lookup?.opportunity;
@@ -196,7 +197,7 @@ describe.skip('Conversions', () => {
     const oppDataDisplayName = opportunityData?.profile.displayName;
 
     // Act
-    const res = await convertChallengeToSpaceCodegen(newChallId);
+    const res = await convertChallengeToSpace(newChallId);
 
     // converted data to assert old challenge
     const convertedChallengeData = res?.data?.convertChallengeToSpace;
@@ -205,7 +206,7 @@ describe.skip('Conversions', () => {
     const newSpaceDataContext = convertedChallengeData?.context;
     //const newSpaceDataAgent = convertedChallengeData?.agent;
     const newSpaceDataApplication =
-      convertedChallengeData?.community?.applications;
+      convertedChallengeData?.community?.roleSet.applications;
     const newSpaceDataAuthorization = convertedChallengeData?.authorization;
     const newSpaceDataChallenges = convertedChallengeData?.challenges;
     const newSpaceDataOpportunities = convertedChallengeData?.opportunities;
@@ -303,12 +304,12 @@ describe.skip('Conversions', () => {
     // expect(newSpaceDataNameIdOpp).toEqual(oppDataNameId); // changed nameId after conversion
     expect(newSpaceDataDisplayNameOpp).toEqual(oppDataDisplayName);
 
-    await deleteChallengeCodegen(newChallengeId);
-    await deleteSpaceCodegen(newSpaceId);
+    await deleteSubspace(newChallengeId);
+    await deleteSpace(newSpaceId);
   });
 
   test('Convert Challenge with 1 lead Organization to Space', async () => {
-    const resCh = await createChallengeCodegen(
+    const resCh = await createChallenge(
       challengeName,
       `success-chnameid${uniqueId}`,
       entitiesId.spaceId
@@ -318,25 +319,25 @@ describe.skip('Conversions', () => {
 
     const newChallId = chData?.id ?? '';
     const newChCommunityId = chData?.community?.id ?? '';
-    await assignCommunityRoleToOrganizationCodegen(
+    await assignRoleToOrganization(
       entitiesId.organization.id,
       newChCommunityId,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
 
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.spaceMember.id,
       newChCommunityId,
-      CommunityRole.Member
+      CommunityRoleType.Member
     );
 
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.spaceMember.id,
       newChCommunityId,
-      CommunityRole.Lead
+      CommunityRoleType.Lead
     );
 
-    const chalRes = await getChallengeDataCodegen(newChallId);
+    const chalRes = await getChallengeData(newChallId);
 
     const challengeData = chalRes?.data?.lookup.challenge;
 
@@ -354,7 +355,7 @@ describe.skip('Conversions', () => {
     const chalDataDisplayName = challengeData?.profile.displayName;
 
     // Act
-    const res = await convertChallengeToSpaceCodegen(newChallId);
+    const res = await convertChallengeToSpace(newChallId);
 
     const convertedChallengeData = res?.data?.convertChallengeToSpace;
 
@@ -412,6 +413,6 @@ describe.skip('Conversions', () => {
     expect(newSpaceDataNameId).toEqual(chalDataNameId);
     expect(newSpaceDataDisplayName).toEqual(chalDataDisplayName);
 
-    await deleteSpaceCodegen(newSpaceId);
+    await deleteSpace(newSpaceId);
   });
 });

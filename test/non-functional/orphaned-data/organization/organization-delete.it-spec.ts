@@ -1,8 +1,8 @@
-import { getSpaceDataCodegen } from '@test/functional-api/journey/space/space.request.params';
+import { getSpaceData } from '@test/functional-api/journey/space/space.request.params';
 import {
-  createOrganizationCodegen,
-  deleteOrganizationCodegen,
-} from '@test/functional-api/organization/organization.request.params';
+  createOrganization,
+  deleteOrganization,
+} from '@test/functional-api/contributor-management/organization/organization.request.params';
 import {
   assignUserAsOrganizationAdmin,
   assignUserAsOrganizationOwner,
@@ -10,14 +10,14 @@ import {
   userAsOrganizationOwnerVariablesData,
 } from '@test/utils/mutations/authorization-mutation';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { changePreferenceOrganizationCodegen } from '@test/utils/mutations/preferences-mutation';
+import { changePreferenceOrganization } from '@test/utils/mutations/preferences-mutation';
 import { OrganizationPreferenceType } from '@alkemio/client-lib';
-import { eventOnOrganizationVerificationCodegen } from '@test/functional-api/lifecycle/innovation-flow.request.params';
+import { eventOnOrganizationVerification } from '@test/functional-api/templates/lifecycle/innovation-flow.request.params';
 import {
-  assignOrganizationAsCommunityLeadCodegen,
-  assignOrganizationAsCommunityMemberCodegen,
-  assignUserToOrganizationCodegen,
-} from '@test/functional-api/roles/roles-request.params';
+  assignOrganizationAsCommunityLead,
+  assignRoleToOrganization,
+  assignUserToOrganization,
+} from '@test/functional-api/roleset/roles-request.params';
 import { mutation } from '@test/utils/graphql.request';
 import { users } from '@test/utils/queries/users-data';
 
@@ -33,10 +33,10 @@ let orgId = '';
 describe('Full Organization Deletion', () => {
   test('should delete all organization related data', async () => {
     // Arrange
-    const spaceData = await getSpaceDataCodegen('eco1');
+    const spaceData = await getSpaceData('eco1');
     const spaceCommunityId = spaceData?.data?.space?.community?.id ?? '';
 
-    const res = await createOrganizationCodegen(
+    const res = await createOrganization(
       organizationName,
       hostNameId,
       legalEntityName,
@@ -50,26 +50,26 @@ describe('Full Organization Deletion', () => {
     const organizationVerificationId = data?.verification.id ?? '';
 
     // Verify organization
-    await eventOnOrganizationVerificationCodegen(
+    await eventOnOrganizationVerification(
       organizationVerificationId,
       'VERIFICATION_REQUEST'
     );
 
     // Change organization preference
-    await changePreferenceOrganizationCodegen(
+    await changePreferenceOrganization(
       orgId,
       OrganizationPreferenceType.AuthorizationOrganizationMatchDomain,
       'true'
     );
     // Assign user as organization member
-    await assignUserToOrganizationCodegen(users.notificationsAdmin.id, orgId);
+    await assignUserToOrganization(users.notificationsAdmin.id, orgId);
 
     // Assign organization as space community member and lead
-    await assignOrganizationAsCommunityMemberCodegen(
+    await assignRoleToOrganization(
       spaceCommunityId,
       'eco1host'
     );
-    await assignOrganizationAsCommunityLeadCodegen(
+    await assignOrganizationAsCommunityLead(
       spaceCommunityId,
       'eco1host'
     );
@@ -97,7 +97,7 @@ describe('Full Organization Deletion', () => {
     );
 
     // Act
-    const resDelete = await deleteOrganizationCodegen(orgId);
+    const resDelete = await deleteOrganization(orgId);
 
     // Assert
     expect(resDelete?.data?.deleteOrganization.id).toEqual(orgId);

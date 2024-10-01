@@ -1,4 +1,4 @@
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import { entitiesId } from '@test/types/entities-helper';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { TestUser } from '@test/utils/token.helper';
@@ -7,7 +7,7 @@ export const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
 
-export const createChallengeCodegen = async (
+export const createChallenge = async (
   challengeName: string,
   challengeNameId: string,
   parentId: string,
@@ -18,7 +18,7 @@ export const createChallengeCodegen = async (
   const callback = (authToken: string | undefined) =>
     graphqlClient.CreateSubspace(
       {
-        subspaceData: challengeVariablesDataCodegen(
+        subspaceData: challengeVariablesData(
           challengeName,
           challengeNameId,
           parentId,
@@ -33,7 +33,7 @@ export const createChallengeCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const challengeVariablesDataCodegen = (
+export const challengeVariablesData = (
   displayName: string,
   nameId: string,
   spaceId: string,

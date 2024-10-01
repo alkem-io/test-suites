@@ -1,14 +1,14 @@
-import { updateUserCodegen } from '@test/functional-api/user-management/user.request.params';
+import { updateUser } from '@test/functional-api/contributor-management/user/user.request.params';
 import { TestUser } from '@test/utils';
 import '@test/utils/array.matcher';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { users } from '@test/utils/queries/users-data';
-import { createPostOnCalloutCodegen } from '../callout/post/post.request.params';
+import { createPostOnCallout } from '../callout/post/post.request.params';
 import { updateOpportunityLocation } from '../journey/opportunity/opportunity.request.params';
 import {
-  createOrganizationCodegen,
-  deleteOrganizationCodegen,
-  updateOrganizationCodegen,
+  createOrganization,
+  deleteOrganization,
+  updateOrganization,
 } from '../organization/organization.request.params';
 import {
   searchContributions,
@@ -17,17 +17,17 @@ import {
 } from './search.request.params';
 import {
   updateSpaceLocation,
-  deleteSpaceCodegen,
+  deleteSpace,
   createSpaceAndGetData,
-  updateSpaceSettingsCodegen,
-  updateSpacePlatformCodegen,
+  updateSpaceSettings,
+  updateSpacePlatformSettings,
 } from '../journey/space/space.request.params';
 import {
-  createChallengeWithUsersCodegen,
-  createOpportunityWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeWithUsers,
+  createOpportunityWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
-import { entitiesId } from '../roles/community/communications-helper';
+import { entitiesId } from '../../types/entities-helper';
 import { SpaceVisibility } from '@test/generated/graphql';
 import { SpacePrivacyMode } from '@test/generated/alkemio-schema';
 
@@ -82,22 +82,22 @@ const opportunityName = 'search-opp-name' + uniqueId;
 const termAllScored = ['qa', 'qa', 'user'];
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsersCodegen(challengeName);
-  await createOpportunityWithUsersCodegen(opportunityName);
+  await createChallengeWithUsers(challengeName);
+  await createOpportunityWithUsers(opportunityName);
 
   organizationNameText = `qa organizationNameText ${uniqueId}`;
 
-  await updateUserCodegen(users.qaUser.id, '+359777777771', {
+  await updateUser(users.qaUser.id, '+359777777771', {
     location: { country: country, city: city },
   });
 
-  await updateOrganizationCodegen(entitiesId.organization.id, {
+  await updateOrganization(entitiesId.organization.id, {
     legalEntityName: 'legalEntityName',
     domain: 'domain',
     website: 'website',
@@ -125,21 +125,21 @@ beforeAll(async () => {
     TestUser.GLOBAL_ADMIN
   );
 
-  const responseCreateOrganization = await createOrganizationCodegen(
+  const responseCreateOrganization = await createOrganization(
     organizationNameText,
     'qa-org' + uniqueId
   );
   organizationIdTest =
     responseCreateOrganization.data?.createOrganization.id ?? '';
 
-  const resSpace = await createPostOnCalloutCodegen(
+  const resSpace = await createPostOnCallout(
     entitiesId.space.calloutId,
     { displayName: postNameIdSpace },
     postNameIdSpace
   );
   postSpaceId = resSpace.data?.createContributionOnCallout.post?.id ?? '';
 
-  const resChallenge = await createPostOnCalloutCodegen(
+  const resChallenge = await createPostOnCallout(
     entitiesId.challenge.calloutId,
     { displayName: postNameIdChallenge },
     postNameIdChallenge
@@ -147,7 +147,7 @@ beforeAll(async () => {
   postChallengeId =
     resChallenge.data?.createContributionOnCallout.post?.id ?? '';
 
-  const resOpportunity = await createPostOnCalloutCodegen(
+  const resOpportunity = await createPostOnCallout(
     entitiesId.opportunity.calloutId,
     { displayName: postNameIdOpportunity },
     postNameIdOpportunity
@@ -157,12 +157,12 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunity.id);
-  await deleteSpaceCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteSpaceCodegen(secondSpaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
-  await deleteOrganizationCodegen(organizationIdTest);
+  await deleteSpace(entitiesId.opportunity.id);
+  await deleteSpace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
+  await deleteSpace(secondSpaceId);
+  await deleteOrganization(entitiesId.organization.id);
+  await deleteOrganization(organizationIdTest);
 });
 
 describe('Search', () => {
@@ -754,7 +754,7 @@ describe('Search', () => {
     });
 
     afterAll(async () => {
-      await deleteSpaceCodegen(secondSpaceId);
+      await deleteSpace(secondSpaceId);
     });
 
     test('should search JOURNEY data filtered space', async () => {
@@ -811,7 +811,7 @@ describe('Search', () => {
 
   describe('Search Archived Space Data', () => {
     beforeAll(async () => {
-      await updateSpacePlatformCodegen(
+      await updateSpacePlatformSettings(
         entitiesId.spaceId,
         spaceNameId,
         SpaceVisibility.Archived
@@ -886,17 +886,17 @@ describe('Search', () => {
 
   describe('Search IN Public Space Private Challenge Data', () => {
     beforeAll(async () => {
-      await updateSpacePlatformCodegen(
+      await updateSpacePlatformSettings(
         entitiesId.spaceId,
         spaceNameId,
         SpaceVisibility.Active
       );
 
-      await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+      await updateSpaceSettings(entitiesId.spaceId, {
         privacy: { mode: SpacePrivacyMode.Public },
       });
 
-      await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
+      await updateSpaceSettings(entitiesId.challenge.id, {
         privacy: { mode: SpacePrivacyMode.Private },
       });
     });
@@ -927,17 +927,17 @@ describe('Search', () => {
 
   describe('Search Public Space Private Challenge Data', () => {
     beforeAll(async () => {
-      await updateSpacePlatformCodegen(
+      await updateSpacePlatformSettings(
         entitiesId.spaceId,
         spaceNameId,
         SpaceVisibility.Active
       );
 
-      await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+      await updateSpaceSettings(entitiesId.spaceId, {
         privacy: { mode: SpacePrivacyMode.Public },
       });
 
-      await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
+      await updateSpaceSettings(entitiesId.challenge.id, {
         privacy: { mode: SpacePrivacyMode.Private },
       });
     });
@@ -967,17 +967,17 @@ describe('Search', () => {
 
   describe('Search Private Space Private Challenge Data', () => {
     beforeAll(async () => {
-      await updateSpacePlatformCodegen(
+      await updateSpacePlatformSettings(
         entitiesId.spaceId,
         spaceNameId,
         SpaceVisibility.Active
       );
 
-      await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+      await updateSpaceSettings(entitiesId.spaceId, {
         privacy: { mode: SpacePrivacyMode.Private },
       });
 
-      await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
+      await updateSpaceSettings(entitiesId.challenge.id, {
         privacy: { mode: SpacePrivacyMode.Private },
       });
     });

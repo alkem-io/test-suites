@@ -1,0 +1,15 @@
+mutation RemoveRoleFromVirtualContributor(
+  $roleSetId: UUID!
+  $virtualContributorId: UUID!
+) {
+  removeRoleFromVirtualContributor(
+    roleData: {
+      roleSetID: $roleSetId
+      role: MEMBER
+      contributorID: $virtualContributorId
+    }
+  ) {
+    id
+    __typename
+  }
+}

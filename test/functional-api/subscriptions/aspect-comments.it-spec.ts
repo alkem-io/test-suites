@@ -1,18 +1,18 @@
 import { delay, TestUser } from '@test/utils';
 import { SubscriptionClient } from '@test/utils/subscriptions';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { createPostOnCalloutCodegen } from '../callout/post/post.request.params';
-import { deleteSpaceCodegen } from '../journey/space/space.request.params';
+import { createPostOnCallout } from '../callout/post/post.request.params';
+import { deleteSpace } from '../journey/space/space.request.params';
 import { subscriptionRooms } from './subscrition-queries';
 import { users } from '@test/utils/queries/users-data';
 import {
-  createChallengeWithUsersCodegen,
-  createOpportunityWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeWithUsers,
+  createOpportunityWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
-import { deleteOrganizationCodegen } from '../organization/organization.request.params';
-import { sendMessageToRoomCodegen } from '../communications/communication.params';
-import { entitiesId } from '../roles/community/communications-helper';
+import { deleteOrganization } from '../organization/organization.request.params';
+import { sendMessageToRoom } from '../communications/communication.params';
+import { entitiesId } from '../../types/entities-helper';
 
 const organizationName = 'com-sub-org-n' + uniqueId;
 const hostNameId = 'com-sub-org-nd' + uniqueId;
@@ -81,15 +81,15 @@ const expectedDataFunc = async (
 };
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
 
-  await createChallengeWithUsersCodegen(challengeName);
-  await createOpportunityWithUsersCodegen(opportunityName);
+  await createChallengeWithUsers(challengeName);
+  await createOpportunityWithUsers(opportunityName);
 });
 
 afterAll(async () => {
@@ -97,15 +97,15 @@ afterAll(async () => {
   subscription2.terminate();
   subscription3.terminate();
 
-  await deleteSpaceCodegen(entitiesId.opportunity.id);
-  await deleteSpaceCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteSpace(entitiesId.opportunity.id);
+  await deleteSpace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
+  await deleteOrganization(entitiesId.organization.id);
 });
 describe('Post comments subscription', () => {
   describe('Space comments subscription ', () => {
     beforeAll(async () => {
-      const resPostonSpace = await createPostOnCalloutCodegen(
+      const resPostonSpace = await createPostOnCallout(
         entitiesId.space.calloutId,
         { displayName: postDisplayName },
         postNameID,
@@ -138,21 +138,21 @@ describe('Post comments subscription', () => {
 
     it('receives message after new comment is created - 3 sender / 3 receivers', async () => {
       // create comment
-      const messageGA = await sendMessageToRoomCodegen(
+      const messageGA = await sendMessageToRoom(
         postCommentsIdSpace,
         messageGAText,
         TestUser.GLOBAL_ADMIN
       );
       messageGaId = messageGA?.data?.sendMessageToRoom.id;
 
-      const messageHA = await sendMessageToRoomCodegen(
+      const messageHA = await sendMessageToRoom(
         postCommentsIdSpace,
         messageHAText,
         TestUser.HUB_ADMIN
       );
       messageHaId = messageHA?.data?.sendMessageToRoom.id;
 
-      const messageHM = await sendMessageToRoomCodegen(
+      const messageHM = await sendMessageToRoom(
         postCommentsIdSpace,
         messageHMText,
         TestUser.HUB_MEMBER
@@ -185,7 +185,7 @@ describe('Post comments subscription', () => {
 
   describe('Challenge comments subscription ', () => {
     beforeAll(async () => {
-      const resPostonChallenge = await createPostOnCalloutCodegen(
+      const resPostonChallenge = await createPostOnCallout(
         entitiesId.challenge.calloutId,
         { displayName: postDisplayName + 'ch' },
         postNameID + 'ch',
@@ -217,21 +217,21 @@ describe('Post comments subscription', () => {
     });
     it('receives message after new comment is created - 3 sender / 3 receivers', async () => {
       // create comment
-      const messageGA = await sendMessageToRoomCodegen(
+      const messageGA = await sendMessageToRoom(
         postCommentsIdChallenge,
         messageGAText,
         TestUser.GLOBAL_ADMIN
       );
       messageGaId = messageGA?.data?.sendMessageToRoom.id;
 
-      const messageHA = await sendMessageToRoomCodegen(
+      const messageHA = await sendMessageToRoom(
         postCommentsIdChallenge,
         messageHAText,
         TestUser.HUB_ADMIN
       );
       messageHaId = messageHA?.data?.sendMessageToRoom.id;
 
-      const messageHM = await sendMessageToRoomCodegen(
+      const messageHM = await sendMessageToRoom(
         postCommentsIdChallenge,
         messageHMText,
         TestUser.HUB_MEMBER
@@ -265,7 +265,7 @@ describe('Post comments subscription', () => {
 
   describe('Opportunity comments subscription ', () => {
     beforeAll(async () => {
-      const resPostonChallenge = await createPostOnCalloutCodegen(
+      const resPostonChallenge = await createPostOnCallout(
         entitiesId.opportunity.calloutId,
         { displayName: postDisplayName + 'opp' },
         postNameID + 'opp',
@@ -298,21 +298,21 @@ describe('Post comments subscription', () => {
     });
     it('receives message after new comment is created - 3 sender / 3 receivers', async () => {
       // create comment
-      const messageGA = await sendMessageToRoomCodegen(
+      const messageGA = await sendMessageToRoom(
         postCommentsIdOpportunity,
         messageGAText,
         TestUser.GLOBAL_ADMIN
       );
       messageGaId = messageGA?.data?.sendMessageToRoom.id;
 
-      const messageHA = await sendMessageToRoomCodegen(
+      const messageHA = await sendMessageToRoom(
         postCommentsIdOpportunity,
         messageHAText,
         TestUser.HUB_ADMIN
       );
       messageHaId = messageHA?.data?.sendMessageToRoom.id;
 
-      const messageHM = await sendMessageToRoomCodegen(
+      const messageHM = await sendMessageToRoom(
         postCommentsIdOpportunity,
         messageHMText,
         TestUser.HUB_MEMBER

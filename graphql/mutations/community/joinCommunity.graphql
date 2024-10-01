@@ -1,5 +1,0 @@
-mutation JoinCommunity($joinCommunityData: CommunityJoinInput!) {
-  joinCommunity(joinCommunityData: $joinCommunityData) {
-    id
-  }
-}

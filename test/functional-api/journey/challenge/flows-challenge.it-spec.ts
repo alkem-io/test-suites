@@ -1,16 +1,16 @@
 import {
-  createSubspaceCodegen,
-  getSubspaceDataCodegen,
+  createSubspace,
+  getSubspaceData,
 } from './challenge.request.params';
 import '@test/utils/array.matcher';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 import {
-  deleteSpaceCodegen,
-  updateSpaceContextCodegen,
+  deleteSpace,
+  updateSpaceContext,
 } from '../space/space.request.params';
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import { entitiesId } from '@test/types/entities-helper';
 // import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { createOrgAndSpaceCodegen } from '@test/utils/data-setup/entities';
+import { createOrgAndSpace } from '@test/utils/data-setup/entities';
 //import { uniqueId } from '@test/utils/mutations/journeys/challenge';
 export const uniqueId = Math.random()
   .toString(12)
@@ -25,7 +25,7 @@ const spaceName = 'flowch-sp-name' + uniqueId;
 const spaceNameId = 'flowch-sp-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpaceCodegen(
+  await createOrgAndSpace(
     organizationName,
     hostNameId,
     spaceName,
@@ -34,14 +34,14 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteSpace(entitiesId.spaceId);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 beforeEach(async () => {
   challengeName = `fl-ch-dname-${uniqueId}`;
 
-  const responseCreateChallenge = await createSubspaceCodegen(
+  const responseCreateChallenge = await createSubspace(
     challengeName,
     uniqueId,
     entitiesId.spaceId
@@ -50,14 +50,14 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await deleteSpaceCodegen(challengeId);
+  await deleteSpace(challengeId);
 });
 
 describe('Flows challenge', () => {
   // ToDo - update test - failing when run in parallel with other suites
   test.skip('should not result unassigned users to a challenge', async () => {
     // Act
-    const responseGroupQuery = await getSubspaceDataCodegen(
+    const responseGroupQuery = await getSubspaceData(
       entitiesId.spaceId,
       challengeId
     );
@@ -66,17 +66,17 @@ describe('Flows challenge', () => {
     // Assert
     expect(responseGroupQuery.status).toBe(200);
     expect(
-      responseGroupQuery.data?.space.subspace?.community?.memberUsers
+      responseGroupQuery.data?.space.subspace?.community?.roleSet.memberUsers
     ).toHaveLength(1);
     expect(
-      responseGroupQuery.data?.space.subspace?.community?.leadUsers
+      responseGroupQuery.data?.space.subspace?.community?.roleSet.leadUsers
     ).toHaveLength(1);
   });
 
   test('should  modify challenge name to allready existing challenge name and/or textId', async () => {
     // Arrange
     // Create second challenge and get its id and name
-    const responseSecondChallenge = await createSubspaceCodegen(
+    const responseSecondChallenge = await createSubspace(
       challengeName + challengeName,
       uniqueId + uniqueId,
       entitiesId.spaceId
@@ -87,7 +87,7 @@ describe('Flows challenge', () => {
       responseSecondChallenge.data?.createSubspace.id ?? '';
 
     // Act
-    const responseUpdateChallenge = await updateSpaceContextCodegen(
+    const responseUpdateChallenge = await updateSpaceContext(
       challengeId,
       secondchallengeName,
       {
@@ -102,13 +102,13 @@ describe('Flows challenge', () => {
     expect(
       responseUpdateChallenge.data?.updateSpace.profile.displayName
     ).toEqual(secondchallengeName);
-    await deleteSpaceCodegen(additionalChallengeId);
+    await deleteSpace(additionalChallengeId);
   });
 
   test('should creating 2 challenges with same name', async () => {
     // Act
     // Create second challenge with same name
-    const response = await createSubspaceCodegen(
+    const response = await createSubspace(
       challengeName,
       `${uniqueId}-2`,
       entitiesId.spaceId
@@ -118,13 +118,13 @@ describe('Flows challenge', () => {
 
     // Assert
     expect(challengeData?.profile.displayName).toContain(challengeName);
-    await deleteSpaceCodegen(additionalChallengeId);
+    await deleteSpace(additionalChallengeId);
   });
 
   test('should throw error - creating 2 challenges with different name and same nameId', async () => {
     // Act
     // Create second challenge with same textId
-    const response = await createSubspaceCodegen(
+    const response = await createSubspace(
       challengeName + challengeName,
       uniqueId,
       entitiesId.spaceId

@@ -1,22 +1,19 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import { delay } from '@test/utils/delay';
 import { users } from '@test/utils/queries/users-data';
 import {
-  createChallengeWithUsersCodegen,
-  createOpportunityWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeWithUsers,
+  createOpportunityWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import { UserPreferenceType } from '@alkemio/client-lib';
-import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
-import { sendMessageToRoomCodegen } from '@test/functional-api/communications/communication.params';
-import {
-  entitiesId,
-  getMailsData,
-} from '@test/functional-api/roles/community/communications-helper';
+import { changePreferenceUser } from '@test/utils/mutations/preferences-mutation';
+import { sendMessageToRoom } from '@test/functional-api/communications/communication.params';
+import { entitiesId, getMailsData } from '@test/types/entities-helper';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 
 const organizationName = 'not-up-org-name' + uniqueId;
 const hostNameId = 'not-up-org-nameid' + uniqueId;
@@ -54,14 +51,14 @@ const templatedAsMemberResult = async (
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsersCodegen(challengeName);
-  await createOpportunityWithUsersCodegen(opportunityName);
+  await createChallengeWithUsers(challengeName);
+  await createOpportunityWithUsers(opportunityName);
 
   preferencesConfig = [
     {
@@ -124,32 +121,32 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunity.id);
-  await deleteSpaceCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteSpace(entitiesId.opportunity.id);
+  await deleteSpace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 // Skip tests due to bug: #193
 describe.skip('Notifications - updates', () => {
   beforeAll(async () => {
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.notificationsAdmin.id,
       UserPreferenceType.NotificationCommunicationUpdates,
       'false'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.notificationsAdmin.id,
       UserPreferenceType.NotificationCommunicationUpdateSentAdmin,
       'false'
     );
 
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationCommunicationUpdates,
       'false'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationCommunicationUpdateSentAdmin,
       'false'
@@ -157,7 +154,7 @@ describe.skip('Notifications - updates', () => {
 
     preferencesConfig.forEach(
       async config =>
-        await changePreferenceUserCodegen(config.userID, config.type, 'true')
+        await changePreferenceUser(config.userID, config.type, 'true')
     );
   });
 
@@ -167,7 +164,7 @@ describe.skip('Notifications - updates', () => {
 
   test('GA create space update - GA(1), HA (1), HM(6) get notifications', async () => {
     // Act
-    await sendMessageToRoomCodegen(
+    await sendMessageToRoom(
       entitiesId.space.updatesId,
       'GA space update '
     );
@@ -211,7 +208,7 @@ describe.skip('Notifications - updates', () => {
 
   test('HA create space update - GA(1), HA (1), HM(6) get notifications', async () => {
     // Act
-    await sendMessageToRoomCodegen(
+    await sendMessageToRoom(
       entitiesId.space.updatesId,
       'EA space update ',
       TestUser.HUB_ADMIN
@@ -257,7 +254,7 @@ describe.skip('Notifications - updates', () => {
 
   test('CA create challenge update - GA(1), HA (1), CA(1), CM(3),  get notifications', async () => {
     // Act
-    await sendMessageToRoomCodegen(
+    await sendMessageToRoom(
       entitiesId.challenge.updatesId,
       'CA challenge update ',
       TestUser.CHALLENGE_ADMIN
@@ -306,7 +303,7 @@ describe.skip('Notifications - updates', () => {
 
   test('OA create opportunity update - GA(1), HA(1), CA(1), OA(1), OM(1), get notifications', async () => {
     // Act
-    await sendMessageToRoomCodegen(
+    await sendMessageToRoom(
       entitiesId.opportunity.updatesId,
       'OA opportunity update ',
       TestUser.OPPORTUNITY_ADMIN
@@ -363,10 +360,10 @@ describe.skip('Notifications - updates', () => {
   test('OA create opportunity update - 0 notifications - all roles with notifications disabled', async () => {
     preferencesConfig.forEach(
       async config =>
-        await changePreferenceUserCodegen(config.userID, config.type, 'false')
+        await changePreferenceUser(config.userID, config.type, 'false')
     );
     // Act
-    await sendMessageToRoomCodegen(
+    await sendMessageToRoom(
       entitiesId.opportunity.updatesId,
       'OA opportunity update 2',
       TestUser.OPPORTUNITY_ADMIN

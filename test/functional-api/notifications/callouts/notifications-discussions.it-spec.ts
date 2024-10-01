@@ -1,26 +1,20 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
+import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import { delay } from '@test/utils/delay';
-import { deleteUserCodegen } from '@test/functional-api/user-management/user.request.params';
+import { deleteUser } from '@test/functional-api/contributor-management/user/user.request.params';
 import { users } from '@test/utils/queries/users-data';
-import {
-  registerUsersAndAssignToAllEntitiesAsMembers,
-  createChallengeWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
-} from '@test/utils/data-setup/entities';
+
 import { UserPreferenceType } from '@alkemio/client-lib';
-import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
+import { changePreferenceUser } from '@test/utils/mutations/preferences-mutation';
 import {
-  createDiscussionCodegen,
-  sendMessageToRoomCodegen,
+  createDiscussion,
+  sendMessageToRoom,
 } from '@test/functional-api/communications/communication.params';
-import {
-  entitiesId,
-  getMailsData,
-} from '@test/functional-api/roles/community/communications-helper';
+import { entitiesId, getMailsData } from '@test/types/entities-helper';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
+import { createOrgAndSpaceWithUsers, createChallengeWithUsers, registerUsersAndAssignToAllEntitiesAsMembers } from '@test/utils/data-setup/entities';
 
 const organizationName = 'not-disc-org-name' + uniqueId;
 const hostNameId = 'not-disc-org-nameid' + uniqueId;
@@ -40,13 +34,13 @@ const challengeDiscussionSubjectTextAdmin = `[${challengeName}] New discussion c
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsersCodegen(challengeName);
+  await createChallengeWithUsers(challengeName);
   await registerUsersAndAssignToAllEntitiesAsMembers(
     spaceMemOnly,
     challengeAndSpaceMemOnly,
@@ -131,31 +125,31 @@ beforeAll(async () => {
 
 afterAll(async () => {
   for (const config of preferencesConfig)
-    await changePreferenceUserCodegen(config.userID, config.type, 'false');
-  await deleteUserCodegen(spaceMemOnly);
-  await deleteUserCodegen(challengeAndSpaceMemOnly);
-  await deleteUserCodegen(opportunityAndChallengeAndSpaceMem);
-  await deleteSpaceCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+    await changePreferenceUser(config.userID, config.type, 'false');
+  await deleteUser(spaceMemOnly);
+  await deleteUser(challengeAndSpaceMemOnly);
+  await deleteUser(opportunityAndChallengeAndSpaceMem);
+  await deleteSpace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 // skipping the tests as they need to be updated
 describe.skip('Notifications - discussions', () => {
   beforeAll(async () => {
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.notificationsAdmin.id,
       UserPreferenceType.NotificationForumDiscussionCreated,
       'false'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.notificationsAdmin.id,
       UserPreferenceType.NotificationCommunicationDiscussionCreatedAdmin,
       'false'
     );
 
     for (const config of preferencesConfig)
-      await changePreferenceUserCodegen(config.userID, config.type, 'true');
+      await changePreferenceUser(config.userID, config.type, 'true');
   });
 
   beforeEach(async () => {
@@ -164,10 +158,10 @@ describe.skip('Notifications - discussions', () => {
 
   test('GA create space discussion and send message - GA(1), HA(1), HM(6) get notifications', async () => {
     // Act
-    const res = await createDiscussionCodegen(entitiesId.space.communicationId);
+    const res = await createDiscussion(entitiesId.space.communicationId);
     entitiesId.discussionId = res?.data?.createDiscussion.id ?? '';
 
-    await sendMessageToRoomCodegen(entitiesId.discussionId, 'test message');
+    await sendMessageToRoom(entitiesId.discussionId, 'test message');
 
     await delay(6000);
     const getEmailsData = await getMailsData();
@@ -222,13 +216,13 @@ describe.skip('Notifications - discussions', () => {
 
   test('EM create space discussion and send message - GA(1), HA(1), HM(6) get notifications', async () => {
     // Act
-    const res = await createDiscussionCodegen(
+    const res = await createDiscussion(
       entitiesId.space.communicationId,
       TestUser.QA_USER
     );
     entitiesId.discussionId = res?.data?.createDiscussion.id ?? '';
 
-    await sendMessageToRoomCodegen(entitiesId.discussionId, 'test message');
+    await sendMessageToRoom(entitiesId.discussionId, 'test message');
 
     await delay(6000);
     const getEmailsData = await getMailsData();
@@ -283,12 +277,12 @@ describe.skip('Notifications - discussions', () => {
 
   test('GA create challenge discussion and send message - GA(1), HA(1), CA(1), CM(4) get notifications', async () => {
     // Act
-    const res = await createDiscussionCodegen(
+    const res = await createDiscussion(
       entitiesId.challenge.communicationId
     );
     entitiesId.discussionId = res?.data?.createDiscussion.id ?? '';
 
-    await sendMessageToRoomCodegen(entitiesId.discussionId, 'test message');
+    await sendMessageToRoom(entitiesId.discussionId, 'test message');
 
     await delay(6000);
     const getEmailsData = await getMailsData();
@@ -333,13 +327,13 @@ describe.skip('Notifications - discussions', () => {
   // Note: users.globalAdmin.idEmail receives email twice, as it member and admin for the entity. Only ones is asserted as the subject of the mail is the same
   test('EM create challenge discussion and send message - GA(1), HA(1), CA(1), CM(4), get notifications', async () => {
     // Act
-    const res = await createDiscussionCodegen(
+    const res = await createDiscussion(
       entitiesId.challenge.communicationId,
       TestUser.QA_USER
     );
     entitiesId.discussionId = res?.data?.createDiscussion.id ?? '';
 
-    await sendMessageToRoomCodegen(entitiesId.discussionId, 'test message');
+    await sendMessageToRoom(entitiesId.discussionId, 'test message');
 
     await delay(6000);
     const getEmailsData = await getMailsData();
@@ -387,16 +381,16 @@ describe.skip('Notifications - discussions', () => {
 
     preferencesConfig.forEach(
       async config =>
-        await changePreferenceUserCodegen(config.userID, config.type, 'false')
+        await changePreferenceUser(config.userID, config.type, 'false')
     );
 
-    const res = await createDiscussionCodegen(
+    const res = await createDiscussion(
       entitiesId.space.communicationId,
       TestUser.QA_USER
     );
     entitiesId.discussionId = res?.data?.createDiscussion.id ?? '';
 
-    await sendMessageToRoomCodegen(entitiesId.discussionId, 'test message');
+    await sendMessageToRoom(entitiesId.discussionId, 'test message');
 
     // Act
     await delay(1500);

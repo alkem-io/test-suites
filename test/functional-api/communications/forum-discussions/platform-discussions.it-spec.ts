@@ -1,15 +1,15 @@
 /* eslint-disable quotes */
 import { TestUser, delay } from '@test/utils';
 import {
-  getPlatformDiscussionsDataByIdCodegen,
-  deleteDiscussionCodegen,
+  getPlatformDiscussionsDataById,
+  deleteDiscussion,
   getPlatformDiscussionsDataByTitle,
-  getPlatformDiscussionsDataCodegen,
-  getPlatformForumDataCodegen,
-  createDiscussionCodegen,
-  updateDiscussionCodegen,
-  sendMessageToRoomCodegen,
-  removeMessageOnRoomCodegen,
+  getPlatformDiscussionsData,
+  getPlatformForumData,
+  createDiscussion,
+  updateDiscussion,
+  sendMessageToRoom,
+  removeMessageOnRoom,
 } from '../communication.params';
 import { ForumDiscussionCategory } from '@test/generated/alkemio-schema';
 
@@ -25,25 +25,25 @@ const errorAuthDiscussionMessageDelete =
   "Authorization: unable to grant 'delete' privilege: room remove message: ";
 
 beforeAll(async () => {
-  const res = await getPlatformForumDataCodegen();
+  const res = await getPlatformForumData();
   platformDiscussionId = res?.data?.platform.forum.id ?? '';
 });
 
 describe('Platform discussions - CRUD operations', () => {
   afterEach(async () => {
-    await deleteDiscussionCodegen(discussionId);
+    await deleteDiscussion(discussionId);
   });
 
   test('Create discussion', async () => {
     // Act
-    const discB = await getPlatformDiscussionsDataCodegen();
+    const discB = await getPlatformDiscussionsData();
     const countDiscsBefore = discB?.data?.platform.forum.discussions ?? '';
-    const res = await createDiscussionCodegen(platformDiscussionId, 'test');
+    const res = await createDiscussion(platformDiscussionId, 'test');
     const discussionData = res?.data?.createDiscussion;
     discussionId = discussionData?.id ?? '';
     discussionCommentsId = discussionData?.comments.id ?? '';
 
-    const discA = await getPlatformDiscussionsDataCodegen();
+    const discA = await getPlatformDiscussionsData();
     const countDiscsAfter = discA?.data?.platform.forum.discussions ?? [];
 
     // Assert
@@ -52,16 +52,16 @@ describe('Platform discussions - CRUD operations', () => {
 
   test('Delete discussion', async () => {
     // Act
-    const discB = await getPlatformDiscussionsDataCodegen();
+    const discB = await getPlatformDiscussionsData();
     const countDiscsBefore = discB?.data?.platform.forum.discussions ?? '';
-    const res = await createDiscussionCodegen(platformDiscussionId, 'test');
+    const res = await createDiscussion(platformDiscussionId, 'test');
     const discussionData = res?.data?.createDiscussion;
     discussionId = discussionData?.id ?? '';
     discussionCommentsId = discussionData?.comments.id ?? '';
 
-    const resDel = await deleteDiscussionCodegen(discussionId);
+    const resDel = await deleteDiscussion(discussionId);
     const deletedDiscussionId = resDel?.data?.deleteDiscussion.id;
-    const discA = await getPlatformDiscussionsDataCodegen();
+    const discA = await getPlatformDiscussionsData();
     const countDiscsAfter = discA?.data?.platform.forum.discussions ?? [];
 
     // Assert
@@ -71,24 +71,20 @@ describe('Platform discussions - CRUD operations', () => {
 
   test('Update discussion', async () => {
     // Arrange
-    const res = await createDiscussionCodegen(platformDiscussionId, 'test');
+    const res = await createDiscussion(platformDiscussionId, 'test');
     const discussionData = res?.data?.createDiscussion;
 
     discussionId = discussionData?.id ?? '';
     discussionCommentsId = discussionData?.comments.id ?? '';
 
     // Act
-    const update = await updateDiscussionCodegen(
-      discussionId,
-      TestUser.GLOBAL_ADMIN,
-      {
-        profileData: {
-          displayName: 'Updated',
-          description: 'Test',
-        },
-        category: ForumDiscussionCategory.Help,
-      }
-    );
+    const update = await updateDiscussion(discussionId, TestUser.GLOBAL_ADMIN, {
+      profileData: {
+        displayName: 'Updated',
+        description: 'Test',
+      },
+      category: ForumDiscussionCategory.Help,
+    });
 
     const discA = await getPlatformDiscussionsDataByTitle('Updated');
 
@@ -99,7 +95,7 @@ describe('Platform discussions - CRUD operations', () => {
 
 describe('Discussion messages', () => {
   beforeAll(async () => {
-    const res = await createDiscussionCodegen(platformDiscussionId, 'test');
+    const res = await createDiscussion(platformDiscussionId, 'test');
     const discussionData = res?.data?.createDiscussion;
 
     discussionId = discussionData?.id ?? '';
@@ -107,21 +103,19 @@ describe('Discussion messages', () => {
   });
 
   afterAll(async () => {
-    await deleteDiscussionCodegen(discussionId);
+    await deleteDiscussion(discussionId);
   });
 
   afterEach(async () => {
-    await removeMessageOnRoomCodegen(discussionCommentsId, messageId);
+    await removeMessageOnRoom(discussionCommentsId, messageId);
   });
 
   test('Send message to discussion', async () => {
     // Act
-    const res = await sendMessageToRoomCodegen(discussionCommentsId);
+    const res = await sendMessageToRoom(discussionCommentsId);
     messageId = res?.data?.sendMessageToRoom.id;
 
-    const discussionRes = await getPlatformDiscussionsDataByIdCodegen(
-      discussionId
-    );
+    const discussionRes = await getPlatformDiscussionsDataById(discussionId);
     const getDiscussionData =
       discussionRes?.data?.platform?.forum?.discussion?.comments.messages[0];
 
@@ -131,22 +125,20 @@ describe('Discussion messages', () => {
 
   test('Create multiple messages in one discussion', async () => {
     // Act
-    const firstMessageRes = await sendMessageToRoomCodegen(
+    const firstMessageRes = await sendMessageToRoom(
       discussionCommentsId,
       'message1'
     );
 
     messageId = firstMessageRes?.data?.sendMessageToRoom.id;
 
-    const secondMessageRes = await sendMessageToRoomCodegen(
+    const secondMessageRes = await sendMessageToRoom(
       discussionCommentsId,
       'message2'
     );
     const secondmessageId = secondMessageRes?.data?.sendMessageToRoom.id;
 
-    const discussionRes = await getPlatformDiscussionsDataByIdCodegen(
-      discussionId
-    );
+    const discussionRes = await getPlatformDiscussionsDataById(discussionId);
 
     const getDiscussions =
       discussionRes?.data?.platform?.forum?.discussion?.comments.messages;
@@ -154,23 +146,21 @@ describe('Discussion messages', () => {
     // Assert
     expect(getDiscussions).toHaveLength(2);
 
-    await removeMessageOnRoomCodegen(discussionCommentsId, secondmessageId);
+    await removeMessageOnRoom(discussionCommentsId, secondmessageId);
   });
 
   test('Delete message from discussion', async () => {
     // Act
-    const res = await sendMessageToRoomCodegen(discussionCommentsId);
+    const res = await sendMessageToRoom(discussionCommentsId);
     messageId = res?.data?.sendMessageToRoom.id;
 
-    let discussionRes = await getPlatformDiscussionsDataByIdCodegen(
-      discussionId
-    );
+    let discussionRes = await getPlatformDiscussionsDataById(discussionId);
     const messagesBefore =
       discussionRes?.data?.platform?.forum?.discussion?.comments.messages;
 
-    await removeMessageOnRoomCodegen(discussionCommentsId, messageId);
+    await removeMessageOnRoom(discussionCommentsId, messageId);
 
-    discussionRes = await getPlatformDiscussionsDataByIdCodegen(discussionId);
+    discussionRes = await getPlatformDiscussionsDataById(discussionId);
     const messagesAfter =
       discussionRes?.data?.platform?.forum?.discussion?.comments.messages;
 
@@ -184,7 +174,7 @@ describe('Authorization - Discussion / Messages', () => {
   describe('Discussions', () => {
     describe('DDT user privileges to create / update platform discussions', () => {
       afterEach(async () => {
-        await deleteDiscussionCodegen(discussionId);
+        await deleteDiscussion(discussionId);
       });
       // Arrange
       test.each`
@@ -195,7 +185,7 @@ describe('Authorization - Discussion / Messages', () => {
         'User: "$userRoleUpdate" get message: "$messageUpdate", who intend to update discussion created from "$userRoleCreate',
         async ({ userRoleCreate, userRoleUpdate, messageUpdate }) => {
           // Act
-          const res = await createDiscussionCodegen(
+          const res = await createDiscussion(
             platformDiscussionId,
             'test',
             ForumDiscussionCategory.PlatformFunctionalities,
@@ -205,13 +195,9 @@ describe('Authorization - Discussion / Messages', () => {
           discussionId = discussionData?.id ?? '';
           discussionCommentsId = discussionData?.comments.id ?? '';
 
-          const update = await updateDiscussionCodegen(
-            discussionId,
-            userRoleUpdate,
-            {
-              profileData: { displayName: messageUpdate },
-            }
-          );
+          const update = await updateDiscussion(discussionId, userRoleUpdate, {
+            profileData: { displayName: messageUpdate },
+          });
 
           // Assert
           expect(update.data?.updateDiscussion.profile.displayName).toContain(
@@ -228,7 +214,7 @@ describe('Authorization - Discussion / Messages', () => {
         'User: "$userRoleUpdate" get ERROR message: "$messageUpdate", who intend to update discussion created from "$userRoleCreate',
         async ({ userRoleCreate, userRoleUpdate, messageUpdate }) => {
           // Act
-          const res = await createDiscussionCodegen(
+          const res = await createDiscussion(
             platformDiscussionId,
             'test',
             ForumDiscussionCategory.PlatformFunctionalities,
@@ -238,13 +224,9 @@ describe('Authorization - Discussion / Messages', () => {
           discussionId = discussionData?.id ?? '';
           discussionCommentsId = discussionData?.comments.id ?? '';
 
-          const update = await updateDiscussionCodegen(
-            discussionId,
-            userRoleUpdate,
-            {
-              profileData: { displayName: 'Updated' },
-            }
-          );
+          const update = await updateDiscussion(discussionId, userRoleUpdate, {
+            profileData: { displayName: 'Updated' },
+          });
 
           // Assert
           expect(update.error?.errors[0].message).toContain(messageUpdate);
@@ -254,7 +236,7 @@ describe('Authorization - Discussion / Messages', () => {
 
     describe('DDT user privileges to create / delete platform discussions', () => {
       afterEach(async () => {
-        await deleteDiscussionCodegen(discussionId);
+        await deleteDiscussion(discussionId);
       });
       // Arrange
       test.each`
@@ -265,7 +247,7 @@ describe('Authorization - Discussion / Messages', () => {
         'User: "$userRoleUpdate" get message: "$messageDelete", who intend to delete discussion created from "$userRoleCreate',
         async ({ userRoleCreate, userRoleDelete }) => {
           // Act
-          const res = await createDiscussionCodegen(
+          const res = await createDiscussion(
             platformDiscussionId,
             'test',
             ForumDiscussionCategory.PlatformFunctionalities,
@@ -274,10 +256,7 @@ describe('Authorization - Discussion / Messages', () => {
           const discussionData = res?.data?.createDiscussion;
           discussionId = discussionData?.id ?? '';
           discussionCommentsId = discussionData?.comments.id ?? '';
-          const del = await deleteDiscussionCodegen(
-            discussionId,
-            userRoleDelete
-          );
+          const del = await deleteDiscussion(discussionId, userRoleDelete);
 
           // Assert
           expect(del.data?.deleteDiscussion?.id).toContain(discussionId);
@@ -292,7 +271,7 @@ describe('Authorization - Discussion / Messages', () => {
         'User: "$userRoleUpdate" get message: "$messageDelete", who intend to delete discussion created from "$userRoleCreate',
         async ({ userRoleCreate, userRoleDelete, messageDelete }) => {
           // Act
-          const res = await createDiscussionCodegen(
+          const res = await createDiscussion(
             platformDiscussionId,
             'test',
             ForumDiscussionCategory.PlatformFunctionalities,
@@ -301,10 +280,7 @@ describe('Authorization - Discussion / Messages', () => {
           const discussionData = res?.data?.createDiscussion;
           discussionId = discussionData?.id ?? '';
           discussionCommentsId = discussionData?.comments.id ?? '';
-          const del = await deleteDiscussionCodegen(
-            discussionId,
-            userRoleDelete
-          );
+          const del = await deleteDiscussion(discussionId, userRoleDelete);
 
           // Assert
           expect(del.error?.errors[0].message).toContain(messageDelete);
@@ -316,7 +292,7 @@ describe('Authorization - Discussion / Messages', () => {
   describe('Comments', () => {
     describe('DDT user privileges to create / delete comments on discussion created from GA', () => {
       afterEach(async () => {
-        await deleteDiscussionCodegen(discussionId);
+        await deleteDiscussion(discussionId);
       });
       // Arrange
       test.each`
@@ -328,7 +304,7 @@ describe('Authorization - Discussion / Messages', () => {
         'User: "$userRoleDelete" get message: "$messageDelete", who intend to delete message created from "$userRoleCreate',
         async ({ userRoleCreate, userRoleDelete }) => {
           // Act
-          const res = await createDiscussionCodegen(
+          const res = await createDiscussion(
             platformDiscussionId,
             'test',
             ForumDiscussionCategory.PlatformFunctionalities,
@@ -338,7 +314,7 @@ describe('Authorization - Discussion / Messages', () => {
           discussionId = discussionData?.id ?? '';
           discussionCommentsId = discussionData?.comments.id ?? '';
 
-          const data = await sendMessageToRoomCodegen(
+          const data = await sendMessageToRoom(
             discussionCommentsId,
             'Test message',
             userRoleCreate
@@ -348,7 +324,7 @@ describe('Authorization - Discussion / Messages', () => {
           // TODO: needs to be removed, possible matrix-adapter related bug
           await delay(1000);
 
-          const delMessage = await removeMessageOnRoomCodegen(
+          const delMessage = await removeMessageOnRoom(
             discussionCommentsId,
             messageId,
             userRoleDelete
@@ -366,7 +342,7 @@ describe('Authorization - Discussion / Messages', () => {
         'User: "$userRoleDelete" get ERROR message: "$messageDelete", who intend to delete message created from "$userRoleCreate',
         async ({ userRoleCreate, userRoleDelete, messageDelete }) => {
           // Act
-          const res = await createDiscussionCodegen(
+          const res = await createDiscussion(
             platformDiscussionId,
             'test',
             ForumDiscussionCategory.PlatformFunctionalities,
@@ -376,7 +352,7 @@ describe('Authorization - Discussion / Messages', () => {
           discussionId = discussionData?.id ?? '';
           discussionCommentsId = discussionData?.comments.id ?? '';
 
-          const data = await sendMessageToRoomCodegen(
+          const data = await sendMessageToRoom(
             discussionCommentsId,
             'Test message',
             userRoleCreate
@@ -387,7 +363,7 @@ describe('Authorization - Discussion / Messages', () => {
           // TODO: needs to be removed, possible matrix-adapter related bug
           await delay(1000);
 
-          const delMessage = await removeMessageOnRoomCodegen(
+          const delMessage = await removeMessageOnRoom(
             discussionCommentsId,
             messageId,
             userRoleDelete
@@ -401,7 +377,7 @@ describe('Authorization - Discussion / Messages', () => {
 
     describe('DDT user privileges to create / delete comments on discussion created from registered user', () => {
       afterEach(async () => {
-        await deleteDiscussionCodegen(discussionId);
+        await deleteDiscussion(discussionId);
       });
       // Arrange
       test.each`
@@ -413,7 +389,7 @@ describe('Authorization - Discussion / Messages', () => {
         'User: "$userRoleDelete" get message: "$messageDelete", who intend to delete message created from "$userRoleCreate',
         async ({ userRoleCreate, userRoleDelete }) => {
           // Act
-          const res = await createDiscussionCodegen(
+          const res = await createDiscussion(
             platformDiscussionId,
             'test',
             ForumDiscussionCategory.PlatformFunctionalities,
@@ -423,7 +399,7 @@ describe('Authorization - Discussion / Messages', () => {
           discussionId = discussionData?.id ?? '';
           discussionCommentsId = discussionData?.comments.id ?? '';
 
-          const data = await sendMessageToRoomCodegen(
+          const data = await sendMessageToRoom(
             discussionCommentsId,
             'Test message',
             userRoleCreate
@@ -434,7 +410,7 @@ describe('Authorization - Discussion / Messages', () => {
           // TODO: needs to be removed, possible matrix-adapter related bug
           await delay(1000);
 
-          const delMessage = await removeMessageOnRoomCodegen(
+          const delMessage = await removeMessageOnRoom(
             discussionCommentsId,
             messageId,
             userRoleDelete
@@ -451,7 +427,7 @@ describe('Authorization - Discussion / Messages', () => {
         'User: "$userRoleDelete" get ERROR message: "$messageDelete", who intend to delete message created from "$userRoleCreate',
         async ({ userRoleCreate, userRoleDelete, messageDelete }) => {
           // Act
-          const res = await createDiscussionCodegen(
+          const res = await createDiscussion(
             platformDiscussionId,
             'test',
             ForumDiscussionCategory.PlatformFunctionalities,
@@ -461,7 +437,7 @@ describe('Authorization - Discussion / Messages', () => {
           discussionId = discussionData?.id ?? '';
           discussionCommentsId = discussionData?.comments.id ?? '';
 
-          const data = await sendMessageToRoomCodegen(
+          const data = await sendMessageToRoom(
             discussionCommentsId,
             'Test message',
             userRoleCreate
@@ -471,7 +447,7 @@ describe('Authorization - Discussion / Messages', () => {
           // TODO: needs to be removed, possible matrix-adapter related bug
           await delay(1000);
 
-          const delMessage = await removeMessageOnRoomCodegen(
+          const delMessage = await removeMessageOnRoom(
             discussionCommentsId,
             messageId,
             userRoleDelete

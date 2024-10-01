@@ -6,7 +6,7 @@ import { TestUser } from '@test/utils';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 
-export const createInnovationHubCodegen = async (
+export const createInnovationHub = async (
   accountID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -33,7 +33,7 @@ export const createInnovationHubCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const deleteInnovationHubCodegen = async (
+export const deleteInnovationHub = async (
   ID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {

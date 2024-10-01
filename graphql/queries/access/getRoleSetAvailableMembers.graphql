@@ -1,0 +1,48 @@
+query RoleSetAvailableMembers(
+  $roleSetId: UUID!
+  $first: Int!
+  $after: UUID
+  $filter: UserFilterInput
+) {
+  lookup {
+    availableMembers: roleSet(ID: $roleSetId) {
+      ...RoleSetAvailableMemberUsers
+      __typename
+    }
+    __typename
+  }
+}
+
+fragment RoleSetAvailableMemberUsers on RoleSet {
+  id
+  availableUsersForMemberRole(first: $first, after: $after, filter: $filter) {
+    users {
+      ...AvailableUser
+      __typename
+    }
+    pageInfo {
+      ...PageInfo
+      __typename
+    }
+    __typename
+  }
+  __typename
+}
+
+fragment AvailableUser on User {
+  id
+  profile {
+    id
+    displayName
+    __typename
+  }
+  email
+  __typename
+}
+
+fragment PageInfo on PageInfo {
+  startCursor
+  endCursor
+  hasNextPage
+  __typename
+}

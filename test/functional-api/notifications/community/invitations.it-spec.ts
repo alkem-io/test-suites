@@ -1,28 +1,25 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import {
-  deleteSpaceCodegen,
-  updateSpaceSettingsCodegen,
+  deleteSpace,
+  updateSpaceSettings,
 } from '@test/functional-api/journey/space/space.request.params';
 import { delay } from '@test/utils/delay';
 import { users } from '@test/utils/queries/users-data';
 import {
-  inviteContributorsCodegen,
-  deleteInvitationCodegen,
-} from '@test/functional-api/user-management/invitations/invitation.request.params';
+  deleteInvitation,
+  inviteContributors,
+} from '@test/functional-api/roleset/invitations/invitation.request.params';
 import { TestUser } from '@test/utils';
 import {
-  createChallengeWithUsersCodegen,
-  createOpportunityWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeWithUsers,
+  createOpportunityWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { UserPreferenceType } from '@alkemio/client-lib';
-import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
-import {
-  entitiesId,
-  getMailsData,
-} from '@test/functional-api/roles/community/communications-helper';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
+import { entitiesId, getMailsData } from '@test/types/entities-helper';
+import { changePreferenceUser } from '@test/utils/mutations/preferences-mutation';
 
 const organizationName = 'not-app-org-name' + uniqueId;
 const hostNameId = 'not-app-org-nameid' + uniqueId;
@@ -38,27 +35,27 @@ let preferencesConfig: any[] = [];
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
 
-  await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+  await updateSpaceSettings(entitiesId.spaceId, {
     membership: {
       allowSubspaceAdminsToInviteMembers: true,
     },
   });
 
-  await createChallengeWithUsersCodegen(challengeName);
+  await createChallengeWithUsers(challengeName);
 
-  await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
+  await updateSpaceSettings(entitiesId.challenge.id, {
     membership: {
       allowSubspaceAdminsToInviteMembers: true,
     },
   });
-  await createOpportunityWithUsersCodegen(opportunityName);
+  await createOpportunityWithUsers(opportunityName);
 
   preferencesConfig = [
     {
@@ -89,35 +86,35 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunity.id);
-  await deleteSpaceCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteSpace(entitiesId.opportunity.id);
+  await deleteSpace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 describe('Notifications - invitations', () => {
   beforeAll(async () => {
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.notificationsAdmin.id,
       UserPreferenceType.NotificationCommunityInvitationUser,
       'false'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationCommunityInvitationUser,
       'false'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.globalAdmin.id,
       UserPreferenceType.NotificationCommunityInvitationUser,
       'false'
     );
     for (const config of preferencesConfig)
-      await changePreferenceUserCodegen(config.userID, config.type, 'true');
+      await changePreferenceUser(config.userID, config.type, 'true');
   });
 
   afterEach(async () => {
-    await deleteInvitationCodegen(invitationId);
+    await deleteInvitation(invitationId);
   });
 
   beforeEach(async () => {
@@ -126,13 +123,13 @@ describe('Notifications - invitations', () => {
 
   test('non space user receive invitation for SPACE community from space admin', async () => {
     // Act
-    const invitationData = await inviteContributorsCodegen(
-      entitiesId.space.communityId,
+    const invitationData = await inviteContributors(
+      entitiesId.space.roleSetId,
       [users.nonSpaceMember.id],
       TestUser.HUB_ADMIN
     );
     const invitationInfo =
-      invitationData?.data?.inviteContributorsForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForRoleSetMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     await delay(6000);
@@ -152,13 +149,13 @@ describe('Notifications - invitations', () => {
 
   test('non space user receive invitation for SPACE community from challenge admin', async () => {
     // Act
-    const invitationData = await inviteContributorsCodegen(
-      entitiesId.space.communityId,
+    const invitationData = await inviteContributors(
+      entitiesId.space.roleSetId,
       [users.qaUser.id],
       TestUser.CHALLENGE_ADMIN
     );
     const invitationInfo =
-      invitationData?.data?.inviteContributorsForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForRoleSetMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     await delay(6000);
@@ -178,13 +175,13 @@ describe('Notifications - invitations', () => {
 
   test('non space user receive invitation for CHALLENGE community from challenge admin', async () => {
     // Act
-    const invitationData = await inviteContributorsCodegen(
-      entitiesId.challenge.communityId,
+    const invitationData = await inviteContributors(
+      entitiesId.challenge.roleSetId,
       [users.qaUser.id],
       TestUser.CHALLENGE_ADMIN
     );
     const invitationInfo =
-      invitationData?.data?.inviteContributorsForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForRoleSetMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     await delay(6000);
@@ -204,13 +201,13 @@ describe('Notifications - invitations', () => {
 
   test("non space user don't receive invitation for CHALLENGE community from opportunity admin", async () => {
     // Act
-    const invitationData = await inviteContributorsCodegen(
-      entitiesId.challenge.communityId,
+    const invitationData = await inviteContributors(
+      entitiesId.challenge.roleSetId,
       [users.qaUser.id],
       TestUser.OPPORTUNITY_ADMIN
     );
     const invitationInfo =
-      invitationData?.data?.inviteContributorsForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForRoleSetMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     await delay(6000);
@@ -219,19 +216,19 @@ describe('Notifications - invitations', () => {
     // Assert
     expect(getEmailsData[1]).toEqual(0);
     expect(invitationData.error?.errors[0].message).toEqual(
-      `Contributor is not a member of the parent community (${entitiesId.space.communityId}) and the current user does not have the privilege to invite to the parent community`
+      `Contributor is not a member of the parent community (${entitiesId.space.roleSetId}) and the current user does not have the privilege to invite to the parent community`
     );
   });
 
   test('space member receive invitation for CHALLENGE community from opportunity admin', async () => {
     // Act
-    const invitationData = await inviteContributorsCodegen(
-      entitiesId.challenge.communityId,
+    const invitationData = await inviteContributors(
+      entitiesId.challenge.roleSetId,
       [users.spaceMember.id],
       TestUser.OPPORTUNITY_ADMIN
     );
     const invitationInfo =
-      invitationData?.data?.inviteContributorsForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForRoleSetMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     await delay(6000);
@@ -251,13 +248,13 @@ describe('Notifications - invitations', () => {
 
   test('non space user receive invitation for OPPORTUNITY community from opportunity admin', async () => {
     // Act
-    const invitationData = await inviteContributorsCodegen(
-      entitiesId.opportunity.communityId,
+    const invitationData = await inviteContributors(
+      entitiesId.opportunity.roleSetId,
       [users.qaUser.id],
       TestUser.OPPORTUNITY_ADMIN
     );
     const invitationInfo =
-      invitationData?.data?.inviteContributorsForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForRoleSetMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     await delay(6000);
@@ -276,20 +273,20 @@ describe('Notifications - invitations', () => {
   });
   test("non space user doesn't receive invitation for SPACE community from space admin", async () => {
     // Arrange
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.nonSpaceMember.id,
       UserPreferenceType.NotificationCommunityInvitationUser,
       'false'
     );
 
     // Act
-    const invitationData = await inviteContributorsCodegen(
-      entitiesId.space.communityId,
+    const invitationData = await inviteContributors(
+      entitiesId.space.roleSetId,
       [users.nonSpaceMember.id],
       TestUser.HUB_ADMIN
     );
     const invitationInfo =
-      invitationData?.data?.inviteContributorsForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForRoleSetMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     await delay(6000);
@@ -301,20 +298,20 @@ describe('Notifications - invitations', () => {
 
   test("non space user doesn't receive invitation for CHALLENGE community from challenge admin, flag disabled", async () => {
     // Arrange
-    await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
+    await updateSpaceSettings(entitiesId.challenge.id, {
       membership: {
         allowSubspaceAdminsToInviteMembers: false,
       },
     });
 
     // Act
-    const invitationData = await inviteContributorsCodegen(
-      entitiesId.challenge.communityId,
+    const invitationData = await inviteContributors(
+      entitiesId.challenge.roleSetId,
       [users.qaUser.displayName],
       TestUser.CHALLENGE_ADMIN
     );
     const invitationInfo =
-      invitationData?.data?.inviteContributorsForCommunityMembership[0];
+      invitationData?.data?.inviteContributorsForRoleSetMembership[0];
     invitationId = invitationInfo?.id ?? '';
 
     await delay(6000);

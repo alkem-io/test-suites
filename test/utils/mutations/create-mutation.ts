@@ -1,4 +1,4 @@
-import { entitiesId } from '@test/functional-api/roles/community/communications-helper';
+import { entitiesId } from '@test/types/entities-helper';
 import { challengeDataTest, spaceData, userData } from '../common-params';
 
 export const uniqueId = Math.random()

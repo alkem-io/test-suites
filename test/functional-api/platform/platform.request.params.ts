@@ -3,7 +3,7 @@ import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { SpaceVisibility } from '../../generated/alkemio-schema';
 
-export const updateSpacePlatformSettingsCodegen = async (
+export const updateSpacePlatformSettings = async (
   spaceID: string,
   visibility?: SpaceVisibility,
   nameID?: string,

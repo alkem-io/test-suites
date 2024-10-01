@@ -1,6 +1,6 @@
-import { createWhiteboardTemplateCodegen } from '../callout/templates/whiteboard/templates.request.params';
-import { getOrganizationsData } from '../organization/organization.request.params';
-import { createInnovationPackOnLibraryCodegen } from './innovation_pack.request.params';
+import { getOrganizationsData } from '../contributor-management/organization/organization.request.params';
+import { createWhiteboardTemplate } from '../templates/whiteboard/templates.request.params';
+import { createInnovationPackOnLibrary } from './innovation_pack.request.params';
 import { whiteboardTemplateValues1 } from './whiteboard-values-fixed';
 export const uniqueId = Math.random()
   .toString(12)
@@ -21,14 +21,14 @@ const main = async () => {
   const firstAvailableOrganizationId =
     organizationsData.body.data.organizations[0].id;
   const providerId = process.env.ORG_ID || firstAvailableOrganizationId;
-  const packData = await createInnovationPackOnLibraryCodegen(
+  const packData = await createInnovationPackOnLibrary(
     packName,
     packNameId,
     providerId
   );
   const templateSetId =
     packData?.data?.createInnovationPack.templatesSet?.id ?? '';
-  await createWhiteboardTemplateCodegen(
+  await createWhiteboardTemplate(
     templateSetId,
     whiteboardTemplateTitle,
     whiteboardTemplateValues

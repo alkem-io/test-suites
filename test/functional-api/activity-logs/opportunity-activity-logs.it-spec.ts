@@ -1,36 +1,36 @@
 import '@test/utils/array.matcher';
-import { deleteOrganizationCodegen } from '../organization/organization.request.params';
 import { TestUser } from '@test/utils';
 import { users } from '@test/utils/queries/users-data';
 import {
-  createChallengeWithUsersCodegen,
-  createOpportunityForChallengeCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeWithUsers,
+  createOpportunityForChallenge,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
 import {
   CalloutState,
   CalloutType,
-  CommunityRole,
+  CommunityRoleType,
   ActivityEventType,
   CalloutVisibility,
   CommunityMembershipPolicy,
   SpacePrivacyMode,
 } from '@test/generated/alkemio-schema';
 import {
-  deleteSpaceCodegen,
-  updateSpaceSettingsCodegen,
+  deleteSpace,
+  updateSpaceSettings,
 } from '@test/functional-api/journey/space/space.request.params';
 import {
-  createCalloutOnCollaborationCodegen,
-  deleteCalloutCodegen,
-  updateCalloutVisibilityCodegen,
+  createCalloutOnCollaboration,
+  deleteCallout,
+  updateCalloutVisibility,
 } from '@test/functional-api/callout/callouts.request.params';
-import { getActivityLogOnCollaborationCodegen } from './activity-log-params';
-import { createPostOnCalloutCodegen } from '@test/functional-api/callout/post/post.request.params';
-import { sendMessageToRoomCodegen } from '../communications/communication.params';
-import { createWhiteboardOnCalloutCodegen } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
-import { assignCommunityRoleToUserCodegen } from '../roles/roles-request.params';
-import { entitiesId } from '../roles/community/communications-helper';
+import { getActivityLogOnCollaboration } from './activity-log-params';
+import { createPostOnCallout } from '@test/functional-api/callout/post/post.request.params';
+import { sendMessageToRoom } from '../communications/communication.params';
+import { createWhiteboardOnCallout } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
+import { assignRoleToUser } from '../roleset/roles-request.params';
+import { entitiesId } from '../../types/entities-helper';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 export const uniqueId = Math.random()
   .toString(12)
   .slice(-6);
@@ -47,27 +47,27 @@ const spaceName = 'callout-eco-name' + uniqueId;
 const spaceNameId = 'callout-eco-nameid' + uniqueId;
 
 beforeAll(async () => {
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+  await updateSpaceSettings(entitiesId.spaceId, {
     membership: {
       policy: CommunityMembershipPolicy.Open,
     },
   });
 
-  await createChallengeWithUsersCodegen(challengeName);
-  await createOpportunityForChallengeCodegen(opportunityName);
+  await createChallengeWithUsers(challengeName);
+  await createOpportunityForChallenge(opportunityName);
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunity.id);
-  await deleteSpaceCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteSpace(entitiesId.opportunity.id);
+  await deleteSpace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 beforeEach(async () => {
@@ -80,11 +80,11 @@ beforeEach(async () => {
 
 describe('Activity logs - Opportunity', () => {
   afterEach(async () => {
-    await deleteCalloutCodegen(calloutId);
+    await deleteCallout(calloutId);
   });
   test('should return empty arrays', async () => {
     // Act
-    const resActivity = await getActivityLogOnCollaborationCodegen(
+    const resActivity = await getActivityLogOnCollaboration(
       entitiesId.opportunity.collaborationId,
       5
     );
@@ -96,13 +96,13 @@ describe('Activity logs - Opportunity', () => {
 
   test('should NOT return CALLOUT_PUBLISHED, when created', async () => {
     // Arrange
-    const res = await createCalloutOnCollaborationCodegen(
+    const res = await createCalloutOnCollaboration(
       entitiesId.opportunity.collaborationId,
       { framing: { profile: { displayName: callDN } } }
     );
     calloutId = res?.data?.createCalloutOnCollaboration.id ?? '';
 
-    const resActivity = await getActivityLogOnCollaborationCodegen(
+    const resActivity = await getActivityLogOnCollaboration(
       entitiesId.opportunity.collaborationId,
       5
     );
@@ -113,14 +113,14 @@ describe('Activity logs - Opportunity', () => {
 
   test('should return MEMBER_JOINED, when user assigned from Admin', async () => {
     // Arrange
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.challengeMember.id,
-      entitiesId.opportunity.communityId,
-      CommunityRole.Member
+      entitiesId.opportunity.roleSetId,
+      CommunityRoleType.Member
     );
 
     // Act
-    const resActivity = await getActivityLogOnCollaborationCodegen(
+    const resActivity = await getActivityLogOnCollaboration(
       entitiesId.opportunity.collaborationId,
       5
     );
@@ -154,18 +154,15 @@ describe('Activity logs - Opportunity', () => {
   // To be updated with the changes related to whiteboard callouts
   test.skip('should return CALLOUT_PUBLISHED, POST_CREATED, POST_COMMENT, DISCUSSION_COMMENT, WHITEBOARD_CREATED', async () => {
     // Arrange
-    const res = await createCalloutOnCollaborationCodegen(
+    const res = await createCalloutOnCollaboration(
       entitiesId.opportunity.collaborationId,
       { framing: { profile: { displayName: callDN } } }
     );
     calloutId = res?.data?.createCalloutOnCollaboration.id ?? '';
 
-    await updateCalloutVisibilityCodegen(
-      calloutId,
-      CalloutVisibility.Published
-    );
+    await updateCalloutVisibility(calloutId, CalloutVisibility.Published);
 
-    const resPostonSpace = await createPostOnCalloutCodegen(
+    const resPostonSpace = await createPostOnCallout(
       calloutId,
       { displayName: postDisplayName },
       postNameID,
@@ -175,14 +172,14 @@ describe('Activity logs - Opportunity', () => {
     const postDataCreate = resPostonSpace?.data?.createContributionOnCallout;
     const postCommentsIdSpace = postDataCreate?.post?.comments.id ?? '';
 
-    const messageRes = await sendMessageToRoomCodegen(
+    const messageRes = await sendMessageToRoom(
       postCommentsIdSpace,
       'test message on space post',
       TestUser.GLOBAL_ADMIN
     );
     messageRes?.data?.sendMessageToRoom.id;
 
-    const resDiscussion = await createCalloutOnCollaborationCodegen(
+    const resDiscussion = await createCalloutOnCollaboration(
       entitiesId.opportunity.collaborationId,
       {
         framing: {
@@ -200,17 +197,17 @@ describe('Activity logs - Opportunity', () => {
     const calloutIdDiscussion =
       resDiscussion?.data?.createCalloutOnCollaboration.id ?? '';
 
-    await updateCalloutVisibilityCodegen(
+    await updateCalloutVisibility(
       calloutIdDiscussion,
       CalloutVisibility.Published
     );
 
-    await sendMessageToRoomCodegen(
+    await sendMessageToRoom(
       calloutIdDiscussion,
       'comment on discussion callout'
     );
 
-    const resWhiteboard = await createCalloutOnCollaborationCodegen(
+    const resWhiteboard = await createCalloutOnCollaboration(
       entitiesId.opportunity.collaborationId,
       {
         framing: {
@@ -228,14 +225,14 @@ describe('Activity logs - Opportunity', () => {
     const calloutIdWhiteboard =
       resWhiteboard?.data?.createCalloutOnCollaboration.id ?? '';
 
-    await updateCalloutVisibilityCodegen(
+    await updateCalloutVisibility(
       calloutIdWhiteboard,
       CalloutVisibility.Published
     );
-    await createWhiteboardOnCalloutCodegen(calloutIdWhiteboard);
+    await createWhiteboardOnCallout(calloutIdWhiteboard);
 
     // Act
-    const resActivity = await getActivityLogOnCollaborationCodegen(
+    const resActivity = await getActivityLogOnCollaboration(
       entitiesId.opportunity.collaborationId,
       7
     );
@@ -304,21 +301,21 @@ describe('Activity logs - Opportunity', () => {
 // Logs used in the tests below are from the previously executed tests in the file
 describe('Access to Activity logs - Opportunity', () => {
   beforeAll(async () => {
-    await assignCommunityRoleToUserCodegen(
+    await assignRoleToUser(
       users.spaceMember.id,
       entitiesId.opportunity.id,
-      CommunityRole.Admin
+      CommunityRoleType.Admin
     );
   });
 
   describe('DDT user privileges to Public Opportunity activity logs of Private Space', () => {
     beforeAll(async () => {
-      await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+      await updateSpaceSettings(entitiesId.spaceId, {
         privacy: { mode: SpacePrivacyMode.Private },
       });
 
       // The privilege of the challenge should cascade to subspace level2
-      await updateSpaceSettingsCodegen(entitiesId.opportunity.id, {
+      await updateSpaceSettings(entitiesId.opportunity.id, {
         privacy: { mode: SpacePrivacyMode.Public },
       });
     });
@@ -332,7 +329,7 @@ describe('Access to Activity logs - Opportunity', () => {
       'User: "$userRole" get message: "$message", when intend to access Public Opportunity activity logs of a Private space',
       async ({ userRole, message }) => {
         // Act
-        const resActivity = await getActivityLogOnCollaborationCodegen(
+        const resActivity = await getActivityLogOnCollaboration(
           entitiesId.opportunity.collaborationId,
           5,
           userRole
@@ -352,7 +349,7 @@ describe('Access to Activity logs - Opportunity', () => {
       'User: "$userRole" get Error message: "$message", when intend to access Public Opportunity activity logs of a Private space',
       async ({ userRole, message }) => {
         // Act
-        const resActivity = await getActivityLogOnCollaborationCodegen(
+        const resActivity = await getActivityLogOnCollaboration(
           entitiesId.opportunity.collaborationId,
           5,
           userRole
@@ -366,13 +363,13 @@ describe('Access to Activity logs - Opportunity', () => {
 
   describe('DDT user privileges to Public Opportunity activity logs of Public Space', () => {
     beforeAll(async () => {
-      await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+      await updateSpaceSettings(entitiesId.spaceId, {
         privacy: { mode: SpacePrivacyMode.Public },
       });
-      await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
+      await updateSpaceSettings(entitiesId.challenge.id, {
         privacy: { mode: SpacePrivacyMode.Public },
       });
-      await updateSpaceSettingsCodegen(entitiesId.opportunity.id, {
+      await updateSpaceSettings(entitiesId.opportunity.id, {
         privacy: { mode: SpacePrivacyMode.Public },
       });
     });
@@ -388,7 +385,7 @@ describe('Access to Activity logs - Opportunity', () => {
       'User: "$userRole" get message: "$message", when intend to access Public Opportunity activity logs of a Public space',
       async ({ userRole, message }) => {
         // Act
-        const resActivity = await getActivityLogOnCollaborationCodegen(
+        const resActivity = await getActivityLogOnCollaboration(
           entitiesId.opportunity.collaborationId,
           5,
           userRole

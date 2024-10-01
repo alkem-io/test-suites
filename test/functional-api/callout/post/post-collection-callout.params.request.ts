@@ -3,7 +3,7 @@ import { TestUser } from '@test/utils';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 
-export const createPostCollectionCalloutCodegen = async (
+export const createPostCollectionCallout = async (
   collaborationID: string,
   nameID: string,
   displayName: string,
@@ -35,7 +35,7 @@ export const createPostCollectionCalloutCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const createPostCardOnCalloutCodegen = async (
+export const createPostCardOnCallout = async (
   calloutID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {

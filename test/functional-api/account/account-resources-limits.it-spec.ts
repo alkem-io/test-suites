@@ -1,13 +1,10 @@
 import '@test/utils/array.matcher';
-import { deleteOrganizationCodegen } from '../organization/organization.request.params';
 import { TestUser } from '@test/utils';
 import {
-  createSpaceAndGetData,
-  createSpaceBasicDataCodegen,
-  deleteSpaceCodegen,
-  getSpaceDataCodegen,
+  createSpaceBasicData,
+  deleteSpace,
+  getSpaceData,
 } from '@test/functional-api/journey/space/space.request.params';
-import { entitiesId } from '../roles/community/communications-helper';
 import { users } from '@test/utils/queries/users-data';
 export const uniqueId = Math.random()
   .toString(12)
@@ -27,11 +24,11 @@ const spaceNameId = 'callout-eco-nameid' + uniqueId;
 
 describe('Limits on account resources creation', () => {
   // afterEach(async () => {
-  //   await deleteSpaceCodegen(spaceId);
+  //   await deleteSpace(spaceId);
   // });
   describe('Global Admin space creation', () => {
     // afterEach(async () => {
-    //   await deleteSpaceCodegen(spaceId);
+    //   await deleteSpace(spaceId);
     // });
     test.each`
       userRole | spaceName
@@ -43,7 +40,7 @@ describe('Limits on account resources creation', () => {
       'User: Global Admin creates a space with name: $spaceName',
       async ({ spaceName }) => {
         // Act
-        const createSpace = await createSpaceBasicDataCodegen(
+        const createSpace = await createSpaceBasicData(
           spaceName,
           spaceNameId,
           users.globalAdmin.accountId,
@@ -52,7 +49,7 @@ describe('Limits on account resources creation', () => {
         console.log('createSpace', createSpace.error);
         spaceId = createSpace.data?.createSpace.id ?? '';
 
-        const spaceData = await getSpaceDataCodegen(spaceId);
+        const spaceData = await getSpaceData(spaceId);
 
         // Assert
         expect(spaceData.data?.space.profile.displayName).toEqual(spaceName);
@@ -70,7 +67,7 @@ describe('Limits on account resources creation', () => {
       'User: Beta Tester creates a space with name: $spaceName',
       async ({ spaceName }) => {
         // Act
-        const createSpace = await createSpaceBasicDataCodegen(
+        const createSpace = await createSpaceBasicData(
           spaceName,
           spaceName,
           users.betaTester.accountId,
@@ -79,7 +76,7 @@ describe('Limits on account resources creation', () => {
         console.log('createSpace', createSpace.error);
         spaceId = createSpace.data?.createSpace.id ?? '';
 
-        const spaceData = await getSpaceDataCodegen(spaceId);
+        const spaceData = await getSpaceData(spaceId);
 
         // Assert
         expect(spaceData.data?.space.profile.displayName).toEqual(spaceName);
@@ -89,7 +86,7 @@ describe('Limits on account resources creation', () => {
 
   describe.only('Non Space User space creation', () => {
     afterAll(async () => {
-      await deleteSpaceCodegen(spaceId1);
+      await deleteSpace(spaceId1);
     });
     test.each`
       userRole | spaceName               | spaceIdn    | message
@@ -101,7 +98,7 @@ describe('Limits on account resources creation', () => {
       'User: Non Space User creates a space with name: $spaceName',
       async ({ spaceName, spaceIdn }) => {
         // Act
-        const createSpace = await createSpaceBasicDataCodegen(
+        const createSpace = await createSpaceBasicData(
           spaceName,
           spaceName,
           users.opportunityAdmin.accountId,
@@ -111,7 +108,7 @@ describe('Limits on account resources creation', () => {
         spaceId = createSpace.data?.createSpace.id ?? '';
         spaceId = spaceIdn;
 
-        const spaceData = await getSpaceDataCodegen(spaceIdn);
+        const spaceData = await getSpaceData(spaceIdn);
 
         // Assert
         expect(spaceData).toContain(spaceName);

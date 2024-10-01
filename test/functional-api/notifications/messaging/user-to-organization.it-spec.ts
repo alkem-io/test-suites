@@ -4,18 +4,18 @@ import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import { delay } from '@test/utils/delay';
 import { TestUser } from '@test/utils';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
-import { assignUserAsOrganizationAdminCodegen } from '@test/utils/mutations/authorization-mutation';
+import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
+import { assignUserAsOrganizationAdmin } from '@test/utils/mutations/authorization-organization-mutation';
 import { users } from '@test/utils/queries/users-data';
-import { createOrgAndSpaceWithUsersCodegen } from '@test/utils/data-setup/entities';
+import { createOrgAndSpaceWithUsers } from '@test/utils/data-setup/entities';
 import { UserPreferenceType } from '@alkemio/client-lib';
-import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
-import { sendMessageToOrganizationCodegen } from '@test/functional-api/communications/communication.params';
+import { changePreferenceUser } from '@test/utils/mutations/preferences-mutation';
+import { sendMessageToOrganization } from '@test/functional-api/communications/communication.params';
 import {
   entitiesId,
   getMailsData,
-} from '@test/functional-api/roles/community/communications-helper';
+} from '@test/types/entities-helper';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 
 const firstOrganizationName = 'sample-org-name' + uniqueId;
 const hostNameId = 'sample-org-nameid' + uniqueId;
@@ -29,19 +29,19 @@ let sender = '';
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     firstOrganizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
 
-  await assignUserAsOrganizationAdminCodegen(
+  await assignUserAsOrganizationAdmin(
     users.spaceAdmin.id,
     entitiesId.organization.id
   );
 
-  await assignUserAsOrganizationAdminCodegen(
+  await assignUserAsOrganizationAdmin(
     users.spaceMember.id,
     entitiesId.organization.id
   );
@@ -62,14 +62,14 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteSpace(entitiesId.spaceId);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 describe('Notifications - user to organization messages', () => {
   beforeAll(async () => {
     for (const config of preferencesConfig)
-      await changePreferenceUserCodegen(config.userID, config.type, 'true');
+      await changePreferenceUser(config.userID, config.type, 'true');
   });
 
   beforeEach(async () => {
@@ -78,7 +78,7 @@ describe('Notifications - user to organization messages', () => {
 
   test("User 'A' sends message to Organization(both admins ORGANIZATION_MESSAGE:true) (3 admins) - 4 messages are sent", async () => {
     // Act
-    await sendMessageToOrganizationCodegen(
+    await sendMessageToOrganization(
       entitiesId.organization.id,
       'Test message',
       TestUser.NON_HUB_MEMBER
@@ -113,13 +113,13 @@ describe('Notifications - user to organization messages', () => {
 
   test("User 'A' sends message to Organization (3 admins, one admin has ORGANIZATION_MESSAGE:false) - 3 messages are sent", async () => {
     // Arrange
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.spaceAdmin.id,
       UserPreferenceType.NotificationOrganizationMessage,
       'false'
     );
     // Act
-    await sendMessageToOrganizationCodegen(
+    await sendMessageToOrganization(
       entitiesId.organization.id,
       'Test message',
       TestUser.NON_HUB_MEMBER
@@ -152,18 +152,18 @@ describe('Notifications - user to organization messages', () => {
   // second admin has ORGANIZATION_MESSAGE:true and COMMUNICATION_MESSAGE:false
   test("User 'A' sends message to Organization (3 admins, one admin has ORGANIZATION_MESSAGE:true and COMMUNICATION_MESSAGE:false) - 4 messages are sent", async () => {
     // Arrange
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.spaceAdmin.id,
       UserPreferenceType.NotificationOrganizationMessage,
       'true'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.spaceAdmin.id,
       UserPreferenceType.NotificationCommunicationMessage,
       'false'
     );
     // Act
-    await sendMessageToOrganizationCodegen(
+    await sendMessageToOrganization(
       entitiesId.organization.id,
       'Test message',
       TestUser.NON_HUB_MEMBER

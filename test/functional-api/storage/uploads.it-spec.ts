@@ -1,28 +1,28 @@
 /* eslint-disable quotes */
 import { uniqueId } from '@test/utils/mutations/create-mutation';
-import { deleteOrganizationCodegen } from '../organization/organization.request.params';
+import { deleteOrganization } from '../contributor-management/organization/organization.request.params';
 import { TestUser, getAuthDocument } from '@test/utils';
 import {
-  deleteDocumentCodegen,
-  getOrgReferenceUriCodegen,
-  getOrgVisualUriCodegen,
-  getOrgVisualUriInnovationHubCodegen,
+  deleteDocument,
+  getOrgReferenceUri,
+  getOrgVisualUri,
+  getOrgVisualUriInnovationHub,
   uploadFileOnRef,
   uploadImageOnVisual,
 } from './upload.params';
 import path from 'path';
 import {
-  createInnovationHubCodegen,
-  deleteInnovationHubCodegen,
+  createInnovationHub,
+  deleteInnovationHub,
 } from '../innovation-hub/innovation-hub-params';
-import { createOrganizationCodegen } from '../organization/organization.request.params';
+import { createOrganization } from '../contributor-management/organization/organization.request.params';
 import {
-  createReferenceOnProfileCodegen,
-  deleteReferenceOnProfileCodegen,
+  createReferenceOnProfile,
+  deleteReferenceOnProfile,
 } from '../references/references.request.params';
 import {
   createSpaceAndGetData,
-  deleteSpaceCodegen,
+  deleteSpace,
 } from '../journey/space/space.request.params';
 
 const organizationName = 'org-name' + uniqueId;
@@ -46,54 +46,54 @@ function getLastPartOfUrl(url: string): string {
 }
 
 async function getReferenceUri(orgId: string): Promise<string> {
-  const orgData = await getOrgReferenceUriCodegen(orgId);
+  const orgData = await getOrgReferenceUri(orgId);
   const referenceUri =
     orgData?.data?.organization?.profile?.references?.[0].uri ?? '';
   return referenceUri;
 }
 
 async function getVisualUri(orgId: string): Promise<string> {
-  const orgData = await getOrgVisualUriCodegen(orgId);
+  const orgData = await getOrgVisualUri(orgId);
   const visualUri = orgData?.data?.organization.profile.visuals[0].uri ?? '';
   return visualUri;
 }
 
 async function getVisualUriInnoSpace(innovationHubId: string): Promise<string> {
-  const orgData = await getOrgVisualUriInnovationHubCodegen(innovationHubId);
+  const orgData = await getOrgVisualUriInnovationHub(innovationHubId);
   const visualUri =
     orgData?.data?.platform?.innovationHub?.profile.visuals[0].uri ?? '';
   return visualUri;
 }
 
 beforeAll(async () => {
-  const res = await createOrganizationCodegen(organizationName, hostNameId);
+  const res = await createOrganization(organizationName, hostNameId);
   const orgData = res?.data?.createOrganization;
   orgId = orgData?.id ?? '';
   orgAccountId = orgData?.account?.id ?? '';
   orgProfileId = orgData?.profile?.id ?? '';
   const ref = orgData?.profile?.references?.[0].id ?? '';
-  await deleteReferenceOnProfileCodegen(ref);
+  await deleteReferenceOnProfile(ref);
   visualId = orgData?.profile?.visuals?.[0].id ?? '';
 });
-afterAll(async () => await deleteOrganizationCodegen(orgId));
+afterAll(async () => await deleteOrganization(orgId));
 
 describe('Upload document', () => {
   beforeAll(async () => {
-    const createRef = await createReferenceOnProfileCodegen(orgProfileId);
+    const createRef = await createReferenceOnProfile(orgProfileId);
     refId = createRef?.data?.createReferenceOnProfile.id ?? '';
   });
 
   afterAll(async () => {
-    await deleteReferenceOnProfileCodegen(refId);
+    await deleteReferenceOnProfile(refId);
   });
 
   afterEach(async () => {
-    await deleteDocumentCodegen(documentId, TestUser.GLOBAL_ADMIN);
+    await deleteDocument(documentId, TestUser.GLOBAL_ADMIN);
   });
 
   describe('DDT upload all file types', () => {
     afterEach(async () => {
-      await deleteDocumentCodegen(documentId, TestUser.GLOBAL_ADMIN);
+      await deleteDocument(documentId, TestUser.GLOBAL_ADMIN);
     });
 
     // Arrange
@@ -163,11 +163,8 @@ describe('Upload document', () => {
     documentEndPoint = res.data?.uploadFileOnReference?.uri;
     documentId = getLastPartOfUrl(documentEndPoint);
 
-    await deleteDocumentCodegen(documentId, TestUser.GLOBAL_ADMIN);
-    const resDelete = await deleteDocumentCodegen(
-      documentId,
-      TestUser.GLOBAL_ADMIN
-    );
+    await deleteDocument(documentId, TestUser.GLOBAL_ADMIN);
+    const resDelete = await deleteDocument(documentId, TestUser.GLOBAL_ADMIN);
 
     expect(resDelete.error?.errors[0].message).toContain(
       `Not able to locate document with the specified ID: ${documentId}`
@@ -199,7 +196,7 @@ describe('Upload document', () => {
     documentEndPoint = res.data?.uploadFileOnReference?.uri;
     documentId = getLastPartOfUrl(documentEndPoint);
 
-    await deleteDocumentCodegen(documentId, TestUser.GLOBAL_ADMIN);
+    await deleteDocument(documentId, TestUser.GLOBAL_ADMIN);
     const documentAccess = await getAuthDocument(
       documentId,
       TestUser.GLOBAL_ADMIN
@@ -208,10 +205,7 @@ describe('Upload document', () => {
   });
 
   test('read uploaded file after related reference is removed', async () => {
-    const refData = await createReferenceOnProfileCodegen(
-      orgProfileId,
-      'test2'
-    );
+    const refData = await createReferenceOnProfile(orgProfileId, 'test2');
     const refId2 = refData?.data?.createReferenceOnProfile?.id ?? '';
     const res = await uploadFileOnRef(
       path.join(__dirname, 'files-to-upload', 'image.png'),
@@ -219,7 +213,7 @@ describe('Upload document', () => {
     );
     documentEndPoint = res.data?.uploadFileOnReference?.uri;
     documentId = getLastPartOfUrl(documentEndPoint);
-    await deleteReferenceOnProfileCodegen(refId2);
+    await deleteReferenceOnProfile(refId2);
     const documentAccess = await getAuthDocument(
       documentId,
       TestUser.GLOBAL_ADMIN
@@ -264,12 +258,9 @@ describe('Upload document', () => {
     documentEndPoint = res.data?.uploadFileOnReference?.uri;
     documentId = getLastPartOfUrl(documentEndPoint);
 
-    await deleteReferenceOnProfileCodegen(refId);
+    await deleteReferenceOnProfile(refId);
 
-    const resDelete = await deleteDocumentCodegen(
-      documentId,
-      TestUser.GLOBAL_ADMIN
-    );
+    const resDelete = await deleteDocument(documentId, TestUser.GLOBAL_ADMIN);
 
     expect(resDelete?.data?.deleteDocument.id).toEqual(documentId);
   });
@@ -277,7 +268,7 @@ describe('Upload document', () => {
 
 describe('Upload visual', () => {
   afterEach(async () => {
-    await deleteDocumentCodegen(documentId, TestUser.GLOBAL_ADMIN);
+    await deleteDocument(documentId, TestUser.GLOBAL_ADMIN);
   });
 
   test('upload visual', async () => {
@@ -353,7 +344,7 @@ describe('Upload visual to innovation space', () => {
     spaceId = spaceData?.id ?? '';
     //const spaceAccountId = spaceData?.account.id ?? '';
 
-    const innovationHubData = await createInnovationHubCodegen(orgAccountId);
+    const innovationHubData = await createInnovationHub(orgAccountId);
     console.log('innovationHubData', innovationHubData.error?.errors);
     console.log('innovationHubData', innovationHubData.error?.errors);
     const innovationHubInfo = innovationHubData?.data?.createInnovationHub;
@@ -362,12 +353,12 @@ describe('Upload visual to innovation space', () => {
   });
 
   afterAll(async () => {
-    await deleteInnovationHubCodegen(innovationHubId);
-    await deleteSpaceCodegen(spaceId);
+    await deleteInnovationHub(innovationHubId);
+    await deleteSpace(spaceId);
   });
 
   afterEach(async () => {
-    await deleteDocumentCodegen(documentId, TestUser.GLOBAL_ADMIN);
+    await deleteDocument(documentId, TestUser.GLOBAL_ADMIN);
   });
 
   test('upload visual', async () => {

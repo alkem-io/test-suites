@@ -1,31 +1,29 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
 import {
-  deleteSpaceCodegen,
-  updateSpaceSettingsCodegen,
+  deleteSpace,
+  updateSpaceSettings,
 } from '@test/functional-api/journey/space/space.request.params';
 import {
-  createApplicationCodegen,
-  deleteApplicationCodegen,
-} from '@test/functional-api/user-management/application/application.request.params';
+  createApplication,
+  deleteApplication,
+} from '@test/functional-api/roleset/application/application.request.params';
 import { delay } from '@test/utils/delay';
 import { users } from '@test/utils/queries/users-data';
 import {
-  createChallengeWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
 import { UserPreferenceType } from '@alkemio/client-lib';
-import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
-import {
-  entitiesId,
-  getMailsData,
-} from '@test/functional-api/roles/community/communications-helper';
-import { assignCommunityRoleToUserCodegen } from '@test/functional-api/roles/roles-request.params';
+
+import { assignRoleToUser } from '@test/functional-api/roleset/roles-request.params';
 import {
   CommunityMembershipPolicy,
-  CommunityRole,
+  CommunityRoleType,
 } from '@test/generated/alkemio-schema';
+import { entitiesId, getMailsData } from '@test/types/entities-helper';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
+import { changePreferenceUser } from '@test/utils/mutations/preferences-mutation';
 
 const organizationName = 'not-app-org-name' + uniqueId;
 const hostNameId = 'not-app-org-nameid' + uniqueId;
@@ -39,14 +37,14 @@ let preferencesConfig: any[] = [];
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsersCodegen(challengeName);
-  await updateSpaceSettingsCodegen(entitiesId.spaceId, {
+  await createChallengeWithUsers(challengeName);
+  await updateSpaceSettings(entitiesId.spaceId, {
     membership: { policy: CommunityMembershipPolicy.Applications },
   });
 
@@ -87,35 +85,35 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteSpace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 describe('Notifications - applications', () => {
   beforeAll(async () => {
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.notificationsAdmin.id,
       UserPreferenceType.NotificationApplicationSubmitted,
       'false'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.notificationsAdmin.id,
       UserPreferenceType.NotificationApplicationReceived,
       'false'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationApplicationSubmitted,
       'false'
     );
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.globalCommunityAdmin.id,
       UserPreferenceType.NotificationApplicationReceived,
       'false'
     );
     for (const config of preferencesConfig)
-      await changePreferenceUserCodegen(config.userID, config.type, 'true');
+      await changePreferenceUser(config.userID, config.type, 'true');
   });
 
   beforeEach(async () => {
@@ -124,12 +122,10 @@ describe('Notifications - applications', () => {
 
   test('receive notification for non space user application to space- GA, EA and Applicant', async () => {
     // Act
-    const applicatioData = await createApplicationCodegen(
-      entitiesId.space.communityId
-    );
+    const applicatioData = await createApplication(entitiesId.space.roleSetId);
 
     entitiesId.space.applicationId =
-      applicatioData?.data?.applyForCommunityMembership?.id ?? '';
+      applicatioData?.data?.applyForEntryRoleOnRoleSet?.id ?? '';
 
     await delay(6000);
 
@@ -156,20 +152,20 @@ describe('Notifications - applications', () => {
 
   test('receive notification for non space user application to challenge- GA, EA, CA and Applicant', async () => {
     // Arrange
-    await assignCommunityRoleToUserCodegen(
-      users.nonSpaceMember.email,
-      entitiesId.space.communityId,
-      CommunityRole.Member
+    await assignRoleToUser(
+      users.nonSpaceMember.id,
+      entitiesId.space.roleSetId,
+      CommunityRoleType.Member
     );
 
-    await updateSpaceSettingsCodegen(entitiesId.challenge.id, {
+    await updateSpaceSettings(entitiesId.challenge.id, {
       membership: {
         policy: CommunityMembershipPolicy.Applications,
       },
     });
 
     // Act
-    await createApplicationCodegen(entitiesId.challenge.communityId);
+    await createApplication(entitiesId.challenge.roleSetId);
 
     await delay(6000);
     const getEmailsData = await getMailsData();
@@ -199,13 +195,13 @@ describe('Notifications - applications', () => {
     // Arrange
     preferencesConfig.forEach(
       async config =>
-        await changePreferenceUserCodegen(config.userID, config.type, 'false')
+        await changePreferenceUser(config.userID, config.type, 'false')
     );
 
-    await deleteApplicationCodegen(entitiesId.space.applicationId);
+    await deleteApplication(entitiesId.space.applicationId);
 
     // Act
-    await createApplicationCodegen(entitiesId.challenge.communityId);
+    await createApplication(entitiesId.challenge.roleSetId);
 
     await delay(1500);
     const getEmailsData = await getMailsData();

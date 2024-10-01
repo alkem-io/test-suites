@@ -1,31 +1,29 @@
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import { deleteMailSlurperMails } from '@test/utils/mailslurper.rest.requests';
-import { deleteSpaceCodegen } from '@test/functional-api/journey/space/space.request.params';
+import { deleteSpace } from '@test/functional-api/journey/space/space.request.params';
 import { delay } from '@test/utils/delay';
 import { users } from '@test/utils/queries/users-data';
 import {
-  createWhiteboardCalloutOnCollaborationCodegen,
-  updateCalloutVisibilityCodegen,
+  createWhiteboardCalloutOnCollaboration,
+  updateCalloutVisibility,
 } from '@test/functional-api/callout/callouts.request.params';
 import {
-  createChallengeWithUsersCodegen,
-  createOpportunityWithUsersCodegen,
-  createOrgAndSpaceWithUsersCodegen,
+  createChallengeWithUsers,
+  createOpportunityWithUsers,
+  createOrgAndSpaceWithUsers,
 } from '@test/utils/data-setup/entities';
-import { deleteOrganizationCodegen } from '@test/functional-api/organization/organization.request.params';
-import { changePreferenceUserCodegen } from '@test/utils/mutations/preferences-mutation';
-import { createWhiteboardOnCalloutCodegen } from '@test/functional-api/callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
-import { deleteWhiteboardCodegen } from '@test/functional-api/callout/whiteboard/whiteboard-callout.params.request';
-import {
-  entitiesId,
-  getMailsData,
-} from '@test/functional-api/roles/community/communications-helper';
+import { changePreferenceUser } from '@test/utils/mutations/preferences-mutation';
+import { createWhiteboardOnCallout } from '@test/functional-api/callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
+import { deleteWhiteboard } from '@test/functional-api/callout/whiteboard/whiteboard-callout.params.request';
+
 import {
   CalloutType,
   CalloutVisibility,
   UserPreferenceType,
 } from '@test/generated/alkemio-schema';
+import { entitiesId, getMailsData } from '@test/types/entities-helper';
+import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
 
 const organizationName = 'not-up-org-name' + uniqueId;
 const hostNameId = 'not-up-org-nameid' + uniqueId;
@@ -53,15 +51,15 @@ const expectedDataFunc = async (subject: string, toAddresses: any[]) => {
 beforeAll(async () => {
   await deleteMailSlurperMails();
 
-  await createOrgAndSpaceWithUsersCodegen(
+  await createOrgAndSpaceWithUsers(
     organizationName,
     hostNameId,
     spaceName,
     spaceNameId
   );
-  await createChallengeWithUsersCodegen(challengeName);
-  await createOpportunityWithUsersCodegen(opportunityName);
-  const resSpace = await createWhiteboardCalloutOnCollaborationCodegen(
+  await createChallengeWithUsers(challengeName);
+  await createOpportunityWithUsers(opportunityName);
+  const resSpace = await createWhiteboardCalloutOnCollaboration(
     entitiesId.space.collaborationId,
     {
       framing: {
@@ -77,12 +75,12 @@ beforeAll(async () => {
   whiteboardCollectionSpaceCalloutId =
     resSpace?.data?.createCalloutOnCollaboration.id ?? '';
 
-  await updateCalloutVisibilityCodegen(
+  await updateCalloutVisibility(
     whiteboardCollectionSpaceCalloutId,
     CalloutVisibility.Published
   );
 
-  const resChallenge = await createWhiteboardCalloutOnCollaborationCodegen(
+  const resChallenge = await createWhiteboardCalloutOnCollaboration(
     entitiesId.challenge.collaborationId,
     {
       framing: {
@@ -98,12 +96,12 @@ beforeAll(async () => {
   whiteboardCollectionChallengeCalloutId =
     resChallenge?.data?.createCalloutOnCollaboration.id ?? '';
 
-  await updateCalloutVisibilityCodegen(
+  await updateCalloutVisibility(
     whiteboardCollectionChallengeCalloutId,
     CalloutVisibility.Published
   );
 
-  const resOpportunity = await createWhiteboardCalloutOnCollaborationCodegen(
+  const resOpportunity = await createWhiteboardCalloutOnCollaboration(
     entitiesId.opportunity.collaborationId,
     {
       framing: {
@@ -119,7 +117,7 @@ beforeAll(async () => {
   whiteboardCollectionOpportunityCalloutId =
     resOpportunity?.data?.createCalloutOnCollaboration.id ?? '';
 
-  await updateCalloutVisibilityCodegen(
+  await updateCalloutVisibility(
     whiteboardCollectionOpportunityCalloutId,
     CalloutVisibility.Published
   );
@@ -169,10 +167,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteSpaceCodegen(entitiesId.opportunity.id);
-  await deleteSpaceCodegen(entitiesId.challenge.id);
-  await deleteSpaceCodegen(entitiesId.spaceId);
-  await deleteOrganizationCodegen(entitiesId.organization.id);
+  await deleteSpace(entitiesId.opportunity.id);
+  await deleteSpace(entitiesId.challenge.id);
+  await deleteSpace(entitiesId.spaceId);
+  await deleteOrganization(entitiesId.organization.id);
 });
 
 describe('Notifications - whiteboard', () => {
@@ -181,14 +179,14 @@ describe('Notifications - whiteboard', () => {
   });
 
   beforeAll(async () => {
-    await changePreferenceUserCodegen(
+    await changePreferenceUser(
       users.notificationsAdmin.id,
       UserPreferenceType.NotificationWhiteboardCreated,
       'false'
     );
     preferencesConfig.forEach(
       async config =>
-        await changePreferenceUserCodegen(config.userID, config.type, 'true')
+        await changePreferenceUser(config.userID, config.type, 'true')
     );
     await deleteMailSlurperMails();
   });
@@ -199,7 +197,7 @@ describe('Notifications - whiteboard', () => {
     const subjectTextMember = `${spaceName}: New Whiteboard created by admin, have a look!`;
 
     // Act
-    const res = await createWhiteboardOnCalloutCodegen(
+    const res = await createWhiteboardOnCallout(
       whiteboardCollectionSpaceCalloutId,
       TestUser.GLOBAL_ADMIN
     );
@@ -241,7 +239,7 @@ describe('Notifications - whiteboard', () => {
       await expectedDataFunc(subjectTextMember, [users.opportunityMember.email])
     );
 
-    await deleteWhiteboardCodegen(spaceWhiteboardId);
+    await deleteWhiteboard(spaceWhiteboardId);
   });
 
   // ToDo: fix test
@@ -249,7 +247,7 @@ describe('Notifications - whiteboard', () => {
     const subjectTextAdmin = `${spaceName}: New Whiteboard created by space`;
     const subjectTextMember = `${spaceName}: New Whiteboard created by space, have a look!`;
     // Act
-    const res = await createWhiteboardOnCalloutCodegen(
+    const res = await createWhiteboardOnCallout(
       whiteboardCollectionSpaceCalloutId,
       TestUser.HUB_ADMIN
     );
@@ -297,7 +295,7 @@ describe('Notifications - whiteboard', () => {
     const subjectTextAdmin = `${challengeName}: New Whiteboard created by space`;
     const subjectTextMember = `${challengeName}: New Whiteboard created by space, have a look!`;
     // Act
-    const res = await createWhiteboardOnCalloutCodegen(
+    const res = await createWhiteboardOnCallout(
       whiteboardCollectionChallengeCalloutId,
       TestUser.HUB_ADMIN
     );
@@ -354,7 +352,7 @@ describe('Notifications - whiteboard', () => {
     const subjectTextAdmin = `${opportunityName}: New Whiteboard created by opportunity`;
     const subjectTextMember = `${opportunityName}: New Whiteboard created by opportunity, have a look!`;
     // Act
-    const res = await createWhiteboardOnCalloutCodegen(
+    const res = await createWhiteboardOnCallout(
       whiteboardCollectionOpportunityCalloutId,
       TestUser.OPPORTUNITY_MEMBER
     );
@@ -413,10 +411,10 @@ describe('Notifications - whiteboard', () => {
   test('OA create opportunity whiteboard - 0 notifications - all roles with notifications disabled', async () => {
     preferencesConfig.forEach(
       async config =>
-        await changePreferenceUserCodegen(config.userID, config.type, 'false')
+        await changePreferenceUser(config.userID, config.type, 'false')
     );
     // Act
-    const res = await createWhiteboardOnCalloutCodegen(
+    const res = await createWhiteboardOnCallout(
       whiteboardCollectionOpportunityCalloutId,
       TestUser.OPPORTUNITY_ADMIN
     );

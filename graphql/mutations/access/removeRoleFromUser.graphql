@@ -1,0 +1,5 @@
+mutation removeRoleFromUser($roleData: RemoveRoleOnRoleSetFromUserInput!) {
+  removeRoleFromUser(roleData: $roleData) {
+    ...UserData
+  }
+}

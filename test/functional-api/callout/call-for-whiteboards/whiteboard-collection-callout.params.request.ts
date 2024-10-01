@@ -3,7 +3,7 @@ import { TestUser } from '@test/utils';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 
-export const createWhiteboardCollectionCalloutCodegen = async (
+export const createWhiteboardCollectionCallout = async (
   collaborationID: string,
   nameID: string,
   displayName: string,
@@ -38,7 +38,7 @@ export const createWhiteboardCollectionCalloutCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const createWhiteboardOnCalloutCodegen = async (
+export const createWhiteboardOnCallout = async (
   calloutID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {

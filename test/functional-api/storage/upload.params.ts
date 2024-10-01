@@ -71,7 +71,7 @@ export const uploadFileOnStorageBucket = async (
   return res;
 };
 
-export const deleteDocumentCodegen = async (
+export const deleteDocument = async (
   ID: string,
   userRole?: TestUser
 ) => {
@@ -88,7 +88,7 @@ export const deleteDocumentCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const getUserReferenceUriCodegen = async (
+export const getUserReferenceUri = async (
   userId: string,
   userRole?: TestUser
 ) => {
@@ -103,7 +103,7 @@ export const getUserReferenceUriCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const getOrgReferenceUriCodegen = async (
+export const getOrgReferenceUri = async (
   organizationId: string,
   userRole?: TestUser
 ) => {
@@ -118,7 +118,7 @@ export const getOrgReferenceUriCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const getOrgVisualUriCodegen = async (
+export const getOrgVisualUri = async (
   organizationId: string,
   userRole?: TestUser
 ) => {
@@ -133,7 +133,7 @@ export const getOrgVisualUriCodegen = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const getOrgVisualUriInnovationHubCodegen = async (
+export const getOrgVisualUriInnovationHub = async (
   ID: string,
   userRole?: TestUser
 ) => {
