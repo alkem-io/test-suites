@@ -31,10 +31,7 @@ fragment SpaceData on Space {
   profile {
     ...ProfileData
   }
-  defaults {
-    ...DefaultData
-  }
-  library {
-    ...TemplatesSetData
+  templatesManager {
+    ...TemplatesManagerData
   }
 }
