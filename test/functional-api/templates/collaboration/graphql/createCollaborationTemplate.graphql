@@ -1,0 +1,17 @@
+mutation createCollaborationTemplate(
+  $templatesSetId: UUID!
+  $profileData: CreateProfileInput!
+  $collaborationData: CreateCollaborationInput!
+) {
+  createTemplate(
+    templateData: {
+      type: COLLABORATION
+      templatesSetID: $templatesSetId
+      profileData: $profileData
+      collaborationData: $collaborationData
+    }
+  ) {
+    ...TemplateProfileData
+    ...CollaborationTemplateData
+  }
+}
