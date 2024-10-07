@@ -1,6 +1,15 @@
+import { deleteSpace } from '../../journey/space/space.request.params';
+import { deleteOrganization } from '../../contributor-management/organization/organization.request.params';
+import { entitiesId } from '@test/types/entities-helper';
 import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
-import { deleteSpace } from '../../journey/space/space.request.params';
+import { createOrgAndSpaceWithUsers } from '@test/utils/data-setup/entities';
+import {
+  createInnovationFlowTemplate,
+  deleteInnovationFlowTemplate,
+  updateInnovationFlowTemplate,
+} from './collaboration-template.request.params';
+import { getInnovationFlowTemplatesCountForSpace } from './collaboration-template-space.request.params';
 import {
   emptyLifecycleDefaultDefinition,
   errorAuthCreateInnovationFlow,
@@ -12,16 +21,7 @@ import {
   lifecycleDefaultDefinition,
   lifecycleDefinitionUpdate,
   templateInfoUpdate,
-} from '../lifecycle/innovation-flow-template-testdata';
-import {
-  createInnovationFlowTemplate,
-  deleteInnovationFlowTemplate,
-  getInnovationFlowTemplatesCountForSpace,
-  updateInnovationFlowTemplate,
-} from '../lifecycle/innovation-flow.request.params';
-import { deleteOrganization } from '../../contributor-management/organization/organization.request.params';
-import { createOrgAndSpaceWithUsers } from '@test/utils/data-setup/entities';
-import { entitiesId } from '@test/types/entities-helper';
+} from './collaboration-template-testdata';
 
 const organizationName = 'lifec-org-name' + uniqueId;
 const hostNameId = 'lifec-org-nameid' + uniqueId;
@@ -136,9 +136,7 @@ describe('InnovationFlow templates - CRUD', () => {
     );
 
     // Act
-    const resDeleteTemplate = await deleteInnovationFlowTemplate(
-      templateId
-    );
+    const resDeleteTemplate = await deleteInnovationFlowTemplate(templateId);
 
     const countAfter = await getInnovationFlowTemplatesCountForSpace(
       entitiesId.spaceId
@@ -196,7 +194,9 @@ describe('InnovationFlow templates - CRUD', () => {
           description: profile.description ?? null,
         })
       );
-      expect(templateData?.innovationFlow?.states).toEqual(states);
+      expect(templateData?.collaboration?.innovationFlow.states).toEqual(
+        states
+      );
     });
   });
 });
