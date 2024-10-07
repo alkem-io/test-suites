@@ -5,19 +5,19 @@ import { uniqueId } from '@test/utils/mutations/create-mutation';
 import { TestUser } from '@test/utils/token.helper';
 import { createOrgAndSpaceWithUsers } from '@test/utils/data-setup/entities';
 import {
-  createInnovationFlowTemplate,
-  deleteInnovationFlowTemplate,
-  updateInnovationFlowTemplate,
+  createCollaborationTemplate,
+  deleteCollaborationTemplate,
+  updateCollaborationTemplate,
 } from './collaboration-template.request.params';
-import { getInnovationFlowTemplatesCountForSpace } from './collaboration-template-space.request.params';
+import { getCollaborationTemplatesCountForSpace } from './collaboration-template-space.request.params';
 import {
   emptyLifecycleDefaultDefinition,
-  errorAuthCreateInnovationFlow,
-  errorAuthDeleteInnovationFlow,
-  errorAuthUpdateInnovationFlow,
-  errorDeleteLastInnovationFlowTemplate,
+  errorAuthCreateCollaboration,
+  errorAuthDeleteCollaboration,
+  errorAuthUpdateCollaboration,
+  errorDeleteLastCollaborationTemplate,
   errorInvalidDescription,
-  errorNoInnovationFlow,
+  errorNoCollaboration,
   lifecycleDefaultDefinition,
   lifecycleDefinitionUpdate,
   templateInfoUpdate,
@@ -42,103 +42,103 @@ afterAll(async () => {
   await deleteOrganization(entitiesId.organization.id);
 });
 
-describe('InnovationFlow templates - Remove last template', () => {
+describe('Collaboration templates - Remove last template', () => {
   // skipping until we decide if we still want to be able to remove the last template
-  test.skip('should NOT delete default innovationFlow templates, as they are the only', async () => {
+  test.skip('should NOT delete default collaboration templates, as they are the only', async () => {
     // Arrange
-    const countBefore = await getInnovationFlowTemplatesCountForSpace(
+    const countBefore = await getCollaborationTemplatesCountForSpace(
       entitiesId.spaceId
     );
 
     // Act
-    const res1 = await deleteInnovationFlowTemplate(
-      entitiesId.space.innovationFlowTemplateOppId,
+    const res1 = await deleteCollaborationTemplate(
+      entitiesId.space.subspaceCollaborationTemplateId,
       TestUser.GLOBAL_ADMIN
     );
-    const res2 = await deleteInnovationFlowTemplate(
-      entitiesId.space.innovationFlowTemplateChId,
+    const res2 = await deleteCollaborationTemplate(
+      entitiesId.space.subspaceCollaborationTemplateId,
       TestUser.GLOBAL_ADMIN
     );
 
-    const countAfter = await getInnovationFlowTemplatesCountForSpace(
+    const countAfter = await getCollaborationTemplatesCountForSpace(
       entitiesId.spaceId
     );
 
     // Assert
     expect(countAfter).toEqual(countBefore);
     expect(res1.error?.errors[0].message).toContain(
-      errorDeleteLastInnovationFlowTemplate
+      errorDeleteLastCollaborationTemplate
     );
     expect(res2.error?.errors[0].message).toContain(
-      errorDeleteLastInnovationFlowTemplate
+      errorDeleteLastCollaborationTemplate
     );
   });
 
   // skipping until we decide if we still want to be able to remove the last template
-  test.skip('should delete default innovationFlow templates, as there are new with same types', async () => {
+  test.skip('should delete default collaboration templates, as there are new with same types', async () => {
     // Arrange
-    const resTemplateOne = await createInnovationFlowTemplate(
+    const resTemplateOne = await createCollaborationTemplate(
       entitiesId.space.templateSetId,
-      { profile: { displayName: 'inno1' } }
+      { profileData: { displayName: 'inno1' } }
     );
     templateId = resTemplateOne?.data?.createTemplate.id ?? '';
 
     // Arrange
-    const resTemplateTwo = await createInnovationFlowTemplate(
+    const resTemplateTwo = await createCollaborationTemplate(
       entitiesId.space.templateSetId,
       { profile: { displayName: 'inno2' } }
     );
     templateId = resTemplateTwo?.data?.createTemplate.id ?? '';
 
-    const countBefore = await getInnovationFlowTemplatesCountForSpace(
+    const countBefore = await getCollaborationTemplatesCountForSpace(
       entitiesId.spaceId
     );
 
     // Act
-    const res1 = await deleteInnovationFlowTemplate(
-      entitiesId.space.innovationFlowTemplateOppId,
+    const res1 = await deleteCollaborationTemplate(
+      entitiesId.space.subspaceCollaborationTemplateId,
       TestUser.GLOBAL_ADMIN
     );
-    const res2 = await deleteInnovationFlowTemplate(
-      entitiesId.space.innovationFlowTemplateChId,
+    const res2 = await deleteCollaborationTemplate(
+      entitiesId.space.subspaceCollaborationTemplateId,
       TestUser.GLOBAL_ADMIN
     );
 
-    const countAfter = await getInnovationFlowTemplatesCountForSpace(
+    const countAfter = await getCollaborationTemplatesCountForSpace(
       entitiesId.spaceId
     );
 
     // Assert
     expect(countAfter).toEqual((countBefore as number) - 2);
     expect(res1.data?.deleteTemplate.id).toEqual(
-      entitiesId.space.innovationFlowTemplateOppId
+      entitiesId.space.subspaceCollaborationTemplateId
     );
     expect(res2.data?.deleteTemplate.id).toEqual(
-      entitiesId.space.innovationFlowTemplateChId
+      entitiesId.space.subspaceCollaborationTemplateId
     );
   });
 });
 
-describe('InnovationFlow templates - CRUD', () => {
+describe('Collaboration templates - CRUD', () => {
   afterEach(async () => {
-    await deleteInnovationFlowTemplate(templateId);
+    await deleteCollaborationTemplate(templateId);
   });
-  test('Delete innovationFlow template', async () => {
+  test('Delete collaboration template', async () => {
     // Arrange
 
-    const res = await createInnovationFlowTemplate(
+    const res = await createCollaborationTemplate(
       entitiesId.space.templateSetId,
       { displayName: 'inno3' }
     );
     templateId = res?.data?.createTemplate.id ?? '';
-    const countBefore = await getInnovationFlowTemplatesCountForSpace(
+    const countBefore = await getCollaborationTemplatesCountForSpace(
       entitiesId.spaceId
     );
 
     // Act
-    const resDeleteTemplate = await deleteInnovationFlowTemplate(templateId);
+    const resDeleteTemplate = await deleteCollaborationTemplate(templateId);
 
-    const countAfter = await getInnovationFlowTemplatesCountForSpace(
+    const countAfter = await getCollaborationTemplatesCountForSpace(
       entitiesId.spaceId
     );
 
@@ -147,14 +147,14 @@ describe('InnovationFlow templates - CRUD', () => {
     expect(resDeleteTemplate?.data?.deleteTemplate.id).toEqual(templateId);
   });
 
-  test('Update innovationFlow template', async () => {
-    const res = await createInnovationFlowTemplate(
+  test('Update collaboration template', async () => {
+    const res = await createCollaborationTemplate(
       entitiesId.space.templateSetId,
       { displayName: 'inno4' }
     );
     const templateId = res?.data?.createTemplate.id ?? '';
 
-    const resUpdateTemplate = await updateInnovationFlowTemplate(
+    const resUpdateTemplate = await updateCollaborationTemplate(
       templateId,
       templateInfoUpdate,
       lifecycleDefinitionUpdate
@@ -172,7 +172,7 @@ describe('InnovationFlow templates - CRUD', () => {
     );
   });
 
-  describe('Create innovationFlow template', () => {
+  describe('Create collaboration template', () => {
     // Arrange
     test.each`
       profile                                          | states
@@ -180,7 +180,7 @@ describe('InnovationFlow templates - CRUD', () => {
       ${{ displayName: 'inno6', description: 'desc' }} | ${lifecycleDefaultDefinition}
     `('should create inovation flow template', async ({ profile, states }) => {
       // Act
-      const res = await createInnovationFlowTemplate(
+      const res = await createCollaborationTemplate(
         entitiesId.space.templateSetId,
         profile,
         states
@@ -203,39 +203,39 @@ describe('InnovationFlow templates - CRUD', () => {
 
 describe('Post templates - Negative Scenarios', () => {
   afterEach(async () => {
-    await deleteInnovationFlowTemplate(templateId);
+    await deleteCollaborationTemplate(templateId);
   });
   // I think it shouldn't fail
-  test.skip('Should fail creation of identical innovationFlow templates', async () => {
+  test.skip('Should fail creation of identical collaboration templates', async () => {
     // Arrange
-    const countBefore = await getInnovationFlowTemplatesCountForSpace(
+    const countBefore = await getCollaborationTemplatesCountForSpace(
       entitiesId.spaceId
     );
 
     // Act
-    const resTemplateOne = await createInnovationFlowTemplate(
+    const resTemplateOne = await createCollaborationTemplate(
       entitiesId.space.templateSetId
     );
     const templateData = resTemplateOne?.data?.createTemplate;
     templateId = templateData?.id ?? '';
     const templateName = templateData?.profile?.displayName;
 
-    const resTemplateTwo = await createInnovationFlowTemplate(
+    const resTemplateTwo = await createCollaborationTemplate(
       entitiesId.space.templateSetId
     );
 
-    const countAfter = await getInnovationFlowTemplatesCountForSpace(
+    const countAfter = await getCollaborationTemplatesCountForSpace(
       entitiesId.spaceId
     );
 
     // Assert
     expect(countAfter).toEqual((countBefore as number) + 1);
     expect(resTemplateTwo.error?.errors[0].message).toEqual(
-      `InnovationFlow Template with the provided name already exists: ${templateName}`
+      `Collaboration Template with the provided name already exists: ${templateName}`
     );
   });
 
-  describe('Should FAIL to create innovationFlow template', () => {
+  describe('Should FAIL to create collaboration template', () => {
     // Arrange
     test.each`
       definition                         | info                         | result                     | errorType
@@ -244,7 +244,7 @@ describe('Post templates - Negative Scenarios', () => {
       'should fail to create template with invalid: "$errorType"',
       async ({ definition, info, result }) => {
         // Act
-        const res = await createInnovationFlowTemplate(
+        const res = await createCollaborationTemplate(
           entitiesId.space.templateSetId,
           info,
           definition
@@ -256,33 +256,33 @@ describe('Post templates - Negative Scenarios', () => {
     );
   });
 
-  test('Delete non existent InnovationFlow template', async () => {
+  test('Delete non existent Collaboration template', async () => {
     // Act
-    const res = await deleteInnovationFlowTemplate(
+    const res = await deleteCollaborationTemplate(
       '0bade07d-6736-4ee2-93c0-b2af22a998ff'
     );
 
     // Assert
-    expect(res.error?.errors[0]?.message).toContain(errorNoInnovationFlow);
+    expect(res.error?.errors[0]?.message).toContain(errorNoCollaboration);
   });
 });
 
-describe('InnovationFlow templates - CRUD Authorization', () => {
-  describe('InnovationFlow templates - Create', () => {
-    describe('DDT user privileges to create space innovationFlow template - positive', () => {
+describe('Collaboration templates - CRUD Authorization', () => {
+  describe('Collaboration templates - Create', () => {
+    describe('DDT user privileges to create space collaboration template - positive', () => {
       // Arrange
       afterEach(async () => {
-        await deleteInnovationFlowTemplate(templateId);
+        await deleteCollaborationTemplate(templateId);
       });
       test.each`
         userRole                 | message    | profile
         ${TestUser.GLOBAL_ADMIN} | ${'inno8'} | ${{ displayName: 'inno8' }}
         ${TestUser.HUB_ADMIN}    | ${'inno9'} | ${{ displayName: 'inno9' }}
       `(
-        'User: "$userRole" creates successfully space innovationFlow template ',
+        'User: "$userRole" creates successfully space collaboration template ',
         async ({ userRole, message, profile }) => {
           // Act
-          const resTemplateOne = await createInnovationFlowTemplate(
+          const resTemplateOne = await createCollaborationTemplate(
             entitiesId.space.templateSetId,
             profile,
             lifecycleDefaultDefinition,
@@ -300,17 +300,17 @@ describe('InnovationFlow templates - CRUD Authorization', () => {
       );
     });
 
-    describe('DDT user privileges to create space innovationFlow template - negative', () => {
+    describe('DDT user privileges to create space collaboration template - negative', () => {
       // Arrange
       test.each`
-        userRole                   | message                          | profile
-        ${TestUser.HUB_MEMBER}     | ${errorAuthCreateInnovationFlow} | ${{ displayName: 'inno10' }}
-        ${TestUser.NON_HUB_MEMBER} | ${errorAuthCreateInnovationFlow} | ${{ displayName: 'inno11' }}
+        userRole                   | message                         | profile
+        ${TestUser.HUB_MEMBER}     | ${errorAuthCreateCollaboration} | ${{ displayName: 'inno10' }}
+        ${TestUser.NON_HUB_MEMBER} | ${errorAuthCreateCollaboration} | ${{ displayName: 'inno11' }}
       `(
-        'User: "$userRole" get error message: "$message", when intend to create space innovationFlow template ',
+        'User: "$userRole" get error message: "$message", when intend to create space collaboration template ',
         async ({ userRole, message, profile }) => {
           // Act
-          const resTemplateOne = await createInnovationFlowTemplate(
+          const resTemplateOne = await createCollaborationTemplate(
             entitiesId.space.templateSetId,
             profile,
             lifecycleDefaultDefinition,
@@ -324,9 +324,9 @@ describe('InnovationFlow templates - CRUD Authorization', () => {
     });
   });
 
-  describe('InnovationFlow templates - Update', () => {
+  describe('Collaboration templates - Update', () => {
     beforeAll(async () => {
-      const resCreateLifecycleTempl = await createInnovationFlowTemplate(
+      const resCreateLifecycleTempl = await createCollaborationTemplate(
         entitiesId.space.templateSetId,
         { displayName: 'inno12' }
       );
@@ -334,10 +334,10 @@ describe('InnovationFlow templates - CRUD Authorization', () => {
       templateId = templateData?.id ?? '';
     });
     afterAll(async () => {
-      await deleteInnovationFlowTemplate(templateId);
+      await deleteCollaborationTemplate(templateId);
     });
 
-    describe('DDT user privileges to update space innovationFlow template', () => {
+    describe('DDT user privileges to update space collaboration template', () => {
       // Arrange
 
       test.each`
@@ -345,10 +345,10 @@ describe('InnovationFlow templates - CRUD Authorization', () => {
         ${TestUser.GLOBAL_ADMIN} | ${templateInfoUpdate.displayName}
         ${TestUser.HUB_ADMIN}    | ${templateInfoUpdate.displayName}
       `(
-        'User: "$userRole" get message: "$message", when intend to update space innovationFlow template ',
+        'User: "$userRole" get message: "$message", when intend to update space collaboration template ',
         async ({ userRole, message }) => {
           // Act
-          const resUpdateTemplate = await updateInnovationFlowTemplate(
+          const resUpdateTemplate = await updateCollaborationTemplate(
             templateId,
             templateInfoUpdate,
             lifecycleDefaultDefinition,
@@ -364,13 +364,13 @@ describe('InnovationFlow templates - CRUD Authorization', () => {
 
       test.each`
         userRole                   | message
-        ${TestUser.HUB_MEMBER}     | ${errorAuthUpdateInnovationFlow}
-        ${TestUser.NON_HUB_MEMBER} | ${errorAuthUpdateInnovationFlow}
+        ${TestUser.HUB_MEMBER}     | ${errorAuthUpdateCollaboration}
+        ${TestUser.NON_HUB_MEMBER} | ${errorAuthUpdateCollaboration}
       `(
-        'User: "$userRole" get ERROR message: "$message", when intend to update space innovationFlow template ',
+        'User: "$userRole" get ERROR message: "$message", when intend to update space collaboration template ',
         async ({ userRole, message }) => {
           // Act
-          const resUpdateTemplate = await updateInnovationFlowTemplate(
+          const resUpdateTemplate = await updateCollaborationTemplate(
             templateId,
             templateInfoUpdate,
             lifecycleDefaultDefinition,
@@ -384,28 +384,28 @@ describe('InnovationFlow templates - CRUD Authorization', () => {
     });
   });
 
-  describe('InnovationFlow templates - Remove', () => {
-    describe('DDT user privileges to remove space innovationFlow template', () => {
+  describe('Collaboration templates - Remove', () => {
+    describe('DDT user privileges to remove space collaboration template', () => {
       // Arrange
       afterEach(async () => {
-        await deleteInnovationFlowTemplate(templateId);
+        await deleteCollaborationTemplate(templateId);
       });
       test.each`
         userRole                 | profile
         ${TestUser.GLOBAL_ADMIN} | ${{ displayName: 'inno13' }}
         ${TestUser.HUB_ADMIN}    | ${{ displayName: 'inno14' }}
       `(
-        'User: "$userRole" get message: "$message", when intend to remove space innovationFlow template ',
+        'User: "$userRole" get message: "$message", when intend to remove space collaboration template ',
         async ({ userRole, profile }) => {
           // Act
-          const resCreateLifecycleTempl = await createInnovationFlowTemplate(
+          const resCreateLifecycleTempl = await createCollaborationTemplate(
             entitiesId.space.templateSetId,
             profile
           );
           const templateData = resCreateLifecycleTempl?.data?.createTemplate;
           templateId = templateData?.id ?? '';
 
-          const removeRes = await deleteInnovationFlowTemplate(
+          const removeRes = await deleteCollaborationTemplate(
             templateId,
             userRole
           );
@@ -415,21 +415,21 @@ describe('InnovationFlow templates - CRUD Authorization', () => {
       );
 
       test.each`
-        userRole                   | message                          | profile
-        ${TestUser.HUB_MEMBER}     | ${errorAuthDeleteInnovationFlow} | ${{ displayName: 'inno15' }}
-        ${TestUser.NON_HUB_MEMBER} | ${errorAuthDeleteInnovationFlow} | ${{ displayName: 'inno16' }}
+        userRole                   | message                         | profile
+        ${TestUser.HUB_MEMBER}     | ${errorAuthDeleteCollaboration} | ${{ displayName: 'inno15' }}
+        ${TestUser.NON_HUB_MEMBER} | ${errorAuthDeleteCollaboration} | ${{ displayName: 'inno16' }}
       `(
-        'User: "$userRole" get ERROR message: "$message", when intend to remove space innovationFlow template ',
+        'User: "$userRole" get ERROR message: "$message", when intend to remove space collaboration template ',
         async ({ userRole, message, profile }) => {
           // Act
-          const resCreateLifecycleTempl = await createInnovationFlowTemplate(
+          const resCreateLifecycleTempl = await createCollaborationTemplate(
             entitiesId.space.templateSetId,
             profile
           );
           const templateData = resCreateLifecycleTempl?.data?.createTemplate;
           templateId = templateData?.id ?? '';
 
-          const removeRes = await deleteInnovationFlowTemplate(
+          const removeRes = await deleteCollaborationTemplate(
             templateId,
             userRole
           );

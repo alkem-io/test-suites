@@ -1,35 +1,22 @@
 import { TestUser } from '@test/utils/token.helper';
-
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
-import { TemplateType } from '@test/generated/alkemio-schema';
 import {
-  lifecycleDefaultDefinition,
+  createCollaborationInputData,
   templateDefaultInfo,
 } from './collaboration-template-testdata';
 
-export const createInnovationFlowTemplate = async (
+export const createCollaborationTemplate = async (
   templatesSetId: string,
-  profile: any = templateDefaultInfo,
-  states: {
-    displayName: string;
-    description: string;
-  }[] = lifecycleDefaultDefinition,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.createTemplate(
+    graphqlClient.createCollaborationTemplate(
       {
-        templatesSetId,
-        profile,
-        type: TemplateType.InnovationFlow,
-        innovationFlowData: {
-          profile: {
-            displayName: 'template',
-          },
-          states,
-        },
+        profileData: templateDefaultInfo,
+        collaborationData: createCollaborationInputData,
+        templatesSetId: templatesSetId,
       },
       {
         authorization: `Bearer ${authToken}`,
@@ -38,13 +25,9 @@ export const createInnovationFlowTemplate = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const updateInnovationFlowTemplate = async (
+export const updateCollaborationTemplate = async (
   templateId: string,
   profile: any = templateDefaultInfo,
-  states: {
-    displayName: string;
-    description: string;
-  }[] = lifecycleDefaultDefinition,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
@@ -53,9 +36,6 @@ export const updateInnovationFlowTemplate = async (
       {
         templateId,
         profile,
-        innovationFlow: {
-          states,
-        },
       },
       {
         authorization: `Bearer ${authToken}`,
@@ -64,7 +44,7 @@ export const updateInnovationFlowTemplate = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const deleteInnovationFlowTemplate = async (
+export const deleteCollaborationTemplate = async (
   ID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {

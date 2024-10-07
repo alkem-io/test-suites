@@ -3,26 +3,7 @@ import { getSpaceData } from '../../journey/space/space.request.params';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 
-export const updateInnovationFlowState = async (
-  innovationFlowId: string,
-  selectedState: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string | undefined) =>
-    graphqlClient.UpdateInnovationFlowSelectedState(
-      {
-        innovationFlowId,
-        selectedState,
-      },
-      {
-        authorization: `Bearer ${authToken}`,
-      }
-    );
-  return graphqlErrorWrapper(callback, userRole);
-};
-
-export const updateInnovationFlowStatesFromTemplate = async (
+export const updateCollaborationStatesFromTemplate = async (
   innovationFlowID: string,
   innovationFlowTemplateID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
@@ -59,13 +40,13 @@ export const getLifeCycleTemplateForSpaceByLifecycleTitle = async (
   return filteredTemplate;
 };
 
-export const getInnovationFlowTemplatesCountForSpace = async (
+export const getCollaborationTemplatesCountForSpace = async (
   spaceId: string
 ) => {
   const template = await getSpaceData(spaceId);
-  const spaceInnovationFlowTemplates =
+  const spaceCollaborationTemplates =
     template?.data?.space?.templatesManager?.templatesSet
       ?.innovationFlowTemplates.length;
 
-  return spaceInnovationFlowTemplates;
+  return spaceCollaborationTemplates;
 };
