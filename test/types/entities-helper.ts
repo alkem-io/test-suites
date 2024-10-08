@@ -89,7 +89,7 @@ export const entitiesId: EntityIds = {
     discussionCalloutCommentsId: '',
     templateId: '',
     templateSetId: '',
-    subspaceCollaborationTemplateId: '';
+    subspaceCollaborationTemplateId: '',
   },
   challenge: {
     id: '',

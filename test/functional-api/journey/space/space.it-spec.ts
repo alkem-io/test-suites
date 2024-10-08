@@ -31,6 +31,7 @@ describe('Space entity', () => {
       spaceNameId,
       orgAccountId
     );
+    console.log('responseEco', responseEco);
     spaceId = responseEco?.data?.space.id ?? '';
   });
 
@@ -39,7 +40,7 @@ describe('Space entity', () => {
     await deleteOrganization(organizationId);
   });
 
-  test('should create space', async () => {
+  test.only('should create space', async () => {
     // Act
     const spaceData = await createSpaceAndGetData(
       spaceName + 'a',

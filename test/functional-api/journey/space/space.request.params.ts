@@ -3,8 +3,8 @@ import {
   SpacePrivacyMode,
   SpaceVisibility,
 } from '../../../generated/alkemio-schema';
-import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { TestUser } from '../../../utils/token.helper';
+import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
 
 const uniqueId = Math.random()
@@ -22,16 +22,16 @@ export const createSpaceBasicData = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.createSpace(
+    graphqlClient.createSpaceBasicData(
       {
         spaceData: {
           nameID: spaceNameId,
           profileData: {
             displayName: spaceName,
           },
-          collaborationData: {
-            addDefaultCallouts: true,
-          },
+          // collaborationData: {
+          //   addDefaultCallouts: true,
+          // },
           accountID,
         },
       },
@@ -372,3 +372,13 @@ export const getUserRoleSpacesVisibility = async (
 
   return graphqlErrorWrapper(callback, userRole);
 };
+function graphqlErrorWrapper(
+  callback: (authToken: string | undefined) => any,
+  userRole: TestUser
+) {
+  throw new Error('Function not implemented.');
+}
+
+function getGraphqlClient() {
+  throw new Error('Function not implemented.');
+}
