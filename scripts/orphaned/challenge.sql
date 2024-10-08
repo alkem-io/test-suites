@@ -1,0 +1,14 @@
+SELECT * FROM alkemio.challenge;
+SELECT * FROM alkemio.challenge where nameID = '' or nameID is null;
+SELECT * FROM alkemio.challenge where authorizationId = '' or authorizationId is null;
+SELECT * FROM alkemio.challenge where contextId = '' or contextId is null;
+SELECT * FROM alkemio.challenge where communityId = '' or communityId is null;
+SELECT * FROM alkemio.challenge where agentId = '' or agentId is null;
+SELECT * FROM alkemio.challenge where spaceId = '' or spaceId is null;
+SELECT * FROM alkemio.challenge where collaborationId = '' or collaborationId is null;
+SELECT * FROM alkemio.challenge where profileId = '' or profileId is null;
+SELECT * FROM alkemio.challenge where storageAggregatorId = '' or storageAggregatorId is null;
+SELECT * FROM alkemio.challenge where accountId = '' or accountId is null;
+SELECT * FROM alkemio.challenge where type = '' or type is null;
+SELECT * FROM alkemio.challenge where settingsStr = '' or settingsStr is null;
+SELECT * FROM alkemio.challenge where level = '' or level is null;

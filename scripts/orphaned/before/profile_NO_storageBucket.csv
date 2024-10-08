@@ -1,0 +1,92 @@
+id,createdDate,updatedDate,version,description,authorizationId,locationId,displayName,tagline,storageBucketId,type
+00851035-ec41-4f17-8bfe-9d8965656e74,"2023-07-28 08:14:00.201059","2023-10-10 13:24:50.508393",1,,f595e5cb-6d3b-4830-9305-09b6dbea46fb,430da599-9c59-4a9a-8711-1856eea7a1ca,,,NULL,innovation-flow
+0531a880-3780-4ea7-9251-35be01fbba0e,"2023-05-11 07:35:30.129961","2023-05-11 07:35:30.129961",1,"An Innovation Hub to demonstrate filtering by visibility",2a4febae-cb06-4b3b-a9ee-4cb4f7ab58fb,db0d2fda-d954-4824-830a-63753efb260c,"Demo Visibility Innovation Hub","An Innovation Hub to demonstrate filtering by visibility",NULL,
+05d1fa70-b95a-40e0-80d6-42dfc4ff0f21,"2023-03-21 12:48:39.701238","2023-10-10 13:24:50.607307",1,"Please share your contribution. The more details the better!",d6757930-712d-4125-bf60-c29df699984a,d36fc493-4657-44a3-ac1a-f0db8d66c303,"my test card",,NULL,post
+06c96245-5eb5-4752-b64b-cc1917543596,"2023-05-11 07:36:06.565606","2023-05-11 07:36:06.565606",1,"An Innovation Hub to demonstrate filtering by visibility",dff00921-22e8-43ae-977d-3208e45a9b8e,60bcf237-c33b-4941-b18a-1c25592b604f,"Demo Visibility Innovation Hub","An Innovation Hub to demonstrate filtering by visibility",NULL,
+07278ca6-4036-42e1-be5b-380d85cc801c,"2023-07-20 06:52:57.283670","2023-07-20 06:52:57.283670",1,,babd2eb0-92dc-4017-8017-96f454a2d8f2,185a7af9-888f-449d-8201-3046aaf96c4a,111,,NULL,
+0bd2c52b-feb6-4856-888f-d48836ade799,"2023-05-11 14:27:15.786458","2023-11-06 14:19:44.894326",1,,8e87045b-8838-4753-81fa-dbba43c2a469,fd904339-d492-44bb-aeae-2d349c168aef,test,,NULL,callout-framing
+0e957995-0adb-48fb-90c1-32847b27cd2b,"2023-05-11 14:39:21.517063","2023-11-06 14:19:44.894326",1,,40f8d726-0716-4847-9f9b-842179f4961f,29619a42-6606-43e8-a691-54ba5f5c1710,222,,NULL,callout-framing
+167332dc-a934-47d5-a95d-ee8ae5ef4c30,"2023-03-21 12:48:40.620485","2023-10-10 13:24:50.607307",1,"Please share your contribution. The more details the better!",40e08519-9382-455d-b9eb-48ac446ea91a,a1726289-e815-4fe4-9782-04050000758d,111,,NULL,post
+174ccc0a-e489-4259-aaed-51fa451b9afa,"2023-07-20 13:02:38.349548","2023-07-20 13:02:38.349548",1,,f914c43b-ffb5-4efa-9434-384bb8a7bb00,38bafdbc-ffc6-4ee6-9e14-50feca157a3c,123123123,,NULL,
+1923fc68-1f1c-4cbc-9ae1-928608daa185,"2023-05-11 07:35:22.541769","2023-05-11 07:35:22.541769",1,"An Innovation Hub to demonstrate filtering by visibility",24e0d52b-4d25-492e-b3fc-5d027ba15fac,21a5ec94-ef83-472c-b8df-85b3f11ae874,"Demo Visibility Innovation Hub","An Innovation Hub to demonstrate filtering by visibility",NULL,
+1ceecc68-1eb9-4cb5-9c14-55df241fe2b7,"2023-07-19 13:26:47.054158","2023-07-19 13:26:47.054158",1,,41723aab-7725-41c0-a22f-79a55238cbf5,c21b4744-31dd-41cc-bef7-9c703915a146,23123,,NULL,
+1f398a25-a5d1-405f-8015-97dbdafccd20,"2023-05-11 14:27:15.890083","2023-05-11 14:27:15.890083",1,,6ae09cc7-5cae-40d3-9175-5d70d4305890,89653780-4e14-4fc9-b612-3fb757aa3c73,Whiteboard:,,NULL,
+23d48424-0edf-4d05-babe-637d05f38cdc,"2023-05-11 07:35:45.906557","2023-05-11 07:35:45.906557",1,"An Innovation Hub to demonstrate filtering by visibility",1baa27d3-1932-4538-92b1-c5c043c89ef8,d6d16b51-dfc0-4ace-a01a-bd29c694d280,"Demo Visibility Innovation Hub","An Innovation Hub to demonstrate filtering by visibility",NULL,
+29ec566e-22ff-4c44-8a4f-18a2b406eb1d,"2023-07-20 11:51:00.396923","2023-07-20 11:51:00.396923",1,,5113b54d-a082-468e-a853-ce65a387ead9,b6233101-3ab8-4d07-995e-3a1949ff2b0f,test,,NULL,
+2eb7f773-7211-42e5-a4c9-8cfa6c478f1b,"2023-04-06 13:19:38.921941","2023-04-06 13:19:38.921941",1,"123
+",8ddd41ac-cab5-40a7-a3e3-e955f3cea51f,e97693b3-c99e-4f38-ac72-6573778fe8c3,123,,NULL,
+31545d49-20d8-4865-8ad2-10db72bff8e2,"2023-07-19 14:18:49.379502","2023-07-19 14:18:49.379502",1,,437297db-127e-444d-bd40-05bf1182b111,3077c390-b61c-4039-b224-426679cbdb01,111,,NULL,
+326eaab8-2c80-4be7-9a60-4aea76641583,"2023-04-06 13:11:12.303775","2023-04-06 13:11:12.303775",1,"## Why Alkemio?
+
+Alkemio is about enabling open innovation, across all aspects of society. Connecting. Aligning. Sharing.
+
+Creating an open innovation platform is a pragmatic offering in the context of the wider vision: *"Enabling society to collaborate. Building a better future, together."*
+",9e94ae36-ee1c-43ef-a950-58196fcec9e5,d1edda7a-2c0a-4cca-9bd3-e6e4e907423f,"Innovation Pack from client",,NULL,
+395363c3-fcd4-4db1-afe9-65744db7178b,"2023-07-20 12:39:12.939689","2023-07-20 12:39:12.939689",1,,7518f02b-9526-462e-8b93-57b5c4fbe8b6,12afb921-4339-4f81-9bda-8fa26750d338,tetetete,,NULL,
+3ab4d9fd-a069-4c49-ac90-7a8824eaba23,"2023-07-20 12:36:47.583384","2023-07-20 12:36:47.583384",1,,5fb90557-3a1a-4a3e-94ac-aefb6af20d2b,13959188-38bc-4ce4-9bcf-5cb100273b92,123123,,NULL,
+3ff6ea30-447c-4b7a-a5fc-e17dc80e0c49,"2023-05-11 07:35:01.080479","2023-05-11 07:35:01.080479",1,"An Innovation Hub to demonstrate filtering by visibility",c1bc96b4-493d-4d59-9324-9e22cc408b8f,0b1d213a-707c-4f1c-801b-7c5b2df4a56b,"Demo Visibility Innovation Hub","An Innovation Hub to demonstrate filtering by visibility",NULL,
+40184d81-ef80-41db-a4de-2b9943d2f2d6,"2023-05-11 14:26:26.227767","2023-11-06 14:19:44.894326",1,"[![Alkemio Logo](https://camo.githubusercontent.com/27b3fe0f4c5ae7cbcbc1e9aac0f1254c72117b4440a2b677a295fcdebd4ab9ee/68747470733a2f2f616c6b656d696f2e666f756e646174696f6e2f75706c6f6164732f6c6f676f732f616c6b656d696f2d6c6f676f2e737667)](https://alkemio.foundation/)
+
+*Empowering society. The platform to succeed in working on challenges, together.*
+
+Alkemio is an open source, open innovation platform. It puts the Challenges central.
+",10805455-b6ec-4055-8b66-7a4b2d4e9057,9cb9104e-d4ea-40ee-8911-e2725cbab30a,"white board callout single",,NULL,callout-framing
+40cdae93-8448-4279-ac8d-bef574803342,"2023-05-11 14:39:21.674938","2023-05-11 14:39:21.674938",1,,b4f0eff7-a9d4-46e7-9f3a-a7bb0a4dfe48,18897a85-9832-4c7f-be18-bb8f9336f643,Whiteboard:,,NULL,
+44192727-6482-4796-9322-a7e4dfb36dc2,"2023-05-11 15:35:33.873194","2023-11-06 14:19:44.894326",1,,a0757744-9d7f-4216-8d84-f54040237b4f,1aa9b2e6-10ae-4f24-9d06-f9bd629f3a50,test,,NULL,callout-framing
+4e1aaac8-2ce3-47db-9536-76e95c359395,"2023-04-06 13:55:03.405045","2023-04-06 13:55:03.405045",1,,414882b5-7aae-494c-bd9b-875ecf5f77c4,39f90f8d-6372-427d-9e5b-c00b8136d8e0,"Release-06-04-2023-hub canvas new",,NULL,
+4e26f141-18c4-471c-a625-08b6846fb838,"2023-05-11 07:35:54.751269","2023-05-11 07:35:54.751269",1,"An Innovation Hub to demonstrate filtering by visibility",5727ce96-9eb1-4ba5-8f5e-799a16e304e1,45f7b0a9-b96f-4a12-98c5-f25db2e374bd,"Demo Visibility Innovation Hub","An Innovation Hub to demonstrate filtering by visibility",NULL,
+55ceddaf-c928-4347-aeaa-bae69bc99fa3,"2023-05-11 15:35:33.988429","2023-05-11 15:35:33.988429",1,,2089648b-48ad-440f-8365-495d8e4ca5c5,1de88863-db71-4f8e-ae33-7d03e76edeff,Whiteboard:,,NULL,
+56e15372-bbca-40ea-9bd6-67e4e8a8d0a1,"2023-03-21 12:48:42.620084","2023-10-10 13:24:50.607307",1,test,16b2e343-7ae2-45b8-82c5-df9d37e641e1,24ed4936-5060-4667-86fd-3684d65cad84,Carlos,,NULL,post
+5776ab22-8051-499e-893e-dc0723583a72,"2023-07-20 12:33:20.297540","2023-07-20 12:33:20.297540",1,,e21c98e0-fac0-4225-8205-6e99f12e6a0d,799e5e60-b85c-4435-89a5-9802dba89151,fdfdfdfdf,,NULL,
+5e817b53-2fdc-4a1d-bda2-7e3d4c49645f,"2023-07-20 12:32:42.280249","2023-07-20 12:32:42.280249",1,,52fc4346-b4e7-4acb-804a-e7f89a6ae876,8aec3afb-76cf-4837-97f6-bf682b985104,gfgfgf,,NULL,
+5f875319-a198-4b9b-94b5-2f362624abd6,"2023-08-18 10:35:50.587150","2023-10-10 13:24:50.607307",1,"333
+",040a7469-825c-4635-8b4e-63f0fb83604c,5072e018-8695-4c49-a91d-25d02ca04159,333,,NULL,post
+6a561529-1c98-49ed-9db3-f38ad3dd7a9c,"2023-07-20 07:29:29.079840","2023-07-20 07:29:29.079840",1,"777777
+",2df44cb6-053c-4b2c-a758-17b3b4abeb0f,1c95ec12-b6cb-487f-8fd6-9272520f1ad8,7777777,,NULL,
+6b08484d-befe-4004-a02b-06bb080c0d52,"2023-03-28 12:31:07.814290","2023-03-28 12:31:07.814290",1,release-13-07-22-op,0a5876ce-d448-4bf3-bb47-8d1bc740639e,NULL,release-13-07-22-op,,NULL,
+6be01b68-2ab5-44ca-90bf-1330db8beafe,"2023-03-21 12:48:42.440514","2023-10-10 13:24:50.607307",1,"Please share your contribution. Th__e more details the__ better! Dnrnenen
+
+😁😂🙉",616240fa-1e18-4878-9fda-965bafa18aa3,1c7091ef-4f87-40b1-b343-96e84210d180,Test,,NULL,post
+70d45119-6162-4429-8c09-b4b240add09f,"2023-03-21 12:48:39.732785","2023-10-10 13:24:50.607307",1,"Please share your contribution. The more details the better! I",ad121a66-5635-4b24-89f0-b25cba19bb44,5318ec7a-1e7c-4263-a732-8e82720fd8a4,Valentin,,NULL,post
+72be7653-f146-4ddf-8025-73bffe9bd22f,"2023-05-11 07:35:36.512499","2023-05-11 07:35:36.512499",1,"An Innovation Hub to demonstrate filtering by visibility",97c5af98-0c37-4daf-aa04-2225a1949b43,0b27b152-2d16-4692-82bf-c12c7dcf6c95,"Demo Visibility Innovation Hub","An Innovation Hub to demonstrate filtering by visibility",NULL,
+8342f207-6cb5-4cfb-98b2-72379ec3e094,"2023-07-19 13:27:40.715040","2023-07-19 13:27:40.715040",1,,b62fc0d0-9b59-4e32-a2a4-d7e44da2301d,7f46a576-27ec-4b44-917b-f48390a386aa,78678,,NULL,
+84416ed7-269e-4cad-b721-7aef96d12dc4,"2023-07-20 09:00:21.389087","2023-10-10 13:24:50.508393",1,,778f39f4-1cd2-4ad3-98e8-39eb7e9f4cfc,22e27b44-a85f-4c16-85c7-67e88e9dfecc,,,NULL,innovation-flow
+847f3b76-7b8a-431c-ae65-cb021297687d,"2023-03-21 12:48:41.450735","2023-10-10 13:24:50.607307",1,"Please share your contribution. The more details the better!",75dcc9c7-58ea-43f2-b1aa-78bf73777bf4,c68d2198-b188-40be-b5d9-da461472b074,111,,NULL,post
+8f5d3b24-64d2-48e4-b84e-1da0ea103cec,"2023-03-21 12:48:39.448471","2023-10-10 13:24:50.607307",1,"Please share your contribution. The more details the better!",c7844ce9-a14c-4e59-9ae3-8e3ee044e3bb,871615b8-3ae7-4b19-aae8-c929c32e9e54,111,,NULL,post
+8f97c07b-a73e-4c65-974f-1b99c9a72c98,"2023-04-06 13:51:16.424488","2023-04-06 13:51:16.424488",1,,26be2878-32fb-4e7e-95df-f1cea72adb8e,2552a4d6-1ff1-4388-ac5e-e461c5699aea,"Release-06-04-2023-hub canvas",,NULL,
+9746efd6-29e2-426e-a099-94a172f8cadd,"2023-03-21 12:48:38.986188","2023-10-10 13:24:50.607307",1,"Please share your contribution. The more details the better!",57b8cc39-a0c3-404b-b0bd-2b050950895d,ff6279e2-8d67-45d0-bd2f-a02f134b2a22,111,,NULL,post
+9b1d87ae-095e-4142-a4ac-e92a79dc51b5,"2023-07-20 12:32:02.573553","2023-07-20 12:32:02.573553",1,,6ee61d40-452e-4ea5-a57f-5028ff8aec7c,51ee9cf1-7c71-41fd-bfd3-2192493dd525,fdfdfdfd,,NULL,
+9c098c3b-d5fc-45d3-9dfc-496f971c0539,"2023-07-20 11:58:21.543483","2023-07-20 11:58:21.543483",1,,396a8838-a1e0-48d8-8275-f1ea2be36f52,59984cc3-0a1b-40d8-9620-3f8cc9636569,fffffff,,NULL,
+a2d9372a-dbeb-4290-8573-96d4fded0f6b,"2023-03-21 12:48:40.541067","2023-10-10 13:24:50.607307",1,"Please describe the related initiative that is relevant.",57763424-966a-444c-8068-3eea211e0eda,adae9b0f-aca8-476d-ba49-c30b8bf260e8,test,,NULL,post
+a3b60648-b01c-4fa8-add9-af7550e97f28,"2023-07-20 12:38:39.822876","2023-07-20 12:38:39.822876",1,,b35a5648-fad8-433d-a8e9-ef434336f518,ae6dfb4e-1463-4311-8aa8-e59cf6f8b7ba,ttttttttt,,NULL,
+a71a8995-fd66-48d9-bffe-8a968dabddac,"2023-07-20 11:57:50.497575","2023-07-20 11:57:50.497575",1,,0e5e9cff-8847-4282-8423-2fdd7bae7b87,868d9df5-edd7-4900-9ba8-18820cadaed0,ttttttttt,,NULL,
+aa084487-6820-4877-b093-3c89d0007cd0,"2023-07-19 13:30:39.690925","2023-07-19 13:30:39.690925",1,,ed71b74a-ca93-465f-a09c-de02459dd4e1,f423368e-3ce3-4e88-a29f-f8d772e3593c,1232112,,NULL,
+b7111a12-b552-46d6-a454-a25049dcc201,"2023-03-21 12:48:40.324793","2023-10-10 13:24:50.607307",1,"<br> 
+
+## test",fb9a91f7-2f19-4658-a634-b17461e1f600,addd9da8-d62c-4e60-a54b-339887ac045e,"<br> ",,NULL,post
+bf490bd8-85b7-4c59-99bb-ebc345411eff,"2023-03-21 12:48:40.471695","2023-10-10 13:24:50.607307",1,"```
+{
+  "firstName": "John",
+  "lastName": "Smith",
+  "age": 25
+}
+```",065d9b72-512f-4b49-aba0-970a340af662,ea852801-c85f-44ed-a556-a6538c80fa02,"``` {   "firstName": "John",   "lastName": "Smith",   "age": 25 } ```",,NULL,post
+bff5e2d1-e913-486b-be86-6a77b12d5cb3,"2023-05-11 07:35:17.420193","2023-05-11 07:35:17.420193",1,"An Innovation Hub to demonstrate filtering by visibility",fa33ed36-98db-4de4-98bd-770ac417f864,f477cc28-4f10-40c8-b3ac-51ef9e63b34e,"Demo Visibility Innovation Hub","An Innovation Hub to demonstrate filtering by visibility",NULL,
+c138fde3-8130-4ac9-846f-a2cf7056ebf8,"2023-05-11 07:35:17.998125","2023-05-11 07:35:17.998125",1,"An Innovation Hub to demonstrate filtering by visibility",2fcd2d5f-673d-47ca-aa81-cf3c76667e6b,fda1be55-bac8-4b6a-b1a5-f4829094214f,"Demo Visibility Innovation Hub","An Innovation Hub to demonstrate filtering by visibility",NULL,
+c6977a92-532f-41de-aad8-599244f735bc,"2023-07-20 07:24:19.174099","2023-07-20 07:24:19.174099",1,"3333
+",efc8d118-4488-4d3e-bc6c-7b6d606aa973,1174e411-b880-4e6c-b582-a89138bb7fa8,333,,NULL,
+c9c4b9c6-d474-4c81-83bb-d241fc57190e,"2023-07-20 12:37:09.063270","2023-07-20 12:37:09.063270",1,,bd0c018f-88b9-40c4-883d-5d38819d040f,13c74a61-32f6-40cc-afe1-00de41c6e2da,vvvvvv,,NULL,
+cab36644-3c5a-4590-9f9d-3a9c4e80f2c6,"2023-08-18 10:35:44.596499","2023-10-10 13:24:50.607307",1,"333
+",aea2dc14-fa05-47ff-8967-8a9ed4f57eca,c61accdf-76f5-4e79-9931-23fe0990b100,333,,NULL,post
+ce6152bc-fd72-4489-bfaf-825d55dbf8bb,"2023-03-21 12:48:42.003402","2023-10-10 13:24:50.607307",1,"Please share your contribution. The more details the better!",bf3e5615-083c-4bc7-97aa-4076119056b7,44f69121-3f71-43a0-ae8f-451ee658b189,Aaaaaaa,,NULL,post
+d34d7325-5008-4c6e-9d68-49b82dd98b36,"2023-07-20 07:23:58.276738","2023-07-20 07:23:58.276738",1,,463f84a2-3a17-4eb8-812f-9e9ac8179dcb,4970107b-77c8-430d-a51f-8ce7efec8710,tttt,,NULL,
+d87dd601-7840-4fe4-8856-d91544b5c21f,"2023-05-11 14:26:26.295949","2023-05-11 14:26:26.295949",1,,1e2abae5-c9f7-45c8-b432-08066f411451,c0c9e068-f7bf-4a0d-a0b8-44e38a9b7317,Whiteboard:,,NULL,
+dc7ea3dd-e7d9-44a3-a7b8-c36c6c7d4442,"2023-03-21 12:48:41.325691","2023-10-10 13:24:50.607307",1,"Please share your contribution. The more details the better!",6b6c20a4-8beb-4e44-9745-850fd94fd423,335bc7d2-1488-4599-96b3-0cd3d12f54ae,111,,NULL,post
+de9d7d1d-d05e-4f98-bda7-b4e2c62f1420,"2023-03-21 12:48:39.641754","2023-10-10 13:24:50.607307",1,"Please share your contribution. The more details the better!",b1b0bced-4abe-472c-bfe3-5f364545fd17,7b4bc5d5-bb5b-4999-bead-4a189598240e,"release-01-03-2023 card opp",,NULL,post
+e772eb47-212b-4afb-824f-51af17f125d1,"2023-03-01 16:48:36.538252","2023-05-17 14:03:48.482939",2,"
+
+__Lorem Ipsum__ is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
+
+
+",115f0aca-faf9-4a24-b8df-67bcb5d7ec72,14241a60-693e-4f9c-8a45-8393c3c645fa,"Evgeni Dimitrov",,NULL,
+f82417ef-a8d4-4b1f-8660-79d5a8634b3a,"2023-07-10 12:33:18.845458","2023-10-10 13:24:50.508393",1,,12800deb-1ba7-49a3-9148-8305fcbdd268,a256b3e1-2662-4f62-8407-47064093b681,,NULL,NULL,innovation-flow

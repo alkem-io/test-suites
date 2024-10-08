@@ -1,0 +1,14 @@
+SELECT * FROM alkemio.callout;
+SELECT * FROM alkemio.callout where nameID = '' or nameID is null;
+SELECT * FROM alkemio.callout where type = '' or type is null;
+SELECT * FROM alkemio.callout where visibility = '' or visibility is null;
+SELECT * FROM alkemio.callout where authorizationId = '' or authorizationId is null;
+SELECT * FROM alkemio.callout where commentsId = '' or commentsId is null;
+SELECT * FROM alkemio.callout where collaborationId = '' or collaborationId is null;
+SELECT * FROM alkemio.callout where sortOrder = '' or sortOrder is null;
+SELECT * FROM alkemio.callout where publishedBy = '' or publishedBy is null;
+SELECT * FROM alkemio.callout where  publishedDate is null;
+SELECT * FROM alkemio.callout where createdBy = '' or createdBy is null;
+SELECT * FROM alkemio.callout where framingId = '' or framingId is null;
+SELECT * FROM alkemio.callout where contributionPolicyId = '' or contributionPolicyId is null;
+SELECT * FROM alkemio.callout where contributionDefaultsId = '' or contributionDefaultsId is null;

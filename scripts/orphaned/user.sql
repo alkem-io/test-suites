@@ -1,0 +1,12 @@
+SELECT * FROM alkemio.user;
+SELECT * FROM alkemio.user where nameID = '' or nameID is null;
+SELECT * FROM alkemio.user where email = '' or email is null;
+SELECT * FROM alkemio.user where authorizationId = '' or authorizationId is null;
+SELECT * FROM alkemio.user where firstName = '' or firstName is null;
+SELECT * FROM alkemio.user where profileId = '' or profileId is null;
+SELECT * FROM alkemio.user where agentId = '' or agentId is null;
+SELECT * FROM alkemio.user where communicationID = '' or communicationID is null;
+SELECT * FROM alkemio.user where serviceProfile = '' or serviceProfile is null;
+SELECT * FROM alkemio.user where preferenceSetId = '' or preferenceSetId is null;
+SELECT * FROM alkemio.user where storageAggregatorId = '' or storageAggregatorId is null;
+SELECT * FROM alkemio.user where accountID = '' or accountID is null;
