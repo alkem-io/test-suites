@@ -1,0 +1,10 @@
+SELECT * FROM alkemio.organization;
+SELECT * FROM alkemio.organization where nameID = '' or nameID is null;
+SELECT * FROM alkemio.organization where authorizationId = '' or authorizationId is null;
+SELECT * FROM alkemio.organization where profileId = '' or profileId is null;
+SELECT * FROM alkemio.organization where agentId = '' or agentId is null;
+SELECT * FROM alkemio.organization where verificationId = '' or verificationId is null;
+SELECT * FROM alkemio.organization where preferenceSetId = '' or preferenceSetId is null;
+SELECT * FROM alkemio.organization where storageAggregatorId = '' or storageAggregatorId is null;
+SELECT * FROM alkemio.organization where communicationID = '' or communicationID is null;
+SELECT * FROM alkemio.organization where accountID = '' or accountID is null;

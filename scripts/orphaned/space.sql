@@ -1,0 +1,18 @@
+SELECT * FROM alkemio.space;
+SELECT * FROM alkemio.space where nameID = '' or nameID is null;
+SELECT * FROM alkemio.space where authorizationId = '' or authorizationId is null;
+SELECT * FROM alkemio.space where contextId = '' or contextId is null;
+SELECT * FROM alkemio.space where communityId = '' or communityId is null;
+SELECT * FROM alkemio.space where agentId = '' or agentId is null;
+SELECT * FROM alkemio.space where collaborationId = '' or collaborationId is null;
+SELECT * FROM alkemio.space where profileId = '' or profileId is null;
+SELECT * FROM alkemio.space where storageAggregatorId = '' or storageAggregatorId is null;
+SELECT * FROM alkemio.space where accountId = '' or accountId is null;
+SELECT * FROM alkemio.space where type = '' or type is null;
+SELECT * FROM alkemio.space where settingsStr = '' or settingsStr is null;
+SELECT * FROM alkemio.space where level = '' or level is null;
+SELECT * FROM alkemio.space where parentSpaceId = '' or parentSpaceId is null;
+SELECT * FROM alkemio.space where levelZeroSpaceID = '' or levelZeroSpaceID is null;
+SELECT * FROM alkemio.space where visibility = '' or visibility is null;
+SELECT * FROM alkemio.space where libraryId = '' or libraryId is null;
+SELECT * FROM alkemio.space where defaultsId = '' or defaultsId is null;

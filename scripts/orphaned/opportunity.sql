@@ -1,0 +1,14 @@
+SELECT * FROM alkemio.opportunity;
+SELECT * FROM alkemio.opportunity where nameID = '' or nameID is null;
+SELECT * FROM alkemio.opportunity where authorizationId = '' or authorizationId is null;
+SELECT * FROM alkemio.opportunity where contextId = '' or contextId is null;
+SELECT * FROM alkemio.opportunity where communityId = '' or communityId is null;
+SELECT * FROM alkemio.opportunity where agentId = '' or agentId is null;
+SELECT * FROM alkemio.opportunity where challengeId = '' or challengeId is null;
+SELECT * FROM alkemio.opportunity where collaborationId = '' or collaborationId is null;
+SELECT * FROM alkemio.opportunity where profileId = '' or profileId is null;
+SELECT * FROM alkemio.opportunity where storageAggregatorId = '' or storageAggregatorId is null;
+SELECT * FROM alkemio.opportunity where accountId = '' or accountId is null;
+SELECT * FROM alkemio.opportunity where type = '' or type is null;
+SELECT * FROM alkemio.opportunity where settingsStr = '' or settingsStr is null;
+SELECT * FROM alkemio.opportunity where level = '' or level is null;

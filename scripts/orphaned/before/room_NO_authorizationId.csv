@@ -1,0 +1,18 @@
+id,createdDate,updatedDate,version,displayName,externalRoomID,authorizationId,messagesCount,type
+0df9a4fc-9687-49dd-9055-9f3a2a00ae3e,"2023-08-16 15:32:21.970018","2023-08-16 15:32:21.970018",1,calendarEvent-comments-activitylog-1240,!TFOwWBvhbXBlQPjWHn:matrix-acc.alkem.io,NULL,0,calendar_event
+1b7dcf1e-b0d3-4012-94b5-2db61d5e9074,"2023-09-28 10:30:48.453279","2023-09-28 10:31:26.000000",3,calendarEvent-comments-test-5950,!YonRumqUYXwTIWTrdE:matrix-acc.alkem.io,NULL,2,calendar_event
+2743bffd-8439-47dd-9cf2-532a95691cfe,"2023-05-17 15:50:58.959213","2023-06-01 09:35:56.000000",4,calendarEvent-comments-123-5317,!EejAUkGFEtkSgJVhRk:matrix-acc.alkem.io,NULL,3,
+2b5e736e-caaf-40b7-9475-048cfb85ad05,"2023-01-31 15:41:00.898029","2023-04-11 14:40:19.000000",2,calendarEvent-comments-test,!nwcznKquomAVVwRBKd:matrix-acc.alkem.io,NULL,1,
+335f9f0a-0078-44a9-96da-23aa8257a649,"2023-08-16 15:32:25.226925","2023-08-16 15:32:25.226925",1,calendarEvent-comments-activitylog-3356,!RfktdVKXYmkNFIuhGn:matrix-acc.alkem.io,NULL,0,calendar_event
+3c1c1dbf-5f0f-4d4e-b937-2f3475e303e1,"2023-08-16 15:32:19.499025","2023-08-16 15:32:19.499025",1,calendarEvent-comments-activitylog-1098,!dLNfiFtdnWzjFCpYxB:matrix-acc.alkem.io,NULL,0,calendar_event
+3ec7e4a9-fe94-424a-859d-1574c8fa91bf,"2023-04-07 07:11:44.659442","2023-04-07 07:11:52.000000",2,calendarEvent-comments-test-6848,!ivLlnfttPvnIQhHCGI:matrix-acc.alkem.io,NULL,1,
+764260a2-7db1-474d-82ad-8e43cc1de623,"2023-01-31 14:18:17.282505","2023-01-31 14:18:26.000000",2,calendarEvent-comments-test,!CAbZKVOetnfaYjCqDJ:matrix-acc.alkem.io,NULL,1,
+968ae4ef-c423-46c7-bdec-c8397a10d246,"2023-05-15 11:27:35.575270","2023-06-14 14:52:04.000000",15,calendarEvent-comments-test-3172,!uDptTdfUOLFrAkfhxu:matrix-acc.alkem.io,NULL,14,
+995093fc-099b-4ee4-9ec6-786e26abb9fe,"2023-08-16 15:13:51.349450","2023-08-16 15:13:59.000000",2,calendarEvent-comments-event1-3292,!thVGhNUYStzPAlYiIA:matrix-acc.alkem.io,NULL,1,calendar_event
+9a299df8-6853-4899-9fc1-bdc1d6e55f97,"2023-08-16 16:02:40.286651","2023-08-16 16:03:07.000000",3,calendarEvent-comments-321231-4958,!EJdWhCDLLWQWylYxOb:matrix-acc.alkem.io,NULL,2,calendar_event
+a9ad5842-db6e-4f20-8b54-2faf827b6ea1,"2023-01-31 08:58:44.358795","2023-01-31 08:58:44.358795",1,calendarEvent-comments-123,!OEpoPcEnGIZTpxznoz:matrix-acc.alkem.io,NULL,0,
+c92528d7-f5cb-4a89-9b73-2ab9f5e1dff7,"2023-08-16 15:15:15.208982","2023-08-16 15:15:55.000000",5,calendarEvent-comments-eventx-7775,!QpSOYTWfXiXvMdOYQJ:matrix-acc.alkem.io,NULL,4,calendar_event
+e1ebd8de-5adf-43ff-920b-cc6d1c14c360,"2023-08-16 15:53:07.284354","2023-08-16 15:53:07.284354",1,calendarEvent-comments-testnewchallengeo-4922,!XBEhlskXTjfxSRynUD:matrix-acc.alkem.io,NULL,0,calendar_event
+ef7e7439-c0fd-4ac0-b0e0-f8632d4e48f0,"2023-05-12 10:30:45.674580","2023-05-12 10:32:02.000000",2,calendarEvent-comments-test-2488,!xWQMGYsxuBaYSjcFDL:matrix-acc.alkem.io,NULL,1,
+efb485d6-00de-4bd7-8d49-df6a41aac6ec,"2023-09-20 09:44:49.844924","2023-09-20 09:45:16.000000",3,calendarEvent-comments-test-9553,!mqQPXXGCDnhCJgJfqR:matrix-acc.alkem.io,NULL,2,calendar_event
+f5bbd5b1-5689-402b-afeb-a16f09885df2,"2023-06-02 10:19:48.850079","2023-06-02 10:19:58.000000",2,calendarEvent-comments-release-02-06-2023-h-9119,!BHrfGkpcDLUMLNOPfx:matrix-acc.alkem.io,NULL,1,
