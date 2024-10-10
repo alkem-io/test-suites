@@ -12,7 +12,7 @@ export const createCollaborationTemplate = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.createCollaborationTemplate(
+    graphqlClient.CreateCollaborationTemplate(
       {
         profileData: templateDefaultInfo,
         collaborationData: createCollaborationInputData,

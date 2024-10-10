@@ -7,7 +7,7 @@ export const errorAuthCreatePostTemplate =
   "Authorization: unable to grant 'create' privilege: templates set create template:";
 export const errorAuthUpdatePostTemplate =
   "Authorization: unable to grant 'update' privilege: update template:";
-export const errorAuthDeletePostTemplate =
+export const errorAuthDeleteTemplate =
   "Authorization: unable to grant 'delete' privilege: template delete:";
 export const errorNoPostTemplate =
   'Not able to locate Template with the specified ID:';

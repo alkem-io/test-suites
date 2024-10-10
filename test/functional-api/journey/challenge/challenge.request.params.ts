@@ -90,7 +90,7 @@ export const challengeVariablesData = (
       who: 'test who' + uniqueId,
     },
     collaborationData: {
-      addDefaultCallouts: true,
+      addTutorialCallouts: true,
     },
   };
 

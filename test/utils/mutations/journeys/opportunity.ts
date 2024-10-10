@@ -12,7 +12,6 @@ export const createOpportunity = async (
   opportunityNameId: string,
   parentId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN,
-  innovationFlowTemplateID?: string
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -22,7 +21,6 @@ export const createOpportunity = async (
           opportunityName,
           opportunityNameId,
           parentId,
-          innovationFlowTemplateID
         ),
       },
       {
@@ -37,7 +35,6 @@ export const opportunityVariablesData = (
   displayName: string,
   nameId: string,
   challengeId: string,
-  innovationFlowTemplateID = entitiesId.space.innovationFlowTemplateOppId
 ) => {
   const variables = {
     spaceID: challengeId,
@@ -60,7 +57,7 @@ export const opportunityVariablesData = (
       who: 'test who' + uniqueId,
     },
     collaborationData: {
-      //innovationFlowTemplateID,
+      "addTutorialCallouts": true
     },
   };
 

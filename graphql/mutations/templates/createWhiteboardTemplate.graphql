@@ -1,0 +1,33 @@
+mutation CreateWhiteboardTemplate(
+  $templatesSetId: UUID!
+  $profile: CreateProfileInput!
+  $type: TemplateType!
+  $tags: [String!]
+  $whiteboard: CreateWhiteboardInput
+) {
+  createTemplate(
+    templateData: {
+      templatesSetID: $templatesSetId
+      profileData: $profile
+      tags: $tags
+      type: $type
+      whiteboard: $whiteboard
+    }
+  ) {
+    id
+    type
+    profile {
+      displayName
+    }
+    authorization {
+      myPrivileges
+    }
+    whiteboard {
+      id
+      profile {
+        displayName
+      }
+      content
+    }
+  }
+}

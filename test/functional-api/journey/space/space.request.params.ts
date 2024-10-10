@@ -1,3 +1,4 @@
+import { GraphQLClient } from 'graphql-request';
 import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
@@ -6,6 +7,7 @@ import {
 import { TestUser } from '../../../utils/token.helper';
 import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
+
 
 const uniqueId = Math.random()
   .toString(12)
@@ -22,16 +24,16 @@ export const createSpaceBasicData = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.createSpaceBasicData(
+    graphqlClient.CreateSpaceBasicData(
       {
         spaceData: {
           nameID: spaceNameId,
           profileData: {
             displayName: spaceName,
           },
-          // collaborationData: {
-          //   addDefaultCallouts: true,
-          // },
+          collaborationData: {
+            addTutorialCallouts: true,
+          },
           accountID,
         },
       },
@@ -372,13 +374,3 @@ export const getUserRoleSpacesVisibility = async (
 
   return graphqlErrorWrapper(callback, userRole);
 };
-function graphqlErrorWrapper(
-  callback: (authToken: string | undefined) => any,
-  userRole: TestUser
-) {
-  throw new Error('Function not implemented.');
-}
-
-function getGraphqlClient() {
-  throw new Error('Function not implemented.');
-}
