@@ -63,12 +63,9 @@ export const createOrgAndSpace = async (
   entitiesId.space.contextId = spaceData?.context?.id ?? '';
   entitiesId.space.profileId = spaceData?.profile?.id ?? '';
   entitiesId.space.collaborationId = spaceData?.collaboration?.id ?? '';
-
-  entitiesId.space.innovationFlowTemplateChId =
-    spaceData?.library?.innovationFlowTemplates[0].id ?? '';
-  entitiesId.space.innovationFlowTemplateOppId =
-    spaceData?.library?.innovationFlowTemplates[0].id ?? '';
-  entitiesId.space.templateSetId = spaceData?.library?.id ?? '';
+  entitiesId.space.templateSetId =
+    spaceData?.templatesManager?.templatesSet?.id ?? '';
+    console.log(entitiesId.space.templateSetId)
 
   const callForPostCalloutData = await createCalloutOnCollaboration(
     entitiesId.space.collaborationId,
@@ -130,9 +127,6 @@ export const createOrgAndSpace = async (
     entitiesId.space.discussionCalloutId,
     CalloutVisibility.Published
   );
-
-  entitiesId.space.templateId =
-    responseEco.data?.space.library?.innovationFlowTemplates[0].id ?? '';
 };
 
 export const getDefaultSpaceCalloutByNameId = async (

@@ -1,9 +1,0 @@
-fragment DefaultData on SpaceDefaults {
-  id
-  authorization {
-    myPrivileges
-  }
-  innovationFlowTemplate {
-    ...InnovationFlowTemplateData
-  }
-}

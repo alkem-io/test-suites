@@ -1,0 +1,6 @@
+mutation deleteTemplate($templateId: UUID!) {
+  deleteTemplate(deleteData: { ID: $templateId }) {
+    id
+    type
+  }
+}

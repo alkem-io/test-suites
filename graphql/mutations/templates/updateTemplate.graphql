@@ -1,0 +1,20 @@
+mutation UpdateTemplate(
+  $templateId: UUID!
+  $profile: UpdateProfileInput!
+  $postDefaultDescription: Markdown
+) {
+  updateTemplate(
+    updateData: {
+      ID: $templateId
+      profile: $profile
+      postDefaultDescription: $postDefaultDescription
+    }
+  ) {
+    ...TemplateProfileData
+    ...CalloutTemplateData
+    ...CommunityGuidelinesTemplateData
+    ...InnovationFlowTemplateData
+    ...PostTemplateData
+    ...WhiteboardTemplateData
+  }
+}

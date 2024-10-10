@@ -14,7 +14,11 @@ import {
 } from '@test/functional-api/communications/communication.params';
 import { entitiesId, getMailsData } from '@test/types/entities-helper';
 import { deleteOrganization } from '@test/functional-api/contributor-management/organization/organization.request.params';
-import { createOrgAndSpaceWithUsers, createChallengeWithUsers, registerUsersAndAssignToAllEntitiesAsMembers } from '@test/utils/data-setup/entities';
+import {
+  createOrgAndSpaceWithUsers,
+  createChallengeWithUsers,
+  registerUsersAndAssignToAllEntitiesAsMembers,
+} from '@test/utils/data-setup/entities';
 
 const organizationName = 'not-disc-org-name' + uniqueId;
 const hostNameId = 'not-disc-org-nameid' + uniqueId;
@@ -277,9 +281,7 @@ describe.skip('Notifications - discussions', () => {
 
   test('GA create challenge discussion and send message - GA(1), HA(1), CA(1), CM(4) get notifications', async () => {
     // Act
-    const res = await createDiscussion(
-      entitiesId.challenge.communicationId
-    );
+    const res = await createDiscussion(entitiesId.challenge.communicationId);
     entitiesId.discussionId = res?.data?.createDiscussion.id ?? '';
 
     await sendMessageToRoom(entitiesId.discussionId, 'test message');

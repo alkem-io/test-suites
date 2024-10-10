@@ -1,0 +1,24 @@
+mutation UpdateWhiteboardTemplate(
+  $templateId: UUID!
+  $profile: UpdateProfileInput!
+) {
+  updateTemplate(updateData: { ID: $templateId, profile: $profile }) {
+    id
+    type
+    profile {
+      displayName
+    }
+    authorization {
+      myPrivileges
+    }
+    whiteboard {
+      id
+      profile {
+        displayName
+      }
+      content
+    }
+  }
+}
+#  ...TemplateProfileData
+#     ...WhiteboardTemplateData

@@ -1,0 +1,10 @@
+fragment CollaborationTemplateData on Template {
+  collaboration {
+    innovationFlow {
+      id
+      states {
+        ...InnovationFlowStateData
+      }
+    }
+  }
+}

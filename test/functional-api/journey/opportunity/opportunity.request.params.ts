@@ -21,7 +21,7 @@ export const createOpportunity = async (
             displayName: opportunityName,
           },
           collaborationData: {
-            addDefaultCallouts: true,
+            addTutorialCallouts: true,
           },
         },
       },

@@ -170,8 +170,7 @@ describe('User roles', () => {
         challengeName + '1',
         challengeName + '1',
         spaceId,
-        TestUser.GLOBAL_ADMIN,
-        entitiesId.space.innovationFlowTemplateChId
+        TestUser.GLOBAL_ADMIN
       );
 
       const chResData = chRes?.data?.createSubspace;
@@ -182,8 +181,7 @@ describe('User roles', () => {
         challengeName + '2',
         challengeName + '2',
         spaceId,
-        TestUser.GLOBAL_ADMIN,
-        entitiesId.space.innovationFlowTemplateChId
+        TestUser.GLOBAL_ADMIN
       );
       const chRes2Data = chRes2?.data?.createSubspace;
       chId2 = chRes2Data?.id ?? '';

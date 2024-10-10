@@ -53,8 +53,7 @@ interface EntityIds {
     applicationId: string;
     templateId: string;
     templateSetId: string;
-    innovationFlowTemplateOppId: string;
-    innovationFlowTemplateChId: string;
+    subspaceCollaborationTemplateId: string;
   };
   challenge: CommonSpaceIds & ProfileableIds;
   opportunity: CommonSpaceIds & ProfileableIds;
@@ -90,8 +89,7 @@ export const entitiesId: EntityIds = {
     discussionCalloutCommentsId: '',
     templateId: '',
     templateSetId: '',
-    innovationFlowTemplateOppId: '',
-    innovationFlowTemplateChId: '',
+    subspaceCollaborationTemplateId: '',
   },
   challenge: {
     id: '',

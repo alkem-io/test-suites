@@ -4,6 +4,10 @@ fragment TemplatesSetData on TemplatesSet {
     ...TemplateProfileData
     ...InnovationFlowTemplateData
   }
+  collaborationTemplates {
+    ...TemplateProfileData
+    ...CollaborationTemplateData
+  }
   postTemplates {
     ...TemplateProfileData
     ...PostTemplateData
