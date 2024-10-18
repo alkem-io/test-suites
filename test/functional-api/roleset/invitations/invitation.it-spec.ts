@@ -136,7 +136,7 @@ describe('Invitations', () => {
             id: invitationIdTwo,
             lifecycle: { state: 'invited' },
           },
-          space: { id: entitiesId.spaceId },
+          spacePendingMembershipInfo: { id: entitiesId.spaceId },
         }),
       ])
     );
