@@ -95,9 +95,7 @@ describe('Application', () => {
         expect.objectContaining({
           application: {
             id: applicationId,
-            lifecycle: {
-              state: 'new',
-            },
+            state: 'new',
           },
           space: { id: entitiesId.spaceId },
         }),
@@ -139,9 +137,7 @@ describe('Application', () => {
         expect.objectContaining({
           application: {
             id: applicationId,
-            lifecycle: {
-              state: 'new',
-            },
+            state: 'new',
           },
           space: { id: entitiesId.spaceId },
         }),
@@ -318,9 +314,7 @@ describe('Application-flows', () => {
       {
         application: {
           id: challengeApplicationId,
-          lifecycle: {
-            state: 'new',
-          },
+          state: 'new',
         },
         space: { id: entitiesId.challenge.id },
       },
@@ -356,9 +350,7 @@ describe('Application-flows', () => {
       {
         application: {
           id: challengeApplicationId,
-          lifecycle: {
-            state: 'new',
-          },
+          state: 'new',
         },
         space: { id: entitiesId.challenge.id },
       },

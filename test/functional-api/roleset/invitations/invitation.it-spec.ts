@@ -134,7 +134,7 @@ describe('Invitations', () => {
         expect.objectContaining({
           invitation: {
             id: invitationIdTwo,
-            lifecycle: { state: 'invited' },
+            state: 'invited',
           },
           space: { id: entitiesId.spaceId },
         }),
