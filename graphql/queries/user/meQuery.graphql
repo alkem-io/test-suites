@@ -3,22 +3,18 @@ query MeQuery {
     communityApplications {
       application {
         id
-        lifecycle {
-          state
-        }
+        ...LifecycleDataApplication
       }
-      space {
+      spacePendingMembershipInfo {
         id
       }
     }
     communityInvitations {
       invitation {
         id
-        lifecycle {
-          state
-        }
+        ...LifecycleDataInvitation
       }
-      space {
+      spacePendingMembershipInfo {
         id
       }
     }

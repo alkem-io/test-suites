@@ -5,8 +5,6 @@ mutation eventOnOrganizationVerification(
     organizationVerificationEventData: $organizationVerificationEventData
   ) {
     id
-    lifecycle {
-      ...LifecycleData
-    }
+    ...LifecycleDataOrganizationVerification
   }
 }

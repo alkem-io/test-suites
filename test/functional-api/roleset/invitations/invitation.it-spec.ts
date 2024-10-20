@@ -94,7 +94,7 @@ describe('Invitations', () => {
     const data = getInv?.data?.space?.community?.roleSet.invitations;
 
     // Assert
-    expect(data?.[0].lifecycle.state).toEqual('invited');
+    expect(data?.[0].state).toEqual('invited');
   });
 
   test('should create space invitation, when previous was REJECTED and ARCHIVED', async () => {
@@ -435,7 +435,7 @@ describe('Invitations - Authorization', () => {
 
         // Assert
         expect(
-          result?.data?.eventOnCommunityInvitation.lifecycle.state
+          result?.data?.eventOnCommunityInvitation.state
         ).toContain(text);
       }
     );
@@ -490,8 +490,7 @@ describe('Invitations - Authorization', () => {
 
         // Assert
         expect(
-          invitationData.data.inviteContributorsForRoleSetMembership[0]
-            .lifecycle.state
+          invitationData.data.inviteContributorsForRoleSetMembership[0].state
         ).toContain(state);
       }
     );
