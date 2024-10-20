@@ -128,9 +128,12 @@ describe('Notifications - invitations', () => {
       [users.nonSpaceMember.id],
       TestUser.HUB_ADMIN
     );
-    const invitationInfo =
-      invitationData?.data?.inviteContributorsForRoleSetMembership[0];
-    invitationId = invitationInfo?.id ?? '';
+    const invitationsInfo =
+      invitationData?.data?.inviteContributorsForRoleSetMembership;
+    invitationId = 'invitationsInfoNotRetrieved';
+    if (invitationsInfo && invitationsInfo.length > 0) {
+      invitationId = invitationsInfo[0].id;
+    }
 
     await delay(6000);
 
@@ -154,9 +157,12 @@ describe('Notifications - invitations', () => {
       [users.qaUser.id],
       TestUser.CHALLENGE_ADMIN
     );
-    const invitationInfo =
-      invitationData?.data?.inviteContributorsForRoleSetMembership[0];
-    invitationId = invitationInfo?.id ?? '';
+    const invitationsInfo =
+      invitationData?.data?.inviteContributorsForRoleSetMembership;
+    invitationId = 'invitationsInfoNotRetrieved';
+    if (invitationsInfo && invitationsInfo.length > 0) {
+      invitationId = invitationsInfo[0].id;
+    }
 
     await delay(6000);
 
@@ -180,9 +186,12 @@ describe('Notifications - invitations', () => {
       [users.qaUser.id],
       TestUser.CHALLENGE_ADMIN
     );
-    const invitationInfo =
-      invitationData?.data?.inviteContributorsForRoleSetMembership[0];
-    invitationId = invitationInfo?.id ?? '';
+    const invitationsInfo =
+      invitationData?.data?.inviteContributorsForRoleSetMembership;
+    invitationId = 'invitationsInfoNotRetrieved';
+    if (invitationsInfo && invitationsInfo.length > 0) {
+      invitationId = invitationsInfo[0].id;
+    }
 
     await delay(6000);
 
@@ -206,9 +215,12 @@ describe('Notifications - invitations', () => {
       [users.qaUser.id],
       TestUser.OPPORTUNITY_ADMIN
     );
-    const invitationInfo =
-      invitationData?.data?.inviteContributorsForRoleSetMembership[0];
-    invitationId = invitationInfo?.id ?? '';
+    const invitationsInfo =
+      invitationData?.data?.inviteContributorsForRoleSetMembership;
+    invitationId = 'invitationsInfoNotRetrieved';
+    if (invitationsInfo && invitationsInfo.length > 0) {
+      invitationId = invitationsInfo[0].id;
+    }
 
     await delay(6000);
 
@@ -227,9 +239,12 @@ describe('Notifications - invitations', () => {
       [users.spaceMember.id],
       TestUser.OPPORTUNITY_ADMIN
     );
-    const invitationInfo =
-      invitationData?.data?.inviteContributorsForRoleSetMembership[0];
-    invitationId = invitationInfo?.id ?? '';
+    const invitationsInfo =
+      invitationData?.data?.inviteContributorsForRoleSetMembership;
+    invitationId = 'invitationsInfoNotRetrieved';
+    if (invitationsInfo && invitationsInfo.length > 0) {
+      invitationId = invitationsInfo[0].id;
+    }
 
     await delay(6000);
 
@@ -253,9 +268,12 @@ describe('Notifications - invitations', () => {
       [users.qaUser.id],
       TestUser.OPPORTUNITY_ADMIN
     );
-    const invitationInfo =
-      invitationData?.data?.inviteContributorsForRoleSetMembership[0];
-    invitationId = invitationInfo?.id ?? '';
+    const invitationsInfo =
+      invitationData?.data?.inviteContributorsForRoleSetMembership;
+    invitationId = 'invitationsInfoNotRetrieved';
+    if (invitationsInfo && invitationsInfo.length > 0) {
+      invitationId = invitationsInfo[0].id;
+    }
 
     await delay(6000);
 
@@ -285,9 +303,12 @@ describe('Notifications - invitations', () => {
       [users.nonSpaceMember.id],
       TestUser.HUB_ADMIN
     );
-    const invitationInfo =
-      invitationData?.data?.inviteContributorsForRoleSetMembership[0];
-    invitationId = invitationInfo?.id ?? '';
+    const invitationsInfo =
+      invitationData?.data?.inviteContributorsForRoleSetMembership;
+    invitationId = 'invitationsInfoNotRetrieved';
+    if (invitationsInfo && invitationsInfo.length > 0) {
+      invitationId = invitationsInfo[0].id;
+    }
 
     await delay(6000);
 
@@ -310,9 +331,12 @@ describe('Notifications - invitations', () => {
       [users.qaUser.displayName],
       TestUser.CHALLENGE_ADMIN
     );
-    const invitationInfo =
-      invitationData?.data?.inviteContributorsForRoleSetMembership[0];
-    invitationId = invitationInfo?.id ?? '';
+    const invitationsInfo =
+      invitationData?.data?.inviteContributorsForRoleSetMembership;
+    invitationId = 'invitationsInfoNotRetrieved';
+    if (invitationsInfo && invitationsInfo.length > 0) {
+      invitationId = invitationsInfo[0].id;
+    }
 
     await delay(6000);
 

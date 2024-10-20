@@ -315,8 +315,10 @@ describe('Application-flows', () => {
         application: {
           id: challengeApplicationId,
           state: 'new',
+          isFinalized: false,
+          nextEvents: ['APPROVE', 'REJECT'],
         },
-        space: { id: entitiesId.challenge.id },
+        spacePendingMembershipInfo: { id: entitiesId.challenge.id },
       },
     ];
 

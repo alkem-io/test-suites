@@ -148,11 +148,9 @@ export const innovationFlowTemplateData = `
 `;
 
 export const lifecycleData = `
-  id
   state
   nextEvents
   stateIsFinal
-  templateName
 `;
 
 export const organizationData = `
@@ -174,9 +172,7 @@ export const organizationData = `
       authorization{${authorizationSpaceData}}
       id
       status
-      lifecycle {
-        ${lifecycleData}
-      }
+      ${lifecycleData}
     }
     preferences{${preferenceData}}
     authorization{${authorizationSpaceData}}
@@ -270,9 +266,7 @@ state
 
 export const applicationData = `
   id
-  lifecycle {
-    ${lifecycleData}
-  }
+  ${lifecycleData}
   questions{id}
   user {
     ${userData}
@@ -282,9 +276,7 @@ export const applicationData = `
 
 export const invitationData = `
   id
-  lifecycle {
-    ${lifecycleData}
-  }
+  ${lifecycleData}
   createdBy {
     ${userData}
   }
@@ -386,16 +378,6 @@ export const postData = `
     }
   }
 
-  authorization{myPrivileges}
-  `;
-
-export const projectData = `
-  id
-  nameID
-  profile {${profileData}}
-  lifecycle {
-    ${lifecycleData}
-  }
   authorization{myPrivileges}
   `;
 
@@ -503,9 +485,6 @@ export const opportunityData = `
     lifecycle {
       ${lifecycleData}
     }
-  }
-  projects{
-    ${projectData}
   }
 
 `;
