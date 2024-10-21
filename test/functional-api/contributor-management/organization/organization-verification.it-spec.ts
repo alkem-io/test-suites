@@ -51,10 +51,10 @@ describe('Organization verification status', () => {
         setEvent
       );
 
-      const data = updateState.data?.eventOnOrganizationVerification?.lifecycle;
+      const data = updateState.data?.eventOnOrganizationVerification;
       const organizationData = await getOrganizationData(organizationId);
       const organizationDataResponse =
-        organizationData?.data?.organization.verification.lifecycle;
+        organizationData?.data?.organization.verification;
 
       // Assert
       expect(data?.state).toEqual(state);

@@ -1,7 +1,20 @@
-fragment LifecycleData on Lifecycle {
+fragment LifecycleDataOrganizationVerification on OrganizationVerification {
   id
   state
   nextEvents
-  stateIsFinal
-  templateName
+  isFinalized
+}
+
+fragment LifecycleDataInvitation on Invitation {
+  id
+  state
+  nextEvents
+  isFinalized
+}
+
+fragment LifecycleDataApplication on Application {
+  id
+  state
+  nextEvents
+  isFinalized
 }

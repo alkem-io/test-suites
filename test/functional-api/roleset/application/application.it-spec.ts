@@ -87,17 +87,15 @@ describe('Application', () => {
 
     // Assert
     expect(applicationData.status).toBe(200);
-    expect(
-      applicationData?.data?.applyForEntryRoleOnRoleSet?.lifecycle?.state
-    ).toEqual('new');
+    expect(applicationData?.data?.applyForEntryRoleOnRoleSet?.state).toEqual(
+      'new'
+    );
     expect(getApp).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           application: {
             id: applicationId,
-            lifecycle: {
-              state: 'new',
-            },
+            state: 'new',
           },
           spacePendingMembershipInfo: { id: entitiesId.spaceId },
         }),
@@ -131,25 +129,22 @@ describe('Application', () => {
 
     // Assert
     expect(applicationData.status).toBe(200);
-    expect(
-      applicationData?.data?.applyForEntryRoleOnRoleSet?.lifecycle?.state
-    ).toEqual('new');
+    expect(applicationData?.data?.applyForEntryRoleOnRoleSet?.state).toEqual(
+      'new'
+    );
     expect(getApp).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           application: {
             id: applicationId,
-            lifecycle: {
-              state: 'new',
-            },
+            state: 'new',
           },
           spacePendingMembershipInfo: { id: entitiesId.spaceId },
         }),
       ])
     );
     const getAppFiltered =
-      getApp?.filter(app => app.application.lifecycle.state !== 'archived') ??
-      [];
+      getApp?.filter(app => app.application.state !== 'archived') ?? [];
     expect(getAppFiltered).toHaveLength(1);
   });
 
@@ -299,7 +294,7 @@ describe('Application-flows', () => {
 
     // Assert
     expect(applicationData.status).toBe(200);
-    expect(createAppData.lifecycle.state).toEqual('new');
+    expect(createAppData.state).toEqual('new');
   });
 
   test('should return correct membershipUser applications', async () => {
@@ -319,17 +314,16 @@ describe('Application-flows', () => {
       {
         application: {
           id: challengeApplicationId,
-          lifecycle: {
-            state: 'new',
-          },
+          state: 'new',
+          isFinalized: false,
+          nextEvents: ['APPROVE', 'REJECT'],
         },
         spacePendingMembershipInfo: { id: entitiesId.challenge.id },
       },
     ];
 
     const filteredMembershipData =
-      membershipData?.filter(app => app.application.lifecycle.state == 'new') ??
-      [];
+      membershipData?.filter(app => app.application.state == 'new') ?? [];
     // Assert
     expect(filteredMembershipData).toEqual(challengeAppOb);
   });
@@ -358,9 +352,7 @@ describe('Application-flows', () => {
       {
         application: {
           id: challengeApplicationId,
-          lifecycle: {
-            state: 'new',
-          },
+          state: 'new',
         },
         spacePendingMembershipInfo: { id: entitiesId.challenge.id },
       },
@@ -387,7 +379,7 @@ describe('Application-flows', () => {
       'APPROVE'
     );
 
-    const state = event?.data?.eventOnApplication?.lifecycle;
+    const state = event?.data?.eventOnApplication;
 
     userMembeship = await getRoleSetInvitationsApplications(
       entitiesId.challenge.roleSetId

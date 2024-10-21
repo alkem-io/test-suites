@@ -11,9 +11,7 @@ mutation InviteContributors(
     }
   ) {
     id
-    lifecycle {
-      state
-    }
+    ...LifecycleDataInvitation
     __typename
   }
 }

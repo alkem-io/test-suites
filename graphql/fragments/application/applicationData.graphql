@@ -1,8 +1,6 @@
 fragment ApplicationData on Application {
   id
-  lifecycle {
-    ...LifecycleData
-  }
+  ...LifecycleDataApplication
   questions {
     id
   }

@@ -71,12 +71,12 @@ describe('Lifecycle', () => {
           setEvent
         );
 
-        const data = updateState?.data?.eventOnApplication.lifecycle;
+        const data = updateState?.data?.eventOnApplication;
         const getApp = await getRoleSetInvitationsApplications(
           entitiesId.space.roleSetId
         );
         const applicationDataResponse =
-          getApp?.data?.lookup?.roleSet?.applications[0].lifecycle;
+          getApp?.data?.lookup?.roleSet?.applications[0];
 
         // Assert
         expect(data?.state).toEqual(state);

@@ -83,10 +83,12 @@ describe('Invitations', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    const invitationInfo =
-      invitationData?.data?.inviteContributorsForRoleSetMembership;
+    invitationId = 'invitationIdNotRetrieved';
+    const invitationResult = invitationData?.data?.inviteContributorsForRoleSetMembership;
+    if (invitationResult && invitationResult.length > 0) {
+      invitationId = invitationResult[0].id;
+    }
 
-    invitationId = invitationInfo[0]?.id ?? '';
     const getInv = await getSpaceInvitation(
       entitiesId.spaceId,
       TestUser.GLOBAL_ADMIN
@@ -94,7 +96,7 @@ describe('Invitations', () => {
     const data = getInv?.data?.space?.community?.roleSet.invitations;
 
     // Assert
-    expect(data?.[0].lifecycle.state).toEqual('invited');
+    expect(data?.[0].state).toEqual('invited');
   });
 
   test('should create space invitation, when previous was REJECTED and ARCHIVED', async () => {
@@ -105,9 +107,11 @@ describe('Invitations', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    const invitationInfo =
-      invitationData?.data?.inviteContributorsForRoleSetMembership[0];
-    invitationId = invitationInfo?.id ?? '';
+    invitationId = 'invitationIdNotRetrieved';
+    const invitationResult = invitationData?.data?.inviteContributorsForRoleSetMembership;
+    if (invitationResult && invitationResult.length > 0) {
+      invitationId = invitationResult[0].id;
+    }
 
     // Reject and Archive Space invitation
     await eventOnRoleSetInvitation(invitationId, 'REJECT');
@@ -134,7 +138,7 @@ describe('Invitations', () => {
         expect.objectContaining({
           invitation: {
             id: invitationIdTwo,
-            lifecycle: { state: 'invited' },
+            state: 'invited',
           },
           spacePendingMembershipInfo: { id: entitiesId.spaceId },
         }),
@@ -150,9 +154,11 @@ describe('Invitations', () => {
       [users.nonSpaceMember.id],
       TestUser.GLOBAL_ADMIN
     );
-    const invitationInfo =
-      invitationData?.data?.inviteContributorsForRoleSetMembership[0];
-    invitationId = invitationInfo?.id ?? '';
+    invitationId = 'invitationIdNotRetrieved';
+    const invitationResult = invitationData?.data?.inviteContributorsForRoleSetMembership;
+    if (invitationResult && invitationResult.length > 0) {
+      invitationId = invitationResult[0].id;
+    }
 
     // Act
     const removeInv = await deleteInvitation(invitationId);
@@ -187,9 +193,11 @@ describe('Invitations', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    const invitationInfo =
-      invitationData?.data?.inviteContributorsForRoleSetMembership[0];
-    invitationId = invitationInfo?.id ?? '';
+    invitationId = 'invitationIdNotRetrieved';
+    const invitationResult = invitationData?.data?.inviteContributorsForRoleSetMembership;
+    if (invitationResult && invitationResult.length > 0) {
+      invitationId = invitationResult[0].id;
+    }
 
     // Act
     const invitationDataTwo = await inviteContributors(
@@ -247,9 +255,11 @@ describe('Invitations-flows', () => {
       [users.nonSpaceMember.id],
       TestUser.GLOBAL_ADMIN
     );
-    const invitationInfo =
-      invitationData?.data?.inviteContributorsForRoleSetMembership[0];
-    invitationId = invitationInfo?.id ?? '';
+    invitationId = 'invitationIdNotRetrieved';
+    const invitationResult = invitationData?.data?.inviteContributorsForRoleSetMembership;
+    if (invitationResult && invitationResult.length > 0) {
+      invitationId = invitationResult[0].id;
+    }
 
     // Approve Space invitation
     const a = await eventOnRoleSetInvitation(
@@ -279,9 +289,11 @@ describe('Invitations-flows', () => {
       [users.nonSpaceMember.id],
       TestUser.GLOBAL_ADMIN
     );
-    const invitationInfo =
-      invitationData?.data?.inviteContributorsForRoleSetMembership[0];
-    invitationId = invitationInfo?.id ?? '';
+    invitationId = 'invitationIdNotRetrieved';
+    const invitationResult = invitationData?.data?.inviteContributorsForRoleSetMembership;
+    if (invitationResult && invitationResult.length > 0) {
+      invitationId = invitationResult[0].id;
+    }
 
     // Approve Space invitation
     await eventOnRoleSetInvitation(
@@ -340,7 +352,10 @@ describe('Invitations-flows', () => {
       entitiesId.space.roleSetId,
       TestUser.NON_HUB_MEMBER
     );
-    const applicationId = res?.data?.applyForEntryRoleOnRoleSet?.id ?? '';
+    let applicationId = 'applicationIdNotRetrieved';
+    if (res?.data?.applyForEntryRoleOnRoleSet) {
+       applicationId = res?.data?.applyForEntryRoleOnRoleSet?.id;
+    }
 
     // Act
     invitationData = await inviteContributors(
@@ -371,9 +386,11 @@ describe('Invitations-flows', () => {
     const applicationsCountOrig = membershipDataOrig?.communityApplications?.length ?? 0;
 
 
-    const invitationInfo =
-      invitationData?.data?.inviteContributorsForRoleSetMembership[0];
-    invitationId = invitationInfo?.id ?? '';
+    invitationId = 'invitationIdNotRetrieved';
+    const invitationResult = invitationData?.data?.inviteContributorsForRoleSetMembership;
+    if (invitationResult && invitationResult.length > 0) {
+      invitationId = invitationResult[0].id;
+    }
 
     // Act
     const res = await createApplication(entitiesId.space.roleSetId);
@@ -423,9 +440,11 @@ describe('Invitations - Authorization', () => {
           [users.nonSpaceMember.id],
           TestUser.GLOBAL_ADMIN
         );
-        const invitationInfo =
-          invitationData?.data?.inviteContributorsForRoleSetMembership[0];
-        invitationId = invitationInfo?.id ?? '';
+        invitationId = 'invitationIdNotRetrieved';
+        const invitationResult = invitationData?.data?.inviteContributorsForRoleSetMembership;
+        if (invitationResult && invitationResult.length > 0) {
+          invitationId = invitationResult[0].id;
+        }
 
         const result = await eventOnRoleSetInvitation(
           invitationId,
@@ -435,7 +454,7 @@ describe('Invitations - Authorization', () => {
 
         // Assert
         expect(
-          result?.data?.eventOnCommunityInvitation.lifecycle.state
+          result?.data?.eventOnCommunityInvitation.state
         ).toContain(text);
       }
     );
@@ -452,9 +471,11 @@ describe('Invitations - Authorization', () => {
           [users.nonSpaceMember.id],
           TestUser.GLOBAL_ADMIN
         );
-        const invitationInfo =
-          invitationData?.data?.inviteContributorsForRoleSetMembership[0];
-        invitationId = invitationInfo?.id ?? '';
+        invitationId = 'invitationIdNotRetrieved';
+        const invitationResult = invitationData?.data?.inviteContributorsForRoleSetMembership;
+        if (invitationResult && invitationResult.length > 0) {
+          invitationId = invitationResult[0].id;
+        }
 
         const result = await eventOnRoleSetInvitation(
           invitationId,
@@ -484,14 +505,15 @@ describe('Invitations - Authorization', () => {
           user
         );
 
-        const invitationInfo =
-          invitationData?.data?.inviteContributorsForRoleSetMembership[0];
-        invitationId = invitationInfo?.id ?? '';
+        invitationId = 'invitationIdNotRetrieved';
+        const invitationResult = invitationData?.data?.inviteContributorsForRoleSetMembership;
+        if (invitationResult && invitationResult.length > 0) {
+          invitationId = invitationResult[0].id;
+        }
 
         // Assert
         expect(
-          invitationData.data.inviteContributorsForRoleSetMembership[0]
-            .lifecycle.state
+          invitationData.data.inviteContributorsForRoleSetMembership[0].state
         ).toContain(state);
       }
     );
