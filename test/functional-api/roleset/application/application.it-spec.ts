@@ -97,7 +97,7 @@ describe('Application', () => {
             id: applicationId,
             state: 'new',
           },
-          space: { id: entitiesId.spaceId },
+          spacePendingMembershipInfo: { id: entitiesId.spaceId },
         }),
       ])
     );
@@ -139,7 +139,7 @@ describe('Application', () => {
             id: applicationId,
             state: 'new',
           },
-          space: { id: entitiesId.spaceId },
+          spacePendingMembershipInfo: { id: entitiesId.spaceId },
         }),
       ])
     );
@@ -354,7 +354,7 @@ describe('Application-flows', () => {
           id: challengeApplicationId,
           state: 'new',
         },
-        space: { id: entitiesId.challenge.id },
+        spacePendingMembershipInfo: { id: entitiesId.challenge.id },
       },
     ];
 

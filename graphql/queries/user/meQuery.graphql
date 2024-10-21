@@ -5,7 +5,7 @@ query MeQuery {
         id
         ...LifecycleDataApplication
       }
-      spacePendingMembershipInfo {
+       spacePendingMembershipInfo {
         id
       }
     }

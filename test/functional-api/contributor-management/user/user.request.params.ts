@@ -22,7 +22,7 @@ export const registerVerifiedUser = async (
 
 export const getDefaultUserData = () => {
   const uniqueId = Math.random()
-    .toString(12)
+    .toString(8)
     .slice(-6);
   return {
     firstName: `fn${uniqueId}`,
