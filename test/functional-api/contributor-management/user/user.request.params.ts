@@ -95,8 +95,7 @@ export const updateUser = async (
 
 export const deleteUser = async (
   userId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
-  deleteIdentity = false
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -104,7 +103,7 @@ export const deleteUser = async (
       {
         deleteData: {
           ID: userId,
-          deleteIdentity,
+          deleteIdentity: false,
         },
       },
       {

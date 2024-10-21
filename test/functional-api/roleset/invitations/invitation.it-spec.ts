@@ -352,7 +352,10 @@ describe('Invitations-flows', () => {
       entitiesId.space.roleSetId,
       TestUser.NON_HUB_MEMBER
     );
-    const applicationId = res?.data?.applyForEntryRoleOnRoleSet?.id ?? '';
+    let applicationId = 'applicationIdNotRetrieved';
+    if (res?.data?.applyForEntryRoleOnRoleSet) {
+       applicationId = res?.data?.applyForEntryRoleOnRoleSet?.id;
+    }
 
     // Act
     invitationData = await inviteContributors(
