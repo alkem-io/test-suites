@@ -11,7 +11,7 @@ export const eventOnOrganizationVerification = async (
   const callback = (authToken: string | undefined) =>
     graphqlClient.eventOnOrganizationVerification(
       {
-        organizationVerificationEventData: {
+        eventData: {
           organizationVerificationID,
           eventName,
         },

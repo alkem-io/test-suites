@@ -26,9 +26,7 @@ fragment OrganizationData on Organization {
     }
     id
     status
-    lifecycle {
-      ...LifecycleData
-    }
+    ...LifecycleDataOrganizationVerification
   }
   preferences {
     ...PreferenceData

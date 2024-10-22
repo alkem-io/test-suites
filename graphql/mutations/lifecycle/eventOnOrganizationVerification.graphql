@@ -1,12 +1,8 @@
 mutation eventOnOrganizationVerification(
-  $organizationVerificationEventData: OrganizationVerificationEventInput!
+  $eventData: OrganizationVerificationEventInput!
 ) {
-  eventOnOrganizationVerification(
-    organizationVerificationEventData: $organizationVerificationEventData
-  ) {
+  eventOnOrganizationVerification(eventData: $eventData) {
     id
-    lifecycle {
-      ...LifecycleData
-    }
+    ...LifecycleDataOrganizationVerification
   }
 }
