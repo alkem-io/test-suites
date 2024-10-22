@@ -89,6 +89,7 @@ describe('Invitations', () => {
       invitationId = invitationResult[0].id;
     }
 
+
     const getInv = await getSpaceInvitation(
       entitiesId.spaceId,
       TestUser.GLOBAL_ADMIN
@@ -356,6 +357,7 @@ describe('Invitations-flows', () => {
     if (res?.data?.applyForEntryRoleOnRoleSet) {
        applicationId = res?.data?.applyForEntryRoleOnRoleSet?.id;
     }
+    expect(applicationId.length).toEqual(36);
 
     // Act
     invitationData = await inviteContributors(
@@ -391,6 +393,7 @@ describe('Invitations-flows', () => {
     if (invitationResult && invitationResult.length > 0) {
       invitationId = invitationResult[0].id;
     }
+    expect(invitationId.length).toEqual(36);
 
     // Act
     const res = await createApplication(entitiesId.space.roleSetId);
@@ -446,6 +449,8 @@ describe('Invitations - Authorization', () => {
           invitationId = invitationResult[0].id;
         }
 
+        expect(invitationId.length).toEqual(36);
+
         const result = await eventOnRoleSetInvitation(
           invitationId,
           'ACCEPT',
@@ -454,7 +459,7 @@ describe('Invitations - Authorization', () => {
 
         // Assert
         expect(
-          result?.data?.eventOnCommunityInvitation.state
+          result?.data?.eventOnInvitation.state
         ).toContain(text);
       }
     );

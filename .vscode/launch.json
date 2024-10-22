@@ -55,7 +55,7 @@
         "${workspaceRoot}/node_modules/.bin/jest",
         "--runInBand",
         "--config",
-        "${workspaceRoot}/test/config/jest.config.roleset.js"
+        "${workspaceRoot}/test/config/jest.config.roleset.js invitation.ts-spec.ts"
       ],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"

@@ -1,5 +1,5 @@
 mutation InvitationStateEvent($input: InvitationEventInput!) {
-  eventOnCommunityInvitation(invitationEventData: $input) {
+  eventOnInvitation(eventData: $input) {
     id
     authorization {
       myPrivileges
