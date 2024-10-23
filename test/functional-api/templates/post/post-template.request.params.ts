@@ -78,7 +78,7 @@ export const deletePostTemplate = async (
 export const getPostTemplatesCountForSpace = async (spaceId: string) => {
   const template = await getSpaceData(spaceId);
   const spacePostTemplates =
-    template?.data?.space?.library?.postTemplates ?? [];
+    template?.data?.space?.templatesManager?.templatesSet?.postTemplates ?? [];
 
   return spacePostTemplates.length;
 };

@@ -1,8 +1,5 @@
-# mutation CreateSpaceBasicData($spaceData: CreateSpaceInput!) {
-#   createSpace(spaceData: $spaceData) {
-#     id
-#     space{
-#       id
-#     }
-#   }
-# }
+mutation CreateSpaceBasicData($spaceData: CreateSpaceOnAccountInput!) {
+  createSpace(spaceData: $spaceData) {
+    id
+  }
+}

@@ -1,11 +1,13 @@
+import { GraphQLClient } from 'graphql-request';
 import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
   SpaceVisibility,
 } from '../../../generated/alkemio-schema';
-import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { TestUser } from '../../../utils/token.helper';
+import { getGraphqlClient } from '@test/utils/graphqlClient';
 import { graphqlErrorWrapper } from '@test/utils/graphql.wrapper';
+
 
 const uniqueId = Math.random()
   .toString(12)
@@ -22,7 +24,7 @@ export const createSpaceBasicData = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.createSpace(
+    graphqlClient.CreateSpaceBasicData(
       {
         spaceData: {
           nameID: spaceNameId,
@@ -30,7 +32,7 @@ export const createSpaceBasicData = async (
             displayName: spaceName,
           },
           collaborationData: {
-            addDefaultCallouts: true,
+            addTutorialCallouts: true,
           },
           accountID,
         },

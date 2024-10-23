@@ -22,7 +22,6 @@ export const createChallenge = async (
           challengeName,
           challengeNameId,
           parentId,
-          innovationFlowTemplateID
         ),
       },
       {
@@ -37,7 +36,6 @@ export const challengeVariablesData = (
   displayName: string,
   nameId: string,
   spaceId: string,
-  innovationFlowTemplateID = entitiesId.space.innovationFlowTemplateChId
 ) => {
   const variables = {
     nameID: nameId,
@@ -60,7 +58,7 @@ export const challengeVariablesData = (
       who: 'test who' + uniqueId,
     },
     collaborationData: {
-      //innovationFlowTemplateID,
+      "addTutorialCallouts": true
     },
   };
 
