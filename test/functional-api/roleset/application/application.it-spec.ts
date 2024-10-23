@@ -99,7 +99,7 @@ describe('Application', () => {
               state: 'new',
             },
           },
-          space: { id: entitiesId.spaceId },
+          spacePendingMembershipInfo: { id: entitiesId.spaceId },
         }),
       ])
     );
@@ -143,7 +143,7 @@ describe('Application', () => {
               state: 'new',
             },
           },
-          space: { id: entitiesId.spaceId },
+          spacePendingMembershipInfo: { id: entitiesId.spaceId },
         }),
       ])
     );
@@ -323,7 +323,7 @@ describe('Application-flows', () => {
             state: 'new',
           },
         },
-        space: { id: entitiesId.challenge.id },
+        spacePendingMembershipInfo: { id: entitiesId.challenge.id },
       },
     ];
 
@@ -362,7 +362,7 @@ describe('Application-flows', () => {
             state: 'new',
           },
         },
-        space: { id: entitiesId.challenge.id },
+        spacePendingMembershipInfo: { id: entitiesId.challenge.id },
       },
     ];
 
