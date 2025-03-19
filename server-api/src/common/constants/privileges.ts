@@ -1,6 +1,7 @@
 export const readPrivilege = ['READ'];
 export const readAboutPrivilege = ['READ_ABOUT'];
 export const sorted_read_readAbout = [...readPrivilege, ...readAboutPrivilege];
+
 export const sorted__create_read_update_delete = [
   'CREATE',
   ...readPrivilege,
@@ -79,12 +80,37 @@ export const sorted__create_read_update_delete_readUserPii = [
   'READ_USER_PII',
 ].sort();
 
+export const sorted__create_read_update_delete_grant_createCallout_transferAccept_transferOffer =
+  [
+    ...sorted__create_read_update_delete_grant,
+    'CREATE_CALLOUT',
+    'TRANSFER_RESOURCE_ACCEPT',
+    'TRANSFER_RESOURCE_OFFER',
+  ].sort();
+
+export const sorted__create_read_update_delete_contribute_createCallout = [
+  ...sorted__create_read_update_delete,
+  'CONTRIBUTE',
+  'CREATE_CALLOUT',
+].sort();
+
 export const sorted__create_read_update_delete_grant_fileUp_fileDel = [
   ...sorted__create_read_update_delete_grant,
   'FILE_UPLOAD',
   'FILE_DELETE',
 ].sort();
-
+export const sorted__create_read_update_delete_grant_fileDelete_fileUpload = [
+  ...sorted__create_read_update_delete_grant,
+  'FILE_UPLOAD',
+  'FILE_DELETE',
+].sort();
+export const sorted__create_read_update_delete_contribute_fileDelete_fileUpload =
+  [
+    ...sorted__create_read_update_delete,
+    'CONTRIBUTE',
+    'FILE_UPLOAD',
+    'FILE_DELETE',
+  ].sort();
 export const sorted__create_read_readAbout_update_delete_grant_fileUp_fileDel =
   [
     ...sorted__create_read_readAbout_update_delete_grant,
@@ -111,12 +137,6 @@ export const sorted__create_read_readAbout_update_delete_grant_fileUp_fileDel_co
     ...sorted__create_read_readAbout_update_delete_grant_fileUp_fileDel,
     'CONTRIBUTE',
   ].sort();
-
-// export const sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent = [
-//   ...sorted__create_read_update_delete_grant_fileUp_fileDel,
-//   'CONTRIBUTE',
-//   'UPDATE_CONTENT',
-// ].sort();
 
 export const sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent =
   [

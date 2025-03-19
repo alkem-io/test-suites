@@ -30,10 +30,12 @@ import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
 import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
 import { getAccountMainEntities } from '@functional-api/account/account.params.request';
 import {
+  readPrivilege,
+  sorted__create_read_update_delete_contribute_fileDelete_fileUpload,
   sorted__create_read_update_delete_contribute_readAbout,
-  sorted__create_read_update_delete_contribute_readAbout_fileDelete_fileUpload,
+  sorted__create_read_update_delete_grant_fileUp_fileDel,
   sorted__create_read_update_delete_grant_platformAdmin_readAbout,
-  sorted__create_read_update_delete_readAbout_fileDelete_fileUpload,
+  sorted_read_readAbout,
 } from '@common/constants/privileges';
 import { SearchVisibility } from '@alkemio/client-lib/dist/types/alkemio-schema';
 const uniqueId = UniqueIDGenerator.getID();
@@ -147,12 +149,12 @@ describe('Virtual Contributor ACCESS - All Public - Visibility Public / BoK / Pu
   });
 
   describe('Virtual contributor', () => {
-    //   failing    ${undefined}                   | ${['READ', 'READ_ABOUT']}
+    //   failing    ${undefined}                   | ${readPrivilege}
     test.each`
       userRole                       | privileges
-      ${TestUser.NON_SPACE_MEMBER}   | ${['READ_ABOUT']}
-      ${TestUser.SPACE_ADMIN}        | ${['READ_ABOUT']}
-      ${TestUser.SPACE_MEMBER}       | ${['READ_ABOUT']}
+      ${TestUser.NON_SPACE_MEMBER}   | ${sorted_read_readAbout}
+      ${TestUser.SPACE_ADMIN}        | ${sorted_read_readAbout}
+      ${TestUser.SPACE_MEMBER}       | ${sorted_read_readAbout}
       ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_readAbout}
       ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout}
     `(
@@ -165,12 +167,12 @@ describe('Virtual Contributor ACCESS - All Public - Visibility Public / BoK / Pu
         expect(data?.sort()).toEqual(privileges);
       }
     );
-    //   failing    ${undefined}                   | ${['READ', 'READ_ABOUT']}
+    //   failing    ${undefined}                   | ${readPrivilege}
     test.each`
       userRole                       | privileges
-      ${TestUser.NON_SPACE_MEMBER}   | ${['READ_ABOUT']}
-      ${TestUser.SPACE_ADMIN}        | ${['READ_ABOUT']}
-      ${TestUser.SPACE_MEMBER}       | ${['READ_ABOUT']}
+      ${TestUser.NON_SPACE_MEMBER}   | ${sorted_read_readAbout}
+      ${TestUser.SPACE_ADMIN}        | ${sorted_read_readAbout}
+      ${TestUser.SPACE_MEMBER}       | ${sorted_read_readAbout}
       ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_readAbout}
       ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout}
     `(
@@ -186,14 +188,14 @@ describe('Virtual Contributor ACCESS - All Public - Visibility Public / BoK / Pu
   });
 
   describe('VC storageBucket', () => {
-    //   failing    ${undefined}                   | ${['READ', 'READ_ABOUT']}
+    //   failing    ${undefined}                   | ${readPrivilege}
     test.each`
       userRole                       | privileges
-      ${TestUser.NON_SPACE_MEMBER}   | ${['READ', 'READ_ABOUT']}
-      ${TestUser.SPACE_ADMIN}        | ${['READ', 'READ_ABOUT']}
-      ${TestUser.SPACE_MEMBER}       | ${['READ', 'READ_ABOUT']}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_readAbout_fileDelete_fileUpload}
-      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout_fileDelete_fileUpload}
+      ${TestUser.NON_SPACE_MEMBER}   | ${readPrivilege}
+      ${TestUser.SPACE_ADMIN}        | ${readPrivilege}
+      ${TestUser.SPACE_MEMBER}       | ${readPrivilege}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel}
+      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_fileDelete_fileUpload}
     `(
       'User: "$userRole" has this privileges: "$privileges" to spaceBasedVC',
       async ({ userRole, privileges }) => {
@@ -205,15 +207,15 @@ describe('Virtual Contributor ACCESS - All Public - Visibility Public / BoK / Pu
         expect(data?.sort()).toEqual(privileges);
       }
     );
-    //   failing    ${undefined}                   | ${['READ', 'READ_ABOUT']}
+    //   failing    ${undefined}                   | ${readPrivilege}
 
     test.each`
       userRole                       | privileges
-      ${TestUser.NON_SPACE_MEMBER}   | ${['READ', 'READ_ABOUT']}
-      ${TestUser.SPACE_ADMIN}        | ${['READ', 'READ_ABOUT']}
-      ${TestUser.SPACE_MEMBER}       | ${['READ', 'READ_ABOUT']}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_readAbout_fileDelete_fileUpload}
-      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout_fileDelete_fileUpload}
+      ${TestUser.NON_SPACE_MEMBER}   | ${readPrivilege}
+      ${TestUser.SPACE_ADMIN}        | ${readPrivilege}
+      ${TestUser.SPACE_MEMBER}       | ${readPrivilege}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel}
+      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_fileDelete_fileUpload}
     `(
       'User: "$userRole" has this privileges: "$privileges" to knowledgeBasedVC',
       async ({ userRole, privileges }) => {
@@ -241,12 +243,12 @@ describe('Virtual Contributor Access - All Private - Visibility Private / BoK / 
   });
 
   describe('Virtualcontributor ', () => {
-    //   failing    ${undefined}                   | ${['READ', 'READ_ABOUT']}
+    //   failing    ${undefined}                   | ${readPrivilege}
     test.each`
       userRole                       | privileges
-      ${TestUser.NON_SPACE_MEMBER}   | ${['READ_ABOUT']}
-      ${TestUser.SPACE_ADMIN}        | ${['READ_ABOUT']}
-      ${TestUser.SPACE_MEMBER}       | ${['READ_ABOUT']}
+      ${TestUser.NON_SPACE_MEMBER}   | ${sorted_read_readAbout}
+      ${TestUser.SPACE_ADMIN}        | ${sorted_read_readAbout}
+      ${TestUser.SPACE_MEMBER}       | ${sorted_read_readAbout}
       ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_readAbout}
       ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout}
     `(
@@ -259,12 +261,12 @@ describe('Virtual Contributor Access - All Private - Visibility Private / BoK / 
         expect(data?.sort()).toEqual(privileges);
       }
     );
-    //   failing    ${undefined}                   | ${['READ', 'READ_ABOUT']}
+    //   failing    ${undefined}                   | ${readPrivilege}
     test.each`
       userRole                       | privileges
-      ${TestUser.NON_SPACE_MEMBER}   | ${['READ_ABOUT']}
-      ${TestUser.SPACE_ADMIN}        | ${['READ_ABOUT']}
-      ${TestUser.SPACE_MEMBER}       | ${['READ_ABOUT']}
+      ${TestUser.NON_SPACE_MEMBER}   | ${sorted_read_readAbout}
+      ${TestUser.SPACE_ADMIN}        | ${sorted_read_readAbout}
+      ${TestUser.SPACE_MEMBER}       | ${sorted_read_readAbout}
       ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_readAbout}
       ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout}
     `(
@@ -280,14 +282,14 @@ describe('Virtual Contributor Access - All Private - Visibility Private / BoK / 
   });
 
   describe('VC storageBucket', () => {
-    //   failing    ${undefined}                   | ${['READ', 'READ_ABOUT']}
+    //   failing    ${undefined}                   | ${readPrivilege}
     test.each`
       userRole                       | privileges
-      ${TestUser.NON_SPACE_MEMBER}   | ${['READ', 'READ_ABOUT']}
-      ${TestUser.SPACE_ADMIN}        | ${['READ', 'READ_ABOUT']}
-      ${TestUser.SPACE_MEMBER}       | ${['READ', 'READ_ABOUT']}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_readAbout_fileDelete_fileUpload}
-      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout_fileDelete_fileUpload}
+      ${TestUser.NON_SPACE_MEMBER}   | ${readPrivilege}
+      ${TestUser.SPACE_ADMIN}        | ${readPrivilege}
+      ${TestUser.SPACE_MEMBER}       | ${readPrivilege}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel}
+      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_fileDelete_fileUpload}
     `(
       'User: "$userRole" has this privileges: "$privileges" to spaceBasedVC',
       async ({ userRole, privileges }) => {
@@ -299,15 +301,15 @@ describe('Virtual Contributor Access - All Private - Visibility Private / BoK / 
         expect(data?.sort()).toEqual(privileges);
       }
     );
-    //   failing    ${undefined}                   | ${['READ', 'READ_ABOUT']}
+    //   failing    ${undefined}                   | ${readPrivilege}
 
     test.each`
       userRole                       | privileges
-      ${TestUser.NON_SPACE_MEMBER}   | ${['READ', 'READ_ABOUT']}
-      ${TestUser.SPACE_ADMIN}        | ${['READ', 'READ_ABOUT']}
-      ${TestUser.SPACE_MEMBER}       | ${['READ', 'READ_ABOUT']}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_readAbout_fileDelete_fileUpload}
-      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout_fileDelete_fileUpload}
+      ${TestUser.NON_SPACE_MEMBER}   | ${readPrivilege}
+      ${TestUser.SPACE_ADMIN}        | ${readPrivilege}
+      ${TestUser.SPACE_MEMBER}       | ${readPrivilege}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel}
+      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_fileDelete_fileUpload}
     `(
       'User: "$userRole" has this privileges: "$privileges" to knowledgeBasedVC',
       async ({ userRole, privileges }) => {
@@ -335,12 +337,12 @@ describe('Virtual Contributor Access - All Private - Visibility Private / BoK / 
   });
 
   describe('Virtualcontributor ', () => {
-    //   failing    ${undefined}                   | ${['READ', 'READ_ABOUT']}
+    //   failing    ${undefined}                   | ${readPrivilege}
     test.each`
       userRole                       | privileges
-      ${TestUser.NON_SPACE_MEMBER}   | ${['READ_ABOUT']}
-      ${TestUser.SPACE_ADMIN}        | ${['READ_ABOUT']}
-      ${TestUser.SPACE_MEMBER}       | ${['READ_ABOUT']}
+      ${TestUser.NON_SPACE_MEMBER}   | ${sorted_read_readAbout}
+      ${TestUser.SPACE_ADMIN}        | ${sorted_read_readAbout}
+      ${TestUser.SPACE_MEMBER}       | ${sorted_read_readAbout}
       ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_readAbout}
       ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout}
     `(
@@ -353,12 +355,12 @@ describe('Virtual Contributor Access - All Private - Visibility Private / BoK / 
         expect(data?.sort()).toEqual(privileges);
       }
     );
-    //   failing    ${undefined}                   | ${['READ', 'READ_ABOUT']}
+    //   failing    ${undefined}                   | ${readPrivilege}
     test.each`
       userRole                       | privileges
-      ${TestUser.NON_SPACE_MEMBER}   | ${['READ_ABOUT']}
-      ${TestUser.SPACE_ADMIN}        | ${['READ_ABOUT']}
-      ${TestUser.SPACE_MEMBER}       | ${['READ_ABOUT']}
+      ${TestUser.NON_SPACE_MEMBER}   | ${sorted_read_readAbout}
+      ${TestUser.SPACE_ADMIN}        | ${sorted_read_readAbout}
+      ${TestUser.SPACE_MEMBER}       | ${sorted_read_readAbout}
       ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_readAbout}
       ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout}
     `(
@@ -374,14 +376,14 @@ describe('Virtual Contributor Access - All Private - Visibility Private / BoK / 
   });
 
   describe('VC storageBucket', () => {
-    //   failing    ${undefined}                   | ${['READ', 'READ_ABOUT']}
+    //   failing    ${undefined}                   | ${readPrivilege}
     test.each`
       userRole                       | privileges
-      ${TestUser.NON_SPACE_MEMBER}   | ${['READ', 'READ_ABOUT']}
-      ${TestUser.SPACE_ADMIN}        | ${['READ', 'READ_ABOUT']}
-      ${TestUser.SPACE_MEMBER}       | ${['READ', 'READ_ABOUT']}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_readAbout_fileDelete_fileUpload}
-      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout_fileDelete_fileUpload}
+      ${TestUser.NON_SPACE_MEMBER}   | ${readPrivilege}
+      ${TestUser.SPACE_ADMIN}        | ${readPrivilege}
+      ${TestUser.SPACE_MEMBER}       | ${readPrivilege}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel}
+      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_fileDelete_fileUpload}
     `(
       'User: "$userRole" has this privileges: "$privileges" to spaceBasedVC',
       async ({ userRole, privileges }) => {
@@ -393,15 +395,15 @@ describe('Virtual Contributor Access - All Private - Visibility Private / BoK / 
         expect(data?.sort()).toEqual(privileges);
       }
     );
-    //   failing    ${undefined}                   | ${['READ', 'READ_ABOUT']}
+    //   failing    ${undefined}                   | ${readPrivilege}
 
     test.each`
       userRole                       | privileges
-      ${TestUser.NON_SPACE_MEMBER}   | ${['READ', 'READ_ABOUT']}
-      ${TestUser.SPACE_ADMIN}        | ${['READ', 'READ_ABOUT']}
-      ${TestUser.SPACE_MEMBER}       | ${['READ', 'READ_ABOUT']}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_readAbout_fileDelete_fileUpload}
-      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout_fileDelete_fileUpload}
+      ${TestUser.NON_SPACE_MEMBER}   | ${readPrivilege}
+      ${TestUser.SPACE_ADMIN}        | ${readPrivilege}
+      ${TestUser.SPACE_MEMBER}       | ${readPrivilege}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel}
+      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_fileDelete_fileUpload}
     `(
       'User: "$userRole" has this privileges: "$privileges" to knowledgeBasedVC',
       async ({ userRole, privileges }) => {
@@ -426,12 +428,12 @@ describe('Virtual Contributor Access - All Private - Visibility Public / BoK / P
   });
 
   describe('Virtualcontributor ', () => {
-    //   failing    ${undefined}                   | ${['READ', 'READ_ABOUT']}
+    //   failing    ${undefined}                   | ${readPrivilege}
     test.each`
       userRole                       | privileges
-      ${TestUser.NON_SPACE_MEMBER}   | ${['READ_ABOUT']}
-      ${TestUser.SPACE_ADMIN}        | ${['READ_ABOUT']}
-      ${TestUser.SPACE_MEMBER}       | ${['READ_ABOUT']}
+      ${TestUser.NON_SPACE_MEMBER}   | ${sorted_read_readAbout}
+      ${TestUser.SPACE_ADMIN}        | ${sorted_read_readAbout}
+      ${TestUser.SPACE_MEMBER}       | ${sorted_read_readAbout}
       ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_readAbout}
       ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout}
     `(
@@ -444,12 +446,12 @@ describe('Virtual Contributor Access - All Private - Visibility Public / BoK / P
         expect(data?.sort()).toEqual(privileges);
       }
     );
-    //   failing    ${undefined}                   | ${['READ', 'READ_ABOUT']}
+    //   failing    ${undefined}                   | ${readPrivilege}
     test.each`
       userRole                       | privileges
-      ${TestUser.NON_SPACE_MEMBER}   | ${['READ_ABOUT']}
-      ${TestUser.SPACE_ADMIN}        | ${['READ_ABOUT']}
-      ${TestUser.SPACE_MEMBER}       | ${['READ_ABOUT']}
+      ${TestUser.NON_SPACE_MEMBER}   | ${sorted_read_readAbout}
+      ${TestUser.SPACE_ADMIN}        | ${sorted_read_readAbout}
+      ${TestUser.SPACE_MEMBER}       | ${sorted_read_readAbout}
       ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_readAbout}
       ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout}
     `(
@@ -465,14 +467,14 @@ describe('Virtual Contributor Access - All Private - Visibility Public / BoK / P
   });
 
   describe('VC storageBucket', () => {
-    //   failing    ${undefined}                   | ${['READ', 'READ_ABOUT']}
+    //   failing    ${undefined}                   | ${readPrivilege}
     test.each`
       userRole                       | privileges
-      ${TestUser.NON_SPACE_MEMBER}   | ${['READ', 'READ_ABOUT']}
-      ${TestUser.SPACE_ADMIN}        | ${['READ', 'READ_ABOUT']}
-      ${TestUser.SPACE_MEMBER}       | ${['READ', 'READ_ABOUT']}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_readAbout_fileDelete_fileUpload}
-      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout_fileDelete_fileUpload}
+      ${TestUser.NON_SPACE_MEMBER}   | ${readPrivilege}
+      ${TestUser.SPACE_ADMIN}        | ${readPrivilege}
+      ${TestUser.SPACE_MEMBER}       | ${readPrivilege}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel}
+      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_fileDelete_fileUpload}
     `(
       'User: "$userRole" has this privileges: "$privileges" to spaceBasedVC',
       async ({ userRole, privileges }) => {
@@ -484,15 +486,15 @@ describe('Virtual Contributor Access - All Private - Visibility Public / BoK / P
         expect(data?.sort()).toEqual(privileges);
       }
     );
-    //   failing    ${undefined}                   | ${['READ', 'READ_ABOUT']}
+    //   failing    ${undefined}                   | ${readPrivilege}
 
     test.each`
       userRole                       | privileges
-      ${TestUser.NON_SPACE_MEMBER}   | ${['READ', 'READ_ABOUT']}
-      ${TestUser.SPACE_ADMIN}        | ${['READ', 'READ_ABOUT']}
-      ${TestUser.SPACE_MEMBER}       | ${['READ', 'READ_ABOUT']}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_readAbout_fileDelete_fileUpload}
-      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout_fileDelete_fileUpload}
+      ${TestUser.NON_SPACE_MEMBER}   | ${readPrivilege}
+      ${TestUser.SPACE_ADMIN}        | ${readPrivilege}
+      ${TestUser.SPACE_MEMBER}       | ${readPrivilege}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel}
+      ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_fileDelete_fileUpload}
     `(
       'User: "$userRole" has this privileges: "$privileges" to knowledgeBasedVC',
       async ({ userRole, privileges }) => {

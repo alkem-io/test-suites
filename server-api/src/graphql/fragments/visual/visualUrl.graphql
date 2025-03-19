@@ -1,8 +1,0 @@
-fragment VisualUri on Visual {
-  id
-  uri
-  name
-  authorization {
-    myPrivileges
-  }
-}

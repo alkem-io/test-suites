@@ -15,8 +15,9 @@ import {
   sorted__create_read_update_delete_grant_contribute_updateContent,
   sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent,
   sorted__create_read_update_delete_grant_fileUp_fileDel_contribute,
-  sorted__create_read_readAbout_update_delete_grant,
-  sorted__create_read_readAbout_update_delete_grant_fileUp_fileDel,
+  readPrivilege,
+  sorted__create_read_update_delete_grant_fileUp_fileDel,
+  sorted__create_read_update_delete_grant,
 } from '@common/constants/privileges';
 import {
   createLinkCollectionCallout,
@@ -110,11 +111,11 @@ describe('Private Space - visual on profile', () => {
     // Arrange
     test.each`
       userRole                     | privileges
-      ${undefined}                 | ${['READ', 'READ_ABOUT']}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_readAbout_update_delete_grant}
-      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_readAbout_update_delete_grant}
-      ${TestUser.NON_SPACE_MEMBER} | ${['READ', 'READ_ABOUT']}
-      ${TestUser.SPACE_MEMBER}     | ${['READ', 'READ_ABOUT']}
+      ${undefined}                 | ${readPrivilege}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant}
+      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant}
+      ${TestUser.NON_SPACE_MEMBER} | ${readPrivilege}
+      ${TestUser.SPACE_MEMBER}     | ${readPrivilege}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space profile visual document',
       async ({ userRole, privileges }) => {
@@ -130,12 +131,12 @@ describe('Private Space - visual on profile', () => {
     );
 
     test.each`
-      userRole                     | privileges                                                          | parentEntityType
-      ${undefined}                 | ${['READ', 'READ_ABOUT']}                                           | ${'SPACE_ABOUT'}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_readAbout_update_delete_grant_fileUp_fileDel} | ${'SPACE_ABOUT'}
-      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_readAbout_update_delete_grant_fileUp_fileDel} | ${'SPACE_ABOUT'}
-      ${TestUser.NON_SPACE_MEMBER} | ${['READ', 'READ_ABOUT']}                                           | ${'SPACE_ABOUT'}
-      ${TestUser.SPACE_MEMBER}     | ${['READ', 'READ_ABOUT']}                                           | ${'SPACE_ABOUT'}
+      userRole                     | privileges                                                | parentEntityType
+      ${undefined}                 | ${readPrivilege}                                          | ${'SPACE_ABOUT'}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${'SPACE_ABOUT'}
+      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${'SPACE_ABOUT'}
+      ${TestUser.NON_SPACE_MEMBER} | ${readPrivilege}                                          | ${'SPACE_ABOUT'}
+      ${TestUser.SPACE_MEMBER}     | ${readPrivilege}                                          | ${'SPACE_ABOUT'}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space profile storage bucket',
       async ({ userRole, privileges, parentEntityType }) => {
@@ -176,11 +177,11 @@ describe('Private Space - visual on profile', () => {
     // Arrange
     test.each`
       userRole                     | privileges
-      ${undefined}                 | ${['READ', 'READ_ABOUT']}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_readAbout_update_delete_grant}
-      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_readAbout_update_delete_grant}
-      ${TestUser.NON_SPACE_MEMBER} | ${['READ', 'READ_ABOUT']}
-      ${TestUser.SPACE_MEMBER}     | ${['READ', 'READ_ABOUT']}
+      ${undefined}                 | ${readPrivilege}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant}
+      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant}
+      ${TestUser.NON_SPACE_MEMBER} | ${readPrivilege}
+      ${TestUser.SPACE_MEMBER}     | ${readPrivilege}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space profile reference document',
       async ({ userRole, privileges }) => {
@@ -197,12 +198,12 @@ describe('Private Space - visual on profile', () => {
     );
 
     test.each`
-      userRole                     | privileges                                                          | parentEntityType
-      ${undefined}                 | ${['READ', 'READ_ABOUT']}                                           | ${'SPACE_ABOUT'}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_readAbout_update_delete_grant_fileUp_fileDel} | ${'SPACE_ABOUT'}
-      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_readAbout_update_delete_grant_fileUp_fileDel} | ${'SPACE_ABOUT'}
-      ${TestUser.NON_SPACE_MEMBER} | ${['READ', 'READ_ABOUT']}                                           | ${'SPACE_ABOUT'}
-      ${TestUser.SPACE_MEMBER}     | ${['READ', 'READ_ABOUT']}                                           | ${'SPACE_ABOUT'}
+      userRole                     | privileges                                                | parentEntityType
+      ${undefined}                 | ${readPrivilege}                                          | ${'SPACE_ABOUT'}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${'SPACE_ABOUT'}
+      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${'SPACE_ABOUT'}
+      ${TestUser.NON_SPACE_MEMBER} | ${readPrivilege}                                          | ${'SPACE_ABOUT'}
+      ${TestUser.SPACE_MEMBER}     | ${readPrivilege}                                          | ${'SPACE_ABOUT'}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space profile storage bucket',
       async ({ userRole, privileges, parentEntityType }) => {
@@ -219,7 +220,7 @@ describe('Private Space - visual on profile', () => {
     );
   });
 
-  describe('Access to Space Context (space storage)', () => {
+  describe('Access to Space About (space storage)', () => {
     afterAll(async () => {
       await deleteDocument(documentId);
     });
@@ -249,13 +250,13 @@ describe('Private Space - visual on profile', () => {
     // Arrange
     test.each`
       userRole                     | privileges
-      ${undefined}                 | ${['READ', 'READ_ABOUT']}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_readAbout_update_delete_grant}
-      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_readAbout_update_delete_grant}
-      ${TestUser.NON_SPACE_MEMBER} | ${['READ', 'READ_ABOUT']}
-      ${TestUser.SPACE_MEMBER}     | ${['READ', 'READ_ABOUT']}
+      ${undefined}                 | ${readPrivilege}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant}
+      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant}
+      ${TestUser.NON_SPACE_MEMBER} | ${readPrivilege}
+      ${TestUser.SPACE_MEMBER}     | ${readPrivilege}
     `(
-      'User: "$userRole" has this privileges: "$privileges" to space context (storageBucket) document',
+      'User: "$userRole" has this privileges: "$privileges" to space about (storageBucket) document',
       async ({ userRole, privileges }) => {
         const res = await getProfileDocuments(
           baseScenario.space.about.profile.id,
@@ -270,14 +271,14 @@ describe('Private Space - visual on profile', () => {
     );
 
     test.each`
-      userRole                     | privileges                                                          | parentEntityType
-      ${undefined}                 | ${['READ', 'READ_ABOUT']}                                           | ${'SPACE_ABOUT'}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_readAbout_update_delete_grant_fileUp_fileDel} | ${'SPACE_ABOUT'}
-      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_readAbout_update_delete_grant_fileUp_fileDel} | ${'SPACE_ABOUT'}
-      ${TestUser.NON_SPACE_MEMBER} | ${['READ', 'READ_ABOUT']}                                           | ${'SPACE_ABOUT'}
-      ${TestUser.SPACE_MEMBER}     | ${['READ', 'READ_ABOUT']}                                           | ${'SPACE_ABOUT'}
+      userRole                     | privileges                                                | parentEntityType
+      ${undefined}                 | ${readPrivilege}                                          | ${'SPACE_ABOUT'}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${'SPACE_ABOUT'}
+      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${'SPACE_ABOUT'}
+      ${TestUser.NON_SPACE_MEMBER} | ${readPrivilege}                                          | ${'SPACE_ABOUT'}
+      ${TestUser.SPACE_MEMBER}     | ${readPrivilege}                                          | ${'SPACE_ABOUT'}
     `(
-      'User: "$userRole" has this privileges: "$privileges" to space context storage bucket',
+      'User: "$userRole" has this privileges: "$privileges" to space about storage bucket',
       async ({ userRole, privileges, parentEntityType }) => {
         const res = await getProfileDocuments(
           baseScenario.space.about.profile.id,

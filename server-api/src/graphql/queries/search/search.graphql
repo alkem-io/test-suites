@@ -1,106 +1,351 @@
-query searchContributor($searchData: SearchInput!) {
+query search($searchData: SearchInput!) {
   search(searchData: $searchData) {
-    contributorResultsCount
-    contributorResults {
-      score
-      terms
-      type
-
-      ... on SearchResultUser {
-        user {
-          id
-          profile {
-            displayName
-          }
-        }
+    spaceResults {
+      cursor
+      results {
+        id
         type
+        score
+        terms
+        ...SearchResultSpace
+        __typename
       }
-
-      ... on SearchResultOrganization {
-        organization {
-          id
-          profile {
-            displayName
-          }
-        }
-        type
-      }
+      total
+      __typename
     }
-  }
-}
-
-query searchJourney($searchData: SearchInput!) {
-  search(searchData: $searchData) {
-    journeyResultsCount
-    journeyResults {
-      score
-      terms
-      type
-
-      ... on SearchResultSpace {
-        space {
-          id
-          about {
-            profile {
-              displayName
-            }
-          }
-        }
+    calloutResults {
+      cursor
+      results {
+        id
         type
+        score
+        terms
+        ...SearchResultCallout
+        __typename
       }
-
-      # ... on SearchResultSubspace {
-      #   subspace {
-      #     id
-      #     profile {
-      #       displayName
-      #     }
-      #   }
-      #   type
-      # }
+      total
+      __typename
     }
-  }
-}
-
-query searchContributions($searchData: SearchInput!) {
-  search(searchData: $searchData) {
-    contributionResultsCount
     contributionResults {
-      id
-      score
-      terms
-      type
-      ... on SearchResultPost {
-        space {
-          id
-          about {
-            profile {
-              displayName
-            }
-          }
-        }
-        # subspace {
-        #   id
-        #   profile {
-        #     displayName
-        #   }
-        # }
-
-        callout {
-          id
-          framing {
-            profile {
-              displayName
-            }
-          }
-        }
-        post {
-          id
-          profile {
-            displayName
-          }
-        }
+      cursor
+      results {
+        id
+        type
+        score
+        terms
+        ...SearchResultPost
+        ...SearchResultCallout
+        __typename
       }
+      total
+      __typename
     }
+    contributorResults {
+      cursor
+      results {
+        id
+        type
+        score
+        terms
+        ...SearchResultUser
+        ...SearchResultOrganization
+        __typename
+      }
+      total
+      __typename
+    }
+    __typename
   }
+}
+
+fragment SearchResultSpace on SearchResultSpace {
+  parentSpace {
+    id
+    level
+    about {
+      ...SpaceAboutLight
+      __typename
+    }
+    settings {
+      privacy {
+        mode
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+  space {
+    id
+    level
+    about {
+      id
+      why
+      profile {
+        id
+        url
+        displayName
+        tagset {
+          ...TagsetDetails
+          __typename
+        }
+        tagline
+        visuals {
+          ...VisualUri
+          __typename
+        }
+        __typename
+      }
+      __typename
+    }
+    community {
+      id
+      roleSet {
+        id
+        myMembershipStatus
+        __typename
+      }
+      __typename
+    }
+    settings {
+      privacy {
+        mode
+        __typename
+      }
+      __typename
+    }
+    visibility
+    __typename
+  }
+  __typename
+}
+
+fragment SpaceAboutLight on SpaceAbout {
+  id
+  profile {
+    id
+    displayName
+    url
+    tagline
+    description
+    tagset {
+      id
+      tags
+      __typename
+    }
+    avatar: visual(type: AVATAR) {
+      ...VisualUri
+      __typename
+    }
+    cardBanner: visual(type: CARD) {
+      ...VisualUri
+      __typename
+    }
+    __typename
+  }
+  __typename
+}
+
+fragment VisualUri on Visual {
+  id
+  uri
+  name
+  __typename
+}
+
+fragment TagsetDetails on Tagset {
+  id
+  name
+  tags
+  allowedValues
+  type
+  __typename
+}
+
+fragment SearchResultCallout on SearchResultCallout {
+  id
+  callout {
+    id
+    type
+    framing {
+      id
+      profile {
+        id
+        displayName
+        description
+        url
+        tagset {
+          ...TagsetDetails
+          __typename
+        }
+        __typename
+      }
+      __typename
+    }
+    contributionPolicy {
+      id
+      state
+      allowedContributionTypes
+      __typename
+    }
+    contributions {
+      id
+      post {
+        id
+        __typename
+      }
+      whiteboard {
+        id
+        __typename
+      }
+      link {
+        id
+        __typename
+      }
+      __typename
+    }
+    comments {
+      id
+      messagesCount
+      __typename
+    }
+    __typename
+  }
+  ...CalloutParent
+  __typename
+}
+
+fragment CalloutParent on SearchResultCallout {
+  space {
+    id
+    about {
+      ...SpaceAboutLight
+      __typename
+    }
+    level
+    __typename
+  }
+  __typename
+}
+
+fragment SearchResultPost on SearchResultPost {
+  post {
+    id
+    profile {
+      id
+      url
+      displayName
+      visual(type: CARD) {
+        ...VisualUri
+        __typename
+      }
+      ...SearchResultPostProfile
+      __typename
+    }
+    createdBy {
+      id
+      profile {
+        id
+        displayName
+        __typename
+      }
+      __typename
+    }
+    createdDate
+    comments {
+      id
+      messagesCount
+      __typename
+    }
+    __typename
+  }
+  ...PostParent
+  __typename
+}
+
+fragment SearchResultPostProfile on Profile {
+  id
+  description
+  tagset {
+    ...TagsetDetails
+    __typename
+  }
+  __typename
+}
+
+fragment PostParent on SearchResultPost {
+  space {
+    id
+    level
+    visibility
+    about {
+      ...SpaceAboutLight
+      __typename
+    }
+    settings {
+      privacy {
+        mode
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+  callout {
+    id
+    framing {
+      id
+      profile {
+        id
+        url
+        displayName
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+  __typename
+}
+
+fragment SearchResultUser on SearchResultUser {
+  user {
+    id
+    isContactable
+    profile {
+      displayName
+      ...SearchResultProfile
+      __typename
+    }
+    __typename
+  }
+  __typename
+}
+
+fragment SearchResultProfile on Profile {
+  id
+  description
+  location {
+    id
+    country
+    city
+    __typename
+  }
+  tagsets {
+    ...TagsetDetails
+    __typename
+  }
+}
+
+fragment SearchResultOrganization on SearchResultOrganization {
+  organization {
+    id
+    profile {
+      displayName
+      ...SearchResultProfile
+      __typename
+    }
+    __typename
+  }
+  __typename
 }
