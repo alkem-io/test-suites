@@ -7,6 +7,7 @@ import {
   CalloutVisibility,
 } from '@generated/alkemio-schema';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
+import { TagsetReservedName } from '@generated/alkemio-schema';
 const uniqueId = UniqueIDGenerator.getID();
 
 export const defaultPostTemplate = {
@@ -102,17 +103,20 @@ export const createCalloutOnCalloutsSet = async (
 
 export const getCalloutsData = async (
   calloutsSetId: string,
-  groups?: string[],
-  calloutIds?: string[],
+  tags?: string[] | undefined,
   role = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.GetCallouts(
+    graphqlClient.GetCalloutsOnCalloutsSetUsingClassification(
       {
         calloutsSetId,
-        groups,
-        calloutIds,
+        classificationTagsets: [
+          {
+            name: TagsetReservedName.FlowState,
+            tags,
+          },
+        ],
       },
       {
         authorization: `Bearer ${authToken}`,

@@ -1,11 +1,6 @@
 fragment SubspaceData on Space {
   id
   nameID
-  metrics {
-    id
-    name
-    value
-  }
   about {
     ...SpaceAboutDetails
   }

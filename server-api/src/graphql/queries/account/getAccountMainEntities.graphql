@@ -4,9 +4,11 @@ query GetAccountMainEntities($accountId: UUID!) {
       spaces {
         id
         nameID
-        provider {
-          id
-          nameID
+        about {
+          provider {
+            id
+            nameID
+          }
         }
       }
       innovationPacks {

@@ -1,11 +1,6 @@
 fragment SpaceData on Space {
   id
   nameID
-  metrics {
-    id
-    name
-    value
-  }
   visibility
   account {
     ...AccountData

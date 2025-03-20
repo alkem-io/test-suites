@@ -8,4 +8,13 @@ fragment SpaceAboutDetails on SpaceAbout {
   profile {
     ...ProfileData
   }
+  metrics {
+    id
+    name
+    value
+  }
+  provider {
+    id
+    nameID
+  }
 }
