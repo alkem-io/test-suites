@@ -1,5 +1,4 @@
-import { TestUser } from '@alkemio/tests-lib';
-import { uniqueId } from 'src/utils/uniqueId';
+import { TestUser, UniqueIDGenerator } from '@alkemio/tests-lib';
 import { registerInAlkemioOrFail } from 'src/utils/register-in-alkemio-or-fail';
 import { registerInKratosOrFail } from 'src/utils/register-in-kratos-or-fail';
 import { verifyInKratosOrFail } from '@src/utils/verify-in-kratos-or-fail';
@@ -18,7 +17,7 @@ export const registerVerifiedUser = async (
 };
 
 export const getDefaultUserData = () => {
-
+  const uniqueId = UniqueIDGenerator.getID();
   return {
     firstName: `fn${uniqueId}`,
     lastName: `ln${uniqueId}`,
