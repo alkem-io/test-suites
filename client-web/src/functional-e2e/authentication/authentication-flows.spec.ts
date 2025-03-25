@@ -19,6 +19,7 @@ import {
 } from '../identity-flows/signin-page-objects';
 import { verifyMyDashboardWelcomeElement } from '../my-dashboard/my-dashboard-page-objects';
 import {
+  continueButton,
   emailField,
   passwordField,
   recoveryCodeField,
@@ -36,7 +37,7 @@ console.log({ baseUrl });
 const uniqueId = UniqueIDGenerator.getID();
 
 const userEmail = `test+${uniqueId}@alkem.io`;
-const newPassword = 'Test1234!!**';
+const newPassword = 'Test1234!!**!!';
 test.beforeEach(async ({ context }) => {
   await context.clearCookies();
   await deleteMailSlurperMails();
@@ -91,7 +92,7 @@ test('user successful registration email', async ({ page }) => {
 
   await expect(page.getByText('An email containing a')).toBeVisible();
   await page.getByLabel('Verification code *').click();
-  await submitButton(page).click();
+  await continueButton(page).click();
 
   await expect(page.getByText('You successfully verified')).toBeVisible();
   await expect(page.getByRole('link', { name: 'Continue' })).toBeVisible();
@@ -112,13 +113,13 @@ test('user successful registration email', async ({ page }) => {
   await deleteUser(registeredUserId);
 });
 
-test('user successful password recovery', async ({ page }) => {
+test.only('user successful password recovery', async ({ page }) => {
   await navigateToLoginPageFromMenu(baseUrl, page);
 
   await page.getByRole('link', { name: 'Reset password' }).click();
   await emailField(page).click();
   await emailField(page).fill('non.space@alkem.io');
-  await submitButton(page).click();
+  await continueButton(page).click();
   await delay(1300);
   const getEmailsData = await getRecoveryCode();
   const recoveryCodeFromEmail = getEmailsData[0];
@@ -128,7 +129,7 @@ test('user successful password recovery', async ({ page }) => {
 
   await recoveryCodeField(page).click();
   await recoveryCodeField(page).fill(recoveryCodeFromEmail);
-  await submitButton(page).click();
+  await continueButton(page).click();
   await passwordField(page).click();
   await passwordField(page).fill(newPassword);
   await expect(
