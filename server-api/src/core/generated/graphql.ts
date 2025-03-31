@@ -1540,14 +1540,14 @@ export type ConversionVcSpaceToVcKnowledgeBaseInput = {
   virtualContributorID: Scalars['UUID']['input'];
 };
 
-export type ConvertSubspaceToSpaceInput = {
-  /** The subspace to be promoted to be a new Space. Note: the original Subspace will no longer exist after the conversion.  */
-  subspaceID: Scalars['UUID']['input'];
+export type ConvertSpaceL1ToSpaceL0Input = {
+  /** The Space L1 to be promoted to be a new Space L0. Note: the original Space L1 will no longer exist after the conversion.  */
+  spaceL1ID: Scalars['UUID']['input'];
 };
 
-export type ConvertSubsubspaceToSubspaceInput = {
-  /** The subsubspace to be promoted. Note: the original Opportunity will no longer exist after the conversion.  */
-  subsubspaceID: Scalars['UUID']['input'];
+export type ConvertSpaceL2ToSpaceL1Input = {
+  /** The Space L2 to be promoted. Note: the original Space will no longer exist after the conversion.  */
+  spaceL2ID: Scalars['UUID']['input'];
 };
 
 export type CreateAiPersonaInput = {
@@ -2663,7 +2663,7 @@ export type Invitation = {
   /** The type of contributor that is invited. */
   contributorType: RoleSetContributorType;
   /** The User who triggered the invitation. */
-  createdBy: User;
+  createdBy?: Maybe<User>;
   createdDate: Scalars['DateTime']['output'];
   /** An additional role to assign to the Contributor, in addition to the entry Role. */
   extraRole?: Maybe<RoleName>;
@@ -3558,10 +3558,10 @@ export type Mutation = {
   beginVerifiedCredentialRequestInteraction: AgentBeginVerifiedCredentialRequestOutput;
   /** Deletes collections nameID-... */
   cleanupCollections: MigrateEmbeddings;
-  /** Creates a new Space by converting an existing Challenge. */
-  convertChallengeToSpace: Space;
-  /** Creates a new Challenge by converting an existing Opportunity. */
-  convertOpportunityToChallenge: Space;
+  /** Creates a new Space by converting an existing L1 Space. */
+  convertSpaceL1ToSpaceL0: Space;
+  /** Creates a new Space L1 by converting an existing Space L2. */
+  convertSpaceL2ToSpaceL1: Space;
   /** Convert a VC of type ALKEMIO_SPACE to be of type KNOWLEDGE_BASE. All Callouts from the Space currently being used are moved to the Knowledge Base. Note: only allowed for VCs using a Space within the same Account. */
   convertVirtualContributorToUseKnowledgeBase: VirtualContributor;
   /** Create a new Callout on the CalloutsSet. */
@@ -3921,12 +3921,12 @@ export type MutationBeginVerifiedCredentialRequestInteractionArgs = {
   types: Array<Scalars['String']['input']>;
 };
 
-export type MutationConvertChallengeToSpaceArgs = {
-  convertData: ConvertSubspaceToSpaceInput;
+export type MutationConvertSpaceL1ToSpaceL0Args = {
+  convertData: ConvertSpaceL1ToSpaceL0Input;
 };
 
-export type MutationConvertOpportunityToChallengeArgs = {
-  convertData: ConvertSubsubspaceToSubspaceInput;
+export type MutationConvertSpaceL2ToSpaceL1Args = {
+  convertData: ConvertSpaceL2ToSpaceL1Input;
 };
 
 export type MutationConvertVirtualContributorToUseKnowledgeBaseArgs = {
@@ -5207,6 +5207,8 @@ export type RelayPaginatedSpace = {
   subspaces: Array<Space>;
   /** The TemplatesManager in use by this Space */
   templatesManager?: Maybe<TemplatesManager>;
+  /** The Type of the Space e.g. space/challenge/opportunity. */
+  type: SpaceType;
   /** The date at which the entity was last updated. */
   updatedDate?: Maybe<Scalars['DateTime']['output']>;
   /** Visibility of the Space. */
@@ -5821,6 +5823,8 @@ export type Space = {
   subspaces: Array<Space>;
   /** The TemplatesManager in use by this Space */
   templatesManager?: Maybe<TemplatesManager>;
+  /** The Type of the Space e.g. space/challenge/opportunity. */
+  type: SpaceType;
   /** The date at which the entity was last updated. */
   updatedDate?: Maybe<Scalars['DateTime']['output']>;
   /** Visibility of the Space. */
@@ -7992,8 +7996,8 @@ export type ResolversTypes = {
   ContributorRolePolicy: ResolverTypeWrapper<SchemaTypes.ContributorRolePolicy>;
   ContributorRoles: ResolverTypeWrapper<SchemaTypes.ContributorRoles>;
   ConversionVcSpaceToVcKnowledgeBaseInput: SchemaTypes.ConversionVcSpaceToVcKnowledgeBaseInput;
-  ConvertSubspaceToSpaceInput: SchemaTypes.ConvertSubspaceToSpaceInput;
-  ConvertSubsubspaceToSubspaceInput: SchemaTypes.ConvertSubsubspaceToSubspaceInput;
+  ConvertSpaceL1ToSpaceL0Input: SchemaTypes.ConvertSpaceL1ToSpaceL0Input;
+  ConvertSpaceL2ToSpaceL1Input: SchemaTypes.ConvertSpaceL2ToSpaceL1Input;
   CreateAiPersonaInput: SchemaTypes.CreateAiPersonaInput;
   CreateAiPersonaServiceInput: SchemaTypes.CreateAiPersonaServiceInput;
   CreateCalendarEventOnCalendarInput: SchemaTypes.CreateCalendarEventOnCalendarInput;
@@ -8211,7 +8215,7 @@ export type ResolversTypes = {
   Invitation: ResolverTypeWrapper<
     Omit<SchemaTypes.Invitation, 'contributor' | 'createdBy'> & {
       contributor: ResolversTypes['Contributor'];
-      createdBy: ResolversTypes['User'];
+      createdBy?: SchemaTypes.Maybe<ResolversTypes['User']>;
     }
   >;
   InvitationEventInput: SchemaTypes.InvitationEventInput;
@@ -9248,8 +9252,8 @@ export type ResolversParentTypes = {
   ContributorRolePolicy: SchemaTypes.ContributorRolePolicy;
   ContributorRoles: SchemaTypes.ContributorRoles;
   ConversionVcSpaceToVcKnowledgeBaseInput: SchemaTypes.ConversionVcSpaceToVcKnowledgeBaseInput;
-  ConvertSubspaceToSpaceInput: SchemaTypes.ConvertSubspaceToSpaceInput;
-  ConvertSubsubspaceToSubspaceInput: SchemaTypes.ConvertSubsubspaceToSubspaceInput;
+  ConvertSpaceL1ToSpaceL0Input: SchemaTypes.ConvertSpaceL1ToSpaceL0Input;
+  ConvertSpaceL2ToSpaceL1Input: SchemaTypes.ConvertSpaceL2ToSpaceL1Input;
   CreateAiPersonaInput: SchemaTypes.CreateAiPersonaInput;
   CreateAiPersonaServiceInput: SchemaTypes.CreateAiPersonaServiceInput;
   CreateCalendarEventOnCalendarInput: SchemaTypes.CreateCalendarEventOnCalendarInput;
@@ -9433,7 +9437,7 @@ export type ResolversParentTypes = {
   Int: SchemaTypes.Scalars['Int']['output'];
   Invitation: Omit<SchemaTypes.Invitation, 'contributor' | 'createdBy'> & {
     contributor: ResolversParentTypes['Contributor'];
-    createdBy: ResolversParentTypes['User'];
+    createdBy?: SchemaTypes.Maybe<ResolversParentTypes['User']>;
   };
   InvitationEventInput: SchemaTypes.InvitationEventInput;
   InviteForEntryRoleOnRoleSetInput: SchemaTypes.InviteForEntryRoleOnRoleSetInput;
@@ -12826,7 +12830,11 @@ export type InvitationResolvers<
     ParentType,
     ContextType
   >;
-  createdBy?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
+  createdBy?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes['User']>,
+    ParentType,
+    ContextType
+  >;
   createdDate?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   extraRole?: Resolver<
     SchemaTypes.Maybe<ResolversTypes['RoleName']>,
@@ -14144,21 +14152,21 @@ export type MutationResolvers<
     ParentType,
     ContextType
   >;
-  convertChallengeToSpace?: Resolver<
+  convertSpaceL1ToSpaceL0?: Resolver<
     ResolversTypes['Space'],
     ParentType,
     ContextType,
     RequireFields<
-      SchemaTypes.MutationConvertChallengeToSpaceArgs,
+      SchemaTypes.MutationConvertSpaceL1ToSpaceL0Args,
       'convertData'
     >
   >;
-  convertOpportunityToChallenge?: Resolver<
+  convertSpaceL2ToSpaceL1?: Resolver<
     ResolversTypes['Space'],
     ParentType,
     ContextType,
     RequireFields<
-      SchemaTypes.MutationConvertOpportunityToChallengeArgs,
+      SchemaTypes.MutationConvertSpaceL2ToSpaceL1Args,
       'convertData'
     >
   >;
@@ -16101,6 +16109,7 @@ export type RelayPaginatedSpaceResolvers<
     ParentType,
     ContextType
   >;
+  type?: Resolver<ResolversTypes['SpaceType'], ParentType, ContextType>;
   updatedDate?: Resolver<
     SchemaTypes.Maybe<ResolversTypes['DateTime']>,
     ParentType,
@@ -16682,6 +16691,7 @@ export type SpaceResolvers<
     ParentType,
     ContextType
   >;
+  type?: Resolver<ResolversTypes['SpaceType'], ParentType, ContextType>;
   updatedDate?: Resolver<
     SchemaTypes.Maybe<ResolversTypes['DateTime']>,
     ParentType,
@@ -18464,17 +18474,23 @@ export type InvitationDataFragment = {
   nextEvents: Array<string>;
   isFinalized: boolean;
   lifecycle: { id: string };
-  createdBy: {
-    id: string;
-    nameID: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    profile: { id: string; displayName: string };
-    authorization?:
-      | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
-      | undefined;
-  };
+  createdBy?:
+    | {
+        id: string;
+        nameID: string;
+        firstName: string;
+        lastName: string;
+        email: string;
+        profile: { id: string; displayName: string };
+        authorization?:
+          | {
+              myPrivileges?:
+                | Array<SchemaTypes.AuthorizationPrivilege>
+                | undefined;
+            }
+          | undefined;
+      }
+    | undefined;
   contributor:
     | {
         id: string;
@@ -77448,21 +77464,23 @@ export type InvitationStateEventMutation = {
     nextEvents: Array<string>;
     isFinalized: boolean;
     lifecycle: { id: string };
-    createdBy: {
-      id: string;
-      nameID: string;
-      firstName: string;
-      lastName: string;
-      email: string;
-      profile: { id: string; displayName: string };
-      authorization?:
-        | {
-            myPrivileges?:
-              | Array<SchemaTypes.AuthorizationPrivilege>
-              | undefined;
-          }
-        | undefined;
-    };
+    createdBy?:
+      | {
+          id: string;
+          nameID: string;
+          firstName: string;
+          lastName: string;
+          email: string;
+          profile: { id: string; displayName: string };
+          authorization?:
+            | {
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+        }
+      | undefined;
     contributor:
       | {
           id: string;
@@ -77502,21 +77520,23 @@ export type InviteContributorsMutation = {
     nextEvents: Array<string>;
     isFinalized: boolean;
     lifecycle: { id: string };
-    createdBy: {
-      id: string;
-      nameID: string;
-      firstName: string;
-      lastName: string;
-      email: string;
-      profile: { id: string; displayName: string };
-      authorization?:
-        | {
-            myPrivileges?:
-              | Array<SchemaTypes.AuthorizationPrivilege>
-              | undefined;
-          }
-        | undefined;
-    };
+    createdBy?:
+      | {
+          id: string;
+          nameID: string;
+          firstName: string;
+          lastName: string;
+          email: string;
+          profile: { id: string; displayName: string };
+          authorization?:
+            | {
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+        }
+      | undefined;
     contributor:
       | {
           id: string;
@@ -81418,12 +81438,12 @@ export type UpdatePostMutation = {
   };
 };
 
-export type ConvertSubspaceToSpaceMutationVariables = SchemaTypes.Exact<{
-  convertData: SchemaTypes.ConvertSubspaceToSpaceInput;
+export type ConvertSpaceL1ToSpaceL0MutationVariables = SchemaTypes.Exact<{
+  convertData: SchemaTypes.ConvertSpaceL1ToSpaceL0Input;
 }>;
 
-export type ConvertSubspaceToSpaceMutation = {
-  convertChallengeToSpace: {
+export type ConvertSpaceL1ToSpaceL0Mutation = {
+  convertSpaceL1ToSpaceL0: {
     id: string;
     nameID: string;
     visibility: SchemaTypes.SpaceVisibility;
@@ -134025,21 +134045,23 @@ export type RoleSetApplicationsInvitationsQuery = {
             nextEvents: Array<string>;
             isFinalized: boolean;
             lifecycle: { id: string };
-            createdBy: {
-              id: string;
-              nameID: string;
-              firstName: string;
-              lastName: string;
-              email: string;
-              profile: { id: string; displayName: string };
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-            };
+            createdBy?:
+              | {
+                  id: string;
+                  nameID: string;
+                  firstName: string;
+                  lastName: string;
+                  email: string;
+                  profile: { id: string; displayName: string };
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }
+              | undefined;
             contributor:
               | {
                   id: string;
@@ -134243,21 +134265,23 @@ export type GetSpaceInvitationsQuery = {
                 nextEvents: Array<string>;
                 isFinalized: boolean;
                 lifecycle: { id: string };
-                createdBy: {
-                  id: string;
-                  nameID: string;
-                  firstName: string;
-                  lastName: string;
-                  email: string;
-                  profile: { id: string; displayName: string };
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<SchemaTypes.AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                };
+                createdBy?:
+                  | {
+                      id: string;
+                      nameID: string;
+                      firstName: string;
+                      lastName: string;
+                      email: string;
+                      profile: { id: string; displayName: string };
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }
+                  | undefined;
                 contributor:
                   | {
                       id: string;
@@ -204565,21 +204589,23 @@ export type MeQueryQuery = {
         nextEvents: Array<string>;
         isFinalized: boolean;
         lifecycle: { id: string };
-        createdBy: {
-          id: string;
-          nameID: string;
-          firstName: string;
-          lastName: string;
-          email: string;
-          profile: { id: string; displayName: string };
-          authorization?:
-            | {
-                myPrivileges?:
-                  | Array<SchemaTypes.AuthorizationPrivilege>
-                  | undefined;
-              }
-            | undefined;
-        };
+        createdBy?:
+          | {
+              id: string;
+              nameID: string;
+              firstName: string;
+              lastName: string;
+              email: string;
+              profile: { id: string; displayName: string };
+              authorization?:
+                | {
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+            }
+          | undefined;
         contributor:
           | {
               id: string;
@@ -207391,9 +207417,11 @@ export const UpdatePostDocument = gql`
   }
   ${PostDataFragmentDoc}
 `;
-export const ConvertSubspaceToSpaceDocument = gql`
-  mutation convertSubspaceToSpace($convertData: ConvertSubspaceToSpaceInput!) {
-    convertChallengeToSpace(convertData: $convertData) {
+export const ConvertSpaceL1ToSpaceL0Document = gql`
+  mutation convertSpaceL1ToSpaceL0(
+    $convertData: ConvertSpaceL1ToSpaceL0Input!
+  ) {
+    convertSpaceL1ToSpaceL0(convertData: $convertData) {
       ...SpaceData
     }
   }
@@ -209599,8 +209627,8 @@ const SendMessageToRoomDocumentString = print(SendMessageToRoomDocument);
 const SendMessageToUserDocumentString = print(SendMessageToUserDocument);
 const UpdateDiscussionDocumentString = print(UpdateDiscussionDocument);
 const UpdatePostDocumentString = print(UpdatePostDocument);
-const ConvertSubspaceToSpaceDocumentString = print(
-  ConvertSubspaceToSpaceDocument
+const ConvertSpaceL1ToSpaceL0DocumentString = print(
+  ConvertSpaceL1ToSpaceL0Document
 );
 const DeleteDocumentDocumentString = print(DeleteDocumentDocument);
 const CreateSpaceBasicDataDocumentString = print(CreateSpaceBasicDataDocument);
@@ -210797,11 +210825,11 @@ export function getSdk(
         variables
       );
     },
-    convertSubspaceToSpace(
-      variables: SchemaTypes.ConvertSubspaceToSpaceMutationVariables,
+    convertSpaceL1ToSpaceL0(
+      variables: SchemaTypes.ConvertSpaceL1ToSpaceL0MutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
-      data: SchemaTypes.ConvertSubspaceToSpaceMutation;
+      data: SchemaTypes.ConvertSpaceL1ToSpaceL0Mutation;
       errors?: GraphQLError[];
       extensions?: any;
       headers: Headers;
@@ -210809,12 +210837,12 @@ export function getSdk(
     }> {
       return withWrapper(
         wrappedRequestHeaders =>
-          client.rawRequest<SchemaTypes.ConvertSubspaceToSpaceMutation>(
-            ConvertSubspaceToSpaceDocumentString,
+          client.rawRequest<SchemaTypes.ConvertSpaceL1ToSpaceL0Mutation>(
+            ConvertSpaceL1ToSpaceL0DocumentString,
             variables,
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
-        'convertSubspaceToSpace',
+        'convertSpaceL1ToSpaceL0',
         'mutation',
         variables
       );
