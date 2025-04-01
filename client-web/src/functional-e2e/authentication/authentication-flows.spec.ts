@@ -38,6 +38,7 @@ const uniqueId = UniqueIDGenerator.getID();
 
 const userEmail = `test+${uniqueId}@alkem.io`;
 const newPassword = 'Test1234!!**!!';
+
 test.beforeEach(async ({ context }) => {
   await context.clearCookies();
   await deleteMailSlurperMails();
@@ -113,7 +114,7 @@ test('user successful registration email', async ({ page }) => {
   await deleteUser(registeredUserId);
 });
 
-test.only('user successful password recovery', async ({ page }) => {
+test('user successful password recovery', async ({ page }) => {
   await navigateToLoginPageFromMenu(baseUrl, page);
 
   await page.getByRole('link', { name: 'Reset password' }).click();
@@ -136,11 +137,21 @@ test.only('user successful password recovery', async ({ page }) => {
     page.getByRole('heading', { name: 'User Settings' })
   ).toBeVisible();
   await saveButton(page).click();
-  await expect(page.getByText('BioKeywordsNo tags available.')).toBeVisible();
   await expect(
     page
       .locator('div')
-      .filter({ hasText: /^non space$/ })
-      .nth(3)
+      .filter({ hasText: /^Welcome back, non!Ready to make some impact\?$/ })
+      .nth(2)
   ).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Invitations' })).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Tips & Tricks' })
+  ).toBeVisible();
+  await expect(page.getByRole('link', { name: 'My Account' })).toBeVisible();
+  await expect(
+    page.getByRole('link', { name: 'Create my own Space' })
+  ).toBeVisible();
+
+  // ToDo
+  // after password reset, delete the user or revert the password to intial state
 });
