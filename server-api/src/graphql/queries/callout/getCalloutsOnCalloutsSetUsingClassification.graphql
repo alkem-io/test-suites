@@ -1,6 +1,7 @@
 query GetCalloutsOnCalloutsSetUsingClassification(
   $calloutsSetId: UUID!
   $classificationTagsets: [TagsetArgs!] = []
+  $withClassification: Boolean = true
 ) {
   lookup {
     calloutsSet(ID: $calloutsSetId) {
@@ -12,6 +13,7 @@ query GetCalloutsOnCalloutsSetUsingClassification(
       }
       callouts(classificationTagsets: $classificationTagsets) {
         ...Callout
+        ...ClassificationDetails @include(if: $withClassification)
         __typename
       }
       __typename
@@ -22,7 +24,6 @@ query GetCalloutsOnCalloutsSetUsingClassification(
 
 fragment Callout on Callout {
   id
-  nameID
   type
   sortOrder
   activity
@@ -41,7 +42,6 @@ fragment Callout on Callout {
     }
     __typename
   }
-  ...ClassificationDetails
   visibility
   __typename
 }
