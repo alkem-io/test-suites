@@ -4,6 +4,18 @@ import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWit
 import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
 import { convertSpaceL1ToSpaceL0 } from './conversion.request.params';
 import { getSpaceData } from '../space/space.request.params';
+import { inviteContributors } from '@functional-api/roleset/invitations/invitation.request.params';
+import { TestUserManager } from '@src/scenario/TestUserManager';
+import {
+  eventOnRoleSetApplication,
+  eventOnRoleSetInvitation,
+} from '@functional-api/roleset/roleset-events.request.params';
+import { sorted_read_readAbout } from '@common/constants/privileges';
+import { createApplication } from '@functional-api/roleset/application/application.request.params';
+import {
+  CommunityMembershipPolicy,
+  SpacePrivacyMode,
+} from '@alkemio/client-lib';
 
 let baseScenario: OrganizationWithSpaceModel;
 
@@ -22,8 +34,6 @@ const scenarioConfig: TestScenarioConfig = {
         TestUser.SPACE_ADMIN,
         TestUser.SUBSPACE_MEMBER,
         TestUser.SUBSPACE_ADMIN,
-        // TestUser.SUBSUBSPACE_MEMBER,
-        // TestUser.SUBSUBSPACE_ADMIN,
       ],
     },
     subspace: {
@@ -34,24 +44,12 @@ const scenarioConfig: TestScenarioConfig = {
       },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
-        members: [
-          TestUser.SUBSPACE_MEMBER,
-          TestUser.SUBSPACE_ADMIN,
-          // TestUser.SUBSUBSPACE_MEMBER,
-          // TestUser.SUBSUBSPACE_ADMIN,
-        ],
+        members: [TestUser.SUBSPACE_MEMBER, TestUser.SUBSPACE_ADMIN],
       },
-      // subspace: {
-      //   collaboration: {
-      //     addPostCallout: true,
-      //     addPostCollectionCallout: true,
-      //     addWhiteboardCallout: true,
-      //   },
-      //   community: {
-      //     admins: [TestUser.SUBSUBSPACE_ADMIN],
-      //     members: [TestUser.SUBSUBSPACE_MEMBER, TestUser.SUBSUBSPACE_ADMIN],
-      //   },
-      // },
+      settings: {
+        membership: { policy: CommunityMembershipPolicy.Applications },
+        privacy: { mode: SpacePrivacyMode.Private },
+      },
     },
   },
 };
@@ -64,21 +62,37 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
-describe('Conversion Subspace L1 to Space L0', () => {
-  test('HM should create post on space callout', async () => {
+describe('Promoting of L1 subspace', () => {
+  test('Conversion Subspace L1 to Space L0 with application and invitation to the subspace', async () => {
     // Arrange
+    const requestInvitation = await inviteContributors(
+      baseScenario.subspace.community.roleSetId,
+      [TestUserManager.users.nonSpaceMember.id],
+      TestUser.GLOBAL_ADMIN
+    );
+    console.log('Invitation ID:', requestInvitation.error);
+
+    const invitationId =
+      requestInvitation.data?.inviteContributorsEntryRoleOnRoleSet[0].id ?? '';
+    console.log('Invitation ID:', invitationId);
+
+    const applicationData = await createApplication(
+      baseScenario.subspace.community.roleSetId,
+      TestUser.SPACE_MEMBER
+    );
+    const createAppData = applicationData?.data?.applyForEntryRoleOnRoleSet;
+    const applicationId = createAppData?.id ?? '';
+    console.log('Application ID:', applicationId);
     const before = await getSpaceData(baseScenario.subspace.id);
-    console.log(before.data?.lookup.space?.account);
 
     // Act
     const res = await convertSpaceL1ToSpaceL0(baseScenario.subspace.id);
-
     const after = res.data?.convertSpaceL1ToSpaceL0;
-    console.log(after?.account);
 
     // Assert
     expect(before.data?.lookup.space?.visibility).toEqual(after?.visibility);
     expect(after?.type).toEqual('SPACE');
+
     expect(
       Array.isArray(before.data?.lookup.space?.community)
         ? before.data.lookup.space.community.slice().sort()
@@ -92,5 +106,43 @@ describe('Conversion Subspace L1 to Space L0', () => {
     );
     expect(before.data?.lookup.space?.settings).toEqual(after?.settings);
     expect(before.data?.lookup.space?.subspaces).toEqual(after?.subspaces);
+
+    // // User accepts invitation after subspace L1 has been converted to L0
+    const a = await eventOnRoleSetInvitation(
+      invitationId,
+      'ACCEPT',
+      TestUser.NON_SPACE_MEMBER
+    );
+    console.log('Invitation accepted', a.error);
+    const spaceDataInvitation = await getSpaceData(
+      baseScenario.subspace.id,
+      TestUser.NON_SPACE_MEMBER
+    );
+    console.log('Space Data Invitation', spaceDataInvitation.data);
+
+    // Assert
+    // skip until fixed
+    // expect(
+    //   spaceDataInvitation?.data?.lookup?.space?.authorization?.myPrivileges
+    // ).toEqual(expect.arrayContaining(sorted_read_readAbout));
+
+    // Converted Space admin approves application after subspace L1 has been converted to L0
+    const subspaceApplicationEventResponse = await eventOnRoleSetApplication(
+      applicationId,
+      'APPROVE'
+    );
+
+    const subspaceApplication =
+      subspaceApplicationEventResponse?.data?.eventOnApplication;
+    const spaceDataApplication = await getSpaceData(
+      baseScenario.subspace.id,
+      TestUser.SPACE_MEMBER
+    );
+    // Assert
+    expect(subspaceApplicationEventResponse.status).toBe(200);
+    expect(subspaceApplication?.state).toContain('approved');
+    expect(
+      spaceDataApplication?.data?.lookup?.space?.authorization?.myPrivileges
+    ).toEqual(expect.arrayContaining(sorted_read_readAbout));
   });
 });

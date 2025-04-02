@@ -1,0 +1,5 @@
+mutation ConvertSpaceL2ToSpaceL1($convertData: ConvertSpaceL2ToSpaceL1Input!) {
+  convertSpaceL2ToSpaceL1(convertData: $convertData) {
+    ...SpaceData
+  }
+}
