@@ -1,0 +1,9 @@
+query GetSpaceLicenseSubscriptions($ID: UUID!) {
+  lookup {
+    space(ID: $ID) {
+      subscriptions {
+        name
+      }
+    }
+  }
+}

@@ -17,6 +17,22 @@ export const getLicensePlans = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
+export const getSpaceLicenseSubscriptions = async (
+  ID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.GetSpaceLicenseSubscriptions(
+      { ID },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
 export const getLicensePlanByName = async (licenseCredential: string) => {
   const response = await getLicensePlans();
   const allLicensePlans =
