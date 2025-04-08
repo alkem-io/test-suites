@@ -577,6 +577,8 @@ export enum AgentType {
 }
 
 export type AiPersona = {
+  /** The ID of the AiPersonaService. */
+  aiPersonaServiceID?: Maybe<Scalars['String']['output']>;
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
   /** A overview of knowledge provided by this AI Persona. */
@@ -620,6 +622,7 @@ export enum AiPersonaEngine {
   Expert = 'EXPERT',
   GenericOpenai = 'GENERIC_OPENAI',
   Guidance = 'GUIDANCE',
+  LibraFlow = 'LIBRA_FLOW',
   OpenaiAssistant = 'OPENAI_ASSISTANT',
 }
 
@@ -642,6 +645,8 @@ export type AiPersonaService = {
   dataAccessMode: AiPersonaDataAccessMode;
   /** The AI Persona Engine being used by this AI Persona. */
   engine: AiPersonaEngine;
+  /** The ExternalConfig for this Virtual. */
+  externalConfig?: Maybe<ExternalConfig>;
   /** The ID of the entity */
   id: Scalars['UUID']['output'];
   /** The prompt used by this Virtual Persona */
@@ -1569,7 +1574,7 @@ export type CreateAiPersonaServiceInput = {
   bodyOfKnowledgeType?: InputMaybe<AiPersonaBodyOfKnowledgeType>;
   dataAccessMode?: InputMaybe<AiPersonaDataAccessMode>;
   engine?: InputMaybe<AiPersonaEngine>;
-  externalConfig?: InputMaybe<ExternalConfig>;
+  externalConfig?: InputMaybe<ExternalConfigInput>;
   prompt?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
@@ -2298,10 +2303,23 @@ export type ExploreSpacesInput = {
 };
 
 export type ExternalConfig = {
+  /** The signature of the API key */
+  apiKey?: Maybe<Scalars['String']['output']>;
+  /** The assistent ID backing the service in OpenAI`s assistant API */
+  assistantId?: Maybe<Scalars['String']['output']>;
+  /** The ExternalConfig for this Virtual. */
+  externalConfig?: Maybe<ExternalConfig>;
+  /** The OpenAI model to use for the service */
+  model: OpenAiModel;
+};
+
+export type ExternalConfigInput = {
   /** The API key for the external LLM provider. */
   apiKey?: InputMaybe<Scalars['String']['input']>;
   /** The assistent ID backing the service in OpenAI`s assistant API */
   assistantId?: InputMaybe<Scalars['String']['input']>;
+  /** The OpenAI model to use for the service */
+  model?: OpenAiModel;
 };
 
 export type FileStorageConfig = {
@@ -4489,6 +4507,34 @@ export enum NotificationEventType {
   SpaceCreated = 'SPACE_CREATED',
 }
 
+export enum OpenAiModel {
+  Babbage_002 = 'BABBAGE_002',
+  DallE_2 = 'DALL_E_2',
+  DallE_3 = 'DALL_E_3',
+  Davinci_002 = 'DAVINCI_002',
+  Gpt_3_5Turbo = 'GPT_3_5_TURBO',
+  Gpt_4 = 'GPT_4',
+  Gpt_4O = 'GPT_4O',
+  Gpt_4OAudioPreview = 'GPT_4O_AUDIO_PREVIEW',
+  Gpt_4OMini = 'GPT_4O_MINI',
+  Gpt_4OMiniAudioPreview = 'GPT_4O_MINI_AUDIO_PREVIEW',
+  Gpt_4OMiniRealtimePreview = 'GPT_4O_MINI_REALTIME_PREVIEW',
+  Gpt_4ORealtimePreview = 'GPT_4O_REALTIME_PREVIEW',
+  Gpt_4_5Preview = 'GPT_4_5_PREVIEW',
+  Gpt_4Turbo = 'GPT_4_TURBO',
+  O1 = 'O1',
+  O1Mini = 'O1_MINI',
+  O3Mini = 'O3_MINI',
+  OmniModerationLatest = 'OMNI_MODERATION_LATEST',
+  TextEmbedding_3Large = 'TEXT_EMBEDDING_3_LARGE',
+  TextEmbedding_3Small = 'TEXT_EMBEDDING_3_SMALL',
+  TextEmbeddingAda_002 = 'TEXT_EMBEDDING_ADA_002',
+  TextModerationLatest = 'TEXT_MODERATION_LATEST',
+  Tts_1 = 'TTS_1',
+  Tts_1Hd = 'TTS_1_HD',
+  Whisper_1 = 'WHISPER_1',
+}
+
 export type Organization = Contributor &
   Groupable & {
     /** The account hosted by this Organization. */
@@ -6393,7 +6439,7 @@ export type UpdateAiPersonaServiceInput = {
   bodyOfKnowledgeID?: InputMaybe<Scalars['UUID']['input']>;
   bodyOfKnowledgeType?: InputMaybe<AiPersonaBodyOfKnowledgeType>;
   engine?: InputMaybe<AiPersonaEngine>;
-  externalConfig?: InputMaybe<ExternalConfig>;
+  externalConfig?: InputMaybe<ExternalConfigInput>;
   prompt?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
@@ -8116,7 +8162,8 @@ export type ResolversTypes = {
   >;
   Emoji: ResolverTypeWrapper<SchemaTypes.Scalars['Emoji']['output']>;
   ExploreSpacesInput: SchemaTypes.ExploreSpacesInput;
-  ExternalConfig: SchemaTypes.ExternalConfig;
+  ExternalConfig: ResolverTypeWrapper<SchemaTypes.ExternalConfig>;
+  ExternalConfigInput: SchemaTypes.ExternalConfigInput;
   FileStorageConfig: ResolverTypeWrapper<SchemaTypes.FileStorageConfig>;
   Float: ResolverTypeWrapper<SchemaTypes.Scalars['Float']['output']>;
   Form: ResolverTypeWrapper<SchemaTypes.Form>;
@@ -8396,6 +8443,7 @@ export type ResolversTypes = {
   NVP: ResolverTypeWrapper<SchemaTypes.Nvp>;
   NameID: ResolverTypeWrapper<SchemaTypes.Scalars['NameID']['output']>;
   NotificationEventType: SchemaTypes.NotificationEventType;
+  OpenAIModel: SchemaTypes.OpenAiModel;
   Organization: ResolverTypeWrapper<
     Omit<
       SchemaTypes.Organization,
@@ -9366,6 +9414,7 @@ export type ResolversParentTypes = {
   Emoji: SchemaTypes.Scalars['Emoji']['output'];
   ExploreSpacesInput: SchemaTypes.ExploreSpacesInput;
   ExternalConfig: SchemaTypes.ExternalConfig;
+  ExternalConfigInput: SchemaTypes.ExternalConfigInput;
   FileStorageConfig: SchemaTypes.FileStorageConfig;
   Float: SchemaTypes.Scalars['Float']['output'];
   Form: SchemaTypes.Form;
@@ -10677,6 +10726,11 @@ export type AiPersonaResolvers<
   ParentType extends
     ResolversParentTypes['AiPersona'] = ResolversParentTypes['AiPersona'],
 > = {
+  aiPersonaServiceID?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes['Authorization']>,
     ParentType,
@@ -10763,6 +10817,11 @@ export type AiPersonaServiceResolvers<
     ContextType
   >;
   engine?: Resolver<ResolversTypes['AiPersonaEngine'], ParentType, ContextType>;
+  externalConfig?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes['ExternalConfig']>,
+    ParentType,
+    ContextType
+  >;
   id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
   prompt?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
   updatedDate?: Resolver<
@@ -12300,6 +12359,30 @@ export interface EmojiScalarConfig
   extends GraphQLScalarTypeConfig<ResolversTypes['Emoji'], any> {
   name: 'Emoji';
 }
+
+export type ExternalConfigResolvers<
+  ContextType = any,
+  ParentType extends
+    ResolversParentTypes['ExternalConfig'] = ResolversParentTypes['ExternalConfig'],
+> = {
+  apiKey?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  assistantId?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  externalConfig?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes['ExternalConfig']>,
+    ParentType,
+    ContextType
+  >;
+  model?: Resolver<ResolversTypes['OpenAIModel'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
 
 export type FileStorageConfigResolvers<
   ContextType = any,
@@ -18228,6 +18311,7 @@ export type Resolvers<ContextType = any> = {
   Discussion?: DiscussionResolvers<ContextType>;
   Document?: DocumentResolvers<ContextType>;
   Emoji?: GraphQLScalarType;
+  ExternalConfig?: ExternalConfigResolvers<ContextType>;
   FileStorageConfig?: FileStorageConfigResolvers<ContextType>;
   Form?: FormResolvers<ContextType>;
   FormQuestion?: FormQuestionResolvers<ContextType>;
@@ -88815,6 +88899,7 @@ export type GetCalloutsOnCalloutsSetUsingClassificationQuery = {
           callouts: Array<{
             __typename: 'Callout';
             id: string;
+            nameID: string;
             type: SchemaTypes.CalloutType;
             sortOrder: number;
             activity: number;
@@ -88863,6 +88948,7 @@ export type GetCalloutsOnCalloutsSetUsingClassificationQuery = {
 export type CalloutFragment = {
   __typename: 'Callout';
   id: string;
+  nameID: string;
   type: SchemaTypes.CalloutType;
   sortOrder: number;
   activity: number;
@@ -123661,6 +123747,7 @@ export const ContributeTabPostFragmentDoc = gql`
 export const CalloutFragmentDoc = gql`
   fragment Callout on Callout {
     id
+    nameID
     type
     sortOrder
     activity
