@@ -3644,7 +3644,7 @@ export type Mutation = {
   /** Resets the interaction with the chat engine. */
   ingest: Scalars['Boolean']['output'];
   /** Invite an existing Contriburor to join the specified Community as a member. */
-  inviteContributorsEntryRoleOnRoleSet: Array<Invitation>;
+  inviteForEntryRoleOnRoleSet: Array<Invitation>;
   /** Invite a User to join the platform and the specified RoleSet as a member. */
   inviteUserToPlatformAndRoleSet: PlatformInvitation;
   /** Invite a User to join the platform in a particular Platform role e.g. BetaTester */
@@ -4120,7 +4120,7 @@ export type MutationGrantCredentialToUserArgs = {
   grantCredentialData: GrantAuthorizationCredentialInput;
 };
 
-export type MutationinviteContributorsEntryRoleOnRoleSetArgs = {
+export type MutationinviteForEntryRoleOnRoleSetArgs = {
   invitationData: InviteForEntryRoleOnRoleSetInput;
 };
 
@@ -14178,12 +14178,12 @@ export type MutationResolvers<
     >
   >;
   ingest?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  inviteContributorsEntryRoleOnRoleSet?: Resolver<
+  inviteForEntryRoleOnRoleSet?: Resolver<
     Array<ResolversTypes['Invitation']>,
     ParentType,
     ContextType,
     RequireFields<
-      SchemaTypes.MutationinviteContributorsEntryRoleOnRoleSetArgs,
+      SchemaTypes.MutationinviteForEntryRoleOnRoleSetArgs,
       'invitationData'
     >
   >;
