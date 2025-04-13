@@ -17,6 +17,8 @@ import { UniqueIDGenerator } from '@alkemio/tests-lib';
 import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
 import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
+import { RoleSetInvitationResultType } from '@generated/graphql';
+import { getSingleInvitationResult } from '../roleset.request.params';
 
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -24,7 +26,7 @@ let emailExternalUser = '';
 const firstNameExternalUser = `FirstName${uniqueId}`;
 const message = 'Hello, feel free to join our community!';
 
-let invitationId = '';
+let platformInvitationId = '';
 let userId = '';
 
 let baseScenario: OrganizationWithSpaceModel;
@@ -62,7 +64,7 @@ describe('Invitations', () => {
     emailExternalUser = `external${uniqueId}@alkem.io`;
   });
   afterEach(async () => {
-    await deleteExternalInvitation(invitationId);
+    await deleteExternalInvitation(platformInvitationId);
   });
   test('should create external invitation', async () => {
     // Arrange
@@ -79,15 +81,9 @@ describe('Invitations', () => {
       message,
       TestUser.GLOBAL_ADMIN
     );
-
-    const invitationsResults =
-      invitationData?.data?.inviteForEntryRoleOnRoleSet;
-    invitationId = 'invitationsInfoNotRetrieved';
-    if (invitationsResults && invitationsResults.length > 0) {
-      const invitation = invitationsResults[0].invitation;
-      if (invitation) {
-        invitationId = invitation.id;
-      }
+    const invitationResult = getSingleInvitationResult(invitationData);
+    if (invitationResult && invitationResult.platformInvitation) {
+      platformInvitationId = invitationResult.platformInvitation.id;
     }
 
     userId = await registerVerifiedUser(
@@ -127,24 +123,21 @@ describe('Invitations', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    const invitationsResults =
-      invitationData?.data?.inviteForEntryRoleOnRoleSet;
-    invitationId = 'invitationsInfoNotRetrieved';
-    if (invitationsResults && invitationsResults.length > 0) {
-      const invitation = invitationsResults[0].invitation;
-      if (invitation) {
-        invitationId = invitation.id;
-      }
+    const invitationResult = getSingleInvitationResult(invitationData);
+    if (invitationResult && invitationResult.platformInvitation) {
+      platformInvitationId = invitationResult.platformInvitation.id;
     }
 
     // Act
-    const invitationData2 = await inviteForEntryRoleOnRoleSet(
+    const invitationMutation2 = await inviteForEntryRoleOnRoleSet(
       baseScenario.space.community.roleSetId,
       [],
       [userEmail],
       message,
       TestUser.GLOBAL_ADMIN
     );
+    const invitationResult2 = getSingleInvitationResult(invitationMutation2);
+
     userId = await registerVerifiedUser(
       userEmail,
       firstNameExternalUser,
@@ -163,8 +156,8 @@ describe('Invitations', () => {
     expect(
       getInvAfter?.data?.lookup?.roleSet?.platformInvitations?.[0].email
     ).toEqual(userEmail);
-    expect(invitationData2.error?.errors[0].message).toContain(
-      `An invitation with the provided email address (${userEmail}) already exists for the specified roleSet: ${baseScenario.space.community.roleSetId}`
+    expect(invitationResult2?.type).toEqual(
+      RoleSetInvitationResultType.AlreadyInvitedToPlatformAndRoleSet
     );
   });
 
@@ -180,14 +173,9 @@ describe('Invitations', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    const invitationsResults =
-      invitationData?.data?.inviteForEntryRoleOnRoleSet;
-    invitationId = 'invitationsInfoNotRetrieved';
-    if (invitationsResults && invitationsResults.length > 0) {
-      const invitation = invitationsResults[0].invitation;
-      if (invitation) {
-        invitationId = invitation.id;
-      }
+    const invitationResult = getSingleInvitationResult(invitationData);
+    if (invitationResult && invitationResult.platformInvitation) {
+      platformInvitationId = invitationResult.platformInvitation.id;
     }
 
     const invData = await getRoleSetInvitationsApplications(
@@ -196,7 +184,7 @@ describe('Invitations', () => {
     );
 
     // Act
-    await deleteExternalInvitation(invitationId);
+    await deleteExternalInvitation(platformInvitationId);
 
     const invitationData2 = await inviteForEntryRoleOnRoleSet(
       baseScenario.space.community.roleSetId,
@@ -206,14 +194,9 @@ describe('Invitations', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    const invitationsResults2 =
-      invitationData2?.data?.inviteForEntryRoleOnRoleSet;
-    invitationId = 'invitationsInfoNotRetrieved';
-    if (invitationsResults2 && invitationsResults2.length > 0) {
-      const invitation2 = invitationsResults2[0].invitation;
-      if (invitation2) {
-        invitationId = invitation2.id;
-      }
+    const invitationResult2 = getSingleInvitationResult(invitationData2);
+    if (invitationResult2 && invitationResult2.platformInvitation) {
+      platformInvitationId = invitationResult2.platformInvitation.id;
     }
 
     userId = await registerVerifiedUser(
@@ -258,14 +241,9 @@ describe('Invitations', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    const invitationsResults =
-      invitationData?.data?.inviteForEntryRoleOnRoleSet;
-    invitationId = 'invitationsInfoNotRetrieved';
-    if (invitationsResults && invitationsResults.length > 0) {
-      const invitation = invitationsResults[0].invitation;
-      if (invitation) {
-        invitationId = invitation.id;
-      }
+    const invitationResult = getSingleInvitationResult(invitationData);
+    if (invitationResult && invitationResult.platformInvitation) {
+      platformInvitationId = invitationResult.platformInvitation.id;
     }
 
     // Act

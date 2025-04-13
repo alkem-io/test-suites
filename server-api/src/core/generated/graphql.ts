@@ -48881,7 +48881,7 @@ export type InviteForEntryRoleOnRoleSetMutation = {
   inviteForEntryRoleOnRoleSet: Array<{
     __typename: 'RoleSetInvitationResult';
     type: SchemaTypes.RoleSetInvitationResultType;
-    invitation?: { id: string } | undefined;
+    invitation?: { id: string; state: string } | undefined;
     platformInvitation?: { id: string } | undefined;
   }>;
 };
@@ -124302,6 +124302,7 @@ export const InviteForEntryRoleOnRoleSetDocument = gql`
       type
       invitation {
         id
+        state
       }
       platformInvitation {
         id

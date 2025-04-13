@@ -17,6 +17,7 @@ import { PreferenceType } from '@generated/graphql';
 import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
 import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
+import { getSingleInvitationResult } from '@functional-api/roleset/roleset.request.params';
 
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -153,10 +154,10 @@ describe('Notifications - invitations', () => {
       message,
       TestUser.GLOBAL_ADMIN
     );
-
-    const invitationResults = invitationData?.data?.inviteForEntryRoleOnRoleSet;
-    const invitationInfo = invitationResults?.[0].invitation;
-    invitationId = invitationInfo?.id ?? '';
+    const invitationResult = getSingleInvitationResult(invitationData);
+    if (invitationResult && invitationResult.invitation) {
+      invitationId = invitationResult.invitation.id;
+    }
 
     await delay(6000);
 
@@ -194,9 +195,10 @@ describe('Notifications - invitations', () => {
       TestUser.SUBSPACE_ADMIN
     );
 
-    const invitationResults = invitationData?.data?.inviteForEntryRoleOnRoleSet;
-    const invitationInfo = invitationResults?.[0].invitation;
-    invitationId = invitationInfo?.id ?? '';
+    const invitationResult = getSingleInvitationResult(invitationData);
+    if (invitationResult && invitationResult.invitation) {
+      invitationId = invitationResult.invitation.id;
+    }
 
     await delay(6000);
 

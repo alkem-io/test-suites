@@ -15,6 +15,7 @@ mutation InviteForEntryRoleOnRoleSet(
     type
     invitation {
       id
+      state
     }
     platformInvitation {
       id

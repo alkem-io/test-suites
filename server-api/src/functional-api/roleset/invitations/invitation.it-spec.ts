@@ -30,6 +30,8 @@ import { registerInAlkemioOrFail } from '@src/scenario/registration/register-in-
 import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
 import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
+import { getSingleInvitationResult } from '../roleset.request.params';
+import { RoleSetInvitationResultType } from '@generated/graphql';
 
 let invitationId = '';
 let invitationData: any;
@@ -90,10 +92,9 @@ describe('Invitations', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    invitationId = 'invitationIdNotRetrieved';
-    const invitationResult = invitationData?.data?.inviteForEntryRoleOnRoleSet;
-    if (invitationResult && invitationResult.length > 0) {
-      invitationId = invitationResult[0].id;
+    const invitationResult = getSingleInvitationResult(invitationData);
+    if (invitationResult && invitationResult.invitation) {
+      invitationId = invitationResult.invitation.id;
     }
     expect(invitationId.length).toEqual(36);
 
@@ -117,10 +118,9 @@ describe('Invitations', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    invitationId = 'invitationIdNotRetrieved';
-    const invitationResult = invitationData?.data?.inviteForEntryRoleOnRoleSet;
-    if (invitationResult && invitationResult.length > 0) {
-      invitationId = invitationResult[0].id;
+    const invitationResult = getSingleInvitationResult(invitationData);
+    if (invitationResult && invitationResult.invitation) {
+      invitationId = invitationResult.invitation.id;
     }
     expect(invitationId.length).toEqual(36);
 
@@ -139,24 +139,11 @@ describe('Invitations', () => {
     );
 
     let invitationId2 = 'invitationId2NotRetrieved';
-    const invitationResults2 =
-      invitationData2?.data?.inviteForEntryRoleOnRoleSet;
-    if (invitationResults2 && invitationResults2.length > 0) {
-      const invitation2 = invitationResults2[0].invitation;
-      if (invitation2) {
-        invitationId2 = invitation2.id;
-      }
+    const invitationResult2 = getSingleInvitationResult(invitationData2);
+    if (invitationResult2 && invitationResult2.invitation) {
+      invitationId2 = invitationResult2.invitation.id;
     }
 
-    const invitationsResults =
-      invitationData?.data?.inviteForEntryRoleOnRoleSet;
-    invitationId = 'invitationsInfoNotRetrieved';
-    if (invitationsResults && invitationsResults.length > 0) {
-      const invitation = invitationsResults[0].invitation;
-      if (invitation) {
-        invitationId = invitation.id;
-      }
-    }
     expect(invitationId2.length).toEqual(36);
 
     const userAppsData = await meQuery(TestUser.NON_SPACE_MEMBER);
@@ -179,7 +166,7 @@ describe('Invitations', () => {
 
   test('should remove invitation', async () => {
     // Arrange
-    invitationData = await inviteForEntryRoleOnRoleSet(
+    const invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.space.community.roleSetId,
       [TestUserManager.users.nonSpaceMember.id],
       [],
@@ -187,9 +174,9 @@ describe('Invitations', () => {
       TestUser.GLOBAL_ADMIN
     );
     invitationId = 'invitationIdNotRetrieved';
-    const invitationResult = invitationData?.data?.inviteForEntryRoleOnRoleSet;
-    if (invitationResult && invitationResult.length > 0) {
-      invitationId = invitationResult[0].id;
+    const invitationResult = getSingleInvitationResult(invitationData);
+    if (invitationResult && invitationResult.invitation) {
+      invitationId = invitationResult.invitation.id;
     }
     expect(invitationId.length).toEqual(36);
 
@@ -205,7 +192,7 @@ describe('Invitations', () => {
     ).toHaveLength(0);
 
     // Re-invite to avoid error when deleting in the test setup
-    invitationData = await inviteForEntryRoleOnRoleSet(
+    const invitation2Data = await inviteForEntryRoleOnRoleSet(
       baseScenario.space.community.roleSetId,
       [TestUserManager.users.nonSpaceMember.id],
       [],
@@ -213,9 +200,9 @@ describe('Invitations', () => {
       TestUser.GLOBAL_ADMIN
     );
     invitationId = 'invitationIdNotRetrieved';
-    const invitationResult2 = invitationData?.data?.inviteForEntryRoleOnRoleSet;
-    if (invitationResult2 && invitationResult2.length > 0) {
-      invitationId = invitationResult2[0].id;
+    const invitationResult2 = getSingleInvitationResult(invitation2Data);
+    if (invitationResult2 && invitationResult2.invitation) {
+      invitationId = invitationResult2.invitation.id;
     }
     expect(invitationId.length).toEqual(36);
   });
@@ -246,24 +233,28 @@ describe('Invitations', () => {
     );
 
     invitationId = 'invitationIdNotRetrieved';
-    const invitationResult = invitationData?.data?.inviteForEntryRoleOnRoleSet;
-    if (invitationResult && invitationResult.length > 0) {
-      invitationId = invitationResult[0].id;
+    const invitationResult = getSingleInvitationResult(invitationData);
+    if (invitationResult && invitationResult.invitation) {
+      invitationId = invitationResult.invitation.id;
     }
     expect(invitationId.length).toEqual(36);
 
     // Act
-    const invitationDataTwo = await inviteForEntryRoleOnRoleSet(
+    const invitationData2 = await inviteForEntryRoleOnRoleSet(
       baseScenario.space.community.roleSetId,
       [TestUserManager.users.nonSpaceMember.id],
       [],
       'welcome',
       TestUser.GLOBAL_ADMIN
     );
+    const invitationResult2 = getSingleInvitationResult(invitationData2);
+    if (invitationResult2 && invitationResult2.invitation) {
+      invitationId = invitationResult2.invitation.id;
+    }
 
     // Assert
-    expect(invitationDataTwo?.error?.errors[0].message).toContain(
-      `Invitation not possible: An open invitation (ID: ${invitationId}) already exists for contributor ${TestUserManager.users.nonSpaceMember.id} (user) on RoleSet: ${baseScenario.space.community.roleSetId}.`
+    expect(invitationResult2?.type).toEqual(
+      RoleSetInvitationResultType.AlreadyInvitedToRoleSet
     );
   });
 
@@ -278,9 +269,9 @@ describe('Invitations', () => {
     );
 
     invitationId = 'invitationIdNotRetrieved';
-    const invitationResult = invitationData?.data?.inviteForEntryRoleOnRoleSet;
-    if (invitationResult && invitationResult.length > 0) {
-      invitationId = invitationResult[0].id;
+    const invitationResult = getSingleInvitationResult(invitationData);
+    if (invitationResult && invitationResult.invitation) {
+      invitationId = invitationResult.invitation.id;
     }
     expect(invitationId.length).toEqual(36);
 
@@ -321,9 +312,9 @@ describe('Invitations-flows', () => {
       TestUser.GLOBAL_ADMIN
     );
     invitationId = 'invitationIdNotRetrieved';
-    const invitationResult = invitationData?.data?.inviteForEntryRoleOnRoleSet;
-    if (invitationResult && invitationResult.length > 0) {
-      invitationId = invitationResult[0].id;
+    const invitationResult = getSingleInvitationResult(invitationData);
+    if (invitationResult && invitationResult.invitation) {
+      invitationId = invitationResult.invitation.id;
     }
     expect(invitationId.length).toEqual(36);
 
@@ -355,9 +346,9 @@ describe('Invitations-flows', () => {
       TestUser.GLOBAL_ADMIN
     );
     invitationId = 'invitationIdNotRetrieved';
-    const invitationResult = invitationData?.data?.inviteForEntryRoleOnRoleSet;
-    if (invitationResult && invitationResult.length > 0) {
-      invitationId = invitationResult[0].id;
+    const invitationResult = getSingleInvitationResult(invitationData);
+    if (invitationResult && invitationResult.invitation) {
+      invitationId = invitationResult.invitation.id;
     }
     expect(invitationId.length).toEqual(36);
 
@@ -442,7 +433,7 @@ describe('Invitations-flows', () => {
     await deleteApplication(applicationId);
   });
 
-  test('User with received inviation, cannot apply to the community', async () => {
+  test('User with received invitation, cannot apply to the community', async () => {
     // Arrange
     invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.space.community.roleSetId,
@@ -460,9 +451,9 @@ describe('Invitations-flows', () => {
       roleDataOrig?.communityApplications?.length ?? 0;
 
     invitationId = 'invitationIdNotRetrieved';
-    const invitationResult = invitationData?.data?.inviteForEntryRoleOnRoleSet;
-    if (invitationResult && invitationResult.length > 0) {
-      invitationId = invitationResult[0].id;
+    const invitationResult = getSingleInvitationResult(invitationData);
+    if (invitationResult && invitationResult.invitation) {
+      invitationId = invitationResult.invitation.id;
     }
     //expect(invitationId.length).toEqual(36);
 
@@ -520,12 +511,10 @@ describe('Invitations - Authorization', () => {
           TestUser.GLOBAL_ADMIN
         );
         invitationId = 'invitationIdNotRetrieved';
-        const invitationResult =
-          invitationData?.data?.inviteForEntryRoleOnRoleSet;
-        if (invitationResult && invitationResult.length > 0) {
-          invitationId = invitationResult[0].id;
+        const invitationResult = getSingleInvitationResult(invitationData);
+        if (invitationResult && invitationResult.invitation) {
+          invitationId = invitationResult.invitation.id;
         }
-
         expect(invitationId.length).toEqual(36);
 
         const result = await eventOnRoleSetInvitation(
@@ -554,10 +543,9 @@ describe('Invitations - Authorization', () => {
           TestUser.GLOBAL_ADMIN
         );
         invitationId = 'invitationIdNotRetrieved';
-        const invitationResult =
-          invitationData?.data?.inviteForEntryRoleOnRoleSet;
-        if (invitationResult && invitationResult.length > 0) {
-          invitationId = invitationResult[0].id;
+        const invitationResult = getSingleInvitationResult(invitationData);
+        if (invitationResult && invitationResult.invitation) {
+          invitationId = invitationResult.invitation.id;
         }
 
         const result = await eventOnRoleSetInvitation(
@@ -592,10 +580,9 @@ describe('Invitations - Authorization', () => {
 
         invitationId = 'invitationIdNotRetrieved';
         let invitationState = 'notretrieved';
-        const invitationResult =
-          invitationData?.data?.inviteForEntryRoleOnRoleSet;
-        if (invitationResult && invitationResult.length > 0) {
-          invitationId = invitationResult[0].id;
+        const invitationResult = getSingleInvitationResult(invitationData);
+        if (invitationResult && invitationResult.invitation) {
+          invitationId = invitationResult.invitation.id;
           invitationState = invitationResult[0].state;
         }
 

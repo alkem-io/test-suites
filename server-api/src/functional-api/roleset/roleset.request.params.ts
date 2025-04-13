@@ -1,6 +1,13 @@
 import { TestUser } from '@alkemio/tests-lib';
 import { getGraphqlClient } from '@utils/graphqlClient';
-import { graphqlErrorWrapper } from '@utils/graphql.wrapper';
+import {
+  graphqlErrorWrapper,
+  GraphqlReturnWithError,
+} from '@utils/graphql.wrapper';
+import {
+  InviteForEntryRoleOnRoleSetMutation,
+  RoleSetInvitationResultType,
+} from '@generated/graphql';
 
 export const getUserCommunityPrivilege = async (
   roleSetId: string,
@@ -19,49 +26,6 @@ export const getUserCommunityPrivilege = async (
 
   return graphqlErrorWrapper(callback, role);
 };
-
-//   spaceId: string,
-//   subsubspaceId: string,
-//   includeDetails: boolean,
-//   role = TestUser.GLOBAL_ADMIN
-// ) => {
-//   const graphqlClient = getGraphqlClient();
-//   const callback = (authToken: string | undefined) =>
-//     graphqlClient.CommunityUserPrivilegesToSubsubspace(
-//       {
-//         spaceId,
-//         subsubspaceId,
-//         includeDetails,
-//       },
-//       {
-//         authorization: `Bearer ${authToken}`,
-//       }
-//     );
-
-//   return graphqlErrorWrapper(callback, role);
-// };
-
-// export const getUserCommunityPrivilegeToSubspace = async (
-//   spaceId: string,
-//   subspaceId: string,
-//   includeDetails: boolean,
-//   role = TestUser.GLOBAL_ADMIN
-// ) => {
-//   const graphqlClient = getGraphqlClient();
-//   const callback = (authToken: string | undefined) =>
-//     graphqlClient.CommunityUserPrivilegesToSubspace(
-//       {
-//         spaceId,
-//         subspaceId,
-//         includeDetails,
-//       },
-//       {
-//         authorization: `Bearer ${authToken}`,
-//       }
-//     );
-
-//   return graphqlErrorWrapper(callback, role);
-// };
 
 export const getRoleSetAvailableUsers = async (
   roleSetId: string,
@@ -126,4 +90,25 @@ export const getRoleSetUsersInLeadRole = async (
   }));
 
   return formattedUsers;
+};
+
+export const getSingleInvitationResult = (
+  invitationResponse: GraphqlReturnWithError<InviteForEntryRoleOnRoleSetMutation>
+):
+  | {
+      type: RoleSetInvitationResultType;
+      invitation?: {
+        id: string;
+        state: string;
+      };
+      platformInvitation?: { id: string };
+    }
+  | undefined => {
+  const invitationResults =
+    invitationResponse?.data?.inviteForEntryRoleOnRoleSet;
+  if (invitationResults && invitationResults.length > 0) {
+    const invitationResult = invitationResults[0];
+    return invitationResult;
+  }
+  return undefined;
 };

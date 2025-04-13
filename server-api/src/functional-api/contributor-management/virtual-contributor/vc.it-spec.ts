@@ -35,6 +35,7 @@ import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWit
 import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
 import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
 import { getAccountMainEntities } from '@functional-api/account/account.params.request';
+import { getSingleInvitationResult } from '@functional-api/roleset/roleset.request.params';
 const uniqueId = UniqueIDGenerator.getID();
 
 let invitationId = '';
@@ -160,8 +161,10 @@ describe('Virtual Contributor', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    invitationId =
-      invitationData?.data?.inviteContributorsForCommunityMembership?.id;
+    const invitationResult = getSingleInvitationResult(invitationData);
+    if (invitationResult && invitationResult.invitation) {
+      invitationId = invitationResult.invitation.id;
+    }
 
     await deleteVirtualContributorOnAccount(vcId);
 

@@ -16,6 +16,7 @@ import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
 } from '@alkemio/client-lib';
+import { getSingleInvitationResult } from '@functional-api/roleset/roleset.request.params';
 
 let baseScenario: OrganizationWithSpaceModel;
 
@@ -65,18 +66,21 @@ afterAll(async () => {
 describe('Promoting of L1 subspace', () => {
   test('Conversion Subspace L1 to Space L0 with application and invitation to the subspace', async () => {
     // Arrange
-    const requestInvitation = await inviteForEntryRoleOnRoleSet(
+    const invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.subspace.community.roleSetId,
       [TestUserManager.users.nonSpaceMember.id],
       [],
       'welcome',
       TestUser.GLOBAL_ADMIN
     );
-    console.log('Invitation ID:', requestInvitation.error);
+    console.log('Invitation ID:', invitationData.error);
 
-    const invitationId =
-      requestInvitation.data?.inviteForEntryRoleOnRoleSet[0].invitation?.id ??
-      '';
+    let invitationId = '';
+    const invitationResult = getSingleInvitationResult(invitationData);
+    if (invitationResult && invitationResult.invitation) {
+      invitationId = invitationResult.invitation.id;
+    }
+
     console.log('Invitation ID:', invitationId);
 
     const applicationData = await createApplication(

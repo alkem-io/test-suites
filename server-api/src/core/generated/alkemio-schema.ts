@@ -44722,7 +44722,7 @@ export type InviteForEntryRoleOnRoleSetMutation = {
   inviteForEntryRoleOnRoleSet: Array<{
     __typename: 'RoleSetInvitationResult';
     type: RoleSetInvitationResultType;
-    invitation?: { id: string } | undefined;
+    invitation?: { id: string; state: string } | undefined;
     platformInvitation?: { id: string } | undefined;
   }>;
 };
