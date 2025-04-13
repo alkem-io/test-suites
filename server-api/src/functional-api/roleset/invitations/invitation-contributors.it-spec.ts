@@ -583,7 +583,7 @@ describe('Invitations - Authorization', () => {
         const invitationResult = getSingleInvitationResult(invitationData);
         if (invitationResult && invitationResult.invitation) {
           invitationId = invitationResult.invitation.id;
-          invitationState = invitationResult[0].state;
+          invitationState = invitationResult.invitation.state;
         }
 
         // Assert
