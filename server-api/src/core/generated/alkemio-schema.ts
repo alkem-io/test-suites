@@ -2297,12 +2297,10 @@ export type ExploreSpacesInput = {
 };
 
 export type ExternalConfig = {
-  /** The signature of the API key */
+  /** The API key for the external LLM provider. */
   apiKey?: Maybe<Scalars['String']['output']>;
-  /** The assistent ID backing the service in OpenAI`s assistant API */
+  /** The assistant ID backing the service in OpenAI`s assistant API */
   assistantId?: Maybe<Scalars['String']['output']>;
-  /** The ExternalConfig for this Virtual. */
-  externalConfig?: Maybe<ExternalConfig>;
   /** The OpenAI model to use for the service */
   model: OpenAiModel;
 };
@@ -2310,7 +2308,7 @@ export type ExternalConfig = {
 export type ExternalConfigInput = {
   /** The API key for the external LLM provider. */
   apiKey?: InputMaybe<Scalars['String']['input']>;
-  /** The assistent ID backing the service in OpenAI`s assistant API */
+  /** The assistant ID backing the service in OpenAI`s assistant API */
   assistantId?: InputMaybe<Scalars['String']['input']>;
   /** The OpenAI model to use for the service */
   model?: OpenAiModel;
@@ -2707,21 +2705,13 @@ export type InvitationEventInput = {
 };
 
 export type InviteForEntryRoleOnRoleSetInput = {
-  /** An additional role to assign to the Contributors, in addition to the entry Role. */
+  /** An additional role to assign in addition to the entry Role. */
   extraRole?: InputMaybe<RoleName>;
   /** The identifiers for the contributors being invited. */
-  invitedContributors: Array<Scalars['UUID']['input']>;
+  invitedContributorIDs: Array<Scalars['UUID']['input']>;
+  invitedUserEmails: Array<Scalars['String']['input']>;
   roleSetID: Scalars['UUID']['input'];
-  welcomeMessage?: InputMaybe<Scalars['String']['input']>;
-};
-
-export type InviteNewContributorForRoleOnRoleSetInput = {
-  email: Scalars['String']['input'];
-  firstName?: InputMaybe<Scalars['String']['input']>;
-  lastName?: InputMaybe<Scalars['String']['input']>;
-  /** An additional role to assign to the Contributors, in addition to the entry Role. */
-  roleSetExtraRole?: InputMaybe<RoleName>;
-  roleSetID: Scalars['UUID']['input'];
+  /** The welcome message to send */
   welcomeMessage?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -3679,10 +3669,8 @@ export type Mutation = {
   grantCredentialToOrganization: Organization;
   /** Grants an authorization credential to a User. */
   grantCredentialToUser: User;
-  /** Invite an existing Contributor to join the specified RoleSet in the Entry Role. */
-  inviteContributorsEntryRoleOnRoleSet: Array<Invitation>;
-  /** Invite a User to join the platform and the specified RoleSet as a member. */
-  inviteUserToPlatformAndRoleSet: PlatformInvitation;
+  /** Invite new Contributors or users by email to join the specified RoleSet in the Entry Role. */
+  inviteForEntryRoleOnRoleSet: Array<RoleSetInvitationResult>;
   /** Join the specified RoleSet using the entry Role, without going through an approval process. */
   joinRoleSet: RoleSet;
   /** Reset the License with Entitlements on the specified Account. */
@@ -3759,6 +3747,8 @@ export type Mutation = {
   updateCalloutVisibility: Callout;
   /** Update the sortOrder field of the supplied Callouts to increase as per the order that they are provided in. */
   updateCalloutsSortOrder: Array<Callout>;
+  /** Updates a Tagset on a Classification. */
+  updateClassificationTagset: Tagset;
   /** Updates the Collaboration, including InnovationFlow states, from the specified Collaboration Template. */
   updateCollaborationFromTemplate: Collaboration;
   /** Updates the CommunityGuidelines. */
@@ -3797,8 +3787,8 @@ export type Mutation = {
   updatePost: Post;
   /** Updates one of the Preferences on a Space */
   updatePreferenceOnUser: Preference;
-  /** Updates the specified Tagset. */
-  updateProfile: Tagset;
+  /** Updates the specified Profile. */
+  updateProfile: Profile;
   /** Updates the specified Reference. */
   updateReference: Reference;
   /** Updates the Space. */
@@ -4138,12 +4128,8 @@ export type MutationGrantCredentialToUserArgs = {
   grantCredentialData: GrantAuthorizationCredentialInput;
 };
 
-export type MutationInviteContributorsEntryRoleOnRoleSetArgs = {
+export type MutationInviteForEntryRoleOnRoleSetArgs = {
   invitationData: InviteForEntryRoleOnRoleSetInput;
-};
-
-export type MutationInviteUserToPlatformAndRoleSetArgs = {
-  invitationData: InviteNewContributorForRoleOnRoleSetInput;
 };
 
 export type MutationJoinRoleSetArgs = {
@@ -4286,6 +4272,10 @@ export type MutationUpdateCalloutsSortOrderArgs = {
   sortOrderData: UpdateCalloutsSortOrderInput;
 };
 
+export type MutationUpdateClassificationTagsetArgs = {
+  updateData: UpdateClassificationSelectTagsetValueInput;
+};
+
 export type MutationUpdateCollaborationFromTemplateArgs = {
   updateData: UpdateCollaborationFromTemplateInput;
 };
@@ -4363,7 +4353,7 @@ export type MutationUpdatePreferenceOnUserArgs = {
 };
 
 export type MutationUpdateProfileArgs = {
-  updateData: UpdateClassificationSelectTagsetValueInput;
+  profileData: UpdateProfileDirectInput;
 };
 
 export type MutationUpdateReferenceArgs = {
@@ -5508,6 +5498,20 @@ export enum RoleSetContributorType {
   Organization = 'ORGANIZATION',
   User = 'USER',
   Virtual = 'VIRTUAL',
+}
+
+export type RoleSetInvitationResult = {
+  invitation?: Maybe<Invitation>;
+  platformInvitation?: Maybe<PlatformInvitation>;
+  type: RoleSetInvitationResultType;
+};
+
+export enum RoleSetInvitationResultType {
+  AlreadyInvitedToPlatformAndRoleSet = 'ALREADY_INVITED_TO_PLATFORM_AND_ROLE_SET',
+  AlreadyInvitedToRoleSet = 'ALREADY_INVITED_TO_ROLE_SET',
+  InvitationToParentNotAuthorized = 'INVITATION_TO_PARENT_NOT_AUTHORIZED',
+  InvitedToPlatformAndRoleSet = 'INVITED_TO_PLATFORM_AND_ROLE_SET',
+  InvitedToRoleSet = 'INVITED_TO_ROLE_SET',
 }
 
 export enum RoleSetRoleImplicit {
@@ -6754,6 +6758,18 @@ export type UpdatePostInput = {
   nameID?: InputMaybe<Scalars['NameID']['input']>;
   /** The Profile of this entity. */
   profileData?: InputMaybe<UpdateProfileInput>;
+};
+
+export type UpdateProfileDirectInput = {
+  description?: InputMaybe<Scalars['Markdown']['input']>;
+  /** The display name for the entity. */
+  displayName?: InputMaybe<Scalars['String']['input']>;
+  location?: InputMaybe<UpdateLocationInput>;
+  profileID: Scalars['UUID']['input'];
+  references?: InputMaybe<Array<UpdateReferenceInput>>;
+  /** A memorable short description for this entity. */
+  tagline?: InputMaybe<Scalars['String']['input']>;
+  tagsets?: InputMaybe<Array<UpdateTagsetInput>>;
 };
 
 export type UpdateProfileInput = {
@@ -8235,7 +8251,6 @@ export type ResolversTypes = {
   >;
   InvitationEventInput: InvitationEventInput;
   InviteForEntryRoleOnRoleSetInput: InviteForEntryRoleOnRoleSetInput;
-  InviteNewContributorForRoleOnRoleSetInput: InviteNewContributorForRoleOnRoleSetInput;
   JSON: ResolverTypeWrapper<Scalars['JSON']['output']>;
   JoinAsEntryRoleOnRoleSetInput: JoinAsEntryRoleOnRoleSetInput;
   KnowledgeBase: ResolverTypeWrapper<
@@ -8566,6 +8581,13 @@ export type ResolversTypes = {
     }
   >;
   RoleSetContributorType: RoleSetContributorType;
+  RoleSetInvitationResult: ResolverTypeWrapper<
+    Omit<RoleSetInvitationResult, 'invitation' | 'platformInvitation'> & {
+      invitation?: Maybe<ResolversTypes['Invitation']>;
+      platformInvitation?: Maybe<ResolversTypes['PlatformInvitation']>;
+    }
+  >;
+  RoleSetInvitationResultType: RoleSetInvitationResultType;
   RoleSetRoleImplicit: RoleSetRoleImplicit;
   RoleSetType: RoleSetType;
   RolesOrganizationInput: RolesOrganizationInput;
@@ -8826,6 +8848,7 @@ export type ResolversTypes = {
   UpdatePlatformSettingsInput: UpdatePlatformSettingsInput;
   UpdatePlatformSettingsIntegrationInput: UpdatePlatformSettingsIntegrationInput;
   UpdatePostInput: UpdatePostInput;
+  UpdateProfileDirectInput: UpdateProfileDirectInput;
   UpdateProfileInput: UpdateProfileInput;
   UpdateReferenceInput: UpdateReferenceInput;
   UpdateSpaceAboutInput: UpdateSpaceAboutInput;
@@ -9421,7 +9444,6 @@ export type ResolversParentTypes = {
   };
   InvitationEventInput: InvitationEventInput;
   InviteForEntryRoleOnRoleSetInput: InviteForEntryRoleOnRoleSetInput;
-  InviteNewContributorForRoleOnRoleSetInput: InviteNewContributorForRoleOnRoleSetInput;
   JSON: Scalars['JSON']['output'];
   JoinAsEntryRoleOnRoleSetInput: JoinAsEntryRoleOnRoleSetInput;
   KnowledgeBase: Omit<KnowledgeBase, 'calloutsSet' | 'profile'> & {
@@ -9704,6 +9726,13 @@ export type ResolversParentTypes = {
       ResolversParentTypes['VirtualContributorsInRolesResponse']
     >;
   };
+  RoleSetInvitationResult: Omit<
+    RoleSetInvitationResult,
+    'invitation' | 'platformInvitation'
+  > & {
+    invitation?: Maybe<ResolversParentTypes['Invitation']>;
+    platformInvitation?: Maybe<ResolversParentTypes['PlatformInvitation']>;
+  };
   RolesOrganizationInput: RolesOrganizationInput;
   RolesResult: RolesResult;
   RolesResultCommunity: RolesResultCommunity;
@@ -9929,6 +9958,7 @@ export type ResolversParentTypes = {
   UpdatePlatformSettingsInput: UpdatePlatformSettingsInput;
   UpdatePlatformSettingsIntegrationInput: UpdatePlatformSettingsIntegrationInput;
   UpdatePostInput: UpdatePostInput;
+  UpdateProfileDirectInput: UpdateProfileDirectInput;
   UpdateProfileInput: UpdateProfileInput;
   UpdateReferenceInput: UpdateReferenceInput;
   UpdateSpaceAboutInput: UpdateSpaceAboutInput;
@@ -12098,11 +12128,6 @@ export type ExternalConfigResolvers<
     ParentType,
     ContextType
   >;
-  externalConfig?: Resolver<
-    Maybe<ResolversTypes['ExternalConfig']>,
-    ParentType,
-    ContextType
-  >;
   model?: Resolver<ResolversTypes['OpenAIModel'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -14164,20 +14189,11 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationGrantCredentialToUserArgs, 'grantCredentialData'>
   >;
-  inviteContributorsEntryRoleOnRoleSet?: Resolver<
-    Array<ResolversTypes['Invitation']>,
+  inviteForEntryRoleOnRoleSet?: Resolver<
+    Array<ResolversTypes['RoleSetInvitationResult']>,
     ParentType,
     ContextType,
-    RequireFields<
-      MutationInviteContributorsEntryRoleOnRoleSetArgs,
-      'invitationData'
-    >
-  >;
-  inviteUserToPlatformAndRoleSet?: Resolver<
-    ResolversTypes['PlatformInvitation'],
-    ParentType,
-    ContextType,
-    RequireFields<MutationInviteUserToPlatformAndRoleSetArgs, 'invitationData'>
+    RequireFields<MutationInviteForEntryRoleOnRoleSetArgs, 'invitationData'>
   >;
   joinRoleSet?: Resolver<
     ResolversTypes['RoleSet'],
@@ -14419,6 +14435,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationUpdateCalloutsSortOrderArgs, 'sortOrderData'>
   >;
+  updateClassificationTagset?: Resolver<
+    ResolversTypes['Tagset'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationUpdateClassificationTagsetArgs, 'updateData'>
+  >;
   updateCollaborationFromTemplate?: Resolver<
     ResolversTypes['Collaboration'],
     ParentType,
@@ -14546,10 +14568,10 @@ export type MutationResolvers<
     RequireFields<MutationUpdatePreferenceOnUserArgs, 'preferenceData'>
   >;
   updateProfile?: Resolver<
-    ResolversTypes['Tagset'],
+    ResolversTypes['Profile'],
     ParentType,
     ContextType,
-    RequireFields<MutationUpdateProfileArgs, 'updateData'>
+    RequireFields<MutationUpdateProfileArgs, 'profileData'>
   >;
   updateReference?: Resolver<
     ResolversTypes['Reference'],
@@ -15868,6 +15890,29 @@ export type RoleSetResolvers<
     ParentType,
     ContextType,
     RequireFields<RoleSetVirtualContributorsInRolesArgs, 'roles'>
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type RoleSetInvitationResultResolvers<
+  ContextType = any,
+  ParentType extends
+    ResolversParentTypes['RoleSetInvitationResult'] = ResolversParentTypes['RoleSetInvitationResult'],
+> = {
+  invitation?: Resolver<
+    Maybe<ResolversTypes['Invitation']>,
+    ParentType,
+    ContextType
+  >;
+  platformInvitation?: Resolver<
+    Maybe<ResolversTypes['PlatformInvitation']>,
+    ParentType,
+    ContextType
+  >;
+  type?: Resolver<
+    ResolversTypes['RoleSetInvitationResultType'],
+    ParentType,
+    ContextType
   >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -17738,6 +17783,7 @@ export type Resolvers<ContextType = any> = {
   RelayPaginatedSpacePageInfo?: RelayPaginatedSpacePageInfoResolvers<ContextType>;
   Role?: RoleResolvers<ContextType>;
   RoleSet?: RoleSetResolvers<ContextType>;
+  RoleSetInvitationResult?: RoleSetInvitationResultResolvers<ContextType>;
   RolesResult?: RolesResultResolvers<ContextType>;
   RolesResultCommunity?: RolesResultCommunityResolvers<ContextType>;
   RolesResultOrganization?: RolesResultOrganizationResolvers<ContextType>;
@@ -44661,63 +44707,24 @@ export type InvitationStateEventMutation = {
   };
 };
 
-export type InviteContributorsMutationVariables = Exact<{
+export type InviteForEntryRoleOnRoleSetMutationVariables = Exact<{
   roleSetId: Scalars['UUID']['input'];
-  contributorIds: Array<Scalars['UUID']['input']> | Scalars['UUID']['input'];
-  message?: InputMaybe<Scalars['String']['input']>;
+  invitedContributorIDs:
+    | Array<Scalars['UUID']['input']>
+    | Scalars['UUID']['input'];
+  invitedUserEmails:
+    | Array<Scalars['String']['input']>
+    | Scalars['String']['input'];
+  welcomeMessage?: InputMaybe<Scalars['String']['input']>;
 }>;
 
-export type InviteContributorsMutation = {
-  inviteContributorsEntryRoleOnRoleSet: Array<{
-    __typename: 'Invitation';
-    id: string;
-    state: string;
-    nextEvents: Array<string>;
-    isFinalized: boolean;
-    lifecycle: { id: string };
-    createdBy?:
-      | {
-          id: string;
-          nameID: string;
-          firstName: string;
-          lastName: string;
-          email: string;
-          profile: { id: string; displayName: string };
-          authorization?:
-            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-            | undefined;
-        }
-      | undefined;
-    contributor:
-      | {
-          id: string;
-          nameID: string;
-          firstName: string;
-          lastName: string;
-          email: string;
-          profile: { id: string; displayName: string };
-          authorization?:
-            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-            | undefined;
-        }
-      | {};
-    authorization?:
-      | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-      | undefined;
+export type InviteForEntryRoleOnRoleSetMutation = {
+  inviteForEntryRoleOnRoleSet: Array<{
+    __typename: 'RoleSetInvitationResult';
+    type: RoleSetInvitationResultType;
+    invitation?: { id: string } | undefined;
+    platformInvitation?: { id: string } | undefined;
   }>;
-};
-
-export type InviteUserToPlatformAndRoleSetMutationVariables = Exact<{
-  email: Scalars['String']['input'];
-  roleSetId: Scalars['UUID']['input'];
-  message?: InputMaybe<Scalars['String']['input']>;
-}>;
-
-export type InviteUserToPlatformAndRoleSetMutation = {
-  inviteUserToPlatformAndRoleSet: {
-    __typename: 'PlatformInvitation';
-    id: string;
-  };
 };
 
 export type JoinRoleSetMutationVariables = Exact<{

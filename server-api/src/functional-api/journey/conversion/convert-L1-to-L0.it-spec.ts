@@ -4,7 +4,7 @@ import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWit
 import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
 import { convertSpaceL1ToSpaceL0 } from './conversion.request.params';
 import { getSpaceData } from '../space/space.request.params';
-import { inviteContributors } from '@functional-api/roleset/invitations/invitation.request.params';
+import { inviteForEntryRoleOnRoleSet } from '@functional-api/roleset/invitations/invitation.request.params';
 import { TestUserManager } from '@src/scenario/TestUserManager';
 import {
   eventOnRoleSetApplication,
@@ -65,15 +65,18 @@ afterAll(async () => {
 describe('Promoting of L1 subspace', () => {
   test('Conversion Subspace L1 to Space L0 with application and invitation to the subspace', async () => {
     // Arrange
-    const requestInvitation = await inviteContributors(
+    const requestInvitation = await inviteForEntryRoleOnRoleSet(
       baseScenario.subspace.community.roleSetId,
       [TestUserManager.users.nonSpaceMember.id],
+      [],
+      'welcome',
       TestUser.GLOBAL_ADMIN
     );
     console.log('Invitation ID:', requestInvitation.error);
 
     const invitationId =
-      requestInvitation.data?.inviteContributorsEntryRoleOnRoleSet[0].id ?? '';
+      requestInvitation.data?.inviteForEntryRoleOnRoleSet[0].invitation?.id ??
+      '';
     console.log('Invitation ID:', invitationId);
 
     const applicationData = await createApplication(

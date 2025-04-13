@@ -25,7 +25,7 @@ import {
 } from '@functional-api/license/license.params.request';
 import {
   deleteInvitation,
-  inviteContributors,
+  inviteForEntryRoleOnRoleSet,
 } from '../../roleset/invitations/invitation.request.params';
 import { getRoleSetInvitationsApplications } from '../../roleset/application/application.request.params';
 import { deleteUser } from '../user/user.request.params';
@@ -152,9 +152,11 @@ describe('Virtual Contributor', () => {
 
   test('should return invitations after virtual contributor is removed', async () => {
     // Act
-    invitationData = await inviteContributors(
+    invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.space.community.roleSetId,
       [vcId],
+      [],
+      'welcome',
       TestUser.GLOBAL_ADMIN
     );
 

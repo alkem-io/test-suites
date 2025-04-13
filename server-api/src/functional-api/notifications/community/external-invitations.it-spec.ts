@@ -9,7 +9,7 @@ import { delay } from '@alkemio/tests-lib';
 import { TestUserManager } from '@src/scenario/TestUserManager';
 import {
   deleteExternalInvitation,
-  inviteExternalUser,
+  inviteForEntryRoleOnRoleSet,
 } from '@functional-api/roleset/invitations/invitation.request.params';
 import { TestUser } from '@alkemio/tests-lib';
 import { changePreferenceUser } from '@functional-api/contributor-management/user/user-preferences-mutation';
@@ -146,14 +146,16 @@ describe('Notifications - invitations', () => {
     const emailExternalUser = `external${uniqueId}@alkem.io`;
     const message = 'Hello, feel free to join our community!';
 
-    const invitationData = await inviteExternalUser(
+    const invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.space.community.roleSetId,
-      emailExternalUser,
+      [],
+      [emailExternalUser],
       message,
       TestUser.GLOBAL_ADMIN
     );
 
-    const invitationInfo = invitationData?.data?.inviteUserToPlatformAndRoleSet;
+    const invitationResults = invitationData?.data?.inviteForEntryRoleOnRoleSet;
+    const invitationInfo = invitationResults?.[0].invitation;
     invitationId = invitationInfo?.id ?? '';
 
     await delay(6000);
@@ -184,14 +186,16 @@ describe('Notifications - invitations', () => {
     const emailExternalUser = `external${uniqueId}@alkem.io`;
     const message = 'Hello, feel free to join our community!';
 
-    const invitationData = await inviteExternalUser(
+    const invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.subspace.community.roleSetId,
-      emailExternalUser,
+      [],
+      [emailExternalUser],
       message,
       TestUser.SUBSPACE_ADMIN
     );
 
-    const invitationInfo = invitationData?.data?.inviteUserToPlatformAndRoleSet;
+    const invitationResults = invitationData?.data?.inviteForEntryRoleOnRoleSet;
+    const invitationInfo = invitationResults?.[0].invitation;
     invitationId = invitationInfo?.id ?? '';
 
     await delay(6000);

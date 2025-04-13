@@ -1,7 +1,7 @@
 import '@utils/array.matcher';
 import {
   deleteExternalInvitation,
-  inviteExternalUser,
+  inviteForEntryRoleOnRoleSet,
 } from './invitation.request.params';
 import {
   createSpaceAndGetData,
@@ -72,15 +72,23 @@ describe('Invitations', () => {
     );
 
     // Act
-    const invitationData = await inviteExternalUser(
+    const invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.space.community.roleSetId,
-      emailExternalUser,
+      [],
+      [emailExternalUser],
       message,
       TestUser.GLOBAL_ADMIN
     );
 
-    const invitationInfo = invitationData?.data?.inviteUserToPlatformAndRoleSet;
-    invitationId = invitationInfo?.id ?? '';
+    const invitationsResults =
+      invitationData?.data?.inviteForEntryRoleOnRoleSet;
+    invitationId = 'invitationsInfoNotRetrieved';
+    if (invitationsResults && invitationsResults.length > 0) {
+      const invitation = invitationsResults[0].invitation;
+      if (invitation) {
+        invitationId = invitation.id;
+      }
+    }
 
     userId = await registerVerifiedUser(
       emailExternalUser,
@@ -111,20 +119,29 @@ describe('Invitations', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    const invitationData = await inviteExternalUser(
+    const invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.space.community.roleSetId,
-      userEmail,
+      [],
+      [userEmail],
       message,
       TestUser.GLOBAL_ADMIN
     );
 
-    const invitationInfo = invitationData?.data?.inviteUserToPlatformAndRoleSet;
-    invitationId = invitationInfo?.id ?? '';
+    const invitationsResults =
+      invitationData?.data?.inviteForEntryRoleOnRoleSet;
+    invitationId = 'invitationsInfoNotRetrieved';
+    if (invitationsResults && invitationsResults.length > 0) {
+      const invitation = invitationsResults[0].invitation;
+      if (invitation) {
+        invitationId = invitation.id;
+      }
+    }
 
     // Act
-    const invitationData2 = await inviteExternalUser(
+    const invitationData2 = await inviteForEntryRoleOnRoleSet(
       baseScenario.space.community.roleSetId,
-      userEmail,
+      [],
+      [userEmail],
       message,
       TestUser.GLOBAL_ADMIN
     );
@@ -155,15 +172,23 @@ describe('Invitations', () => {
     // Arrange
     const userEmail = `3+${emailExternalUser}`;
 
-    const invitationData = await inviteExternalUser(
+    const invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.space.community.roleSetId,
-      userEmail,
+      [],
+      [userEmail],
       message,
       TestUser.GLOBAL_ADMIN
     );
 
-    const invitationInfo = invitationData?.data?.inviteUserToPlatformAndRoleSet;
-    invitationId = invitationInfo?.id ?? '';
+    const invitationsResults =
+      invitationData?.data?.inviteForEntryRoleOnRoleSet;
+    invitationId = 'invitationsInfoNotRetrieved';
+    if (invitationsResults && invitationsResults.length > 0) {
+      const invitation = invitationsResults[0].invitation;
+      if (invitation) {
+        invitationId = invitation.id;
+      }
+    }
 
     const invData = await getRoleSetInvitationsApplications(
       baseScenario.space.community.roleSetId,
@@ -173,16 +198,23 @@ describe('Invitations', () => {
     // Act
     await deleteExternalInvitation(invitationId);
 
-    const invitationData2 = await inviteExternalUser(
+    const invitationData2 = await inviteForEntryRoleOnRoleSet(
       baseScenario.space.community.roleSetId,
-      userEmail,
+      [],
+      [userEmail],
       message,
       TestUser.GLOBAL_ADMIN
     );
 
-    const invitationInfo2 =
-      invitationData2?.data?.inviteUserToPlatformAndRoleSet;
-    invitationId = invitationInfo2?.id ?? '';
+    const invitationsResults2 =
+      invitationData2?.data?.inviteForEntryRoleOnRoleSet;
+    invitationId = 'invitationsInfoNotRetrieved';
+    if (invitationsResults2 && invitationsResults2.length > 0) {
+      const invitation2 = invitationsResults2[0].invitation;
+      if (invitation2) {
+        invitationId = invitation2.id;
+      }
+    }
 
     userId = await registerVerifiedUser(
       userEmail,
@@ -218,20 +250,29 @@ describe('Invitations', () => {
     const secondSpaceId = secondSpaceData?.id ?? '';
     const secondSpaceRoleSetId = secondSpaceData?.community?.roleSet.id ?? '';
 
-    const invitationData = await inviteExternalUser(
+    const invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.space.community.roleSetId,
-      userEmail,
+      [],
+      [userEmail],
       message,
       TestUser.GLOBAL_ADMIN
     );
 
-    const invitationInfo = invitationData?.data?.inviteUserToPlatformAndRoleSet;
-    invitationId = invitationInfo?.id || '';
+    const invitationsResults =
+      invitationData?.data?.inviteForEntryRoleOnRoleSet;
+    invitationId = 'invitationsInfoNotRetrieved';
+    if (invitationsResults && invitationsResults.length > 0) {
+      const invitation = invitationsResults[0].invitation;
+      if (invitation) {
+        invitationId = invitation.id;
+      }
+    }
 
     // Act
-    await inviteExternalUser(
+    await inviteForEntryRoleOnRoleSet(
       secondSpaceRoleSetId,
-      userEmail,
+      [],
+      [userEmail],
       message,
       TestUser.GLOBAL_ADMIN
     );

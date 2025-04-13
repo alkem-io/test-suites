@@ -8,7 +8,7 @@ import { delay } from '@alkemio/tests-lib';
 import { TestUserManager } from '@src/scenario/TestUserManager';
 import {
   deleteInvitation,
-  inviteContributors,
+  inviteForEntryRoleOnRoleSet,
 } from '@functional-api/roleset/invitations/invitation.request.params';
 import { TestUser } from '@alkemio/tests-lib';
 import { PreferenceType } from '@generated/graphql';
@@ -145,16 +145,21 @@ describe('Notifications - invitations', () => {
 
   test('non space user receive invitation for SPACE community from space admin', async () => {
     // Act
-    const invitationData = await inviteContributors(
+    const invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.space.community.roleSetId,
       [TestUserManager.users.nonSpaceMember.id],
+      [],
+      'welcome',
       TestUser.SPACE_ADMIN
     );
-    const invitationsInfo =
-      invitationData?.data?.inviteContributorsEntryRoleOnRoleSet;
+    const invitationsResults =
+      invitationData?.data?.inviteForEntryRoleOnRoleSet;
     invitationId = 'invitationsInfoNotRetrieved';
-    if (invitationsInfo && invitationsInfo.length > 0) {
-      invitationId = invitationsInfo[0].id;
+    if (invitationsResults && invitationsResults.length > 0) {
+      const invitation = invitationsResults[0].invitation;
+      if (invitation) {
+        invitationId = invitation.id;
+      }
     }
 
     await delay(6000);
@@ -174,16 +179,22 @@ describe('Notifications - invitations', () => {
 
   test('non space user receive invitation for SPACE community from subspace admin', async () => {
     // Act
-    const invitationData = await inviteContributors(
+    const invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.space.community.roleSetId,
       [TestUserManager.users.qaUser.id],
+      [],
+      'welcome',
       TestUser.SUBSPACE_ADMIN
     );
-    const invitationsInfo =
-      invitationData?.data?.inviteContributorsEntryRoleOnRoleSet;
+
+    const invitationsResults =
+      invitationData?.data?.inviteForEntryRoleOnRoleSet;
     invitationId = 'invitationsInfoNotRetrieved';
-    if (invitationsInfo && invitationsInfo.length > 0) {
-      invitationId = invitationsInfo[0].id;
+    if (invitationsResults && invitationsResults.length > 0) {
+      const invitation = invitationsResults[0].invitation;
+      if (invitation) {
+        invitationId = invitation.id;
+      }
     }
 
     await delay(6000);
@@ -203,16 +214,21 @@ describe('Notifications - invitations', () => {
 
   test('non space user receive invitation for CHALLENGE community from subspace admin', async () => {
     // Act
-    const invitationData = await inviteContributors(
+    const invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.subspace.community.roleSetId,
       [TestUserManager.users.qaUser.id],
+      [],
+      'welcome',
       TestUser.SUBSPACE_ADMIN
     );
-    const invitationsInfo =
-      invitationData?.data?.inviteContributorsEntryRoleOnRoleSet;
+    const invitationsResults =
+      invitationData?.data?.inviteForEntryRoleOnRoleSet;
     invitationId = 'invitationsInfoNotRetrieved';
-    if (invitationsInfo && invitationsInfo.length > 0) {
-      invitationId = invitationsInfo[0].id;
+    if (invitationsResults && invitationsResults.length > 0) {
+      const invitation = invitationsResults[0].invitation;
+      if (invitation) {
+        invitationId = invitation.id;
+      }
     }
 
     await delay(6000);
@@ -232,16 +248,21 @@ describe('Notifications - invitations', () => {
 
   test("non space user don't receive invitation for CHALLENGE community from subsubspace admin", async () => {
     // Act
-    const invitationData = await inviteContributors(
+    const invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.subspace.community.roleSetId,
       [TestUserManager.users.qaUser.id],
+      [],
+      'welcome',
       TestUser.SUBSUBSPACE_ADMIN
     );
-    const invitationsInfo =
-      invitationData?.data?.inviteContributorsEntryRoleOnRoleSet;
+    const invitationsResults =
+      invitationData?.data?.inviteForEntryRoleOnRoleSet;
     invitationId = 'invitationsInfoNotRetrieved';
-    if (invitationsInfo && invitationsInfo.length > 0) {
-      invitationId = invitationsInfo[0].id;
+    if (invitationsResults && invitationsResults.length > 0) {
+      const invitation = invitationsResults[0].invitation;
+      if (invitation) {
+        invitationId = invitation.id;
+      }
     }
 
     await delay(6000);
@@ -256,16 +277,21 @@ describe('Notifications - invitations', () => {
 
   test('space member receive invitation for CHALLENGE community from subsubspace admin', async () => {
     // Act
-    const invitationData = await inviteContributors(
+    const invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.subspace.community.roleSetId,
       [TestUserManager.users.spaceMember.id],
+      [],
+      'welcome',
       TestUser.SUBSUBSPACE_ADMIN
     );
-    const invitationsInfo =
-      invitationData?.data?.inviteContributorsEntryRoleOnRoleSet;
+    const invitationsResults =
+      invitationData?.data?.inviteForEntryRoleOnRoleSet;
     invitationId = 'invitationsInfoNotRetrieved';
-    if (invitationsInfo && invitationsInfo.length > 0) {
-      invitationId = invitationsInfo[0].id;
+    if (invitationsResults && invitationsResults.length > 0) {
+      const invitation = invitationsResults[0].invitation;
+      if (invitation) {
+        invitationId = invitation.id;
+      }
     }
 
     await delay(6000);
@@ -285,16 +311,21 @@ describe('Notifications - invitations', () => {
 
   test('non space user receive invitation for OPPORTUNITY community from subsubspace admin', async () => {
     // Act
-    const invitationData = await inviteContributors(
+    const invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.subsubspace.community.roleSetId,
       [TestUserManager.users.qaUser.id],
+      [],
+      'welcome',
       TestUser.SUBSUBSPACE_ADMIN
     );
-    const invitationsInfo =
-      invitationData?.data?.inviteContributorsEntryRoleOnRoleSet;
+    const invitationsResults =
+      invitationData?.data?.inviteForEntryRoleOnRoleSet;
     invitationId = 'invitationsInfoNotRetrieved';
-    if (invitationsInfo && invitationsInfo.length > 0) {
-      invitationId = invitationsInfo[0].id;
+    if (invitationsResults && invitationsResults.length > 0) {
+      const invitation = invitationsResults[0].invitation;
+      if (invitation) {
+        invitationId = invitation.id;
+      }
     }
 
     await delay(6000);
@@ -320,16 +351,21 @@ describe('Notifications - invitations', () => {
     );
 
     // Act
-    const invitationData = await inviteContributors(
+    const invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.space.community.roleSetId,
       [TestUserManager.users.nonSpaceMember.id],
+      [],
+      'welcome',
       TestUser.SPACE_ADMIN
     );
-    const invitationsInfo =
-      invitationData?.data?.inviteContributorsEntryRoleOnRoleSet;
+    const invitationsResults =
+      invitationData?.data?.inviteForEntryRoleOnRoleSet;
     invitationId = 'invitationsInfoNotRetrieved';
-    if (invitationsInfo && invitationsInfo.length > 0) {
-      invitationId = invitationsInfo[0].id;
+    if (invitationsResults && invitationsResults.length > 0) {
+      const invitation = invitationsResults[0].invitation;
+      if (invitation) {
+        invitationId = invitation.id;
+      }
     }
 
     await delay(6000);
@@ -348,16 +384,21 @@ describe('Notifications - invitations', () => {
     });
 
     // Act
-    const invitationData = await inviteContributors(
+    const invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.subspace.community.roleSetId,
       [TestUserManager.users.qaUser.displayName],
+      [],
+      'welcome',
       TestUser.SUBSPACE_ADMIN
     );
-    const invitationsInfo =
-      invitationData?.data?.inviteContributorsEntryRoleOnRoleSet;
+    const invitationsResults =
+      invitationData?.data?.inviteForEntryRoleOnRoleSet;
     invitationId = 'invitationsInfoNotRetrieved';
-    if (invitationsInfo && invitationsInfo.length > 0) {
-      invitationId = invitationsInfo[0].id;
+    if (invitationsResults && invitationsResults.length > 0) {
+      const invitation = invitationsResults[0].invitation;
+      if (invitation) {
+        invitationId = invitation.id;
+      }
     }
 
     await delay(6000);
