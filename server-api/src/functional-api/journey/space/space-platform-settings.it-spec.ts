@@ -16,10 +16,11 @@ import {
 import {
   readPrivilege,
   sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin,
-  sorted_read_readAbout,
   readAboutPrivilege,
-  sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin,
-  sorted__create_read_readAbout_update_delete_grant_createSubspace,
+  sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense,
+  sorted_read_readAbout_readLicense,
+  sorted__create_read_readAbout_update_delete_grant_createSubspace_readLicense,
+  readAboutPrivilege_readLicense,
 } from '@common/constants/privileges';
 import { SpacePrivacyMode, SpaceVisibility } from '@generated/alkemio-schema';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
@@ -143,11 +144,11 @@ describe('Update space platform settings', () => {
       // Arrange
       test.each`
         user                             | spaceMyPrivileges
-        ${TestUser.GLOBAL_ADMIN}         | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin}
-        ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin}
-        ${TestUser.GLOBAL_LICENSE_ADMIN} | ${readAboutPrivilege}
-        ${TestUser.SPACE_ADMIN}          | ${sorted__create_read_readAbout_update_delete_grant_createSubspace}
-        ${TestUser.SPACE_MEMBER}         | ${sorted_read_readAbout}
+        ${TestUser.GLOBAL_ADMIN}         | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense}
+        ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense}
+        ${TestUser.GLOBAL_LICENSE_ADMIN} | ${readAboutPrivilege_readLicense}
+        ${TestUser.SPACE_ADMIN}          | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_readLicense}
+        ${TestUser.SPACE_MEMBER}         | ${sorted_read_readAbout_readLicense}
         ${TestUser.NON_SPACE_MEMBER}     | ${readAboutPrivilege}
       `(
         'User: "$user", should have private Space privileges: "$spaceMyPrivileges"',
@@ -182,12 +183,12 @@ describe('Update space platform settings', () => {
 
       test.each`
         user                             | spaceMyPrivileges
-        ${TestUser.GLOBAL_ADMIN}         | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin}
-        ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin}
-        ${TestUser.GLOBAL_LICENSE_ADMIN} | ${sorted_read_readAbout}
-        ${TestUser.SPACE_ADMIN}          | ${sorted__create_read_readAbout_update_delete_grant_createSubspace}
-        ${TestUser.SPACE_MEMBER}         | ${sorted_read_readAbout}
-        ${TestUser.NON_SPACE_MEMBER}     | ${sorted_read_readAbout}
+        ${TestUser.GLOBAL_ADMIN}         | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense}
+        ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense}
+        ${TestUser.GLOBAL_LICENSE_ADMIN} | ${sorted_read_readAbout_readLicense}
+        ${TestUser.SPACE_ADMIN}          | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_readLicense}
+        ${TestUser.SPACE_MEMBER}         | ${sorted_read_readAbout_readLicense}
+        ${TestUser.NON_SPACE_MEMBER}     | ${sorted_read_readAbout_readLicense}
       `(
         'User: "$user", should have private Space privileges: "$spaceMyPrivileges"',
         async ({ user, spaceMyPrivileges }) => {
