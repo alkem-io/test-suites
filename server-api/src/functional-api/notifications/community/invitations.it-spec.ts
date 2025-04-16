@@ -24,11 +24,6 @@ let baseScenario: OrganizationWithSpaceModel;
 const scenarioConfig: TestScenarioConfig = {
   name: 'notifications-invitation',
   space: {
-    collaboration: {
-      addPostCallout: true,
-      addPostCollectionCallout: true,
-      addWhiteboardCallout: true,
-    },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [
@@ -41,11 +36,6 @@ const scenarioConfig: TestScenarioConfig = {
       ],
     },
     subspace: {
-      collaboration: {
-        addPostCallout: true,
-        addPostCollectionCallout: true,
-        addWhiteboardCallout: true,
-      },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
         members: [
@@ -56,11 +46,6 @@ const scenarioConfig: TestScenarioConfig = {
         ],
       },
       subspace: {
-        collaboration: {
-          addPostCallout: true,
-          addPostCollectionCallout: true,
-          addWhiteboardCallout: true,
-        },
         community: {
           admins: [TestUser.SUBSUBSPACE_ADMIN],
           members: [TestUser.SUBSUBSPACE_MEMBER, TestUser.SUBSUBSPACE_ADMIN],
@@ -270,9 +255,14 @@ describe('Notifications - invitations', () => {
     const getEmailsData = await getMailsData();
     // Assert
     expect(getEmailsData[1]).toEqual(0);
-    expect(invitationData.error?.errors[0].message).toEqual(
-      `Contributor is not a member of the parent community (${baseScenario.space.community.roleSetId}) and the current user does not have the privilege to invite to the parent community`
-    );
+    expect(invitationData.data?.inviteForEntryRoleOnRoleSet).toEqual([
+      {
+        type: 'INVITATION_TO_PARENT_NOT_AUTHORIZED',
+        invitation: null,
+        platformInvitation: null,
+        __typename: 'RoleSetInvitationResult',
+      },
+    ]);
   });
 
   test('space member receive invitation for CHALLENGE community from subsubspace admin', async () => {

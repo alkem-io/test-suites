@@ -28,11 +28,6 @@ let baseScenario: OrganizationWithSpaceModel;
 const scenarioConfig: TestScenarioConfig = {
   name: 'notifications-external-invitation',
   space: {
-    collaboration: {
-      addPostCallout: true,
-      addPostCollectionCallout: true,
-      addWhiteboardCallout: true,
-    },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [
@@ -45,11 +40,6 @@ const scenarioConfig: TestScenarioConfig = {
       ],
     },
     subspace: {
-      collaboration: {
-        addPostCallout: true,
-        addPostCollectionCallout: true,
-        addWhiteboardCallout: true,
-      },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
         members: [
@@ -60,11 +50,6 @@ const scenarioConfig: TestScenarioConfig = {
         ],
       },
       subspace: {
-        collaboration: {
-          addPostCallout: true,
-          addPostCollectionCallout: true,
-          addWhiteboardCallout: true,
-        },
         community: {
           admins: [TestUser.SUBSUBSPACE_ADMIN],
           members: [TestUser.SUBSUBSPACE_MEMBER, TestUser.SUBSUBSPACE_ADMIN],
