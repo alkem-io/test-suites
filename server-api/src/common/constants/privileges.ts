@@ -1,6 +1,13 @@
 export const readPrivilege = ['READ'];
 export const readAboutPrivilege = ['READ_ABOUT'];
+export const readAboutPrivilege_readLicense = ['READ_ABOUT', 'READ_LICENSE'];
+
 export const sorted_read_readAbout = [...readPrivilege, ...readAboutPrivilege];
+export const sorted_read_readAbout_readLicense = [
+  ...readPrivilege,
+  ...readAboutPrivilege,
+  'READ_LICENSE',
+];
 
 export const sorted__create_read_update_delete = [
   'CREATE',
@@ -227,6 +234,13 @@ export const sorted__create_read_readAbout_update_delete_grant_createSubspace =
     'CREATE_SUBSPACE',
   ].sort();
 
+export const sorted__create_read_readAbout_update_delete_grant_createSubspace_readLicense =
+  [
+    ...sorted__create_read_readAbout_update_delete_grant,
+    'CREATE_SUBSPACE',
+    'READ_LICENSE',
+  ].sort();
+
 export const sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin =
   [
     ...sorted__create_read_update_delete_grant,
@@ -247,6 +261,14 @@ export const sorted__create_read_readAbout_update_delete_grant_createSubspace_pl
     ...sorted__create_read_readAbout_update_delete_grant,
     'CREATE_SUBSPACE',
     'PLATFORM_ADMIN',
+  ].sort();
+
+export const sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense =
+  [
+    ...sorted__create_read_readAbout_update_delete_grant,
+    'CREATE_SUBSPACE',
+    'PLATFORM_ADMIN',
+    'READ_LICENSE',
   ].sort();
 
 export const sorted__create_read_update_delete_contribute_readAbout = [
