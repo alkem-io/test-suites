@@ -1,5 +1,5 @@
 fragment MemberData on User {
-  ...UserData
+  ...UserDataLight
   profile {
     ...ProfileDataUser
   }
