@@ -19,6 +19,7 @@ import {
 } from '../identity-flows/signin-page-objects';
 import { verifyMyDashboardWelcomeElement } from '../my-dashboard/my-dashboard-page-objects';
 import {
+  continueButton,
   emailField,
   passwordField,
   recoveryCodeField,
@@ -26,15 +27,17 @@ import {
   submitButton,
 } from './common-authentication-page-elements';
 import { deleteMailSlurperMails } from 'src/utils/mailslurper.rest.requests';
-import { uniqueId } from 'src/utils/uniqueId';
 import { deleteUser, getUserData } from '../../duplicate/user.request.params';
 import { delay } from '@alkemio/tests-lib';
+import { UniqueIDGenerator } from '@alkemio/tests-lib';
 
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || '';
 const baseUrl = process.env.ALKEMIO_BASE_URL || '';
+const uniqueId = UniqueIDGenerator.getID();
 
 const userEmail = `test+${uniqueId}@alkem.io`;
-const newPassword = 'Test1234!!**';
+const newPassword = password;
+
 test.beforeEach(async ({ context }) => {
   await context.clearCookies();
   await deleteMailSlurperMails();
@@ -89,7 +92,7 @@ test('user successful registration email', async ({ page }) => {
 
   await expect(page.getByText('An email containing a')).toBeVisible();
   await page.getByLabel('Verification code *').click();
-  await submitButton(page).click();
+  await continueButton(page).click();
 
   await expect(page.getByText('You successfully verified')).toBeVisible();
   await expect(page.getByRole('link', { name: 'Continue' })).toBeVisible();
@@ -116,7 +119,7 @@ test('user successful password recovery', async ({ page }) => {
   await page.getByRole('link', { name: 'Reset password' }).click();
   await emailField(page).click();
   await emailField(page).fill('non.space@alkem.io');
-  await submitButton(page).click();
+  await continueButton(page).click();
   await delay(1300);
   const getEmailsData = await getRecoveryCode();
   const recoveryCodeFromEmail = getEmailsData[0];
@@ -126,18 +129,28 @@ test('user successful password recovery', async ({ page }) => {
 
   await recoveryCodeField(page).click();
   await recoveryCodeField(page).fill(recoveryCodeFromEmail);
-  await submitButton(page).click();
+  await continueButton(page).click();
   await passwordField(page).click();
   await passwordField(page).fill(newPassword);
   await expect(
     page.getByRole('heading', { name: 'User Settings' })
   ).toBeVisible();
   await saveButton(page).click();
-  await expect(page.getByText('BioKeywordsNo tags available.')).toBeVisible();
   await expect(
     page
       .locator('div')
-      .filter({ hasText: /^non space$/ })
-      .nth(3)
+      .filter({ hasText: /^Welcome back, non!Ready to make some impact\?$/ })
+      .nth(2)
   ).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Invitations' })).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Tips & Tricks' })
+  ).toBeVisible();
+  await expect(page.getByRole('link', { name: 'My Account' })).toBeVisible();
+  await expect(
+    page.getByRole('link', { name: 'Create my own Space' })
+  ).toBeVisible();
+
+  // ToDo
+  // after password reset, delete the user or revert the password to intial state
 });

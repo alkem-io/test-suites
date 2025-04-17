@@ -1,6 +1,5 @@
 const { compilerOptions } = require('../tsconfig');
 
-
 module.exports = {
   rootDir: '..',
   preset: 'ts-jest',
@@ -19,7 +18,7 @@ module.exports = {
   },
   coverageDirectory: '<rootDir>/coverage',
   collectCoverageFrom: [],
-  testTimeout: 1800000,
+  testTimeout: 90000,
   collectCoverage: false,
   globalSetup: '<rootDir>/src/testSetup.ts',
   reporters: [
@@ -34,6 +33,5 @@ module.exports = {
     ],
   ],
 };
-
 
 console.info('Global Setup Path:', require.resolve('../src/testSetup.ts'));
