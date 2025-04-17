@@ -33,11 +33,10 @@ import { UniqueIDGenerator } from '@alkemio/tests-lib';
 
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || '';
 const baseUrl = process.env.ALKEMIO_BASE_URL || '';
-console.log({ baseUrl });
 const uniqueId = UniqueIDGenerator.getID();
 
 const userEmail = `test+${uniqueId}@alkem.io`;
-const newPassword = 'Test1234!!**!!';
+const newPassword = password;
 
 test.beforeEach(async ({ context }) => {
   await context.clearCookies();

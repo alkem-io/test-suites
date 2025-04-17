@@ -923,6 +923,7 @@ export enum AuthorizationPrivilege {
   PlatformSettingsAdmin = 'PLATFORM_SETTINGS_ADMIN',
   Read = 'READ',
   ReadAbout = 'READ_ABOUT',
+  ReadLicense = 'READ_LICENSE',
   ReadUsers = 'READ_USERS',
   ReadUserPii = 'READ_USER_PII',
   ReadUserSettings = 'READ_USER_SETTINGS',
@@ -1534,14 +1535,21 @@ export type ConversionVcSpaceToVcKnowledgeBaseInput = {
   virtualContributorID: Scalars['UUID']['input'];
 };
 
-export type ConvertSubspaceToSpaceInput = {
-  /** The subspace to be promoted to be a new Space. Note: the original Subspace will no longer exist after the conversion.  */
-  subspaceID: Scalars['UUID']['input'];
+export type ConvertSpaceL1ToSpaceL0Input = {
+  /** The Space L1 to be promoted to be a new Space L0.  */
+  spaceL1ID: Scalars['UUID']['input'];
 };
 
-export type ConvertSubsubspaceToSubspaceInput = {
-  /** The subsubspace to be promoted. Note: the original Opportunity will no longer exist after the conversion.  */
-  subsubspaceID: Scalars['UUID']['input'];
+export type ConvertSpaceL1ToSpaceL2Input = {
+  /** The Space L1 to be the parent of the Space L1 when it is moved to be L2.  */
+  parentSpaceL1ID: Scalars['UUID']['input'];
+  /** The Space L1 to be moved to be a child of another Space L. Both the L1 Space and the parent Space must be in the same L0 Space.  */
+  spaceL1ID: Scalars['UUID']['input'];
+};
+
+export type ConvertSpaceL2ToSpaceL1Input = {
+  /** The Space L2 to be promoted.  */
+  spaceL2ID: Scalars['UUID']['input'];
 };
 
 export type CreateAiPersonaInput = {
@@ -2285,12 +2293,10 @@ export type ExploreSpacesInput = {
 };
 
 export type ExternalConfig = {
-  /** The signature of the API key */
+  /** The API key for the external LLM provider. */
   apiKey?: Maybe<Scalars['String']['output']>;
-  /** The assistent ID backing the service in OpenAI`s assistant API */
+  /** The assistant ID backing the service in OpenAI`s assistant API */
   assistantId?: Maybe<Scalars['String']['output']>;
-  /** The ExternalConfig for this Virtual. */
-  externalConfig?: Maybe<ExternalConfig>;
   /** The OpenAI model to use for the service */
   model: OpenAiModel;
 };
@@ -2298,7 +2304,7 @@ export type ExternalConfig = {
 export type ExternalConfigInput = {
   /** The API key for the external LLM provider. */
   apiKey?: InputMaybe<Scalars['String']['input']>;
-  /** The assistent ID backing the service in OpenAI`s assistant API */
+  /** The assistant ID backing the service in OpenAI`s assistant API */
   assistantId?: InputMaybe<Scalars['String']['input']>;
   /** The OpenAI model to use for the service */
   model?: OpenAiModel;
@@ -2670,7 +2676,7 @@ export type Invitation = {
   /** The type of contributor that is invited. */
   contributorType: RoleSetContributorType;
   /** The User who triggered the invitation. */
-  createdBy: User;
+  createdBy?: Maybe<User>;
   createdDate: Scalars['DateTime']['output'];
   /** An additional role to assign to the Contributor, in addition to the entry Role. */
   extraRole?: Maybe<RoleName>;
@@ -3501,6 +3507,8 @@ export type MoveCalloutContributionInput = {
 };
 
 export type Mutation = {
+  /** Adds an Iframe Allowed URL to the Platform Settings */
+  addIframeAllowedURL: Array<Scalars['String']['output']>;
   /** Add a reaction to a message from the specified Room. */
   addReactionToMessageInRoom: Reaction;
   /** Ensure all community members are registered for communications. */
@@ -3565,10 +3573,12 @@ export type Mutation = {
   beginVerifiedCredentialRequestInteraction: AgentBeginVerifiedCredentialRequestOutput;
   /** Deletes collections nameID-... */
   cleanupCollections: MigrateEmbeddings;
-  /** Creates a new Space by converting an existing Challenge. */
-  convertChallengeToSpace: Space;
-  /** Creates a new Challenge by converting an existing Opportunity. */
-  convertOpportunityToChallenge: Space;
+  /** Move an L1 Space up in the hierarchy, to be a L0 Space. */
+  convertSpaceL1ToSpaceL0: Space;
+  /** Move an L1 Space down in the hierarchy within the same L0 Space, to be a L2 Space.       Restrictions: the Space L1 must remain within the same L0 Space.       Roles: all user, organization and virtual contributor role assignments are removed, with       the exception of Admin role assignments for Users. */
+  convertSpaceL1ToSpaceL2: Space;
+  /** Move an L2 Space up in the hierarchy, to be a L1 Space. */
+  convertSpaceL2ToSpaceL1: Space;
   /** Convert a VC of type ALKEMIO_SPACE to be of type KNOWLEDGE_BASE. All Callouts from the Space currently being used are moved to the Knowledge Base. Note: only allowed for VCs using a Space within the same Account. */
   convertVirtualContributorToUseKnowledgeBase: VirtualContributor;
   /** Create a new Callout on the CalloutsSet. */
@@ -3683,6 +3693,8 @@ export type Mutation = {
   refreshVirtualContributorBodyOfKnowledge: Scalars['Boolean']['output'];
   /** Empties the CommunityGuidelines. */
   removeCommunityGuidelinesContent: CommunityGuidelines;
+  /** Removes an Iframe Allowed URL from the Platform Settings */
+  removeIframeAllowedURL: Array<Scalars['String']['output']>;
   /** Removes a message. */
   removeMessageOnRoom: Scalars['MessageID']['output'];
   /** Removes a User from a Role on the Platform. */
@@ -3745,6 +3757,8 @@ export type Mutation = {
   updateCalloutVisibility: Callout;
   /** Update the sortOrder field of the supplied Callouts to increase as per the order that they are provided in. */
   updateCalloutsSortOrder: Array<Callout>;
+  /** Updates a Tagset on a Classification. */
+  updateClassificationTagset: Tagset;
   /** Updates the Collaboration, including InnovationFlow states, from the specified Collaboration Template. */
   updateCollaborationFromTemplate: Collaboration;
   /** Updates the CommunityGuidelines. */
@@ -3783,8 +3797,8 @@ export type Mutation = {
   updatePost: Post;
   /** Updates one of the Preferences on a Space */
   updatePreferenceOnUser: Preference;
-  /** Updates the specified Tagset. */
-  updateProfile: Tagset;
+  /** Updates the specified Profile. */
+  updateProfile: Profile;
   /** Updates the specified Reference. */
   updateReference: Reference;
   /** Updates the Space. */
@@ -3825,6 +3839,10 @@ export type Mutation = {
   uploadFileOnStorageBucket: Scalars['String']['output'];
   /** Uploads and sets an image for the specified Visual. */
   uploadImageOnVisual: Visual;
+};
+
+export type MutationAddIframeAllowedUrlArgs = {
+  whitelistedURL: Scalars['String']['input'];
 };
 
 export type MutationAddReactionToMessageInRoomArgs = {
@@ -3928,12 +3946,16 @@ export type MutationBeginVerifiedCredentialRequestInteractionArgs = {
   types: Array<Scalars['String']['input']>;
 };
 
-export type MutationConvertChallengeToSpaceArgs = {
-  convertData: ConvertSubspaceToSpaceInput;
+export type MutationConvertSpaceL1ToSpaceL0Args = {
+  convertData: ConvertSpaceL1ToSpaceL0Input;
 };
 
-export type MutationConvertOpportunityToChallengeArgs = {
-  convertData: ConvertSubsubspaceToSubspaceInput;
+export type MutationConvertSpaceL1ToSpaceL2Args = {
+  convertData: ConvertSpaceL1ToSpaceL2Input;
+};
+
+export type MutationConvertSpaceL2ToSpaceL1Args = {
+  convertData: ConvertSpaceL2ToSpaceL1Input;
 };
 
 export type MutationConvertVirtualContributorToUseKnowledgeBaseArgs = {
@@ -4152,6 +4174,10 @@ export type MutationRemoveCommunityGuidelinesContentArgs = {
   communityGuidelinesData: RemoveCommunityGuidelinesContentInput;
 };
 
+export type MutationRemoveIframeAllowedUrlArgs = {
+  whitelistedURL: Scalars['String']['input'];
+};
+
 export type MutationRemoveMessageOnRoomArgs = {
   messageData: RoomRemoveMessageInput;
 };
@@ -4268,6 +4294,10 @@ export type MutationUpdateCalloutsSortOrderArgs = {
   sortOrderData: UpdateCalloutsSortOrderInput;
 };
 
+export type MutationUpdateClassificationTagsetArgs = {
+  updateData: UpdateClassificationSelectTagsetValueInput;
+};
+
 export type MutationUpdateCollaborationFromTemplateArgs = {
   updateData: UpdateCollaborationFromTemplateInput;
 };
@@ -4345,7 +4375,7 @@ export type MutationUpdatePreferenceOnUserArgs = {
 };
 
 export type MutationUpdateProfileArgs = {
-  updateData: UpdateClassificationSelectTagsetValueInput;
+  profileData: UpdateProfileDirectInput;
 };
 
 export type MutationUpdateReferenceArgs = {
@@ -5242,6 +5272,8 @@ export type RelayPaginatedSpace = {
   subspaces: Array<Space>;
   /** The TemplatesManager in use by this Space */
   templatesManager?: Maybe<TemplatesManager>;
+  /** The Type of the Space e.g. space/challenge/opportunity. */
+  type: SpaceType;
   /** The date at which the entity was last updated. */
   updatedDate?: Maybe<Scalars['DateTime']['output']>;
   /** Visibility of the Space. */
@@ -5856,6 +5888,8 @@ export type Space = {
   subspaces: Array<Space>;
   /** The TemplatesManager in use by this Space */
   templatesManager?: Maybe<TemplatesManager>;
+  /** The Type of the Space e.g. space/challenge/opportunity. */
+  type: SpaceType;
   /** The date at which the entity was last updated. */
   updatedDate?: Maybe<Scalars['DateTime']['output']>;
   /** Visibility of the Space. */
@@ -6732,6 +6766,18 @@ export type UpdatePostInput = {
   nameID?: InputMaybe<Scalars['NameID']['input']>;
   /** The Profile of this entity. */
   profileData?: InputMaybe<UpdateProfileInput>;
+};
+
+export type UpdateProfileDirectInput = {
+  description?: InputMaybe<Scalars['Markdown']['input']>;
+  /** The display name for the entity. */
+  displayName?: InputMaybe<Scalars['String']['input']>;
+  location?: InputMaybe<UpdateLocationInput>;
+  profileID: Scalars['UUID']['input'];
+  references?: InputMaybe<Array<UpdateReferenceInput>>;
+  /** A memorable short description for this entity. */
+  tagline?: InputMaybe<Scalars['String']['input']>;
+  tagsets?: InputMaybe<Array<UpdateTagsetInput>>;
 };
 
 export type UpdateProfileInput = {
@@ -7995,8 +8041,9 @@ export type ResolversTypes = {
   ContributorRolePolicy: ResolverTypeWrapper<ContributorRolePolicy>;
   ContributorRoles: ResolverTypeWrapper<ContributorRoles>;
   ConversionVcSpaceToVcKnowledgeBaseInput: ConversionVcSpaceToVcKnowledgeBaseInput;
-  ConvertSubspaceToSpaceInput: ConvertSubspaceToSpaceInput;
-  ConvertSubsubspaceToSubspaceInput: ConvertSubsubspaceToSubspaceInput;
+  ConvertSpaceL1ToSpaceL0Input: ConvertSpaceL1ToSpaceL0Input;
+  ConvertSpaceL1ToSpaceL2Input: ConvertSpaceL1ToSpaceL2Input;
+  ConvertSpaceL2ToSpaceL1Input: ConvertSpaceL2ToSpaceL1Input;
   CreateAiPersonaInput: CreateAiPersonaInput;
   CreateAiPersonaServiceInput: CreateAiPersonaServiceInput;
   CreateCalendarEventOnCalendarInput: CreateCalendarEventOnCalendarInput;
@@ -8207,7 +8254,7 @@ export type ResolversTypes = {
   Invitation: ResolverTypeWrapper<
     Omit<Invitation, 'contributor' | 'createdBy'> & {
       contributor: ResolversTypes['Contributor'];
-      createdBy: ResolversTypes['User'];
+      createdBy?: Maybe<ResolversTypes['User']>;
     }
   >;
   InvitationEventInput: InvitationEventInput;
@@ -8803,6 +8850,7 @@ export type ResolversTypes = {
   UpdatePlatformSettingsInput: UpdatePlatformSettingsInput;
   UpdatePlatformSettingsIntegrationInput: UpdatePlatformSettingsIntegrationInput;
   UpdatePostInput: UpdatePostInput;
+  UpdateProfileDirectInput: UpdateProfileDirectInput;
   UpdateProfileInput: UpdateProfileInput;
   UpdateReferenceInput: UpdateReferenceInput;
   UpdateSpaceAboutInput: UpdateSpaceAboutInput;
@@ -9207,8 +9255,9 @@ export type ResolversParentTypes = {
   ContributorRolePolicy: ContributorRolePolicy;
   ContributorRoles: ContributorRoles;
   ConversionVcSpaceToVcKnowledgeBaseInput: ConversionVcSpaceToVcKnowledgeBaseInput;
-  ConvertSubspaceToSpaceInput: ConvertSubspaceToSpaceInput;
-  ConvertSubsubspaceToSubspaceInput: ConvertSubsubspaceToSubspaceInput;
+  ConvertSpaceL1ToSpaceL0Input: ConvertSpaceL1ToSpaceL0Input;
+  ConvertSpaceL1ToSpaceL2Input: ConvertSpaceL1ToSpaceL2Input;
+  ConvertSpaceL2ToSpaceL1Input: ConvertSpaceL2ToSpaceL1Input;
   CreateAiPersonaInput: CreateAiPersonaInput;
   CreateAiPersonaServiceInput: CreateAiPersonaServiceInput;
   CreateCalendarEventOnCalendarInput: CreateCalendarEventOnCalendarInput;
@@ -9393,7 +9442,7 @@ export type ResolversParentTypes = {
   Int: Scalars['Int']['output'];
   Invitation: Omit<Invitation, 'contributor' | 'createdBy'> & {
     contributor: ResolversParentTypes['Contributor'];
-    createdBy: ResolversParentTypes['User'];
+    createdBy?: Maybe<ResolversParentTypes['User']>;
   };
   InvitationEventInput: InvitationEventInput;
   InviteForEntryRoleOnRoleSetInput: InviteForEntryRoleOnRoleSetInput;
@@ -9905,6 +9954,7 @@ export type ResolversParentTypes = {
   UpdatePlatformSettingsInput: UpdatePlatformSettingsInput;
   UpdatePlatformSettingsIntegrationInput: UpdatePlatformSettingsIntegrationInput;
   UpdatePostInput: UpdatePostInput;
+  UpdateProfileDirectInput: UpdateProfileDirectInput;
   UpdateProfileInput: UpdateProfileInput;
   UpdateReferenceInput: UpdateReferenceInput;
   UpdateSpaceAboutInput: UpdateSpaceAboutInput;
@@ -12074,11 +12124,6 @@ export type ExternalConfigResolvers<
     ParentType,
     ContextType
   >;
-  externalConfig?: Resolver<
-    Maybe<ResolversTypes['ExternalConfig']>,
-    ParentType,
-    ContextType
-  >;
   model?: Resolver<ResolversTypes['OpenAIModel'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -12612,7 +12657,7 @@ export type InvitationResolvers<
     ParentType,
     ContextType
   >;
-  createdBy?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
+  createdBy?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
   createdDate?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   extraRole?: Resolver<
     Maybe<ResolversTypes['RoleName']>,
@@ -13606,6 +13651,12 @@ export type MutationResolvers<
   ParentType extends
     ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation'],
 > = {
+  addIframeAllowedURL?: Resolver<
+    Array<ResolversTypes['String']>,
+    ParentType,
+    ContextType,
+    RequireFields<MutationAddIframeAllowedUrlArgs, 'whitelistedURL'>
+  >;
   addReactionToMessageInRoom?: Resolver<
     ResolversTypes['Reaction'],
     ParentType,
@@ -13827,17 +13878,23 @@ export type MutationResolvers<
     ParentType,
     ContextType
   >;
-  convertChallengeToSpace?: Resolver<
+  convertSpaceL1ToSpaceL0?: Resolver<
     ResolversTypes['Space'],
     ParentType,
     ContextType,
-    RequireFields<MutationConvertChallengeToSpaceArgs, 'convertData'>
+    RequireFields<MutationConvertSpaceL1ToSpaceL0Args, 'convertData'>
   >;
-  convertOpportunityToChallenge?: Resolver<
+  convertSpaceL1ToSpaceL2?: Resolver<
     ResolversTypes['Space'],
     ParentType,
     ContextType,
-    RequireFields<MutationConvertOpportunityToChallengeArgs, 'convertData'>
+    RequireFields<MutationConvertSpaceL1ToSpaceL2Args, 'convertData'>
+  >;
+  convertSpaceL2ToSpaceL1?: Resolver<
+    ResolversTypes['Space'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationConvertSpaceL2ToSpaceL1Args, 'convertData'>
   >;
   convertVirtualContributorToUseKnowledgeBase?: Resolver<
     ResolversTypes['VirtualContributor'],
@@ -14196,6 +14253,12 @@ export type MutationResolvers<
       'communityGuidelinesData'
     >
   >;
+  removeIframeAllowedURL?: Resolver<
+    Array<ResolversTypes['String']>,
+    ParentType,
+    ContextType,
+    RequireFields<MutationRemoveIframeAllowedUrlArgs, 'whitelistedURL'>
+  >;
   removeMessageOnRoom?: Resolver<
     ResolversTypes['MessageID'],
     ParentType,
@@ -14389,6 +14452,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationUpdateCalloutsSortOrderArgs, 'sortOrderData'>
   >;
+  updateClassificationTagset?: Resolver<
+    ResolversTypes['Tagset'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationUpdateClassificationTagsetArgs, 'updateData'>
+  >;
   updateCollaborationFromTemplate?: Resolver<
     ResolversTypes['Collaboration'],
     ParentType,
@@ -14516,10 +14585,10 @@ export type MutationResolvers<
     RequireFields<MutationUpdatePreferenceOnUserArgs, 'preferenceData'>
   >;
   updateProfile?: Resolver<
-    ResolversTypes['Tagset'],
+    ResolversTypes['Profile'],
     ParentType,
     ContextType,
-    RequireFields<MutationUpdateProfileArgs, 'updateData'>
+    RequireFields<MutationUpdateProfileArgs, 'profileData'>
   >;
   updateReference?: Resolver<
     ResolversTypes['Reference'],
@@ -15609,6 +15678,7 @@ export type RelayPaginatedSpaceResolvers<
     ParentType,
     ContextType
   >;
+  type?: Resolver<ResolversTypes['SpaceType'], ParentType, ContextType>;
   updatedDate?: Resolver<
     Maybe<ResolversTypes['DateTime']>,
     ParentType,
@@ -16180,6 +16250,7 @@ export type SpaceResolvers<
     ParentType,
     ContextType
   >;
+  type?: Resolver<ResolversTypes['SpaceType'], ParentType, ContextType>;
   updatedDate?: Resolver<
     Maybe<ResolversTypes['DateTime']>,
     ParentType,
