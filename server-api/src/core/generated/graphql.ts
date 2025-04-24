@@ -807,9 +807,11 @@ export enum AuthorizationCredential {
   GlobalAnonymous = 'GLOBAL_ANONYMOUS',
   GlobalCommunityRead = 'GLOBAL_COMMUNITY_READ',
   GlobalLicenseManager = 'GLOBAL_LICENSE_MANAGER',
+  GlobalPlatformManager = 'GLOBAL_PLATFORM_MANAGER',
   GlobalRegistered = 'GLOBAL_REGISTERED',
   GlobalSpacesReader = 'GLOBAL_SPACES_READER',
   GlobalSupport = 'GLOBAL_SUPPORT',
+  GlobalSupportManager = 'GLOBAL_SUPPORT_MANAGER',
   OrganizationAdmin = 'ORGANIZATION_ADMIN',
   OrganizationAssociate = 'ORGANIZATION_ASSOCIATE',
   OrganizationOwner = 'ORGANIZATION_OWNER',
@@ -934,6 +936,7 @@ export enum AuthorizationPrivilege {
   PlatformSettingsAdmin = 'PLATFORM_SETTINGS_ADMIN',
   Read = 'READ',
   ReadAbout = 'READ_ABOUT',
+  ReadLicense = 'READ_LICENSE',
   ReadUsers = 'READ_USERS',
   ReadUserPii = 'READ_USER_PII',
   ReadUserSettings = 'READ_USER_SETTINGS',
@@ -2108,9 +2111,11 @@ export enum CredentialType {
   GlobalAnonymous = 'GLOBAL_ANONYMOUS',
   GlobalCommunityRead = 'GLOBAL_COMMUNITY_READ',
   GlobalLicenseManager = 'GLOBAL_LICENSE_MANAGER',
+  GlobalPlatformManager = 'GLOBAL_PLATFORM_MANAGER',
   GlobalRegistered = 'GLOBAL_REGISTERED',
   GlobalSpacesReader = 'GLOBAL_SPACES_READER',
   GlobalSupport = 'GLOBAL_SUPPORT',
+  GlobalSupportManager = 'GLOBAL_SUPPORT_MANAGER',
   OrganizationAdmin = 'ORGANIZATION_ADMIN',
   OrganizationAssociate = 'ORGANIZATION_ASSOCIATE',
   OrganizationOwner = 'ORGANIZATION_OWNER',
@@ -3509,6 +3514,8 @@ export type MoveCalloutContributionInput = {
 };
 
 export type Mutation = {
+  /** Adds an Iframe Allowed URL to the Platform Settings */
+  addIframeAllowedURL: Array<Scalars['String']['output']>;
   /** Add a reaction to a message from the specified Room. */
   addReactionToMessageInRoom: Reaction;
   /** Ensure all community members are registered for communications. */
@@ -3681,6 +3688,10 @@ export type Mutation = {
   joinRoleSet: RoleSet;
   /** Reset the License with Entitlements on the specified Account. */
   licenseResetOnAccount: Account;
+  /** Mark multiple notifications as read. */
+  markNotificationsAsRead: Scalars['Boolean']['output'];
+  /** Mark multiple notifications as unread. */
+  markNotificationsAsUnread: Scalars['Boolean']['output'];
   /** Sends a message on the specified User`s behalf and returns the room id */
   messageUser: Scalars['String']['output'];
   /** Moves the specified Contribution to another Callout. */
@@ -3691,6 +3702,8 @@ export type Mutation = {
   refreshVirtualContributorBodyOfKnowledge: Scalars['Boolean']['output'];
   /** Empties the CommunityGuidelines. */
   removeCommunityGuidelinesContent: CommunityGuidelines;
+  /** Removes an Iframe Allowed URL from the Platform Settings */
+  removeIframeAllowedURL: Array<Scalars['String']['output']>;
   /** Removes a message. */
   removeMessageOnRoom: Scalars['MessageID']['output'];
   /** Removes a User from a Role on the Platform. */
@@ -3835,6 +3848,10 @@ export type Mutation = {
   uploadFileOnStorageBucket: Scalars['String']['output'];
   /** Uploads and sets an image for the specified Visual. */
   uploadImageOnVisual: Visual;
+};
+
+export type MutationAddIframeAllowedUrlArgs = {
+  whitelistedURL: Scalars['String']['input'];
 };
 
 export type MutationAddReactionToMessageInRoomArgs = {
@@ -4146,6 +4163,14 @@ export type MutationLicenseResetOnAccountArgs = {
   resetData: AccountLicenseResetInput;
 };
 
+export type MutationMarkNotificationsAsReadArgs = {
+  notificationIds: Array<Scalars['String']['input']>;
+};
+
+export type MutationMarkNotificationsAsUnreadArgs = {
+  notificationIds: Array<Scalars['String']['input']>;
+};
+
 export type MutationMessageUserArgs = {
   messageData: UserSendMessageInput;
 };
@@ -4160,6 +4185,10 @@ export type MutationRefreshVirtualContributorBodyOfKnowledgeArgs = {
 
 export type MutationRemoveCommunityGuidelinesContentArgs = {
   communityGuidelinesData: RemoveCommunityGuidelinesContentInput;
+};
+
+export type MutationRemoveIframeAllowedUrlArgs = {
+  whitelistedURL: Scalars['String']['input'];
 };
 
 export type MutationRemoveMessageOnRoomArgs = {
@@ -5387,8 +5416,10 @@ export enum RoleName {
   GlobalAdmin = 'GLOBAL_ADMIN',
   GlobalCommunityReader = 'GLOBAL_COMMUNITY_READER',
   GlobalLicenseManager = 'GLOBAL_LICENSE_MANAGER',
+  GlobalPlatformManager = 'GLOBAL_PLATFORM_MANAGER',
   GlobalSpacesReader = 'GLOBAL_SPACES_READER',
   GlobalSupport = 'GLOBAL_SUPPORT',
+  GlobalSupportManager = 'GLOBAL_SUPPORT_MANAGER',
   Lead = 'LEAD',
   Member = 'MEMBER',
   Owner = 'OWNER',
@@ -14043,6 +14074,12 @@ export type MutationResolvers<
   ParentType extends
     ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation'],
 > = {
+  addIframeAllowedURL?: Resolver<
+    Array<ResolversTypes['String']>,
+    ParentType,
+    ContextType,
+    RequireFields<SchemaTypes.MutationAddIframeAllowedUrlArgs, 'whitelistedURL'>
+  >;
   addReactionToMessageInRoom?: Resolver<
     ResolversTypes['Reaction'],
     ParentType,
@@ -14658,6 +14695,24 @@ export type MutationResolvers<
     ContextType,
     RequireFields<SchemaTypes.MutationLicenseResetOnAccountArgs, 'resetData'>
   >;
+  markNotificationsAsRead?: Resolver<
+    ResolversTypes['Boolean'],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationMarkNotificationsAsReadArgs,
+      'notificationIds'
+    >
+  >;
+  markNotificationsAsUnread?: Resolver<
+    ResolversTypes['Boolean'],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationMarkNotificationsAsUnreadArgs,
+      'notificationIds'
+    >
+  >;
   messageUser?: Resolver<
     ResolversTypes['String'],
     ParentType,
@@ -14694,6 +14749,15 @@ export type MutationResolvers<
     RequireFields<
       SchemaTypes.MutationRemoveCommunityGuidelinesContentArgs,
       'communityGuidelinesData'
+    >
+  >;
+  removeIframeAllowedURL?: Resolver<
+    Array<ResolversTypes['String']>,
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationRemoveIframeAllowedUrlArgs,
+      'whitelistedURL'
     >
   >;
   removeMessageOnRoom?: Resolver<
@@ -99368,6 +99432,7 @@ export type SearchQuery = {
                   about: {
                     __typename: 'SpaceAbout';
                     id: string;
+                    isContentPublic: boolean;
                     profile: {
                       __typename: 'Profile';
                       id: string;
@@ -99399,12 +99464,20 @@ export type SearchQuery = {
                           }
                         | undefined;
                     };
-                  };
-                  settings: {
-                    __typename: 'SpaceSettings';
-                    privacy: {
-                      __typename: 'SpaceSettingsPrivacy';
-                      mode: SchemaTypes.SpacePrivacyMode;
+                    membership: {
+                      __typename: 'SpaceAboutMembership';
+                      myMembershipStatus?:
+                        | SchemaTypes.CommunityMembershipStatus
+                        | undefined;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                      communityID: string;
+                      roleSetID: string;
+                    };
+                    guidelines: {
+                      __typename: 'CommunityGuidelines';
+                      id: string;
                     };
                   };
                 }
@@ -99418,6 +99491,7 @@ export type SearchQuery = {
                 __typename: 'SpaceAbout';
                 id: string;
                 why?: any | undefined;
+                isContentPublic: boolean;
                 profile: {
                   __typename: 'Profile';
                   id: string;
@@ -99441,23 +99515,11 @@ export type SearchQuery = {
                     name: string;
                   }>;
                 };
-              };
-              community: {
-                __typename: 'Community';
-                id: string;
-                roleSet: {
-                  __typename: 'RoleSet';
-                  id: string;
+                membership: {
+                  __typename: 'SpaceAboutMembership';
                   myMembershipStatus?:
                     | SchemaTypes.CommunityMembershipStatus
                     | undefined;
-                };
-              };
-              settings: {
-                __typename: 'SpaceSettings';
-                privacy: {
-                  __typename: 'SpaceSettingsPrivacy';
-                  mode: SchemaTypes.SpacePrivacyMode;
                 };
               };
             };
@@ -99533,6 +99595,7 @@ export type SearchQuery = {
               about: {
                 __typename: 'SpaceAbout';
                 id: string;
+                isContentPublic: boolean;
                 profile: {
                   __typename: 'Profile';
                   id: string;
@@ -99560,6 +99623,18 @@ export type SearchQuery = {
                       }
                     | undefined;
                 };
+                membership: {
+                  __typename: 'SpaceAboutMembership';
+                  myMembershipStatus?:
+                    | SchemaTypes.CommunityMembershipStatus
+                    | undefined;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                  communityID: string;
+                  roleSetID: string;
+                };
+                guidelines: { __typename: 'CommunityGuidelines'; id: string };
               };
             };
           }
@@ -99655,6 +99730,7 @@ export type SearchQuery = {
               about: {
                 __typename: 'SpaceAbout';
                 id: string;
+                isContentPublic: boolean;
                 profile: {
                   __typename: 'Profile';
                   id: string;
@@ -99682,6 +99758,18 @@ export type SearchQuery = {
                       }
                     | undefined;
                 };
+                membership: {
+                  __typename: 'SpaceAboutMembership';
+                  myMembershipStatus?:
+                    | SchemaTypes.CommunityMembershipStatus
+                    | undefined;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                  communityID: string;
+                  roleSetID: string;
+                };
+                guidelines: { __typename: 'CommunityGuidelines'; id: string };
               };
             };
           }
@@ -99752,6 +99840,7 @@ export type SearchQuery = {
               about: {
                 __typename: 'SpaceAbout';
                 id: string;
+                isContentPublic: boolean;
                 profile: {
                   __typename: 'Profile';
                   id: string;
@@ -99779,13 +99868,18 @@ export type SearchQuery = {
                       }
                     | undefined;
                 };
-              };
-              settings: {
-                __typename: 'SpaceSettings';
-                privacy: {
-                  __typename: 'SpaceSettingsPrivacy';
-                  mode: SchemaTypes.SpacePrivacyMode;
+                membership: {
+                  __typename: 'SpaceAboutMembership';
+                  myMembershipStatus?:
+                    | SchemaTypes.CommunityMembershipStatus
+                    | undefined;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                  communityID: string;
+                  roleSetID: string;
                 };
+                guidelines: { __typename: 'CommunityGuidelines'; id: string };
               };
             };
             callout: {
@@ -99845,6 +99939,7 @@ export type SearchQuery = {
                 displayName: string;
                 id: string;
                 description?: any | undefined;
+                url: string;
                 location?:
                   | {
                       __typename: 'Location';
@@ -99862,6 +99957,14 @@ export type SearchQuery = {
                       allowedValues: Array<string>;
                       type: SchemaTypes.TagsetType;
                     }>
+                  | undefined;
+                visual?:
+                  | {
+                      __typename: 'Visual';
+                      id: string;
+                      uri: string;
+                      name: string;
+                    }
                   | undefined;
               };
             };
@@ -99895,6 +99998,7 @@ export type SearchQuery = {
                 displayName: string;
                 id: string;
                 description?: any | undefined;
+                url: string;
                 location?:
                   | {
                       __typename: 'Location';
@@ -99912,6 +100016,14 @@ export type SearchQuery = {
                       allowedValues: Array<string>;
                       type: SchemaTypes.TagsetType;
                     }>
+                  | undefined;
+                visual?:
+                  | {
+                      __typename: 'Visual';
+                      id: string;
+                      uri: string;
+                      name: string;
+                    }
                   | undefined;
               };
             };
@@ -99931,6 +100043,7 @@ export type SearchResultSpaceFragment = {
         about: {
           __typename: 'SpaceAbout';
           id: string;
+          isContentPublic: boolean;
           profile: {
             __typename: 'Profile';
             id: string;
@@ -99948,13 +100061,18 @@ export type SearchResultSpaceFragment = {
               | { __typename: 'Visual'; id: string; uri: string; name: string }
               | undefined;
           };
-        };
-        settings: {
-          __typename: 'SpaceSettings';
-          privacy: {
-            __typename: 'SpaceSettingsPrivacy';
-            mode: SchemaTypes.SpacePrivacyMode;
+          membership: {
+            __typename: 'SpaceAboutMembership';
+            myMembershipStatus?:
+              | SchemaTypes.CommunityMembershipStatus
+              | undefined;
+            myPrivileges?:
+              | Array<SchemaTypes.AuthorizationPrivilege>
+              | undefined;
+            communityID: string;
+            roleSetID: string;
           };
+          guidelines: { __typename: 'CommunityGuidelines'; id: string };
         };
       }
     | undefined;
@@ -99967,6 +100085,7 @@ export type SearchResultSpaceFragment = {
       __typename: 'SpaceAbout';
       id: string;
       why?: any | undefined;
+      isContentPublic: boolean;
       profile: {
         __typename: 'Profile';
         id: string;
@@ -99990,21 +100109,9 @@ export type SearchResultSpaceFragment = {
           name: string;
         }>;
       };
-    };
-    community: {
-      __typename: 'Community';
-      id: string;
-      roleSet: {
-        __typename: 'RoleSet';
-        id: string;
+      membership: {
+        __typename: 'SpaceAboutMembership';
         myMembershipStatus?: SchemaTypes.CommunityMembershipStatus | undefined;
-      };
-    };
-    settings: {
-      __typename: 'SpaceSettings';
-      privacy: {
-        __typename: 'SpaceSettingsPrivacy';
-        mode: SchemaTypes.SpacePrivacyMode;
       };
     };
   };
@@ -100013,6 +100120,7 @@ export type SearchResultSpaceFragment = {
 export type SpaceAboutLightFragment = {
   __typename: 'SpaceAbout';
   id: string;
+  isContentPublic: boolean;
   profile: {
     __typename: 'Profile';
     id: string;
@@ -100030,6 +100138,14 @@ export type SpaceAboutLightFragment = {
       | { __typename: 'Visual'; id: string; uri: string; name: string }
       | undefined;
   };
+  membership: {
+    __typename: 'SpaceAboutMembership';
+    myMembershipStatus?: SchemaTypes.CommunityMembershipStatus | undefined;
+    myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined;
+    communityID: string;
+    roleSetID: string;
+  };
+  guidelines: { __typename: 'CommunityGuidelines'; id: string };
 };
 
 export type VisualUriFragment = {
@@ -100091,6 +100207,7 @@ export type SearchResultCalloutFragment = {
     about: {
       __typename: 'SpaceAbout';
       id: string;
+      isContentPublic: boolean;
       profile: {
         __typename: 'Profile';
         id: string;
@@ -100108,6 +100225,14 @@ export type SearchResultCalloutFragment = {
           | { __typename: 'Visual'; id: string; uri: string; name: string }
           | undefined;
       };
+      membership: {
+        __typename: 'SpaceAboutMembership';
+        myMembershipStatus?: SchemaTypes.CommunityMembershipStatus | undefined;
+        myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined;
+        communityID: string;
+        roleSetID: string;
+      };
+      guidelines: { __typename: 'CommunityGuidelines'; id: string };
     };
   };
 };
@@ -100121,6 +100246,7 @@ export type CalloutParentFragment = {
     about: {
       __typename: 'SpaceAbout';
       id: string;
+      isContentPublic: boolean;
       profile: {
         __typename: 'Profile';
         id: string;
@@ -100138,6 +100264,14 @@ export type CalloutParentFragment = {
           | { __typename: 'Visual'; id: string; uri: string; name: string }
           | undefined;
       };
+      membership: {
+        __typename: 'SpaceAboutMembership';
+        myMembershipStatus?: SchemaTypes.CommunityMembershipStatus | undefined;
+        myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined;
+        communityID: string;
+        roleSetID: string;
+      };
+      guidelines: { __typename: 'CommunityGuidelines'; id: string };
     };
   };
 };
@@ -100185,6 +100319,7 @@ export type SearchResultPostFragment = {
     about: {
       __typename: 'SpaceAbout';
       id: string;
+      isContentPublic: boolean;
       profile: {
         __typename: 'Profile';
         id: string;
@@ -100202,13 +100337,14 @@ export type SearchResultPostFragment = {
           | { __typename: 'Visual'; id: string; uri: string; name: string }
           | undefined;
       };
-    };
-    settings: {
-      __typename: 'SpaceSettings';
-      privacy: {
-        __typename: 'SpaceSettingsPrivacy';
-        mode: SchemaTypes.SpacePrivacyMode;
+      membership: {
+        __typename: 'SpaceAboutMembership';
+        myMembershipStatus?: SchemaTypes.CommunityMembershipStatus | undefined;
+        myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined;
+        communityID: string;
+        roleSetID: string;
       };
+      guidelines: { __typename: 'CommunityGuidelines'; id: string };
     };
   };
   callout: {
@@ -100253,6 +100389,7 @@ export type PostParentFragment = {
     about: {
       __typename: 'SpaceAbout';
       id: string;
+      isContentPublic: boolean;
       profile: {
         __typename: 'Profile';
         id: string;
@@ -100270,13 +100407,14 @@ export type PostParentFragment = {
           | { __typename: 'Visual'; id: string; uri: string; name: string }
           | undefined;
       };
-    };
-    settings: {
-      __typename: 'SpaceSettings';
-      privacy: {
-        __typename: 'SpaceSettingsPrivacy';
-        mode: SchemaTypes.SpacePrivacyMode;
+      membership: {
+        __typename: 'SpaceAboutMembership';
+        myMembershipStatus?: SchemaTypes.CommunityMembershipStatus | undefined;
+        myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined;
+        communityID: string;
+        roleSetID: string;
       };
+      guidelines: { __typename: 'CommunityGuidelines'; id: string };
     };
   };
   callout: {
@@ -100306,6 +100444,7 @@ export type SearchResultUserFragment = {
       displayName: string;
       id: string;
       description?: any | undefined;
+      url: string;
       location?:
         | {
             __typename: 'Location';
@@ -100324,13 +100463,18 @@ export type SearchResultUserFragment = {
             type: SchemaTypes.TagsetType;
           }>
         | undefined;
+      visual?:
+        | { __typename: 'Visual'; id: string; uri: string; name: string }
+        | undefined;
     };
   };
 };
 
 export type SearchResultProfileFragment = {
+  __typename: 'Profile';
   id: string;
   description?: any | undefined;
+  url: string;
   location?:
     | {
         __typename: 'Location';
@@ -100349,6 +100493,9 @@ export type SearchResultProfileFragment = {
         type: SchemaTypes.TagsetType;
       }>
     | undefined;
+  visual?:
+    | { __typename: 'Visual'; id: string; uri: string; name: string }
+    | undefined;
 };
 
 export type SearchResultOrganizationFragment = {
@@ -100361,6 +100508,7 @@ export type SearchResultOrganizationFragment = {
       displayName: string;
       id: string;
       description?: any | undefined;
+      url: string;
       location?:
         | {
             __typename: 'Location';
@@ -100378,6 +100526,9 @@ export type SearchResultOrganizationFragment = {
             allowedValues: Array<string>;
             type: SchemaTypes.TagsetType;
           }>
+        | undefined;
+      visual?:
+        | { __typename: 'Visual'; id: string; uri: string; name: string }
         | undefined;
     };
   };
@@ -123833,6 +123984,18 @@ export const SpaceAboutLightFragmentDoc = gql`
       }
       __typename
     }
+    isContentPublic
+    membership {
+      myMembershipStatus
+      myPrivileges
+      communityID
+      roleSetID
+      __typename
+    }
+    guidelines {
+      id
+      __typename
+    }
     __typename
   }
   ${VisualUriFragmentDoc}
@@ -123844,13 +124007,6 @@ export const SearchResultSpaceFragmentDoc = gql`
       level
       about {
         ...SpaceAboutLight
-        __typename
-      }
-      settings {
-        privacy {
-          mode
-          __typename
-        }
         __typename
       }
       __typename
@@ -123876,20 +124032,9 @@ export const SearchResultSpaceFragmentDoc = gql`
           }
           __typename
         }
-        __typename
-      }
-      community {
-        id
-        roleSet {
-          id
+        isContentPublic
+        membership {
           myMembershipStatus
-          __typename
-        }
-        __typename
-      }
-      settings {
-        privacy {
-          mode
           __typename
         }
         __typename
@@ -123996,13 +124141,6 @@ export const PostParentFragmentDoc = gql`
         ...SpaceAboutLight
         __typename
       }
-      settings {
-        privacy {
-          mode
-          __typename
-        }
-        __typename
-      }
       __typename
     }
     callout {
@@ -124076,8 +124214,15 @@ export const SearchResultProfileFragmentDoc = gql`
       ...TagsetDetails
       __typename
     }
+    visual(type: AVATAR) {
+      ...VisualUri
+      __typename
+    }
+    url
+    __typename
   }
   ${TagsetDetailsFragmentDoc}
+  ${VisualUriFragmentDoc}
 `;
 export const SearchResultUserFragmentDoc = gql`
   fragment SearchResultUser on SearchResultUser {
