@@ -4,7 +4,7 @@ import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWit
 import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
 import { convertSpaceL1ToSpaceL0 } from './conversion.request.params';
 import { getSpaceData } from '../space/space.request.params';
-import { inviteContributors } from '@functional-api/roleset/invitations/invitation.request.params';
+import { inviteForEntryRoleOnRoleSet } from '@functional-api/roleset/invitations/invitation.request.params';
 import { TestUserManager } from '@src/scenario/TestUserManager';
 import { createApplication } from '@functional-api/roleset/application/application.request.params';
 import {
@@ -78,9 +78,11 @@ afterAll(async () => {
 describe('Promoting of L1 subspace', () => {
   test('Conversion Subspace L1 to Space L0 together with L2 to L1', async () => {
     // Arrange
-    await inviteContributors(
+    await inviteForEntryRoleOnRoleSet(
       baseScenario.subspace.community.roleSetId,
       [TestUserManager.users.nonSpaceMember.id],
+      [],
+      'welcome',
       TestUser.GLOBAL_ADMIN
     );
 

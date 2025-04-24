@@ -2,44 +2,27 @@ import { getGraphqlClient } from '@utils/graphqlClient';
 import { TestUser } from '@alkemio/tests-lib';
 import { graphqlErrorWrapper } from '@utils/graphql.wrapper';
 
-export const inviteContributors = async (
+export const inviteForEntryRoleOnRoleSet = async (
   roleSetId: string,
-  contributorIds: string[],
+  invitedContributorIDs: string[],
+  invitedUserEmails: string[],
+  welcomeMessage: string,
   contributorRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.InviteContributors(
+    graphqlClient.InviteForEntryRoleOnRoleSet(
       {
         roleSetId,
-        contributorIds: contributorIds,
+        invitedContributorIDs,
+        invitedUserEmails,
+        welcomeMessage,
       },
       {
         authorization: `Bearer ${authToken}`,
       }
     );
   return graphqlErrorWrapper(callback, contributorRole);
-};
-
-export const inviteExternalUser = async (
-  roleSetId: string,
-  email: string,
-  message: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string | undefined) =>
-    graphqlClient.inviteUserToPlatformAndRoleSet(
-      {
-        roleSetId,
-        email,
-        message,
-      },
-      {
-        authorization: `Bearer ${authToken}`,
-      }
-    );
-  return graphqlErrorWrapper(callback, userRole);
 };
 
 export const deleteInvitation = async (

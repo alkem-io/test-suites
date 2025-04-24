@@ -1,0 +1,25 @@
+mutation InviteForEntryRoleOnRoleSet(
+  $roleSetId: UUID!
+  $invitedContributorIDs: [UUID!]!
+  $invitedUserEmails: [String!]!
+  $welcomeMessage: String
+) {
+  inviteForEntryRoleOnRoleSet(
+    invitationData: {
+      roleSetID: $roleSetId
+      invitedContributorIDs: $invitedContributorIDs
+      invitedUserEmails: $invitedUserEmails
+      welcomeMessage: $welcomeMessage
+    }
+  ) {
+    type
+    invitation {
+      id
+      state
+    }
+    platformInvitation {
+      id
+    }
+    __typename
+  }
+}

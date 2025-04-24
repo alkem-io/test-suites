@@ -149,6 +149,13 @@ export class TestScenarioFactory {
   ): Promise<void> {
     const alreadyHasRole = userModel.RoleNames.includes(role);
     if (!alreadyHasRole) {
+      if (userModel.id.length === 0) {
+        // Missing user ID, cannot assign role
+        LogManager.getLogger().error(
+          `User ID is missing for ${userModel.type}, cannot assign role ${role}`
+        );
+        process.exit(1); // Exit the Jest process with an error code.
+      }
       await assignPlatformRole(userModel.id, role);
     }
   }

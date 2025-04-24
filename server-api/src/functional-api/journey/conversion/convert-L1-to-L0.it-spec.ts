@@ -4,7 +4,7 @@ import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWit
 import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
 import { convertSpaceL1ToSpaceL0 } from './conversion.request.params';
 import { getSpaceData } from '../space/space.request.params';
-import { inviteContributors } from '@functional-api/roleset/invitations/invitation.request.params';
+import { inviteForEntryRoleOnRoleSet } from '@functional-api/roleset/invitations/invitation.request.params';
 import { TestUserManager } from '@src/scenario/TestUserManager';
 import {
   eventOnRoleSetApplication,
@@ -16,6 +16,7 @@ import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
 } from '@alkemio/client-lib';
+import { getSingleInvitationResult } from '@functional-api/roleset/roleset.request.params';
 
 let baseScenario: OrganizationWithSpaceModel;
 
@@ -65,15 +66,21 @@ afterAll(async () => {
 describe('Promoting of L1 subspace', () => {
   test('Conversion Subspace L1 to Space L0 with application and invitation to the subspace', async () => {
     // Arrange
-    const requestInvitation = await inviteContributors(
+    const invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.subspace.community.roleSetId,
       [TestUserManager.users.nonSpaceMember.id],
+      [],
+      'welcome',
       TestUser.GLOBAL_ADMIN
     );
-    console.log('Invitation ID:', requestInvitation.error);
+    console.log('Invitation ID:', invitationData.error);
 
-    const invitationId =
-      requestInvitation.data?.inviteContributorsEntryRoleOnRoleSet[0].id ?? '';
+    let invitationId = '';
+    const invitationResult = getSingleInvitationResult(invitationData);
+    if (invitationResult && invitationResult.invitation) {
+      invitationId = invitationResult.invitation.id;
+    }
+
     console.log('Invitation ID:', invitationId);
 
     const applicationData = await createApplication(

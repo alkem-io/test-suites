@@ -25,7 +25,7 @@ import {
 } from '@functional-api/license/license.params.request';
 import {
   deleteInvitation,
-  inviteContributors,
+  inviteForEntryRoleOnRoleSet,
 } from '../../roleset/invitations/invitation.request.params';
 import { getRoleSetInvitationsApplications } from '../../roleset/application/application.request.params';
 import { deleteUser } from '../user/user.request.params';
@@ -35,6 +35,7 @@ import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWit
 import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
 import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
 import { getAccountMainEntities } from '@functional-api/account/account.params.request';
+import { getSingleInvitationResult } from '@functional-api/roleset/roleset.request.params';
 const uniqueId = UniqueIDGenerator.getID();
 
 let invitationId = '';
@@ -152,14 +153,18 @@ describe('Virtual Contributor', () => {
 
   test('should return invitations after virtual contributor is removed', async () => {
     // Act
-    invitationData = await inviteContributors(
+    invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.space.community.roleSetId,
       [vcId],
+      [],
+      'welcome',
       TestUser.GLOBAL_ADMIN
     );
 
-    invitationId =
-      invitationData?.data?.inviteContributorsForCommunityMembership?.id;
+    const invitationResult = getSingleInvitationResult(invitationData);
+    if (invitationResult && invitationResult.invitation) {
+      invitationId = invitationResult.invitation.id;
+    }
 
     await deleteVirtualContributorOnAccount(vcId);
 

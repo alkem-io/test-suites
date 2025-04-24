@@ -28,11 +28,6 @@ let baseScenario: OrganizationWithSpaceModel;
 const scenarioConfig: TestScenarioConfig = {
   name: 'notifications-join-community',
   space: {
-    collaboration: {
-      addPostCallout: true,
-      addPostCollectionCallout: true,
-      addWhiteboardCallout: true,
-    },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [
@@ -53,11 +48,6 @@ const scenarioConfig: TestScenarioConfig = {
       },
     },
     subspace: {
-      collaboration: {
-        addPostCallout: true,
-        addPostCollectionCallout: true,
-        addWhiteboardCallout: true,
-      },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
         members: [

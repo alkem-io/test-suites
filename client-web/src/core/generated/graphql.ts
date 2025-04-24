@@ -3682,8 +3682,10 @@ export type Mutation = {
   grantCredentialToOrganization: Organization;
   /** Grants an authorization credential to a User. */
   grantCredentialToUser: User;
-  /** Invite an existing Contributor to join the specified RoleSet in the Entry Role. */
-  inviteContributorsEntryRoleOnRoleSet: Array<Invitation>;
+  /** Resets the interaction with the chat engine. */
+  ingest: Scalars['Boolean']['output'];
+  /** Invite an existing Contriburor to join the specified Community as a member. */
+  inviteForEntryRoleOnRoleSet: Array<Invitation>;
   /** Invite a User to join the platform and the specified RoleSet as a member. */
   inviteUserToPlatformAndRoleSet: PlatformInvitation;
   /** Join the specified RoleSet using the entry Role, without going through an approval process. */
@@ -4149,9 +4151,8 @@ export type MutationGrantCredentialToUserArgs = {
   grantCredentialData: GrantAuthorizationCredentialInput;
 };
 
-export type MutationInviteContributorsEntryRoleOnRoleSetArgs = {
-  invitationData: InviteForEntryRoleOnRoleSetInput;
-};
+export type MutationinviteForEntryRoleOnRoleSetArgs = {
+
 
 export type MutationInviteUserToPlatformAndRoleSetArgs = {
   invitationData: InviteNewContributorForRoleOnRoleSetInput;
@@ -14633,12 +14634,13 @@ export type MutationResolvers<
       'grantCredentialData'
     >
   >;
-  inviteContributorsEntryRoleOnRoleSet?: Resolver<
+  ingest?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  inviteForEntryRoleOnRoleSet?: Resolver<
     Array<ResolversTypes['Invitation']>,
     ParentType,
     ContextType,
     RequireFields<
-      SchemaTypes.MutationInviteContributorsEntryRoleOnRoleSetArgs,
+      SchemaTypes.MutationinviteForEntryRoleOnRoleSetArgs,
       'invitationData'
     >
   >;

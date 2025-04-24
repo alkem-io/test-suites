@@ -9,7 +9,7 @@ import { delay } from '@alkemio/tests-lib';
 import { TestUserManager } from '@src/scenario/TestUserManager';
 import {
   deleteExternalInvitation,
-  inviteExternalUser,
+  inviteForEntryRoleOnRoleSet,
 } from '@functional-api/roleset/invitations/invitation.request.params';
 import { TestUser } from '@alkemio/tests-lib';
 import { changePreferenceUser } from '@functional-api/contributor-management/user/user-preferences-mutation';
@@ -17,6 +17,7 @@ import { PreferenceType } from '@generated/graphql';
 import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
 import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
+import { getSingleInvitationResult } from '@functional-api/roleset/roleset.request.params';
 
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -27,11 +28,6 @@ let baseScenario: OrganizationWithSpaceModel;
 const scenarioConfig: TestScenarioConfig = {
   name: 'notifications-external-invitation',
   space: {
-    collaboration: {
-      addPostCallout: true,
-      addPostCollectionCallout: true,
-      addWhiteboardCallout: true,
-    },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [
@@ -44,11 +40,6 @@ const scenarioConfig: TestScenarioConfig = {
       ],
     },
     subspace: {
-      collaboration: {
-        addPostCallout: true,
-        addPostCollectionCallout: true,
-        addWhiteboardCallout: true,
-      },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
         members: [
@@ -59,11 +50,6 @@ const scenarioConfig: TestScenarioConfig = {
         ],
       },
       subspace: {
-        collaboration: {
-          addPostCallout: true,
-          addPostCollectionCallout: true,
-          addWhiteboardCallout: true,
-        },
         community: {
           admins: [TestUser.SUBSUBSPACE_ADMIN],
           members: [TestUser.SUBSUBSPACE_MEMBER, TestUser.SUBSUBSPACE_ADMIN],
@@ -146,15 +132,17 @@ describe('Notifications - invitations', () => {
     const emailExternalUser = `external${uniqueId}@alkem.io`;
     const message = 'Hello, feel free to join our community!';
 
-    const invitationData = await inviteExternalUser(
+    const invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.space.community.roleSetId,
-      emailExternalUser,
+      [],
+      [emailExternalUser],
       message,
       TestUser.GLOBAL_ADMIN
     );
-
-    const invitationInfo = invitationData?.data?.inviteUserToPlatformAndRoleSet;
-    invitationId = invitationInfo?.id ?? '';
+    const invitationResult = getSingleInvitationResult(invitationData);
+    if (invitationResult && invitationResult.invitation) {
+      invitationId = invitationResult.invitation.id;
+    }
 
     await delay(6000);
 
@@ -184,15 +172,18 @@ describe('Notifications - invitations', () => {
     const emailExternalUser = `external${uniqueId}@alkem.io`;
     const message = 'Hello, feel free to join our community!';
 
-    const invitationData = await inviteExternalUser(
+    const invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.subspace.community.roleSetId,
-      emailExternalUser,
+      [],
+      [emailExternalUser],
       message,
       TestUser.SUBSPACE_ADMIN
     );
 
-    const invitationInfo = invitationData?.data?.inviteUserToPlatformAndRoleSet;
-    invitationId = invitationInfo?.id ?? '';
+    const invitationResult = getSingleInvitationResult(invitationData);
+    if (invitationResult && invitationResult.invitation) {
+      invitationId = invitationResult.invitation.id;
+    }
 
     await delay(6000);
 

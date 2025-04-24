@@ -8,7 +8,7 @@ import { delay } from '@alkemio/tests-lib';
 import { TestUserManager } from '@src/scenario/TestUserManager';
 import {
   deleteInvitation,
-  inviteContributors,
+  inviteForEntryRoleOnRoleSet,
 } from '@functional-api/roleset/invitations/invitation.request.params';
 import { TestUser } from '@alkemio/tests-lib';
 import { PreferenceType } from '@generated/graphql';
@@ -24,11 +24,6 @@ let baseScenario: OrganizationWithSpaceModel;
 const scenarioConfig: TestScenarioConfig = {
   name: 'notifications-invitation',
   space: {
-    collaboration: {
-      addPostCallout: true,
-      addPostCollectionCallout: true,
-      addWhiteboardCallout: true,
-    },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [
@@ -41,11 +36,6 @@ const scenarioConfig: TestScenarioConfig = {
       ],
     },
     subspace: {
-      collaboration: {
-        addPostCallout: true,
-        addPostCollectionCallout: true,
-        addWhiteboardCallout: true,
-      },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
         members: [
@@ -56,11 +46,6 @@ const scenarioConfig: TestScenarioConfig = {
         ],
       },
       subspace: {
-        collaboration: {
-          addPostCallout: true,
-          addPostCollectionCallout: true,
-          addWhiteboardCallout: true,
-        },
         community: {
           admins: [TestUser.SUBSUBSPACE_ADMIN],
           members: [TestUser.SUBSUBSPACE_MEMBER, TestUser.SUBSUBSPACE_ADMIN],
@@ -145,16 +130,21 @@ describe('Notifications - invitations', () => {
 
   test('non space user receive invitation for SPACE community from space admin', async () => {
     // Act
-    const invitationData = await inviteContributors(
+    const invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.space.community.roleSetId,
       [TestUserManager.users.nonSpaceMember.id],
+      [],
+      'welcome',
       TestUser.SPACE_ADMIN
     );
-    const invitationsInfo =
-      invitationData?.data?.inviteContributorsEntryRoleOnRoleSet;
+    const invitationsResults =
+      invitationData?.data?.inviteForEntryRoleOnRoleSet;
     invitationId = 'invitationsInfoNotRetrieved';
-    if (invitationsInfo && invitationsInfo.length > 0) {
-      invitationId = invitationsInfo[0].id;
+    if (invitationsResults && invitationsResults.length > 0) {
+      const invitation = invitationsResults[0].invitation;
+      if (invitation) {
+        invitationId = invitation.id;
+      }
     }
 
     await delay(6000);
@@ -174,16 +164,22 @@ describe('Notifications - invitations', () => {
 
   test('non space user receive invitation for SPACE community from subspace admin', async () => {
     // Act
-    const invitationData = await inviteContributors(
+    const invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.space.community.roleSetId,
       [TestUserManager.users.qaUser.id],
+      [],
+      'welcome',
       TestUser.SUBSPACE_ADMIN
     );
-    const invitationsInfo =
-      invitationData?.data?.inviteContributorsEntryRoleOnRoleSet;
+
+    const invitationsResults =
+      invitationData?.data?.inviteForEntryRoleOnRoleSet;
     invitationId = 'invitationsInfoNotRetrieved';
-    if (invitationsInfo && invitationsInfo.length > 0) {
-      invitationId = invitationsInfo[0].id;
+    if (invitationsResults && invitationsResults.length > 0) {
+      const invitation = invitationsResults[0].invitation;
+      if (invitation) {
+        invitationId = invitation.id;
+      }
     }
 
     await delay(6000);
@@ -203,16 +199,21 @@ describe('Notifications - invitations', () => {
 
   test('non space user receive invitation for CHALLENGE community from subspace admin', async () => {
     // Act
-    const invitationData = await inviteContributors(
+    const invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.subspace.community.roleSetId,
       [TestUserManager.users.qaUser.id],
+      [],
+      'welcome',
       TestUser.SUBSPACE_ADMIN
     );
-    const invitationsInfo =
-      invitationData?.data?.inviteContributorsEntryRoleOnRoleSet;
+    const invitationsResults =
+      invitationData?.data?.inviteForEntryRoleOnRoleSet;
     invitationId = 'invitationsInfoNotRetrieved';
-    if (invitationsInfo && invitationsInfo.length > 0) {
-      invitationId = invitationsInfo[0].id;
+    if (invitationsResults && invitationsResults.length > 0) {
+      const invitation = invitationsResults[0].invitation;
+      if (invitation) {
+        invitationId = invitation.id;
+      }
     }
 
     await delay(6000);
@@ -232,16 +233,21 @@ describe('Notifications - invitations', () => {
 
   test("non space user don't receive invitation for CHALLENGE community from subsubspace admin", async () => {
     // Act
-    const invitationData = await inviteContributors(
+    const invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.subspace.community.roleSetId,
       [TestUserManager.users.qaUser.id],
+      [],
+      'welcome',
       TestUser.SUBSUBSPACE_ADMIN
     );
-    const invitationsInfo =
-      invitationData?.data?.inviteContributorsEntryRoleOnRoleSet;
+    const invitationsResults =
+      invitationData?.data?.inviteForEntryRoleOnRoleSet;
     invitationId = 'invitationsInfoNotRetrieved';
-    if (invitationsInfo && invitationsInfo.length > 0) {
-      invitationId = invitationsInfo[0].id;
+    if (invitationsResults && invitationsResults.length > 0) {
+      const invitation = invitationsResults[0].invitation;
+      if (invitation) {
+        invitationId = invitation.id;
+      }
     }
 
     await delay(6000);
@@ -249,23 +255,33 @@ describe('Notifications - invitations', () => {
     const getEmailsData = await getMailsData();
     // Assert
     expect(getEmailsData[1]).toEqual(0);
-    expect(invitationData.error?.errors[0].message).toEqual(
-      `Contributor is not a member of the parent community (${baseScenario.space.community.roleSetId}) and the current user does not have the privilege to invite to the parent community`
-    );
+    expect(invitationData.data?.inviteForEntryRoleOnRoleSet).toEqual([
+      {
+        type: 'INVITATION_TO_PARENT_NOT_AUTHORIZED',
+        invitation: null,
+        platformInvitation: null,
+        __typename: 'RoleSetInvitationResult',
+      },
+    ]);
   });
 
   test('space member receive invitation for CHALLENGE community from subsubspace admin', async () => {
     // Act
-    const invitationData = await inviteContributors(
+    const invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.subspace.community.roleSetId,
       [TestUserManager.users.spaceMember.id],
+      [],
+      'welcome',
       TestUser.SUBSUBSPACE_ADMIN
     );
-    const invitationsInfo =
-      invitationData?.data?.inviteContributorsEntryRoleOnRoleSet;
+    const invitationsResults =
+      invitationData?.data?.inviteForEntryRoleOnRoleSet;
     invitationId = 'invitationsInfoNotRetrieved';
-    if (invitationsInfo && invitationsInfo.length > 0) {
-      invitationId = invitationsInfo[0].id;
+    if (invitationsResults && invitationsResults.length > 0) {
+      const invitation = invitationsResults[0].invitation;
+      if (invitation) {
+        invitationId = invitation.id;
+      }
     }
 
     await delay(6000);
@@ -285,16 +301,21 @@ describe('Notifications - invitations', () => {
 
   test('non space user receive invitation for OPPORTUNITY community from subsubspace admin', async () => {
     // Act
-    const invitationData = await inviteContributors(
+    const invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.subsubspace.community.roleSetId,
       [TestUserManager.users.qaUser.id],
+      [],
+      'welcome',
       TestUser.SUBSUBSPACE_ADMIN
     );
-    const invitationsInfo =
-      invitationData?.data?.inviteContributorsEntryRoleOnRoleSet;
+    const invitationsResults =
+      invitationData?.data?.inviteForEntryRoleOnRoleSet;
     invitationId = 'invitationsInfoNotRetrieved';
-    if (invitationsInfo && invitationsInfo.length > 0) {
-      invitationId = invitationsInfo[0].id;
+    if (invitationsResults && invitationsResults.length > 0) {
+      const invitation = invitationsResults[0].invitation;
+      if (invitation) {
+        invitationId = invitation.id;
+      }
     }
 
     await delay(6000);
@@ -320,16 +341,21 @@ describe('Notifications - invitations', () => {
     );
 
     // Act
-    const invitationData = await inviteContributors(
+    const invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.space.community.roleSetId,
       [TestUserManager.users.nonSpaceMember.id],
+      [],
+      'welcome',
       TestUser.SPACE_ADMIN
     );
-    const invitationsInfo =
-      invitationData?.data?.inviteContributorsEntryRoleOnRoleSet;
+    const invitationsResults =
+      invitationData?.data?.inviteForEntryRoleOnRoleSet;
     invitationId = 'invitationsInfoNotRetrieved';
-    if (invitationsInfo && invitationsInfo.length > 0) {
-      invitationId = invitationsInfo[0].id;
+    if (invitationsResults && invitationsResults.length > 0) {
+      const invitation = invitationsResults[0].invitation;
+      if (invitation) {
+        invitationId = invitation.id;
+      }
     }
 
     await delay(6000);
@@ -348,16 +374,21 @@ describe('Notifications - invitations', () => {
     });
 
     // Act
-    const invitationData = await inviteContributors(
+    const invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.subspace.community.roleSetId,
       [TestUserManager.users.qaUser.displayName],
+      [],
+      'welcome',
       TestUser.SUBSPACE_ADMIN
     );
-    const invitationsInfo =
-      invitationData?.data?.inviteContributorsEntryRoleOnRoleSet;
+    const invitationsResults =
+      invitationData?.data?.inviteForEntryRoleOnRoleSet;
     invitationId = 'invitationsInfoNotRetrieved';
-    if (invitationsInfo && invitationsInfo.length > 0) {
-      invitationId = invitationsInfo[0].id;
+    if (invitationsResults && invitationsResults.length > 0) {
+      const invitation = invitationsResults[0].invitation;
+      if (invitation) {
+        invitationId = invitation.id;
+      }
     }
 
     await delay(6000);
