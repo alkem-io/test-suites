@@ -1,4 +1,4 @@
-query getUserData($userId: UUID_NAMEID_EMAIL!) {
+query getUserData($userId: UUID!) {
   user(ID: $userId) {
     ...UserData
   }
