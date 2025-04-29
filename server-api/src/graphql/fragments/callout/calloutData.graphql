@@ -32,10 +32,6 @@ fragment CalloutData on Callout {
       profile {
         ...ProfileStorageConfig
         ...ProfileData
-        visual(type: CARD) {
-          ...VisualUri
-          __typename
-        }
       }
     }
   }

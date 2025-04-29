@@ -1,60 +1,47 @@
 query search($searchData: SearchInput!) {
   search(searchData: $searchData) {
     spaceResults {
-      cursor
       results {
-        id
         type
-        score
-        terms
         ...SearchResultSpace
-        __typename
       }
       total
-      __typename
     }
     calloutResults {
       cursor
       results {
         id
         type
-        score
+
         terms
         ...SearchResultCallout
-        __typename
       }
       total
-      __typename
     }
     contributionResults {
       cursor
       results {
         id
         type
-        score
+
         terms
         ...SearchResultPost
         ...SearchResultCallout
-        __typename
       }
       total
-      __typename
     }
     contributorResults {
       cursor
       results {
         id
         type
-        score
+
         terms
         ...SearchResultUser
         ...SearchResultOrganization
-        __typename
       }
       total
-      __typename
     }
-    __typename
   }
 }
 
@@ -62,104 +49,14 @@ fragment SearchResultSpace on SearchResultSpace {
   parentSpace {
     id
     level
-    about {
-      ...SpaceAboutLight
-      __typename
-    }
-    settings {
-      privacy {
-        mode
-        __typename
-      }
-      __typename
-    }
-    __typename
+    visibility
   }
   space {
     id
     level
-    about {
-      id
-      why
-      profile {
-        id
-        url
-        displayName
-        tagset {
-          ...TagsetDetails
-          __typename
-        }
-        tagline
-        visuals {
-          ...VisualUri
-          __typename
-        }
-        __typename
-      }
-      __typename
-    }
-    community {
-      id
-      roleSet {
-        id
-        myMembershipStatus
-        __typename
-      }
-      __typename
-    }
-    settings {
-      privacy {
-        mode
-        __typename
-      }
-      __typename
-    }
+
     visibility
-    __typename
   }
-  __typename
-}
-
-fragment SpaceAboutLight on SpaceAbout {
-  id
-  profile {
-    id
-    displayName
-    url
-    tagline
-    description
-    tagset {
-      id
-      tags
-      __typename
-    }
-    avatar: visual(type: AVATAR) {
-      ...VisualUri
-      __typename
-    }
-    cardBanner: visual(type: CARD) {
-      ...VisualUri
-      __typename
-    }
-    __typename
-  }
-  __typename
-}
-
-fragment VisualUri on Visual {
-  id
-  uri
-  name
-  __typename
-}
-
-fragment TagsetDetails on Tagset {
-  id
-  name
-  tags
-  allowedValues
-  type
-  __typename
 }
 
 fragment SearchResultCallout on SearchResultCallout {
@@ -176,56 +73,39 @@ fragment SearchResultCallout on SearchResultCallout {
         url
         tagset {
           ...TagsetDetails
-          __typename
         }
-        __typename
       }
-      __typename
     }
     contributionPolicy {
       id
       state
       allowedContributionTypes
-      __typename
     }
     contributions {
       id
       post {
         id
-        __typename
       }
       whiteboard {
         id
-        __typename
       }
       link {
         id
-        __typename
       }
-      __typename
     }
     comments {
       id
       messagesCount
-      __typename
     }
-    __typename
   }
   ...CalloutParent
-  __typename
 }
 
 fragment CalloutParent on SearchResultCallout {
   space {
     id
-    about {
-      ...SpaceAboutLight
-      __typename
-    }
     level
-    __typename
   }
-  __typename
 }
 
 fragment SearchResultPost on SearchResultPost {
@@ -235,32 +115,22 @@ fragment SearchResultPost on SearchResultPost {
       id
       url
       displayName
-      visual(type: CARD) {
-        ...VisualUri
-        __typename
-      }
       ...SearchResultPostProfile
-      __typename
     }
     createdBy {
       id
       profile {
         id
         displayName
-        __typename
       }
-      __typename
     }
     createdDate
     comments {
       id
       messagesCount
-      __typename
     }
-    __typename
   }
   ...PostParent
-  __typename
 }
 
 fragment SearchResultPostProfile on Profile {
@@ -268,9 +138,7 @@ fragment SearchResultPostProfile on Profile {
   description
   tagset {
     ...TagsetDetails
-    __typename
   }
-  __typename
 }
 
 fragment PostParent on SearchResultPost {
@@ -278,18 +146,6 @@ fragment PostParent on SearchResultPost {
     id
     level
     visibility
-    about {
-      ...SpaceAboutLight
-      __typename
-    }
-    settings {
-      privacy {
-        mode
-        __typename
-      }
-      __typename
-    }
-    __typename
   }
   callout {
     id
@@ -299,13 +155,9 @@ fragment PostParent on SearchResultPost {
         id
         url
         displayName
-        __typename
       }
-      __typename
     }
-    __typename
   }
-  __typename
 }
 
 fragment SearchResultUser on SearchResultUser {
@@ -315,11 +167,8 @@ fragment SearchResultUser on SearchResultUser {
     profile {
       displayName
       ...SearchResultProfile
-      __typename
     }
-    __typename
   }
-  __typename
 }
 
 fragment SearchResultProfile on Profile {
@@ -329,12 +178,9 @@ fragment SearchResultProfile on Profile {
     id
     country
     city
-    __typename
   }
-  tagsets {
-    ...TagsetDetails
-    __typename
-  }
+
+  url
 }
 
 fragment SearchResultOrganization on SearchResultOrganization {
@@ -343,9 +189,6 @@ fragment SearchResultOrganization on SearchResultOrganization {
     profile {
       displayName
       ...SearchResultProfile
-      __typename
     }
-    __typename
   }
-  __typename
 }

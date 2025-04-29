@@ -4,13 +4,6 @@ fragment WhiteboardData on Whiteboard {
   }
   id
   nameID
-  profile {
-    ...ProfileStorageConfig
-    ...ProfileData
-    visual(type: CARD) {
-      ...VisualUri
-      __typename
-    }
-  }
+
   content
 }

@@ -20897,32 +20897,6 @@ export type CalloutContributionDataFragment = {
                   | undefined;
               }>
             | undefined;
-          visual?:
-            | { __typename: 'Visual'; id: string; uri: string; name: string }
-            | undefined;
-          storageBucket: {
-            id: string;
-            authorization?:
-              | {
-                  myPrivileges?:
-                    | Array<SchemaTypes.AuthorizationPrivilege>
-                    | undefined;
-                }
-              | undefined;
-            parentEntity?:
-              | { displayName: string; type: SchemaTypes.ProfileType }
-              | undefined;
-            documents: Array<{
-              id: string;
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-            }>;
-          };
           tagsets?:
             | Array<{
                 id: string;
@@ -20947,17 +20921,30 @@ export type CalloutContributionDataFragment = {
                   | undefined;
               }
             | undefined;
+          storageBucket: {
+            id: string;
+            authorization?:
+              | {
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+            parentEntity?:
+              | { displayName: string; type: SchemaTypes.ProfileType }
+              | undefined;
+            documents: Array<{
+              id: string;
+              authorization?:
+                | {
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+            }>;
+          };
         };
-        comments: {
-          id: string;
-          messagesCount: number;
-          messages: Array<{
-            id: any;
-            message: any;
-            sender?: { id: string } | {} | undefined;
-          }>;
-        };
-        createdBy?: { email: string } | undefined;
       }
     | undefined;
   whiteboard?:
@@ -20972,76 +20959,6 @@ export type CalloutContributionDataFragment = {
                 | undefined;
             }
           | undefined;
-        profile: {
-          id: string;
-          displayName: string;
-          description?: any | undefined;
-          tagline?: string | undefined;
-          visual?:
-            | { __typename: 'Visual'; id: string; uri: string; name: string }
-            | undefined;
-          storageBucket: {
-            id: string;
-            authorization?:
-              | {
-                  myPrivileges?:
-                    | Array<SchemaTypes.AuthorizationPrivilege>
-                    | undefined;
-                }
-              | undefined;
-            parentEntity?:
-              | { displayName: string; type: SchemaTypes.ProfileType }
-              | undefined;
-            documents: Array<{
-              id: string;
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-            }>;
-          };
-          references?:
-            | Array<{
-                id: string;
-                name: string;
-                uri: string;
-                authorization?:
-                  | {
-                      myPrivileges?:
-                        | Array<SchemaTypes.AuthorizationPrivilege>
-                        | undefined;
-                    }
-                  | undefined;
-              }>
-            | undefined;
-          tagsets?:
-            | Array<{
-                id: string;
-                name: string;
-                tags: Array<string>;
-                authorization?:
-                  | {
-                      myPrivileges?:
-                        | Array<SchemaTypes.AuthorizationPrivilege>
-                        | undefined;
-                    }
-                  | undefined;
-              }>
-            | undefined;
-          location?:
-            | { country?: string | undefined; city?: string | undefined }
-            | undefined;
-          authorization?:
-            | {
-                myPrivileges?:
-                  | Array<SchemaTypes.AuthorizationPrivilege>
-                  | undefined;
-              }
-            | undefined;
-        };
       }
     | undefined;
 };
@@ -21181,32 +21098,6 @@ export type CalloutDataFragment = {
                     | undefined;
                 }>
               | undefined;
-            visual?:
-              | { __typename: 'Visual'; id: string; uri: string; name: string }
-              | undefined;
-            storageBucket: {
-              id: string;
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-              parentEntity?:
-                | { displayName: string; type: SchemaTypes.ProfileType }
-                | undefined;
-              documents: Array<{
-                id: string;
-                authorization?:
-                  | {
-                      myPrivileges?:
-                        | Array<SchemaTypes.AuthorizationPrivilege>
-                        | undefined;
-                    }
-                  | undefined;
-              }>;
-            };
             tagsets?:
               | Array<{
                   id: string;
@@ -21231,17 +21122,30 @@ export type CalloutDataFragment = {
                     | undefined;
                 }
               | undefined;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: SchemaTypes.ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
           };
-          comments: {
-            id: string;
-            messagesCount: number;
-            messages: Array<{
-              id: any;
-              message: any;
-              sender?: { id: string } | {} | undefined;
-            }>;
-          };
-          createdBy?: { email: string } | undefined;
         }
       | undefined;
     whiteboard?:
@@ -21256,76 +21160,6 @@ export type CalloutDataFragment = {
                   | undefined;
               }
             | undefined;
-          profile: {
-            id: string;
-            displayName: string;
-            description?: any | undefined;
-            tagline?: string | undefined;
-            visual?:
-              | { __typename: 'Visual'; id: string; uri: string; name: string }
-              | undefined;
-            storageBucket: {
-              id: string;
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-              parentEntity?:
-                | { displayName: string; type: SchemaTypes.ProfileType }
-                | undefined;
-              documents: Array<{
-                id: string;
-                authorization?:
-                  | {
-                      myPrivileges?:
-                        | Array<SchemaTypes.AuthorizationPrivilege>
-                        | undefined;
-                    }
-                  | undefined;
-              }>;
-            };
-            references?:
-              | Array<{
-                  id: string;
-                  name: string;
-                  uri: string;
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<SchemaTypes.AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                }>
-              | undefined;
-            tagsets?:
-              | Array<{
-                  id: string;
-                  name: string;
-                  tags: Array<string>;
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<SchemaTypes.AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                }>
-              | undefined;
-            location?:
-              | { country?: string | undefined; city?: string | undefined }
-              | undefined;
-            authorization?:
-              | {
-                  myPrivileges?:
-                    | Array<SchemaTypes.AuthorizationPrivilege>
-                    | undefined;
-                }
-              | undefined;
-          };
         }
       | undefined;
   }>;
@@ -21407,9 +21241,6 @@ export type CalloutDataFragment = {
             displayName: string;
             description?: any | undefined;
             tagline?: string | undefined;
-            visual?:
-              | { __typename: 'Visual'; id: string; uri: string; name: string }
-              | undefined;
             storageBucket: {
               id: string;
               authorization?:
@@ -21646,32 +21477,6 @@ export type ContributionsDataFragment = {
                   | undefined;
               }>
             | undefined;
-          visual?:
-            | { __typename: 'Visual'; id: string; uri: string; name: string }
-            | undefined;
-          storageBucket: {
-            id: string;
-            authorization?:
-              | {
-                  myPrivileges?:
-                    | Array<SchemaTypes.AuthorizationPrivilege>
-                    | undefined;
-                }
-              | undefined;
-            parentEntity?:
-              | { displayName: string; type: SchemaTypes.ProfileType }
-              | undefined;
-            documents: Array<{
-              id: string;
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-            }>;
-          };
           tagsets?:
             | Array<{
                 id: string;
@@ -21696,17 +21501,30 @@ export type ContributionsDataFragment = {
                   | undefined;
               }
             | undefined;
+          storageBucket: {
+            id: string;
+            authorization?:
+              | {
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+            parentEntity?:
+              | { displayName: string; type: SchemaTypes.ProfileType }
+              | undefined;
+            documents: Array<{
+              id: string;
+              authorization?:
+                | {
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+            }>;
+          };
         };
-        comments: {
-          id: string;
-          messagesCount: number;
-          messages: Array<{
-            id: any;
-            message: any;
-            sender?: { id: string } | {} | undefined;
-          }>;
-        };
-        createdBy?: { email: string } | undefined;
       }
     | undefined;
   whiteboard?:
@@ -21721,76 +21539,6 @@ export type ContributionsDataFragment = {
                 | undefined;
             }
           | undefined;
-        profile: {
-          id: string;
-          displayName: string;
-          description?: any | undefined;
-          tagline?: string | undefined;
-          visual?:
-            | { __typename: 'Visual'; id: string; uri: string; name: string }
-            | undefined;
-          storageBucket: {
-            id: string;
-            authorization?:
-              | {
-                  myPrivileges?:
-                    | Array<SchemaTypes.AuthorizationPrivilege>
-                    | undefined;
-                }
-              | undefined;
-            parentEntity?:
-              | { displayName: string; type: SchemaTypes.ProfileType }
-              | undefined;
-            documents: Array<{
-              id: string;
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-            }>;
-          };
-          references?:
-            | Array<{
-                id: string;
-                name: string;
-                uri: string;
-                authorization?:
-                  | {
-                      myPrivileges?:
-                        | Array<SchemaTypes.AuthorizationPrivilege>
-                        | undefined;
-                    }
-                  | undefined;
-              }>
-            | undefined;
-          tagsets?:
-            | Array<{
-                id: string;
-                name: string;
-                tags: Array<string>;
-                authorization?:
-                  | {
-                      myPrivileges?:
-                        | Array<SchemaTypes.AuthorizationPrivilege>
-                        | undefined;
-                    }
-                  | undefined;
-              }>
-            | undefined;
-          location?:
-            | { country?: string | undefined; city?: string | undefined }
-            | undefined;
-          authorization?:
-            | {
-                myPrivileges?:
-                  | Array<SchemaTypes.AuthorizationPrivilege>
-                  | undefined;
-              }
-            | undefined;
-        };
       }
     | undefined;
 };
@@ -21921,8 +21669,25 @@ export type PostDataFragment = {
             | undefined;
         }>
       | undefined;
-    visual?:
-      | { __typename: 'Visual'; id: string; uri: string; name: string }
+    tagsets?:
+      | Array<{
+          id: string;
+          name: string;
+          tags: Array<string>;
+          authorization?:
+            | {
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+        }>
+      | undefined;
+    location?:
+      | { country?: string | undefined; city?: string | undefined }
+      | undefined;
+    authorization?:
+      | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
       | undefined;
     storageBucket: {
       id: string;
@@ -21947,37 +21712,7 @@ export type PostDataFragment = {
           | undefined;
       }>;
     };
-    tagsets?:
-      | Array<{
-          id: string;
-          name: string;
-          tags: Array<string>;
-          authorization?:
-            | {
-                myPrivileges?:
-                  | Array<SchemaTypes.AuthorizationPrivilege>
-                  | undefined;
-              }
-            | undefined;
-        }>
-      | undefined;
-    location?:
-      | { country?: string | undefined; city?: string | undefined }
-      | undefined;
-    authorization?:
-      | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
-      | undefined;
   };
-  comments: {
-    id: string;
-    messagesCount: number;
-    messages: Array<{
-      id: any;
-      message: any;
-      sender?: { id: string } | {} | undefined;
-    }>;
-  };
-  createdBy?: { email: string } | undefined;
 };
 
 export type WhiteboardInCalloutOnCollaborationWithStorageConfigFragment = {
@@ -22081,72 +21816,6 @@ export type WhiteboardDataFragment = {
   authorization?:
     | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
     | undefined;
-  profile: {
-    id: string;
-    displayName: string;
-    description?: any | undefined;
-    tagline?: string | undefined;
-    visual?:
-      | { __typename: 'Visual'; id: string; uri: string; name: string }
-      | undefined;
-    storageBucket: {
-      id: string;
-      authorization?:
-        | {
-            myPrivileges?:
-              | Array<SchemaTypes.AuthorizationPrivilege>
-              | undefined;
-          }
-        | undefined;
-      parentEntity?:
-        | { displayName: string; type: SchemaTypes.ProfileType }
-        | undefined;
-      documents: Array<{
-        id: string;
-        authorization?:
-          | {
-              myPrivileges?:
-                | Array<SchemaTypes.AuthorizationPrivilege>
-                | undefined;
-            }
-          | undefined;
-      }>;
-    };
-    references?:
-      | Array<{
-          id: string;
-          name: string;
-          uri: string;
-          authorization?:
-            | {
-                myPrivileges?:
-                  | Array<SchemaTypes.AuthorizationPrivilege>
-                  | undefined;
-              }
-            | undefined;
-        }>
-      | undefined;
-    tagsets?:
-      | Array<{
-          id: string;
-          name: string;
-          tags: Array<string>;
-          authorization?:
-            | {
-                myPrivileges?:
-                  | Array<SchemaTypes.AuthorizationPrivilege>
-                  | undefined;
-              }
-            | undefined;
-        }>
-      | undefined;
-    location?:
-      | { country?: string | undefined; city?: string | undefined }
-      | undefined;
-    authorization?:
-      | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
-      | undefined;
-  };
 };
 
 export type CollaborationDataFragment = {
@@ -22300,12 +21969,28 @@ export type CollaborationDataFragment = {
                         | undefined;
                     }>
                   | undefined;
-                visual?:
-                  | {
-                      __typename: 'Visual';
+                tagsets?:
+                  | Array<{
                       id: string;
-                      uri: string;
                       name: string;
+                      tags: Array<string>;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>
+                  | undefined;
+                location?:
+                  | { country?: string | undefined; city?: string | undefined }
+                  | undefined;
+                authorization?:
+                  | {
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
                     }
                   | undefined;
                 storageBucket: {
@@ -22331,41 +22016,7 @@ export type CollaborationDataFragment = {
                       | undefined;
                   }>;
                 };
-                tagsets?:
-                  | Array<{
-                      id: string;
-                      name: string;
-                      tags: Array<string>;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    }>
-                  | undefined;
-                location?:
-                  | { country?: string | undefined; city?: string | undefined }
-                  | undefined;
-                authorization?:
-                  | {
-                      myPrivileges?:
-                        | Array<SchemaTypes.AuthorizationPrivilege>
-                        | undefined;
-                    }
-                  | undefined;
               };
-              comments: {
-                id: string;
-                messagesCount: number;
-                messages: Array<{
-                  id: any;
-                  message: any;
-                  sender?: { id: string } | {} | undefined;
-                }>;
-              };
-              createdBy?: { email: string } | undefined;
             }
           | undefined;
         whiteboard?:
@@ -22380,81 +22031,6 @@ export type CollaborationDataFragment = {
                       | undefined;
                   }
                 | undefined;
-              profile: {
-                id: string;
-                displayName: string;
-                description?: any | undefined;
-                tagline?: string | undefined;
-                visual?:
-                  | {
-                      __typename: 'Visual';
-                      id: string;
-                      uri: string;
-                      name: string;
-                    }
-                  | undefined;
-                storageBucket: {
-                  id: string;
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<SchemaTypes.AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                  parentEntity?:
-                    | { displayName: string; type: SchemaTypes.ProfileType }
-                    | undefined;
-                  documents: Array<{
-                    id: string;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }>;
-                };
-                references?:
-                  | Array<{
-                      id: string;
-                      name: string;
-                      uri: string;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    }>
-                  | undefined;
-                tagsets?:
-                  | Array<{
-                      id: string;
-                      name: string;
-                      tags: Array<string>;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    }>
-                  | undefined;
-                location?:
-                  | { country?: string | undefined; city?: string | undefined }
-                  | undefined;
-                authorization?:
-                  | {
-                      myPrivileges?:
-                        | Array<SchemaTypes.AuthorizationPrivilege>
-                        | undefined;
-                    }
-                  | undefined;
-              };
             }
           | undefined;
       }>;
@@ -22536,14 +22112,6 @@ export type CollaborationDataFragment = {
                 displayName: string;
                 description?: any | undefined;
                 tagline?: string | undefined;
-                visual?:
-                  | {
-                      __typename: 'Visual';
-                      id: string;
-                      uri: string;
-                      name: string;
-                    }
-                  | undefined;
                 storageBucket: {
                   id: string;
                   authorization?:
@@ -26314,37 +25882,6 @@ export type SubspaceL1DataFragment = {
                             | undefined;
                         }>
                       | undefined;
-                    visual?:
-                      | {
-                          __typename: 'Visual';
-                          id: string;
-                          uri: string;
-                          name: string;
-                        }
-                      | undefined;
-                    storageBucket: {
-                      id: string;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                      parentEntity?:
-                        | { displayName: string; type: SchemaTypes.ProfileType }
-                        | undefined;
-                      documents: Array<{
-                        id: string;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>;
-                    };
                     tagsets?:
                       | Array<{
                           id: string;
@@ -26372,17 +25909,30 @@ export type SubspaceL1DataFragment = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   };
-                  comments: {
-                    id: string;
-                    messagesCount: number;
-                    messages: Array<{
-                      id: any;
-                      message: any;
-                      sender?: { id: string } | {} | undefined;
-                    }>;
-                  };
-                  createdBy?: { email: string } | undefined;
                 }
               | undefined;
             whiteboard?:
@@ -26397,84 +25947,6 @@ export type SubspaceL1DataFragment = {
                           | undefined;
                       }
                     | undefined;
-                  profile: {
-                    id: string;
-                    displayName: string;
-                    description?: any | undefined;
-                    tagline?: string | undefined;
-                    visual?:
-                      | {
-                          __typename: 'Visual';
-                          id: string;
-                          uri: string;
-                          name: string;
-                        }
-                      | undefined;
-                    storageBucket: {
-                      id: string;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                      parentEntity?:
-                        | { displayName: string; type: SchemaTypes.ProfileType }
-                        | undefined;
-                      documents: Array<{
-                        id: string;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>;
-                    };
-                    references?:
-                      | Array<{
-                          id: string;
-                          name: string;
-                          uri: string;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>
-                      | undefined;
-                    tagsets?:
-                      | Array<{
-                          id: string;
-                          name: string;
-                          tags: Array<string>;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>
-                      | undefined;
-                    location?:
-                      | {
-                          country?: string | undefined;
-                          city?: string | undefined;
-                        }
-                      | undefined;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  };
                 }
               | undefined;
           }>;
@@ -26556,14 +26028,6 @@ export type SubspaceL1DataFragment = {
                     displayName: string;
                     description?: any | undefined;
                     tagline?: string | undefined;
-                    visual?:
-                      | {
-                          __typename: 'Visual';
-                          id: string;
-                          uri: string;
-                          name: string;
-                        }
-                      | undefined;
                     storageBucket: {
                       id: string;
                       authorization?:
@@ -29017,37 +28481,6 @@ export type SubspaceL1DataFragment = {
                           | undefined;
                       }>
                     | undefined;
-                  visual?:
-                    | {
-                        __typename: 'Visual';
-                        id: string;
-                        uri: string;
-                        name: string;
-                      }
-                    | undefined;
-                  storageBucket: {
-                    id: string;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                    parentEntity?:
-                      | { displayName: string; type: SchemaTypes.ProfileType }
-                      | undefined;
-                    documents: Array<{
-                      id: string;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    }>;
-                  };
                   tagsets?:
                     | Array<{
                         id: string;
@@ -29075,17 +28508,30 @@ export type SubspaceL1DataFragment = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                 };
-                comments: {
-                  id: string;
-                  messagesCount: number;
-                  messages: Array<{
-                    id: any;
-                    message: any;
-                    sender?: { id: string } | {} | undefined;
-                  }>;
-                };
-                createdBy?: { email: string } | undefined;
               }
             | undefined;
           whiteboard?:
@@ -29100,84 +28546,6 @@ export type SubspaceL1DataFragment = {
                         | undefined;
                     }
                   | undefined;
-                profile: {
-                  id: string;
-                  displayName: string;
-                  description?: any | undefined;
-                  tagline?: string | undefined;
-                  visual?:
-                    | {
-                        __typename: 'Visual';
-                        id: string;
-                        uri: string;
-                        name: string;
-                      }
-                    | undefined;
-                  storageBucket: {
-                    id: string;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                    parentEntity?:
-                      | { displayName: string; type: SchemaTypes.ProfileType }
-                      | undefined;
-                    documents: Array<{
-                      id: string;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    }>;
-                  };
-                  references?:
-                    | Array<{
-                        id: string;
-                        name: string;
-                        uri: string;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>
-                    | undefined;
-                  tagsets?:
-                    | Array<{
-                        id: string;
-                        name: string;
-                        tags: Array<string>;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>
-                    | undefined;
-                  location?:
-                    | {
-                        country?: string | undefined;
-                        city?: string | undefined;
-                      }
-                    | undefined;
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<SchemaTypes.AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                };
               }
             | undefined;
         }>;
@@ -29259,14 +28627,6 @@ export type SubspaceL1DataFragment = {
                   displayName: string;
                   description?: any | undefined;
                   tagline?: string | undefined;
-                  visual?:
-                    | {
-                        __typename: 'Visual';
-                        id: string;
-                        uri: string;
-                        name: string;
-                      }
-                    | undefined;
                   storageBucket: {
                     id: string;
                     authorization?:
@@ -31702,37 +31062,6 @@ export type SubspaceL2DataFragment = {
                             | undefined;
                         }>
                       | undefined;
-                    visual?:
-                      | {
-                          __typename: 'Visual';
-                          id: string;
-                          uri: string;
-                          name: string;
-                        }
-                      | undefined;
-                    storageBucket: {
-                      id: string;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                      parentEntity?:
-                        | { displayName: string; type: SchemaTypes.ProfileType }
-                        | undefined;
-                      documents: Array<{
-                        id: string;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>;
-                    };
                     tagsets?:
                       | Array<{
                           id: string;
@@ -31760,17 +31089,30 @@ export type SubspaceL2DataFragment = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   };
-                  comments: {
-                    id: string;
-                    messagesCount: number;
-                    messages: Array<{
-                      id: any;
-                      message: any;
-                      sender?: { id: string } | {} | undefined;
-                    }>;
-                  };
-                  createdBy?: { email: string } | undefined;
                 }
               | undefined;
             whiteboard?:
@@ -31785,84 +31127,6 @@ export type SubspaceL2DataFragment = {
                           | undefined;
                       }
                     | undefined;
-                  profile: {
-                    id: string;
-                    displayName: string;
-                    description?: any | undefined;
-                    tagline?: string | undefined;
-                    visual?:
-                      | {
-                          __typename: 'Visual';
-                          id: string;
-                          uri: string;
-                          name: string;
-                        }
-                      | undefined;
-                    storageBucket: {
-                      id: string;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                      parentEntity?:
-                        | { displayName: string; type: SchemaTypes.ProfileType }
-                        | undefined;
-                      documents: Array<{
-                        id: string;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>;
-                    };
-                    references?:
-                      | Array<{
-                          id: string;
-                          name: string;
-                          uri: string;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>
-                      | undefined;
-                    tagsets?:
-                      | Array<{
-                          id: string;
-                          name: string;
-                          tags: Array<string>;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>
-                      | undefined;
-                    location?:
-                      | {
-                          country?: string | undefined;
-                          city?: string | undefined;
-                        }
-                      | undefined;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  };
                 }
               | undefined;
           }>;
@@ -31944,14 +31208,6 @@ export type SubspaceL2DataFragment = {
                     displayName: string;
                     description?: any | undefined;
                     tagline?: string | undefined;
-                    visual?:
-                      | {
-                          __typename: 'Visual';
-                          id: string;
-                          uri: string;
-                          name: string;
-                        }
-                      | undefined;
                     storageBucket: {
                       id: string;
                       authorization?:
@@ -34405,37 +33661,6 @@ export type SubspaceL2DataFragment = {
                           | undefined;
                       }>
                     | undefined;
-                  visual?:
-                    | {
-                        __typename: 'Visual';
-                        id: string;
-                        uri: string;
-                        name: string;
-                      }
-                    | undefined;
-                  storageBucket: {
-                    id: string;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                    parentEntity?:
-                      | { displayName: string; type: SchemaTypes.ProfileType }
-                      | undefined;
-                    documents: Array<{
-                      id: string;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    }>;
-                  };
                   tagsets?:
                     | Array<{
                         id: string;
@@ -34463,17 +33688,30 @@ export type SubspaceL2DataFragment = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                 };
-                comments: {
-                  id: string;
-                  messagesCount: number;
-                  messages: Array<{
-                    id: any;
-                    message: any;
-                    sender?: { id: string } | {} | undefined;
-                  }>;
-                };
-                createdBy?: { email: string } | undefined;
               }
             | undefined;
           whiteboard?:
@@ -34488,84 +33726,6 @@ export type SubspaceL2DataFragment = {
                         | undefined;
                     }
                   | undefined;
-                profile: {
-                  id: string;
-                  displayName: string;
-                  description?: any | undefined;
-                  tagline?: string | undefined;
-                  visual?:
-                    | {
-                        __typename: 'Visual';
-                        id: string;
-                        uri: string;
-                        name: string;
-                      }
-                    | undefined;
-                  storageBucket: {
-                    id: string;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                    parentEntity?:
-                      | { displayName: string; type: SchemaTypes.ProfileType }
-                      | undefined;
-                    documents: Array<{
-                      id: string;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    }>;
-                  };
-                  references?:
-                    | Array<{
-                        id: string;
-                        name: string;
-                        uri: string;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>
-                    | undefined;
-                  tagsets?:
-                    | Array<{
-                        id: string;
-                        name: string;
-                        tags: Array<string>;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>
-                    | undefined;
-                  location?:
-                    | {
-                        country?: string | undefined;
-                        city?: string | undefined;
-                      }
-                    | undefined;
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<SchemaTypes.AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                };
               }
             | undefined;
         }>;
@@ -34647,14 +33807,6 @@ export type SubspaceL2DataFragment = {
                   displayName: string;
                   description?: any | undefined;
                   tagline?: string | undefined;
-                  visual?:
-                    | {
-                        __typename: 'Visual';
-                        id: string;
-                        uri: string;
-                        name: string;
-                      }
-                    | undefined;
                   storageBucket: {
                     id: string;
                     authorization?:
@@ -39440,37 +38592,6 @@ export type SpaceDataFragment = {
                           | undefined;
                       }>
                     | undefined;
-                  visual?:
-                    | {
-                        __typename: 'Visual';
-                        id: string;
-                        uri: string;
-                        name: string;
-                      }
-                    | undefined;
-                  storageBucket: {
-                    id: string;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                    parentEntity?:
-                      | { displayName: string; type: SchemaTypes.ProfileType }
-                      | undefined;
-                    documents: Array<{
-                      id: string;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    }>;
-                  };
                   tagsets?:
                     | Array<{
                         id: string;
@@ -39498,17 +38619,30 @@ export type SpaceDataFragment = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                 };
-                comments: {
-                  id: string;
-                  messagesCount: number;
-                  messages: Array<{
-                    id: any;
-                    message: any;
-                    sender?: { id: string } | {} | undefined;
-                  }>;
-                };
-                createdBy?: { email: string } | undefined;
               }
             | undefined;
           whiteboard?:
@@ -39523,84 +38657,6 @@ export type SpaceDataFragment = {
                         | undefined;
                     }
                   | undefined;
-                profile: {
-                  id: string;
-                  displayName: string;
-                  description?: any | undefined;
-                  tagline?: string | undefined;
-                  visual?:
-                    | {
-                        __typename: 'Visual';
-                        id: string;
-                        uri: string;
-                        name: string;
-                      }
-                    | undefined;
-                  storageBucket: {
-                    id: string;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                    parentEntity?:
-                      | { displayName: string; type: SchemaTypes.ProfileType }
-                      | undefined;
-                    documents: Array<{
-                      id: string;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    }>;
-                  };
-                  references?:
-                    | Array<{
-                        id: string;
-                        name: string;
-                        uri: string;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>
-                    | undefined;
-                  tagsets?:
-                    | Array<{
-                        id: string;
-                        name: string;
-                        tags: Array<string>;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>
-                    | undefined;
-                  location?:
-                    | {
-                        country?: string | undefined;
-                        city?: string | undefined;
-                      }
-                    | undefined;
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<SchemaTypes.AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                };
               }
             | undefined;
         }>;
@@ -39682,14 +38738,6 @@ export type SpaceDataFragment = {
                   displayName: string;
                   description?: any | undefined;
                   tagline?: string | undefined;
-                  visual?:
-                    | {
-                        __typename: 'Visual';
-                        id: string;
-                        uri: string;
-                        name: string;
-                      }
-                    | undefined;
                   storageBucket: {
                     id: string;
                     authorization?:
@@ -40085,37 +39133,6 @@ export type SpaceDataFragment = {
                             | undefined;
                         }>
                       | undefined;
-                    visual?:
-                      | {
-                          __typename: 'Visual';
-                          id: string;
-                          uri: string;
-                          name: string;
-                        }
-                      | undefined;
-                    storageBucket: {
-                      id: string;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                      parentEntity?:
-                        | { displayName: string; type: SchemaTypes.ProfileType }
-                        | undefined;
-                      documents: Array<{
-                        id: string;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>;
-                    };
                     tagsets?:
                       | Array<{
                           id: string;
@@ -40143,17 +39160,30 @@ export type SpaceDataFragment = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   };
-                  comments: {
-                    id: string;
-                    messagesCount: number;
-                    messages: Array<{
-                      id: any;
-                      message: any;
-                      sender?: { id: string } | {} | undefined;
-                    }>;
-                  };
-                  createdBy?: { email: string } | undefined;
                 }
               | undefined;
             whiteboard?:
@@ -40168,84 +39198,6 @@ export type SpaceDataFragment = {
                           | undefined;
                       }
                     | undefined;
-                  profile: {
-                    id: string;
-                    displayName: string;
-                    description?: any | undefined;
-                    tagline?: string | undefined;
-                    visual?:
-                      | {
-                          __typename: 'Visual';
-                          id: string;
-                          uri: string;
-                          name: string;
-                        }
-                      | undefined;
-                    storageBucket: {
-                      id: string;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                      parentEntity?:
-                        | { displayName: string; type: SchemaTypes.ProfileType }
-                        | undefined;
-                      documents: Array<{
-                        id: string;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>;
-                    };
-                    references?:
-                      | Array<{
-                          id: string;
-                          name: string;
-                          uri: string;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>
-                      | undefined;
-                    tagsets?:
-                      | Array<{
-                          id: string;
-                          name: string;
-                          tags: Array<string>;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>
-                      | undefined;
-                    location?:
-                      | {
-                          country?: string | undefined;
-                          city?: string | undefined;
-                        }
-                      | undefined;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  };
                 }
               | undefined;
           }>;
@@ -40327,14 +39279,6 @@ export type SpaceDataFragment = {
                     displayName: string;
                     description?: any | undefined;
                     tagline?: string | undefined;
-                    visual?:
-                      | {
-                          __typename: 'Visual';
-                          id: string;
-                          uri: string;
-                          name: string;
-                        }
-                      | undefined;
                     storageBucket: {
                       id: string;
                       authorization?:
@@ -43401,37 +42345,6 @@ export type SubspaceDataFragment = {
                           | undefined;
                       }>
                     | undefined;
-                  visual?:
-                    | {
-                        __typename: 'Visual';
-                        id: string;
-                        uri: string;
-                        name: string;
-                      }
-                    | undefined;
-                  storageBucket: {
-                    id: string;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                    parentEntity?:
-                      | { displayName: string; type: SchemaTypes.ProfileType }
-                      | undefined;
-                    documents: Array<{
-                      id: string;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    }>;
-                  };
                   tagsets?:
                     | Array<{
                         id: string;
@@ -43459,17 +42372,30 @@ export type SubspaceDataFragment = {
                           | undefined;
                       }
                     | undefined;
+                  storageBucket: {
+                    id: string;
+                    authorization?:
+                      | {
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                    parentEntity?:
+                      | { displayName: string; type: SchemaTypes.ProfileType }
+                      | undefined;
+                    documents: Array<{
+                      id: string;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                    }>;
+                  };
                 };
-                comments: {
-                  id: string;
-                  messagesCount: number;
-                  messages: Array<{
-                    id: any;
-                    message: any;
-                    sender?: { id: string } | {} | undefined;
-                  }>;
-                };
-                createdBy?: { email: string } | undefined;
               }
             | undefined;
           whiteboard?:
@@ -43484,84 +42410,6 @@ export type SubspaceDataFragment = {
                         | undefined;
                     }
                   | undefined;
-                profile: {
-                  id: string;
-                  displayName: string;
-                  description?: any | undefined;
-                  tagline?: string | undefined;
-                  visual?:
-                    | {
-                        __typename: 'Visual';
-                        id: string;
-                        uri: string;
-                        name: string;
-                      }
-                    | undefined;
-                  storageBucket: {
-                    id: string;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                    parentEntity?:
-                      | { displayName: string; type: SchemaTypes.ProfileType }
-                      | undefined;
-                    documents: Array<{
-                      id: string;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    }>;
-                  };
-                  references?:
-                    | Array<{
-                        id: string;
-                        name: string;
-                        uri: string;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>
-                    | undefined;
-                  tagsets?:
-                    | Array<{
-                        id: string;
-                        name: string;
-                        tags: Array<string>;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>
-                    | undefined;
-                  location?:
-                    | {
-                        country?: string | undefined;
-                        city?: string | undefined;
-                      }
-                    | undefined;
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<SchemaTypes.AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                };
               }
             | undefined;
         }>;
@@ -43643,14 +42491,6 @@ export type SubspaceDataFragment = {
                   displayName: string;
                   description?: any | undefined;
                   tagline?: string | undefined;
-                  visual?:
-                    | {
-                        __typename: 'Visual';
-                        id: string;
-                        uri: string;
-                        name: string;
-                      }
-                    | undefined;
                   storageBucket: {
                     id: string;
                     authorization?:
@@ -50430,12 +49270,28 @@ export type CreateCalloutOnCalloutsSetMutation = {
                       | undefined;
                   }>
                 | undefined;
-              visual?:
-                | {
-                    __typename: 'Visual';
+              tagsets?:
+                | Array<{
                     id: string;
-                    uri: string;
                     name: string;
+                    tags: Array<string>;
+                    authorization?:
+                      | {
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>
+                | undefined;
+              location?:
+                | { country?: string | undefined; city?: string | undefined }
+                | undefined;
+              authorization?:
+                | {
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
                   }
                 | undefined;
               storageBucket: {
@@ -50461,41 +49317,7 @@ export type CreateCalloutOnCalloutsSetMutation = {
                     | undefined;
                 }>;
               };
-              tagsets?:
-                | Array<{
-                    id: string;
-                    name: string;
-                    tags: Array<string>;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }>
-                | undefined;
-              location?:
-                | { country?: string | undefined; city?: string | undefined }
-                | undefined;
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
             };
-            comments: {
-              id: string;
-              messagesCount: number;
-              messages: Array<{
-                id: any;
-                message: any;
-                sender?: { id: string } | {} | undefined;
-              }>;
-            };
-            createdBy?: { email: string } | undefined;
           }
         | undefined;
       whiteboard?:
@@ -50510,81 +49332,6 @@ export type CreateCalloutOnCalloutsSetMutation = {
                     | undefined;
                 }
               | undefined;
-            profile: {
-              id: string;
-              displayName: string;
-              description?: any | undefined;
-              tagline?: string | undefined;
-              visual?:
-                | {
-                    __typename: 'Visual';
-                    id: string;
-                    uri: string;
-                    name: string;
-                  }
-                | undefined;
-              storageBucket: {
-                id: string;
-                authorization?:
-                  | {
-                      myPrivileges?:
-                        | Array<SchemaTypes.AuthorizationPrivilege>
-                        | undefined;
-                    }
-                  | undefined;
-                parentEntity?:
-                  | { displayName: string; type: SchemaTypes.ProfileType }
-                  | undefined;
-                documents: Array<{
-                  id: string;
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<SchemaTypes.AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                }>;
-              };
-              references?:
-                | Array<{
-                    id: string;
-                    name: string;
-                    uri: string;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }>
-                | undefined;
-              tagsets?:
-                | Array<{
-                    id: string;
-                    name: string;
-                    tags: Array<string>;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }>
-                | undefined;
-              location?:
-                | { country?: string | undefined; city?: string | undefined }
-                | undefined;
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-            };
           }
         | undefined;
     }>;
@@ -50666,14 +49413,6 @@ export type CreateCalloutOnCalloutsSetMutation = {
               displayName: string;
               description?: any | undefined;
               tagline?: string | undefined;
-              visual?:
-                | {
-                    __typename: 'Visual';
-                    id: string;
-                    uri: string;
-                    name: string;
-                  }
-                | undefined;
               storageBucket: {
                 id: string;
                 authorization?:
@@ -50905,12 +49644,28 @@ export type UpdateCalloutMutation = {
                       | undefined;
                   }>
                 | undefined;
-              visual?:
-                | {
-                    __typename: 'Visual';
+              tagsets?:
+                | Array<{
                     id: string;
-                    uri: string;
                     name: string;
+                    tags: Array<string>;
+                    authorization?:
+                      | {
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>
+                | undefined;
+              location?:
+                | { country?: string | undefined; city?: string | undefined }
+                | undefined;
+              authorization?:
+                | {
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
                   }
                 | undefined;
               storageBucket: {
@@ -50936,41 +49691,7 @@ export type UpdateCalloutMutation = {
                     | undefined;
                 }>;
               };
-              tagsets?:
-                | Array<{
-                    id: string;
-                    name: string;
-                    tags: Array<string>;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }>
-                | undefined;
-              location?:
-                | { country?: string | undefined; city?: string | undefined }
-                | undefined;
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
             };
-            comments: {
-              id: string;
-              messagesCount: number;
-              messages: Array<{
-                id: any;
-                message: any;
-                sender?: { id: string } | {} | undefined;
-              }>;
-            };
-            createdBy?: { email: string } | undefined;
           }
         | undefined;
       whiteboard?:
@@ -50985,81 +49706,6 @@ export type UpdateCalloutMutation = {
                     | undefined;
                 }
               | undefined;
-            profile: {
-              id: string;
-              displayName: string;
-              description?: any | undefined;
-              tagline?: string | undefined;
-              visual?:
-                | {
-                    __typename: 'Visual';
-                    id: string;
-                    uri: string;
-                    name: string;
-                  }
-                | undefined;
-              storageBucket: {
-                id: string;
-                authorization?:
-                  | {
-                      myPrivileges?:
-                        | Array<SchemaTypes.AuthorizationPrivilege>
-                        | undefined;
-                    }
-                  | undefined;
-                parentEntity?:
-                  | { displayName: string; type: SchemaTypes.ProfileType }
-                  | undefined;
-                documents: Array<{
-                  id: string;
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<SchemaTypes.AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                }>;
-              };
-              references?:
-                | Array<{
-                    id: string;
-                    name: string;
-                    uri: string;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }>
-                | undefined;
-              tagsets?:
-                | Array<{
-                    id: string;
-                    name: string;
-                    tags: Array<string>;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }>
-                | undefined;
-              location?:
-                | { country?: string | undefined; city?: string | undefined }
-                | undefined;
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-            };
           }
         | undefined;
     }>;
@@ -51141,14 +49787,6 @@ export type UpdateCalloutMutation = {
               displayName: string;
               description?: any | undefined;
               tagline?: string | undefined;
-              visual?:
-                | {
-                    __typename: 'Visual';
-                    id: string;
-                    uri: string;
-                    name: string;
-                  }
-                | undefined;
               storageBucket: {
                 id: string;
                 authorization?:
@@ -51362,12 +50000,28 @@ export type UpdateCalloutVisibilityMutation = {
                       | undefined;
                   }>
                 | undefined;
-              visual?:
-                | {
-                    __typename: 'Visual';
+              tagsets?:
+                | Array<{
                     id: string;
-                    uri: string;
                     name: string;
+                    tags: Array<string>;
+                    authorization?:
+                      | {
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  }>
+                | undefined;
+              location?:
+                | { country?: string | undefined; city?: string | undefined }
+                | undefined;
+              authorization?:
+                | {
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
                   }
                 | undefined;
               storageBucket: {
@@ -51393,41 +50047,7 @@ export type UpdateCalloutVisibilityMutation = {
                     | undefined;
                 }>;
               };
-              tagsets?:
-                | Array<{
-                    id: string;
-                    name: string;
-                    tags: Array<string>;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }>
-                | undefined;
-              location?:
-                | { country?: string | undefined; city?: string | undefined }
-                | undefined;
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
             };
-            comments: {
-              id: string;
-              messagesCount: number;
-              messages: Array<{
-                id: any;
-                message: any;
-                sender?: { id: string } | {} | undefined;
-              }>;
-            };
-            createdBy?: { email: string } | undefined;
           }
         | undefined;
       whiteboard?:
@@ -51442,81 +50062,6 @@ export type UpdateCalloutVisibilityMutation = {
                     | undefined;
                 }
               | undefined;
-            profile: {
-              id: string;
-              displayName: string;
-              description?: any | undefined;
-              tagline?: string | undefined;
-              visual?:
-                | {
-                    __typename: 'Visual';
-                    id: string;
-                    uri: string;
-                    name: string;
-                  }
-                | undefined;
-              storageBucket: {
-                id: string;
-                authorization?:
-                  | {
-                      myPrivileges?:
-                        | Array<SchemaTypes.AuthorizationPrivilege>
-                        | undefined;
-                    }
-                  | undefined;
-                parentEntity?:
-                  | { displayName: string; type: SchemaTypes.ProfileType }
-                  | undefined;
-                documents: Array<{
-                  id: string;
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<SchemaTypes.AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                }>;
-              };
-              references?:
-                | Array<{
-                    id: string;
-                    name: string;
-                    uri: string;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }>
-                | undefined;
-              tagsets?:
-                | Array<{
-                    id: string;
-                    name: string;
-                    tags: Array<string>;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }>
-                | undefined;
-              location?:
-                | { country?: string | undefined; city?: string | undefined }
-                | undefined;
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-            };
           }
         | undefined;
     }>;
@@ -51598,14 +50143,6 @@ export type UpdateCalloutVisibilityMutation = {
               displayName: string;
               description?: any | undefined;
               tagline?: string | undefined;
-              visual?:
-                | {
-                    __typename: 'Visual';
-                    id: string;
-                    uri: string;
-                    name: string;
-                  }
-                | undefined;
               storageBucket: {
                 id: string;
                 authorization?:
@@ -51796,32 +50333,6 @@ export type CreateContributionOnCalloutMutation = {
                     | undefined;
                 }>
               | undefined;
-            visual?:
-              | { __typename: 'Visual'; id: string; uri: string; name: string }
-              | undefined;
-            storageBucket: {
-              id: string;
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-              parentEntity?:
-                | { displayName: string; type: SchemaTypes.ProfileType }
-                | undefined;
-              documents: Array<{
-                id: string;
-                authorization?:
-                  | {
-                      myPrivileges?:
-                        | Array<SchemaTypes.AuthorizationPrivilege>
-                        | undefined;
-                    }
-                  | undefined;
-              }>;
-            };
             tagsets?:
               | Array<{
                   id: string;
@@ -51846,17 +50357,30 @@ export type CreateContributionOnCalloutMutation = {
                     | undefined;
                 }
               | undefined;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: SchemaTypes.ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
           };
-          comments: {
-            id: string;
-            messagesCount: number;
-            messages: Array<{
-              id: any;
-              message: any;
-              sender?: { id: string } | {} | undefined;
-            }>;
-          };
-          createdBy?: { email: string } | undefined;
         }
       | undefined;
     whiteboard?:
@@ -51871,76 +50395,6 @@ export type CreateContributionOnCalloutMutation = {
                   | undefined;
               }
             | undefined;
-          profile: {
-            id: string;
-            displayName: string;
-            description?: any | undefined;
-            tagline?: string | undefined;
-            visual?:
-              | { __typename: 'Visual'; id: string; uri: string; name: string }
-              | undefined;
-            storageBucket: {
-              id: string;
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-              parentEntity?:
-                | { displayName: string; type: SchemaTypes.ProfileType }
-                | undefined;
-              documents: Array<{
-                id: string;
-                authorization?:
-                  | {
-                      myPrivileges?:
-                        | Array<SchemaTypes.AuthorizationPrivilege>
-                        | undefined;
-                    }
-                  | undefined;
-              }>;
-            };
-            references?:
-              | Array<{
-                  id: string;
-                  name: string;
-                  uri: string;
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<SchemaTypes.AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                }>
-              | undefined;
-            tagsets?:
-              | Array<{
-                  id: string;
-                  name: string;
-                  tags: Array<string>;
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<SchemaTypes.AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                }>
-              | undefined;
-            location?:
-              | { country?: string | undefined; city?: string | undefined }
-              | undefined;
-            authorization?:
-              | {
-                  myPrivileges?:
-                    | Array<SchemaTypes.AuthorizationPrivilege>
-                    | undefined;
-                }
-              | undefined;
-          };
         }
       | undefined;
   };
@@ -52142,32 +50596,6 @@ export type UpdatePostMutation = {
               | undefined;
           }>
         | undefined;
-      visual?:
-        | { __typename: 'Visual'; id: string; uri: string; name: string }
-        | undefined;
-      storageBucket: {
-        id: string;
-        authorization?:
-          | {
-              myPrivileges?:
-                | Array<SchemaTypes.AuthorizationPrivilege>
-                | undefined;
-            }
-          | undefined;
-        parentEntity?:
-          | { displayName: string; type: SchemaTypes.ProfileType }
-          | undefined;
-        documents: Array<{
-          id: string;
-          authorization?:
-            | {
-                myPrivileges?:
-                  | Array<SchemaTypes.AuthorizationPrivilege>
-                  | undefined;
-              }
-            | undefined;
-        }>;
-      };
       tagsets?:
         | Array<{
             id: string;
@@ -52192,17 +50620,30 @@ export type UpdatePostMutation = {
               | undefined;
           }
         | undefined;
+      storageBucket: {
+        id: string;
+        authorization?:
+          | {
+              myPrivileges?:
+                | Array<SchemaTypes.AuthorizationPrivilege>
+                | undefined;
+            }
+          | undefined;
+        parentEntity?:
+          | { displayName: string; type: SchemaTypes.ProfileType }
+          | undefined;
+        documents: Array<{
+          id: string;
+          authorization?:
+            | {
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+        }>;
+      };
     };
-    comments: {
-      id: string;
-      messagesCount: number;
-      messages: Array<{
-        id: any;
-        message: any;
-        sender?: { id: string } | {} | undefined;
-      }>;
-    };
-    createdBy?: { email: string } | undefined;
   };
 };
 
@@ -54761,37 +53202,6 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                             | undefined;
                         }>
                       | undefined;
-                    visual?:
-                      | {
-                          __typename: 'Visual';
-                          id: string;
-                          uri: string;
-                          name: string;
-                        }
-                      | undefined;
-                    storageBucket: {
-                      id: string;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                      parentEntity?:
-                        | { displayName: string; type: SchemaTypes.ProfileType }
-                        | undefined;
-                      documents: Array<{
-                        id: string;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>;
-                    };
                     tagsets?:
                       | Array<{
                           id: string;
@@ -54819,17 +53229,30 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   };
-                  comments: {
-                    id: string;
-                    messagesCount: number;
-                    messages: Array<{
-                      id: any;
-                      message: any;
-                      sender?: { id: string } | {} | undefined;
-                    }>;
-                  };
-                  createdBy?: { email: string } | undefined;
                 }
               | undefined;
             whiteboard?:
@@ -54844,84 +53267,6 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                           | undefined;
                       }
                     | undefined;
-                  profile: {
-                    id: string;
-                    displayName: string;
-                    description?: any | undefined;
-                    tagline?: string | undefined;
-                    visual?:
-                      | {
-                          __typename: 'Visual';
-                          id: string;
-                          uri: string;
-                          name: string;
-                        }
-                      | undefined;
-                    storageBucket: {
-                      id: string;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                      parentEntity?:
-                        | { displayName: string; type: SchemaTypes.ProfileType }
-                        | undefined;
-                      documents: Array<{
-                        id: string;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>;
-                    };
-                    references?:
-                      | Array<{
-                          id: string;
-                          name: string;
-                          uri: string;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>
-                      | undefined;
-                    tagsets?:
-                      | Array<{
-                          id: string;
-                          name: string;
-                          tags: Array<string>;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>
-                      | undefined;
-                    location?:
-                      | {
-                          country?: string | undefined;
-                          city?: string | undefined;
-                        }
-                      | undefined;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  };
                 }
               | undefined;
           }>;
@@ -55003,14 +53348,6 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                     displayName: string;
                     description?: any | undefined;
                     tagline?: string | undefined;
-                    visual?:
-                      | {
-                          __typename: 'Visual';
-                          id: string;
-                          uri: string;
-                          name: string;
-                        }
-                      | undefined;
                     storageBucket: {
                       id: string;
                       authorization?:
@@ -55415,12 +53752,31 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                               | undefined;
                           }>
                         | undefined;
-                      visual?:
-                        | {
-                            __typename: 'Visual';
+                      tagsets?:
+                        | Array<{
                             id: string;
-                            uri: string;
                             name: string;
+                            tags: Array<string>;
+                            authorization?:
+                              | {
+                                  myPrivileges?:
+                                    | Array<SchemaTypes.AuthorizationPrivilege>
+                                    | undefined;
+                                }
+                              | undefined;
+                          }>
+                        | undefined;
+                      location?:
+                        | {
+                            country?: string | undefined;
+                            city?: string | undefined;
+                          }
+                        | undefined;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
                           }
                         | undefined;
                       storageBucket: {
@@ -55449,44 +53805,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                             | undefined;
                         }>;
                       };
-                      tagsets?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            tags: Array<string>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      location?:
-                        | {
-                            country?: string | undefined;
-                            city?: string | undefined;
-                          }
-                        | undefined;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
                     };
-                    comments: {
-                      id: string;
-                      messagesCount: number;
-                      messages: Array<{
-                        id: any;
-                        message: any;
-                        sender?: { id: string } | {} | undefined;
-                      }>;
-                    };
-                    createdBy?: { email: string } | undefined;
                   }
                 | undefined;
               whiteboard?:
@@ -55501,87 +53820,6 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                             | undefined;
                         }
                       | undefined;
-                    profile: {
-                      id: string;
-                      displayName: string;
-                      description?: any | undefined;
-                      tagline?: string | undefined;
-                      visual?:
-                        | {
-                            __typename: 'Visual';
-                            id: string;
-                            uri: string;
-                            name: string;
-                          }
-                        | undefined;
-                      storageBucket: {
-                        id: string;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                        parentEntity?:
-                          | {
-                              displayName: string;
-                              type: SchemaTypes.ProfileType;
-                            }
-                          | undefined;
-                        documents: Array<{
-                          id: string;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>;
-                      };
-                      references?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            uri: string;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      tagsets?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            tags: Array<string>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      location?:
-                        | {
-                            country?: string | undefined;
-                            city?: string | undefined;
-                          }
-                        | undefined;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    };
                   }
                 | undefined;
             }>;
@@ -55663,14 +53901,6 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                       displayName: string;
                       description?: any | undefined;
                       tagline?: string | undefined;
-                      visual?:
-                        | {
-                            __typename: 'Visual';
-                            id: string;
-                            uri: string;
-                            name: string;
-                          }
-                        | undefined;
                       storageBucket: {
                         id: string;
                         authorization?:
@@ -61075,37 +59305,6 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                             | undefined;
                         }>
                       | undefined;
-                    visual?:
-                      | {
-                          __typename: 'Visual';
-                          id: string;
-                          uri: string;
-                          name: string;
-                        }
-                      | undefined;
-                    storageBucket: {
-                      id: string;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                      parentEntity?:
-                        | { displayName: string; type: SchemaTypes.ProfileType }
-                        | undefined;
-                      documents: Array<{
-                        id: string;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>;
-                    };
                     tagsets?:
                       | Array<{
                           id: string;
@@ -61133,17 +59332,30 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   };
-                  comments: {
-                    id: string;
-                    messagesCount: number;
-                    messages: Array<{
-                      id: any;
-                      message: any;
-                      sender?: { id: string } | {} | undefined;
-                    }>;
-                  };
-                  createdBy?: { email: string } | undefined;
                 }
               | undefined;
             whiteboard?:
@@ -61158,84 +59370,6 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                           | undefined;
                       }
                     | undefined;
-                  profile: {
-                    id: string;
-                    displayName: string;
-                    description?: any | undefined;
-                    tagline?: string | undefined;
-                    visual?:
-                      | {
-                          __typename: 'Visual';
-                          id: string;
-                          uri: string;
-                          name: string;
-                        }
-                      | undefined;
-                    storageBucket: {
-                      id: string;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                      parentEntity?:
-                        | { displayName: string; type: SchemaTypes.ProfileType }
-                        | undefined;
-                      documents: Array<{
-                        id: string;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>;
-                    };
-                    references?:
-                      | Array<{
-                          id: string;
-                          name: string;
-                          uri: string;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>
-                      | undefined;
-                    tagsets?:
-                      | Array<{
-                          id: string;
-                          name: string;
-                          tags: Array<string>;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>
-                      | undefined;
-                    location?:
-                      | {
-                          country?: string | undefined;
-                          city?: string | undefined;
-                        }
-                      | undefined;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  };
                 }
               | undefined;
           }>;
@@ -61317,14 +59451,6 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                     displayName: string;
                     description?: any | undefined;
                     tagline?: string | undefined;
-                    visual?:
-                      | {
-                          __typename: 'Visual';
-                          id: string;
-                          uri: string;
-                          name: string;
-                        }
-                      | undefined;
                     storageBucket: {
                       id: string;
                       authorization?:
@@ -61729,12 +59855,31 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                               | undefined;
                           }>
                         | undefined;
-                      visual?:
-                        | {
-                            __typename: 'Visual';
+                      tagsets?:
+                        | Array<{
                             id: string;
-                            uri: string;
                             name: string;
+                            tags: Array<string>;
+                            authorization?:
+                              | {
+                                  myPrivileges?:
+                                    | Array<SchemaTypes.AuthorizationPrivilege>
+                                    | undefined;
+                                }
+                              | undefined;
+                          }>
+                        | undefined;
+                      location?:
+                        | {
+                            country?: string | undefined;
+                            city?: string | undefined;
+                          }
+                        | undefined;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
                           }
                         | undefined;
                       storageBucket: {
@@ -61763,44 +59908,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                             | undefined;
                         }>;
                       };
-                      tagsets?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            tags: Array<string>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      location?:
-                        | {
-                            country?: string | undefined;
-                            city?: string | undefined;
-                          }
-                        | undefined;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
                     };
-                    comments: {
-                      id: string;
-                      messagesCount: number;
-                      messages: Array<{
-                        id: any;
-                        message: any;
-                        sender?: { id: string } | {} | undefined;
-                      }>;
-                    };
-                    createdBy?: { email: string } | undefined;
                   }
                 | undefined;
               whiteboard?:
@@ -61815,87 +59923,6 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                             | undefined;
                         }
                       | undefined;
-                    profile: {
-                      id: string;
-                      displayName: string;
-                      description?: any | undefined;
-                      tagline?: string | undefined;
-                      visual?:
-                        | {
-                            __typename: 'Visual';
-                            id: string;
-                            uri: string;
-                            name: string;
-                          }
-                        | undefined;
-                      storageBucket: {
-                        id: string;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                        parentEntity?:
-                          | {
-                              displayName: string;
-                              type: SchemaTypes.ProfileType;
-                            }
-                          | undefined;
-                        documents: Array<{
-                          id: string;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>;
-                      };
-                      references?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            uri: string;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      tagsets?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            tags: Array<string>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      location?:
-                        | {
-                            country?: string | undefined;
-                            city?: string | undefined;
-                          }
-                        | undefined;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    };
                   }
                 | undefined;
             }>;
@@ -61977,14 +60004,6 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                       displayName: string;
                       description?: any | undefined;
                       tagline?: string | undefined;
-                      visual?:
-                        | {
-                            __typename: 'Visual';
-                            id: string;
-                            uri: string;
-                            name: string;
-                          }
-                        | undefined;
                       storageBucket: {
                         id: string;
                         authorization?:
@@ -67407,37 +65426,6 @@ export type UpdateSpaceMutation = {
                             | undefined;
                         }>
                       | undefined;
-                    visual?:
-                      | {
-                          __typename: 'Visual';
-                          id: string;
-                          uri: string;
-                          name: string;
-                        }
-                      | undefined;
-                    storageBucket: {
-                      id: string;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                      parentEntity?:
-                        | { displayName: string; type: SchemaTypes.ProfileType }
-                        | undefined;
-                      documents: Array<{
-                        id: string;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>;
-                    };
                     tagsets?:
                       | Array<{
                           id: string;
@@ -67465,17 +65453,30 @@ export type UpdateSpaceMutation = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   };
-                  comments: {
-                    id: string;
-                    messagesCount: number;
-                    messages: Array<{
-                      id: any;
-                      message: any;
-                      sender?: { id: string } | {} | undefined;
-                    }>;
-                  };
-                  createdBy?: { email: string } | undefined;
                 }
               | undefined;
             whiteboard?:
@@ -67490,84 +65491,6 @@ export type UpdateSpaceMutation = {
                           | undefined;
                       }
                     | undefined;
-                  profile: {
-                    id: string;
-                    displayName: string;
-                    description?: any | undefined;
-                    tagline?: string | undefined;
-                    visual?:
-                      | {
-                          __typename: 'Visual';
-                          id: string;
-                          uri: string;
-                          name: string;
-                        }
-                      | undefined;
-                    storageBucket: {
-                      id: string;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                      parentEntity?:
-                        | { displayName: string; type: SchemaTypes.ProfileType }
-                        | undefined;
-                      documents: Array<{
-                        id: string;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>;
-                    };
-                    references?:
-                      | Array<{
-                          id: string;
-                          name: string;
-                          uri: string;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>
-                      | undefined;
-                    tagsets?:
-                      | Array<{
-                          id: string;
-                          name: string;
-                          tags: Array<string>;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>
-                      | undefined;
-                    location?:
-                      | {
-                          country?: string | undefined;
-                          city?: string | undefined;
-                        }
-                      | undefined;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  };
                 }
               | undefined;
           }>;
@@ -67649,14 +65572,6 @@ export type UpdateSpaceMutation = {
                     displayName: string;
                     description?: any | undefined;
                     tagline?: string | undefined;
-                    visual?:
-                      | {
-                          __typename: 'Visual';
-                          id: string;
-                          uri: string;
-                          name: string;
-                        }
-                      | undefined;
                     storageBucket: {
                       id: string;
                       authorization?:
@@ -68061,12 +65976,31 @@ export type UpdateSpaceMutation = {
                               | undefined;
                           }>
                         | undefined;
-                      visual?:
-                        | {
-                            __typename: 'Visual';
+                      tagsets?:
+                        | Array<{
                             id: string;
-                            uri: string;
                             name: string;
+                            tags: Array<string>;
+                            authorization?:
+                              | {
+                                  myPrivileges?:
+                                    | Array<SchemaTypes.AuthorizationPrivilege>
+                                    | undefined;
+                                }
+                              | undefined;
+                          }>
+                        | undefined;
+                      location?:
+                        | {
+                            country?: string | undefined;
+                            city?: string | undefined;
+                          }
+                        | undefined;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
                           }
                         | undefined;
                       storageBucket: {
@@ -68095,44 +66029,7 @@ export type UpdateSpaceMutation = {
                             | undefined;
                         }>;
                       };
-                      tagsets?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            tags: Array<string>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      location?:
-                        | {
-                            country?: string | undefined;
-                            city?: string | undefined;
-                          }
-                        | undefined;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
                     };
-                    comments: {
-                      id: string;
-                      messagesCount: number;
-                      messages: Array<{
-                        id: any;
-                        message: any;
-                        sender?: { id: string } | {} | undefined;
-                      }>;
-                    };
-                    createdBy?: { email: string } | undefined;
                   }
                 | undefined;
               whiteboard?:
@@ -68147,87 +66044,6 @@ export type UpdateSpaceMutation = {
                             | undefined;
                         }
                       | undefined;
-                    profile: {
-                      id: string;
-                      displayName: string;
-                      description?: any | undefined;
-                      tagline?: string | undefined;
-                      visual?:
-                        | {
-                            __typename: 'Visual';
-                            id: string;
-                            uri: string;
-                            name: string;
-                          }
-                        | undefined;
-                      storageBucket: {
-                        id: string;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                        parentEntity?:
-                          | {
-                              displayName: string;
-                              type: SchemaTypes.ProfileType;
-                            }
-                          | undefined;
-                        documents: Array<{
-                          id: string;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>;
-                      };
-                      references?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            uri: string;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      tagsets?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            tags: Array<string>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      location?:
-                        | {
-                            country?: string | undefined;
-                            city?: string | undefined;
-                          }
-                        | undefined;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    };
                   }
                 | undefined;
             }>;
@@ -68309,14 +66125,6 @@ export type UpdateSpaceMutation = {
                       displayName: string;
                       description?: any | undefined;
                       tagline?: string | undefined;
-                      visual?:
-                        | {
-                            __typename: 'Visual';
-                            id: string;
-                            uri: string;
-                            name: string;
-                          }
-                        | undefined;
                       storageBucket: {
                         id: string;
                         authorization?:
@@ -71420,12 +69228,31 @@ export type CreateSubspaceMutation = {
                               | undefined;
                           }>
                         | undefined;
-                      visual?:
-                        | {
-                            __typename: 'Visual';
+                      tagsets?:
+                        | Array<{
                             id: string;
-                            uri: string;
                             name: string;
+                            tags: Array<string>;
+                            authorization?:
+                              | {
+                                  myPrivileges?:
+                                    | Array<SchemaTypes.AuthorizationPrivilege>
+                                    | undefined;
+                                }
+                              | undefined;
+                          }>
+                        | undefined;
+                      location?:
+                        | {
+                            country?: string | undefined;
+                            city?: string | undefined;
+                          }
+                        | undefined;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
                           }
                         | undefined;
                       storageBucket: {
@@ -71454,44 +69281,7 @@ export type CreateSubspaceMutation = {
                             | undefined;
                         }>;
                       };
-                      tagsets?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            tags: Array<string>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      location?:
-                        | {
-                            country?: string | undefined;
-                            city?: string | undefined;
-                          }
-                        | undefined;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
                     };
-                    comments: {
-                      id: string;
-                      messagesCount: number;
-                      messages: Array<{
-                        id: any;
-                        message: any;
-                        sender?: { id: string } | {} | undefined;
-                      }>;
-                    };
-                    createdBy?: { email: string } | undefined;
                   }
                 | undefined;
               whiteboard?:
@@ -71506,87 +69296,6 @@ export type CreateSubspaceMutation = {
                             | undefined;
                         }
                       | undefined;
-                    profile: {
-                      id: string;
-                      displayName: string;
-                      description?: any | undefined;
-                      tagline?: string | undefined;
-                      visual?:
-                        | {
-                            __typename: 'Visual';
-                            id: string;
-                            uri: string;
-                            name: string;
-                          }
-                        | undefined;
-                      storageBucket: {
-                        id: string;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                        parentEntity?:
-                          | {
-                              displayName: string;
-                              type: SchemaTypes.ProfileType;
-                            }
-                          | undefined;
-                        documents: Array<{
-                          id: string;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>;
-                      };
-                      references?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            uri: string;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      tagsets?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            tags: Array<string>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      location?:
-                        | {
-                            country?: string | undefined;
-                            city?: string | undefined;
-                          }
-                        | undefined;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    };
                   }
                 | undefined;
             }>;
@@ -71668,14 +69377,6 @@ export type CreateSubspaceMutation = {
                       displayName: string;
                       description?: any | undefined;
                       tagline?: string | undefined;
-                      visual?:
-                        | {
-                            __typename: 'Visual';
-                            id: string;
-                            uri: string;
-                            name: string;
-                          }
-                        | undefined;
                       storageBucket: {
                         id: string;
                         authorization?:
@@ -74152,37 +71853,6 @@ export type CreateSubspaceMutation = {
                             | undefined;
                         }>
                       | undefined;
-                    visual?:
-                      | {
-                          __typename: 'Visual';
-                          id: string;
-                          uri: string;
-                          name: string;
-                        }
-                      | undefined;
-                    storageBucket: {
-                      id: string;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                      parentEntity?:
-                        | { displayName: string; type: SchemaTypes.ProfileType }
-                        | undefined;
-                      documents: Array<{
-                        id: string;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>;
-                    };
                     tagsets?:
                       | Array<{
                           id: string;
@@ -74210,17 +71880,30 @@ export type CreateSubspaceMutation = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   };
-                  comments: {
-                    id: string;
-                    messagesCount: number;
-                    messages: Array<{
-                      id: any;
-                      message: any;
-                      sender?: { id: string } | {} | undefined;
-                    }>;
-                  };
-                  createdBy?: { email: string } | undefined;
                 }
               | undefined;
             whiteboard?:
@@ -74235,84 +71918,6 @@ export type CreateSubspaceMutation = {
                           | undefined;
                       }
                     | undefined;
-                  profile: {
-                    id: string;
-                    displayName: string;
-                    description?: any | undefined;
-                    tagline?: string | undefined;
-                    visual?:
-                      | {
-                          __typename: 'Visual';
-                          id: string;
-                          uri: string;
-                          name: string;
-                        }
-                      | undefined;
-                    storageBucket: {
-                      id: string;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                      parentEntity?:
-                        | { displayName: string; type: SchemaTypes.ProfileType }
-                        | undefined;
-                      documents: Array<{
-                        id: string;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>;
-                    };
-                    references?:
-                      | Array<{
-                          id: string;
-                          name: string;
-                          uri: string;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>
-                      | undefined;
-                    tagsets?:
-                      | Array<{
-                          id: string;
-                          name: string;
-                          tags: Array<string>;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>
-                      | undefined;
-                    location?:
-                      | {
-                          country?: string | undefined;
-                          city?: string | undefined;
-                        }
-                      | undefined;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  };
                 }
               | undefined;
           }>;
@@ -74394,14 +71999,6 @@ export type CreateSubspaceMutation = {
                     displayName: string;
                     description?: any | undefined;
                     tagline?: string | undefined;
-                    visual?:
-                      | {
-                          __typename: 'Visual';
-                          id: string;
-                          uri: string;
-                          name: string;
-                        }
-                      | undefined;
                     storageBucket: {
                       id: string;
                       authorization?:
@@ -76877,12 +74474,31 @@ export type UpdateSubspaceMutation = {
                               | undefined;
                           }>
                         | undefined;
-                      visual?:
-                        | {
-                            __typename: 'Visual';
+                      tagsets?:
+                        | Array<{
                             id: string;
-                            uri: string;
                             name: string;
+                            tags: Array<string>;
+                            authorization?:
+                              | {
+                                  myPrivileges?:
+                                    | Array<SchemaTypes.AuthorizationPrivilege>
+                                    | undefined;
+                                }
+                              | undefined;
+                          }>
+                        | undefined;
+                      location?:
+                        | {
+                            country?: string | undefined;
+                            city?: string | undefined;
+                          }
+                        | undefined;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
                           }
                         | undefined;
                       storageBucket: {
@@ -76911,44 +74527,7 @@ export type UpdateSubspaceMutation = {
                             | undefined;
                         }>;
                       };
-                      tagsets?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            tags: Array<string>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      location?:
-                        | {
-                            country?: string | undefined;
-                            city?: string | undefined;
-                          }
-                        | undefined;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
                     };
-                    comments: {
-                      id: string;
-                      messagesCount: number;
-                      messages: Array<{
-                        id: any;
-                        message: any;
-                        sender?: { id: string } | {} | undefined;
-                      }>;
-                    };
-                    createdBy?: { email: string } | undefined;
                   }
                 | undefined;
               whiteboard?:
@@ -76963,87 +74542,6 @@ export type UpdateSubspaceMutation = {
                             | undefined;
                         }
                       | undefined;
-                    profile: {
-                      id: string;
-                      displayName: string;
-                      description?: any | undefined;
-                      tagline?: string | undefined;
-                      visual?:
-                        | {
-                            __typename: 'Visual';
-                            id: string;
-                            uri: string;
-                            name: string;
-                          }
-                        | undefined;
-                      storageBucket: {
-                        id: string;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                        parentEntity?:
-                          | {
-                              displayName: string;
-                              type: SchemaTypes.ProfileType;
-                            }
-                          | undefined;
-                        documents: Array<{
-                          id: string;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>;
-                      };
-                      references?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            uri: string;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      tagsets?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            tags: Array<string>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      location?:
-                        | {
-                            country?: string | undefined;
-                            city?: string | undefined;
-                          }
-                        | undefined;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    };
                   }
                 | undefined;
             }>;
@@ -77125,14 +74623,6 @@ export type UpdateSubspaceMutation = {
                       displayName: string;
                       description?: any | undefined;
                       tagline?: string | undefined;
-                      visual?:
-                        | {
-                            __typename: 'Visual';
-                            id: string;
-                            uri: string;
-                            name: string;
-                          }
-                        | undefined;
                       storageBucket: {
                         id: string;
                         authorization?:
@@ -79609,37 +77099,6 @@ export type UpdateSubspaceMutation = {
                             | undefined;
                         }>
                       | undefined;
-                    visual?:
-                      | {
-                          __typename: 'Visual';
-                          id: string;
-                          uri: string;
-                          name: string;
-                        }
-                      | undefined;
-                    storageBucket: {
-                      id: string;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                      parentEntity?:
-                        | { displayName: string; type: SchemaTypes.ProfileType }
-                        | undefined;
-                      documents: Array<{
-                        id: string;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>;
-                    };
                     tagsets?:
                       | Array<{
                           id: string;
@@ -79667,17 +77126,30 @@ export type UpdateSubspaceMutation = {
                             | undefined;
                         }
                       | undefined;
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
                   };
-                  comments: {
-                    id: string;
-                    messagesCount: number;
-                    messages: Array<{
-                      id: any;
-                      message: any;
-                      sender?: { id: string } | {} | undefined;
-                    }>;
-                  };
-                  createdBy?: { email: string } | undefined;
                 }
               | undefined;
             whiteboard?:
@@ -79692,84 +77164,6 @@ export type UpdateSubspaceMutation = {
                           | undefined;
                       }
                     | undefined;
-                  profile: {
-                    id: string;
-                    displayName: string;
-                    description?: any | undefined;
-                    tagline?: string | undefined;
-                    visual?:
-                      | {
-                          __typename: 'Visual';
-                          id: string;
-                          uri: string;
-                          name: string;
-                        }
-                      | undefined;
-                    storageBucket: {
-                      id: string;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                      parentEntity?:
-                        | { displayName: string; type: SchemaTypes.ProfileType }
-                        | undefined;
-                      documents: Array<{
-                        id: string;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>;
-                    };
-                    references?:
-                      | Array<{
-                          id: string;
-                          name: string;
-                          uri: string;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>
-                      | undefined;
-                    tagsets?:
-                      | Array<{
-                          id: string;
-                          name: string;
-                          tags: Array<string>;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>
-                      | undefined;
-                    location?:
-                      | {
-                          country?: string | undefined;
-                          city?: string | undefined;
-                        }
-                      | undefined;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  };
                 }
               | undefined;
           }>;
@@ -79851,14 +77245,6 @@ export type UpdateSubspaceMutation = {
                     displayName: string;
                     description?: any | undefined;
                     tagline?: string | undefined;
-                    visual?:
-                      | {
-                          __typename: 'Visual';
-                          id: string;
-                          uri: string;
-                          name: string;
-                        }
-                      | undefined;
                     storageBucket: {
                       id: string;
                       authorization?:
@@ -83467,6 +80853,14 @@ export type DeleteReferenceMutationVariables = SchemaTypes.Exact<{
 
 export type DeleteReferenceMutation = { deleteReference: { id: string } };
 
+export type AdminSearchIngestFromScratchMutationVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type AdminSearchIngestFromScratchMutation = {
+  adminSearchIngestFromScratch: string;
+};
+
 export type UpdateSpaceSettingsMutationVariables = SchemaTypes.Exact<{
   settingsData: SchemaTypes.UpdateSpaceSettingsInput;
 }>;
@@ -86089,12 +83483,31 @@ export type SpaceCalloutQuery = {
                                   | undefined;
                               }>
                             | undefined;
-                          visual?:
-                            | {
-                                __typename: 'Visual';
+                          tagsets?:
+                            | Array<{
                                 id: string;
-                                uri: string;
                                 name: string;
+                                tags: Array<string>;
+                                authorization?:
+                                  | {
+                                      myPrivileges?:
+                                        | Array<SchemaTypes.AuthorizationPrivilege>
+                                        | undefined;
+                                    }
+                                  | undefined;
+                              }>
+                            | undefined;
+                          location?:
+                            | {
+                                country?: string | undefined;
+                                city?: string | undefined;
+                              }
+                            | undefined;
+                          authorization?:
+                            | {
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
                               }
                             | undefined;
                           storageBucket: {
@@ -86123,44 +83536,7 @@ export type SpaceCalloutQuery = {
                                 | undefined;
                             }>;
                           };
-                          tagsets?:
-                            | Array<{
-                                id: string;
-                                name: string;
-                                tags: Array<string>;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<SchemaTypes.AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>
-                            | undefined;
-                          location?:
-                            | {
-                                country?: string | undefined;
-                                city?: string | undefined;
-                              }
-                            | undefined;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
                         };
-                        comments: {
-                          id: string;
-                          messagesCount: number;
-                          messages: Array<{
-                            id: any;
-                            message: any;
-                            sender?: { id: string } | {} | undefined;
-                          }>;
-                        };
-                        createdBy?: { email: string } | undefined;
                       }
                     | undefined;
                   whiteboard?:
@@ -86175,87 +83551,6 @@ export type SpaceCalloutQuery = {
                                 | undefined;
                             }
                           | undefined;
-                        profile: {
-                          id: string;
-                          displayName: string;
-                          description?: any | undefined;
-                          tagline?: string | undefined;
-                          visual?:
-                            | {
-                                __typename: 'Visual';
-                                id: string;
-                                uri: string;
-                                name: string;
-                              }
-                            | undefined;
-                          storageBucket: {
-                            id: string;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                            parentEntity?:
-                              | {
-                                  displayName: string;
-                                  type: SchemaTypes.ProfileType;
-                                }
-                              | undefined;
-                            documents: Array<{
-                              id: string;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<SchemaTypes.AuthorizationPrivilege>
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>;
-                          };
-                          references?:
-                            | Array<{
-                                id: string;
-                                name: string;
-                                uri: string;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<SchemaTypes.AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>
-                            | undefined;
-                          tagsets?:
-                            | Array<{
-                                id: string;
-                                name: string;
-                                tags: Array<string>;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<SchemaTypes.AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>
-                            | undefined;
-                          location?:
-                            | {
-                                country?: string | undefined;
-                                city?: string | undefined;
-                              }
-                            | undefined;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        };
                       }
                     | undefined;
                 }>;
@@ -86340,14 +83635,6 @@ export type SpaceCalloutQuery = {
                           displayName: string;
                           description?: any | undefined;
                           tagline?: string | undefined;
-                          visual?:
-                            | {
-                                __typename: 'Visual';
-                                id: string;
-                                uri: string;
-                                name: string;
-                              }
-                            | undefined;
                           storageBucket: {
                             id: string;
                             authorization?:
@@ -89101,32 +86388,6 @@ export type GetPostDataQuery = {
                     | undefined;
                 }>
               | undefined;
-            visual?:
-              | { __typename: 'Visual'; id: string; uri: string; name: string }
-              | undefined;
-            storageBucket: {
-              id: string;
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-              parentEntity?:
-                | { displayName: string; type: SchemaTypes.ProfileType }
-                | undefined;
-              documents: Array<{
-                id: string;
-                authorization?:
-                  | {
-                      myPrivileges?:
-                        | Array<SchemaTypes.AuthorizationPrivilege>
-                        | undefined;
-                    }
-                  | undefined;
-              }>;
-            };
             tagsets?:
               | Array<{
                   id: string;
@@ -89151,17 +86412,30 @@ export type GetPostDataQuery = {
                     | undefined;
                 }
               | undefined;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: SchemaTypes.ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
           };
-          comments: {
-            id: string;
-            messagesCount: number;
-            messages: Array<{
-              id: any;
-              message: any;
-              sender?: { id: string } | {} | undefined;
-            }>;
-          };
-          createdBy?: { email: string } | undefined;
         }
       | undefined;
   };
@@ -99391,168 +96665,44 @@ export type SearchQueryVariables = SchemaTypes.Exact<{
 
 export type SearchQuery = {
   search: {
-    __typename: 'ISearchResults';
     spaceResults: {
-      __typename: 'ISearchCategoryResult';
-      cursor?: any | undefined;
       total: number;
       results: Array<
+        | { type: SchemaTypes.SearchResultType }
+        | { type: SchemaTypes.SearchResultType }
+        | { type: SchemaTypes.SearchResultType }
         | {
-            __typename: 'SearchResultCallout';
-            id: string;
             type: SchemaTypes.SearchResultType;
-            score: number;
-            terms: Array<string>;
-          }
-        | {
-            __typename: 'SearchResultOrganization';
-            id: string;
-            type: SchemaTypes.SearchResultType;
-            score: number;
-            terms: Array<string>;
-          }
-        | {
-            __typename: 'SearchResultPost';
-            id: string;
-            type: SchemaTypes.SearchResultType;
-            score: number;
-            terms: Array<string>;
-          }
-        | {
-            __typename: 'SearchResultSpace';
-            id: string;
-            type: SchemaTypes.SearchResultType;
-            score: number;
-            terms: Array<string>;
             parentSpace?:
               | {
-                  __typename: 'Space';
                   id: string;
                   level: SchemaTypes.SpaceLevel;
-                  about: {
-                    __typename: 'SpaceAbout';
-                    id: string;
-                    isContentPublic: boolean;
-                    profile: {
-                      __typename: 'Profile';
-                      id: string;
-                      displayName: string;
-                      url: string;
-                      tagline?: string | undefined;
-                      description?: any | undefined;
-                      tagset?:
-                        | {
-                            __typename: 'Tagset';
-                            id: string;
-                            tags: Array<string>;
-                          }
-                        | undefined;
-                      avatar?:
-                        | {
-                            __typename: 'Visual';
-                            id: string;
-                            uri: string;
-                            name: string;
-                          }
-                        | undefined;
-                      cardBanner?:
-                        | {
-                            __typename: 'Visual';
-                            id: string;
-                            uri: string;
-                            name: string;
-                          }
-                        | undefined;
-                    };
-                    membership: {
-                      __typename: 'SpaceAboutMembership';
-                      myMembershipStatus?:
-                        | SchemaTypes.CommunityMembershipStatus
-                        | undefined;
-                      myPrivileges?:
-                        | Array<SchemaTypes.AuthorizationPrivilege>
-                        | undefined;
-                      communityID: string;
-                      roleSetID: string;
-                    };
-                    guidelines: {
-                      __typename: 'CommunityGuidelines';
-                      id: string;
-                    };
-                  };
+                  visibility: SchemaTypes.SpaceVisibility;
                 }
               | undefined;
             space: {
-              __typename: 'Space';
               id: string;
               level: SchemaTypes.SpaceLevel;
               visibility: SchemaTypes.SpaceVisibility;
-              about: {
-                __typename: 'SpaceAbout';
-                id: string;
-                why?: any | undefined;
-                isContentPublic: boolean;
-                profile: {
-                  __typename: 'Profile';
-                  id: string;
-                  url: string;
-                  displayName: string;
-                  tagline?: string | undefined;
-                  tagset?:
-                    | {
-                        __typename: 'Tagset';
-                        id: string;
-                        name: string;
-                        tags: Array<string>;
-                        allowedValues: Array<string>;
-                        type: SchemaTypes.TagsetType;
-                      }
-                    | undefined;
-                  visuals: Array<{
-                    __typename: 'Visual';
-                    id: string;
-                    uri: string;
-                    name: string;
-                  }>;
-                };
-                membership: {
-                  __typename: 'SpaceAboutMembership';
-                  myMembershipStatus?:
-                    | SchemaTypes.CommunityMembershipStatus
-                    | undefined;
-                };
-              };
             };
           }
-        | {
-            __typename: 'SearchResultUser';
-            id: string;
-            type: SchemaTypes.SearchResultType;
-            score: number;
-            terms: Array<string>;
-          }
+        | { type: SchemaTypes.SearchResultType }
       >;
     };
     calloutResults: {
-      __typename: 'ISearchCategoryResult';
       cursor?: any | undefined;
       total: number;
       results: Array<
         | {
-            __typename: 'SearchResultCallout';
             id: string;
             type: SchemaTypes.SearchResultType;
-            score: number;
             terms: Array<string>;
             callout: {
-              __typename: 'Callout';
               id: string;
               type: SchemaTypes.CalloutType;
               framing: {
-                __typename: 'CalloutFraming';
                 id: string;
                 profile: {
-                  __typename: 'Profile';
                   id: string;
                   displayName: string;
                   description?: any | undefined;
@@ -99570,124 +96720,56 @@ export type SearchQuery = {
                 };
               };
               contributionPolicy: {
-                __typename: 'CalloutContributionPolicy';
                 id: string;
                 state: SchemaTypes.CalloutState;
                 allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
               };
               contributions: Array<{
-                __typename: 'CalloutContribution';
                 id: string;
-                post?: { __typename: 'Post'; id: string } | undefined;
-                whiteboard?:
-                  | { __typename: 'Whiteboard'; id: string }
-                  | undefined;
-                link?: { __typename: 'Link'; id: string } | undefined;
+                post?: { id: string } | undefined;
+                whiteboard?: { id: string } | undefined;
+                link?: { id: string } | undefined;
               }>;
-              comments?:
-                | { __typename: 'Room'; id: string; messagesCount: number }
-                | undefined;
+              comments?: { id: string; messagesCount: number } | undefined;
             };
-            space: {
-              __typename: 'Space';
-              id: string;
-              level: SchemaTypes.SpaceLevel;
-              about: {
-                __typename: 'SpaceAbout';
-                id: string;
-                isContentPublic: boolean;
-                profile: {
-                  __typename: 'Profile';
-                  id: string;
-                  displayName: string;
-                  url: string;
-                  tagline?: string | undefined;
-                  description?: any | undefined;
-                  tagset?:
-                    | { __typename: 'Tagset'; id: string; tags: Array<string> }
-                    | undefined;
-                  avatar?:
-                    | {
-                        __typename: 'Visual';
-                        id: string;
-                        uri: string;
-                        name: string;
-                      }
-                    | undefined;
-                  cardBanner?:
-                    | {
-                        __typename: 'Visual';
-                        id: string;
-                        uri: string;
-                        name: string;
-                      }
-                    | undefined;
-                };
-                membership: {
-                  __typename: 'SpaceAboutMembership';
-                  myMembershipStatus?:
-                    | SchemaTypes.CommunityMembershipStatus
-                    | undefined;
-                  myPrivileges?:
-                    | Array<SchemaTypes.AuthorizationPrivilege>
-                    | undefined;
-                  communityID: string;
-                  roleSetID: string;
-                };
-                guidelines: { __typename: 'CommunityGuidelines'; id: string };
-              };
-            };
+            space: { id: string; level: SchemaTypes.SpaceLevel };
           }
         | {
-            __typename: 'SearchResultOrganization';
             id: string;
             type: SchemaTypes.SearchResultType;
-            score: number;
             terms: Array<string>;
           }
         | {
-            __typename: 'SearchResultPost';
             id: string;
             type: SchemaTypes.SearchResultType;
-            score: number;
             terms: Array<string>;
           }
         | {
-            __typename: 'SearchResultSpace';
             id: string;
             type: SchemaTypes.SearchResultType;
-            score: number;
             terms: Array<string>;
           }
         | {
-            __typename: 'SearchResultUser';
             id: string;
             type: SchemaTypes.SearchResultType;
-            score: number;
             terms: Array<string>;
           }
       >;
     };
     contributionResults: {
-      __typename: 'ISearchCategoryResult';
       cursor?: any | undefined;
       total: number;
       results: Array<
         | {
-            __typename: 'SearchResultCallout';
             id: string;
             type: SchemaTypes.SearchResultType;
-            score: number;
             terms: Array<string>;
             callout: {
-              __typename: 'Callout';
               id: string;
               type: SchemaTypes.CalloutType;
               framing: {
-                __typename: 'CalloutFraming';
                 id: string;
                 profile: {
-                  __typename: 'Profile';
                   id: string;
                   displayName: string;
                   description?: any | undefined;
@@ -99705,105 +96787,37 @@ export type SearchQuery = {
                 };
               };
               contributionPolicy: {
-                __typename: 'CalloutContributionPolicy';
                 id: string;
                 state: SchemaTypes.CalloutState;
                 allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
               };
               contributions: Array<{
-                __typename: 'CalloutContribution';
                 id: string;
-                post?: { __typename: 'Post'; id: string } | undefined;
-                whiteboard?:
-                  | { __typename: 'Whiteboard'; id: string }
-                  | undefined;
-                link?: { __typename: 'Link'; id: string } | undefined;
+                post?: { id: string } | undefined;
+                whiteboard?: { id: string } | undefined;
+                link?: { id: string } | undefined;
               }>;
-              comments?:
-                | { __typename: 'Room'; id: string; messagesCount: number }
-                | undefined;
+              comments?: { id: string; messagesCount: number } | undefined;
             };
-            space: {
-              __typename: 'Space';
-              id: string;
-              level: SchemaTypes.SpaceLevel;
-              about: {
-                __typename: 'SpaceAbout';
-                id: string;
-                isContentPublic: boolean;
-                profile: {
-                  __typename: 'Profile';
-                  id: string;
-                  displayName: string;
-                  url: string;
-                  tagline?: string | undefined;
-                  description?: any | undefined;
-                  tagset?:
-                    | { __typename: 'Tagset'; id: string; tags: Array<string> }
-                    | undefined;
-                  avatar?:
-                    | {
-                        __typename: 'Visual';
-                        id: string;
-                        uri: string;
-                        name: string;
-                      }
-                    | undefined;
-                  cardBanner?:
-                    | {
-                        __typename: 'Visual';
-                        id: string;
-                        uri: string;
-                        name: string;
-                      }
-                    | undefined;
-                };
-                membership: {
-                  __typename: 'SpaceAboutMembership';
-                  myMembershipStatus?:
-                    | SchemaTypes.CommunityMembershipStatus
-                    | undefined;
-                  myPrivileges?:
-                    | Array<SchemaTypes.AuthorizationPrivilege>
-                    | undefined;
-                  communityID: string;
-                  roleSetID: string;
-                };
-                guidelines: { __typename: 'CommunityGuidelines'; id: string };
-              };
-            };
+            space: { id: string; level: SchemaTypes.SpaceLevel };
           }
         | {
-            __typename: 'SearchResultOrganization';
             id: string;
             type: SchemaTypes.SearchResultType;
-            score: number;
             terms: Array<string>;
           }
         | {
-            __typename: 'SearchResultPost';
             id: string;
             type: SchemaTypes.SearchResultType;
-            score: number;
             terms: Array<string>;
             post: {
-              __typename: 'Post';
               id: string;
               createdDate: Date;
               profile: {
-                __typename: 'Profile';
                 id: string;
                 url: string;
                 displayName: string;
                 description?: any | undefined;
-                visual?:
-                  | {
-                      __typename: 'Visual';
-                      id: string;
-                      uri: string;
-                      name: string;
-                    }
-                  | undefined;
                 tagset?:
                   | {
                       __typename: 'Tagset';
@@ -99816,213 +96830,92 @@ export type SearchQuery = {
                   | undefined;
               };
               createdBy?:
-                | {
-                    __typename: 'User';
-                    id: string;
-                    profile: {
-                      __typename: 'Profile';
-                      id: string;
-                      displayName: string;
-                    };
-                  }
+                | { id: string; profile: { id: string; displayName: string } }
                 | undefined;
-              comments: {
-                __typename: 'Room';
-                id: string;
-                messagesCount: number;
-              };
+              comments: { id: string; messagesCount: number };
             };
             space: {
-              __typename: 'Space';
               id: string;
               level: SchemaTypes.SpaceLevel;
               visibility: SchemaTypes.SpaceVisibility;
-              about: {
-                __typename: 'SpaceAbout';
-                id: string;
-                isContentPublic: boolean;
-                profile: {
-                  __typename: 'Profile';
-                  id: string;
-                  displayName: string;
-                  url: string;
-                  tagline?: string | undefined;
-                  description?: any | undefined;
-                  tagset?:
-                    | { __typename: 'Tagset'; id: string; tags: Array<string> }
-                    | undefined;
-                  avatar?:
-                    | {
-                        __typename: 'Visual';
-                        id: string;
-                        uri: string;
-                        name: string;
-                      }
-                    | undefined;
-                  cardBanner?:
-                    | {
-                        __typename: 'Visual';
-                        id: string;
-                        uri: string;
-                        name: string;
-                      }
-                    | undefined;
-                };
-                membership: {
-                  __typename: 'SpaceAboutMembership';
-                  myMembershipStatus?:
-                    | SchemaTypes.CommunityMembershipStatus
-                    | undefined;
-                  myPrivileges?:
-                    | Array<SchemaTypes.AuthorizationPrivilege>
-                    | undefined;
-                  communityID: string;
-                  roleSetID: string;
-                };
-                guidelines: { __typename: 'CommunityGuidelines'; id: string };
-              };
             };
             callout: {
-              __typename: 'Callout';
               id: string;
               framing: {
-                __typename: 'CalloutFraming';
                 id: string;
-                profile: {
-                  __typename: 'Profile';
-                  id: string;
-                  url: string;
-                  displayName: string;
-                };
+                profile: { id: string; url: string; displayName: string };
               };
             };
           }
         | {
-            __typename: 'SearchResultSpace';
             id: string;
             type: SchemaTypes.SearchResultType;
-            score: number;
             terms: Array<string>;
           }
         | {
-            __typename: 'SearchResultUser';
             id: string;
             type: SchemaTypes.SearchResultType;
-            score: number;
             terms: Array<string>;
           }
       >;
     };
     contributorResults: {
-      __typename: 'ISearchCategoryResult';
       cursor?: any | undefined;
       total: number;
       results: Array<
         | {
-            __typename: 'SearchResultCallout';
             id: string;
             type: SchemaTypes.SearchResultType;
-            score: number;
             terms: Array<string>;
           }
         | {
-            __typename: 'SearchResultOrganization';
             id: string;
             type: SchemaTypes.SearchResultType;
-            score: number;
             terms: Array<string>;
             organization: {
-              __typename: 'Organization';
               id: string;
               profile: {
-                __typename: 'Profile';
                 displayName: string;
                 id: string;
                 description?: any | undefined;
                 url: string;
                 location?:
                   | {
-                      __typename: 'Location';
                       id: string;
                       country?: string | undefined;
                       city?: string | undefined;
-                    }
-                  | undefined;
-                tagsets?:
-                  | Array<{
-                      __typename: 'Tagset';
-                      id: string;
-                      name: string;
-                      tags: Array<string>;
-                      allowedValues: Array<string>;
-                      type: SchemaTypes.TagsetType;
-                    }>
-                  | undefined;
-                visual?:
-                  | {
-                      __typename: 'Visual';
-                      id: string;
-                      uri: string;
-                      name: string;
                     }
                   | undefined;
               };
             };
           }
         | {
-            __typename: 'SearchResultPost';
             id: string;
             type: SchemaTypes.SearchResultType;
-            score: number;
             terms: Array<string>;
           }
         | {
-            __typename: 'SearchResultSpace';
             id: string;
             type: SchemaTypes.SearchResultType;
-            score: number;
             terms: Array<string>;
           }
         | {
-            __typename: 'SearchResultUser';
             id: string;
             type: SchemaTypes.SearchResultType;
-            score: number;
             terms: Array<string>;
             user: {
-              __typename: 'User';
               id: string;
               isContactable: boolean;
               profile: {
-                __typename: 'Profile';
                 displayName: string;
                 id: string;
                 description?: any | undefined;
                 url: string;
                 location?:
                   | {
-                      __typename: 'Location';
                       id: string;
                       country?: string | undefined;
                       city?: string | undefined;
-                    }
-                  | undefined;
-                tagsets?:
-                  | Array<{
-                      __typename: 'Tagset';
-                      id: string;
-                      name: string;
-                      tags: Array<string>;
-                      allowedValues: Array<string>;
-                      type: SchemaTypes.TagsetType;
-                    }>
-                  | undefined;
-                visual?:
-                  | {
-                      __typename: 'Visual';
-                      id: string;
-                      uri: string;
-                      name: string;
                     }
                   | undefined;
               };
@@ -100034,139 +96927,28 @@ export type SearchQuery = {
 };
 
 export type SearchResultSpaceFragment = {
-  __typename: 'SearchResultSpace';
   parentSpace?:
     | {
-        __typename: 'Space';
         id: string;
         level: SchemaTypes.SpaceLevel;
-        about: {
-          __typename: 'SpaceAbout';
-          id: string;
-          isContentPublic: boolean;
-          profile: {
-            __typename: 'Profile';
-            id: string;
-            displayName: string;
-            url: string;
-            tagline?: string | undefined;
-            description?: any | undefined;
-            tagset?:
-              | { __typename: 'Tagset'; id: string; tags: Array<string> }
-              | undefined;
-            avatar?:
-              | { __typename: 'Visual'; id: string; uri: string; name: string }
-              | undefined;
-            cardBanner?:
-              | { __typename: 'Visual'; id: string; uri: string; name: string }
-              | undefined;
-          };
-          membership: {
-            __typename: 'SpaceAboutMembership';
-            myMembershipStatus?:
-              | SchemaTypes.CommunityMembershipStatus
-              | undefined;
-            myPrivileges?:
-              | Array<SchemaTypes.AuthorizationPrivilege>
-              | undefined;
-            communityID: string;
-            roleSetID: string;
-          };
-          guidelines: { __typename: 'CommunityGuidelines'; id: string };
-        };
+        visibility: SchemaTypes.SpaceVisibility;
       }
     | undefined;
   space: {
-    __typename: 'Space';
     id: string;
     level: SchemaTypes.SpaceLevel;
     visibility: SchemaTypes.SpaceVisibility;
-    about: {
-      __typename: 'SpaceAbout';
-      id: string;
-      why?: any | undefined;
-      isContentPublic: boolean;
-      profile: {
-        __typename: 'Profile';
-        id: string;
-        url: string;
-        displayName: string;
-        tagline?: string | undefined;
-        tagset?:
-          | {
-              __typename: 'Tagset';
-              id: string;
-              name: string;
-              tags: Array<string>;
-              allowedValues: Array<string>;
-              type: SchemaTypes.TagsetType;
-            }
-          | undefined;
-        visuals: Array<{
-          __typename: 'Visual';
-          id: string;
-          uri: string;
-          name: string;
-        }>;
-      };
-      membership: {
-        __typename: 'SpaceAboutMembership';
-        myMembershipStatus?: SchemaTypes.CommunityMembershipStatus | undefined;
-      };
-    };
   };
-};
-
-export type SpaceAboutLightFragment = {
-  __typename: 'SpaceAbout';
-  id: string;
-  isContentPublic: boolean;
-  profile: {
-    __typename: 'Profile';
-    id: string;
-    displayName: string;
-    url: string;
-    tagline?: string | undefined;
-    description?: any | undefined;
-    tagset?:
-      | { __typename: 'Tagset'; id: string; tags: Array<string> }
-      | undefined;
-    avatar?:
-      | { __typename: 'Visual'; id: string; uri: string; name: string }
-      | undefined;
-    cardBanner?:
-      | { __typename: 'Visual'; id: string; uri: string; name: string }
-      | undefined;
-  };
-  membership: {
-    __typename: 'SpaceAboutMembership';
-    myMembershipStatus?: SchemaTypes.CommunityMembershipStatus | undefined;
-    myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined;
-    communityID: string;
-    roleSetID: string;
-  };
-  guidelines: { __typename: 'CommunityGuidelines'; id: string };
-};
-
-export type VisualUriFragment = {
-  __typename: 'Visual';
-  id: string;
-  uri: string;
-  name: string;
 };
 
 export type SearchResultCalloutFragment = {
-  __typename: 'SearchResultCallout';
   id: string;
   callout: {
-    __typename: 'Callout';
     id: string;
     type: SchemaTypes.CalloutType;
     framing: {
-      __typename: 'CalloutFraming';
       id: string;
       profile: {
-        __typename: 'Profile';
         id: string;
         displayName: string;
         description?: any | undefined;
@@ -100184,113 +96966,34 @@ export type SearchResultCalloutFragment = {
       };
     };
     contributionPolicy: {
-      __typename: 'CalloutContributionPolicy';
       id: string;
       state: SchemaTypes.CalloutState;
       allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
     };
     contributions: Array<{
-      __typename: 'CalloutContribution';
       id: string;
-      post?: { __typename: 'Post'; id: string } | undefined;
-      whiteboard?: { __typename: 'Whiteboard'; id: string } | undefined;
-      link?: { __typename: 'Link'; id: string } | undefined;
+      post?: { id: string } | undefined;
+      whiteboard?: { id: string } | undefined;
+      link?: { id: string } | undefined;
     }>;
-    comments?:
-      | { __typename: 'Room'; id: string; messagesCount: number }
-      | undefined;
+    comments?: { id: string; messagesCount: number } | undefined;
   };
-  space: {
-    __typename: 'Space';
-    id: string;
-    level: SchemaTypes.SpaceLevel;
-    about: {
-      __typename: 'SpaceAbout';
-      id: string;
-      isContentPublic: boolean;
-      profile: {
-        __typename: 'Profile';
-        id: string;
-        displayName: string;
-        url: string;
-        tagline?: string | undefined;
-        description?: any | undefined;
-        tagset?:
-          | { __typename: 'Tagset'; id: string; tags: Array<string> }
-          | undefined;
-        avatar?:
-          | { __typename: 'Visual'; id: string; uri: string; name: string }
-          | undefined;
-        cardBanner?:
-          | { __typename: 'Visual'; id: string; uri: string; name: string }
-          | undefined;
-      };
-      membership: {
-        __typename: 'SpaceAboutMembership';
-        myMembershipStatus?: SchemaTypes.CommunityMembershipStatus | undefined;
-        myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined;
-        communityID: string;
-        roleSetID: string;
-      };
-      guidelines: { __typename: 'CommunityGuidelines'; id: string };
-    };
-  };
+  space: { id: string; level: SchemaTypes.SpaceLevel };
 };
 
 export type CalloutParentFragment = {
-  __typename: 'SearchResultCallout';
-  space: {
-    __typename: 'Space';
-    id: string;
-    level: SchemaTypes.SpaceLevel;
-    about: {
-      __typename: 'SpaceAbout';
-      id: string;
-      isContentPublic: boolean;
-      profile: {
-        __typename: 'Profile';
-        id: string;
-        displayName: string;
-        url: string;
-        tagline?: string | undefined;
-        description?: any | undefined;
-        tagset?:
-          | { __typename: 'Tagset'; id: string; tags: Array<string> }
-          | undefined;
-        avatar?:
-          | { __typename: 'Visual'; id: string; uri: string; name: string }
-          | undefined;
-        cardBanner?:
-          | { __typename: 'Visual'; id: string; uri: string; name: string }
-          | undefined;
-      };
-      membership: {
-        __typename: 'SpaceAboutMembership';
-        myMembershipStatus?: SchemaTypes.CommunityMembershipStatus | undefined;
-        myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined;
-        communityID: string;
-        roleSetID: string;
-      };
-      guidelines: { __typename: 'CommunityGuidelines'; id: string };
-    };
-  };
+  space: { id: string; level: SchemaTypes.SpaceLevel };
 };
 
 export type SearchResultPostFragment = {
-  __typename: 'SearchResultPost';
   post: {
-    __typename: 'Post';
     id: string;
     createdDate: Date;
     profile: {
-      __typename: 'Profile';
       id: string;
       url: string;
       displayName: string;
       description?: any | undefined;
-      visual?:
-        | { __typename: 'Visual'; id: string; uri: string; name: string }
-        | undefined;
       tagset?:
         | {
             __typename: 'Tagset';
@@ -100303,68 +97006,25 @@ export type SearchResultPostFragment = {
         | undefined;
     };
     createdBy?:
-      | {
-          __typename: 'User';
-          id: string;
-          profile: { __typename: 'Profile'; id: string; displayName: string };
-        }
+      | { id: string; profile: { id: string; displayName: string } }
       | undefined;
-    comments: { __typename: 'Room'; id: string; messagesCount: number };
+    comments: { id: string; messagesCount: number };
   };
   space: {
-    __typename: 'Space';
     id: string;
     level: SchemaTypes.SpaceLevel;
     visibility: SchemaTypes.SpaceVisibility;
-    about: {
-      __typename: 'SpaceAbout';
-      id: string;
-      isContentPublic: boolean;
-      profile: {
-        __typename: 'Profile';
-        id: string;
-        displayName: string;
-        url: string;
-        tagline?: string | undefined;
-        description?: any | undefined;
-        tagset?:
-          | { __typename: 'Tagset'; id: string; tags: Array<string> }
-          | undefined;
-        avatar?:
-          | { __typename: 'Visual'; id: string; uri: string; name: string }
-          | undefined;
-        cardBanner?:
-          | { __typename: 'Visual'; id: string; uri: string; name: string }
-          | undefined;
-      };
-      membership: {
-        __typename: 'SpaceAboutMembership';
-        myMembershipStatus?: SchemaTypes.CommunityMembershipStatus | undefined;
-        myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined;
-        communityID: string;
-        roleSetID: string;
-      };
-      guidelines: { __typename: 'CommunityGuidelines'; id: string };
-    };
   };
   callout: {
-    __typename: 'Callout';
     id: string;
     framing: {
-      __typename: 'CalloutFraming';
       id: string;
-      profile: {
-        __typename: 'Profile';
-        id: string;
-        url: string;
-        displayName: string;
-      };
+      profile: { id: string; url: string; displayName: string };
     };
   };
 };
 
 export type SearchResultPostProfileFragment = {
-  __typename: 'Profile';
   id: string;
   description?: any | undefined;
   tagset?:
@@ -100380,155 +97040,63 @@ export type SearchResultPostProfileFragment = {
 };
 
 export type PostParentFragment = {
-  __typename: 'SearchResultPost';
   space: {
-    __typename: 'Space';
     id: string;
     level: SchemaTypes.SpaceLevel;
     visibility: SchemaTypes.SpaceVisibility;
-    about: {
-      __typename: 'SpaceAbout';
-      id: string;
-      isContentPublic: boolean;
-      profile: {
-        __typename: 'Profile';
-        id: string;
-        displayName: string;
-        url: string;
-        tagline?: string | undefined;
-        description?: any | undefined;
-        tagset?:
-          | { __typename: 'Tagset'; id: string; tags: Array<string> }
-          | undefined;
-        avatar?:
-          | { __typename: 'Visual'; id: string; uri: string; name: string }
-          | undefined;
-        cardBanner?:
-          | { __typename: 'Visual'; id: string; uri: string; name: string }
-          | undefined;
-      };
-      membership: {
-        __typename: 'SpaceAboutMembership';
-        myMembershipStatus?: SchemaTypes.CommunityMembershipStatus | undefined;
-        myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined;
-        communityID: string;
-        roleSetID: string;
-      };
-      guidelines: { __typename: 'CommunityGuidelines'; id: string };
-    };
   };
   callout: {
-    __typename: 'Callout';
     id: string;
     framing: {
-      __typename: 'CalloutFraming';
       id: string;
-      profile: {
-        __typename: 'Profile';
-        id: string;
-        url: string;
-        displayName: string;
-      };
+      profile: { id: string; url: string; displayName: string };
     };
   };
 };
 
 export type SearchResultUserFragment = {
-  __typename: 'SearchResultUser';
   user: {
-    __typename: 'User';
     id: string;
     isContactable: boolean;
     profile: {
-      __typename: 'Profile';
       displayName: string;
       id: string;
       description?: any | undefined;
       url: string;
       location?:
         | {
-            __typename: 'Location';
             id: string;
             country?: string | undefined;
             city?: string | undefined;
           }
-        | undefined;
-      tagsets?:
-        | Array<{
-            __typename: 'Tagset';
-            id: string;
-            name: string;
-            tags: Array<string>;
-            allowedValues: Array<string>;
-            type: SchemaTypes.TagsetType;
-          }>
-        | undefined;
-      visual?:
-        | { __typename: 'Visual'; id: string; uri: string; name: string }
         | undefined;
     };
   };
 };
 
 export type SearchResultProfileFragment = {
-  __typename: 'Profile';
   id: string;
   description?: any | undefined;
   url: string;
   location?:
-    | {
-        __typename: 'Location';
-        id: string;
-        country?: string | undefined;
-        city?: string | undefined;
-      }
-    | undefined;
-  tagsets?:
-    | Array<{
-        __typename: 'Tagset';
-        id: string;
-        name: string;
-        tags: Array<string>;
-        allowedValues: Array<string>;
-        type: SchemaTypes.TagsetType;
-      }>
-    | undefined;
-  visual?:
-    | { __typename: 'Visual'; id: string; uri: string; name: string }
+    | { id: string; country?: string | undefined; city?: string | undefined }
     | undefined;
 };
 
 export type SearchResultOrganizationFragment = {
-  __typename: 'SearchResultOrganization';
   organization: {
-    __typename: 'Organization';
     id: string;
     profile: {
-      __typename: 'Profile';
       displayName: string;
       id: string;
       description?: any | undefined;
       url: string;
       location?:
         | {
-            __typename: 'Location';
             id: string;
             country?: string | undefined;
             city?: string | undefined;
           }
-        | undefined;
-      tagsets?:
-        | Array<{
-            __typename: 'Tagset';
-            id: string;
-            name: string;
-            tags: Array<string>;
-            allowedValues: Array<string>;
-            type: SchemaTypes.TagsetType;
-          }>
-        | undefined;
-      visual?:
-        | { __typename: 'Visual'; id: string; uri: string; name: string }
         | undefined;
     };
   };
@@ -103163,12 +99731,31 @@ export type GetSpaceDataQuery = {
                                   | undefined;
                               }>
                             | undefined;
-                          visual?:
-                            | {
-                                __typename: 'Visual';
+                          tagsets?:
+                            | Array<{
                                 id: string;
-                                uri: string;
                                 name: string;
+                                tags: Array<string>;
+                                authorization?:
+                                  | {
+                                      myPrivileges?:
+                                        | Array<SchemaTypes.AuthorizationPrivilege>
+                                        | undefined;
+                                    }
+                                  | undefined;
+                              }>
+                            | undefined;
+                          location?:
+                            | {
+                                country?: string | undefined;
+                                city?: string | undefined;
+                              }
+                            | undefined;
+                          authorization?:
+                            | {
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
                               }
                             | undefined;
                           storageBucket: {
@@ -103197,44 +99784,7 @@ export type GetSpaceDataQuery = {
                                 | undefined;
                             }>;
                           };
-                          tagsets?:
-                            | Array<{
-                                id: string;
-                                name: string;
-                                tags: Array<string>;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<SchemaTypes.AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>
-                            | undefined;
-                          location?:
-                            | {
-                                country?: string | undefined;
-                                city?: string | undefined;
-                              }
-                            | undefined;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
                         };
-                        comments: {
-                          id: string;
-                          messagesCount: number;
-                          messages: Array<{
-                            id: any;
-                            message: any;
-                            sender?: { id: string } | {} | undefined;
-                          }>;
-                        };
-                        createdBy?: { email: string } | undefined;
                       }
                     | undefined;
                   whiteboard?:
@@ -103249,87 +99799,6 @@ export type GetSpaceDataQuery = {
                                 | undefined;
                             }
                           | undefined;
-                        profile: {
-                          id: string;
-                          displayName: string;
-                          description?: any | undefined;
-                          tagline?: string | undefined;
-                          visual?:
-                            | {
-                                __typename: 'Visual';
-                                id: string;
-                                uri: string;
-                                name: string;
-                              }
-                            | undefined;
-                          storageBucket: {
-                            id: string;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                            parentEntity?:
-                              | {
-                                  displayName: string;
-                                  type: SchemaTypes.ProfileType;
-                                }
-                              | undefined;
-                            documents: Array<{
-                              id: string;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<SchemaTypes.AuthorizationPrivilege>
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>;
-                          };
-                          references?:
-                            | Array<{
-                                id: string;
-                                name: string;
-                                uri: string;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<SchemaTypes.AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>
-                            | undefined;
-                          tagsets?:
-                            | Array<{
-                                id: string;
-                                name: string;
-                                tags: Array<string>;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<SchemaTypes.AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>
-                            | undefined;
-                          location?:
-                            | {
-                                country?: string | undefined;
-                                city?: string | undefined;
-                              }
-                            | undefined;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        };
                       }
                     | undefined;
                 }>;
@@ -103414,14 +99883,6 @@ export type GetSpaceDataQuery = {
                           displayName: string;
                           description?: any | undefined;
                           tagline?: string | undefined;
-                          visual?:
-                            | {
-                                __typename: 'Visual';
-                                id: string;
-                                uri: string;
-                                name: string;
-                              }
-                            | undefined;
                           storageBucket: {
                             id: string;
                             authorization?:
@@ -103829,12 +100290,31 @@ export type GetSpaceDataQuery = {
                                     | undefined;
                                 }>
                               | undefined;
-                            visual?:
-                              | {
-                                  __typename: 'Visual';
+                            tagsets?:
+                              | Array<{
                                   id: string;
-                                  uri: string;
                                   name: string;
+                                  tags: Array<string>;
+                                  authorization?:
+                                    | {
+                                        myPrivileges?:
+                                          | Array<SchemaTypes.AuthorizationPrivilege>
+                                          | undefined;
+                                      }
+                                    | undefined;
+                                }>
+                              | undefined;
+                            location?:
+                              | {
+                                  country?: string | undefined;
+                                  city?: string | undefined;
+                                }
+                              | undefined;
+                            authorization?:
+                              | {
+                                  myPrivileges?:
+                                    | Array<SchemaTypes.AuthorizationPrivilege>
+                                    | undefined;
                                 }
                               | undefined;
                             storageBucket: {
@@ -103863,44 +100343,7 @@ export type GetSpaceDataQuery = {
                                   | undefined;
                               }>;
                             };
-                            tagsets?:
-                              | Array<{
-                                  id: string;
-                                  name: string;
-                                  tags: Array<string>;
-                                  authorization?:
-                                    | {
-                                        myPrivileges?:
-                                          | Array<SchemaTypes.AuthorizationPrivilege>
-                                          | undefined;
-                                      }
-                                    | undefined;
-                                }>
-                              | undefined;
-                            location?:
-                              | {
-                                  country?: string | undefined;
-                                  city?: string | undefined;
-                                }
-                              | undefined;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
                           };
-                          comments: {
-                            id: string;
-                            messagesCount: number;
-                            messages: Array<{
-                              id: any;
-                              message: any;
-                              sender?: { id: string } | {} | undefined;
-                            }>;
-                          };
-                          createdBy?: { email: string } | undefined;
                         }
                       | undefined;
                     whiteboard?:
@@ -103915,87 +100358,6 @@ export type GetSpaceDataQuery = {
                                   | undefined;
                               }
                             | undefined;
-                          profile: {
-                            id: string;
-                            displayName: string;
-                            description?: any | undefined;
-                            tagline?: string | undefined;
-                            visual?:
-                              | {
-                                  __typename: 'Visual';
-                                  id: string;
-                                  uri: string;
-                                  name: string;
-                                }
-                              | undefined;
-                            storageBucket: {
-                              id: string;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<SchemaTypes.AuthorizationPrivilege>
-                                      | undefined;
-                                  }
-                                | undefined;
-                              parentEntity?:
-                                | {
-                                    displayName: string;
-                                    type: SchemaTypes.ProfileType;
-                                  }
-                                | undefined;
-                              documents: Array<{
-                                id: string;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<SchemaTypes.AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>;
-                            };
-                            references?:
-                              | Array<{
-                                  id: string;
-                                  name: string;
-                                  uri: string;
-                                  authorization?:
-                                    | {
-                                        myPrivileges?:
-                                          | Array<SchemaTypes.AuthorizationPrivilege>
-                                          | undefined;
-                                      }
-                                    | undefined;
-                                }>
-                              | undefined;
-                            tagsets?:
-                              | Array<{
-                                  id: string;
-                                  name: string;
-                                  tags: Array<string>;
-                                  authorization?:
-                                    | {
-                                        myPrivileges?:
-                                          | Array<SchemaTypes.AuthorizationPrivilege>
-                                          | undefined;
-                                      }
-                                    | undefined;
-                                }>
-                              | undefined;
-                            location?:
-                              | {
-                                  country?: string | undefined;
-                                  city?: string | undefined;
-                                }
-                              | undefined;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          };
                         }
                       | undefined;
                   }>;
@@ -104083,14 +100445,6 @@ export type GetSpaceDataQuery = {
                             displayName: string;
                             description?: any | undefined;
                             tagline?: string | undefined;
-                            visual?:
-                              | {
-                                  __typename: 'Visual';
-                                  id: string;
-                                  uri: string;
-                                  name: string;
-                                }
-                              | undefined;
                             storageBucket: {
                               id: string;
                               authorization?:
@@ -107282,12 +103636,31 @@ export type GetSubspacePageQuery = {
                                     | undefined;
                                 }>
                               | undefined;
-                            visual?:
-                              | {
-                                  __typename: 'Visual';
+                            tagsets?:
+                              | Array<{
                                   id: string;
-                                  uri: string;
                                   name: string;
+                                  tags: Array<string>;
+                                  authorization?:
+                                    | {
+                                        myPrivileges?:
+                                          | Array<SchemaTypes.AuthorizationPrivilege>
+                                          | undefined;
+                                      }
+                                    | undefined;
+                                }>
+                              | undefined;
+                            location?:
+                              | {
+                                  country?: string | undefined;
+                                  city?: string | undefined;
+                                }
+                              | undefined;
+                            authorization?:
+                              | {
+                                  myPrivileges?:
+                                    | Array<SchemaTypes.AuthorizationPrivilege>
+                                    | undefined;
                                 }
                               | undefined;
                             storageBucket: {
@@ -107316,44 +103689,7 @@ export type GetSubspacePageQuery = {
                                   | undefined;
                               }>;
                             };
-                            tagsets?:
-                              | Array<{
-                                  id: string;
-                                  name: string;
-                                  tags: Array<string>;
-                                  authorization?:
-                                    | {
-                                        myPrivileges?:
-                                          | Array<SchemaTypes.AuthorizationPrivilege>
-                                          | undefined;
-                                      }
-                                    | undefined;
-                                }>
-                              | undefined;
-                            location?:
-                              | {
-                                  country?: string | undefined;
-                                  city?: string | undefined;
-                                }
-                              | undefined;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
                           };
-                          comments: {
-                            id: string;
-                            messagesCount: number;
-                            messages: Array<{
-                              id: any;
-                              message: any;
-                              sender?: { id: string } | {} | undefined;
-                            }>;
-                          };
-                          createdBy?: { email: string } | undefined;
                         }
                       | undefined;
                     whiteboard?:
@@ -107368,87 +103704,6 @@ export type GetSubspacePageQuery = {
                                   | undefined;
                               }
                             | undefined;
-                          profile: {
-                            id: string;
-                            displayName: string;
-                            description?: any | undefined;
-                            tagline?: string | undefined;
-                            visual?:
-                              | {
-                                  __typename: 'Visual';
-                                  id: string;
-                                  uri: string;
-                                  name: string;
-                                }
-                              | undefined;
-                            storageBucket: {
-                              id: string;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<SchemaTypes.AuthorizationPrivilege>
-                                      | undefined;
-                                  }
-                                | undefined;
-                              parentEntity?:
-                                | {
-                                    displayName: string;
-                                    type: SchemaTypes.ProfileType;
-                                  }
-                                | undefined;
-                              documents: Array<{
-                                id: string;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<SchemaTypes.AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>;
-                            };
-                            references?:
-                              | Array<{
-                                  id: string;
-                                  name: string;
-                                  uri: string;
-                                  authorization?:
-                                    | {
-                                        myPrivileges?:
-                                          | Array<SchemaTypes.AuthorizationPrivilege>
-                                          | undefined;
-                                      }
-                                    | undefined;
-                                }>
-                              | undefined;
-                            tagsets?:
-                              | Array<{
-                                  id: string;
-                                  name: string;
-                                  tags: Array<string>;
-                                  authorization?:
-                                    | {
-                                        myPrivileges?:
-                                          | Array<SchemaTypes.AuthorizationPrivilege>
-                                          | undefined;
-                                      }
-                                    | undefined;
-                                }>
-                              | undefined;
-                            location?:
-                              | {
-                                  country?: string | undefined;
-                                  city?: string | undefined;
-                                }
-                              | undefined;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          };
                         }
                       | undefined;
                   }>;
@@ -107536,14 +103791,6 @@ export type GetSubspacePageQuery = {
                             displayName: string;
                             description?: any | undefined;
                             tagline?: string | undefined;
-                            visual?:
-                              | {
-                                  __typename: 'Visual';
-                                  id: string;
-                                  uri: string;
-                                  name: string;
-                                }
-                              | undefined;
                             storageBucket: {
                               id: string;
                               authorization?:
@@ -110068,12 +106315,31 @@ export type GetSubspacePageQuery = {
                                   | undefined;
                               }>
                             | undefined;
-                          visual?:
-                            | {
-                                __typename: 'Visual';
+                          tagsets?:
+                            | Array<{
                                 id: string;
-                                uri: string;
                                 name: string;
+                                tags: Array<string>;
+                                authorization?:
+                                  | {
+                                      myPrivileges?:
+                                        | Array<SchemaTypes.AuthorizationPrivilege>
+                                        | undefined;
+                                    }
+                                  | undefined;
+                              }>
+                            | undefined;
+                          location?:
+                            | {
+                                country?: string | undefined;
+                                city?: string | undefined;
+                              }
+                            | undefined;
+                          authorization?:
+                            | {
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
                               }
                             | undefined;
                           storageBucket: {
@@ -110102,44 +106368,7 @@ export type GetSubspacePageQuery = {
                                 | undefined;
                             }>;
                           };
-                          tagsets?:
-                            | Array<{
-                                id: string;
-                                name: string;
-                                tags: Array<string>;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<SchemaTypes.AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>
-                            | undefined;
-                          location?:
-                            | {
-                                country?: string | undefined;
-                                city?: string | undefined;
-                              }
-                            | undefined;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
                         };
-                        comments: {
-                          id: string;
-                          messagesCount: number;
-                          messages: Array<{
-                            id: any;
-                            message: any;
-                            sender?: { id: string } | {} | undefined;
-                          }>;
-                        };
-                        createdBy?: { email: string } | undefined;
                       }
                     | undefined;
                   whiteboard?:
@@ -110154,87 +106383,6 @@ export type GetSubspacePageQuery = {
                                 | undefined;
                             }
                           | undefined;
-                        profile: {
-                          id: string;
-                          displayName: string;
-                          description?: any | undefined;
-                          tagline?: string | undefined;
-                          visual?:
-                            | {
-                                __typename: 'Visual';
-                                id: string;
-                                uri: string;
-                                name: string;
-                              }
-                            | undefined;
-                          storageBucket: {
-                            id: string;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                            parentEntity?:
-                              | {
-                                  displayName: string;
-                                  type: SchemaTypes.ProfileType;
-                                }
-                              | undefined;
-                            documents: Array<{
-                              id: string;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<SchemaTypes.AuthorizationPrivilege>
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>;
-                          };
-                          references?:
-                            | Array<{
-                                id: string;
-                                name: string;
-                                uri: string;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<SchemaTypes.AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>
-                            | undefined;
-                          tagsets?:
-                            | Array<{
-                                id: string;
-                                name: string;
-                                tags: Array<string>;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<SchemaTypes.AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>
-                            | undefined;
-                          location?:
-                            | {
-                                country?: string | undefined;
-                                city?: string | undefined;
-                              }
-                            | undefined;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        };
                       }
                     | undefined;
                 }>;
@@ -110319,14 +106467,6 @@ export type GetSubspacePageQuery = {
                           displayName: string;
                           description?: any | undefined;
                           tagline?: string | undefined;
-                          visual?:
-                            | {
-                                __typename: 'Visual';
-                                id: string;
-                                uri: string;
-                                name: string;
-                              }
-                            | undefined;
                           storageBucket: {
                             id: string;
                             authorization?:
@@ -112843,12 +108983,31 @@ export type GetSpaceAboutDetailsQuery = {
                                   | undefined;
                               }>
                             | undefined;
-                          visual?:
-                            | {
-                                __typename: 'Visual';
+                          tagsets?:
+                            | Array<{
                                 id: string;
-                                uri: string;
                                 name: string;
+                                tags: Array<string>;
+                                authorization?:
+                                  | {
+                                      myPrivileges?:
+                                        | Array<SchemaTypes.AuthorizationPrivilege>
+                                        | undefined;
+                                    }
+                                  | undefined;
+                              }>
+                            | undefined;
+                          location?:
+                            | {
+                                country?: string | undefined;
+                                city?: string | undefined;
+                              }
+                            | undefined;
+                          authorization?:
+                            | {
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
                               }
                             | undefined;
                           storageBucket: {
@@ -112877,44 +109036,7 @@ export type GetSpaceAboutDetailsQuery = {
                                 | undefined;
                             }>;
                           };
-                          tagsets?:
-                            | Array<{
-                                id: string;
-                                name: string;
-                                tags: Array<string>;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<SchemaTypes.AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>
-                            | undefined;
-                          location?:
-                            | {
-                                country?: string | undefined;
-                                city?: string | undefined;
-                              }
-                            | undefined;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
                         };
-                        comments: {
-                          id: string;
-                          messagesCount: number;
-                          messages: Array<{
-                            id: any;
-                            message: any;
-                            sender?: { id: string } | {} | undefined;
-                          }>;
-                        };
-                        createdBy?: { email: string } | undefined;
                       }
                     | undefined;
                   whiteboard?:
@@ -112929,87 +109051,6 @@ export type GetSpaceAboutDetailsQuery = {
                                 | undefined;
                             }
                           | undefined;
-                        profile: {
-                          id: string;
-                          displayName: string;
-                          description?: any | undefined;
-                          tagline?: string | undefined;
-                          visual?:
-                            | {
-                                __typename: 'Visual';
-                                id: string;
-                                uri: string;
-                                name: string;
-                              }
-                            | undefined;
-                          storageBucket: {
-                            id: string;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                            parentEntity?:
-                              | {
-                                  displayName: string;
-                                  type: SchemaTypes.ProfileType;
-                                }
-                              | undefined;
-                            documents: Array<{
-                              id: string;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<SchemaTypes.AuthorizationPrivilege>
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>;
-                          };
-                          references?:
-                            | Array<{
-                                id: string;
-                                name: string;
-                                uri: string;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<SchemaTypes.AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>
-                            | undefined;
-                          tagsets?:
-                            | Array<{
-                                id: string;
-                                name: string;
-                                tags: Array<string>;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<SchemaTypes.AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>
-                            | undefined;
-                          location?:
-                            | {
-                                country?: string | undefined;
-                                city?: string | undefined;
-                              }
-                            | undefined;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        };
                       }
                     | undefined;
                 }>;
@@ -113094,14 +109135,6 @@ export type GetSpaceAboutDetailsQuery = {
                           displayName: string;
                           description?: any | undefined;
                           tagline?: string | undefined;
-                          visual?:
-                            | {
-                                __typename: 'Visual';
-                                id: string;
-                                uri: string;
-                                name: string;
-                              }
-                            | undefined;
                           storageBucket: {
                             id: string;
                             authorization?:
@@ -115626,12 +111659,31 @@ export type GetSubspacesDataQuery = {
                                       | undefined;
                                   }>
                                 | undefined;
-                              visual?:
-                                | {
-                                    __typename: 'Visual';
+                              tagsets?:
+                                | Array<{
                                     id: string;
-                                    uri: string;
                                     name: string;
+                                    tags: Array<string>;
+                                    authorization?:
+                                      | {
+                                          myPrivileges?:
+                                            | Array<SchemaTypes.AuthorizationPrivilege>
+                                            | undefined;
+                                        }
+                                      | undefined;
+                                  }>
+                                | undefined;
+                              location?:
+                                | {
+                                    country?: string | undefined;
+                                    city?: string | undefined;
+                                  }
+                                | undefined;
+                              authorization?:
+                                | {
+                                    myPrivileges?:
+                                      | Array<SchemaTypes.AuthorizationPrivilege>
+                                      | undefined;
                                   }
                                 | undefined;
                               storageBucket: {
@@ -115660,44 +111712,7 @@ export type GetSubspacesDataQuery = {
                                     | undefined;
                                 }>;
                               };
-                              tagsets?:
-                                | Array<{
-                                    id: string;
-                                    name: string;
-                                    tags: Array<string>;
-                                    authorization?:
-                                      | {
-                                          myPrivileges?:
-                                            | Array<SchemaTypes.AuthorizationPrivilege>
-                                            | undefined;
-                                        }
-                                      | undefined;
-                                  }>
-                                | undefined;
-                              location?:
-                                | {
-                                    country?: string | undefined;
-                                    city?: string | undefined;
-                                  }
-                                | undefined;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<SchemaTypes.AuthorizationPrivilege>
-                                      | undefined;
-                                  }
-                                | undefined;
                             };
-                            comments: {
-                              id: string;
-                              messagesCount: number;
-                              messages: Array<{
-                                id: any;
-                                message: any;
-                                sender?: { id: string } | {} | undefined;
-                              }>;
-                            };
-                            createdBy?: { email: string } | undefined;
                           }
                         | undefined;
                       whiteboard?:
@@ -115712,87 +111727,6 @@ export type GetSubspacesDataQuery = {
                                     | undefined;
                                 }
                               | undefined;
-                            profile: {
-                              id: string;
-                              displayName: string;
-                              description?: any | undefined;
-                              tagline?: string | undefined;
-                              visual?:
-                                | {
-                                    __typename: 'Visual';
-                                    id: string;
-                                    uri: string;
-                                    name: string;
-                                  }
-                                | undefined;
-                              storageBucket: {
-                                id: string;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<SchemaTypes.AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                                parentEntity?:
-                                  | {
-                                      displayName: string;
-                                      type: SchemaTypes.ProfileType;
-                                    }
-                                  | undefined;
-                                documents: Array<{
-                                  id: string;
-                                  authorization?:
-                                    | {
-                                        myPrivileges?:
-                                          | Array<SchemaTypes.AuthorizationPrivilege>
-                                          | undefined;
-                                      }
-                                    | undefined;
-                                }>;
-                              };
-                              references?:
-                                | Array<{
-                                    id: string;
-                                    name: string;
-                                    uri: string;
-                                    authorization?:
-                                      | {
-                                          myPrivileges?:
-                                            | Array<SchemaTypes.AuthorizationPrivilege>
-                                            | undefined;
-                                        }
-                                      | undefined;
-                                  }>
-                                | undefined;
-                              tagsets?:
-                                | Array<{
-                                    id: string;
-                                    name: string;
-                                    tags: Array<string>;
-                                    authorization?:
-                                      | {
-                                          myPrivileges?:
-                                            | Array<SchemaTypes.AuthorizationPrivilege>
-                                            | undefined;
-                                        }
-                                      | undefined;
-                                  }>
-                                | undefined;
-                              location?:
-                                | {
-                                    country?: string | undefined;
-                                    city?: string | undefined;
-                                  }
-                                | undefined;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<SchemaTypes.AuthorizationPrivilege>
-                                      | undefined;
-                                  }
-                                | undefined;
-                            };
                           }
                         | undefined;
                     }>;
@@ -115880,14 +111814,6 @@ export type GetSubspacesDataQuery = {
                               displayName: string;
                               description?: any | undefined;
                               tagline?: string | undefined;
-                              visual?:
-                                | {
-                                    __typename: 'Visual';
-                                    id: string;
-                                    uri: string;
-                                    name: string;
-                                  }
-                                | undefined;
                               storageBucket: {
                                 id: string;
                                 authorization?:
@@ -118412,12 +114338,31 @@ export type GetSubspacesDataQuery = {
                                     | undefined;
                                 }>
                               | undefined;
-                            visual?:
-                              | {
-                                  __typename: 'Visual';
+                            tagsets?:
+                              | Array<{
                                   id: string;
-                                  uri: string;
                                   name: string;
+                                  tags: Array<string>;
+                                  authorization?:
+                                    | {
+                                        myPrivileges?:
+                                          | Array<SchemaTypes.AuthorizationPrivilege>
+                                          | undefined;
+                                      }
+                                    | undefined;
+                                }>
+                              | undefined;
+                            location?:
+                              | {
+                                  country?: string | undefined;
+                                  city?: string | undefined;
+                                }
+                              | undefined;
+                            authorization?:
+                              | {
+                                  myPrivileges?:
+                                    | Array<SchemaTypes.AuthorizationPrivilege>
+                                    | undefined;
                                 }
                               | undefined;
                             storageBucket: {
@@ -118446,44 +114391,7 @@ export type GetSubspacesDataQuery = {
                                   | undefined;
                               }>;
                             };
-                            tagsets?:
-                              | Array<{
-                                  id: string;
-                                  name: string;
-                                  tags: Array<string>;
-                                  authorization?:
-                                    | {
-                                        myPrivileges?:
-                                          | Array<SchemaTypes.AuthorizationPrivilege>
-                                          | undefined;
-                                      }
-                                    | undefined;
-                                }>
-                              | undefined;
-                            location?:
-                              | {
-                                  country?: string | undefined;
-                                  city?: string | undefined;
-                                }
-                              | undefined;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
                           };
-                          comments: {
-                            id: string;
-                            messagesCount: number;
-                            messages: Array<{
-                              id: any;
-                              message: any;
-                              sender?: { id: string } | {} | undefined;
-                            }>;
-                          };
-                          createdBy?: { email: string } | undefined;
                         }
                       | undefined;
                     whiteboard?:
@@ -118498,87 +114406,6 @@ export type GetSubspacesDataQuery = {
                                   | undefined;
                               }
                             | undefined;
-                          profile: {
-                            id: string;
-                            displayName: string;
-                            description?: any | undefined;
-                            tagline?: string | undefined;
-                            visual?:
-                              | {
-                                  __typename: 'Visual';
-                                  id: string;
-                                  uri: string;
-                                  name: string;
-                                }
-                              | undefined;
-                            storageBucket: {
-                              id: string;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<SchemaTypes.AuthorizationPrivilege>
-                                      | undefined;
-                                  }
-                                | undefined;
-                              parentEntity?:
-                                | {
-                                    displayName: string;
-                                    type: SchemaTypes.ProfileType;
-                                  }
-                                | undefined;
-                              documents: Array<{
-                                id: string;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<SchemaTypes.AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>;
-                            };
-                            references?:
-                              | Array<{
-                                  id: string;
-                                  name: string;
-                                  uri: string;
-                                  authorization?:
-                                    | {
-                                        myPrivileges?:
-                                          | Array<SchemaTypes.AuthorizationPrivilege>
-                                          | undefined;
-                                      }
-                                    | undefined;
-                                }>
-                              | undefined;
-                            tagsets?:
-                              | Array<{
-                                  id: string;
-                                  name: string;
-                                  tags: Array<string>;
-                                  authorization?:
-                                    | {
-                                        myPrivileges?:
-                                          | Array<SchemaTypes.AuthorizationPrivilege>
-                                          | undefined;
-                                      }
-                                    | undefined;
-                                }>
-                              | undefined;
-                            location?:
-                              | {
-                                  country?: string | undefined;
-                                  city?: string | undefined;
-                                }
-                              | undefined;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          };
                         }
                       | undefined;
                   }>;
@@ -118666,14 +114493,6 @@ export type GetSubspacesDataQuery = {
                             displayName: string;
                             description?: any | undefined;
                             tagline?: string | undefined;
-                            visual?:
-                              | {
-                                  __typename: 'Visual';
-                                  id: string;
-                                  uri: string;
-                                  name: string;
-                                }
-                              | undefined;
                             storageBucket: {
                               id: string;
                               authorization?:
@@ -122562,29 +118381,6 @@ export const LinkDataFragmentDoc = gql`
   }
   ${ProfileDataFragmentDoc}
 `;
-export const VisualUriFragmentDoc = gql`
-  fragment VisualUri on Visual {
-    id
-    uri
-    name
-    __typename
-  }
-`;
-export const CommentsDataFragmentDoc = gql`
-  fragment CommentsData on Room {
-    id
-    messagesCount
-    messages {
-      id
-      message
-      sender {
-        ... on User {
-          id
-        }
-      }
-    }
-  }
-`;
 export const PostDataFragmentDoc = gql`
   fragment PostData on Post {
     authorization {
@@ -122593,29 +118389,11 @@ export const PostDataFragmentDoc = gql`
     id
     nameID
     profile {
-      ...ProfileStorageConfig
       ...ProfileData
-      references {
-        ...ReferenceData
-      }
-      visual(type: CARD) {
-        ...VisualUri
-        __typename
-      }
-    }
-    comments {
-      ...CommentsData
-    }
-    createdBy {
-      email
     }
     createdDate
   }
-  ${ProfileStorageConfigFragmentDoc}
   ${ProfileDataFragmentDoc}
-  ${ReferenceDataFragmentDoc}
-  ${VisualUriFragmentDoc}
-  ${CommentsDataFragmentDoc}
 `;
 export const WhiteboardDataFragmentDoc = gql`
   fragment WhiteboardData on Whiteboard {
@@ -122624,19 +118402,8 @@ export const WhiteboardDataFragmentDoc = gql`
     }
     id
     nameID
-    profile {
-      ...ProfileStorageConfig
-      ...ProfileData
-      visual(type: CARD) {
-        ...VisualUri
-        __typename
-      }
-    }
     content
   }
-  ${ProfileStorageConfigFragmentDoc}
-  ${ProfileDataFragmentDoc}
-  ${VisualUriFragmentDoc}
 `;
 export const ContributionsDataFragmentDoc = gql`
   fragment ContributionsData on CalloutContribution {
@@ -122689,6 +118456,21 @@ export const CalloutOnCollaborationWithStorageConfigFragmentDoc = gql`
     __typename
   }
   ${ProfileStorageConfigFragmentDoc}
+`;
+export const CommentsDataFragmentDoc = gql`
+  fragment CommentsData on Room {
+    id
+    messagesCount
+    messages {
+      id
+      message
+      sender {
+        ... on User {
+          id
+        }
+      }
+    }
+  }
 `;
 export const LinkContributionInCalloutOnCollaborationWithStorageConfigFragmentDoc = gql`
   fragment LinkContributionInCalloutOnCollaborationWithStorageConfig on Collaboration {
@@ -122943,10 +118725,6 @@ export const CalloutDataFragmentDoc = gql`
         profile {
           ...ProfileStorageConfig
           ...ProfileData
-          visual(type: CARD) {
-            ...VisualUri
-            __typename
-          }
         }
       }
     }
@@ -122962,7 +118740,6 @@ export const CalloutDataFragmentDoc = gql`
   ${ContributionsDataFragmentDoc}
   ${ProfileDataFragmentDoc}
   ${ProfileStorageConfigFragmentDoc}
-  ${VisualUriFragmentDoc}
 `;
 export const InnovationFlowStateDataFragmentDoc = gql`
   fragment InnovationFlowStateData on InnovationFlowState {
@@ -123960,108 +119737,27 @@ export const PendingMembershipsJourneyProfileFragmentDoc = gql`
     }
   }
 `;
-export const SpaceAboutLightFragmentDoc = gql`
-  fragment SpaceAboutLight on SpaceAbout {
-    id
-    profile {
-      id
-      displayName
-      url
-      tagline
-      description
-      tagset {
-        id
-        tags
-        __typename
-      }
-      avatar: visual(type: AVATAR) {
-        ...VisualUri
-        __typename
-      }
-      cardBanner: visual(type: CARD) {
-        ...VisualUri
-        __typename
-      }
-      __typename
-    }
-    isContentPublic
-    membership {
-      myMembershipStatus
-      myPrivileges
-      communityID
-      roleSetID
-      __typename
-    }
-    guidelines {
-      id
-      __typename
-    }
-    __typename
-  }
-  ${VisualUriFragmentDoc}
-`;
 export const SearchResultSpaceFragmentDoc = gql`
   fragment SearchResultSpace on SearchResultSpace {
     parentSpace {
       id
       level
-      about {
-        ...SpaceAboutLight
-        __typename
-      }
-      __typename
+      visibility
     }
     space {
       id
       level
-      about {
-        id
-        why
-        profile {
-          id
-          url
-          displayName
-          tagset {
-            ...TagsetDetails
-            __typename
-          }
-          tagline
-          visuals {
-            ...VisualUri
-            __typename
-          }
-          __typename
-        }
-        isContentPublic
-        membership {
-          myMembershipStatus
-          __typename
-        }
-        __typename
-      }
       visibility
-      __typename
     }
-    __typename
   }
-  ${SpaceAboutLightFragmentDoc}
-  ${TagsetDetailsFragmentDoc}
-  ${VisualUriFragmentDoc}
 `;
 export const CalloutParentFragmentDoc = gql`
   fragment CalloutParent on SearchResultCallout {
     space {
       id
-      about {
-        ...SpaceAboutLight
-        __typename
-      }
       level
-      __typename
     }
-    __typename
   }
-  ${SpaceAboutLightFragmentDoc}
 `;
 export const SearchResultCalloutFragmentDoc = gql`
   fragment SearchResultCallout on SearchResultCallout {
@@ -124078,43 +119774,32 @@ export const SearchResultCalloutFragmentDoc = gql`
           url
           tagset {
             ...TagsetDetails
-            __typename
           }
-          __typename
         }
-        __typename
       }
       contributionPolicy {
         id
         state
         allowedContributionTypes
-        __typename
       }
       contributions {
         id
         post {
           id
-          __typename
         }
         whiteboard {
           id
-          __typename
         }
         link {
           id
-          __typename
         }
-        __typename
       }
       comments {
         id
         messagesCount
-        __typename
       }
-      __typename
     }
     ...CalloutParent
-    __typename
   }
   ${TagsetDetailsFragmentDoc}
   ${CalloutParentFragmentDoc}
@@ -124125,9 +119810,7 @@ export const SearchResultPostProfileFragmentDoc = gql`
     description
     tagset {
       ...TagsetDetails
-      __typename
     }
-    __typename
   }
   ${TagsetDetailsFragmentDoc}
 `;
@@ -124137,11 +119820,6 @@ export const PostParentFragmentDoc = gql`
       id
       level
       visibility
-      about {
-        ...SpaceAboutLight
-        __typename
-      }
-      __typename
     }
     callout {
       id
@@ -124151,15 +119829,10 @@ export const PostParentFragmentDoc = gql`
           id
           url
           displayName
-          __typename
         }
-        __typename
       }
-      __typename
     }
-    __typename
   }
-  ${SpaceAboutLightFragmentDoc}
 `;
 export const SearchResultPostFragmentDoc = gql`
   fragment SearchResultPost on SearchResultPost {
@@ -124169,34 +119842,23 @@ export const SearchResultPostFragmentDoc = gql`
         id
         url
         displayName
-        visual(type: CARD) {
-          ...VisualUri
-          __typename
-        }
         ...SearchResultPostProfile
-        __typename
       }
       createdBy {
         id
         profile {
           id
           displayName
-          __typename
         }
-        __typename
       }
       createdDate
       comments {
         id
         messagesCount
-        __typename
       }
-      __typename
     }
     ...PostParent
-    __typename
   }
-  ${VisualUriFragmentDoc}
   ${SearchResultPostProfileFragmentDoc}
   ${PostParentFragmentDoc}
 `;
@@ -124208,21 +119870,9 @@ export const SearchResultProfileFragmentDoc = gql`
       id
       country
       city
-      __typename
-    }
-    tagsets {
-      ...TagsetDetails
-      __typename
-    }
-    visual(type: AVATAR) {
-      ...VisualUri
-      __typename
     }
     url
-    __typename
   }
-  ${TagsetDetailsFragmentDoc}
-  ${VisualUriFragmentDoc}
 `;
 export const SearchResultUserFragmentDoc = gql`
   fragment SearchResultUser on SearchResultUser {
@@ -124232,11 +119882,8 @@ export const SearchResultUserFragmentDoc = gql`
       profile {
         displayName
         ...SearchResultProfile
-        __typename
       }
-      __typename
     }
-    __typename
   }
   ${SearchResultProfileFragmentDoc}
 `;
@@ -124247,11 +119894,8 @@ export const SearchResultOrganizationFragmentDoc = gql`
       profile {
         displayName
         ...SearchResultProfile
-        __typename
       }
-      __typename
     }
-    __typename
   }
   ${SearchResultProfileFragmentDoc}
 `;
@@ -125011,6 +120655,11 @@ export const DeleteReferenceDocument = gql`
     deleteReference(deleteData: $deleteData) {
       id
     }
+  }
+`;
+export const AdminSearchIngestFromScratchDocument = gql`
+  mutation AdminSearchIngestFromScratch {
+    adminSearchIngestFromScratch
   }
 `;
 export const UpdateSpaceSettingsDocument = gql`
@@ -126309,60 +121958,44 @@ export const SearchDocument = gql`
   query search($searchData: SearchInput!) {
     search(searchData: $searchData) {
       spaceResults {
-        cursor
         results {
-          id
           type
-          score
-          terms
           ...SearchResultSpace
-          __typename
         }
         total
-        __typename
       }
       calloutResults {
         cursor
         results {
           id
           type
-          score
           terms
           ...SearchResultCallout
-          __typename
         }
         total
-        __typename
       }
       contributionResults {
         cursor
         results {
           id
           type
-          score
           terms
           ...SearchResultPost
           ...SearchResultCallout
-          __typename
         }
         total
-        __typename
       }
       contributorResults {
         cursor
         results {
           id
           type
-          score
           terms
           ...SearchResultUser
           ...SearchResultOrganization
-          __typename
         }
         total
-        __typename
       }
-      __typename
     }
   }
   ${SearchResultSpaceFragmentDoc}
@@ -127003,6 +122636,9 @@ const CreateReferenceOnProfileDocumentString = print(
   CreateReferenceOnProfileDocument
 );
 const DeleteReferenceDocumentString = print(DeleteReferenceDocument);
+const AdminSearchIngestFromScratchDocumentString = print(
+  AdminSearchIngestFromScratchDocument
+);
 const UpdateSpaceSettingsDocumentString = print(UpdateSpaceSettingsDocument);
 const CreateSpaceDocumentString = print(CreateSpaceDocument);
 const CreateTemplateDocumentString = print(CreateTemplateDocument);
@@ -128709,6 +124345,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         'DeleteReference',
+        'mutation',
+        variables
+      );
+    },
+    AdminSearchIngestFromScratch(
+      variables?: SchemaTypes.AdminSearchIngestFromScratchMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminSearchIngestFromScratchMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        wrappedRequestHeaders =>
+          client.rawRequest<SchemaTypes.AdminSearchIngestFromScratchMutation>(
+            AdminSearchIngestFromScratchDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        'AdminSearchIngestFromScratch',
         'mutation',
         variables
       );
