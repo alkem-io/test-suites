@@ -33982,6 +33982,7 @@ export type SpaceDataFragment = {
   id: string;
   nameID: string;
   visibility: SpaceVisibility;
+  level: SpaceLevel;
   account: {
     id: string;
     spaces: Array<{ id: string }>;
@@ -47509,6 +47510,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
     id: string;
     nameID: string;
     visibility: SpaceVisibility;
+    level: SpaceLevel;
     account: {
       id: string;
       spaces: Array<{ id: string }>;
@@ -53323,6 +53325,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
     id: string;
     nameID: string;
     visibility: SpaceVisibility;
+    level: SpaceLevel;
     account: {
       id: string;
       spaces: Array<{ id: string }>;
@@ -59155,6 +59158,7 @@ export type UpdateSpaceMutation = {
     id: string;
     nameID: string;
     visibility: SpaceVisibility;
+    level: SpaceLevel;
     account: {
       id: string;
       spaces: Array<{ id: string }>;
@@ -92368,6 +92372,7 @@ export type GetSpaceDataQuery = {
           id: string;
           nameID: string;
           visibility: SpaceVisibility;
+          level: SpaceLevel;
           account: {
             id: string;
             spaces: Array<{ id: string }>;

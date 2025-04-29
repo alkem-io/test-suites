@@ -17,6 +17,7 @@ import {
   SpacePrivacyMode,
 } from '@alkemio/client-lib';
 import { getSingleInvitationResult } from '@functional-api/roleset/roleset.request.params';
+import { SpaceLevel } from '@generated/alkemio-schema';
 
 let baseScenario: OrganizationWithSpaceModel;
 
@@ -98,7 +99,7 @@ describe('Promoting of L1 subspace', () => {
 
     // Assert
     expect(before.data?.lookup.space?.visibility).toEqual(after?.visibility);
-    expect(after?.type).toEqual('SPACE');
+    expect(after?.level).toEqual(SpaceLevel.L0);
 
     expect(
       Array.isArray(before.data?.lookup.space?.community)
