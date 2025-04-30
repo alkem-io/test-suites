@@ -96666,7 +96666,6 @@ export type SearchQueryVariables = SchemaTypes.Exact<{
 export type SearchQuery = {
   search: {
     spaceResults: {
-      total: number;
       results: Array<
         | { type: SchemaTypes.SearchResultType }
         | { type: SchemaTypes.SearchResultType }
@@ -96690,39 +96689,16 @@ export type SearchQuery = {
       >;
     };
     calloutResults: {
-      cursor?: any | undefined;
-      total: number;
       results: Array<
         | {
-            id: string;
             type: SchemaTypes.SearchResultType;
-            terms: Array<string>;
+            id: string;
             callout: {
               id: string;
               type: SchemaTypes.CalloutType;
               framing: {
                 id: string;
-                profile: {
-                  id: string;
-                  displayName: string;
-                  description?: any | undefined;
-                  url: string;
-                  tagset?:
-                    | {
-                        __typename: 'Tagset';
-                        id: string;
-                        name: string;
-                        tags: Array<string>;
-                        allowedValues: Array<string>;
-                        type: SchemaTypes.TagsetType;
-                      }
-                    | undefined;
-                };
-              };
-              contributionPolicy: {
-                id: string;
-                state: SchemaTypes.CalloutState;
-                allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
+                profile: { id: string; displayName: string };
               };
               contributions: Array<{
                 id: string;
@@ -96730,66 +96706,26 @@ export type SearchQuery = {
                 whiteboard?: { id: string } | undefined;
                 link?: { id: string } | undefined;
               }>;
-              comments?: { id: string; messagesCount: number } | undefined;
             };
             space: { id: string; level: SchemaTypes.SpaceLevel };
           }
-        | {
-            id: string;
-            type: SchemaTypes.SearchResultType;
-            terms: Array<string>;
-          }
-        | {
-            id: string;
-            type: SchemaTypes.SearchResultType;
-            terms: Array<string>;
-          }
-        | {
-            id: string;
-            type: SchemaTypes.SearchResultType;
-            terms: Array<string>;
-          }
-        | {
-            id: string;
-            type: SchemaTypes.SearchResultType;
-            terms: Array<string>;
-          }
+        | { type: SchemaTypes.SearchResultType }
+        | { type: SchemaTypes.SearchResultType }
+        | { type: SchemaTypes.SearchResultType }
+        | { type: SchemaTypes.SearchResultType }
       >;
     };
     contributionResults: {
-      cursor?: any | undefined;
-      total: number;
       results: Array<
         | {
-            id: string;
             type: SchemaTypes.SearchResultType;
-            terms: Array<string>;
+            id: string;
             callout: {
               id: string;
               type: SchemaTypes.CalloutType;
               framing: {
                 id: string;
-                profile: {
-                  id: string;
-                  displayName: string;
-                  description?: any | undefined;
-                  url: string;
-                  tagset?:
-                    | {
-                        __typename: 'Tagset';
-                        id: string;
-                        name: string;
-                        tags: Array<string>;
-                        allowedValues: Array<string>;
-                        type: SchemaTypes.TagsetType;
-                      }
-                    | undefined;
-                };
-              };
-              contributionPolicy: {
-                id: string;
-                state: SchemaTypes.CalloutState;
-                allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
+                profile: { id: string; displayName: string };
               };
               contributions: Array<{
                 id: string;
@@ -96797,43 +96733,13 @@ export type SearchQuery = {
                 whiteboard?: { id: string } | undefined;
                 link?: { id: string } | undefined;
               }>;
-              comments?: { id: string; messagesCount: number } | undefined;
             };
             space: { id: string; level: SchemaTypes.SpaceLevel };
           }
+        | { type: SchemaTypes.SearchResultType }
         | {
-            id: string;
             type: SchemaTypes.SearchResultType;
-            terms: Array<string>;
-          }
-        | {
-            id: string;
-            type: SchemaTypes.SearchResultType;
-            terms: Array<string>;
-            post: {
-              id: string;
-              createdDate: Date;
-              profile: {
-                id: string;
-                url: string;
-                displayName: string;
-                description?: any | undefined;
-                tagset?:
-                  | {
-                      __typename: 'Tagset';
-                      id: string;
-                      name: string;
-                      tags: Array<string>;
-                      allowedValues: Array<string>;
-                      type: SchemaTypes.TagsetType;
-                    }
-                  | undefined;
-              };
-              createdBy?:
-                | { id: string; profile: { id: string; displayName: string } }
-                | undefined;
-              comments: { id: string; messagesCount: number };
-            };
+            post: { id: string; profile: { displayName: string } };
             space: {
               id: string;
               level: SchemaTypes.SpaceLevel;
@@ -96841,85 +96747,25 @@ export type SearchQuery = {
             };
             callout: {
               id: string;
-              framing: {
-                id: string;
-                profile: { id: string; url: string; displayName: string };
-              };
+              framing: { profile: { displayName: string } };
             };
           }
-        | {
-            id: string;
-            type: SchemaTypes.SearchResultType;
-            terms: Array<string>;
-          }
-        | {
-            id: string;
-            type: SchemaTypes.SearchResultType;
-            terms: Array<string>;
-          }
+        | { type: SchemaTypes.SearchResultType }
+        | { type: SchemaTypes.SearchResultType }
       >;
     };
     contributorResults: {
-      cursor?: any | undefined;
-      total: number;
       results: Array<
+        | { type: SchemaTypes.SearchResultType }
         | {
-            id: string;
             type: SchemaTypes.SearchResultType;
-            terms: Array<string>;
+            organization: { id: string; profile: { displayName: string } };
           }
+        | { type: SchemaTypes.SearchResultType }
+        | { type: SchemaTypes.SearchResultType }
         | {
-            id: string;
             type: SchemaTypes.SearchResultType;
-            terms: Array<string>;
-            organization: {
-              id: string;
-              profile: {
-                displayName: string;
-                id: string;
-                description?: any | undefined;
-                url: string;
-                location?:
-                  | {
-                      id: string;
-                      country?: string | undefined;
-                      city?: string | undefined;
-                    }
-                  | undefined;
-              };
-            };
-          }
-        | {
-            id: string;
-            type: SchemaTypes.SearchResultType;
-            terms: Array<string>;
-          }
-        | {
-            id: string;
-            type: SchemaTypes.SearchResultType;
-            terms: Array<string>;
-          }
-        | {
-            id: string;
-            type: SchemaTypes.SearchResultType;
-            terms: Array<string>;
-            user: {
-              id: string;
-              isContactable: boolean;
-              profile: {
-                displayName: string;
-                id: string;
-                description?: any | undefined;
-                url: string;
-                location?:
-                  | {
-                      id: string;
-                      country?: string | undefined;
-                      city?: string | undefined;
-                    }
-                  | undefined;
-              };
-            };
+            user: { id: string; profile: { displayName: string } };
           }
       >;
     };
@@ -96946,37 +96792,13 @@ export type SearchResultCalloutFragment = {
   callout: {
     id: string;
     type: SchemaTypes.CalloutType;
-    framing: {
-      id: string;
-      profile: {
-        id: string;
-        displayName: string;
-        description?: any | undefined;
-        url: string;
-        tagset?:
-          | {
-              __typename: 'Tagset';
-              id: string;
-              name: string;
-              tags: Array<string>;
-              allowedValues: Array<string>;
-              type: SchemaTypes.TagsetType;
-            }
-          | undefined;
-      };
-    };
-    contributionPolicy: {
-      id: string;
-      state: SchemaTypes.CalloutState;
-      allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
-    };
+    framing: { id: string; profile: { id: string; displayName: string } };
     contributions: Array<{
       id: string;
       post?: { id: string } | undefined;
       whiteboard?: { id: string } | undefined;
       link?: { id: string } | undefined;
     }>;
-    comments?: { id: string; messagesCount: number } | undefined;
   };
   space: { id: string; level: SchemaTypes.SpaceLevel };
 };
@@ -96986,58 +96808,16 @@ export type CalloutParentFragment = {
 };
 
 export type SearchResultPostFragment = {
-  post: {
-    id: string;
-    createdDate: Date;
-    profile: {
-      id: string;
-      url: string;
-      displayName: string;
-      description?: any | undefined;
-      tagset?:
-        | {
-            __typename: 'Tagset';
-            id: string;
-            name: string;
-            tags: Array<string>;
-            allowedValues: Array<string>;
-            type: SchemaTypes.TagsetType;
-          }
-        | undefined;
-    };
-    createdBy?:
-      | { id: string; profile: { id: string; displayName: string } }
-      | undefined;
-    comments: { id: string; messagesCount: number };
-  };
+  post: { id: string; profile: { displayName: string } };
   space: {
     id: string;
     level: SchemaTypes.SpaceLevel;
     visibility: SchemaTypes.SpaceVisibility;
   };
-  callout: {
-    id: string;
-    framing: {
-      id: string;
-      profile: { id: string; url: string; displayName: string };
-    };
-  };
+  callout: { id: string; framing: { profile: { displayName: string } } };
 };
 
-export type SearchResultPostProfileFragment = {
-  id: string;
-  description?: any | undefined;
-  tagset?:
-    | {
-        __typename: 'Tagset';
-        id: string;
-        name: string;
-        tags: Array<string>;
-        allowedValues: Array<string>;
-        type: SchemaTypes.TagsetType;
-      }
-    | undefined;
-};
+export type SearchResultPostProfileFragment = { displayName: string };
 
 export type PostParentFragment = {
   space: {
@@ -97045,33 +96825,11 @@ export type PostParentFragment = {
     level: SchemaTypes.SpaceLevel;
     visibility: SchemaTypes.SpaceVisibility;
   };
-  callout: {
-    id: string;
-    framing: {
-      id: string;
-      profile: { id: string; url: string; displayName: string };
-    };
-  };
+  callout: { id: string; framing: { profile: { displayName: string } } };
 };
 
 export type SearchResultUserFragment = {
-  user: {
-    id: string;
-    isContactable: boolean;
-    profile: {
-      displayName: string;
-      id: string;
-      description?: any | undefined;
-      url: string;
-      location?:
-        | {
-            id: string;
-            country?: string | undefined;
-            city?: string | undefined;
-          }
-        | undefined;
-    };
-  };
+  user: { id: string; profile: { displayName: string } };
 };
 
 export type SearchResultProfileFragment = {
@@ -97084,22 +96842,7 @@ export type SearchResultProfileFragment = {
 };
 
 export type SearchResultOrganizationFragment = {
-  organization: {
-    id: string;
-    profile: {
-      displayName: string;
-      id: string;
-      description?: any | undefined;
-      url: string;
-      location?:
-        | {
-            id: string;
-            country?: string | undefined;
-            city?: string | undefined;
-          }
-        | undefined;
-    };
-  };
+  organization: { id: string; profile: { displayName: string } };
 };
 
 export type PrivateSpaceDataQueryVariables = SchemaTypes.Exact<{
@@ -119770,17 +119513,7 @@ export const SearchResultCalloutFragmentDoc = gql`
         profile {
           id
           displayName
-          description
-          url
-          tagset {
-            ...TagsetDetails
-          }
         }
-      }
-      contributionPolicy {
-        id
-        state
-        allowedContributionTypes
       }
       contributions {
         id
@@ -119794,25 +119527,15 @@ export const SearchResultCalloutFragmentDoc = gql`
           id
         }
       }
-      comments {
-        id
-        messagesCount
-      }
     }
     ...CalloutParent
   }
-  ${TagsetDetailsFragmentDoc}
   ${CalloutParentFragmentDoc}
 `;
 export const SearchResultPostProfileFragmentDoc = gql`
   fragment SearchResultPostProfile on Profile {
-    id
-    description
-    tagset {
-      ...TagsetDetails
-    }
+    displayName
   }
-  ${TagsetDetailsFragmentDoc}
 `;
 export const PostParentFragmentDoc = gql`
   fragment PostParent on SearchResultPost {
@@ -119824,10 +119547,7 @@ export const PostParentFragmentDoc = gql`
     callout {
       id
       framing {
-        id
         profile {
-          id
-          url
           displayName
         }
       }
@@ -119839,28 +119559,24 @@ export const SearchResultPostFragmentDoc = gql`
     post {
       id
       profile {
-        id
-        url
         displayName
         ...SearchResultPostProfile
-      }
-      createdBy {
-        id
-        profile {
-          id
-          displayName
-        }
-      }
-      createdDate
-      comments {
-        id
-        messagesCount
       }
     }
     ...PostParent
   }
   ${SearchResultPostProfileFragmentDoc}
   ${PostParentFragmentDoc}
+`;
+export const SearchResultUserFragmentDoc = gql`
+  fragment SearchResultUser on SearchResultUser {
+    user {
+      id
+      profile {
+        displayName
+      }
+    }
+  }
 `;
 export const SearchResultProfileFragmentDoc = gql`
   fragment SearchResultProfile on Profile {
@@ -119874,30 +119590,15 @@ export const SearchResultProfileFragmentDoc = gql`
     url
   }
 `;
-export const SearchResultUserFragmentDoc = gql`
-  fragment SearchResultUser on SearchResultUser {
-    user {
-      id
-      isContactable
-      profile {
-        displayName
-        ...SearchResultProfile
-      }
-    }
-  }
-  ${SearchResultProfileFragmentDoc}
-`;
 export const SearchResultOrganizationFragmentDoc = gql`
   fragment SearchResultOrganization on SearchResultOrganization {
     organization {
       id
       profile {
         displayName
-        ...SearchResultProfile
       }
     }
   }
-  ${SearchResultProfileFragmentDoc}
 `;
 export const CreateCollaborationTemplateDocument = gql`
   mutation createCollaborationTemplate(
@@ -121962,39 +121663,26 @@ export const SearchDocument = gql`
           type
           ...SearchResultSpace
         }
-        total
       }
       calloutResults {
-        cursor
         results {
-          id
           type
-          terms
           ...SearchResultCallout
         }
-        total
       }
       contributionResults {
-        cursor
         results {
-          id
           type
-          terms
           ...SearchResultPost
           ...SearchResultCallout
         }
-        total
       }
       contributorResults {
-        cursor
         results {
-          id
           type
-          terms
           ...SearchResultUser
           ...SearchResultOrganization
         }
-        total
       }
     }
   }

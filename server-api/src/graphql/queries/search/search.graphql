@@ -5,42 +5,26 @@ query search($searchData: SearchInput!) {
         type
         ...SearchResultSpace
       }
-      total
     }
     calloutResults {
-      cursor
       results {
-        id
         type
-
-        terms
         ...SearchResultCallout
       }
-      total
     }
     contributionResults {
-      cursor
       results {
-        id
         type
-
-        terms
         ...SearchResultPost
         ...SearchResultCallout
       }
-      total
     }
     contributorResults {
-      cursor
       results {
-        id
         type
-
-        terms
         ...SearchResultUser
         ...SearchResultOrganization
       }
-      total
     }
   }
 }
@@ -54,7 +38,6 @@ fragment SearchResultSpace on SearchResultSpace {
   space {
     id
     level
-
     visibility
   }
 }
@@ -69,17 +52,7 @@ fragment SearchResultCallout on SearchResultCallout {
       profile {
         id
         displayName
-        description
-        url
-        tagset {
-          ...TagsetDetails
-        }
       }
-    }
-    contributionPolicy {
-      id
-      state
-      allowedContributionTypes
     }
     contributions {
       id
@@ -92,10 +65,6 @@ fragment SearchResultCallout on SearchResultCallout {
       link {
         id
       }
-    }
-    comments {
-      id
-      messagesCount
     }
   }
   ...CalloutParent
@@ -112,33 +81,15 @@ fragment SearchResultPost on SearchResultPost {
   post {
     id
     profile {
-      id
-      url
       displayName
       ...SearchResultPostProfile
-    }
-    createdBy {
-      id
-      profile {
-        id
-        displayName
-      }
-    }
-    createdDate
-    comments {
-      id
-      messagesCount
     }
   }
   ...PostParent
 }
 
 fragment SearchResultPostProfile on Profile {
-  id
-  description
-  tagset {
-    ...TagsetDetails
-  }
+  displayName
 }
 
 fragment PostParent on SearchResultPost {
@@ -150,10 +101,7 @@ fragment PostParent on SearchResultPost {
   callout {
     id
     framing {
-      id
       profile {
-        id
-        url
         displayName
       }
     }
@@ -163,10 +111,8 @@ fragment PostParent on SearchResultPost {
 fragment SearchResultUser on SearchResultUser {
   user {
     id
-    isContactable
     profile {
       displayName
-      ...SearchResultProfile
     }
   }
 }
@@ -188,7 +134,6 @@ fragment SearchResultOrganization on SearchResultOrganization {
     id
     profile {
       displayName
-      ...SearchResultProfile
     }
   }
 }

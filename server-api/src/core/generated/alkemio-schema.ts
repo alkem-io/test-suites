@@ -88832,7 +88832,6 @@ export type SearchQueryVariables = Exact<{
 export type SearchQuery = {
   search: {
     spaceResults: {
-      total: number;
       results: Array<
         | { type: SearchResultType }
         | { type: SearchResultType }
@@ -88852,39 +88851,16 @@ export type SearchQuery = {
       >;
     };
     calloutResults: {
-      cursor?: any | undefined;
-      total: number;
       results: Array<
         | {
-            id: string;
             type: SearchResultType;
-            terms: Array<string>;
+            id: string;
             callout: {
               id: string;
               type: CalloutType;
               framing: {
                 id: string;
-                profile: {
-                  id: string;
-                  displayName: string;
-                  description?: any | undefined;
-                  url: string;
-                  tagset?:
-                    | {
-                        __typename: 'Tagset';
-                        id: string;
-                        name: string;
-                        tags: Array<string>;
-                        allowedValues: Array<string>;
-                        type: TagsetType;
-                      }
-                    | undefined;
-                };
-              };
-              contributionPolicy: {
-                id: string;
-                state: CalloutState;
-                allowedContributionTypes: Array<CalloutContributionType>;
+                profile: { id: string; displayName: string };
               };
               contributions: Array<{
                 id: string;
@@ -88892,50 +88868,26 @@ export type SearchQuery = {
                 whiteboard?: { id: string } | undefined;
                 link?: { id: string } | undefined;
               }>;
-              comments?: { id: string; messagesCount: number } | undefined;
             };
             space: { id: string; level: SpaceLevel };
           }
-        | { id: string; type: SearchResultType; terms: Array<string> }
-        | { id: string; type: SearchResultType; terms: Array<string> }
-        | { id: string; type: SearchResultType; terms: Array<string> }
-        | { id: string; type: SearchResultType; terms: Array<string> }
+        | { type: SearchResultType }
+        | { type: SearchResultType }
+        | { type: SearchResultType }
+        | { type: SearchResultType }
       >;
     };
     contributionResults: {
-      cursor?: any | undefined;
-      total: number;
       results: Array<
         | {
-            id: string;
             type: SearchResultType;
-            terms: Array<string>;
+            id: string;
             callout: {
               id: string;
               type: CalloutType;
               framing: {
                 id: string;
-                profile: {
-                  id: string;
-                  displayName: string;
-                  description?: any | undefined;
-                  url: string;
-                  tagset?:
-                    | {
-                        __typename: 'Tagset';
-                        id: string;
-                        name: string;
-                        tags: Array<string>;
-                        allowedValues: Array<string>;
-                        type: TagsetType;
-                      }
-                    | undefined;
-                };
-              };
-              contributionPolicy: {
-                id: string;
-                state: CalloutState;
-                allowedContributionTypes: Array<CalloutContributionType>;
+                profile: { id: string; displayName: string };
               };
               contributions: Array<{
                 id: string;
@@ -88943,39 +88895,13 @@ export type SearchQuery = {
                 whiteboard?: { id: string } | undefined;
                 link?: { id: string } | undefined;
               }>;
-              comments?: { id: string; messagesCount: number } | undefined;
             };
             space: { id: string; level: SpaceLevel };
           }
-        | { id: string; type: SearchResultType; terms: Array<string> }
+        | { type: SearchResultType }
         | {
-            id: string;
             type: SearchResultType;
-            terms: Array<string>;
-            post: {
-              id: string;
-              createdDate: Date;
-              profile: {
-                id: string;
-                url: string;
-                displayName: string;
-                description?: any | undefined;
-                tagset?:
-                  | {
-                      __typename: 'Tagset';
-                      id: string;
-                      name: string;
-                      tags: Array<string>;
-                      allowedValues: Array<string>;
-                      type: TagsetType;
-                    }
-                  | undefined;
-              };
-              createdBy?:
-                | { id: string; profile: { id: string; displayName: string } }
-                | undefined;
-              comments: { id: string; messagesCount: number };
-            };
+            post: { id: string; profile: { displayName: string } };
             space: {
               id: string;
               level: SpaceLevel;
@@ -88983,65 +88909,25 @@ export type SearchQuery = {
             };
             callout: {
               id: string;
-              framing: {
-                id: string;
-                profile: { id: string; url: string; displayName: string };
-              };
+              framing: { profile: { displayName: string } };
             };
           }
-        | { id: string; type: SearchResultType; terms: Array<string> }
-        | { id: string; type: SearchResultType; terms: Array<string> }
+        | { type: SearchResultType }
+        | { type: SearchResultType }
       >;
     };
     contributorResults: {
-      cursor?: any | undefined;
-      total: number;
       results: Array<
-        | { id: string; type: SearchResultType; terms: Array<string> }
+        | { type: SearchResultType }
         | {
-            id: string;
             type: SearchResultType;
-            terms: Array<string>;
-            organization: {
-              id: string;
-              profile: {
-                displayName: string;
-                id: string;
-                description?: any | undefined;
-                url: string;
-                location?:
-                  | {
-                      id: string;
-                      country?: string | undefined;
-                      city?: string | undefined;
-                    }
-                  | undefined;
-              };
-            };
+            organization: { id: string; profile: { displayName: string } };
           }
-        | { id: string; type: SearchResultType; terms: Array<string> }
-        | { id: string; type: SearchResultType; terms: Array<string> }
+        | { type: SearchResultType }
+        | { type: SearchResultType }
         | {
-            id: string;
             type: SearchResultType;
-            terms: Array<string>;
-            user: {
-              id: string;
-              isContactable: boolean;
-              profile: {
-                displayName: string;
-                id: string;
-                description?: any | undefined;
-                url: string;
-                location?:
-                  | {
-                      id: string;
-                      country?: string | undefined;
-                      city?: string | undefined;
-                    }
-                  | undefined;
-              };
-            };
+            user: { id: string; profile: { displayName: string } };
           }
       >;
     };
@@ -89060,37 +88946,13 @@ export type SearchResultCalloutFragment = {
   callout: {
     id: string;
     type: CalloutType;
-    framing: {
-      id: string;
-      profile: {
-        id: string;
-        displayName: string;
-        description?: any | undefined;
-        url: string;
-        tagset?:
-          | {
-              __typename: 'Tagset';
-              id: string;
-              name: string;
-              tags: Array<string>;
-              allowedValues: Array<string>;
-              type: TagsetType;
-            }
-          | undefined;
-      };
-    };
-    contributionPolicy: {
-      id: string;
-      state: CalloutState;
-      allowedContributionTypes: Array<CalloutContributionType>;
-    };
+    framing: { id: string; profile: { id: string; displayName: string } };
     contributions: Array<{
       id: string;
       post?: { id: string } | undefined;
       whiteboard?: { id: string } | undefined;
       link?: { id: string } | undefined;
     }>;
-    comments?: { id: string; messagesCount: number } | undefined;
   };
   space: { id: string; level: SpaceLevel };
 };
@@ -89100,84 +88962,20 @@ export type CalloutParentFragment = {
 };
 
 export type SearchResultPostFragment = {
-  post: {
-    id: string;
-    createdDate: Date;
-    profile: {
-      id: string;
-      url: string;
-      displayName: string;
-      description?: any | undefined;
-      tagset?:
-        | {
-            __typename: 'Tagset';
-            id: string;
-            name: string;
-            tags: Array<string>;
-            allowedValues: Array<string>;
-            type: TagsetType;
-          }
-        | undefined;
-    };
-    createdBy?:
-      | { id: string; profile: { id: string; displayName: string } }
-      | undefined;
-    comments: { id: string; messagesCount: number };
-  };
+  post: { id: string; profile: { displayName: string } };
   space: { id: string; level: SpaceLevel; visibility: SpaceVisibility };
-  callout: {
-    id: string;
-    framing: {
-      id: string;
-      profile: { id: string; url: string; displayName: string };
-    };
-  };
+  callout: { id: string; framing: { profile: { displayName: string } } };
 };
 
-export type SearchResultPostProfileFragment = {
-  id: string;
-  description?: any | undefined;
-  tagset?:
-    | {
-        __typename: 'Tagset';
-        id: string;
-        name: string;
-        tags: Array<string>;
-        allowedValues: Array<string>;
-        type: TagsetType;
-      }
-    | undefined;
-};
+export type SearchResultPostProfileFragment = { displayName: string };
 
 export type PostParentFragment = {
   space: { id: string; level: SpaceLevel; visibility: SpaceVisibility };
-  callout: {
-    id: string;
-    framing: {
-      id: string;
-      profile: { id: string; url: string; displayName: string };
-    };
-  };
+  callout: { id: string; framing: { profile: { displayName: string } } };
 };
 
 export type SearchResultUserFragment = {
-  user: {
-    id: string;
-    isContactable: boolean;
-    profile: {
-      displayName: string;
-      id: string;
-      description?: any | undefined;
-      url: string;
-      location?:
-        | {
-            id: string;
-            country?: string | undefined;
-            city?: string | undefined;
-          }
-        | undefined;
-    };
-  };
+  user: { id: string; profile: { displayName: string } };
 };
 
 export type SearchResultProfileFragment = {
@@ -89190,22 +88988,7 @@ export type SearchResultProfileFragment = {
 };
 
 export type SearchResultOrganizationFragment = {
-  organization: {
-    id: string;
-    profile: {
-      displayName: string;
-      id: string;
-      description?: any | undefined;
-      url: string;
-      location?:
-        | {
-            id: string;
-            country?: string | undefined;
-            city?: string | undefined;
-          }
-        | undefined;
-    };
-  };
+  organization: { id: string; profile: { displayName: string } };
 };
 
 export type PrivateSpaceDataQueryVariables = Exact<{

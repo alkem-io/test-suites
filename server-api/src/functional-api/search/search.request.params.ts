@@ -19,7 +19,7 @@ export const adminSearchIngestFromScratch = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const searchGlobalSpaces = async (
+export const searchSpaces = async (
   terms: any,
   //filter: any,
   userRole: TestUser = TestUser.GLOBAL_ADMIN,
@@ -51,9 +51,9 @@ export const searchGlobalSpaces = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const searchGlobalContributions = async (
+export const searchResponses = async (
   terms: any,
-  filter: any,
+  //filter: any,
   userRole: TestUser = TestUser.GLOBAL_ADMIN,
   searchInSpaceFilter?: string
 ) => {
@@ -62,13 +62,13 @@ export const searchGlobalContributions = async (
     graphqlClient.search(
       {
         searchData: {
-          tagsetNames: ['Keywords'],
+          //  tagsetNames: ['Keywords'],
           terms: terms,
           filters: [
             {
-              category: filter,
+              category: SearchCategory.Responses,
               size: 3,
-              types: [SearchResultType.Space, SearchResultType.Subspace],
+              types: [SearchResultType.Post, SearchResultType.Whiteboard],
             },
           ],
 
@@ -83,10 +83,15 @@ export const searchGlobalContributions = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const searchGlobalContributors = async (
+export const searchContributors = async (
   terms: any,
-  filter: any,
+
+  //  filter: any,
   userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  // types: SearchResultType[] = [
+  //   SearchResultType.User,
+  //   SearchResultType.Organization,
+  // ],
   searchInSpaceFilter?: string
 ) => {
   const graphqlClient = await getGraphqlClient();
@@ -94,13 +99,13 @@ export const searchGlobalContributors = async (
     graphqlClient.search(
       {
         searchData: {
-          tagsetNames: ['Keywords'],
+          // tagsetNames: ['Keywords'],
           terms: terms,
           filters: [
             {
-              category: filter,
+              category: SearchCategory.Contributors, // filter,
               size: 3,
-              types: [SearchResultType.Space, SearchResultType.Subspace],
+              types: [SearchResultType.User, SearchResultType.Organization],
             },
           ],
 

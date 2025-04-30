@@ -6,9 +6,9 @@ import { TestUserManager } from '@src/scenario/TestUserManager';
 import { createPostOnCallout } from '../callout/post/post.request.params';
 import {
   adminSearchIngestFromScratch,
-  // searchContributions,
-  // searchContributor,
-  searchGlobalSpaces,
+  searchContributors,
+  searchResponses,
+  searchSpaces,
   // searchJourney,
 } from './search.request.params';
 import {
@@ -28,6 +28,7 @@ import {
 import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
 import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
+import { SearchResultType } from '@alkemio/client-lib/dist/types';
 
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -80,46 +81,46 @@ const scenarioConfig: TestScenarioConfig = {
   name: 'search',
   space: {
     collaboration: {
-      addPostCallout: true,
+      //addPostCallout: true,
       addPostCollectionCallout: true,
-      addWhiteboardCallout: true,
+      //addWhiteboardCallout: true,
     },
-    community: {
-      admins: [TestUser.SPACE_ADMIN],
-      members: [
-        TestUser.SPACE_MEMBER,
-        TestUser.SPACE_ADMIN,
-        TestUser.SUBSPACE_MEMBER,
-        TestUser.SUBSPACE_ADMIN,
-        TestUser.SUBSUBSPACE_MEMBER,
-        TestUser.SUBSUBSPACE_ADMIN,
-      ],
-    },
+    // community: {
+    //   admins: [TestUser.SPACE_ADMIN],
+    //   members: [
+    //     TestUser.SPACE_MEMBER,
+    //     TestUser.SPACE_ADMIN,
+    //     TestUser.SUBSPACE_MEMBER,
+    //     TestUser.SUBSPACE_ADMIN,
+    //     TestUser.SUBSUBSPACE_MEMBER,
+    //     TestUser.SUBSUBSPACE_ADMIN,
+    //   ],
+    // },
     subspace: {
       collaboration: {
-        addPostCallout: true,
+        //addPostCallout: true,
         addPostCollectionCallout: true,
-        addWhiteboardCallout: true,
+        //addWhiteboardCallout: true,
       },
-      community: {
-        admins: [TestUser.SUBSPACE_ADMIN],
-        members: [
-          TestUser.SUBSPACE_MEMBER,
-          TestUser.SUBSPACE_ADMIN,
-          TestUser.SUBSUBSPACE_MEMBER,
-          TestUser.SUBSUBSPACE_ADMIN,
-        ],
-      },
+      // community: {
+      //   admins: [TestUser.SUBSPACE_ADMIN],
+      //   members: [
+      //     TestUser.SUBSPACE_MEMBER,
+      //     TestUser.SUBSPACE_ADMIN,
+      //     TestUser.SUBSUBSPACE_MEMBER,
+      //     TestUser.SUBSUBSPACE_ADMIN,
+      //   ],
+      // },
       subspace: {
         collaboration: {
-          addPostCallout: true,
+          //   addPostCallout: true,
           addPostCollectionCallout: true,
-          addWhiteboardCallout: true,
+          //   addWhiteboardCallout: true,
         },
-        community: {
-          admins: [TestUser.SUBSUBSPACE_ADMIN],
-          members: [TestUser.SUBSUBSPACE_MEMBER, TestUser.SUBSUBSPACE_ADMIN],
-        },
+        // community: {
+        //   admins: [TestUser.SUBSUBSPACE_ADMIN],
+        //   members: [TestUser.SUBSUBSPACE_MEMBER, TestUser.SUBSUBSPACE_ADMIN],
+        // },
       },
     },
   },
@@ -169,24 +170,27 @@ beforeAll(async () => {
     responseCreateOrganization.data?.createOrganization.id ?? '';
 
   const resSpace = await createPostOnCallout(
-    baseScenario.space.collaboration.calloutPostId,
+    baseScenario.space.collaboration.calloutPostCollectionId,
     { displayName: postNameIdSpace },
     postNameIdSpace
   );
+  console.log('resSpace', resSpace.error);
   postSpaceId = resSpace.data?.createContributionOnCallout.post?.id ?? '';
 
   const resSubspace = await createPostOnCallout(
-    baseScenario.subspace.collaboration.calloutPostId,
+    baseScenario.subspace.collaboration.calloutPostCollectionId,
     { displayName: postNameIdSubspace },
     postNameIdSubspace
   );
+  console.log('resSubspace', resSubspace);
   postSubspaceId = resSubspace.data?.createContributionOnCallout.post?.id ?? '';
 
   const resSubsubspace = await createPostOnCallout(
-    baseScenario.subsubspace.collaboration.calloutPostId,
+    baseScenario.subsubspace.collaboration.calloutPostCollectionId,
     { displayName: postNameIdSubsubspace },
     postNameIdSubsubspace
   );
+  console.log('resSubsubspace', resSubsubspace);
   postSubsubspaceId =
     resSubsubspace.data?.createContributionOnCallout.post?.id ?? '';
 
@@ -203,44 +207,49 @@ afterAll(async () => {
 
 describe('Search', () => {
   describe('Search types', () => {
-    // test('should search CONTRIBUTOR data', async () => {
-    //   // Act
-    //   const responseSearchData = await searchContributor(
-    //     termAll,
-    //     typeFilterAll
-    //   );
-    //   const result = responseSearchData.data?.;
+    test('should search CONTRIBUTOR data', async () => {
+      // Act
+      const responseSearchData = await searchContributors(
+        termAll
+        //typeFilterAll
+      );
+      const result = responseSearchData.data?.search;
+      console.log('contributorResults', responseSearchData.error);
+      console.log(
+        'contributorResults',
+        responseSearchData?.data?.search.contributorResults.results
+      );
 
-    //   // Assert
-    //   expect(result?.contributorResultsCount).toEqual(2);
-    //   expect(result?.contributorResults).toContainObject({
-    //     terms: termAll,
-    //    10,
-    //     type: 'USER',
-    //     user: {
-    //       id: TestUserManager.users.qaUser.id,
-    //       profile: {
-    //         displayName: `${userName}`,
-    //       },
-    //     },
-    //   });
+      // Assert
+      expect(result?.contributorResults.results).toHaveLength(2);
+      expect(result?.contributorResults.results).toContainObject({
+        //terms: termAll,
+        // 10,
+        type: 'USER',
+        user: {
+          id: TestUserManager.users.qaUser.id,
+          profile: {
+            displayName: `${userName}`,
+          },
+        },
+      });
 
-    //   expect(result?.contributorResults).toContainObject({
-    //     terms: termAll,
-    //    10,
-    //     type: 'ORGANIZATION',
-    //     organization: {
-    //       id: `${organizationIdTest}`,
-    //       profile: {
-    //         displayName: `${organizationNameText}`,
-    //       },
-    //     },
-    //   });
-    // });
+      expect(result?.contributorResults.results).toContainObject({
+        //terms: termAll,
+        // 10,
+        type: 'ORGANIZATION',
+        organization: {
+          id: `${organizationIdTest}`,
+          profile: {
+            displayName: `${organizationNameText}`,
+          },
+        },
+      });
+    });
 
     test('should search JOURNEY data', async () => {
       // Act
-      const responseSearchData = await searchGlobalSpaces(
+      const responseSearchData = await searchSpaces(
         termWord
         // typeFilterAll
       );
@@ -289,450 +298,315 @@ describe('Search', () => {
       });
     });
 
-    // test('should search CONTRIBUTION data', async () => {
-    //   // Act
-    //   const responseSearchData = await searchContributions(
-    //     termAll,
-    //     typeFilterAll
-    //   );
-    //   const resultContribution = responseSearchData.data?.search;
-    //   const contributionResults = resultContribution?.contributionResults;
+    test('should search CONTRIBUTION data', async () => {
+      // Act
+      const responseSearchData = await searchResponses(termAll);
+      console.log('responseSearchData', responseSearchData.error);
+      console.log('responseSearchData', responseSearchData.data);
+      const resultContribution = responseSearchData.data?.search;
+      const contributionResults =
+        resultContribution?.contributionResults.results;
+      console.log('contributionResults', contributionResults);
 
-    //   // Assert
-    //   expect(resultContribution?.contributionResultsCount).toEqual(3);
-    //   expect(contributionResults).toContainObject({
-    //     terms: termAll,
-    //    10,
-    //     type: 'POST',
-    //     space: {
-    //       id: baseScenario.space.id,
-    //       profile: {
-    //         displayName: baseScenario.space.about.profile.displayName,
-    //       },
-    //     },
-    //     subspace: null,
-    //     subsubspace: null,
-    //     callout: {
-    //       id: baseScenario.space.collaboration.calloutPostId,
-    //       framing: {
-    //         profile: { displayName: 'Subspace proposals' },
-    //       },
-    //     },
-    //     post: {
-    //       id: postSpaceId,
-    //       profile: {
-    //         displayName: postNameIdSpace,
-    //       },
-    //     },
-    //   });
-    //   expect(contributionResults).toContainObject({
-    //     terms: termAll,
-    //    10,
-    //     type: 'POST',
-    //     space: {
-    //       id: baseScenario.space.id,
-    //       profile: {
-    //         displayName: baseScenario.space.about.profile.displayName,
-    //       },
-    //     },
-    //     subspace: {
-    //       id: baseScenario.subspace.id,
-    //       profile: {
-    //         displayName: baseScenario.subspace.about.profile.displayName,
-    //       },
-    //     },
-    //     subsubspace: null,
-    //     callout: {
-    //       id: baseScenario.subspace.collaboration.calloutPostId,
-    //       framing: {
-    //         profile: { displayName: 'Subsubspace proposals' },
-    //       },
-    //     },
-    //     post: {
-    //       id: postSubspaceId,
-    //       profile: {
-    //         displayName: postNameIdSubspace,
-    //       },
-    //     },
-    //   });
-    //   expect(contributionResults).toContainObject({
-    //     terms: termAll,
-    //    10,
-    //     type: 'POST',
-    //     space: {
-    //       id: baseScenario.space.id,
-    //       profile: {
-    //         displayName: baseScenario.space.about.profile.displayName,
-    //       },
-    //     },
-    //     subspace: {
-    //       id: baseScenario.subspace.id,
-    //       profile: {
-    //         displayName: baseScenario.subspace.about.profile.displayName,
-    //       },
-    //     },
-    //     subsubspace: {
-    //       id: baseScenario.subsubspace.id,
-    //       profile: {
-    //         displayName: baseScenario.subsubspace.about.profile.displayName,
-    //       },
-    //     },
-    //     callout: {
-    //       id: baseScenario.subsubspace.collaboration.calloutPostId,
-    //       framing: {
-    //         profile: { displayName: 'Relevant news, research or use cases 📰' },
-    //       },
-    //     },
-    //     post: {
-    //       id: postSubsubspaceId,
-    //       profile: {
-    //         displayName: postNameIdSubsubspace,
-    //       },
-    //     },
-    //   });
-    // });
+      // Assert
+      expect(resultContribution?.contributionResults.results).toHaveLength(3);
+      expect(contributionResults).toContainObject({
+        type: 'POST',
+        space: {
+          id: baseScenario.space.id,
+          level: 'L0',
+          visibility: 'ACTIVE',
+        },
+
+        callout: {
+          id: baseScenario.space.collaboration.calloutPostCollectionId,
+          framing: {
+            profile: { displayName: 'postCollectionCallout-search' },
+          },
+        },
+        post: {
+          id: postSpaceId,
+          profile: {
+            displayName: postNameIdSpace,
+          },
+        },
+      });
+      expect(contributionResults).toContainObject({
+        type: 'POST',
+        space: {
+          id: baseScenario.subspace.id,
+          level: 'L1',
+          visibility: 'ACTIVE',
+        },
+
+        callout: {
+          id: baseScenario.subspace.collaboration.calloutPostCollectionId,
+          framing: {
+            profile: { displayName: 'postCollectionCallout-search' },
+          },
+        },
+        post: {
+          id: postSubspaceId,
+          profile: {
+            displayName: postNameIdSubspace,
+          },
+        },
+      });
+      expect(contributionResults).toContainObject({
+        type: 'POST',
+
+        space: {
+          id: baseScenario.subsubspace.id,
+          level: 'L2',
+          visibility: 'ACTIVE',
+        },
+
+        callout: {
+          id: baseScenario.subsubspace.collaboration.calloutPostCollectionId,
+          framing: {
+            profile: { displayName: 'postCollectionCallout-search' },
+          },
+        },
+        post: {
+          id: postSubsubspaceId,
+          profile: {
+            displayName: postNameIdSubsubspace,
+          },
+        },
+      });
+    });
   });
-  // test('should search with all filters applied', async () => {
-  //   // Act
-  //   const responseSearchData = await searchContributor(termAll, typeFilterAll);
-  //   const result = responseSearchData.data?.search;
+  test('should search with all filters applied', async () => {
+    // Act
+    const responseSearchData = await searchContributors(termAll);
+    const result = responseSearchData.data?.search.contributorResults.results;
 
-  //   // Assert
-  //   expect(result?.contributorResultsCount).toEqual(2);
-  //   expect(result?.contributorResults).toContainObject({
-  //     terms: termAll,
-  //    10,
-  //     type: 'USER',
-  //     user: {
-  //       id: TestUserManager.users.qaUser.id,
-  //       profile: {
-  //         displayName: `${userName}`,
-  //       },
-  //     },
-  //   });
+    // Assert
+    expect(result).toHaveLength(2);
+    expect(result).toContainObject({
+      type: 'USER',
+      user: {
+        id: TestUserManager.users.qaUser.id,
+        profile: {
+          displayName: `${userName}`,
+        },
+      },
+    });
 
-  //   expect(result?.contributorResults).toContainObject({
-  //     terms: termAll,
-  //    10,
-  //     type: 'ORGANIZATION',
-  //     organization: {
-  //       id: `${organizationIdTest}`,
-  //       profile: {
-  //         displayName: `${organizationNameText}`,
-  //       },
-  //     },
-  //   });
-  // });
+    expect(result).toContainObject({
+      type: 'ORGANIZATION',
+      organization: {
+        id: `${organizationIdTest}`,
+        profile: {
+          displayName: `${organizationNameText}`,
+        },
+      },
+    });
+  });
 
-  // test('should search by full user name', async () => {
-  //   // Act
-  //   const responseSearchData = await searchContributor(
-  //     termFullUserName,
-  //     typeFilterAll
-  //   );
-  //   const result = responseSearchData.data?.search;
+  test('should search by full user name', async () => {
+    // Act
+    const responseSearchData = await searchContributors(termFullUserName);
+    const result = responseSearchData.data?.search.contributorResults.results;
 
-  //   // Assert
-  //   expect(result?.contributorResultsCount).toEqual(1);
-  //   expect(result?.contributorResults).toContainObject({
-  //     terms: termFullUserName,
-  //    10,
-  //     type: 'USER',
-  //     user: {
-  //       id: TestUserManager.users.qaUser.id,
-  //       profile: {
-  //         displayName: `${userName}`,
-  //       },
-  //     },
-  //   });
+    // Assert
+    expect(result).toHaveLength(2);
+    expect(result).toContainObject({
+      type: 'USER',
+      user: {
+        id: TestUserManager.users.qaUser.id,
+        profile: {
+          displayName: `${userName}`,
+        },
+      },
+    });
 
-  //   expect(result?.contributorResults).not.toContainObject({
-  //     terms: termFullUserName,
-  //    10,
-  //     type: 'ORGANIZATION',
-  //     organization: {
-  //       id: `${organizationIdTest}`,
-  //       profile: {
-  //         displayName: `${organizationNameText}`,
-  //       },
-  //     },
-  //   });
-  // });
+    expect(result).toContainObject({
+      type: 'ORGANIZATION',
+      organization: {
+        id: `${organizationIdTest}`,
+        profile: {
+          displayName: `${organizationNameText}`,
+        },
+      },
+    });
+  });
 
-  // test('should search with common word filter applied', async () => {
-  //   // Act
-  //   const responseContributior = await searchContributor(
-  //     termWord,
-  //     typeFilterAll
-  //   );
-  //   const resultContrbutor = responseContributior.data?.search;
-  //   const contributorResults = resultContrbutor?.contributorResults;
+  test('should search with common word filter applied', async () => {
+    // Act
+    const responseContributior = await searchContributors(termWord);
+    const resultContrbutor =
+      responseContributior.data?.search.contributorResults.results;
+    // const contributorResults = resultContrbutor?.contributorResults;
 
-  //   const responseSearchData = await searchGlobalSpaces(termWord, typeFilterAll);
-  //   const resultJourney = responseSearchData.data?.search;
-  //   const journeyResults = resultJourney?.journeyResults;
+    const responseSearchData = await searchSpaces(termWord);
+    const resultJourney = responseSearchData.data?.search.spaceResults.results;
+    //const journeyResults = resultJourney?.journeyResults;
 
-  //   // Assert
-  //   expect(resultContrbutor?.contributorResultsCount).toEqual(1);
-  //   expect(resultJourney?.journeyResultsCount).toEqual(3);
-  //   expect(contributorResults).not.toContainObject({
-  //     terms: termWord,
-  //    10,
-  //     type: 'USER',
-  //     user: {
-  //       id: TestUserManager.users.qaUser.id,
-  //       profile: {
-  //         displayName: `${userName}`,
-  //       },
-  //     },
-  //   });
+    // Assert
+    expect(resultContrbutor).toHaveLength(1);
+    expect(resultJourney).toHaveLength(3);
+    expect(resultContrbutor).not.toContainObject({
+      type: 'USER',
+      user: {
+        id: TestUserManager.users.qaUser.id,
+        profile: {
+          displayName: `${userName}`,
+        },
+      },
+    });
 
-  //   expect(contributorResults).toContainObject({
-  //     terms: termWord,
-  //    10,
-  //     type: 'ORGANIZATION',
-  //     organization: {
-  //       id: baseScenario.organization.id,
-  //       profile: {
-  //         displayName: baseScenario.organization.profile.displayName,
-  //       },
-  //     },
-  //   });
-  //   expect(journeyResults).toContainObject({
-  //     terms: termWord,
-  //    10,
-  //     type: 'SPACE',
-  //     space: {
-  //       id: baseScenario.space.id,
-  //       profile: {
-  //         displayName: baseScenario.space.about.profile.displayName,
-  //       },
-  //     },
-  //   });
-  //   expect(journeyResults).toContainObject({
-  //     terms: termWord,
-  //    10,
-  //     type: 'CHALLENGE',
-  //     subspace: {
-  //       id: baseScenario.subspace.id,
-  //       profile: {
-  //         displayName: baseScenario.subspace.about.profile.displayName,
-  //       },
-  //     },
-  //   });
-  //   expect(journeyResults).toContainObject({
-  //     terms: termWord,
-  //    10,
-  //     type: 'OPPORTUNITY',
-  //     subsubspace: {
-  //       id: baseScenario.subsubspace.id,
-  //       profile: {
-  //         displayName: baseScenario.subsubspace.about.profile.displayName,
-  //       },
-  //     },
-  //   });
-  // });
+    expect(resultContrbutor).toContainObject({
+      type: 'ORGANIZATION',
+      organization: {
+        id: baseScenario.organization.id,
+        profile: {
+          displayName: baseScenario.organization.profile.displayName,
+        },
+      },
+    });
+    expect(resultJourney).toContainObject({
+      type: 'SPACE',
+      space: {
+        id: baseScenario.space.id,
+        level: 'L0',
+        visibility: 'ACTIVE',
+      },
+    });
+    expect(resultJourney).toContainObject({
+      type: 'SUBSPACE',
+      space: {
+        id: baseScenario.subspace.id,
+        level: 'L1',
+        visibility: 'ACTIVE',
+      },
+    });
+    // expect(journeyResults).toContainObject({
+    //   type: 'SUBSPACE',
+    //   parentSpace: {
+    //     id: baseScenario.space.id,
+    //     level: 'L0',
+    //     visibility: 'ACTIVE',
+    //   },
+    //   space: {
+    //     id: baseScenario.subspace.id,
+    //     level: 'L1',
+    //     visibility: 'ACTIVE',
+    //   },
+    // });
+    expect(resultJourney).toContainObject({
+      type: 'SUBSPACE',
+      space: {
+        id: baseScenario.subsubspace.id,
+        level: 'L2',
+        visibility: 'ACTIVE',
+      },
+    });
+  });
 
-  // test('should search with location filter applied for all entities', async () => {
-  //   // Act
-  //   const responseContributior = await searchContributor(
-  //     termLocation,
-  //     typeFilterAll
-  //   );
-  //   const resultContrbutor = responseContributior.data?.search;
-  //   const contributorResults = resultContrbutor?.contributorResults;
+  test('should search with location filter applied for all entities', async () => {
+    // Act
+    const responseContributior = await searchContributors(termLocation);
+    const resultContrbutor =
+      responseContributior.data?.search.contributorResults.results;
+    //const contributorResults = resultContrbutor?.contributorResults;
 
-  //   const responseSearchData = await searchGlobalSpaces(termLocation, typeFilterAll);
-  //   const result = responseSearchData.data?.search;
-  //   const journeyResults = result?.journeyResults;
+    const responseSearchData = await searchSpaces(termLocation);
+    // const result = responseSearchData.data?.search.spaceResults.results;
+    const journeyResults = responseSearchData.data?.search.spaceResults.results;
 
-  //   // Assert
-  //   expect(resultContrbutor?.contributorResultsCount).toEqual(2);
-  //   expect(result?.journeyResultsCount).toEqual(3);
-  //   expect(contributorResults).toContainObject({
-  //     terms: termLocation,
-  //    10,
-  //     type: 'USER',
-  //     user: {
-  //       id: TestUserManager.users.qaUser.id,
-  //       profile: {
-  //         displayName: `${userName}`,
-  //       },
-  //     },
-  //   });
+    // Assert
+    expect(resultContrbutor).toHaveLength(2);
+    expect(journeyResults).toHaveLength(3);
+    expect(resultContrbutor).toContainObject({
+      type: 'USER',
+      user: {
+        id: TestUserManager.users.qaUser.id,
+        profile: {
+          displayName: `${userName}`,
+        },
+      },
+    });
 
-  //   expect(contributorResults).toContainObject({
-  //     terms: termLocation,
-  //    10,
-  //     type: 'ORGANIZATION',
-  //     organization: {
-  //       id: baseScenario.organization.id,
-  //       profile: {
-  //         displayName: baseScenario.organization.profile.displayName,
-  //       },
-  //     },
-  //   });
+    expect(resultContrbutor).toContainObject({
+      type: 'ORGANIZATION',
+      organization: {
+        id: baseScenario.organization.id,
+        profile: {
+          displayName: baseScenario.organization.profile.displayName,
+        },
+      },
+    });
 
-  //   expect(journeyResults).toContainObject({
-  //     terms: termLocation,
-  //    10,
-  //     type: 'OPPORTUNITY',
-  //     subsubspace: {
-  //       id: baseScenario.subsubspace.id,
-  //       profile: {
-  //         displayName: baseScenario.subsubspace.about.profile.displayName,
-  //       },
-  //     },
-  //   });
+    expect(journeyResults).toContainObject({
+      type: 'SUBSPACE',
+      space: {
+        id: baseScenario.subsubspace.id,
+        level: 'L2',
+        visibility: 'ACTIVE',
+      },
+    });
 
-  //   expect(journeyResults).toContainObject({
-  //     terms: termLocation,
-  //    10,
-  //     type: 'CHALLENGE',
-  //     subspace: {
-  //       id: baseScenario.subspace.id,
-  //       profile: {
-  //         displayName: baseScenario.subspace.about.profile.displayName,
-  //       },
-  //     },
-  //   });
+    expect(journeyResults).toContainObject({
+      type: 'SUBSPACE',
+      space: {
+        id: baseScenario.subspace.id,
+        level: 'L1',
+        visibility: 'ACTIVE',
+      },
+    });
 
-  //   expect(journeyResults).toContainObject({
-  //     terms: termLocation,
-  //    10,
-  //     type: 'SPACE',
-  //     space: {
-  //       id: baseScenario.space.id,
-  //       profile: {
-  //         displayName: baseScenario.space.about.profile.displayName,
-  //       },
-  //     },
-  //   });
-  // });
+    expect(journeyResults).toContainObject({
+      type: 'SPACE',
+      space: {
+        id: baseScenario.space.id,
+        level: 'L0',
+        visibility: 'ACTIVE',
+      },
+    });
+  });
 
-  // test('should search without filters', async () => {
-  //   // Act
-  //   const responseContributior = await searchContributor(
-  //     filterNo,
-  //     typeFilterAll
-  //   );
-  //   const responseJourney = await searchGlobalSpaces(filterNo, typeFilterAll);
+  test.only('should search without filters', async () => {
+    // Act
+    const responseContributior = await searchContributors(filterNo);
+    const responseJourney = await searchSpaces(filterNo);
 
-  //   // Assert
-  //   expect(responseContributior.data?.search.contributorResultsCount).toEqual(
-  //     0
-  //   );
+    // Assert
+    expect(
+      responseContributior.data?.search.contributorResults.results
+    ).toHaveLength(3);
 
-  //   expect(responseJourney.data?.search.journeyResultsCount).toEqual(0);
-  // });
+    expect(responseJourney.data?.search.spaceResults.results).toHaveLength(0);
+  });
 
-  // test('should search only for filtered users', async () => {
-  //   // Act
-  //   const responseContributior = await searchContributor(
-  //     termAll,
-  //     filterOnlyUser
-  //   );
-  //   const resultContrbutor = responseContributior.data?.search;
-  //   const contributorResults = resultContrbutor?.contributorResults;
+  test('should search term users only', async () => {
+    // Act
+    const responseContributior = await searchContributors(termUserOnly);
+    const resultContrbutor =
+      responseContributior.data?.search.contributorResults.results;
 
-  //   // Assert
-  //   expect(resultContrbutor?.contributorResultsCount).toEqual(1);
-  //   expect(contributorResults).toContainObject({
-  //     terms: termAll,
-  //    10,
-  //     type: 'USER',
-  //     user: {
-  //       id: TestUserManager.users.qaUser.id,
-  //       profile: {
-  //         displayName: `${userName}`,
-  //       },
-  //     },
-  //   });
+    // Assert
+    expect(resultContrbutor).toHaveLength(3);
+    expect(resultContrbutor).toContainObject({
+      type: 'USER',
+      user: {
+        id: TestUserManager.users.qaUser.id,
+        profile: {
+          displayName: `${userName}`,
+        },
+      },
+    });
 
-  //   expect(contributorResults).not.toContainObject({
-  //     terms: termAll,
-  //    10,
-  //     type: 'ORGANIZATION',
-  //     organization: {
-  //       id: `${organizationIdTest}`,
-  //       profile: {
-  //         displayName: `${organizationNameText}`,
-  //       },
-  //     },
-  //   });
-  // });
-
-  // test('should search users triple score', async () => {
-  //   // Act
-  //   const responseContributior = await searchContributor(
-  //     termAllScored,
-  //     filterOnlyUser
-  //   );
-  //   const resultContrbutor = responseContributior.data?.search;
-  //   const contributorResults = resultContrbutor?.contributorResults;
-
-  //   // Assert
-  //   expect(resultContrbutor?.contributorResultsCount).toEqual(1);
-  //   expect(contributorResults).toContainObject({
-  //     terms: ['qa', 'user'],
-  //    30,
-  //     type: 'USER',
-  //     user: {
-  //       id: TestUserManager.users.qaUser.id,
-  //       profile: {
-  //         displayName: `${userName}`,
-  //       },
-  //     },
-  //   });
-
-  //   expect(contributorResults).not.toContainObject({
-  //     terms: ['qa'],
-  //    20,
-  //     type: 'ORGANIZATION',
-  //     organization: {
-  //       id: `${organizationIdTest}`,
-  //       profile: {
-  //         displayName: `${organizationNameText}`,
-  //       },
-  //     },
-  //   });
-  // });
-
-  // test('should search term users only', async () => {
-  //   // Act
-  //   const responseContributior = await searchContributor(
-  //     termUserOnly,
-  //     filterOnlyUser
-  //   );
-  //   const resultContrbutor = responseContributior.data?.search;
-  //   const contributorResults = resultContrbutor?.contributorResults;
-
-  //   // Assert
-  //   expect(resultContrbutor?.contributorResultsCount).toEqual(1);
-  //   expect(contributorResults).toContainObject({
-  //     terms: termUserOnly,
-  //    10,
-  //     type: 'USER',
-  //     user: {
-  //       id: TestUserManager.users.qaUser.id,
-  //       profile: {
-  //         displayName: `${userName}`,
-  //       },
-  //     },
-  //   });
-
-  //   expect(contributorResults).not.toContainObject({
-  //     terms: termUserOnly,
-  //    10,
-  //     type: 'ORGANIZATION',
-  //     organization: {
-  //       id: `${organizationIdTest}`,
-  //       profile: {
-  //         displayName: `${organizationNameText}`,
-  //       },
-  //     },
-  //   });
-  // });
+    expect(resultContrbutor).not.toContainObject({
+      type: 'ORGANIZATION',
+      organization: {
+        id: `${organizationIdTest}`,
+        profile: {
+          displayName: `${organizationNameText}`,
+        },
+      },
+    });
+  });
 
   // describe('Search negative scenarios', () => {
   //   test('should throw limit error for too many terms', async () => {
