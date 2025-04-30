@@ -28,7 +28,6 @@ import {
 import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
 import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
-import { SearchResultType } from '@alkemio/client-lib/dist/types';
 
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -44,15 +43,8 @@ let postSubspaceId = '';
 let postSubsubspaceId = '';
 const postNameIdSubspace = 'qa-chal' + uniqueId;
 const postNameIdSubsubspace = 'qa-opp' + uniqueId;
-const typeFilterAll = [
-  'organization',
-  'user',
-  'space',
-  'subspace',
-  'subsubspace',
-  'post',
-];
-const filterOnlyUser = ['user'];
+
+//const filterOnlyUser = ['user'];
 const filterNo: never[] = [];
 const termUserOnly = ['user'];
 const termAll = ['qa'];
@@ -74,7 +66,7 @@ const termTooLong = [
   'qa',
 ];
 
-const termAllScored = ['qa', 'qa', 'user'];
+//const termAllScored = ['qa', 'qa', 'user'];
 
 let baseScenario: OrganizationWithSpaceModel;
 const scenarioConfig: TestScenarioConfig = {
@@ -85,42 +77,42 @@ const scenarioConfig: TestScenarioConfig = {
       addPostCollectionCallout: true,
       //addWhiteboardCallout: true,
     },
-    // community: {
-    //   admins: [TestUser.SPACE_ADMIN],
-    //   members: [
-    //     TestUser.SPACE_MEMBER,
-    //     TestUser.SPACE_ADMIN,
-    //     TestUser.SUBSPACE_MEMBER,
-    //     TestUser.SUBSPACE_ADMIN,
-    //     TestUser.SUBSUBSPACE_MEMBER,
-    //     TestUser.SUBSUBSPACE_ADMIN,
-    //   ],
-    // },
+    community: {
+      admins: [TestUser.SPACE_ADMIN],
+      members: [
+        TestUser.SPACE_MEMBER,
+        TestUser.SPACE_ADMIN,
+        TestUser.SUBSPACE_MEMBER,
+        TestUser.SUBSPACE_ADMIN,
+        TestUser.SUBSUBSPACE_MEMBER,
+        TestUser.SUBSUBSPACE_ADMIN,
+      ],
+    },
     subspace: {
       collaboration: {
         //addPostCallout: true,
         addPostCollectionCallout: true,
         //addWhiteboardCallout: true,
       },
-      // community: {
-      //   admins: [TestUser.SUBSPACE_ADMIN],
-      //   members: [
-      //     TestUser.SUBSPACE_MEMBER,
-      //     TestUser.SUBSPACE_ADMIN,
-      //     TestUser.SUBSUBSPACE_MEMBER,
-      //     TestUser.SUBSUBSPACE_ADMIN,
-      //   ],
-      // },
+      community: {
+        admins: [TestUser.SUBSPACE_ADMIN],
+        members: [
+          TestUser.SUBSPACE_MEMBER,
+          TestUser.SUBSPACE_ADMIN,
+          TestUser.SUBSUBSPACE_MEMBER,
+          TestUser.SUBSUBSPACE_ADMIN,
+        ],
+      },
       subspace: {
         collaboration: {
           //   addPostCallout: true,
           addPostCollectionCallout: true,
           //   addWhiteboardCallout: true,
         },
-        // community: {
-        //   admins: [TestUser.SUBSUBSPACE_ADMIN],
-        //   members: [TestUser.SUBSUBSPACE_MEMBER, TestUser.SUBSUBSPACE_ADMIN],
-        // },
+        community: {
+          admins: [TestUser.SUBSUBSPACE_ADMIN],
+          members: [TestUser.SUBSUBSPACE_MEMBER, TestUser.SUBSUBSPACE_ADMIN],
+        },
       },
     },
   },
@@ -174,7 +166,6 @@ beforeAll(async () => {
     { displayName: postNameIdSpace },
     postNameIdSpace
   );
-  console.log('resSpace', resSpace.error);
   postSpaceId = resSpace.data?.createContributionOnCallout.post?.id ?? '';
 
   const resSubspace = await createPostOnCallout(
@@ -182,7 +173,6 @@ beforeAll(async () => {
     { displayName: postNameIdSubspace },
     postNameIdSubspace
   );
-  console.log('resSubspace', resSubspace);
   postSubspaceId = resSubspace.data?.createContributionOnCallout.post?.id ?? '';
 
   const resSubsubspace = await createPostOnCallout(
@@ -190,13 +180,11 @@ beforeAll(async () => {
     { displayName: postNameIdSubsubspace },
     postNameIdSubsubspace
   );
-  console.log('resSubsubspace', resSubsubspace);
   postSubsubspaceId =
     resSubsubspace.data?.createContributionOnCallout.post?.id ?? '';
 
-  const a = await adminSearchIngestFromScratch();
-  await delay(10000);
-  console.log('a', a);
+  await adminSearchIngestFromScratch();
+  await delay(15000);
 });
 
 afterAll(async () => {
@@ -209,22 +197,12 @@ describe('Search', () => {
   describe('Search types', () => {
     test('should search CONTRIBUTOR data', async () => {
       // Act
-      const responseSearchData = await searchContributors(
-        termAll
-        //typeFilterAll
-      );
+      const responseSearchData = await searchContributors(termAll);
       const result = responseSearchData.data?.search;
-      console.log('contributorResults', responseSearchData.error);
-      console.log(
-        'contributorResults',
-        responseSearchData?.data?.search.contributorResults.results
-      );
 
       // Assert
       expect(result?.contributorResults.results).toHaveLength(2);
       expect(result?.contributorResults.results).toContainObject({
-        //terms: termAll,
-        // 10,
         type: 'USER',
         user: {
           id: TestUserManager.users.qaUser.id,
@@ -235,8 +213,6 @@ describe('Search', () => {
       });
 
       expect(result?.contributorResults.results).toContainObject({
-        //terms: termAll,
-        // 10,
         type: 'ORGANIZATION',
         organization: {
           id: `${organizationIdTest}`,
@@ -249,19 +225,13 @@ describe('Search', () => {
 
     test('should search JOURNEY data', async () => {
       // Act
-      const responseSearchData = await searchSpaces(
-        termWord
-        // typeFilterAll
-      );
-      const resultJourney = responseSearchData.data?.search;
-      console.log('journeyResults', responseSearchData.error);
-
-      const journeyResults = resultJourney?.spaceResults.results;
-      console.log('journeyResults', journeyResults);
+      const responseSearchData = await searchSpaces(termWord);
+      const resultJourney =
+        responseSearchData.data?.search.spaceResults.results;
 
       // Assert
-      expect(resultJourney?.spaceResults.results).toHaveLength(3);
-      expect(journeyResults).toContainObject({
+      expect(resultJourney).toHaveLength(3);
+      expect(resultJourney).toContainObject({
         type: 'SPACE',
         parentSpace: null,
         space: {
@@ -270,7 +240,7 @@ describe('Search', () => {
           visibility: 'ACTIVE',
         },
       });
-      expect(journeyResults).toContainObject({
+      expect(resultJourney).toContainObject({
         type: 'SUBSPACE',
         parentSpace: {
           id: baseScenario.space.id,
@@ -283,7 +253,7 @@ describe('Search', () => {
           visibility: 'ACTIVE',
         },
       });
-      expect(journeyResults).toContainObject({
+      expect(resultJourney).toContainObject({
         type: 'SUBSPACE',
         parentSpace: {
           id: baseScenario.subspace.id,
@@ -301,12 +271,9 @@ describe('Search', () => {
     test('should search CONTRIBUTION data', async () => {
       // Act
       const responseSearchData = await searchResponses(termAll);
-      console.log('responseSearchData', responseSearchData.error);
-      console.log('responseSearchData', responseSearchData.data);
       const resultContribution = responseSearchData.data?.search;
       const contributionResults =
         resultContribution?.contributionResults.results;
-      console.log('contributionResults', contributionResults);
 
       // Assert
       expect(resultContribution?.contributionResults.results).toHaveLength(3);
@@ -437,11 +404,8 @@ describe('Search', () => {
     const responseContributior = await searchContributors(termWord);
     const resultContrbutor =
       responseContributior.data?.search.contributorResults.results;
-    // const contributorResults = resultContrbutor?.contributorResults;
-
     const responseSearchData = await searchSpaces(termWord);
     const resultJourney = responseSearchData.data?.search.spaceResults.results;
-    //const journeyResults = resultJourney?.journeyResults;
 
     // Assert
     expect(resultContrbutor).toHaveLength(1);
@@ -481,19 +445,6 @@ describe('Search', () => {
         visibility: 'ACTIVE',
       },
     });
-    // expect(journeyResults).toContainObject({
-    //   type: 'SUBSPACE',
-    //   parentSpace: {
-    //     id: baseScenario.space.id,
-    //     level: 'L0',
-    //     visibility: 'ACTIVE',
-    //   },
-    //   space: {
-    //     id: baseScenario.subspace.id,
-    //     level: 'L1',
-    //     visibility: 'ACTIVE',
-    //   },
-    // });
     expect(resultJourney).toContainObject({
       type: 'SUBSPACE',
       space: {
@@ -509,10 +460,7 @@ describe('Search', () => {
     const responseContributior = await searchContributors(termLocation);
     const resultContrbutor =
       responseContributior.data?.search.contributorResults.results;
-    //const contributorResults = resultContrbutor?.contributorResults;
-
     const responseSearchData = await searchSpaces(termLocation);
-    // const result = responseSearchData.data?.search.spaceResults.results;
     const journeyResults = responseSearchData.data?.search.spaceResults.results;
 
     // Assert
@@ -566,7 +514,8 @@ describe('Search', () => {
     });
   });
 
-  test.only('should search without filters', async () => {
+  // now returns results up to the limit - to be verified if new expectation is correct
+  test.skip('should search without filters', async () => {
     // Act
     const responseContributior = await searchContributors(filterNo);
     const responseJourney = await searchSpaces(filterNo);
@@ -608,318 +557,291 @@ describe('Search', () => {
     });
   });
 
-  // describe('Search negative scenarios', () => {
-  //   test('should throw limit error for too many terms', async () => {
-  //     // Act
-  //     const { error: searchContributorError } = await searchContributor(
-  //       termTooLong,
-  //       typeFilterAll
-  //     );
-  //     // Assert
-  //     expect(searchContributorError?.errors[0].message).toContain(
-  //       'Maximum number of search terms is 10; supplied: 11'
-  //     );
+  describe('Search negative scenarios', () => {
+    test('should throw limit error for too many terms', async () => {
+      // Act
+      const { error: searchContributorError } =
+        await searchContributors(termTooLong);
+      // Assert
+      expect(searchContributorError?.errors[0].message).toContain(
+        'Maximum number of search terms is 10; supplied: 11'
+      );
 
-  //     const { error: searchJourneyError } = await searchGlobalSpaces(
-  //       termTooLong,
-  //       typeFilterAll
-  //     );
-  //     expect(searchJourneyError?.errors[0].message).toContain(
-  //       'Maximum number of search terms is 10; supplied: 11'
-  //     );
-  //   });
+      const { error: searchJourneyError } = await searchSpaces(termTooLong);
+      expect(searchJourneyError?.errors[0].message).toContain(
+        'Maximum number of search terms is 10; supplied: 11'
+      );
+    });
 
-  //   test('should throw error for invalid filter', async () => {
-  //     // Act
-  //     const { error } = await searchContributor(termAll, 'invalid');
-  //     // Assert
-  //     expect(error?.errors[0].message).toContain(
-  //       'Not allowed typeFilter encountered: invalid'
-  //     );
-  //   });
+    // now returns results up to the limit - to be verified if new expectation is correct
+    test.skip('should throw error for empty string search', async () => {
+      // Act
+      const { error } = await searchContributors(' ');
+      // Assert
+      expect(error?.errors[0].message).toContain(
+        'Search: Skipping term below minimum length: '
+      );
+    });
 
-  //   test('should throw error for empty string search', async () => {
-  //     // Act
-  //     const { error } = await searchContributor(' ', typeFilterAll);
-  //     // Assert
-  //     expect(error?.errors[0].message).toContain(
-  //       'Search: Skipping term below minimum length: '
-  //     );
-  //   });
+    test('should not return any results for invalid term', async () => {
+      // Act
+      const responseSearchData = await searchContributors(termNotExisting);
 
-  //   test('should not return any results for invalid term', async () => {
-  //     // Act
-  //     const responseSearchData = await searchContributor(
-  //       termNotExisting,
-  //       typeFilterAll
-  //     );
+      // Assert
+      expect(
+        responseSearchData.data?.search.contributorResults.results
+      ).toEqual([]);
+    });
+  });
 
-  //     // Assert
-  //     expect(responseSearchData.data?.search.contributorResults).toEqual([]);
-  //   });
-  // });
+  describe('Search filtered Space Data', () => {
+    const secondSpaceName = 'search-space2' + uniqueId;
 
-  // describe('Search filtered Space Data', () => {
-  //   const secondSpaceName = 'search-space2' + uniqueId;
+    beforeAll(async () => {
+      const res = await createSpaceAndGetData(
+        secondSpaceName,
+        secondSpaceName,
+        baseScenario.organization.accountId
+      );
+      secondSpaceId = res.data?.lookup?.space?.id ?? '';
+    });
 
-  //   beforeAll(async () => {
-  //     const res = await createSpaceAndGetData(
-  //       secondSpaceName,
-  //       secondSpaceName,
-  //       baseScenario.organization.id
-  //     );
-  //     secondSpaceId = res.data?.lookup?.space?.id ?? '';
-  //   });
+    afterAll(async () => {
+      await deleteSpace(secondSpaceId);
+    });
 
-  //   afterAll(async () => {
-  //     await deleteSpace(secondSpaceId);
-  //   });
+    // skip until bug is fixed: https://app.zenhub.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/gh/alkem-io/server/5114
+    test.skip('should search JOURNEY data filtered space', async () => {
+      // Act
+      const responseSearchData = await searchSpaces(
+        [secondSpaceName],
+        TestUser.GLOBAL_ADMIN,
+        baseScenario.space.id
+      );
+      const resultJourney =
+        responseSearchData.data?.search.spaceResults.results;
+      // const journeyResults = resultJourney?.journeyResults;
 
-  //   test('should search JOURNEY data filtered space', async () => {
-  //     // Act
-  //     const responseSearchData = await searchGlobalSpaces(
-  //       termWord,
-  //       typeFilterAll,
-  //       TestUser.GLOBAL_ADMIN,
-  //       baseScenario.space.id
-  //     );
-  //     const resultJourney = responseSearchData.data?.search;
-  //     const journeyResults = resultJourney?.journeyResults;
+      // Assert
+      expect(resultJourney).toHaveLength(2);
+      expect(resultJourney).toContainObject({
+        type: 'SUBSPACE',
+        space: {
+          id: baseScenario.subspace.id,
+          level: 'L1',
+          visibility: 'ACTIVE',
+        },
+      });
+      expect(resultJourney).toContainObject({
+        type: 'SUBSPACE',
+        space: {
+          id: baseScenario.subsubspace.id,
+          level: 'L2',
+          visibility: 'ACTIVE',
+        },
+      });
+    });
 
-  //     // Assert
-  //     expect(resultJourney?.journeyResultsCount).toEqual(2);
-  //     expect(journeyResults).toContainObject({
-  //       terms: termWord,
-  //      10,
-  //       type: 'CHALLENGE',
-  //       subspace: {
-  //         id: baseScenario.subspace.id,
-  //         profile: {
-  //           displayName: baseScenario.subspace.about.profile.displayName,
-  //         },
-  //       },
-  //     });
-  //     expect(journeyResults).toContainObject({
-  //       terms: termWord,
-  //      10,
-  //       type: 'OPPORTUNITY',
-  //       subsubspace: {
-  //         id: baseScenario.subsubspace.id,
-  //         profile: {
-  //           displayName: baseScenario.subsubspace.about.profile.displayName,
-  //         },
-  //       },
-  //     });
-  //   });
+    test('should search JOURNEY data filtered empty space', async () => {
+      // Act
+      const responseSearchData = await searchSpaces(
+        termWord,
+        TestUser.GLOBAL_ADMIN,
+        secondSpaceId
+      );
+      const resultJourney =
+        responseSearchData.data?.search.spaceResults.results;
 
-  //   test('should search JOURNEY data filtered empty space', async () => {
-  //     // Act
-  //     const responseSearchData = await searchGlobalSpaces(
-  //       termWord,
-  //       typeFilterAll,
-  //       TestUser.GLOBAL_ADMIN,
-  //       secondSpaceId
-  //     );
-  //     const resultJourney = responseSearchData.data?.search;
+      // Assert
+      expect(resultJourney).toHaveLength(0);
+    });
+  });
 
-  //     // Assert
-  //     expect(resultJourney?.journeyResultsCount).toEqual(0);
-  //   });
-  // });
+  describe('Search Archived Space Data', () => {
+    beforeAll(async () => {
+      await updateSpacePlatformSettings(
+        baseScenario.space.id,
+        baseScenario.space.nameId,
+        SpaceVisibility.Archived
+      );
+    });
 
-  // describe('Search Archived Space Data', () => {
-  //   beforeAll(async () => {
-  //     await updateSpacePlatformSettings(
-  //       baseScenario.space.id,
-  //       baseScenario.space.nameId,
-  //       SpaceVisibility.Archived
-  //     );
-  //   });
+    test.each`
+      userRole
+      ${TestUser.SPACE_ADMIN}
+      ${TestUser.SPACE_MEMBER}
+      ${TestUser.NON_SPACE_MEMBER}
+    `(
+      'User: "$userRole" should not receive Space / Subspace / Subsubspace data',
+      async ({ userRole }) => {
+        const responseSearchData = await searchSpaces(
+          termLocation,
 
-  //   test.each`
-  //     userRole
-  //     ${TestUser.SPACE_ADMIN}
-  //     ${TestUser.SPACE_MEMBER}
-  //     ${TestUser.NON_SPACE_MEMBER}
-  //   `(
-  //     'User: "$userRole" should not receive Space / Subspace / Subsubspace data',
-  //     async ({ userRole }) => {
-  //       const responseSearchData = await searchGlobalSpaces(
-  //         termLocation,
-  //         typeFilterAll,
-  //         userRole
-  //       );
-  //       const resultJourney = responseSearchData.data?.search;
-  //       const journeyResults = resultJourney?.journeyResults;
-  //       expect(journeyResults).not.toContainObject({
-  //         terms: termLocation,
-  //        10,
-  //         type: 'OPPORTUNITY',
-  //         subsubspace: {
-  //           id: baseScenario.subsubspace.id,
-  //           profile: {
-  //             displayName: baseScenario.subsubspace.about.profile.displayName,
-  //           },
-  //         },
-  //       });
+          userRole
+        );
+        const resultJourney =
+          responseSearchData.data?.search.spaceResults.results;
 
-  //       expect(journeyResults).not.toContainObject({
-  //         terms: termLocation,
-  //        10,
-  //         type: 'CHALLENGE',
-  //         subspace: {
-  //           id: baseScenario.subspace.id,
-  //           profile: {
-  //             displayName: baseScenario.subspace.about.profile.displayName,
-  //           },
-  //         },
-  //       });
+        expect(resultJourney).not.toContainObject({
+          type: 'SUBSPACE',
+          space: {
+            id: baseScenario.subsubspace.id,
+            level: 'L2',
+            visibility: 'ACTIVE',
+          },
+        });
 
-  //       expect(journeyResults).not.toContainObject({
-  //         terms: termLocation,
-  //        10,
-  //         type: 'SPACE',
-  //         space: {
-  //           id: baseScenario.space.id,
-  //           profile: {
-  //             displayName: baseScenario.space.about.profile.displayName,
-  //           },
-  //         },
-  //       });
-  //     }
-  //   );
+        expect(resultJourney).not.toContainObject({
+          type: 'SUBSPACE',
+          space: {
+            id: baseScenario.subspace.id,
+            level: 'L1',
+            visibility: 'ACTIVE',
+          },
+        });
 
-  //   test('GA get results for archived spaces', async () => {
-  //     const responseSearchData = await searchGlobalSpaces(
-  //       termLocation,
-  //       typeFilterAll,
-  //       TestUser.GLOBAL_ADMIN
-  //     );
-  //     const resultJourney = responseSearchData.data?.search;
+        expect(resultJourney).not.toContainObject({
+          type: 'SPACE',
+          space: {
+            id: baseScenario.space.id,
+            level: 'L0',
+            visibility: 'ACTIVE',
+          },
+        });
+      }
+    );
 
-  //     // Assert
-  //     expect(resultJourney?.journeyResultsCount).toEqual(0);
-  //   });
-  // });
+    test('GA get results for archived spaces', async () => {
+      const responseSearchData = await searchSpaces(
+        termLocation,
 
-  // describe('Search IN Public Space Private Subspace Data', () => {
-  //   beforeAll(async () => {
-  //     await updateSpacePlatformSettings(
-  //       baseScenario.space.id,
-  //       baseScenario.space.nameId,
-  //       SpaceVisibility.Active
-  //     );
+        TestUser.GLOBAL_ADMIN
+      );
+      const resultJourney =
+        responseSearchData.data?.search.spaceResults.results;
 
-  //     await updateSpaceSettings(baseScenario.space.id, {
-  //       privacy: { mode: SpacePrivacyMode.Public },
-  //     });
+      // Assert
+      expect(resultJourney).toHaveLength(3);
+    });
+  });
 
-  //     await updateSpaceSettings(baseScenario.subspace.id, {
-  //       privacy: { mode: SpacePrivacyMode.Private },
-  //     });
-  //   });
+  describe.skip('Search IN Public Space Private Subspace Data', () => {
+    beforeAll(async () => {
+      await updateSpacePlatformSettings(
+        baseScenario.space.id,
+        baseScenario.space.nameId,
+        SpaceVisibility.Active
+      );
 
-  //   test.each`
-  //     userRole                       | numberResults
-  //     ${TestUser.SPACE_ADMIN}        | ${2}
-  //     ${TestUser.SPACE_MEMBER}       | ${0}
-  //     ${TestUser.SUBSPACE_ADMIN}     | ${2}
-  //     ${TestUser.SUBSPACE_MEMBER}    | ${2}
-  //     ${TestUser.SUBSUBSPACE_ADMIN}  | ${2}
-  //     ${TestUser.SUBSUBSPACE_MEMBER} | ${2}
-  //     ${TestUser.NON_SPACE_MEMBER}   | ${0}
-  //   `(
-  //     'User: "$userRole" should get "$numberResults" results for Subspace / Subsubspace data',
-  //     async ({ userRole, numberResults }) => {
-  //       const responseSearchData = await searchGlobalSpaces(
-  //         termWord,
-  //         typeFilterAll,
-  //         userRole,
-  //         baseScenario.space.id
-  //       );
-  //       const resultJourney = responseSearchData.data?.search;
-  //       expect(resultJourney?.journeyResultsCount).toEqual(numberResults);
-  //     }
-  //   );
-  // });
+      await updateSpaceSettings(baseScenario.space.id, {
+        privacy: { mode: SpacePrivacyMode.Public },
+      });
 
-  // describe('Search Public Space Private Subspace Data', () => {
-  //   beforeAll(async () => {
-  //     await updateSpacePlatformSettings(
-  //       baseScenario.space.id,
-  //       baseScenario.space.nameId,
-  //       SpaceVisibility.Active
-  //     );
+      await updateSpaceSettings(baseScenario.subspace.id, {
+        privacy: { mode: SpacePrivacyMode.Private },
+      });
+    });
 
-  //     await updateSpaceSettings(baseScenario.space.id, {
-  //       privacy: { mode: SpacePrivacyMode.Public },
-  //     });
+    // skip until bug is fixed: https://app.zenhub.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/gh/alkem-io/server/5114
+    test.skip.each`
+      userRole                       | numberResults
+      ${TestUser.SPACE_ADMIN}        | ${2}
+      ${TestUser.SPACE_MEMBER}       | ${0}
+      ${TestUser.SUBSPACE_ADMIN}     | ${2}
+      ${TestUser.SUBSPACE_MEMBER}    | ${2}
+      ${TestUser.SUBSUBSPACE_ADMIN}  | ${2}
+      ${TestUser.SUBSUBSPACE_MEMBER} | ${2}
+      ${TestUser.NON_SPACE_MEMBER}   | ${0}
+    `(
+      'User: "$userRole" should get "$numberResults" results for Subspace / Subsubspace data',
+      async ({ userRole, numberResults }) => {
+        const responseSearchData = await searchSpaces(
+          termWord,
+          userRole,
+          baseScenario.space.id
+        );
+        const resultJourney =
+          responseSearchData.data?.search.spaceResults.results;
+        expect(resultJourney).toHaveLength(numberResults);
+      }
+    );
+  });
 
-  //     await updateSpaceSettings(baseScenario.subspace.id, {
-  //       privacy: { mode: SpacePrivacyMode.Private },
-  //     });
-  //   });
+  describe('Search Public Space Private Subspace Data', () => {
+    beforeAll(async () => {
+      await updateSpacePlatformSettings(
+        baseScenario.space.id,
+        baseScenario.space.nameId,
+        SpaceVisibility.Active
+      );
 
-  //   test.each`
-  //     userRole                       | numberResults
-  //     ${TestUser.SPACE_ADMIN}        | ${3}
-  //     ${TestUser.SPACE_MEMBER}       | ${1}
-  //     ${TestUser.SUBSPACE_ADMIN}     | ${3}
-  //     ${TestUser.SUBSPACE_MEMBER}    | ${3}
-  //     ${TestUser.SUBSUBSPACE_ADMIN}  | ${3}
-  //     ${TestUser.SUBSUBSPACE_MEMBER} | ${3}
-  //     ${TestUser.NON_SPACE_MEMBER}   | ${1}
-  //   `(
-  //     'User: "$userRole" should get "$numberResults" results for Space /  Subspace / Subsubspace data',
-  //     async ({ userRole, numberResults }) => {
-  //       const responseSearchData = await searchGlobalSpaces(
-  //         termWord,
-  //         typeFilterAll,
-  //         userRole
-  //       );
-  //       const resultJourney = responseSearchData.data?.search;
-  //       expect(resultJourney?.journeyResultsCount).toEqual(numberResults);
-  //     }
-  //   );
-  // });
+      await updateSpaceSettings(baseScenario.space.id, {
+        privacy: { mode: SpacePrivacyMode.Public },
+      });
 
-  // describe('Search Private Space Private Subspace Data', () => {
-  //   beforeAll(async () => {
-  //     await updateSpacePlatformSettings(
-  //       baseScenario.space.id,
-  //       baseScenario.space.nameId,
-  //       SpaceVisibility.Active
-  //     );
+      await updateSpaceSettings(baseScenario.subspace.id, {
+        privacy: { mode: SpacePrivacyMode.Private },
+      });
+    });
 
-  //     await updateSpaceSettings(baseScenario.space.id, {
-  //       privacy: { mode: SpacePrivacyMode.Private },
-  //     });
+    test.each`
+      userRole                       | numberResults
+      ${TestUser.SPACE_ADMIN}        | ${3}
+      ${TestUser.SPACE_MEMBER}       | ${1}
+      ${TestUser.SUBSPACE_ADMIN}     | ${3}
+      ${TestUser.SUBSPACE_MEMBER}    | ${3}
+      ${TestUser.SUBSUBSPACE_ADMIN}  | ${3}
+      ${TestUser.SUBSUBSPACE_MEMBER} | ${3}
+      ${TestUser.NON_SPACE_MEMBER}   | ${1}
+    `(
+      'User: "$userRole" should get "$numberResults" results for Space /  Subspace / Subsubspace data',
+      async ({ userRole, numberResults }) => {
+        const responseSearchData = await searchSpaces(termWord, userRole);
+        const resultJourney =
+          responseSearchData.data?.search.spaceResults.results;
+        expect(resultJourney).toHaveLength(numberResults);
+      }
+    );
+  });
 
-  //     await updateSpaceSettings(baseScenario.subspace.id, {
-  //       privacy: { mode: SpacePrivacyMode.Private },
-  //     });
-  //   });
+  describe('Search Private Space Private Subspace Data', () => {
+    beforeAll(async () => {
+      await updateSpacePlatformSettings(
+        baseScenario.space.id,
+        baseScenario.space.nameId,
+        SpaceVisibility.Active
+      );
 
-  //   test.each`
-  //     userRole                       | numberResults
-  //     ${TestUser.SPACE_ADMIN}        | ${3}
-  //     ${TestUser.SPACE_MEMBER}       | ${1}
-  //     ${TestUser.SUBSPACE_ADMIN}     | ${3}
-  //     ${TestUser.SUBSPACE_MEMBER}    | ${3}
-  //     ${TestUser.SUBSUBSPACE_ADMIN}  | ${3}
-  //     ${TestUser.SUBSUBSPACE_MEMBER} | ${3}
-  //     ${TestUser.NON_SPACE_MEMBER}   | ${1}
-  //   `(
-  //     'User: "$userRole" should get "$numberResults" results for Space / Subspace / Subsubspace data',
-  //     async ({ userRole, numberResults }) => {
-  //       const responseSearchData = await searchGlobalSpaces(
-  //         termWord,
-  //         typeFilterAll,
-  //         userRole
-  //       );
-  //       const resultJourney = responseSearchData.data?.search;
-  //       expect(resultJourney?.journeyResultsCount).toEqual(numberResults);
-  //     }
-  //   );
-  // });
+      await updateSpaceSettings(baseScenario.space.id, {
+        privacy: { mode: SpacePrivacyMode.Private },
+      });
+
+      await updateSpaceSettings(baseScenario.subspace.id, {
+        privacy: { mode: SpacePrivacyMode.Private },
+      });
+    });
+
+    test.each`
+      userRole                       | numberResults
+      ${TestUser.SPACE_ADMIN}        | ${3}
+      ${TestUser.SPACE_MEMBER}       | ${1}
+      ${TestUser.SUBSPACE_ADMIN}     | ${3}
+      ${TestUser.SUBSPACE_MEMBER}    | ${3}
+      ${TestUser.SUBSUBSPACE_ADMIN}  | ${3}
+      ${TestUser.SUBSUBSPACE_MEMBER} | ${3}
+      ${TestUser.NON_SPACE_MEMBER}   | ${1}
+    `(
+      'User: "$userRole" should get "$numberResults" results for Space / Subspace / Subsubspace data',
+      async ({ userRole, numberResults }) => {
+        const responseSearchData = await searchSpaces(
+          termWord,
+
+          userRole
+        );
+        const resultJourney =
+          responseSearchData.data?.search.spaceResults.results;
+        expect(resultJourney).toHaveLength(numberResults);
+      }
+    );
+  });
 });
