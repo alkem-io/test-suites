@@ -12,5 +12,6 @@ fragment WhiteboardData on Whiteboard {
       __typename
     }
   }
+
   content
 }

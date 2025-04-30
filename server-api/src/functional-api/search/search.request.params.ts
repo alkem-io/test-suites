@@ -2,21 +2,41 @@
 import { TestUser } from '@alkemio/tests-lib';
 import { getGraphqlClient } from '@utils/graphqlClient';
 import { graphqlErrorWrapper } from '@utils/graphql.wrapper';
+import { SearchCategory, SearchResultType } from '@generated/alkemio-schema';
 
-export const searchContributor = async (
+export const adminSearchIngestFromScratch = async (
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = await getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.AdminSearchIngestFromScratch(
+      {},
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const searchSpaces = async (
   terms: any,
-  filter: any,
   userRole: TestUser = TestUser.GLOBAL_ADMIN,
   searchInSpaceFilter?: string
 ) => {
   const graphqlClient = await getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.searchContributor(
+    graphqlClient.search(
       {
         searchData: {
-          tagsetNames: ['Keywords'],
           terms: terms,
-          typesFilter: filter,
+          filters: [
+            {
+              category: SearchCategory.Spaces,
+              size: 3,
+              types: [SearchResultType.Space, SearchResultType.Subspace],
+            },
+          ],
+
           searchInSpaceFilter,
         },
       },
@@ -28,20 +48,25 @@ export const searchContributor = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const searchJourney = async (
+export const searchResponses = async (
   terms: any,
-  filter: any,
   userRole: TestUser = TestUser.GLOBAL_ADMIN,
   searchInSpaceFilter?: string
 ) => {
   const graphqlClient = await getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.searchJourney(
+    graphqlClient.search(
       {
         searchData: {
-          tagsetNames: ['Keywords'],
           terms: terms,
-          typesFilter: filter,
+          filters: [
+            {
+              category: SearchCategory.Responses,
+              size: 3,
+              types: [SearchResultType.Post, SearchResultType.Whiteboard],
+            },
+          ],
+
           searchInSpaceFilter,
         },
       },
@@ -53,20 +78,24 @@ export const searchJourney = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const searchContributions = async (
+export const searchContributors = async (
   terms: any,
-  filter: any,
   userRole: TestUser = TestUser.GLOBAL_ADMIN,
   searchInSpaceFilter?: string
 ) => {
   const graphqlClient = await getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.searchContributions(
+    graphqlClient.search(
       {
         searchData: {
-          tagsetNames: ['Keywords'],
           terms: terms,
-          typesFilter: filter,
+          filters: [
+            {
+              category: SearchCategory.Contributors,
+              size: 3,
+              types: [SearchResultType.User, SearchResultType.Organization],
+            },
+          ],
           searchInSpaceFilter,
         },
       },
@@ -74,5 +103,6 @@ export const searchContributions = async (
         authorization: `Bearer ${authToken}`,
       }
     );
+
   return graphqlErrorWrapper(callback, userRole);
 };

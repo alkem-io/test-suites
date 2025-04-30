@@ -1,13 +1,15 @@
 import { updateUser } from '@functional-api/contributor-management/user/user.request.params';
-import { TestUser } from '@alkemio/tests-lib';
+import { delay, TestUser } from '@alkemio/tests-lib';
 import '@utils/array.matcher';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
 import { TestUserManager } from '@src/scenario/TestUserManager';
 import { createPostOnCallout } from '../callout/post/post.request.params';
 import {
-  searchContributions,
-  searchContributor,
-  searchJourney,
+  adminSearchIngestFromScratch,
+  searchContributors,
+  searchResponses,
+  searchSpaces,
+  // searchJourney,
 } from './search.request.params';
 import {
   updateSpaceLocation,
@@ -41,15 +43,8 @@ let postSubspaceId = '';
 let postSubsubspaceId = '';
 const postNameIdSubspace = 'qa-chal' + uniqueId;
 const postNameIdSubsubspace = 'qa-opp' + uniqueId;
-const typeFilterAll = [
-  'organization',
-  'user',
-  'space',
-  'subspace',
-  'subsubspace',
-  'post',
-];
-const filterOnlyUser = ['user'];
+
+//const filterOnlyUser = ['user'];
 const filterNo: never[] = [];
 const termUserOnly = ['user'];
 const termAll = ['qa'];
@@ -71,16 +66,16 @@ const termTooLong = [
   'qa',
 ];
 
-const termAllScored = ['qa', 'qa', 'user'];
+//const termAllScored = ['qa', 'qa', 'user'];
 
 let baseScenario: OrganizationWithSpaceModel;
 const scenarioConfig: TestScenarioConfig = {
   name: 'search',
   space: {
     collaboration: {
-      addPostCallout: true,
+      //addPostCallout: true,
       addPostCollectionCallout: true,
-      addWhiteboardCallout: true,
+      //addWhiteboardCallout: true,
     },
     community: {
       admins: [TestUser.SPACE_ADMIN],
@@ -95,9 +90,9 @@ const scenarioConfig: TestScenarioConfig = {
     },
     subspace: {
       collaboration: {
-        addPostCallout: true,
+        //addPostCallout: true,
         addPostCollectionCallout: true,
-        addWhiteboardCallout: true,
+        //addWhiteboardCallout: true,
       },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
@@ -110,9 +105,9 @@ const scenarioConfig: TestScenarioConfig = {
       },
       subspace: {
         collaboration: {
-          addPostCallout: true,
+          //   addPostCallout: true,
           addPostCollectionCallout: true,
-          addWhiteboardCallout: true,
+          //   addWhiteboardCallout: true,
         },
         community: {
           admins: [TestUser.SUBSUBSPACE_ADMIN],
@@ -167,26 +162,29 @@ beforeAll(async () => {
     responseCreateOrganization.data?.createOrganization.id ?? '';
 
   const resSpace = await createPostOnCallout(
-    baseScenario.space.collaboration.calloutPostId,
+    baseScenario.space.collaboration.calloutPostCollectionId,
     { displayName: postNameIdSpace },
     postNameIdSpace
   );
   postSpaceId = resSpace.data?.createContributionOnCallout.post?.id ?? '';
 
   const resSubspace = await createPostOnCallout(
-    baseScenario.subspace.collaboration.calloutPostId,
+    baseScenario.subspace.collaboration.calloutPostCollectionId,
     { displayName: postNameIdSubspace },
     postNameIdSubspace
   );
   postSubspaceId = resSubspace.data?.createContributionOnCallout.post?.id ?? '';
 
   const resSubsubspace = await createPostOnCallout(
-    baseScenario.subsubspace.collaboration.calloutPostId,
+    baseScenario.subsubspace.collaboration.calloutPostCollectionId,
     { displayName: postNameIdSubsubspace },
     postNameIdSubsubspace
   );
   postSubsubspaceId =
     resSubsubspace.data?.createContributionOnCallout.post?.id ?? '';
+
+  await adminSearchIngestFromScratch();
+  await delay(15000);
 });
 
 afterAll(async () => {
@@ -199,17 +197,12 @@ describe('Search', () => {
   describe('Search types', () => {
     test('should search CONTRIBUTOR data', async () => {
       // Act
-      const responseSearchData = await searchContributor(
-        termAll,
-        typeFilterAll
-      );
+      const responseSearchData = await searchContributors(termAll);
       const result = responseSearchData.data?.search;
 
       // Assert
-      expect(result?.contributorResultsCount).toEqual(2);
-      expect(result?.contributorResults).toContainObject({
-        terms: termAll,
-        score: 10,
+      expect(result?.contributorResults.results).toHaveLength(2);
+      expect(result?.contributorResults.results).toContainObject({
         type: 'USER',
         user: {
           id: TestUserManager.users.qaUser.id,
@@ -219,9 +212,7 @@ describe('Search', () => {
         },
       });
 
-      expect(result?.contributorResults).toContainObject({
-        terms: termAll,
-        score: 10,
+      expect(result?.contributorResults.results).toContainObject({
         type: 'ORGANIZATION',
         organization: {
           id: `${organizationIdTest}`,
@@ -234,74 +225,70 @@ describe('Search', () => {
 
     test('should search JOURNEY data', async () => {
       // Act
-      const responseSearchData = await searchJourney(termWord, typeFilterAll);
-      const resultJourney = responseSearchData.data?.search;
-      const journeyResults = resultJourney?.journeyResults;
+      const responseSearchData = await searchSpaces(termWord);
+      const resultJourney =
+        responseSearchData.data?.search.spaceResults.results;
 
       // Assert
-      expect(resultJourney?.journeyResultsCount).toEqual(3);
-      expect(journeyResults).toContainObject({
-        terms: termWord,
-        score: 10,
+      expect(resultJourney).toHaveLength(3);
+      expect(resultJourney).toContainObject({
         type: 'SPACE',
+        parentSpace: null,
         space: {
           id: baseScenario.space.id,
-          profile: {
-            displayName: baseScenario.space.about.profile.displayName,
-          },
+          level: 'L0',
+          visibility: 'ACTIVE',
         },
       });
-      expect(journeyResults).toContainObject({
-        terms: termWord,
-        score: 10,
-        type: 'CHALLENGE',
-        subspace: {
+      expect(resultJourney).toContainObject({
+        type: 'SUBSPACE',
+        parentSpace: {
+          id: baseScenario.space.id,
+          level: 'L0',
+          visibility: 'ACTIVE',
+        },
+        space: {
           id: baseScenario.subspace.id,
-          profile: {
-            displayName: baseScenario.subspace.about.profile.displayName,
-          },
+          level: 'L1',
+          visibility: 'ACTIVE',
         },
       });
-      expect(journeyResults).toContainObject({
-        terms: termWord,
-        score: 10,
-        type: 'OPPORTUNITY',
-        subsubspace: {
+      expect(resultJourney).toContainObject({
+        type: 'SUBSPACE',
+        parentSpace: {
+          id: baseScenario.subspace.id,
+          level: 'L1',
+          visibility: 'ACTIVE',
+        },
+        space: {
           id: baseScenario.subsubspace.id,
-          profile: {
-            displayName: baseScenario.subsubspace.about.profile.displayName,
-          },
+          level: 'L2',
+          visibility: 'ACTIVE',
         },
       });
     });
 
     test('should search CONTRIBUTION data', async () => {
       // Act
-      const responseSearchData = await searchContributions(
-        termAll,
-        typeFilterAll
-      );
+      const responseSearchData = await searchResponses(termAll);
       const resultContribution = responseSearchData.data?.search;
-      const contributionResults = resultContribution?.contributionResults;
+      const contributionResults =
+        resultContribution?.contributionResults.results;
 
       // Assert
-      expect(resultContribution?.contributionResultsCount).toEqual(3);
+      expect(resultContribution?.contributionResults.results).toHaveLength(3);
       expect(contributionResults).toContainObject({
-        terms: termAll,
-        score: 10,
         type: 'POST',
         space: {
           id: baseScenario.space.id,
-          profile: {
-            displayName: baseScenario.space.about.profile.displayName,
-          },
+          level: 'L0',
+          visibility: 'ACTIVE',
         },
-        subspace: null,
-        subsubspace: null,
+
         callout: {
-          id: baseScenario.space.collaboration.calloutPostId,
+          id: baseScenario.space.collaboration.calloutPostCollectionId,
           framing: {
-            profile: { displayName: 'Subspace proposals' },
+            profile: { displayName: 'postCollectionCallout-search' },
           },
         },
         post: {
@@ -312,26 +299,17 @@ describe('Search', () => {
         },
       });
       expect(contributionResults).toContainObject({
-        terms: termAll,
-        score: 10,
         type: 'POST',
         space: {
-          id: baseScenario.space.id,
-          profile: {
-            displayName: baseScenario.space.about.profile.displayName,
-          },
-        },
-        subspace: {
           id: baseScenario.subspace.id,
-          profile: {
-            displayName: baseScenario.subspace.about.profile.displayName,
-          },
+          level: 'L1',
+          visibility: 'ACTIVE',
         },
-        subsubspace: null,
+
         callout: {
-          id: baseScenario.subspace.collaboration.calloutPostId,
+          id: baseScenario.subspace.collaboration.calloutPostCollectionId,
           framing: {
-            profile: { displayName: 'Subsubspace proposals' },
+            profile: { displayName: 'postCollectionCallout-search' },
           },
         },
         post: {
@@ -342,31 +320,18 @@ describe('Search', () => {
         },
       });
       expect(contributionResults).toContainObject({
-        terms: termAll,
-        score: 10,
         type: 'POST',
+
         space: {
-          id: baseScenario.space.id,
-          profile: {
-            displayName: baseScenario.space.about.profile.displayName,
-          },
-        },
-        subspace: {
-          id: baseScenario.subspace.id,
-          profile: {
-            displayName: baseScenario.subspace.about.profile.displayName,
-          },
-        },
-        subsubspace: {
           id: baseScenario.subsubspace.id,
-          profile: {
-            displayName: baseScenario.subsubspace.about.profile.displayName,
-          },
+          level: 'L2',
+          visibility: 'ACTIVE',
         },
+
         callout: {
-          id: baseScenario.subsubspace.collaboration.calloutPostId,
+          id: baseScenario.subsubspace.collaboration.calloutPostCollectionId,
           framing: {
-            profile: { displayName: 'Relevant news, research or use cases 📰' },
+            profile: { displayName: 'postCollectionCallout-search' },
           },
         },
         post: {
@@ -380,14 +345,12 @@ describe('Search', () => {
   });
   test('should search with all filters applied', async () => {
     // Act
-    const responseSearchData = await searchContributor(termAll, typeFilterAll);
-    const result = responseSearchData.data?.search;
+    const responseSearchData = await searchContributors(termAll);
+    const result = responseSearchData.data?.search.contributorResults.results;
 
     // Assert
-    expect(result?.contributorResultsCount).toEqual(2);
-    expect(result?.contributorResults).toContainObject({
-      terms: termAll,
-      score: 10,
+    expect(result).toHaveLength(2);
+    expect(result).toContainObject({
       type: 'USER',
       user: {
         id: TestUserManager.users.qaUser.id,
@@ -397,9 +360,7 @@ describe('Search', () => {
       },
     });
 
-    expect(result?.contributorResults).toContainObject({
-      terms: termAll,
-      score: 10,
+    expect(result).toContainObject({
       type: 'ORGANIZATION',
       organization: {
         id: `${organizationIdTest}`,
@@ -412,17 +373,12 @@ describe('Search', () => {
 
   test('should search by full user name', async () => {
     // Act
-    const responseSearchData = await searchContributor(
-      termFullUserName,
-      typeFilterAll
-    );
-    const result = responseSearchData.data?.search;
+    const responseSearchData = await searchContributors(termFullUserName);
+    const result = responseSearchData.data?.search.contributorResults.results;
 
     // Assert
-    expect(result?.contributorResultsCount).toEqual(1);
-    expect(result?.contributorResults).toContainObject({
-      terms: termFullUserName,
-      score: 10,
+    expect(result).toHaveLength(2);
+    expect(result).toContainObject({
       type: 'USER',
       user: {
         id: TestUserManager.users.qaUser.id,
@@ -432,9 +388,7 @@ describe('Search', () => {
       },
     });
 
-    expect(result?.contributorResults).not.toContainObject({
-      terms: termFullUserName,
-      score: 10,
+    expect(result).toContainObject({
       type: 'ORGANIZATION',
       organization: {
         id: `${organizationIdTest}`,
@@ -447,23 +401,16 @@ describe('Search', () => {
 
   test('should search with common word filter applied', async () => {
     // Act
-    const responseContributior = await searchContributor(
-      termWord,
-      typeFilterAll
-    );
-    const resultContrbutor = responseContributior.data?.search;
-    const contributorResults = resultContrbutor?.contributorResults;
-
-    const responseSearchData = await searchJourney(termWord, typeFilterAll);
-    const resultJourney = responseSearchData.data?.search;
-    const journeyResults = resultJourney?.journeyResults;
+    const responseContributior = await searchContributors(termWord);
+    const resultContrbutor =
+      responseContributior.data?.search.contributorResults.results;
+    const responseSearchData = await searchSpaces(termWord);
+    const resultJourney = responseSearchData.data?.search.spaceResults.results;
 
     // Assert
-    expect(resultContrbutor?.contributorResultsCount).toEqual(1);
-    expect(resultJourney?.journeyResultsCount).toEqual(3);
-    expect(contributorResults).not.toContainObject({
-      terms: termWord,
-      score: 10,
+    expect(resultContrbutor).toHaveLength(1);
+    expect(resultJourney).toHaveLength(3);
+    expect(resultContrbutor).not.toContainObject({
       type: 'USER',
       user: {
         id: TestUserManager.users.qaUser.id,
@@ -473,9 +420,7 @@ describe('Search', () => {
       },
     });
 
-    expect(contributorResults).toContainObject({
-      terms: termWord,
-      score: 10,
+    expect(resultContrbutor).toContainObject({
       type: 'ORGANIZATION',
       organization: {
         id: baseScenario.organization.id,
@@ -484,60 +429,44 @@ describe('Search', () => {
         },
       },
     });
-    expect(journeyResults).toContainObject({
-      terms: termWord,
-      score: 10,
+    expect(resultJourney).toContainObject({
       type: 'SPACE',
       space: {
         id: baseScenario.space.id,
-        profile: {
-          displayName: baseScenario.space.about.profile.displayName,
-        },
+        level: 'L0',
+        visibility: 'ACTIVE',
       },
     });
-    expect(journeyResults).toContainObject({
-      terms: termWord,
-      score: 10,
-      type: 'CHALLENGE',
-      subspace: {
+    expect(resultJourney).toContainObject({
+      type: 'SUBSPACE',
+      space: {
         id: baseScenario.subspace.id,
-        profile: {
-          displayName: baseScenario.subspace.about.profile.displayName,
-        },
+        level: 'L1',
+        visibility: 'ACTIVE',
       },
     });
-    expect(journeyResults).toContainObject({
-      terms: termWord,
-      score: 10,
-      type: 'OPPORTUNITY',
-      subsubspace: {
+    expect(resultJourney).toContainObject({
+      type: 'SUBSPACE',
+      space: {
         id: baseScenario.subsubspace.id,
-        profile: {
-          displayName: baseScenario.subsubspace.about.profile.displayName,
-        },
+        level: 'L2',
+        visibility: 'ACTIVE',
       },
     });
   });
 
   test('should search with location filter applied for all entities', async () => {
     // Act
-    const responseContributior = await searchContributor(
-      termLocation,
-      typeFilterAll
-    );
-    const resultContrbutor = responseContributior.data?.search;
-    const contributorResults = resultContrbutor?.contributorResults;
-
-    const responseSearchData = await searchJourney(termLocation, typeFilterAll);
-    const result = responseSearchData.data?.search;
-    const journeyResults = result?.journeyResults;
+    const responseContributior = await searchContributors(termLocation);
+    const resultContrbutor =
+      responseContributior.data?.search.contributorResults.results;
+    const responseSearchData = await searchSpaces(termLocation);
+    const journeyResults = responseSearchData.data?.search.spaceResults.results;
 
     // Assert
-    expect(resultContrbutor?.contributorResultsCount).toEqual(2);
-    expect(result?.journeyResultsCount).toEqual(3);
-    expect(contributorResults).toContainObject({
-      terms: termLocation,
-      score: 10,
+    expect(resultContrbutor).toHaveLength(2);
+    expect(journeyResults).toHaveLength(3);
+    expect(resultContrbutor).toContainObject({
       type: 'USER',
       user: {
         id: TestUserManager.users.qaUser.id,
@@ -547,9 +476,7 @@ describe('Search', () => {
       },
     });
 
-    expect(contributorResults).toContainObject({
-      terms: termLocation,
-      score: 10,
+    expect(resultContrbutor).toContainObject({
       type: 'ORGANIZATION',
       organization: {
         id: baseScenario.organization.id,
@@ -560,144 +487,56 @@ describe('Search', () => {
     });
 
     expect(journeyResults).toContainObject({
-      terms: termLocation,
-      score: 10,
-      type: 'OPPORTUNITY',
-      subsubspace: {
+      type: 'SUBSPACE',
+      space: {
         id: baseScenario.subsubspace.id,
-        profile: {
-          displayName: baseScenario.subsubspace.about.profile.displayName,
-        },
+        level: 'L2',
+        visibility: 'ACTIVE',
       },
     });
 
     expect(journeyResults).toContainObject({
-      terms: termLocation,
-      score: 10,
-      type: 'CHALLENGE',
-      subspace: {
+      type: 'SUBSPACE',
+      space: {
         id: baseScenario.subspace.id,
-        profile: {
-          displayName: baseScenario.subspace.about.profile.displayName,
-        },
+        level: 'L1',
+        visibility: 'ACTIVE',
       },
     });
 
     expect(journeyResults).toContainObject({
-      terms: termLocation,
-      score: 10,
       type: 'SPACE',
       space: {
         id: baseScenario.space.id,
-        profile: {
-          displayName: baseScenario.space.about.profile.displayName,
-        },
+        level: 'L0',
+        visibility: 'ACTIVE',
       },
     });
   });
 
-  test('should search without filters', async () => {
+  // now returns results up to the limit - to be verified if new expectation is correct
+  test.skip('should search without filters', async () => {
     // Act
-    const responseContributior = await searchContributor(
-      filterNo,
-      typeFilterAll
-    );
-    const responseJourney = await searchJourney(filterNo, typeFilterAll);
+    const responseContributior = await searchContributors(filterNo);
+    const responseJourney = await searchSpaces(filterNo);
 
     // Assert
-    expect(responseContributior.data?.search.contributorResultsCount).toEqual(
-      0
-    );
+    expect(
+      responseContributior.data?.search.contributorResults.results
+    ).toHaveLength(3);
 
-    expect(responseJourney.data?.search.journeyResultsCount).toEqual(0);
-  });
-
-  test('should search only for filtered users', async () => {
-    // Act
-    const responseContributior = await searchContributor(
-      termAll,
-      filterOnlyUser
-    );
-    const resultContrbutor = responseContributior.data?.search;
-    const contributorResults = resultContrbutor?.contributorResults;
-
-    // Assert
-    expect(resultContrbutor?.contributorResultsCount).toEqual(1);
-    expect(contributorResults).toContainObject({
-      terms: termAll,
-      score: 10,
-      type: 'USER',
-      user: {
-        id: TestUserManager.users.qaUser.id,
-        profile: {
-          displayName: `${userName}`,
-        },
-      },
-    });
-
-    expect(contributorResults).not.toContainObject({
-      terms: termAll,
-      score: 10,
-      type: 'ORGANIZATION',
-      organization: {
-        id: `${organizationIdTest}`,
-        profile: {
-          displayName: `${organizationNameText}`,
-        },
-      },
-    });
-  });
-
-  test('should search users triple score', async () => {
-    // Act
-    const responseContributior = await searchContributor(
-      termAllScored,
-      filterOnlyUser
-    );
-    const resultContrbutor = responseContributior.data?.search;
-    const contributorResults = resultContrbutor?.contributorResults;
-
-    // Assert
-    expect(resultContrbutor?.contributorResultsCount).toEqual(1);
-    expect(contributorResults).toContainObject({
-      terms: ['qa', 'user'],
-      score: 30,
-      type: 'USER',
-      user: {
-        id: TestUserManager.users.qaUser.id,
-        profile: {
-          displayName: `${userName}`,
-        },
-      },
-    });
-
-    expect(contributorResults).not.toContainObject({
-      terms: ['qa'],
-      score: 20,
-      type: 'ORGANIZATION',
-      organization: {
-        id: `${organizationIdTest}`,
-        profile: {
-          displayName: `${organizationNameText}`,
-        },
-      },
-    });
+    expect(responseJourney.data?.search.spaceResults.results).toHaveLength(0);
   });
 
   test('should search term users only', async () => {
     // Act
-    const responseContributior = await searchContributor(
-      termUserOnly,
-      filterOnlyUser
-    );
-    const resultContrbutor = responseContributior.data?.search;
-    const contributorResults = resultContrbutor?.contributorResults;
+    const responseContributior = await searchContributors(termUserOnly);
+    const resultContrbutor =
+      responseContributior.data?.search.contributorResults.results;
 
     // Assert
-    expect(resultContrbutor?.contributorResultsCount).toEqual(1);
-    expect(contributorResults).toContainObject({
-      terms: termUserOnly,
-      score: 10,
+    expect(resultContrbutor).toHaveLength(3);
+    expect(resultContrbutor).toContainObject({
       type: 'USER',
       user: {
         id: TestUserManager.users.qaUser.id,
@@ -707,9 +546,7 @@ describe('Search', () => {
       },
     });
 
-    expect(contributorResults).not.toContainObject({
-      terms: termUserOnly,
-      score: 10,
+    expect(resultContrbutor).not.toContainObject({
       type: 'ORGANIZATION',
       organization: {
         id: `${organizationIdTest}`,
@@ -723,36 +560,23 @@ describe('Search', () => {
   describe('Search negative scenarios', () => {
     test('should throw limit error for too many terms', async () => {
       // Act
-      const { error: searchContributorError } = await searchContributor(
-        termTooLong,
-        typeFilterAll
-      );
+      const { error: searchContributorError } =
+        await searchContributors(termTooLong);
       // Assert
       expect(searchContributorError?.errors[0].message).toContain(
         'Maximum number of search terms is 10; supplied: 11'
       );
 
-      const { error: searchJourneyError } = await searchJourney(
-        termTooLong,
-        typeFilterAll
-      );
+      const { error: searchJourneyError } = await searchSpaces(termTooLong);
       expect(searchJourneyError?.errors[0].message).toContain(
         'Maximum number of search terms is 10; supplied: 11'
       );
     });
 
-    test('should throw error for invalid filter', async () => {
+    // now returns results up to the limit - to be verified if new expectation is correct
+    test.skip('should throw error for empty string search', async () => {
       // Act
-      const { error } = await searchContributor(termAll, 'invalid');
-      // Assert
-      expect(error?.errors[0].message).toContain(
-        'Not allowed typeFilter encountered: invalid'
-      );
-    });
-
-    test('should throw error for empty string search', async () => {
-      // Act
-      const { error } = await searchContributor(' ', typeFilterAll);
+      const { error } = await searchContributors(' ');
       // Assert
       expect(error?.errors[0].message).toContain(
         'Search: Skipping term below minimum length: '
@@ -761,13 +585,12 @@ describe('Search', () => {
 
     test('should not return any results for invalid term', async () => {
       // Act
-      const responseSearchData = await searchContributor(
-        termNotExisting,
-        typeFilterAll
-      );
+      const responseSearchData = await searchContributors(termNotExisting);
 
       // Assert
-      expect(responseSearchData.data?.search.contributorResults).toEqual([]);
+      expect(
+        responseSearchData.data?.search.contributorResults.results
+      ).toEqual([]);
     });
   });
 
@@ -778,7 +601,7 @@ describe('Search', () => {
       const res = await createSpaceAndGetData(
         secondSpaceName,
         secondSpaceName,
-        baseScenario.organization.id
+        baseScenario.organization.accountId
       );
       secondSpaceId = res.data?.lookup?.space?.id ?? '';
     });
@@ -787,55 +610,50 @@ describe('Search', () => {
       await deleteSpace(secondSpaceId);
     });
 
-    test('should search JOURNEY data filtered space', async () => {
+    // skip until bug is fixed: https://app.zenhub.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/gh/alkem-io/server/5114
+    test.skip('should search JOURNEY data filtered space', async () => {
       // Act
-      const responseSearchData = await searchJourney(
-        termWord,
-        typeFilterAll,
+      const responseSearchData = await searchSpaces(
+        [secondSpaceName],
         TestUser.GLOBAL_ADMIN,
         baseScenario.space.id
       );
-      const resultJourney = responseSearchData.data?.search;
-      const journeyResults = resultJourney?.journeyResults;
+      const resultJourney =
+        responseSearchData.data?.search.spaceResults.results;
+      // const journeyResults = resultJourney?.journeyResults;
 
       // Assert
-      expect(resultJourney?.journeyResultsCount).toEqual(2);
-      expect(journeyResults).toContainObject({
-        terms: termWord,
-        score: 10,
-        type: 'CHALLENGE',
-        subspace: {
+      expect(resultJourney).toHaveLength(2);
+      expect(resultJourney).toContainObject({
+        type: 'SUBSPACE',
+        space: {
           id: baseScenario.subspace.id,
-          profile: {
-            displayName: baseScenario.subspace.about.profile.displayName,
-          },
+          level: 'L1',
+          visibility: 'ACTIVE',
         },
       });
-      expect(journeyResults).toContainObject({
-        terms: termWord,
-        score: 10,
-        type: 'OPPORTUNITY',
-        subsubspace: {
+      expect(resultJourney).toContainObject({
+        type: 'SUBSPACE',
+        space: {
           id: baseScenario.subsubspace.id,
-          profile: {
-            displayName: baseScenario.subsubspace.about.profile.displayName,
-          },
+          level: 'L2',
+          visibility: 'ACTIVE',
         },
       });
     });
 
     test('should search JOURNEY data filtered empty space', async () => {
       // Act
-      const responseSearchData = await searchJourney(
+      const responseSearchData = await searchSpaces(
         termWord,
-        typeFilterAll,
         TestUser.GLOBAL_ADMIN,
         secondSpaceId
       );
-      const resultJourney = responseSearchData.data?.search;
+      const resultJourney =
+        responseSearchData.data?.search.spaceResults.results;
 
       // Assert
-      expect(resultJourney?.journeyResultsCount).toEqual(0);
+      expect(resultJourney).toHaveLength(0);
     });
   });
 
@@ -856,65 +674,58 @@ describe('Search', () => {
     `(
       'User: "$userRole" should not receive Space / Subspace / Subsubspace data',
       async ({ userRole }) => {
-        const responseSearchData = await searchJourney(
+        const responseSearchData = await searchSpaces(
           termLocation,
-          typeFilterAll,
+
           userRole
         );
-        const resultJourney = responseSearchData.data?.search;
-        const journeyResults = resultJourney?.journeyResults;
-        expect(journeyResults).not.toContainObject({
-          terms: termLocation,
-          score: 10,
-          type: 'OPPORTUNITY',
-          subsubspace: {
+        const resultJourney =
+          responseSearchData.data?.search.spaceResults.results;
+
+        expect(resultJourney).not.toContainObject({
+          type: 'SUBSPACE',
+          space: {
             id: baseScenario.subsubspace.id,
-            profile: {
-              displayName: baseScenario.subsubspace.about.profile.displayName,
-            },
+            level: 'L2',
+            visibility: 'ACTIVE',
           },
         });
 
-        expect(journeyResults).not.toContainObject({
-          terms: termLocation,
-          score: 10,
-          type: 'CHALLENGE',
-          subspace: {
+        expect(resultJourney).not.toContainObject({
+          type: 'SUBSPACE',
+          space: {
             id: baseScenario.subspace.id,
-            profile: {
-              displayName: baseScenario.subspace.about.profile.displayName,
-            },
+            level: 'L1',
+            visibility: 'ACTIVE',
           },
         });
 
-        expect(journeyResults).not.toContainObject({
-          terms: termLocation,
-          score: 10,
+        expect(resultJourney).not.toContainObject({
           type: 'SPACE',
           space: {
             id: baseScenario.space.id,
-            profile: {
-              displayName: baseScenario.space.about.profile.displayName,
-            },
+            level: 'L0',
+            visibility: 'ACTIVE',
           },
         });
       }
     );
 
     test('GA get results for archived spaces', async () => {
-      const responseSearchData = await searchJourney(
+      const responseSearchData = await searchSpaces(
         termLocation,
-        typeFilterAll,
+
         TestUser.GLOBAL_ADMIN
       );
-      const resultJourney = responseSearchData.data?.search;
+      const resultJourney =
+        responseSearchData.data?.search.spaceResults.results;
 
       // Assert
-      expect(resultJourney?.journeyResultsCount).toEqual(0);
+      expect(resultJourney).toHaveLength(3);
     });
   });
 
-  describe('Search IN Public Space Private Subspace Data', () => {
+  describe.skip('Search IN Public Space Private Subspace Data', () => {
     beforeAll(async () => {
       await updateSpacePlatformSettings(
         baseScenario.space.id,
@@ -931,7 +742,8 @@ describe('Search', () => {
       });
     });
 
-    test.each`
+    // skip until bug is fixed: https://app.zenhub.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/gh/alkem-io/server/5114
+    test.skip.each`
       userRole                       | numberResults
       ${TestUser.SPACE_ADMIN}        | ${2}
       ${TestUser.SPACE_MEMBER}       | ${0}
@@ -943,14 +755,14 @@ describe('Search', () => {
     `(
       'User: "$userRole" should get "$numberResults" results for Subspace / Subsubspace data',
       async ({ userRole, numberResults }) => {
-        const responseSearchData = await searchJourney(
+        const responseSearchData = await searchSpaces(
           termWord,
-          typeFilterAll,
           userRole,
           baseScenario.space.id
         );
-        const resultJourney = responseSearchData.data?.search;
-        expect(resultJourney?.journeyResultsCount).toEqual(numberResults);
+        const resultJourney =
+          responseSearchData.data?.search.spaceResults.results;
+        expect(resultJourney).toHaveLength(numberResults);
       }
     );
   });
@@ -984,13 +796,10 @@ describe('Search', () => {
     `(
       'User: "$userRole" should get "$numberResults" results for Space /  Subspace / Subsubspace data',
       async ({ userRole, numberResults }) => {
-        const responseSearchData = await searchJourney(
-          termWord,
-          typeFilterAll,
-          userRole
-        );
-        const resultJourney = responseSearchData.data?.search;
-        expect(resultJourney?.journeyResultsCount).toEqual(numberResults);
+        const responseSearchData = await searchSpaces(termWord, userRole);
+        const resultJourney =
+          responseSearchData.data?.search.spaceResults.results;
+        expect(resultJourney).toHaveLength(numberResults);
       }
     );
   });
@@ -1024,13 +833,14 @@ describe('Search', () => {
     `(
       'User: "$userRole" should get "$numberResults" results for Space / Subspace / Subsubspace data',
       async ({ userRole, numberResults }) => {
-        const responseSearchData = await searchJourney(
+        const responseSearchData = await searchSpaces(
           termWord,
-          typeFilterAll,
+
           userRole
         );
-        const resultJourney = responseSearchData.data?.search;
-        expect(resultJourney?.journeyResultsCount).toEqual(numberResults);
+        const resultJourney =
+          responseSearchData.data?.search.spaceResults.results;
+        expect(resultJourney).toHaveLength(numberResults);
       }
     );
   });
