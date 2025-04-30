@@ -140,10 +140,9 @@ export enum ActivityEventType {
   CalloutPublished = 'CALLOUT_PUBLISHED',
   CalloutWhiteboardContentModified = 'CALLOUT_WHITEBOARD_CONTENT_MODIFIED',
   CalloutWhiteboardCreated = 'CALLOUT_WHITEBOARD_CREATED',
-  ChallengeCreated = 'CHALLENGE_CREATED',
   DiscussionComment = 'DISCUSSION_COMMENT',
   MemberJoined = 'MEMBER_JOINED',
-  OpportunityCreated = 'OPPORTUNITY_CREATED',
+  SubspaceCreated = 'SUBSPACE_CREATED',
   UpdateSent = 'UPDATE_SENT',
 }
 
@@ -199,8 +198,6 @@ export type ActivityLogEntry = {
   id: Scalars['UUID']['output'];
   /** The display name of the parent */
   parentDisplayName: Scalars['String']['output'];
-  /** The nameID of the parent */
-  parentNameID: Scalars['NameID']['output'];
   /** The Space where the activity happened */
   space?: Maybe<Space>;
   /** The user that triggered this Activity. */
@@ -225,8 +222,6 @@ export type ActivityLogEntryCalendarEventCreated = ActivityLogEntry & {
   id: Scalars['UUID']['output'];
   /** The display name of the parent */
   parentDisplayName: Scalars['String']['output'];
-  /** The nameID of the parent */
-  parentNameID: Scalars['NameID']['output'];
   /** The Space where the activity happened */
   space?: Maybe<Space>;
   /** The user that triggered this Activity. */
@@ -249,8 +244,6 @@ export type ActivityLogEntryCalloutDiscussionComment = ActivityLogEntry & {
   id: Scalars['UUID']['output'];
   /** The display name of the parent */
   parentDisplayName: Scalars['String']['output'];
-  /** The nameID of the parent */
-  parentNameID: Scalars['NameID']['output'];
   /** The Space where the activity happened */
   space?: Maybe<Space>;
   /** The user that triggered this Activity. */
@@ -275,8 +268,6 @@ export type ActivityLogEntryCalloutLinkCreated = ActivityLogEntry & {
   link: Link;
   /** The display name of the parent */
   parentDisplayName: Scalars['String']['output'];
-  /** The nameID of the parent */
-  parentNameID: Scalars['NameID']['output'];
   /** The Space where the activity happened */
   space?: Maybe<Space>;
   /** The user that triggered this Activity. */
@@ -299,8 +290,6 @@ export type ActivityLogEntryCalloutPostComment = ActivityLogEntry & {
   id: Scalars['UUID']['output'];
   /** The display name of the parent */
   parentDisplayName: Scalars['String']['output'];
-  /** The nameID of the parent */
-  parentNameID: Scalars['NameID']['output'];
   /** The Post that was commented on. */
   post: Post;
   /** The Space where the activity happened */
@@ -325,8 +314,6 @@ export type ActivityLogEntryCalloutPostCreated = ActivityLogEntry & {
   id: Scalars['UUID']['output'];
   /** The display name of the parent */
   parentDisplayName: Scalars['String']['output'];
-  /** The nameID of the parent */
-  parentNameID: Scalars['NameID']['output'];
   /** The Post that was created. */
   post: Post;
   /** The Space where the activity happened */
@@ -351,8 +338,6 @@ export type ActivityLogEntryCalloutPublished = ActivityLogEntry & {
   id: Scalars['UUID']['output'];
   /** The display name of the parent */
   parentDisplayName: Scalars['String']['output'];
-  /** The nameID of the parent */
-  parentNameID: Scalars['NameID']['output'];
   /** The Space where the activity happened */
   space?: Maybe<Space>;
   /** The user that triggered this Activity. */
@@ -376,8 +361,6 @@ export type ActivityLogEntryCalloutWhiteboardContentModified =
     id: Scalars['UUID']['output'];
     /** The display name of the parent */
     parentDisplayName: Scalars['String']['output'];
-    /** The nameID of the parent */
-    parentNameID: Scalars['NameID']['output'];
     /** The Space where the activity happened */
     space?: Maybe<Space>;
     /** The user that triggered this Activity. */
@@ -402,8 +385,6 @@ export type ActivityLogEntryCalloutWhiteboardCreated = ActivityLogEntry & {
   id: Scalars['UUID']['output'];
   /** The display name of the parent */
   parentDisplayName: Scalars['String']['output'];
-  /** The nameID of the parent */
-  parentNameID: Scalars['NameID']['output'];
   /** The Space where the activity happened */
   space?: Maybe<Space>;
   /** The user that triggered this Activity. */
@@ -412,30 +393,6 @@ export type ActivityLogEntryCalloutWhiteboardCreated = ActivityLogEntry & {
   type: ActivityEventType;
   /** The Whiteboard that was created. */
   whiteboard: Whiteboard;
-};
-
-export type ActivityLogEntryChallengeCreated = ActivityLogEntry & {
-  /** Indicates if this Activity happened on a child Collaboration. Child results can be included via the "includeChild" parameter. */
-  child: Scalars['Boolean']['output'];
-  /** The id of the Collaboration entity within which the Activity was generated. */
-  collaborationID: Scalars['UUID']['output'];
-  /** The timestamp for the Activity. */
-  createdDate: Scalars['DateTime']['output'];
-  /** The text details for this Activity. */
-  description: Scalars['String']['output'];
-  id: Scalars['UUID']['output'];
-  /** The display name of the parent */
-  parentDisplayName: Scalars['String']['output'];
-  /** The nameID of the parent */
-  parentNameID: Scalars['NameID']['output'];
-  /** The Space where the activity happened */
-  space?: Maybe<Space>;
-  /** The Subspace that was created. */
-  subspace: Space;
-  /** The user that triggered this Activity. */
-  triggeredBy: User;
-  /** The event type for this Activity. */
-  type: ActivityEventType;
 };
 
 export type ActivityLogEntryMemberJoined = ActivityLogEntry & {
@@ -456,8 +413,6 @@ export type ActivityLogEntryMemberJoined = ActivityLogEntry & {
   id: Scalars['UUID']['output'];
   /** The display name of the parent */
   parentDisplayName: Scalars['String']['output'];
-  /** The nameID of the parent */
-  parentNameID: Scalars['NameID']['output'];
   /** The Space where the activity happened */
   space?: Maybe<Space>;
   /** The user that triggered this Activity. */
@@ -466,7 +421,7 @@ export type ActivityLogEntryMemberJoined = ActivityLogEntry & {
   type: ActivityEventType;
 };
 
-export type ActivityLogEntryOpportunityCreated = ActivityLogEntry & {
+export type ActivityLogEntrySubspaceCreated = ActivityLogEntry & {
   /** Indicates if this Activity happened on a child Collaboration. Child results can be included via the "includeChild" parameter. */
   child: Scalars['Boolean']['output'];
   /** The id of the Collaboration entity within which the Activity was generated. */
@@ -478,12 +433,10 @@ export type ActivityLogEntryOpportunityCreated = ActivityLogEntry & {
   id: Scalars['UUID']['output'];
   /** The display name of the parent */
   parentDisplayName: Scalars['String']['output'];
-  /** The nameID of the parent */
-  parentNameID: Scalars['NameID']['output'];
   /** The Space where the activity happened */
   space?: Maybe<Space>;
-  /** The Subsubspace that was created. */
-  subsubspace: Space;
+  /** The Subspace that was created. */
+  subspace: Space;
   /** The user that triggered this Activity. */
   triggeredBy: User;
   /** The event type for this Activity. */
@@ -506,8 +459,6 @@ export type ActivityLogEntryUpdateSent = ActivityLogEntry & {
   message: Scalars['String']['output'];
   /** The display name of the parent */
   parentDisplayName: Scalars['String']['output'];
-  /** The nameID of the parent */
-  parentNameID: Scalars['NameID']['output'];
   /** The Space where the activity happened */
   space?: Maybe<Space>;
   /** The user that triggered this Activity. */
@@ -5279,8 +5230,6 @@ export type RelayPaginatedSpace = {
   subspaces: Array<Space>;
   /** The TemplatesManager in use by this Space */
   templatesManager?: Maybe<TemplatesManager>;
-  /** The Type of the Space e.g. space/challenge/opportunity. */
-  type: SpaceType;
   /** The date at which the entity was last updated. */
   updatedDate?: Maybe<Scalars['DateTime']['output']>;
   /** Visibility of the Space. */
@@ -5579,14 +5528,12 @@ export type RolesResultCommunity = {
   displayName: Scalars['String']['output'];
   /** A unique identifier for this membership result. */
   id: Scalars['String']['output'];
-  /** The level of the Space e.g. space/challenge/opportunity. */
+  /** The level of the Space e.g. L0/L1/L2. */
   level: SpaceLevel;
   /** Name Identifier of the entity */
   nameID: Scalars['NameID']['output'];
   /** The roles held by the contributor */
   roles: Array<Scalars['String']['output']>;
-  /** The Type of the Space e.g. space/challenge/opportunity. */
-  type: SpaceType;
 };
 
 export type RolesResultOrganization = {
@@ -5609,7 +5556,7 @@ export type RolesResultSpace = {
   displayName: Scalars['String']['output'];
   /** A unique identifier for this membership result. */
   id: Scalars['String']['output'];
-  /** The level of the Space e.g. space/challenge/opportunity. */
+  /** The level of the Space e.g. L0/L1/L2. */
   level: SpaceLevel;
   /** Name Identifier of the entity */
   nameID: Scalars['NameID']['output'];
@@ -5619,8 +5566,6 @@ export type RolesResultSpace = {
   spaceID: Scalars['String']['output'];
   /** Details of the Subspace the user is a member of */
   subspaces: Array<RolesResultCommunity>;
-  /** The Type of the Space e.g. space/challenge/opportunity. */
-  type: SpaceType;
   /** Visibility of the Space. */
   visibility: SpaceVisibility;
 };
@@ -5911,8 +5856,6 @@ export type Space = {
   subspaces: Array<Space>;
   /** The TemplatesManager in use by this Space */
   templatesManager?: Maybe<TemplatesManager>;
-  /** The Type of the Space e.g. space/challenge/opportunity. */
-  type: SpaceType;
   /** The date at which the entity was last updated. */
   updatedDate?: Maybe<Scalars['DateTime']['output']>;
   /** Visibility of the Space. */
@@ -7577,14 +7520,6 @@ export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> =
           whiteboard: _RefType['Whiteboard'];
         })
       | (Omit<
-          ActivityLogEntryChallengeCreated,
-          'space' | 'subspace' | 'triggeredBy'
-        > & {
-          space?: Maybe<_RefType['Space']>;
-          subspace: _RefType['Space'];
-          triggeredBy: _RefType['User'];
-        })
-      | (Omit<
           ActivityLogEntryMemberJoined,
           'community' | 'contributor' | 'space' | 'triggeredBy'
         > & {
@@ -7594,11 +7529,11 @@ export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> =
           triggeredBy: _RefType['User'];
         })
       | (Omit<
-          ActivityLogEntryOpportunityCreated,
-          'space' | 'subsubspace' | 'triggeredBy'
+          ActivityLogEntrySubspaceCreated,
+          'space' | 'subspace' | 'triggeredBy'
         > & {
           space?: Maybe<_RefType['Space']>;
-          subsubspace: _RefType['Space'];
+          subspace: _RefType['Space'];
           triggeredBy: _RefType['User'];
         })
       | (Omit<
@@ -7831,16 +7766,6 @@ export type ResolversTypes = {
       whiteboard: ResolversTypes['Whiteboard'];
     }
   >;
-  ActivityLogEntryChallengeCreated: ResolverTypeWrapper<
-    Omit<
-      ActivityLogEntryChallengeCreated,
-      'space' | 'subspace' | 'triggeredBy'
-    > & {
-      space?: Maybe<ResolversTypes['Space']>;
-      subspace: ResolversTypes['Space'];
-      triggeredBy: ResolversTypes['User'];
-    }
-  >;
   ActivityLogEntryMemberJoined: ResolverTypeWrapper<
     Omit<
       ActivityLogEntryMemberJoined,
@@ -7852,13 +7777,13 @@ export type ResolversTypes = {
       triggeredBy: ResolversTypes['User'];
     }
   >;
-  ActivityLogEntryOpportunityCreated: ResolverTypeWrapper<
+  ActivityLogEntrySubspaceCreated: ResolverTypeWrapper<
     Omit<
-      ActivityLogEntryOpportunityCreated,
-      'space' | 'subsubspace' | 'triggeredBy'
+      ActivityLogEntrySubspaceCreated,
+      'space' | 'subspace' | 'triggeredBy'
     > & {
       space?: Maybe<ResolversTypes['Space']>;
-      subsubspace: ResolversTypes['Space'];
+      subspace: ResolversTypes['Space'];
       triggeredBy: ResolversTypes['User'];
     }
   >;
@@ -9097,14 +9022,6 @@ export type ResolversParentTypes = {
     triggeredBy: ResolversParentTypes['User'];
     whiteboard: ResolversParentTypes['Whiteboard'];
   };
-  ActivityLogEntryChallengeCreated: Omit<
-    ActivityLogEntryChallengeCreated,
-    'space' | 'subspace' | 'triggeredBy'
-  > & {
-    space?: Maybe<ResolversParentTypes['Space']>;
-    subspace: ResolversParentTypes['Space'];
-    triggeredBy: ResolversParentTypes['User'];
-  };
   ActivityLogEntryMemberJoined: Omit<
     ActivityLogEntryMemberJoined,
     'community' | 'contributor' | 'space' | 'triggeredBy'
@@ -9114,12 +9031,12 @@ export type ResolversParentTypes = {
     space?: Maybe<ResolversParentTypes['Space']>;
     triggeredBy: ResolversParentTypes['User'];
   };
-  ActivityLogEntryOpportunityCreated: Omit<
-    ActivityLogEntryOpportunityCreated,
-    'space' | 'subsubspace' | 'triggeredBy'
+  ActivityLogEntrySubspaceCreated: Omit<
+    ActivityLogEntrySubspaceCreated,
+    'space' | 'subspace' | 'triggeredBy'
   > & {
     space?: Maybe<ResolversParentTypes['Space']>;
-    subsubspace: ResolversParentTypes['Space'];
+    subspace: ResolversParentTypes['Space'];
     triggeredBy: ResolversParentTypes['User'];
   };
   ActivityLogEntryUpdateSent: Omit<
@@ -10226,9 +10143,8 @@ export type ActivityLogEntryResolvers<
     | 'ActivityLogEntryCalloutPublished'
     | 'ActivityLogEntryCalloutWhiteboardContentModified'
     | 'ActivityLogEntryCalloutWhiteboardCreated'
-    | 'ActivityLogEntryChallengeCreated'
     | 'ActivityLogEntryMemberJoined'
-    | 'ActivityLogEntryOpportunityCreated'
+    | 'ActivityLogEntrySubspaceCreated'
     | 'ActivityLogEntryUpdateSent',
     ParentType,
     ContextType
@@ -10243,7 +10159,6 @@ export type ActivityLogEntryResolvers<
     ParentType,
     ContextType
   >;
-  parentNameID?: Resolver<ResolversTypes['NameID'], ParentType, ContextType>;
   space?: Resolver<Maybe<ResolversTypes['Space']>, ParentType, ContextType>;
   triggeredBy?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
   type?: Resolver<ResolversTypes['ActivityEventType'], ParentType, ContextType>;
@@ -10270,7 +10185,6 @@ export type ActivityLogEntryCalendarEventCreatedResolvers<
     ParentType,
     ContextType
   >;
-  parentNameID?: Resolver<ResolversTypes['NameID'], ParentType, ContextType>;
   space?: Resolver<Maybe<ResolversTypes['Space']>, ParentType, ContextType>;
   triggeredBy?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
   type?: Resolver<ResolversTypes['ActivityEventType'], ParentType, ContextType>;
@@ -10293,7 +10207,6 @@ export type ActivityLogEntryCalloutDiscussionCommentResolvers<
     ParentType,
     ContextType
   >;
-  parentNameID?: Resolver<ResolversTypes['NameID'], ParentType, ContextType>;
   space?: Resolver<Maybe<ResolversTypes['Space']>, ParentType, ContextType>;
   triggeredBy?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
   type?: Resolver<ResolversTypes['ActivityEventType'], ParentType, ContextType>;
@@ -10317,7 +10230,6 @@ export type ActivityLogEntryCalloutLinkCreatedResolvers<
     ParentType,
     ContextType
   >;
-  parentNameID?: Resolver<ResolversTypes['NameID'], ParentType, ContextType>;
   space?: Resolver<Maybe<ResolversTypes['Space']>, ParentType, ContextType>;
   triggeredBy?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
   type?: Resolver<ResolversTypes['ActivityEventType'], ParentType, ContextType>;
@@ -10340,7 +10252,6 @@ export type ActivityLogEntryCalloutPostCommentResolvers<
     ParentType,
     ContextType
   >;
-  parentNameID?: Resolver<ResolversTypes['NameID'], ParentType, ContextType>;
   post?: Resolver<ResolversTypes['Post'], ParentType, ContextType>;
   space?: Resolver<Maybe<ResolversTypes['Space']>, ParentType, ContextType>;
   triggeredBy?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
@@ -10364,7 +10275,6 @@ export type ActivityLogEntryCalloutPostCreatedResolvers<
     ParentType,
     ContextType
   >;
-  parentNameID?: Resolver<ResolversTypes['NameID'], ParentType, ContextType>;
   post?: Resolver<ResolversTypes['Post'], ParentType, ContextType>;
   space?: Resolver<Maybe<ResolversTypes['Space']>, ParentType, ContextType>;
   triggeredBy?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
@@ -10388,7 +10298,6 @@ export type ActivityLogEntryCalloutPublishedResolvers<
     ParentType,
     ContextType
   >;
-  parentNameID?: Resolver<ResolversTypes['NameID'], ParentType, ContextType>;
   space?: Resolver<Maybe<ResolversTypes['Space']>, ParentType, ContextType>;
   triggeredBy?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
   type?: Resolver<ResolversTypes['ActivityEventType'], ParentType, ContextType>;
@@ -10411,7 +10320,6 @@ export type ActivityLogEntryCalloutWhiteboardContentModifiedResolvers<
     ParentType,
     ContextType
   >;
-  parentNameID?: Resolver<ResolversTypes['NameID'], ParentType, ContextType>;
   space?: Resolver<Maybe<ResolversTypes['Space']>, ParentType, ContextType>;
   triggeredBy?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
   type?: Resolver<ResolversTypes['ActivityEventType'], ParentType, ContextType>;
@@ -10435,34 +10343,10 @@ export type ActivityLogEntryCalloutWhiteboardCreatedResolvers<
     ParentType,
     ContextType
   >;
-  parentNameID?: Resolver<ResolversTypes['NameID'], ParentType, ContextType>;
   space?: Resolver<Maybe<ResolversTypes['Space']>, ParentType, ContextType>;
   triggeredBy?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
   type?: Resolver<ResolversTypes['ActivityEventType'], ParentType, ContextType>;
   whiteboard?: Resolver<ResolversTypes['Whiteboard'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type ActivityLogEntryChallengeCreatedResolvers<
-  ContextType = any,
-  ParentType extends
-    ResolversParentTypes['ActivityLogEntryChallengeCreated'] = ResolversParentTypes['ActivityLogEntryChallengeCreated'],
-> = {
-  child?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  collaborationID?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
-  createdDate?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
-  description?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
-  parentDisplayName?: Resolver<
-    ResolversTypes['String'],
-    ParentType,
-    ContextType
-  >;
-  parentNameID?: Resolver<ResolversTypes['NameID'], ParentType, ContextType>;
-  space?: Resolver<Maybe<ResolversTypes['Space']>, ParentType, ContextType>;
-  subspace?: Resolver<ResolversTypes['Space'], ParentType, ContextType>;
-  triggeredBy?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
-  type?: Resolver<ResolversTypes['ActivityEventType'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -10492,17 +10376,16 @@ export type ActivityLogEntryMemberJoinedResolvers<
     ParentType,
     ContextType
   >;
-  parentNameID?: Resolver<ResolversTypes['NameID'], ParentType, ContextType>;
   space?: Resolver<Maybe<ResolversTypes['Space']>, ParentType, ContextType>;
   triggeredBy?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
   type?: Resolver<ResolversTypes['ActivityEventType'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export type ActivityLogEntryOpportunityCreatedResolvers<
+export type ActivityLogEntrySubspaceCreatedResolvers<
   ContextType = any,
   ParentType extends
-    ResolversParentTypes['ActivityLogEntryOpportunityCreated'] = ResolversParentTypes['ActivityLogEntryOpportunityCreated'],
+    ResolversParentTypes['ActivityLogEntrySubspaceCreated'] = ResolversParentTypes['ActivityLogEntrySubspaceCreated'],
 > = {
   child?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   collaborationID?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
@@ -10514,9 +10397,8 @@ export type ActivityLogEntryOpportunityCreatedResolvers<
     ParentType,
     ContextType
   >;
-  parentNameID?: Resolver<ResolversTypes['NameID'], ParentType, ContextType>;
   space?: Resolver<Maybe<ResolversTypes['Space']>, ParentType, ContextType>;
-  subsubspace?: Resolver<ResolversTypes['Space'], ParentType, ContextType>;
+  subspace?: Resolver<ResolversTypes['Space'], ParentType, ContextType>;
   triggeredBy?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
   type?: Resolver<ResolversTypes['ActivityEventType'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -10539,7 +10421,6 @@ export type ActivityLogEntryUpdateSentResolvers<
     ParentType,
     ContextType
   >;
-  parentNameID?: Resolver<ResolversTypes['NameID'], ParentType, ContextType>;
   space?: Resolver<Maybe<ResolversTypes['Space']>, ParentType, ContextType>;
   triggeredBy?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
   type?: Resolver<ResolversTypes['ActivityEventType'], ParentType, ContextType>;
@@ -15716,7 +15597,6 @@ export type RelayPaginatedSpaceResolvers<
     ParentType,
     ContextType
   >;
-  type?: Resolver<ResolversTypes['SpaceType'], ParentType, ContextType>;
   updatedDate?: Resolver<
     Maybe<ResolversTypes['DateTime']>,
     ParentType,
@@ -15994,7 +15874,6 @@ export type RolesResultCommunityResolvers<
   level?: Resolver<ResolversTypes['SpaceLevel'], ParentType, ContextType>;
   nameID?: Resolver<ResolversTypes['NameID'], ParentType, ContextType>;
   roles?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
-  type?: Resolver<ResolversTypes['SpaceType'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -16032,7 +15911,6 @@ export type RolesResultSpaceResolvers<
     ParentType,
     ContextType
   >;
-  type?: Resolver<ResolversTypes['SpaceType'], ParentType, ContextType>;
   visibility?: Resolver<
     ResolversTypes['SpaceVisibility'],
     ParentType,
@@ -16311,7 +16189,6 @@ export type SpaceResolvers<
     ParentType,
     ContextType
   >;
-  type?: Resolver<ResolversTypes['SpaceType'], ParentType, ContextType>;
   updatedDate?: Resolver<
     Maybe<ResolversTypes['DateTime']>,
     ParentType,
@@ -17687,9 +17564,8 @@ export type Resolvers<ContextType = any> = {
   ActivityLogEntryCalloutPublished?: ActivityLogEntryCalloutPublishedResolvers<ContextType>;
   ActivityLogEntryCalloutWhiteboardContentModified?: ActivityLogEntryCalloutWhiteboardContentModifiedResolvers<ContextType>;
   ActivityLogEntryCalloutWhiteboardCreated?: ActivityLogEntryCalloutWhiteboardCreatedResolvers<ContextType>;
-  ActivityLogEntryChallengeCreated?: ActivityLogEntryChallengeCreatedResolvers<ContextType>;
   ActivityLogEntryMemberJoined?: ActivityLogEntryMemberJoinedResolvers<ContextType>;
-  ActivityLogEntryOpportunityCreated?: ActivityLogEntryOpportunityCreatedResolvers<ContextType>;
+  ActivityLogEntrySubspaceCreated?: ActivityLogEntrySubspaceCreatedResolvers<ContextType>;
   ActivityLogEntryUpdateSent?: ActivityLogEntryUpdateSentResolvers<ContextType>;
   Agent?: AgentResolvers<ContextType>;
   AgentBeginVerifiedCredentialOfferOutput?: AgentBeginVerifiedCredentialOfferOutputResolvers<ContextType>;
@@ -34106,7 +33982,7 @@ export type SpaceDataFragment = {
   id: string;
   nameID: string;
   visibility: SpaceVisibility;
-  type: SpaceType;
+  level: SpaceLevel;
   account: {
     id: string;
     spaces: Array<{ id: string }>;
@@ -47641,7 +47517,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
     id: string;
     nameID: string;
     visibility: SpaceVisibility;
-    type: SpaceType;
+    level: SpaceLevel;
     account: {
       id: string;
       spaces: Array<{ id: string }>;
@@ -53456,7 +53332,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
     id: string;
     nameID: string;
     visibility: SpaceVisibility;
-    type: SpaceType;
+    level: SpaceLevel;
     account: {
       id: string;
       spaces: Array<{ id: string }>;
@@ -59289,7 +59165,7 @@ export type UpdateSpaceMutation = {
     id: string;
     nameID: string;
     visibility: SpaceVisibility;
-    type: SpaceType;
+    level: SpaceLevel;
     account: {
       id: string;
       spaces: Array<{ id: string }>;
@@ -78572,12 +78448,6 @@ export type GetActivityLogOnCollaborationQuery = {
         type: ActivityEventType;
         triggeredBy: { id: string };
       }
-    | {
-        collaborationID: string;
-        description: string;
-        type: ActivityEventType;
-        triggeredBy: { id: string };
-      }
   >;
 };
 
@@ -91632,7 +91502,7 @@ export type GetSpaceDataQuery = {
           id: string;
           nameID: string;
           visibility: SpaceVisibility;
-          type: SpaceType;
+          level: SpaceLevel;
           account: {
             id: string;
             spaces: Array<{ id: string }>;

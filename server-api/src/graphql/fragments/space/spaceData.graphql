@@ -2,7 +2,7 @@ fragment SpaceData on Space {
   id
   nameID
   visibility
-  type
+  level
   account {
     ...AccountData
   }

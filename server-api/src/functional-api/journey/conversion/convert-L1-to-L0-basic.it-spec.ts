@@ -5,6 +5,7 @@ import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
 import { convertSpaceL1ToSpaceL0 } from './conversion.request.params';
 import { getSpaceData } from '../space/space.request.params';
 import { getSpaceLicenseSubscriptions } from '@functional-api/license/license.params.request';
+import { SpaceLevel } from '@generated/alkemio-schema';
 
 let baseScenario: OrganizationWithSpaceModel;
 
@@ -92,7 +93,7 @@ describe('Promoting of L1 subspace', () => {
     expect(subspaceBefore.data?.lookup.space?.visibility).toEqual(
       subspaceAfter?.visibility
     );
-    expect(subspaceAfter?.type).toEqual('SPACE');
+    expect(subspaceAfter?.level).toEqual(SpaceLevel.L0);
     expect(sortedLicenseBefore).toEqual(sortedLicenseAfter);
 
     expect(
