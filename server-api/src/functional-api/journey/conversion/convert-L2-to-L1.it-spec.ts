@@ -4,6 +4,7 @@ import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWit
 import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
 import { convertSpaceL2ToSpaceL1 } from './conversion.request.params';
 import { getSpaceData } from '../space/space.request.params';
+import { SpaceLevel } from '@generated/alkemio-schema';
 
 let baseScenario: OrganizationWithSpaceModel;
 
@@ -82,7 +83,7 @@ describe('Promoting of L2 subspace', () => {
       before.data?.lookup.space?.collaboration.innovationFlow.states
     );
     expect(before.data?.lookup.space?.visibility).toEqual(after?.visibility);
-    expect(after?.type).toEqual('CHALLENGE');
+    expect(after?.level).toEqual(SpaceLevel.L1);
 
     expect(
       Array.isArray(before.data?.lookup.space?.community)

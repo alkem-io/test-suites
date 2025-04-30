@@ -7,6 +7,7 @@ import { getSpaceData } from '../space/space.request.params';
 import { inviteForEntryRoleOnRoleSet } from '@functional-api/roleset/invitations/invitation.request.params';
 import { TestUserManager } from '@src/scenario/TestUserManager';
 import { createApplication } from '@functional-api/roleset/application/application.request.params';
+import { SpaceLevel } from '@generated/alkemio-schema';
 import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
@@ -104,7 +105,7 @@ describe('Promoting of L1 subspace', () => {
     expect(subspaceBefore.data?.lookup.space?.visibility).toEqual(
       subspaceAfter?.visibility
     );
-    expect(subspaceAfter?.type).toEqual('SPACE');
+    expect(subspaceAfter?.level).toEqual(SpaceLevel.L0);
 
     expect(
       Array.isArray(subspaceBefore.data?.lookup.space?.community)
@@ -132,7 +133,7 @@ describe('Promoting of L1 subspace', () => {
     expect(subsubspaceBefore.data?.lookup.space?.visibility).toEqual(
       subsubspaceAfterData?.visibility
     );
-    expect(subsubspaceAfterData?.type).toEqual('CHALLENGE');
+    expect(subsubspaceAfterData?.level).toEqual(SpaceLevel.L1);
     expect(
       Array.isArray(subsubspaceBefore.data?.lookup.space?.community)
         ? subsubspaceBefore.data.lookup.space.community.slice().sort()
