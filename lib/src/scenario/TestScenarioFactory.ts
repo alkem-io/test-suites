@@ -12,9 +12,9 @@ import {
   CalloutType,
   CalloutVisibility,
   RoleName,
-} from "@src/core/generated/alkemio-schema";
-import { TestUser } from "@src/common/enums/test.user";
-import { UniqueIDGenerator } from "@src/utils/uniqueId";
+} from "../core/generated/alkemio-schema";
+import { TestUser } from "../common/enums/test.user";
+import { UniqueIDGenerator } from "../utils/uniqueId";
 import {
   assignPlatformRole,
   assignRoleToUser,

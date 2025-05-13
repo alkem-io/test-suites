@@ -1,8 +1,8 @@
 import { Client, createClient, SubscribePayload } from 'graphql-ws';
 import { GraphQLError } from 'graphql';
 import { buildConnectionParams } from './build-connection-params';
-import { testConfiguration } from '@src/config/test.configuration';
-import { TestUser } from '@src/common/enums/test.user';
+import { testConfiguration } from '../../config/test.configuration';
+import { TestUser } from '../../common/enums/test.user';
 
 type SubscriptionCleanUpFn = () => void;
 export type SubscriptionMessage = Record<string, unknown> | null | undefined;

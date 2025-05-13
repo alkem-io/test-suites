@@ -1,7 +1,7 @@
-import { TestUserManager } from "@src/scenario/TestUserManager";
+import { TestUserManager } from "../scenario/TestUserManager";
 import { TestScenarioFactory } from "./TestScenarioFactory";
-import { RoleName } from "@src/core/generated/alkemio-schema";
-import { delay } from "@src/utils/delay";
+import { RoleName } from "../core/generated/alkemio-schema";
+import { delay } from "../utils/delay";
 import { OrganizationWithSpaceModel } from "./models/OrganizationWithSpaceModel";
 import {
   assignRoleToUser,

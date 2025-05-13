@@ -6,15 +6,15 @@ import {
   CreateOrganizationInput,
   SpacePrivacyMode,
 } from "@alkemio/client-lib";
-import { TestUser } from "@src/common/enums/test.user";
+import { TestUser } from "../common/enums/test.user";
 import {
   CreateSpaceOnAccountInput,
   RoleName,
   TagsetReservedName,
-} from "@src/core/generated/alkemio-schema";
-import { graphqlErrorWrapper } from "@src/utils/graphql.wrapper";
-import { getGraphqlClient } from "@src/utils/graphqlClient";
-import { UniqueIDGenerator } from "@src/utils/uniqueId";
+} from "../core/generated/alkemio-schema";
+import { graphqlErrorWrapper } from "../utils/graphql.wrapper";
+import { getGraphqlClient } from "../utils/graphqlClient";
+import { UniqueIDGenerator } from "../utils/uniqueId";
 
 export const updateCalloutVisibility = async (
   calloutID: string,

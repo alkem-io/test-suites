@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import request from 'supertest';
 import { getUserToken } from './get-user-token';
-import { testConfiguration } from '@src/config/test.configuration';
+import { testConfiguration } from '../../config/test.configuration';
 
 export const registerInAlkemioOrFail = async (
   firstName: string,

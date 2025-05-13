@@ -4,12 +4,12 @@
 require('tsconfig-paths/register');
 import { TestScenarioFactory } from '../scenario/TestScenarioFactory';
 import { TestScenarioConfig } from '../scenario/config/test-scenario-config';
-import { registerInAlkemioOrFail } from '@src/scenario/registration/register-in-alkemio-or-fail';
+import { registerInAlkemioOrFail } from '../scenario/registration/register-in-alkemio-or-fail';
 import { UiText } from '@ory/kratos-client';
-import { registerInKratosOrFail } from '@src/scenario/registration/register-in-kratos-or-fail';
-import { verifyInKratosOrFail } from '@src/scenario/registration/verify-in-kratos-or-fail';
-import { LogManager } from '@src/scenario/LogManager';
-import { TestUser } from '@src/common/enums/test.user';
+import { registerInKratosOrFail } from '../scenario/registration/register-in-kratos-or-fail';
+import { verifyInKratosOrFail } from '../scenario/registration/verify-in-kratos-or-fail';
+import { LogManager } from '../scenario/LogManager';
+import { TestUser } from '../common/enums/test.user';
 
 const scenarioConfig: TestScenarioConfig = {
   name: 'organization-settings',

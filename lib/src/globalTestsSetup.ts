@@ -3,7 +3,7 @@
 // This is critical to be able to use TypeScript aliases in Jest tests
 require("tsconfig-paths/register");
 import { UiText } from "@ory/kratos-client";
-import { registerInAlkemioOrFail } from "@src/scenario/registration/register-in-alkemio-or-fail";
+import { registerInAlkemioOrFail } from "./scenario/registration/register-in-alkemio-or-fail";
 import { testConfiguration } from "./config/test.configuration";
 import { stringifyConfig } from "./config/create-config-using-envvars";
 import { registerInKratosOrFail } from "./scenario/registration/register-in-kratos-or-fail";

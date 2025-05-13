@@ -1,4 +1,4 @@
-import { testConfiguration } from '@src/config/test.configuration';
+import { testConfiguration } from '../config/test.configuration';
 import request from 'supertest';
 
 /**

@@ -1,4 +1,4 @@
-import { TestUser } from "@src/common/enums/test.user";
+import { TestUser } from "../../common/enums/test.user";
 
 export type UserModel = {
   id: string;

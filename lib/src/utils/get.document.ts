@@ -1,8 +1,8 @@
 import request from 'supertest';
-import { testConfiguration } from '@src/config/test.configuration';
-import { TestUserManager } from '@src/scenario/TestUserManager';
-import { LogManager } from '@src/scenario/LogManager';
-import { TestUser } from '@src/common/enums/test.user';
+import { testConfiguration } from '../config/test.configuration';
+import { TestUserManager } from '../scenario/TestUserManager';
+import { LogManager } from '../scenario/LogManager';
+import { TestUser } from '../common/enums/test.user';
 
 export const getDocument = (documentId: string) => {
   return request(buildDocumentUrl(documentId)).get('');

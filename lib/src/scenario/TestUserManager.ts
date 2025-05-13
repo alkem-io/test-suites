@@ -2,8 +2,8 @@
 import { UserModel } from './models/UserModel';
 import { TestUserModels } from './models/TestUserModels';
 import { getUserToken } from './registration/get-user-token';
-import { TestUser } from '@src/common/enums/test.user';
-import { getGraphqlClient } from '@src/utils/graphqlClient';
+import { TestUser } from '../common/enums/test.user';
+import { getGraphqlClient } from '../utils/graphqlClient';
 
 export class TestUserManager {
   private static userModelMapEmail: Map<string, UserModel>;

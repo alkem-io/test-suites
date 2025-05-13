@@ -1,6 +1,6 @@
 {
   "name": "@alkemio/tests-lib",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Library for creating test suites to provide quality assurance for the Alkemio platform.",
   "author": "Alkemio Foundation",
   "private": false,

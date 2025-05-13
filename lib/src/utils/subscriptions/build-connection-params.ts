@@ -1,5 +1,5 @@
-import { TestUser } from '@src/common/enums/test.user';
-import { TestUserManager } from '@src/scenario/TestUserManager';
+import { TestUser } from '../../common/enums/test.user';
+import { TestUserManager } from '../../scenario/TestUserManager';
 
 export const buildConnectionParams = async (user: TestUser) => {
   const testUserModel = TestUserManager.getUserModelByType(user);

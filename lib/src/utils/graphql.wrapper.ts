@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Headers from 'graphql-request';
-import { TestUserManager } from '@src/scenario/TestUserManager';
-import { LogManager } from '@src/scenario/LogManager';
-import { TestUser } from '@src/common/enums/test.user';
+import { TestUserManager } from '../scenario/TestUserManager';
+import { LogManager } from '../scenario/LogManager';
+import { TestUser } from '../common/enums/test.user';
 
 export type ErrorType = {
   response: {

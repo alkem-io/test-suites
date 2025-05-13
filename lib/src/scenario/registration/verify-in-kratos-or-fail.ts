@@ -1,8 +1,8 @@
 import request from 'supertest';
 import { Configuration, IdentityApi, FrontendApi } from '@ory/kratos-client';
-import { testConfiguration } from '@src/config/test.configuration';
-import { delay } from '@src/utils/delay';
-import { getMails } from '@src/utils/mailslurper.rest.requests';
+import { testConfiguration } from '../../config/test.configuration';
+import { delay } from '../../utils/delay';
+import { getMails } from '../../utils/mailslurper.rest.requests';
 
 
 /***

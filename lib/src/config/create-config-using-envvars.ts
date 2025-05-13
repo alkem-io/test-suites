@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import { AlkemioTestConfig } from '@src/config/alkemio-test-config';
+import { AlkemioTestConfig } from '../config/alkemio-test-config';
 
 export const createConfigUsingEnvVars = (): AlkemioTestConfig => {
   dotenv.config();

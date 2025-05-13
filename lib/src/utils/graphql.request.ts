@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import request from 'supertest';
-import { testConfiguration } from '@src/config/test.configuration';
-import { TestUserManager } from '@src/scenario/TestUserManager';
-import { LogManager } from '@src/scenario/LogManager';
-import { TestUser } from '@src/common/enums/test.user';
+import { testConfiguration } from '../config/test.configuration';
+import { TestUserManager } from '../scenario/TestUserManager';
+import { LogManager } from '../scenario/LogManager';
+import { TestUser } from '../common/enums/test.user';
 
 // ToDo
 // Add support for connection to the DB and drop/populate DB

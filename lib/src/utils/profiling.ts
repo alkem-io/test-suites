@@ -1,4 +1,4 @@
-import { LogManager } from '@src/scenario/LogManager';
+import { LogManager } from '../scenario/LogManager';
 import { performance } from 'perf_hooks';
 
 export const logElapsedTime = (prefix: string, start: number) => {

@@ -2,7 +2,7 @@ import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
 } from "@alkemio/client-lib";
-import { TestUser } from "@src/common/enums/test.user";
+import { TestUser } from "../../common/enums/test.user";
 
 export interface TestScenarioConfig {
   name: string;

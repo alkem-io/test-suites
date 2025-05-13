@@ -1,5 +1,5 @@
 import { Configuration, IdentityApi, FrontendApi } from '@ory/kratos-client';
-import { testConfiguration } from '@src/config/test.configuration';
+import { testConfiguration } from '../../config/test.configuration';
 
 /***
  * Registration Flow on v0.8.0-alpha3
