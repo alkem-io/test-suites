@@ -1,0 +1,9 @@
+fragment GroupData on UserGroup {
+  id
+  members {
+    ...MemberData
+  }
+  profile {
+    ...ProfileData
+  }
+}

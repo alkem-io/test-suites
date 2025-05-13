@@ -1,0 +1,12 @@
+fragment AccountData on Account {
+  id
+  spaces {
+    id
+  }
+  authorization {
+    ...AuthorizationData
+  }
+  host {
+    ...ContributorData
+  }
+}

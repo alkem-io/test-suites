@@ -1,0 +1,6 @@
+fragment CollaborationTemplateData on Template {
+  profile {
+    displayName
+    description
+  }
+}

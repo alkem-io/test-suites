@@ -1,0 +1,26 @@
+fragment ProfileData on Profile {
+  id
+  displayName
+  description
+  references {
+    authorization {
+      myPrivileges
+    }
+    ...ReferenceData
+  }
+  tagline
+  tagsets {
+    authorization {
+      myPrivileges
+    }
+    ...TagsetData
+  }
+  location {
+    country
+    city
+  }
+  authorization {
+    myPrivileges
+  }
+  ...ProfileStorageConfig
+}

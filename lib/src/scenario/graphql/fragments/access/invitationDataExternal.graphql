@@ -1,0 +1,10 @@
+fragment PlatformInvitationData on PlatformInvitation {
+  id
+  email
+  authorization {
+    myPrivileges
+  }
+  profileCreated
+  firstName
+  lastName
+}

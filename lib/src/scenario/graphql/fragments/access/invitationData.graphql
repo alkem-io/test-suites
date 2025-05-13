@@ -1,0 +1,18 @@
+fragment InvitationData on Invitation {
+  id
+  state
+  nextEvents
+  isFinalized
+  lifecycle {
+    id
+  }
+  createdBy {
+    ...UserDataLight
+  }
+  contributor {
+    ...UserDataLight
+  }
+  authorization {
+    myPrivileges
+  }
+}

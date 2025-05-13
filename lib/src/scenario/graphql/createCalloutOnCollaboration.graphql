@@ -1,0 +1,7 @@
+mutation CreateCalloutOnCalloutsSet(
+  $calloutData: CreateCalloutOnCalloutsSetInput!
+) {
+  createCalloutOnCalloutsSet(calloutData: $calloutData) {
+    ...CalloutData
+  }
+}

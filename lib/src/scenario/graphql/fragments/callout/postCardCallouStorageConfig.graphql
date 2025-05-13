@@ -1,0 +1,25 @@
+fragment PostCardInCalloutOnCollaborationWithStorageConfig on Collaboration {
+  id
+  calloutsSet {
+    callouts(IDs: [$calloutId]) {
+      id
+      contributions {
+        post {
+          id
+          profile {
+            ...ProfileStorageConfig
+            references {
+              ...ReferenceData
+            }
+            __typename
+          }
+          __typename
+        }
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+  __typename
+}

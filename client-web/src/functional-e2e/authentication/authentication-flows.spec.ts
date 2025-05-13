@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { getEmails, getRecoveryCode } from 'src/utils/ui.test.helper';
+//import { getEmails, getRecoveryCode } from 'src/utils/ui.test.helper';
 import {
   navigateToLoginPageFromMenu,
   navigateToRegistrationFromSignUp,
@@ -26,10 +26,16 @@ import {
   saveButton,
   submitButton,
 } from './common-authentication-page-elements';
-import { deleteMailSlurperMails } from 'src/utils/mailslurper.rest.requests';
+//import { deleteMailSlurperMails } from 'src/utils/mailslurper.rest.requests';
 import { deleteUser, getUserData } from '../../duplicate/user.request.params';
-import { delay } from '@alkemio/tests-lib';
-import { UniqueIDGenerator } from '@alkemio/tests-lib';
+import {
+  delay,
+  deleteMailSlurperMails,
+  getEmails,
+  getRecoveryCode,
+  UniqueIDGenerator,
+} from '@alkemio/tests-lib';
+//import {  } from '@alkemio/tests-lib';
 
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || '';
 const baseUrl = process.env.ALKEMIO_BASE_URL || '';

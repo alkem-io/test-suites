@@ -1,0 +1,14 @@
+fragment PreferenceData on Preference {
+  id
+  value
+  definition {
+    type
+    id
+    displayName
+    description
+    group
+  }
+  authorization {
+    myPrivileges
+  }
+}

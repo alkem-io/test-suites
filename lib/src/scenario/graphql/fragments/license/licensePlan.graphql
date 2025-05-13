@@ -1,0 +1,12 @@
+fragment LicensePlanData on LicensePlan {
+  id
+  name
+  enabled
+  isFree
+  licenseCredential
+  pricePerMonth
+  requiresContactSupport
+  requiresPaymentMethod
+  sortOrder
+  trialEnabled
+}

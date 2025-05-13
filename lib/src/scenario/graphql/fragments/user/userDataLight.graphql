@@ -1,0 +1,14 @@
+fragment UserDataLight on User {
+  id
+  nameID
+  firstName
+  lastName
+  email
+  profile {
+    id
+    displayName
+  }
+  authorization {
+    myPrivileges
+  }
+}

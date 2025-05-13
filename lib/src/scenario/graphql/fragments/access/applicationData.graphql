@@ -1,0 +1,18 @@
+fragment ApplicationData on Application {
+  id
+  state
+  nextEvents
+  isFinalized
+  lifecycle {
+    id
+  }
+  questions {
+    id
+  }
+  contributor {
+    ...UserDataLight
+  }
+  authorization {
+    myPrivileges
+  }
+}

@@ -1,0 +1,26 @@
+fragment TemplatesSetData on TemplatesSet {
+  id
+  collaborationTemplates {
+    ...TemplateProfileData
+    ...CollaborationTemplateData
+  }
+  postTemplates {
+    ...TemplateProfileData
+    ...PostTemplateData
+  }
+  whiteboardTemplates {
+    ...TemplateProfileData
+    ...WhiteboardTemplateData
+  }
+  communityGuidelinesTemplates {
+    ...TemplateProfileData
+    ...CommunityGuidelinesTemplateData
+  }
+  calloutTemplates {
+    ...TemplateProfileData
+    ...CalloutTemplateData
+  }
+  authorization {
+    myPrivileges
+  }
+}
