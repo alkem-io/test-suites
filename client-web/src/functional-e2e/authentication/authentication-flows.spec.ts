@@ -27,7 +27,7 @@ import {
   submitButton,
 } from './common-authentication-page-elements';
 //import { deleteMailSlurperMails } from 'src/utils/mailslurper.rest.requests';
-import { deleteUser, getUserData } from '../../duplicate/user.request.params';
+//import { deleteUser, getUserData } from '../../duplicate/user.request.params';
 import {
   delay,
   deleteMailSlurperMails,
@@ -113,10 +113,10 @@ test('user successful registration email', async ({ page }) => {
     page.getByRole('heading', { name: 'Welcome back, Test!' })
   ).toBeVisible();
 
-  const getUserId = await getUserData(userEmail);
-  const registeredUserId = getUserId.data?.user.id ?? '';
+  // const getUserId = await getUserData(userEmail);
+  // const registeredUserId = getUserId.data?.user.id ?? '';
 
-  await deleteUser(registeredUserId);
+  // await deleteUser(registeredUserId);
 });
 
 test('user successful password recovery', async ({ page }) => {

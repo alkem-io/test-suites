@@ -1,15 +1,20 @@
-import { CalloutState, CalloutType, CalloutVisibility, CommunityMembershipPolicy, CreateOrganizationInput, SpacePrivacyMode } from '@alkemio/client-lib';
-// import {
-//   createCalloutOnCalloutsSet,
-//   createWhiteboardCalloutOnCalloutsSet,
-//   updateCalloutVisibility,
-// } from '@functional-api/callout/callouts.request.params';
-import { TestUser } from '@src/common/enums/test.user';
-import { CreateSpaceOnAccountInput, RoleName, TagsetReservedName } from '@src/core/generated/alkemio-schema';
-import { graphqlErrorWrapper } from '@src/utils/graphql.wrapper';
-import { getGraphqlClient } from '@src/utils/graphqlClient';
-import { UniqueIDGenerator } from '@src/utils/uniqueId';
-
+import {
+  CalloutState,
+  CalloutType,
+  CalloutVisibility,
+  CommunityMembershipPolicy,
+  CreateOrganizationInput,
+  SpacePrivacyMode,
+} from "@alkemio/client-lib";
+import { TestUser } from "@src/common/enums/test.user";
+import {
+  CreateSpaceOnAccountInput,
+  RoleName,
+  TagsetReservedName,
+} from "@src/core/generated/alkemio-schema";
+import { graphqlErrorWrapper } from "@src/utils/graphql.wrapper";
+import { getGraphqlClient } from "@src/utils/graphqlClient";
+import { UniqueIDGenerator } from "@src/utils/uniqueId";
 
 export const updateCalloutVisibility = async (
   calloutID: string,
@@ -59,7 +64,6 @@ export const assignRoleToUser = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-
 const uniqueId = UniqueIDGenerator.getID();
 
 export const getDefaultUserData = () => {
@@ -70,7 +74,7 @@ export const getDefaultUserData = () => {
     email: `user-email-${uniqueId}@alkem.io`,
     profileData: {
       displayName: `FNLN${uniqueId}`,
-      description: 'User description',
+      description: "User description",
     },
   };
 };
@@ -105,15 +109,14 @@ export const createUser = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-
 export const defaultPostTemplate = {
   postTemplate: {
-    defaultDescription: 'Please describe the knowledge that is relevant.',
-    type: 'knowledge',
+    defaultDescription: "Please describe the knowledge that is relevant.",
+    type: "knowledge",
     profile: {
-      displayName: 'Post template display name',
-      tagline: 'Post template tagline',
-      description: 'To share relevant knowledge, building blocks etc.',
+      displayName: "Post template display name",
+      tagline: "Post template tagline",
+      description: "To share relevant knowledge, building blocks etc.",
     },
   },
 };
@@ -121,8 +124,8 @@ export const defaultPostTemplate = {
 export const defaultCallout = {
   framing: {
     profile: {
-      displayName: 'default callout display name',
-      description: 'callout description',
+      displayName: "default callout display name",
+      description: "callout description",
     },
   },
   contributionPolicy: {
@@ -130,7 +133,7 @@ export const defaultCallout = {
   },
   type: CalloutType.Post,
   contributionDefaults: {
-    postDescription: 'Please describe the knowledge that is relevant.',
+    postDescription: "Please describe the knowledge that is relevant.",
   },
 };
 
@@ -138,7 +141,7 @@ export const defaultWhiteboard = {
   framing: {
     profile: {
       displayName: `default Whiteboard callout display name ${uniqueId}`,
-      description: 'callout Whiteboard description',
+      description: "callout Whiteboard description",
     },
   },
   contributionPolicy: {
@@ -150,7 +153,6 @@ export const defaultWhiteboard = {
       '{"type":"excalidraw","version":2,"source":"https://excalidraw.com","elements":[],"appState":{"gridSize":null,"viewBackgroundColor":"#ffffff"}}',
   },
 };
-
 
 export const createCalloutOnCalloutsSet = async (
   calloutsSetID: string,
@@ -227,8 +229,8 @@ export const createWhiteboardCalloutOnCalloutsSet = async (
           ...options,
           framing: {
             profile: {
-              displayName: 'default callout display name',
-              description: 'callout description',
+              displayName: "default callout display name",
+              description: "callout description",
             },
           },
         },
@@ -280,9 +282,9 @@ export const createOrganization = async (
       displayName: organizationName,
       referencesData: [
         {
-          description: 'test ref',
-          name: 'test ref neame',
-          uri: 'https://testref.io',
+          description: "test ref",
+          name: "test ref neame",
+          uri: "https://testref.io",
         },
       ],
     },
@@ -355,13 +357,13 @@ export const subspaceVariablesData = (
     about: {
       profileData: {
         displayName,
-        tagline: 'test tagline' + uniqueId,
-        description: 'test description' + uniqueId,
+        tagline: "test tagline" + uniqueId,
+        description: "test description" + uniqueId,
         referencesData: [
           {
-            name: 'test video' + uniqueId,
-            uri: 'https://youtu.be/-wGlzcjs',
-            description: 'dest description' + uniqueId,
+            name: "test video" + uniqueId,
+            uri: "https://youtu.be/-wGlzcjs",
+            description: "dest description" + uniqueId,
           },
         ],
       },
@@ -478,7 +480,7 @@ export const updateSpaceSettings = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   if (!spaceID) {
-    throw new Error('Space ID is required');
+    throw new Error("Space ID is required");
   }
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -522,7 +524,6 @@ export const updateSpaceSettings = async (
 
   return graphqlErrorWrapper(callback, userRole);
 };
-
 
 export const spaceNameId = `testecoeid${uniqueId}`;
 

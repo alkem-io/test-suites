@@ -1,10 +1,8 @@
 import { AlkemioClient } from "@alkemio/client-lib";
 import { LogManager } from "../LogManager";
+import { testConfiguration } from "@src/config/test.configuration";
 
-export const getUserToken = async (
-  testConfiguration: any,
-  userEmail: string
-) => {
+export const getUserToken = async (userEmail: string) => {
   const server = testConfiguration.endPoints.graphql.private;
 
   if (!server) {

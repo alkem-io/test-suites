@@ -1,10 +1,14 @@
-import { TestUserManager } from '@src/scenario/TestUserManager';
-import { TestScenarioFactory } from './TestScenarioFactory';
-import { RoleName } from '@src/core/generated/alkemio-schema';
-import { delay } from '@src/utils/delay';
-//import { getCalloutDetails, getCalloutsData } from '@src/common/functions/callouts.request.params';
-import { OrganizationWithSpaceModel } from './models/OrganizationWithSpaceModel';
-import { assignRoleToUser, createUser, getCalloutDetails, getCalloutsData } from './baseFunctions';
+import { TestUserManager } from "@src/scenario/TestUserManager";
+import { TestScenarioFactory } from "./TestScenarioFactory";
+import { RoleName } from "@src/core/generated/alkemio-schema";
+import { delay } from "@src/utils/delay";
+import { OrganizationWithSpaceModel } from "./models/OrganizationWithSpaceModel";
+import {
+  assignRoleToUser,
+  createUser,
+  getCalloutDetails,
+  getCalloutsData,
+} from "./baseFunctions";
 
 export class TestSetupUtils {
   public static async assignUsersToRoles(
@@ -27,25 +31,25 @@ export class TestSetupUtils {
     subsubspaceMemberEmail: string
   ): Promise<void> {
     const createSpaceMember = await createUser({
-      firstName: 'space',
-      lastName: 'mem',
+      firstName: "space",
+      lastName: "mem",
       email: spaceMemberEmail,
     });
-    const spaceMemberId = createSpaceMember.data?.createUser.id ?? '';
+    const spaceMemberId = createSpaceMember.data?.createUser.id ?? "";
     const createSubspaceMember = await createUser({
-      firstName: 'chal',
-      lastName: 'mem',
+      firstName: "chal",
+      lastName: "mem",
       email: subspaceMemberEmail,
     });
-    const subspaceMemberId = createSubspaceMember.data?.createUser.id ?? '';
+    const subspaceMemberId = createSubspaceMember.data?.createUser.id ?? "";
 
     const createSubsubspaceMember = await createUser({
-      firstName: 'opp',
-      lastName: 'mem',
+      firstName: "opp",
+      lastName: "mem",
       email: subsubspaceMemberEmail,
     });
     const subsubspaceMemberId =
-      createSubsubspaceMember.data?.createUser.id ?? '';
+      createSubsubspaceMember.data?.createUser.id ?? "";
 
     // Assign users to Space community
     await assignRoleToUser(
@@ -94,7 +98,7 @@ export class TestSetupUtils {
     const allCallouts =
       calloutsPerSpace.data?.lookup.calloutsSet?.callouts ?? [];
     const filteredCallout = allCallouts.filter(
-      callout => callout.nameID.includes(nameID) || callout.id === nameID
+      (callout) => callout.nameID.includes(nameID) || callout.id === nameID
     );
 
     const colloutDetails = await getCalloutDetails(filteredCallout[0].id);

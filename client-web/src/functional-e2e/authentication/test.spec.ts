@@ -30,15 +30,18 @@
 // test.spec.ts
 import { test, expect } from '@playwright/test';
 import { TabsPage } from './TabsPage';
-import { TestScenarioNoPreCreationConfig } from '@alkemio/tests-lib/dist/scenario/config/test-scenario-config';
-import { createOrganization, TestScenarioFactory } from '@alkemio/tests-lib';
+import {
+  createOrganization,
+  TestScenarioFactory,
+  TestScenarioNoPreCreationConfig,
+} from '@alkemio/tests-lib';
 
 const baseUrl = 'https://dev-alkem.io/checkdefaultcallouts';
 
 const scenarioConfig: TestScenarioNoPreCreationConfig = {
   name: 'organization',
 };
-beforeAll(async () => {
+test.beforeAll(async () => {
   const a = await TestScenarioFactory.createBaseScenario(scenarioConfig);
   console.log('Scenario created:', a);
 });

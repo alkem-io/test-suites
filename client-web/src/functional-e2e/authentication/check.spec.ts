@@ -8,40 +8,42 @@ import {
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
 import { testConfiguration } from '@src/config/test.configuration';
-//import { testConfiguration } from '@src/config/test.configuration';
-//import { TestScenarioNoPreCreationConfig } from '@alkemio/tests-lib/dist/scenario/config/test-scenario-config';
+
+import * as TestLib from '@alkemio/tests-lib';
 
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || '';
-const baseUrl = testConfiguration.endPoints.server + '/home'; //process.env.ALKEMIO_BASE_URL || '';
+const baseUrl = testConfiguration.endPoints.server + '/home';
 const uniqueId = UniqueIDGenerator.getID();
 
 const userEmail = `test+${uniqueId}@alkem.io`;
 const newPassword = password;
-//const baseUrl =
 
 const scenarioConfig: TestScenarioNoPreCreationConfig = {
-  name: 'organization',
+  name: 'organization-owner',
 };
+
 test.beforeAll(async () => {
-  const a = await TestScenarioFactory.createBaseScenario(scenarioConfig);
-  console.log('Scenario created:', a);
+  // Check if TestScenarioFactory is properly imported
+  if (
+    !TestLib.TestScenarioFactory ||
+    !TestLib.TestScenarioFactory.createBaseScenarioEmpty
+  ) {
+    console.error('TestScenarioFactory is not properly imported!');
+    throw new Error(
+      'TestScenarioFactory.createBaseScenarioEmpty is not available'
+    );
+  }
+  await TestLib.TestScenarioFactory.createBaseScenarioEmpty(scenarioConfig);
 });
 
 test.beforeEach(async ({ context }) => {
   await context.clearCookies();
   await deleteMailSlurperMails();
 });
+
 test.describe.configure({ mode: 'serial' });
 
 test.only('verify registration page', async ({ page }) => {
-  // const a = await createOrganization(
-  //   'Test Organization',
-  //   'test-organization',
-  //   'test-organization'
-  // );
-  // const orgId = a.data?.createOrganization?.id ?? '';
-  // console.log('Organization created:', a);
   await navigateToRegistrationFromSignUp(baseUrl, page);
   await verifyRegistrationPageElements(page);
-  //deleteOrganization(a.data?.createOrganization?.id ?? '');
 });
