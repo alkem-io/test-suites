@@ -57,8 +57,8 @@
     "test:innovation": "jest --forceExit --maxWorkers=1 --verbose --config ./config/jest.config.innovationPacks.mjs",
     "test:documents": "jest --forceExit --maxWorkers=1 --verbose --config ./config/jest.config.documents.mjs",
     "test:configuration": "jest --forceExit --maxWorkers=1 --verbose --config ./config/jest.config.configuration.mjs",
-    "innovation-pack-with-templates": "node --experimental-specifier-resolution=node --no-warnings --loader ts-node/esm  ./src/functional-api/innovation-pack/innovation-pack-with-templates.ts",
-    "validate-scenario-setup": "node --experimental-specifier-resolution=node --no-warnings --loader ts-node/esm  ./src/scripts/validate-scenario-setup.ts"
+    "innovation-pack-with-templates": "tsx ./src/functional-api/innovation-pack/innovation-pack-with-templates.ts",
+    "validate-scenario-setup": "tsx ./src/scripts/validate-scenario-setup.ts"
   },
   "dependencies": {
     "@alkemio/client-lib": "^0.32.0",
@@ -104,7 +104,8 @@
     "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "~5.7.2",
+    "tsx": "^4.19.4",
+    "typescript": "~5.7.3",
     "typescript-eslint": "^8.21.0"
   },
   "husky": {

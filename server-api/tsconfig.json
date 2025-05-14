@@ -2,7 +2,6 @@
   "compilerOptions": {
     "lib": ["es2020", "dom"],
     "sourceMap": true,
-    "baseUrl": "./",
     "removeComments": true,
     "strict": true,
     "allowSyntheticDefaultImports": true,
@@ -16,6 +15,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "outDir": "./dist",
+    "baseUrl": "./",
     "paths": {
       "@generated/*": ["src/core/generated/*"],
       "@utils/*": ["src/utils/*"],
