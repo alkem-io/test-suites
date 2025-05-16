@@ -12,7 +12,9 @@ import { verifyInKratosOrFail } from './scenario/registration/verify-in-kratos-o
 import { LogManager } from './scenario/LogManager';
 
 module.exports = async () => {
-  LogManager.getLogger().info(`\nLaunching tests using configuration: ${stringifyConfig(testConfiguration)}`);
+  LogManager.getLogger().info(
+    `\nLaunching tests using configuration: ${stringifyConfig(testConfiguration)}`
+  );
 
   if (!testConfiguration.registerUsers) return;
 
@@ -30,7 +32,9 @@ module.exports = async () => {
     try {
       await userRegisterFlow(username);
     } catch (error) {
-      LogManager.getLogger().error(`Unable to register user ${username}: ${error}`);
+      LogManager.getLogger().error(
+        `Unable to register user ${username}: ${error}`
+      );
     }
   }
 };
@@ -48,8 +52,7 @@ export const userRegisterFlow = async (userName: string) => {
 
     LogManager.getLogger().info(`User ${email} registered in Kratos`);
   } catch (e: any) {
-    const errorMessages = (e as any).response?.data.ui
-      .messages as UiText[];
+    const errorMessages = (e as any).response?.data.ui.messages as UiText[];
     const errorMessage =
       errorMessages.map(x => x.text).join('\n') ?? 'Unknown error';
     const userExists =
@@ -70,7 +73,9 @@ export const userRegisterFlow = async (userName: string) => {
   } catch (e) {
     const err = e as Error;
     if (err.message.indexOf('already registered') > -1) {
-      LogManager.getLogger().warn(`User ${email} already registered in Alkemio`);
+      LogManager.getLogger().warn(
+        `User ${email} already registered in Alkemio`
+      );
     } else {
       throw new Error(err.message);
     }

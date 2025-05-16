@@ -1,7 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// This is critical to be able to use TypeScript aliases in Jest tests
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-require('tsconfig-paths/register');
 import { TestScenarioFactory } from '../scenario/TestScenarioFactory';
 import { TestScenarioConfig } from '../scenario/config/test-scenario-config';
 import { registerInAlkemioOrFail } from '@src/scenario/registration/register-in-alkemio-or-fail';
@@ -17,7 +14,6 @@ const scenarioConfig: TestScenarioConfig = {
 };
 
 const main = async () => {
-
   const userNames = Object.values(TestUser).filter(
     x => x !== TestUser.GLOBAL_ADMIN
   );
