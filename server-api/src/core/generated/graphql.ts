@@ -550,6 +550,8 @@ export type AiPersona = {
   id: Scalars['UUID']['output'];
   /** The type of interactions that are supported by this AI Persona when used. */
   interactionModes: Array<AiPersonaInteractionMode>;
+  /** The model card information about this AI Persona. */
+  modelCard: AiPersonaModelCard;
   /** The date at which the entity was last updated. */
   updatedDate?: Maybe<Scalars['DateTime']['output']>;
 };
@@ -580,6 +582,39 @@ export enum AiPersonaEngine {
 export enum AiPersonaInteractionMode {
   DiscussionTagging = 'DISCUSSION_TAGGING',
 }
+
+export type AiPersonaModelCard = {
+  /** The model card information about the AI Engine behind the AI Persona. */
+  aiEngine?: Maybe<ModelCardAiEngineResult>;
+  /** The model card information about the monitoring that is done on usage. */
+  monitoring?: Maybe<ModelCardMonitoringResult>;
+  /** The Model Card details related to usage of the Ai Persona within a Space. */
+  spaceUsage?: Maybe<Array<ModelCardSpaceUsageResult>>;
+};
+
+export enum AiPersonaModelCardEntry {
+  SpaceCapabilities = 'SPACE_CAPABILITIES',
+  SpaceDataAccess = 'SPACE_DATA_ACCESS',
+  SpaceRoleRequired = 'SPACE_ROLE_REQUIRED',
+}
+
+export enum AiPersonaModelCardEntryFlagName {
+  SpaceCapabilityCommunityManagement = 'SPACE_CAPABILITY_COMMUNITY_MANAGEMENT',
+  SpaceCapabilityCreateContent = 'SPACE_CAPABILITY_CREATE_CONTENT',
+  SpaceCapabilityTagging = 'SPACE_CAPABILITY_TAGGING',
+  SpaceDataAccessAbout = 'SPACE_DATA_ACCESS_ABOUT',
+  SpaceDataAccessContent = 'SPACE_DATA_ACCESS_CONTENT',
+  SpaceDataAccessSubspaces = 'SPACE_DATA_ACCESS_SUBSPACES',
+  SpaceRoleAdmin = 'SPACE_ROLE_ADMIN',
+  SpaceRoleMember = 'SPACE_ROLE_MEMBER',
+}
+
+export type AiPersonaModelCardFlag = {
+  /** Is this model card entry flag enabled? */
+  enabled: Scalars['Boolean']['output'];
+  /** The name of the Model Card Entry flag */
+  name: AiPersonaModelCardEntryFlagName;
+};
 
 export type AiPersonaService = {
   /** The authorization rules for the entity */
@@ -1900,7 +1935,8 @@ export type CreateSpaceOnAccountInput = {
   licensePlanID?: InputMaybe<Scalars['UUID']['input']>;
   /** A readable identifier, unique within the containing scope. */
   nameID?: InputMaybe<Scalars['NameID']['input']>;
-  type?: InputMaybe<SpaceType>;
+  /** Pick up a different platform template. */
+  platformTemplate?: InputMaybe<TemplateDefaultType>;
 };
 
 export type CreateSubspaceInput = {
@@ -1908,8 +1944,9 @@ export type CreateSubspaceInput = {
   collaborationData: CreateCollaborationOnSpaceInput;
   /** A readable identifier, unique within the containing scope. */
   nameID?: InputMaybe<Scalars['NameID']['input']>;
+  /** Pick up a different platform template. */
+  platformTemplate?: InputMaybe<TemplateDefaultType>;
   spaceID: Scalars['UUID']['input'];
-  type?: InputMaybe<SpaceType>;
 };
 
 export type CreateTagsetData = {
@@ -3192,6 +3229,8 @@ export type LookupQueryResults = {
   myPrivileges?: Maybe<LookupMyPrivilegesQueryResults>;
   /** Lookup the specified Organization using a ID */
   organization?: Maybe<Organization>;
+  /** Lookup the specified PlatformInvitation */
+  platformInvitation?: Maybe<PlatformInvitation>;
   /** Lookup the specified Post */
   post?: Maybe<Post>;
   /** Lookup the specified Profile */
@@ -3298,6 +3337,10 @@ export type LookupQueryResultsLicenseArgs = {
 };
 
 export type LookupQueryResultsOrganizationArgs = {
+  ID: Scalars['UUID']['input'];
+};
+
+export type LookupQueryResultsPlatformInvitationArgs = {
   ID: Scalars['UUID']['input'];
 };
 
@@ -3456,6 +3499,35 @@ export enum MimeType {
   Xlsx = 'XLSX',
   Xpng = 'XPNG',
 }
+
+export type ModelCardAiEngineResult = {
+  /** Access to detailed information on the underlying models specifications */
+  additionalTechnicalDetails: Scalars['String']['output'];
+  /** Is the VC prompted to limit the responses to a specific body of knowledge? */
+  areAnswersRestrictedToBodyOfKnowledge: Scalars['String']['output'];
+  /** Can the VC access or search the web? */
+  canAccessWebWhenAnswering: Scalars['Boolean']['output'];
+  /** Where is the AI service hosted? */
+  hostingLocation: Scalars['String']['output'];
+  /** Is the AI Persona using an AI Engine not provided by Alkemio? */
+  isExternal: Scalars['Boolean']['output'];
+  /** Is interaction data used in any way for model training? Null means Unknown. */
+  isInteractionDataUsedForTraining?: Maybe<Scalars['Boolean']['output']>;
+  /** Does the VC use an open-weight model? */
+  isUsingOpenWeightsModel: Scalars['Boolean']['output'];
+};
+
+export type ModelCardMonitoringResult = {
+  /** Since Alkemio facilitates the interaction with the external provider, it holds an operational responsibility to monitor the service. As with all data and interactions on the platform, these are governed by our <a href="https://welcome.alkem.io/legal/#tc" target="_blank" ref="noreferer">Terms & Conditions</a>. */
+  isUsageMonitoredByAlkemio: Scalars['Boolean']['output'];
+};
+
+export type ModelCardSpaceUsageResult = {
+  /** The Flags for this Model Card Entry. */
+  flags: Array<AiPersonaModelCardFlag>;
+  /** The Model Card Entry type. */
+  modelCardEntry: AiPersonaModelCardEntry;
+};
 
 export type MoveCalloutContributionInput = {
   /** ID of the Callout to move the Contribution to. */
@@ -4651,6 +4723,12 @@ export type PaginatedUsers = {
   users: Array<User>;
 };
 
+export type PaginatedVirtualContributor = {
+  pageInfo: PageInfo;
+  total: Scalars['Float']['output'];
+  virtualContributors: Array<VirtualContributor>;
+};
+
 export type Platform = {
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
@@ -5387,6 +5465,8 @@ export type RoleSet = {
   availableUsersForElevatedRole: PaginatedUsers;
   /** All available users that are could join this RoleSet in the entry role. */
   availableUsersForEntryRole: PaginatedUsers;
+  /** All available VirtualContributors that are eligible to invite to this RoleSet in the entry role. */
+  availableVirtualContributorsForEntryRole: PaginatedVirtualContributor;
   /** The date at which the entity was created. */
   createdDate?: Maybe<Scalars['DateTime']['output']>;
   /** The Role that acts as the entry Role for the RoleSet, so other roles potentially require it. */
@@ -5442,6 +5522,13 @@ export type RoleSetAvailableUsersForEntryRoleArgs = {
   after?: InputMaybe<Scalars['UUID']['input']>;
   before?: InputMaybe<Scalars['UUID']['input']>;
   filter?: InputMaybe<UserFilterInput>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type RoleSetAvailableVirtualContributorsForEntryRoleArgs = {
+  after?: InputMaybe<Scalars['UUID']['input']>;
+  before?: InputMaybe<Scalars['UUID']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
 };
@@ -5991,14 +6078,6 @@ export type SpaceSubscription = {
   /** The name of the Subscription. */
   name: LicensingCredentialBasedCredentialType;
 };
-
-export enum SpaceType {
-  BlankSlate = 'BLANK_SLATE',
-  Challenge = 'CHALLENGE',
-  Knowledge = 'KNOWLEDGE',
-  Opportunity = 'OPPORTUNITY',
-  Space = 'SPACE',
-}
 
 export enum SpaceVisibility {
   Active = 'ACTIVE',
@@ -7823,6 +7902,10 @@ export type ResolversTypes = {
   AiPersonaDataAccessMode: SchemaTypes.AiPersonaDataAccessMode;
   AiPersonaEngine: SchemaTypes.AiPersonaEngine;
   AiPersonaInteractionMode: SchemaTypes.AiPersonaInteractionMode;
+  AiPersonaModelCard: ResolverTypeWrapper<SchemaTypes.AiPersonaModelCard>;
+  AiPersonaModelCardEntry: SchemaTypes.AiPersonaModelCardEntry;
+  AiPersonaModelCardEntryFlagName: SchemaTypes.AiPersonaModelCardEntryFlagName;
+  AiPersonaModelCardFlag: ResolverTypeWrapper<SchemaTypes.AiPersonaModelCardFlag>;
   AiPersonaService: ResolverTypeWrapper<SchemaTypes.AiPersonaService>;
   AiServer: ResolverTypeWrapper<SchemaTypes.AiServer>;
   Application: ResolverTypeWrapper<
@@ -8320,6 +8403,7 @@ export type ResolversTypes = {
       | 'invitation'
       | 'knowledgeBase'
       | 'organization'
+      | 'platformInvitation'
       | 'post'
       | 'profile'
       | 'roleSet'
@@ -8352,6 +8436,9 @@ export type ResolversTypes = {
       invitation?: SchemaTypes.Maybe<ResolversTypes['Invitation']>;
       knowledgeBase: ResolversTypes['KnowledgeBase'];
       organization?: SchemaTypes.Maybe<ResolversTypes['Organization']>;
+      platformInvitation?: SchemaTypes.Maybe<
+        ResolversTypes['PlatformInvitation']
+      >;
       post?: SchemaTypes.Maybe<ResolversTypes['Post']>;
       profile?: SchemaTypes.Maybe<ResolversTypes['Profile']>;
       roleSet?: SchemaTypes.Maybe<ResolversTypes['RoleSet']>;
@@ -8402,6 +8489,9 @@ export type ResolversTypes = {
   Metadata: ResolverTypeWrapper<SchemaTypes.Metadata>;
   MigrateEmbeddings: ResolverTypeWrapper<SchemaTypes.MigrateEmbeddings>;
   MimeType: SchemaTypes.MimeType;
+  ModelCardAiEngineResult: ResolverTypeWrapper<SchemaTypes.ModelCardAiEngineResult>;
+  ModelCardMonitoringResult: ResolverTypeWrapper<SchemaTypes.ModelCardMonitoringResult>;
+  ModelCardSpaceUsageResult: ResolverTypeWrapper<SchemaTypes.ModelCardSpaceUsageResult>;
   MoveCalloutContributionInput: SchemaTypes.MoveCalloutContributionInput;
   Mutation: ResolverTypeWrapper<{}>;
   MutationType: SchemaTypes.MutationType;
@@ -8458,6 +8548,15 @@ export type ResolversTypes = {
     Omit<SchemaTypes.PaginatedUsers, 'pageInfo' | 'users'> & {
       pageInfo: ResolversTypes['PageInfo'];
       users: Array<ResolversTypes['User']>;
+    }
+  >;
+  PaginatedVirtualContributor: ResolverTypeWrapper<
+    Omit<
+      SchemaTypes.PaginatedVirtualContributor,
+      'pageInfo' | 'virtualContributors'
+    > & {
+      pageInfo: ResolversTypes['PageInfo'];
+      virtualContributors: Array<ResolversTypes['VirtualContributor']>;
     }
   >;
   Platform: ResolverTypeWrapper<
@@ -8562,6 +8661,7 @@ export type ResolversTypes = {
       | 'applications'
       | 'availableUsersForElevatedRole'
       | 'availableUsersForEntryRole'
+      | 'availableVirtualContributorsForEntryRole'
       | 'invitations'
       | 'organizationsInRole'
       | 'organizationsInRoles'
@@ -8574,6 +8674,7 @@ export type ResolversTypes = {
       applications: Array<ResolversTypes['Application']>;
       availableUsersForElevatedRole: ResolversTypes['PaginatedUsers'];
       availableUsersForEntryRole: ResolversTypes['PaginatedUsers'];
+      availableVirtualContributorsForEntryRole: ResolversTypes['PaginatedVirtualContributor'];
       invitations: Array<ResolversTypes['Invitation']>;
       organizationsInRole: Array<ResolversTypes['Organization']>;
       organizationsInRoles: Array<
@@ -8744,7 +8845,6 @@ export type ResolversTypes = {
   SpaceSettingsMembership: ResolverTypeWrapper<SchemaTypes.SpaceSettingsMembership>;
   SpaceSettingsPrivacy: ResolverTypeWrapper<SchemaTypes.SpaceSettingsPrivacy>;
   SpaceSubscription: ResolverTypeWrapper<SchemaTypes.SpaceSubscription>;
-  SpaceType: SchemaTypes.SpaceType;
   SpaceVisibility: SchemaTypes.SpaceVisibility;
   StorageAggregator: ResolverTypeWrapper<
     Omit<
@@ -9140,6 +9240,8 @@ export type ResolversParentTypes = {
   AgentBeginVerifiedCredentialOfferOutput: SchemaTypes.AgentBeginVerifiedCredentialOfferOutput;
   AgentBeginVerifiedCredentialRequestOutput: SchemaTypes.AgentBeginVerifiedCredentialRequestOutput;
   AiPersona: SchemaTypes.AiPersona;
+  AiPersonaModelCard: SchemaTypes.AiPersonaModelCard;
+  AiPersonaModelCardFlag: SchemaTypes.AiPersonaModelCardFlag;
   AiPersonaService: SchemaTypes.AiPersonaService;
   AiServer: SchemaTypes.AiServer;
   Application: Omit<SchemaTypes.Application, 'contributor'> & {
@@ -9535,6 +9637,7 @@ export type ResolversParentTypes = {
     | 'invitation'
     | 'knowledgeBase'
     | 'organization'
+    | 'platformInvitation'
     | 'post'
     | 'profile'
     | 'roleSet'
@@ -9567,6 +9670,9 @@ export type ResolversParentTypes = {
     invitation?: SchemaTypes.Maybe<ResolversParentTypes['Invitation']>;
     knowledgeBase: ResolversParentTypes['KnowledgeBase'];
     organization?: SchemaTypes.Maybe<ResolversParentTypes['Organization']>;
+    platformInvitation?: SchemaTypes.Maybe<
+      ResolversParentTypes['PlatformInvitation']
+    >;
     post?: SchemaTypes.Maybe<ResolversParentTypes['Post']>;
     profile?: SchemaTypes.Maybe<ResolversParentTypes['Profile']>;
     roleSet?: SchemaTypes.Maybe<ResolversParentTypes['RoleSet']>;
@@ -9617,6 +9723,9 @@ export type ResolversParentTypes = {
   MessageID: SchemaTypes.Scalars['MessageID']['output'];
   Metadata: SchemaTypes.Metadata;
   MigrateEmbeddings: SchemaTypes.MigrateEmbeddings;
+  ModelCardAiEngineResult: SchemaTypes.ModelCardAiEngineResult;
+  ModelCardMonitoringResult: SchemaTypes.ModelCardMonitoringResult;
+  ModelCardSpaceUsageResult: SchemaTypes.ModelCardSpaceUsageResult;
   MoveCalloutContributionInput: SchemaTypes.MoveCalloutContributionInput;
   Mutation: {};
   MySpaceResults: Omit<
@@ -9667,6 +9776,13 @@ export type ResolversParentTypes = {
   PaginatedUsers: Omit<SchemaTypes.PaginatedUsers, 'pageInfo' | 'users'> & {
     pageInfo: ResolversParentTypes['PageInfo'];
     users: Array<ResolversParentTypes['User']>;
+  };
+  PaginatedVirtualContributor: Omit<
+    SchemaTypes.PaginatedVirtualContributor,
+    'pageInfo' | 'virtualContributors'
+  > & {
+    pageInfo: ResolversParentTypes['PageInfo'];
+    virtualContributors: Array<ResolversParentTypes['VirtualContributor']>;
   };
   Platform: Omit<
     SchemaTypes.Platform,
@@ -9754,6 +9870,7 @@ export type ResolversParentTypes = {
     | 'applications'
     | 'availableUsersForElevatedRole'
     | 'availableUsersForEntryRole'
+    | 'availableVirtualContributorsForEntryRole'
     | 'invitations'
     | 'organizationsInRole'
     | 'organizationsInRoles'
@@ -9766,6 +9883,7 @@ export type ResolversParentTypes = {
     applications: Array<ResolversParentTypes['Application']>;
     availableUsersForElevatedRole: ResolversParentTypes['PaginatedUsers'];
     availableUsersForEntryRole: ResolversParentTypes['PaginatedUsers'];
+    availableVirtualContributorsForEntryRole: ResolversParentTypes['PaginatedVirtualContributor'];
     invitations: Array<ResolversParentTypes['Invitation']>;
     organizationsInRole: Array<ResolversParentTypes['Organization']>;
     organizationsInRoles: Array<
@@ -10718,8 +10836,50 @@ export type AiPersonaResolvers<
     ParentType,
     ContextType
   >;
+  modelCard?: Resolver<
+    ResolversTypes['AiPersonaModelCard'],
+    ParentType,
+    ContextType
+  >;
   updatedDate?: Resolver<
     SchemaTypes.Maybe<ResolversTypes['DateTime']>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type AiPersonaModelCardResolvers<
+  ContextType = any,
+  ParentType extends
+    ResolversParentTypes['AiPersonaModelCard'] = ResolversParentTypes['AiPersonaModelCard'],
+> = {
+  aiEngine?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes['ModelCardAiEngineResult']>,
+    ParentType,
+    ContextType
+  >;
+  monitoring?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes['ModelCardMonitoringResult']>,
+    ParentType,
+    ContextType
+  >;
+  spaceUsage?: Resolver<
+    SchemaTypes.Maybe<Array<ResolversTypes['ModelCardSpaceUsageResult']>>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type AiPersonaModelCardFlagResolvers<
+  ContextType = any,
+  ParentType extends
+    ResolversParentTypes['AiPersonaModelCardFlag'] = ResolversParentTypes['AiPersonaModelCardFlag'],
+> = {
+  enabled?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  name?: Resolver<
+    ResolversTypes['AiPersonaModelCardEntryFlagName'],
     ParentType,
     ContextType
   >;
@@ -13738,6 +13898,12 @@ export type LookupQueryResultsResolvers<
     ContextType,
     RequireFields<SchemaTypes.LookupQueryResultsOrganizationArgs, 'ID'>
   >;
+  platformInvitation?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes['PlatformInvitation']>,
+    ParentType,
+    ContextType,
+    RequireFields<SchemaTypes.LookupQueryResultsPlatformInvitationArgs, 'ID'>
+  >;
   post?: Resolver<
     SchemaTypes.Maybe<ResolversTypes['Post']>,
     ParentType,
@@ -13943,6 +14109,72 @@ export type MigrateEmbeddingsResolvers<
     ResolversParentTypes['MigrateEmbeddings'] = ResolversParentTypes['MigrateEmbeddings'],
 > = {
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type ModelCardAiEngineResultResolvers<
+  ContextType = any,
+  ParentType extends
+    ResolversParentTypes['ModelCardAiEngineResult'] = ResolversParentTypes['ModelCardAiEngineResult'],
+> = {
+  additionalTechnicalDetails?: Resolver<
+    ResolversTypes['String'],
+    ParentType,
+    ContextType
+  >;
+  areAnswersRestrictedToBodyOfKnowledge?: Resolver<
+    ResolversTypes['String'],
+    ParentType,
+    ContextType
+  >;
+  canAccessWebWhenAnswering?: Resolver<
+    ResolversTypes['Boolean'],
+    ParentType,
+    ContextType
+  >;
+  hostingLocation?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  isExternal?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  isInteractionDataUsedForTraining?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes['Boolean']>,
+    ParentType,
+    ContextType
+  >;
+  isUsingOpenWeightsModel?: Resolver<
+    ResolversTypes['Boolean'],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type ModelCardMonitoringResultResolvers<
+  ContextType = any,
+  ParentType extends
+    ResolversParentTypes['ModelCardMonitoringResult'] = ResolversParentTypes['ModelCardMonitoringResult'],
+> = {
+  isUsageMonitoredByAlkemio?: Resolver<
+    ResolversTypes['Boolean'],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type ModelCardSpaceUsageResultResolvers<
+  ContextType = any,
+  ParentType extends
+    ResolversParentTypes['ModelCardSpaceUsageResult'] = ResolversParentTypes['ModelCardSpaceUsageResult'],
+> = {
+  flags?: Resolver<
+    Array<ResolversTypes['AiPersonaModelCardFlag']>,
+    ParentType,
+    ContextType
+  >;
+  modelCardEntry?: Resolver<
+    ResolversTypes['AiPersonaModelCardEntry'],
+    ParentType,
+    ContextType
+  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -15488,6 +15720,21 @@ export type PaginatedUsersResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type PaginatedVirtualContributorResolvers<
+  ContextType = any,
+  ParentType extends
+    ResolversParentTypes['PaginatedVirtualContributor'] = ResolversParentTypes['PaginatedVirtualContributor'],
+> = {
+  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
+  total?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  virtualContributors?: Resolver<
+    Array<ResolversTypes['VirtualContributor']>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type PlatformResolvers<
   ContextType = any,
   ParentType extends
@@ -16321,6 +16568,12 @@ export type RoleSetResolvers<
     ParentType,
     ContextType,
     Partial<SchemaTypes.RoleSetAvailableUsersForEntryRoleArgs>
+  >;
+  availableVirtualContributorsForEntryRole?: Resolver<
+    ResolversTypes['PaginatedVirtualContributor'],
+    ParentType,
+    ContextType,
+    Partial<SchemaTypes.RoleSetAvailableVirtualContributorsForEntryRoleArgs>
   >;
   createdDate?: Resolver<
     SchemaTypes.Maybe<ResolversTypes['DateTime']>,
@@ -18239,6 +18492,8 @@ export type Resolvers<ContextType = any> = {
   AgentBeginVerifiedCredentialOfferOutput?: AgentBeginVerifiedCredentialOfferOutputResolvers<ContextType>;
   AgentBeginVerifiedCredentialRequestOutput?: AgentBeginVerifiedCredentialRequestOutputResolvers<ContextType>;
   AiPersona?: AiPersonaResolvers<ContextType>;
+  AiPersonaModelCard?: AiPersonaModelCardResolvers<ContextType>;
+  AiPersonaModelCardFlag?: AiPersonaModelCardFlagResolvers<ContextType>;
   AiPersonaService?: AiPersonaServiceResolvers<ContextType>;
   AiServer?: AiServerResolvers<ContextType>;
   Application?: ApplicationResolvers<ContextType>;
@@ -18347,6 +18602,9 @@ export type Resolvers<ContextType = any> = {
   MessageID?: GraphQLScalarType;
   Metadata?: MetadataResolvers<ContextType>;
   MigrateEmbeddings?: MigrateEmbeddingsResolvers<ContextType>;
+  ModelCardAiEngineResult?: ModelCardAiEngineResultResolvers<ContextType>;
+  ModelCardMonitoringResult?: ModelCardMonitoringResultResolvers<ContextType>;
+  ModelCardSpaceUsageResult?: ModelCardSpaceUsageResultResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   MySpaceResults?: MySpaceResultsResolvers<ContextType>;
   NVP?: NvpResolvers<ContextType>;
@@ -18362,6 +18620,7 @@ export type Resolvers<ContextType = any> = {
   PaginatedOrganization?: PaginatedOrganizationResolvers<ContextType>;
   PaginatedSpaces?: PaginatedSpacesResolvers<ContextType>;
   PaginatedUsers?: PaginatedUsersResolvers<ContextType>;
+  PaginatedVirtualContributor?: PaginatedVirtualContributorResolvers<ContextType>;
   Platform?: PlatformResolvers<ContextType>;
   PlatformFeatureFlag?: PlatformFeatureFlagResolvers<ContextType>;
   PlatformIntegrationSettings?: PlatformIntegrationSettingsResolvers<ContextType>;
@@ -85110,6 +85369,7 @@ export type CreateVirtualContributorOnAccountMutation = {
     __typename: 'VirtualContributor';
     id: string;
     profile: { __typename: 'Profile'; id: string; url: string };
+    aiPersona?: { engine: SchemaTypes.AiPersonaEngine } | undefined;
     knowledgeBase?:
       | {
           __typename: 'KnowledgeBase';
@@ -120891,6 +121151,151 @@ export type MeQueryQuery = {
   };
 };
 
+export type GetAiPersonaModelCardQueryVariables = SchemaTypes.Exact<{
+  id: SchemaTypes.Scalars['UUID']['input'];
+}>;
+
+export type GetAiPersonaModelCardQuery = {
+  lookup: {
+    virtualContributor?:
+      | {
+          aiPersona?:
+            | {
+                id: string;
+                modelCard: {
+                  spaceUsage?:
+                    | Array<{
+                        modelCardEntry: SchemaTypes.AiPersonaModelCardEntry;
+                        flags: Array<{
+                          name: SchemaTypes.AiPersonaModelCardEntryFlagName;
+                          enabled: boolean;
+                        }>;
+                      }>
+                    | undefined;
+                  aiEngine?:
+                    | {
+                        isExternal: boolean;
+                        hostingLocation: string;
+                        isUsingOpenWeightsModel: boolean;
+                        isInteractionDataUsedForTraining?: boolean | undefined;
+                        canAccessWebWhenAnswering: boolean;
+                        areAnswersRestrictedToBodyOfKnowledge: string;
+                        additionalTechnicalDetails: string;
+                      }
+                    | undefined;
+                  monitoring?:
+                    | { isUsageMonitoredByAlkemio: boolean }
+                    | undefined;
+                };
+              }
+            | undefined;
+        }
+      | undefined;
+  };
+};
+
+export type GetVirtualContributorWithModelCardQueryVariables =
+  SchemaTypes.Exact<{
+    id: SchemaTypes.Scalars['UUID']['input'];
+  }>;
+
+export type GetVirtualContributorWithModelCardQuery = {
+  lookup: {
+    virtualContributor?:
+      | {
+          id: string;
+          searchVisibility: SchemaTypes.SearchVisibility;
+          listedInStore: boolean;
+          status: SchemaTypes.VirtualContributorStatus;
+          authorization?:
+            | {
+                id: string;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+          settings: { privacy: { knowledgeBaseContentVisible: boolean } };
+          aiPersona?:
+            | {
+                id: string;
+                bodyOfKnowledgeID?: string | undefined;
+                bodyOfKnowledgeType?:
+                  | SchemaTypes.AiPersonaBodyOfKnowledgeType
+                  | undefined;
+                bodyOfKnowledge?: any | undefined;
+                engine: SchemaTypes.AiPersonaEngine;
+                aiPersonaServiceID?: string | undefined;
+                modelCard: {
+                  spaceUsage?:
+                    | Array<{
+                        modelCardEntry: SchemaTypes.AiPersonaModelCardEntry;
+                        flags: Array<{
+                          name: SchemaTypes.AiPersonaModelCardEntryFlagName;
+                          enabled: boolean;
+                        }>;
+                      }>
+                    | undefined;
+                  aiEngine?:
+                    | {
+                        isExternal: boolean;
+                        hostingLocation: string;
+                        isUsingOpenWeightsModel: boolean;
+                        isInteractionDataUsedForTraining?: boolean | undefined;
+                        canAccessWebWhenAnswering: boolean;
+                        areAnswersRestrictedToBodyOfKnowledge: string;
+                        additionalTechnicalDetails: string;
+                      }
+                    | undefined;
+                  monitoring?:
+                    | { isUsageMonitoredByAlkemio: boolean }
+                    | undefined;
+                };
+              }
+            | undefined;
+          profile: {
+            id: string;
+            displayName: string;
+            description?: any | undefined;
+            tagline?: string | undefined;
+            url: string;
+            tagsets?:
+              | Array<{
+                  id: string;
+                  name: string;
+                  tags: Array<string>;
+                  allowedValues: Array<string>;
+                  type: SchemaTypes.TagsetType;
+                }>
+              | undefined;
+            avatar?:
+              | {
+                  id: string;
+                  uri: string;
+                  name: string;
+                  allowedTypes: Array<string>;
+                  aspectRatio: number;
+                  maxHeight: number;
+                  maxWidth: number;
+                  minHeight: number;
+                  minWidth: number;
+                  alternativeText?: string | undefined;
+                }
+              | undefined;
+            references?:
+              | Array<{
+                  id: string;
+                  name: string;
+                  uri: string;
+                  description?: string | undefined;
+                }>
+              | undefined;
+          };
+        }
+      | undefined;
+  };
+};
+
 export type VirtualContributorQueryVariables = SchemaTypes.Exact<{
   id: SchemaTypes.Scalars['UUID']['input'];
 }>;
@@ -121115,6 +121520,7 @@ export type VirtualContributorQuery = {
             | {
                 __typename: 'AiPersona';
                 id: string;
+                engine: SchemaTypes.AiPersonaEngine;
                 bodyOfKnowledgeID?: string | undefined;
                 bodyOfKnowledgeType?:
                   | SchemaTypes.AiPersonaBodyOfKnowledgeType
@@ -124073,6 +124479,9 @@ export const CreateVirtualContributorOnAccountDocument = gql`
         url
         __typename
       }
+      aiPersona {
+        engine
+      }
       knowledgeBase {
         id
         calloutsSet {
@@ -125354,6 +125763,120 @@ export const MeQueryDocument = gql`
   ${ApplicationDataFragmentDoc}
   ${InvitationDataFragmentDoc}
 `;
+export const GetAiPersonaModelCardDocument = gql`
+  query GetAiPersonaModelCard($id: UUID!) {
+    lookup {
+      virtualContributor(ID: $id) {
+        aiPersona {
+          id
+          modelCard {
+            spaceUsage {
+              modelCardEntry
+              flags {
+                name
+                enabled
+              }
+            }
+            aiEngine {
+              isExternal
+              hostingLocation
+              isUsingOpenWeightsModel
+              isInteractionDataUsedForTraining
+              canAccessWebWhenAnswering
+              areAnswersRestrictedToBodyOfKnowledge
+              additionalTechnicalDetails
+            }
+            monitoring {
+              isUsageMonitoredByAlkemio
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+export const GetVirtualContributorWithModelCardDocument = gql`
+  query GetVirtualContributorWithModelCard($id: UUID!) {
+    lookup {
+      virtualContributor(ID: $id) {
+        id
+        authorization {
+          id
+          myPrivileges
+        }
+        settings {
+          privacy {
+            knowledgeBaseContentVisible
+          }
+        }
+        searchVisibility
+        listedInStore
+        status
+        aiPersona {
+          id
+          bodyOfKnowledgeID
+          bodyOfKnowledgeType
+          bodyOfKnowledge
+          engine
+          aiPersonaServiceID
+          modelCard {
+            spaceUsage {
+              modelCardEntry
+              flags {
+                name
+                enabled
+              }
+            }
+            aiEngine {
+              isExternal
+              hostingLocation
+              isUsingOpenWeightsModel
+              isInteractionDataUsedForTraining
+              canAccessWebWhenAnswering
+              areAnswersRestrictedToBodyOfKnowledge
+              additionalTechnicalDetails
+            }
+            monitoring {
+              isUsageMonitoredByAlkemio
+            }
+          }
+        }
+        profile {
+          id
+          displayName
+          description
+          tagline
+          tagsets {
+            id
+            name
+            tags
+            allowedValues
+            type
+          }
+          url
+          avatar: visual(type: AVATAR) {
+            id
+            uri
+            name
+            allowedTypes
+            aspectRatio
+            maxHeight
+            maxWidth
+            minHeight
+            minWidth
+            alternativeText
+          }
+          references {
+            id
+            name
+            uri
+            description
+          }
+        }
+      }
+    }
+  }
+`;
 export const VirtualContributorDocument = gql`
   query VirtualContributor($id: UUID!) {
     lookup {
@@ -125425,6 +125948,7 @@ export const VirtualContributorDocument = gql`
         status
         aiPersona {
           id
+          engine
           bodyOfKnowledgeID
           bodyOfKnowledgeType
           bodyOfKnowledge
@@ -125876,6 +126400,12 @@ const GetUserDataDocumentString = print(GetUserDataDocument);
 const GetUserReferenceUriDocumentString = print(GetUserReferenceUriDocument);
 const GetUsersDataDocumentString = print(GetUsersDataDocument);
 const MeQueryDocumentString = print(MeQueryDocument);
+const GetAiPersonaModelCardDocumentString = print(
+  GetAiPersonaModelCardDocument
+);
+const GetVirtualContributorWithModelCardDocumentString = print(
+  GetVirtualContributorWithModelCardDocument
+);
 const VirtualContributorDocumentString = print(VirtualContributorDocument);
 const VirtualContributorKnowledgeBaseDocumentString = print(
   VirtualContributorKnowledgeBaseDocument
@@ -129235,6 +129765,50 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         'MeQuery',
+        'query',
+        variables
+      );
+    },
+    GetAiPersonaModelCard(
+      variables: SchemaTypes.GetAiPersonaModelCardQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.GetAiPersonaModelCardQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        wrappedRequestHeaders =>
+          client.rawRequest<SchemaTypes.GetAiPersonaModelCardQuery>(
+            GetAiPersonaModelCardDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        'GetAiPersonaModelCard',
+        'query',
+        variables
+      );
+    },
+    GetVirtualContributorWithModelCard(
+      variables: SchemaTypes.GetVirtualContributorWithModelCardQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.GetVirtualContributorWithModelCardQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        wrappedRequestHeaders =>
+          client.rawRequest<SchemaTypes.GetVirtualContributorWithModelCardQuery>(
+            GetVirtualContributorWithModelCardDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        'GetVirtualContributorWithModelCard',
         'query',
         variables
       );

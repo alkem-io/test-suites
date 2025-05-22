@@ -544,6 +544,8 @@ export type AiPersona = {
   id: Scalars['UUID']['output'];
   /** The type of interactions that are supported by this AI Persona when used. */
   interactionModes: Array<AiPersonaInteractionMode>;
+  /** The model card information about this AI Persona. */
+  modelCard: AiPersonaModelCard;
   /** The date at which the entity was last updated. */
   updatedDate?: Maybe<Scalars['DateTime']['output']>;
 };
@@ -574,6 +576,39 @@ export enum AiPersonaEngine {
 export enum AiPersonaInteractionMode {
   DiscussionTagging = 'DISCUSSION_TAGGING',
 }
+
+export type AiPersonaModelCard = {
+  /** The model card information about the AI Engine behind the AI Persona. */
+  aiEngine?: Maybe<ModelCardAiEngineResult>;
+  /** The model card information about the monitoring that is done on usage. */
+  monitoring?: Maybe<ModelCardMonitoringResult>;
+  /** The Model Card details related to usage of the Ai Persona within a Space. */
+  spaceUsage?: Maybe<Array<ModelCardSpaceUsageResult>>;
+};
+
+export enum AiPersonaModelCardEntry {
+  SpaceCapabilities = 'SPACE_CAPABILITIES',
+  SpaceDataAccess = 'SPACE_DATA_ACCESS',
+  SpaceRoleRequired = 'SPACE_ROLE_REQUIRED',
+}
+
+export enum AiPersonaModelCardEntryFlagName {
+  SpaceCapabilityCommunityManagement = 'SPACE_CAPABILITY_COMMUNITY_MANAGEMENT',
+  SpaceCapabilityCreateContent = 'SPACE_CAPABILITY_CREATE_CONTENT',
+  SpaceCapabilityTagging = 'SPACE_CAPABILITY_TAGGING',
+  SpaceDataAccessAbout = 'SPACE_DATA_ACCESS_ABOUT',
+  SpaceDataAccessContent = 'SPACE_DATA_ACCESS_CONTENT',
+  SpaceDataAccessSubspaces = 'SPACE_DATA_ACCESS_SUBSPACES',
+  SpaceRoleAdmin = 'SPACE_ROLE_ADMIN',
+  SpaceRoleMember = 'SPACE_ROLE_MEMBER',
+}
+
+export type AiPersonaModelCardFlag = {
+  /** Is this model card entry flag enabled? */
+  enabled: Scalars['Boolean']['output'];
+  /** The name of the Model Card Entry flag */
+  name: AiPersonaModelCardEntryFlagName;
+};
 
 export type AiPersonaService = {
   /** The authorization rules for the entity */
@@ -1894,7 +1929,8 @@ export type CreateSpaceOnAccountInput = {
   licensePlanID?: InputMaybe<Scalars['UUID']['input']>;
   /** A readable identifier, unique within the containing scope. */
   nameID?: InputMaybe<Scalars['NameID']['input']>;
-  type?: InputMaybe<SpaceType>;
+  /** Pick up a different platform template. */
+  platformTemplate?: InputMaybe<TemplateDefaultType>;
 };
 
 export type CreateSubspaceInput = {
@@ -1902,8 +1938,9 @@ export type CreateSubspaceInput = {
   collaborationData: CreateCollaborationOnSpaceInput;
   /** A readable identifier, unique within the containing scope. */
   nameID?: InputMaybe<Scalars['NameID']['input']>;
+  /** Pick up a different platform template. */
+  platformTemplate?: InputMaybe<TemplateDefaultType>;
   spaceID: Scalars['UUID']['input'];
-  type?: InputMaybe<SpaceType>;
 };
 
 export type CreateTagsetData = {
@@ -3186,6 +3223,8 @@ export type LookupQueryResults = {
   myPrivileges?: Maybe<LookupMyPrivilegesQueryResults>;
   /** Lookup the specified Organization using a ID */
   organization?: Maybe<Organization>;
+  /** Lookup the specified PlatformInvitation */
+  platformInvitation?: Maybe<PlatformInvitation>;
   /** Lookup the specified Post */
   post?: Maybe<Post>;
   /** Lookup the specified Profile */
@@ -3292,6 +3331,10 @@ export type LookupQueryResultsLicenseArgs = {
 };
 
 export type LookupQueryResultsOrganizationArgs = {
+  ID: Scalars['UUID']['input'];
+};
+
+export type LookupQueryResultsPlatformInvitationArgs = {
   ID: Scalars['UUID']['input'];
 };
 
@@ -3450,6 +3493,35 @@ export enum MimeType {
   Xlsx = 'XLSX',
   Xpng = 'XPNG',
 }
+
+export type ModelCardAiEngineResult = {
+  /** Access to detailed information on the underlying models specifications */
+  additionalTechnicalDetails: Scalars['String']['output'];
+  /** Is the VC prompted to limit the responses to a specific body of knowledge? */
+  areAnswersRestrictedToBodyOfKnowledge: Scalars['String']['output'];
+  /** Can the VC access or search the web? */
+  canAccessWebWhenAnswering: Scalars['Boolean']['output'];
+  /** Where is the AI service hosted? */
+  hostingLocation: Scalars['String']['output'];
+  /** Is the AI Persona using an AI Engine not provided by Alkemio? */
+  isExternal: Scalars['Boolean']['output'];
+  /** Is interaction data used in any way for model training? Null means Unknown. */
+  isInteractionDataUsedForTraining?: Maybe<Scalars['Boolean']['output']>;
+  /** Does the VC use an open-weight model? */
+  isUsingOpenWeightsModel: Scalars['Boolean']['output'];
+};
+
+export type ModelCardMonitoringResult = {
+  /** Since Alkemio facilitates the interaction with the external provider, it holds an operational responsibility to monitor the service. As with all data and interactions on the platform, these are governed by our <a href="https://welcome.alkem.io/legal/#tc" target="_blank" ref="noreferer">Terms & Conditions</a>. */
+  isUsageMonitoredByAlkemio: Scalars['Boolean']['output'];
+};
+
+export type ModelCardSpaceUsageResult = {
+  /** The Flags for this Model Card Entry. */
+  flags: Array<AiPersonaModelCardFlag>;
+  /** The Model Card Entry type. */
+  modelCardEntry: AiPersonaModelCardEntry;
+};
 
 export type MoveCalloutContributionInput = {
   /** ID of the Callout to move the Contribution to. */
@@ -4645,6 +4717,12 @@ export type PaginatedUsers = {
   users: Array<User>;
 };
 
+export type PaginatedVirtualContributor = {
+  pageInfo: PageInfo;
+  total: Scalars['Float']['output'];
+  virtualContributors: Array<VirtualContributor>;
+};
+
 export type Platform = {
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
@@ -5381,6 +5459,8 @@ export type RoleSet = {
   availableUsersForElevatedRole: PaginatedUsers;
   /** All available users that are could join this RoleSet in the entry role. */
   availableUsersForEntryRole: PaginatedUsers;
+  /** All available VirtualContributors that are eligible to invite to this RoleSet in the entry role. */
+  availableVirtualContributorsForEntryRole: PaginatedVirtualContributor;
   /** The date at which the entity was created. */
   createdDate?: Maybe<Scalars['DateTime']['output']>;
   /** The Role that acts as the entry Role for the RoleSet, so other roles potentially require it. */
@@ -5436,6 +5516,13 @@ export type RoleSetAvailableUsersForEntryRoleArgs = {
   after?: InputMaybe<Scalars['UUID']['input']>;
   before?: InputMaybe<Scalars['UUID']['input']>;
   filter?: InputMaybe<UserFilterInput>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type RoleSetAvailableVirtualContributorsForEntryRoleArgs = {
+  after?: InputMaybe<Scalars['UUID']['input']>;
+  before?: InputMaybe<Scalars['UUID']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
 };
@@ -5985,14 +6072,6 @@ export type SpaceSubscription = {
   /** The name of the Subscription. */
   name: LicensingCredentialBasedCredentialType;
 };
-
-export enum SpaceType {
-  BlankSlate = 'BLANK_SLATE',
-  Challenge = 'CHALLENGE',
-  Knowledge = 'KNOWLEDGE',
-  Opportunity = 'OPPORTUNITY',
-  Space = 'SPACE',
-}
 
 export enum SpaceVisibility {
   Active = 'ACTIVE',
@@ -7804,6 +7883,10 @@ export type ResolversTypes = {
   AiPersonaDataAccessMode: AiPersonaDataAccessMode;
   AiPersonaEngine: AiPersonaEngine;
   AiPersonaInteractionMode: AiPersonaInteractionMode;
+  AiPersonaModelCard: ResolverTypeWrapper<AiPersonaModelCard>;
+  AiPersonaModelCardEntry: AiPersonaModelCardEntry;
+  AiPersonaModelCardEntryFlagName: AiPersonaModelCardEntryFlagName;
+  AiPersonaModelCardFlag: ResolverTypeWrapper<AiPersonaModelCardFlag>;
   AiPersonaService: ResolverTypeWrapper<AiPersonaService>;
   AiServer: ResolverTypeWrapper<AiServer>;
   Application: ResolverTypeWrapper<
@@ -8274,6 +8357,7 @@ export type ResolversTypes = {
       | 'invitation'
       | 'knowledgeBase'
       | 'organization'
+      | 'platformInvitation'
       | 'post'
       | 'profile'
       | 'roleSet'
@@ -8304,6 +8388,7 @@ export type ResolversTypes = {
       invitation?: Maybe<ResolversTypes['Invitation']>;
       knowledgeBase: ResolversTypes['KnowledgeBase'];
       organization?: Maybe<ResolversTypes['Organization']>;
+      platformInvitation?: Maybe<ResolversTypes['PlatformInvitation']>;
       post?: Maybe<ResolversTypes['Post']>;
       profile?: Maybe<ResolversTypes['Profile']>;
       roleSet?: Maybe<ResolversTypes['RoleSet']>;
@@ -8352,6 +8437,9 @@ export type ResolversTypes = {
   Metadata: ResolverTypeWrapper<Metadata>;
   MigrateEmbeddings: ResolverTypeWrapper<MigrateEmbeddings>;
   MimeType: MimeType;
+  ModelCardAiEngineResult: ResolverTypeWrapper<ModelCardAiEngineResult>;
+  ModelCardMonitoringResult: ResolverTypeWrapper<ModelCardMonitoringResult>;
+  ModelCardSpaceUsageResult: ResolverTypeWrapper<ModelCardSpaceUsageResult>;
   MoveCalloutContributionInput: MoveCalloutContributionInput;
   Mutation: ResolverTypeWrapper<{}>;
   MutationType: MutationType;
@@ -8408,6 +8496,12 @@ export type ResolversTypes = {
     Omit<PaginatedUsers, 'pageInfo' | 'users'> & {
       pageInfo: ResolversTypes['PageInfo'];
       users: Array<ResolversTypes['User']>;
+    }
+  >;
+  PaginatedVirtualContributor: ResolverTypeWrapper<
+    Omit<PaginatedVirtualContributor, 'pageInfo' | 'virtualContributors'> & {
+      pageInfo: ResolversTypes['PageInfo'];
+      virtualContributors: Array<ResolversTypes['VirtualContributor']>;
     }
   >;
   Platform: ResolverTypeWrapper<
@@ -8510,6 +8604,7 @@ export type ResolversTypes = {
       | 'applications'
       | 'availableUsersForElevatedRole'
       | 'availableUsersForEntryRole'
+      | 'availableVirtualContributorsForEntryRole'
       | 'invitations'
       | 'organizationsInRole'
       | 'organizationsInRoles'
@@ -8522,6 +8617,7 @@ export type ResolversTypes = {
       applications: Array<ResolversTypes['Application']>;
       availableUsersForElevatedRole: ResolversTypes['PaginatedUsers'];
       availableUsersForEntryRole: ResolversTypes['PaginatedUsers'];
+      availableVirtualContributorsForEntryRole: ResolversTypes['PaginatedVirtualContributor'];
       invitations: Array<ResolversTypes['Invitation']>;
       organizationsInRole: Array<ResolversTypes['Organization']>;
       organizationsInRoles: Array<
@@ -8669,7 +8765,6 @@ export type ResolversTypes = {
   SpaceSettingsMembership: ResolverTypeWrapper<SpaceSettingsMembership>;
   SpaceSettingsPrivacy: ResolverTypeWrapper<SpaceSettingsPrivacy>;
   SpaceSubscription: ResolverTypeWrapper<SpaceSubscription>;
-  SpaceType: SpaceType;
   SpaceVisibility: SpaceVisibility;
   StorageAggregator: ResolverTypeWrapper<
     Omit<StorageAggregator, 'directStorageBucket' | 'storageBuckets'> & {
@@ -9052,6 +9147,8 @@ export type ResolversParentTypes = {
   AgentBeginVerifiedCredentialOfferOutput: AgentBeginVerifiedCredentialOfferOutput;
   AgentBeginVerifiedCredentialRequestOutput: AgentBeginVerifiedCredentialRequestOutput;
   AiPersona: AiPersona;
+  AiPersonaModelCard: AiPersonaModelCard;
+  AiPersonaModelCardFlag: AiPersonaModelCardFlag;
   AiPersonaService: AiPersonaService;
   AiServer: AiServer;
   Application: Omit<Application, 'contributor'> & {
@@ -9443,6 +9540,7 @@ export type ResolversParentTypes = {
     | 'invitation'
     | 'knowledgeBase'
     | 'organization'
+    | 'platformInvitation'
     | 'post'
     | 'profile'
     | 'roleSet'
@@ -9473,6 +9571,7 @@ export type ResolversParentTypes = {
     invitation?: Maybe<ResolversParentTypes['Invitation']>;
     knowledgeBase: ResolversParentTypes['KnowledgeBase'];
     organization?: Maybe<ResolversParentTypes['Organization']>;
+    platformInvitation?: Maybe<ResolversParentTypes['PlatformInvitation']>;
     post?: Maybe<ResolversParentTypes['Post']>;
     profile?: Maybe<ResolversParentTypes['Profile']>;
     roleSet?: Maybe<ResolversParentTypes['RoleSet']>;
@@ -9519,6 +9618,9 @@ export type ResolversParentTypes = {
   MessageID: Scalars['MessageID']['output'];
   Metadata: Metadata;
   MigrateEmbeddings: MigrateEmbeddings;
+  ModelCardAiEngineResult: ModelCardAiEngineResult;
+  ModelCardMonitoringResult: ModelCardMonitoringResult;
+  ModelCardSpaceUsageResult: ModelCardSpaceUsageResult;
   MoveCalloutContributionInput: MoveCalloutContributionInput;
   Mutation: {};
   MySpaceResults: Omit<MySpaceResults, 'latestActivity' | 'space'> & {
@@ -9564,6 +9666,13 @@ export type ResolversParentTypes = {
   PaginatedUsers: Omit<PaginatedUsers, 'pageInfo' | 'users'> & {
     pageInfo: ResolversParentTypes['PageInfo'];
     users: Array<ResolversParentTypes['User']>;
+  };
+  PaginatedVirtualContributor: Omit<
+    PaginatedVirtualContributor,
+    'pageInfo' | 'virtualContributors'
+  > & {
+    pageInfo: ResolversParentTypes['PageInfo'];
+    virtualContributors: Array<ResolversParentTypes['VirtualContributor']>;
   };
   Platform: Omit<
     Platform,
@@ -9647,6 +9756,7 @@ export type ResolversParentTypes = {
     | 'applications'
     | 'availableUsersForElevatedRole'
     | 'availableUsersForEntryRole'
+    | 'availableVirtualContributorsForEntryRole'
     | 'invitations'
     | 'organizationsInRole'
     | 'organizationsInRoles'
@@ -9659,6 +9769,7 @@ export type ResolversParentTypes = {
     applications: Array<ResolversParentTypes['Application']>;
     availableUsersForElevatedRole: ResolversParentTypes['PaginatedUsers'];
     availableUsersForEntryRole: ResolversParentTypes['PaginatedUsers'];
+    availableVirtualContributorsForEntryRole: ResolversParentTypes['PaginatedVirtualContributor'];
     invitations: Array<ResolversParentTypes['Invitation']>;
     organizationsInRole: Array<ResolversParentTypes['Organization']>;
     organizationsInRoles: Array<
@@ -10536,8 +10647,50 @@ export type AiPersonaResolvers<
     ParentType,
     ContextType
   >;
+  modelCard?: Resolver<
+    ResolversTypes['AiPersonaModelCard'],
+    ParentType,
+    ContextType
+  >;
   updatedDate?: Resolver<
     Maybe<ResolversTypes['DateTime']>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type AiPersonaModelCardResolvers<
+  ContextType = any,
+  ParentType extends
+    ResolversParentTypes['AiPersonaModelCard'] = ResolversParentTypes['AiPersonaModelCard'],
+> = {
+  aiEngine?: Resolver<
+    Maybe<ResolversTypes['ModelCardAiEngineResult']>,
+    ParentType,
+    ContextType
+  >;
+  monitoring?: Resolver<
+    Maybe<ResolversTypes['ModelCardMonitoringResult']>,
+    ParentType,
+    ContextType
+  >;
+  spaceUsage?: Resolver<
+    Maybe<Array<ResolversTypes['ModelCardSpaceUsageResult']>>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type AiPersonaModelCardFlagResolvers<
+  ContextType = any,
+  ParentType extends
+    ResolversParentTypes['AiPersonaModelCardFlag'] = ResolversParentTypes['AiPersonaModelCardFlag'],
+> = {
+  enabled?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  name?: Resolver<
+    ResolversTypes['AiPersonaModelCardEntryFlagName'],
     ParentType,
     ContextType
   >;
@@ -13370,6 +13523,12 @@ export type LookupQueryResultsResolvers<
     ContextType,
     RequireFields<LookupQueryResultsOrganizationArgs, 'ID'>
   >;
+  platformInvitation?: Resolver<
+    Maybe<ResolversTypes['PlatformInvitation']>,
+    ParentType,
+    ContextType,
+    RequireFields<LookupQueryResultsPlatformInvitationArgs, 'ID'>
+  >;
   post?: Resolver<
     Maybe<ResolversTypes['Post']>,
     ParentType,
@@ -13559,6 +13718,72 @@ export type MigrateEmbeddingsResolvers<
     ResolversParentTypes['MigrateEmbeddings'] = ResolversParentTypes['MigrateEmbeddings'],
 > = {
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type ModelCardAiEngineResultResolvers<
+  ContextType = any,
+  ParentType extends
+    ResolversParentTypes['ModelCardAiEngineResult'] = ResolversParentTypes['ModelCardAiEngineResult'],
+> = {
+  additionalTechnicalDetails?: Resolver<
+    ResolversTypes['String'],
+    ParentType,
+    ContextType
+  >;
+  areAnswersRestrictedToBodyOfKnowledge?: Resolver<
+    ResolversTypes['String'],
+    ParentType,
+    ContextType
+  >;
+  canAccessWebWhenAnswering?: Resolver<
+    ResolversTypes['Boolean'],
+    ParentType,
+    ContextType
+  >;
+  hostingLocation?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  isExternal?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  isInteractionDataUsedForTraining?: Resolver<
+    Maybe<ResolversTypes['Boolean']>,
+    ParentType,
+    ContextType
+  >;
+  isUsingOpenWeightsModel?: Resolver<
+    ResolversTypes['Boolean'],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type ModelCardMonitoringResultResolvers<
+  ContextType = any,
+  ParentType extends
+    ResolversParentTypes['ModelCardMonitoringResult'] = ResolversParentTypes['ModelCardMonitoringResult'],
+> = {
+  isUsageMonitoredByAlkemio?: Resolver<
+    ResolversTypes['Boolean'],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type ModelCardSpaceUsageResultResolvers<
+  ContextType = any,
+  ParentType extends
+    ResolversParentTypes['ModelCardSpaceUsageResult'] = ResolversParentTypes['ModelCardSpaceUsageResult'],
+> = {
+  flags?: Resolver<
+    Array<ResolversTypes['AiPersonaModelCardFlag']>,
+    ParentType,
+    ContextType
+  >;
+  modelCardEntry?: Resolver<
+    ResolversTypes['AiPersonaModelCardEntry'],
+    ParentType,
+    ContextType
+  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -14915,6 +15140,21 @@ export type PaginatedUsersResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type PaginatedVirtualContributorResolvers<
+  ContextType = any,
+  ParentType extends
+    ResolversParentTypes['PaginatedVirtualContributor'] = ResolversParentTypes['PaginatedVirtualContributor'],
+> = {
+  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
+  total?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  virtualContributors?: Resolver<
+    Array<ResolversTypes['VirtualContributor']>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type PlatformResolvers<
   ContextType = any,
   ParentType extends
@@ -15729,6 +15969,12 @@ export type RoleSetResolvers<
     ParentType,
     ContextType,
     Partial<RoleSetAvailableUsersForEntryRoleArgs>
+  >;
+  availableVirtualContributorsForEntryRole?: Resolver<
+    ResolversTypes['PaginatedVirtualContributor'],
+    ParentType,
+    ContextType,
+    Partial<RoleSetAvailableVirtualContributorsForEntryRoleArgs>
   >;
   createdDate?: Resolver<
     Maybe<ResolversTypes['DateTime']>,
@@ -17571,6 +17817,8 @@ export type Resolvers<ContextType = any> = {
   AgentBeginVerifiedCredentialOfferOutput?: AgentBeginVerifiedCredentialOfferOutputResolvers<ContextType>;
   AgentBeginVerifiedCredentialRequestOutput?: AgentBeginVerifiedCredentialRequestOutputResolvers<ContextType>;
   AiPersona?: AiPersonaResolvers<ContextType>;
+  AiPersonaModelCard?: AiPersonaModelCardResolvers<ContextType>;
+  AiPersonaModelCardFlag?: AiPersonaModelCardFlagResolvers<ContextType>;
   AiPersonaService?: AiPersonaServiceResolvers<ContextType>;
   AiServer?: AiServerResolvers<ContextType>;
   Application?: ApplicationResolvers<ContextType>;
@@ -17679,6 +17927,9 @@ export type Resolvers<ContextType = any> = {
   MessageID?: GraphQLScalarType;
   Metadata?: MetadataResolvers<ContextType>;
   MigrateEmbeddings?: MigrateEmbeddingsResolvers<ContextType>;
+  ModelCardAiEngineResult?: ModelCardAiEngineResultResolvers<ContextType>;
+  ModelCardMonitoringResult?: ModelCardMonitoringResultResolvers<ContextType>;
+  ModelCardSpaceUsageResult?: ModelCardSpaceUsageResultResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   MySpaceResults?: MySpaceResultsResolvers<ContextType>;
   NVP?: NvpResolvers<ContextType>;
@@ -17694,6 +17945,7 @@ export type Resolvers<ContextType = any> = {
   PaginatedOrganization?: PaginatedOrganizationResolvers<ContextType>;
   PaginatedSpaces?: PaginatedSpacesResolvers<ContextType>;
   PaginatedUsers?: PaginatedUsersResolvers<ContextType>;
+  PaginatedVirtualContributor?: PaginatedVirtualContributorResolvers<ContextType>;
   Platform?: PlatformResolvers<ContextType>;
   PlatformFeatureFlag?: PlatformFeatureFlagResolvers<ContextType>;
   PlatformIntegrationSettings?: PlatformIntegrationSettingsResolvers<ContextType>;
@@ -77810,6 +78062,7 @@ export type CreateVirtualContributorOnAccountMutation = {
     __typename: 'VirtualContributor';
     id: string;
     profile: { __typename: 'Profile'; id: string; url: string };
+    aiPersona?: { engine: AiPersonaEngine } | undefined;
     knowledgeBase?:
       | {
           __typename: 'KnowledgeBase';
@@ -112123,6 +112376,146 @@ export type MeQueryQuery = {
   };
 };
 
+export type GetAiPersonaModelCardQueryVariables = Exact<{
+  id: Scalars['UUID']['input'];
+}>;
+
+export type GetAiPersonaModelCardQuery = {
+  lookup: {
+    virtualContributor?:
+      | {
+          aiPersona?:
+            | {
+                id: string;
+                modelCard: {
+                  spaceUsage?:
+                    | Array<{
+                        modelCardEntry: AiPersonaModelCardEntry;
+                        flags: Array<{
+                          name: AiPersonaModelCardEntryFlagName;
+                          enabled: boolean;
+                        }>;
+                      }>
+                    | undefined;
+                  aiEngine?:
+                    | {
+                        isExternal: boolean;
+                        hostingLocation: string;
+                        isUsingOpenWeightsModel: boolean;
+                        isInteractionDataUsedForTraining?: boolean | undefined;
+                        canAccessWebWhenAnswering: boolean;
+                        areAnswersRestrictedToBodyOfKnowledge: string;
+                        additionalTechnicalDetails: string;
+                      }
+                    | undefined;
+                  monitoring?:
+                    | { isUsageMonitoredByAlkemio: boolean }
+                    | undefined;
+                };
+              }
+            | undefined;
+        }
+      | undefined;
+  };
+};
+
+export type GetVirtualContributorWithModelCardQueryVariables = Exact<{
+  id: Scalars['UUID']['input'];
+}>;
+
+export type GetVirtualContributorWithModelCardQuery = {
+  lookup: {
+    virtualContributor?:
+      | {
+          id: string;
+          searchVisibility: SearchVisibility;
+          listedInStore: boolean;
+          status: VirtualContributorStatus;
+          authorization?:
+            | {
+                id: string;
+                myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+              }
+            | undefined;
+          settings: { privacy: { knowledgeBaseContentVisible: boolean } };
+          aiPersona?:
+            | {
+                id: string;
+                bodyOfKnowledgeID?: string | undefined;
+                bodyOfKnowledgeType?: AiPersonaBodyOfKnowledgeType | undefined;
+                bodyOfKnowledge?: any | undefined;
+                engine: AiPersonaEngine;
+                aiPersonaServiceID?: string | undefined;
+                modelCard: {
+                  spaceUsage?:
+                    | Array<{
+                        modelCardEntry: AiPersonaModelCardEntry;
+                        flags: Array<{
+                          name: AiPersonaModelCardEntryFlagName;
+                          enabled: boolean;
+                        }>;
+                      }>
+                    | undefined;
+                  aiEngine?:
+                    | {
+                        isExternal: boolean;
+                        hostingLocation: string;
+                        isUsingOpenWeightsModel: boolean;
+                        isInteractionDataUsedForTraining?: boolean | undefined;
+                        canAccessWebWhenAnswering: boolean;
+                        areAnswersRestrictedToBodyOfKnowledge: string;
+                        additionalTechnicalDetails: string;
+                      }
+                    | undefined;
+                  monitoring?:
+                    | { isUsageMonitoredByAlkemio: boolean }
+                    | undefined;
+                };
+              }
+            | undefined;
+          profile: {
+            id: string;
+            displayName: string;
+            description?: any | undefined;
+            tagline?: string | undefined;
+            url: string;
+            tagsets?:
+              | Array<{
+                  id: string;
+                  name: string;
+                  tags: Array<string>;
+                  allowedValues: Array<string>;
+                  type: TagsetType;
+                }>
+              | undefined;
+            avatar?:
+              | {
+                  id: string;
+                  uri: string;
+                  name: string;
+                  allowedTypes: Array<string>;
+                  aspectRatio: number;
+                  maxHeight: number;
+                  maxWidth: number;
+                  minHeight: number;
+                  minWidth: number;
+                  alternativeText?: string | undefined;
+                }
+              | undefined;
+            references?:
+              | Array<{
+                  id: string;
+                  name: string;
+                  uri: string;
+                  description?: string | undefined;
+                }>
+              | undefined;
+          };
+        }
+      | undefined;
+  };
+};
+
 export type VirtualContributorQueryVariables = Exact<{
   id: Scalars['UUID']['input'];
 }>;
@@ -112345,6 +112738,7 @@ export type VirtualContributorQuery = {
             | {
                 __typename: 'AiPersona';
                 id: string;
+                engine: AiPersonaEngine;
                 bodyOfKnowledgeID?: string | undefined;
                 bodyOfKnowledgeType?: AiPersonaBodyOfKnowledgeType | undefined;
                 bodyOfKnowledge?: any | undefined;

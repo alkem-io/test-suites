@@ -1,0 +1,30 @@
+query GetAiPersonaModelCard($id: UUID!) {
+  lookup {
+    virtualContributor(ID: $id) {
+      aiPersona {
+        id
+        modelCard {
+          spaceUsage {
+            modelCardEntry
+            flags {
+              name
+              enabled
+            }
+          }
+          aiEngine {
+            isExternal
+            hostingLocation
+            isUsingOpenWeightsModel
+            isInteractionDataUsedForTraining
+            canAccessWebWhenAnswering
+            areAnswersRestrictedToBodyOfKnowledge
+            additionalTechnicalDetails
+          }
+          monitoring {
+            isUsageMonitoredByAlkemio
+          }
+        }
+      }
+    }
+  }
+}
