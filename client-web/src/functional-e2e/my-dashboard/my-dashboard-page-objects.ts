@@ -9,7 +9,7 @@ export const verifyMyDashboardWelcomeElement = async (
   await expect(
     page
       .locator('div')
-      .filter({ hasText: `Welcome back, ${firstName}` })
+      .filter({ hasText: `Welcome, ${firstName}` })
       .first()
   ).toBeVisible();
 };

@@ -110,7 +110,7 @@ test('user successful registration email', async ({ page }) => {
 
   await pressSignInButtonSignInPage(page);
   await expect(
-    page.getByRole('heading', { name: 'Welcome back, Test!' })
+    page.getByRole('heading', { name: 'Welcome, Test!' })
   ).toBeVisible();
 
   // const getUserId = await getUserData(userEmail);
@@ -145,7 +145,7 @@ test('user successful password recovery', async ({ page }) => {
   await expect(
     page
       .locator('div')
-      .filter({ hasText: /^Welcome back, non!Ready to make some impact\?$/ })
+      .filter({ hasText: /^Welcome, non!Ready to make some impact\?$/ })
       .nth(2)
   ).toBeVisible();
   await expect(page.getByRole('button', { name: 'Invitations' })).toBeVisible();

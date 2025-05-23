@@ -13,7 +13,7 @@ export const recoveryCodeField = (page: Page) =>
 export const signInButton = (page: Page) =>
   page.getByRole('button', { name: 'Sign in' });
 export const signUpButton = (page: Page) =>
-  page.getByRole('button', { name: 'Sign up' });
+  page.getByRole('button', { name: 'Sign up', exact: true });
 export const saveButton = (page: Page) =>
   page.getByRole('button', { name: 'Save' });
 export const submitButton = (page: Page) =>
