@@ -1,0 +1,26 @@
+fragment PostData on Post {
+  authorization {
+    myPrivileges
+  }
+  id
+  nameID
+  profile {
+    ...ProfileStorageConfig
+    ...ProfileData
+    references {
+      ...ReferenceData
+    }
+    visual(type: CARD) {
+      ...VisualUri
+      __typename
+    }
+  }
+  comments {
+    ...CommentsData
+  }
+  createdBy {
+    email
+  }
+
+  createdDate
+}

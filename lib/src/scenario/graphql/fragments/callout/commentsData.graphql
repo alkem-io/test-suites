@@ -1,0 +1,13 @@
+fragment CommentsData on Room {
+  id
+  messagesCount
+  messages {
+    id
+    message
+    sender {
+      ... on User {
+        id
+      }
+    }
+  }
+}

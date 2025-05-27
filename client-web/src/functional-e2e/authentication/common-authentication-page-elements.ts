@@ -11,9 +11,9 @@ export const recoveryCodeField = (page: Page) =>
   page.getByLabel('Recovery code *');
 
 export const signInButton = (page: Page) =>
-  page.getByRole('button', { name: 'Sign in' });
+  page.getByRole('button', { name: 'Sign in with password', exact: true });
 export const signUpButton = (page: Page) =>
-  page.getByRole('button', { name: 'Sign up' });
+  page.getByRole('button', { name: 'Sign up', exact: true });
 export const saveButton = (page: Page) =>
   page.getByRole('button', { name: 'Save' });
 export const submitButton = (page: Page) =>

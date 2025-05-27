@@ -1,0 +1,22 @@
+fragment WhiteboardInCalloutOnCollaborationWithStorageConfig on Collaboration {
+  id
+  calloutsSet {
+    callouts(IDs: [$calloutId]) {
+      id
+      contributions {
+        whiteboard {
+          id
+          profile {
+            ...ProfileStorageConfig
+            __typename
+          }
+          __typename
+        }
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+  __typename
+}

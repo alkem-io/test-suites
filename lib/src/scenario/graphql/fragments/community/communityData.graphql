@@ -1,0 +1,31 @@
+fragment CommunityData on Community {
+  id
+  authorization {
+    ...AuthorizationData
+  }
+  groups {
+    ...GroupData
+  }
+  roleSet {
+    id
+    ...MembersAndLeadsData
+    applications {
+      ...ApplicationData
+    }
+  }
+  communication {
+    id
+    updates {
+      id
+      messages {
+        ...MessageData
+      }
+      authorization {
+        myPrivileges
+      }
+    }
+    authorization {
+      myPrivileges
+    }
+  }
+}

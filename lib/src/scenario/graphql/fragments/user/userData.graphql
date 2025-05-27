@@ -1,0 +1,36 @@
+fragment UserData on User {
+  id
+  nameID
+  firstName
+  lastName
+  email
+  phone
+  accountUpn
+  account {
+    ...AccountData
+  }
+  agent {
+    ...AgentData
+  }
+  profile {
+    ...ProfileDataUser
+  }
+  preferences {
+    ...PreferenceData
+  }
+  settings {
+    privacy {
+      contributionRolesPubliclyVisible
+    }
+    communication {
+      allowOtherUsersToSendMessages
+    }
+  }
+  authorization {
+    myPrivileges
+    credentialRules {
+      name
+    }
+  }
+}
+

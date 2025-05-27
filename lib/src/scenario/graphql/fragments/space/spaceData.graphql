@@ -1,0 +1,30 @@
+fragment SpaceData on Space {
+  id
+  nameID
+  visibility
+  level
+  account {
+    ...AccountData
+  }
+  authorization {
+    ...AuthorizationData
+  }
+  about {
+    ...SpaceAboutDetails
+  }
+  community {
+    ...CommunityData
+  }
+  collaboration {
+    ...CollaborationData
+  }
+  subspaces {
+    ...SubspaceData
+  }
+  settings {
+    ...SettingsData
+  }
+  templatesManager {
+    ...TemplatesManagerData
+  }
+}

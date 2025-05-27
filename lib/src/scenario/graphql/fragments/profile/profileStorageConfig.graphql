@@ -1,0 +1,19 @@
+fragment ProfileStorageConfig on Profile {
+  id
+  storageBucket {
+    id
+    authorization {
+      myPrivileges
+    }
+    parentEntity {
+      displayName
+      type
+    }
+    documents {
+      id
+      authorization {
+        myPrivileges
+      }
+    }
+  }
+}

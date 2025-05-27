@@ -127,7 +127,7 @@ describe('Notifications - invitations', () => {
     await deleteMailSlurperMails();
   });
 
-  test('sender and external user receive notifications', async () => {
+  test('external user receive notifications', async () => {
     // Act
     const emailExternalUser = `external${uniqueId}@alkem.io`;
     const message = 'Hello, feel free to join our community!';
@@ -148,7 +148,7 @@ describe('Notifications - invitations', () => {
 
     const getEmailsData = await getMailsData();
     // Assert
-    expect(getEmailsData[1]).toEqual(2);
+    expect(getEmailsData[1]).toEqual(1);
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -157,17 +157,9 @@ describe('Notifications - invitations', () => {
         }),
       ])
     );
-    expect(getEmailsData[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `Invitation to join ${baseScenario.space.about.profile.displayName}`,
-          toAddresses: [TestUserManager.users.globalAdmin.email],
-        }),
-      ])
-    );
   });
 
-  test('subspace admin (sender) and external user receive notifications', async () => {
+  test('external user receive notifications from subspace', async () => {
     // Act
     const emailExternalUser = `external${uniqueId}@alkem.io`;
     const message = 'Hello, feel free to join our community!';
@@ -189,20 +181,12 @@ describe('Notifications - invitations', () => {
 
     const getEmailsData = await getMailsData();
     // Assert
-    expect(getEmailsData[1]).toEqual(2);
+    expect(getEmailsData[1]).toEqual(1);
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           subject: `Invitation to join ${baseScenario.subspace.about.profile.displayName}`,
           toAddresses: [emailExternalUser],
-        }),
-      ])
-    );
-    expect(getEmailsData[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: `Invitation to join ${baseScenario.subspace.about.profile.displayName}`,
-          toAddresses: [TestUserManager.users.subspaceAdmin.email],
         }),
       ])
     );

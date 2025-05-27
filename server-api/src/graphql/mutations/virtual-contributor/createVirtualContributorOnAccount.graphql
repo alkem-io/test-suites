@@ -8,6 +8,9 @@ mutation CreateVirtualContributorOnAccount(
       url
       __typename
     }
+    aiPersona {
+      engine
+    }
     knowledgeBase {
       id
       calloutsSet {

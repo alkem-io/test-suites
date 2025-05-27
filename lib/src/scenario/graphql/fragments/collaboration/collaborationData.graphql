@@ -1,0 +1,15 @@
+fragment CollaborationData on Collaboration {
+  id
+  calloutsSet {
+    id
+    callouts {
+      ...CalloutData
+    }
+  }
+  authorization {
+    myPrivileges
+  }
+  innovationFlow {
+    ...InnovationFlowData
+  }
+}

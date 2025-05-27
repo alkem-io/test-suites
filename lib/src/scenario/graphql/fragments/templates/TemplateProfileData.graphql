@@ -1,0 +1,10 @@
+fragment TemplateProfileData on Template {
+  id
+  type
+  profile {
+    ...ProfileData
+  }
+  authorization {
+    myPrivileges
+  }
+}

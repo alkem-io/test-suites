@@ -1,0 +1,17 @@
+fragment WhiteboardData on Whiteboard {
+  authorization {
+    myPrivileges
+  }
+  id
+  nameID
+  profile {
+    ...ProfileStorageConfig
+    ...ProfileData
+    visual(type: CARD) {
+      ...VisualUri
+      __typename
+    }
+  }
+
+  content
+}

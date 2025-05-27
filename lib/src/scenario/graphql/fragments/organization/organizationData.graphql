@@ -1,0 +1,50 @@
+fragment OrganizationData on Organization {
+  id
+  nameID
+  legalEntityName
+  domain
+  website
+  contactEmail
+  account {
+    ...AccountData
+  }
+  agent {
+    id
+  }
+  groups {
+    ...GroupData
+  }
+  roleSet {
+    id
+    usersInRole(role: ASSOCIATE) {
+      ...MemberData
+    }
+  }
+  profile {
+    ...ProfileDataUser
+  }
+  verification {
+    authorization {
+      ...AuthorizationData
+    }
+    id
+    status
+    state
+    nextEvents
+    isFinalized
+    lifecycle {
+      id
+    }
+  }
+  settings {
+    privacy {
+      contributionRolesPubliclyVisible
+    }
+    membership {
+      allowUsersMatchingDomainToJoin
+    }
+  }
+  authorization {
+    ...AuthorizationData
+  }
+}

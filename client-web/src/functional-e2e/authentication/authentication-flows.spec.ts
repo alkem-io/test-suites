@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { getEmails, getRecoveryCode } from 'src/utils/ui.test.helper';
+//import { getEmails, getRecoveryCode } from 'src/utils/ui.test.helper';
 import {
   navigateToLoginPageFromMenu,
   navigateToRegistrationFromSignUp,
@@ -26,10 +26,16 @@ import {
   saveButton,
   submitButton,
 } from './common-authentication-page-elements';
-import { deleteMailSlurperMails } from 'src/utils/mailslurper.rest.requests';
-import { deleteUser, getUserData } from '../../duplicate/user.request.params';
-import { delay } from '@alkemio/tests-lib';
-import { UniqueIDGenerator } from '@alkemio/tests-lib';
+//import { deleteMailSlurperMails } from 'src/utils/mailslurper.rest.requests';
+//import { deleteUser, getUserData } from '../../duplicate/user.request.params';
+import {
+  delay,
+  deleteMailSlurperMails,
+  getEmails,
+  getRecoveryCode,
+  UniqueIDGenerator,
+} from '@alkemio/tests-lib';
+//import {  } from '@alkemio/tests-lib';
 
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || '';
 const baseUrl = process.env.ALKEMIO_BASE_URL || '';
@@ -104,13 +110,13 @@ test('user successful registration email', async ({ page }) => {
 
   await pressSignInButtonSignInPage(page);
   await expect(
-    page.getByRole('heading', { name: 'Welcome back, Test!' })
+    page.getByRole('heading', { name: 'Welcome, Test!' })
   ).toBeVisible();
 
-  const getUserId = await getUserData(userEmail);
-  const registeredUserId = getUserId.data?.user.id ?? '';
+  // const getUserId = await getUserData(userEmail);
+  // const registeredUserId = getUserId.data?.user.id ?? '';
 
-  await deleteUser(registeredUserId);
+  // await deleteUser(registeredUserId);
 });
 
 test('user successful password recovery', async ({ page }) => {
@@ -139,7 +145,7 @@ test('user successful password recovery', async ({ page }) => {
   await expect(
     page
       .locator('div')
-      .filter({ hasText: /^Welcome back, non!Ready to make some impact\?$/ })
+      .filter({ hasText: /^Welcome, non!Ready to make some impact\?$/ })
       .nth(2)
   ).toBeVisible();
   await expect(page.getByRole('button', { name: 'Invitations' })).toBeVisible();

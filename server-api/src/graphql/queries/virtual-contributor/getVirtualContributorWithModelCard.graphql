@@ -1,0 +1,80 @@
+query GetVirtualContributorWithModelCard($id: UUID!) {
+  lookup {
+    virtualContributor(ID: $id) {
+      id
+      authorization {
+        id
+        myPrivileges
+      }
+      settings {
+        privacy {
+          knowledgeBaseContentVisible
+        }
+      }
+      searchVisibility
+      listedInStore
+      status
+      aiPersona {
+        id
+        bodyOfKnowledgeID
+        bodyOfKnowledgeType
+        bodyOfKnowledge
+        engine
+        aiPersonaServiceID
+        modelCard {
+          spaceUsage {
+            modelCardEntry
+            flags {
+              name
+              enabled
+            }
+          }
+          aiEngine {
+            isExternal
+            hostingLocation
+            isUsingOpenWeightsModel
+            isInteractionDataUsedForTraining
+            canAccessWebWhenAnswering
+            areAnswersRestrictedToBodyOfKnowledge
+            additionalTechnicalDetails
+          }
+          monitoring {
+            isUsageMonitoredByAlkemio
+          }
+        }
+      }
+      profile {
+        id
+        displayName
+        description
+        tagline
+        tagsets {
+          id
+          name
+          tags
+          allowedValues
+          type
+        }
+        url
+        avatar: visual(type: AVATAR) {
+          id
+          uri
+          name
+          allowedTypes
+          aspectRatio
+          maxHeight
+          maxWidth
+          minHeight
+          minWidth
+          alternativeText
+        }
+        references {
+          id
+          name
+          uri
+          description
+        }
+      }
+    }
+  }
+}

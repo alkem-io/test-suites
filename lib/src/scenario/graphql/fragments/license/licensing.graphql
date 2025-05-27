@@ -1,0 +1,12 @@
+fragment LicensingData on Licensing {
+  id
+  plans {
+    ...LicensePlanData
+  }
+  policy {
+    ...LicensePolicyData
+  }
+  authorization {
+    ...AuthorizationData
+  }
+}

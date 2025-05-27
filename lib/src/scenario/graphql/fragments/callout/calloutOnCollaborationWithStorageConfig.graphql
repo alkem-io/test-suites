@@ -1,0 +1,18 @@
+fragment CalloutOnCollaborationWithStorageConfig on Collaboration {
+  id
+  calloutsSet {
+    callouts(IDs: [$calloutId]) {
+      id
+      framing {
+        profile {
+          ...ProfileStorageConfig
+          __typename
+        }
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+  __typename
+}
