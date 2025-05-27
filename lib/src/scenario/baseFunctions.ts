@@ -15,6 +15,7 @@ import {
 import { graphqlErrorWrapper } from "../utils/graphql.wrapper";
 import { getGraphqlClient } from "../utils/graphqlClient";
 import { UniqueIDGenerator } from "../utils/uniqueId";
+const getUniqueId = () => UniqueIDGenerator.getID();
 
 export const updateCalloutVisibility = async (
   calloutID: string,
@@ -48,7 +49,7 @@ export const assignRoleToUser = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.assignRoleToUser(
+    graphqlClient.AssignRoleToUser(
       {
         roleData: {
           contributorID: userID,
@@ -65,15 +66,14 @@ export const assignRoleToUser = async (
 };
 
 const uniqueId = UniqueIDGenerator.getID();
-
 export const getDefaultUserData = () => {
   return {
-    firstName: `fn${uniqueId}`,
-    lastName: `ln${uniqueId}`,
-    nameID: `user-nameid-${uniqueId}`,
-    email: `user-email-${uniqueId}@alkem.io`,
+    firstName: `fn${getUniqueId()}`,
+    lastName: `ln${getUniqueId()}`,
+    nameID: `user-nameid-${getUniqueId()}`,
+    email: `user-email-${getUniqueId()}@alkem.io`,
     profileData: {
-      displayName: `FNLN${uniqueId}`,
+      displayName: `FNLN${getUniqueId()}`,
       description: "User description",
     },
   };
@@ -140,7 +140,7 @@ export const defaultCallout = {
 export const defaultWhiteboard = {
   framing: {
     profile: {
-      displayName: `default Whiteboard callout display name ${uniqueId}`,
+      displayName: `default Whiteboard callout display name ${getUniqueId()}`,
       description: "callout Whiteboard description",
     },
   },
@@ -229,8 +229,11 @@ export const createWhiteboardCalloutOnCalloutsSet = async (
           ...options,
           framing: {
             profile: {
-              displayName: "default callout display name",
-              description: "callout description",
+              displayName:
+                options?.framing?.profile?.displayName ||
+                "default callout display name",
+              description:
+                options?.framing?.profile?.description || "callout description",
             },
           },
         },
@@ -357,13 +360,13 @@ export const subspaceVariablesData = (
     about: {
       profileData: {
         displayName,
-        tagline: "test tagline" + uniqueId,
-        description: "test description" + uniqueId,
+        tagline: "test tagline" + getUniqueId(),
+        description: "test description" + getUniqueId(),
         referencesData: [
           {
-            name: "test video" + uniqueId,
+            name: "test video" + getUniqueId(),
             uri: "https://youtu.be/-wGlzcjs",
-            description: "dest description" + uniqueId,
+            description: "dest description" + getUniqueId(),
           },
         ],
       },
@@ -456,7 +459,6 @@ export const createSpaceBasicData = async (
 
 export const updateSpaceSettings = async (
   spaceID: string,
-  // options?: {
   settings?: {
     privacy?: {
       mode?: SpacePrivacyMode;
@@ -473,8 +475,6 @@ export const updateSpaceSettings = async (
       inheritMembershipRights?: boolean;
       allowEventsFromSubspaces?: boolean;
     };
-    //},
-    // },
   },
 
   userRole: TestUser = TestUser.GLOBAL_ADMIN
@@ -486,13 +486,11 @@ export const updateSpaceSettings = async (
   const callback = (authToken: string | undefined) =>
     graphqlClient.UpdateSpaceSettings(
       {
-        // todo: defaults?
         settingsData: {
           spaceID,
           settings: {
             privacy: {
-              // mode: settings?.privacy?.mode || SpacePrivacyMode.Private, // todo
-              mode: settings?.privacy?.mode, // todo
+              mode: settings?.privacy?.mode,
               allowPlatformSupportAsAdmin:
                 settings?.privacy?.allowPlatformSupportAsAdmin || true,
             },
@@ -514,7 +512,7 @@ export const updateSpaceSettings = async (
               allowEventsFromSubspaces:
                 settings?.collaboration?.allowEventsFromSubspaces || true,
             },
-          }, // Add an empty object for the settings property
+          },
         },
       },
       {
@@ -525,7 +523,7 @@ export const updateSpaceSettings = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const spaceNameId = `testecoeid${uniqueId}`;
+export const spaceNameId = `testecoeid${getUniqueId()}`;
 
 export const getSpaceData = async (
   spaceId = spaceNameId,

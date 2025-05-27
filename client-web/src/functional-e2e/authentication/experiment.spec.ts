@@ -11,7 +11,7 @@ import {
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
 import { testConfiguration } from '@src/config/test.configuration';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { SpacePrivacyMode } from '@alkemio/client-lib';
 
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || '';

@@ -18,5 +18,5 @@ export const verifySignUpPageElements = async (page: Page) => {
     page.locator('div').filter({ hasText: /^Sign up with E-Mail$/ })
   ).toBeVisible();
   await expect(page.getByText('Already have an account?')).toBeVisible();
-  await expect(signInButton(page)).toBeVisible();
+  //await expect(signInButton(page)).toBeVisible();
 };

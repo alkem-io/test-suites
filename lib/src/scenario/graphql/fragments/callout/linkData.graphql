@@ -1,9 +1,0 @@
-# fragment LinkData on Link {
-#   authorization {
-#     myPrivileges
-#   }
-#   id
-#   name
-#   uri
-#   description
-# }

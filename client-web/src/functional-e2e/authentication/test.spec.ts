@@ -35,15 +35,16 @@ import {
   TestScenarioFactory,
   TestScenarioNoPreCreationConfig,
 } from '@alkemio/tests-lib';
+import { testConfiguration } from '@src/config/test.configuration';
 
-const baseUrl = 'https://dev-alkem.io/checkdefaultcallouts';
+const baseUrl = `${testConfiguration.endPoints.server}/checkdefaultcallouts`; //'https://dev-alkem.io/checkdefaultcallouts';
 
 const scenarioConfig: TestScenarioNoPreCreationConfig = {
   name: 'organization',
 };
 test.beforeAll(async () => {
-  const a = await TestScenarioFactory.createBaseScenario(scenarioConfig);
-  console.log('Scenario created:', a);
+  await TestScenarioFactory.createBaseScenarioEmpty(scenarioConfig);
+  console.log('Scenario setup completed');
 });
 
 test.describe('Tabs Navigation Tests', () => {

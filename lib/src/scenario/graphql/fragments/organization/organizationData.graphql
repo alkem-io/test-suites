@@ -1,9 +1,6 @@
 fragment OrganizationData on Organization {
   id
   nameID
-  roleSet {
-    id
-  }
   legalEntityName
   domain
   website
@@ -18,6 +15,7 @@ fragment OrganizationData on Organization {
     ...GroupData
   }
   roleSet {
+    id
     usersInRole(role: ASSOCIATE) {
       ...MemberData
     }

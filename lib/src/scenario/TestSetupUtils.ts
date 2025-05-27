@@ -92,7 +92,7 @@ export class TestSetupUtils {
     calloutsSetId: string,
     nameID: string
   ) {
-    delay(100);
+    await delay(100);
     const calloutsPerSpace = await getCalloutsData(calloutsSetId);
 
     const allCallouts =

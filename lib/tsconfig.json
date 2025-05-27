@@ -10,7 +10,7 @@
     "declaration": true,
     "removeComments": true,
     "strict": true,
-    "baseUrl": ".",
+    "baseUrl": "./",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "experimentalDecorators": true,
@@ -18,13 +18,12 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
+
     "paths": {
       "@src/*": ["src/*"],
-      "@common/*": ["src/common/*"],
+      "@common/*": ["src/common/*"]
     }
   },
   "exclude": ["./node_modules"],
-  "include": [
-    "./src/**/*.ts"
-  ]
+  "include": ["./src/**/*.ts"]
 }

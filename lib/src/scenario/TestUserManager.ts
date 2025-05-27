@@ -1,9 +1,8 @@
-
-import { UserModel } from './models/UserModel';
-import { TestUserModels } from './models/TestUserModels';
-import { getUserToken } from './registration/get-user-token';
-import { TestUser } from '../common/enums/test.user';
-import { getGraphqlClient } from '../utils/graphqlClient';
+import { UserModel } from "./models/UserModel";
+import { TestUserModels } from "./models/TestUserModels";
+import { getUserToken } from "./registration/get-user-token";
+import { TestUser } from "../common/enums/test.user";
+import { getGraphqlClient } from "../utils/graphqlClient";
 
 export class TestUserManager {
   private static userModelMapEmail: Map<string, UserModel>;
@@ -12,7 +11,6 @@ export class TestUserManager {
   public static users: TestUserModels;
 
   public static async populateUserModelMap() {
-
     this.userModelMapEmail = new Map<string, UserModel>();
     this.userModelMapType = new Map<string, UserModel>();
 
@@ -37,16 +35,19 @@ export class TestUserManager {
     // logElapsedTime('populateUserModels', start);
   }
 
-  private static createEmptyUserModel(email: string, testUser: TestUser): UserModel {
+  private static createEmptyUserModel(
+    email: string,
+    testUser: TestUser
+  ): UserModel {
     const result: UserModel = {
       email,
-      id: '',
-      displayName: '',
-      profileId: '',
-      nameId: '',
-      agentId: '',
-      accountId: '',
-      authToken: '',
+      id: "",
+      displayName: "",
+      profileId: "",
+      nameId: "",
+      agentId: "",
+      accountId: "",
+      authToken: "",
       type: testUser,
       RoleNames: [],
     };
@@ -55,33 +56,33 @@ export class TestUserManager {
 
   private static populateUsers() {
     this.users = {
-      globalAdmin: TestUserManager.getUserModelByEmail('admin@alkem.io'),
+      globalAdmin: TestUserManager.getUserModelByEmail("admin@alkem.io"),
       globalSupportAdmin: TestUserManager.getUserModelByEmail(
-        'global.support@alkem.io'
+        "global.support@alkem.io"
       ),
       globalLicenseAdmin: TestUserManager.getUserModelByEmail(
-        'global.license@alkem.io'
+        "global.license@alkem.io"
       ),
-      spaceAdmin: TestUserManager.getUserModelByEmail('space.admin@alkem.io'),
-      spaceMember: TestUserManager.getUserModelByEmail('space.member@alkem.io'),
+      spaceAdmin: TestUserManager.getUserModelByEmail("space.admin@alkem.io"),
+      spaceMember: TestUserManager.getUserModelByEmail("space.member@alkem.io"),
       subspaceAdmin: TestUserManager.getUserModelByEmail(
-        'subspace.admin@alkem.io'
+        "subspace.admin@alkem.io"
       ),
       subspaceMember: TestUserManager.getUserModelByEmail(
-        'subspace.member@alkem.io'
+        "subspace.member@alkem.io"
       ),
       subsubspaceAdmin: TestUserManager.getUserModelByEmail(
-        'subsubspace.admin@alkem.io'
+        "subsubspace.admin@alkem.io"
       ),
       subsubspaceMember: TestUserManager.getUserModelByEmail(
-        'subsubspace.member@alkem.io'
+        "subsubspace.member@alkem.io"
       ),
-      qaUser: TestUserManager.getUserModelByEmail('qa.user@alkem.io'),
+      qaUser: TestUserManager.getUserModelByEmail("qa.user@alkem.io"),
       // notificationsAdmin: TestUserManager.getUserModelByEmail(
       //   'notifications@alkem.io' // TODO: notifications seems to not be properly setup
       // ),
-      nonSpaceMember: TestUserManager.getUserModelByEmail('non.space@alkem.io'),
-      betaTester: TestUserManager.getUserModelByEmail('beta.tester@alkem.io'),
+      nonSpaceMember: TestUserManager.getUserModelByEmail("non.space@alkem.io"),
+      betaTester: TestUserManager.getUserModelByEmail("beta.tester@alkem.io"),
     };
   }
 
@@ -107,12 +108,12 @@ export class TestUserManager {
   ): Promise<void> {
     const userData = await this.getUserData(userModel.authToken);
     const userInfo = userData?.data?.me.user;
-    userModel.displayName = userInfo?.profile.displayName || '';
-    userModel.id = userInfo?.id || '';
-    userModel.profileId = userInfo?.profile.id || '';
-    userModel.nameId = userInfo?.nameID || '';
-    userModel.agentId = userInfo?.agent.id || '';
-    userModel.accountId = userInfo?.account?.id || '';
+    userModel.displayName = userInfo?.profile.displayName || "";
+    userModel.id = userInfo?.id || "";
+    userModel.profileId = userInfo?.profile.id || "";
+    userModel.nameId = userInfo?.nameID || "";
+    userModel.agentId = userInfo?.agent.id || "";
+    userModel.accountId = userInfo?.account?.id || "";
 
     const RoleNames = userData?.data?.platform?.roleSet.myRoles || [];
     userModel.RoleNames = RoleNames;

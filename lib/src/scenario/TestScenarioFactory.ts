@@ -210,14 +210,14 @@ export class TestScenarioFactory {
     }
     if (spaceCommunityConfig) {
       if (spaceCommunityConfig.members) {
-        this.assignUsersByTypeToRole(
+        await this.assignUsersByTypeToRole(
           spaceCommunityConfig.members,
           RoleName.Member,
           roleSetID
         );
       }
       if (spaceCommunityConfig.admins) {
-        this.assignUsersByTypeToRole(
+        await this.assignUsersByTypeToRole(
           spaceCommunityConfig.admins,
           RoleName.Admin,
           roleSetID
@@ -225,7 +225,7 @@ export class TestScenarioFactory {
       }
 
       if (spaceCommunityConfig.leads) {
-        this.assignUsersByTypeToRole(
+        await this.assignUsersByTypeToRole(
           spaceCommunityConfig.leads,
           RoleName.Lead,
           roleSetID

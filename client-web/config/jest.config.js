@@ -4,23 +4,42 @@ module.exports = {
   rootDir: '..',
   preset: 'ts-jest',
   testEnvironment: 'node',
+  testMatch: [
+    '<rootDir>/src/**/*.spec.ts',
+    '<rootDir>/tests-examples/**/*.spec.ts'
+  ],
+  testPathIgnorePatterns: [
+    '<rootDir>/dist/',
+    '<rootDir>/node_modules/'
+  ],
   moduleNameMapper: {
     '^@src/(.*)$': '<rootDir>/src/$1',
     '^@generated/(.*)$': '<rootDir>/test/generated/$1',
     '^@utils/(.*)$': '<rootDir>/test/utils/$1',
     '^@functional-api/(.*)$': '<rootDir>/test/functional-api/$1',
+    '^@alkemio/tests-lib$': '<rootDir>/../lib/src/index.ts',
+    '^@alkemio/tests-lib/(.*)$': '<rootDir>/../lib/src/$1',
   },
-  moduleFileExtensions: ['js', 'json', 'ts'],
-  setupFiles: ['./src/setupTests.ts'],
-  roots: ['<rootDir>/src'],
+  moduleFileExtensions: ['ts', 'js', 'json'],
+  setupFiles: ['<rootDir>/setupTests.ts'],
+  roots: ['<rootDir>/src', '<rootDir>/tests-examples'],
   transform: {
-    '^.+\\.(t|j)s$': 'ts-jest',
+    '^.+\\.ts$': ['ts-jest', {
+      tsconfig: {
+        esModuleInterop: true,
+        allowSyntheticDefaultImports: true,
+        experimentalDecorators: true,
+        emitDecoratorMetadata: true,
+      }
+    }],
   },
+  transformIgnorePatterns: [
+    'node_modules/(?!(@alkemio/tests-lib)/)',
+  ],
   coverageDirectory: '<rootDir>/coverage',
   collectCoverageFrom: [],
   testTimeout: 90000,
   collectCoverage: false,
-  globalSetup: '<rootDir>/src/testSetup.ts',
   reporters: [
     'default',
     [
@@ -34,4 +53,4 @@ module.exports = {
   ],
 };
 
-console.info('Global Setup Path:', require.resolve('../src/testSetup.ts'));
+console.info('Jest configuration loaded successfully');
