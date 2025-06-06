@@ -9,7 +9,7 @@ import {
   createTemplateFromSpace,
   getSpaceTemplatesCountForSpace,
   updateSpaceTemplate,
-} from './collaboration-template.request.params';
+} from './space-template.request.params';
 
 let templateId = '';
 
