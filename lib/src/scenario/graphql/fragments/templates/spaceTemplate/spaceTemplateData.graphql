@@ -1,4 +1,4 @@
-fragment CollaborationTemplateData on Template {
+fragment SpaceTemplateData on Template {
   profile {
     displayName
     description
