@@ -6,12 +6,9 @@ module.exports = {
   testEnvironment: 'node',
   testMatch: [
     '<rootDir>/src/**/*.spec.ts',
-    '<rootDir>/tests-examples/**/*.spec.ts'
+    '<rootDir>/tests-examples/**/*.spec.ts',
   ],
-  testPathIgnorePatterns: [
-    '<rootDir>/dist/',
-    '<rootDir>/node_modules/'
-  ],
+  testPathIgnorePatterns: ['<rootDir>/dist/', '<rootDir>/node_modules/'],
   moduleNameMapper: {
     '^@src/(.*)$': '<rootDir>/src/$1',
     '^@generated/(.*)$': '<rootDir>/test/generated/$1',
@@ -24,21 +21,22 @@ module.exports = {
   setupFiles: ['<rootDir>/setupTests.ts'],
   roots: ['<rootDir>/src', '<rootDir>/tests-examples'],
   transform: {
-    '^.+\\.ts$': ['ts-jest', {
-      tsconfig: {
-        esModuleInterop: true,
-        allowSyntheticDefaultImports: true,
-        experimentalDecorators: true,
-        emitDecoratorMetadata: true,
-      }
-    }],
+    '^.+\\.ts$': [
+      'ts-jest',
+      {
+        tsconfig: {
+          esModuleInterop: true,
+          allowSyntheticDefaultImports: true,
+          experimentalDecorators: true,
+          emitDecoratorMetadata: true,
+        },
+      },
+    ],
   },
-  transformIgnorePatterns: [
-    'node_modules/(?!(@alkemio/tests-lib)/)',
-  ],
+  transformIgnorePatterns: ['node_modules/(?!(@alkemio/tests-lib)/)'],
   coverageDirectory: '<rootDir>/coverage',
   collectCoverageFrom: [],
-  testTimeout: 90000,
+  testTimeout: 10000,
   collectCoverage: false,
   reporters: [
     'default',

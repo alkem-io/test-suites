@@ -4,19 +4,9 @@ import { signInButton } from '../authentication/common-authentication-page-eleme
 // SignUp Page Object
 
 export const verifySignUpPageElements = async (page: Page) => {
-  await expect(
-    page.getByRole('heading', { name: 'Create an account to start' })
-  ).toBeVisible();
-  await expect(page.locator('label')).toBeVisible();
-  await expect(
-    page.locator('div').filter({ hasText: /^Connect with LinkedIn$/ })
-  ).toBeVisible();
-  await expect(
-    page.locator('div').filter({ hasText: /^Connect with Microsoft$/ })
-  ).toBeVisible();
-  await expect(
-    page.locator('div').filter({ hasText: /^Sign up with E-Mail$/ })
-  ).toBeVisible();
-  await expect(page.getByText('Already have an account?')).toBeVisible();
-  //await expect(signInButton(page)).toBeVisible();
+  // The signup page in the new design has different elements
+  await expect(page.locator('input[type="checkbox"]')).toBeVisible(); // Terms checkbox
+  await expect(page.getByRole('button', { name: 'Next' })).toBeVisible(); // Next button
+  // Check if page contains terms-related text
+  await expect(page.locator('body')).toContainText('Terms');
 };

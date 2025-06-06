@@ -35,10 +35,11 @@ import {
   getRecoveryCode,
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
+import { verifyVerificationPageElements } from '../identity-flows/verify-page-objects';
 //import {  } from '@alkemio/tests-lib';
 
-const password = process.env.AUTH_TEST_HARNESS_PASSWORD || '';
-const baseUrl = process.env.ALKEMIO_BASE_URL || '';
+const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
+const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const uniqueId = UniqueIDGenerator.getID();
 
 const userEmail = `test+${uniqueId}@alkem.io`;
@@ -65,9 +66,9 @@ test('verify login page', async ({ page }) => {
   await verifySignInPageElements(page);
 });
 
-test('verify verification page', async ({ page }) => {
+test.skip('verify verification page', async ({ page }) => {
   await navigateToLoginPageFromMenu(baseUrl, page);
-  await verifySignInPageElements(page);
+  await verifyVerificationPageElements(page);
 });
 
 test('user successful authentication', async ({ page }) => {

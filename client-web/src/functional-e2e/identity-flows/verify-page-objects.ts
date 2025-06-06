@@ -3,6 +3,8 @@ import { Page, expect } from '@playwright/test';
 // Vreification Page Object
 
 export const verifyVerificationPageElements = async (page: Page) => {
+  //await page.getByRole('link', { name: 'Forgot password?' }).click();
+  page.getByRole('button', { name: 'Sign in', exact: true });
   await page
     .getByRole('link', { name: 'click here to send it again.' })
     .click();
