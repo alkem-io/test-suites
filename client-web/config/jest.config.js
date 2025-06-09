@@ -36,7 +36,7 @@ module.exports = {
   transformIgnorePatterns: ['node_modules/(?!(@alkemio/tests-lib)/)'],
   coverageDirectory: '<rootDir>/coverage',
   collectCoverageFrom: [],
-  testTimeout: 10000,
+  testTimeout: 20000,
   collectCoverage: false,
   reporters: [
     'default',

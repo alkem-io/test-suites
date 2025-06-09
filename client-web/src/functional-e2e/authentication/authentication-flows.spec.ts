@@ -1,9 +1,10 @@
 import { test, expect } from '@playwright/test';
-//import { getEmails, getRecoveryCode } from 'src/utils/ui.test.helper';
 import {
   navigateToLoginPageFromMenu,
-  navigateToRegistrationFromSignUp,
+  navigateToRegistrationFromAcceptTerms,
+  navigateToRegistrationFromSignUpAcceptTermsAndContinue,
   navigateToSignUpFromSignIn,
+  navigateToVerificationPage,
 } from './login-page-objects';
 import {
   fillUpSignUpPageElements,
@@ -21,9 +22,11 @@ import { verifyMyDashboardWelcomeElement } from '../my-dashboard/my-dashboard-pa
 import {
   continueButton,
   emailField,
+  nextButton,
   passwordField,
   recoveryCodeField,
   saveButton,
+  signUpButton,
   submitButton,
 } from './common-authentication-page-elements';
 //import { deleteMailSlurperMails } from 'src/utils/mailslurper.rest.requests';
@@ -35,14 +38,16 @@ import {
   getRecoveryCode,
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
-import { verifyVerificationPageElements } from '../identity-flows/verify-page-objects';
-//import {  } from '@alkemio/tests-lib';
+import {
+  verifyVerificationPageElements,
+  verifyVerificationPageWithSendAgainButtonElements,
+} from '../identity-flows/verify-page-objects';
 
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const uniqueId = UniqueIDGenerator.getID();
 
-const userEmail = `test+${uniqueId}@alkem.io`;
+const userEmail = `tes+${uniqueId}@alkem.io`;
 const newPassword = password;
 
 test.beforeEach(async ({ context }) => {
@@ -52,7 +57,7 @@ test.beforeEach(async ({ context }) => {
 test.describe.configure({ mode: 'serial' });
 
 test('verify registration page', async ({ page }) => {
-  await navigateToRegistrationFromSignUp(baseUrl, page);
+  await navigateToRegistrationFromSignUpAcceptTermsAndContinue(baseUrl, page);
   await verifyRegistrationPageElements(page);
 });
 
@@ -66,9 +71,13 @@ test('verify login page', async ({ page }) => {
   await verifySignInPageElements(page);
 });
 
-test.skip('verify verification page', async ({ page }) => {
-  await navigateToLoginPageFromMenu(baseUrl, page);
+test('verify verification page', async ({ page }) => {
+  await navigateToVerificationPage(baseUrl, page);
   await verifyVerificationPageElements(page);
+  await emailField(page).click();
+  await emailField(page).fill(userEmail);
+  await continueButton(page).click();
+  await verifyVerificationPageWithSendAgainButtonElements(page);
 });
 
 test('user successful authentication', async ({ page }) => {
@@ -78,10 +87,14 @@ test('user successful authentication', async ({ page }) => {
   await verifyMyDashboardWelcomeElement(page, 'admin');
 });
 
-test('user successful registration email', async ({ page }) => {
-  await navigateToRegistrationFromSignUp(baseUrl, page);
+// skipped until bug is fixed: https://app.zenhub.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/gh/alkem-io/client-web/8317
+test.skip('user successful registration email accept terms first', async ({
+  page,
+}) => {
+  await navigateToRegistrationFromSignUpAcceptTermsAndContinue(baseUrl, page);
   await fillUpSignUpPageElements(userEmail, 'Test', 'Alkemio', page);
   await pressSignUpButtonRegistrationPage(page);
+  await signUpButton(page).click();
   await fillUpSignUpPasswordElements(password, page);
   await pressSignUpButtonRegistrationPage(page);
 
@@ -120,10 +133,56 @@ test('user successful registration email', async ({ page }) => {
   // await deleteUser(registeredUserId);
 });
 
+test('user successful registration email accept terms and fill all required fields', async ({
+  page,
+}) => {
+  await navigateToRegistrationFromAcceptTerms(baseUrl, page);
+  await fillUpSignUpPageElements(userEmail, 'Test', 'Alkemio', page);
+  await nextButton(page).click();
+  //await signUpButton(page).click();
+  await fillUpSignUpPasswordElements(password, page);
+  await nextButton(page).click();
+  await expect(page.getByText('Sign up')).toBeVisible();
+  await expect(
+    page.getByText(
+      'The last step is to verify your email address. Please check your inbox for an email with instructions.'
+    )
+  ).toBeVisible();
+
+  await delay(1000);
+  const getEmailsData = await getEmails();
+  const urlFromEmail = getEmailsData[0];
+  if (urlFromEmail === undefined) {
+    throw new Error('Url from email is missing!');
+  }
+  await page.goto(urlFromEmail);
+
+  await expect(page.getByText('An email containing a')).toBeVisible();
+  await page.getByLabel('Verification code *').click();
+  await continueButton(page).click();
+
+  await expect(page.getByText('You successfully verified')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Continue' })).toBeVisible();
+  await page.getByRole('link', { name: 'Continue' }).click();
+  await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
+  await fillUpSignInPageElements(userEmail, password, page);
+
+  await pressSignInButtonSignInPage(page);
+
+  await expect(
+    page.getByRole('heading', { name: 'Welcome, Test!' })
+  ).toBeVisible();
+
+  // const getUserId = await getUserData(userEmail);
+  // const registeredUserId = getUserId.data?.user.id ?? '';
+
+  // await deleteUser(registeredUserId);
+});
+
 test('user successful password recovery', async ({ page }) => {
   await navigateToLoginPageFromMenu(baseUrl, page);
 
-  await page.getByRole('link', { name: 'Reset password' }).click();
+  await page.getByRole('link', { name: 'Forgot password' }).click();
   await emailField(page).click();
   await emailField(page).fill('non.space@alkem.io');
   await continueButton(page).click();

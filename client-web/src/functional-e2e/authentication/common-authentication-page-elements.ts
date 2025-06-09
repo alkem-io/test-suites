@@ -20,3 +20,5 @@ export const submitButton = (page: Page) =>
   page.getByRole('button', { name: 'submit' });
 export const continueButton = (page: Page) =>
   page.getByRole('button', { name: 'Continue' });
+export const nextButton = (page: Page) =>
+  page.getByRole('button', { name: 'Next' });
