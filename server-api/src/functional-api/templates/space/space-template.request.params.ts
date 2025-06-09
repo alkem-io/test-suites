@@ -2,7 +2,7 @@
 import { TestUser } from '@alkemio/tests-lib';
 import { getGraphqlClient } from '@utils/graphqlClient';
 import { graphqlErrorWrapper } from '@utils/graphql.wrapper';
-import { templateDefaultInfo } from './collaboration-template-testdata';
+import { templateDefaultInfo } from './space-template-testdata';
 import { getSpaceData } from '../../journey/space/space.request.params';
 
 export const getLifeCycleTemplateForSpaceByLifecycleTitle = async (
@@ -12,7 +12,7 @@ export const getLifeCycleTemplateForSpaceByLifecycleTitle = async (
   const templatesPerSpace = await getSpaceData(spaceId);
   const allTemplates =
     templatesPerSpace?.data?.lookup?.space?.templatesManager?.templatesSet
-      ?.collaborationTemplates ?? [];
+      ?.spaceTemplates ?? [];
 
   const filteredTemplate = allTemplates?.filter(item => {
     return item.profile.displayName === displayName;
@@ -21,24 +21,22 @@ export const getLifeCycleTemplateForSpaceByLifecycleTitle = async (
   return filteredTemplate;
 };
 
-export const getCollaborationTemplatesCountForSpace = async (
-  spaceId: string
-) => {
+export const getSpaceTemplatesCountForSpace = async (spaceId: string) => {
   const template = await getSpaceData(spaceId);
   const spaceCollaborationTemplates =
     template?.data?.lookup?.space?.templatesManager?.templatesSet
-      ?.collaborationTemplates.length;
+      ?.spaceTemplates.length;
 
   return spaceCollaborationTemplates;
 };
 
-export const getCollaborationTemplatesCountByTemplateSetId = async (
+export const getSpaceTemplatesCountByTemplateSetId = async (
   templateSetId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.GetCollaborationTemplatesCountByTemplateSetId(
+    graphqlClient.GetSpaceTemplatesCountByTemplateSetId(
       {
         templateSetId,
       },
@@ -50,26 +48,25 @@ export const getCollaborationTemplatesCountByTemplateSetId = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const getCollaborationTemplatesCount = async (templateSetId: string) => {
-  const templates =
-    await getCollaborationTemplatesCountByTemplateSetId(templateSetId);
+export const getSpaceTemplatesCount = async (templateSetId: string) => {
+  const templates = await getSpaceTemplatesCountByTemplateSetId(templateSetId);
   const collaborationTemplatesCount =
-    templates?.data?.lookup?.templatesSet?.collaborationTemplatesCount ?? '';
+    templates?.data?.lookup?.templatesSet?.spaceTemplatesCount ?? '';
 
   return collaborationTemplatesCount;
 };
 
-export const createTemplateFromCollaboration = async (
-  collaborationId: string,
+export const createTemplateFromSpace = async (
+  spaceId: string,
   templatesSetId: string,
   displayName: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.CreateTemplateFromCollaboration(
+    graphqlClient.CreateTemplateFromSpace(
       {
-        collaborationId,
+        spaceId,
         templatesSetId,
         profileData: { displayName },
       },
@@ -80,14 +77,14 @@ export const createTemplateFromCollaboration = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const updateCollaborationTemplate = async (
+export const updateSpaceTemplate = async (
   templateId: string,
   profile: any = templateDefaultInfo,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.UpdateCollaborationTemplate(
+    graphqlClient.UpdateSpaceTemplate(
       {
         templateId,
         profile,

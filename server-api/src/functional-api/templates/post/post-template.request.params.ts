@@ -13,10 +13,10 @@ export const createPostTemplate = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.createTemplate(
+    graphqlClient.CreateTemplate(
       {
         type: TemplateType.Post,
-        profile: {
+        profileData: {
           displayName,
           description,
         },

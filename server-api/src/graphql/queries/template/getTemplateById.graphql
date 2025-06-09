@@ -3,6 +3,7 @@ query GetTemplateById($templateId: UUID!) {
     template(ID: $templateId) {
       id
       type
+      nameID
       profile {
         id
         displayName
@@ -11,7 +12,7 @@ query GetTemplateById($templateId: UUID!) {
       authorization {
         myPrivileges
       }
-      collaboration {
+      contentSpace {
         id
       }
       whiteboard {

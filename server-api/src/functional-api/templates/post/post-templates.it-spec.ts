@@ -110,6 +110,7 @@ describe('Post templates - CRUD', () => {
       expect.objectContaining({
         id: templateData?.id,
         type: templateData?.type,
+        nameID: templateData?.nameID,
       })
     );
   });

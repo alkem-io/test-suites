@@ -1,8 +1,8 @@
-mutation UpdateCollaborationTemplate(
+mutation UpdateSpaceTemplate(
   $templateId: UUID!
   $profile: UpdateProfileInput!
 ) {
   updateTemplate(updateData: { ID: $templateId, profile: $profile }) {
-    ...CollaborationTemplateData
+    ...SpaceTemplateData
   }
 }
