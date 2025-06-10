@@ -177,6 +177,38 @@ export const sorted__create_read_update_delete_grant_addMember_apply_invite_addV
     'COMMUNITY_ASSIGN_VC_FROM_ACCOUNT',
   ].sort();
 
+export const sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization =
+  [
+    'CREATE',
+    'GRANT',
+    ...readPrivilege,
+    'UPDATE',
+    'DELETE',
+    'ROLESET_ENTRY_ROLE_ASSIGN',
+    'ROLESET_ENTRY_ROLE_APPLY',
+    'ROLESET_ENTRY_ROLE_INVITE',
+    'COMMUNITY_ASSIGN_VC_FROM_ACCOUNT',
+    'ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION',
+  ].sort();
+export const sorted__create_read_update_delete_grant_apply_invite_addVC_accessVC_assignOrganization =
+  [
+    'CREATE',
+    'GRANT',
+    ...readPrivilege,
+    'UPDATE',
+    'DELETE',
+    'ROLESET_ENTRY_ROLE_APPLY',
+    'ROLESET_ENTRY_ROLE_INVITE',
+    'COMMUNITY_ASSIGN_VC_FROM_ACCOUNT',
+    'ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION',
+  ].sort();
+
+export const sorted__read_apply_assignOrganization = [
+  ...readPrivilege,
+  'ROLESET_ENTRY_ROLE_APPLY',
+  'ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION',
+].sort();
+
 export const sorted__create_read_update_delete_grant_apply_invite_addVC_accessVC =
   [
     'CREATE',
