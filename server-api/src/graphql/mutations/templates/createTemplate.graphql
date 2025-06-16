@@ -1,33 +1,55 @@
-mutation createTemplate(
+mutation CreateTemplate(
   $templatesSetId: UUID!
-  $profile: CreateProfileInput!
+  $profileData: CreateProfileInput!
   $type: TemplateType!
   $tags: [String!]
   $calloutData: CreateCalloutInput
-  $collaborationData: CreateCollaborationInput
   $communityGuidelinesData: CreateCommunityGuidelinesInput
+  $contentSpaceData: CreateTemplateContentSpaceInput
   $postDefaultDescription: Markdown
   $whiteboard: CreateWhiteboardInput
+  $includeProfileVisuals: Boolean = false
 ) {
   createTemplate(
     templateData: {
       templatesSetID: $templatesSetId
-      profileData: $profile
+      profileData: $profileData
       tags: $tags
       type: $type
       calloutData: $calloutData
       communityGuidelinesData: $communityGuidelinesData
-      collaborationData: $collaborationData
       postDefaultDescription: $postDefaultDescription
+      contentSpaceData: $contentSpaceData
       whiteboard: $whiteboard
     }
   ) {
-    ...TemplateProfileData
-    ...WhiteboardTemplateData
-    ...CalloutTemplateData
-    ...CommunityGuidelinesTemplateData
-    ...CollaborationTemplateData
-    ...PostTemplateData
-    ...WhiteboardTemplateData
+    id
+    nameID
+    type
+    profile @include(if: $includeProfileVisuals) {
+      id
+      cardVisual: visual(type: CARD) {
+        id
+        __typename
+      }
+      previewVisual: visual(type: BANNER) {
+        id
+        __typename
+      }
+      __typename
+    }
+    callout {
+      id
+      framing {
+        id
+        whiteboard {
+          id
+          nameID
+          profile {
+            id
+          }
+        }
+      }
+    }
   }
 }

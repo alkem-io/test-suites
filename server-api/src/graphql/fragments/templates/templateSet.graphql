@@ -1,8 +1,8 @@
 fragment TemplatesSetData on TemplatesSet {
   id
-  collaborationTemplates {
+  spaceTemplates {
     ...TemplateProfileData
-    ...CollaborationTemplateData
+    ...SpaceTemplateData
   }
   postTemplates {
     ...TemplateProfileData

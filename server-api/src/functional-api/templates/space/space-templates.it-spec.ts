@@ -1,15 +1,15 @@
-import {
-  createTemplateFromCollaboration,
-  getCollaborationTemplatesCount,
-  updateCollaborationTemplate,
-} from './collaboration-template.request.params';
-import { getCollaborationTemplatesCountForSpace } from './collaboration-template.request.params';
-import { templateInfoUpdate } from './collaboration-template-testdata';
+import { templateInfoUpdate } from './space-template-testdata';
 import { deleteTemplate, GetTemplateById } from '../template.request.params';
 import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
 import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
 import { TestUser } from '@alkemio/tests-lib';
+import {
+  getSpaceTemplatesCount,
+  createTemplateFromSpace,
+  getSpaceTemplatesCountForSpace,
+  updateSpaceTemplate,
+} from './space-template.request.params';
 
 let templateId = '';
 
@@ -67,20 +67,21 @@ describe('Subspace templates - CRUD', () => {
   test('Create subspace template', async () => {
     // Arrange
 
-    const countBefore = await getCollaborationTemplatesCount(
+    const countBefore = await getSpaceTemplatesCount(
       baseScenario.space.templateSetId
     );
 
-    const res = await createTemplateFromCollaboration(
-      baseScenario.subspace.collaboration.id,
+    const res = await createTemplateFromSpace(
+      baseScenario.subspace.id,
       baseScenario.space.templateSetId,
       'Subspace Template 1'
     );
-    const collaborationData = res?.data?.createTemplateFromCollaboration;
+
+    const collaborationData = res?.data?.createTemplateFromSpace;
     templateId = collaborationData?.id ?? '';
 
     // Act
-    const countAfter = await getCollaborationTemplatesCount(
+    const countAfter = await getSpaceTemplatesCount(
       baseScenario.space.templateSetId
     );
 
@@ -99,20 +100,20 @@ describe('Subspace templates - CRUD', () => {
 
   test('Delete subspace template', async () => {
     // Arrange
-    const countBefore = await getCollaborationTemplatesCountForSpace(
+    const countBefore = await getSpaceTemplatesCountForSpace(
       baseScenario.space.id
     );
-    const res = await createTemplateFromCollaboration(
-      baseScenario.subspace.collaboration.id,
+    const res = await createTemplateFromSpace(
+      baseScenario.subspace.id,
       baseScenario.space.templateSetId,
       'Subspace Template 2'
     );
 
-    templateId = res?.data?.createTemplateFromCollaboration.id ?? '';
+    templateId = res?.data?.createTemplateFromSpace.id ?? '';
 
     // Act
     const resDeleteTemplate = await deleteTemplate(templateId);
-    const countAfter = await getCollaborationTemplatesCountForSpace(
+    const countAfter = await getSpaceTemplatesCountForSpace(
       baseScenario.space.id
     );
 
@@ -123,15 +124,15 @@ describe('Subspace templates - CRUD', () => {
 
   test('Update subspace template', async () => {
     // Arrange
-    const res = await createTemplateFromCollaboration(
-      baseScenario.subspace.collaboration.id,
+    const res = await createTemplateFromSpace(
+      baseScenario.subspace.id,
       baseScenario.space.templateSetId,
       'Subspace Template 3'
     );
-    const collaborationData = res?.data?.createTemplateFromCollaboration;
+    const collaborationData = res?.data?.createTemplateFromSpace;
     templateId = collaborationData?.id ?? '';
 
-    const resUpdateTemplate = await updateCollaborationTemplate(
+    const resUpdateTemplate = await updateSpaceTemplate(
       templateId,
       templateInfoUpdate
     );

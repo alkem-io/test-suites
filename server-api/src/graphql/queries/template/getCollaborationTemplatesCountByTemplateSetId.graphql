@@ -1,7 +1,0 @@
-query GetCollaborationTemplatesCountByTemplateSetId($templateSetId: UUID!) {
-  lookup {
-    templatesSet(ID: $templateSetId) {
-      collaborationTemplatesCount
-    }
-  }
-}

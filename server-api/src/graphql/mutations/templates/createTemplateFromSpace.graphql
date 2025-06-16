@@ -1,15 +1,15 @@
-mutation CreateTemplateFromCollaboration(
+mutation CreateTemplateFromSpace(
   $templatesSetId: UUID!
   $profileData: CreateProfileInput!
   $tags: [String!]
-  $collaborationId: UUID!
+  $spaceId: UUID!
 ) {
-  createTemplateFromCollaboration(
+  createTemplateFromSpace(
     templateData: {
       templatesSetID: $templatesSetId
       profileData: $profileData
       tags: $tags
-      collaborationID: $collaborationId
+      spaceID: $spaceId
     }
   ) {
     id
@@ -20,9 +20,16 @@ mutation CreateTemplateFromCollaboration(
     authorization {
       myPrivileges
     }
-    collaboration {
+    contentSpace {
       id
-      isTemplate
+      about {
+        id
+      }
+      collaboration {
+        id
+        isTemplate
+      }
+      level
     }
   }
 }
