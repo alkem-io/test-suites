@@ -53,7 +53,7 @@ test.beforeEach(async ({ context }) => {
 
 test.describe.configure({ mode: 'serial' });
 
-test.only('Experiment - client test with scenario setup', async ({ page }) => {
+test('Experiment - client test with scenario setup', async ({ page }) => {
   await navigateToRegistrationFromSignUpAcceptTermsAndContinue(baseUrl, page);
   await verifyRegistrationPageElements(page);
 });
