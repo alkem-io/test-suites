@@ -8,17 +8,16 @@ import {
 // SignIn Page Object
 
 export const verifySignInPageElements = async (page: Page) => {
-  // await expect(page.getByText('Don’t have an Alkemio account')).toBeVisible();
+  await expect(page.getByText('No account?')).toBeVisible();
   await expect(emailField(page)).toBeVisible();
   await expect(passwordField(page)).toBeVisible();
   await expect(signInButton(page)).toBeVisible();
-  await expect(page.locator('button[value="github"]')).toBeVisible();
-  await expect(page.locator('button[value="microsoft"]')).toBeVisible();
-  await expect(page.locator('button[value="linkedin"]')).toBeVisible();
-
-  // await expect(
-  //   page.getByRole('button', { name: 'Connect with Microsoft' })
-  // ).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Connect with LinkedIn' })
+  ).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Connect with Microsoft' })
+  ).toBeVisible();
 };
 
 export const fillUpSignInPageElements = async (

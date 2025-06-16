@@ -1,5 +1,4 @@
 import { test } from '@playwright/test';
-import { navigateToRegistrationFromSignUp } from './login-page-objects';
 import { verifyRegistrationPageElements } from '../identity-flows/registration-page-objects';
 import {
   createOrganization,
@@ -13,6 +12,7 @@ import {
 import { testConfiguration } from '@src/config/test.configuration';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { SpacePrivacyMode } from '@alkemio/client-lib';
+import { navigateToRegistrationFromSignUpAcceptTermsAndContinue } from './login-page-objects';
 
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || '';
 const baseUrl = testConfiguration.endPoints.server + '/home';
@@ -53,7 +53,7 @@ test.beforeEach(async ({ context }) => {
 
 test.describe.configure({ mode: 'serial' });
 
-test.only('Experiment - client test with scenario setup', async ({ page }) => {
-  await navigateToRegistrationFromSignUp(baseUrl, page);
+test('Experiment - client test with scenario setup', async ({ page }) => {
+  await navigateToRegistrationFromSignUpAcceptTermsAndContinue(baseUrl, page);
   await verifyRegistrationPageElements(page);
 });

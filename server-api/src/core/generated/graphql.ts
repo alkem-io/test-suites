@@ -931,6 +931,7 @@ export enum AuthorizationPrivilege {
   ReadUserSettings = 'READ_USER_SETTINGS',
   RolesetEntryRoleApply = 'ROLESET_ENTRY_ROLE_APPLY',
   RolesetEntryRoleAssign = 'ROLESET_ENTRY_ROLE_ASSIGN',
+  RolesetEntryRoleAssignOrganization = 'ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION',
   RolesetEntryRoleInvite = 'ROLESET_ENTRY_ROLE_INVITE',
   RolesetEntryRoleInviteAccept = 'ROLESET_ENTRY_ROLE_INVITE_ACCEPT',
   RolesetEntryRoleJoin = 'ROLESET_ENTRY_ROLE_JOIN',
@@ -997,7 +998,9 @@ export type CalendarEvent = {
 };
 
 export enum CalendarEventType {
+  Deadline = 'DEADLINE',
   Event = 'EVENT',
+  Meeting = 'MEETING',
   Milestone = 'MILESTONE',
   Other = 'OTHER',
   Training = 'TRAINING',

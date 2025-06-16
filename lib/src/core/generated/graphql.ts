@@ -882,6 +882,7 @@ export enum AuthorizationPolicyType {
   Template = "TEMPLATE",
   TemplatesManager = "TEMPLATES_MANAGER",
   TemplatesSet = "TEMPLATES_SET",
+  TemplateContentSpace = "TEMPLATE_CONTENT_SPACE",
   TemplateDefault = "TEMPLATE_DEFAULT",
   Timeline = "TIMELINE",
   Unknown = "UNKNOWN",
@@ -930,6 +931,7 @@ export enum AuthorizationPrivilege {
   ReadUserSettings = "READ_USER_SETTINGS",
   RolesetEntryRoleApply = "ROLESET_ENTRY_ROLE_APPLY",
   RolesetEntryRoleAssign = "ROLESET_ENTRY_ROLE_ASSIGN",
+  RolesetEntryRoleAssignOrganization = "ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION",
   RolesetEntryRoleInvite = "ROLESET_ENTRY_ROLE_INVITE",
   RolesetEntryRoleInviteAccept = "ROLESET_ENTRY_ROLE_INVITE_ACCEPT",
   RolesetEntryRoleJoin = "ROLESET_ENTRY_ROLE_JOIN",
@@ -996,7 +998,9 @@ export type CalendarEvent = {
 };
 
 export enum CalendarEventType {
+  Deadline = "DEADLINE",
   Event = "EVENT",
+  Meeting = "MEETING",
   Milestone = "MILESTONE",
   Other = "OTHER",
   Training = "TRAINING",
@@ -1725,8 +1729,6 @@ export type CreateCollaborationOnSpaceInput = {
   addTutorialCallouts?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** The CalloutsSet to use for this Collaboration. */
   calloutsSetData: CreateCalloutsSetInput;
-  /** The Template to use for instantiating the Collaboration. */
-  collaborationTemplateID?: InputMaybe<Scalars["UUID"]["input"]>;
   /** The InnovationFlow Template to use for this Collaboration. */
   innovationFlowData?: InputMaybe<CreateInnovationFlowInput>;
 };
@@ -1943,6 +1945,41 @@ export type CreateSpaceOnAccountInput = {
   nameID?: InputMaybe<Scalars["NameID"]["input"]>;
   /** Pick up a different platform template. */
   platformTemplate?: InputMaybe<TemplateDefaultType>;
+  settings?: InputMaybe<CreateSpaceSettingsInput>;
+  /** The Template to use for instantiating the Collaboration. */
+  spaceTemplateID?: InputMaybe<Scalars["UUID"]["input"]>;
+};
+
+export type CreateSpaceSettingsCollaborationInput = {
+  /** Flag to control if events from Subspaces are visible on this Space calendar as well. */
+  allowEventsFromSubspaces: Scalars["Boolean"]["input"];
+  /** Flag to control if members can create callouts. */
+  allowMembersToCreateCallouts: Scalars["Boolean"]["input"];
+  /** Flag to control if members can create subspaces. */
+  allowMembersToCreateSubspaces: Scalars["Boolean"]["input"];
+  /** Flag to control if ability to contribute is inherited from parent Space. */
+  inheritMembershipRights: Scalars["Boolean"]["input"];
+};
+
+export type CreateSpaceSettingsInput = {
+  collaboration?: InputMaybe<CreateSpaceSettingsCollaborationInput>;
+  membership?: InputMaybe<CreateSpaceSettingsMembershipInput>;
+  privacy?: InputMaybe<CreateSpaceSettingsPrivacyInput>;
+};
+
+export type CreateSpaceSettingsMembershipInput = {
+  /** Flag to control if Subspace admins can invite for this Space. */
+  allowSubspaceAdminsToInviteMembers: Scalars["Boolean"]["input"];
+  /** The membership policy in usage for this Space */
+  policy: CommunityMembershipPolicy;
+  /** The organizations that are trusted to Join as members for this Space */
+  trustedOrganizations: Array<Scalars["UUID"]["input"]>;
+};
+
+export type CreateSpaceSettingsPrivacyInput = {
+  /** Flag to control if Platform Support has admin rights. */
+  allowPlatformSupportAsAdmin?: InputMaybe<Scalars["Boolean"]["input"]>;
+  mode?: InputMaybe<SpacePrivacyMode>;
 };
 
 export type CreateSubspaceInput = {
@@ -1952,7 +1989,10 @@ export type CreateSubspaceInput = {
   nameID?: InputMaybe<Scalars["NameID"]["input"]>;
   /** Pick up a different platform template. */
   platformTemplate?: InputMaybe<TemplateDefaultType>;
+  settings?: InputMaybe<CreateSpaceSettingsInput>;
   spaceID: Scalars["UUID"]["input"];
+  /** The Template to use for instantiating the Collaboration. */
+  spaceTemplateID?: InputMaybe<Scalars["UUID"]["input"]>;
 };
 
 export type CreateTagsetData = {
@@ -1974,12 +2014,20 @@ export type CreateTagsetOnProfileInput = {
   type?: InputMaybe<TagsetType>;
 };
 
-export type CreateTemplateFromCollaborationOnTemplatesSetInput = {
-  /** The Collaboration to use as the content for the Template. */
-  collaborationID: Scalars["UUID"]["input"];
+export type CreateTemplateContentSpaceInput = {
+  about: CreateSpaceAboutInput;
+  collaborationData: CreateCollaborationInput;
+  level: SpaceLevel;
+  /** Create the settings for the Space. */
+  settings: CreateSpaceSettingsInput;
+};
+
+export type CreateTemplateFromSpaceOnTemplatesSetInput = {
   /** A readable identifier, unique within the containing scope. */
   nameID?: InputMaybe<Scalars["NameID"]["input"]>;
   profileData: CreateProfileInput;
+  /** The ID of the Space to use as the content for the Template. */
+  spaceID: Scalars["UUID"]["input"];
   tags?: InputMaybe<Array<Scalars["String"]["input"]>>;
   templatesSetID: Scalars["UUID"]["input"];
 };
@@ -1987,10 +2035,10 @@ export type CreateTemplateFromCollaborationOnTemplatesSetInput = {
 export type CreateTemplateOnTemplatesSetInput = {
   /** The Callout to associate with this template. */
   calloutData?: InputMaybe<CreateCalloutInput>;
-  /** The Collaboration to associate with this template. */
-  collaborationData?: InputMaybe<CreateCollaborationInput>;
   /** The Community guidelines to associate with this template. */
   communityGuidelinesData?: InputMaybe<CreateCommunityGuidelinesInput>;
+  /** The Template Content for a Space to associate with this template. */
+  contentSpaceData?: InputMaybe<CreateTemplateContentSpaceInput>;
   /** A readable identifier, unique within the containing scope. */
   nameID?: InputMaybe<Scalars["NameID"]["input"]>;
   /** Post Template: The default description to be pre-filled. */
@@ -2889,6 +2937,7 @@ export enum LicenseType {
   Collaboration = "COLLABORATION",
   Roleset = "ROLESET",
   Space = "SPACE",
+  TemplateContentSpace = "TEMPLATE_CONTENT_SPACE",
   Whiteboard = "WHITEBOARD",
 }
 
@@ -3255,6 +3304,8 @@ export type LookupQueryResults = {
   storageBucket?: Maybe<StorageBucket>;
   /** Lookup the specified Template */
   template?: Maybe<Template>;
+  /** Lookup the specified Space Content Template */
+  templateContentSpace?: Maybe<TemplateContentSpace>;
   /** Lookup the specified TemplatesManager */
   templatesManager?: Maybe<TemplatesManager>;
   /** Lookup the specified TemplatesSet */
@@ -3381,6 +3432,10 @@ export type LookupQueryResultsStorageBucketArgs = {
 };
 
 export type LookupQueryResultsTemplateArgs = {
+  ID: Scalars["UUID"]["input"];
+};
+
+export type LookupQueryResultsTemplateContentSpaceArgs = {
   ID: Scalars["UUID"]["input"];
 };
 
@@ -3651,8 +3706,8 @@ export type Mutation = {
   createTagsetOnProfile: Tagset;
   /** Creates a new Template on the specified TemplatesSet. */
   createTemplate: Template;
-  /** Creates a new Template on the specified TemplatesSet using the provided Collaboration as content. */
-  createTemplateFromCollaboration: Template;
+  /** Creates a new Template on the specified TemplatesSet using the provided Space as content. */
+  createTemplateFromSpace: Template;
   /** Creates a new User on the platform. */
   createUser: User;
   /** Creates a new User profile on the platform for a user that has a valid Authentication session. */
@@ -3799,8 +3854,8 @@ export type Mutation = {
   updateCalloutsSortOrder: Array<Callout>;
   /** Updates a Tagset on a Classification. */
   updateClassificationTagset: Tagset;
-  /** Updates the Collaboration, including InnovationFlow states, from the specified Collaboration Template. */
-  updateCollaborationFromTemplate: Collaboration;
+  /** Updates a Collaboration, including InnovationFlow states, using the Space content from the specified Template. */
+  updateCollaborationFromSpaceTemplate: Collaboration;
   /** Updates the CommunityGuidelines. */
   updateCommunityGuidelines: CommunityGuidelines;
   /** Update the sortOrder field of the Contributions of s Callout. */
@@ -3851,10 +3906,12 @@ export type Mutation = {
   updateTagset: Tagset;
   /** Updates the specified Template. */
   updateTemplate: Template;
+  /** Updates the TemplateContentSpace. */
+  updateTemplateContentSpace: TemplateContentSpace;
   /** Updates the specified Template Defaults. */
   updateTemplateDefault: TemplateDefault;
-  /** Updates the specified Collaboration Template using the provided Collaboration. */
-  updateTemplateFromCollaboration: Template;
+  /** Updates the specified Space Content Template using the provided Space. */
+  updateTemplateFromSpace: Template;
   /** Updates the User. */
   updateUser: User;
   /** Updates the specified User Group. */
@@ -4062,8 +4119,8 @@ export type MutationCreateTemplateArgs = {
   templateData: CreateTemplateOnTemplatesSetInput;
 };
 
-export type MutationCreateTemplateFromCollaborationArgs = {
-  templateData: CreateTemplateFromCollaborationOnTemplatesSetInput;
+export type MutationCreateTemplateFromSpaceArgs = {
+  templateData: CreateTemplateFromSpaceOnTemplatesSetInput;
 };
 
 export type MutationCreateUserArgs = {
@@ -4342,8 +4399,8 @@ export type MutationUpdateClassificationTagsetArgs = {
   updateData: UpdateClassificationSelectTagsetValueInput;
 };
 
-export type MutationUpdateCollaborationFromTemplateArgs = {
-  updateData: UpdateCollaborationFromTemplateInput;
+export type MutationUpdateCollaborationFromSpaceTemplateArgs = {
+  updateData: UpdateCollaborationFromSpaceTemplateInput;
 };
 
 export type MutationUpdateCommunityGuidelinesArgs = {
@@ -4446,12 +4503,16 @@ export type MutationUpdateTemplateArgs = {
   updateData: UpdateTemplateInput;
 };
 
+export type MutationUpdateTemplateContentSpaceArgs = {
+  templateContentSpaceData: UpdateTemplateContentSpaceInput;
+};
+
 export type MutationUpdateTemplateDefaultArgs = {
   templateDefaultData: UpdateTemplateDefaultTemplateInput;
 };
 
-export type MutationUpdateTemplateFromCollaborationArgs = {
-  updateData: UpdateTemplateFromCollaborationInput;
+export type MutationUpdateTemplateFromSpaceArgs = {
+  updateData: UpdateTemplateFromSpaceInput;
 };
 
 export type MutationUpdateUserArgs = {
@@ -6337,10 +6398,10 @@ export type Template = {
   authorization?: Maybe<Authorization>;
   /** The Callout for this Template. */
   callout?: Maybe<Callout>;
-  /** The Collaboration for this Template. */
-  collaboration?: Maybe<Collaboration>;
   /** The Community Guidelines for this Template. */
   communityGuidelines?: Maybe<CommunityGuidelines>;
+  /** The Space for this Template. */
+  contentSpace?: Maybe<TemplateContentSpace>;
   /** The date at which the entity was created. */
   createdDate: Scalars["DateTime"]["output"];
   /** The ID of the entity */
@@ -6357,6 +6418,25 @@ export type Template = {
   updatedDate: Scalars["DateTime"]["output"];
   /** The Whiteboard for this Template. */
   whiteboard?: Maybe<Whiteboard>;
+};
+
+export type TemplateContentSpace = {
+  /** Template to be used to tell About a new Space. */
+  about: SpaceAbout;
+  /** The authorization rules for the entity */
+  authorization?: Maybe<Authorization>;
+  /** The collaboration for the TemplateContentSpace. */
+  collaboration: Collaboration;
+  /** The date at which the entity was created. */
+  createdDate: Scalars["DateTime"]["output"];
+  /** The ID of the entity */
+  id: Scalars["UUID"]["output"];
+  /** The level of this TemplateContentSpace */
+  level: SpaceLevel;
+  /** The settings for this TemplateContentSpace. */
+  settings: SpaceSettings;
+  /** The date at which the entity was last updated. */
+  updatedDate: Scalars["DateTime"]["output"];
 };
 
 export type TemplateDefault = {
@@ -6393,9 +6473,9 @@ export type TemplateResult = {
 
 export enum TemplateType {
   Callout = "CALLOUT",
-  Collaboration = "COLLABORATION",
   CommunityGuidelines = "COMMUNITY_GUIDELINES",
   Post = "POST",
+  Space = "SPACE",
   Whiteboard = "WHITEBOARD",
 }
 
@@ -6421,10 +6501,6 @@ export type TemplatesSet = {
   calloutTemplates: Array<Template>;
   /** The total number of CalloutTemplates in this TemplatesSet. */
   calloutTemplatesCount: Scalars["Float"]["output"];
-  /** The CollaborationTemplates in this TemplatesSet. */
-  collaborationTemplates: Array<Template>;
-  /** The total number of CollaborationTemplates in this TemplatesSet. */
-  collaborationTemplatesCount: Scalars["Float"]["output"];
   /** The CommunityGuidelines in this TemplatesSet. */
   communityGuidelinesTemplates: Array<Template>;
   /** The total number of CommunityGuidelinesTemplates in this TemplatesSet. */
@@ -6437,6 +6513,10 @@ export type TemplatesSet = {
   postTemplates: Array<Template>;
   /** The total number of Post Templates in this TemplatesSet. */
   postTemplatesCount: Scalars["Float"]["output"];
+  /** The Space Templates in this TemplatesSet. */
+  spaceTemplates: Array<Template>;
+  /** The total number of Space Templates in this TemplatesSet. */
+  spaceTemplatesCount: Scalars["Float"]["output"];
   /** The Templates in this TemplatesSet. */
   templates: Array<Template>;
   /** The total number of Templates in this TemplatesSet. */
@@ -6603,13 +6683,13 @@ export type UpdateClassificationSelectTagsetValueInput = {
   tagsetName: Scalars["String"]["input"];
 };
 
-export type UpdateCollaborationFromTemplateInput = {
+export type UpdateCollaborationFromSpaceTemplateInput = {
   /** Add the Callouts from the Collaboration Template */
   addCallouts?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** ID of the Collaboration to be updated */
   collaborationID: Scalars["UUID"]["input"];
-  /** The Collaboration Template that will be used for updates to the Collaboration */
-  collaborationTemplateID: Scalars["UUID"]["input"];
+  /** The Space Template whose Collaboration that will be used for updates to the target Collaboration */
+  spaceTemplateID: Scalars["UUID"]["input"];
 };
 
 export type UpdateCommunityGuidelinesEntityInput = {
@@ -6926,6 +7006,14 @@ export type UpdateTagsetInput = {
   tags: Array<Scalars["String"]["input"]>;
 };
 
+export type UpdateTemplateContentSpaceInput = {
+  ID: Scalars["UUID"]["input"];
+  /** Update the TemplateContentSpace About information. */
+  about?: InputMaybe<UpdateSpaceAboutInput>;
+  /** Update the settings for the Space. */
+  settings: UpdateSpaceSettingsEntityInput;
+};
+
 export type UpdateTemplateDefaultTemplateInput = {
   /** The identifier for the TemplateDefault to be updated. */
   templateDefaultID: Scalars["UUID"]["input"];
@@ -6933,9 +7021,9 @@ export type UpdateTemplateDefaultTemplateInput = {
   templateID: Scalars["UUID"]["input"];
 };
 
-export type UpdateTemplateFromCollaborationInput = {
-  /** The Collaboration whose content should be copied to this Template. */
-  collaborationID: Scalars["UUID"]["input"];
+export type UpdateTemplateFromSpaceInput = {
+  /** The Space whose content should be copied to this Template. */
+  spaceID: Scalars["UUID"]["input"];
   /** The ID of the Template. */
   templateID: Scalars["UUID"]["input"];
 };
@@ -8164,11 +8252,16 @@ export type ResolversTypes = {
   CreateReferenceOnProfileInput: SchemaTypes.CreateReferenceOnProfileInput;
   CreateSpaceAboutInput: SchemaTypes.CreateSpaceAboutInput;
   CreateSpaceOnAccountInput: SchemaTypes.CreateSpaceOnAccountInput;
+  CreateSpaceSettingsCollaborationInput: SchemaTypes.CreateSpaceSettingsCollaborationInput;
+  CreateSpaceSettingsInput: SchemaTypes.CreateSpaceSettingsInput;
+  CreateSpaceSettingsMembershipInput: SchemaTypes.CreateSpaceSettingsMembershipInput;
+  CreateSpaceSettingsPrivacyInput: SchemaTypes.CreateSpaceSettingsPrivacyInput;
   CreateSubspaceInput: SchemaTypes.CreateSubspaceInput;
   CreateTagsetData: ResolverTypeWrapper<SchemaTypes.CreateTagsetData>;
   CreateTagsetInput: SchemaTypes.CreateTagsetInput;
   CreateTagsetOnProfileInput: SchemaTypes.CreateTagsetOnProfileInput;
-  CreateTemplateFromCollaborationOnTemplatesSetInput: SchemaTypes.CreateTemplateFromCollaborationOnTemplatesSetInput;
+  CreateTemplateContentSpaceInput: SchemaTypes.CreateTemplateContentSpaceInput;
+  CreateTemplateFromSpaceOnTemplatesSetInput: SchemaTypes.CreateTemplateFromSpaceOnTemplatesSetInput;
   CreateTemplateOnTemplatesSetInput: SchemaTypes.CreateTemplateOnTemplatesSetInput;
   CreateUserGroupInput: SchemaTypes.CreateUserGroupInput;
   CreateUserInput: SchemaTypes.CreateUserInput;
@@ -8419,6 +8512,7 @@ export type ResolversTypes = {
       | "space"
       | "storageBucket"
       | "template"
+      | "templateContentSpace"
       | "templatesManager"
       | "templatesSet"
       | "user"
@@ -8454,6 +8548,9 @@ export type ResolversTypes = {
       space?: SchemaTypes.Maybe<ResolversTypes["Space"]>;
       storageBucket?: SchemaTypes.Maybe<ResolversTypes["StorageBucket"]>;
       template?: SchemaTypes.Maybe<ResolversTypes["Template"]>;
+      templateContentSpace?: SchemaTypes.Maybe<
+        ResolversTypes["TemplateContentSpace"]
+      >;
       templatesManager?: SchemaTypes.Maybe<ResolversTypes["TemplatesManager"]>;
       templatesSet?: SchemaTypes.Maybe<ResolversTypes["TemplatesSet"]>;
       user?: SchemaTypes.Maybe<ResolversTypes["User"]>;
@@ -8894,18 +8991,24 @@ export type ResolversTypes = {
     Omit<
       SchemaTypes.Template,
       | "callout"
-      | "collaboration"
       | "communityGuidelines"
+      | "contentSpace"
       | "profile"
       | "whiteboard"
     > & {
       callout?: SchemaTypes.Maybe<ResolversTypes["Callout"]>;
-      collaboration?: SchemaTypes.Maybe<ResolversTypes["Collaboration"]>;
       communityGuidelines?: SchemaTypes.Maybe<
         ResolversTypes["CommunityGuidelines"]
       >;
+      contentSpace?: SchemaTypes.Maybe<ResolversTypes["TemplateContentSpace"]>;
       profile: ResolversTypes["Profile"];
       whiteboard?: SchemaTypes.Maybe<ResolversTypes["Whiteboard"]>;
+    }
+  >;
+  TemplateContentSpace: ResolverTypeWrapper<
+    Omit<SchemaTypes.TemplateContentSpace, "about" | "collaboration"> & {
+      about: ResolversTypes["SpaceAbout"];
+      collaboration: ResolversTypes["Collaboration"];
     }
   >;
   TemplateDefault: ResolverTypeWrapper<
@@ -8931,16 +9034,16 @@ export type ResolversTypes = {
     Omit<
       SchemaTypes.TemplatesSet,
       | "calloutTemplates"
-      | "collaborationTemplates"
       | "communityGuidelinesTemplates"
       | "postTemplates"
+      | "spaceTemplates"
       | "templates"
       | "whiteboardTemplates"
     > & {
       calloutTemplates: Array<ResolversTypes["Template"]>;
-      collaborationTemplates: Array<ResolversTypes["Template"]>;
       communityGuidelinesTemplates: Array<ResolversTypes["Template"]>;
       postTemplates: Array<ResolversTypes["Template"]>;
+      spaceTemplates: Array<ResolversTypes["Template"]>;
       templates: Array<ResolversTypes["Template"]>;
       whiteboardTemplates: Array<ResolversTypes["Template"]>;
     }
@@ -8969,7 +9072,7 @@ export type ResolversTypes = {
   UpdateCalloutsSortOrderInput: SchemaTypes.UpdateCalloutsSortOrderInput;
   UpdateClassificationInput: SchemaTypes.UpdateClassificationInput;
   UpdateClassificationSelectTagsetValueInput: SchemaTypes.UpdateClassificationSelectTagsetValueInput;
-  UpdateCollaborationFromTemplateInput: SchemaTypes.UpdateCollaborationFromTemplateInput;
+  UpdateCollaborationFromSpaceTemplateInput: SchemaTypes.UpdateCollaborationFromSpaceTemplateInput;
   UpdateCommunityGuidelinesEntityInput: SchemaTypes.UpdateCommunityGuidelinesEntityInput;
   UpdateContributionCalloutsSortOrderInput: SchemaTypes.UpdateContributionCalloutsSortOrderInput;
   UpdateDiscussionInput: SchemaTypes.UpdateDiscussionInput;
@@ -9008,8 +9111,9 @@ export type ResolversTypes = {
   UpdateSpaceSettingsMembershipInput: SchemaTypes.UpdateSpaceSettingsMembershipInput;
   UpdateSpaceSettingsPrivacyInput: SchemaTypes.UpdateSpaceSettingsPrivacyInput;
   UpdateTagsetInput: SchemaTypes.UpdateTagsetInput;
+  UpdateTemplateContentSpaceInput: SchemaTypes.UpdateTemplateContentSpaceInput;
   UpdateTemplateDefaultTemplateInput: SchemaTypes.UpdateTemplateDefaultTemplateInput;
-  UpdateTemplateFromCollaborationInput: SchemaTypes.UpdateTemplateFromCollaborationInput;
+  UpdateTemplateFromSpaceInput: SchemaTypes.UpdateTemplateFromSpaceInput;
   UpdateTemplateInput: SchemaTypes.UpdateTemplateInput;
   UpdateUserGroupInput: SchemaTypes.UpdateUserGroupInput;
   UpdateUserInput: SchemaTypes.UpdateUserInput;
@@ -9446,11 +9550,16 @@ export type ResolversParentTypes = {
   CreateReferenceOnProfileInput: SchemaTypes.CreateReferenceOnProfileInput;
   CreateSpaceAboutInput: SchemaTypes.CreateSpaceAboutInput;
   CreateSpaceOnAccountInput: SchemaTypes.CreateSpaceOnAccountInput;
+  CreateSpaceSettingsCollaborationInput: SchemaTypes.CreateSpaceSettingsCollaborationInput;
+  CreateSpaceSettingsInput: SchemaTypes.CreateSpaceSettingsInput;
+  CreateSpaceSettingsMembershipInput: SchemaTypes.CreateSpaceSettingsMembershipInput;
+  CreateSpaceSettingsPrivacyInput: SchemaTypes.CreateSpaceSettingsPrivacyInput;
   CreateSubspaceInput: SchemaTypes.CreateSubspaceInput;
   CreateTagsetData: SchemaTypes.CreateTagsetData;
   CreateTagsetInput: SchemaTypes.CreateTagsetInput;
   CreateTagsetOnProfileInput: SchemaTypes.CreateTagsetOnProfileInput;
-  CreateTemplateFromCollaborationOnTemplatesSetInput: SchemaTypes.CreateTemplateFromCollaborationOnTemplatesSetInput;
+  CreateTemplateContentSpaceInput: SchemaTypes.CreateTemplateContentSpaceInput;
+  CreateTemplateFromSpaceOnTemplatesSetInput: SchemaTypes.CreateTemplateFromSpaceOnTemplatesSetInput;
   CreateTemplateOnTemplatesSetInput: SchemaTypes.CreateTemplateOnTemplatesSetInput;
   CreateUserGroupInput: SchemaTypes.CreateUserGroupInput;
   CreateUserInput: SchemaTypes.CreateUserInput;
@@ -9653,6 +9762,7 @@ export type ResolversParentTypes = {
     | "space"
     | "storageBucket"
     | "template"
+    | "templateContentSpace"
     | "templatesManager"
     | "templatesSet"
     | "user"
@@ -9688,6 +9798,9 @@ export type ResolversParentTypes = {
     space?: SchemaTypes.Maybe<ResolversParentTypes["Space"]>;
     storageBucket?: SchemaTypes.Maybe<ResolversParentTypes["StorageBucket"]>;
     template?: SchemaTypes.Maybe<ResolversParentTypes["Template"]>;
+    templateContentSpace?: SchemaTypes.Maybe<
+      ResolversParentTypes["TemplateContentSpace"]
+    >;
     templatesManager?: SchemaTypes.Maybe<
       ResolversParentTypes["TemplatesManager"]
     >;
@@ -10065,18 +10178,27 @@ export type ResolversParentTypes = {
   Template: Omit<
     SchemaTypes.Template,
     | "callout"
-    | "collaboration"
     | "communityGuidelines"
+    | "contentSpace"
     | "profile"
     | "whiteboard"
   > & {
     callout?: SchemaTypes.Maybe<ResolversParentTypes["Callout"]>;
-    collaboration?: SchemaTypes.Maybe<ResolversParentTypes["Collaboration"]>;
     communityGuidelines?: SchemaTypes.Maybe<
       ResolversParentTypes["CommunityGuidelines"]
     >;
+    contentSpace?: SchemaTypes.Maybe<
+      ResolversParentTypes["TemplateContentSpace"]
+    >;
     profile: ResolversParentTypes["Profile"];
     whiteboard?: SchemaTypes.Maybe<ResolversParentTypes["Whiteboard"]>;
+  };
+  TemplateContentSpace: Omit<
+    SchemaTypes.TemplateContentSpace,
+    "about" | "collaboration"
+  > & {
+    about: ResolversParentTypes["SpaceAbout"];
+    collaboration: ResolversParentTypes["Collaboration"];
   };
   TemplateDefault: Omit<SchemaTypes.TemplateDefault, "template"> & {
     template?: SchemaTypes.Maybe<ResolversParentTypes["Template"]>;
@@ -10098,16 +10220,16 @@ export type ResolversParentTypes = {
   TemplatesSet: Omit<
     SchemaTypes.TemplatesSet,
     | "calloutTemplates"
-    | "collaborationTemplates"
     | "communityGuidelinesTemplates"
     | "postTemplates"
+    | "spaceTemplates"
     | "templates"
     | "whiteboardTemplates"
   > & {
     calloutTemplates: Array<ResolversParentTypes["Template"]>;
-    collaborationTemplates: Array<ResolversParentTypes["Template"]>;
     communityGuidelinesTemplates: Array<ResolversParentTypes["Template"]>;
     postTemplates: Array<ResolversParentTypes["Template"]>;
+    spaceTemplates: Array<ResolversParentTypes["Template"]>;
     templates: Array<ResolversParentTypes["Template"]>;
     whiteboardTemplates: Array<ResolversParentTypes["Template"]>;
   };
@@ -10133,7 +10255,7 @@ export type ResolversParentTypes = {
   UpdateCalloutsSortOrderInput: SchemaTypes.UpdateCalloutsSortOrderInput;
   UpdateClassificationInput: SchemaTypes.UpdateClassificationInput;
   UpdateClassificationSelectTagsetValueInput: SchemaTypes.UpdateClassificationSelectTagsetValueInput;
-  UpdateCollaborationFromTemplateInput: SchemaTypes.UpdateCollaborationFromTemplateInput;
+  UpdateCollaborationFromSpaceTemplateInput: SchemaTypes.UpdateCollaborationFromSpaceTemplateInput;
   UpdateCommunityGuidelinesEntityInput: SchemaTypes.UpdateCommunityGuidelinesEntityInput;
   UpdateContributionCalloutsSortOrderInput: SchemaTypes.UpdateContributionCalloutsSortOrderInput;
   UpdateDiscussionInput: SchemaTypes.UpdateDiscussionInput;
@@ -10172,8 +10294,9 @@ export type ResolversParentTypes = {
   UpdateSpaceSettingsMembershipInput: SchemaTypes.UpdateSpaceSettingsMembershipInput;
   UpdateSpaceSettingsPrivacyInput: SchemaTypes.UpdateSpaceSettingsPrivacyInput;
   UpdateTagsetInput: SchemaTypes.UpdateTagsetInput;
+  UpdateTemplateContentSpaceInput: SchemaTypes.UpdateTemplateContentSpaceInput;
   UpdateTemplateDefaultTemplateInput: SchemaTypes.UpdateTemplateDefaultTemplateInput;
-  UpdateTemplateFromCollaborationInput: SchemaTypes.UpdateTemplateFromCollaborationInput;
+  UpdateTemplateFromSpaceInput: SchemaTypes.UpdateTemplateFromSpaceInput;
   UpdateTemplateInput: SchemaTypes.UpdateTemplateInput;
   UpdateUserGroupInput: SchemaTypes.UpdateUserGroupInput;
   UpdateUserInput: SchemaTypes.UpdateUserInput;
@@ -13549,6 +13672,12 @@ export type LookupQueryResultsResolvers<
     ContextType,
     RequireFields<SchemaTypes.LookupQueryResultsTemplateArgs, "ID">
   >;
+  templateContentSpace?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["TemplateContentSpace"]>,
+    ParentType,
+    ContextType,
+    RequireFields<SchemaTypes.LookupQueryResultsTemplateContentSpaceArgs, "ID">
+  >;
   templatesManager?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["TemplatesManager"]>,
     ParentType,
@@ -14165,12 +14294,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<SchemaTypes.MutationCreateTemplateArgs, "templateData">
   >;
-  createTemplateFromCollaboration?: Resolver<
+  createTemplateFromSpace?: Resolver<
     ResolversTypes["Template"],
     ParentType,
     ContextType,
     RequireFields<
-      SchemaTypes.MutationCreateTemplateFromCollaborationArgs,
+      SchemaTypes.MutationCreateTemplateFromSpaceArgs,
       "templateData"
     >
   >;
@@ -14704,12 +14833,12 @@ export type MutationResolvers<
       "updateData"
     >
   >;
-  updateCollaborationFromTemplate?: Resolver<
+  updateCollaborationFromSpaceTemplate?: Resolver<
     ResolversTypes["Collaboration"],
     ParentType,
     ContextType,
     RequireFields<
-      SchemaTypes.MutationUpdateCollaborationFromTemplateArgs,
+      SchemaTypes.MutationUpdateCollaborationFromSpaceTemplateArgs,
       "updateData"
     >
   >;
@@ -14902,6 +15031,15 @@ export type MutationResolvers<
     ContextType,
     RequireFields<SchemaTypes.MutationUpdateTemplateArgs, "updateData">
   >;
+  updateTemplateContentSpace?: Resolver<
+    ResolversTypes["TemplateContentSpace"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationUpdateTemplateContentSpaceArgs,
+      "templateContentSpaceData"
+    >
+  >;
   updateTemplateDefault?: Resolver<
     ResolversTypes["TemplateDefault"],
     ParentType,
@@ -14911,14 +15049,11 @@ export type MutationResolvers<
       "templateDefaultData"
     >
   >;
-  updateTemplateFromCollaboration?: Resolver<
+  updateTemplateFromSpace?: Resolver<
     ResolversTypes["Template"],
     ParentType,
     ContextType,
-    RequireFields<
-      SchemaTypes.MutationUpdateTemplateFromCollaborationArgs,
-      "updateData"
-    >
+    RequireFields<SchemaTypes.MutationUpdateTemplateFromSpaceArgs, "updateData">
   >;
   updateUser?: Resolver<
     ResolversTypes["User"],
@@ -16955,13 +17090,13 @@ export type TemplateResolvers<
     ParentType,
     ContextType
   >;
-  collaboration?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes["Collaboration"]>,
+  communityGuidelines?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["CommunityGuidelines"]>,
     ParentType,
     ContextType
   >;
-  communityGuidelines?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes["CommunityGuidelines"]>,
+  contentSpace?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["TemplateContentSpace"]>,
     ParentType,
     ContextType
   >;
@@ -16981,6 +17116,29 @@ export type TemplateResolvers<
     ParentType,
     ContextType
   >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type TemplateContentSpaceResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["TemplateContentSpace"] = ResolversParentTypes["TemplateContentSpace"]
+> = {
+  about?: Resolver<ResolversTypes["SpaceAbout"], ParentType, ContextType>;
+  authorization?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
+    ParentType,
+    ContextType
+  >;
+  collaboration?: Resolver<
+    ResolversTypes["Collaboration"],
+    ParentType,
+    ContextType
+  >;
+  createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  level?: Resolver<ResolversTypes["SpaceLevel"], ParentType, ContextType>;
+  settings?: Resolver<ResolversTypes["SpaceSettings"], ParentType, ContextType>;
+  updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -17071,16 +17229,6 @@ export type TemplatesSetResolvers<
     ParentType,
     ContextType
   >;
-  collaborationTemplates?: Resolver<
-    Array<ResolversTypes["Template"]>,
-    ParentType,
-    ContextType
-  >;
-  collaborationTemplatesCount?: Resolver<
-    ResolversTypes["Float"],
-    ParentType,
-    ContextType
-  >;
   communityGuidelinesTemplates?: Resolver<
     Array<ResolversTypes["Template"]>,
     ParentType,
@@ -17099,6 +17247,16 @@ export type TemplatesSetResolvers<
     ContextType
   >;
   postTemplatesCount?: Resolver<
+    ResolversTypes["Float"],
+    ParentType,
+    ContextType
+  >;
+  spaceTemplates?: Resolver<
+    Array<ResolversTypes["Template"]>,
+    ParentType,
+    ContextType
+  >;
+  spaceTemplatesCount?: Resolver<
     ResolversTypes["Float"],
     ParentType,
     ContextType
@@ -17923,6 +18081,7 @@ export type Resolvers<ContextType = any> = {
   TagsetTemplate?: TagsetTemplateResolvers<ContextType>;
   Task?: TaskResolvers<ContextType>;
   Template?: TemplateResolvers<ContextType>;
+  TemplateContentSpace?: TemplateContentSpaceResolvers<ContextType>;
   TemplateDefault?: TemplateDefaultResolvers<ContextType>;
   TemplateResult?: TemplateResultResolvers<ContextType>;
   TemplatesManager?: TemplatesManagerResolvers<ContextType>;
@@ -38305,7 +38464,7 @@ export type SpaceDataFragment = {
         templatesSet?:
           | {
               id: string;
-              collaborationTemplates: Array<{
+              spaceTemplates: Array<{
                 id: string;
                 type: SchemaTypes.TemplateType;
                 profile: {
@@ -52427,7 +52586,7 @@ export type TemplatesManagerDataFragment = {
   templatesSet?:
     | {
         id: string;
-        collaborationTemplates: Array<{
+        spaceTemplates: Array<{
           id: string;
           type: SchemaTypes.TemplateType;
           profile: {
@@ -53062,10 +53221,6 @@ export type CalloutTemplateDataFragment = {
     | undefined;
 };
 
-export type CollaborationTemplateDataFragment = {
-  profile: { displayName: string; description?: any | undefined };
-};
-
 export type CommunityGuidelinesTemplateDataFragment = {
   id: string;
   authorization?:
@@ -53078,9 +53233,13 @@ export type PostTemplateDataFragment = {
   postDefaultDescription?: any | undefined;
 };
 
+export type SpaceTemplateDataFragment = {
+  profile: { displayName: string; description?: any | undefined };
+};
+
 export type TemplatesSetDataFragment = {
   id: string;
-  collaborationTemplates: Array<{
+  spaceTemplates: Array<{
     id: string;
     type: SchemaTypes.TemplateType;
     profile: {
@@ -62139,7 +62298,7 @@ export type GetSpaceDataQuery = {
                 templatesSet?:
                   | {
                       id: string;
-                      collaborationTemplates: Array<{
+                      spaceTemplates: Array<{
                         id: string;
                         type: SchemaTypes.TemplateType;
                         profile: {
@@ -64075,8 +64234,8 @@ export const TemplateProfileDataFragmentDoc = gql`
   }
   ${ProfileDataFragmentDoc}
 `;
-export const CollaborationTemplateDataFragmentDoc = gql`
-  fragment CollaborationTemplateData on Template {
+export const SpaceTemplateDataFragmentDoc = gql`
+  fragment SpaceTemplateData on Template {
     profile {
       displayName
       description
@@ -64130,9 +64289,9 @@ export const CalloutTemplateDataFragmentDoc = gql`
 export const TemplatesSetDataFragmentDoc = gql`
   fragment TemplatesSetData on TemplatesSet {
     id
-    collaborationTemplates {
+    spaceTemplates {
       ...TemplateProfileData
-      ...CollaborationTemplateData
+      ...SpaceTemplateData
     }
     postTemplates {
       ...TemplateProfileData
@@ -64155,7 +64314,7 @@ export const TemplatesSetDataFragmentDoc = gql`
     }
   }
   ${TemplateProfileDataFragmentDoc}
-  ${CollaborationTemplateDataFragmentDoc}
+  ${SpaceTemplateDataFragmentDoc}
   ${PostTemplateDataFragmentDoc}
   ${WhiteboardTemplateDataFragmentDoc}
   ${CommunityGuidelinesTemplateDataFragmentDoc}

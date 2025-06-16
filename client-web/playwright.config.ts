@@ -31,10 +31,10 @@ export default defineConfig({
     trace: 'on-first-retry',
     headless: process.env.UI_HEADLESS === 'true',
   },
-  timeout: 60000,
+  timeout: 15000,
 
   expect: {
-    timeout: 10 * 1500,
+    timeout: 10 * 500,
   },
 
   /* Configure projects for major browsers */

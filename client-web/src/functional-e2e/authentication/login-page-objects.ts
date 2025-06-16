@@ -19,6 +19,13 @@ export const navigateToLoginPageFromSpace = async (
   // ToDo
 };
 
+export const navigateToVerificationPage = async (
+  endPoint: string,
+  page: Page
+) => {
+  await page.goto(endPoint + '/verify');
+};
+
 export const navigateToLoginPageFromForumDiscussion = async (
   endPoint: string,
   page: Page
@@ -50,14 +57,22 @@ export const navigateToSignUpFromSignIn = async (
   page: Page
 ) => {
   await navigateToLoginPageFromMenu(endPoint, page);
-  await page.getByRole('link', { name: 'Click here to sign up.' }).click();
+  await page.getByRole('link', { name: 'Sign up' }).click();
 };
 
-export const navigateToRegistrationFromSignUp = async (
+export const navigateToRegistrationFromAcceptTerms = async (
   endPoint: string,
   page: Page
 ) => {
   await navigateToSignUpFromSignIn(endPoint, page);
-  await page.getByLabel('I accept the Terms of Use and').check();
-  await page.getByRole('button', { name: 'Sign up with E-Mail' }).click();
+  await page.locator('input[type="checkbox"]').check();
+};
+
+export const navigateToRegistrationFromSignUpAcceptTermsAndContinue = async (
+  endPoint: string,
+  page: Page
+) => {
+  await navigateToSignUpFromSignIn(endPoint, page);
+  await page.locator('input[type="checkbox"]').check();
+  await page.getByRole('button', { name: 'Next' }).click();
 };

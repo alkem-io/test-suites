@@ -1,33 +1,3 @@
-// TabsPage.ts
-
-// class TabsPage {
-//   constructor(page) {
-//     this.page = page;
-//     this.homeTab = 'a[href="/checkdefaultcallouts?tab=1"]';
-//     this.communityTab = 'a[href="/checkdefaultcallouts?tab=2"]';
-//     this.subspacesTab = 'a[href="/checkdefaultcallouts?tab=3"]';
-//     this.knowledgeTab = 'a[href="/checkdefaultcallouts?tab=4"]';
-//     this.settingsTab = 'a[href="/checkdefaultcallouts/settings"]';
-//   }
-
-//   async navigateToTab(tab) {
-//     await this.page.click(tab);
-//   }
-
-//   async isTabSelected(tab) {
-//     const isSelected = await this.page.evaluate(selector => {
-//       return (
-//         document.querySelector(selector).getAttribute('aria-selected') ===
-//         'true'
-//       );
-//     }, tab);
-//     return isSelected;
-//   }
-// }
-
-// export default TabsPage;
-
-// test.spec.ts
 import { test, expect } from '@playwright/test';
 import { TabsPage } from './TabsPage';
 import {
