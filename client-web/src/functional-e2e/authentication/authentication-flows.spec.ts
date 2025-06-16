@@ -47,7 +47,7 @@ const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const uniqueId = UniqueIDGenerator.getID();
 
-const userEmail = `tes+${uniqueId}@alkem.io`;
+const userEmail = `test+${uniqueId}@alkem.io`;
 const newPassword = password;
 
 test.beforeEach(async ({ context }) => {
@@ -182,7 +182,7 @@ test('user successful registration email accept terms and fill all required fiel
 test('user successful password recovery', async ({ page }) => {
   await navigateToLoginPageFromMenu(baseUrl, page);
 
-  await page.getByRole('link', { name: 'Forgot password' }).click();
+  await page.getByRole('link', { name: 'Forgot password?' }).click();
   await emailField(page).click();
   await emailField(page).fill('non.space@alkem.io');
   await continueButton(page).click();
