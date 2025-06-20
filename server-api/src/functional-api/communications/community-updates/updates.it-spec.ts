@@ -10,12 +10,15 @@ import {
 } from '@alkemio/tests-lib';
 import { assignRoleToUser } from '@functional-api/roleset/roles-request.params';
 import { delay } from '@alkemio/tests-lib';
-import { RoleName, SpacePrivacyMode } from '@generated/alkemio-schema';
 import {
   removeMessageOnRoom,
   sendMessageToRoom,
 } from '../communication.params';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import {
+  RoleName,
+  SpacePrivacyMode,
+} from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
 
 let baseScenario: OrganizationWithSpaceModel;
 

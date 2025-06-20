@@ -6,7 +6,7 @@ export * from "./utils/emails";
 export * from "./utils/mailslurper.rest.requests";
 export * from "./utils/graphqlClient";
 export * from "./utils/mailslurper.rest.requests";
-
+export * from "./utils/subscriptions";
 export * from "./utils/graphql.authorization.header";
 export * from "./utils/get.document";
 export * from "./scenario/TestScenarioFactory";
@@ -14,7 +14,6 @@ export * from "./scenario/baseFunctions";
 export * from "./scenario/TestSetupUtils";
 export * from "./scenario/LogManager";
 export * from "./scenario/TestUserManager";
-
 export * from "./scenario/config/test-scenario-config";
 export * from "./scenario/registration/get-user-token";
 export * from "./scenario/registration/register-in-alkemio-or-fail";
