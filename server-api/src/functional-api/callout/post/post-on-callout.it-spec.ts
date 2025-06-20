@@ -1,4 +1,3 @@
-import '@utils/array.matcher';
 import {
   deletePost,
   postDataPerSpaceCallout,
@@ -7,8 +6,12 @@ import {
   updatePost,
   getPostData,
 } from './post.request.params';
-import { TestUser } from '@alkemio/tests-lib';
-import { TestUserManager } from '@src/scenario/TestUserManager';
+import {
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUser,
+  TestUserManager,
+} from '@alkemio/tests-lib';
 import {
   removeMessageOnRoom,
   sendMessageToRoom,
@@ -20,9 +23,7 @@ import {
 } from '@functional-api/references/references.request.params';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
 import { delay } from '@alkemio/tests-lib';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
 
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -126,7 +127,7 @@ describe('Posts - Create', () => {
     );
     const data =
       postsData.data?.lookup?.space?.collaboration?.calloutsSet.callouts?.[0].contributions?.find(
-        c => c.post && c.post.id === spacePostId
+        (c: { post?: { id: string } }) => c.post && c.post.id === spacePostId
       )?.post;
 
     // Assert
@@ -263,7 +264,8 @@ describe('Posts - Update', () => {
     );
     const data =
       postsData.data?.lookup?.space?.collaboration?.calloutsSet.callouts?.[0].contributions?.find(
-        c => c.post && c.post.id === postDataUpdate?.id
+        (c: { post?: { id: string } }) =>
+          c.post && c.post.id === postDataUpdate?.id
       )?.post;
 
     // Assert
@@ -286,7 +288,8 @@ describe('Posts - Update', () => {
     );
     const data =
       postsData.data?.lookup?.space?.collaboration?.calloutsSet.callouts?.[0].contributions?.find(
-        c => c.post && c.post.id === postDataUpdate?.id
+        (c: { post?: { id: string } }) =>
+          c.post && c.post.id === postDataUpdate?.id
       )?.post;
 
     // Assert
@@ -324,7 +327,7 @@ test('HM should update post created on space callout from HM', async () => {
   );
   const data =
     postsData.data?.lookup?.space?.collaboration?.calloutsSet.callouts?.[0].contributions?.find(
-      c => c.post && c.post.id === spacePostIdEM
+      (c: { post?: { id: string } }) => c.post && c.post.id === spacePostIdEM
     )?.post;
 
   // Assert

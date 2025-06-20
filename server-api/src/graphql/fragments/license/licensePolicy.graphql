@@ -1,6 +1,0 @@
-fragment LicensePolicyData on LicensePolicy {
-  id
-  authorization {
-    ...AuthorizationData
-  }
-}

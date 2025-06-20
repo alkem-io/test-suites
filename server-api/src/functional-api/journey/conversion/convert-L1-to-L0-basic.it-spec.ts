@@ -1,11 +1,13 @@
-import { TestUser } from '@alkemio/tests-lib';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
+import {
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUser,
+} from '@alkemio/tests-lib';
 import { convertSpaceL1ToSpaceL0 } from './conversion.request.params';
 import { getSpaceData } from '../space/space.request.params';
 import { getSpaceLicenseSubscriptions } from '@functional-api/license/license.params.request';
-import { SpaceLevel } from '@generated/alkemio-schema';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { SpaceLevel } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
 
 let baseScenario: OrganizationWithSpaceModel;
 

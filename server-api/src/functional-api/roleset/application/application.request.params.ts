@@ -1,6 +1,5 @@
-import { getGraphqlClient } from '@utils/graphqlClient';
-import { TestUser } from '@alkemio/tests-lib';
-import { graphqlErrorWrapper } from '@utils/graphql.wrapper';
+import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/dist/utils/graphql.wrapper';
 
 export const createApplication = async (
   roleSetID: string,

@@ -1,15 +1,18 @@
 import { templateInfoUpdate } from './space-template-testdata';
 import { deleteTemplate, GetTemplateById } from '../template.request.params';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
-import { TestUser } from '@alkemio/tests-lib';
+
+import {
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUser,
+} from '@alkemio/tests-lib';
 import {
   getSpaceTemplatesCount,
   createTemplateFromSpace,
   getSpaceTemplatesCountForSpace,
   updateSpaceTemplate,
 } from './space-template.request.params';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
 
 let templateId = '';
 

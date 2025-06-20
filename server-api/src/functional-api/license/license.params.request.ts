@@ -1,6 +1,5 @@
-import { TestUser } from '@alkemio/tests-lib';
-import { graphqlErrorWrapper } from '@utils/graphql.wrapper';
-import { getGraphqlClient } from '@utils/graphqlClient';
+import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/dist/utils/graphql.wrapper';
 
 export const getLicensePlans = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
@@ -38,7 +37,7 @@ export const getLicensePlanByName = async (licenseCredential: string) => {
   const allLicensePlans =
     response.data?.platform.licensingFramework.plans ?? [];
   const filteredLicensePlan = allLicensePlans.filter(
-    plan =>
+    (plan: { licenseCredential: string; id: string }) =>
       plan.licenseCredential.includes(licenseCredential) ||
       plan.id === licenseCredential
   );

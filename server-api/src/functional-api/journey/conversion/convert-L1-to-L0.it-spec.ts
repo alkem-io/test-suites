@@ -1,23 +1,25 @@
-import { TestUser } from '@alkemio/tests-lib';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
+import {
+  sorted_read_readAbout,
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUser,
+  TestUserManager,
+} from '@alkemio/tests-lib';
 import { convertSpaceL1ToSpaceL0 } from './conversion.request.params';
 import { getSpaceData } from '../space/space.request.params';
 import { inviteForEntryRoleOnRoleSet } from '@functional-api/roleset/invitations/invitation.request.params';
-import { TestUserManager } from '@src/scenario/TestUserManager';
 import {
   eventOnRoleSetApplication,
   eventOnRoleSetInvitation,
 } from '@functional-api/roleset/roleset-events.request.params';
-import { sorted_read_readAbout } from '@common/constants/privileges';
 import { createApplication } from '@functional-api/roleset/application/application.request.params';
 import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
 } from '@alkemio/client-lib';
 import { getSingleInvitationResult } from '@functional-api/roleset/roleset.request.params';
-import { SpaceLevel } from '@generated/alkemio-schema';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { SpaceLevel } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
 
 let baseScenario: OrganizationWithSpaceModel;
 

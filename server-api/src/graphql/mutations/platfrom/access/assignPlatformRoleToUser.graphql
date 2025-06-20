@@ -1,5 +1,0 @@
-mutation assignPlatformRoleToUser($roleData: AssignPlatformRoleInput!) {
-  assignPlatformRoleToUser(roleData: $roleData) {
-    ...UserDataLight
-  }
-}

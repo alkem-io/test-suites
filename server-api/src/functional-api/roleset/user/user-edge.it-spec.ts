@@ -1,11 +1,12 @@
-import { TestUserManager } from '@src/scenario/TestUserManager';
 import { getRoleSetMembersList } from '../roleset.request.params';
 import { removeRoleFromUser, assignRoleToUser } from '../roles-request.params';
-import { RoleName } from '@generated/alkemio-schema';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
-
+import {
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUserManager,
+} from '@alkemio/tests-lib';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { RoleName } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
 let baseScenario: OrganizationWithSpaceModel;
 
 const scenarioConfig: TestScenarioConfig = {

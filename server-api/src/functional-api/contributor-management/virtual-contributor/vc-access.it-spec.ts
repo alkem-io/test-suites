@@ -1,4 +1,3 @@
-import '@utils/array.matcher';
 import {
   createVirtualContributorOnAccountKnowledgeBasedWithCallout,
   createVirtualContributorOnAccountSpaceBased,
@@ -13,22 +12,6 @@ import {
   deleteSpace,
   updateSpacePlatformSettings,
 } from '../../journey/space/space.request.params';
-import { TestUser } from '@alkemio/tests-lib';
-import { TestUserManager } from '@src/scenario/TestUserManager';
-import {
-  CommunityMembershipPolicy,
-  SpacePrivacyMode,
-} from '@generated/alkemio-schema';
-import {
-  assignLicensePlanToAccount,
-  getLicensePlanByName,
-} from '@functional-api/license/license.params.request';
-import { SpaceVisibility } from '@generated/graphql';
-import { UniqueIDGenerator } from '@alkemio/tests-lib';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
-import { getAccountMainEntities } from '@functional-api/account/account.params.request';
 import {
   readPrivilege,
   sorted__create_read_update_delete_contribute_fileDelete_fileUpload,
@@ -36,8 +19,25 @@ import {
   sorted__create_read_update_delete_grant_fileUp_fileDel,
   sorted__create_read_update_delete_grant_platformAdmin_readAbout,
   sorted_read_readAbout,
-} from '@common/constants/privileges';
-import { SearchVisibility } from '@alkemio/client-lib/dist/types/alkemio-schema';
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUser,
+  TestUserManager,
+} from '@alkemio/tests-lib';
+
+import {
+  assignLicensePlanToAccount,
+  getLicensePlanByName,
+} from '@functional-api/license/license.params.request';
+import { UniqueIDGenerator } from '@alkemio/tests-lib';
+import { getAccountMainEntities } from '@functional-api/account/account.params.request';
+import {
+  CommunityMembershipPolicy,
+  SearchVisibility,
+  SpacePrivacyMode,
+  SpaceVisibility,
+} from '@alkemio/client-lib/dist/types/alkemio-schema';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
 const uniqueId = UniqueIDGenerator.getID();
 
 const spaceNameId = 'appl-eco-nameid' + uniqueId;

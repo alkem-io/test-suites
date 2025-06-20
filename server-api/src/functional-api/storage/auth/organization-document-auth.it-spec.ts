@@ -1,4 +1,13 @@
-import { TestUser } from '@alkemio/tests-lib';
+import {
+  sorted__create_read_update_delete_grant,
+  sorted__create_read_update_delete_grant_fileUp_fileDel,
+  sorted__create_read_update_delete_grant_fileUp_fileDel_platformAdmin,
+  sorted__create_read_update_delete_grant_platformAdmin,
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUser,
+  TestUserManager,
+} from '@alkemio/tests-lib';
 import {
   deleteDocument,
   getProfileDocuments,
@@ -8,19 +17,12 @@ import {
 } from '../upload.params';
 import path from 'path';
 import { lookupProfileVisuals } from '../../lookup/lookup-request.params';
-import {
-  sorted__create_read_update_delete_grant,
-  sorted__create_read_update_delete_grant_fileUp_fileDel,
-  sorted__create_read_update_delete_grant_fileUp_fileDel_platformAdmin,
-  sorted__create_read_update_delete_grant_platformAdmin,
-} from '@common/constants/privileges';
-import { TestUserManager } from '@src/scenario/TestUserManager';
+
 import { createReferenceOnProfile } from '../../references/references.request.params';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
-import { RoleName } from '@generated/alkemio-schema';
+
 import { assignRoleToUser } from '@functional-api/roleset/roles-request.params';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { RoleName } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
 
 let refId = '';
 

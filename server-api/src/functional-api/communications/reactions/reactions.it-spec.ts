@@ -1,5 +1,9 @@
 /* eslint-disable quotes */
-import { TestUser } from '@alkemio/tests-lib';
+import {
+  TestScenarioFactory,
+  TestScenarioNoPreCreationConfig,
+  TestUser,
+} from '@alkemio/tests-lib';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
 import {
   getPlatformDiscussionsDataById,
@@ -10,8 +14,6 @@ import {
   sendMessageToRoom,
 } from '../communication.params';
 import { addReaction, removeReaction } from './reactions.request.params';
-import { TestScenarioNoPreCreationConfig } from '@src/scenario/config/test-scenario-config';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
 
 const uniqueId = UniqueIDGenerator.getID();
 let platformDiscussionId = '';
@@ -58,9 +60,8 @@ describe('Reaction - Discussion messages', () => {
       '👏'
     );
 
-    const discussionMessageData = await getPlatformDiscussionsDataById(
-      discussionId
-    );
+    const discussionMessageData =
+      await getPlatformDiscussionsDataById(discussionId);
 
     // Assert
     expect(reactionData?.data?.addReactionToMessageInRoom.emoji).toEqual(
@@ -84,9 +85,8 @@ describe('Reaction - Discussion messages', () => {
       '👏'
     );
 
-    const discussionMessageData = await getPlatformDiscussionsDataById(
-      discussionId
-    );
+    const discussionMessageData =
+      await getPlatformDiscussionsDataById(discussionId);
 
     // Assert
     expect(reactionData?.data?.addReactionToMessageInRoom.emoji).toEqual(
@@ -116,9 +116,8 @@ describe('Reaction - Discussion messages', () => {
       '😁'
     );
 
-    const discussionMessageData = await getPlatformDiscussionsDataById(
-      discussionId
-    );
+    const discussionMessageData =
+      await getPlatformDiscussionsDataById(discussionId);
     const discussionData =
       discussionMessageData?.data?.platform?.forum?.discussion?.comments
         .messages[0];
@@ -151,9 +150,8 @@ describe('Reaction - Discussion messages', () => {
       messageId,
       '👏'
     );
-    const discussionMessageData = await getPlatformDiscussionsDataById(
-      discussionId
-    );
+    const discussionMessageData =
+      await getPlatformDiscussionsDataById(discussionId);
 
     // Assert
     expect(reactionDataOne?.data?.addReactionToMessageInRoom.emoji).toEqual(
@@ -180,9 +178,8 @@ describe('Reaction - Discussion messages', () => {
     // Act
 
     const resRemove = await removeReaction(reactionId, discussionCommentsId);
-    const discussionMessageData = await getPlatformDiscussionsDataById(
-      discussionId
-    );
+    const discussionMessageData =
+      await getPlatformDiscussionsDataById(discussionId);
 
     // Assert
     expect(resRemove?.data?.removeReactionToMessageInRoom).toEqual(true);
@@ -216,9 +213,8 @@ describe('Reaction - Discussion messages', () => {
       TestUser.SPACE_ADMIN
     );
 
-    const discussionMessageData = await getPlatformDiscussionsDataById(
-      discussionId
-    );
+    const discussionMessageData =
+      await getPlatformDiscussionsDataById(discussionId);
 
     // Assert
     expect(resRemove.error?.errors[0].message).toContain(

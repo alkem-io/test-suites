@@ -1,22 +1,25 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { UniqueIDGenerator } from '@alkemio/tests-lib';
-import { TestUser } from '@alkemio/tests-lib';
 import {
   deleteMailSlurperMails,
   getMailsData,
-} from '@utils/mailslurper.rest.requests';
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUserManager,
+  UniqueIDGenerator,
+} from '@alkemio/tests-lib';
+import { TestUser } from '@alkemio/tests-lib';
 import { delay } from '@alkemio/tests-lib';
+import {
+  CalloutVisibility,
+  PreferenceType,
+} from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
 import {
   createCalloutOnCalloutsSet,
   deleteCallout,
   updateCalloutVisibility,
 } from '@functional-api/callout/callouts.request.params';
-import { TestUserManager } from '@src/scenario/TestUserManager';
-import { CalloutVisibility, PreferenceType } from '@generated/graphql';
 import { changePreferenceUser } from '@functional-api/contributor-management/user/user-preferences-mutation';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
 
 const uniqueId = UniqueIDGenerator.getID();
 let preferencesConfigCallout: any[] = [];

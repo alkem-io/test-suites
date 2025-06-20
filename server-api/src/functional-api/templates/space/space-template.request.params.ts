@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { TestUser } from '@alkemio/tests-lib';
-import { getGraphqlClient } from '@utils/graphqlClient';
-import { graphqlErrorWrapper } from '@utils/graphql.wrapper';
+import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
 import { templateDefaultInfo } from './space-template-testdata';
 import { getSpaceData } from '../../journey/space/space.request.params';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/dist/utils/graphql.wrapper';
 
 export const getLifeCycleTemplateForSpaceByLifecycleTitle = async (
   spaceId: string,

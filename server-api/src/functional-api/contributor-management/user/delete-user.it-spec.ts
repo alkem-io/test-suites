@@ -10,12 +10,13 @@
  * The tests ensure that the user deletion process works as expected,
  * and that the API responses match the expected values.
  */
-import '@utils/array.matcher';
 import { createUser, deleteUser, getUserData } from './user.request.params';
-import { UniqueIDGenerator } from '@alkemio/tests-lib';
-import { TestScenarioNoPreCreationConfig } from '@src/scenario/config/test-scenario-config';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-;
+import {
+  TestScenarioFactory,
+  TestScenarioNoPreCreationConfig,
+  UniqueIDGenerator,
+} from '@alkemio/tests-lib';
+
 const uniqueId = UniqueIDGenerator.getID();
 
 let userName = '';

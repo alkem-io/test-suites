@@ -11,14 +11,11 @@
  * and that the API responses match the expected values.
  */
 import {
-  createUser,
-  deleteUser,
-  getUserData,
-} from './user.request.params';
-import '@utils/array.matcher';
-import { UniqueIDGenerator } from '@alkemio/tests-lib';
-import { TestScenarioNoPreCreationConfig } from '@src/scenario/config/test-scenario-config';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
+  TestScenarioFactory,
+  TestScenarioNoPreCreationConfig,
+  UniqueIDGenerator,
+} from '@alkemio/tests-lib';
+import { createUser, deleteUser, getUserData } from './user.request.params';
 
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -94,10 +91,9 @@ describe('Create User', () => {
       // nameID: 'taka',
       profileData: {
         displayName:
-          'very loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong name',
+          'very looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong',
       },
     });
-
     // Assert
     expect(response.error?.errors[0].message).toContain(
       'property profileData.displayName has failed the following constraints: maxLength'

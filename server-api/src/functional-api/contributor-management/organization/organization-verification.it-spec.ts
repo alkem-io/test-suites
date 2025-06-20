@@ -10,8 +10,11 @@
  * The tests ensure that the organization verification process works as expected,
  * and that the API responses match the expected values.
  */
-import '@utils/array.matcher';
-import { UniqueIDGenerator } from '@alkemio/tests-lib';
+import {
+  TestScenarioFactory,
+  TestScenarioNoPreCreationConfig,
+  UniqueIDGenerator,
+} from '@alkemio/tests-lib';
 const uniqueId = UniqueIDGenerator.getID();
 import {
   deleteOrganization,
@@ -19,8 +22,6 @@ import {
   getOrganizationData,
 } from './organization.request.params';
 import { eventOnOrganizationVerification } from './organization-verification.events.request.params';
-import { TestScenarioNoPreCreationConfig } from '@src/scenario/config/test-scenario-config';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
 
 let organizationId = '';
 let organizationVerificationId = '';

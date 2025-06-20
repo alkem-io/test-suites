@@ -1,10 +1,15 @@
-import '@utils/array.matcher';
 import {
   createPostTemplate,
   getPostTemplatesCountForSpace,
   updatePostTemplate,
 } from './post-template.request.params';
-import { UniqueIDGenerator } from '@alkemio/tests-lib';
+import {
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestSetupUtils,
+  TestUserManager,
+  UniqueIDGenerator,
+} from '@alkemio/tests-lib';
 import {
   errorAuthCreatePostTemplate,
   errorAuthDeleteTemplate,
@@ -22,13 +27,9 @@ import {
 import { GetTemplateById } from '@functional-api/templates/template.request.params';
 import { deleteTemplate } from '../template.request.params';
 import { TestUser } from '@alkemio/tests-lib';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
 import { assignRoleToUser } from '@functional-api/roleset/roles-request.params';
 import { RoleName } from '@generated/graphql';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
-import { TestSetupUtils } from '@src/scenario/TestSetupUtils';
-import { TestUserManager } from '@src/scenario/TestUserManager';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
 
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -205,7 +206,7 @@ describe('Post templates - Utilization in posts', () => {
       );
       const data =
         postsData.data?.lookup?.space?.collaboration?.calloutsSet.callouts?.[0].contributions?.find(
-          c => c.post && c.post.id === spacePostId
+          (c: { post?: { id: string } }) => c.post && c.post.id === spacePostId
         )?.post;
 
       // Assert
@@ -275,7 +276,7 @@ describe('Post templates - Utilization in posts', () => {
       );
       const data =
         postsData.data?.lookup?.space?.collaboration?.calloutsSet.callouts?.[0].contributions?.find(
-          c => c.post && c.post.id === spacePostId
+          (c: { post?: { id: string } }) => c.post && c.post.id === spacePostId
         )?.post;
 
       // Assert
@@ -297,7 +298,7 @@ describe('Post templates - Utilization in posts', () => {
       );
       const data =
         postsData.data?.lookup?.space?.collaboration?.calloutsSet.callouts?.[0].contributions?.find(
-          c => c.post && c.post.id === spacePostId
+          (c: { post?: { id: string } }) => c.post && c.post.id === spacePostId
         )?.post;
 
       // Assert
@@ -332,7 +333,7 @@ describe('Post templates - Utilization in posts', () => {
       );
       const data =
         postsData.data?.lookup?.space?.collaboration?.calloutsSet.callouts?.[0].contributions?.find(
-          c => c.post && c.post.id === spacePostId
+          (c: { post?: { id: string } }) => c.post && c.post.id === spacePostId
         )?.post;
 
       // Assert

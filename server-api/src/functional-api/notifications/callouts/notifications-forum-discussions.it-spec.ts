@@ -1,10 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
+import { PreferenceType, ForumDiscussionCategory } from '@alkemio/client-lib';
 import {
+  delay,
   deleteMailSlurperMails,
   getMailsData,
-} from '@utils/mailslurper.rest.requests';
-import { delay } from '@alkemio/tests-lib';
-import { TestUserManager } from '@src/scenario/TestUserManager';
+  TestScenarioFactory,
+  TestScenarioNoPreCreationConfig,
+  TestUserManager,
+} from '@alkemio/tests-lib';
 import { TestUser } from '@alkemio/tests-lib';
 import {
   createDiscussion,
@@ -13,11 +17,7 @@ import {
   sendMessageToRoom,
 } from '@functional-api/communications/communication.params';
 import { sendMessageReplyToRoom } from '@functional-api/communications/replies/reply.request.params';
-import { ForumDiscussionCategory } from '@generated/alkemio-schema';
 import { changePreferenceUser } from '@functional-api/contributor-management/user/user-preferences-mutation';
-import { PreferenceType } from '@generated/graphql';
-import { TestScenarioNoPreCreationConfig } from '@src/scenario/config/test-scenario-config';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
 
 let preferencesConfigDiscussions: any[] = [];
 let preferencesConfigComments: any[] = [];

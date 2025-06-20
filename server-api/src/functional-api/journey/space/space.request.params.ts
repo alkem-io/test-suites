@@ -1,15 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { TestUser } from '@alkemio/tests-lib';
-import { getGraphqlClient } from '@utils/graphqlClient';
-import { graphqlErrorWrapper } from '@utils/graphql.wrapper';
-import { UniqueIDGenerator } from '@alkemio/tests-lib';
-const uniqueId = UniqueIDGenerator.getID();
 import {
-  CommunityMembershipPolicy,
-  CreateSpaceOnAccountInput,
-  SpacePrivacyMode,
   SpaceVisibility,
-} from '@generated/graphql';
+  SpacePrivacyMode,
+  CommunityMembershipPolicy,
+} from '@alkemio/client-lib';
+import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
+import { UniqueIDGenerator } from '@alkemio/tests-lib';
+import { CreateSpaceOnAccountInput } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/dist/utils/graphql.wrapper';
+const uniqueId = UniqueIDGenerator.getID();
 
 export const spaceName = `testEcoName${uniqueId}`;
 export const spaceNameId = `testecoeid${uniqueId}`;

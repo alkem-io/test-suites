@@ -1,6 +1,0 @@
-fragment SubspaceL1Data on Space {
-  ...SubspaceData
-  subspaces {
-    ...SubspaceData
-  }
-}

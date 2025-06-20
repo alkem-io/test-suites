@@ -1,4 +1,13 @@
-import { TestUser } from '@alkemio/tests-lib';
+import {
+  sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii,
+  sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii_platformAdmin,
+  sorted__create_read_update_delete_grant_readUserPii_platformAdmin,
+  sorted__create_read_update_delete_readUserPii,
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUser,
+  TestUserManager,
+} from '@alkemio/tests-lib';
 import {
   deleteDocument,
   getProfileDocuments,
@@ -8,19 +17,10 @@ import {
 } from '../upload.params';
 import path from 'path';
 import { lookupProfileVisuals } from '../../lookup/lookup-request.params';
-import { TestUserManager } from '@src/scenario/TestUserManager';
 import {
   deleteReferenceOnProfile,
   createReferenceOnProfile,
 } from '../../references/references.request.params';
-import {
-  sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii,
-  sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii_platformAdmin,
-  sorted__create_read_update_delete_grant_readUserPii_platformAdmin,
-  sorted__create_read_update_delete_readUserPii,
-} from '@common/constants/privileges';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
 
 let refId = '';
 let documentId = '';

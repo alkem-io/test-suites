@@ -1,5 +1,10 @@
-import '@utils/array.matcher';
-import { TestUser, UniqueIDGenerator } from '@alkemio/tests-lib';
+import {
+  TestScenarioFactory,
+  TestScenarioNoPreCreationConfig,
+  TestUser,
+  TestUserManager,
+  UniqueIDGenerator,
+} from '@alkemio/tests-lib';
 import {
   createOrganization,
   deleteOrganization,
@@ -8,18 +13,16 @@ import {
   createInnovationPack,
   deleteInnovationPack,
 } from '@functional-api/innovation-pack/innovation_pack.request.params';
-import { TestScenarioNoPreCreationConfig } from '@src/scenario/config/test-scenario-config';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
+
 import {
   getAccountMainEntities,
   transferInnovationPackToAccount,
 } from './account.params.request';
-import { TestUserManager } from '@src/scenario/TestUserManager';
 import {
   assignPlatformRole,
   removePlatformRole,
 } from '@functional-api/platform/authorization-platform-mutation';
-import { RoleName } from '@generated/alkemio-schema';
+import { RoleName } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
 const uniqueId = UniqueIDGenerator.getID();
 
 const organizationName = 'Organization packs' + uniqueId;

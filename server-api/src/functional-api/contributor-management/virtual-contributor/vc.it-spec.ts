@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import '@utils/array.matcher';
 import {
   createVirtualContributorOnAccountSpaceBased,
   deleteVirtualContributorOnAccount,
@@ -12,13 +11,13 @@ import {
   deleteSpace,
   updateSpacePlatformSettings,
 } from '../../journey/space/space.request.params';
-import { TestUser } from '@alkemio/tests-lib';
-import { TestUserManager } from '@src/scenario/TestUserManager';
 import {
-  CommunityMembershipPolicy,
-  SpacePrivacyMode,
-} from '@generated/alkemio-schema';
-import { createSubspace } from '@src/graphql/mutations/journeys/subspace';
+  createSubspace,
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUser,
+  TestUserManager,
+} from '@alkemio/tests-lib';
 import {
   assignLicensePlanToAccount,
   getLicensePlanByName,
@@ -29,13 +28,16 @@ import {
 } from '../../roleset/invitations/invitation.request.params';
 import { getRoleSetInvitationsApplications } from '../../roleset/application/application.request.params';
 import { deleteUser } from '../user/user.request.params';
-import { SearchVisibility, SpaceVisibility } from '@generated/graphql';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
 import { getAccountMainEntities } from '@functional-api/account/account.params.request';
 import { getSingleInvitationResult } from '@functional-api/roleset/roleset.request.params';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import {
+  SpaceVisibility,
+  SearchVisibility,
+  CommunityMembershipPolicy,
+  SpacePrivacyMode,
+} from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
 const uniqueId = UniqueIDGenerator.getID();
 
 let invitationId = '';

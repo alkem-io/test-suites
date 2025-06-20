@@ -1,5 +1,4 @@
 import { getRoleSetUserPrivilege } from '../../journey/space/space.request.params';
-import { TestUser } from '@alkemio/tests-lib';
 import {
   sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC,
   sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization,
@@ -7,19 +6,20 @@ import {
   sorted__create_read_update_delete_grant_apply_invite_addVC_accessVC_assignOrganization,
   sorted__read_applyToRoleSet,
   sorted__read_applyToRoleSet_invite_addVC,
-} from '@common/constants/privileges';
-import {
-  CommunityMembershipPolicy,
-  SpacePrivacyMode,
-} from '@generated/alkemio-schema';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUser,
+} from '@alkemio/tests-lib';
 import {
   assignPlatformRole,
   removePlatformRole,
 } from '@functional-api/platform/authorization-platform-mutation';
-import { RoleName } from '@generated/graphql';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import {
+  CommunityMembershipPolicy,
+  RoleName,
+  SpacePrivacyMode,
+} from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
 
 let baseScenario: OrganizationWithSpaceModel;
 const scenarioConfig: TestScenarioConfig = {

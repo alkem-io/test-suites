@@ -1,3 +1,0 @@
-fragment AuthorizationData on Authorization {
-  myPrivileges
-}

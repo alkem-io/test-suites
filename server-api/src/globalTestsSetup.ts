@@ -3,13 +3,15 @@
 // This is critical to be able to use TypeScript aliases in Jest tests
 require('tsconfig-paths/register');
 import { UiText } from '@ory/kratos-client';
-import { TestUser } from '@alkemio/tests-lib';
-import { registerInAlkemioOrFail } from '@src/scenario/registration/register-in-alkemio-or-fail';
-import { testConfiguration } from './config/test.configuration';
-import { stringifyConfig } from './config/create-config-using-envvars';
-import { registerInKratosOrFail } from './scenario/registration/register-in-kratos-or-fail';
-import { verifyInKratosOrFail } from './scenario/registration/verify-in-kratos-or-fail';
-import { LogManager } from './scenario/LogManager';
+import {
+  LogManager,
+  registerInAlkemioOrFail,
+  registerInKratosOrFail,
+  stringifyConfig,
+  testConfiguration,
+  TestUser,
+  verifyInKratosOrFail,
+} from '@alkemio/tests-lib';
 
 module.exports = async () => {
   LogManager.getLogger().info(

@@ -1,5 +1,0 @@
-mutation UpdateCalloutVisibility($calloutData: UpdateCalloutVisibilityInput!) {
-  updateCalloutVisibility(calloutData: $calloutData) {
-    ...CalloutData
-  }
-}

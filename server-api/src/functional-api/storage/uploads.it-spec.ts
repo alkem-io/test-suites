@@ -1,4 +1,3 @@
-import { UniqueIDGenerator } from '@alkemio/tests-lib';
 import {
   deleteDocument,
   getOrgReferenceUri,
@@ -20,12 +19,16 @@ import {
   createSpaceAndGetData,
   deleteSpace,
 } from '../journey/space/space.request.params';
-import { TestUser } from '@alkemio/tests-lib';
-import { getAuthDocument } from '@utils/get.document';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
+
 import { lookupProfileVisuals } from '@functional-api/lookup/lookup-request.params';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import {
+  getAuthDocument,
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUser,
+  UniqueIDGenerator,
+} from '@alkemio/tests-lib';
 const uniqueId = UniqueIDGenerator.getID();
 const isTravis = process.env.TRAVIS === 'true';
 
@@ -46,7 +49,7 @@ function getLastPartOfUrl(url: string | undefined): string {
 async function getReferenceUri(orgId: string): Promise<string> {
   const orgData = await getOrgReferenceUri(orgId);
   const referencesUri = orgData?.data?.organization?.profile?.references ?? [];
-  const referenceUri = referencesUri.filter(referenceUri =>
+  const referenceUri = referencesUri.filter((referenceUri: { uri: string }) =>
     referenceUri.uri.includes('/api/private/rest/storage/document')
   );
   return referenceUri[0]?.uri ?? '';

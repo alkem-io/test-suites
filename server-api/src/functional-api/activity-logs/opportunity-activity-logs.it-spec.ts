@@ -1,15 +1,9 @@
-import '@utils/array.matcher';
-import { TestUser } from '@alkemio/tests-lib';
-import { TestUserManager } from '@src/scenario/TestUserManager';
 import {
-  CalloutState,
-  CalloutType,
-  RoleName,
-  ActivityEventType,
-  CalloutVisibility,
-  CommunityMembershipPolicy,
-  SpacePrivacyMode,
-} from '@generated/alkemio-schema';
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUser,
+  TestUserManager,
+} from '@alkemio/tests-lib';
 import { updateSpaceSettings } from '@functional-api/journey/space/space.request.params';
 import {
   createCalloutOnCalloutsSet,
@@ -22,9 +16,16 @@ import { sendMessageToRoom } from '../communications/communication.params';
 import { createWhiteboardOnCallout } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 import { assignRoleToUser } from '../roleset/roles-request.params';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import {
+  CalloutState,
+  CalloutType,
+  CalloutVisibility,
+  CommunityMembershipPolicy,
+  RoleName,
+  SpacePrivacyMode,
+} from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+import { ActivityEventType } from '@alkemio/client-lib';
 
 const uniqueId = UniqueIDGenerator.getID();
 

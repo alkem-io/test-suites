@@ -1,14 +1,13 @@
-import { getGraphqlClient } from '@utils/graphqlClient';
-import { TestUser } from '@alkemio/tests-lib';
-import { graphqlErrorWrapper } from '@utils/graphql.wrapper';
-import { SearchVisibility } from '@generated/graphql';
+import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
+import { createCalloutOnCalloutsSet } from '@functional-api/callout/callouts.request.params';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/dist/utils/graphql.wrapper';
 import {
   AiPersonaBodyOfKnowledgeType,
   CalloutState,
   CalloutType,
   CalloutVisibility,
-} from '@generated/alkemio-schema';
-import { createCalloutOnCalloutsSet } from '@functional-api/callout/callouts.request.params';
+  SearchVisibility,
+} from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
 
 export const createVirtualContributorOnAccountSpaceBased = async (
   displayName: string,

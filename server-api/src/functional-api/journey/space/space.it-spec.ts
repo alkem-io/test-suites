@@ -4,12 +4,17 @@ import {
   getSpacesData,
   updateSpacePlatformSettings,
 } from './space.request.params';
-import { deleteOrganization } from '@functional-api/contributor-management/organization/organization.request.params';
-import { createOrganization } from '@functional-api/contributor-management/organization/organization.request.params';
-import { SpaceVisibility } from '@generated/graphql';
-import { UniqueIDGenerator } from '@alkemio/tests-lib';
-import { TestScenarioNoPreCreationConfig } from '@src/scenario/config/test-scenario-config';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
+import {
+  deleteOrganization,
+  createOrganization,
+} from '@functional-api/contributor-management/organization/organization.request.params';
+import {
+  TestScenarioFactory,
+  TestScenarioNoPreCreationConfig,
+  UniqueIDGenerator,
+} from '@alkemio/tests-lib';
+import { SpaceVisibility } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+
 const uniqueId = UniqueIDGenerator.getID();
 
 let spaceId = '';

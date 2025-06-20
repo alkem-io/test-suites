@@ -3,17 +3,17 @@ import {
   deleteUser,
   getUserData,
 } from '@functional-api/contributor-management/user/user.request.params';
-import { UniqueIDGenerator } from '@alkemio/tests-lib';
 import {
   deleteMailSlurperMails,
   getMailsData,
-} from '@utils/mailslurper.rest.requests';
-import { TestUserManager } from '@src/scenario/TestUserManager';
+  TestScenarioFactory,
+  TestScenarioNoPreCreationConfig,
+  TestUserManager,
+  UniqueIDGenerator,
+} from '@alkemio/tests-lib';
 import { changePreferenceUser } from '@functional-api/contributor-management/user/user-preferences-mutation';
-import { PreferenceType } from '@generated/graphql';
 import { delay } from '@alkemio/tests-lib';
-import { TestScenarioNoPreCreationConfig } from '@src/scenario/config/test-scenario-config';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
+import { PreferenceType } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
 
 const uniqueId = UniqueIDGenerator.getID();
 

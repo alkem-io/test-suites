@@ -1,7 +1,6 @@
-import { ForumDiscussionCategory } from '@generated/alkemio-schema';
-import { TestUser } from '@alkemio/tests-lib';
-import { graphqlErrorWrapper } from '@utils/graphql.wrapper';
-import { getGraphqlClient } from '@utils/graphqlClient';
+import { ForumDiscussionCategory } from '@alkemio/client-lib/dist/types/alkemio-schema';
+import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/dist/utils/graphql.wrapper';
 
 export const sendMessageToRoom = async (
   roomID: string,

@@ -34,6 +34,7 @@ fragment CalloutData on Callout {
         ...ProfileData
         visual(type: CARD) {
           ...VisualUri
+          __typename
         }
       }
     }

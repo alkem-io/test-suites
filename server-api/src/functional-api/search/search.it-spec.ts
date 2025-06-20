@@ -1,8 +1,12 @@
 import { updateUser } from '@functional-api/contributor-management/user/user.request.params';
-import { delay, TestUser } from '@alkemio/tests-lib';
-import '@utils/array.matcher';
+import {
+  delay,
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUser,
+  TestUserManager,
+} from '@alkemio/tests-lib';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
-import { TestUserManager } from '@src/scenario/TestUserManager';
 import { createPostOnCallout } from '../callout/post/post.request.params';
 import {
   adminSearchIngestFromScratch,
@@ -18,16 +22,14 @@ import {
   updateSpaceSettings,
   updateSpacePlatformSettings,
 } from '../journey/space/space.request.params';
-import { SpaceVisibility } from '@generated/graphql';
-import { SpacePrivacyMode } from '@generated/graphql';
+
 import {
   createOrganization,
   deleteOrganization,
   updateOrganization,
 } from '@functional-api/contributor-management/organization/organization.request.params';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
+import { SpaceVisibility, SpacePrivacyMode } from '@alkemio/client-lib';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
 
 const uniqueId = UniqueIDGenerator.getID();
 

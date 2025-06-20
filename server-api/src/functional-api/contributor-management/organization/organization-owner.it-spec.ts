@@ -10,20 +10,22 @@
  * The tests ensure that the organization owner assignment process works as expected,
  * and that the API responses match the expected values.
  */
-import '@utils/array.matcher';
 import {
   createOrganization,
   deleteOrganization,
 } from '../organization/organization.request.params';
-import { TestUserManager } from '@src/scenario/TestUserManager';
-import { UniqueIDGenerator } from '@alkemio/tests-lib';
-import { TestScenarioNoPreCreationConfig } from '@src/scenario/config/test-scenario-config';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
+import {
+  TestScenarioFactory,
+  TestScenarioNoPreCreationConfig,
+  TestUserManager,
+  UniqueIDGenerator,
+} from '@alkemio/tests-lib';
+import { RoleName } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
 import {
   assignRoleToUser,
   removeRoleFromUser,
 } from '@functional-api/roleset/roles-request.params';
-import { RoleName } from '@generated/alkemio-schema';
+import '@utils/array.matcher';
 
 const uniqueId = UniqueIDGenerator.getID();
 

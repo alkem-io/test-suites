@@ -49,7 +49,7 @@ export const assignRoleToUser = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.AssignRoleToUser(
+    graphqlClient.assignRoleToUser(
       {
         roleData: {
           contributorID: userID,

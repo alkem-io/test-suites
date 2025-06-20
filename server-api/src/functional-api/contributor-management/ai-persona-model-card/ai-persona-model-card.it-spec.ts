@@ -1,15 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import '@utils/array.matcher';
-import { TestUser } from '@alkemio/tests-lib';
-import { TestUserManager } from '@src/scenario/TestUserManager';
 import {
-  AiPersonaModelCardEntry,
-  AiPersonaModelCardEntryFlagName,
-} from '@generated/alkemio-schema';
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUser,
+  TestUserManager,
+} from '@alkemio/tests-lib';
+
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
 import {
   createVirtualContributorOnAccountSpaceBased,
   deleteVirtualContributorOnAccount,
@@ -24,6 +21,11 @@ import {
   deleteSpace,
 } from '../../journey/space/space.request.params';
 import { getModelCardForAiPersona } from './ai-persona-model-card.request.params';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import {
+  AiPersonaModelCardEntry,
+  AiPersonaModelCardEntryFlagName,
+} from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
 
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -75,21 +77,18 @@ describe('AI Persona Model Card', () => {
       vcSpaceId,
       TestUser.GLOBAL_ADMIN
     );
-    console.log(vcData.data);
 
     vcId = vcData?.data?.createVirtualContributor?.id ?? '';
     expect(vcId).toBeDefined();
 
     // Query the VC data to get AI Persona ID
     const vcDataQuery = await queryVCData(vcId);
-    console.log(vcDataQuery.data?.lookup.virtualContributor?.aiPersona);
     const aiPersonaId =
       vcDataQuery?.data?.lookup.virtualContributor?.aiPersona?.id ?? '';
     expect(aiPersonaId).toBeDefined();
 
     // Query model card data
     const modelCardData = await getModelCardForAiPersona(vcId);
-    console.log(modelCardData.data?.lookup.virtualContributor?.aiPersona);
 
     // Verify model card exists
     expect(
@@ -109,21 +108,30 @@ describe('AI Persona Model Card', () => {
     expect(spaceUsage?.length).toBeGreaterThan(0);
 
     // Verify expected model card entries are present
-    const entries = spaceUsage?.map(entry => entry.modelCardEntry);
+    const entries = spaceUsage?.map(
+      (entry: {
+        modelCardEntry: AiPersonaModelCardEntry;
+        flags: { name: AiPersonaModelCardEntryFlagName }[];
+      }) => entry.modelCardEntry
+    );
     expect(entries).toContain(AiPersonaModelCardEntry.SpaceCapabilities);
     expect(entries).toContain(AiPersonaModelCardEntry.SpaceDataAccess);
     expect(entries).toContain(AiPersonaModelCardEntry.SpaceRoleRequired);
 
     // Verify each entry has appropriate flags
     const capabilitiesEntry = spaceUsage?.find(
-      entry =>
-        entry.modelCardEntry === AiPersonaModelCardEntry.SpaceCapabilities
+      (entry: {
+        modelCardEntry: AiPersonaModelCardEntry;
+        flags: { name: AiPersonaModelCardEntryFlagName }[];
+      }) => entry.modelCardEntry === AiPersonaModelCardEntry.SpaceCapabilities
     );
     expect(capabilitiesEntry?.flags).toBeDefined();
     expect(capabilitiesEntry?.flags.length).toBeGreaterThan(0);
 
     // Check for specific flags
-    const flagNames = capabilitiesEntry?.flags.map(flag => flag.name);
+    const flagNames = capabilitiesEntry?.flags.map(
+      (flag: { name: AiPersonaModelCardEntryFlagName }) => flag.name
+    );
     expect(flagNames).toContain(
       AiPersonaModelCardEntryFlagName.SpaceCapabilityTagging
     );

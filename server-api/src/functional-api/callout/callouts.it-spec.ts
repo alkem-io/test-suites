@@ -1,5 +1,8 @@
-import '@utils/array.matcher';
-import { UniqueIDGenerator } from '@alkemio/tests-lib';
+import {
+  TestScenarioConfig,
+  TestScenarioFactory,
+  UniqueIDGenerator,
+} from '@alkemio/tests-lib';
 import {
   createCalloutOnCalloutsSet,
   deleteCallout,
@@ -8,12 +11,13 @@ import {
   updateCalloutVisibility,
 } from './callouts.request.params';
 import { TestUser } from '@alkemio/tests-lib';
-import { CalloutState, CalloutType } from '@generated/alkemio-schema';
 import { getDataPerSpaceCallout } from './post/post.request.params';
-import { CalloutVisibility } from '@generated/graphql';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import {
+  CalloutState,
+  CalloutType,
+  CalloutVisibility,
+} from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
 
 const uniqueId = UniqueIDGenerator.getID();
 

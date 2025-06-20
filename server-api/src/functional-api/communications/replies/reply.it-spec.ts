@@ -1,4 +1,8 @@
-import { TestUser } from '@alkemio/tests-lib';
+import {
+  TestScenarioFactory,
+  TestScenarioNoPreCreationConfig,
+  TestUser,
+} from '@alkemio/tests-lib';
 import { sendMessageReplyToRoom } from './reply.request.params';
 import { addReaction } from '../reactions/reactions.request.params';
 import {
@@ -9,9 +13,8 @@ import {
   sendMessageToRoom,
   removeMessageOnRoom,
 } from '../communication.params';
-import { UniqueIDGenerator } from '@alkemio/tests-lib';import { TestScenarioNoPreCreationConfig } from '@src/scenario/config/test-scenario-config';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-;
+import { UniqueIDGenerator } from '@alkemio/tests-lib';
+
 const uniqueId = UniqueIDGenerator.getID();
 
 let platformDiscussionId = '';
@@ -65,9 +68,8 @@ describe('Reply - Discussion messages', () => {
     replyId = replyInfo?.id;
     threadId = replyInfo?.threadID ?? '';
 
-    const discussionMessageData = await getPlatformDiscussionsDataById(
-      discussionId
-    );
+    const discussionMessageData =
+      await getPlatformDiscussionsDataById(discussionId);
 
     // Assert
     expect(threadId).toEqual(messageId);
@@ -93,9 +95,8 @@ describe('Reply - Discussion messages', () => {
     replyId = replyInfo?.id;
     threadId = replyInfo?.threadID ?? '';
 
-    const discussionMessageData = await getPlatformDiscussionsDataById(
-      discussionId
-    );
+    const discussionMessageData =
+      await getPlatformDiscussionsDataById(discussionId);
 
     // Assert
     expect(threadId).toEqual(messageId);
@@ -208,9 +209,8 @@ describe('Reply - Discussion messages', () => {
       discussionCommentsId,
       messageId
     );
-    const discussionMessageData = await getPlatformDiscussionsDataById(
-      discussionId
-    );
+    const discussionMessageData =
+      await getPlatformDiscussionsDataById(discussionId);
 
     // Assert
     expect(resDelete?.data?.removeMessageOnRoom).toEqual(messageId);
@@ -259,9 +259,8 @@ describe('Reply - Discussion messages', () => {
       TestUser.SUBSPACE_ADMIN
     );
 
-    const discussionMessageData = await getPlatformDiscussionsDataById(
-      discussionId
-    );
+    const discussionMessageData =
+      await getPlatformDiscussionsDataById(discussionId);
     const discussionMessages =
       discussionMessageData?.data?.platform?.forum?.discussion?.comments
         .messages;

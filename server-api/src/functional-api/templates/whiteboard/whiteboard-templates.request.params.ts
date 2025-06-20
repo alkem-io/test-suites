@@ -1,8 +1,7 @@
-import { getGraphqlClient } from '@utils/graphqlClient';
-import { graphqlErrorWrapper } from '@utils/graphql.wrapper';
-import { TemplateType } from '@generated/alkemio-schema';
 import { whiteboardTemplateValuesEmpty } from './whiteboard-values-empty';
-import { TestUser } from '@alkemio/tests-lib';
+import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
+import { TemplateType } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/dist/utils/graphql.wrapper';
 
 export const getWhiteboardTemplatesCountByTemplateSetId = async (
   templateSetId: string,
@@ -23,9 +22,8 @@ export const getWhiteboardTemplatesCountByTemplateSetId = async (
 };
 
 export const getWhiteboardTemplatesCount = async (templateSetId: string) => {
-  const templates = await getWhiteboardTemplatesCountByTemplateSetId(
-    templateSetId
-  );
+  const templates =
+    await getWhiteboardTemplatesCountByTemplateSetId(templateSetId);
   const whiteboardTemplatesCount =
     templates?.data?.lookup?.templatesSet?.whiteboardTemplatesCount ?? '';
 
@@ -78,7 +76,7 @@ export const updateTemplate = async (
           displayName,
           description,
         },
-        },
+      },
       {
         authorization: `Bearer ${authToken}`,
       }

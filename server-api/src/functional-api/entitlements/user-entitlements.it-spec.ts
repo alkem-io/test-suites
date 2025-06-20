@@ -19,8 +19,12 @@
  * The cleanup steps ensure that any created resources (spaces, virtual contributors, innovation packs) are deleted
  * and the platform roles are removed after the tests are executed.
  */
-import { TestUser } from '@alkemio/tests-lib';
-import { TestUserManager } from '@src/scenario/TestUserManager';
+import {
+  TestScenarioFactory,
+  TestScenarioNoPreCreationConfig,
+  TestUser,
+  TestUserManager,
+} from '@alkemio/tests-lib';
 import {
   accountNoLicenses,
   accountVCCampaignLicenses,
@@ -35,21 +39,18 @@ import {
   createVirtualContributorOnAccountSpaceBased,
   deleteVirtualContributorOnAccount,
 } from '@functional-api/contributor-management/virtual-contributor/vc.request.params';
-
 import {
   createInnovationPack,
   deleteInnovationPack,
 } from '@functional-api/innovation-pack/innovation_pack.request.params';
-
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
+
 const uniqueId = UniqueIDGenerator.getID();
-import { RoleName } from '@generated/graphql';
 import {
   assignPlatformRole,
   removePlatformRole,
 } from '@functional-api/platform/authorization-platform-mutation';
-import { TestScenarioNoPreCreationConfig } from '@src/scenario/config/test-scenario-config';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
+import { RoleName } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
 
 let spaceId = '';
 const spaceName = `space-name-${uniqueId}`;

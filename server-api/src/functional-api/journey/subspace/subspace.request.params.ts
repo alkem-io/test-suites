@@ -1,7 +1,6 @@
-import { TestUser } from '@alkemio/tests-lib';
-import { getGraphqlClient } from '@utils/graphqlClient';
-import { graphqlErrorWrapper } from '@utils/graphql.wrapper';
+import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/dist/utils/graphql.wrapper';
 const uniqueId = UniqueIDGenerator.getID();
 
 export const subspaceNameId = `chalNaId${uniqueId}`;

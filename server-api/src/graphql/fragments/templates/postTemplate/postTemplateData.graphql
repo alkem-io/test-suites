@@ -1,3 +1,0 @@
-fragment PostTemplateData on Template {
-  postDefaultDescription
-}

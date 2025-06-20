@@ -1,14 +1,16 @@
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
-import '../../../utils/array.matcher';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
 import { deleteSpace } from '../space/space.request.params';
 import {
   createSubspace,
   getSubspaceData,
   getSubspacesData,
 } from './subspace.request.params';
-import { UniqueIDGenerator } from '@alkemio/tests-lib';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
+import {
+  TestScenarioConfig,
+  TestScenarioFactory,
+  UniqueIDGenerator,
+} from '@alkemio/tests-lib';
+
 const uniqueId = UniqueIDGenerator.getID();
 
 let subspaceName = '';
@@ -91,7 +93,7 @@ describe('Create subspace', () => {
 
     expect(
       (await subspacesList()).data?.lookup?.space?.subspaces
-    ).not.toContainObject(challangeDataBeforeRemove.data?.lookup?.space);
+    ).not.toContainEqual(challangeDataBeforeRemove.data?.lookup?.space);
   });
 
   // ToDo: unstable, passes randomly
@@ -113,15 +115,19 @@ describe('Create subspace', () => {
     const subspaceId2 = responseSubspaceTwo.data?.createSubspace.id ?? '';
 
     // Assert
-    expect(
-      (await subspacesList()).data?.lookup?.space?.subspaces
-    ).toContainObject(
-      (await subspaceData(subspaceId1)).data?.lookup?.space?.subspaces[0]
+    expect((await subspacesList()).data?.lookup?.space?.subspaces).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining(
+          (await subspaceData(subspaceId1)).data?.lookup?.space?.subspaces[0]
+        ),
+      ])
     );
-    expect(
-      (await subspacesList()).data?.lookup?.space?.subspaces
-    ).toContainObject(
-      (await subspaceData(subspaceId2)).data?.lookup?.space?.subspaces[0]
+    expect((await subspacesList()).data?.lookup?.space?.subspaces).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining(
+          (await subspaceData(subspaceId2)).data?.lookup?.space?.subspaces[0]
+        ),
+      ])
     );
     await deleteSpace(subspaceId1);
     await deleteSpace(subspaceId2);

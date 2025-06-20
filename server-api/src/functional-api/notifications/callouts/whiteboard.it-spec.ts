@@ -1,27 +1,27 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { TestUser } from '@alkemio/tests-lib';
 import {
   deleteMailSlurperMails,
   getMailsData,
-} from '@utils/mailslurper.rest.requests';
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUser,
+  TestUserManager,
+} from '@alkemio/tests-lib';
+
 import { delay } from '@alkemio/tests-lib';
-import { TestUserManager } from '@src/scenario/TestUserManager';
 import {
   createWhiteboardCalloutOnCalloutsSet,
   updateCalloutVisibility,
 } from '@functional-api/callout/callouts.request.params';
 import { createWhiteboardOnCallout } from '@functional-api/callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 import { deleteWhiteboard } from '@functional-api/callout/whiteboard/whiteboard-callout.params.request';
-
+import { changePreferenceUser } from '@functional-api/contributor-management/user/user-preferences-mutation';
 import {
   CalloutType,
   CalloutVisibility,
   PreferenceType,
-} from '@generated/alkemio-schema';
-import { changePreferenceUser } from '@functional-api/contributor-management/user/user-preferences-mutation';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
+} from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
 
 let spaceWhiteboardId = '';
 let preferencesConfig: any[] = [];

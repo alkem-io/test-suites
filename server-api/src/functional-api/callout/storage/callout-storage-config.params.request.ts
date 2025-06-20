@@ -1,7 +1,5 @@
-import { TestUser } from '@alkemio/tests-lib';
-import { setAuthHeader } from '@utils/graphql.authorization.header';
-import { graphqlErrorWrapper } from '@utils/graphql.wrapper';
-import { getGraphqlClient } from '@utils/graphqlClient';
+import { getGraphqlClient, setAuthHeader, TestUser } from '@alkemio/tests-lib';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/dist/utils/graphql.wrapper';
 
 export const calloutStorageConfig = async (
   calloutId: string,

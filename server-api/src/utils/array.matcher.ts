@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export {};
+/* eslint-disable @typescript-eslint/prefer-namespace-keyword */
+/* eslint-disable @typescript-eslint/no-namespace */
+import { expect } from '@jest/globals';
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace jest {
     interface Matchers<R> {
       toContainObject(argument: any): R;

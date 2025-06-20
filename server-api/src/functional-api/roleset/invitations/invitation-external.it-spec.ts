@@ -1,4 +1,3 @@
-import '@utils/array.matcher';
 import {
   deleteExternalInvitation,
   inviteForEntryRoleOnRoleSet,
@@ -7,18 +6,20 @@ import {
   createSpaceAndGetData,
   deleteSpace,
 } from '../../journey/space/space.request.params';
-import { TestUser } from '@alkemio/tests-lib';
+import {
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUser,
+} from '@alkemio/tests-lib';
 import {
   registerVerifiedUser,
   deleteUser,
 } from '../../contributor-management/user/user.request.params';
 import { getRoleSetInvitationsApplications } from '../application/application.request.params';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
-import { RoleSetInvitationResultType } from '@generated/graphql';
 import { getSingleInvitationResult } from '../roleset.request.params';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { RoleSetInvitationResultType } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
 
 const uniqueId = UniqueIDGenerator.getID();
 

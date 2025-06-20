@@ -1,4 +1,0 @@
-fragment InnovationFlowStateData on InnovationFlowState {
-  description
-  displayName
-}

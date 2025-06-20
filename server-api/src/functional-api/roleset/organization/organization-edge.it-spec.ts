@@ -3,14 +3,13 @@ import {
   assignRoleToOrganization,
   removeRoleFromOrganization,
 } from '../roles-request.params';
-import { RoleName } from '@generated/graphql';
 import {
   createOrganization,
   deleteOrganization,
 } from '@functional-api/contributor-management/organization/organization.request.params';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
+import { TestScenarioConfig, TestScenarioFactory } from '@alkemio/tests-lib';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { RoleName } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
 
 let newOrgId = '';
 const newOrgNameId = 'ha-new-org-nameid';
@@ -20,15 +19,13 @@ const scenarioConfig: TestScenarioConfig = {
   name: 'orgRolesOnSpace',
   space: {
     subspace: {
-      subspace: {
-      },
-    }
-  }
-}
+      subspace: {},
+    },
+  },
+};
 
 beforeAll(async () => {
-  baseScenario =
-    await TestScenarioFactory.createBaseScenario(scenarioConfig);
+  baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
 
   const newOrgName = 'ha-new-org';
   const res = await createOrganization(newOrgName, newOrgNameId);

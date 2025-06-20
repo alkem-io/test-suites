@@ -1,9 +1,8 @@
 import { TestUser } from '@alkemio/tests-lib';
-import { RoleName } from '@generated/graphql';
-import { graphqlRequestAuth } from '@utils/graphql.request';
-import { graphqlErrorWrapper } from '@utils/graphql.wrapper';
-import { getGraphqlClient } from '@utils/graphqlClient';
-
+import { getGraphqlClient } from '@alkemio/tests-lib';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/dist/utils/graphql.wrapper';
+import { graphqlRequestAuth } from '@alkemio/tests-lib/dist/utils/graphql.request';
+import { RoleName } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
 export const assignPlatformRole = async (
   contributorID: string,
   roleName: RoleName,
@@ -41,7 +40,6 @@ export const removePlatformRole = async (
 
   return graphqlErrorWrapper(callback, userRole);
 };
-
 
 export const authorizationPolicyResetOnPlatform = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN

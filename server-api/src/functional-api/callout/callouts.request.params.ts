@@ -1,13 +1,13 @@
-import { TestUser } from '@alkemio/tests-lib';
-import { getGraphqlClient } from '@utils/graphqlClient';
-import { graphqlErrorWrapper } from '@utils/graphql.wrapper';
+import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
+import { UniqueIDGenerator } from '@alkemio/tests-lib';
 import {
   CalloutState,
   CalloutType,
   CalloutVisibility,
-} from '@generated/alkemio-schema';
-import { UniqueIDGenerator } from '@alkemio/tests-lib';
-import { TagsetReservedName } from '@generated/alkemio-schema';
+  TagsetReservedName,
+} from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/dist/utils/graphql.wrapper';
+
 const uniqueId = UniqueIDGenerator.getID();
 
 export const defaultPostTemplate = {

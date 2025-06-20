@@ -1,17 +1,18 @@
-import '@utils/array.matcher';
 import { createSubspace } from '../subspace/subspace.request.params';
 import { deleteSpace } from '../space/space.request.params';
-import { TestUser } from '@alkemio/tests-lib';
-import { TestUserManager } from '@src/scenario/TestUserManager';
-import { RoleName } from '@generated/alkemio-schema';
+import {
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUser,
+  TestUserManager,
+} from '@alkemio/tests-lib';
 import {
   assignRoleToUserExtendedData,
   removeRoleFromUserExtendedData,
 } from '../../roleset/roles-request.params';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { RoleName } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
 
 const uniqueId = UniqueIDGenerator.getID();
 
