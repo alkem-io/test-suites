@@ -1,6 +1,6 @@
 language: node_js
 node_js:
-  - v17.9.1
+  - "18"
 addons:
   chrome: stable
 cache:
