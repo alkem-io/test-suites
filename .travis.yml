@@ -7,6 +7,7 @@ cache:
   directories:
     - node_modules
     - server-api/node_modules
+    - lib/node_modules
 env:
   matrix:
     - ALKEMIO_SERVER=https://test-alkem.io/api/private/non-interactive/graphql ALKEMIO_SERVER_URL=https://test-alkem.io/api/private/non-interactive/graphql
@@ -17,6 +18,8 @@ env:
 before_install:
   - npm i -g npm@8.11.0
 install:
+  - cd $TRAVIS_BUILD_DIR/lib && npm install
+  - cd $TRAVIS_BUILD_DIR/lib && npm run build
   - cd $TRAVIS_BUILD_DIR/server-api && npm install
   - cd $TRAVIS_BUILD_DIR/server-api && npm run build
 script:
