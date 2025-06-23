@@ -16,8 +16,8 @@ env:
   global:
     secure: cvfEwQhiyIdtOMSriMpzeeV2qs64FXEVksZ+lWpAMg5DKxgL7veJU3SKT7LibQeU3oTGgG97Jw6bTmqHtbTsaOLBbTO7fmqQufupBMEeB6MEk2MSe2FvHCs5JXeGXA7JQ8I2zVC9biqAcxGzxrGUbPkZS5U7ACnOQXOKUgCUI5RYwI4YVJp7m2RByKzK5vq0dJvmaW91w+N/6/fkLVEQvOSkSMExad1eeEjo1y6NRYnuqKl+Vc35opnk1o2HCsNVZUl1qV0rDbJK3R0kIM+jrUxyMRRcdJJQv8ynD+Est4xTZDMqWphEoHPR6uXKcK8fYzKISPiFEs+1g4IxuR5OJLGTVlgzrCKKeF9IavGcZhJy+KLFjETzQMEsBf0btZk4rOXjOZSsEfw+DTm5Mw9E6aJg5cP0E5xjcRAfrfRIWdZ4lThRvyMFozv3c/YTaaqOrqce6XdBW1MLJSmMKhFrn5PETYRlccFXJctMCGD/LEEkej/NmaL2ozKtPw4fxruq5wr3uz6pjWkK7H4qGzCIoo0/ynS60Aa85linfvquOiw2C7M4gaf2Syi3Zt4Ph5cWb5xSuL2y81lO4d12hW4/YOa1BBzK9vbrinz3uNYTkzzAbk1GM8RmSfNvNHkm5y/5JT8QtYi7NSUiozZ+Scqtbm+K6qQ7pGmqGDt9tu0wQQE=
 before_install:
-  - npm i -g npm@8.11.0
   - npm config set engine-strict false
+  - npm i -g npm@8.11.0
 install:
   - cd $TRAVIS_BUILD_DIR/lib && npm install
   - cd $TRAVIS_BUILD_DIR/lib && npm run build
