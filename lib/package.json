@@ -61,7 +61,7 @@
     }
   },
   "engines": {
-    "node": ">=20.9.0",
+    "node": ">=17.9.1",
     "npm": ">=10"
   },
   "publishConfig": {
