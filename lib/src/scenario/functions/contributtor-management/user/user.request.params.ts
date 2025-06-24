@@ -1,6 +1,5 @@
 import { registerInKratosOrFail } from "@src/scenario/registration/register-in-kratos-or-fail";
 import { registerInAlkemioOrFail } from "@src/scenario/registration/register-in-alkemio-or-fail";
-
 import { verifyInKratosOrFail } from "@src/scenario/registration/verify-in-kratos-or-fail";
 import { UniqueIDGenerator } from "@src/utils/uniqueId";
 import { TestUser } from "@src/common/enums/test.user";
@@ -10,8 +9,6 @@ import {
   PreferenceType,
   UpdateUserSettingsEntityInput,
 } from "@src/core/generated/alkemio-schema";
-
-const uniqueId = UniqueIDGenerator.getID();
 
 export const registerVerifiedUser = async (
   email: string,
@@ -25,6 +22,7 @@ export const registerVerifiedUser = async (
 };
 
 export const getDefaultUserData = () => {
+  const uniqueId = UniqueIDGenerator.getID();
   return {
     firstName: `fn${uniqueId}`,
     lastName: `ln${uniqueId}`,
@@ -116,7 +114,6 @@ export const deleteUser = async (
 };
 
 export const getUsersData = async (
-  userID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
