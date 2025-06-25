@@ -1,6 +1,7 @@
 # compiled output
 /dist
 /node_modules
+node_modules
 /html-report
 client-web/dist
 client-web/node_modules
