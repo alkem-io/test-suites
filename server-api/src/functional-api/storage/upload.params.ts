@@ -1,11 +1,13 @@
 import { AlkemioClient } from '@alkemio/client-lib';
-import { TestUser } from '@alkemio/tests-lib';
-import { testConfiguration } from '@src/config/test.configuration';
-import { setAuthHeader } from '@utils/graphql.authorization.header';
-import { graphqlErrorWrapper } from '@utils/graphql.wrapper';
-import { getGraphqlClient } from '@utils/graphqlClient';
-import { PathLike } from 'fs';
+import {
+  getGraphqlClient,
+  setAuthHeader,
+  testConfiguration,
+  TestUser,
+} from '@alkemio/tests-lib';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/dist/utils/graphql.wrapper';
 
+import { PathLike } from 'fs';
 
 const generateClientConfig = (user: TestUser) => ({
   apiEndpointPrivateGraphql: testConfiguration.endPoints.graphql.private,

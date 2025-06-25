@@ -1,9 +1,8 @@
-import { UniqueIDGenerator } from '@alkemio/tests-lib';
+import { LogManager, UniqueIDGenerator } from '@alkemio/tests-lib';
 import { createInnovationPack } from './innovation_pack.request.params';
 import { whiteboardTemplateValues1 } from './whiteboard-values-fixed';
 import { createWhiteboardTemplate } from '@functional-api/templates/whiteboard/whiteboard-templates.request.params';
 import { getOrganizations } from '@functional-api/contributor-management/organization/organization.request.params';
-import { LogManager } from '@src/scenario/LogManager';
 
 const uniqueId = UniqueIDGenerator.getID();
 

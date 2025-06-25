@@ -1,14 +1,15 @@
-import '@utils/array.matcher';
 import { createSubspace, getSubspaceData } from './subspace.request.params';
 import {
   createOrganization,
   deleteOrganization,
 } from '@functional-api/contributor-management/organization/organization.request.params';
 import { deleteSpace, updateSpaceContext } from '../space/space.request.params';
-import { UniqueIDGenerator } from '@alkemio/tests-lib';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
+import {
+  TestScenarioConfig,
+  TestScenarioFactory,
+  UniqueIDGenerator,
+} from '@alkemio/tests-lib';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
 
 const uniqueId = UniqueIDGenerator.getID();
 

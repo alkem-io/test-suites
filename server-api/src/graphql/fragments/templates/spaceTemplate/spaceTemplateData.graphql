@@ -1,6 +1,0 @@
-fragment SpaceTemplateData on Template {
-  profile {
-    displayName
-    description
-  }
-}

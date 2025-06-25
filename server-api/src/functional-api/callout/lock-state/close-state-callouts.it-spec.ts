@@ -1,4 +1,3 @@
-import '@utils/array.matcher';
 import {
   deleteCallout,
   createCalloutOnCalloutsSet,
@@ -9,14 +8,20 @@ import {
   createPostOnCallout,
   getDataPerSpaceCallout,
 } from '../post/post.request.params';
-import { TestUser } from '@alkemio/tests-lib';
-import { CalloutState, CalloutVisibility } from '@generated/alkemio-schema';
+import {
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestSetupUtils,
+  TestUser,
+} from '@alkemio/tests-lib';
 import { sendMessageToRoom } from '@functional-api/communications/communication.params';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
-import { TestSetupUtils } from '@src/scenario/TestSetupUtils';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import {
+  CalloutState,
+  CalloutVisibility,
+} from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+
 const uniqueId = UniqueIDGenerator.getID();
 
 let calloutId = '';

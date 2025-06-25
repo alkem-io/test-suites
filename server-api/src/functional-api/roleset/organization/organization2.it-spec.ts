@@ -1,11 +1,7 @@
-import {
-  assignRoleToOrganization,
-  getRoleName,
-} from '../roles-request.params';
-import { RoleName } from '@generated/graphql';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
+import { TestScenarioConfig, TestScenarioFactory } from '@alkemio/tests-lib';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { assignRoleToOrganization, getRoleName } from '../roles-request.params';
+import { RoleName } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
 
 const spaceRoles = ['lead', 'member'];
 const availableRoles = ['member', 'lead'];
@@ -15,15 +11,13 @@ const scenarioConfig: TestScenarioConfig = {
   name: 'subspace-activity',
   space: {
     subspace: {
-      subspace: {
-      },
+      subspace: {},
     },
   },
 };
 
 beforeAll(async () => {
-  baseScenario =
-    await TestScenarioFactory.createBaseScenario(scenarioConfig);
+  baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
 
   await assignRoleToOrganization(
     baseScenario.organization.id,

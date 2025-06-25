@@ -1,11 +1,13 @@
 import {
+  delay,
   deleteMailSlurperMails,
   getMailsData,
-} from '@utils/mailslurper.rest.requests';
-import { delay } from '@alkemio/tests-lib';
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUserManager,
+} from '@alkemio/tests-lib';
 import { TestUser } from '@alkemio/tests-lib';
 import { updateSpaceSettings } from '@functional-api/journey/space/space.request.params';
-import { TestUserManager } from '@src/scenario/TestUserManager';
 import { sendMessageToCommunityLeads } from '@functional-api/communications/communication.params';
 import {
   removeRoleFromUser,
@@ -14,10 +16,9 @@ import {
   removeRoleFromOrganization,
 } from '@functional-api/roleset/roles-request.params';
 import { updateOrganization } from '@functional-api/contributor-management/organization/organization.request.params';
-import { RoleName, SpacePrivacyMode } from '@generated/graphql';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
+import { SpacePrivacyMode } from '@alkemio/client-lib';
+import { RoleName } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
 
 const senders = (communityName: string) => {
   return `You have sent a message to ${communityName} community`;

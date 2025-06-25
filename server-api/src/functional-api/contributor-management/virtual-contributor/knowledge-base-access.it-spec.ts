@@ -1,4 +1,3 @@
-import '@utils/array.matcher';
 import {
   createVirtualContributorOnAccountKnowledgeBasedWithCallout,
   createVirtualContributorOnAccountSpaceBased,
@@ -15,34 +14,35 @@ import {
   deleteSpace,
   updateSpacePlatformSettings,
 } from '../../journey/space/space.request.params';
-import { TestUser } from '@alkemio/tests-lib';
-import { TestUserManager } from '@src/scenario/TestUserManager';
 import {
-  CommunityMembershipPolicy,
-  SpacePrivacyMode,
-} from '@generated/alkemio-schema';
+  readAboutPrivilege,
+  readPrivilege,
+  sorted__create_read_update_delete_contribute_createCallout,
+  sorted__create_read_update_delete_contribute_fileDelete_fileUpload,
+  sorted__create_read_update_delete_contribute_readAbout,
+  sorted__create_read_update_delete_grant_createCallout_transferAccept_transferOffer,
+  sorted__create_read_update_delete_grant_fileDelete_fileUpload,
+  sorted__create_read_update_delete_grant_readAbout,
+  sorted_read_readAbout,
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUser,
+  TestUserManager,
+} from '@alkemio/tests-lib';
+
 import {
   assignLicensePlanToAccount,
   getLicensePlanByName,
 } from '@functional-api/license/license.params.request';
-import { SpaceVisibility } from '@generated/graphql';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
 import { getAccountMainEntities } from '@functional-api/account/account.params.request';
 import {
-  sorted__create_read_update_delete_contribute_readAbout,
-  sorted__create_read_update_delete_grant_readAbout,
-  readPrivilege,
-  sorted_read_readAbout,
-  sorted__create_read_update_delete_contribute_createCallout,
-  sorted__create_read_update_delete_contribute_fileDelete_fileUpload,
-  sorted__create_read_update_delete_grant_createCallout_transferAccept_transferOffer,
-  sorted__create_read_update_delete_grant_fileDelete_fileUpload,
-  readAboutPrivilege,
-} from '@common/constants/privileges';
-import { SearchVisibility } from '@alkemio/client-lib/dist/types/alkemio-schema';
+  CommunityMembershipPolicy,
+  SearchVisibility,
+  SpacePrivacyMode,
+  SpaceVisibility,
+} from '@alkemio/client-lib/dist/types/alkemio-schema';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
 const uniqueId = UniqueIDGenerator.getID();
 
 const spaceNameId = 'appl-eco-nameid' + uniqueId;

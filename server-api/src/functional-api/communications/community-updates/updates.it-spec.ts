@@ -2,18 +2,23 @@ import {
   getSpaceData,
   updateSpaceSettings,
 } from '@functional-api/journey/space/space.request.params';
-import { TestUser } from '@alkemio/tests-lib';
-import { TestUserManager } from '@src/scenario/TestUserManager';
+import {
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUser,
+  TestUserManager,
+} from '@alkemio/tests-lib';
 import { assignRoleToUser } from '@functional-api/roleset/roles-request.params';
 import { delay } from '@alkemio/tests-lib';
-import { RoleName, SpacePrivacyMode } from '@generated/alkemio-schema';
 import {
   removeMessageOnRoom,
   sendMessageToRoom,
 } from '../communication.params';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import {
+  RoleName,
+  SpacePrivacyMode,
+} from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
 
 let baseScenario: OrganizationWithSpaceModel;
 

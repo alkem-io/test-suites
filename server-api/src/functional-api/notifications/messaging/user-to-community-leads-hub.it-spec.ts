@@ -1,22 +1,24 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { delay, TestUser } from '@alkemio/tests-lib';
+import {
+  delay,
+  deleteMailSlurperMails,
+  getMailsData,
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUser,
+  TestUserManager,
+} from '@alkemio/tests-lib';
 import { updateSpaceSettings } from '@functional-api/journey/space/space.request.params';
-import { TestUserManager } from '@src/scenario/TestUserManager';
 import { sendMessageToCommunityLeads } from '@functional-api/communications/communication.params';
 import {
   removeRoleFromUser,
   assignRoleToUser,
 } from '@functional-api/roleset/roles-request.params';
-import { RoleName, SpacePrivacyMode } from '@generated/graphql';
 import { changePreferenceUser } from '@functional-api/contributor-management/user/user-preferences-mutation';
 import { updateUserSettingCommunicationMessage } from '@functional-api/contributor-management/user/user.request.params';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
-import {
-  deleteMailSlurperMails,
-  getMailsData,
-} from '@utils/mailslurper.rest.requests';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { SpacePrivacyMode } from '@alkemio/client-lib';
+import { RoleName } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
 
 let usersList: any[] = [];
 

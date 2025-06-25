@@ -1,5 +1,5 @@
-import { getGraphqlClient } from '@utils/graphqlClient';
-import { graphqlErrorWrapper } from '@utils/graphql.wrapper';
+import { getGraphqlClient } from '@alkemio/tests-lib';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/dist/utils/graphql.wrapper';
 
 export const fullConfiguration = async () => {
   const graphqlClient = getGraphqlClient();

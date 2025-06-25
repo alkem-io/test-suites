@@ -1,5 +1,0 @@
-fragment CalloutContributionData on CalloutContribution {
-    ...ContributionsData
-
-}
-

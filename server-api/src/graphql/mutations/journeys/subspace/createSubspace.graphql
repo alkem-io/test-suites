@@ -1,5 +1,0 @@
-mutation CreateSubspace($subspaceData: CreateSubspaceInput!) {
-  createSubspace(subspaceData: $subspaceData) {
-    ...SubspaceL1Data
-  }
-}

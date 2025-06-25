@@ -1,10 +1,9 @@
-import { getGraphqlClient } from '@utils/graphqlClient';
-import { TestUser } from '@alkemio/tests-lib';
-import { graphqlErrorWrapper } from '@utils/graphql.wrapper';
+import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
 import {
   AiPersonaBodyOfKnowledgeType,
   AiPersonaEngine,
-} from '@generated/alkemio-schema';
+} from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/dist/utils/graphql.wrapper';
 
 export const getModelCardForAiPersona = async (
   aiPersonaId: string,

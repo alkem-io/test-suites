@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "lib": ["es2020", "dom"],
-    "sourceMap": true,
+    "sourceMap": false,
     "removeComments": true,
     "strict": true,
     "allowSyntheticDefaultImports": true,
@@ -11,11 +11,15 @@
     "resolveJsonModule": true,
     "module": "ESNext",
     "moduleResolution": "Node",
+    "allowJs": true,
     "target": "ESNext",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "outDir": "./dist",
     "baseUrl": "./",
+    "typeRoots": ["./node_modules/@types", "./src/types"],
+    "incremental": true,
+    "tsBuildInfoFile": ".tsbuildinfo",
     "paths": {
       "@generated/*": ["src/core/generated/*"],
       "@utils/*": ["src/utils/*"],
@@ -23,5 +27,15 @@
       "@functional-api/*": ["src/functional-api/*"],
       "@src/*": ["src/*"]
     }
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "html-report",
+    "coverage",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "**/whiteboard-values.ts",
+    "**/whiteboard-values-fixed.ts"
+  ]
 }

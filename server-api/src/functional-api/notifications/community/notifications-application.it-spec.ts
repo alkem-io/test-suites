@@ -1,23 +1,28 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {
-  deleteMailSlurperMails,
-  getMailsData,
-} from '@utils/mailslurper.rest.requests';
+
 import { updateSpaceSettings } from '@functional-api/journey/space/space.request.params';
 import {
   createApplication,
   deleteApplication,
 } from '@functional-api/roleset/application/application.request.params';
-import { delay, TestUser } from '@alkemio/tests-lib';
-import { TestUserManager } from '@src/scenario/TestUserManager';
+import {
+  delay,
+  deleteMailSlurperMails,
+  getMailsData,
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUser,
+  TestUserManager,
+} from '@alkemio/tests-lib';
 import { assignRoleToUser } from '@functional-api/roleset/roles-request.params';
-import { CommunityMembershipPolicy, RoleName } from '@generated/alkemio-schema';
-import { PreferenceType } from '@generated/graphql';
 import { changePreferenceUser } from '@functional-api/contributor-management/user/user-preferences-mutation';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
 import { getUserByNameId } from '@functional-api/contributor-management/user/user.request.params';
+import {
+  CommunityMembershipPolicy,
+  PreferenceType,
+  RoleName,
+} from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
 
 let preferencesConfig: any[] = [];
 

@@ -22,8 +22,12 @@
  * - A test to handle the scenario where the innovation pack creation exceeds the license limit.
  */
 
-import { TestUser } from '@alkemio/tests-lib';
-import { TestUserManager } from '@src/scenario/TestUserManager';
+import {
+  TestScenarioFactory,
+  TestScenarioNoPreCreationConfig,
+  TestUser,
+  TestUserManager,
+} from '@alkemio/tests-lib';
 import { getMyEntitlementsQuery } from './entitlements-request.params';
 import {
   createInnovationPack,
@@ -32,13 +36,11 @@ import {
 import { getAccountMainEntities } from '../account/account.params.request';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
 const uniqueId = UniqueIDGenerator.getID();
-import { RoleName } from '@generated/graphql';
 import {
   assignPlatformRole,
   removePlatformRole,
 } from '@functional-api/platform/authorization-platform-mutation';
-import { TestScenarioNoPreCreationConfig } from '@src/scenario/config/test-scenario-config';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
+import { RoleName } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
 
 const scenarioConfig: TestScenarioNoPreCreationConfig = {
   name: 'innovation-pack-functional-entitlements',

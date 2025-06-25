@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import '@utils/array.matcher';
 import {
   createApplication,
   deleteApplication,
@@ -7,23 +6,26 @@ import {
   meQuery,
 } from './application.request.params';
 import { updateSpaceSettings } from '../../journey/space/space.request.params';
-import { TestUserManager } from '@src/scenario/TestUserManager';
-import {
-  CommunityMembershipPolicy,
-  RoleName,
-  SpacePrivacyMode,
-} from '@generated/alkemio-schema';
 import { deleteUser } from '../../contributor-management/user/user.request.params';
 import {
   assignRoleToUser,
   removeRoleFromUser,
 } from '@functional-api/roleset/roles-request.params';
 import { eventOnRoleSetApplication } from '../roleset-events.request.params';
-import { delay, TestUser } from '@alkemio/tests-lib';
-import { registerInAlkemioOrFail } from '@src/scenario/registration/register-in-alkemio-or-fail';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
+import {
+  delay,
+  registerInAlkemioOrFail,
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUser,
+  TestUserManager,
+} from '@alkemio/tests-lib';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import {
+  SpacePrivacyMode,
+  CommunityMembershipPolicy,
+} from '@alkemio/client-lib';
+import { RoleName } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
 
 let applicationId = '';
 let subspaceApplicationId = '';

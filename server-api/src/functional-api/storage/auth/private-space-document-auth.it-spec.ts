@@ -1,4 +1,15 @@
-import { TestUser } from '@alkemio/tests-lib';
+import {
+  readPrivilege,
+  sorted__create_read_update_delete_grant,
+  sorted__create_read_update_delete_grant_contribute,
+  sorted__create_read_update_delete_grant_contribute_updateContent,
+  sorted__create_read_update_delete_grant_fileUp_fileDel,
+  sorted__create_read_update_delete_grant_fileUp_fileDel_contribute,
+  sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent,
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUser,
+} from '@alkemio/tests-lib';
 import {
   deleteDocument,
   getProfileDocuments,
@@ -10,15 +21,7 @@ import {
 import path from 'path';
 import { lookupProfileVisuals } from '../../lookup/lookup-request.params';
 import { updateSpacePlatformSettings } from '../../journey/space/space.request.params';
-import {
-  sorted__create_read_update_delete_grant_contribute,
-  sorted__create_read_update_delete_grant_contribute_updateContent,
-  sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent,
-  sorted__create_read_update_delete_grant_fileUp_fileDel_contribute,
-  readPrivilege,
-  sorted__create_read_update_delete_grant_fileUp_fileDel,
-  sorted__create_read_update_delete_grant,
-} from '@common/constants/privileges';
+
 import {
   createLinkCollectionCallout,
   createLinkOnCallout,
@@ -40,10 +43,8 @@ import {
 } from '../../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 import { createWhiteboardCallout } from '../../callout/whiteboard/whiteboard-callout.params.request';
 import { createReferenceOnProfile } from '../../references/references.request.params';
-import { SpacePrivacyMode, SpaceVisibility } from '@generated/alkemio-schema';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { SpacePrivacyMode, SpaceVisibility } from '@alkemio/client-lib';
 
 let refId = '';
 let documentId = '';

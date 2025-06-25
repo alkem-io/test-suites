@@ -1,20 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
+  delay,
   deleteMailSlurperMails,
   getMailsData,
-} from '@utils/mailslurper.rest.requests';
-import { delay } from '@alkemio/tests-lib';
+  testConfiguration,
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUserManager,
+} from '@alkemio/tests-lib';
 import { TestUser } from '@alkemio/tests-lib';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
-import { TestUserManager } from '@src/scenario/TestUserManager';
 import { createPostOnCallout } from '@functional-api/callout/post/post.request.params';
-import { PreferenceType } from '@generated/alkemio-schema';
 import { changePreferenceUser } from '@functional-api/contributor-management/user/user-preferences-mutation';
 import { sendMessageToRoom } from '@functional-api/communications/communication.params';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
-import { testConfiguration } from '@src/config/test.configuration';
+import { PreferenceType } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
 
 const uniqueId = UniqueIDGenerator.getID();
 

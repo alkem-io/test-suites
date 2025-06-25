@@ -1,7 +1,6 @@
-import { TestUser } from '@alkemio/tests-lib';
-import { graphqlErrorWrapper } from '../../utils/graphql.wrapper';
-import { getGraphqlClient } from '../../utils/graphqlClient';
-import { RoleName } from '@generated/graphql';
+import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
+import { RoleName } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/dist/utils/graphql.wrapper';
 
 export const getRoleName = async (
   organizationID: string,
@@ -231,5 +230,3 @@ export const assignOrganizationAsCommunityLead = async (
 
   return graphqlErrorWrapper(callback, userRole);
 };
-
-

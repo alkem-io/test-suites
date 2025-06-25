@@ -1,21 +1,24 @@
-import { delay, TestUser } from '@alkemio/tests-lib';
+import {
+  delay,
+  deleteMailSlurperMails,
+  getMailsData,
+  testConfiguration,
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUser,
+  TestUserManager,
+} from '@alkemio/tests-lib';
 import { updateOrganization } from '@functional-api/contributor-management/organization/organization.request.params';
-import { TestUserManager } from '@src/scenario/TestUserManager';
 import { createPostOnCallout } from '@functional-api/callout/post/post.request.params';
 import { sendMessageToRoom } from '@functional-api/communications/communication.params';
 import { changePreferenceUser } from '@functional-api/contributor-management/user/user-preferences-mutation';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
-import { PreferenceType } from '@generated/graphql';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
-import { testConfiguration } from '@src/config/test.configuration';
-import {
-  deleteMailSlurperMails,
-  getMailsData,
-} from '@utils/mailslurper.rest.requests';
-import { RoleName } from '@generated/alkemio-schema';
 import { assignRoleToUser } from '@functional-api/roleset/roles-request.params';
+import {
+  PreferenceType,
+  RoleName,
+} from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
 
 const uniqueId = UniqueIDGenerator.getID();
 let postCommentsIdSpace = '';

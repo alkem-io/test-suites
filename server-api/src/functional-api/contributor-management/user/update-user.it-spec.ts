@@ -11,7 +11,12 @@
  * The tests ensure that the user update process works as expected,
  * and that the API responses match the expected values.
  */
-import { TestUser } from '@alkemio/tests-lib';
+import {
+  TestScenarioFactory,
+  TestScenarioNoPreCreationConfig,
+  TestUser,
+  TestUserManager,
+} from '@alkemio/tests-lib';
 import {
   createUser,
   deleteUser,
@@ -19,11 +24,7 @@ import {
   getUsersData,
   updateUser,
 } from './user.request.params';
-import '@utils/array.matcher';
-import { TestUserManager } from '@src/scenario/TestUserManager';
-import { UniqueIDGenerator } from '@alkemio/tests-lib';import { TestScenarioNoPreCreationConfig } from '@src/scenario/config/test-scenario-config';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-;
+import { UniqueIDGenerator } from '@alkemio/tests-lib';
 const uniqueId = UniqueIDGenerator.getID();
 
 let userName = '';

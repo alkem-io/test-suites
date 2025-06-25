@@ -1,5 +1,16 @@
-import { TestUser } from '@alkemio/tests-lib';
-import '@utils/array.matcher';
+import {
+  readAboutPrivilege,
+  readAboutPrivilege_readLicense,
+  readPrivilege,
+  sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense,
+  sorted__create_read_readAbout_update_delete_grant_createSubspace_readLicense,
+  sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin,
+  sorted_read_readAbout_readLicense,
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUser,
+  TestUserManager,
+} from '@alkemio/tests-lib';
 import {
   getSpaceData,
   getUserRoleSpacesVisibility,
@@ -13,21 +24,9 @@ import {
   createOrganization,
   deleteOrganization,
 } from '@functional-api/contributor-management/organization/organization.request.params';
-import {
-  readPrivilege,
-  sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin,
-  readAboutPrivilege,
-  sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense,
-  sorted_read_readAbout_readLicense,
-  sorted__create_read_readAbout_update_delete_grant_createSubspace_readLicense,
-  readAboutPrivilege_readLicense,
-} from '@common/constants/privileges';
-import { SpacePrivacyMode, SpaceVisibility } from '@generated/alkemio-schema';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
-import { TestUserManager } from '@src/scenario/TestUserManager';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { SpacePrivacyMode, SpaceVisibility } from '@alkemio/client-lib';
 
 const uniqueId = UniqueIDGenerator.getID();
 

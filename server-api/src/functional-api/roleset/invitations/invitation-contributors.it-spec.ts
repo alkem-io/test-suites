@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import '@utils/array.matcher';
 import {
   createApplication,
   deleteApplication,
@@ -12,26 +11,31 @@ import {
   inviteForEntryRoleOnRoleSet,
 } from './invitation.request.params';
 import { getSpaceData } from '../../journey/space/space.request.params';
-import { TestUserManager } from '@src/scenario/TestUserManager';
-import { sorted_read_readAbout } from '@common/constants/privileges';
+
 import {
   removeRoleFromUser,
   assignRoleToUser,
 } from '@functional-api/roleset/roles-request.params';
-import {
-  CommunityMembershipPolicy,
-  RoleName,
-  SpacePrivacyMode,
-} from '@generated/alkemio-schema';
 import { deleteUser } from '../../contributor-management/user/user.request.params';
 import { eventOnRoleSetInvitation } from '../roleset-events.request.params';
-import { TestUser } from '@alkemio/tests-lib';
-import { registerInAlkemioOrFail } from '@src/scenario/registration/register-in-alkemio-or-fail';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
+import {
+  registerInAlkemioOrFail,
+  sorted_read_readAbout,
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUser,
+  TestUserManager,
+} from '@alkemio/tests-lib';
 import { getSingleInvitationResult } from '../roleset.request.params';
-import { RoleSetInvitationResultType } from '@generated/graphql';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import {
+  SpacePrivacyMode,
+  CommunityMembershipPolicy,
+} from '@alkemio/client-lib';
+import {
+  RoleName,
+  RoleSetInvitationResultType,
+} from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
 
 let invitationId = '';
 let invitationData: any;

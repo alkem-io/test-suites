@@ -1,14 +1,16 @@
-import { SubscriptionClient } from '@utils/subscriptions';
-import { UniqueIDGenerator } from '@alkemio/tests-lib';
+import {
+  SubscriptionClient,
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUserManager,
+  UniqueIDGenerator,
+} from '@alkemio/tests-lib';
 import { createPostOnCallout } from '../callout/post/post.request.params';
 import { subscriptionRooms } from './subscription-queries';
-import { TestUserManager } from '@src/scenario/TestUserManager';
 import { sendMessageToRoom } from '../communications/communication.params';
 import { TestUser } from '@alkemio/tests-lib';
 import { delay } from '@alkemio/tests-lib';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
 
 const uniqueId = UniqueIDGenerator.getID();
 

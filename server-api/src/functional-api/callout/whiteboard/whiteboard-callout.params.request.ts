@@ -1,7 +1,9 @@
-import { CalloutType, CalloutVisibility } from '@generated/alkemio-schema';
-import { TestUser } from '@alkemio/tests-lib';
-import { graphqlErrorWrapper } from '@utils/graphql.wrapper';
-import { getGraphqlClient } from '@utils/graphqlClient';
+import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
+import {
+  CalloutType,
+  CalloutVisibility,
+} from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/dist/utils/graphql.wrapper';
 
 export const createWhiteboardCallout = async (
   calloutsSetID: string,

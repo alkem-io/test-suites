@@ -1,19 +1,16 @@
-import '@utils/array.matcher';
 import {
   getSpaceData,
   updateSpaceSettings,
 } from '@functional-api/journey/space/space.request.params';
-
 import {
   deleteApplication,
   createApplication,
   getRoleSetInvitationsApplications,
 } from '@functional-api/roleset/application/application.request.params';
 import { eventOnRoleSetApplication } from '../roleset-events.request.params';
-import { CommunityMembershipPolicy } from '@generated/graphql';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { OrganizationWithSpaceModel } from '@src/scenario/models/OrganizationWithSpaceModel';
-import { TestScenarioConfig } from '@src/scenario/config/test-scenario-config';
+import { TestScenarioConfig, TestScenarioFactory } from '@alkemio/tests-lib';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { CommunityMembershipPolicy } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
 
 let applicationId = '';
 let applicationData;

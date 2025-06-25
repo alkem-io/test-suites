@@ -1,8 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { TestUser } from '@alkemio/tests-lib';
-import { getGraphqlClient } from '@utils/graphqlClient';
-import { graphqlErrorWrapper } from '@utils/graphql.wrapper';
-import { SearchCategory, SearchResultType } from '@generated/alkemio-schema';
+import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
+import {
+  SearchCategory,
+  SearchResultType,
+} from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/dist/utils/graphql.wrapper';
 
 export const adminSearchIngestFromScratch = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN

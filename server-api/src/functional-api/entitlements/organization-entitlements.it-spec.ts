@@ -24,8 +24,12 @@
  * - `afterAll`: Deletes the organization.
  * - `afterAll` in 'Account license plus cleanup': Cleans up created resources (Space, Virtual Contributor, Innovation Pack) and revokes the ACCOUNT_LICENSE_PLUS license from the organization account.
  */
-import { TestUser } from '@alkemio/tests-lib';
-import { TestUserManager } from '@src/scenario/TestUserManager';
+import {
+  TestScenarioFactory,
+  TestScenarioNoPreCreationConfig,
+  TestUser,
+  TestUserManager,
+} from '@alkemio/tests-lib';
 import {
   assignLicensePlanToAccount,
   getLicensePlanByName,
@@ -54,12 +58,10 @@ import {
   deleteOrganization,
 } from '@functional-api/contributor-management/organization/organization.request.params';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
-import { TestScenarioNoPreCreationConfig } from '@src/scenario/config/test-scenario-config';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
-import { RoleName } from '@generated/alkemio-schema';
 import { assignRoleToUser } from '@functional-api/roleset/roles-request.params';
-
+import { RoleName } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
 const uniqueId = UniqueIDGenerator.getID();
+
 let spaceId = '';
 let orgId = '';
 let orgRoleSetId = '';

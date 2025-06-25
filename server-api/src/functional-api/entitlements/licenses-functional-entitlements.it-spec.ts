@@ -11,8 +11,12 @@
  * the expected values.
  */
 
-import { TestUser } from '@alkemio/tests-lib';
-import { TestUserManager } from '@src/scenario/TestUserManager';
+import {
+  TestScenarioFactory,
+  TestScenarioNoPreCreationConfig,
+  TestUser,
+  TestUserManager,
+} from '@alkemio/tests-lib';
 import { getMyEntitlementsQuery } from './entitlements-request.params';
 import {
   createSpaceBasicData,
@@ -27,16 +31,13 @@ import {
   accountVCCampaignLicenses1SpacePlus,
   accountVCCampaignLicenses1SpaceVCPack,
 } from './entitlements-data';
-
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
-const uniqueId = UniqueIDGenerator.getID();
-import { RoleName } from '@generated/graphql';
 import {
   assignPlatformRole,
   removePlatformRole,
 } from '@functional-api/platform/authorization-platform-mutation';
-import { TestScenarioNoPreCreationConfig } from '@src/scenario/config/test-scenario-config';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
+import { RoleName } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+const uniqueId = UniqueIDGenerator.getID();
 
 let spaceId = '';
 const spaceName = `space-name-${uniqueId}`;

@@ -1,12 +1,17 @@
-import { registerInKratosOrFail } from '@src/scenario/registration/register-in-kratos-or-fail';
-import { registerInAlkemioOrFail } from '@src/scenario/registration/register-in-alkemio-or-fail';
-import { TestUser } from '@alkemio/tests-lib';
-import { getGraphqlClient } from '@utils/graphqlClient';
-import { graphqlErrorWrapper } from '@utils/graphql.wrapper';
-import { UniqueIDGenerator } from '@alkemio/tests-lib';
-import { PreferenceType } from '@generated/graphql';
-import { UpdateUserSettingsEntityInput } from '@generated/alkemio-schema';
-import { verifyInKratosOrFail } from '@src/scenario/registration/verify-in-kratos-or-fail';
+import {
+  getGraphqlClient,
+  registerInAlkemioOrFail,
+  registerInKratosOrFail,
+  TestUser,
+  UniqueIDGenerator,
+  verifyInKratosOrFail,
+} from '@alkemio/tests-lib';
+import {
+  PreferenceType,
+  UpdateUserSettingsEntityInput,
+} from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/dist/utils/graphql.wrapper';
+//import { getGraphqlClient } from '@src/_utils/graphqlClient';
 
 const uniqueId = UniqueIDGenerator.getID();
 

@@ -20,7 +20,6 @@
  *
  */
 import { TestUser } from '@alkemio/tests-lib';
-import { TestUserManager } from '@src/scenario/TestUserManager';
 import { getMyEntitlementsQuery } from './entitlements-request.params';
 import {
   createSpaceBasicData,
@@ -31,14 +30,17 @@ import {
   deleteVirtualContributorOnAccount,
 } from '@functional-api/contributor-management/virtual-contributor/vc.request.params';
 import { getAccountMainEntities } from '../account/account.params.request';
-import { RoleName } from '@generated/graphql';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
 import {
   assignPlatformRole,
   removePlatformRole,
 } from '@functional-api/platform/authorization-platform-mutation';
-import { TestScenarioNoPreCreationConfig } from '@src/scenario/config/test-scenario-config';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
+import {
+  TestScenarioFactory,
+  TestScenarioNoPreCreationConfig,
+  TestUserManager,
+} from '@alkemio/tests-lib';
+import { RoleName } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
 const uniqueId = UniqueIDGenerator.getID();
 
 const spaceName = `space-name-${uniqueId}`;

@@ -1,4 +1,8 @@
-import { TestUser } from '@alkemio/tests-lib';
+import {
+  TestScenarioFactory,
+  TestScenarioNoPreCreationConfig,
+  TestUser,
+} from '@alkemio/tests-lib';
 import {
   getPlatformDiscussionsDataById,
   deleteDiscussion,
@@ -10,10 +14,8 @@ import {
   sendMessageToRoom,
   removeMessageOnRoom,
 } from '../communication.params';
-import { ForumDiscussionCategory } from '@generated/alkemio-schema';
 import { delay } from '@alkemio/tests-lib';
-import { TestScenarioNoPreCreationConfig } from '@src/scenario/config/test-scenario-config';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
+import { ForumDiscussionCategory } from '@alkemio/client-lib/dist/types/alkemio-schema';
 
 let platformDiscussionId = '';
 let discussionId = '';

@@ -17,14 +17,14 @@
     "**/build**"
   ],
   "scripts": {
-    "ts:watch": "tsc --noEmit --watch",
+    "ts:watch": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" tsc --noEmit --watch",
     "prebuild": "rimraf dist",
-    "build": "tsc",
+    "build": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" tsc",
     "circular-dependencies": "madge --circular dist",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "lint": "tsc --noEmit && eslint src/**/*.ts{,x}",
-    "lint:prod": "tsc --noEmit && cross-env NODE_ENV=production eslint src/**/*.ts{,x}",
-    "lint:fix": "tsc --noEmit && eslint src/**/*.ts{,x} --fix",
+    "lint": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" tsc --noEmit && eslint src/**/*.ts{,x}",
+    "lint:prod": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" tsc --noEmit && cross-env NODE_ENV=production eslint src/**/*.ts{,x}",
+    "lint:fix": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" tsc --noEmit && eslint src/**/*.ts{,x} --fix",
     "codegen": "graphql-codegen --config codegen.ts",
     "test": "jest",
     "stop-process": "fuser 4000/tcp -k",
@@ -62,7 +62,7 @@
   },
   "dependencies": {
     "@alkemio/client-lib": "^0.32.0",
-    "@alkemio/tests-lib": "^0.1.4",
+    "@alkemio/tests-lib": "^0.1.5",
     "@ory/kratos-client": "^0.11.1",
     "axios": "^1.7.9",
     "cross-env": "^7.0.3",
@@ -97,9 +97,11 @@
     "globals": "^15.14.0",
     "graphql-request": "6.0.0",
     "husky": "^9.1.7",
+    "jest-extended": "^6.0.0",
     "jest-html-reporters": "^3.1.7",
     "lint-staged": "^15.4.2",
     "prettier": "^3.4.2",
+    "rimraf": "^6.0.1",
     "supertest": "^7.0.0",
     "ts-jest": "^29.2.5",
     "tsconfig-paths": "^4.2.0",
@@ -116,10 +118,10 @@
     "*.ts": "eslint --fix"
   },
   "engines": {
-    "node": ">=17.9.1",
-    "npm": ">=10"
+    "node": ">=18.0.0",
+    "npm": ">=8.11.0"
   },
   "volta": {
-    "node": "17.9.1"
+    "node": "18.0.0"
   }
 }

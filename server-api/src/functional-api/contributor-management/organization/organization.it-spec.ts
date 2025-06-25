@@ -9,14 +9,16 @@
  * The tests ensure that the organization creation and deletion processes work as expected,
  * and that the API responses match the expected values.
  */
-import { UniqueIDGenerator } from '@alkemio/tests-lib';
+import {
+  TestScenarioFactory,
+  TestScenarioNoPreCreationConfig,
+  UniqueIDGenerator,
+} from '@alkemio/tests-lib';
 import {
   createOrganization,
   deleteOrganization,
   updateOrganization,
 } from './organization.request.params';
-import { TestScenarioNoPreCreationConfig } from '@src/scenario/config/test-scenario-config';
-import { TestScenarioFactory } from '@src/scenario/TestScenarioFactory';
 
 const uniqueId = UniqueIDGenerator.getID();
 const legalEntityName = 'Legal alkemio';
