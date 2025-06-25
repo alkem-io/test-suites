@@ -4,8 +4,7 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
-    "start": "npm run build && node dist/stress-test.js -- 10"
+    "start": "tsx stress-test.ts"
   },
   "devDependencies": {
     "@types/node": "^20.16.5",

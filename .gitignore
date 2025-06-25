@@ -1,8 +1,7 @@
 # compiled output
-/dist
-/node_modules
+dist
 node_modules
-/html-report
+html-report
 client-web/dist
 client-web/node_modules
 server-api/html-report
