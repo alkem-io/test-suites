@@ -25,7 +25,7 @@ import {
   deleteOrganization,
 } from '@functional-api/contributor-management/organization/organization.request.params';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { SpacePrivacyMode, SpaceVisibility } from '@alkemio/client-lib';
 
 const uniqueId = UniqueIDGenerator.getID();

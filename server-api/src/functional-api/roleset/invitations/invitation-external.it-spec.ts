@@ -18,8 +18,8 @@ import {
 import { getRoleSetInvitationsApplications } from '../application/application.request.params';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
 import { getSingleInvitationResult } from '../roleset.request.params';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
-import { RoleSetInvitationResultType } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import { RoleSetInvitationResultType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
 const uniqueId = UniqueIDGenerator.getID();
 

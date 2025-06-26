@@ -13,7 +13,7 @@ import {
 } from '@alkemio/tests-lib';
 import { changePreferenceUser } from '@functional-api/contributor-management/user/user-preferences-mutation';
 import { delay } from '@alkemio/tests-lib';
-import { PreferenceType } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+import { PreferenceType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
 const uniqueId = UniqueIDGenerator.getID();
 

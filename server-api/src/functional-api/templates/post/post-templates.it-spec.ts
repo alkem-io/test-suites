@@ -27,11 +27,11 @@ import { GetTemplateById } from '@functional-api/templates/template.request.para
 import { deleteTemplate } from '../template.request.params';
 import { TestUser } from '@alkemio/tests-lib';
 import { assignRoleToUser } from '@functional-api/roleset/roles-request.params';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import {
   PostDataFragment,
   RoleName,
-} from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+} from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
 const uniqueId = UniqueIDGenerator.getID();
 

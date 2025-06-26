@@ -12,7 +12,7 @@ import {
   getSpaceTemplatesCountForSpace,
   updateSpaceTemplate,
 } from './space-template.request.params';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 
 let templateId = '';
 

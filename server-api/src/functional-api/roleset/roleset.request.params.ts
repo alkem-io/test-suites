@@ -2,11 +2,11 @@ import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
 import {
   InviteForEntryRoleOnRoleSetMutation,
   RoleSetInvitationResultType,
-} from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+} from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import {
   graphqlErrorWrapper,
   GraphqlReturnWithError,
-} from '@alkemio/tests-lib/dist/utils/graphql.wrapper';
+} from '@alkemio/tests-lib/utils/graphql.wrapper';
 
 export const getUserCommunityPrivilege = async (
   roleSetId: string,

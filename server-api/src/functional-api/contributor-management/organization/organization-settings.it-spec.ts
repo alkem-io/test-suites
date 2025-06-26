@@ -13,8 +13,8 @@ import {
 import { deleteUser, registerVerifiedUser } from '../user/user.request.params';
 import { eventOnOrganizationVerification } from './organization-verification.events.request.params';
 import { assignRoleToUser } from '@functional-api/roleset/roles-request.params';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
-import { RoleName } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
 const uniqueId = UniqueIDGenerator.getID();
 const firstName = `fn${uniqueId}`;

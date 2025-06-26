@@ -1,10 +1,10 @@
 import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
-import { graphqlErrorWrapper } from '@alkemio/tests-lib/dist/utils/graphql.wrapper';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import {
   CreateOrganizationInput,
   UpdateOrganizationSettingsEntityInput,
-} from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+} from '@alkemio/tests-lib/core/generated/alkemio-schema';
 const uniqueId = UniqueIDGenerator.getID();
 export const organizationName = `testorghost${uniqueId}`;
 export const hostNameId = `testorghost${uniqueId}`;

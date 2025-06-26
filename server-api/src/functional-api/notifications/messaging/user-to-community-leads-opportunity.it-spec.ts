@@ -16,8 +16,8 @@ import {
 } from '@functional-api/roleset/roles-request.params';
 import { updateOrganization } from '@functional-api/contributor-management/organization/organization.request.params';
 import { SpacePrivacyMode } from '@alkemio/client-lib';
-import { RoleName } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 
 const senders = (communityName: string) => {
   return `You have sent a message to ${communityName} community`;

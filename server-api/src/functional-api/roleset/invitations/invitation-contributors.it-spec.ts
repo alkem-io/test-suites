@@ -27,7 +27,7 @@ import {
   TestUserManager,
 } from '@alkemio/tests-lib';
 import { getSingleInvitationResult } from '../roleset.request.params';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import {
   SpacePrivacyMode,
   CommunityMembershipPolicy,
@@ -35,7 +35,7 @@ import {
 import {
   RoleName,
   RoleSetInvitationResultType,
-} from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+} from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
 let invitationId = '';
 let invitationData: any;

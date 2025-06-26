@@ -9,7 +9,7 @@ import { subscriptionSubsubspaceCreated } from './subscription-queries';
 import { TestUser } from '@alkemio/tests-lib';
 import { delay } from '@alkemio/tests-lib';
 import { createSubspace } from '@functional-api/journey/subspace/subspace.request.params';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 
 const uniqueId = UniqueIDGenerator.getID();
 

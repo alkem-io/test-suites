@@ -14,8 +14,8 @@ import {
 } from '@functional-api/roleset/invitations/invitation.request.params';
 import { TestUser } from '@alkemio/tests-lib';
 import { changePreferenceUser } from '@functional-api/contributor-management/user/user-preferences-mutation';
-import { PreferenceType } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { PreferenceType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 
 let invitationId = '';
 let preferencesConfig: any[] = [];

@@ -4,7 +4,7 @@ import {
   getWhiteboardTemplatesCount,
 } from './whiteboard-templates.request.params';
 import { deleteTemplate } from '../template.request.params';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioConfig, TestScenarioFactory } from '@alkemio/tests-lib';
 
 let templateId = '';

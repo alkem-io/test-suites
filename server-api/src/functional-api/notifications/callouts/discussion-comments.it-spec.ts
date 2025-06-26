@@ -9,8 +9,8 @@ import {
 } from '@alkemio/tests-lib';
 import '@utils/array.matcher';
 import { delay } from '@alkemio/tests-lib';
-import { PreferenceType } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { PreferenceType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { changePreferenceUser } from '@functional-api/contributor-management/user/user.request.params';
 import { sendMessageToRoom } from '../../communications/communication.params';
 
