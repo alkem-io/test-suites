@@ -28,6 +28,7 @@ fragment CalloutData on Callout {
       ...ProfileData
     }
     whiteboard {
+      id
       nameID
       profile {
         ...ProfileStorageConfig

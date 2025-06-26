@@ -16,6 +16,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "socket.io-client": "^4.8.1"
+    "nodeplotlib": "^1.1.2",
+    "socket.io-client": "^4.8.1",
+    "tsx": "^4.20.3"
   }
 }

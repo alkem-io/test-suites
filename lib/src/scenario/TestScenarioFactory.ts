@@ -74,7 +74,7 @@ export class TestScenarioFactory {
         baseScenario.space,
         baseScenario.organization.accountId,
         baseScenario.name,
-        scenarioConfig.space.collaboration?.addTutorialCallouts || true
+        scenarioConfig.space.collaboration?.addTutorialCallouts ?? true
       );
 
       await this.populateSpace(
@@ -116,9 +116,10 @@ export class TestScenarioFactory {
         baseScenario.subsubspace,
         baseScenario.name
       );
-    } catch (e) {
+    } catch (e: any) {
       LogManager.getLogger().error(
-        `Unable to create core scenario setup: ${e}`
+        `Unable to create core scenario setup: ${e}`,
+        e?.stack
       );
       process.exit(1); // Exit the Jest process with an error code.
     }

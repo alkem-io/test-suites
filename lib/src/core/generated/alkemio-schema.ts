@@ -1391,7 +1391,7 @@ export type CommunityGuidelines = {
   createdDate: Scalars["DateTime"]["output"];
   /** The ID of the entity */
   id: Scalars["UUID"]["output"];
-  /** The details of the guidelilnes */
+  /** The details of the guidelines */
   profile: Profile;
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
@@ -1922,6 +1922,8 @@ export type CreateReferenceOnProfileInput = {
 };
 
 export type CreateSpaceAboutInput = {
+  /** The CommunityGuidelines for the Space */
+  guidelines?: InputMaybe<CreateCommunityGuidelinesInput>;
   profileData: CreateProfileInput;
   when?: InputMaybe<Scalars["Markdown"]["input"]>;
   who?: InputMaybe<Scalars["Markdown"]["input"]>;
@@ -2014,6 +2016,16 @@ export type CreateTemplateContentSpaceInput = {
   level: SpaceLevel;
   /** Create the settings for the Space. */
   settings: CreateSpaceSettingsInput;
+};
+
+export type CreateTemplateFromContentSpaceOnTemplatesSetInput = {
+  /** The ID of the ContentSpace to use as for the Template. */
+  contentSpaceID: Scalars["UUID"]["input"];
+  /** A readable identifier, unique within the containing scope. */
+  nameID?: InputMaybe<Scalars["NameID"]["input"]>;
+  profileData: CreateProfileInput;
+  tags?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  templatesSetID: Scalars["UUID"]["input"];
 };
 
 export type CreateTemplateFromSpaceOnTemplatesSetInput = {
@@ -3711,6 +3723,8 @@ export type Mutation = {
   createTagsetOnProfile: Tagset;
   /** Creates a new Template on the specified TemplatesSet. */
   createTemplate: Template;
+  /** Creates a new Template on the specified TemplatesSet using the provided ContentSpace as content. */
+  createTemplateFromContentSpace: Template;
   /** Creates a new Template on the specified TemplatesSet using the provided Space as content. */
   createTemplateFromSpace: Template;
   /** Creates a new User on the platform. */
@@ -4122,6 +4136,10 @@ export type MutationCreateTagsetOnProfileArgs = {
 
 export type MutationCreateTemplateArgs = {
   templateData: CreateTemplateOnTemplatesSetInput;
+};
+
+export type MutationCreateTemplateFromContentSpaceArgs = {
+  templateData: CreateTemplateFromContentSpaceOnTemplatesSetInput;
 };
 
 export type MutationCreateTemplateFromSpaceArgs = {
@@ -5579,8 +5597,10 @@ export type RoleSet = {
   usersInRole: Array<User>;
   /** All users that have a Role in this RoleSet in the specified Roles. */
   usersInRoles: Array<UsersInRolesResponse>;
-  /** All virtuals that have the specified Role in this Community. */
+  /** All Virtual Contributors that have the specified Role in this Community. */
   virtualContributorsInRole: Array<VirtualContributor>;
+  /** All Virtual Contributors that are available from the current or parent RoleSets. */
+  virtualContributorsInRoleInHierarchy: Array<VirtualContributor>;
   /** All VirtualContributors that have a role in this RoleSet in the specified Roles. */
   virtualContributorsInRoles: Array<VirtualContributorsInRolesResponse>;
 };
@@ -5636,6 +5656,10 @@ export type RoleSetUsersInRolesArgs = {
 };
 
 export type RoleSetVirtualContributorsInRoleArgs = {
+  role: RoleName;
+};
+
+export type RoleSetVirtualContributorsInRoleInHierarchyArgs = {
   role: RoleName;
 };
 
@@ -8234,6 +8258,7 @@ export type ResolversTypes = {
   CreateTagsetInput: CreateTagsetInput;
   CreateTagsetOnProfileInput: CreateTagsetOnProfileInput;
   CreateTemplateContentSpaceInput: CreateTemplateContentSpaceInput;
+  CreateTemplateFromContentSpaceOnTemplatesSetInput: CreateTemplateFromContentSpaceOnTemplatesSetInput;
   CreateTemplateFromSpaceOnTemplatesSetInput: CreateTemplateFromSpaceOnTemplatesSetInput;
   CreateTemplateOnTemplatesSetInput: CreateTemplateOnTemplatesSetInput;
   CreateUserGroupInput: CreateUserGroupInput;
@@ -8727,6 +8752,7 @@ export type ResolversTypes = {
       | "usersInRole"
       | "usersInRoles"
       | "virtualContributorsInRole"
+      | "virtualContributorsInRoleInHierarchy"
       | "virtualContributorsInRoles"
     > & {
       applications: Array<ResolversTypes["Application"]>;
@@ -8742,6 +8768,9 @@ export type ResolversTypes = {
       usersInRole: Array<ResolversTypes["User"]>;
       usersInRoles: Array<ResolversTypes["UsersInRolesResponse"]>;
       virtualContributorsInRole: Array<ResolversTypes["VirtualContributor"]>;
+      virtualContributorsInRoleInHierarchy: Array<
+        ResolversTypes["VirtualContributor"]
+      >;
       virtualContributorsInRoles: Array<
         ResolversTypes["VirtualContributorsInRolesResponse"]
       >;
@@ -9475,6 +9504,7 @@ export type ResolversParentTypes = {
   CreateTagsetInput: CreateTagsetInput;
   CreateTagsetOnProfileInput: CreateTagsetOnProfileInput;
   CreateTemplateContentSpaceInput: CreateTemplateContentSpaceInput;
+  CreateTemplateFromContentSpaceOnTemplatesSetInput: CreateTemplateFromContentSpaceOnTemplatesSetInput;
   CreateTemplateFromSpaceOnTemplatesSetInput: CreateTemplateFromSpaceOnTemplatesSetInput;
   CreateTemplateOnTemplatesSetInput: CreateTemplateOnTemplatesSetInput;
   CreateUserGroupInput: CreateUserGroupInput;
@@ -9894,6 +9924,7 @@ export type ResolversParentTypes = {
     | "usersInRole"
     | "usersInRoles"
     | "virtualContributorsInRole"
+    | "virtualContributorsInRoleInHierarchy"
     | "virtualContributorsInRoles"
   > & {
     applications: Array<ResolversParentTypes["Application"]>;
@@ -9909,6 +9940,9 @@ export type ResolversParentTypes = {
     usersInRole: Array<ResolversParentTypes["User"]>;
     usersInRoles: Array<ResolversParentTypes["UsersInRolesResponse"]>;
     virtualContributorsInRole: Array<
+      ResolversParentTypes["VirtualContributor"]
+    >;
+    virtualContributorsInRoleInHierarchy: Array<
       ResolversParentTypes["VirtualContributor"]
     >;
     virtualContributorsInRoles: Array<
@@ -13884,6 +13918,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationCreateTemplateArgs, "templateData">
   >;
+  createTemplateFromContentSpace?: Resolver<
+    ResolversTypes["Template"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationCreateTemplateFromContentSpaceArgs, "templateData">
+  >;
   createTemplateFromSpace?: Resolver<
     ResolversTypes["Template"],
     ParentType,
@@ -15684,6 +15724,12 @@ export type RoleSetResolvers<
     ParentType,
     ContextType,
     RequireFields<RoleSetVirtualContributorsInRoleArgs, "role">
+  >;
+  virtualContributorsInRoleInHierarchy?: Resolver<
+    Array<ResolversTypes["VirtualContributor"]>,
+    ParentType,
+    ContextType,
+    RequireFields<RoleSetVirtualContributorsInRoleInHierarchyArgs, "role">
   >;
   virtualContributorsInRoles?: Resolver<
     Array<ResolversTypes["VirtualContributorsInRolesResponse"]>,
@@ -19776,6 +19822,7 @@ export type CalloutDataFragment = {
     };
     whiteboard?:
       | {
+          id: string;
           nameID: string;
           profile: {
             id: string;
@@ -20725,6 +20772,7 @@ export type CollaborationDataFragment = {
         };
         whiteboard?:
           | {
+              id: string;
               nameID: string;
               profile: {
                 id: string;
@@ -24258,6 +24306,7 @@ export type SubspaceL1DataFragment = {
             };
             whiteboard?:
               | {
+                  id: string;
                   nameID: string;
                   profile: {
                     id: string;
@@ -26711,6 +26760,7 @@ export type SubspaceL1DataFragment = {
           };
           whiteboard?:
             | {
+                id: string;
                 nameID: string;
                 profile: {
                   id: string;
@@ -29121,6 +29171,7 @@ export type SubspaceL2DataFragment = {
             };
             whiteboard?:
               | {
+                  id: string;
                   nameID: string;
                   profile: {
                     id: string;
@@ -31574,6 +31625,7 @@ export type SubspaceL2DataFragment = {
           };
           whiteboard?:
             | {
+                id: string;
                 nameID: string;
                 profile: {
                   id: string;
@@ -36049,6 +36101,7 @@ export type SpaceDataFragment = {
           };
           whiteboard?:
             | {
+                id: string;
                 nameID: string;
                 profile: {
                   id: string;
@@ -36626,6 +36679,7 @@ export type SpaceDataFragment = {
             };
             whiteboard?:
               | {
+                  id: string;
                   nameID: string;
                   profile: {
                     id: string;
@@ -39655,6 +39709,7 @@ export type SubspaceDataFragment = {
           };
           whiteboard?:
             | {
+                id: string;
                 nameID: string;
                 profile: {
                   id: string;
@@ -45807,6 +45862,7 @@ export type CreateCalloutOnCalloutsSetMutation = {
       };
       whiteboard?:
         | {
+            id: string;
             nameID: string;
             profile: {
               id: string;
@@ -46212,6 +46268,7 @@ export type UpdateCalloutMutation = {
       };
       whiteboard?:
         | {
+            id: string;
             nameID: string;
             profile: {
               id: string;
@@ -46599,6 +46656,7 @@ export type UpdateCalloutVisibilityMutation = {
       };
       whiteboard?:
         | {
+            id: string;
             nameID: string;
             profile: {
               id: string;
@@ -49676,6 +49734,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
             };
             whiteboard?:
               | {
+                  id: string;
                   nameID: string;
                   profile: {
                     id: string;
@@ -50263,6 +50322,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
               };
               whiteboard?:
                 | {
+                    id: string;
                     nameID: string;
                     profile: {
                       id: string;
@@ -55491,6 +55551,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
             };
             whiteboard?:
               | {
+                  id: string;
                   nameID: string;
                   profile: {
                     id: string;
@@ -56078,6 +56139,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
               };
               whiteboard?:
                 | {
+                    id: string;
                     nameID: string;
                     profile: {
                       id: string;
@@ -61324,6 +61386,7 @@ export type UpdateSpaceMutation = {
             };
             whiteboard?:
               | {
+                  id: string;
                   nameID: string;
                   profile: {
                     id: string;
@@ -61911,6 +61974,7 @@ export type UpdateSpaceMutation = {
               };
               whiteboard?:
                 | {
+                    id: string;
                     nameID: string;
                     profile: {
                       id: string;
@@ -65049,6 +65113,7 @@ export type CreateSubspaceMutation = {
               };
               whiteboard?:
                 | {
+                    id: string;
                     nameID: string;
                     profile: {
                       id: string;
@@ -67574,6 +67639,7 @@ export type CreateSubspaceMutation = {
             };
             whiteboard?:
               | {
+                  id: string;
                   nameID: string;
                   profile: {
                     id: string;
@@ -70064,6 +70130,7 @@ export type UpdateSubspaceMutation = {
               };
               whiteboard?:
                 | {
+                    id: string;
                     nameID: string;
                     profile: {
                       id: string;
@@ -72589,6 +72656,7 @@ export type UpdateSubspaceMutation = {
             };
             whiteboard?:
               | {
+                  id: string;
                   nameID: string;
                   profile: {
                     id: string;
@@ -78325,6 +78393,7 @@ export type SpaceCalloutQuery = {
                   };
                   whiteboard?:
                     | {
+                        id: string;
                         nameID: string;
                         profile: {
                           id: string;
@@ -93712,6 +93781,7 @@ export type GetSpaceDataQuery = {
                   };
                   whiteboard?:
                     | {
+                        id: string;
                         nameID: string;
                         profile: {
                           id: string;
@@ -94346,6 +94416,7 @@ export type GetSpaceDataQuery = {
                     };
                     whiteboard?:
                       | {
+                          id: string;
                           nameID: string;
                           profile: {
                             id: string;
@@ -97691,6 +97762,7 @@ export type GetSubspacePageQuery = {
                     };
                     whiteboard?:
                       | {
+                          id: string;
                           nameID: string;
                           profile: {
                             id: string;
@@ -100387,6 +100459,7 @@ export type GetSubspacePageQuery = {
                   };
                   whiteboard?:
                     | {
+                        id: string;
                         nameID: string;
                         profile: {
                           id: string;
@@ -103042,6 +103115,7 @@ export type GetSpaceAboutDetailsQuery = {
                   };
                   whiteboard?:
                     | {
+                        id: string;
                         nameID: string;
                         profile: {
                           id: string;
@@ -105717,6 +105791,7 @@ export type GetSubspacesDataQuery = {
                       };
                       whiteboard?:
                         | {
+                            id: string;
                             nameID: string;
                             profile: {
                               id: string;
@@ -108456,6 +108531,7 @@ export type GetSubspacesDataQuery = {
                     };
                     whiteboard?:
                       | {
+                          id: string;
                           nameID: string;
                           profile: {
                             id: string;

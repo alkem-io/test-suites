@@ -136,3 +136,16 @@ export const bufferize = (data: any): ArrayBuffer => {
   const jsonStr = JSON.stringify(data);
   return new TextEncoder().encode(jsonStr).buffer;
 }
+
+
+export const calculateTimeStats = (min: number, max: number) => {
+  const maxTime = max / 1000;
+  const minTime = min / 1000;
+  const avgTime = (maxTime + minTime) / 2;
+
+  return {
+    max: maxTime > 60 ?`${Math.floor(maxTime / 60)}m${maxTime % 60}s` : `${maxTime}s`,
+    min: minTime > 60 ?`${Math.floor(minTime / 60)}m${minTime % 60}s` : `${minTime}s`,
+    avg: avgTime > 60 ? `${Math.floor(avgTime / 60)}m${avgTime % 60}s` : `${avgTime}s`
+  }
+}

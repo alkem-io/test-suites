@@ -16,7 +16,13 @@ interface RandomActionFn {
 }
 
 export const getRandomAction = (): RandomActionFn => {
-  const actions = [insert, /*update, remove, moveMultipleRandom, resizeMultipleRandom, createTextRandom, updateTextRandom,*/ writeTextInShapeRandom];
+  // give more weight to deletes
+  const actions = [
+    insert, update, remove,  /*writeTextInShapeRandom,*/
+    moveMultipleRandom, resizeMultipleRandom,
+    createTextRandom, updateTextRandom, removeTextRandom,
+
+  ];
   return actions[Math.floor(Math.random() * actions.length)];
 }
 
@@ -79,14 +85,14 @@ export const moveMultipleRandom = (socket: SocketIoSocket, roomID: string, eleme
 }
 
 export const resizeMultipleRandom = (socket: SocketIoSocket, roomID: string, elements: any[]) => {
-  const nonDeletedElements = elements.filter(el => !el.isDeleted);
+  const nonDeletedShapes = elements.filter(el => !el.isDeleted && el.type !== 'text');
   // nothing we can do - early exit
-  if (nonDeletedElements.length === 0) {
+  if (nonDeletedShapes.length === 0) {
     return;
   }
   const numberOfElements = getRandomInt(20, 3);
   // might be less than numberOfElements
-  const chosenElements = nonDeletedElements.slice(0, numberOfElements);
+  const chosenElements = nonDeletedShapes.slice(0, numberOfElements);
   // resize them in unison
   const width = getRandomInt(500, 100) * (Math.random() < 0.5 ? -1 : 1);
   const height = getRandomInt(500, 100) * (Math.random() < 0.5 ? -1 : 1);
@@ -117,6 +123,17 @@ export const updateTextRandom = (socket: SocketIoSocket, roomID: string, element
 
   emitUpdate(socket, roomID, [element]);
 }
+
+export const removeTextRandom = (socket: SocketIoSocket, roomID: string, elements: any[]) => {
+  const element = getRandomText(elements);
+
+  element.isDeleted = true; // Mark the element as deleted
+  element.version += 1; // Increment version for update
+  element.versionNonce += 1; // Increment version nonce for update
+
+  emitUpdate(socket, roomID, [element]);
+}
+
 // todo: does not work
 export const writeTextInShapeRandom = (socket: SocketIoSocket, roomID: string, elements: any[]) => {
   const shape = getRandomShape(elements);
@@ -175,8 +192,8 @@ export const emitMouseLocation = (socket: SocketIoSocket, roomID: string, userna
       socketId: socket.id,
       username,
       pointer: {
-        x: Math.random() * 10000,
-        y: Math.random() * 10000,
+        x: Math.random() * 5000,
+        y: Math.random() * 5000,
         tool:'pointer'
       },
       button: 'up',

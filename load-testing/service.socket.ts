@@ -2,9 +2,13 @@ import { io } from 'socket.io-client';
 import { setTimeout } from 'node:timers/promises';
 import { SocketIoSocket } from './types/socket.io.socket.js';
 import { COLLABORATOR_MODE, JOIN_ROOM, PING, SERVER_BROADCAST } from './types/event.names.js';
+import { plotPing } from './plotPing.js';
 
 export class ServiceSocket {
   private socket: SocketIoSocket;
+
+  private pingInterval: NodeJS.Timeout | null = null;
+  private pings: number[] = [];
 
   constructor(url: string, path: string) {
     this.socket = io(url, {
@@ -59,14 +63,39 @@ export class ServiceSocket {
     });
   }
 
-  public measurePing = () => {
-    setInterval(() => {
+  public startPing(interval: number = 1000) {
+    this.pingInterval = setInterval(() => {
       const start = performance.now();
-      this.socket.emitWithAck(PING).then((serverAckAt) => {
+      this.socket.emitWithAck(PING).then(() => {
         const now = performance.now();
         const pingInMilliseconds = Math.round(now - start);
         console.log(`Ping: ${pingInMilliseconds}ms`);
+        this.pings.push(pingInMilliseconds);
       });
-    }, 1000);
+    }, interval);
+  }
+
+  public pingStats() {
+    if (!this.pingInterval) {
+      return undefined;
+    }
+
+    return {
+      min: Math.min(...this.pings),
+      max: Math.max(...this.pings),
+      avg: this.pings.reduce((sum, ping) => sum + ping, 0) / this.pings.length,
+      movingAvg: this.pings.slice(-20).reduce((sum, ping) => sum + ping, 0) / Math.min(10, this.pings.length),
+      count: this.pings.length,
+    }
+  }
+
+  public endAndPlotPing(plotTitle?: string) {
+    if (this.pingInterval) {
+      clearInterval(this.pingInterval);
+
+      plotPing(1, this.pings, plotTitle);
+
+      this.pings = [];
+    }
   }
 }
