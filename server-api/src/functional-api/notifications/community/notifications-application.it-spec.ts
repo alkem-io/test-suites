@@ -21,8 +21,8 @@ import {
   CommunityMembershipPolicy,
   PreferenceType,
   RoleName,
-} from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+} from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 
 let preferencesConfig: any[] = [];
 

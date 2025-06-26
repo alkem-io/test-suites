@@ -12,12 +12,12 @@ import {
 } from './callouts.request.params';
 import { TestUser } from '@alkemio/tests-lib';
 import { getDataPerSpaceCallout } from './post/post.request.params';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import {
   CalloutState,
   CalloutType,
   CalloutVisibility,
-} from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+} from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
 const uniqueId = UniqueIDGenerator.getID();
 

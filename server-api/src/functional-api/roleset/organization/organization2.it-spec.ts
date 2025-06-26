@@ -1,7 +1,7 @@
 import { TestScenarioConfig, TestScenarioFactory } from '@alkemio/tests-lib';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { assignRoleToOrganization, getRoleName } from '../roles-request.params';
-import { RoleName } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
 const spaceRoles = ['lead', 'member'];
 const availableRoles = ['member', 'lead'];

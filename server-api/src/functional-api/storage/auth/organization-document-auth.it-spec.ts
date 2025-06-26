@@ -21,8 +21,8 @@ import { lookupProfileVisuals } from '../../lookup/lookup-request.params';
 import { createReferenceOnProfile } from '../../references/references.request.params';
 
 import { assignRoleToUser } from '@functional-api/roleset/roles-request.params';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
-import { RoleName } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
 let refId = '';
 

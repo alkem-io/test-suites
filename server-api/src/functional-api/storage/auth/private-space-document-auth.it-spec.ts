@@ -43,7 +43,7 @@ import {
 } from '../../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 import { createWhiteboardCallout } from '../../callout/whiteboard/whiteboard-callout.params.request';
 import { createReferenceOnProfile } from '../../references/references.request.params';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { SpacePrivacyMode, SpaceVisibility } from '@alkemio/client-lib';
 
 let refId = '';

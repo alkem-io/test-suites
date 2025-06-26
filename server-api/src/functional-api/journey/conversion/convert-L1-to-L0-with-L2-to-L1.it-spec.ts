@@ -12,8 +12,8 @@ import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
 } from '@alkemio/client-lib';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
-import { SpaceLevel } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import { SpaceLevel } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
 let baseScenario: OrganizationWithSpaceModel;
 

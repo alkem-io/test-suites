@@ -1,6 +1,6 @@
 import { UserFilterInput, OrganizationFilterInput } from '@alkemio/client-lib';
 import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
-import { graphqlErrorWrapper } from '@alkemio/tests-lib/dist/utils/graphql.wrapper';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 
 export const paginatedUser = async (
   options: {

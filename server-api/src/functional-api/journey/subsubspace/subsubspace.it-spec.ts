@@ -1,4 +1,4 @@
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { deleteSpace, updateSpaceContext } from '../space/space.request.params';
 import {
   createSubspace,

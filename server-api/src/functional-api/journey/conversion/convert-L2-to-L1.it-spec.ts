@@ -5,8 +5,8 @@ import {
 } from '@alkemio/tests-lib';
 import { convertSpaceL2ToSpaceL1 } from './conversion.request.params';
 import { getSpaceData } from '../space/space.request.params';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
-import { SpaceLevel } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import { SpaceLevel } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
 let baseScenario: OrganizationWithSpaceModel;
 

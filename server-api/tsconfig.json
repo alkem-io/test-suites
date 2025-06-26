@@ -25,7 +25,9 @@
       "@utils/*": ["src/utils/*"],
       "@common/*": ["src/common/*"],
       "@functional-api/*": ["src/functional-api/*"],
-      "@src/*": ["src/*"]
+      "@src/*": ["src/*"],
+      "@alkemio/tests-lib": ["../lib/src/index.ts"],
+      "@alkemio/tests-lib/*": ["../lib/src/*"]
     }
   },
   "exclude": [

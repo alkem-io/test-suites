@@ -50,7 +50,7 @@ import {
   assignPlatformRole,
   removePlatformRole,
 } from '@functional-api/platform/authorization-platform-mutation';
-import { RoleName } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
 let spaceId = '';
 const spaceName = `space-name-${uniqueId}`;

@@ -59,7 +59,7 @@ import {
 } from '@functional-api/contributor-management/organization/organization.request.params';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
 import { assignRoleToUser } from '@functional-api/roleset/roles-request.params';
-import { RoleName } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 const uniqueId = UniqueIDGenerator.getID();
 
 let spaceId = '';

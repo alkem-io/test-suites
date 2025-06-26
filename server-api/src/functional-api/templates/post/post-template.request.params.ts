@@ -1,6 +1,6 @@
 import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
-import { TemplateType } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
-import { graphqlErrorWrapper } from '@alkemio/tests-lib/dist/utils/graphql.wrapper';
+import { TemplateType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import { getSpaceData } from '@functional-api/journey/space/space.request.params';
 
 export const createPostTemplate = async (

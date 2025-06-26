@@ -6,8 +6,8 @@ import {
 } from '@alkemio/client-lib';
 import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
-import { CreateSpaceOnAccountInput } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
-import { graphqlErrorWrapper } from '@alkemio/tests-lib/dist/utils/graphql.wrapper';
+import { CreateSpaceOnAccountInput } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 const uniqueId = UniqueIDGenerator.getID();
 
 export const spaceName = `testEcoName${uniqueId}`;

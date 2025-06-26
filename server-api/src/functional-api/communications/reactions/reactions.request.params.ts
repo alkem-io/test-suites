@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
-import { graphqlErrorWrapper } from '@alkemio/tests-lib/dist/utils/graphql.wrapper';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 
 export const addReaction = async (
   roomID: string,

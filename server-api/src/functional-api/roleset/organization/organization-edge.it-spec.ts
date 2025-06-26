@@ -8,8 +8,8 @@ import {
   deleteOrganization,
 } from '@functional-api/contributor-management/organization/organization.request.params';
 import { TestScenarioConfig, TestScenarioFactory } from '@alkemio/tests-lib';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
-import { RoleName } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
 let newOrgId = '';
 const newOrgNameId = 'ha-new-org-nameid';

@@ -1,8 +1,8 @@
 import { TestUser } from '@alkemio/tests-lib';
 import { getGraphqlClient } from '@alkemio/tests-lib';
-import { graphqlErrorWrapper } from '@alkemio/tests-lib/dist/utils/graphql.wrapper';
-import { graphqlRequestAuth } from '@alkemio/tests-lib/dist/utils/graphql.request';
-import { RoleName } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
+import { graphqlRequestAuth } from '@alkemio/tests-lib/utils/graphql.request';
+import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 export const assignPlatformRole = async (
   contributorID: string,
   roleName: RoleName,

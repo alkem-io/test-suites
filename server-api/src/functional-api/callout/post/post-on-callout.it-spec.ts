@@ -23,7 +23,7 @@ import {
 } from '@functional-api/references/references.request.params';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
 import { delay } from '@alkemio/tests-lib';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 
 const uniqueId = UniqueIDGenerator.getID();
 

@@ -2,8 +2,8 @@ import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
 import {
   InnovationHubType,
   SpaceVisibility,
-} from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
-import { graphqlErrorWrapper } from '@alkemio/tests-lib/dist/utils/graphql.wrapper';
+} from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 
 export const createInnovationHub = async (
   accountID: string,
