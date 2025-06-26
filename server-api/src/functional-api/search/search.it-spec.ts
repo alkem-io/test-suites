@@ -29,7 +29,7 @@ import {
   updateOrganization,
 } from '@functional-api/contributor-management/organization/organization.request.params';
 import { SpaceVisibility, SpacePrivacyMode } from '@alkemio/client-lib';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 
 const uniqueId = UniqueIDGenerator.getID();
 

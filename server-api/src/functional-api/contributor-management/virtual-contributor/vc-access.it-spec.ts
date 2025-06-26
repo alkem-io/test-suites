@@ -37,7 +37,7 @@ import {
   SpacePrivacyMode,
   SpaceVisibility,
 } from '@alkemio/client-lib/dist/types/alkemio-schema';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 const uniqueId = UniqueIDGenerator.getID();
 
 const spaceNameId = 'appl-eco-nameid' + uniqueId;

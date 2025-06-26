@@ -21,7 +21,7 @@ import {
 } from '../journey/space/space.request.params';
 
 import { lookupProfileVisuals } from '@functional-api/lookup/lookup-request.params';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import {
   getAuthDocument,
   TestScenarioConfig,

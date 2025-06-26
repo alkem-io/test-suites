@@ -1,5 +1,5 @@
 import { getGraphqlClient, setAuthHeader, TestUser } from '@alkemio/tests-lib';
-import { graphqlErrorWrapper } from '@alkemio/tests-lib/dist/utils/graphql.wrapper';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 
 export const calloutStorageConfig = async (
   calloutId: string,

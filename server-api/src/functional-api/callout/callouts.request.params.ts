@@ -5,8 +5,8 @@ import {
   CalloutType,
   CalloutVisibility,
   TagsetReservedName,
-} from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
-import { graphqlErrorWrapper } from '@alkemio/tests-lib/dist/utils/graphql.wrapper';
+} from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 
 const uniqueId = UniqueIDGenerator.getID();
 

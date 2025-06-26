@@ -40,7 +40,7 @@ import {
   TestScenarioNoPreCreationConfig,
   TestUserManager,
 } from '@alkemio/tests-lib';
-import { RoleName } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 const uniqueId = UniqueIDGenerator.getID();
 
 const spaceName = `space-name-${uniqueId}`;

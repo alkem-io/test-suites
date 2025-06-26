@@ -17,8 +17,8 @@ import { assignRoleToUser } from '@functional-api/roleset/roles-request.params';
 import {
   PreferenceType,
   RoleName,
-} from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+} from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 
 const uniqueId = UniqueIDGenerator.getID();
 let postCommentsIdSpace = '';

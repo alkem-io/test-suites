@@ -16,7 +16,7 @@ import { sendMessageToRoom } from '../communications/communication.params';
 import { createWhiteboardOnCallout } from '../callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 import { assignRoleToUser } from '../roleset/roles-request.params';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import {
   CalloutState,
   CalloutType,
@@ -24,7 +24,7 @@ import {
   CommunityMembershipPolicy,
   RoleName,
   SpacePrivacyMode,
-} from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+} from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { ActivityEventType } from '@alkemio/client-lib';
 
 const uniqueId = UniqueIDGenerator.getID();

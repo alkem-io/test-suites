@@ -9,8 +9,8 @@ import {
 } from '@functional-api/roleset/application/application.request.params';
 import { eventOnRoleSetApplication } from '../roleset-events.request.params';
 import { TestScenarioConfig, TestScenarioFactory } from '@alkemio/tests-lib';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
-import { CommunityMembershipPolicy } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import { CommunityMembershipPolicy } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
 let applicationId = '';
 let applicationData;

@@ -1,11 +1,11 @@
 import { TestScenarioConfig, TestScenarioFactory } from '@alkemio/tests-lib';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import {
   removeRoleFromOrganization,
   assignRoleToOrganization,
 } from '../roles-request.params';
 import { getRoleSetMembersList } from '../roleset.request.params';
-import { RoleName } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
 let baseScenario: OrganizationWithSpaceModel;
 const scenarioConfig: TestScenarioConfig = {

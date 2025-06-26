@@ -31,13 +31,13 @@ import { deleteUser } from '../user/user.request.params';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
 import { getAccountMainEntities } from '@functional-api/account/account.params.request';
 import { getSingleInvitationResult } from '@functional-api/roleset/roleset.request.params';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import {
   SpaceVisibility,
   SearchVisibility,
   CommunityMembershipPolicy,
   SpacePrivacyMode,
-} from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+} from '@alkemio/tests-lib/core/generated/alkemio-schema';
 const uniqueId = UniqueIDGenerator.getID();
 
 let invitationId = '';

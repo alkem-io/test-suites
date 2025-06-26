@@ -16,9 +16,9 @@ import {
 } from '@functional-api/roleset/roles-request.params';
 import { changePreferenceUser } from '@functional-api/contributor-management/user/user-preferences-mutation';
 import { updateUserSettingCommunicationMessage } from '@functional-api/contributor-management/user/user.request.params';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { SpacePrivacyMode } from '@alkemio/client-lib';
-import { RoleName } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
+import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
 let usersList: any[] = [];
 

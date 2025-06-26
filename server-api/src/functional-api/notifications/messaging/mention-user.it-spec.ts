@@ -13,8 +13,8 @@ import { UniqueIDGenerator } from '@alkemio/tests-lib';
 import { createPostOnCallout } from '@functional-api/callout/post/post.request.params';
 import { changePreferenceUser } from '@functional-api/contributor-management/user/user-preferences-mutation';
 import { sendMessageToRoom } from '@functional-api/communications/communication.params';
-import { PreferenceType } from '@alkemio/tests-lib/dist/core/generated/alkemio-schema';
-import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/dist/scenario/models/OrganizationWithSpaceModel';
+import { PreferenceType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 
 const uniqueId = UniqueIDGenerator.getID();
 
