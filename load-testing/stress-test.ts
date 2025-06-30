@@ -36,44 +36,34 @@ const config: StressTestConfig = {
   // wss://sandbox-alkem.io/api/private/ws/socket.io/?EIO=4&transport=websocket
   // url: 'http://localhost:4002',
   // path: '/socket.io',
-  url: 'https://test-alkem.io',
+  url: 'https://acc-alkem.io',
   path: '/api/private/ws/socket.io',
-  scenarios: [{
-    name: '3 Whiteboard 15 Clients',
-    whiteboards: 3,
-    clients: 15,
-    repeat: 50,
-    maxWait: 3000,
-    minWait: 300,
-  }]/*, {
-    name: '2 Whiteboards 15 Clients',
-    whiteboards: 2,
-    clients: 2,
-    repeat: 15,
-    maxWait: 3000,
-    minWait: 300,
-  }, {
-    name: '4 Whiteboards 15 Clients',
-    whiteboards: 4,
-    clients: 15,
-    repeat: 30,
-    maxWait: 3000,
-    minWait: 300,
-  }, {
-    name: '8 Whiteboards 15 Clients',
-    whiteboards: 8,
-    clients: 15,
-    repeat: 30,
-    maxWait: 3000,
-    minWait: 300,
-  }, {
-    name: '10 Whiteboards 15 Clients',
-    whiteboards: 10,
-    clients: 15,
-    repeat: 30,
-    maxWait: 3000,
-    minWait: 300,
-  }]*/
+  scenarios: [
+    {
+      name: '1 Whiteboards 20 Clients',
+      whiteboards: 1,
+      clients: 20,
+      repeat: 100,
+      maxWait: 3000,
+      minWait: 600,
+    },
+    {
+      name: '2 Whiteboards 10 Clients',
+      whiteboards: 2,
+      clients: 10,
+      repeat: 100,
+      maxWait: 3000,
+      minWait: 600,
+    },
+    {
+      name: '2 Whiteboards 20 Clients',
+      whiteboards: 2,
+      clients: 20,
+      repeat: 100,
+      maxWait: 3000,
+      minWait: 600,
+    }
+  ],
 };
 
 const elements: any[] = [];
@@ -116,6 +106,13 @@ const deletePrerequisites = async (baseScenario: OrganizationWithSpaceModel) => 
 }
 
 let actionsExecuted = 0;
+// manually created - hardcoded rooms
+const wbIds: string[] = [
+  '9e58a6a0-eda1-4a30-bbea-4efdc77cc1d9',
+  'e72f7ecf-b310-436b-9b12-34e120ff4c88',
+  '6a23c347-f63a-43a6-98bd-56852c169b2f',
+  '6752cb7e-b8eb-463f-bcc8-0fe8d5828184'
+];
 
 const runTest = async (url: string, path: string, scenario: StressScenario) => {
   const maxActions = scenario.whiteboards * scenario.clients * scenario.repeat;
@@ -124,8 +121,8 @@ const runTest = async (url: string, path: string, scenario: StressScenario) => {
   const { min, max, avg } = calculateTimeStats(minTime, maxTime);
   console.log(`Based on the config for '${scenario.name}' max execution time can take between ${max} and ${min} Average execution time is around ${avg}`);
 
-  const { baseScenario, wbIds } = await createPrerequisites(scenario.whiteboards);
-  console.log(`${scenario.whiteboards} Whiteboards created under '${baseScenario.space.about.profile.displayName}'`);
+  // const { baseScenario, wbIds } = await createPrerequisites(scenario.whiteboards);
+  // console.log(`${scenario.whiteboards} Whiteboards created under '${baseScenario.space.about.profile.displayName}'`);
 
   const serviceSocket = new ServiceSocket(url, path);
   serviceSocket.startPing();
@@ -137,9 +134,9 @@ const runTest = async (url: string, path: string, scenario: StressScenario) => {
   }, REPORTER_INTERVAL);
 
   // spawn & execute
-  console.log(`Spawning ${scenario.clients} clients for each of the ${wbIds.length} Whiteboards...`);
+  console.log(`Spawning ${scenario.clients} clients for each of the ${scenario.whiteboards} Whiteboards...`);
   await Promise.all(
-    Array.from(wbIds).flatMap((wbId) => Array.from({ length: scenario.clients }).map(() => spawnClient(wbId, scenario)))
+    Array.from(wbIds).slice(0, scenario.whiteboards).flatMap((wbId) => Array.from({ length: scenario.clients }).map(() => spawnClient(wbId, scenario)))
   );
 
   // delete all elements
@@ -151,12 +148,13 @@ const runTest = async (url: string, path: string, scenario: StressScenario) => {
 
   console.log(`Final ping stats: ${JSON.stringify(serviceSocket.pingStats())}`);
   serviceSocket.endAndPlotPing(scenario.name);
+  await setTimeout(1000); // ensure the plot is displayed
 
   console.log(`Stress test completed. Cleaning up...`);
   elements.length = 0; // clear elements
   actionsExecuted = 0;
   clearInterval(reporter);
-  await deletePrerequisites(baseScenario);
+  // await deletePrerequisites(baseScenario);
 };
 
 const spawnClient = (roomID: string, scenario: StressScenario) => {
