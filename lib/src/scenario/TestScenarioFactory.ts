@@ -122,7 +122,7 @@ export class TestScenarioFactory {
       LogManager.getLogger().error(
         `Unable to create core scenario setup: ${e}`
       );
-      process.exit(1); // Exit the Jest process with an error code.
+      throw new Error(`Unable to create core scenario setup: ${e}`);
     }
 
     return baseScenario;
@@ -156,7 +156,9 @@ export class TestScenarioFactory {
         LogManager.getLogger().error(
           `User ID is missing for ${userModel.type}, cannot assign role ${role}`
         );
-        process.exit(1); // Exit the Jest process with an error code.
+        throw new Error(
+          `User ID is missing for ${userModel.type}, cannot assign role ${role}`
+        );
       }
       await assignPlatformRole(userModel.id, role);
     }
@@ -185,7 +187,9 @@ export class TestScenarioFactory {
       LogManager.getLogger().error(
         `Unable to tear down core scenario setup for '${baseScenario.name}: ${e}`
       );
-      process.exit(1); // Exit the Jest process with an error code.
+      throw new Error(
+        `Unable to tear down core scenario setup for '${baseScenario.name}: ${e}`
+      );
     }
   }
 
