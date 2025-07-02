@@ -10,7 +10,7 @@ export default {
     '/src/functional-api/zcommunications/.*\\.it-spec\\.ts',
     '/src/functional-api/activity-logs/.*\\.it-spec\\.ts',
     '/src/functional-api/journey/.*\\.it-spec\\.ts',
-    //'/src/functional-api/storage/.*\\.it-spec\\.ts',
+    '/src/functional-api/storage/.*\\.it-spec\\.ts',
     '/src/functional-api/entitlements/.*\\.it-spec\\.ts',
     '/src/functional-api/template/.*\\.it-spec\\.ts',
   ],

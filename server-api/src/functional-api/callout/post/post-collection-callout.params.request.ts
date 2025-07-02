@@ -1,4 +1,5 @@
 import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
+import { CalloutContributionType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 
 export const createPostCollectionCallout = async (
@@ -18,6 +19,12 @@ export const createPostCollectionCallout = async (
             profile: {
               displayName,
               description: 'Post collection callout',
+            },
+          },
+          settings: {
+            contribution: {
+              enabled: true,
+              allowedTypes: [CalloutContributionType.Post],
             },
           },
         },

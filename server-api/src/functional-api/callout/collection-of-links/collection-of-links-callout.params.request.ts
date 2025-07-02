@@ -1,4 +1,8 @@
 import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
+import {
+  CalloutContributionType,
+  CalloutFramingType,
+} from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 
 export const createLinkCollectionCallout = async (
@@ -18,6 +22,13 @@ export const createLinkCollectionCallout = async (
             profile: {
               displayName,
               description: 'Link collection callout',
+            },
+            type: CalloutFramingType.None,
+          },
+          settings: {
+            contribution: {
+              enabled: true,
+              allowedTypes: [CalloutContributionType.Link],
             },
           },
         },
