@@ -1,8 +1,4 @@
 import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
-import {
-  CalloutType,
-  CalloutVisibility,
-} from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 
 export const createPostCollectionCallout = async (
@@ -18,9 +14,6 @@ export const createPostCollectionCallout = async (
         calloutData: {
           calloutsSetID,
           nameID,
-          type: CalloutType.PostCollection,
-
-          visibility: CalloutVisibility.Published,
           framing: {
             profile: {
               displayName,

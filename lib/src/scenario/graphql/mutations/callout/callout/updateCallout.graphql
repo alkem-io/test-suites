@@ -1,5 +1,5 @@
 mutation UpdateCallout($calloutData: UpdateCalloutEntityInput!) {
   updateCallout(calloutData: $calloutData) {
-    ...CalloutData
+    ...CalloutDetails
   }
 }

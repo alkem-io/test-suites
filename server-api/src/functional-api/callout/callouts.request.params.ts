@@ -1,8 +1,9 @@
 import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
 import {
-  CalloutState,
-  CalloutType,
+  CalloutAllowedContributors,
+  CalloutContributionType,
+  CalloutFramingType,
   CalloutVisibility,
   TagsetReservedName,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
@@ -28,11 +29,19 @@ export const defaultCallout = {
       displayName: 'default callout display name',
       description: 'callout description',
     },
+    type: CalloutFramingType.None, // This is to allow for future extensions, e.g., whiteboard framing
   },
-  contributionPolicy: {
-    state: CalloutState.Open,
+
+  settings: {
+    visibility: CalloutVisibility.Draft,
+    contribution: {
+      enabled: true,
+      allowedTypes: [CalloutContributionType.Post],
+      canAddContributions: CalloutAllowedContributors.Members,
+      commentsEnabled: true,
+    },
+    framing: { commentsEnabled: true },
   },
-  type: CalloutType.Post,
   contributionDefaults: {
     postDescription: 'Please describe the knowledge that is relevant.',
   },
@@ -45,10 +54,17 @@ export const defaultWhiteboard = {
       description: 'callout Whiteboard description',
     },
   },
-  contributionPolicy: {
-    state: CalloutState.Open,
+
+  settings: {
+    visibility: CalloutVisibility.Draft,
+    contribution: {
+      enabled: true,
+      allowedTypes: [CalloutContributionType.Whiteboard],
+      canAddContributions: CalloutAllowedContributors.Members,
+      commentsEnabled: true,
+    },
+    framing: { commentsEnabled: true },
   },
-  type: CalloutType.WhiteboardCollection,
   contributionDefaults: {
     whiteboardContent:
       '{"type":"excalidraw","version":2,"source":"https://excalidraw.com","elements":[],"appState":{"gridSize":null,"viewBackgroundColor":"#ffffff"}}',
@@ -63,12 +79,20 @@ export const createCalloutOnCalloutsSet = async (
         displayName: string;
         description?: string;
       };
+      type?: CalloutFramingType; // This is to allow for future extensions, e.g., whiteboard framing
     };
-    contributionPolicy?: {
-      state?: CalloutState;
+
+    settings?: {
+      visibility?: CalloutVisibility;
+      contribution?: {
+        enabled?: boolean;
+        allowedTypes?: CalloutContributionType[];
+        canAddContributions?: CalloutAllowedContributors;
+        commentsEnabled?: boolean;
+      };
+      framing?: { commentsEnabled: boolean };
     };
-    type?: CalloutType;
-    visibility?: CalloutVisibility;
+
     postTemplate?: {
       defaultDescription?: string;
       type?: string;
@@ -89,8 +113,6 @@ export const createCalloutOnCalloutsSet = async (
           calloutsSetID,
           ...defaultCallout,
           ...options,
-          enableComments:
-            defaultCallout.type === CalloutType.Post ? true : false,
         },
       },
       {
@@ -152,11 +174,19 @@ export const createWhiteboardCalloutOnCalloutsSet = async (
         displayName: string;
         description: string;
       };
+      type?: CalloutFramingType.Whiteboard; // This is to allow for future extensions, e.g., whiteboard framing
     };
-    contributionPolicy?: {
-      state?: CalloutState;
+
+    settings?: {
+      visibility?: CalloutVisibility.Published;
+      contribution?: {
+        enabled?: true;
+        allowedTypes?: CalloutContributionType[];
+        canAddContributions?: CalloutAllowedContributors;
+        commentsEnabled?: true;
+      };
+      framing?: { commentsEnabled: true };
     };
-    type?: CalloutType;
     contributionDefaults?: {
       whiteboardContent?: string;
     };
@@ -173,8 +203,11 @@ export const createWhiteboardCalloutOnCalloutsSet = async (
           ...options,
           framing: {
             profile: {
-              displayName: 'default callout display name',
-              description: 'callout description',
+              displayName:
+                options?.framing?.profile?.displayName ||
+                'default callout display name',
+              description:
+                options?.framing?.profile?.description || 'callout description',
             },
           },
         },
@@ -196,14 +229,28 @@ export const updateCallout = async (
         displayName?: string;
         description?: string;
       };
+      type?: CalloutFramingType; // This is to allow for future extensions, e.g., whiteboard framing
     };
-    contributionPolicy?: {
-      state?: CalloutState;
+
+    settings?: {
+      visibility?: CalloutVisibility;
+      contribution?: {
+        enabled?: boolean;
+        allowedTypes?: CalloutContributionType[];
+        canAddContributions?: CalloutAllowedContributors;
+        commentsEnabled?: boolean;
+      };
+      framing?: { commentsEnabled: boolean };
     };
-    type?: CalloutType;
-    contributionDefaults?: {
-      postDescription?: string;
-      whiteboardContent?: string;
+
+    postTemplate?: {
+      defaultDescription?: string;
+      type?: string;
+      profile?: {
+        displayName?: string;
+        description?: string;
+        tagline?: string;
+      };
     };
   }
 ) => {

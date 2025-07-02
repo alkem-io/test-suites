@@ -34,6 +34,9 @@ let baseScenario: OrganizationWithSpaceModel;
 const scenarioConfig: TestScenarioConfig = {
   name: 'invitation-external',
   space: {
+    collaboration: {
+      addTutorialCallouts: false,
+    },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [

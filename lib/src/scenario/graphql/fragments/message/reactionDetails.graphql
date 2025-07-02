@@ -1,0 +1,14 @@
+fragment ReactionDetails on Reaction {
+  id
+  emoji
+  sender {
+    id
+    profile {
+      id
+      displayName
+      __typename
+    }
+    __typename
+  }
+  __typename
+}

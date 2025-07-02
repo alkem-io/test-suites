@@ -51,6 +51,7 @@ const scenarioConfig: TestScenarioConfig = {
       addPostCallout: true,
       addPostCollectionCallout: true,
       addWhiteboardCallout: true,
+      addTutorialCallouts: false,
     },
     community: {
       admins: [TestUser.SPACE_ADMIN],
@@ -68,6 +69,7 @@ const scenarioConfig: TestScenarioConfig = {
         addPostCallout: true,
         addPostCollectionCallout: true,
         addWhiteboardCallout: true,
+        addTutorialCallouts: false,
       },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
@@ -83,6 +85,7 @@ const scenarioConfig: TestScenarioConfig = {
           addPostCallout: true,
           addPostCollectionCallout: true,
           addWhiteboardCallout: true,
+          addTutorialCallouts: false,
         },
         community: {
           admins: [TestUser.SUBSUBSPACE_ADMIN],

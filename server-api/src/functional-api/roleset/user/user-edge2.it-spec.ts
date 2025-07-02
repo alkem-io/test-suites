@@ -15,6 +15,9 @@ let baseScenario: OrganizationWithSpaceModel;
 const scenarioConfig: TestScenarioConfig = {
   name: 'assign-remove-leads-to-community',
   space: {
+    collaboration: {
+      addTutorialCallouts: false,
+    },
     community: {
       members: [
         TestUser.SPACE_ADMIN,
@@ -23,10 +26,16 @@ const scenarioConfig: TestScenarioConfig = {
       ],
     },
     subspace: {
+      collaboration: {
+        addTutorialCallouts: false,
+      },
       community: {
         members: [TestUser.SUBSPACE_ADMIN, TestUser.SUBSUBSPACE_ADMIN],
       },
       subspace: {
+        collaboration: {
+          addTutorialCallouts: false,
+        },
         community: {
           members: [TestUser.SUBSUBSPACE_ADMIN],
         },

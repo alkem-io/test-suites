@@ -1,0 +1,21 @@
+fragment ContributorDetails on Contributor {
+  id
+  profile {
+    id
+    displayName
+    url
+    description
+    tagsets {
+      ...TagsetDetails
+      __typename
+    }
+    location {
+      id
+      country
+      city
+      __typename
+    }
+    __typename
+  }
+  __typename
+}

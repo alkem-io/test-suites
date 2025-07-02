@@ -1,10 +1,9 @@
 import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
 import { createCalloutOnCalloutsSet } from '@functional-api/callout/callouts.request.params';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
+import { CalloutContributionType } from '@alkemio/client-lib';
 import {
   AiPersonaBodyOfKnowledgeType,
-  CalloutState,
-  CalloutType,
   CalloutVisibility,
   SearchVisibility,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
@@ -88,9 +87,13 @@ export const createVirtualContributorOnAccountKnowledgeBasedWithCallout =
         framing: {
           profile: { displayName: 'Post callout' },
         },
-        type: CalloutType.Post,
-        contributionPolicy: { state: CalloutState.Closed },
-        visibility: CalloutVisibility.Published,
+        settings: {
+          contribution: {
+            allowedTypes: [CalloutContributionType.Post],
+            enabled: false,
+          },
+          visibility: CalloutVisibility.Published,
+        },
       },
       userRole
     );

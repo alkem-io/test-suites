@@ -1,8 +1,9 @@
 import request from "supertest";
+import { testConfiguration } from "..";
 const environment = process.env.MAIL_SLURPER_ENDPOINT || "localhost:4437/mail";
 
 export const deleteMailSlurperMails = async () => {
-  return await request(environment)
+  return await request(testConfiguration.endPoints.mailSlurper)
     .delete("")
     .send({
       pruneCode: "all",
@@ -13,7 +14,7 @@ export const deleteMailSlurperMails = async () => {
 };
 
 export const getMails = async () => {
-  return await request(environment)
+  return await request(testConfiguration.endPoints.mailSlurper)
     .get("")
     .set("Accept", "application/json")
     .set("Content-Type", "application/json")

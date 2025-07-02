@@ -43,8 +43,10 @@ fragment Callout on Callout {
     }
     __typename
   }
-  visibility
-  __typename
+  settings {
+    visibility
+    __typename
+  }
 }
 
 fragment ClassificationDetails on Callout {

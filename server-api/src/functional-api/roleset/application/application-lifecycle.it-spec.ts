@@ -23,9 +23,7 @@ const scenarioConfig: TestScenarioConfig = {
   space: {
     subspace: {
       collaboration: {
-        addPostCallout: true,
-        addPostCollectionCallout: true,
-        addWhiteboardCallout: true,
+        addTutorialCallouts: false,
       },
     },
   },

@@ -9,6 +9,7 @@ import { UserModel } from "./models/UserModel";
 import { OrganizationModel } from "./models/OrganizationModel";
 import { LogManager } from "./LogManager";
 import {
+  CalloutAllowedContributors,
   CalloutType,
   CalloutVisibility,
   RoleName,
@@ -29,6 +30,7 @@ import {
   updateCalloutVisibility,
   updateSpaceSettings,
 } from "./baseFunctions";
+import { CalloutContributionType } from "@alkemio/client-lib/dist/generated/graphql";
 
 export class TestScenarioFactory {
   public static async createBaseScenarioEmpty(
@@ -74,7 +76,7 @@ export class TestScenarioFactory {
         baseScenario.space,
         baseScenario.organization.accountId,
         baseScenario.name,
-        scenarioConfig.space.collaboration?.addTutorialCallouts || true
+        scenarioConfig.space.collaboration?.addTutorialCallouts ?? true
       );
 
       await this.populateSpace(
@@ -373,18 +375,24 @@ export class TestScenarioFactory {
         framing: {
           profile: { displayName: `${scenarioName} - post` },
         },
-        type: CalloutType.Post,
+        settings: {
+          framing: { commentsEnabled: true },
+          contribution: {
+            allowedTypes: [CalloutContributionType.Link],
+            canAddContributions: CalloutAllowedContributors.Members,
+            enabled: true,
+            commentsEnabled: true,
+          },
+          visibility: CalloutVisibility.Published,
+        },
       }
     );
+
     const postCalloutData = createPostCallout.data?.createCalloutOnCalloutsSet;
 
     spaceModel.collaboration.calloutPostId = postCalloutData?.id ?? "";
     spaceModel.collaboration.calloutPostCommentsId =
       postCalloutData?.comments?.id ?? "";
-    await updateCalloutVisibility(
-      spaceModel.collaboration.calloutPostId,
-      CalloutVisibility.Published
-    );
 
     return spaceModel;
   }
@@ -402,17 +410,22 @@ export class TestScenarioFactory {
             description: `postCollectionCallout-${scenarioName} - created as part of scenario setup for tests`,
           },
         },
-        type: CalloutType.PostCollection,
+        settings: {
+          //framing: { commentsEnabled: true },
+          contribution: {
+            allowedTypes: [CalloutContributionType.Post],
+            canAddContributions: CalloutAllowedContributors.Members,
+            enabled: true,
+            commentsEnabled: true,
+          },
+          visibility: CalloutVisibility.Published,
+        },
       }
     );
 
     spaceModel.collaboration.calloutPostCollectionId =
       callForPostCalloutData?.data?.createCalloutOnCalloutsSet?.id ?? "";
 
-    await updateCalloutVisibility(
-      spaceModel.collaboration.calloutPostCollectionId,
-      CalloutVisibility.Published
-    );
     return spaceModel;
   }
 
@@ -429,18 +442,18 @@ export class TestScenarioFactory {
             description: "Whiteboard - initial",
           },
         },
-        type: CalloutType.WhiteboardCollection,
+        settings: {
+          contribution: {
+            allowedTypes: [CalloutContributionType.Whiteboard],
+          },
+          visibility: CalloutVisibility.Published,
+        },
       },
       TestUser.GLOBAL_ADMIN
     );
 
     spaceModel.collaboration.calloutWhiteboardId =
       whiteboardCalloutData?.data?.createCalloutOnCalloutsSet?.id ?? "";
-
-    await updateCalloutVisibility(
-      spaceModel.collaboration.calloutWhiteboardId,
-      CalloutVisibility.Published
-    );
 
     return spaceModel;
   }

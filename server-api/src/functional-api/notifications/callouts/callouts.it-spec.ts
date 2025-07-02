@@ -10,6 +10,7 @@ import {
 import { TestUser } from '@alkemio/tests-lib';
 import { delay } from '@alkemio/tests-lib';
 import {
+  CalloutFramingType,
   CalloutVisibility,
   PreferenceType,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
@@ -51,6 +52,9 @@ let baseScenario: OrganizationWithSpaceModel;
 const scenarioConfig: TestScenarioConfig = {
   name: 'callouts-notifications',
   space: {
+    collaboration: {
+      addTutorialCallouts: false,
+    },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [
@@ -63,6 +67,9 @@ const scenarioConfig: TestScenarioConfig = {
       ],
     },
     subspace: {
+      collaboration: {
+        addTutorialCallouts: false,
+      },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
         members: [
@@ -73,6 +80,9 @@ const scenarioConfig: TestScenarioConfig = {
         ],
       },
       subspace: {
+        collaboration: {
+          addTutorialCallouts: false,
+        },
         community: {
           admins: [TestUser.SUBSUBSPACE_ADMIN],
           members: [TestUser.SUBSUBSPACE_MEMBER, TestUser.SUBSUBSPACE_ADMIN],
@@ -156,12 +166,18 @@ describe('Notifications - post', () => {
       await changePreferenceUser(config.userID, config.type, 'true');
     });
   });
+
   test('GA PUBLISH space callout - HM(7) get notifications', async () => {
-    const spaceCalloutSubjectText = `${baseScenario.space.about.profile.displayName} - New post is published &#34;${calloutDisplayName}&#34;, have a look!`;
+    const spaceCalloutSubjectText = `${baseScenario.space.about.profile.displayName} - New post-collection is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
     const res = await createCalloutOnCalloutsSet(
       baseScenario.space.collaboration.calloutsSetId,
-      { framing: { profile: { displayName: calloutDisplayName } } },
+      {
+        framing: {
+          profile: { displayName: calloutDisplayName },
+          type: CalloutFramingType.None,
+        },
+      },
       TestUser.GLOBAL_ADMIN
     );
     calloutId = res.data?.createCalloutOnCalloutsSet.id ?? '';
@@ -292,7 +308,7 @@ describe('Notifications - post', () => {
   });
 
   test('HA create PUBLISHED space callout type: POST - HM(7) get notifications', async () => {
-    const spaceCalloutSubjectText = `${baseScenario.space.about.profile.displayName} - New post is published &#34;${calloutDisplayName}&#34;, have a look!`;
+    const spaceCalloutSubjectText = `${baseScenario.space.about.profile.displayName} - New post-collection is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
     const res = await createCalloutOnCalloutsSet(
       baseScenario.space.collaboration.calloutsSetId,
@@ -440,7 +456,7 @@ describe('Notifications - post', () => {
   });
 
   test('HA create PUBLISHED subspace callout type: POST - CM(5) get notifications', async () => {
-    const calloutSubjectText = `${baseScenario.subspace.about.profile.displayName} - New post is published &#34;${calloutDisplayName}&#34;, have a look!`;
+    const calloutSubjectText = `${baseScenario.subspace.about.profile.displayName} - New post-collection is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
     const res = await createCalloutOnCalloutsSet(
       baseScenario.subspace.collaboration.calloutsSetId,
@@ -532,7 +548,7 @@ describe('Notifications - post', () => {
   });
 
   test('OA create PUBLISHED subsubspace callout type: POST - OM(4) get notifications', async () => {
-    const calloutSubjectText = `${baseScenario.subsubspace.about.profile.displayName} - New post is published &#34;${calloutDisplayName}&#34;, have a look!`;
+    const calloutSubjectText = `${baseScenario.subsubspace.about.profile.displayName} - New post-collection is published &#34;${calloutDisplayName}&#34;, have a look!`;
     // Act
     const res = await createCalloutOnCalloutsSet(
       baseScenario.subsubspace.collaboration.calloutsSetId,

@@ -1,0 +1,11 @@
+fragment ClassificationDetails on Callout {
+  classification {
+    id
+    flowState: tagset(tagsetName: FLOW_STATE) {
+      ...TagsetDetails
+      __typename
+    }
+    __typename
+  }
+  __typename
+}
