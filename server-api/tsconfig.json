@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
     "lib": ["es2020", "dom"],
-    "sourceMap": false,
+    "sourceMap": true,
+    "inlineSourceMap": true,
+    "inlineSources": true,
     "removeComments": true,
     "strict": true,
     "allowSyntheticDefaultImports": true,
@@ -17,6 +19,7 @@
     "skipLibCheck": true,
     "outDir": "./dist",
     "baseUrl": "./",
+    "types": ["node", "jest"],
     "typeRoots": ["./node_modules/@types", "./src/types"],
     "incremental": true,
     "tsBuildInfoFile": ".tsbuildinfo",

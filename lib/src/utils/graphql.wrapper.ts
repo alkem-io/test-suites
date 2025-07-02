@@ -57,6 +57,8 @@ export const graphqlErrorWrapper = async <TData>(
       if (badErrors.length > 0) {
         LogManager.getLogger().error(badErrors);
         LogManager.getLogger().error(`Unable to complete call '${fn}'`);
+
+        throw new Error(`GraphQL error: ${badErrors.map(e => e.message).join(', ')}`);
       }
       return {
         error: {
