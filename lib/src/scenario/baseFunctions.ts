@@ -232,7 +232,7 @@ export const createWhiteboardCalloutOnCalloutsSet = async (
         displayName: string;
         description: string;
       };
-      type?: CalloutFramingType.Whiteboard; // This is to allow for future extensions, e.g., whiteboard framing
+      type?: CalloutFramingType.Whiteboard;
     };
 
     settings?: {

@@ -27,7 +27,7 @@
     "supertest": "^7.0.0"
   },
   "devDependencies": {
-    "@types/node": "^16.18.126",
+    "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^4.28.5",
     "@typescript-eslint/parser": "^4.28.5",
     "@types/supertest": "^6.0.2",

@@ -124932,7 +124932,6 @@ export const CalloutDataFragmentDoc = gql`
         enabled
         canAddContributions
         commentsEnabled
-        enabled
       }
       visibility
     }
