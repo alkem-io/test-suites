@@ -1,7 +1,9 @@
 language: node_js
-# Use the newer Node.js version as default (for lib)
+# Use Ubuntu 20.04 for better Node.js compatibility
+dist: focal
+# Use Node.js 20.11.0 as default (compatible with Ubuntu 20.04)
 node_js:
-  - v20.9.0
+  - 20.11.0
 addons:
   chrome: stable
 cache:
@@ -24,7 +26,7 @@ before_install:
   # Install updated npm globally (for the default Node version)
   - npm i -g npm@10.0.0
 install:
-  # Build lib with Node 20.9.0 (current default)
+  # Build lib with Node 20.11.0 (current default, compatible with Ubuntu 20.04)
   - echo "Building lib with Node $(node --version) and npm $(npm --version)"
   - cd $TRAVIS_BUILD_DIR/lib && npm install
   - cd $TRAVIS_BUILD_DIR/lib && npm run build
