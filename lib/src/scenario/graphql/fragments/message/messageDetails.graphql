@@ -1,0 +1,14 @@
+fragment MessageDetails on Message {
+  id
+  message
+  reactions {
+    ...ReactionDetails
+    __typename
+  }
+  threadID
+  sender {
+    ...ContributorDetails
+    __typename
+  }
+  __typename
+}

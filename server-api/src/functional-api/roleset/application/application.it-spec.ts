@@ -38,6 +38,9 @@ let baseScenario: OrganizationWithSpaceModel;
 const scenarioConfig: TestScenarioConfig = {
   name: 'application',
   space: {
+    collaboration: {
+      addTutorialCallouts: false,
+    },
     settings: {
       privacy: {
         mode: SpacePrivacyMode.Public,

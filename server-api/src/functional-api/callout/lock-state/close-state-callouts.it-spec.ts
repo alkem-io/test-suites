@@ -1,6 +1,6 @@
 import {
-  deleteCallout,
   createCalloutOnCalloutsSet,
+  deleteCallout,
   updateCallout,
   updateCalloutVisibility,
 } from '../callouts.request.params';
@@ -18,7 +18,8 @@ import { sendMessageToRoom } from '@functional-api/communications/communication.
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import {
-  CalloutState,
+  CalloutAllowedContributors,
+  CalloutFramingType,
   CalloutVisibility,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
@@ -55,6 +56,7 @@ const scenarioConfig: TestScenarioConfig = {
       addPostCallout: true,
       addPostCollectionCallout: true,
       addWhiteboardCallout: true,
+      addTutorialCallouts: false,
     },
     community: {
       admins: [TestUser.SPACE_ADMIN],
@@ -72,6 +74,7 @@ const scenarioConfig: TestScenarioConfig = {
         addPostCallout: true,
         addPostCollectionCallout: true,
         addWhiteboardCallout: true,
+        addTutorialCallouts: false,
       },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
@@ -87,6 +90,7 @@ const scenarioConfig: TestScenarioConfig = {
           addPostCallout: true,
           addPostCollectionCallout: true,
           addWhiteboardCallout: true,
+          addTutorialCallouts: false,
         },
         community: {
           admins: [TestUser.SUBSUBSPACE_ADMIN],
@@ -124,10 +128,15 @@ describe('Callouts - Close State', () => {
     calloutId = res.data?.createCalloutOnCalloutsSet.id ?? '';
 
     await updateCallout(calloutId, TestUser.GLOBAL_ADMIN, {
-      contributionPolicy: {
-        state: CalloutState.Closed,
-      },
+      settings: { contribution: { enabled: false } },
     });
+
+    await createPostOnCallout(
+      calloutId,
+      { displayName: 'postDisplayName' },
+      postNameID,
+      TestUser.SPACE_MEMBER
+    );
 
     const postsData = await getDataPerSpaceCallout(
       baseScenario.space.id,
@@ -137,7 +146,8 @@ describe('Callouts - Close State', () => {
       postsData.data?.lookup?.space?.collaboration?.calloutsSet.callouts?.[0];
 
     // Assert
-    expect(data?.contributionPolicy.state).toEqual(CalloutState.Closed);
+    expect(data?.contributions).toEqual([]);
+    expect(data?.settings?.visibility).toEqual(CalloutVisibility.Draft);
   });
 
   test('Close callout that has been published', async () => {
@@ -150,10 +160,16 @@ describe('Callouts - Close State', () => {
     await updateCalloutVisibility(calloutId, CalloutVisibility.Published);
 
     await updateCallout(calloutId, TestUser.GLOBAL_ADMIN, {
-      contributionPolicy: {
-        state: CalloutState.Closed,
-      },
+      settings: { contribution: { enabled: false } },
     });
+
+    const resPostonSpace = await createPostOnCallout(
+      calloutId,
+      { displayName: 'postDisplayName' },
+      postNameID,
+      TestUser.SPACE_MEMBER
+    );
+
     const postsData = await getDataPerSpaceCallout(
       baseScenario.space.id,
       calloutId
@@ -162,7 +178,9 @@ describe('Callouts - Close State', () => {
       postsData.data?.lookup?.space?.collaboration?.calloutsSet.callouts?.[0];
 
     // Assert
-    expect(data?.contributionPolicy.state).toEqual(CalloutState.Closed);
+    expect(resPostonSpace.error?.errors[0].code).toContain('CALLOUT_CLOSED');
+    expect(data?.contributions).toEqual([]);
+    expect(data?.settings?.visibility).toEqual(CalloutVisibility.Published);
   });
 });
 
@@ -185,10 +203,18 @@ describe('Callout - Close State - User Privileges Posts', () => {
       const postCommentsId = postDataCreate?.comments.id ?? '';
 
       await updateCallout(calloutId, TestUser.GLOBAL_ADMIN, {
-        contributionPolicy: {
-          state: CalloutState.Closed,
+        settings: {
+          framing: {
+            commentsEnabled: true,
+          },
+          contribution: {
+            enabled: true,
+            canAddContributions: CalloutAllowedContributors.Admins,
+            commentsEnabled: true,
+          },
         },
       });
+
       return postCommentsId;
     };
 
@@ -291,13 +317,13 @@ describe('Callout - Close State - User Privileges Posts', () => {
       test.each`
         userRole                       | message                                                                                    | entity
         ${TestUser.SPACE_ADMIN}        | ${'"data":{"createContributionOnCallout"'}                                                 | ${'space'}
-        ${TestUser.SPACE_MEMBER}       | ${'"New contributions to a closed Callout with id'}                                        | ${'space'}
+        ${TestUser.SPACE_MEMBER}       | ${'"Only admins are allowed to contribute to Callout with id'}                             | ${'space'}
         ${TestUser.NON_SPACE_MEMBER}   | ${"Authorization: unable to grant 'contribute' privilege: create contribution on callout"} | ${'space'}
         ${TestUser.SUBSPACE_ADMIN}     | ${'"data":{"createContributionOnCallout"'}                                                 | ${'subspace'}
-        ${TestUser.SUBSPACE_MEMBER}    | ${'"New contributions to a closed Callout with id'}                                        | ${'subspace'}
+        ${TestUser.SUBSPACE_MEMBER}    | ${'"Only admins are allowed to contribute to Callout with id'}                             | ${'subspace'}
         ${TestUser.NON_SPACE_MEMBER}   | ${"Authorization: unable to grant 'contribute' privilege: create contribution on callout"} | ${'subspace'}
         ${TestUser.SUBSUBSPACE_ADMIN}  | ${'"data":{"createContributionOnCallout"'}                                                 | ${'subsubspace'}
-        ${TestUser.SUBSUBSPACE_MEMBER} | ${'"New contributions to a closed Callout with id'}                                        | ${'subsubspace'}
+        ${TestUser.SUBSUBSPACE_MEMBER} | ${'"Only admins are allowed to contribute to Callout with id'}                             | ${'subsubspace'}
         ${TestUser.NON_SPACE_MEMBER}   | ${"Authorization: unable to grant 'contribute' privilege: create contribution on callout"} | ${'subsubspace'}
       `(
         'User: "$userRole" get error when create post to closed "$entity" callout',
@@ -336,8 +362,16 @@ describe.skip('Callout - Close State - User Privileges Discussions', () => {
   beforeAll(async () => {
     const preconditions = async (calloutId: string) => {
       await updateCallout(calloutId, TestUser.GLOBAL_ADMIN, {
-        contributionPolicy: {
-          state: CalloutState.Closed,
+        framing: { type: CalloutFramingType.None },
+        settings: {
+          framing: {
+            commentsEnabled: false,
+          },
+          contribution: {
+            enabled: true,
+            canAddContributions: CalloutAllowedContributors.Admins,
+            commentsEnabled: true,
+          },
         },
       });
     };

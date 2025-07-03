@@ -5,7 +5,7 @@ query SpaceCallout($spaceNameId: UUID!, $calloutId: UUID!) {
       collaboration {
         calloutsSet {
           callouts(IDs: [$calloutId]) {
-            ...CalloutData
+            ...CalloutDetails
           }
         }
       }

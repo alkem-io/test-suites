@@ -1,5 +1,5 @@
 mutation SendMessageToRoom($messageData: RoomSendMessageInput!) {
   sendMessageToRoom(messageData: $messageData) {
-    ...MessageData
+    ...MessageDetails
   }
 }

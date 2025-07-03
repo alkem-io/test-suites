@@ -44,6 +44,9 @@ let baseScenario: OrganizationWithSpaceModel;
 const scenarioConfig: TestScenarioConfig = {
   name: 'access-invitations',
   space: {
+    collaboration: {
+      addTutorialCallouts: false,
+    },
     settings: {
       privacy: {
         mode: SpacePrivacyMode.Private,

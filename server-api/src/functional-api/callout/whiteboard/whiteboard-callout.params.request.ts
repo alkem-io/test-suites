@@ -1,6 +1,7 @@
 import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
 import {
-  CalloutType,
+  CalloutAllowedContributors,
+  CalloutFramingType,
   CalloutVisibility,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
@@ -18,9 +19,6 @@ export const createWhiteboardCallout = async (
         calloutData: {
           calloutsSetID,
           nameID,
-          type: CalloutType.Whiteboard,
-
-          visibility: CalloutVisibility.Published,
           framing: {
             profile: {
               displayName,
@@ -32,6 +30,19 @@ export const createWhiteboardCallout = async (
               profile: {
                 displayName: 'whiteboard',
               },
+            },
+            type: CalloutFramingType.Whiteboard,
+          },
+          settings: {
+            framing: {
+              commentsEnabled: true,
+            },
+            visibility: CalloutVisibility.Published,
+            contribution: {
+              enabled: true,
+              allowedTypes: [],
+              canAddContributions: CalloutAllowedContributors.Admins,
+              commentsEnabled: true,
             },
           },
         },

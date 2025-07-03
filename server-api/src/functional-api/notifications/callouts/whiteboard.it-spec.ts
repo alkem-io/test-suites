@@ -17,7 +17,7 @@ import { createWhiteboardOnCallout } from '@functional-api/callout/call-for-whit
 import { deleteWhiteboard } from '@functional-api/callout/whiteboard/whiteboard-callout.params.request';
 import { changePreferenceUser } from '@functional-api/contributor-management/user/user-preferences-mutation';
 import {
-  CalloutType,
+  CalloutContributionType,
   CalloutVisibility,
   PreferenceType,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
@@ -48,6 +48,7 @@ const scenarioConfig: TestScenarioConfig = {
       addPostCallout: true,
       addPostCollectionCallout: true,
       addWhiteboardCallout: true,
+      addTutorialCallouts: false,
     },
     community: {
       admins: [TestUser.SPACE_ADMIN],
@@ -65,6 +66,7 @@ const scenarioConfig: TestScenarioConfig = {
         addPostCallout: true,
         addPostCollectionCallout: true,
         addWhiteboardCallout: true,
+        addTutorialCallouts: false,
       },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
@@ -80,6 +82,7 @@ const scenarioConfig: TestScenarioConfig = {
           addPostCallout: true,
           addPostCollectionCallout: true,
           addWhiteboardCallout: true,
+          addTutorialCallouts: false,
         },
         community: {
           admins: [TestUser.SUBSUBSPACE_ADMIN],
@@ -103,7 +106,12 @@ beforeAll(async () => {
           description: 'test',
         },
       },
-      type: CalloutType.WhiteboardCollection,
+      settings: {
+        contribution: {
+          allowedTypes: [CalloutContributionType.Whiteboard],
+          enabled: true,
+        },
+      },
     },
     TestUser.GLOBAL_ADMIN
   );
@@ -124,7 +132,12 @@ beforeAll(async () => {
           description: '',
         },
       },
-      type: CalloutType.WhiteboardCollection,
+      settings: {
+        contribution: {
+          allowedTypes: [CalloutContributionType.Whiteboard],
+          enabled: true,
+        },
+      },
     },
     TestUser.GLOBAL_ADMIN
   );
@@ -145,7 +158,12 @@ beforeAll(async () => {
           description: 'test',
         },
       },
-      type: CalloutType.WhiteboardCollection,
+      settings: {
+        contribution: {
+          allowedTypes: [CalloutContributionType.Whiteboard],
+          enabled: true,
+        },
+      },
     },
     TestUser.GLOBAL_ADMIN
   );

@@ -1,0 +1,33 @@
+fragment WhiteboardDetails on Whiteboard {
+  id
+  nameID
+  createdDate
+  profile {
+    ...WhiteboardProfile
+    __typename
+  }
+  authorization {
+    id
+    myPrivileges
+    __typename
+  }
+  contentUpdatePolicy
+  createdBy {
+    id
+    profile {
+      id
+      displayName
+      url
+      location {
+        id
+        country
+        city
+        __typename
+      }
+
+      __typename
+    }
+    __typename
+  }
+  __typename
+}

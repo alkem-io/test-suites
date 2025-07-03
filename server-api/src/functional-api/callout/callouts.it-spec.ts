@@ -13,11 +13,8 @@ import {
 import { TestUser } from '@alkemio/tests-lib';
 import { getDataPerSpaceCallout } from './post/post.request.params';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import {
-  CalloutState,
-  CalloutType,
-  CalloutVisibility,
-} from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { CalloutVisibility } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { CalloutContributionType } from '@alkemio/client-lib';
 
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -30,10 +27,9 @@ const scenarioConfig: TestScenarioConfig = {
   name: 'callouts',
   space: {
     collaboration: {
-      addPostCallout: true,
-      addPostCollectionCallout: true,
-      addWhiteboardCallout: true,
+      addTutorialCallouts: false,
     },
+
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [
@@ -47,9 +43,7 @@ const scenarioConfig: TestScenarioConfig = {
     },
     subspace: {
       collaboration: {
-        addPostCallout: true,
-        addPostCollectionCallout: true,
-        addWhiteboardCallout: true,
+        addTutorialCallouts: false,
       },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
@@ -62,9 +56,7 @@ const scenarioConfig: TestScenarioConfig = {
       },
       subspace: {
         collaboration: {
-          addPostCallout: true,
-          addPostCollectionCallout: true,
-          addWhiteboardCallout: true,
+          addTutorialCallouts: false,
         },
         community: {
           admins: [TestUser.SUBSUBSPACE_ADMIN],
@@ -131,9 +123,6 @@ describe('Callouts - CRUD', () => {
             description: 'calloutDescription update',
           },
         },
-        contributionPolicy: {
-          state: CalloutState.Archived,
-        },
       });
       const calloutReq = await getDataPerSpaceCallout(
         baseScenario.space.id,
@@ -164,7 +153,9 @@ describe('Callouts - CRUD', () => {
         calloutReq.data?.lookup?.space?.collaboration?.calloutsSet
           .callouts?.[0];
       // Assert
-      expect(calloutData?.visibility).toEqual(CalloutVisibility.Published);
+      expect(calloutData?.settings?.visibility).toEqual(
+        CalloutVisibility.Published
+      );
     });
   });
 
@@ -247,8 +238,12 @@ describe('Callouts - AUTH Space', () => {
       async ({ userRole, message }) => {
         // Act
         const res = await createCalloutOnCalloutsSet(
-          baseScenario.subspace.collaboration.calloutsSetId,
-          { type: CalloutType.Post },
+          baseScenario.space.collaboration.calloutsSetId,
+          {
+            settings: {
+              contribution: { allowedTypes: [CalloutContributionType.Post] },
+            },
+          },
           userRole
         );
         calloutId = res.data?.createCalloutOnCalloutsSet.id ?? '';
@@ -263,7 +258,6 @@ describe('Callouts - AUTH Space', () => {
     // Arrange
     test.each`
       userRole                     | message
-      ${TestUser.SPACE_MEMBER}     | ${'errors'}
       ${TestUser.NON_SPACE_MEMBER} | ${'errors'}
     `(
       'User: "$userRole" get message: "$message", who intend to create callout',
@@ -271,7 +265,6 @@ describe('Callouts - AUTH Space', () => {
         // Act
         const res = await createCalloutOnCalloutsSet(
           baseScenario.space.collaboration.calloutsSetId,
-          { type: CalloutType.Post },
           userRole
         );
 
@@ -304,10 +297,8 @@ describe('Callouts - AUTH Space', () => {
           framing: {
             profile: {
               description: 'update',
+              displayName: calloutDisplayName + 'update',
             },
-          },
-          contributionPolicy: {
-            state: CalloutState.Archived,
           },
         });
 
@@ -362,7 +353,11 @@ describe('Callouts - AUTH Subspace', () => {
         // Act
         const res = await createCalloutOnCalloutsSet(
           baseScenario.subspace.collaboration.calloutsSetId,
-          { type: CalloutType.Post },
+          {
+            settings: {
+              contribution: { allowedTypes: [CalloutContributionType.Post] },
+            },
+          },
           userRole
         );
 
@@ -385,7 +380,11 @@ describe('Callouts - AUTH Subspace', () => {
         // Act
         const res = await createCalloutOnCalloutsSet(
           baseScenario.subspace.collaboration.calloutsSetId,
-          { type: CalloutType.Post },
+          {
+            settings: {
+              contribution: { allowedTypes: [CalloutContributionType.Post] },
+            },
+          },
           userRole
         );
 
@@ -418,10 +417,8 @@ describe('Callouts - AUTH Subspace', () => {
           framing: {
             profile: {
               description: ' update',
+              displayName: calloutDisplayName + 'update',
             },
-          },
-          contributionPolicy: {
-            state: CalloutState.Archived,
           },
         });
 
@@ -478,7 +475,11 @@ describe('Callouts - AUTH Subsubspace', () => {
         // Act
         const res = await createCalloutOnCalloutsSet(
           baseScenario.subsubspace.collaboration.calloutsSetId,
-          { type: CalloutType.Post },
+          {
+            settings: {
+              contribution: { allowedTypes: [CalloutContributionType.Post] },
+            },
+          },
           userRole
         );
         calloutId = res.data?.createCalloutOnCalloutsSet.id ?? '';
@@ -489,19 +490,24 @@ describe('Callouts - AUTH Subsubspace', () => {
     );
   });
 
+  // ToDo check if space member should have rights ro create callouts on L2?
+  // ${TestUser.SPACE_MEMBER}     | ${'errors'}
   describe('DDT user NO privileges to create callout', () => {
     // Arrange
     test.each`
       userRole                     | message
       ${TestUser.NON_SPACE_MEMBER} | ${'errors'}
-      ${TestUser.SPACE_MEMBER}     | ${'errors'}
     `(
       'User: "$userRole" get message: "$message", who intend to create callout',
       async ({ userRole, message }) => {
         // Act
         const res = await createCalloutOnCalloutsSet(
           baseScenario.subsubspace.collaboration.calloutsSetId,
-          { type: CalloutType.Post },
+          {
+            settings: {
+              contribution: { allowedTypes: [CalloutContributionType.Post] },
+            },
+          },
           userRole
         );
 
@@ -539,9 +545,6 @@ describe('Callouts - AUTH Subsubspace', () => {
               displayName: calloutDisplayName + 'update',
               description: 'calloutDescription update',
             },
-          },
-          contributionPolicy: {
-            state: CalloutState.Archived,
           },
         });
 

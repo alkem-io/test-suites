@@ -18,7 +18,7 @@ fragment CommunityData on Community {
     updates {
       id
       messages {
-        ...MessageData
+        ...MessageDetails
       }
       authorization {
         myPrivileges

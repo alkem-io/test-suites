@@ -24,6 +24,9 @@ let baseScenario: OrganizationWithSpaceModel;
 const scenarioConfig: TestScenarioConfig = {
   name: 'notifications-invitation',
   space: {
+    collaboration: {
+      addTutorialCallouts: false,
+    },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [
@@ -36,6 +39,9 @@ const scenarioConfig: TestScenarioConfig = {
       ],
     },
     subspace: {
+      collaboration: {
+        addTutorialCallouts: false,
+      },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
         members: [
@@ -46,6 +52,9 @@ const scenarioConfig: TestScenarioConfig = {
         ],
       },
       subspace: {
+        collaboration: {
+          addTutorialCallouts: false,
+        },
         community: {
           admins: [TestUser.SUBSUBSPACE_ADMIN],
           members: [TestUser.SUBSUBSPACE_MEMBER, TestUser.SUBSUBSPACE_ADMIN],

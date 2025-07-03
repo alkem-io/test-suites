@@ -1,6 +1,6 @@
 import {
   CalloutState,
-  CalloutType,
+  //CalloutType,
   CalloutVisibility,
   CommunityMembershipPolicy,
   CreateOrganizationInput,
@@ -8,6 +8,8 @@ import {
 } from "@alkemio/client-lib";
 import { TestUser } from "../common/enums/test.user";
 import {
+  CalloutAllowedContributors,
+  CalloutFramingType,
   CreateSpaceOnAccountInput,
   RoleName,
   TagsetReservedName,
@@ -15,6 +17,7 @@ import {
 import { graphqlErrorWrapper } from "../utils/graphql.wrapper";
 import { getGraphqlClient } from "../utils/graphqlClient";
 import { UniqueIDGenerator } from "../utils/uniqueId";
+import { CalloutContributionType } from "@alkemio/client-lib/dist/generated/graphql";
 const getUniqueId = () => UniqueIDGenerator.getID();
 
 export const updateCalloutVisibility = async (
@@ -127,11 +130,19 @@ export const defaultCallout = {
       displayName: "default callout display name",
       description: "callout description",
     },
+    type: CalloutFramingType.None, // This is to allow for future extensions, e.g., whiteboard framing
   },
-  contributionPolicy: {
-    state: CalloutState.Open,
+
+  settings: {
+    visibility: CalloutVisibility.Published,
+    contribution: {
+      enabled: true,
+      allowedTypes: [CalloutContributionType.Post],
+      canAddContributions: CalloutAllowedContributors.Members,
+      commentsEnabled: true,
+    },
+    framing: { commentsEnabled: true },
   },
-  type: CalloutType.Post,
   contributionDefaults: {
     postDescription: "Please describe the knowledge that is relevant.",
   },
@@ -144,10 +155,17 @@ export const defaultWhiteboard = {
       description: "callout Whiteboard description",
     },
   },
-  contributionPolicy: {
-    state: CalloutState.Open,
+
+  settings: {
+    visibility: CalloutVisibility.Published,
+    contribution: {
+      enabled: true,
+      allowedTypes: [CalloutContributionType.Whiteboard],
+      canAddContributions: CalloutAllowedContributors.Members,
+      commentsEnabled: true,
+    },
+    framing: { commentsEnabled: true },
   },
-  type: CalloutType.WhiteboardCollection,
   contributionDefaults: {
     whiteboardContent:
       '{"type":"excalidraw","version":2,"source":"https://excalidraw.com","elements":[],"appState":{"gridSize":null,"viewBackgroundColor":"#ffffff"}}',
@@ -162,12 +180,20 @@ export const createCalloutOnCalloutsSet = async (
         displayName: string;
         description?: string;
       };
+      type?: CalloutFramingType; // This is to allow for future extensions, e.g., whiteboard framing
     };
-    contributionPolicy?: {
-      state?: CalloutState;
+
+    settings?: {
+      visibility?: CalloutVisibility;
+      contribution?: {
+        enabled?: boolean;
+        allowedTypes?: CalloutContributionType[];
+        canAddContributions?: CalloutAllowedContributors;
+        commentsEnabled?: boolean;
+      };
+      framing?: { commentsEnabled: boolean };
     };
-    type?: CalloutType;
-    visibility?: CalloutVisibility;
+
     postTemplate?: {
       defaultDescription?: string;
       type?: string;
@@ -188,8 +214,6 @@ export const createCalloutOnCalloutsSet = async (
           calloutsSetID,
           ...defaultCallout,
           ...options,
-          enableComments:
-            defaultCallout.type === CalloutType.Post ? true : false,
         },
       },
       {
@@ -208,11 +232,19 @@ export const createWhiteboardCalloutOnCalloutsSet = async (
         displayName: string;
         description: string;
       };
+      type?: CalloutFramingType.Whiteboard;
     };
-    contributionPolicy?: {
-      state?: CalloutState;
+
+    settings?: {
+      visibility?: CalloutVisibility.Published;
+      contribution?: {
+        enabled?: true;
+        allowedTypes?: CalloutContributionType[];
+        canAddContributions?: CalloutAllowedContributors;
+        commentsEnabled?: true;
+      };
+      framing?: { commentsEnabled: true };
     };
-    type?: CalloutType;
     contributionDefaults?: {
       whiteboardContent?: string;
     };
@@ -372,7 +404,7 @@ export const subspaceVariablesData = (
       },
     },
     collaborationData: {
-      addTutorialCallouts: true,
+      addTutorialCallouts: false,
       calloutsSetData: {},
     },
   };
@@ -427,7 +459,7 @@ export const createSpaceBasicData = async (
   spaceName: string,
   spaceNameId: string,
   accountID: string,
-  addTutorialCallouts = true,
+  addTutorialCallouts = false,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();

@@ -18,6 +18,9 @@ let baseScenario: OrganizationWithSpaceModel;
 const scenarioConfig: TestScenarioConfig = {
   name: 'orgRolesOnSpace',
   space: {
+    collaboration: {
+      addTutorialCallouts: false,
+    },
     subspace: {
       subspace: {},
     },

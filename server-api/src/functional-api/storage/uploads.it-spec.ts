@@ -19,7 +19,6 @@ import {
   createSpaceAndGetData,
   deleteSpace,
 } from '../journey/space/space.request.params';
-
 import { lookupProfileVisuals } from '@functional-api/lookup/lookup-request.params';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import {
@@ -92,6 +91,7 @@ describe('Upload document', () => {
     const createRef = await createReferenceOnProfile(
       baseScenario.organization.profile.id
     );
+    console.log('createRef', createRef.error);
     refId = createRef?.data?.createReferenceOnProfile.id ?? '';
   });
 
@@ -135,12 +135,12 @@ describe('Upload document', () => {
     );
   });
 
-  test('DDT upload all file types', async () => {
+  test.only('DDT upload all file types', async () => {
     const res = await uploadFileOnRef(
       path.join(__dirname, 'files-to-upload', 'image.png'),
       refId
     );
-
+    console.log(res.error.errors);
     documentEndPoint = res.data?.uploadFileOnReference?.uri || 'not found';
     documentId = getLastPartOfUrl(documentEndPoint);
     referenceUri = await getReferenceUri(baseScenario.organization.id);
