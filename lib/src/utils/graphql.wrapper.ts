@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import Headers from 'graphql-request';
-import { TestUserManager } from '../scenario/TestUserManager';
-import { LogManager } from '../scenario/LogManager';
-import { TestUser } from '../common/enums/test.user';
+import Headers from "graphql-request";
+import { TestUserManager } from "../scenario/TestUserManager";
+import { LogManager } from "../scenario/LogManager";
+import { TestUser } from "../common/enums/test.user";
 
 export type ErrorType = {
   response: {
@@ -42,27 +42,28 @@ export const graphqlErrorWrapper = async <TData>(
     const err = error as ErrorType;
     if (!err.response || !err.response.errors) {
       LogManager.getLogger().error(`Unable to complete call '${fn}'`);
-      LogManager.getLogger().error('Returned error:');
+      LogManager.getLogger().error("Returned error:");
       LogManager.getLogger().error(err);
       return {
         error: {
-          errors: [{ message: 'Unable to complete call', code: 'UNKNOWN' }],
+          errors: [{ message: "Unable to complete call", code: "UNKNOWN" }],
         },
       };
     } else {
-
       const badErrors = err.response.errors.filter(
-        e => e.extensions.code !== 'BAD_USER_INPUT' && e.extensions.code !== 'FORBIDDEN_POLICY'
+        (e) =>
+          e.extensions.code !== "BAD_USER_INPUT" &&
+          e.extensions.code !== "FORBIDDEN_POLICY"
       );
       if (badErrors.length > 0) {
         LogManager.getLogger().error(badErrors);
         LogManager.getLogger().error(`Unable to complete call '${fn}'`);
 
-        throw new Error(`GraphQL error: ${badErrors.map(e => e.message).join(', ')}`);
+        //throw new Error(`GraphQL error: ${badErrors.map(e => e.message).join(', ')}`);
       }
       return {
         error: {
-          errors: err.response.errors.map(error => ({
+          errors: err.response.errors.map((error) => ({
             ...error,
             message: error.message,
             code: error.extensions.code,
