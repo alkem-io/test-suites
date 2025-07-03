@@ -91,7 +91,6 @@ describe('Upload document', () => {
     const createRef = await createReferenceOnProfile(
       baseScenario.organization.profile.id
     );
-    console.log('createRef', createRef.error);
     refId = createRef?.data?.createReferenceOnProfile.id ?? '';
   });
 
@@ -135,12 +134,11 @@ describe('Upload document', () => {
     );
   });
 
-  test.only('DDT upload all file types', async () => {
+  test('DDT upload all file types', async () => {
     const res = await uploadFileOnRef(
       path.join(__dirname, 'files-to-upload', 'image.png'),
       refId
     );
-    console.log(res.error.errors);
     documentEndPoint = res.data?.uploadFileOnReference?.uri || 'not found';
     documentId = getLastPartOfUrl(documentEndPoint);
     referenceUri = await getReferenceUri(baseScenario.organization.id);
