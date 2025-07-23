@@ -260,6 +260,14 @@ export const sorted__create_read_update_delete_grant_createSubspace = [
   "CREATE_SUBSPACE",
 ].sort();
 
+export const sorted__create_read_update_delete_grant_createSubspace_readLicense_readAbout =
+  [
+    ...sorted__create_read_update_delete_grant,
+    "CREATE_SUBSPACE",
+    "READ_LICENSE",
+    "READ_ABOUT",
+  ].sort();
+
 export const sorted__create_read_readAbout_update_delete_grant_createSubspace =
   [
     ...sorted__create_read_readAbout_update_delete_grant,

@@ -1,6 +1,7 @@
 fragment SubspaceData on Space {
   id
   nameID
+  level
   about {
     ...SpaceAboutDetails
   }
@@ -12,5 +13,28 @@ fragment SubspaceData on Space {
   }
   community {
     ...CommunityData
+  }
+  settings {
+    ...SettingsData
+  }
+  subspaces {
+    id
+    nameID
+    level
+    about {
+      ...SpaceAboutDetails
+    }
+    collaboration {
+      ...CollaborationData
+    }
+    authorization {
+      ...AuthorizationData
+    }
+    community {
+      ...CommunityData
+    }
+    settings {
+      ...SettingsData
+    }
   }
 }

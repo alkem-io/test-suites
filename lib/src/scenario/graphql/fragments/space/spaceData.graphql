@@ -15,6 +15,9 @@ fragment SpaceData on Space {
   community {
     ...CommunityData
   }
+  # settings {
+  #   ...SettingsData
+  # }
   collaboration {
     ...CollaborationData
   }

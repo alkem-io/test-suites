@@ -14,6 +14,24 @@ query GetTemplateById($templateId: UUID!) {
       }
       contentSpace {
         id
+        about {
+          id
+        }
+        level
+        subspaces {
+          id
+          about {
+            id
+          }
+          level
+          subspaces {
+            id
+            about {
+              id
+            }
+            level
+          }
+        }
       }
       whiteboard {
         id
