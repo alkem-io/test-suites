@@ -19,6 +19,7 @@ export const createSubspace = async (
           subspaceName,
           subspaceNameId,
           parentId
+          
         ),
       },
       {

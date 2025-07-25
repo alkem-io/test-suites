@@ -379,7 +379,7 @@ describe('Use hierarchical space template from other account ', () => {
     );
     console.log('res2', createSpaceUsingTemplate.error);
     const spaceFromTemplateId =
-      createSpaceUsingTemplate?.data?.createSpace?.id ?? '';
+      createSpaceUsingTemplate?.data?.createSubspace?.id ?? '';
 
     const spaceData = await getSpaceData(
       spaceFromTemplateId,
