@@ -10,6 +10,7 @@ mutation InviteForEntryRoleOnRoleSet(
       invitedContributorIDs: $invitedContributorIDs
       invitedUserEmails: $invitedUserEmails
       welcomeMessage: $welcomeMessage
+      extraRoles: []
     }
   ) {
     type
