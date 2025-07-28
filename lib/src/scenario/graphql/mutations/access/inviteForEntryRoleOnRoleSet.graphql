@@ -1,24 +1,40 @@
 mutation InviteForEntryRoleOnRoleSet(
   $roleSetId: UUID!
-  $invitedContributorIDs: [UUID!]!
+  $invitedContributorIds: [UUID!]!
   $invitedUserEmails: [String!]!
   $welcomeMessage: String
+  $extraRoles: [RoleName!]!
 ) {
   inviteForEntryRoleOnRoleSet(
     invitationData: {
-      roleSetID: $roleSetId
-      invitedContributorIDs: $invitedContributorIDs
+      invitedContributorIDs: $invitedContributorIds
       invitedUserEmails: $invitedUserEmails
+      roleSetID: $roleSetId
       welcomeMessage: $welcomeMessage
+      extraRoles: $extraRoles
     }
   ) {
     type
     invitation {
       id
       state
+      contributor {
+        id
+        profile {
+          id
+          displayName
+          __typename
+        }
+        __typename
+      }
+      __typename
     }
     platformInvitation {
       id
+      email
+      firstName
+      lastName
+      __typename
     }
     __typename
   }

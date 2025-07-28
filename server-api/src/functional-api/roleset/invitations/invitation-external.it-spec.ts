@@ -19,7 +19,10 @@ import { getRoleSetInvitationsApplications } from '../application/application.re
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
 import { getSingleInvitationResult } from '../roleset.request.params';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { RoleSetInvitationResultType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import {
+  RoleName,
+  RoleSetInvitationResultType,
+} from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -83,6 +86,7 @@ describe('Invitations', () => {
       [],
       [emailExternalUser],
       message,
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
     const invitationResult = getSingleInvitationResult(invitationData);
@@ -124,6 +128,7 @@ describe('Invitations', () => {
       [],
       [userEmail],
       message,
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
 
@@ -138,6 +143,7 @@ describe('Invitations', () => {
       [],
       [userEmail],
       message,
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
     const invitationResult2 = getSingleInvitationResult(invitationMutation2);
@@ -174,6 +180,7 @@ describe('Invitations', () => {
       [],
       [userEmail],
       message,
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
 
@@ -195,6 +202,7 @@ describe('Invitations', () => {
       [],
       [userEmail],
       message,
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
 
@@ -242,6 +250,7 @@ describe('Invitations', () => {
       [],
       [userEmail],
       message,
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
 
@@ -256,6 +265,7 @@ describe('Invitations', () => {
       [],
       [userEmail],
       message,
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
 

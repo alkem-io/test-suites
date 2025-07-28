@@ -14,7 +14,10 @@ import {
 } from '@functional-api/roleset/invitations/invitation.request.params';
 import { TestUser } from '@alkemio/tests-lib';
 import { changePreferenceUser } from '@functional-api/contributor-management/user/user-preferences-mutation';
-import { PreferenceType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import {
+  PreferenceType,
+  RoleName,
+} from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 
 let invitationId = '';
@@ -144,6 +147,7 @@ describe('Notifications - invitations', () => {
       [TestUserManager.users.nonSpaceMember.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.SPACE_ADMIN
     );
     const invitationsResults =
@@ -178,6 +182,7 @@ describe('Notifications - invitations', () => {
       [TestUserManager.users.qaUser.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.SUBSPACE_ADMIN
     );
 
@@ -213,6 +218,7 @@ describe('Notifications - invitations', () => {
       [TestUserManager.users.qaUser.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.SUBSPACE_ADMIN
     );
     const invitationsResults =
@@ -247,6 +253,7 @@ describe('Notifications - invitations', () => {
       [TestUserManager.users.qaUser.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.SUBSUBSPACE_ADMIN
     );
     const invitationsResults =
@@ -281,6 +288,7 @@ describe('Notifications - invitations', () => {
       [TestUserManager.users.spaceMember.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.SUBSUBSPACE_ADMIN
     );
     const invitationsResults =
@@ -315,6 +323,7 @@ describe('Notifications - invitations', () => {
       [TestUserManager.users.qaUser.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.SUBSUBSPACE_ADMIN
     );
     const invitationsResults =
@@ -355,6 +364,7 @@ describe('Notifications - invitations', () => {
       [TestUserManager.users.nonSpaceMember.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.SPACE_ADMIN
     );
     const invitationsResults =
@@ -388,6 +398,7 @@ describe('Notifications - invitations', () => {
       [TestUserManager.users.qaUser.displayName],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.SUBSPACE_ADMIN
     );
     const invitationsResults =

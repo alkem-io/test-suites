@@ -96,6 +96,7 @@ describe('Invitations', () => {
       [TestUserManager.users.nonSpaceMember.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
 
@@ -122,6 +123,7 @@ describe('Invitations', () => {
       [TestUserManager.users.nonSpaceMember.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
 
@@ -142,6 +144,7 @@ describe('Invitations', () => {
       [TestUserManager.users.nonSpaceMember.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
 
@@ -178,6 +181,7 @@ describe('Invitations', () => {
       [TestUserManager.users.nonSpaceMember.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
     invitationId = 'invitationIdNotRetrieved';
@@ -204,6 +208,7 @@ describe('Invitations', () => {
       [TestUserManager.users.nonSpaceMember.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
     invitationId = 'invitationIdNotRetrieved';
@@ -236,6 +241,7 @@ describe('Invitations', () => {
       [TestUserManager.users.nonSpaceMember.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
 
@@ -252,6 +258,7 @@ describe('Invitations', () => {
       [TestUserManager.users.nonSpaceMember.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
     const invitationResult2 = getSingleInvitationResult(invitationData2);
@@ -272,6 +279,7 @@ describe('Invitations', () => {
       [TestUserManager.users.betaTester.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
 
@@ -316,6 +324,7 @@ describe('Invitations-flows', () => {
       [TestUserManager.users.nonSpaceMember.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
     invitationId = 'invitationIdNotRetrieved';
@@ -350,6 +359,7 @@ describe('Invitations-flows', () => {
       [TestUserManager.users.nonSpaceMember.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
     invitationId = 'invitationIdNotRetrieved';
@@ -403,6 +413,7 @@ describe('Invitations-flows', () => {
       [TestUserManager.users.nonSpaceMember.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
 
@@ -430,6 +441,7 @@ describe('Invitations-flows', () => {
       [TestUserManager.users.nonSpaceMember.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
 
@@ -447,6 +459,7 @@ describe('Invitations-flows', () => {
       [TestUserManager.users.nonSpaceMember.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
 
@@ -515,6 +528,7 @@ describe('Invitations - Authorization', () => {
           [TestUserManager.users.nonSpaceMember.id],
           [],
           'welcome',
+          [RoleName.Member],
           TestUser.GLOBAL_ADMIN
         );
         invitationId = 'invitationIdNotRetrieved';
@@ -547,6 +561,7 @@ describe('Invitations - Authorization', () => {
           [TestUserManager.users.nonSpaceMember.id],
           [],
           'welcome',
+          [RoleName.Member],
           TestUser.GLOBAL_ADMIN
         );
         invitationId = 'invitationIdNotRetrieved';
@@ -582,6 +597,7 @@ describe('Invitations - Authorization', () => {
           [TestUserManager.users.nonSpaceMember.id],
           [],
           'welcome',
+          [RoleName.Member],
           user
         );
 
@@ -616,6 +632,7 @@ describe('Invitations - Authorization', () => {
           [TestUserManager.users.nonSpaceMember.id],
           [],
           'welcome',
+          [RoleName.Member],
           user
         );
 

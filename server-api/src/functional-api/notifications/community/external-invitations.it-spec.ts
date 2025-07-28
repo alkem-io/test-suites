@@ -16,7 +16,10 @@ import {
 import { TestUser } from '@alkemio/tests-lib';
 import { changePreferenceUser } from '@functional-api/contributor-management/user/user-preferences-mutation';
 import { getSingleInvitationResult } from '@functional-api/roleset/roleset.request.params';
-import { PreferenceType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import {
+  PreferenceType,
+  RoleName,
+} from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 
 const uniqueId = UniqueIDGenerator.getID();
@@ -146,6 +149,7 @@ describe('Notifications - invitations', () => {
       [],
       [emailExternalUser],
       message,
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
     const invitationResult = getSingleInvitationResult(invitationData);
@@ -178,6 +182,7 @@ describe('Notifications - invitations', () => {
       [],
       [emailExternalUser],
       message,
+      [RoleName.Member],
       TestUser.SUBSPACE_ADMIN
     );
 

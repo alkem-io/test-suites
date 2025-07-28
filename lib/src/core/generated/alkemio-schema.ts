@@ -848,6 +848,7 @@ export enum AuthorizationPolicyType {
   Document = "DOCUMENT",
   Forum = "FORUM",
   InnovationFlow = "INNOVATION_FLOW",
+  InnovationFlowState = "INNOVATION_FLOW_STATE",
   InnovationHub = "INNOVATION_HUB",
   InnovationPack = "INNOVATION_PACK",
   Invitation = "INVITATION",
@@ -1611,6 +1612,14 @@ export type CreateCalendarEventOnCalendarInput = {
   wholeDay: Scalars["Boolean"]["input"];
 };
 
+export type CreateCalloutContributionData = {
+  link?: Maybe<CreateLinkData>;
+  post?: Maybe<CreatePostData>;
+  /** The sort order to assign to this Contribution. */
+  sortOrder?: Maybe<Scalars["Float"]["output"]>;
+  whiteboard?: Maybe<CreateWhiteboardData>;
+};
+
 export type CreateCalloutContributionDefaultsData = {
   /** The default title to use for new contributions. */
   defaultDisplayName?: Maybe<Scalars["String"]["output"]>;
@@ -1627,9 +1636,19 @@ export type CreateCalloutContributionDefaultsInput = {
   whiteboardContent?: InputMaybe<Scalars["WhiteboardContent"]["input"]>;
 };
 
+export type CreateCalloutContributionInput = {
+  link?: InputMaybe<CreateLinkInput>;
+  post?: InputMaybe<CreatePostInput>;
+  /** The sort order to assign to this Contribution. */
+  sortOrder?: InputMaybe<Scalars["Float"]["input"]>;
+  whiteboard?: InputMaybe<CreateWhiteboardInput>;
+};
+
 export type CreateCalloutData = {
   classification?: Maybe<CreateClassificationData>;
   contributionDefaults?: Maybe<CreateCalloutContributionDefaultsData>;
+  /** Contributions to be created with this Callout. */
+  contributions?: Maybe<Array<CreateCalloutContributionData>>;
   framing: CreateCalloutFramingData;
   /** A readable identifier, unique within the containing scope. */
   nameID?: Maybe<Scalars["NameID"]["output"]>;
@@ -1659,6 +1678,8 @@ export type CreateCalloutFramingInput = {
 export type CreateCalloutInput = {
   classification?: InputMaybe<CreateClassificationInput>;
   contributionDefaults?: InputMaybe<CreateCalloutContributionDefaultsInput>;
+  /** Contributions to be created with this Callout. */
+  contributions?: InputMaybe<Array<CreateCalloutContributionInput>>;
   framing: CreateCalloutFramingInput;
   /** A readable identifier, unique within the containing scope. */
   nameID?: InputMaybe<Scalars["NameID"]["input"]>;
@@ -1673,6 +1694,8 @@ export type CreateCalloutOnCalloutsSetInput = {
   calloutsSetID: Scalars["UUID"]["input"];
   classification?: InputMaybe<CreateClassificationInput>;
   contributionDefaults?: InputMaybe<CreateCalloutContributionDefaultsInput>;
+  /** Contributions to be created with this Callout. */
+  contributions?: InputMaybe<Array<CreateCalloutContributionInput>>;
   framing: CreateCalloutFramingInput;
   /** A readable identifier, unique within the containing scope. */
   nameID?: InputMaybe<Scalars["NameID"]["input"]>;
@@ -1800,17 +1823,33 @@ export type CreateInnovationFlowInput = {
 };
 
 export type CreateInnovationFlowStateData = {
-  /** The explation text to clarify the State. */
+  /** The explanation text to clarify the State. */
   description?: Maybe<Scalars["Markdown"]["output"]>;
   /** The display name for the State */
   displayName: Scalars["String"]["output"];
+  settings?: Maybe<CreateInnovationFlowStateSettingsData>;
+  /** The sort order for the State; if not specified, it will be set to the next highest order. */
+  sortOrder?: Maybe<Scalars["Float"]["output"]>;
 };
 
 export type CreateInnovationFlowStateInput = {
-  /** The explation text to clarify the State. */
+  /** The explanation text to clarify the State. */
   description?: InputMaybe<Scalars["Markdown"]["input"]>;
   /** The display name for the State */
   displayName: Scalars["String"]["input"];
+  settings?: InputMaybe<CreateInnovationFlowStateSettingsInput>;
+  /** The sort order for the State; if not specified, it will be set to the next highest order. */
+  sortOrder?: InputMaybe<Scalars["Float"]["input"]>;
+};
+
+export type CreateInnovationFlowStateSettingsData = {
+  /** The flag to set. */
+  allowNewCallouts: Scalars["Boolean"]["output"];
+};
+
+export type CreateInnovationFlowStateSettingsInput = {
+  /** The flag to set. */
+  allowNewCallouts: Scalars["Boolean"]["input"];
 };
 
 export type CreateInnovationHubOnAccountInput = {
@@ -1873,6 +1912,11 @@ export type CreateLicensePlanOnLicensingFrameworkInput = {
   type: LicensingCredentialBasedPlanType;
 };
 
+export type CreateLinkData = {
+  profile: CreateProfileData;
+  uri?: Maybe<Scalars["String"]["output"]>;
+};
+
 export type CreateLinkInput = {
   profile: CreateProfileInput;
   uri?: InputMaybe<Scalars["String"]["input"]>;
@@ -1910,6 +1954,10 @@ export type CreateOrganizationInput = {
   nameID?: InputMaybe<Scalars["NameID"]["input"]>;
   profileData: CreateProfileInput;
   website?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+export type CreatePostData = {
+  tags?: Maybe<Array<Scalars["String"]["output"]>>;
 };
 
 export type CreatePostInput = {
@@ -1984,8 +2032,6 @@ export type CreateSpaceOnAccountInput = {
   licensePlanID?: InputMaybe<Scalars["UUID"]["input"]>;
   /** A readable identifier, unique within the containing scope. */
   nameID?: InputMaybe<Scalars["NameID"]["input"]>;
-  /** Pick up a different platform template. */
-  platformTemplate?: InputMaybe<TemplateDefaultType>;
   settings?: InputMaybe<CreateSpaceSettingsInput>;
   /** The Template to use for instantiating the Collaboration. */
   spaceTemplateID?: InputMaybe<Scalars["UUID"]["input"]>;
@@ -2023,13 +2069,22 @@ export type CreateSpaceSettingsPrivacyInput = {
   mode?: InputMaybe<SpacePrivacyMode>;
 };
 
+export type CreateStateOnInnovationFlowInput = {
+  /** The explanation text to clarify the State. */
+  description?: InputMaybe<Scalars["Markdown"]["input"]>;
+  /** The display name for the State */
+  displayName: Scalars["String"]["input"];
+  innovationFlowID: Scalars["UUID"]["input"];
+  settings?: InputMaybe<CreateInnovationFlowStateSettingsInput>;
+  /** The sort order for the State; if not specified, it will be set to the next highest order. */
+  sortOrder?: InputMaybe<Scalars["Float"]["input"]>;
+};
+
 export type CreateSubspaceInput = {
   about: CreateSpaceAboutInput;
   collaborationData: CreateCollaborationOnSpaceInput;
   /** A readable identifier, unique within the containing scope. */
   nameID?: InputMaybe<Scalars["NameID"]["input"]>;
-  /** Pick up a different platform template. */
-  platformTemplate?: InputMaybe<TemplateDefaultType>;
   settings?: InputMaybe<CreateSpaceSettingsInput>;
   spaceID: Scalars["UUID"]["input"];
   /** The Template to use for instantiating the Collaboration. */
@@ -2061,6 +2116,7 @@ export type CreateTemplateContentSpaceInput = {
   level: SpaceLevel;
   /** Create the settings for the Space. */
   settings: CreateSpaceSettingsInput;
+  subspaces?: InputMaybe<Array<CreateTemplateContentSpaceInput>>;
 };
 
 export type CreateTemplateFromContentSpaceOnTemplatesSetInput = {
@@ -2077,6 +2133,8 @@ export type CreateTemplateFromSpaceOnTemplatesSetInput = {
   /** A readable identifier, unique within the containing scope. */
   nameID?: InputMaybe<Scalars["NameID"]["input"]>;
   profileData: CreateProfileInput;
+  /** Whether to reproduce the hierarchy or just the space. */
+  recursive?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** The ID of the Space to use as the content for the Template. */
   spaceID: Scalars["UUID"]["input"];
   tags?: InputMaybe<Array<Scalars["String"]["input"]>>;
@@ -2291,6 +2349,11 @@ export type DeleteReferenceInput = {
 
 export type DeleteSpaceInput = {
   ID: Scalars["UUID"]["input"];
+};
+
+export type DeleteStateOnInnovationFlowInput = {
+  ID: Scalars["UUID"]["input"];
+  innovationFlowID: Scalars["UUID"]["input"];
 };
 
 export type DeleteStorageBuckeetInput = {
@@ -2652,14 +2715,14 @@ export type InnovationFlow = {
   /** The date at which the entity was created. */
   createdDate: Scalars["DateTime"]["output"];
   /** The currently selected State in this Flow. */
-  currentState: InnovationFlowState;
+  currentState?: Maybe<InnovationFlowState>;
   /** The ID of the entity */
   id: Scalars["UUID"]["output"];
   /** The Profile for this InnovationFlow. */
   profile: Profile;
   /** The settings for this InnovationFlow. */
   settings: InnovationFlowSettings;
-  /** The set of States in use in this Flow. */
+  /** The States for this InnovationFlow. */
   states: Array<InnovationFlowState>;
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
@@ -2673,10 +2736,27 @@ export type InnovationFlowSettings = {
 };
 
 export type InnovationFlowState = {
+  /** The authorization rules for the entity */
+  authorization?: Maybe<Authorization>;
+  /** The date at which the entity was created. */
+  createdDate: Scalars["DateTime"]["output"];
   /** The explanation text to clarify the state. */
-  description: Scalars["Markdown"]["output"];
+  description?: Maybe<Scalars["Markdown"]["output"]>;
   /** The display name for the State */
   displayName: Scalars["String"]["output"];
+  /** The ID of the entity */
+  id: Scalars["UUID"]["output"];
+  /** The Settings associated with this InnovationFlowState. */
+  settings: InnovationFlowStateSettings;
+  /** The sorting order for this State. */
+  sortOrder: Scalars["Float"]["output"];
+  /** The date at which the entity was last updated. */
+  updatedDate: Scalars["DateTime"]["output"];
+};
+
+export type InnovationFlowStateSettings = {
+  /** Whether new callouts can be added to this State. */
+  allowNewCallouts: Scalars["Boolean"]["output"];
 };
 
 export type InnovationHub = {
@@ -2794,8 +2874,8 @@ export type Invitation = {
   createdBy?: Maybe<User>;
   /** The date at which the entity was created. */
   createdDate: Scalars["DateTime"]["output"];
-  /** An additional role to assign to the Contributor, in addition to the entry Role. */
-  extraRole?: Maybe<RoleName>;
+  /** Additional roles to assign to the Contributor, in addition to the entry Role. */
+  extraRoles: Array<RoleName>;
   /** The ID of the entity */
   id: Scalars["UUID"]["output"];
   /** Whether to also add the invited contributor to the parent community. */
@@ -2818,8 +2898,8 @@ export type InvitationEventInput = {
 };
 
 export type InviteForEntryRoleOnRoleSetInput = {
-  /** An additional role to assign in addition to the entry Role. */
-  extraRole?: InputMaybe<RoleName>;
+  /** Additional roles to assign in addition to the entry Role. */
+  extraRoles: Array<RoleName>;
   /** The identifiers for the contributors being invited. */
   invitedContributorIDs: Array<Scalars["UUID"]["input"]>;
   invitedUserEmails: Array<Scalars["String"]["input"]>;
@@ -3762,6 +3842,8 @@ export type Mutation = {
   createReferenceOnProfile: Reference;
   /** Creates a new Level Zero Space within the specified Account. */
   createSpace: Space;
+  /** Create a new State on the InnovationFlow. */
+  createStateOnInnovationFlow: InnovationFlowState;
   /** Creates a new Subspace within the specified Space. */
   createSubspace: Space;
   /** Creates a new Tagset on the specified Profile */
@@ -3784,6 +3866,8 @@ export type Mutation = {
   deleteCalendarEvent: CalendarEvent;
   /** Delete a Callout. */
   deleteCallout: Callout;
+  /** Deletes a contribution. */
+  deleteContribution: CalloutContribution;
   /** Deletes the specified Discussion. */
   deleteDiscussion: Discussion;
   /** Deletes the specified Document. */
@@ -3808,6 +3892,8 @@ export type Mutation = {
   deleteReference: Reference;
   /** Deletes the specified Space. */
   deleteSpace: Space;
+  /** Delete a  State on the InnovationFlow. */
+  deleteStateOnInnovationFlow: InnovationFlowState;
   /** Deletes a Storage Bucket */
   deleteStorageBucket: StorageBucket;
   /** Deletes the specified Template. */
@@ -3931,9 +4017,11 @@ export type Mutation = {
   /** Updates the InnovationFlow. */
   updateInnovationFlow: InnovationFlow;
   /** Updates the InnovationFlow. */
-  updateInnovationFlowSelectedState: InnovationFlow;
+  updateInnovationFlowCurrentState: InnovationFlow;
   /** Updates the specified InnovationFlowState. */
-  updateInnovationFlowSingleState: InnovationFlow;
+  updateInnovationFlowState: InnovationFlowState;
+  /** Update the sortOrder field of the supplied InnovationFlowStates to increase as per the order that they are provided in. */
+  updateInnovationFlowStatesSortOrder: Array<InnovationFlowState>;
   /** Update Innovation Hub. */
   updateInnovationHub: InnovationHub;
   /** Updates the InnovationPack. */
@@ -4171,6 +4259,10 @@ export type MutationCreateSpaceArgs = {
   spaceData: CreateSpaceOnAccountInput;
 };
 
+export type MutationCreateStateOnInnovationFlowArgs = {
+  stateData: CreateStateOnInnovationFlowInput;
+};
+
 export type MutationCreateSubspaceArgs = {
   subspaceData: CreateSubspaceInput;
 };
@@ -4209,6 +4301,10 @@ export type MutationDeleteCalendarEventArgs = {
 
 export type MutationDeleteCalloutArgs = {
   deleteData: DeleteCalloutInput;
+};
+
+export type MutationDeleteContributionArgs = {
+  contributionID: Scalars["String"]["input"];
 };
 
 export type MutationDeleteDiscussionArgs = {
@@ -4257,6 +4353,10 @@ export type MutationDeleteReferenceArgs = {
 
 export type MutationDeleteSpaceArgs = {
   deleteData: DeleteSpaceInput;
+};
+
+export type MutationDeleteStateOnInnovationFlowArgs = {
+  stateData: DeleteStateOnInnovationFlowInput;
 };
 
 export type MutationDeleteStorageBucketArgs = {
@@ -4488,15 +4588,19 @@ export type MutationUpdateDocumentArgs = {
 };
 
 export type MutationUpdateInnovationFlowArgs = {
-  innovationFlowData: UpdateInnovationFlowEntityInput;
+  innovationFlowData: UpdateInnovationFlowInput;
 };
 
-export type MutationUpdateInnovationFlowSelectedStateArgs = {
-  innovationFlowStateData: UpdateInnovationFlowSelectedStateInput;
+export type MutationUpdateInnovationFlowCurrentStateArgs = {
+  innovationFlowStateData: UpdateInnovationFlowCurrentStateInput;
 };
 
-export type MutationUpdateInnovationFlowSingleStateArgs = {
-  innovationFlowStateData: UpdateInnovationFlowSingleStateInput;
+export type MutationUpdateInnovationFlowStateArgs = {
+  stateData: UpdateInnovationFlowStateInput;
+};
+
+export type MutationUpdateInnovationFlowStatesSortOrderArgs = {
+  sortOrderData: UpdateInnovationFlowStatesSortOrderInput;
 };
 
 export type MutationUpdateInnovationHubArgs = {
@@ -4946,8 +5050,8 @@ export type PlatformInvitation = {
   platformRole?: Maybe<RoleName>;
   /** Whether a new user profile has been created. */
   profileCreated: Scalars["Boolean"]["output"];
-  /** An additional role to assign to the Contributor, in addition to the entry Role. */
-  roleSetExtraRole?: Maybe<RoleName>;
+  /** Additional roles to assign to the Contributor, in addition to the entry Role. */
+  roleSetExtraRoles: Array<RoleName>;
   /** Whether to also add the invited user to the parent community. */
   roleSetInvitedToParent: Scalars["Boolean"]["output"];
   /** The date at which the entity was last updated. */
@@ -6509,6 +6613,8 @@ export type TemplateContentSpace = {
   level: SpaceLevel;
   /** The settings for this TemplateContentSpace. */
   settings: SpaceSettings;
+  /** The template subspaces for the Template Content Space. */
+  subspaces: Array<TemplateContentSpace>;
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
 };
@@ -6834,34 +6940,39 @@ export type UpdateFormQuestionInput = {
   sortOrder: Scalars["Float"]["input"];
 };
 
-export type UpdateInnovationFlowEntityInput = {
+export type UpdateInnovationFlowCurrentStateInput = {
+  /** ID of the Innovation Flow State to be selected as the current one. */
+  currentStateID: Scalars["UUID"]["input"];
+  /** ID of the Innovation Flow */
+  innovationFlowID: Scalars["UUID"]["input"];
+};
+
+export type UpdateInnovationFlowInput = {
   /** ID of the Innovation Flow */
   innovationFlowID: Scalars["UUID"]["input"];
   /** The Profile of this entity. */
   profileData?: InputMaybe<UpdateProfileInput>;
-  states?: InputMaybe<Array<UpdateInnovationFlowStateInput>>;
-};
-
-export type UpdateInnovationFlowSelectedStateInput = {
-  /** ID of the Innovation Flow */
-  innovationFlowID: Scalars["UUID"]["input"];
-  /** The State that the Innovation Flow is in */
-  selectedState: Scalars["String"]["input"];
-};
-
-export type UpdateInnovationFlowSingleStateInput = {
-  /** ID of the Innovation Flow */
-  innovationFlowID: Scalars["UUID"]["input"];
-  /** The name of the Innovation Flow State to be updated */
-  stateDisplayName: Scalars["String"]["input"];
-  stateUpdatedData: UpdateInnovationFlowStateInput;
 };
 
 export type UpdateInnovationFlowStateInput = {
-  /** The explation text to clarify the State. */
+  /** The explanation text to clarify the State. */
   description?: InputMaybe<Scalars["Markdown"]["input"]>;
   /** The display name for the State */
   displayName: Scalars["String"]["input"];
+  /** ID of the Innovation Flow */
+  innovationFlowStateID: Scalars["UUID"]["input"];
+  settings?: InputMaybe<UpdateInnovationFlowStateSettingsInput>;
+};
+
+export type UpdateInnovationFlowStateSettingsInput = {
+  /** The flag to set. */
+  allowNewCallouts: Scalars["Boolean"]["input"];
+};
+
+export type UpdateInnovationFlowStatesSortOrderInput = {
+  innovationFlowID: Scalars["UUID"]["input"];
+  /** The IDs of the states to update the sort order on */
+  stateIDs: Array<Scalars["UUID"]["input"]>;
 };
 
 export type UpdateInnovationHubInput = {
@@ -7116,6 +7227,8 @@ export type UpdateTemplateDefaultTemplateInput = {
 };
 
 export type UpdateTemplateFromSpaceInput = {
+  /** Whether to reproduce the hierarchy or just the space. */
+  recursive?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** The Space whose content should be copied to this Template. */
   spaceID: Scalars["UUID"]["input"];
   /** The ID of the Template. */
@@ -8277,8 +8390,10 @@ export type ResolversTypes = {
   CreateAiPersonaInput: CreateAiPersonaInput;
   CreateAiPersonaServiceInput: CreateAiPersonaServiceInput;
   CreateCalendarEventOnCalendarInput: CreateCalendarEventOnCalendarInput;
+  CreateCalloutContributionData: ResolverTypeWrapper<CreateCalloutContributionData>;
   CreateCalloutContributionDefaultsData: ResolverTypeWrapper<CreateCalloutContributionDefaultsData>;
   CreateCalloutContributionDefaultsInput: CreateCalloutContributionDefaultsInput;
+  CreateCalloutContributionInput: CreateCalloutContributionInput;
   CreateCalloutData: ResolverTypeWrapper<CreateCalloutData>;
   CreateCalloutFramingData: ResolverTypeWrapper<CreateCalloutFramingData>;
   CreateCalloutFramingInput: CreateCalloutFramingInput;
@@ -8304,15 +8419,19 @@ export type ResolversTypes = {
   CreateInnovationFlowInput: CreateInnovationFlowInput;
   CreateInnovationFlowStateData: ResolverTypeWrapper<CreateInnovationFlowStateData>;
   CreateInnovationFlowStateInput: CreateInnovationFlowStateInput;
+  CreateInnovationFlowStateSettingsData: ResolverTypeWrapper<CreateInnovationFlowStateSettingsData>;
+  CreateInnovationFlowStateSettingsInput: CreateInnovationFlowStateSettingsInput;
   CreateInnovationHubOnAccountInput: CreateInnovationHubOnAccountInput;
   CreateInnovationPackOnAccountInput: CreateInnovationPackOnAccountInput;
   CreateKnowledgeBaseInput: CreateKnowledgeBaseInput;
   CreateLicensePlanOnLicensingFrameworkInput: CreateLicensePlanOnLicensingFrameworkInput;
+  CreateLinkData: ResolverTypeWrapper<CreateLinkData>;
   CreateLinkInput: CreateLinkInput;
   CreateLocationData: ResolverTypeWrapper<CreateLocationData>;
   CreateLocationInput: CreateLocationInput;
   CreateNVPInput: CreateNvpInput;
   CreateOrganizationInput: CreateOrganizationInput;
+  CreatePostData: ResolverTypeWrapper<CreatePostData>;
   CreatePostInput: CreatePostInput;
   CreateProfileData: ResolverTypeWrapper<CreateProfileData>;
   CreateProfileInput: CreateProfileInput;
@@ -8325,6 +8444,7 @@ export type ResolversTypes = {
   CreateSpaceSettingsInput: CreateSpaceSettingsInput;
   CreateSpaceSettingsMembershipInput: CreateSpaceSettingsMembershipInput;
   CreateSpaceSettingsPrivacyInput: CreateSpaceSettingsPrivacyInput;
+  CreateStateOnInnovationFlowInput: CreateStateOnInnovationFlowInput;
   CreateSubspaceInput: CreateSubspaceInput;
   CreateTagsetData: ResolverTypeWrapper<CreateTagsetData>;
   CreateTagsetInput: CreateTagsetInput;
@@ -8362,6 +8482,7 @@ export type ResolversTypes = {
   DeletePostInput: DeletePostInput;
   DeleteReferenceInput: DeleteReferenceInput;
   DeleteSpaceInput: DeleteSpaceInput;
+  DeleteStateOnInnovationFlowInput: DeleteStateOnInnovationFlowInput;
   DeleteStorageBuckeetInput: DeleteStorageBuckeetInput;
   DeleteTemplateInput: DeleteTemplateInput;
   DeleteUserGroupInput: DeleteUserGroupInput;
@@ -8461,14 +8582,11 @@ export type ResolversTypes = {
     }
   >;
   InnovationFlow: ResolverTypeWrapper<
-    Omit<InnovationFlow, "currentState" | "profile" | "states"> & {
-      currentState: ResolversTypes["InnovationFlowState"];
-      profile: ResolversTypes["Profile"];
-      states: Array<ResolversTypes["InnovationFlowState"]>;
-    }
+    Omit<InnovationFlow, "profile"> & { profile: ResolversTypes["Profile"] }
   >;
   InnovationFlowSettings: ResolverTypeWrapper<InnovationFlowSettings>;
   InnovationFlowState: ResolverTypeWrapper<InnovationFlowState>;
+  InnovationFlowStateSettings: ResolverTypeWrapper<InnovationFlowStateSettings>;
   InnovationHub: ResolverTypeWrapper<
     Omit<
       InnovationHub,
@@ -9030,9 +9148,10 @@ export type ResolversTypes = {
     }
   >;
   TemplateContentSpace: ResolverTypeWrapper<
-    Omit<TemplateContentSpace, "about" | "collaboration"> & {
+    Omit<TemplateContentSpace, "about" | "collaboration" | "subspaces"> & {
       about: ResolversTypes["SpaceAbout"];
       collaboration: ResolversTypes["Collaboration"];
+      subspaces: Array<ResolversTypes["TemplateContentSpace"]>;
     }
   >;
   TemplateDefault: ResolverTypeWrapper<
@@ -9103,10 +9222,11 @@ export type ResolversTypes = {
   UpdateDocumentInput: UpdateDocumentInput;
   UpdateFormInput: UpdateFormInput;
   UpdateFormQuestionInput: UpdateFormQuestionInput;
-  UpdateInnovationFlowEntityInput: UpdateInnovationFlowEntityInput;
-  UpdateInnovationFlowSelectedStateInput: UpdateInnovationFlowSelectedStateInput;
-  UpdateInnovationFlowSingleStateInput: UpdateInnovationFlowSingleStateInput;
+  UpdateInnovationFlowCurrentStateInput: UpdateInnovationFlowCurrentStateInput;
+  UpdateInnovationFlowInput: UpdateInnovationFlowInput;
   UpdateInnovationFlowStateInput: UpdateInnovationFlowStateInput;
+  UpdateInnovationFlowStateSettingsInput: UpdateInnovationFlowStateSettingsInput;
+  UpdateInnovationFlowStatesSortOrderInput: UpdateInnovationFlowStatesSortOrderInput;
   UpdateInnovationHubInput: UpdateInnovationHubInput;
   UpdateInnovationPackInput: UpdateInnovationPackInput;
   UpdateKnowledgeBaseInput: UpdateKnowledgeBaseInput;
@@ -9531,8 +9651,10 @@ export type ResolversParentTypes = {
   CreateAiPersonaInput: CreateAiPersonaInput;
   CreateAiPersonaServiceInput: CreateAiPersonaServiceInput;
   CreateCalendarEventOnCalendarInput: CreateCalendarEventOnCalendarInput;
+  CreateCalloutContributionData: CreateCalloutContributionData;
   CreateCalloutContributionDefaultsData: CreateCalloutContributionDefaultsData;
   CreateCalloutContributionDefaultsInput: CreateCalloutContributionDefaultsInput;
+  CreateCalloutContributionInput: CreateCalloutContributionInput;
   CreateCalloutData: CreateCalloutData;
   CreateCalloutFramingData: CreateCalloutFramingData;
   CreateCalloutFramingInput: CreateCalloutFramingInput;
@@ -9558,15 +9680,19 @@ export type ResolversParentTypes = {
   CreateInnovationFlowInput: CreateInnovationFlowInput;
   CreateInnovationFlowStateData: CreateInnovationFlowStateData;
   CreateInnovationFlowStateInput: CreateInnovationFlowStateInput;
+  CreateInnovationFlowStateSettingsData: CreateInnovationFlowStateSettingsData;
+  CreateInnovationFlowStateSettingsInput: CreateInnovationFlowStateSettingsInput;
   CreateInnovationHubOnAccountInput: CreateInnovationHubOnAccountInput;
   CreateInnovationPackOnAccountInput: CreateInnovationPackOnAccountInput;
   CreateKnowledgeBaseInput: CreateKnowledgeBaseInput;
   CreateLicensePlanOnLicensingFrameworkInput: CreateLicensePlanOnLicensingFrameworkInput;
+  CreateLinkData: CreateLinkData;
   CreateLinkInput: CreateLinkInput;
   CreateLocationData: CreateLocationData;
   CreateLocationInput: CreateLocationInput;
   CreateNVPInput: CreateNvpInput;
   CreateOrganizationInput: CreateOrganizationInput;
+  CreatePostData: CreatePostData;
   CreatePostInput: CreatePostInput;
   CreateProfileData: CreateProfileData;
   CreateProfileInput: CreateProfileInput;
@@ -9579,6 +9705,7 @@ export type ResolversParentTypes = {
   CreateSpaceSettingsInput: CreateSpaceSettingsInput;
   CreateSpaceSettingsMembershipInput: CreateSpaceSettingsMembershipInput;
   CreateSpaceSettingsPrivacyInput: CreateSpaceSettingsPrivacyInput;
+  CreateStateOnInnovationFlowInput: CreateStateOnInnovationFlowInput;
   CreateSubspaceInput: CreateSubspaceInput;
   CreateTagsetData: CreateTagsetData;
   CreateTagsetInput: CreateTagsetInput;
@@ -9615,6 +9742,7 @@ export type ResolversParentTypes = {
   DeletePostInput: DeletePostInput;
   DeleteReferenceInput: DeleteReferenceInput;
   DeleteSpaceInput: DeleteSpaceInput;
+  DeleteStateOnInnovationFlowInput: DeleteStateOnInnovationFlowInput;
   DeleteStorageBuckeetInput: DeleteStorageBuckeetInput;
   DeleteTemplateInput: DeleteTemplateInput;
   DeleteUserGroupInput: DeleteUserGroupInput;
@@ -9691,16 +9819,12 @@ export type ResolversParentTypes = {
     receiver: ResolversParentTypes["Contributor"];
     triggeredBy?: Maybe<ResolversParentTypes["Contributor"]>;
   };
-  InnovationFlow: Omit<
-    InnovationFlow,
-    "currentState" | "profile" | "states"
-  > & {
-    currentState: ResolversParentTypes["InnovationFlowState"];
+  InnovationFlow: Omit<InnovationFlow, "profile"> & {
     profile: ResolversParentTypes["Profile"];
-    states: Array<ResolversParentTypes["InnovationFlowState"]>;
   };
   InnovationFlowSettings: InnovationFlowSettings;
   InnovationFlowState: InnovationFlowState;
+  InnovationFlowStateSettings: InnovationFlowStateSettings;
   InnovationHub: Omit<
     InnovationHub,
     "account" | "profile" | "provider" | "spaceListFilter"
@@ -10184,10 +10308,11 @@ export type ResolversParentTypes = {
   };
   TemplateContentSpace: Omit<
     TemplateContentSpace,
-    "about" | "collaboration"
+    "about" | "collaboration" | "subspaces"
   > & {
     about: ResolversParentTypes["SpaceAbout"];
     collaboration: ResolversParentTypes["Collaboration"];
+    subspaces: Array<ResolversParentTypes["TemplateContentSpace"]>;
   };
   TemplateDefault: Omit<TemplateDefault, "template"> & {
     template?: Maybe<ResolversParentTypes["Template"]>;
@@ -10250,10 +10375,11 @@ export type ResolversParentTypes = {
   UpdateDocumentInput: UpdateDocumentInput;
   UpdateFormInput: UpdateFormInput;
   UpdateFormQuestionInput: UpdateFormQuestionInput;
-  UpdateInnovationFlowEntityInput: UpdateInnovationFlowEntityInput;
-  UpdateInnovationFlowSelectedStateInput: UpdateInnovationFlowSelectedStateInput;
-  UpdateInnovationFlowSingleStateInput: UpdateInnovationFlowSingleStateInput;
+  UpdateInnovationFlowCurrentStateInput: UpdateInnovationFlowCurrentStateInput;
+  UpdateInnovationFlowInput: UpdateInnovationFlowInput;
   UpdateInnovationFlowStateInput: UpdateInnovationFlowStateInput;
+  UpdateInnovationFlowStateSettingsInput: UpdateInnovationFlowStateSettingsInput;
+  UpdateInnovationFlowStatesSortOrderInput: UpdateInnovationFlowStatesSortOrderInput;
   UpdateInnovationHubInput: UpdateInnovationHubInput;
   UpdateInnovationPackInput: UpdateInnovationPackInput;
   UpdateKnowledgeBaseInput: UpdateKnowledgeBaseInput;
@@ -11797,6 +11923,29 @@ export type ContributorRolesResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type CreateCalloutContributionDataResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CreateCalloutContributionData"] = ResolversParentTypes["CreateCalloutContributionData"]
+> = {
+  link?: Resolver<
+    Maybe<ResolversTypes["CreateLinkData"]>,
+    ParentType,
+    ContextType
+  >;
+  post?: Resolver<
+    Maybe<ResolversTypes["CreatePostData"]>,
+    ParentType,
+    ContextType
+  >;
+  sortOrder?: Resolver<Maybe<ResolversTypes["Float"]>, ParentType, ContextType>;
+  whiteboard?: Resolver<
+    Maybe<ResolversTypes["CreateWhiteboardData"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type CreateCalloutContributionDefaultsDataResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["CreateCalloutContributionDefaultsData"] = ResolversParentTypes["CreateCalloutContributionDefaultsData"]
@@ -11830,6 +11979,11 @@ export type CreateCalloutDataResolvers<
   >;
   contributionDefaults?: Resolver<
     Maybe<ResolversTypes["CreateCalloutContributionDefaultsData"]>,
+    ParentType,
+    ContextType
+  >;
+  contributions?: Resolver<
+    Maybe<Array<ResolversTypes["CreateCalloutContributionData"]>>,
     ParentType,
     ContextType
   >;
@@ -12017,6 +12171,37 @@ export type CreateInnovationFlowStateDataResolvers<
     ContextType
   >;
   displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  settings?: Resolver<
+    Maybe<ResolversTypes["CreateInnovationFlowStateSettingsData"]>,
+    ParentType,
+    ContextType
+  >;
+  sortOrder?: Resolver<Maybe<ResolversTypes["Float"]>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CreateInnovationFlowStateSettingsDataResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CreateInnovationFlowStateSettingsData"] = ResolversParentTypes["CreateInnovationFlowStateSettingsData"]
+> = {
+  allowNewCallouts?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CreateLinkDataResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CreateLinkData"] = ResolversParentTypes["CreateLinkData"]
+> = {
+  profile?: Resolver<
+    ResolversTypes["CreateProfileData"],
+    ParentType,
+    ContextType
+  >;
+  uri?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -12043,6 +12228,18 @@ export type CreateLocationDataResolvers<
   >;
   stateOrProvince?: Resolver<
     Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CreatePostDataResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CreatePostData"] = ResolversParentTypes["CreatePostData"]
+> = {
+  tags?: Resolver<
+    Maybe<Array<ResolversTypes["String"]>>,
     ParentType,
     ContextType
   >;
@@ -12596,7 +12793,7 @@ export type InnovationFlowResolvers<
   >;
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   currentState?: Resolver<
-    ResolversTypes["InnovationFlowState"],
+    Maybe<ResolversTypes["InnovationFlowState"]>,
     ParentType,
     ContextType
   >;
@@ -12637,8 +12834,38 @@ export type InnovationFlowStateResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["InnovationFlowState"] = ResolversParentTypes["InnovationFlowState"]
 > = {
-  description?: Resolver<ResolversTypes["Markdown"], ParentType, ContextType>;
+  authorization?: Resolver<
+    Maybe<ResolversTypes["Authorization"]>,
+    ParentType,
+    ContextType
+  >;
+  createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  description?: Resolver<
+    Maybe<ResolversTypes["Markdown"]>,
+    ParentType,
+    ContextType
+  >;
   displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  settings?: Resolver<
+    ResolversTypes["InnovationFlowStateSettings"],
+    ParentType,
+    ContextType
+  >;
+  sortOrder?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type InnovationFlowStateSettingsResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["InnovationFlowStateSettings"] = ResolversParentTypes["InnovationFlowStateSettings"]
+> = {
+  allowNewCallouts?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -12766,8 +12993,8 @@ export type InvitationResolvers<
   >;
   createdBy?: Resolver<Maybe<ResolversTypes["User"]>, ParentType, ContextType>;
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
-  extraRole?: Resolver<
-    Maybe<ResolversTypes["RoleName"]>,
+  extraRoles?: Resolver<
+    Array<ResolversTypes["RoleName"]>,
     ParentType,
     ContextType
   >;
@@ -14072,6 +14299,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationCreateSpaceArgs, "spaceData">
   >;
+  createStateOnInnovationFlow?: Resolver<
+    ResolversTypes["InnovationFlowState"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationCreateStateOnInnovationFlowArgs, "stateData">
+  >;
   createSubspace?: Resolver<
     ResolversTypes["Space"],
     ParentType,
@@ -14139,6 +14372,12 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationDeleteCalloutArgs, "deleteData">
+  >;
+  deleteContribution?: Resolver<
+    ResolversTypes["CalloutContribution"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationDeleteContributionArgs, "contributionID">
   >;
   deleteDiscussion?: Resolver<
     ResolversTypes["Discussion"],
@@ -14211,6 +14450,12 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationDeleteSpaceArgs, "deleteData">
+  >;
+  deleteStateOnInnovationFlow?: Resolver<
+    ResolversTypes["InnovationFlowState"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationDeleteStateOnInnovationFlowArgs, "stateData">
   >;
   deleteStorageBucket?: Resolver<
     ResolversTypes["StorageBucket"],
@@ -14599,22 +14844,28 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationUpdateInnovationFlowArgs, "innovationFlowData">
   >;
-  updateInnovationFlowSelectedState?: Resolver<
+  updateInnovationFlowCurrentState?: Resolver<
     ResolversTypes["InnovationFlow"],
     ParentType,
     ContextType,
     RequireFields<
-      MutationUpdateInnovationFlowSelectedStateArgs,
+      MutationUpdateInnovationFlowCurrentStateArgs,
       "innovationFlowStateData"
     >
   >;
-  updateInnovationFlowSingleState?: Resolver<
-    ResolversTypes["InnovationFlow"],
+  updateInnovationFlowState?: Resolver<
+    ResolversTypes["InnovationFlowState"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationUpdateInnovationFlowStateArgs, "stateData">
+  >;
+  updateInnovationFlowStatesSortOrder?: Resolver<
+    Array<ResolversTypes["InnovationFlowState"]>,
     ParentType,
     ContextType,
     RequireFields<
-      MutationUpdateInnovationFlowSingleStateArgs,
-      "innovationFlowStateData"
+      MutationUpdateInnovationFlowStatesSortOrderArgs,
+      "sortOrderData"
     >
   >;
   updateInnovationHub?: Resolver<
@@ -15191,8 +15442,8 @@ export type PlatformInvitationResolvers<
     ContextType
   >;
   profileCreated?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
-  roleSetExtraRole?: Resolver<
-    Maybe<ResolversTypes["RoleName"]>,
+  roleSetExtraRoles?: Resolver<
+    Array<ResolversTypes["RoleName"]>,
     ParentType,
     ContextType
   >;
@@ -16751,6 +17002,11 @@ export type TemplateContentSpaceResolvers<
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   level?: Resolver<ResolversTypes["SpaceLevel"], ParentType, ContextType>;
   settings?: Resolver<ResolversTypes["SpaceSettings"], ParentType, ContextType>;
+  subspaces?: Resolver<
+    Array<ResolversTypes["TemplateContentSpace"]>,
+    ParentType,
+    ContextType
+  >;
   updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -17511,6 +17767,7 @@ export type Resolvers<ContextType = any> = {
   Contributor?: ContributorResolvers<ContextType>;
   ContributorRolePolicy?: ContributorRolePolicyResolvers<ContextType>;
   ContributorRoles?: ContributorRolesResolvers<ContextType>;
+  CreateCalloutContributionData?: CreateCalloutContributionDataResolvers<ContextType>;
   CreateCalloutContributionDefaultsData?: CreateCalloutContributionDefaultsDataResolvers<ContextType>;
   CreateCalloutData?: CreateCalloutDataResolvers<ContextType>;
   CreateCalloutFramingData?: CreateCalloutFramingDataResolvers<ContextType>;
@@ -17523,7 +17780,10 @@ export type Resolvers<ContextType = any> = {
   CreateCommunityGuidelinesData?: CreateCommunityGuidelinesDataResolvers<ContextType>;
   CreateInnovationFlowData?: CreateInnovationFlowDataResolvers<ContextType>;
   CreateInnovationFlowStateData?: CreateInnovationFlowStateDataResolvers<ContextType>;
+  CreateInnovationFlowStateSettingsData?: CreateInnovationFlowStateSettingsDataResolvers<ContextType>;
+  CreateLinkData?: CreateLinkDataResolvers<ContextType>;
   CreateLocationData?: CreateLocationDataResolvers<ContextType>;
+  CreatePostData?: CreatePostDataResolvers<ContextType>;
   CreateProfileData?: CreateProfileDataResolvers<ContextType>;
   CreateReferenceData?: CreateReferenceDataResolvers<ContextType>;
   CreateTagsetData?: CreateTagsetDataResolvers<ContextType>;
@@ -17555,6 +17815,7 @@ export type Resolvers<ContextType = any> = {
   InnovationFlow?: InnovationFlowResolvers<ContextType>;
   InnovationFlowSettings?: InnovationFlowSettingsResolvers<ContextType>;
   InnovationFlowState?: InnovationFlowStateResolvers<ContextType>;
+  InnovationFlowStateSettings?: InnovationFlowStateSettingsResolvers<ContextType>;
   InnovationHub?: InnovationHubResolvers<ContextType>;
   InnovationPack?: InnovationPackResolvers<ContextType>;
   InputCreatorQueryResults?: InputCreatorQueryResultsResolvers<ContextType>;
@@ -21662,8 +21923,10 @@ export type CollaborationDataFragment = {
     authorization?:
       | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
       | undefined;
-    currentState: { description: any; displayName: string };
-    states: Array<{ description: any; displayName: string }>;
+    currentState?:
+      | { description?: any | undefined; displayName: string }
+      | undefined;
+    states: Array<{ description?: any | undefined; displayName: string }>;
   };
 };
 
@@ -24110,7 +24373,7 @@ export type MemberDataFragment = {
 };
 
 export type InnovationFlowStateDataFragment = {
-  description: any;
+  description?: any | undefined;
   displayName: string;
 };
 
@@ -24164,8 +24427,10 @@ export type InnovationFlowDataFragment = {
   authorization?:
     | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
     | undefined;
-  currentState: { description: any; displayName: string };
-  states: Array<{ description: any; displayName: string }>;
+  currentState?:
+    | { description?: any | undefined; displayName: string }
+    | undefined;
+  states: Array<{ description?: any | undefined; displayName: string }>;
 };
 
 export type AssignLicensePlanToAccountMutationVariables = Exact<{
@@ -25797,8 +26062,10 @@ export type SubspaceL1DataFragment = {
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
-        currentState: { description: any; displayName: string };
-        states: Array<{ description: any; displayName: string }>;
+        currentState?:
+          | { description?: any | undefined; displayName: string }
+          | undefined;
+        states: Array<{ description?: any | undefined; displayName: string }>;
       };
     };
     authorization?:
@@ -28351,8 +28618,10 @@ export type SubspaceL1DataFragment = {
       authorization?:
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
-      currentState: { description: any; displayName: string };
-      states: Array<{ description: any; displayName: string }>;
+      currentState?:
+        | { description?: any | undefined; displayName: string }
+        | undefined;
+      states: Array<{ description?: any | undefined; displayName: string }>;
     };
   };
   authorization?:
@@ -30866,8 +31135,10 @@ export type SubspaceL2DataFragment = {
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
-        currentState: { description: any; displayName: string };
-        states: Array<{ description: any; displayName: string }>;
+        currentState?:
+          | { description?: any | undefined; displayName: string }
+          | undefined;
+        states: Array<{ description?: any | undefined; displayName: string }>;
       };
     };
     authorization?:
@@ -33420,8 +33691,10 @@ export type SubspaceL2DataFragment = {
       authorization?:
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
-      currentState: { description: any; displayName: string };
-      states: Array<{ description: any; displayName: string }>;
+      currentState?:
+        | { description?: any | undefined; displayName: string }
+        | undefined;
+      states: Array<{ description?: any | undefined; displayName: string }>;
     };
   };
   authorization?:
@@ -38098,8 +38371,10 @@ export type SpaceDataFragment = {
       authorization?:
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
-      currentState: { description: any; displayName: string };
-      states: Array<{ description: any; displayName: string }>;
+      currentState?:
+        | { description?: any | undefined; displayName: string }
+        | undefined;
+      states: Array<{ description?: any | undefined; displayName: string }>;
     };
   };
   subspaces: Array<{
@@ -38680,8 +38955,10 @@ export type SpaceDataFragment = {
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
-        currentState: { description: any; displayName: string };
-        states: Array<{ description: any; displayName: string }>;
+        currentState?:
+          | { description?: any | undefined; displayName: string }
+          | undefined;
+        states: Array<{ description?: any | undefined; displayName: string }>;
       };
     };
     authorization?:
@@ -41810,8 +42087,10 @@ export type SubspaceDataFragment = {
       authorization?:
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
-      currentState: { description: any; displayName: string };
-      states: Array<{ description: any; displayName: string }>;
+      currentState?:
+        | { description?: any | undefined; displayName: string }
+        | undefined;
+      states: Array<{ description?: any | undefined; displayName: string }>;
     };
   };
   authorization?:
@@ -46400,21 +46679,64 @@ export type InvitationStateEventMutation = {
 
 export type InviteForEntryRoleOnRoleSetMutationVariables = Exact<{
   roleSetId: Scalars["UUID"]["input"];
-  invitedContributorIDs:
+  invitedContributorIds:
     | Array<Scalars["UUID"]["input"]>
     | Scalars["UUID"]["input"];
   invitedUserEmails:
     | Array<Scalars["String"]["input"]>
     | Scalars["String"]["input"];
   welcomeMessage?: InputMaybe<Scalars["String"]["input"]>;
+  extraRoles: Array<RoleName> | RoleName;
 }>;
 
 export type InviteForEntryRoleOnRoleSetMutation = {
   inviteForEntryRoleOnRoleSet: Array<{
     __typename: "RoleSetInvitationResult";
     type: RoleSetInvitationResultType;
-    invitation?: { id: string; state: string } | undefined;
-    platformInvitation?: { id: string } | undefined;
+    invitation?:
+      | {
+          __typename: "Invitation";
+          id: string;
+          state: string;
+          contributor:
+            | {
+                __typename: "Organization";
+                id: string;
+                profile: {
+                  __typename: "Profile";
+                  id: string;
+                  displayName: string;
+                };
+              }
+            | {
+                __typename: "User";
+                id: string;
+                profile: {
+                  __typename: "Profile";
+                  id: string;
+                  displayName: string;
+                };
+              }
+            | {
+                __typename: "VirtualContributor";
+                id: string;
+                profile: {
+                  __typename: "Profile";
+                  id: string;
+                  displayName: string;
+                };
+              };
+        }
+      | undefined;
+    platformInvitation?:
+      | {
+          __typename: "PlatformInvitation";
+          id: string;
+          email: string;
+          firstName?: string | undefined;
+          lastName?: string | undefined;
+        }
+      | undefined;
   }>;
 };
 
@@ -52660,8 +52982,10 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
-        currentState: { description: any; displayName: string };
-        states: Array<{ description: any; displayName: string }>;
+        currentState?:
+          | { description?: any | undefined; displayName: string }
+          | undefined;
+        states: Array<{ description?: any | undefined; displayName: string }>;
       };
     };
     subspaces: Array<{
@@ -53258,8 +53582,10 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
-          currentState: { description: any; displayName: string };
-          states: Array<{ description: any; displayName: string }>;
+          currentState?:
+            | { description?: any | undefined; displayName: string }
+            | undefined;
+          states: Array<{ description?: any | undefined; displayName: string }>;
         };
       };
       authorization?:
@@ -58681,8 +59007,10 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
-        currentState: { description: any; displayName: string };
-        states: Array<{ description: any; displayName: string }>;
+        currentState?:
+          | { description?: any | undefined; displayName: string }
+          | undefined;
+        states: Array<{ description?: any | undefined; displayName: string }>;
       };
     };
     subspaces: Array<{
@@ -59279,8 +59607,10 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
-          currentState: { description: any; displayName: string };
-          states: Array<{ description: any; displayName: string }>;
+          currentState?:
+            | { description?: any | undefined; displayName: string }
+            | undefined;
+          states: Array<{ description?: any | undefined; displayName: string }>;
         };
       };
       authorization?:
@@ -64720,8 +65050,10 @@ export type UpdateSpaceMutation = {
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
-        currentState: { description: any; displayName: string };
-        states: Array<{ description: any; displayName: string }>;
+        currentState?:
+          | { description?: any | undefined; displayName: string }
+          | undefined;
+        states: Array<{ description?: any | undefined; displayName: string }>;
       };
     };
     subspaces: Array<{
@@ -65318,8 +65650,10 @@ export type UpdateSpaceMutation = {
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
-          currentState: { description: any; displayName: string };
-          states: Array<{ description: any; displayName: string }>;
+          currentState?:
+            | { description?: any | undefined; displayName: string }
+            | undefined;
+          states: Array<{ description?: any | undefined; displayName: string }>;
         };
       };
       authorization?:
@@ -68559,8 +68893,10 @@ export type CreateSubspaceMutation = {
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
-          currentState: { description: any; displayName: string };
-          states: Array<{ description: any; displayName: string }>;
+          currentState?:
+            | { description?: any | undefined; displayName: string }
+            | undefined;
+          states: Array<{ description?: any | undefined; displayName: string }>;
         };
       };
       authorization?:
@@ -71179,8 +71515,10 @@ export type CreateSubspaceMutation = {
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
-        currentState: { description: any; displayName: string };
-        states: Array<{ description: any; displayName: string }>;
+        currentState?:
+          | { description?: any | undefined; displayName: string }
+          | undefined;
+        states: Array<{ description?: any | undefined; displayName: string }>;
       };
     };
     authorization?:
@@ -73780,8 +74118,10 @@ export type UpdateSubspaceMutation = {
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
-          currentState: { description: any; displayName: string };
-          states: Array<{ description: any; displayName: string }>;
+          currentState?:
+            | { description?: any | undefined; displayName: string }
+            | undefined;
+          states: Array<{ description?: any | undefined; displayName: string }>;
         };
       };
       authorization?:
@@ -76400,8 +76740,10 @@ export type UpdateSubspaceMutation = {
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
-        currentState: { description: any; displayName: string };
-        states: Array<{ description: any; displayName: string }>;
+        currentState?:
+          | { description?: any | undefined; displayName: string }
+          | undefined;
+        states: Array<{ description?: any | undefined; displayName: string }>;
       };
     };
     authorization?:
@@ -78474,64 +78816,18 @@ export type EventOnOrganizationVerificationMutation = {
   };
 };
 
-export type UpdateInnovationFlowSelectedStateMutationVariables = Exact<{
+export type UpdateInnovationFlowCurrentStateMutationVariables = Exact<{
   innovationFlowId: Scalars["UUID"]["input"];
-  selectedState: Scalars["String"]["input"];
+  currentStateID: Scalars["UUID"]["input"];
 }>;
 
-export type UpdateInnovationFlowSelectedStateMutation = {
-  updateInnovationFlowSelectedState: {
+export type UpdateInnovationFlowCurrentStateMutation = {
+  updateInnovationFlowCurrentState: {
+    __typename: "InnovationFlow";
     id: string;
-    profile: {
-      id: string;
-      displayName: string;
-      description?: any | undefined;
-      tagline?: string | undefined;
-      references?:
-        | Array<{
-            id: string;
-            name: string;
-            uri: string;
-            authorization?:
-              | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-              | undefined;
-          }>
-        | undefined;
-      tagsets?:
-        | Array<{
-            id: string;
-            name: string;
-            tags: Array<string>;
-            authorization?:
-              | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-              | undefined;
-          }>
-        | undefined;
-      location?:
-        | { country?: string | undefined; city?: string | undefined }
-        | undefined;
-      authorization?:
-        | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-        | undefined;
-      storageBucket: {
-        id: string;
-        authorization?:
-          | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-          | undefined;
-        parentEntity?: { displayName: string; type: ProfileType } | undefined;
-        documents: Array<{
-          id: string;
-          authorization?:
-            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-            | undefined;
-        }>;
-      };
-    };
-    authorization?:
-      | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+    currentState?:
+      | { __typename: "InnovationFlowState"; displayName: string }
       | undefined;
-    currentState: { description: any; displayName: string };
-    states: Array<{ description: any; displayName: string }>;
   };
 };
 
@@ -96538,8 +96834,13 @@ export type GetSpaceDataQuery = {
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
-              currentState: { description: any; displayName: string };
-              states: Array<{ description: any; displayName: string }>;
+              currentState?:
+                | { description?: any | undefined; displayName: string }
+                | undefined;
+              states: Array<{
+                description?: any | undefined;
+                displayName: string;
+              }>;
             };
           };
           subspaces: Array<{
@@ -97182,8 +97483,13 @@ export type GetSpaceDataQuery = {
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
-                currentState: { description: any; displayName: string };
-                states: Array<{ description: any; displayName: string }>;
+                currentState?:
+                  | { description?: any | undefined; displayName: string }
+                  | undefined;
+                states: Array<{
+                  description?: any | undefined;
+                  displayName: string;
+                }>;
               };
             };
             authorization?:
@@ -100630,8 +100936,13 @@ export type GetSubspacePageQuery = {
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
-                currentState: { description: any; displayName: string };
-                states: Array<{ description: any; displayName: string }>;
+                currentState?:
+                  | { description?: any | undefined; displayName: string }
+                  | undefined;
+                states: Array<{
+                  description?: any | undefined;
+                  displayName: string;
+                }>;
               };
             };
             authorization?:
@@ -103422,8 +103733,13 @@ export type GetSubspacePageQuery = {
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
-              currentState: { description: any; displayName: string };
-              states: Array<{ description: any; displayName: string }>;
+              currentState?:
+                | { description?: any | undefined; displayName: string }
+                | undefined;
+              states: Array<{
+                description?: any | undefined;
+                displayName: string;
+              }>;
             };
           };
           authorization?:
@@ -106180,8 +106496,13 @@ export type GetSpaceAboutDetailsQuery = {
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
-              currentState: { description: any; displayName: string };
-              states: Array<{ description: any; displayName: string }>;
+              currentState?:
+                | { description?: any | undefined; displayName: string }
+                | undefined;
+              states: Array<{
+                description?: any | undefined;
+                displayName: string;
+              }>;
             };
           };
           authorization?:
@@ -108969,8 +109290,13 @@ export type GetSubspacesDataQuery = {
                           | undefined;
                       }
                     | undefined;
-                  currentState: { description: any; displayName: string };
-                  states: Array<{ description: any; displayName: string }>;
+                  currentState?:
+                    | { description?: any | undefined; displayName: string }
+                    | undefined;
+                  states: Array<{
+                    description?: any | undefined;
+                    displayName: string;
+                  }>;
                 };
               };
               authorization?:
@@ -111807,8 +112133,13 @@ export type GetSubspacesDataQuery = {
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
-                currentState: { description: any; displayName: string };
-                states: Array<{ description: any; displayName: string }>;
+                currentState?:
+                  | { description?: any | undefined; displayName: string }
+                  | undefined;
+                states: Array<{
+                  description?: any | undefined;
+                  displayName: string;
+                }>;
               };
             };
             authorization?:
