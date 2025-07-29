@@ -137,7 +137,7 @@ describe('Notifications - member join community', () => {
   });
 
   //ToBeReviewd
-  test.skip('Non-space member join a Space - GA, HA and Joiner receive notifications', async () => {
+  test('Non-space member join a Space - GA, HA and Joiner receive notifications', async () => {
     // Act
     await joinRoleSet(
       baseScenario.space.community.roleSetId,
@@ -169,11 +169,11 @@ describe('Notifications - member join community', () => {
 
   test('Non-space member join a Subspace - GA, HA, CA and Joiner receive notifications', async () => {
     // Act
-    await joinRoleSet(
+    const a = await joinRoleSet(
       baseScenario.subspace.community.roleSetId,
       TestUser.NON_SPACE_MEMBER
     );
-
+    console.log('joinRoleSet result', a.error);
     await delay(10000);
     const getEmailsData = await getMailsData();
 

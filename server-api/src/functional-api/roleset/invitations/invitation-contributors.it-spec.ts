@@ -20,6 +20,7 @@ import { deleteUser } from '../../contributor-management/user/user.request.param
 import { eventOnRoleSetInvitation } from '../roleset-events.request.params';
 import {
   registerInAlkemioOrFail,
+  sorted__create_read_readAbout_update_delete_grant_createSubspace_readLicense,
   sorted_read_readAbout,
   TestScenarioConfig,
   TestScenarioFactory,
@@ -317,6 +318,55 @@ describe('Invitations-flows', () => {
     await deleteInvitation(invitationId);
   });
 
+  test('invitee is able to ACCEPT EXTRA ROLES invitation and access space data', async () => {
+    // Act
+    invitationData = await inviteForEntryRoleOnRoleSet(
+      baseScenario.space.community.roleSetId,
+      [TestUserManager.users.qaUser.id],
+      [],
+      'welcome',
+      [RoleName.Admin, RoleName.Lead],
+      TestUser.GLOBAL_ADMIN
+    );
+
+    invitationId = 'invitationIdNotRetrieved';
+    const invitationResult = getSingleInvitationResult(invitationData);
+    if (invitationResult && invitationResult.invitation) {
+      invitationId = invitationResult.invitation.id;
+    }
+    expect(invitationId.length).toEqual(36);
+
+    // Approve Space invitation
+    await eventOnRoleSetInvitation(invitationId, 'ACCEPT', TestUser.QA_USER);
+
+    const spaceData = await getSpaceData(
+      baseScenario.space.id,
+      TestUser.QA_USER
+    );
+
+    // Assert
+    expect(spaceData?.data?.lookup?.space?.authorization?.myPrivileges).toEqual(
+      expect.arrayContaining(
+        sorted__create_read_readAbout_update_delete_grant_createSubspace_readLicense
+      )
+    );
+    await removeRoleFromUser(
+      TestUserManager.users.nonSpaceMember.id,
+      baseScenario.space.community.roleSetId,
+      RoleName.Lead
+    );
+    await removeRoleFromUser(
+      TestUserManager.users.nonSpaceMember.id,
+      baseScenario.space.community.roleSetId,
+      RoleName.Admin
+    );
+    await removeRoleFromUser(
+      TestUserManager.users.qaUser.id,
+      baseScenario.space.community.roleSetId,
+      RoleName.Member
+    );
+  });
+
   test('invitee is able to ACCEPT invitation and access space data', async () => {
     // Act
     invitationData = await inviteForEntryRoleOnRoleSet(
@@ -349,6 +399,13 @@ describe('Invitations-flows', () => {
     // Assert
     expect(spaceData?.data?.lookup?.space?.authorization?.myPrivileges).toEqual(
       expect.arrayContaining(sorted_read_readAbout)
+    );
+    expect(
+      spaceData?.data?.lookup?.space?.authorization?.myPrivileges
+    ).not.toEqual(
+      expect.arrayContaining(
+        sorted__create_read_readAbout_update_delete_grant_createSubspace_readLicense
+      )
     );
   });
 
