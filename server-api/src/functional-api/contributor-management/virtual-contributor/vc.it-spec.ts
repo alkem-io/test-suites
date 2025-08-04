@@ -37,6 +37,7 @@ import {
   SearchVisibility,
   CommunityMembershipPolicy,
   SpacePrivacyMode,
+  RoleName,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -160,6 +161,7 @@ describe('Virtual Contributor', () => {
       [vcId],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
 

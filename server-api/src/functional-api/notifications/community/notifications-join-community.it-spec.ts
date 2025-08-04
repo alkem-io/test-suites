@@ -136,8 +136,7 @@ describe('Notifications - member join community', () => {
     await deleteMailSlurperMails();
   });
 
-  //ToBeReviewd
-  test.skip('Non-space member join a Space - GA, HA and Joiner receive notifications', async () => {
+  test('Non-space member join a Space - GA, HA and Joiner receive notifications', async () => {
     // Act
     await joinRoleSet(
       baseScenario.space.community.roleSetId,

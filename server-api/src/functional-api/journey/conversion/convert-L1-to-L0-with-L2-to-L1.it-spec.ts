@@ -13,7 +13,10 @@ import {
   SpacePrivacyMode,
 } from '@alkemio/client-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { SpaceLevel } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import {
+  RoleName,
+  SpaceLevel,
+} from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
 let baseScenario: OrganizationWithSpaceModel;
 
@@ -86,6 +89,7 @@ describe('Promoting of L1 subspace', () => {
       [TestUserManager.users.nonSpaceMember.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
 
