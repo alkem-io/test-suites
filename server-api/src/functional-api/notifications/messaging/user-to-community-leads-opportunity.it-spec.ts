@@ -61,7 +61,7 @@ const scenarioConfig: TestScenarioConfig = {
         community: {
           admins: [TestUser.SUBSUBSPACE_ADMIN],
           members: [TestUser.SUBSUBSPACE_MEMBER, TestUser.SUBSUBSPACE_ADMIN],
-          leads: [TestUser.SUBSUBSPACE_MEMBER, TestUser.SUBSUBSPACE_ADMIN],
+          leads: [TestUser.SUBSUBSPACE_ADMIN],
         },
       },
     },
@@ -94,6 +94,12 @@ beforeAll(async () => {
 
   await assignRoleToOrganization(
     baseScenario.organization.id,
+    baseScenario.subsubspace.community.roleSetId,
+    RoleName.Lead
+  );
+
+  await assignRoleToUser(
+    TestUserManager.users.subsubspaceMember.id,
     baseScenario.subsubspace.community.roleSetId,
     RoleName.Lead
   );
