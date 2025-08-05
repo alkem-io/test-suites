@@ -44,7 +44,7 @@ const scenarioConfig: TestScenarioConfig = {
         TestUser.SUBSUBSPACE_MEMBER,
         TestUser.SUBSUBSPACE_ADMIN,
       ],
-      leads: [TestUser.SPACE_MEMBER, TestUser.SPACE_ADMIN],
+      leads: [TestUser.SPACE_ADMIN],
     },
   },
 };
@@ -66,9 +66,15 @@ beforeAll(async () => {
     RoleName.Admin
   );
 
+  await assignRoleToUser(
+    TestUserManager.users.spaceMember.id,
+    baseScenario.space.community.roleSetId,
+    RoleName.Lead
+  );
+
   usersList = [
-    TestUserManager.users.spaceAdmin.email,
-    TestUserManager.users.spaceMember.email,
+    TestUserManager.users.spaceAdmin.id,
+    TestUserManager.users.spaceMember.id,
   ];
 });
 
