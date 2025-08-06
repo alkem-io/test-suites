@@ -19,3 +19,40 @@ To do:
 * Bring back in the use of Husky
 * Migrated code that is duplicated between client-web + server-api to be in the tests-lib package
 
+## 🚀 Recent Optimizations (2025)
+
+This repository has been recently optimized for better maintainability and performance:
+
+- **✅ Workspace Structure**: Implemented monorepo with shared configurations
+- **✅ Code Deduplication**: Moved shared utilities to central library  
+- **✅ Standardized Configs**: Unified TypeScript, Jest, ESLint, and Prettier settings
+- **✅ Legacy Cleanup**: Automated removal of outdated test files and configurations
+
+### Quick Start
+
+```bash
+# Install all dependencies
+npm install
+
+# Build all packages
+npm run build
+
+# Run all tests
+npm run test
+
+# Apply optimizations (if not done yet)
+./scripts/optimize-repository.sh
+```
+
+For detailed information, see [OPTIMIZATION_GUIDE.md](./OPTIMIZATION_GUIDE.md)
+
+## 📁 Repository Structure
+
+```
+test-suites/
+├── lib/                    # 📚 Shared utilities and types
+├── client-web/            # 🌐 Web client testing suite  
+├── server-api/            # 🔧 API testing suite
+└── scripts/               # 🛠️ Automation and maintenance scripts
+```
+

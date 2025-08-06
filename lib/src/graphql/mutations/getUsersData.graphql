@@ -1,0 +1,12 @@
+query getUsersData {
+  users {
+    ...UserData
+  }
+}
+fragment UserData on User {
+  id
+  profile {
+    displayName
+  }
+  email
+}

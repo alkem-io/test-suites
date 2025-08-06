@@ -1,4 +1,5 @@
 {
+  "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "lib": ["es2020", "dom"],
     "sourceMap": true,

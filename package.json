@@ -1,0 +1,44 @@
+{
+  "name": "@alkemio/test-suites",
+  "version": "1.0.0",
+  "description": "Alkemio quality assurance packages",
+  "private": true,
+  "workspaces": [
+    "lib",
+    "client-web",
+    "server-api"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "build:lib": "npm run build -w lib",
+    "build:client": "npm run build -w client-web",
+    "build:server": "npm run build -w server-api",
+    "test": "npm run test --workspaces --if-present",
+    "test:lib": "npm run test -w lib",
+    "test:client": "npm run test -w client-web",
+    "test:server": "npm run test -w server-api",
+    "lint": "npm run lint --workspaces --if-present",
+    "lint:fix": "npm run lint:fix --workspaces --if-present",
+    "format": "npm run format --workspaces --if-present",
+    "codegen": "npm run codegen --workspaces --if-present",
+    "clean": "npm run clean --workspaces --if-present && rimraf node_modules",
+    "install:all": "npm install",
+    "postinstall": "npm run build:lib"
+  },
+  "devDependencies": {
+    "rimraf": "^5.0.5",
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.0",
+    "concurrently": "^8.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alkem-io/test-suites.git"
+  },
+  "author": "Alkemio Foundation",
+  "license": "EUPL-1.2"
+}

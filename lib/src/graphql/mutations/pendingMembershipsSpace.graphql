@@ -1,0 +1,30 @@
+query PendingMembershipsSpace($spaceId: UUID!, $fetchDetails: Boolean! = false) {
+  lookup {
+    space(ID: $spaceId) {
+      id
+      nameID
+      about {
+        profile {
+          ...PendingMembershipsJourneyProfile
+        }
+      }
+      __typename
+    }
+  }
+}
+
+fragment PendingMembershipsJourneyProfile on Profile {
+  id
+  displayName
+  ... on Profile @include(if: $fetchDetails) {
+    tagline
+    tagset {
+      id
+      tags
+    }
+    cardBanner: visual(type: CARD) {
+      id
+      uri
+    }
+  }
+}

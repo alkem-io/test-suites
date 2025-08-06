@@ -23,3 +23,4 @@ export * from "./scenario/registration/verify-in-kratos-or-fail";
 export * from "./config/test.configuration";
 export * from "./config/alkemio-test-config";
 export * from "./config/create-config-using-envvars";
+export * from "./utils/test-helpers";
