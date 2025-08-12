@@ -13,6 +13,8 @@ import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
 let newOrgId = '';
 const newOrgNameId = 'ha-new-org-nameid';
+const errorMessage =
+  'Agent already has credential of this type on this resource';
 
 let baseScenario: OrganizationWithSpaceModel;
 const scenarioConfig: TestScenarioConfig = {
@@ -129,9 +131,7 @@ describe('Assign / Remove organization to community', () => {
 
         // Assert
         expect(data).toHaveLength(1);
-        expect(res.error?.errors[0].message).toContain(
-          `Agent (${baseScenario.organization.agentId}) already has assigned credential: space-member`
-        );
+        expect(res.error?.errors[0].message).toContain(errorMessage);
         expect(data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
@@ -156,9 +156,7 @@ describe('Assign / Remove organization to community', () => {
 
         // Assert
         expect(data).toHaveLength(1);
-        expect(res.error?.errors[0].message).toContain(
-          `Agent (${baseScenario.organization.agentId}) already has assigned credential: space-member`
-        );
+        expect(res.error?.errors[0].message).toContain(errorMessage);
         expect(data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
@@ -183,9 +181,7 @@ describe('Assign / Remove organization to community', () => {
 
         // Assert
         expect(data).toHaveLength(1);
-        expect(res.error?.errors[0].message).toContain(
-          `Agent (${baseScenario.organization.agentId}) already has assigned credential: space-member`
-        );
+        expect(res.error?.errors[0].message).toContain(errorMessage);
         expect(data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
@@ -286,9 +282,7 @@ describe('Assign / Remove organization to community', () => {
 
         // Assert
         expect(data).toHaveLength(1);
-        expect(res.error?.errors[0].message).toContain(
-          `Agent (${baseScenario.organization.agentId}) already has assigned credential: space-lead`
-        );
+        expect(res.error?.errors[0].message).toContain(errorMessage);
         expect(data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
@@ -312,9 +306,7 @@ describe('Assign / Remove organization to community', () => {
 
         // Assert
         expect(data).toHaveLength(1);
-        expect(res.error?.errors[0].message).toContain(
-          `Agent (${baseScenario.organization.agentId}) already has assigned credential: space-lead`
-        );
+        expect(res.error?.errors[0].message).toContain(errorMessage);
         expect(data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
@@ -338,9 +330,7 @@ describe('Assign / Remove organization to community', () => {
 
         // Assert
         expect(data).toHaveLength(1);
-        expect(res.error?.errors[0].message).toContain(
-          `Agent (${baseScenario.organization.agentId}) already has assigned credential: space-lead`
-        );
+        expect(res.error?.errors[0].message).toContain(errorMessage);
         expect(data).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
