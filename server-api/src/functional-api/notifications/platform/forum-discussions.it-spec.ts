@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { PreferenceType, ForumDiscussionCategory } from '@alkemio/client-lib';
+import { ForumDiscussionCategory } from '@alkemio/client-lib';
 import {
   delay,
   deleteMailSlurperMails,
@@ -17,11 +17,132 @@ import {
   sendMessageToRoom,
 } from '@functional-api/communications/communication.params';
 import { sendMessageReplyToRoom } from '@functional-api/communications/replies/reply.request.params';
-import { changePreferenceUser } from '@functional-api/contributor-management/user/user-preferences-mutation';
+import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
 
-let preferencesConfigDiscussions: any[] = [];
-let preferencesConfigComments: any[] = [];
-let preferencesConfigCommentsReply: any[] = [];
+// Helper functions for forum discussion notification settings
+const forumDiscussionCreatedNotificationSettings = {
+  notification: {
+    platform: {
+      forumDiscussionCreated: true,
+      newUserSignUp: false,
+      forumDiscussionComment: false,
+      spaceCreated: false,
+      userProfileRemoved: false,
+    },
+  },
+};
+
+const disabledForumDiscussionCreatedNotificationSettings = {
+  notification: {
+    platform: {
+      forumDiscussionCreated: false,
+      newUserSignUp: false,
+      forumDiscussionComment: false,
+      spaceCreated: false,
+      userProfileRemoved: false,
+    },
+  },
+};
+
+const forumDiscussionCommentNotificationSettings = {
+  notification: {
+    platform: {
+      forumDiscussionComment: true,
+      forumDiscussionCreated: false,
+      newUserSignUp: false,
+      spaceCreated: false,
+      userProfileRemoved: false,
+    },
+  },
+};
+
+const disabledForumDiscussionCommentNotificationSettings = {
+  notification: {
+    platform: {
+      forumDiscussionComment: false,
+      forumDiscussionCreated: false,
+      newUserSignUp: false,
+      spaceCreated: false,
+      userProfileRemoved: false,
+    },
+  },
+};
+
+const commentReplyNotificationSettings = {
+  notification: {
+    user: {
+      commentReply: true,
+      mentioned: false,
+    },
+  },
+};
+
+const disabledCommentReplyNotificationSettings = {
+  notification: {
+    user: {
+      commentReply: false,
+      mentioned: false,
+    },
+  },
+};
+
+const enableForumDiscussionCreatedNotifications = async (userIds: string[]) => {
+  await Promise.all(
+    userIds.map(userId =>
+      updateUserSettings(userId, forumDiscussionCreatedNotificationSettings)
+    )
+  );
+};
+
+const disableForumDiscussionCreatedNotifications = async (
+  userIds: string[]
+) => {
+  await Promise.all(
+    userIds.map(userId =>
+      updateUserSettings(
+        userId,
+        disabledForumDiscussionCreatedNotificationSettings
+      )
+    )
+  );
+};
+
+const enableForumDiscussionCommentNotifications = async (userIds: string[]) => {
+  await Promise.all(
+    userIds.map(userId =>
+      updateUserSettings(userId, forumDiscussionCommentNotificationSettings)
+    )
+  );
+};
+
+const disableForumDiscussionCommentNotifications = async (
+  userIds: string[]
+) => {
+  await Promise.all(
+    userIds.map(userId =>
+      updateUserSettings(
+        userId,
+        disabledForumDiscussionCommentNotificationSettings
+      )
+    )
+  );
+};
+
+const enableCommentReplyNotifications = async (userIds: string[]) => {
+  await Promise.all(
+    userIds.map(userId =>
+      updateUserSettings(userId, commentReplyNotificationSettings)
+    )
+  );
+};
+
+const disableCommentReplyNotifications = async (userIds: string[]) => {
+  await Promise.all(
+    userIds.map(userId =>
+      updateUserSettings(userId, disabledCommentReplyNotificationSettings)
+    )
+  );
+};
 
 const forumDiscussionSubjectText = 'New discussion created: test discussion';
 const forumDiscussionCommentSubjectText =
@@ -43,76 +164,21 @@ beforeAll(async () => {
   await deleteMailSlurperMails();
   const res = await getPlatformForumData();
   platformCommunicationId = res?.data?.platform.forum.id ?? '';
-
-  preferencesConfigDiscussions = [
-    {
-      userID: TestUserManager.users.globalAdmin.id,
-      type: PreferenceType.NotificationForumDiscussionCreated,
-    },
-    {
-      userID: TestUserManager.users.qaUser.id,
-      type: PreferenceType.NotificationForumDiscussionCreated,
-    },
-    {
-      userID: TestUserManager.users.globalLicenseAdmin.id,
-      type: PreferenceType.NotificationForumDiscussionCreated,
-    },
-    {
-      userID: TestUserManager.users.spaceMember.id,
-      type: PreferenceType.NotificationForumDiscussionCreated,
-    },
-  ];
-
-  preferencesConfigComments = [
-    {
-      userID: TestUserManager.users.globalAdmin.id,
-      type: PreferenceType.NotificationForumDiscussionComment,
-    },
-    {
-      userID: TestUserManager.users.qaUser.id,
-      type: PreferenceType.NotificationForumDiscussionComment,
-    },
-    {
-      userID: TestUserManager.users.globalLicenseAdmin.id,
-      type: PreferenceType.NotificationForumDiscussionComment,
-    },
-    {
-      userID: TestUserManager.users.spaceMember.id,
-      type: PreferenceType.NotificationForumDiscussionComment,
-    },
-  ];
-
-  preferencesConfigCommentsReply = [
-    {
-      userID: TestUserManager.users.globalAdmin.id,
-      type: PreferenceType.NotificationCommentReply,
-    },
-    {
-      userID: TestUserManager.users.qaUser.id,
-      type: PreferenceType.NotificationCommentReply,
-    },
-    {
-      userID: TestUserManager.users.globalLicenseAdmin.id,
-      type: PreferenceType.NotificationCommentReply,
-    },
-    {
-      userID: TestUserManager.users.spaceMember.id,
-      type: PreferenceType.NotificationCommentReply,
-    },
-  ];
 });
 
 afterAll(async () => {
-  for (const config of preferencesConfigDiscussions)
-    await changePreferenceUser(config.userID, config.type, 'false');
-  for (const config of preferencesConfigComments)
-    await changePreferenceUser(config.userID, config.type, 'false');
+  // All cleanup is handled by helper functions in each test
 });
 
 describe('Notifications - forum discussions', () => {
   beforeAll(async () => {
-    for (const config of preferencesConfigDiscussions)
-      await changePreferenceUser(config.userID, config.type, 'true');
+    // Enable forum discussion created notifications for all relevant users
+    await enableForumDiscussionCreatedNotifications([
+      TestUserManager.users.globalAdmin.id,
+      TestUserManager.users.qaUser.id,
+      TestUserManager.users.globalLicenseAdmin.id,
+      TestUserManager.users.spaceMember.id,
+    ]);
   });
 
   beforeEach(async () => {
@@ -198,10 +264,19 @@ describe('Notifications - forum discussions', () => {
 
 describe('Notifications - forum discussions comment', () => {
   beforeAll(async () => {
-    for (const config of preferencesConfigDiscussions)
-      await changePreferenceUser(config.userID, config.type, 'false');
-    for (const config of preferencesConfigComments)
-      await changePreferenceUser(config.userID, config.type, 'true');
+    // Disable forum discussion created notifications and enable comment notifications
+    await disableForumDiscussionCreatedNotifications([
+      TestUserManager.users.globalAdmin.id,
+      TestUserManager.users.qaUser.id,
+      TestUserManager.users.globalLicenseAdmin.id,
+      TestUserManager.users.spaceMember.id,
+    ]);
+    await enableForumDiscussionCommentNotifications([
+      TestUserManager.users.globalAdmin.id,
+      TestUserManager.users.qaUser.id,
+      TestUserManager.users.globalLicenseAdmin.id,
+      TestUserManager.users.spaceMember.id,
+    ]);
   });
 
   beforeEach(async () => {
@@ -326,12 +401,25 @@ describe('Notifications - forum discussions comment', () => {
 
 describe('Notifications - forum discussions comments reply', () => {
   beforeAll(async () => {
-    for (const config of preferencesConfigDiscussions)
-      await changePreferenceUser(config.userID, config.type, 'false');
-    for (const config of preferencesConfigComments)
-      await changePreferenceUser(config.userID, config.type, 'false');
-    for (const config of preferencesConfigCommentsReply)
-      await changePreferenceUser(config.userID, config.type, 'true');
+    // Disable forum discussion created and comment notifications, enable reply notifications
+    await disableForumDiscussionCreatedNotifications([
+      TestUserManager.users.globalAdmin.id,
+      TestUserManager.users.qaUser.id,
+      TestUserManager.users.globalLicenseAdmin.id,
+      TestUserManager.users.spaceMember.id,
+    ]);
+    await disableForumDiscussionCommentNotifications([
+      TestUserManager.users.globalAdmin.id,
+      TestUserManager.users.qaUser.id,
+      TestUserManager.users.globalLicenseAdmin.id,
+      TestUserManager.users.spaceMember.id,
+    ]);
+    await enableCommentReplyNotifications([
+      TestUserManager.users.globalAdmin.id,
+      TestUserManager.users.qaUser.id,
+      TestUserManager.users.globalLicenseAdmin.id,
+      TestUserManager.users.spaceMember.id,
+    ]);
   });
 
   beforeEach(async () => {
@@ -504,12 +592,25 @@ describe('Notifications - forum discussions comments reply', () => {
 
 describe('Notifications - no notifications triggered', () => {
   beforeAll(async () => {
-    for (const config of preferencesConfigDiscussions)
-      await changePreferenceUser(config.userID, config.type, 'false');
-    for (const config of preferencesConfigComments)
-      await changePreferenceUser(config.userID, config.type, 'false');
-    for (const config of preferencesConfigCommentsReply)
-      await changePreferenceUser(config.userID, config.type, 'false');
+    // Disable all forum-related notifications
+    await disableForumDiscussionCreatedNotifications([
+      TestUserManager.users.globalAdmin.id,
+      TestUserManager.users.qaUser.id,
+      TestUserManager.users.globalLicenseAdmin.id,
+      TestUserManager.users.spaceMember.id,
+    ]);
+    await disableForumDiscussionCommentNotifications([
+      TestUserManager.users.globalAdmin.id,
+      TestUserManager.users.qaUser.id,
+      TestUserManager.users.globalLicenseAdmin.id,
+      TestUserManager.users.spaceMember.id,
+    ]);
+    await disableCommentReplyNotifications([
+      TestUserManager.users.globalAdmin.id,
+      TestUserManager.users.qaUser.id,
+      TestUserManager.users.globalLicenseAdmin.id,
+      TestUserManager.users.spaceMember.id,
+    ]);
   });
 
   beforeEach(async () => {

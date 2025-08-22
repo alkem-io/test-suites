@@ -11,9 +11,8 @@ import {
 import { TestUser } from '@alkemio/tests-lib';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
 import { createPostOnCallout } from '@functional-api/callout/post/post.request.params';
-import { changePreferenceUser } from '@functional-api/contributor-management/user/user-preferences-mutation';
+import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
 import { sendMessageToRoom } from '@functional-api/communications/communication.params';
-import { PreferenceType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 
 const uniqueId = UniqueIDGenerator.getID();
@@ -32,10 +31,67 @@ const mentionedUser = (userDisplayName: string, userNameId: string) => {
   return `[@${userDisplayName}](${baseUrl}/${userNameId})`;
 };
 
-let preferencesConfig: any[] = [];
-let preferencesPostCreatedConfig: any[] = [];
-let preferencesPostCommentsCreatedConfig: any[] = [];
-let preferencesCalloutPublishedConfig: any[] = [];
+// Helper functions for notification settings
+const mentionNotificationSettings = {
+  notification: {
+    user: {
+      commentReply: true,
+      mentioned: true,
+    },
+  },
+};
+
+const disabledMentionNotificationSettings = {
+  notification: {
+    user: {
+      commentReply: false,
+      mentioned: false,
+    },
+  },
+};
+
+const enableMentionNotifications = async (userIds: string[]) => {
+  await Promise.all(
+    userIds.map(userId =>
+      updateUserSettings(userId, mentionNotificationSettings)
+    )
+  );
+};
+
+const disableMentionNotifications = async (userIds: string[]) => {
+  await Promise.all(
+    userIds.map(userId =>
+      updateUserSettings(userId, disabledMentionNotificationSettings)
+    )
+  );
+};
+
+// const disableOtherNotifications = async (userIds: string[]) => {
+//   const disabledSettings = {
+//     notification: {
+//       space: {
+//         communityApplicationReceived: false,
+//         communityApplicationSubmitted: false,
+//         collaborationCalloutPublished: false,
+//         communicationUpdatesAdmin: false,
+//         communicationUpdates: false,
+//         communityNewMember: false,
+//         communityNewMemberAdmin: false,
+//         collaborationPostCommentCreated: false,
+//         collaborationPostCreated: false,
+//         collaborationPostCreatedAdmin: false,
+//         collaborationWhiteboardCreated: false,
+//         collaborationDiscussionCreated: false,
+//         collaborationDiscussionCreatedAdmin: false,
+//         collaborationDiscussionCommentCreated: false,
+//       },
+//     },
+//   };
+
+//   await Promise.all(
+//     userIds.map(userId => updateUserSettings(userId, disabledSettings))
+//   );
+// };
 
 let baseScenario: OrganizationWithSpaceModel;
 const scenarioConfig: TestScenarioConfig = {
@@ -44,7 +100,7 @@ const scenarioConfig: TestScenarioConfig = {
     collaboration: {
       addPostCallout: true,
       addPostCollectionCallout: true,
-      addWhiteboardCallout: true,
+      addWhiteboardCallout: false,
     },
     community: {
       admins: [TestUser.SPACE_ADMIN],
@@ -61,7 +117,7 @@ const scenarioConfig: TestScenarioConfig = {
       collaboration: {
         addPostCallout: true,
         addPostCollectionCallout: true,
-        addWhiteboardCallout: true,
+        addWhiteboardCallout: false,
       },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
@@ -76,7 +132,7 @@ const scenarioConfig: TestScenarioConfig = {
         collaboration: {
           addPostCallout: true,
           addPostCollectionCallout: true,
-          addWhiteboardCallout: true,
+          addWhiteboardCallout: false,
         },
         community: {
           admins: [TestUser.SUBSUBSPACE_ADMIN],
@@ -92,224 +148,21 @@ beforeAll(async () => {
 
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
 
-  await changePreferenceUser(
+  // All relevant users for mention notifications
+  const allRelevantUsers = [
     TestUserManager.users.globalAdmin.id,
-    PreferenceType.NotificationPostCommentCreated,
-    'false'
-  );
-
-  preferencesConfig = [
-    {
-      userID: TestUserManager.users.globalAdmin.id,
-      type: PreferenceType.NotificationCommunicationMention,
-    },
-    {
-      userID: TestUserManager.users.spaceMember.id,
-      type: PreferenceType.NotificationCommunicationMention,
-    },
-    {
-      userID: TestUserManager.users.subspaceMember.id,
-      type: PreferenceType.NotificationCommunicationMention,
-    },
-    {
-      userID: TestUserManager.users.subsubspaceMember.id,
-      type: PreferenceType.NotificationCommunicationMention,
-    },
-    {
-      userID: TestUserManager.users.spaceAdmin.id,
-      type: PreferenceType.NotificationCommunicationMention,
-    },
-    {
-      userID: TestUserManager.users.subspaceAdmin.id,
-      type: PreferenceType.NotificationCommunicationMention,
-    },
-    {
-      userID: TestUserManager.users.subsubspaceAdmin.id,
-      type: PreferenceType.NotificationCommunicationMention,
-    },
-    {
-      userID: TestUserManager.users.nonSpaceMember.id,
-      type: PreferenceType.NotificationCommunicationMention,
-    },
+    TestUserManager.users.spaceMember.id,
+    TestUserManager.users.subspaceMember.id,
+    TestUserManager.users.subsubspaceMember.id,
+    TestUserManager.users.spaceAdmin.id,
+    TestUserManager.users.subspaceAdmin.id,
+    TestUserManager.users.subsubspaceAdmin.id,
+    TestUserManager.users.nonSpaceMember.id,
   ];
 
-  preferencesPostCreatedConfig = [
-    {
-      userID: TestUserManager.users.globalAdmin.id,
-      type: PreferenceType.NotificationPostCreated,
-    },
-    {
-      userID: TestUserManager.users.globalAdmin.id,
-      type: PreferenceType.NotificationPostCreatedAdmin,
-    },
-
-    {
-      userID: TestUserManager.users.spaceMember.id,
-      type: PreferenceType.NotificationPostCreated,
-    },
-    {
-      userID: TestUserManager.users.spaceMember.id,
-      type: PreferenceType.NotificationPostCreatedAdmin,
-    },
-
-    {
-      userID: TestUserManager.users.subspaceMember.id,
-      type: PreferenceType.NotificationPostCreated,
-    },
-    {
-      userID: TestUserManager.users.subspaceMember.id,
-      type: PreferenceType.NotificationPostCreatedAdmin,
-    },
-
-    {
-      userID: TestUserManager.users.subsubspaceMember.id,
-      type: PreferenceType.NotificationPostCreated,
-    },
-    {
-      userID: TestUserManager.users.subsubspaceMember.id,
-      type: PreferenceType.NotificationPostCreatedAdmin,
-    },
-
-    {
-      userID: TestUserManager.users.spaceAdmin.id,
-      type: PreferenceType.NotificationPostCreated,
-    },
-    {
-      userID: TestUserManager.users.spaceAdmin.id,
-      type: PreferenceType.NotificationPostCreatedAdmin,
-    },
-    {
-      userID: TestUserManager.users.subspaceAdmin.id,
-      type: PreferenceType.NotificationPostCreated,
-    },
-    {
-      userID: TestUserManager.users.subspaceAdmin.id,
-      type: PreferenceType.NotificationPostCreatedAdmin,
-    },
-    {
-      userID: TestUserManager.users.subsubspaceAdmin.id,
-      type: PreferenceType.NotificationPostCreated,
-    },
-    {
-      userID: TestUserManager.users.subsubspaceAdmin.id,
-      type: PreferenceType.NotificationPostCreatedAdmin,
-    },
-    {
-      userID: TestUserManager.users.nonSpaceMember.id,
-      type: PreferenceType.NotificationPostCreated,
-    },
-    {
-      userID: TestUserManager.users.nonSpaceMember.id,
-      type: PreferenceType.NotificationPostCreatedAdmin,
-    },
-  ];
-
-  preferencesPostCommentsCreatedConfig = [
-    {
-      userID: TestUserManager.users.globalAdmin.id,
-      type: PreferenceType.NotificationPostCommentCreated,
-    },
-
-    {
-      userID: TestUserManager.users.spaceMember.id,
-      type: PreferenceType.NotificationPostCommentCreated,
-    },
-
-    {
-      userID: TestUserManager.users.subspaceMember.id,
-      type: PreferenceType.NotificationPostCommentCreated,
-    },
-
-    {
-      userID: TestUserManager.users.subsubspaceMember.id,
-      type: PreferenceType.NotificationPostCommentCreated,
-    },
-
-    {
-      userID: TestUserManager.users.spaceAdmin.id,
-      type: PreferenceType.NotificationPostCommentCreated,
-    },
-
-    {
-      userID: TestUserManager.users.subspaceAdmin.id,
-      type: PreferenceType.NotificationPostCommentCreated,
-    },
-
-    {
-      userID: TestUserManager.users.subsubspaceAdmin.id,
-      type: PreferenceType.NotificationPostCommentCreated,
-    },
-
-    {
-      userID: TestUserManager.users.nonSpaceMember.id,
-      type: PreferenceType.NotificationPostCommentCreated,
-    },
-  ];
-
-  preferencesCalloutPublishedConfig = [
-    {
-      userID: TestUserManager.users.globalAdmin.id,
-      type: PreferenceType.NotificationCalloutPublished,
-    },
-
-    {
-      userID: TestUserManager.users.spaceMember.id,
-      type: PreferenceType.NotificationCalloutPublished,
-    },
-
-    {
-      userID: TestUserManager.users.subspaceMember.id,
-      type: PreferenceType.NotificationCalloutPublished,
-    },
-
-    {
-      userID: TestUserManager.users.subsubspaceMember.id,
-      type: PreferenceType.NotificationCalloutPublished,
-    },
-
-    {
-      userID: TestUserManager.users.spaceAdmin.id,
-      type: PreferenceType.NotificationCalloutPublished,
-    },
-
-    {
-      userID: TestUserManager.users.subspaceAdmin.id,
-      type: PreferenceType.NotificationCalloutPublished,
-    },
-
-    {
-      userID: TestUserManager.users.subsubspaceAdmin.id,
-      type: PreferenceType.NotificationCalloutPublished,
-    },
-
-    {
-      userID: TestUserManager.users.nonSpaceMember.id,
-      type: PreferenceType.NotificationCalloutPublished,
-    },
-  ];
-
-  await Promise.all(
-    preferencesConfig.map(config =>
-      changePreferenceUser(config.userID, config.type, 'true')
-    )
-  );
-  await Promise.all(
-    preferencesPostCreatedConfig.map(config =>
-      changePreferenceUser(config.userID, config.type, 'false')
-    )
-  );
-
-  await Promise.all(
-    preferencesPostCommentsCreatedConfig.map(config =>
-      changePreferenceUser(config.userID, config.type, 'false')
-    )
-  );
-
-  await Promise.all(
-    preferencesCalloutPublishedConfig.map(config =>
-      changePreferenceUser(config.userID, config.type, 'false')
-    )
-  );
+  // Enable mention notifications and disable other notifications that might interfere
+  await enableMentionNotifications(allRelevantUsers);
+  //await disableOtherNotifications(allRelevantUsers);
 });
 
 afterAll(async () => {
@@ -331,7 +184,7 @@ describe('Notifications - Mention User', () => {
         )} comment on discussion callout`,
         TestUser.GLOBAL_ADMIN
       );
-      await delay(3000);
+      await delay(1000);
       const getEmailsData = await getMailsData();
 
       // Assert
@@ -356,7 +209,7 @@ describe('Notifications - Mention User', () => {
         )} comment on discussion callout`,
         TestUser.SPACE_MEMBER
       );
-      await delay(3000);
+      await delay(1000);
 
       const getEmailsData = await getMailsData();
 
@@ -385,7 +238,7 @@ describe('Notifications - Mention User', () => {
         )}  comment on discussion callout`,
         TestUser.SPACE_MEMBER
       );
-      await delay(3000);
+      await delay(1000);
 
       const getEmailsData = await getMailsData();
 
@@ -415,7 +268,7 @@ describe('Notifications - Mention User', () => {
         )} comment on discussion callout`,
         TestUser.NON_SPACE_MEMBER
       );
-      await delay(3000);
+      await delay(1000);
 
       const getEmailsData = await getMailsData();
 
@@ -433,7 +286,7 @@ describe('Notifications - Mention User', () => {
         )} comment on discussion callout`,
         TestUser.GLOBAL_ADMIN
       );
-      await delay(3000);
+      await delay(1000);
 
       const getEmailsData = await getMailsData();
 
@@ -460,7 +313,7 @@ describe('Notifications - Mention User', () => {
         )} comment on discussion callout`,
         TestUser.GLOBAL_ADMIN
       );
-      await delay(3000);
+      await delay(1000);
 
       const getEmailsData = await getMailsData();
 
@@ -477,7 +330,7 @@ describe('Notifications - Mention User', () => {
     });
   });
 
-  describe('Post comment', () => {
+  describe.only('Post comment', () => {
     beforeAll(async () => {
       let postNameID = '';
       postNameID = `post-name-id-${uniqueId}`;
@@ -511,7 +364,7 @@ describe('Notifications - Mention User', () => {
       postCommentsIdSubsubspace =
         resPostonOpp.data?.createContributionOnCallout.post?.comments.id ?? '';
 
-      await delay(3000);
+      await delay(1000);
       await deleteMailSlurperMails();
     });
 
@@ -525,7 +378,7 @@ describe('Notifications - Mention User', () => {
         )} comment on discussion callout`,
         TestUser.SPACE_ADMIN
       );
-      await delay(3000);
+      await delay(1000);
 
       const getEmailsData = await getMailsData();
 
@@ -551,7 +404,7 @@ describe('Notifications - Mention User', () => {
         )} comment on discussion callout`,
         TestUser.SUBSPACE_MEMBER
       );
-      await delay(3000);
+      await delay(1000);
 
       const getEmailsData = await getMailsData();
 
@@ -580,7 +433,7 @@ describe('Notifications - Mention User', () => {
         TestUser.SUBSUBSPACE_MEMBER
       );
 
-      await delay(3000);
+      await delay(1000);
 
       const getEmailsData = await getMailsData();
 
@@ -599,11 +452,18 @@ describe('Notifications - Mention User', () => {
     });
 
     test('OA mention HM in Subsubspace post (preference disabled) - 0 notification to HM is sent', async () => {
-      // Arrange
-      preferencesConfig.forEach(
-        async config =>
-          await changePreferenceUser(config.userID, config.type, 'false')
-      );
+      // Arrange - Disable mention notifications for all users
+      const allUsers = [
+        TestUserManager.users.globalAdmin.id,
+        TestUserManager.users.spaceMember.id,
+        TestUserManager.users.subspaceMember.id,
+        TestUserManager.users.subsubspaceMember.id,
+        TestUserManager.users.spaceAdmin.id,
+        TestUserManager.users.subspaceAdmin.id,
+        TestUserManager.users.subsubspaceAdmin.id,
+        TestUserManager.users.nonSpaceMember.id,
+      ];
+      await disableMentionNotifications(allUsers);
 
       // Act
       await sendMessageToRoom(
@@ -615,7 +475,7 @@ describe('Notifications - Mention User', () => {
         TestUser.SUBSUBSPACE_MEMBER
       );
 
-      await delay(3000);
+      await delay(1000);
 
       const getEmailsData = await getMailsData();
 

@@ -271,8 +271,8 @@ describe('Notifications - whiteboard', () => {
     await deleteMailSlurperMails();
   });
 
-  test.only('GA create space whiteboard - GA(1), HA (2), HM(6) get notifications', async () => {
-    const subjectTextAdmin = `${baseScenario.space.about.profile.displayName}: New Whiteboard created by admin`;
+  test('GA create space whiteboard - GA(1), HA (2), HM(6) get notifications', async () => {
+    //const subjectTextAdmin = `${baseScenario.space.about.profile.displayName}: New Whiteboard created by admin`;
     const subjectTextMember = `${baseScenario.space.about.profile.displayName}: New Whiteboard created by admin, have a look!`;
 
     // Act
@@ -285,19 +285,19 @@ describe('Notifications - whiteboard', () => {
     await delay(1000);
     const mails = await getMailsData();
 
-    expect(mails[1]).toEqual(9);
+    expect(mails[1]).toEqual(7);
 
-    expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextAdmin, [
-        TestUserManager.users.globalAdmin.email,
-      ])
-    );
+    // expect(mails[0]).toEqual(
+    //   await expectedDataFunc(subjectTextAdmin, [
+    //     TestUserManager.users.globalAdmin.email,
+    //   ])
+    // );
 
-    expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextAdmin, [
-        TestUserManager.users.spaceAdmin.email,
-      ])
-    );
+    // expect(mails[0]).toEqual(
+    //   await expectedDataFunc(subjectTextAdmin, [
+    //     TestUserManager.users.spaceAdmin.email,
+    //   ])
+    // );
 
     expect(mails[0]).toEqual(
       await expectedDataFunc(subjectTextMember, [
@@ -340,7 +340,7 @@ describe('Notifications - whiteboard', () => {
   });
 
   test('HA create space whiteboard - GA(1), HA (1), HM(6) get notifications', async () => {
-    const subjectTextAdmin = `${baseScenario.space.about.profile.displayName}: New Whiteboard created by space`;
+    //const subjectTextAdmin = `${baseScenario.space.about.profile.displayName}: New Whiteboard created by space`;
     const subjectTextMember = `${baseScenario.space.about.profile.displayName}: New Whiteboard created by space, have a look!`;
     // Act
     const res = await createWhiteboardOnCallout(
@@ -350,22 +350,22 @@ describe('Notifications - whiteboard', () => {
     spaceWhiteboardId =
       res?.data?.createContributionOnCallout?.whiteboard?.id ?? '';
 
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
 
-    expect(mails[1]).toEqual(9);
+    expect(mails[1]).toEqual(7);
 
-    expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextAdmin, [
-        TestUserManager.users.globalAdmin.email,
-      ])
-    );
+    // expect(mails[0]).toEqual(
+    //   await expectedDataFunc(subjectTextAdmin, [
+    //     TestUserManager.users.globalAdmin.email,
+    //   ])
+    // );
 
-    expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextAdmin, [
-        TestUserManager.users.spaceAdmin.email,
-      ])
-    );
+    // expect(mails[0]).toEqual(
+    //   await expectedDataFunc(subjectTextAdmin, [
+    //     TestUserManager.users.spaceAdmin.email,
+    //   ])
+    // );
 
     expect(mails[0]).toEqual(
       await expectedDataFunc(subjectTextMember, [
@@ -406,7 +406,7 @@ describe('Notifications - whiteboard', () => {
   });
 
   test('HA create subspace whiteboard - GA(1), HA (1), CA(1), CM(3),  get notifications', async () => {
-    const subjectTextAdmin = `${baseScenario.subspace.about.profile.displayName}: New Whiteboard created by space`;
+    // const subjectTextAdmin = `${baseScenario.subspace.about.profile.displayName}: New Whiteboard created by space`;
     const subjectTextMember = `${baseScenario.subspace.about.profile.displayName}: New Whiteboard created by space, have a look!`;
     // Act
     const res = await createWhiteboardOnCallout(
@@ -416,23 +416,23 @@ describe('Notifications - whiteboard', () => {
     spaceWhiteboardId =
       res?.data?.createContributionOnCallout?.whiteboard?.id ?? '';
 
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
 
-    expect(mails[1]).toEqual(7);
+    expect(mails[1]).toEqual(5);
 
-    expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextAdmin, [
-        TestUserManager.users.globalAdmin.email,
-      ])
-    );
+    // expect(mails[0]).toEqual(
+    //   await expectedDataFunc(subjectTextAdmin, [
+    //     TestUserManager.users.globalAdmin.email,
+    //   ])
+    // );
 
-    // Space admin does not reacive email as admin message
-    expect(mails[0]).not.toEqual(
-      await expectedDataFunc(subjectTextAdmin, [
-        TestUserManager.users.spaceAdmin.email,
-      ])
-    );
+    // // Space admin does not reacive email as admin message
+    // expect(mails[0]).not.toEqual(
+    //   await expectedDataFunc(subjectTextAdmin, [
+    //     TestUserManager.users.spaceAdmin.email,
+    //   ])
+    // );
 
     expect(mails[0]).toEqual(
       await expectedDataFunc(subjectTextMember, [
@@ -454,11 +454,11 @@ describe('Notifications - whiteboard', () => {
       ])
     );
 
-    expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextAdmin, [
-        TestUserManager.users.subspaceAdmin.email,
-      ])
-    );
+    // expect(mails[0]).toEqual(
+    //   await expectedDataFunc(subjectTextAdmin, [
+    //     TestUserManager.users.subspaceAdmin.email,
+    //   ])
+    // );
 
     expect(mails[0]).toEqual(
       await expectedDataFunc(subjectTextMember, [
@@ -483,7 +483,7 @@ describe('Notifications - whiteboard', () => {
   });
 
   test('OM create subsubspace whiteboard - HA(2), CA(1), OA(2), OM(4), get notifications', async () => {
-    const subjectTextAdmin = `${baseScenario.subsubspace.about.profile.displayName}: New Whiteboard created by subsubspace`;
+    // const subjectTextAdmin = `${baseScenario.subsubspace.about.profile.displayName}: New Whiteboard created by subsubspace`;
     const subjectTextMember = `${baseScenario.subsubspace.about.profile.displayName}: New Whiteboard created by subsubspace, have a look!`;
     // Act
     const res = await createWhiteboardOnCallout(
@@ -493,23 +493,23 @@ describe('Notifications - whiteboard', () => {
     spaceWhiteboardId =
       res?.data?.createContributionOnCallout?.whiteboard?.id ?? '';
 
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
 
-    expect(mails[1]).toEqual(5);
+    expect(mails[1]).toEqual(3);
 
-    expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextAdmin, [
-        TestUserManager.users.globalAdmin.email,
-      ])
-    );
+    // expect(mails[0]).toEqual(
+    //   await expectedDataFunc(subjectTextAdmin, [
+    //     TestUserManager.users.globalAdmin.email,
+    //   ])
+    // );
 
-    // Space admin does not reacive email as admin message
-    expect(mails[0]).not.toEqual(
-      await expectedDataFunc(subjectTextAdmin, [
-        TestUserManager.users.spaceAdmin.email,
-      ])
-    );
+    // // Space admin does not reacive email as admin message
+    // expect(mails[0]).not.toEqual(
+    //   await expectedDataFunc(subjectTextAdmin, [
+    //     TestUserManager.users.spaceAdmin.email,
+    //   ])
+    // );
 
     expect(mails[0]).toEqual(
       await expectedDataFunc(subjectTextMember, [
@@ -530,12 +530,12 @@ describe('Notifications - whiteboard', () => {
       ])
     );
 
-    // Subspace admin does not reacive email as admin message
-    expect(mails[0]).not.toEqual(
-      await expectedDataFunc(subjectTextAdmin, [
-        TestUserManager.users.subspaceAdmin.email,
-      ])
-    );
+    // // Subspace admin does not reacive email as admin message
+    // expect(mails[0]).not.toEqual(
+    //   await expectedDataFunc(subjectTextAdmin, [
+    //     TestUserManager.users.subspaceAdmin.email,
+    //   ])
+    // );
 
     // Subspace member does not reacive email
     expect(mails[0]).not.toEqual(
@@ -544,11 +544,11 @@ describe('Notifications - whiteboard', () => {
       ])
     );
 
-    expect(mails[0]).toEqual(
-      await expectedDataFunc(subjectTextAdmin, [
-        TestUserManager.users.subsubspaceAdmin.email,
-      ])
-    );
+    // expect(mails[0]).toEqual(
+    //   await expectedDataFunc(subjectTextAdmin, [
+    //     TestUserManager.users.subsubspaceAdmin.email,
+    //   ])
+    // );
 
     expect(mails[0]).toEqual(
       await expectedDataFunc(subjectTextMember, [

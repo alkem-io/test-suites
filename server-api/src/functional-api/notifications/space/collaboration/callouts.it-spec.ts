@@ -12,7 +12,6 @@ import { delay } from '@alkemio/tests-lib';
 import {
   CalloutFramingType,
   CalloutVisibility,
-  PreferenceType,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import {
@@ -20,10 +19,68 @@ import {
   deleteCallout,
   updateCalloutVisibility,
 } from '@functional-api/callout/callouts.request.params';
-import { changePreferenceUser } from '@functional-api/contributor-management/user/user-preferences-mutation';
+import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
+
+// Helper functions for callout published notification settings
+const calloutPublishedNotificationSettings = {
+  notification: {
+    space: {
+      collaborationCalloutPublished: true,
+      communityApplicationReceived: false,
+      communityApplicationSubmitted: false,
+      communicationUpdatesAdmin: false,
+      communicationUpdates: false,
+      communityInvitationUser: false,
+      communityNewMember: false,
+      communityNewMemberAdmin: false,
+      collaborationPostCommentCreated: false,
+      collaborationPostCreated: false,
+      collaborationPostCreatedAdmin: false,
+      collaborationWhiteboardCreated: false,
+      communicationMessageAdmin: false,
+      communicationMessage: false,
+    },
+  },
+};
+
+const disabledCalloutPublishedNotificationSettings = {
+  notification: {
+    space: {
+      collaborationCalloutPublished: false,
+      communityApplicationReceived: false,
+      communityApplicationSubmitted: false,
+      communicationUpdatesAdmin: false,
+      communicationUpdates: false,
+      communityInvitationUser: true,
+      communityNewMember: false,
+      communityNewMemberAdmin: false,
+      collaborationPostCommentCreated: false,
+      collaborationPostCreated: false,
+      collaborationPostCreatedAdmin: false,
+      collaborationWhiteboardCreated: false,
+      communicationMessageAdmin: false,
+      communicationMessage: false,
+    },
+  },
+};
+
+const enableCalloutPublishedNotifications = async (userIds: string[]) => {
+  await Promise.all(
+    userIds.map(userId =>
+      updateUserSettings(userId, calloutPublishedNotificationSettings)
+    )
+  );
+};
+
+const disableCalloutPublishedNotifications = async (userIds: string[]) => {
+  await Promise.all(
+    userIds.map(userId =>
+      updateUserSettings(userId, disabledCalloutPublishedNotificationSettings)
+    )
+  );
+};
 
 const uniqueId = UniqueIDGenerator.getID();
-let preferencesConfigCallout: any[] = [];
 let calloutDisplayName = '';
 let calloutId = '';
 
@@ -96,48 +153,6 @@ beforeAll(async () => {
   await deleteMailSlurperMails();
 
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
-
-  preferencesConfigCallout = [
-    {
-      userID: TestUserManager.users.globalAdmin.id,
-      type: PreferenceType.NotificationCalloutPublished,
-    },
-
-    {
-      userID: TestUserManager.users.spaceMember.id,
-      type: PreferenceType.NotificationCalloutPublished,
-    },
-
-    {
-      userID: TestUserManager.users.subspaceMember.id,
-      type: PreferenceType.NotificationCalloutPublished,
-    },
-
-    {
-      userID: TestUserManager.users.subsubspaceMember.id,
-      type: PreferenceType.NotificationCalloutPublished,
-    },
-
-    {
-      userID: TestUserManager.users.spaceAdmin.id,
-      type: PreferenceType.NotificationCalloutPublished,
-    },
-
-    {
-      userID: TestUserManager.users.subspaceAdmin.id,
-      type: PreferenceType.NotificationCalloutPublished,
-    },
-
-    {
-      userID: TestUserManager.users.subsubspaceAdmin.id,
-      type: PreferenceType.NotificationCalloutPublished,
-    },
-
-    {
-      userID: TestUserManager.users.nonSpaceMember.id,
-      type: PreferenceType.NotificationCalloutPublished,
-    },
-  ];
 });
 
 afterAll(async () => {
@@ -156,15 +171,22 @@ describe('Notifications - post', () => {
   });
 
   beforeAll(async () => {
-    await changePreferenceUser(
+    // Disable notifications for global support admin
+    await disableCalloutPublishedNotifications([
       TestUserManager.users.globalSupportAdmin.id,
-      PreferenceType.NotificationCalloutPublished,
-      'false'
-    );
+    ]);
 
-    preferencesConfigCallout.forEach(async config => {
-      await changePreferenceUser(config.userID, config.type, 'true');
-    });
+    // Enable callout published notifications for all relevant users
+    await enableCalloutPublishedNotifications([
+      TestUserManager.users.globalAdmin.id,
+      TestUserManager.users.spaceMember.id,
+      TestUserManager.users.subspaceMember.id,
+      TestUserManager.users.subsubspaceMember.id,
+      TestUserManager.users.spaceAdmin.id,
+      TestUserManager.users.subspaceAdmin.id,
+      TestUserManager.users.subsubspaceAdmin.id,
+      TestUserManager.users.nonSpaceMember.id,
+    ]);
   });
 
   test('GA PUBLISH space callout - HM(7) get notifications', async () => {
@@ -184,7 +206,7 @@ describe('Notifications - post', () => {
 
     await updateCalloutVisibility(calloutId, CalloutVisibility.Published);
 
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
 
     expect(mails[1]).toEqual(7);
@@ -251,7 +273,7 @@ describe('Notifications - post', () => {
       false
     );
 
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
 
     // Assert
@@ -279,7 +301,7 @@ describe('Notifications - post', () => {
       TestUser.SPACE_ADMIN
     );
 
-    await delay(6000);
+    await delay(1000);
     mails = await getMailsData();
 
     expect(mails[1]).toEqual(7);
@@ -301,7 +323,7 @@ describe('Notifications - post', () => {
       TestUser.SPACE_ADMIN
     );
 
-    await delay(6000);
+    await delay(1000);
     mails = await getMailsData();
 
     expect(mails[1]).toEqual(14);
@@ -324,7 +346,7 @@ describe('Notifications - post', () => {
       TestUser.SPACE_ADMIN
     );
 
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
     expect(mails[1]).toEqual(7);
 
@@ -391,7 +413,7 @@ describe('Notifications - post', () => {
       TestUser.SPACE_ADMIN
     );
 
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
 
     // expect(mails[0]).toEqual(
@@ -471,7 +493,7 @@ describe('Notifications - post', () => {
       TestUser.SPACE_ADMIN
     );
 
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
 
     expect(mails[1]).toEqual(5);
@@ -540,7 +562,7 @@ describe('Notifications - post', () => {
       false
     );
 
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
 
     // Assert
@@ -562,7 +584,7 @@ describe('Notifications - post', () => {
       TestUser.SUBSUBSPACE_ADMIN
     );
 
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
 
     expect(mails[1]).toEqual(3);
@@ -634,7 +656,7 @@ describe('Notifications - post', () => {
       false
     );
 
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
 
     // Assert
@@ -642,10 +664,18 @@ describe('Notifications - post', () => {
   });
 
   test('OA create PUBLISHED subsubspace callout type: POST - 0 notifications - all roles with notifications disabled', async () => {
-    preferencesConfigCallout.forEach(
-      async config =>
-        await changePreferenceUser(config.userID, config.type, 'false')
-    );
+    // Disable callout published notifications for all users
+    await disableCalloutPublishedNotifications([
+      TestUserManager.users.globalAdmin.id,
+      TestUserManager.users.spaceMember.id,
+      TestUserManager.users.subspaceMember.id,
+      TestUserManager.users.subsubspaceMember.id,
+      TestUserManager.users.spaceAdmin.id,
+      TestUserManager.users.subspaceAdmin.id,
+      TestUserManager.users.subsubspaceAdmin.id,
+      TestUserManager.users.nonSpaceMember.id,
+    ]);
+
     // Act
     const res = await createCalloutOnCalloutsSet(
       baseScenario.subsubspace.collaboration.calloutsSetId,

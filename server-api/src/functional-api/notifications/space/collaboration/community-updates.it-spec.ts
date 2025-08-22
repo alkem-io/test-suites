@@ -9,10 +9,68 @@ import {
 } from '@alkemio/tests-lib';
 import { TestUser } from '@alkemio/tests-lib';
 import { delay } from '@alkemio/tests-lib';
-import { PreferenceType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { sendMessageToRoom } from '@functional-api/communications/communication.params';
-import { changePreferenceUser } from '@functional-api/contributor-management/user/user-preferences-mutation';
+import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
+
+// Helper functions for community update notification settings
+const communityUpdatesNotificationSettings = {
+  notification: {
+    space: {
+      communicationUpdates: true,
+      communicationUpdatesAdmin: true,
+      collaborationCalloutPublished: false,
+      communityApplicationReceived: false,
+      communityApplicationSubmitted: false,
+      communityInvitationUser: false,
+      communityNewMember: false,
+      communityNewMemberAdmin: false,
+      collaborationPostCommentCreated: false,
+      collaborationPostCreated: false,
+      collaborationPostCreatedAdmin: false,
+      collaborationWhiteboardCreated: false,
+      communicationMessageAdmin: false,
+      communicationMessage: false,
+    },
+  },
+};
+
+const disabledCommunityUpdatesNotificationSettings = {
+  notification: {
+    space: {
+      communicationUpdates: false,
+      communicationUpdatesAdmin: false,
+      collaborationCalloutPublished: false,
+      communityApplicationReceived: false,
+      communityApplicationSubmitted: false,
+      communityInvitationUser: true,
+      communityNewMember: false,
+      communityNewMemberAdmin: false,
+      collaborationPostCommentCreated: false,
+      collaborationPostCreated: false,
+      collaborationPostCreatedAdmin: false,
+      collaborationWhiteboardCreated: false,
+      communicationMessageAdmin: false,
+      communicationMessage: false,
+    },
+  },
+};
+
+const enableCommunityUpdatesNotifications = async (userIds: string[]) => {
+  await Promise.all(
+    userIds.map(userId =>
+      updateUserSettings(userId, communityUpdatesNotificationSettings)
+    )
+  );
+};
+
+const disableCommunityUpdatesNotifications = async (userIds: string[]) => {
+  await Promise.all(
+    userIds.map(userId =>
+      updateUserSettings(userId, disabledCommunityUpdatesNotificationSettings)
+    )
+  );
+};
 
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -20,7 +78,6 @@ const spaceName = 'not-up-eco-name' + uniqueId;
 const ecoName = spaceName;
 const subspaceName = `chName${uniqueId}`;
 const subsubspaceName = `opName${uniqueId}`;
-let preferencesConfig: any[] = [];
 
 export const templatedAsAdminResult = async (
   entityName: string,
@@ -103,65 +160,6 @@ beforeAll(async () => {
   await deleteMailSlurperMails();
 
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
-
-  preferencesConfig = [
-    {
-      userID: TestUserManager.users.globalAdmin.id,
-      type: PreferenceType.NotificationCommunicationUpdates,
-    },
-    {
-      userID: TestUserManager.users.globalAdmin.id,
-      type: PreferenceType.NotificationCommunicationUpdateSentAdmin,
-    },
-    {
-      userID: TestUserManager.users.nonSpaceMember.id,
-      type: PreferenceType.NotificationCommunicationUpdates,
-    },
-    {
-      userID: TestUserManager.users.nonSpaceMember.id,
-      type: PreferenceType.NotificationCommunicationUpdateSentAdmin,
-    },
-    {
-      userID: TestUserManager.users.subspaceMember.id,
-      type: PreferenceType.NotificationCommunicationUpdates,
-    },
-    {
-      userID: TestUserManager.users.subspaceMember.id,
-      type: PreferenceType.NotificationCommunicationUpdateSentAdmin,
-    },
-    {
-      userID: TestUserManager.users.subsubspaceMember.id,
-      type: PreferenceType.NotificationCommunicationUpdates,
-    },
-    {
-      userID: TestUserManager.users.subsubspaceMember.id,
-      type: PreferenceType.NotificationCommunicationUpdateSentAdmin,
-    },
-    {
-      userID: TestUserManager.users.spaceAdmin.id,
-      type: PreferenceType.NotificationCommunicationUpdates,
-    },
-    {
-      userID: TestUserManager.users.spaceAdmin.id,
-      type: PreferenceType.NotificationCommunicationUpdateSentAdmin,
-    },
-    {
-      userID: TestUserManager.users.subspaceAdmin.id,
-      type: PreferenceType.NotificationCommunicationUpdates,
-    },
-    {
-      userID: TestUserManager.users.subspaceAdmin.id,
-      type: PreferenceType.NotificationCommunicationUpdateSentAdmin,
-    },
-    {
-      userID: TestUserManager.users.subsubspaceAdmin.id,
-      type: PreferenceType.NotificationCommunicationUpdates,
-    },
-    {
-      userID: TestUserManager.users.subsubspaceAdmin.id,
-      type: PreferenceType.NotificationCommunicationUpdateSentAdmin,
-    },
-  ];
 });
 
 afterAll(async () => {
@@ -171,35 +169,35 @@ afterAll(async () => {
 // Skip tests due to bug: #193
 describe.skip('Notifications - updates', () => {
   beforeAll(async () => {
-    await changePreferenceUser(
+    // Disable community updates notifications for global support admin
+    await disableCommunityUpdatesNotifications([
       TestUserManager.users.globalSupportAdmin.id,
-      PreferenceType.NotificationCommunicationUpdates,
-      'false'
-    );
-    await changePreferenceUser(
-      TestUserManager.users.globalSupportAdmin.id,
-      PreferenceType.NotificationCommunicationUpdateSentAdmin,
-      'false'
-    );
+    ]);
 
-    preferencesConfig.forEach(
-      async config =>
-        await changePreferenceUser(config.userID, config.type, 'true')
-    );
+    // Enable community updates notifications for all relevant users
+    await enableCommunityUpdatesNotifications([
+      TestUserManager.users.globalAdmin.id,
+      TestUserManager.users.nonSpaceMember.id,
+      TestUserManager.users.subspaceMember.id,
+      TestUserManager.users.subsubspaceMember.id,
+      TestUserManager.users.spaceAdmin.id,
+      TestUserManager.users.subspaceAdmin.id,
+      TestUserManager.users.subsubspaceAdmin.id,
+    ]);
   });
 
   beforeEach(async () => {
     await deleteMailSlurperMails();
   });
 
-  test('GA create space update - GA(1), HA (1), HM(6) get notifications', async () => {
+  test.only('GA create space update - GA(1), HA (1), HM(6) get notifications', async () => {
     // Act
     await sendMessageToRoom(
       baseScenario.space.communication.updatesId,
       'GA space update '
     );
 
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
 
     // Assert
@@ -272,7 +270,7 @@ describe.skip('Notifications - updates', () => {
     );
 
     // Assert
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
 
     expect(mails[1]).toEqual(9);
@@ -345,7 +343,7 @@ describe.skip('Notifications - updates', () => {
     );
 
     // Assert
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
 
     expect(mails[1]).toEqual(7);
@@ -418,7 +416,7 @@ describe.skip('Notifications - updates', () => {
     );
 
     // Assert
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
 
     expect(mails[1]).toEqual(5);
@@ -484,10 +482,17 @@ describe.skip('Notifications - updates', () => {
   });
 
   test('OA create subsubspace update - 0 notifications - all roles with notifications disabled', async () => {
-    preferencesConfig.forEach(
-      async config =>
-        await changePreferenceUser(config.userID, config.type, 'false')
-    );
+    // Disable community updates notifications for all users
+    await disableCommunityUpdatesNotifications([
+      TestUserManager.users.globalAdmin.id,
+      TestUserManager.users.nonSpaceMember.id,
+      TestUserManager.users.subspaceMember.id,
+      TestUserManager.users.subsubspaceMember.id,
+      TestUserManager.users.spaceAdmin.id,
+      TestUserManager.users.subspaceAdmin.id,
+      TestUserManager.users.subsubspaceAdmin.id,
+    ]);
+
     // Act
     await sendMessageToRoom(
       baseScenario.subsubspace.communication.updatesId,

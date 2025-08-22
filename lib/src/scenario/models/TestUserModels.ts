@@ -1,5 +1,4 @@
-
-import { UserModel } from './UserModel';
+import { UserModel } from "./UserModel";
 
 export interface TestUserModels {
   globalAdmin: UserModel;
@@ -12,9 +11,7 @@ export interface TestUserModels {
   subsubspaceAdmin: UserModel;
   subsubspaceMember: UserModel;
   qaUser: UserModel;
-  //notificationsAdmin: UserModel;
+  // notificationsAdmin: UserModel;
   nonSpaceMember: UserModel;
   betaTester: UserModel;
 }
-
-
