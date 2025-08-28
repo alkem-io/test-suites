@@ -35,8 +35,28 @@ const mentionedUser = (userDisplayName: string, userNameId: string) => {
 const mentionNotificationSettings = {
   notification: {
     user: {
-      commentReply: true,
+      commentReply: false,
       mentioned: true,
+      messageReceived: true,
+      copyOfMessageSent: true,
+      membership: {
+        spaceCommunityApplicationSubmitted: false,
+        spaceCommunityInvitationReceived: false,
+        spaceCommunityJoined: false,
+      },
+    },
+    space: {
+      admin: {
+        communityApplicationReceived: false,
+        communityNewMember: false,
+        collaborationCalloutContributionCreated: false,
+        communicationMessageReceived: false,
+      },
+      collaborationCalloutPublished: false,
+      communicationUpdates: false,
+      collaborationCalloutPostContributionComment: false,
+      collaborationCalloutContributionCreated: false,
+      collaborationCalloutComment: false,
     },
   },
 };
@@ -46,6 +66,26 @@ const disabledMentionNotificationSettings = {
     user: {
       commentReply: false,
       mentioned: false,
+      messageReceived: false,
+      copyOfMessageSent: false,
+      membership: {
+        spaceCommunityApplicationSubmitted: false,
+        spaceCommunityInvitationReceived: false,
+        spaceCommunityJoined: false,
+      },
+    },
+    space: {
+      admin: {
+        communityApplicationReceived: false,
+        communityNewMember: false,
+        collaborationCalloutContributionCreated: false,
+        communicationMessageReceived: false,
+      },
+      collaborationCalloutPublished: false,
+      communicationUpdates: false,
+      collaborationCalloutPostContributionComment: false,
+      collaborationCalloutContributionCreated: false,
+      collaborationCalloutComment: false,
     },
   },
 };
@@ -330,7 +370,7 @@ describe('Notifications - Mention User', () => {
     });
   });
 
-  describe.only('Post comment', () => {
+  describe('Post comment', () => {
     beforeAll(async () => {
       let postNameID = '';
       postNameID = `post-name-id-${uniqueId}`;

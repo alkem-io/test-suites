@@ -1,495 +1,475 @@
-// /* eslint-disable @typescript-eslint/no-explicit-any */
-// import {
-//   delay,
-//   deleteMailSlurperMails,
-//   getMailsData,
-//   TestScenarioConfig,
-//   TestScenarioFactory,
-//   TestUser,
-//   TestUserManager,
-// } from '@alkemio/tests-lib';
-// import { updateSpaceSettings } from '@functional-api/journey/space/space.request.params';
-// import { sendMessageToCommunityLeads } from '@functional-api/communications/communication.params';
-// import {
-//   removeRoleFromUser,
-//   assignRoleToUser,
-// } from '@functional-api/roleset/roles-request.params';
-// import { changePreferenceUser } from '@functional-api/contributor-management/user/user-preferences-mutation';
-// import { updateUserSettingCommunicationMessage } from '@functional-api/contributor-management/user/user.request.params';
-// import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-// import { SpacePrivacyMode } from '@alkemio/client-lib';
-// import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import {
+  delay,
+  deleteMailSlurperMails,
+  getMailsData,
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUser,
+  TestUserManager,
+} from '@alkemio/tests-lib';
+import { updateSpaceSettings } from '@functional-api/journey/space/space.request.params';
+import { sendMessageToCommunityLeads } from '@functional-api/communications/communication.params';
+import {
+  removeRoleFromUser,
+  assignRoleToUser,
+} from '@functional-api/roleset/roles-request.params';
+import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import { SpacePrivacyMode } from '@alkemio/client-lib';
+import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
-// let usersList: any[] = [];
+// Notification settings for communication message events
+const communicationMessageNotificationSettings = {
+  notification: {
+    space: {
+      admin: {
+        communityApplicationReceived: false,
+        communityNewMember: false,
+        collaborationCalloutContributionCreated: false,
+        communicationMessageReceived: true,
+      },
+      collaborationCalloutPublished: false,
+      communicationUpdates: false,
+      collaborationCalloutPostContributionComment: false,
+      collaborationCalloutContributionCreated: false,
+      collaborationCalloutComment: false,
+    },
+    user: {
+      commentReply: false,
+      mentioned: false,
+      messageReceived: true,
+      copyOfMessageSent: true,
+      membership: {
+        spaceCommunityApplicationSubmitted: false,
+        spaceCommunityInvitationReceived: false,
+        spaceCommunityJoined: false,
+      },
+    },
+  },
+};
 
-// const senders = (communityName: string) => {
-//   return `You have sent a message to ${communityName} community`;
-// };
+const disabledCommunicationMessageNotificationSettings = {
+  notification: {
+    space: {
+      admin: {
+        communityApplicationReceived: false,
+        communityNewMember: false,
+        collaborationCalloutContributionCreated: false,
+        communicationMessageReceived: false,
+      },
+      collaborationCalloutPublished: false,
+      communicationUpdates: false,
+      collaborationCalloutPostContributionComment: false,
+      collaborationCalloutContributionCreated: false,
+      collaborationCalloutComment: false,
+    },
+    user: {
+      commentReply: false,
+      mentioned: false,
+      messageReceived: false,
+      copyOfMessageSent: false,
+      membership: {
+        spaceCommunityApplicationSubmitted: false,
+        spaceCommunityInvitationReceived: false,
+        spaceCommunityJoined: false,
+      },
+    },
+  },
+};
 
-// const receivers = (senderDisplayName: string) => {
-//   return `${senderDisplayName} sent a message to your community`;
-// };
+// Helper function to enable communication message notifications for specific users
+const enableCommunicationMessageNotifications = async (userIds: string[]) => {
+  await Promise.all(
+    userIds.map(userId =>
+      updateUserSettings(userId, communicationMessageNotificationSettings)
+    )
+  );
+};
 
-// let baseScenario: OrganizationWithSpaceModel;
-// const scenarioConfig: TestScenarioConfig = {
-//   name: 'messaging-user-to-community-leads-space',
-//   space: {
-//     community: {
-//       admins: [TestUser.SPACE_ADMIN],
-//       members: [
-//         TestUser.SPACE_MEMBER,
-//         TestUser.SPACE_ADMIN,
-//         TestUser.SUBSPACE_MEMBER,
-//         TestUser.SUBSPACE_ADMIN,
-//         TestUser.SUBSUBSPACE_MEMBER,
-//         TestUser.SUBSUBSPACE_ADMIN,
-//       ],
-//       leads: [TestUser.SPACE_ADMIN],
-//     },
-//   },
-// };
+// Helper function to disable communication message notifications for specific users
+const disableCommunicationMessageNotifications = async (userIds: string[]) => {
+  await Promise.all(
+    userIds.map(userId =>
+      updateUserSettings(
+        userId,
+        disabledCommunicationMessageNotificationSettings
+      )
+    )
+  );
+};
 
-// beforeAll(async () => {
-//   await deleteMailSlurperMails();
+let usersList: any[] = [];
 
-//   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
+const senders = (communityName: string) => {
+  return `You have sent a message to ${communityName} community`;
+};
 
-//   await removeRoleFromUser(
-//     TestUserManager.users.globalAdmin.id,
-//     baseScenario.space.community.roleSetId,
-//     RoleName.Lead
-//   );
+const receivers = (senderDisplayName: string) => {
+  return `${senderDisplayName} sent a message to your community`;
+};
 
-//   await assignRoleToUser(
-//     TestUserManager.users.spaceAdmin.id,
-//     baseScenario.organization.roleSetId,
-//     RoleName.Admin
-//   );
+let baseScenario: OrganizationWithSpaceModel;
+const scenarioConfig: TestScenarioConfig = {
+  name: 'messaging-user-to-community-leads-space',
+  space: {
+    community: {
+      admins: [TestUser.SPACE_ADMIN],
+      members: [
+        TestUser.SPACE_MEMBER,
+        TestUser.SPACE_ADMIN,
+        TestUser.SUBSPACE_MEMBER,
+        TestUser.SUBSPACE_ADMIN,
+        TestUser.SUBSUBSPACE_MEMBER,
+        TestUser.SUBSUBSPACE_ADMIN,
+      ],
+      leads: [TestUser.SPACE_ADMIN],
+    },
+  },
+};
 
-//   await assignRoleToUser(
-//     TestUserManager.users.spaceMember.id,
-//     baseScenario.space.community.roleSetId,
-//     RoleName.Lead
-//   );
+beforeAll(async () => {
+  await deleteMailSlurperMails();
 
-//   usersList = [
-//     TestUserManager.users.spaceAdmin.id,
-//     TestUserManager.users.spaceMember.id,
-//   ];
-// });
+  baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
 
-// afterAll(async () => {
-//   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
-// });
+  await removeRoleFromUser(
+    TestUserManager.users.globalAdmin.id,
+    baseScenario.space.community.roleSetId,
+    RoleName.Lead
+  );
+  await assignRoleToUser(
+    TestUserManager.users.spaceAdmin.id,
+    baseScenario.organization.roleSetId,
+    RoleName.Admin
+  );
 
-// describe('Notifications - send messages to Private space hosts', () => {
-//   describe('Notifications - hosts (COMMUNICATION_MESSAGE pref: enabled)', () => {
-//     beforeAll(async () => {
-//       for (const userOnList of usersList)
-//         await updateUserSettingCommunicationMessage(userOnList.userID, true);
+  await assignRoleToUser(
+    TestUserManager.users.spaceMember.id,
+    baseScenario.space.community.roleSetId,
+    RoleName.Lead
+  );
 
-//       await updateSpaceSettings(baseScenario.space.id, {
-//         privacy: {
-//           mode: SpacePrivacyMode.Private,
-//         },
-//       });
-//     });
+  usersList = [
+    TestUserManager.users.spaceAdmin.id,
+    TestUserManager.users.spaceMember.id,
+    TestUserManager.users.nonSpaceMember.id,
+    TestUserManager.users.subspaceMember.id,
+    TestUserManager.users.nonSpaceMember.id,
+    TestUserManager.users.qaUser.id,
+  ];
+});
 
-//     beforeEach(async () => {
-//       await deleteMailSlurperMails();
-//     });
+afterAll(async () => {
+  await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+});
 
-//     test('NOT space member sends message to Space community (2 hosts) - 3 messages sent', async () => {
-//       // Act
-//       await sendMessageToCommunityLeads(
-//         baseScenario.space.community.id,
-//         'Test message',
-//         TestUser.NON_SPACE_MEMBER
-//       );
+describe('Notifications - send messages to Private space hosts', () => {
+  describe('Notifications - hosts (COMMUNICATION_MESSAGE pref: enabled)', () => {
+    beforeAll(async () => {
+      await enableCommunicationMessageNotifications(usersList);
+      await updateSpaceSettings(baseScenario.space.id, {
+        privacy: {
+          mode: SpacePrivacyMode.Private,
+        },
+      });
+    });
 
-//       await delay(3000);
+    beforeEach(async () => {
+      await deleteMailSlurperMails();
+    });
 
-//       const getEmailsData = await getMailsData();
+    test('NOT space member sends message to Space community (2 hosts) - 3 messages sent', async () => {
+      // Act
+      await sendMessageToCommunityLeads(
+        baseScenario.space.community.id,
+        'Test message',
+        TestUser.NON_SPACE_MEMBER
+      );
 
-//       // Assert
-//       expect(getEmailsData[1]).toEqual(3);
-//       expect(getEmailsData[0]).toEqual(
-//         expect.arrayContaining([
-//           expect.objectContaining({
-//             subject: receivers(
-//               TestUserManager.users.nonSpaceMember.displayName
-//             ),
-//             toAddresses: [TestUserManager.users.spaceAdmin.email],
-//           }),
-//           expect.objectContaining({
-//             subject: receivers(
-//               TestUserManager.users.nonSpaceMember.displayName
-//             ),
-//             toAddresses: [TestUserManager.users.spaceMember.email],
-//           }),
-//           expect.objectContaining({
-//             subject: senders(baseScenario.space.about.profile.displayName),
-//             toAddresses: [TestUserManager.users.nonSpaceMember.email],
-//           }),
-//         ])
-//       );
-//     });
+      await delay(1000);
+      const getEmailsData = await getMailsData();
 
-//     test('Space member send message to Space community (2 hosts) - 3 messages sent', async () => {
-//       // Act
-//       await sendMessageToCommunityLeads(
-//         baseScenario.space.community.id,
-//         'Test message',
-//         TestUser.SUBSPACE_MEMBER
-//       );
-//       await delay(3000);
+      // Assert
+      expect(getEmailsData[1]).toEqual(3);
+      expect(getEmailsData[0]).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            subject: receivers(
+              TestUserManager.users.nonSpaceMember.displayName
+            ),
+            toAddresses: [TestUserManager.users.spaceAdmin.email],
+          }),
+          expect.objectContaining({
+            subject: receivers(
+              TestUserManager.users.nonSpaceMember.displayName
+            ),
+            toAddresses: [TestUserManager.users.spaceMember.email],
+          }),
+          expect.objectContaining({
+            subject: senders(baseScenario.space.about.profile.displayName),
+            toAddresses: [TestUserManager.users.nonSpaceMember.email],
+          }),
+        ])
+      );
+    });
 
-//       const getEmailsData = await getMailsData();
+    test('Space member send message to Space community (2 hosts) - 3 messages sent', async () => {
+      // Act
+      await sendMessageToCommunityLeads(
+        baseScenario.space.community.id,
+        'Test message',
+        TestUser.SUBSPACE_MEMBER
+      );
+      await delay(1000);
 
-//       // Assert
-//       expect(getEmailsData[1]).toEqual(3);
-//       expect(getEmailsData[0]).toEqual(
-//         expect.arrayContaining([
-//           expect.objectContaining({
-//             subject: receivers(
-//               TestUserManager.users.subspaceMember.displayName
-//             ),
-//             toAddresses: [TestUserManager.users.spaceAdmin.email],
-//           }),
-//           expect.objectContaining({
-//             subject: receivers(
-//               TestUserManager.users.subspaceMember.displayName
-//             ),
-//             toAddresses: [TestUserManager.users.spaceMember.email],
-//           }),
-//           expect.objectContaining({
-//             subject: senders(baseScenario.space.about.profile.displayName),
-//             toAddresses: [TestUserManager.users.subspaceMember.email],
-//           }),
-//         ])
-//       );
-//     });
-//   });
+      const getEmailsData = await getMailsData();
 
-//   describe('Notifications - hosts (COMMUNICATION_MESSAGE pref: disabled)', () => {
-//     beforeAll(async () => {
-//       for (const config of usersList)
-//         await changePreferenceUser(config.userID, config.type, 'false');
-//     });
+      // Assert
+      expect(getEmailsData[1]).toEqual(3);
+      expect(getEmailsData[0]).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            subject: receivers(
+              TestUserManager.users.subspaceMember.displayName
+            ),
+            toAddresses: [TestUserManager.users.spaceAdmin.email],
+          }),
+          expect.objectContaining({
+            subject: receivers(
+              TestUserManager.users.subspaceMember.displayName
+            ),
+            toAddresses: [TestUserManager.users.spaceMember.email],
+          }),
+          expect.objectContaining({
+            subject: senders(baseScenario.space.about.profile.displayName),
+            toAddresses: [TestUserManager.users.subspaceMember.email],
+          }),
+        ])
+      );
+    });
+  });
 
-//     beforeEach(async () => {
-//       await deleteMailSlurperMails();
-//     });
+  describe('Notifications - hosts (COMMUNICATION_MESSAGE pref: disabled)', () => {
+    beforeAll(async () => {
+      await disableCommunicationMessageNotifications(usersList);
+    });
 
-//     test('NOT space member sends message to Space community (2 hosts) - 3 messages sent', async () => {
-//       // Act
-//       await sendMessageToCommunityLeads(
-//         baseScenario.space.community.id,
-//         'Test message',
-//         TestUser.NON_SPACE_MEMBER
-//       );
-//       await delay(3000);
+    beforeEach(async () => {
+      await deleteMailSlurperMails();
+    });
 
-//       const getEmailsData = await getMailsData();
+    test('NOT space member sends message to Space community (2 hosts) - 0 messages sent', async () => {
+      // Act
+      await sendMessageToCommunityLeads(
+        baseScenario.space.community.id,
+        'Test message',
+        TestUser.NON_SPACE_MEMBER
+      );
+      await delay(1000);
 
-//       // Assert
-//       expect(getEmailsData[1]).toEqual(3);
-//       expect(getEmailsData[0]).toEqual(
-//         expect.arrayContaining([
-//           expect.objectContaining({
-//             subject: receivers(
-//               TestUserManager.users.nonSpaceMember.displayName
-//             ),
-//             toAddresses: [TestUserManager.users.spaceAdmin.email],
-//           }),
-//           expect.objectContaining({
-//             subject: receivers(
-//               TestUserManager.users.nonSpaceMember.displayName
-//             ),
-//             toAddresses: [TestUserManager.users.spaceMember.email],
-//           }),
-//           expect.objectContaining({
-//             subject: senders(baseScenario.space.about.profile.displayName),
-//             toAddresses: [TestUserManager.users.nonSpaceMember.email],
-//           }),
-//         ])
-//       );
-//     });
+      const getEmailsData = await getMailsData();
 
-//     test('Space member send message to Space community (2 hosts) - 3 messages sent', async () => {
-//       // Act
-//       await sendMessageToCommunityLeads(
-//         baseScenario.space.community.id,
-//         'Test message',
-//         TestUser.SUBSPACE_MEMBER
-//       );
-//       await delay(3000);
+      // Assert
+      expect(getEmailsData[1]).toEqual(0);
+    });
 
-//       const getEmailsData = await getMailsData();
+    test('Space member send message to Space community (2 hosts) - 0 messages sent', async () => {
+      // Act
+      await sendMessageToCommunityLeads(
+        baseScenario.space.community.id,
+        'Test message',
+        TestUser.SUBSPACE_MEMBER
+      );
+      await delay(1000);
 
-//       // Assert
-//       expect(getEmailsData[1]).toEqual(3);
-//       expect(getEmailsData[0]).toEqual(
-//         expect.arrayContaining([
-//           expect.objectContaining({
-//             subject: receivers(
-//               TestUserManager.users.subspaceMember.displayName
-//             ),
-//             toAddresses: [TestUserManager.users.spaceAdmin.email],
-//           }),
-//           expect.objectContaining({
-//             subject: receivers(
-//               TestUserManager.users.subspaceMember.displayName
-//             ),
-//             toAddresses: [TestUserManager.users.spaceMember.email],
-//           }),
-//           expect.objectContaining({
-//             subject: senders(baseScenario.space.about.profile.displayName),
-//             toAddresses: [TestUserManager.users.subspaceMember.email],
-//           }),
-//         ])
-//       );
-//     });
-//   });
-// });
-// describe('Notifications - messages to Public space hosts', () => {
-//   beforeAll(async () => {
-//     await updateSpaceSettings(baseScenario.space.id, {
-//       privacy: {
-//         mode: SpacePrivacyMode.Public,
-//       },
-//     });
-//   });
-//   describe('Notifications - hosts (COMMUNICATION_MESSAGE pref: enabled)', () => {
-//     beforeAll(async () => {
-//       for (const config of usersList)
-//         await changePreferenceUser(config.userID, config.type, 'true');
-//     });
+      const getEmailsData = await getMailsData();
 
-//     beforeEach(async () => {
-//       await deleteMailSlurperMails();
-//     });
+      // Assert
+      expect(getEmailsData[1]).toEqual(0);
+    });
+  });
+});
+describe('Notifications - messages to Public space hosts', () => {
+  beforeAll(async () => {
+    await updateSpaceSettings(baseScenario.space.id, {
+      privacy: {
+        mode: SpacePrivacyMode.Public,
+      },
+    });
+  });
+  describe('Notifications - hosts (COMMUNICATION_MESSAGE pref: enabled)', () => {
+    beforeAll(async () => {
+      await enableCommunicationMessageNotifications(usersList);
+    });
 
-//     test('NOT space member sends message to Space community (2 hosts) - 3 messages sent', async () => {
-//       // Act
-//       await sendMessageToCommunityLeads(
-//         baseScenario.space.community.id,
-//         'Test message',
-//         TestUser.NON_SPACE_MEMBER
-//       );
-//       await delay(3000);
+    beforeEach(async () => {
+      await deleteMailSlurperMails();
+    });
 
-//       const getEmailsData = await getMailsData();
+    test('NOT space member sends message to Space community (2 hosts) - 3 messages sent', async () => {
+      // Act
+      await sendMessageToCommunityLeads(
+        baseScenario.space.community.id,
+        'Test message',
+        TestUser.NON_SPACE_MEMBER
+      );
+      await delay(1000);
 
-//       // Assert
-//       expect(getEmailsData[1]).toEqual(3);
-//       expect(getEmailsData[0]).toEqual(
-//         expect.arrayContaining([
-//           expect.objectContaining({
-//             subject: receivers(
-//               TestUserManager.users.nonSpaceMember.displayName
-//             ),
-//             toAddresses: [TestUserManager.users.spaceAdmin.email],
-//           }),
-//           expect.objectContaining({
-//             subject: receivers(
-//               TestUserManager.users.nonSpaceMember.displayName
-//             ),
-//             toAddresses: [TestUserManager.users.spaceMember.email],
-//           }),
-//           expect.objectContaining({
-//             subject: senders(baseScenario.space.about.profile.displayName),
-//             toAddresses: [TestUserManager.users.nonSpaceMember.email],
-//           }),
-//         ])
-//       );
-//     });
+      const getEmailsData = await getMailsData();
 
-//     test('Space member send message to Space community (2 hosts) - 3 messages sent', async () => {
-//       // Act
-//       await sendMessageToCommunityLeads(
-//         baseScenario.space.community.id,
-//         'Test message',
-//         TestUser.SUBSPACE_MEMBER
-//       );
-//       await delay(3000);
+      // Assert
+      expect(getEmailsData[1]).toEqual(3);
+      expect(getEmailsData[0]).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            subject: receivers(
+              TestUserManager.users.nonSpaceMember.displayName
+            ),
+            toAddresses: [TestUserManager.users.spaceAdmin.email],
+          }),
+          expect.objectContaining({
+            subject: receivers(
+              TestUserManager.users.nonSpaceMember.displayName
+            ),
+            toAddresses: [TestUserManager.users.spaceMember.email],
+          }),
+          expect.objectContaining({
+            subject: senders(baseScenario.space.about.profile.displayName),
+            toAddresses: [TestUserManager.users.nonSpaceMember.email],
+          }),
+        ])
+      );
+    });
 
-//       const getEmailsData = await getMailsData();
+    test('Space member send message to Space community (2 hosts) - 3 messages sent', async () => {
+      // Act
+      await sendMessageToCommunityLeads(
+        baseScenario.space.community.id,
+        'Test message',
+        TestUser.SUBSPACE_MEMBER
+      );
+      await delay(1000);
 
-//       // Assert
-//       expect(getEmailsData[1]).toEqual(3);
-//       expect(getEmailsData[0]).toEqual(
-//         expect.arrayContaining([
-//           expect.objectContaining({
-//             subject: receivers(
-//               TestUserManager.users.subspaceMember.displayName
-//             ),
-//             toAddresses: [TestUserManager.users.spaceAdmin.email],
-//           }),
-//           expect.objectContaining({
-//             subject: receivers(
-//               TestUserManager.users.subspaceMember.displayName
-//             ),
-//             toAddresses: [TestUserManager.users.spaceMember.email],
-//           }),
-//           expect.objectContaining({
-//             subject: senders(baseScenario.space.about.profile.displayName),
-//             toAddresses: [TestUserManager.users.subspaceMember.email],
-//           }),
-//         ])
-//       );
-//     });
-//   });
+      const getEmailsData = await getMailsData();
 
-//   describe('Notifications - hosts (COMMUNICATION_MESSAGE pref: disabled)', () => {
-//     beforeAll(async () => {
-//       for (const config of usersList)
-//         await changePreferenceUser(config.userID, config.type, 'false');
-//     });
+      // Assert
+      expect(getEmailsData[1]).toEqual(3);
+      expect(getEmailsData[0]).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            subject: receivers(
+              TestUserManager.users.subspaceMember.displayName
+            ),
+            toAddresses: [TestUserManager.users.spaceAdmin.email],
+          }),
+          expect.objectContaining({
+            subject: receivers(
+              TestUserManager.users.subspaceMember.displayName
+            ),
+            toAddresses: [TestUserManager.users.spaceMember.email],
+          }),
+          expect.objectContaining({
+            subject: senders(baseScenario.space.about.profile.displayName),
+            toAddresses: [TestUserManager.users.subspaceMember.email],
+          }),
+        ])
+      );
+    });
+  });
 
-//     beforeEach(async () => {
-//       await deleteMailSlurperMails();
-//     });
+  describe('Notifications - hosts (COMMUNICATION_MESSAGE pref: disabled)', () => {
+    beforeAll(async () => {
+      await disableCommunicationMessageNotifications(usersList);
+    });
 
-//     test('NOT space member sends message to Space community (2 hosts) - 3 messages sent', async () => {
-//       // Act
-//       await sendMessageToCommunityLeads(
-//         baseScenario.space.community.id,
-//         'Test message',
-//         TestUser.NON_SPACE_MEMBER
-//       );
-//       await delay(3000);
+    beforeEach(async () => {
+      await deleteMailSlurperMails();
+    });
 
-//       const getEmailsData = await getMailsData();
+    test('NOT space member sends message to Space community (2 hosts) - 0 messages sent', async () => {
+      // Act
+      await sendMessageToCommunityLeads(
+        baseScenario.space.community.id,
+        'Test message',
+        TestUser.NON_SPACE_MEMBER
+      );
+      await delay(1000);
 
-//       // Assert
-//       expect(getEmailsData[1]).toEqual(3);
-//       expect(getEmailsData[0]).toEqual(
-//         expect.arrayContaining([
-//           expect.objectContaining({
-//             subject: receivers(
-//               TestUserManager.users.nonSpaceMember.displayName
-//             ),
-//             toAddresses: [TestUserManager.users.spaceAdmin.email],
-//           }),
-//           expect.objectContaining({
-//             subject: receivers(
-//               TestUserManager.users.nonSpaceMember.displayName
-//             ),
-//             toAddresses: [TestUserManager.users.spaceMember.email],
-//           }),
-//           expect.objectContaining({
-//             subject: senders(baseScenario.space.about.profile.displayName),
-//             toAddresses: [TestUserManager.users.nonSpaceMember.email],
-//           }),
-//         ])
-//       );
-//     });
+      const getEmailsData = await getMailsData();
 
-//     test('Space member send message to Space community (2 hosts) - 3 messages sent', async () => {
-//       // Act
-//       await sendMessageToCommunityLeads(
-//         baseScenario.space.community.id,
-//         'Test message',
-//         TestUser.SUBSPACE_MEMBER
-//       );
-//       await delay(3000);
+      // Assert
+      expect(getEmailsData[1]).toEqual(0);
+    });
 
-//       const getEmailsData = await getMailsData();
+    test('Space member send message to Space community (2 hosts) - 0 messages sent', async () => {
+      // Act
+      await sendMessageToCommunityLeads(
+        baseScenario.space.community.id,
+        'Test message',
+        TestUser.SUBSPACE_MEMBER
+      );
+      await delay(1000);
 
-//       // Assert
-//       expect(getEmailsData[1]).toEqual(3);
-//       expect(getEmailsData[0]).toEqual(
-//         expect.arrayContaining([
-//           expect.objectContaining({
-//             subject: receivers(
-//               TestUserManager.users.subspaceMember.displayName
-//             ),
-//             toAddresses: [TestUserManager.users.spaceAdmin.email],
-//           }),
-//           expect.objectContaining({
-//             subject: receivers(
-//               TestUserManager.users.subspaceMember.displayName
-//             ),
-//             toAddresses: [TestUserManager.users.spaceMember.email],
-//           }),
-//           expect.objectContaining({
-//             subject: senders(baseScenario.space.about.profile.displayName),
-//             toAddresses: [TestUserManager.users.subspaceMember.email],
-//           }),
-//         ])
-//       );
-//     });
-//   });
-// });
+      const getEmailsData = await getMailsData();
 
-// describe('Notifications - messages to Public space NO hosts', () => {
-//   beforeAll(async () => {
-//     await updateSpaceSettings(baseScenario.space.id, {
-//       privacy: {
-//         mode: SpacePrivacyMode.Public,
-//       },
-//     });
+      // Assert
+      expect(getEmailsData[1]).toEqual(0);
+    });
+  });
+});
 
-//     await removeRoleFromUser(
-//       TestUserManager.users.spaceAdmin.id,
-//       baseScenario.space.community.roleSetId,
-//       RoleName.Lead
-//     );
-//     await removeRoleFromUser(
-//       TestUserManager.users.spaceMember.id,
-//       baseScenario.space.community.roleSetId,
-//       RoleName.Lead
-//     );
-//   });
+describe('Notifications - messages to Public space NO hosts', () => {
+  beforeAll(async () => {
+    await updateSpaceSettings(baseScenario.space.id, {
+      privacy: {
+        mode: SpacePrivacyMode.Public,
+      },
+    });
 
-//   beforeEach(async () => {
-//     await deleteMailSlurperMails();
-//   });
+    await removeRoleFromUser(
+      TestUserManager.users.spaceAdmin.id,
+      baseScenario.space.community.roleSetId,
+      RoleName.Lead
+    );
+    await removeRoleFromUser(
+      TestUserManager.users.spaceMember.id,
+      baseScenario.space.community.roleSetId,
+      RoleName.Lead
+    );
+  });
 
-//   test('NOT space member sends message to Space community (0 hosts) - 1 messages sent', async () => {
-//     // Act
-//     await sendMessageToCommunityLeads(
-//       baseScenario.space.community.id,
-//       'Test message',
-//       TestUser.NON_SPACE_MEMBER
-//     );
-//     await delay(3000);
+  beforeEach(async () => {
+    await deleteMailSlurperMails();
+  });
 
-//     const getEmailsData = await getMailsData();
+  test('NOT space member sends message to Space community (0 hosts) - 0 messages sent', async () => {
+    // Act
+    await sendMessageToCommunityLeads(
+      baseScenario.space.community.id,
+      'Test message',
+      TestUser.NON_SPACE_MEMBER
+    );
+    await delay(1000);
 
-//     // Assert
-//     expect(getEmailsData[1]).toEqual(1);
-//     expect(getEmailsData[0]).toEqual(
-//       expect.arrayContaining([
-//         expect.objectContaining({
-//           subject: senders(baseScenario.space.about.profile.displayName),
-//           toAddresses: [TestUserManager.users.nonSpaceMember.email],
-//         }),
-//       ])
-//     );
-//   });
+    const getEmailsData = await getMailsData();
 
-//   test('Space member send message to Space community (0 hosts) - 1 messages sent', async () => {
-//     // Act
-//     await sendMessageToCommunityLeads(
-//       baseScenario.space.community.id,
-//       'Test message',
-//       TestUser.QA_USER
-//     );
-//     await delay(3000);
+    // Assert
+    expect(getEmailsData[1]).toEqual(0);
+  });
 
-//     const getEmailsData = await getMailsData();
+  test('Space member send message to Space community (0 hosts) - 0 messages sent', async () => {
+    // Act
+    await sendMessageToCommunityLeads(
+      baseScenario.space.community.id,
+      'Test message',
+      TestUser.QA_USER
+    );
+    await delay(1000);
 
-//     // Assert
-//     expect(getEmailsData[1]).toEqual(1);
-//     expect(getEmailsData[0]).toEqual(
-//       expect.arrayContaining([
-//         expect.objectContaining({
-//           subject: await senders(baseScenario.space.about.profile.displayName),
-//           toAddresses: [TestUserManager.users.qaUser.email],
-//         }),
-//       ])
-//     );
-//   });
-// });
+    const getEmailsData = await getMailsData();
+
+    // Assert
+    expect(getEmailsData[1]).toEqual(0);
+  });
+});

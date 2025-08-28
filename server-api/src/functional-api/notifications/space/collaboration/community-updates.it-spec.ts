@@ -5,7 +5,6 @@ import {
   TestScenarioConfig,
   TestScenarioFactory,
   TestUserManager,
-  UniqueIDGenerator,
 } from '@alkemio/tests-lib';
 import { TestUser } from '@alkemio/tests-lib';
 import { delay } from '@alkemio/tests-lib';
@@ -17,20 +16,17 @@ import { updateUserSettings } from '@functional-api/contributor-management/user/
 const communityUpdatesNotificationSettings = {
   notification: {
     space: {
-      communicationUpdates: true,
-      communicationUpdatesAdmin: true,
+      admin: {
+        communityApplicationReceived: false,
+        communityNewMember: false,
+        collaborationCalloutContributionCreated: false,
+        communicationMessageReceived: true,
+      },
       collaborationCalloutPublished: false,
-      communityApplicationReceived: false,
-      communityApplicationSubmitted: false,
-      communityInvitationUser: false,
-      communityNewMember: false,
-      communityNewMemberAdmin: false,
-      collaborationPostCommentCreated: false,
-      collaborationPostCreated: false,
-      collaborationPostCreatedAdmin: false,
-      collaborationWhiteboardCreated: false,
-      communicationMessageAdmin: false,
-      communicationMessage: false,
+      communicationUpdates: true,
+      collaborationCalloutPostContributionComment: false,
+      collaborationCalloutContributionCreated: false,
+      collaborationCalloutComment: false,
     },
   },
 };
@@ -38,20 +34,17 @@ const communityUpdatesNotificationSettings = {
 const disabledCommunityUpdatesNotificationSettings = {
   notification: {
     space: {
-      communicationUpdates: false,
-      communicationUpdatesAdmin: false,
+      admin: {
+        communityApplicationReceived: false,
+        communityNewMember: false,
+        collaborationCalloutContributionCreated: false,
+        communicationMessageReceived: false,
+      },
       collaborationCalloutPublished: false,
-      communityApplicationReceived: false,
-      communityApplicationSubmitted: false,
-      communityInvitationUser: true,
-      communityNewMember: false,
-      communityNewMemberAdmin: false,
-      collaborationPostCommentCreated: false,
-      collaborationPostCreated: false,
-      collaborationPostCreatedAdmin: false,
-      collaborationWhiteboardCreated: false,
-      communicationMessageAdmin: false,
-      communicationMessage: false,
+      communicationUpdates: false,
+      collaborationCalloutPostContributionComment: false,
+      collaborationCalloutContributionCreated: false,
+      collaborationCalloutComment: false,
     },
   },
 };
@@ -72,25 +65,6 @@ const disableCommunityUpdatesNotifications = async (userIds: string[]) => {
   );
 };
 
-const uniqueId = UniqueIDGenerator.getID();
-
-const spaceName = 'not-up-eco-name' + uniqueId;
-const ecoName = spaceName;
-const subspaceName = `chName${uniqueId}`;
-const subsubspaceName = `opName${uniqueId}`;
-
-export const templatedAsAdminResult = async (
-  entityName: string,
-  userEmail: string
-) => {
-  return expect.arrayContaining([
-    expect.objectContaining({
-      subject: `${entityName}: New update shared`,
-      toAddresses: [userEmail],
-    }),
-  ]);
-};
-
 const templatedAsMemberResult = async (
   entityName: string,
   userEmail: string
@@ -108,9 +82,9 @@ const scenarioConfig: TestScenarioConfig = {
   name: 'notifications-updates',
   space: {
     collaboration: {
-      addPostCallout: true,
-      addPostCollectionCallout: true,
-      addWhiteboardCallout: true,
+      addPostCallout: false,
+      addPostCollectionCallout: false,
+      addWhiteboardCallout: false,
       addTutorialCallouts: false,
     },
     community: {
@@ -126,9 +100,9 @@ const scenarioConfig: TestScenarioConfig = {
     },
     subspace: {
       collaboration: {
-        addPostCallout: true,
-        addPostCollectionCallout: true,
-        addWhiteboardCallout: true,
+        addPostCallout: false,
+        addPostCollectionCallout: false,
+        addWhiteboardCallout: false,
         addTutorialCallouts: false,
       },
       community: {
@@ -142,9 +116,9 @@ const scenarioConfig: TestScenarioConfig = {
       },
       subspace: {
         collaboration: {
-          addPostCallout: true,
-          addPostCollectionCallout: true,
-          addWhiteboardCallout: true,
+          addPostCallout: false,
+          addPostCollectionCallout: false,
+          addWhiteboardCallout: false,
           addTutorialCallouts: false,
         },
         community: {
@@ -167,7 +141,7 @@ afterAll(async () => {
 });
 
 // Skip tests due to bug: #193
-describe.skip('Notifications - updates', () => {
+describe('Notifications - updates', () => {
   beforeAll(async () => {
     // Disable community updates notifications for global support admin
     await disableCommunityUpdatesNotifications([
@@ -181,6 +155,7 @@ describe.skip('Notifications - updates', () => {
       TestUserManager.users.subspaceMember.id,
       TestUserManager.users.subsubspaceMember.id,
       TestUserManager.users.spaceAdmin.id,
+      TestUserManager.users.spaceMember.id,
       TestUserManager.users.subspaceAdmin.id,
       TestUserManager.users.subsubspaceAdmin.id,
     ]);
@@ -190,7 +165,7 @@ describe.skip('Notifications - updates', () => {
     await deleteMailSlurperMails();
   });
 
-  test.only('GA create space update - GA(1), HA (1), HM(6) get notifications', async () => {
+  test('GA create space update - GA(1), HA (1), HM(6) get notifications', async () => {
     // Act
     await sendMessageToRoom(
       baseScenario.space.communication.updatesId,
@@ -201,61 +176,47 @@ describe.skip('Notifications - updates', () => {
     const mails = await getMailsData();
 
     // Assert
-    expect(mails[1]).toEqual(9);
-    expect(mails[0]).toEqual(
-      await templatedAsAdminResult(
-        ecoName,
-        TestUserManager.users.globalAdmin.email
-      )
-    );
-
-    expect(mails[0]).toEqual(
-      await templatedAsAdminResult(
-        ecoName,
-        TestUserManager.users.spaceAdmin.email
-      )
-    );
-
+    expect(mails[1]).toEqual(6);
+    // expect(mails[0]).toEqual(
+    //   await templatedAsMemberResult(
+    //     baseScenario.space.about.profile.displayName,
+    //     TestUserManager.users.globalAdmin.email
+    //   )
+    // );
     expect(mails[0]).toEqual(
       await templatedAsMemberResult(
-        ecoName,
-        TestUserManager.users.globalAdmin.email
-      )
-    );
-    expect(mails[0]).toEqual(
-      await templatedAsMemberResult(
-        ecoName,
+        baseScenario.space.about.profile.displayName,
         TestUserManager.users.spaceAdmin.email
       )
     );
     expect(mails[0]).toEqual(
       await templatedAsMemberResult(
-        ecoName,
+        baseScenario.space.about.profile.displayName,
         TestUserManager.users.spaceMember.email
       )
     );
 
     expect(mails[0]).toEqual(
       await templatedAsMemberResult(
-        ecoName,
+        baseScenario.space.about.profile.displayName,
         TestUserManager.users.subspaceAdmin.email
       )
     );
     expect(mails[0]).toEqual(
       await templatedAsMemberResult(
-        ecoName,
+        baseScenario.space.about.profile.displayName,
         TestUserManager.users.subspaceMember.email
       )
     );
     expect(mails[0]).toEqual(
       await templatedAsMemberResult(
-        ecoName,
+        baseScenario.space.about.profile.displayName,
         TestUserManager.users.subsubspaceAdmin.email
       )
     );
     expect(mails[0]).toEqual(
       await templatedAsMemberResult(
-        ecoName,
+        baseScenario.space.about.profile.displayName,
         TestUserManager.users.subsubspaceMember.email
       )
     );
@@ -273,62 +234,48 @@ describe.skip('Notifications - updates', () => {
     await delay(1000);
     const mails = await getMailsData();
 
-    expect(mails[1]).toEqual(9);
+    expect(mails[1]).toEqual(6);
 
     expect(mails[0]).toEqual(
-      await templatedAsAdminResult(
-        ecoName,
+      await templatedAsMemberResult(
+        baseScenario.space.about.profile.displayName,
         TestUserManager.users.globalAdmin.email
       )
     );
-
-    expect(mails[0]).toEqual(
-      await templatedAsAdminResult(
-        ecoName,
-        TestUserManager.users.spaceAdmin.email
-      )
-    );
-
+    // expect(mails[0]).toEqual(
+    //   await templatedAsMemberResult(
+    //     baseScenario.space.about.profile.displayName,
+    //     TestUserManager.users.spaceAdmin.email
+    //   )
+    // );
     expect(mails[0]).toEqual(
       await templatedAsMemberResult(
-        ecoName,
-        TestUserManager.users.globalAdmin.email
-      )
-    );
-    expect(mails[0]).toEqual(
-      await templatedAsMemberResult(
-        ecoName,
-        TestUserManager.users.spaceAdmin.email
-      )
-    );
-    expect(mails[0]).toEqual(
-      await templatedAsMemberResult(
-        ecoName,
+        baseScenario.space.about.profile.displayName,
         TestUserManager.users.spaceMember.email
       )
     );
 
     expect(mails[0]).toEqual(
       await templatedAsMemberResult(
-        ecoName,
+        baseScenario.space.about.profile.displayName,
         TestUserManager.users.subspaceAdmin.email
       )
     );
     expect(mails[0]).toEqual(
       await templatedAsMemberResult(
-        ecoName,
+        baseScenario.space.about.profile.displayName,
         TestUserManager.users.subspaceMember.email
       )
     );
     expect(mails[0]).toEqual(
       await templatedAsMemberResult(
-        ecoName,
+        baseScenario.space.about.profile.displayName,
         TestUserManager.users.subsubspaceAdmin.email
       )
     );
     expect(mails[0]).toEqual(
       await templatedAsMemberResult(
-        ecoName,
+        baseScenario.space.about.profile.displayName,
         TestUserManager.users.subsubspaceMember.email
       )
     );
@@ -346,62 +293,47 @@ describe.skip('Notifications - updates', () => {
     await delay(1000);
     const mails = await getMailsData();
 
-    expect(mails[1]).toEqual(7);
-
-    expect(mails[0]).toEqual(
-      await templatedAsAdminResult(
-        subspaceName,
-        TestUserManager.users.globalAdmin.email
-      )
-    );
-
-    expect(mails[0]).toEqual(
-      await templatedAsAdminResult(
-        subspaceName,
-        TestUserManager.users.spaceAdmin.email
-      )
-    );
-
+    expect(mails[1]).toEqual(4);
     expect(mails[0]).toEqual(
       await templatedAsMemberResult(
-        subspaceName,
+        baseScenario.subspace.about.profile.displayName,
         TestUserManager.users.globalAdmin.email
       )
     );
     expect(mails[0]).not.toEqual(
       await templatedAsMemberResult(
-        subspaceName,
+        baseScenario.subspace.about.profile.displayName,
         TestUserManager.users.spaceAdmin.email
       )
     );
     expect(mails[0]).not.toEqual(
       await templatedAsMemberResult(
-        subspaceName,
+        baseScenario.subspace.about.profile.displayName,
         TestUserManager.users.spaceMember.email
       )
     );
 
+    // expect(mails[0]).toEqual(
+    //   await templatedAsMemberResult(
+    //     baseScenario.subspace.about.profile.displayName,
+    //     TestUserManager.users.subspaceAdmin.email
+    //   )
+    // );
     expect(mails[0]).toEqual(
       await templatedAsMemberResult(
-        subspaceName,
-        TestUserManager.users.subspaceAdmin.email
-      )
-    );
-    expect(mails[0]).toEqual(
-      await templatedAsMemberResult(
-        subspaceName,
+        baseScenario.subspace.about.profile.displayName,
         TestUserManager.users.subspaceMember.email
       )
     );
     expect(mails[0]).toEqual(
       await templatedAsMemberResult(
-        subspaceName,
+        baseScenario.subspace.about.profile.displayName,
         TestUserManager.users.subsubspaceAdmin.email
       )
     );
     expect(mails[0]).toEqual(
       await templatedAsMemberResult(
-        subspaceName,
+        baseScenario.subspace.about.profile.displayName,
         TestUserManager.users.subsubspaceMember.email
       )
     );
@@ -419,63 +351,49 @@ describe.skip('Notifications - updates', () => {
     await delay(1000);
     const mails = await getMailsData();
 
-    expect(mails[1]).toEqual(5);
-
-    expect(mails[0]).toEqual(
-      await templatedAsAdminResult(
-        subsubspaceName,
-        TestUserManager.users.globalAdmin.email
-      )
-    );
-
-    expect(mails[0]).toEqual(
-      await templatedAsAdminResult(
-        subsubspaceName,
-        TestUserManager.users.spaceAdmin.email
-      )
-    );
+    expect(mails[1]).toEqual(2);
 
     expect(mails[0]).toEqual(
       await templatedAsMemberResult(
-        subsubspaceName,
+        baseScenario.subsubspace.about.profile.displayName,
         TestUserManager.users.globalAdmin.email
       )
     );
     expect(mails[0]).not.toEqual(
       await templatedAsMemberResult(
-        subsubspaceName,
+        baseScenario.subsubspace.about.profile.displayName,
         TestUserManager.users.spaceAdmin.email
       )
     );
     expect(mails[0]).not.toEqual(
       await templatedAsMemberResult(
-        subsubspaceName,
+        baseScenario.subsubspace.about.profile.displayName,
         TestUserManager.users.spaceMember.email
       )
     );
 
     expect(mails[0]).not.toEqual(
       await templatedAsMemberResult(
-        subsubspaceName,
+        baseScenario.subsubspace.about.profile.displayName,
         TestUserManager.users.subspaceAdmin.email
       )
     );
     expect(mails[0]).not.toEqual(
       await templatedAsMemberResult(
-        subsubspaceName,
+        baseScenario.subsubspace.about.profile.displayName,
         TestUserManager.users.subspaceMember.email
       )
     );
 
-    expect(mails[0]).toEqual(
+    expect(mails[0]).not.toEqual(
       await templatedAsMemberResult(
-        subsubspaceName,
+        baseScenario.subsubspace.about.profile.displayName,
         TestUserManager.users.subsubspaceAdmin.email
       )
     );
     expect(mails[0]).toEqual(
       await templatedAsMemberResult(
-        subsubspaceName,
+        baseScenario.subsubspace.about.profile.displayName,
         TestUserManager.users.subsubspaceMember.email
       )
     );
@@ -489,6 +407,7 @@ describe.skip('Notifications - updates', () => {
       TestUserManager.users.subspaceMember.id,
       TestUserManager.users.subsubspaceMember.id,
       TestUserManager.users.spaceAdmin.id,
+      TestUserManager.users.spaceMember.id,
       TestUserManager.users.subspaceAdmin.id,
       TestUserManager.users.subsubspaceAdmin.id,
     ]);

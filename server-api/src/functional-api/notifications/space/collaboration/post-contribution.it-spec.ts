@@ -28,20 +28,17 @@ let postDisplayName = '';
 const postNotificationSettings = {
   notification: {
     space: {
-      collaborationPostCreated: true,
-      collaborationPostCreatedAdmin: true,
-      collaborationPostCommentCreated: true,
-      communicationUpdates: false,
-      communicationUpdatesAdmin: false,
+      admin: {
+        communityApplicationReceived: false,
+        communityNewMember: false,
+        collaborationCalloutContributionCreated: false,
+        communicationMessageReceived: false,
+      },
       collaborationCalloutPublished: false,
-      communityApplicationReceived: false,
-      communityApplicationSubmitted: false,
-      communityInvitationUser: true,
-      communityNewMember: false,
-      communityNewMemberAdmin: false,
-      collaborationWhiteboardCreated: false,
-      communicationMessageAdmin: false,
-      communicationMessage: false,
+      communicationUpdates: false,
+      collaborationCalloutPostContributionComment: false,
+      collaborationCalloutContributionCreated: true,
+      collaborationCalloutComment: false,
     },
   },
 };
@@ -49,20 +46,17 @@ const postNotificationSettings = {
 const disablePostNotificationSettings = {
   notification: {
     space: {
-      collaborationPostCreated: false,
-      collaborationPostCreatedAdmin: false,
-      collaborationPostCommentCreated: false,
-      communicationUpdates: false,
-      communicationUpdatesAdmin: false,
+      admin: {
+        communityApplicationReceived: false,
+        communityNewMember: false,
+        collaborationCalloutContributionCreated: false,
+        communicationMessageReceived: false,
+      },
       collaborationCalloutPublished: false,
-      communityApplicationReceived: false,
-      communityApplicationSubmitted: false,
-      communityInvitationUser: true,
-      communityNewMember: false,
-      communityNewMemberAdmin: false,
-      collaborationWhiteboardCreated: false,
-      communicationMessageAdmin: false,
-      communicationMessage: false,
+      communicationUpdates: false,
+      collaborationCalloutPostContributionComment: false,
+      collaborationCalloutContributionCreated: false,
+      collaborationCalloutComment: false,
     },
   },
 };
@@ -82,15 +76,6 @@ const disablePostNotifications = async (userIds: string[]) => {
   );
 };
 
-const templatedAdminResult = async (entityName: string, userEmail: string) => {
-  return expect.arrayContaining([
-    expect.objectContaining({
-      subject: entityName,
-      toAddresses: [userEmail],
-    }),
-  ]);
-};
-
 const templateMemberResult = async (entityName: string, userEmail: string) => {
   return expect.arrayContaining([
     expect.objectContaining({
@@ -105,9 +90,9 @@ const scenarioConfig: TestScenarioConfig = {
   name: 'posts-notifications',
   space: {
     collaboration: {
-      addPostCallout: true,
+      addPostCallout: false,
       addPostCollectionCallout: true,
-      addWhiteboardCallout: true,
+      addWhiteboardCallout: false,
       addTutorialCallouts: false,
     },
     community: {
@@ -123,9 +108,9 @@ const scenarioConfig: TestScenarioConfig = {
     },
     subspace: {
       collaboration: {
-        addPostCallout: true,
+        addPostCallout: false,
         addPostCollectionCallout: true,
-        addWhiteboardCallout: true,
+        addWhiteboardCallout: false,
         addTutorialCallouts: false,
       },
       community: {
@@ -139,9 +124,9 @@ const scenarioConfig: TestScenarioConfig = {
       },
       subspace: {
         collaboration: {
-          addPostCallout: true,
+          addPostCallout: false,
           addPostCollectionCallout: true,
-          addWhiteboardCallout: true,
+          addWhiteboardCallout: false,
           addTutorialCallouts: false,
         },
         community: {
@@ -198,9 +183,8 @@ describe('Notifications - post', () => {
     await deletePost(subsubspacePostId);
   });
 
-  test.only('GA create space post - GA(1), HA (2), HM(6) get notifications', async () => {
-    const postSubjectAdmin = `${baseScenario.space.about.profile.displayName}: New Post created by admin`;
-    const postSubjectMember = `${baseScenario.space.about.profile.displayName}: New Post created by admin, have a look!`;
+  test('GA create space post - GA(1), HA (2), HM(6) get notifications', async () => {
+    const postSubjectMember = `${baseScenario.space.about.profile.displayName}: New post contribution created by admin, have a look!`;
 
     // Act
     const resPostonSpace = await createPostOnCallout(
@@ -214,21 +198,7 @@ describe('Notifications - post', () => {
 
     await delay(1000);
     const mails = await getMailsData();
-    expect(mails[1]).toEqual(9);
-    expect(mails[0]).toEqual(
-      await templatedAdminResult(
-        postSubjectAdmin,
-        TestUserManager.users.globalAdmin.email
-      )
-    );
-
-    expect(mails[0]).toEqual(
-      await templatedAdminResult(
-        postSubjectAdmin,
-        TestUserManager.users.spaceAdmin.email
-      )
-    );
-
+    expect(mails[1]).toEqual(7);
     expect(mails[0]).toEqual(
       await templateMemberResult(
         postSubjectMember,
@@ -276,8 +246,7 @@ describe('Notifications - post', () => {
   });
 
   test('HA create space post - GA(1), HA (1), HM(6) get notifications', async () => {
-    const postSubjectAdmin = `${baseScenario.space.about.profile.displayName}: New Post created by space`;
-    const postSubjectMember = `${baseScenario.space.about.profile.displayName}: New Post created by space, have a look!`;
+    const postSubjectMember = `${baseScenario.space.about.profile.displayName}: New post contribution created by space, have a look!`;
     // Act
     const resPostonSpace = await createPostOnCallout(
       baseScenario.space.collaboration.calloutPostCollectionId,
@@ -290,22 +259,7 @@ describe('Notifications - post', () => {
 
     await delay(1000);
     const mails = await getMailsData();
-
-    expect(mails[1]).toEqual(9);
-
-    expect(mails[0]).toEqual(
-      await templatedAdminResult(
-        postSubjectAdmin,
-        TestUserManager.users.globalAdmin.email
-      )
-    );
-
-    expect(mails[0]).toEqual(
-      await templatedAdminResult(
-        postSubjectAdmin,
-        TestUserManager.users.spaceAdmin.email
-      )
-    );
+    expect(mails[1]).toEqual(7);
 
     expect(mails[0]).toEqual(
       await templateMemberResult(
@@ -353,8 +307,7 @@ describe('Notifications - post', () => {
   });
 
   test('HA create subspace post - GA(1), HA (1), CA(1), CM(3),  get notifications', async () => {
-    const postSubjectAdmin = `${baseScenario.subspace.about.profile.displayName}: New Post created by space`;
-    const postSubjectMember = `${baseScenario.subspace.about.profile.displayName}: New Post created by space, have a look!`;
+    const postSubjectMember = `${baseScenario.subspace.about.profile.displayName}: New post contribution created by space, have a look!`;
     // Act
     const resPostonSpace = await createPostOnCallout(
       baseScenario.subspace.collaboration.calloutPostCollectionId,
@@ -367,31 +320,11 @@ describe('Notifications - post', () => {
 
     await delay(1000);
     const mails = await getMailsData();
-    expect(mails[0]).toEqual(
-      await templatedAdminResult(
-        postSubjectAdmin,
-        TestUserManager.users.globalAdmin.email
-      )
-    );
-
-    // Space admin does not reacive email
-    expect(mails[0]).not.toEqual(
-      await templatedAdminResult(
-        postSubjectAdmin,
-        TestUserManager.users.spaceAdmin.email
-      )
-    );
-
+    expect(mails[1]).toEqual(5);
     expect(mails[0]).toEqual(
       await templateMemberResult(
         postSubjectMember,
         TestUserManager.users.globalAdmin.email
-      )
-    );
-    expect(mails[0]).toEqual(
-      await templateMemberResult(
-        postSubjectAdmin,
-        TestUserManager.users.subspaceAdmin.email
       )
     );
 
@@ -421,7 +354,7 @@ describe('Notifications - post', () => {
         TestUserManager.users.subsubspaceAdmin.email
       )
     );
-    expect(mails[1]).toEqual(7);
+
     expect(mails[0]).toEqual(
       await templateMemberResult(
         postSubjectMember,
@@ -431,8 +364,7 @@ describe('Notifications - post', () => {
   });
 
   test('OM create subsubspace post - HA(2), CA(1), OA(2), OM(4), get notifications', async () => {
-    const postSubjectAdmin = `${baseScenario.subsubspace.about.profile.displayName}: New Post created by subsubspace`;
-    const postSubjectMember = `${baseScenario.subsubspace.about.profile.displayName}: New Post created by subsubspace, have a look!`;
+    const postSubjectMember = `${baseScenario.subsubspace.about.profile.displayName}: New post contribution created by subsubspace, have a look!`;
     // Act
     const resPostonSpace = await createPostOnCallout(
       baseScenario.subsubspace.collaboration.calloutPostCollectionId,
@@ -445,21 +377,7 @@ describe('Notifications - post', () => {
 
     await delay(1000);
     const mails = await getMailsData();
-    expect(mails[0]).toEqual(
-      await templatedAdminResult(
-        postSubjectAdmin,
-        TestUserManager.users.globalAdmin.email
-      )
-    );
-
-    // Space admin does not reacive email
-    expect(mails[0]).not.toEqual(
-      await templatedAdminResult(
-        postSubjectAdmin,
-        TestUserManager.users.spaceAdmin.email
-      )
-    );
-
+    expect(mails[1]).toEqual(3);
     expect(mails[0]).toEqual(
       await templateMemberResult(
         postSubjectMember,
@@ -498,12 +416,6 @@ describe('Notifications - post', () => {
         TestUserManager.users.subspaceMember.email
       )
     );
-    expect(mails[0]).toEqual(
-      await templateMemberResult(
-        postSubjectAdmin,
-        TestUserManager.users.subsubspaceAdmin.email
-      )
-    );
 
     expect(mails[0]).toEqual(
       await templateMemberResult(
@@ -518,7 +430,6 @@ describe('Notifications - post', () => {
         TestUserManager.users.subsubspaceAdmin.email
       )
     );
-    expect(mails[1]).toEqual(5);
 
     expect(mails[0]).toEqual(
       await templateMemberResult(

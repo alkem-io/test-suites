@@ -20,42 +20,32 @@ import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/O
 // Notification settings for invitation events
 const invitationNotificationSettings = {
   notification: {
-    space: {
-      communityApplicationReceived: false,
-      communityApplicationSubmitted: false,
-      collaborationCalloutPublished: false,
-      communicationUpdatesAdmin: false,
-      communicationUpdates: false,
-      communityInvitationUser: true,
-      communityNewMember: false,
-      communityNewMemberAdmin: false,
-      collaborationPostCommentCreated: false,
-      collaborationPostCreated: false,
-      collaborationPostCreatedAdmin: false,
-      collaborationWhiteboardCreated: false,
-      communicationMessageAdmin: false,
-      communicationMessage: false,
+    user: {
+      commentReply: false,
+      mentioned: false,
+      messageReceived: false,
+      copyOfMessageSent: false,
+      membership: {
+        spaceCommunityApplicationSubmitted: false,
+        spaceCommunityInvitationReceived: true,
+        spaceCommunityJoined: false,
+      },
     },
   },
 };
 
 const disabledInvitationNotificationSettings = {
   notification: {
-    space: {
-      communityApplicationReceived: false,
-      communityApplicationSubmitted: false,
-      collaborationCalloutPublished: false,
-      communicationUpdatesAdmin: false,
-      communicationUpdates: false,
-      communityInvitationUser: false,
-      communityNewMember: false,
-      communityNewMemberAdmin: false,
-      collaborationPostCommentCreated: false,
-      collaborationPostCreated: false,
-      collaborationPostCreatedAdmin: false,
-      collaborationWhiteboardCreated: false,
-      communicationMessageAdmin: false,
-      communicationMessage: false,
+    user: {
+      commentReply: false,
+      mentioned: false,
+      messageReceived: false,
+      copyOfMessageSent: false,
+      membership: {
+        spaceCommunityApplicationSubmitted: false,
+        spaceCommunityInvitationReceived: false,
+        spaceCommunityJoined: false,
+      },
     },
   },
 };

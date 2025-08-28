@@ -8,6 +8,7 @@ import {
   TestScenarioFactory,
   TestScenarioNoPreCreationConfig,
   TestUserManager,
+  UniqueIDGenerator,
 } from '@alkemio/tests-lib';
 import { TestUser } from '@alkemio/tests-lib';
 import {
@@ -18,16 +19,31 @@ import {
 } from '@functional-api/communications/communication.params';
 import { sendMessageReplyToRoom } from '@functional-api/communications/replies/reply.request.params';
 import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
+const uniqueId = UniqueIDGenerator.getID();
 
 // Helper functions for forum discussion notification settings
 const forumDiscussionCreatedNotificationSettings = {
   notification: {
     platform: {
+      forumDiscussionComment: true,
       forumDiscussionCreated: true,
-      newUserSignUp: false,
-      forumDiscussionComment: false,
-      spaceCreated: false,
-      userProfileRemoved: false,
+      admin: {
+        userProfileCreated: false,
+        userProfileRemoved: false,
+        spaceCreated: false,
+        userGlobalRoleChanged: false,
+      },
+    },
+    user: {
+      commentReply: true,
+      mentioned: false,
+      messageReceived: false,
+      copyOfMessageSent: false,
+      membership: {
+        spaceCommunityApplicationSubmitted: false,
+        spaceCommunityInvitationReceived: false,
+        spaceCommunityJoined: false,
+      },
     },
   },
 };
@@ -35,11 +51,25 @@ const forumDiscussionCreatedNotificationSettings = {
 const disabledForumDiscussionCreatedNotificationSettings = {
   notification: {
     platform: {
-      forumDiscussionCreated: false,
-      newUserSignUp: false,
       forumDiscussionComment: false,
-      spaceCreated: false,
-      userProfileRemoved: false,
+      forumDiscussionCreated: false,
+      admin: {
+        userProfileCreated: false,
+        userProfileRemoved: false,
+        spaceCreated: false,
+        userGlobalRoleChanged: false,
+      },
+    },
+    user: {
+      commentReply: false,
+      mentioned: false,
+      messageReceived: false,
+      copyOfMessageSent: false,
+      membership: {
+        spaceCommunityApplicationSubmitted: false,
+        spaceCommunityInvitationReceived: false,
+        spaceCommunityJoined: false,
+      },
     },
   },
 };
@@ -49,9 +79,12 @@ const forumDiscussionCommentNotificationSettings = {
     platform: {
       forumDiscussionComment: true,
       forumDiscussionCreated: false,
-      newUserSignUp: false,
-      spaceCreated: false,
-      userProfileRemoved: false,
+      admin: {
+        userProfileCreated: false,
+        userProfileRemoved: false,
+        spaceCreated: false,
+        userGlobalRoleChanged: false,
+      },
     },
   },
 };
@@ -61,9 +94,12 @@ const disabledForumDiscussionCommentNotificationSettings = {
     platform: {
       forumDiscussionComment: false,
       forumDiscussionCreated: false,
-      newUserSignUp: false,
-      spaceCreated: false,
-      userProfileRemoved: false,
+      admin: {
+        userProfileCreated: false,
+        userProfileRemoved: false,
+        spaceCreated: false,
+        userGlobalRoleChanged: false,
+      },
     },
   },
 };
@@ -144,9 +180,11 @@ const disableCommentReplyNotifications = async (userIds: string[]) => {
   );
 };
 
-const forumDiscussionSubjectText = 'New discussion created: test discussion';
+const discussionName = 'test discussion' + uniqueId;
+
+const forumDiscussionSubjectText = 'New discussion created: ' + discussionName;
 const forumDiscussionCommentSubjectText =
-  'New comment on discussion: test discussion';
+  'New comment on discussion: ' + discussionName;
 const forumDiscussionCommentReplySubjectText =
   'You have a new reply on your comment, have a look!';
 
@@ -179,6 +217,17 @@ describe('Notifications - forum discussions', () => {
       TestUserManager.users.globalLicenseAdmin.id,
       TestUserManager.users.spaceMember.id,
     ]);
+
+    await disableForumDiscussionCreatedNotifications([
+      TestUserManager.users.betaTester.id,
+      TestUserManager.users.globalSupportAdmin.id,
+      TestUserManager.users.nonSpaceMember.id,
+      TestUserManager.users.spaceAdmin.id,
+      TestUserManager.users.subspaceAdmin.id,
+      TestUserManager.users.subspaceMember.id,
+      TestUserManager.users.subsubspaceAdmin.id,
+      TestUserManager.users.subsubspaceMember.id,
+    ]);
   });
 
   beforeEach(async () => {
@@ -191,13 +240,10 @@ describe('Notifications - forum discussions', () => {
 
   test('GA create forum discussion - GA(1), QA(1), GHA(1), HM(1) get notifications', async () => {
     // Act
-    const res = await createDiscussion(
-      platformCommunicationId,
-      'test discussion'
-    );
+    const res = await createDiscussion(platformCommunicationId, discussionName);
     discussionId = res?.data?.createDiscussion.id ?? '';
 
-    await delay(3000);
+    await delay(1000);
     const getEmailsData = await getMailsData();
 
     // Assert
@@ -228,13 +274,13 @@ describe('Notifications - forum discussions', () => {
     // Act
     const res = await createDiscussion(
       platformCommunicationId,
-      'test discussion',
+      discussionName,
       ForumDiscussionCategory.PlatformFunctionalities,
       TestUser.QA_USER
     );
     discussionId = res?.data?.createDiscussion.id ?? '';
 
-    await delay(3000);
+    await delay(1000);
     const getEmailsData = await getMailsData();
 
     // Assert
@@ -290,7 +336,7 @@ describe('Notifications - forum discussions comment', () => {
     // Act
     const createDiscussionRes = await createDiscussion(
       platformCommunicationId,
-      'test discussion'
+      discussionName
     );
     discussionId = createDiscussionRes?.data?.createDiscussion.id ?? '';
     discussionCommentId =
@@ -298,7 +344,7 @@ describe('Notifications - forum discussions comment', () => {
 
     await sendMessageToRoom(discussionCommentId);
 
-    await delay(3000);
+    await delay(1000);
     const getEmailsData = await getMailsData();
 
     // Assert
@@ -317,7 +363,7 @@ describe('Notifications - forum discussions comment', () => {
     // Act
     const createDiscussionRes = await createDiscussion(
       platformCommunicationId,
-      'test discussion',
+      discussionName,
       ForumDiscussionCategory.PlatformFunctionalities,
       TestUser.QA_USER
     );
@@ -327,7 +373,7 @@ describe('Notifications - forum discussions comment', () => {
 
     await sendMessageToRoom(discussionCommentId);
 
-    await delay(3000);
+    await delay(1000);
     const getEmailsData = await getMailsData();
 
     // Assert
@@ -346,7 +392,7 @@ describe('Notifications - forum discussions comment', () => {
     // Act
     const createDiscussionRes = await createDiscussion(
       platformCommunicationId,
-      'test discussion',
+      discussionName,
       ForumDiscussionCategory.PlatformFunctionalities,
       TestUser.QA_USER
     );
@@ -356,7 +402,7 @@ describe('Notifications - forum discussions comment', () => {
 
     await sendMessageToRoom(discussionCommentId, undefined, TestUser.QA_USER);
 
-    await delay(3000);
+    await delay(1000);
     const getEmailsData = await getMailsData();
 
     // Assert
@@ -375,7 +421,7 @@ describe('Notifications - forum discussions comment', () => {
     // Act
     const createDiscussionRes = await createDiscussion(
       platformCommunicationId,
-      'test discussion'
+      discussionName
     );
     discussionId = createDiscussionRes?.data?.createDiscussion.id ?? '';
     discussionCommentId =
@@ -383,7 +429,7 @@ describe('Notifications - forum discussions comment', () => {
 
     await sendMessageToRoom(discussionCommentId, undefined, TestUser.QA_USER);
 
-    await delay(3000);
+    await delay(1000);
     const getEmailsData = await getMailsData();
 
     // Assert
@@ -433,7 +479,7 @@ describe('Notifications - forum discussions comments reply', () => {
     // Act
     const createDiscussionRes = await createDiscussion(
       platformCommunicationId,
-      'test discussion'
+      discussionName + uniqueId
     );
     discussionId = createDiscussionRes?.data?.createDiscussion.id ?? '';
     discussionCommentId =
@@ -443,6 +489,8 @@ describe('Notifications - forum discussions comments reply', () => {
     const resComment = res?.data?.sendMessageToRoom;
     messageId = resComment?.id;
 
+    await deleteMailSlurperMails();
+
     await sendMessageReplyToRoom(
       messageId,
       discussionCommentId,
@@ -450,7 +498,7 @@ describe('Notifications - forum discussions comments reply', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    await delay(3000);
+    await delay(1000);
     const getEmailsData = await getMailsData();
 
     // Assert
@@ -469,7 +517,7 @@ describe('Notifications - forum discussions comments reply', () => {
     // Act
     const createDiscussionRes = await createDiscussion(
       platformCommunicationId,
-      'test discussion',
+      discussionName + uniqueId,
       ForumDiscussionCategory.PlatformFunctionalities,
       TestUser.QA_USER
     );
@@ -484,6 +532,7 @@ describe('Notifications - forum discussions comments reply', () => {
     );
     const resComment = res?.data?.sendMessageToRoom;
     messageId = resComment?.id;
+    await deleteMailSlurperMails();
 
     await sendMessageReplyToRoom(
       messageId,
@@ -492,7 +541,7 @@ describe('Notifications - forum discussions comments reply', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    await delay(3000);
+    await delay(1000);
     const getEmailsData = await getMailsData();
 
     // Assert
@@ -511,7 +560,7 @@ describe('Notifications - forum discussions comments reply', () => {
     // Act
     const createDiscussionRes = await createDiscussion(
       platformCommunicationId,
-      'test discussion',
+      discussionName + uniqueId,
       ForumDiscussionCategory.PlatformFunctionalities,
       TestUser.QA_USER
     );
@@ -526,6 +575,7 @@ describe('Notifications - forum discussions comments reply', () => {
     );
     const resComment = res?.data?.sendMessageToRoom;
     messageId = resComment?.id;
+    await deleteMailSlurperMails();
 
     await sendMessageReplyToRoom(
       messageId,
@@ -534,7 +584,7 @@ describe('Notifications - forum discussions comments reply', () => {
       TestUser.QA_USER
     );
 
-    await delay(3000);
+    await delay(1000);
     const getEmailsData = await getMailsData();
 
     // Assert
@@ -553,7 +603,7 @@ describe('Notifications - forum discussions comments reply', () => {
     // Act
     const createDiscussionRes = await createDiscussion(
       platformCommunicationId,
-      'test discussion'
+      discussionName + uniqueId
     );
     discussionId = createDiscussionRes?.data?.createDiscussion.id ?? '';
     discussionCommentId =
@@ -566,6 +616,7 @@ describe('Notifications - forum discussions comments reply', () => {
     );
     const resComment = res?.data?.sendMessageToRoom;
     messageId = resComment?.id;
+    await deleteMailSlurperMails();
 
     await sendMessageReplyToRoom(
       messageId,
@@ -574,7 +625,7 @@ describe('Notifications - forum discussions comments reply', () => {
       TestUser.QA_USER
     );
 
-    await delay(3000);
+    await delay(1000);
     const getEmailsData = await getMailsData();
 
     // Assert
@@ -625,11 +676,11 @@ describe('Notifications - no notifications triggered', () => {
     // Act
     const res = await createDiscussion(
       platformCommunicationId,
-      'test discussion'
+      discussionName + uniqueId
     );
     discussionId = res?.data?.createDiscussion.id ?? '';
 
-    await delay(3000);
+    await delay(1000);
     const getEmailsData = await getMailsData();
 
     // Assert
@@ -640,13 +691,13 @@ describe('Notifications - no notifications triggered', () => {
     // Act
     const res = await createDiscussion(
       platformCommunicationId,
-      'test discussion',
+      discussionName,
       ForumDiscussionCategory.PlatformFunctionalities,
       TestUser.QA_USER
     );
     discussionId = res?.data?.createDiscussion.id ?? '';
 
-    await delay(3000);
+    await delay(1000);
     const getEmailsData = await getMailsData();
 
     // Assert
@@ -657,7 +708,7 @@ describe('Notifications - no notifications triggered', () => {
     // Act
     const createDiscussionRes = await createDiscussion(
       platformCommunicationId,
-      'test discussion'
+      discussionName + uniqueId
     );
     discussionId = createDiscussionRes?.data?.createDiscussion.id ?? '';
     discussionCommentId =
@@ -665,7 +716,7 @@ describe('Notifications - no notifications triggered', () => {
 
     await sendMessageToRoom(discussionCommentId);
 
-    await delay(3000);
+    await delay(1000);
     const getEmailsData = await getMailsData();
 
     // Assert
@@ -676,7 +727,7 @@ describe('Notifications - no notifications triggered', () => {
     // Act
     const createDiscussionRes = await createDiscussion(
       platformCommunicationId,
-      'test discussion',
+      discussionName + uniqueId,
       ForumDiscussionCategory.PlatformFunctionalities,
       TestUser.QA_USER
     );
@@ -686,7 +737,7 @@ describe('Notifications - no notifications triggered', () => {
 
     await sendMessageToRoom(discussionCommentId);
 
-    await delay(3000);
+    await delay(1000);
     const getEmailsData = await getMailsData();
 
     // Assert
@@ -697,7 +748,7 @@ describe('Notifications - no notifications triggered', () => {
     // Act
     const createDiscussionRes = await createDiscussion(
       platformCommunicationId,
-      'test discussion'
+      discussionName + uniqueId
     );
     discussionId = createDiscussionRes?.data?.createDiscussion.id ?? '';
     discussionCommentId =
@@ -714,7 +765,7 @@ describe('Notifications - no notifications triggered', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    await delay(3000);
+    await delay(1000);
     const getEmailsData = await getMailsData();
 
     // Assert
@@ -725,7 +776,7 @@ describe('Notifications - no notifications triggered', () => {
     // Act
     const createDiscussionRes = await createDiscussion(
       platformCommunicationId,
-      'test discussion',
+      discussionName + uniqueId,
       ForumDiscussionCategory.PlatformFunctionalities,
       TestUser.QA_USER
     );
@@ -748,7 +799,7 @@ describe('Notifications - no notifications triggered', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    await delay(3000);
+    await delay(1000);
     const getEmailsData = await getMailsData();
 
     // Assert

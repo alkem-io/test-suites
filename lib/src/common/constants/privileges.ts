@@ -9,6 +9,11 @@ export const sorted_read_readAbout_readLicense = [
   "READ_LICENSE",
 ];
 
+export const sorted_read_readAbout_readLicense_notifications = [
+  ...sorted_read_readAbout_readLicense,
+  "RECEIVE_NOTIFICATIONS",
+];
+
 export const sorted__create_read_update_delete = [
   "CREATE",
   ...readPrivilege,
@@ -48,14 +53,42 @@ export const sorted__create_read_update_delete_grant_platformAdmin = [
   "PLATFORM_ADMIN",
 ].sort();
 
+// export const sorted__create_read_update_delete_grant_platformAdmin_notificationsAdmin = [
+//   "CREATE",
+//   "GRANT",
+//   ...readPrivilege,
+//   "UPDATE",
+//   "DELETE",
+//   "PLATFORM_ADMIN",
+//   "RECEIVE_NOTIFICATIONS_ADMIN",
+// ].sort();
+
 export const sorted__create_read_update_delete_grant_platformAdmin_readAbout = [
   ...sorted__create_read_update_delete_grant_platformAdmin,
   "READ_ABOUT",
 ].sort();
 
+export const sorted__create_read_update_delete_grant_platformAdmin_readAbout_notificationsAdmin =
+  [
+    ...sorted__create_read_update_delete_grant_platformAdmin,
+    "READ_ABOUT",
+    "RECEIVE_NOTIFICATIONS_ADMIN",
+  ].sort();
+
+export const sorted__create_read_update_delete_grant_platformAdmin_notificationsAdmin =
+  [
+    ...sorted__create_read_update_delete_grant_platformAdmin,
+    "RECEIVE_NOTIFICATIONS_ADMIN",
+  ].sort();
+
 export const sorted__create_read_update_delete_grant_readAbout = [
   ...sorted__create_read_update_delete_grant,
   "READ_ABOUT",
+].sort();
+
+export const sorted__create_read_update_delete_grant_notificationsAdmin = [
+  ...sorted__create_read_update_delete_grant,
+  "RECEIVE_NOTIFICATIONS_ADMIN",
 ].sort();
 
 export const sorted__create_read_update_delete_grant_readUserPii_platformAdmin =
@@ -65,6 +98,11 @@ export const sorted__create_read_update_delete_grant_readUserPii_platformAdmin =
     "PLATFORM_ADMIN",
   ].sort();
 
+export const sorted__create_read_update_delete_grant_readUserPii = [
+  ...sorted__create_read_update_delete_grant,
+  "READ_USER_PII",
+].sort();
+
 export const sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii_platformAdmin =
   [
     ...sorted__create_read_update_delete_grant,
@@ -72,6 +110,14 @@ export const sorted__create_read_update_delete_grant_fileUpload_fileDelete_readU
     "FILE_UPLOAD",
     "FILE_DELETE",
     "PLATFORM_ADMIN",
+  ].sort();
+
+export const sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii =
+  [
+    ...sorted__create_read_update_delete_grant,
+    "READ_USER_PII",
+    "FILE_UPLOAD",
+    "FILE_DELETE",
   ].sort();
 
 export const sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii =
@@ -101,11 +147,28 @@ export const sorted__create_read_update_delete_contribute_createCallout = [
   "CREATE_CALLOUT",
 ].sort();
 
+export const sorted__create_read_update_delete_contribute_createCallout_receiveNotifications =
+  [
+    ...sorted__create_read_update_delete,
+    "CONTRIBUTE",
+    "CREATE_CALLOUT",
+    "RECEIVE_NOTIFICATIONS",
+  ].sort();
+
 export const sorted__create_read_update_delete_grant_fileUp_fileDel = [
   ...sorted__create_read_update_delete_grant,
   "FILE_UPLOAD",
   "FILE_DELETE",
 ].sort();
+
+export const sorted__create_read_update_delete_grant_fileUp_fileDel_notificationsAdmin =
+  [
+    ...sorted__create_read_update_delete_grant,
+    "FILE_UPLOAD",
+    "FILE_DELETE",
+    "RECEIVE_NOTIFICATIONS_ADMIN",
+  ].sort();
+
 export const sorted__create_read_update_delete_grant_fileDelete_fileUpload = [
   ...sorted__create_read_update_delete_grant,
   "FILE_UPLOAD",
@@ -118,6 +181,16 @@ export const sorted__create_read_update_delete_contribute_fileDelete_fileUpload 
     "FILE_UPLOAD",
     "FILE_DELETE",
   ].sort();
+
+export const sorted__create_read_update_delete_contribute_fileDelete_fileUpload_receiveNotifications =
+  [
+    ...sorted__create_read_update_delete,
+    "CONTRIBUTE",
+    "FILE_UPLOAD",
+    "FILE_DELETE",
+    "RECEIVE_NOTIFICATIONS",
+  ].sort();
+
 export const sorted__create_read_readAbout_update_delete_grant_fileUp_fileDel =
   [
     ...sorted__create_read_readAbout_update_delete_grant,
@@ -131,6 +204,15 @@ export const sorted__create_read_update_delete_grant_fileUp_fileDel_platformAdmi
     "FILE_UPLOAD",
     "FILE_DELETE",
     "PLATFORM_ADMIN",
+  ].sort();
+
+export const sorted__create_read_update_delete_grant_fileUp_fileDel_platformAdmin_notificationsAdmin =
+  [
+    ...sorted__create_read_update_delete_grant,
+    "FILE_UPLOAD",
+    "FILE_DELETE",
+    "PLATFORM_ADMIN",
+    "RECEIVE_NOTIFICATIONS_ADMIN",
   ].sort();
 
 export const sorted__create_read_update_delete_grant_fileUp_fileDel_contribute =
@@ -177,6 +259,35 @@ export const sorted__create_read_update_delete_grant_addMember_apply_invite_addV
     "COMMUNITY_ASSIGN_VC_FROM_ACCOUNT",
   ].sort();
 
+export const sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_notificationsAdmin =
+  [
+    "CREATE",
+    "GRANT",
+    ...readPrivilege,
+    "UPDATE",
+    "DELETE",
+    "ROLESET_ENTRY_ROLE_ASSIGN",
+    "ROLESET_ENTRY_ROLE_APPLY",
+    "ROLESET_ENTRY_ROLE_INVITE",
+    "COMMUNITY_ASSIGN_VC_FROM_ACCOUNT",
+    "RECEIVE_NOTIFICATIONS_ADMIN",
+  ].sort();
+
+export const sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_notifications_notificationsAdmin =
+  [
+    "CREATE",
+    "GRANT",
+    ...readPrivilege,
+    "UPDATE",
+    "DELETE",
+    "ROLESET_ENTRY_ROLE_ASSIGN",
+    "ROLESET_ENTRY_ROLE_APPLY",
+    "ROLESET_ENTRY_ROLE_INVITE",
+    "COMMUNITY_ASSIGN_VC_FROM_ACCOUNT",
+    "RECEIVE_NOTIFICATIONS",
+    "RECEIVE_NOTIFICATIONS_ADMIN",
+  ].sort();
+
 export const sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization =
   [
     "CREATE",
@@ -190,6 +301,38 @@ export const sorted__create_read_update_delete_grant_addMember_apply_invite_addV
     "COMMUNITY_ASSIGN_VC_FROM_ACCOUNT",
     "ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION",
   ].sort();
+
+export const sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization_notificationsAdmin =
+  [
+    "CREATE",
+    "GRANT",
+    ...readPrivilege,
+    "UPDATE",
+    "DELETE",
+    "ROLESET_ENTRY_ROLE_ASSIGN",
+    "ROLESET_ENTRY_ROLE_APPLY",
+    "ROLESET_ENTRY_ROLE_INVITE",
+    "COMMUNITY_ASSIGN_VC_FROM_ACCOUNT",
+    "ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION",
+    "RECEIVE_NOTIFICATIONS_ADMIN",
+  ].sort();
+
+export const sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization_notifications_notificationsAdmin =
+  [
+    "CREATE",
+    "GRANT",
+    ...readPrivilege,
+    "UPDATE",
+    "DELETE",
+    "ROLESET_ENTRY_ROLE_ASSIGN",
+    "ROLESET_ENTRY_ROLE_APPLY",
+    "ROLESET_ENTRY_ROLE_INVITE",
+    "COMMUNITY_ASSIGN_VC_FROM_ACCOUNT",
+    "ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION",
+    "RECEIVE_NOTIFICATIONS",
+    "RECEIVE_NOTIFICATIONS_ADMIN",
+  ].sort();
+
 export const sorted__create_read_update_delete_grant_apply_invite_addVC_accessVC_assignOrganization =
   [
     "CREATE",
@@ -201,6 +344,21 @@ export const sorted__create_read_update_delete_grant_apply_invite_addVC_accessVC
     "ROLESET_ENTRY_ROLE_INVITE",
     "COMMUNITY_ASSIGN_VC_FROM_ACCOUNT",
     "ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION",
+  ].sort();
+
+export const sorted__create_read_update_delete_grant_apply_invite_addVC_accessVC_assignOrganization_notifications_notificationsAdmin =
+  [
+    "CREATE",
+    "GRANT",
+    ...readPrivilege,
+    "UPDATE",
+    "DELETE",
+    "ROLESET_ENTRY_ROLE_APPLY",
+    "ROLESET_ENTRY_ROLE_INVITE",
+    "COMMUNITY_ASSIGN_VC_FROM_ACCOUNT",
+    "ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION",
+    "RECEIVE_NOTIFICATIONS",
+    "RECEIVE_NOTIFICATIONS_ADMIN",
   ].sort();
 
 export const sorted__read_apply_assignOrganization = [
@@ -221,6 +379,47 @@ export const sorted__create_read_update_delete_grant_apply_invite_addVC_accessVC
     "COMMUNITY_ASSIGN_VC_FROM_ACCOUNT",
   ].sort();
 
+export const sorted__create_read_update_delete_grant_apply_invite_addVC_accessVC_notifications_notificationsAdmin =
+  [
+    "CREATE",
+    "GRANT",
+    ...readPrivilege,
+    "UPDATE",
+    "DELETE",
+    "ROLESET_ENTRY_ROLE_APPLY",
+    "ROLESET_ENTRY_ROLE_INVITE",
+    "COMMUNITY_ASSIGN_VC_FROM_ACCOUNT",
+    "RECEIVE_NOTIFICATIONS",
+    "RECEIVE_NOTIFICATIONS_ADMIN",
+  ].sort();
+
+export const sorted__create_read_update_delete_grant_apply_invite_addVC_accessVC_notificationsAdmin =
+  [
+    "CREATE",
+    "GRANT",
+    ...readPrivilege,
+    "UPDATE",
+    "DELETE",
+    "ROLESET_ENTRY_ROLE_APPLY",
+    "ROLESET_ENTRY_ROLE_INVITE",
+    "COMMUNITY_ASSIGN_VC_FROM_ACCOUNT",
+    "RECEIVE_NOTIFICATIONS_ADMIN",
+  ].sort();
+
+export const sorted__create_read_update_delete_grant_apply_invite_assign_addVC_accessVC_notificationsAdmin =
+  [
+    "CREATE",
+    "GRANT",
+    ...readPrivilege,
+    "UPDATE",
+    "DELETE",
+    "ROLESET_ENTRY_ROLE_APPLY",
+    "ROLESET_ENTRY_ROLE_INVITE",
+    "COMMUNITY_ASSIGN_VC_FROM_ACCOUNT",
+    "RECEIVE_NOTIFICATIONS_ADMIN",
+    "ROLESET_ENTRY_ROLE_ASSIGN",
+  ].sort();
+
 export const sorted__roleSet_applyTo_join = [
   "ROLESET_ENTRY_ROLE_APPLY",
   "ROLESET_ENTRY_ROLE_JOIN",
@@ -231,11 +430,25 @@ export const sorted__read_applyToRoleSet = [
   "ROLESET_ENTRY_ROLE_APPLY",
 ].sort();
 
+export const sorted__read_applyToRoleSet_notifications = [
+  "READ",
+  "ROLESET_ENTRY_ROLE_APPLY",
+  "RECEIVE_NOTIFICATIONS",
+].sort();
+
 export const sorted__read_applyToRoleSet_invite_addVC = [
   "READ",
   "ROLESET_ENTRY_ROLE_APPLY",
   "ROLESET_ENTRY_ROLE_INVITE",
   "COMMUNITY_ASSIGN_VC_FROM_ACCOUNT",
+].sort();
+
+export const sorted__read_applyToRoleSet_invite_addVC_notifications = [
+  "READ",
+  "ROLESET_ENTRY_ROLE_APPLY",
+  "ROLESET_ENTRY_ROLE_INVITE",
+  "COMMUNITY_ASSIGN_VC_FROM_ACCOUNT",
+  "RECEIVE_NOTIFICATIONS",
 ].sort();
 
 export const sorted__create_read_update_delete_grant_contribute = [
@@ -273,6 +486,15 @@ export const sorted__create_read_readAbout_update_delete_grant_createSubspace_re
     "READ_LICENSE",
   ].sort();
 
+export const sorted__create_read_readAbout_update_delete_grant_createSubspace_readLicense_notifications_notificationsAdmin =
+  [
+    ...sorted__create_read_readAbout_update_delete_grant,
+    "CREATE_SUBSPACE",
+    "READ_LICENSE",
+    "RECEIVE_NOTIFICATIONS",
+    "RECEIVE_NOTIFICATIONS_ADMIN",
+  ].sort();
+
 export const sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin =
   [
     ...sorted__create_read_update_delete_grant,
@@ -303,11 +525,38 @@ export const sorted__create_read_readAbout_update_delete_grant_createSubspace_pl
     "READ_LICENSE",
   ].sort();
 
+export const sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense_notifications_notificationsAdmin =
+  [
+    ...sorted__create_read_readAbout_update_delete_grant,
+    "CREATE_SUBSPACE",
+    "PLATFORM_ADMIN",
+    "READ_LICENSE",
+    "RECEIVE_NOTIFICATIONS",
+    "RECEIVE_NOTIFICATIONS_ADMIN",
+  ].sort();
+
+export const sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense_notificationsAdmin =
+  [
+    ...sorted__create_read_readAbout_update_delete_grant,
+    "CREATE_SUBSPACE",
+    "PLATFORM_ADMIN",
+    "READ_LICENSE",
+    "RECEIVE_NOTIFICATIONS_ADMIN",
+  ].sort();
+
 export const sorted__create_read_update_delete_contribute_readAbout = [
   ...sorted__create_read_update_delete,
   "CONTRIBUTE",
   "READ_ABOUT",
 ].sort();
+
+export const sorted__create_read_update_delete_contribute_readAbout_receiveNotifications =
+  [
+    ...sorted__create_read_update_delete,
+    "CONTRIBUTE",
+    "READ_ABOUT",
+    "RECEIVE_NOTIFICATIONS",
+  ].sort();
 
 export const sorted__create_read_update_delete_createCallout_readAbout_transferAccept_transferOffer =
   [

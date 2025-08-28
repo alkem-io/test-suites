@@ -26,11 +26,14 @@ const scenarioConfig: TestScenarioNoPreCreationConfig = {
 const spaceCreationNotificationSettings = {
   notification: {
     platform: {
-      newUserSignUp: false,
       forumDiscussionComment: false,
       forumDiscussionCreated: false,
-      spaceCreated: true,
-      userProfileRemoved: false,
+      admin: {
+        userProfileCreated: false,
+        userProfileRemoved: false,
+        spaceCreated: true,
+        userGlobalRoleChanged: false,
+      },
     },
   },
 };
@@ -39,11 +42,14 @@ const spaceCreationNotificationSettings = {
 const disabledSpaceCreationNotificationSettings = {
   notification: {
     platform: {
-      newUserSignUp: false,
       forumDiscussionComment: false,
       forumDiscussionCreated: false,
-      spaceCreated: false,
-      userProfileRemoved: false,
+      admin: {
+        userProfileCreated: false,
+        userProfileRemoved: false,
+        spaceCreated: false,
+        userGlobalRoleChanged: false,
+      },
     },
   },
 };
@@ -56,12 +62,11 @@ const updateAdminSpaceCreationNotificationSettings = async () => {
     TestUserManager.users.globalSupportAdmin.id,
   ];
 
-  const a = await Promise.all(
+  await Promise.all(
     adminUsers.map(userId =>
       updateUserSettings(userId, spaceCreationNotificationSettings)
     )
   );
-  console.log('Admin space creation notification settings updated:', a);
 };
 
 // Helper function to disable all admin space creation notifications
@@ -97,8 +102,6 @@ const createSpace = async (
     spaceNameId,
     accountId
   );
-  console.log('New Space ID:', response.error);
-
   const newSpaceId = response?.data?.lookup?.space?.id ?? '';
 
   return { spaceId: newSpaceId };
@@ -111,7 +114,7 @@ beforeAll(async () => {
   spaceNameId = `testspace${uniqueId}`;
 });
 
-describe.skip('Notifications - Space creation', () => {
+describe('Notifications - Space creation', () => {
   beforeAll(async () => {
     // Set up space creation notification settings for all admin users
     await updateAdminSpaceCreationNotificationSettings();
@@ -127,39 +130,37 @@ describe.skip('Notifications - Space creation', () => {
     }
   });
 
-  test.only('Space created - GA(1), LA(1), SA(1) get notifications', async () => {
+  test('Space created - GA(1), LA(1), SA(1) get notifications', async () => {
     // Act
     const { spaceId: newSpaceId } = await createSpace(
       spaceName,
       spaceNameId,
       TestUserManager.users.betaTester.accountId
     );
-    console.log('New Space ID:', newSpaceId);
     spaceId = newSpaceId;
     await delay(1000);
     const emailsData = await getMailsData();
     // Assert
-    // Note: Email subjects are tentative - actual implementation may differ
-    expect(emailsData[1]).toEqual(1);
+    expect(emailsData[1]).toEqual(3);
     expect(emailsData[0]).toEqual(
       expect.arrayContaining([
         expectedEmail(
-          `New Space created on Alkemio: ${spaceName}`,
+          `New space created - ${spaceName}`,
           TestUserManager.users.globalAdmin.email
         ),
         expectedEmail(
-          `New Space created on Alkemio: ${spaceName}`,
-          TestUserManager.users.globalLicenseAdmin.email
+          `New space created - ${spaceName}`,
+          TestUserManager.users.globalSupportAdmin.email
         ),
         expectedEmail(
-          `New Space created on Alkemio: ${spaceName}`,
-          TestUserManager.users.globalSupportAdmin.email
+          `New space created - ${spaceName}`,
+          TestUserManager.users.globalLicenseAdmin.email
         ),
       ])
     );
   });
 
-  test('Space created - GA(0), LA(0), SA(0) - no admin notifications', async () => {
+  test('Space created - GA(0), SA(0) - no admin notifications', async () => {
     // Arrange - Disable all admin space creation notifications
     await disableAllAdminSpaceCreationNotifications();
 
@@ -206,7 +207,7 @@ describe.skip('Notifications - Space creation', () => {
     expect(emailsData[0]).toEqual(
       expect.arrayContaining([
         expectedEmail(
-          `New Space created on Alkemio: ${spaceName}gaonly`,
+          `New space created - ${spaceName}gaonly`,
           TestUserManager.users.globalAdmin.email
         ),
       ])
@@ -220,12 +221,14 @@ describe.skip('Notifications - Space deletion', () => {
     await updateUserSettings(TestUserManager.users.globalAdmin.id, {
       notification: {
         platform: {
-          newUserSignUp: false,
           forumDiscussionComment: false,
           forumDiscussionCreated: false,
-          spaceCreated: false,
-          userProfileRemoved: false,
-          // Note: spaceDeleted notification might not exist yet, this is a placeholder
+          admin: {
+            userProfileCreated: true,
+            userProfileRemoved: false,
+            spaceCreated: false,
+            userGlobalRoleChanged: false,
+          },
         },
       },
     });

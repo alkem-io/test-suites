@@ -25,20 +25,17 @@ import { updateUserSettings } from '@functional-api/contributor-management/user/
 const calloutPublishedNotificationSettings = {
   notification: {
     space: {
+      admin: {
+        communityApplicationReceived: false,
+        communityNewMember: false,
+        collaborationCalloutContributionCreated: false,
+        communicationMessageReceived: false,
+      },
       collaborationCalloutPublished: true,
-      communityApplicationReceived: false,
-      communityApplicationSubmitted: false,
-      communicationUpdatesAdmin: false,
       communicationUpdates: false,
-      communityInvitationUser: false,
-      communityNewMember: false,
-      communityNewMemberAdmin: false,
-      collaborationPostCommentCreated: false,
-      collaborationPostCreated: false,
-      collaborationPostCreatedAdmin: false,
-      collaborationWhiteboardCreated: false,
-      communicationMessageAdmin: false,
-      communicationMessage: false,
+      collaborationCalloutPostContributionComment: false,
+      collaborationCalloutContributionCreated: false,
+      collaborationCalloutComment: false,
     },
   },
 };
@@ -46,20 +43,17 @@ const calloutPublishedNotificationSettings = {
 const disabledCalloutPublishedNotificationSettings = {
   notification: {
     space: {
+      admin: {
+        communityApplicationReceived: false,
+        communityNewMember: false,
+        collaborationCalloutContributionCreated: false,
+        communicationMessageReceived: false,
+      },
       collaborationCalloutPublished: false,
-      communityApplicationReceived: false,
-      communityApplicationSubmitted: false,
-      communicationUpdatesAdmin: false,
       communicationUpdates: false,
-      communityInvitationUser: true,
-      communityNewMember: false,
-      communityNewMemberAdmin: false,
-      collaborationPostCommentCreated: false,
-      collaborationPostCreated: false,
-      collaborationPostCreatedAdmin: false,
-      collaborationWhiteboardCreated: false,
-      communicationMessageAdmin: false,
-      communicationMessage: false,
+      collaborationCalloutPostContributionComment: false,
+      collaborationCalloutContributionCreated: false,
+      collaborationCalloutComment: false,
     },
   },
 };
@@ -188,9 +182,11 @@ describe('Notifications - post', () => {
       TestUserManager.users.nonSpaceMember.id,
     ]);
   });
+  // "callouts-notificat-38435a - New post is published \u0026#34;call-d-name-704985\u0026#34;, have a look!", "toAddresses": ["admin@alkem.io"]
+  // "callouts-notificat-38435a - New Post is published \u0026#34;call-d-name-704985\u0026#34;, have a look!"
 
   test('GA PUBLISH space callout - HM(7) get notifications', async () => {
-    const spaceCalloutSubjectText = `${baseScenario.space.about.profile.displayName} - New post-collection is published &#34;${calloutDisplayName}&#34;, have a look!`;
+    const spaceCalloutSubjectText = `${baseScenario.space.about.profile.displayName} - New Post is published \u0026#34;${calloutDisplayName}\u0026#34;, have a look!`;
     // Act
     const res = await createCalloutOnCalloutsSet(
       baseScenario.space.collaboration.calloutsSetId,
@@ -330,7 +326,7 @@ describe('Notifications - post', () => {
   });
 
   test('HA create PUBLISHED space callout type: POST - HM(7) get notifications', async () => {
-    const spaceCalloutSubjectText = `${baseScenario.space.about.profile.displayName} - New post-collection is published &#34;${calloutDisplayName}&#34;, have a look!`;
+    const spaceCalloutSubjectText = `${baseScenario.space.about.profile.displayName} - New Post is published \u0026#34;${calloutDisplayName}\u0026#34;, have a look!`;
     // Act
     const res = await createCalloutOnCalloutsSet(
       baseScenario.space.collaboration.calloutsSetId,
@@ -478,7 +474,7 @@ describe('Notifications - post', () => {
   });
 
   test('HA create PUBLISHED subspace callout type: POST - CM(5) get notifications', async () => {
-    const calloutSubjectText = `${baseScenario.subspace.about.profile.displayName} - New post-collection is published &#34;${calloutDisplayName}&#34;, have a look!`;
+    const calloutSubjectText = `${baseScenario.subspace.about.profile.displayName} - New Post is published \u0026#34;${calloutDisplayName}\u0026#34;, have a look!`;
     // Act
     const res = await createCalloutOnCalloutsSet(
       baseScenario.subspace.collaboration.calloutsSetId,
@@ -570,7 +566,7 @@ describe('Notifications - post', () => {
   });
 
   test('OA create PUBLISHED subsubspace callout type: POST - OM(4) get notifications', async () => {
-    const calloutSubjectText = `${baseScenario.subsubspace.about.profile.displayName} - New post-collection is published &#34;${calloutDisplayName}&#34;, have a look!`;
+    const calloutSubjectText = `${baseScenario.subsubspace.about.profile.displayName} - New Post is published \u0026#34;${calloutDisplayName}\u0026#34;, have a look!`;
     // Act
     const res = await createCalloutOnCalloutsSet(
       baseScenario.subsubspace.collaboration.calloutsSetId,

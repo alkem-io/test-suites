@@ -26,11 +26,14 @@ const scenarioConfig: TestScenarioNoPreCreationConfig = {
 const notificationSettings = {
   notification: {
     platform: {
-      newUserSignUp: true,
       forumDiscussionComment: false,
       forumDiscussionCreated: false,
-      spaceCreated: false,
-      userProfileRemoved: false,
+      admin: {
+        userProfileCreated: true,
+        userProfileRemoved: false,
+        spaceCreated: false,
+        userGlobalRoleChanged: false,
+      },
     },
   },
 };
@@ -53,11 +56,14 @@ const disableAllAdminNotifications = async () => {
   const disabledNotificationSettings = {
     notification: {
       platform: {
-        newUserSignUp: false,
         forumDiscussionComment: false,
         forumDiscussionCreated: false,
-        spaceCreated: false,
-        userProfileRemoved: false,
+        admin: {
+          userProfileCreated: false,
+          userProfileRemoved: false,
+          spaceCreated: false,
+          userGlobalRoleChanged: false,
+        },
       },
     },
   };
@@ -130,7 +136,7 @@ describe('Notifications - User registration', () => {
     userId = newUserId;
 
     // Assert
-    expect(emailsData[1]).toEqual(3);
+    expect(emailsData[1]).toEqual(4);
     expect(emailsData[0]).toEqual(
       expect.arrayContaining([
         expectedEmail(
@@ -140,6 +146,10 @@ describe('Notifications - User registration', () => {
         expectedEmail(
           `New user registration on Alkemio: ${userName}`,
           TestUserManager.users.globalSupportAdmin.email
+        ),
+        expectedEmail(
+          `New user registration on Alkemio: ${userName}`,
+          TestUserManager.users.globalLicenseAdmin.email
         ),
         expectedEmail('Alkemio - Registration successful!', userEmail),
       ])
@@ -173,11 +183,14 @@ describe('Notifications - User removal', () => {
     await updateUserSettings(TestUserManager.users.globalAdmin.id, {
       notification: {
         platform: {
-          newUserSignUp: false,
           forumDiscussionComment: false,
           forumDiscussionCreated: false,
-          spaceCreated: false,
-          userProfileRemoved: true,
+          admin: {
+            userProfileCreated: false,
+            userProfileRemoved: true,
+            spaceCreated: false,
+            userGlobalRoleChanged: false,
+          },
         },
       },
     });

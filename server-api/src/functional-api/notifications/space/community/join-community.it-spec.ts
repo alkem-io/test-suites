@@ -28,20 +28,28 @@ import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/O
 const communityJoinNotificationSettings = {
   notification: {
     space: {
-      communityApplicationReceived: false,
-      communityApplicationSubmitted: false,
+      admin: {
+        communityApplicationReceived: false,
+        communityNewMember: true,
+        collaborationCalloutContributionCreated: false,
+        communicationMessageReceived: false,
+      },
       collaborationCalloutPublished: false,
-      communicationUpdatesAdmin: false,
       communicationUpdates: false,
-      communityInvitationUser: false,
-      communityNewMember: true,
-      communityNewMemberAdmin: true,
-      collaborationPostCommentCreated: false,
-      collaborationPostCreated: false,
-      collaborationPostCreatedAdmin: false,
-      collaborationWhiteboardCreated: false,
-      communicationMessageAdmin: false,
-      communicationMessage: false,
+      collaborationCalloutPostContributionComment: false,
+      collaborationCalloutContributionCreated: false,
+      collaborationCalloutComment: false,
+    },
+    user: {
+      commentReply: false,
+      mentioned: false,
+      messageReceived: false,
+      copyOfMessageSent: false,
+      membership: {
+        spaceCommunityApplicationSubmitted: false,
+        spaceCommunityInvitationReceived: false,
+        spaceCommunityJoined: true,
+      },
     },
   },
 };
@@ -49,20 +57,28 @@ const communityJoinNotificationSettings = {
 const disabledCommunityJoinNotificationSettings = {
   notification: {
     space: {
-      communityApplicationReceived: false,
-      communityApplicationSubmitted: false,
+      admin: {
+        communityApplicationReceived: false,
+        communityNewMember: false,
+        collaborationCalloutContributionCreated: false,
+        communicationMessageReceived: false,
+      },
       collaborationCalloutPublished: false,
-      communicationUpdatesAdmin: false,
       communicationUpdates: false,
-      communityInvitationUser: false,
-      communityNewMember: false,
-      communityNewMemberAdmin: false,
-      collaborationPostCommentCreated: false,
-      collaborationPostCreated: false,
-      collaborationPostCreatedAdmin: false,
-      collaborationWhiteboardCreated: false,
-      communicationMessageAdmin: false,
-      communicationMessage: false,
+      collaborationCalloutPostContributionComment: false,
+      collaborationCalloutContributionCreated: false,
+      collaborationCalloutComment: false,
+    },
+    user: {
+      commentReply: false,
+      mentioned: false,
+      messageReceived: false,
+      copyOfMessageSent: false,
+      membership: {
+        spaceCommunityApplicationSubmitted: false,
+        spaceCommunityInvitationReceived: false,
+        spaceCommunityJoined: false,
+      },
     },
   },
 };

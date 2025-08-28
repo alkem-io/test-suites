@@ -18,7 +18,19 @@ import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/O
 const organizationMessageNotificationSettings = {
   notification: {
     organization: {
+      adminMentioned: false,
+      adminMessageReceived: true,
+    },
+    user: {
+      commentReply: false,
+      mentioned: false,
       messageReceived: true,
+      copyOfMessageSent: true,
+      membership: {
+        spaceCommunityApplicationSubmitted: false,
+        spaceCommunityInvitationReceived: false,
+        spaceCommunityJoined: false,
+      },
     },
   },
 };
@@ -26,7 +38,19 @@ const organizationMessageNotificationSettings = {
 const disabledOrganizationMessageNotificationSettings = {
   notification: {
     organization: {
+      adminMentioned: false,
+      adminMessageReceived: false,
+    },
+    user: {
+      commentReply: false,
+      mentioned: false,
       messageReceived: false,
+      copyOfMessageSent: false,
+      membership: {
+        spaceCommunityApplicationSubmitted: false,
+        spaceCommunityInvitationReceived: false,
+        spaceCommunityJoined: false,
+      },
     },
   },
 };
@@ -70,10 +94,23 @@ const scenarioConfig: TestScenarioConfig = {
 beforeAll(async () => {
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
 
-  await assignRoleToUser(
+  const a = await assignRoleToUser(
+    TestUserManager.users.spaceAdmin.id,
+    baseScenario.organization.roleSetId,
+    RoleName.Associate
+  );
+  console.log(a.error);
+
+  const b = await assignRoleToUser(
     TestUserManager.users.spaceAdmin.id,
     baseScenario.organization.roleSetId,
     RoleName.Admin
+  );
+  console.log(b.error);
+  await assignRoleToUser(
+    TestUserManager.users.spaceMember.id,
+    baseScenario.organization.roleSetId,
+    RoleName.Associate
   );
 
   await assignRoleToUser(
@@ -110,7 +147,7 @@ describe('Notifications - user to organization messages', () => {
       'Test message',
       TestUser.NON_SPACE_MEMBER
     );
-    await delay(3000);
+    await delay(1000);
 
     const getEmailsData = await getMailsData();
 
@@ -150,7 +187,7 @@ describe('Notifications - user to organization messages', () => {
       'Test message',
       TestUser.NON_SPACE_MEMBER
     );
-    await delay(3000);
+    await delay(1000);
 
     const getEmailsData = await getMailsData();
 
@@ -181,7 +218,8 @@ describe('Notifications - user to organization messages', () => {
     await updateUserSettings(TestUserManager.users.spaceAdmin.id, {
       notification: {
         organization: {
-          messageReceived: true,
+          adminMessageReceived: true,
+          adminMentioned: false,
         },
       },
       communication: {
@@ -195,7 +233,7 @@ describe('Notifications - user to organization messages', () => {
       'Test message',
       TestUser.NON_SPACE_MEMBER
     );
-    await delay(3000);
+    await delay(1000);
 
     const getEmailsData = await getMailsData();
 
