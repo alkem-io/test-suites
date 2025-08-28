@@ -9,16 +9,67 @@ import {
 } from '@alkemio/tests-lib';
 import { TestUser } from '@alkemio/tests-lib';
 import { sendMessageToOrganization } from '@functional-api/communications/communication.params';
-import { changePreferenceUser } from '@functional-api/contributor-management/user/user-preferences-mutation';
-import { updateUserSettingCommunicationMessage } from '@functional-api/contributor-management/user/user.request.params';
+import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
 import { assignRoleToUser } from '@functional-api/roleset/roles-request.params';
-import {
-  PreferenceType,
-  RoleName,
-} from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 
-let preferencesConfig: any[] = [];
+// Helper functions for organization message notification settings
+const organizationMessageNotificationSettings = {
+  notification: {
+    organization: {
+      adminMentioned: false,
+      adminMessageReceived: true,
+    },
+    user: {
+      commentReply: false,
+      mentioned: false,
+      messageReceived: true,
+      copyOfMessageSent: true,
+      membership: {
+        spaceCommunityApplicationSubmitted: false,
+        spaceCommunityInvitationReceived: false,
+        spaceCommunityJoined: false,
+      },
+    },
+  },
+};
+
+const disabledOrganizationMessageNotificationSettings = {
+  notification: {
+    organization: {
+      adminMentioned: false,
+      adminMessageReceived: false,
+    },
+    user: {
+      commentReply: false,
+      mentioned: false,
+      messageReceived: false,
+      copyOfMessageSent: false,
+      membership: {
+        spaceCommunityApplicationSubmitted: false,
+        spaceCommunityInvitationReceived: false,
+        spaceCommunityJoined: false,
+      },
+    },
+  },
+};
+
+const enableOrganizationMessageNotifications = async (userIds: string[]) => {
+  await Promise.all(
+    userIds.map(userId =>
+      updateUserSettings(userId, organizationMessageNotificationSettings)
+    )
+  );
+};
+
+const disableOrganizationMessageNotifications = async (userId: string) => {
+  await updateUserSettings(
+    userId,
+    disabledOrganizationMessageNotificationSettings
+  );
+};
+
 let receivers = '';
 let sender = '';
 
@@ -43,10 +94,23 @@ const scenarioConfig: TestScenarioConfig = {
 beforeAll(async () => {
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
 
-  await assignRoleToUser(
+  const a = await assignRoleToUser(
+    TestUserManager.users.spaceAdmin.id,
+    baseScenario.organization.roleSetId,
+    RoleName.Associate
+  );
+  console.log(a.error);
+
+  const b = await assignRoleToUser(
     TestUserManager.users.spaceAdmin.id,
     baseScenario.organization.roleSetId,
     RoleName.Admin
+  );
+  console.log(b.error);
+  await assignRoleToUser(
+    TestUserManager.users.spaceMember.id,
+    baseScenario.organization.roleSetId,
+    RoleName.Associate
   );
 
   await assignRoleToUser(
@@ -57,17 +121,6 @@ beforeAll(async () => {
 
   receivers = `${TestUserManager.users.nonSpaceMember.displayName} sent a message to your organization`;
   sender = `You have sent a message to ${baseScenario.organization.profile.displayName}!`;
-
-  preferencesConfig = [
-    {
-      userID: TestUserManager.users.spaceAdmin.id,
-      type: PreferenceType.NotificationOrganizationMessage,
-    },
-    {
-      userID: TestUserManager.users.spaceMember.id,
-      type: PreferenceType.NotificationOrganizationMessage,
-    },
-  ];
 });
 
 afterAll(async () => {
@@ -76,8 +129,11 @@ afterAll(async () => {
 
 describe('Notifications - user to organization messages', () => {
   beforeAll(async () => {
-    for (const config of preferencesConfig)
-      await changePreferenceUser(config.userID, config.type, 'true');
+    // Enable organization message notifications for the organization admins
+    await enableOrganizationMessageNotifications([
+      TestUserManager.users.spaceAdmin.id,
+      TestUserManager.users.spaceMember.id,
+    ]);
   });
 
   beforeEach(async () => {
@@ -91,7 +147,7 @@ describe('Notifications - user to organization messages', () => {
       'Test message',
       TestUser.NON_SPACE_MEMBER
     );
-    await delay(3000);
+    await delay(1000);
 
     const getEmailsData = await getMailsData();
 
@@ -120,19 +176,18 @@ describe('Notifications - user to organization messages', () => {
   });
 
   test("User 'A' sends message to Organization (3 admins, one admin has ORGANIZATION_MESSAGE:false) - 3 messages are sent", async () => {
-    // Arrange
-    await changePreferenceUser(
-      TestUserManager.users.spaceAdmin.id,
-      PreferenceType.NotificationOrganizationMessage,
-      'false'
+    // Arrange - Disable organization message notifications for one admin
+    await disableOrganizationMessageNotifications(
+      TestUserManager.users.spaceAdmin.id
     );
+
     // Act
     await sendMessageToOrganization(
       baseScenario.organization.id,
       'Test message',
       TestUser.NON_SPACE_MEMBER
     );
-    await delay(3000);
+    await delay(1000);
 
     const getEmailsData = await getMailsData();
 
@@ -159,23 +214,26 @@ describe('Notifications - user to organization messages', () => {
   // first admin has ORGANIZATION_MESSAGE:true and COMMUNICATION_MESSAGE:true
   // second admin has ORGANIZATION_MESSAGE:true and COMMUNICATION_MESSAGE:false
   test("User 'A' sends message to Organization (3 admins, one admin has ORGANIZATION_MESSAGE:true and COMMUNICATION_MESSAGE:false) - 4 messages are sent", async () => {
-    // Arrange
-    await changePreferenceUser(
-      TestUserManager.users.spaceAdmin.id,
-      PreferenceType.NotificationOrganizationMessage,
-      'true'
-    );
-    await updateUserSettingCommunicationMessage(
-      TestUserManager.users.spaceAdmin.id,
-      false
-    );
+    // Arrange - Enable organization message notifications but disable communication messages
+    await updateUserSettings(TestUserManager.users.spaceAdmin.id, {
+      notification: {
+        organization: {
+          adminMessageReceived: true,
+          adminMentioned: false,
+        },
+      },
+      communication: {
+        allowOtherUsersToSendMessages: false,
+      },
+    });
+
     // Act
     await sendMessageToOrganization(
       baseScenario.organization.id,
       'Test message',
       TestUser.NON_SPACE_MEMBER
     );
-    await delay(3000);
+    await delay(1000);
 
     const getEmailsData = await getMailsData();
 

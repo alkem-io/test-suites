@@ -13,15 +13,101 @@ import {
   inviteForEntryRoleOnRoleSet,
 } from '@functional-api/roleset/invitations/invitation.request.params';
 import { TestUser } from '@alkemio/tests-lib';
-import { changePreferenceUser } from '@functional-api/contributor-management/user/user-preferences-mutation';
-import {
-  PreferenceType,
-  RoleName,
-} from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
+import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 
+// Notification settings for invitation events
+const invitationNotificationSettings = {
+  notification: {
+    user: {
+      commentReply: false,
+      mentioned: false,
+      messageReceived: false,
+      copyOfMessageSent: false,
+      membership: {
+        spaceCommunityApplicationSubmitted: false,
+        spaceCommunityInvitationReceived: true,
+        spaceCommunityJoined: false,
+      },
+    },
+  },
+};
+
+const disabledInvitationNotificationSettings = {
+  notification: {
+    user: {
+      commentReply: false,
+      mentioned: false,
+      messageReceived: false,
+      copyOfMessageSent: false,
+      membership: {
+        spaceCommunityApplicationSubmitted: false,
+        spaceCommunityInvitationReceived: false,
+        spaceCommunityJoined: false,
+      },
+    },
+  },
+};
+
+// Helper function to enable invitation notifications for specific users
+const enableInvitationNotifications = async (userIds: string[]) => {
+  await Promise.all(
+    userIds.map(userId =>
+      updateUserSettings(userId, invitationNotificationSettings)
+    )
+  );
+};
+
+// Helper function to disable invitation notifications for specific users
+const disableInvitationNotifications = async (userIds: string[]) => {
+  await Promise.all(
+    userIds.map(userId =>
+      updateUserSettings(userId, disabledInvitationNotificationSettings)
+    )
+  );
+};
+
+// Helper function to create expected email objects
+const expectedEmail = (subject: string, toAddress: string) =>
+  expect.objectContaining({
+    subject,
+    toAddresses: [toAddress],
+  });
+
+// Helper function to send invitation and get emails
+const sendInvitationAndGetEmails = async (
+  roleSetId: string,
+  userIds: string[],
+  roles: RoleName[],
+  sender: TestUser,
+  delayMs = 2000
+) => {
+  const invitationData = await inviteForEntryRoleOnRoleSet(
+    roleSetId,
+    userIds,
+    [],
+    'welcome',
+    roles,
+    sender
+  );
+
+  let invitationId = 'invitationsInfoNotRetrieved';
+  const invitationsResults = invitationData?.data?.inviteForEntryRoleOnRoleSet;
+  if (invitationsResults && invitationsResults.length > 0) {
+    const invitation = invitationsResults[0].invitation;
+    if (invitation) {
+      invitationId = invitation.id;
+    }
+  }
+
+  await delay(delayMs);
+  const emailsData = await getMailsData();
+
+  return { invitationData, emailsData, invitationId };
+};
+
 let invitationId = '';
-let preferencesConfig: any[] = [];
 
 let baseScenario: OrganizationWithSpaceModel;
 const scenarioConfig: TestScenarioConfig = {
@@ -84,32 +170,17 @@ beforeAll(async () => {
     },
   });
 
-  preferencesConfig = [
-    {
-      userID: TestUserManager.users.spaceAdmin.id,
-      type: PreferenceType.NotificationCommunityInvitationUser,
-    },
-
-    {
-      userID: TestUserManager.users.subspaceAdmin.id,
-      type: PreferenceType.NotificationCommunityInvitationUser,
-    },
-
-    {
-      userID: TestUserManager.users.subsubspaceAdmin.id,
-      type: PreferenceType.NotificationCommunityInvitationUser,
-    },
-
-    {
-      userID: TestUserManager.users.nonSpaceMember.id,
-      type: PreferenceType.NotificationCommunityInvitationUser,
-    },
-
-    {
-      userID: TestUserManager.users.qaUser.id,
-      type: PreferenceType.NotificationCommunityInvitationUser,
-    },
+  // Enable invitation notifications for all relevant users
+  const allRelevantUsers = [
+    TestUserManager.users.spaceAdmin.id,
+    TestUserManager.users.spaceMember.id,
+    TestUserManager.users.subspaceAdmin.id,
+    TestUserManager.users.subsubspaceAdmin.id,
+    TestUserManager.users.nonSpaceMember.id,
+    TestUserManager.users.qaUser.id,
   ];
+
+  await enableInvitationNotifications(allRelevantUsers);
 });
 
 afterAll(async () => {
@@ -118,18 +189,22 @@ afterAll(async () => {
 
 describe('Notifications - invitations', () => {
   beforeAll(async () => {
-    await changePreferenceUser(
+    // Disable notifications for global admins
+    await disableInvitationNotifications([
       TestUserManager.users.globalSupportAdmin.id,
-      PreferenceType.NotificationCommunityInvitationUser,
-      'false'
-    );
-    await changePreferenceUser(
       TestUserManager.users.globalAdmin.id,
-      PreferenceType.NotificationCommunityInvitationUser,
-      'false'
-    );
-    for (const config of preferencesConfig)
-      await changePreferenceUser(config.userID, config.type, 'true');
+    ]);
+
+    // Enable notifications for test users
+    const testUsers = [
+      TestUserManager.users.spaceAdmin.id,
+      TestUserManager.users.spaceMember.id,
+      TestUserManager.users.subspaceAdmin.id,
+      TestUserManager.users.subsubspaceAdmin.id,
+      TestUserManager.users.nonSpaceMember.id,
+      TestUserManager.users.qaUser.id,
+    ];
+    await enableInvitationNotifications(testUsers);
   });
 
   afterEach(async () => {
@@ -141,107 +216,70 @@ describe('Notifications - invitations', () => {
   });
 
   test('non space user receive invitation for SPACE community from space admin', async () => {
-    // Act
-    const invitationData = await inviteForEntryRoleOnRoleSet(
-      baseScenario.space.community.roleSetId,
-      [TestUserManager.users.nonSpaceMember.id],
-      [],
-      'welcome',
-      [RoleName.Member],
-      TestUser.SPACE_ADMIN
-    );
-    const invitationsResults =
-      invitationData?.data?.inviteForEntryRoleOnRoleSet;
-    invitationId = 'invitationsInfoNotRetrieved';
-    if (invitationsResults && invitationsResults.length > 0) {
-      const invitation = invitationsResults[0].invitation;
-      if (invitation) {
-        invitationId = invitation.id;
-      }
-    }
+    // Act & Assert
+    const { emailsData, invitationId: currentInvitationId } =
+      await sendInvitationAndGetEmails(
+        baseScenario.space.community.roleSetId,
+        [TestUserManager.users.nonSpaceMember.id],
+        [RoleName.Member],
+        TestUser.SPACE_ADMIN
+      );
 
-    await delay(6000);
+    invitationId = currentInvitationId;
 
-    const getEmailsData = await getMailsData();
-    // Assert
-    expect(getEmailsData[1]).toEqual(1);
-    expect(getEmailsData[0]).toEqual(
+    expect(emailsData[1]).toEqual(1);
+    expect(emailsData[0]).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({
-          subject: `Invitation to join ${baseScenario.space.about.profile.displayName}`,
-          toAddresses: [TestUserManager.users.nonSpaceMember.email],
-        }),
+        expectedEmail(
+          `Invitation to join ${baseScenario.space.about.profile.displayName}`,
+          TestUserManager.users.nonSpaceMember.email
+        ),
       ])
     );
   });
 
   test('non space user receive invitation for SPACE community from subspace admin', async () => {
-    // Act
-    const invitationData = await inviteForEntryRoleOnRoleSet(
-      baseScenario.space.community.roleSetId,
-      [TestUserManager.users.qaUser.id],
-      [],
-      'welcome',
-      [RoleName.Member],
-      TestUser.SUBSPACE_ADMIN
-    );
+    // Act & Assert
+    const { emailsData, invitationId: currentInvitationId } =
+      await sendInvitationAndGetEmails(
+        baseScenario.space.community.roleSetId,
+        [TestUserManager.users.qaUser.id],
+        [RoleName.Member],
+        TestUser.SUBSPACE_ADMIN
+      );
 
-    const invitationsResults =
-      invitationData?.data?.inviteForEntryRoleOnRoleSet;
-    invitationId = 'invitationsInfoNotRetrieved';
-    if (invitationsResults && invitationsResults.length > 0) {
-      const invitation = invitationsResults[0].invitation;
-      if (invitation) {
-        invitationId = invitation.id;
-      }
-    }
+    invitationId = currentInvitationId;
 
-    await delay(6000);
-
-    const getEmailsData = await getMailsData();
-    // Assert
-    expect(getEmailsData[1]).toEqual(1);
-    expect(getEmailsData[0]).toEqual(
+    expect(emailsData[1]).toEqual(1);
+    expect(emailsData[0]).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({
-          subject: `Invitation to join ${baseScenario.space.about.profile.displayName}`,
-          toAddresses: [TestUserManager.users.qaUser.email],
-        }),
+        expectedEmail(
+          `Invitation to join ${baseScenario.space.about.profile.displayName}`,
+          TestUserManager.users.qaUser.email
+        ),
       ])
     );
   });
 
   test('non space user receive invitation for CHALLENGE community from subspace admin', async () => {
-    // Act
-    const invitationData = await inviteForEntryRoleOnRoleSet(
-      baseScenario.subspace.community.roleSetId,
-      [TestUserManager.users.qaUser.id],
-      [],
-      'welcome',
-      [RoleName.Member],
-      TestUser.SUBSPACE_ADMIN
-    );
-    const invitationsResults =
-      invitationData?.data?.inviteForEntryRoleOnRoleSet;
-    invitationId = 'invitationsInfoNotRetrieved';
-    if (invitationsResults && invitationsResults.length > 0) {
-      const invitation = invitationsResults[0].invitation;
-      if (invitation) {
-        invitationId = invitation.id;
-      }
-    }
+    // Act & Assert
+    const { emailsData, invitationId: currentInvitationId } =
+      await sendInvitationAndGetEmails(
+        baseScenario.subspace.community.roleSetId,
+        [TestUserManager.users.qaUser.id],
+        [RoleName.Member],
+        TestUser.SUBSPACE_ADMIN
+      );
 
-    await delay(6000);
+    invitationId = currentInvitationId;
 
-    const getEmailsData = await getMailsData();
-    // Assert
-    expect(getEmailsData[1]).toEqual(1);
-    expect(getEmailsData[0]).toEqual(
+    expect(emailsData[1]).toEqual(1);
+    expect(emailsData[0]).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({
-          subject: `Invitation to join ${baseScenario.subspace.about.profile.displayName}`,
-          toAddresses: [TestUserManager.users.qaUser.email],
-        }),
+        expectedEmail(
+          `Invitation to join ${baseScenario.subspace.about.profile.displayName}`,
+          TestUserManager.users.qaUser.email
+        ),
       ])
     );
   });
@@ -256,6 +294,8 @@ describe('Notifications - invitations', () => {
       [RoleName.Member],
       TestUser.SUBSUBSPACE_ADMIN
     );
+
+    // Extract invitation ID if available
     const invitationsResults =
       invitationData?.data?.inviteForEntryRoleOnRoleSet;
     invitationId = 'invitationsInfoNotRetrieved';
@@ -266,7 +306,7 @@ describe('Notifications - invitations', () => {
       }
     }
 
-    await delay(6000);
+    await delay(1000);
 
     const getEmailsData = await getMailsData();
     // Assert
@@ -301,7 +341,7 @@ describe('Notifications - invitations', () => {
       }
     }
 
-    await delay(6000);
+    await delay(1000);
 
     const getEmailsData = await getMailsData();
     // Assert
@@ -336,7 +376,7 @@ describe('Notifications - invitations', () => {
       }
     }
 
-    await delay(6000);
+    await delay(1000);
 
     const getEmailsData = await getMailsData();
     // Assert
@@ -352,11 +392,9 @@ describe('Notifications - invitations', () => {
   });
   test("non space user doesn't receive invitation for SPACE community from space admin", async () => {
     // Arrange
-    await changePreferenceUser(
+    await disableInvitationNotifications([
       TestUserManager.users.nonSpaceMember.id,
-      PreferenceType.NotificationCommunityInvitationUser,
-      'false'
-    );
+    ]);
 
     // Act
     const invitationData = await inviteForEntryRoleOnRoleSet(
@@ -377,7 +415,7 @@ describe('Notifications - invitations', () => {
       }
     }
 
-    await delay(6000);
+    await delay(1000);
 
     const getEmailsData = await getMailsData();
     // Assert
@@ -411,7 +449,7 @@ describe('Notifications - invitations', () => {
       }
     }
 
-    await delay(6000);
+    await delay(1000);
 
     const getEmailsData = await getMailsData();
     // Assert

@@ -12,7 +12,6 @@ import { delay } from '@alkemio/tests-lib';
 import {
   CalloutFramingType,
   CalloutVisibility,
-  PreferenceType,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import {
@@ -20,10 +19,62 @@ import {
   deleteCallout,
   updateCalloutVisibility,
 } from '@functional-api/callout/callouts.request.params';
-import { changePreferenceUser } from '@functional-api/contributor-management/user/user-preferences-mutation';
+import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
+
+// Helper functions for callout published notification settings
+const calloutPublishedNotificationSettings = {
+  notification: {
+    space: {
+      admin: {
+        communityApplicationReceived: false,
+        communityNewMember: false,
+        collaborationCalloutContributionCreated: false,
+        communicationMessageReceived: false,
+      },
+      collaborationCalloutPublished: true,
+      communicationUpdates: false,
+      collaborationCalloutPostContributionComment: false,
+      collaborationCalloutContributionCreated: false,
+      collaborationCalloutComment: false,
+    },
+  },
+};
+
+const disabledCalloutPublishedNotificationSettings = {
+  notification: {
+    space: {
+      admin: {
+        communityApplicationReceived: false,
+        communityNewMember: false,
+        collaborationCalloutContributionCreated: false,
+        communicationMessageReceived: false,
+      },
+      collaborationCalloutPublished: false,
+      communicationUpdates: false,
+      collaborationCalloutPostContributionComment: false,
+      collaborationCalloutContributionCreated: false,
+      collaborationCalloutComment: false,
+    },
+  },
+};
+
+const enableCalloutPublishedNotifications = async (userIds: string[]) => {
+  await Promise.all(
+    userIds.map(userId =>
+      updateUserSettings(userId, calloutPublishedNotificationSettings)
+    )
+  );
+};
+
+const disableCalloutPublishedNotifications = async (userIds: string[]) => {
+  await Promise.all(
+    userIds.map(userId =>
+      updateUserSettings(userId, disabledCalloutPublishedNotificationSettings)
+    )
+  );
+};
 
 const uniqueId = UniqueIDGenerator.getID();
-let preferencesConfigCallout: any[] = [];
 let calloutDisplayName = '';
 let calloutId = '';
 
@@ -96,48 +147,6 @@ beforeAll(async () => {
   await deleteMailSlurperMails();
 
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
-
-  preferencesConfigCallout = [
-    {
-      userID: TestUserManager.users.globalAdmin.id,
-      type: PreferenceType.NotificationCalloutPublished,
-    },
-
-    {
-      userID: TestUserManager.users.spaceMember.id,
-      type: PreferenceType.NotificationCalloutPublished,
-    },
-
-    {
-      userID: TestUserManager.users.subspaceMember.id,
-      type: PreferenceType.NotificationCalloutPublished,
-    },
-
-    {
-      userID: TestUserManager.users.subsubspaceMember.id,
-      type: PreferenceType.NotificationCalloutPublished,
-    },
-
-    {
-      userID: TestUserManager.users.spaceAdmin.id,
-      type: PreferenceType.NotificationCalloutPublished,
-    },
-
-    {
-      userID: TestUserManager.users.subspaceAdmin.id,
-      type: PreferenceType.NotificationCalloutPublished,
-    },
-
-    {
-      userID: TestUserManager.users.subsubspaceAdmin.id,
-      type: PreferenceType.NotificationCalloutPublished,
-    },
-
-    {
-      userID: TestUserManager.users.nonSpaceMember.id,
-      type: PreferenceType.NotificationCalloutPublished,
-    },
-  ];
 });
 
 afterAll(async () => {
@@ -156,19 +165,28 @@ describe('Notifications - post', () => {
   });
 
   beforeAll(async () => {
-    await changePreferenceUser(
+    // Disable notifications for global support admin
+    await disableCalloutPublishedNotifications([
       TestUserManager.users.globalSupportAdmin.id,
-      PreferenceType.NotificationCalloutPublished,
-      'false'
-    );
+    ]);
 
-    preferencesConfigCallout.forEach(async config => {
-      await changePreferenceUser(config.userID, config.type, 'true');
-    });
+    // Enable callout published notifications for all relevant users
+    await enableCalloutPublishedNotifications([
+      TestUserManager.users.globalAdmin.id,
+      TestUserManager.users.spaceMember.id,
+      TestUserManager.users.subspaceMember.id,
+      TestUserManager.users.subsubspaceMember.id,
+      TestUserManager.users.spaceAdmin.id,
+      TestUserManager.users.subspaceAdmin.id,
+      TestUserManager.users.subsubspaceAdmin.id,
+      TestUserManager.users.nonSpaceMember.id,
+    ]);
   });
+  // "callouts-notificat-38435a - New post is published \u0026#34;call-d-name-704985\u0026#34;, have a look!", "toAddresses": ["admin@alkem.io"]
+  // "callouts-notificat-38435a - New Post is published \u0026#34;call-d-name-704985\u0026#34;, have a look!"
 
   test('GA PUBLISH space callout - HM(7) get notifications', async () => {
-    const spaceCalloutSubjectText = `${baseScenario.space.about.profile.displayName} - New post-collection is published &#34;${calloutDisplayName}&#34;, have a look!`;
+    const spaceCalloutSubjectText = `${baseScenario.space.about.profile.displayName} - New Post is published \u0026#34;${calloutDisplayName}\u0026#34;, have a look!`;
     // Act
     const res = await createCalloutOnCalloutsSet(
       baseScenario.space.collaboration.calloutsSetId,
@@ -184,7 +202,7 @@ describe('Notifications - post', () => {
 
     await updateCalloutVisibility(calloutId, CalloutVisibility.Published);
 
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
 
     expect(mails[1]).toEqual(7);
@@ -251,7 +269,7 @@ describe('Notifications - post', () => {
       false
     );
 
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
 
     // Assert
@@ -279,7 +297,7 @@ describe('Notifications - post', () => {
       TestUser.SPACE_ADMIN
     );
 
-    await delay(6000);
+    await delay(1000);
     mails = await getMailsData();
 
     expect(mails[1]).toEqual(7);
@@ -301,14 +319,14 @@ describe('Notifications - post', () => {
       TestUser.SPACE_ADMIN
     );
 
-    await delay(6000);
+    await delay(1000);
     mails = await getMailsData();
 
     expect(mails[1]).toEqual(14);
   });
 
   test('HA create PUBLISHED space callout type: POST - HM(7) get notifications', async () => {
-    const spaceCalloutSubjectText = `${baseScenario.space.about.profile.displayName} - New post-collection is published &#34;${calloutDisplayName}&#34;, have a look!`;
+    const spaceCalloutSubjectText = `${baseScenario.space.about.profile.displayName} - New Post is published \u0026#34;${calloutDisplayName}\u0026#34;, have a look!`;
     // Act
     const res = await createCalloutOnCalloutsSet(
       baseScenario.space.collaboration.calloutsSetId,
@@ -324,7 +342,7 @@ describe('Notifications - post', () => {
       TestUser.SPACE_ADMIN
     );
 
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
     expect(mails[1]).toEqual(7);
 
@@ -391,7 +409,7 @@ describe('Notifications - post', () => {
       TestUser.SPACE_ADMIN
     );
 
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
 
     // expect(mails[0]).toEqual(
@@ -456,7 +474,7 @@ describe('Notifications - post', () => {
   });
 
   test('HA create PUBLISHED subspace callout type: POST - CM(5) get notifications', async () => {
-    const calloutSubjectText = `${baseScenario.subspace.about.profile.displayName} - New post-collection is published &#34;${calloutDisplayName}&#34;, have a look!`;
+    const calloutSubjectText = `${baseScenario.subspace.about.profile.displayName} - New Post is published \u0026#34;${calloutDisplayName}\u0026#34;, have a look!`;
     // Act
     const res = await createCalloutOnCalloutsSet(
       baseScenario.subspace.collaboration.calloutsSetId,
@@ -471,7 +489,7 @@ describe('Notifications - post', () => {
       TestUser.SPACE_ADMIN
     );
 
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
 
     expect(mails[1]).toEqual(5);
@@ -540,7 +558,7 @@ describe('Notifications - post', () => {
       false
     );
 
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
 
     // Assert
@@ -548,7 +566,7 @@ describe('Notifications - post', () => {
   });
 
   test('OA create PUBLISHED subsubspace callout type: POST - OM(4) get notifications', async () => {
-    const calloutSubjectText = `${baseScenario.subsubspace.about.profile.displayName} - New post-collection is published &#34;${calloutDisplayName}&#34;, have a look!`;
+    const calloutSubjectText = `${baseScenario.subsubspace.about.profile.displayName} - New Post is published \u0026#34;${calloutDisplayName}\u0026#34;, have a look!`;
     // Act
     const res = await createCalloutOnCalloutsSet(
       baseScenario.subsubspace.collaboration.calloutsSetId,
@@ -562,7 +580,7 @@ describe('Notifications - post', () => {
       TestUser.SUBSUBSPACE_ADMIN
     );
 
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
 
     expect(mails[1]).toEqual(3);
@@ -634,7 +652,7 @@ describe('Notifications - post', () => {
       false
     );
 
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
 
     // Assert
@@ -642,10 +660,18 @@ describe('Notifications - post', () => {
   });
 
   test('OA create PUBLISHED subsubspace callout type: POST - 0 notifications - all roles with notifications disabled', async () => {
-    preferencesConfigCallout.forEach(
-      async config =>
-        await changePreferenceUser(config.userID, config.type, 'false')
-    );
+    // Disable callout published notifications for all users
+    await disableCalloutPublishedNotifications([
+      TestUserManager.users.globalAdmin.id,
+      TestUserManager.users.spaceMember.id,
+      TestUserManager.users.subspaceMember.id,
+      TestUserManager.users.subsubspaceMember.id,
+      TestUserManager.users.spaceAdmin.id,
+      TestUserManager.users.subspaceAdmin.id,
+      TestUserManager.users.subsubspaceAdmin.id,
+      TestUserManager.users.nonSpaceMember.id,
+    ]);
+
     // Act
     const res = await createCalloutOnCalloutsSet(
       baseScenario.subsubspace.collaboration.calloutsSetId,

@@ -5,10 +5,7 @@ import { UniqueIDGenerator } from "@src/utils/uniqueId";
 import { TestUser } from "@src/common/enums/test.user";
 import { getGraphqlClient } from "@src/utils/graphqlClient";
 import { graphqlErrorWrapper } from "@src/utils/graphql.wrapper";
-import {
-  PreferenceType,
-  UpdateUserSettingsEntityInput,
-} from "@src/core/generated/alkemio-schema";
+import { UpdateUserSettingsEntityInput } from "@src/core/generated/alkemio-schema";
 
 export const registerVerifiedUser = async (
   email: string,
@@ -177,20 +174,18 @@ export const getUserPendingMemberships = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const changePreferenceUser = async (
+export const updateUserSettings = async (
   userID: string,
-  type: PreferenceType = PreferenceType.NotificationUserSignUp,
-  value: string,
+  settings: UpdateUserSettingsEntityInput,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.UpdatePreferenceOnUser(
+    graphqlClient.UpdateUserSettings(
       {
-        preferenceData: {
+        settingsData: {
           userID,
-          type,
-          value,
+          settings,
         },
       },
       {
@@ -201,25 +196,25 @@ export const changePreferenceUser = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const updateUserSettings = async (
-  userID: string,
-  settings: UpdateUserSettingsEntityInput,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string | undefined) =>
-    graphqlClient.updateUserSettings(
-      {
-        userID,
-        settingsData: settings,
-      },
-      {
-        authorization: `Bearer ${authToken}`,
-      }
-    );
+// export const updateUserSettings = async (
+//   userID: string,
+//   settings: UpdateUserSettingsEntityInput,
+//   userRole: TestUser = TestUser.GLOBAL_ADMIN
+// ) => {
+//   const graphqlClient = getGraphqlClient();
+//   const callback = (authToken: string | undefined) =>
+//     graphqlClient.updateUserSettings(
+//       {
+//         userID,
+//         settingsData: settings,
+//       },
+//       {
+//         authorization: `Bearer ${authToken}`,
+//       }
+//     );
 
-  return graphqlErrorWrapper(callback, userRole);
-};
+//   return graphqlErrorWrapper(callback, userRole);
+// };
 
 export const updateUserSettingCommunicationMessage = async (
   userID: string,

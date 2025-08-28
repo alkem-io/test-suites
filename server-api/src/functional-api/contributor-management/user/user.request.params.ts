@@ -6,10 +6,7 @@ import {
   UniqueIDGenerator,
   verifyInKratosOrFail,
 } from '@alkemio/tests-lib';
-import {
-  PreferenceType,
-  UpdateUserSettingsEntityInput,
-} from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { UpdateUserSettingsEntityInput } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 //import { getGraphqlClient } from '@src/_utils/graphqlClient';
 
@@ -182,20 +179,42 @@ export const getUserPendingMemberships = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const changePreferenceUser = async (
+// export const changePreferenceUser = async (
+//   userID: string,
+//   type: PreferenceType = PreferenceType.NotificationUserSignUp,
+//   value: string,
+//   userRole: TestUser = TestUser.GLOBAL_ADMIN
+// ) => {
+//   const graphqlClient = getGraphqlClient();
+//   const callback = (authToken: string | undefined) =>
+//     graphqlClient.UpdatePreferenceOnUser(
+//       {
+//         preferenceData: {
+//           userID,
+//           type,
+//           value,
+//         },
+//       },
+//       {
+//         authorization: `Bearer ${authToken}`,
+//       }
+//     );
+
+//   return graphqlErrorWrapper(callback, userRole);
+// };
+
+export const updateUserSettings = async (
   userID: string,
-  type: PreferenceType = PreferenceType.NotificationUserSignUp,
-  value: string,
+  settings: UpdateUserSettingsEntityInput,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.UpdatePreferenceOnUser(
+    graphqlClient.UpdateUserSettings(
       {
-        preferenceData: {
+        settingsData: {
           userID,
-          type,
-          value,
+          settings,
         },
       },
       {
@@ -206,38 +225,18 @@ export const changePreferenceUser = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const updateUserSettings = async (
-  userID: string,
-  settings: UpdateUserSettingsEntityInput,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  const graphqlClient = getGraphqlClient();
-  const callback = (authToken: string | undefined) =>
-    graphqlClient.updateUserSettings(
-      {
-        userID,
-        settingsData: settings,
-      },
-      {
-        authorization: `Bearer ${authToken}`,
-      }
-    );
-
-  return graphqlErrorWrapper(callback, userRole);
-};
-
-export const updateUserSettingCommunicationMessage = async (
-  userID: string,
-  value: boolean,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
-) => {
-  return updateUserSettings(
-    userID,
-    {
-      communication: {
-        allowOtherUsersToSendMessages: value,
-      },
-    },
-    userRole
-  );
-};
+// export const updateUserSettingCommunicationMessage = async (
+//   userID: string,
+//   value: boolean,
+//   userRole: TestUser = TestUser.GLOBAL_ADMIN
+// ) => {
+//   return updateUserSettings(
+//     userID,
+//     {
+//       communication: {
+//         allowOtherUsersToSendMessages: value,
+//       },
+//     },
+//     userRole
+//   );
+// };

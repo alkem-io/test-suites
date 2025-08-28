@@ -15,16 +15,9 @@ fragment UserData on User {
   profile {
     ...ProfileDataUser
   }
-  preferences {
-    ...PreferenceData
-  }
+
   settings {
-    privacy {
-      contributionRolesPubliclyVisible
-    }
-    communication {
-      allowOtherUsersToSendMessages
-    }
+    ...userSettingsFragment
   }
   authorization {
     myPrivileges
@@ -33,4 +26,3 @@ fragment UserData on User {
     }
   }
 }
-

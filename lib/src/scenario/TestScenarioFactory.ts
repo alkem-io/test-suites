@@ -10,7 +10,6 @@ import { OrganizationModel } from "./models/OrganizationModel";
 import { LogManager } from "./LogManager";
 import {
   CalloutAllowedContributors,
-  CalloutType,
   CalloutVisibility,
   RoleName,
 } from "../core/generated/alkemio-schema";

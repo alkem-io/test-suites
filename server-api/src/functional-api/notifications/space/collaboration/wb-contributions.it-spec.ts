@@ -15,21 +15,70 @@ import {
 } from '@functional-api/callout/callouts.request.params';
 import { createWhiteboardOnCallout } from '@functional-api/callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
 import { deleteWhiteboard } from '@functional-api/callout/whiteboard/whiteboard-callout.params.request';
-import { changePreferenceUser } from '@functional-api/contributor-management/user/user-preferences-mutation';
+import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
 import {
   CalloutContributionType,
   CalloutVisibility,
-  PreferenceType,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 
 let spaceWhiteboardId = '';
-let preferencesConfig: any[] = [];
 let whiteboardCollectionSpaceCalloutId = '';
-
 let whiteboardCollectionSubspaceCalloutId = '';
-
 let whiteboardCollectionSubsubspaceCalloutId = '';
+
+// Helper functions for whiteboard notification settings
+const whiteboardNotificationSettings = {
+  notification: {
+    space: {
+      admin: {
+        communityApplicationReceived: false,
+        communityNewMember: false,
+        collaborationCalloutContributionCreated: true,
+        communicationMessageReceived: false,
+      },
+      collaborationCalloutPublished: false,
+      communicationUpdates: false,
+      collaborationCalloutPostContributionComment: false,
+      collaborationCalloutContributionCreated: true,
+      collaborationCalloutComment: false,
+    },
+  },
+};
+
+const disabledWhiteboardNotificationSettings = {
+  notification: {
+    space: {
+      admin: {
+        communityApplicationReceived: false,
+        communityNewMember: false,
+        collaborationCalloutContributionCreated: false,
+        communicationMessageReceived: false,
+      },
+      collaborationCalloutPublished: false,
+      communicationUpdates: false,
+      collaborationCalloutPostContributionComment: false,
+      collaborationCalloutContributionCreated: false,
+      collaborationCalloutComment: false,
+    },
+  },
+};
+
+const enableWhiteboardNotifications = async (userIds: string[]) => {
+  await Promise.all(
+    userIds.map(userId =>
+      updateUserSettings(userId, whiteboardNotificationSettings)
+    )
+  );
+};
+
+const disableWhiteboardNotifications = async (userIds: string[]) => {
+  await Promise.all(
+    userIds.map(userId =>
+      updateUserSettings(userId, disabledWhiteboardNotificationSettings)
+    )
+  );
+};
 
 const expectedDataFunc = async (subject: string, toAddresses: any[]) => {
   return expect.arrayContaining([
@@ -42,11 +91,11 @@ const expectedDataFunc = async (subject: string, toAddresses: any[]) => {
 
 let baseScenario: OrganizationWithSpaceModel;
 const scenarioConfig: TestScenarioConfig = {
-  name: 'whiteboard-notifications',
+  name: 'whiteboard-contribution-notifications',
   space: {
     collaboration: {
-      addPostCallout: true,
-      addPostCollectionCallout: true,
+      addPostCallout: false,
+      addPostCollectionCallout: false,
       addWhiteboardCallout: true,
       addTutorialCallouts: false,
     },
@@ -63,8 +112,8 @@ const scenarioConfig: TestScenarioConfig = {
     },
     subspace: {
       collaboration: {
-        addPostCallout: true,
-        addPostCollectionCallout: true,
+        addPostCallout: false,
+        addPostCollectionCallout: false,
         addWhiteboardCallout: true,
         addTutorialCallouts: false,
       },
@@ -79,8 +128,8 @@ const scenarioConfig: TestScenarioConfig = {
       },
       subspace: {
         collaboration: {
-          addPostCallout: true,
-          addPostCollectionCallout: true,
+          addPostCallout: false,
+          addPostCollectionCallout: false,
           addWhiteboardCallout: true,
           addTutorialCallouts: false,
         },
@@ -176,47 +225,19 @@ beforeAll(async () => {
   );
   await deleteMailSlurperMails();
 
-  preferencesConfig = [
-    {
-      userID: TestUserManager.users.globalAdmin.id,
-      type: PreferenceType.NotificationWhiteboardCreated,
-    },
-
-    {
-      userID: TestUserManager.users.spaceMember.id,
-      type: PreferenceType.NotificationWhiteboardCreated,
-    },
-
-    {
-      userID: TestUserManager.users.subspaceMember.id,
-      type: PreferenceType.NotificationWhiteboardCreated,
-    },
-
-    {
-      userID: TestUserManager.users.subsubspaceMember.id,
-      type: PreferenceType.NotificationWhiteboardCreated,
-    },
-
-    {
-      userID: TestUserManager.users.spaceAdmin.id,
-      type: PreferenceType.NotificationWhiteboardCreated,
-    },
-
-    {
-      userID: TestUserManager.users.subspaceAdmin.id,
-      type: PreferenceType.NotificationWhiteboardCreated,
-    },
-
-    {
-      userID: TestUserManager.users.subsubspaceAdmin.id,
-      type: PreferenceType.NotificationWhiteboardCreated,
-    },
-
-    {
-      userID: TestUserManager.users.nonSpaceMember.id,
-      type: PreferenceType.NotificationWhiteboardCreated,
-    },
+  // Enable whiteboard notifications for all relevant users
+  const allRelevantUsers = [
+    TestUserManager.users.globalAdmin.id,
+    TestUserManager.users.spaceMember.id,
+    TestUserManager.users.subspaceMember.id,
+    TestUserManager.users.subsubspaceMember.id,
+    TestUserManager.users.spaceAdmin.id,
+    TestUserManager.users.subspaceAdmin.id,
+    TestUserManager.users.subsubspaceAdmin.id,
+    TestUserManager.users.nonSpaceMember.id,
   ];
+
+  await enableWhiteboardNotifications(allRelevantUsers);
 });
 
 afterAll(async () => {
@@ -229,16 +250,24 @@ describe('Notifications - whiteboard', () => {
   });
 
   beforeAll(async () => {
-    preferencesConfig.forEach(
-      async config =>
-        await changePreferenceUser(config.userID, config.type, 'true')
-    );
+    // Enable whiteboard notifications for all test users
+    const testUsers = [
+      TestUserManager.users.globalAdmin.id,
+      TestUserManager.users.spaceMember.id,
+      TestUserManager.users.subspaceMember.id,
+      TestUserManager.users.subsubspaceMember.id,
+      TestUserManager.users.spaceAdmin.id,
+      TestUserManager.users.subspaceAdmin.id,
+      TestUserManager.users.subsubspaceAdmin.id,
+      TestUserManager.users.nonSpaceMember.id,
+    ];
+    await enableWhiteboardNotifications(testUsers);
     await deleteMailSlurperMails();
   });
 
   test('GA create space whiteboard - GA(1), HA (2), HM(6) get notifications', async () => {
-    const subjectTextAdmin = `${baseScenario.space.about.profile.displayName}: New Whiteboard created by admin`;
-    const subjectTextMember = `${baseScenario.space.about.profile.displayName}: New Whiteboard created by admin, have a look!`;
+    const subjectTextAdmin = `${baseScenario.space.about.profile.displayName}: New whiteboard contribution created by admin`;
+    const subjectTextMember = `${baseScenario.space.about.profile.displayName}: New whiteboard contribution created by admin, have a look!`;
 
     // Act
     const res = await createWhiteboardOnCallout(
@@ -247,7 +276,7 @@ describe('Notifications - whiteboard', () => {
     );
     spaceWhiteboardId =
       res?.data?.createContributionOnCallout?.whiteboard?.id ?? '';
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
 
     expect(mails[1]).toEqual(9);
@@ -305,8 +334,8 @@ describe('Notifications - whiteboard', () => {
   });
 
   test('HA create space whiteboard - GA(1), HA (1), HM(6) get notifications', async () => {
-    const subjectTextAdmin = `${baseScenario.space.about.profile.displayName}: New Whiteboard created by space`;
-    const subjectTextMember = `${baseScenario.space.about.profile.displayName}: New Whiteboard created by space, have a look!`;
+    const subjectTextAdmin = `${baseScenario.space.about.profile.displayName}: New whiteboard contribution created by space`;
+    const subjectTextMember = `${baseScenario.space.about.profile.displayName}: New whiteboard contribution created by space, have a look!`;
     // Act
     const res = await createWhiteboardOnCallout(
       whiteboardCollectionSpaceCalloutId,
@@ -315,7 +344,7 @@ describe('Notifications - whiteboard', () => {
     spaceWhiteboardId =
       res?.data?.createContributionOnCallout?.whiteboard?.id ?? '';
 
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
 
     expect(mails[1]).toEqual(9);
@@ -371,8 +400,8 @@ describe('Notifications - whiteboard', () => {
   });
 
   test('HA create subspace whiteboard - GA(1), HA (1), CA(1), CM(3),  get notifications', async () => {
-    const subjectTextAdmin = `${baseScenario.subspace.about.profile.displayName}: New Whiteboard created by space`;
-    const subjectTextMember = `${baseScenario.subspace.about.profile.displayName}: New Whiteboard created by space, have a look!`;
+    const subjectTextAdmin = `${baseScenario.subspace.about.profile.displayName}: New whiteboard contribution created by space`;
+    const subjectTextMember = `${baseScenario.subspace.about.profile.displayName}: New whiteboard contribution created by space, have a look!`;
     // Act
     const res = await createWhiteboardOnCallout(
       whiteboardCollectionSubspaceCalloutId,
@@ -381,7 +410,7 @@ describe('Notifications - whiteboard', () => {
     spaceWhiteboardId =
       res?.data?.createContributionOnCallout?.whiteboard?.id ?? '';
 
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
 
     expect(mails[1]).toEqual(7);
@@ -448,8 +477,8 @@ describe('Notifications - whiteboard', () => {
   });
 
   test('OM create subsubspace whiteboard - HA(2), CA(1), OA(2), OM(4), get notifications', async () => {
-    const subjectTextAdmin = `${baseScenario.subsubspace.about.profile.displayName}: New Whiteboard created by subsubspace`;
-    const subjectTextMember = `${baseScenario.subsubspace.about.profile.displayName}: New Whiteboard created by subsubspace, have a look!`;
+    const subjectTextAdmin = `${baseScenario.subsubspace.about.profile.displayName}: New whiteboard contribution created by subsubspace`;
+    const subjectTextMember = `${baseScenario.subsubspace.about.profile.displayName}: New whiteboard contribution created by subsubspace, have a look!`;
     // Act
     const res = await createWhiteboardOnCallout(
       whiteboardCollectionSubsubspaceCalloutId,
@@ -458,7 +487,7 @@ describe('Notifications - whiteboard', () => {
     spaceWhiteboardId =
       res?.data?.createContributionOnCallout?.whiteboard?.id ?? '';
 
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
 
     expect(mails[1]).toEqual(5);
@@ -528,10 +557,19 @@ describe('Notifications - whiteboard', () => {
   });
 
   test('OA create subsubspace whiteboard - 0 notifications - all roles with notifications disabled', async () => {
-    preferencesConfig.forEach(
-      async config =>
-        await changePreferenceUser(config.userID, config.type, 'false')
-    );
+    // Disable whiteboard notifications for all test users
+    const testUsers = [
+      TestUserManager.users.globalAdmin.id,
+      TestUserManager.users.spaceMember.id,
+      TestUserManager.users.subspaceMember.id,
+      TestUserManager.users.subsubspaceMember.id,
+      TestUserManager.users.spaceAdmin.id,
+      TestUserManager.users.subspaceAdmin.id,
+      TestUserManager.users.subsubspaceAdmin.id,
+      TestUserManager.users.nonSpaceMember.id,
+    ];
+    await disableWhiteboardNotifications(testUsers);
+
     // Act
     const res = await createWhiteboardOnCallout(
       whiteboardCollectionSubsubspaceCalloutId,

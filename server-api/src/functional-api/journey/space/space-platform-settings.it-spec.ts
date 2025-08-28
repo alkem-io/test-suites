@@ -2,10 +2,12 @@ import {
   readAboutPrivilege,
   readAboutPrivilege_readLicense,
   readPrivilege,
-  sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense,
-  sorted__create_read_readAbout_update_delete_grant_createSubspace_readLicense,
+  sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense_notifications_notificationsAdmin,
+  sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense_notificationsAdmin,
+  sorted__create_read_readAbout_update_delete_grant_createSubspace_readLicense_notifications_notificationsAdmin,
   sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin,
   sorted_read_readAbout_readLicense,
+  sorted_read_readAbout_readLicense_notifications,
   TestScenarioConfig,
   TestScenarioFactory,
   TestUser,
@@ -143,11 +145,11 @@ describe('Update space platform settings', () => {
       // Arrange
       test.each`
         user                             | spaceMyPrivileges
-        ${TestUser.GLOBAL_ADMIN}         | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense}
-        ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense}
+        ${TestUser.GLOBAL_ADMIN}         | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense_notifications_notificationsAdmin}
+        ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense_notificationsAdmin}
         ${TestUser.GLOBAL_LICENSE_ADMIN} | ${readAboutPrivilege_readLicense}
-        ${TestUser.SPACE_ADMIN}          | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_readLicense}
-        ${TestUser.SPACE_MEMBER}         | ${sorted_read_readAbout_readLicense}
+        ${TestUser.SPACE_ADMIN}          | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_readLicense_notifications_notificationsAdmin}
+        ${TestUser.SPACE_MEMBER}         | ${sorted_read_readAbout_readLicense_notifications}
         ${TestUser.NON_SPACE_MEMBER}     | ${readAboutPrivilege}
       `(
         'User: "$user", should have private Space privileges: "$spaceMyPrivileges"',
@@ -182,11 +184,11 @@ describe('Update space platform settings', () => {
 
       test.each`
         user                             | spaceMyPrivileges
-        ${TestUser.GLOBAL_ADMIN}         | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense}
-        ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense}
+        ${TestUser.GLOBAL_ADMIN}         | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense_notifications_notificationsAdmin}
+        ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense_notificationsAdmin}
         ${TestUser.GLOBAL_LICENSE_ADMIN} | ${sorted_read_readAbout_readLicense}
-        ${TestUser.SPACE_ADMIN}          | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_readLicense}
-        ${TestUser.SPACE_MEMBER}         | ${sorted_read_readAbout_readLicense}
+        ${TestUser.SPACE_ADMIN}          | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_readLicense_notifications_notificationsAdmin}
+        ${TestUser.SPACE_MEMBER}         | ${sorted_read_readAbout_readLicense_notifications}
         ${TestUser.NON_SPACE_MEMBER}     | ${sorted_read_readAbout_readLicense}
       `(
         'User: "$user", should have private Space privileges: "$spaceMyPrivileges"',

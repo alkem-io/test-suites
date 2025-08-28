@@ -134,7 +134,17 @@ describe('Query Subspace data', () => {
     const requestSubsubspaceData = requestQuerySubsubspace.data?.lookup?.space;
 
     // Assert
-    expect(createSubsubspaceData).toEqual(requestSubsubspaceData);
+    expect(createSubsubspaceData?.about).toEqual(requestSubsubspaceData?.about);
+    expect(createSubsubspaceData?.collaboration).toEqual(
+      requestSubsubspaceData?.collaboration
+    );
+    expect(createSubsubspaceData?.community).toEqual(
+      requestSubsubspaceData?.community
+    );
+    expect(createSubsubspaceData?.id).toEqual(requestSubsubspaceData?.id);
+    expect(createSubsubspaceData?.subspaces).toEqual(
+      requestSubsubspaceData?.subspaces
+    );
   });
 
   test('should update a subspace', async () => {

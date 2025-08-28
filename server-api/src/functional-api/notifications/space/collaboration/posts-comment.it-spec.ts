@@ -17,9 +17,85 @@ import {
   removeMessageOnRoom,
   sendMessageToRoom,
 } from '@functional-api/communications/communication.params';
-import { changePreferenceUser } from '@functional-api/contributor-management/user/user-preferences-mutation';
-import { PreferenceType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+
+// Notification settings for post comment events
+const postCommentNotificationSettings = {
+  notification: {
+    space: {
+      admin: {
+        communityApplicationReceived: false,
+        communityNewMember: false,
+        collaborationCalloutContributionCreated: false,
+        communicationMessageReceived: false,
+      },
+      collaborationCalloutPublished: false,
+      communicationUpdates: false,
+      collaborationCalloutPostContributionComment: true,
+      collaborationCalloutContributionCreated: false,
+      collaborationCalloutComment: false,
+    },
+    user: {
+      commentReply: false,
+      mentioned: false,
+      messageReceived: false,
+      copyOfMessageSent: false,
+      membership: {
+        spaceCommunityApplicationSubmitted: false,
+        spaceCommunityInvitationReceived: false,
+        spaceCommunityJoined: false,
+      },
+    },
+  },
+};
+
+const disabledPostCommentNotificationSettings = {
+  notification: {
+    space: {
+      admin: {
+        communityApplicationReceived: false,
+        communityNewMember: false,
+        collaborationCalloutContributionCreated: false,
+        communicationMessageReceived: false,
+      },
+      collaborationCalloutPublished: false,
+      communicationUpdates: false,
+      collaborationCalloutPostContributionComment: true,
+      collaborationCalloutContributionCreated: false,
+      collaborationCalloutComment: false,
+    },
+    user: {
+      commentReply: false,
+      mentioned: false,
+      messageReceived: false,
+      copyOfMessageSent: false,
+      membership: {
+        spaceCommunityApplicationSubmitted: false,
+        spaceCommunityInvitationReceived: false,
+        spaceCommunityJoined: false,
+      },
+    },
+  },
+};
+
+// Helper function to enable post comment notifications for specific users
+const enablePostCommentNotifications = async (userIds: string[]) => {
+  await Promise.all(
+    userIds.map(userId =>
+      updateUserSettings(userId, postCommentNotificationSettings)
+    )
+  );
+};
+
+// Helper function to disable post comment notifications for specific users
+const disablePostCommentNotifications = async (userIds: string[]) => {
+  await Promise.all(
+    userIds.map(userId =>
+      updateUserSettings(userId, disabledPostCommentNotificationSettings)
+    )
+  );
+};
 
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -31,8 +107,7 @@ let postCommentsIdSpace = '';
 let postCommentsIdSubspace = '';
 let postCommentsIdSubsubspace = '';
 let messageId = '';
-export let preferencesPostCreatedConfig: any[] = [];
-export let preferencesPostCommentsCreatedConfig: any[] = [];
+let postCommentUsersConfig: string[] = [];
 
 let baseScenario: OrganizationWithSpaceModel;
 const scenarioConfig: TestScenarioConfig = {
@@ -92,111 +167,17 @@ beforeAll(async () => {
 
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
 
-  preferencesPostCreatedConfig = [
-    {
-      userID: TestUserManager.users.globalAdmin.id,
-      type: PreferenceType.NotificationPostCreated,
-    },
-    {
-      userID: TestUserManager.users.globalAdmin.id,
-      type: PreferenceType.NotificationPostCreatedAdmin,
-    },
-
-    {
-      userID: TestUserManager.users.spaceMember.id,
-      type: PreferenceType.NotificationPostCreated,
-    },
-    {
-      userID: TestUserManager.users.spaceMember.id,
-      type: PreferenceType.NotificationPostCreatedAdmin,
-    },
-
-    {
-      userID: TestUserManager.users.subspaceMember.id,
-      type: PreferenceType.NotificationPostCreated,
-    },
-    {
-      userID: TestUserManager.users.subspaceMember.id,
-      type: PreferenceType.NotificationPostCreatedAdmin,
-    },
-
-    {
-      userID: TestUserManager.users.subsubspaceMember.id,
-      type: PreferenceType.NotificationPostCreated,
-    },
-    {
-      userID: TestUserManager.users.subsubspaceMember.id,
-      type: PreferenceType.NotificationPostCreatedAdmin,
-    },
-
-    {
-      userID: TestUserManager.users.spaceAdmin.id,
-      type: PreferenceType.NotificationPostCreated,
-    },
-    {
-      userID: TestUserManager.users.spaceAdmin.id,
-      type: PreferenceType.NotificationPostCreatedAdmin,
-    },
-    {
-      userID: TestUserManager.users.subspaceAdmin.id,
-      type: PreferenceType.NotificationPostCreated,
-    },
-    {
-      userID: TestUserManager.users.subspaceAdmin.id,
-      type: PreferenceType.NotificationPostCreatedAdmin,
-    },
-    {
-      userID: TestUserManager.users.subsubspaceAdmin.id,
-      type: PreferenceType.NotificationPostCreated,
-    },
-    {
-      userID: TestUserManager.users.subsubspaceAdmin.id,
-      type: PreferenceType.NotificationPostCreatedAdmin,
-    },
-    {
-      userID: TestUserManager.users.nonSpaceMember.id,
-      type: PreferenceType.NotificationPostCreated,
-    },
-    {
-      userID: TestUserManager.users.nonSpaceMember.id,
-      type: PreferenceType.NotificationPostCreatedAdmin,
-    },
+  postCommentUsersConfig = [
+    TestUserManager.users.globalAdmin.id,
+    TestUserManager.users.spaceMember.id,
+    TestUserManager.users.subspaceMember.id,
+    TestUserManager.users.subsubspaceMember.id,
+    TestUserManager.users.spaceAdmin.id,
+    TestUserManager.users.subspaceAdmin.id,
+    TestUserManager.users.subsubspaceAdmin.id,
+    TestUserManager.users.nonSpaceMember.id,
   ];
 
-  preferencesPostCommentsCreatedConfig = [
-    {
-      userID: TestUserManager.users.globalAdmin.id,
-      type: PreferenceType.NotificationPostCommentCreated,
-    },
-    {
-      userID: TestUserManager.users.spaceMember.id,
-      type: PreferenceType.NotificationPostCommentCreated,
-    },
-    {
-      userID: TestUserManager.users.subspaceMember.id,
-      type: PreferenceType.NotificationPostCommentCreated,
-    },
-    {
-      userID: TestUserManager.users.subsubspaceMember.id,
-      type: PreferenceType.NotificationPostCommentCreated,
-    },
-    {
-      userID: TestUserManager.users.spaceAdmin.id,
-      type: PreferenceType.NotificationPostCommentCreated,
-    },
-    {
-      userID: TestUserManager.users.subspaceAdmin.id,
-      type: PreferenceType.NotificationPostCommentCreated,
-    },
-    {
-      userID: TestUserManager.users.subsubspaceAdmin.id,
-      type: PreferenceType.NotificationPostCommentCreated,
-    },
-    {
-      userID: TestUserManager.users.nonSpaceMember.id,
-      type: PreferenceType.NotificationPostCommentCreated,
-    },
-  ];
   await deleteMailSlurperMails();
 });
 
@@ -216,35 +197,19 @@ describe('Notifications - post comments', () => {
   });
 
   beforeAll(async () => {
-    await changePreferenceUser(
+    // Disable post comment notifications for global support admin
+    await disablePostCommentNotifications([
       TestUserManager.users.globalSupportAdmin.id,
-      PreferenceType.NotificationPostCommentCreated,
-      'false'
-    );
-    await changePreferenceUser(
-      TestUserManager.users.globalSupportAdmin.id,
-      PreferenceType.NotificationPostCreated,
-      'false'
-    );
-    await changePreferenceUser(
-      TestUserManager.users.globalSupportAdmin.id,
-      PreferenceType.NotificationPostCreatedAdmin,
-      'false'
-    );
-    preferencesPostCreatedConfig.forEach(
-      async config =>
-        await changePreferenceUser(config.userID, config.type, 'false')
-    );
+    ]);
 
-    preferencesPostCommentsCreatedConfig.forEach(
-      async config =>
-        await changePreferenceUser(config.userID, config.type, 'true')
-    );
+    // Enable post comment notifications for other users
+    await enablePostCommentNotifications(postCommentUsersConfig);
+
     await deleteMailSlurperMails();
   });
 
   afterEach(async () => {
-    await delay(6000);
+    await delay(1000);
     await removeMessageOnRoom(
       postCommentsIdSpace,
       messageId,
@@ -278,7 +243,7 @@ describe('Notifications - post comments', () => {
       );
       messageId = messageRes?.data?.sendMessageToRoom.id ?? '';
 
-      await delay(6000);
+      await delay(1000);
       const mails = await getMailsData();
       expect(mails[1]).toEqual(0);
     });
@@ -293,7 +258,7 @@ describe('Notifications - post comments', () => {
       );
       messageId = messageRes?.data?.sendMessageToRoom.id ?? '';
 
-      await delay(6000);
+      await delay(1000);
       const mails = await getMailsData();
 
       expect(mails[0]).toEqual(
@@ -336,7 +301,7 @@ describe('Notifications - post comments', () => {
       );
       messageId = messageRes?.data?.sendMessageToRoom.id ?? '';
 
-      await delay(6000);
+      await delay(1000);
       const mails = await getMailsData();
 
       expect(mails[1]).toEqual(0);
@@ -352,7 +317,7 @@ describe('Notifications - post comments', () => {
       );
       messageId = messageRes?.data?.sendMessageToRoom.id ?? '';
 
-      await delay(6000);
+      await delay(1000);
       const mails = await getMailsData();
 
       expect(mails[0]).toEqual(
@@ -395,7 +360,7 @@ describe('Notifications - post comments', () => {
       );
       messageId = messageRes?.data?.sendMessageToRoom.id ?? '';
 
-      await delay(6000);
+      await delay(1000);
       const mails = await getMailsData();
 
       expect(mails[1]).toEqual(0);
@@ -411,7 +376,7 @@ describe('Notifications - post comments', () => {
       );
       messageId = messageRes?.data?.sendMessageToRoom.id ?? '';
 
-      await delay(6000);
+      await delay(1000);
       const mails = await getMailsData();
 
       expect(mails[0]).toEqual(
@@ -454,7 +419,7 @@ describe('Notifications - post comments', () => {
       );
       messageId = messageRes?.data?.sendMessageToRoom.id ?? '';
 
-      await delay(6000);
+      await delay(1000);
       const mails = await getMailsData();
 
       expect(mails[1]).toEqual(0);
@@ -470,7 +435,7 @@ describe('Notifications - post comments', () => {
       );
       messageId = messageRes?.data?.sendMessageToRoom.id ?? '';
 
-      await delay(6000);
+      await delay(1000);
       const mails = await getMailsData();
 
       expect(mails[0]).toEqual(
@@ -487,10 +452,8 @@ describe('Notifications - post comments', () => {
   });
 
   test('OA create post on subsubspace and comment - 0 notifications - all roles with notifications disabled', async () => {
-    preferencesPostCommentsCreatedConfig.forEach(
-      async config =>
-        await changePreferenceUser(config.userID, config.type, 'false')
-    );
+    await disablePostCommentNotifications(postCommentUsersConfig);
+
     // Act
     const resPostonSpace = await createPostOnCallout(
       baseScenario.subsubspace.collaboration.calloutPostCollectionId,

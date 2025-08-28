@@ -25,7 +25,6 @@ query GetCalloutsOnCalloutsSetUsingClassification(
 fragment Callout on Callout {
   id
   nameID
-  type
   sortOrder
   activity
   authorization {

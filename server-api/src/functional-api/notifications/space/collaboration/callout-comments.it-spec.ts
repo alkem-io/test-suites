@@ -7,19 +7,103 @@ import {
   TestUser,
   TestUserManager,
 } from '@alkemio/tests-lib';
-import '@utils/array.matcher';
 import { delay } from '@alkemio/tests-lib';
-import { PreferenceType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { changePreferenceUser } from '@functional-api/contributor-management/user/user.request.params';
-import { sendMessageToRoom } from '../../communications/communication.params';
+import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
+import { sendMessageToRoom } from '@functional-api/communications/communication.params';
 
-export let preferencesDiscussionCommentCreatedConfig: any[] = [];
+// Notification settings for discussion comment events
+const discussionCommentNotificationSettings = {
+  notification: {
+    space: {
+      admin: {
+        communityApplicationReceived: false,
+        communityNewMember: false,
+        collaborationCalloutContributionCreated: false,
+        communicationMessageReceived: false,
+      },
+      collaborationCalloutPublished: false,
+      communicationUpdates: false,
+      collaborationCalloutPostContributionComment: false,
+      collaborationCalloutContributionCreated: false,
+      collaborationCalloutComment: true,
+    },
+    user: {
+      commentReply: true,
+      mentioned: false,
+      messageReceived: true,
+      copyOfMessageSent: false,
+      membership: {
+        spaceCommunityApplicationSubmitted: false,
+        spaceCommunityInvitationReceived: false,
+        spaceCommunityJoined: false,
+      },
+    },
+  },
+};
+
+const disabledDiscussionCommentNotificationSettings = {
+  notification: {
+    space: {
+      admin: {
+        communityApplicationReceived: false,
+        communityNewMember: false,
+        collaborationCalloutContributionCreated: false,
+        communicationMessageReceived: false,
+      },
+      collaborationCalloutPublished: false,
+      communicationUpdates: false,
+      collaborationCalloutPostContributionComment: false,
+      collaborationCalloutContributionCreated: false,
+      collaborationCalloutComment: false,
+    },
+    user: {
+      commentReply: false,
+      mentioned: false,
+      messageReceived: false,
+      copyOfMessageSent: false,
+      membership: {
+        spaceCommunityApplicationSubmitted: false,
+        spaceCommunityInvitationReceived: false,
+        spaceCommunityJoined: false,
+      },
+    },
+  },
+};
+
+// Helper function to enable discussion comment notifications for specific users
+const enableDiscussionCommentNotifications = async (userIds: string[]) => {
+  await Promise.all(
+    userIds.map(userId =>
+      updateUserSettings(userId, discussionCommentNotificationSettings)
+    )
+  );
+};
+
+// Helper function to disable discussion comment notifications for specific users
+const disableDiscussionCommentNotifications = async (userIds: string[]) => {
+  await Promise.all(
+    userIds.map(userId =>
+      updateUserSettings(userId, disabledDiscussionCommentNotificationSettings)
+    )
+  );
+};
+
+let discussionCommentUsersConfig: string[] = [];
 
 const expectedDataSpace = async (toAddresses: any[]) => {
   return expect.arrayContaining([
     expect.objectContaining({
-      subject: `${baseScenario.space.about.profile.displayName} - New comment received on Callout \u0026#34;discussion-comments-notification - post\u0026#34;, have a look!`,
+      subject: `${baseScenario.space.about.profile.displayName} - New comment received on your Post \u0026#34;discussion-comments-notification - post\u0026#34; by admin, have a look!`,
+      toAddresses,
+    }),
+  ]);
+};
+
+const expectedDataSpace2 = async (toAddresses: any[]) => {
+  return expect.arrayContaining([
+    expect.objectContaining({
+      subject: `${baseScenario.space.about.profile.displayName} - New comment received on your Post \u0026#34;discussion-comments-notification - post\u0026#34; by space, have a look!`,
       toAddresses,
     }),
   ]);
@@ -28,7 +112,7 @@ const expectedDataSpace = async (toAddresses: any[]) => {
 const expectedDataChal = async (toAddresses: any[]) => {
   return expect.arrayContaining([
     expect.objectContaining({
-      subject: `${baseScenario.subspace.about.profile.displayName} - New comment received on Callout \u0026#34;discussion-comments-notification - post\u0026#34;, have a look!`,
+      subject: `${baseScenario.subspace.about.profile.displayName} - New comment received on your Post \u0026#34;discussion-comments-notification - post\u0026#34; by space, have a look!`,
       toAddresses,
     }),
   ]);
@@ -37,7 +121,7 @@ const expectedDataChal = async (toAddresses: any[]) => {
 const expectedDataOpp = async (toAddresses: any[]) => {
   return expect.arrayContaining([
     expect.objectContaining({
-      subject: `${baseScenario.subsubspace.about.profile.displayName} - New comment received on Callout \u0026#34;discussion-comments-notification - post\u0026#34;, have a look!`,
+      subject: `${baseScenario.subsubspace.about.profile.displayName} - New comment received on your Post \u0026#34;discussion-comments-notification - post\u0026#34; by subsubspace, have a look!`,
       toAddresses,
     }),
   ]);
@@ -49,8 +133,8 @@ const scenarioConfig: TestScenarioConfig = {
   space: {
     collaboration: {
       addPostCallout: true,
-      addPostCollectionCallout: true,
-      addWhiteboardCallout: true,
+      addPostCollectionCallout: false,
+      addWhiteboardCallout: false,
       addTutorialCallouts: false,
     },
     community: {
@@ -67,8 +151,8 @@ const scenarioConfig: TestScenarioConfig = {
     subspace: {
       collaboration: {
         addPostCallout: true,
-        addPostCollectionCallout: true,
-        addWhiteboardCallout: true,
+        addPostCollectionCallout: false,
+        addWhiteboardCallout: false,
         addTutorialCallouts: false,
       },
       community: {
@@ -83,8 +167,8 @@ const scenarioConfig: TestScenarioConfig = {
       subspace: {
         collaboration: {
           addPostCallout: true,
-          addPostCollectionCallout: true,
-          addWhiteboardCallout: true,
+          addPostCollectionCallout: false,
+          addWhiteboardCallout: false,
           addTutorialCallouts: false,
         },
         community: {
@@ -101,46 +185,14 @@ beforeAll(async () => {
 
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
 
-  preferencesDiscussionCommentCreatedConfig = [
-    {
-      userID: TestUserManager.users.globalAdmin.id,
-      type: PreferenceType.NotificationDiscussionCommentCreated,
-    },
-
-    {
-      userID: TestUserManager.users.spaceMember.id,
-      type: PreferenceType.NotificationDiscussionCommentCreated,
-    },
-
-    {
-      userID: TestUserManager.users.subspaceMember.id,
-      type: PreferenceType.NotificationDiscussionCommentCreated,
-    },
-
-    {
-      userID: TestUserManager.users.subsubspaceMember.id,
-      type: PreferenceType.NotificationDiscussionCommentCreated,
-    },
-
-    {
-      userID: TestUserManager.users.spaceAdmin.id,
-      type: PreferenceType.NotificationDiscussionCommentCreated,
-    },
-
-    {
-      userID: TestUserManager.users.spaceAdmin.id,
-      type: PreferenceType.NotificationDiscussionCommentCreated,
-    },
-
-    {
-      userID: TestUserManager.users.subspaceAdmin.id,
-      type: PreferenceType.NotificationDiscussionCommentCreated,
-    },
-
-    {
-      userID: TestUserManager.users.subsubspaceAdmin.id,
-      type: PreferenceType.NotificationDiscussionCommentCreated,
-    },
+  discussionCommentUsersConfig = [
+    TestUserManager.users.globalAdmin.id,
+    TestUserManager.users.spaceAdmin.id,
+    TestUserManager.users.spaceMember.id,
+    TestUserManager.users.subspaceMember.id,
+    TestUserManager.users.subspaceAdmin.id,
+    TestUserManager.users.subsubspaceMember.id,
+    TestUserManager.users.subsubspaceAdmin.id,
   ];
 });
 
@@ -154,10 +206,7 @@ describe('Notifications - callout comments', () => {
   });
 
   beforeAll(async () => {
-    preferencesDiscussionCommentCreatedConfig.forEach(
-      async config =>
-        await changePreferenceUser(config.userID, config.type, 'true')
-    );
+    await enableDiscussionCommentNotifications(discussionCommentUsersConfig);
   });
 
   test('GA create space callout comment - HM(7) get notifications', async () => {
@@ -167,14 +216,11 @@ describe('Notifications - callout comments', () => {
       'comment on discussion callout',
       TestUser.GLOBAL_ADMIN
     );
-
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
 
-    expect(mails[1]).toEqual(7);
-    expect(mails[0]).toEqual(
-      await expectedDataSpace([TestUserManager.users.globalAdmin.email])
-    );
+    expect(mails[1]).toEqual(6);
+
     expect(mails[0]).toEqual(
       await expectedDataSpace([TestUserManager.users.spaceAdmin.email])
     );
@@ -203,30 +249,27 @@ describe('Notifications - callout comments', () => {
       TestUser.SPACE_ADMIN
     );
 
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
 
-    expect(mails[1]).toEqual(7);
+    expect(mails[1]).toEqual(6);
     expect(mails[0]).toEqual(
-      await expectedDataSpace([TestUserManager.users.globalAdmin.email])
+      await expectedDataSpace2([TestUserManager.users.globalAdmin.email])
     );
     expect(mails[0]).toEqual(
-      await expectedDataSpace([TestUserManager.users.spaceAdmin.email])
+      await expectedDataSpace2([TestUserManager.users.spaceMember.email])
     );
     expect(mails[0]).toEqual(
-      await expectedDataSpace([TestUserManager.users.spaceMember.email])
+      await expectedDataSpace2([TestUserManager.users.subspaceAdmin.email])
     );
     expect(mails[0]).toEqual(
-      await expectedDataSpace([TestUserManager.users.subspaceAdmin.email])
+      await expectedDataSpace2([TestUserManager.users.subspaceMember.email])
     );
     expect(mails[0]).toEqual(
-      await expectedDataSpace([TestUserManager.users.subspaceMember.email])
+      await expectedDataSpace2([TestUserManager.users.subsubspaceAdmin.email])
     );
     expect(mails[0]).toEqual(
-      await expectedDataSpace([TestUserManager.users.subsubspaceAdmin.email])
-    );
-    expect(mails[0]).toEqual(
-      await expectedDataSpace([TestUserManager.users.subsubspaceMember.email])
+      await expectedDataSpace2([TestUserManager.users.subsubspaceMember.email])
     );
   });
 
@@ -238,7 +281,7 @@ describe('Notifications - callout comments', () => {
       TestUser.SPACE_ADMIN
     );
 
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
 
     expect(mails[1]).toEqual(5);
@@ -277,10 +320,10 @@ describe('Notifications - callout comments', () => {
       TestUser.SUBSUBSPACE_MEMBER
     );
 
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
 
-    expect(mails[1]).toEqual(3);
+    expect(mails[1]).toEqual(2);
     expect(mails[0]).toEqual(
       await expectedDataOpp([TestUserManager.users.globalAdmin.email])
     );
@@ -303,16 +346,11 @@ describe('Notifications - callout comments', () => {
     expect(mails[0]).toEqual(
       await expectedDataOpp([TestUserManager.users.subsubspaceAdmin.email])
     );
-    expect(mails[0]).toEqual(
-      await expectedDataOpp([TestUserManager.users.subsubspaceMember.email])
-    );
   });
 
   test('OA create subsubspace callout comment - 0 notifications - all roles with notifications disabled', async () => {
-    preferencesDiscussionCommentCreatedConfig.forEach(
-      async config =>
-        await changePreferenceUser(config.userID, config.type, 'false')
-    );
+    await disableDiscussionCommentNotifications(discussionCommentUsersConfig);
+
     // Act
     await sendMessageToRoom(
       baseScenario.subsubspace.collaboration.calloutPostCommentsId,

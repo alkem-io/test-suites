@@ -1,0 +1,164 @@
+fragment userSettingsFragment on UserSettings {
+  id
+  communication {
+    allowOtherUsersToSendMessages
+    __typename
+  }
+  privacy {
+    contributionRolesPubliclyVisible
+    __typename
+  }
+  notification {
+    platform {
+      admin {
+        userProfileRemoved {
+          email
+          inApp
+          __typename
+        }
+        userProfileCreated {
+          email
+          inApp
+          __typename
+        }
+        spaceCreated {
+          email
+          inApp
+          __typename
+        }
+        userGlobalRoleChanged {
+          email
+          inApp
+          __typename
+        }
+        __typename
+      }
+      forumDiscussionComment {
+        email
+        inApp
+        __typename
+      }
+      forumDiscussionCreated {
+        email
+        inApp
+        __typename
+      }
+      __typename
+    }
+    organization {
+      adminMentioned {
+        email
+        inApp
+        __typename
+      }
+      adminMessageReceived {
+        email
+        inApp
+        __typename
+      }
+      __typename
+    }
+    space {
+      admin {
+        communityApplicationReceived {
+          email
+          inApp
+          __typename
+        }
+        collaborationCalloutContributionCreated {
+          email
+          inApp
+          __typename
+        }
+        communityNewMember {
+          email
+          inApp
+          __typename
+        }
+        communicationMessageReceived {
+          email
+          inApp
+          __typename
+        }
+        __typename
+      }
+      collaborationCalloutContributionCreated {
+        email
+        inApp
+        __typename
+      }
+      communicationUpdates {
+        email
+        inApp
+        __typename
+      }
+      collaborationCalloutPublished {
+        email
+        inApp
+        __typename
+      }
+      collaborationCalloutComment {
+        email
+        inApp
+        __typename
+      }
+      collaborationCalloutPostContributionComment {
+        email
+        inApp
+        __typename
+      }
+      __typename
+    }
+    user {
+      membership {
+        spaceCommunityInvitationReceived {
+          email
+          inApp
+          __typename
+        }
+        spaceCommunityJoined {
+          email
+          inApp
+          __typename
+        }
+        spaceCommunityApplicationSubmitted {
+          email
+          inApp
+          __typename
+        }
+        __typename
+      }
+      mentioned {
+        email
+        inApp
+        __typename
+      }
+      commentReply {
+        email
+        inApp
+        __typename
+      }
+      messageReceived {
+        email
+        inApp
+        __typename
+      }
+      copyOfMessageSent {
+        email
+        inApp
+        __typename
+      }
+      __typename
+    }
+    virtualContributor {
+      adminSpaceCommunityInvitation {
+        email
+        inApp
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+  __typename
+}

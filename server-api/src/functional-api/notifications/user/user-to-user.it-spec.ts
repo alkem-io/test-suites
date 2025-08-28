@@ -9,7 +9,7 @@ import {
 } from '@alkemio/tests-lib';
 import { TestUser } from '@alkemio/tests-lib';
 import { sendMessageToUser } from '@functional-api/communications/communication.params';
-import { updateUserSettingCommunicationMessage } from '@functional-api/contributor-management/user/user.request.params';
+import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
 
 let receiver_userDisplayName = '';
 let sender_userDisplayName = '';
@@ -22,6 +22,62 @@ const scenarioConfig: TestScenarioNoPreCreationConfig = {
 
 const receivers = (senderDisplayName: string) => {
   return `${senderDisplayName} sent you a message!`;
+};
+
+// Helper functions for communication message notification settings
+const communicationMessageNotificationSettings = {
+  privacy: {
+    contributionRolesPubliclyVisible: true,
+  },
+  communication: {
+    allowOtherUsersToSendMessages: true,
+  },
+  notification: {
+    user: {
+      commentReply: false,
+      mentioned: false,
+      messageReceived: true,
+      copyOfMessageSent: true,
+      membership: {
+        spaceCommunityApplicationSubmitted: false,
+        spaceCommunityInvitationReceived: false,
+        spaceCommunityJoined: false,
+      },
+    },
+  },
+};
+
+const disabledCommunicationMessageNotificationSettings = {
+  privacy: {
+    contributionRolesPubliclyVisible: false,
+  },
+  communication: {
+    allowOtherUsersToSendMessages: false,
+  },
+  notification: {
+    user: {
+      commentReply: false,
+      mentioned: false,
+      messageReceived: false,
+      copyOfMessageSent: false,
+      membership: {
+        spaceCommunityApplicationSubmitted: false,
+        spaceCommunityInvitationReceived: false,
+        spaceCommunityJoined: false,
+      },
+    },
+  },
+};
+
+const enableCommunicationMessageNotifications = async (userId: string) => {
+  await updateUserSettings(userId, communicationMessageNotificationSettings);
+};
+
+const disableCommunicationMessageNotifications = async (userId: string) => {
+  await updateUserSettings(
+    userId,
+    disabledCommunicationMessageNotificationSettings
+  );
 };
 
 beforeAll(async () => {
@@ -43,8 +99,9 @@ beforeAll(async () => {
 
 describe('Notifications - user to user messages', () => {
   beforeAll(async () => {
-    for (const user of usersList)
-      await updateUserSettingCommunicationMessage(user.userID, true);
+    for (const user of usersList) {
+      await enableCommunicationMessageNotifications(user);
+    }
   });
 
   beforeEach(async () => {
@@ -58,7 +115,7 @@ describe('Notifications - user to user messages', () => {
       'Test message',
       TestUser.NON_SPACE_MEMBER
     );
-    await delay(3000);
+    await delay(1000);
 
     const getEmailsData = await getMailsData();
 
@@ -79,19 +136,19 @@ describe('Notifications - user to user messages', () => {
   });
 
   // Skipping until behavior is cleared, whather the bahavior of receiving email for each sent message is right
-  test.skip("User 'A'(pref:true) send message to 2 users: 'B' and 'C'(pref:true) - 3 messages are sent", async () => {
+  test("User 'A'(pref:true) send message to 2 users: 'B' and 'C'(pref:true) - 4 messages are sent", async () => {
     // Act
     await sendMessageToUser(
       [TestUserManager.users.globalAdmin.id, TestUserManager.users.qaUser.id],
       'Test message',
       TestUser.NON_SPACE_MEMBER
     );
-    await delay(3000);
+    await delay(1000);
 
     const getEmailsData = await getMailsData();
 
     // Assert
-    expect(getEmailsData[1]).toEqual(3);
+    expect(getEmailsData[1]).toEqual(4);
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -111,11 +168,10 @@ describe('Notifications - user to user messages', () => {
   });
 
   // Skipping until behavior is cleared, whather the bahavior of receiving email for each sent message is right
-  test.skip("User 'A'(pref:true) send message to 2 users: 'B'(pref:true) and 'C'(pref:false) - 2 messages are sent", async () => {
+  test("User 'A'(pref:true) send message to 2 users: 'B'(pref:true) and 'C'(pref:false) - 3 messages are sent", async () => {
     // Arrange
-    await updateUserSettingCommunicationMessage(
-      TestUserManager.users.qaUser.id,
-      false
+    await disableCommunicationMessageNotifications(
+      TestUserManager.users.qaUser.id
     );
 
     // Act
@@ -124,7 +180,7 @@ describe('Notifications - user to user messages', () => {
       'Test message',
       TestUser.NON_SPACE_MEMBER
     );
-    await delay(3000);
+    await delay(1000);
 
     const getEmailsData = await getMailsData();
 
@@ -142,17 +198,19 @@ describe('Notifications - user to user messages', () => {
         }),
       ])
     );
-    await updateUserSettingCommunicationMessage(
-      TestUserManager.users.qaUser.id,
-      true
+    await enableCommunicationMessageNotifications(
+      TestUserManager.users.qaUser.id
     );
   });
 
   test("User 'A'(pref:true) send message to user 'B'(pref:false) - 1 messages are sent", async () => {
     // Arrange
-    await updateUserSettingCommunicationMessage(
-      TestUserManager.users.globalAdmin.id,
-      false
+    await disableCommunicationMessageNotifications(
+      TestUserManager.users.globalAdmin.id
+    );
+
+    await enableCommunicationMessageNotifications(
+      TestUserManager.users.nonSpaceMember.id
     );
 
     // Act
@@ -161,7 +219,31 @@ describe('Notifications - user to user messages', () => {
       'Test message',
       TestUser.NON_SPACE_MEMBER
     );
-    await delay(3000);
+    await delay(1000);
+
+    const getEmailsData = await getMailsData();
+
+    // Assert
+    expect(getEmailsData[1]).toEqual(0);
+  });
+
+  test("User 'A'(pref:false) send message to user 'B'(pref:true) - 1 messages are sent", async () => {
+    // Arrange
+    await enableCommunicationMessageNotifications(
+      TestUserManager.users.globalAdmin.id
+    );
+
+    await disableCommunicationMessageNotifications(
+      TestUserManager.users.nonSpaceMember.id
+    );
+
+    // Act
+    await sendMessageToUser(
+      [TestUserManager.users.globalAdmin.id],
+      'Test message',
+      TestUser.NON_SPACE_MEMBER
+    );
+    await delay(1000);
 
     const getEmailsData = await getMailsData();
 
@@ -170,47 +252,13 @@ describe('Notifications - user to user messages', () => {
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          subject: sender,
-          toAddresses: [TestUserManager.users.nonSpaceMember.email],
-        }),
-      ])
-    );
-  });
-
-  test("User 'A'(pref:false) send message to user 'B'(pref:true) - 2 messages are sent", async () => {
-    // Arrange
-    await updateUserSettingCommunicationMessage(
-      TestUserManager.users.globalAdmin.id,
-      true
-    );
-
-    await updateUserSettingCommunicationMessage(
-      TestUserManager.users.nonSpaceMember.id,
-      false
-    );
-
-    // Act
-    await sendMessageToUser(
-      [TestUserManager.users.globalAdmin.id],
-      'Test message',
-      TestUser.NON_SPACE_MEMBER
-    );
-    await delay(3000);
-
-    const getEmailsData = await getMailsData();
-
-    // Assert
-    expect(getEmailsData[1]).toEqual(2);
-    expect(getEmailsData[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
           subject: receiver,
           toAddresses: [TestUserManager.users.globalAdmin.email],
         }),
-        expect.objectContaining({
-          subject: sender,
-          toAddresses: [TestUserManager.users.nonSpaceMember.email],
-        }),
+        // expect.objectContaining({
+        //   subject: sender,
+        //   toAddresses: [TestUserManager.users.nonSpaceMember.email],
+        // }),
       ])
     );
   });

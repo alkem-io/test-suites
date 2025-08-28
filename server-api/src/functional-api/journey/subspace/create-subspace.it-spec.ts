@@ -75,8 +75,23 @@ describe('Create subspace', () => {
     expect(createSubspaceData?.about.profile.displayName).toEqual(
       'subspaceName'
     );
-    expect(createSubspaceData).toEqual(
+    expect(createSubspaceData?.about).toEqual(
+      (await getSubspaceData(additionalSubspaceId)).data?.lookup?.space?.about
+    );
+    expect(createSubspaceData?.collaboration).toEqual(
       (await getSubspaceData(additionalSubspaceId)).data?.lookup?.space
+        ?.collaboration
+    );
+    expect(createSubspaceData?.community).toEqual(
+      (await getSubspaceData(additionalSubspaceId)).data?.lookup?.space
+        ?.community
+    );
+    expect(createSubspaceData?.id).toEqual(
+      (await getSubspaceData(additionalSubspaceId)).data?.lookup?.space?.id
+    );
+    expect(createSubspaceData?.subspaces).toEqual(
+      (await getSubspaceData(additionalSubspaceId)).data?.lookup?.space
+        ?.subspaces
     );
     await deleteSpace(additionalSubspaceId);
   });

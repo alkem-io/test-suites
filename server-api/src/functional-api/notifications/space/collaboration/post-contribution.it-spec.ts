@@ -14,8 +14,7 @@ import {
   createPostOnCallout,
   deletePost,
 } from '@functional-api/callout/post/post.request.params';
-import { changePreferenceUser } from '@functional-api/contributor-management/user/user-preferences-mutation';
-import { PreferenceType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 
 const uniqueId = UniqueIDGenerator.getID();
@@ -24,15 +23,57 @@ let spacePostId = '';
 let subspacePostId = '';
 let subsubspacePostId = '';
 let postDisplayName = '';
-export let preferencesPostOnCallForPostCreatedConfig: any[] = [];
 
-const templatedAdminResult = async (entityName: string, userEmail: string) => {
-  return expect.arrayContaining([
-    expect.objectContaining({
-      subject: entityName,
-      toAddresses: [userEmail],
-    }),
-  ]);
+// Notification settings for post creation
+const postNotificationSettings = {
+  notification: {
+    space: {
+      admin: {
+        communityApplicationReceived: false,
+        communityNewMember: false,
+        collaborationCalloutContributionCreated: false,
+        communicationMessageReceived: false,
+      },
+      collaborationCalloutPublished: false,
+      communicationUpdates: false,
+      collaborationCalloutPostContributionComment: false,
+      collaborationCalloutContributionCreated: true,
+      collaborationCalloutComment: false,
+    },
+  },
+};
+
+const disablePostNotificationSettings = {
+  notification: {
+    space: {
+      admin: {
+        communityApplicationReceived: false,
+        communityNewMember: false,
+        collaborationCalloutContributionCreated: false,
+        communicationMessageReceived: false,
+      },
+      collaborationCalloutPublished: false,
+      communicationUpdates: false,
+      collaborationCalloutPostContributionComment: false,
+      collaborationCalloutContributionCreated: false,
+      collaborationCalloutComment: false,
+    },
+  },
+};
+
+// Helper functions for managing post notifications
+const enablePostNotifications = async (userIds: string[]) => {
+  await Promise.all(
+    userIds.map(userId => updateUserSettings(userId, postNotificationSettings))
+  );
+};
+
+const disablePostNotifications = async (userIds: string[]) => {
+  await Promise.all(
+    userIds.map(userId =>
+      updateUserSettings(userId, disablePostNotificationSettings)
+    )
+  );
 };
 
 const templateMemberResult = async (entityName: string, userEmail: string) => {
@@ -49,9 +90,9 @@ const scenarioConfig: TestScenarioConfig = {
   name: 'posts-notifications',
   space: {
     collaboration: {
-      addPostCallout: true,
+      addPostCallout: false,
       addPostCollectionCallout: true,
-      addWhiteboardCallout: true,
+      addWhiteboardCallout: false,
       addTutorialCallouts: false,
     },
     community: {
@@ -67,9 +108,9 @@ const scenarioConfig: TestScenarioConfig = {
     },
     subspace: {
       collaboration: {
-        addPostCallout: true,
+        addPostCallout: false,
         addPostCollectionCallout: true,
-        addWhiteboardCallout: true,
+        addWhiteboardCallout: false,
         addTutorialCallouts: false,
       },
       community: {
@@ -83,9 +124,9 @@ const scenarioConfig: TestScenarioConfig = {
       },
       subspace: {
         collaboration: {
-          addPostCallout: true,
+          addPostCallout: false,
           addPostCollectionCallout: true,
-          addWhiteboardCallout: true,
+          addWhiteboardCallout: false,
           addTutorialCallouts: false,
         },
         community: {
@@ -101,77 +142,6 @@ beforeAll(async () => {
   await deleteMailSlurperMails();
 
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
-
-  preferencesPostOnCallForPostCreatedConfig = [
-    {
-      userID: TestUserManager.users.globalAdmin.id,
-      type: PreferenceType.NotificationPostCreated,
-    },
-    {
-      userID: TestUserManager.users.globalAdmin.id,
-      type: PreferenceType.NotificationPostCreatedAdmin,
-    },
-
-    {
-      userID: TestUserManager.users.spaceMember.id,
-      type: PreferenceType.NotificationPostCreated,
-    },
-    {
-      userID: TestUserManager.users.spaceMember.id,
-      type: PreferenceType.NotificationPostCreatedAdmin,
-    },
-
-    {
-      userID: TestUserManager.users.subspaceMember.id,
-      type: PreferenceType.NotificationPostCreated,
-    },
-    {
-      userID: TestUserManager.users.subspaceMember.id,
-      type: PreferenceType.NotificationPostCreatedAdmin,
-    },
-
-    {
-      userID: TestUserManager.users.subsubspaceMember.id,
-      type: PreferenceType.NotificationPostCreated,
-    },
-    {
-      userID: TestUserManager.users.subsubspaceMember.id,
-      type: PreferenceType.NotificationPostCreatedAdmin,
-    },
-
-    {
-      userID: TestUserManager.users.spaceAdmin.id,
-      type: PreferenceType.NotificationPostCreated,
-    },
-    {
-      userID: TestUserManager.users.spaceAdmin.id,
-      type: PreferenceType.NotificationPostCreatedAdmin,
-    },
-    {
-      userID: TestUserManager.users.subspaceAdmin.id,
-      type: PreferenceType.NotificationPostCreated,
-    },
-    {
-      userID: TestUserManager.users.subspaceAdmin.id,
-      type: PreferenceType.NotificationPostCreatedAdmin,
-    },
-    {
-      userID: TestUserManager.users.subsubspaceAdmin.id,
-      type: PreferenceType.NotificationPostCreated,
-    },
-    {
-      userID: TestUserManager.users.subsubspaceAdmin.id,
-      type: PreferenceType.NotificationPostCreatedAdmin,
-    },
-    {
-      userID: TestUserManager.users.nonSpaceMember.id,
-      type: PreferenceType.NotificationPostCreated,
-    },
-    {
-      userID: TestUserManager.users.nonSpaceMember.id,
-      type: PreferenceType.NotificationPostCreatedAdmin,
-    },
-  ];
 });
 
 afterAll(async () => {
@@ -189,26 +159,22 @@ describe('Notifications - post', () => {
   });
 
   beforeAll(async () => {
-    await changePreferenceUser(
+    // Disable notifications for global support admin
+    await disablePostNotifications([
       TestUserManager.users.globalSupportAdmin.id,
-      PreferenceType.NotificationPostCommentCreated,
-      'false'
-    );
-    await changePreferenceUser(
-      TestUserManager.users.globalSupportAdmin.id,
-      PreferenceType.NotificationPostCreated,
-      'false'
-    );
-    await changePreferenceUser(
-      TestUserManager.users.globalSupportAdmin.id,
-      PreferenceType.NotificationPostCreatedAdmin,
-      'false'
-    );
+    ]);
 
-    preferencesPostOnCallForPostCreatedConfig.forEach(
-      async config =>
-        await changePreferenceUser(config.userID, config.type, 'true')
-    );
+    // Enable notifications for all relevant users
+    await enablePostNotifications([
+      TestUserManager.users.globalAdmin.id,
+      TestUserManager.users.spaceMember.id,
+      TestUserManager.users.subspaceMember.id,
+      TestUserManager.users.subsubspaceMember.id,
+      TestUserManager.users.spaceAdmin.id,
+      TestUserManager.users.subspaceAdmin.id,
+      TestUserManager.users.subsubspaceAdmin.id,
+      TestUserManager.users.nonSpaceMember.id,
+    ]);
   });
 
   afterEach(async () => {
@@ -218,8 +184,7 @@ describe('Notifications - post', () => {
   });
 
   test('GA create space post - GA(1), HA (2), HM(6) get notifications', async () => {
-    const postSubjectAdmin = `${baseScenario.space.about.profile.displayName}: New Post created by admin`;
-    const postSubjectMember = `${baseScenario.space.about.profile.displayName}: New Post created by admin, have a look!`;
+    const postSubjectMember = `${baseScenario.space.about.profile.displayName}: New post contribution created by admin, have a look!`;
 
     // Act
     const resPostonSpace = await createPostOnCallout(
@@ -231,22 +196,9 @@ describe('Notifications - post', () => {
     spacePostId =
       resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
 
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
-    expect(mails[0]).toEqual(
-      await templatedAdminResult(
-        postSubjectAdmin,
-        TestUserManager.users.globalAdmin.email
-      )
-    );
-
-    expect(mails[0]).toEqual(
-      await templatedAdminResult(
-        postSubjectAdmin,
-        TestUserManager.users.spaceAdmin.email
-      )
-    );
-
+    expect(mails[1]).toEqual(7);
     expect(mails[0]).toEqual(
       await templateMemberResult(
         postSubjectMember,
@@ -284,7 +236,7 @@ describe('Notifications - post', () => {
         TestUserManager.users.subsubspaceAdmin.email
       )
     );
-    expect(mails[1]).toEqual(9);
+
     expect(mails[0]).toEqual(
       await templateMemberResult(
         postSubjectMember,
@@ -294,8 +246,7 @@ describe('Notifications - post', () => {
   });
 
   test('HA create space post - GA(1), HA (1), HM(6) get notifications', async () => {
-    const postSubjectAdmin = `${baseScenario.space.about.profile.displayName}: New Post created by space`;
-    const postSubjectMember = `${baseScenario.space.about.profile.displayName}: New Post created by space, have a look!`;
+    const postSubjectMember = `${baseScenario.space.about.profile.displayName}: New post contribution created by space, have a look!`;
     // Act
     const resPostonSpace = await createPostOnCallout(
       baseScenario.space.collaboration.calloutPostCollectionId,
@@ -306,24 +257,9 @@ describe('Notifications - post', () => {
     spacePostId =
       resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
 
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
-
-    expect(mails[1]).toEqual(9);
-
-    expect(mails[0]).toEqual(
-      await templatedAdminResult(
-        postSubjectAdmin,
-        TestUserManager.users.globalAdmin.email
-      )
-    );
-
-    expect(mails[0]).toEqual(
-      await templatedAdminResult(
-        postSubjectAdmin,
-        TestUserManager.users.spaceAdmin.email
-      )
-    );
+    expect(mails[1]).toEqual(7);
 
     expect(mails[0]).toEqual(
       await templateMemberResult(
@@ -371,8 +307,7 @@ describe('Notifications - post', () => {
   });
 
   test('HA create subspace post - GA(1), HA (1), CA(1), CM(3),  get notifications', async () => {
-    const postSubjectAdmin = `${baseScenario.subspace.about.profile.displayName}: New Post created by space`;
-    const postSubjectMember = `${baseScenario.subspace.about.profile.displayName}: New Post created by space, have a look!`;
+    const postSubjectMember = `${baseScenario.subspace.about.profile.displayName}: New post contribution created by space, have a look!`;
     // Act
     const resPostonSpace = await createPostOnCallout(
       baseScenario.subspace.collaboration.calloutPostCollectionId,
@@ -383,33 +318,13 @@ describe('Notifications - post', () => {
     subspacePostId =
       resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
 
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
-    expect(mails[0]).toEqual(
-      await templatedAdminResult(
-        postSubjectAdmin,
-        TestUserManager.users.globalAdmin.email
-      )
-    );
-
-    // Space admin does not reacive email
-    expect(mails[0]).not.toEqual(
-      await templatedAdminResult(
-        postSubjectAdmin,
-        TestUserManager.users.spaceAdmin.email
-      )
-    );
-
+    expect(mails[1]).toEqual(5);
     expect(mails[0]).toEqual(
       await templateMemberResult(
         postSubjectMember,
         TestUserManager.users.globalAdmin.email
-      )
-    );
-    expect(mails[0]).toEqual(
-      await templateMemberResult(
-        postSubjectAdmin,
-        TestUserManager.users.subspaceAdmin.email
       )
     );
 
@@ -439,7 +354,7 @@ describe('Notifications - post', () => {
         TestUserManager.users.subsubspaceAdmin.email
       )
     );
-    expect(mails[1]).toEqual(7);
+
     expect(mails[0]).toEqual(
       await templateMemberResult(
         postSubjectMember,
@@ -449,8 +364,7 @@ describe('Notifications - post', () => {
   });
 
   test('OM create subsubspace post - HA(2), CA(1), OA(2), OM(4), get notifications', async () => {
-    const postSubjectAdmin = `${baseScenario.subsubspace.about.profile.displayName}: New Post created by subsubspace`;
-    const postSubjectMember = `${baseScenario.subsubspace.about.profile.displayName}: New Post created by subsubspace, have a look!`;
+    const postSubjectMember = `${baseScenario.subsubspace.about.profile.displayName}: New post contribution created by subsubspace, have a look!`;
     // Act
     const resPostonSpace = await createPostOnCallout(
       baseScenario.subsubspace.collaboration.calloutPostCollectionId,
@@ -461,23 +375,9 @@ describe('Notifications - post', () => {
     subsubspacePostId =
       resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
 
-    await delay(6000);
+    await delay(1000);
     const mails = await getMailsData();
-    expect(mails[0]).toEqual(
-      await templatedAdminResult(
-        postSubjectAdmin,
-        TestUserManager.users.globalAdmin.email
-      )
-    );
-
-    // Space admin does not reacive email
-    expect(mails[0]).not.toEqual(
-      await templatedAdminResult(
-        postSubjectAdmin,
-        TestUserManager.users.spaceAdmin.email
-      )
-    );
-
+    expect(mails[1]).toEqual(3);
     expect(mails[0]).toEqual(
       await templateMemberResult(
         postSubjectMember,
@@ -516,12 +416,6 @@ describe('Notifications - post', () => {
         TestUserManager.users.subspaceMember.email
       )
     );
-    expect(mails[0]).toEqual(
-      await templateMemberResult(
-        postSubjectAdmin,
-        TestUserManager.users.subsubspaceAdmin.email
-      )
-    );
 
     expect(mails[0]).toEqual(
       await templateMemberResult(
@@ -536,7 +430,6 @@ describe('Notifications - post', () => {
         TestUserManager.users.subsubspaceAdmin.email
       )
     );
-    expect(mails[1]).toEqual(5);
 
     expect(mails[0]).toEqual(
       await templateMemberResult(
@@ -547,10 +440,18 @@ describe('Notifications - post', () => {
   });
 
   test('OA create subsubspace post - 0 notifications - all roles with notifications disabled', async () => {
-    preferencesPostOnCallForPostCreatedConfig.forEach(
-      async config =>
-        await changePreferenceUser(config.userID, config.type, 'false')
-    );
+    // Disable notifications for all users
+    await disablePostNotifications([
+      TestUserManager.users.globalAdmin.id,
+      TestUserManager.users.spaceMember.id,
+      TestUserManager.users.subspaceMember.id,
+      TestUserManager.users.subsubspaceMember.id,
+      TestUserManager.users.spaceAdmin.id,
+      TestUserManager.users.subspaceAdmin.id,
+      TestUserManager.users.subsubspaceAdmin.id,
+      TestUserManager.users.nonSpaceMember.id,
+    ]);
+
     // Act
     const resPostonSpace = await createPostOnCallout(
       baseScenario.subsubspace.collaboration.calloutPostCollectionId,

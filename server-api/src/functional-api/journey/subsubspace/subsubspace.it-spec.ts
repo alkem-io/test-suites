@@ -70,7 +70,18 @@ describe('Opportunities', () => {
     const requestSubsubspaceData = requestQuerySubsubspace?.data?.lookup?.space;
 
     // Assert
-    expect(createSubsubspaceData).toEqual(requestSubsubspaceData);
+    // expect(createSubsubspaceData).toEqual(requestSubsubspaceData);
+    expect(createSubsubspaceData?.about).toEqual(requestSubsubspaceData?.about);
+    expect(createSubsubspaceData?.collaboration).toEqual(
+      requestSubsubspaceData?.collaboration
+    );
+    expect(createSubsubspaceData?.community).toEqual(
+      requestSubsubspaceData?.community
+    );
+    expect(createSubsubspaceData?.id).toEqual(requestSubsubspaceData?.id);
+    expect(createSubsubspaceData?.subspaces).toEqual(
+      requestSubsubspaceData?.subspaces
+    );
   });
 
   test('should update subsubspace and query the data', async () => {
@@ -124,7 +135,7 @@ describe('Opportunities', () => {
       subsubspaceId
     );
     expect(requestQuerySubsubspace?.error?.errors[0].message).toEqual(
-      `Unable to find Space with ID: ${subsubspaceId} using options 'undefined`
+      "Unable to find Space using options 'undefined'"
     );
   });
 
