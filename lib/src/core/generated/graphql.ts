@@ -127955,7 +127955,7 @@ export type VirtualContributorQuery = {
                     | undefined;
                 };
               };
-          aiPersona: { engine: SchemaTypes.AiPersonaEngine };
+          aiPersona: { id: string; engine: SchemaTypes.AiPersonaEngine };
           profile: {
             __typename: "Profile";
             id: string;
@@ -132550,6 +132550,7 @@ export const VirtualContributorDocument = gql`
         bodyOfKnowledgeType
         bodyOfKnowledgeDescription
         aiPersona {
+          id
           engine
         }
         profile {

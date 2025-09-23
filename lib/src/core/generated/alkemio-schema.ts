@@ -119198,7 +119198,7 @@ export type VirtualContributorQuery = {
                     | undefined;
                 };
               };
-          aiPersona: { engine: AiPersonaEngine };
+          aiPersona: { id: string; engine: AiPersonaEngine };
           profile: {
             __typename: "Profile";
             id: string;

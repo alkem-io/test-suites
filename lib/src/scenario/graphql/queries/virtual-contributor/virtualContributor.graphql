@@ -71,6 +71,7 @@ query VirtualContributor($id: UUID!) {
       bodyOfKnowledgeType
       bodyOfKnowledgeDescription
       aiPersona {
+        id
         engine
       }
       profile {

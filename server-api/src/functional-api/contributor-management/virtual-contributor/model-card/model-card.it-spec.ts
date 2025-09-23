@@ -82,7 +82,7 @@ it('should create a virtual contributor with a model card', async () => {
   // Query the VC data to get AI Persona ID
   const vcDataQuery = await queryVCData(vcId);
   const aiPersonaId =
-    vcDataQuery?.data?.lookup.virtualContributor?.aiPersonaID ?? '';
+    vcDataQuery?.data?.lookup.virtualContributor?.aiPersona.id;
   expect(aiPersonaId).toBeDefined();
 
   // Query model card data
