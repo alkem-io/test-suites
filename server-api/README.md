@@ -17,8 +17,8 @@ Initial version of integration api tests is in place. To run them, look at the p
 - `AUTH_TEST_HARNESS_PASSWORD` password of the user set on the target endpoint (i.e. dev, test, local)
 - `ALKEMIO_SERVER=http://localhost:4455/admin/graphql` endpoint used for gathering token based on provided credentials
 - `ALKEMIO_SERVER_URL=http://localhost:4455/admin/graphql` endpoint used for graphql requests
-- In order to run the tests, execute the following command: `npm run test:[TEST_TYPE]` where TEST_TYPE is `it`
-  - To run specific suite: `npm run-script test:[TEST_TYPE] ./test folder>/<test suite file>` (i.e. `npm run-script test:it ./src/functional/integration/challenge/create-challenge.it-spec.ts`)
+- In order to run the tests, execute the following command: `pnpm run test:[TEST_TYPE]` where TEST_TYPE is `it`
+  - To run specific suite: `pnpm run test:[TEST_TYPE] ./test folder>/<test suite file>` (i.e. `pnpm run test:it ./src/functional/integration/challenge/create-challenge.it-spec.ts`)
 - The results of the test, will be displayed at the end of the execution.
 
 Automation test structure
@@ -53,9 +53,9 @@ Test types
 
 Run tests:
 
-    - run all tests: `npm run-script test:nightly`
-    - run all tests from particular test suite area: `npm run-script test:it ./src/functional-api/integration/challenge/`
-    - run all tests for a test file: `npm run-script test:it ./src/functional-api/integration/challenge/query-challenge-data.it-spec.ts`
+    - run all tests: `pnpm run test:nightly`
+    - run all tests from particular test suite area: `pnpm run test:it ./src/functional-api/integration/challenge/`
+    - run all tests for a test file: `pnpm run test:it ./src/functional-api/integration/challenge/query-challenge-data.it-spec.ts`
 
 To debug tests in VS Code
 
@@ -64,7 +64,7 @@ To debug tests in VS Code
 To run only one test from a test file
 
 - Set the keyword _.only_ after `test` or `describe` (i.e. `test.only('should remove a challenge', async () => {})`)
-- Run the command for this particular test file: `npm run-script test:it ./src/functional/integration/challenge/query-challenge-data.it-spec.ts`
+- Run the command for this particular test file: `pnpm run test:it ./src/functional/integration/challenge/query-challenge-data.it-spec.ts`
 
 ## Update user password secret for Travis CI
 

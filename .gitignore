@@ -7,11 +7,18 @@ client-web/node_modules
 server-api/html-report
 server-api/dist
 server-api/node_modules
+lib/dist
+lib/node_modules
+
+# Package managers
+pnpm-lock.yaml
+.pnpm-debug.log*
 
 # Logs
 logs
 *.log
 npm-debug.log*
+pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
@@ -55,8 +62,9 @@ web_modules/
 # TypeScript cache
 *.tsbuildinfo
 
-# Optional npm cache directory
+# Optional package manager cache directories
 .npm
+.pnpm
 
 # Optional eslint cache
 .eslintcache

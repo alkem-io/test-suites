@@ -1,0 +1,5 @@
+packages:
+  - 'lib'
+  - 'server-api'
+  - 'client-web'
+  # Note: testOld is excluded as it's legacy and should not be part of the main workspace

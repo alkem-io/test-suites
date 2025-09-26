@@ -6,7 +6,15 @@
 # Alkemio Test Suites
 Alkemio quallity assurance packages.
 
-##
+## Package Manager
+
+This project uses [pnpm](https://pnpm.io/) as the package manager. To get started:
+
+1. Install pnpm globally: `npm install -g pnpm`
+2. Install dependencies: `pnpm install`
+3. Build all packages: `pnpm run build`
+
+## Repository Structure
 This repository contains three core elements:
 * Tests Library: for shared components that can be re-used across test suites
 * Test Suite **Server-API**: used to validate the Alkemio server api.

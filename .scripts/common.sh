@@ -63,7 +63,7 @@ cd "$PROJECT_ROOT_DIR" || exit
 cd $SNAPSHOT_SERVER_DIR || exit
 
 # # Run migrations
-npm run migration:run
+pnpm run migration:run
 echo run migration
 
 npm start &

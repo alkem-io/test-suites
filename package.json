@@ -1,0 +1,24 @@
+{
+  "name": "@alkemio/test-suites",
+  "version": "0.1.0",
+  "description": "Alkemio quality assurance packages.",
+  "private": true,
+  "author": "Alkemio Foundation",
+  "license": "EUPL-1.2",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alkem-io/test-suites.git"
+  },
+  "scripts": {
+    "build": "pnpm --filter='./lib' build && pnpm --filter='./server-api' build && pnpm --filter='./client-web' build",
+    "lint": "pnpm --recursive lint",
+    "lint:fix": "pnpm --recursive lint:fix",
+    "clean": "pnpm --recursive clean || echo 'Clean completed'",
+    "test": "pnpm --recursive test"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@10.17.1"
+}
