@@ -35,7 +35,7 @@
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/supertest": "^6.0.2",
-    "@types/graphql-upload": "^16.0.4",
+    "@types/graphql-upload": "8.0.12",
     "@typescript-eslint/eslint-plugin": "^4.28.5",
     "@typescript-eslint/parser": "^4.28.5",
     "@types/supertest": "^6.0.2",
