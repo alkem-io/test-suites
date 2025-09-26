@@ -1,7 +1,7 @@
-import config from './jest.config.mjs';
+import baseConfig from './jest.config.mjs';
 
 export default {
-  ...config,
+  ...baseConfig,
   testRegex: [
     '/src/functional-api/contributor-management/organization/.*\\.it-spec\\.ts',
   ],
