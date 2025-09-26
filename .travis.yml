@@ -8,9 +8,7 @@ addons:
   chrome: stable
 cache:
   directories:
-    - node_modules
-    - server-api/node_modules
-    - lib/node_modules
+    - node_modules/.pnpm-store
     - $HOME/.nvm
 env:
   matrix:
@@ -21,23 +19,25 @@ env:
   global:
     secure: cvfEwQhiyIdtOMSriMpzeeV2qs64FXEVksZ+lWpAMg5DKxgL7veJU3SKT7LibQeU3oTGgG97Jw6bTmqHtbTsaOLBbTO7fmqQufupBMEeB6MEk2MSe2FvHCs5JXeGXA7JQ8I2zVC9biqAcxGzxrGUbPkZS5U7ACnOQXOKUgCUI5RYwI4YVJp7m2RByKzK5vq0dJvmaW91w+N/6/fkLVEQvOSkSMExad1eeEjo1y6NRYnuqKl+Vc35opnk1o2HCsNVZUl1qV0rDbJK3R0kIM+jrUxyMRRcdJJQv8ynD+Est4xTZDMqWphEoHPR6uXKcK8fYzKISPiFEs+1g4IxuR5OJLGTVlgzrCKKeF9IavGcZhJy+KLFjETzQMEsBf0btZk4rOXjOZSsEfw+DTm5Mw9E6aJg5cP0E5xjcRAfrfRIWdZ4lThRvyMFozv3c/YTaaqOrqce6XdBW1MLJSmMKhFrn5PETYRlccFXJctMCGD/LEEkej/NmaL2ozKtPw4fxruq5wr3uz6pjWkK7H4qGzCIoo0/ynS60Aa85linfvquOiw2C7M4gaf2Syi3Zt4Ph5cWb5xSuL2y81lO4d12hW4/YOa1BBzK9vbrinz3uNYTkzzAbk1GM8RmSfNvNHkm5y/5JT8QtYi7NSUiozZ+Scqtbm+K6qQ7pGmqGDt9tu0wQQE=
 before_install:
+  # Install pnpm globally
+  - npm install -g pnpm
   # Install Node 17.9.1 for server-api compatibility
   - nvm install 17.9.1
 install:
   # Build lib with Node 20.11.0 (current default, compatible with Ubuntu 20.04)
-  - echo "Building lib with Node $(node --version) and npm $(npm --version)"
-  - cd $TRAVIS_BUILD_DIR/lib && npm install
-  - cd $TRAVIS_BUILD_DIR/lib && npm run build
+  - echo "Building lib with Node $(node --version) and pnpm $(pnpm --version)"
+  - cd $TRAVIS_BUILD_DIR && pnpm install --filter @alkemio/tests-lib
+  - cd $TRAVIS_BUILD_DIR && pnpm --filter @alkemio/tests-lib build
 
   # Switch to Node 17.9.1 for server-api
   - nvm use 17.9.1
-  - echo "Building server-api with Node $(node --version) and npm $(npm --version)"
-  - cd $TRAVIS_BUILD_DIR/server-api && npm install
-  - cd $TRAVIS_BUILD_DIR/server-api && npm run build
+  - echo "Building server-api with Node $(node --version) and pnpm $(pnpm --version)"
+  - cd $TRAVIS_BUILD_DIR && pnpm install --filter @alkemio/test-suite-server-api
+  - cd $TRAVIS_BUILD_DIR && pnpm --filter @alkemio/test-suite-server-api build
 script:
   # Run tests with Node 17.9.1 (already switched in install phase)
-  - echo "Running tests with Node $(node --version) and npm $(npm --version)"
-  - cd $TRAVIS_BUILD_DIR/server-api && npm run test:nightly
+  - echo "Running tests with Node $(node --version) and pnpm $(pnpm --version)"
+  - cd $TRAVIS_BUILD_DIR && pnpm --filter @alkemio/test-suite-server-api test:nightly
 
 notifications:
   email:

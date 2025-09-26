@@ -50,7 +50,7 @@ do
   fi
   cd $PROJECT_ROOT_DIR
 
-  npm run-script test:auth $testFile
+  pnpm-script test:auth $testFile
 done
 
 cd $SCRIPT_DIR

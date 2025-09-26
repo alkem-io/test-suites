@@ -70,14 +70,14 @@ cd $SNAPSHOT_SERVER_DIR
 
 echo $MYSQL_DATABASE
 # Run migrations
-npm run migration:run
+pnpm migration:run
 
 # Navigate to the populator folder
 cd $PROJECT_ROOT_DIR
 cd $SNAPSHOT_POPULATOR_DIR
 
 # Run population
-npm run populate
+pnpm populate
 
 cd $START_DIR
 

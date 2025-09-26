@@ -23,7 +23,7 @@ Where:
 
 There is a `create-snapshot.config.example` shows all variables which can be configured. They are split in 3 categories: `server`, `populator` and `script`
 
-**the environment variables `export` is mandatory otherwise the npm scripts won't be able to use them.**
+**the environment variables `export` is mandatory otherwise the pnpm scripts won't be able to use them.**
 
 ```bash
 # === Server ===

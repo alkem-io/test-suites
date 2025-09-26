@@ -63,10 +63,10 @@ cd "$PROJECT_ROOT_DIR" || exit
 cd $SNAPSHOT_SERVER_DIR || exit
 
 # # Run migrations
-npm run migration:run
+pnpm migration:run
 echo run migration
 
-npm start &
+pnpm start &
 echo Alkemio service is running
 
 # Waits the server to start successfully
