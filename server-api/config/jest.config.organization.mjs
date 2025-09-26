@@ -1,5 +1,7 @@
-module.exports = {
-  ...require('./jest.config.mjs'),
+import config from './jest.config.mjs';
+
+export default {
+  ...config,
   testRegex: [
     '/src/functional-api/contributor-management/organization/.*\\.it-spec\\.ts',
   ],
