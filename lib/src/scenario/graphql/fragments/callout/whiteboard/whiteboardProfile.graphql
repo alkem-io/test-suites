@@ -1,0 +1,16 @@
+fragment WhiteboardProfile on Profile {
+  id
+  url
+  displayName
+  description
+
+  tagset {
+    ...TagsetDetails
+    __typename
+  }
+  storageBucket {
+    id
+    __typename
+  }
+  __typename
+}

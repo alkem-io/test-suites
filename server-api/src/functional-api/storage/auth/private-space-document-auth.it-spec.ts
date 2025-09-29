@@ -57,6 +57,7 @@ const scenarioConfig: TestScenarioConfig = {
       addPostCallout: true,
       addPostCollectionCallout: true,
       addWhiteboardCallout: true,
+      addTutorialCallouts: false,
     },
     settings: {
       privacy: { mode: SpacePrivacyMode.Private },

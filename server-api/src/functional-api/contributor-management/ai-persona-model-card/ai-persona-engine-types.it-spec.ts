@@ -9,6 +9,8 @@ import { UniqueIDGenerator } from '@alkemio/tests-lib';
 import {
   deleteVirtualContributorOnAccount,
   queryVCData,
+  updateVirtualContributor,
+  updateVirtualContributorSettings,
 } from '../virtual-contributor/vc.request.params';
 import {
   assignLicensePlanToAccount,
@@ -24,7 +26,10 @@ import {
   createExternalVirtualContributorWithEngineType,
 } from './ai-persona-engine.request.params';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { AiPersonaEngine } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import {
+  AiPersonaEngine,
+  SearchVisibility,
+} from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -83,7 +88,18 @@ describe('AI Persona Engine Types Model Card', () => {
       AiPersonaEngine.LibraFlow,
       TestUser.GLOBAL_ADMIN
     );
+
     libraFlowVcId = libraFlowVcData?.data?.createVirtualContributor?.id ?? '';
+    await updateVirtualContributor(
+      libraFlowVcId,
+      SearchVisibility.Public,
+      TestUser.GLOBAL_ADMIN
+    );
+    await updateVirtualContributorSettings(
+      libraFlowVcId,
+      true,
+      TestUser.GLOBAL_ADMIN
+    );
 
     const expertVcData = await createVirtualContributorWithEngineType(
       expertVcName,
@@ -93,6 +109,16 @@ describe('AI Persona Engine Types Model Card', () => {
       TestUser.GLOBAL_ADMIN
     );
     expertVcId = expertVcData?.data?.createVirtualContributor?.id ?? '';
+    await updateVirtualContributor(
+      expertVcId,
+      SearchVisibility.Public,
+      TestUser.GLOBAL_ADMIN
+    );
+    await updateVirtualContributorSettings(
+      expertVcId,
+      true,
+      TestUser.GLOBAL_ADMIN
+    );
 
     // Create a knowledge-based VC with OpenAI engine
     const genericOpenAiVcData =
@@ -104,6 +130,16 @@ describe('AI Persona Engine Types Model Card', () => {
       );
     genericOpenAiVcId =
       genericOpenAiVcData?.data?.createVirtualContributor?.id ?? '';
+    await updateVirtualContributor(
+      genericOpenAiVcId,
+      SearchVisibility.Public,
+      TestUser.GLOBAL_ADMIN
+    );
+    await updateVirtualContributorSettings(
+      genericOpenAiVcId,
+      true,
+      TestUser.GLOBAL_ADMIN
+    );
 
     // Create a knowledge-based VC with Guidance engine
     const guidanceVcData = await createExternalVirtualContributorWithEngineType(
@@ -113,6 +149,16 @@ describe('AI Persona Engine Types Model Card', () => {
       TestUser.GLOBAL_ADMIN
     );
     guidanceVcId = guidanceVcData?.data?.createVirtualContributor?.id ?? '';
+    await updateVirtualContributor(
+      guidanceVcId,
+      SearchVisibility.Public,
+      TestUser.GLOBAL_ADMIN
+    );
+    await updateVirtualContributorSettings(
+      guidanceVcId,
+      true,
+      TestUser.GLOBAL_ADMIN
+    );
   });
 
   afterAll(async () => {
@@ -137,10 +183,10 @@ describe('AI Persona Engine Types Model Card', () => {
     // Query all VC data in parallel
     const [libraFlowData, expertData, genericOpenAiData, guidanceData] =
       await Promise.all([
-        queryVCData(libraFlowVcId),
-        queryVCData(expertVcId),
-        queryVCData(genericOpenAiVcId),
-        queryVCData(guidanceVcId),
+        queryVCData(libraFlowVcId, TestUser.GLOBAL_ADMIN),
+        queryVCData(expertVcId, TestUser.GLOBAL_ADMIN),
+        queryVCData(genericOpenAiVcId, TestUser.GLOBAL_ADMIN),
+        queryVCData(guidanceVcId, TestUser.GLOBAL_ADMIN),
       ]);
 
     // Verify engine types
@@ -264,7 +310,7 @@ describe('AI Persona Engine Types Model Card', () => {
   it('should have model card for registered user access', async () => {
     // Test accessing model card as non-admin user
     const externalModelCard = await getModelCardForAiPersona(
-      guidanceVcId,
+      expertVcId,
       TestUser.NON_SPACE_MEMBER
     );
 

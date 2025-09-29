@@ -43,9 +43,8 @@ const scenarioConfig: TestScenarioConfig = {
   name: 'post-on-callout',
   space: {
     collaboration: {
-      addPostCallout: true,
       addPostCollectionCallout: true,
-      addWhiteboardCallout: true,
+      addTutorialCallouts: false,
     },
     community: {
       admins: [TestUser.SPACE_ADMIN],
@@ -60,9 +59,7 @@ const scenarioConfig: TestScenarioConfig = {
     },
     subspace: {
       collaboration: {
-        addPostCallout: true,
         addPostCollectionCallout: true,
-        addWhiteboardCallout: true,
       },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
@@ -75,9 +72,7 @@ const scenarioConfig: TestScenarioConfig = {
       },
       subspace: {
         collaboration: {
-          addPostCallout: true,
           addPostCollectionCallout: true,
-          addWhiteboardCallout: true,
         },
         community: {
           admins: [TestUser.SUBSUBSPACE_ADMIN],
@@ -140,7 +135,6 @@ describe('Posts - Create', () => {
       baseScenario.space.collaboration.calloutPostCollectionId,
       { displayName: postDisplayName }
     );
-
     spacePostId =
       resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
     const spacePostNameId =

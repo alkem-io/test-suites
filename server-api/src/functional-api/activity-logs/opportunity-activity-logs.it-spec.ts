@@ -18,13 +18,12 @@ import { assignRoleToUser } from '../roleset/roles-request.params';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import {
-  CalloutState,
-  CalloutType,
   CalloutVisibility,
   CommunityMembershipPolicy,
   RoleName,
   SpacePrivacyMode,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { CalloutContributionType } from '@alkemio/client-lib';
 import { ActivityEventType } from '@alkemio/client-lib';
 
 const uniqueId = UniqueIDGenerator.getID();
@@ -209,10 +208,12 @@ describe('Activity logs - Subsubspace', () => {
             description: 'discussion callout',
           },
         },
-        contributionPolicy: {
-          state: CalloutState.Open,
+        settings: {
+          contribution: {
+            enabled: true,
+            allowedTypes: [CalloutContributionType.Whiteboard],
+          },
         },
-        type: CalloutType.Whiteboard,
       }
     );
     const calloutIdDiscussion =
@@ -237,10 +238,13 @@ describe('Activity logs - Subsubspace', () => {
             description: 'whiteboard callout',
           },
         },
-        contributionPolicy: {
-          state: CalloutState.Open,
+
+        settings: {
+          contribution: {
+            enabled: true,
+            allowedTypes: [CalloutContributionType.Whiteboard],
+          },
         },
-        type: CalloutType.Whiteboard,
       }
     );
     const calloutIdWhiteboard =

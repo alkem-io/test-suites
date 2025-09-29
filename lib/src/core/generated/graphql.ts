@@ -51,6 +51,7 @@ export type Scalars = {
   JSON: { input: string; output: string };
   LifecycleDefinition: { input: any; output: any };
   Markdown: { input: any; output: any };
+  MemoContent: { input: any; output: any };
   MessageID: { input: any; output: any };
   NameID: { input: string; output: string };
   SearchCursor: { input: any; output: any };
@@ -74,6 +75,8 @@ export type Account = {
   agent: Agent;
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
+  /** The base license plan assigned to this Account. Additional entitlements may be added via other means. */
+  baselineLicensePlan: AccountLicensePlan;
   /** The date at which the entity was created. */
   createdDate: Scalars["DateTime"]["output"];
   /** The external subscription ID for this Account. */
@@ -105,6 +108,21 @@ export type Account = {
 export type AccountAuthorizationResetInput = {
   /** The identifier of the Account whose Authorization Policy should be reset. */
   accountID: Scalars["UUID"]["input"];
+};
+
+export type AccountLicensePlan = {
+  /** The number of Innovation Packs allowed. */
+  innovationPacks: Scalars["Int"]["output"];
+  /** The number of Free Spaces allowed. */
+  spaceFree: Scalars["Int"]["output"];
+  /** The number of Plus Spaces allowed. */
+  spacePlus: Scalars["Int"]["output"];
+  /** The number of Premium Spaces allowed. */
+  spacePremium: Scalars["Int"]["output"];
+  /** The number of Starting Pages allowed. */
+  startingPages: Scalars["Int"]["output"];
+  /** The number of Virtual Contributors allowed. */
+  virtualContributor: Scalars["Int"]["output"];
 };
 
 export type AccountLicenseResetInput = {
@@ -762,6 +780,7 @@ export type AuthenticationProviderConfigUnion = OryConfig;
 
 export enum AuthenticationType {
   Email = "EMAIL",
+  Github = "GITHUB",
   Linkedin = "LINKEDIN",
   Microsoft = "MICROSOFT",
   Unknown = "UNKNOWN",
@@ -772,6 +791,8 @@ export type Authorization = {
   createdDate: Scalars["DateTime"]["output"];
   /** The set of credential rules that are contained by this Authorization Policy. */
   credentialRules?: Maybe<Array<AuthorizationPolicyRuleCredential>>;
+  /** Does the current User have the specified privilege based on this Authorization Policy. */
+  hasPrivilege: Scalars["Boolean"]["output"];
   /** The ID of the entity */
   id: Scalars["UUID"]["output"];
   /** The privileges granted to the current user based on this Authorization Policy. */
@@ -786,6 +807,10 @@ export type Authorization = {
   verifiedCredentialRules?: Maybe<
     Array<AuthorizationPolicyRuleVerifiedCredential>
   >;
+};
+
+export type AuthorizationHasPrivilegeArgs = {
+  privilege: AuthorizationPrivilege;
 };
 
 export enum AuthorizationCredential {
@@ -854,6 +879,7 @@ export enum AuthorizationPolicyType {
   Document = "DOCUMENT",
   Forum = "FORUM",
   InnovationFlow = "INNOVATION_FLOW",
+  InnovationFlowState = "INNOVATION_FLOW_STATE",
   InnovationHub = "INNOVATION_HUB",
   InnovationPack = "INNOVATION_PACK",
   Invitation = "INVITATION",
@@ -864,12 +890,11 @@ export enum AuthorizationPolicyType {
   LicensePolicy = "LICENSE_POLICY",
   Licensing = "LICENSING",
   Link = "LINK",
+  Memo = "MEMO",
   Organization = "ORGANIZATION",
   OrganizationVerification = "ORGANIZATION_VERIFICATION",
   Platform = "PLATFORM",
   Post = "POST",
-  Preference = "PREFERENCE",
-  PreferenceSet = "PREFERENCE_SET",
   Profile = "PROFILE",
   Reference = "REFERENCE",
   RoleSet = "ROLE_SET",
@@ -888,6 +913,7 @@ export enum AuthorizationPolicyType {
   Unknown = "UNKNOWN",
   User = "USER",
   UserGroup = "USER_GROUP",
+  UserSettings = "USER_SETTINGS",
   VirtualContributor = "VIRTUAL_CONTRIBUTOR",
   Visual = "VISUAL",
   Whiteboard = "WHITEBOARD",
@@ -929,6 +955,11 @@ export enum AuthorizationPrivilege {
   ReadUsers = "READ_USERS",
   ReadUserPii = "READ_USER_PII",
   ReadUserSettings = "READ_USER_SETTINGS",
+  ReceiveNotifications = "RECEIVE_NOTIFICATIONS",
+  ReceiveNotificationsAdmin = "RECEIVE_NOTIFICATIONS_ADMIN",
+  ReceiveNotificationsInApp = "RECEIVE_NOTIFICATIONS_IN_APP",
+  ReceiveNotificationsOrganizationAdmin = "RECEIVE_NOTIFICATIONS_ORGANIZATION_ADMIN",
+  ReceiveNotificationsSpaceAdmin = "RECEIVE_NOTIFICATIONS_SPACE_ADMIN",
   RolesetEntryRoleApply = "ROLESET_ENTRY_ROLE_APPLY",
   RolesetEntryRoleAssign = "ROLESET_ENTRY_ROLE_ASSIGN",
   RolesetEntryRoleAssignOrganization = "ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION",
@@ -1007,7 +1038,7 @@ export enum CalendarEventType {
 }
 
 export type Callout = {
-  /** The activity for this Callout. */
+  /** The activity for this Callout. The number of Contributions if the callout allows contributions, or the number of comments if it does not. */
   activity: Scalars["Float"]["output"];
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
@@ -1017,8 +1048,6 @@ export type Callout = {
   comments?: Maybe<Room>;
   /** The Contribution Defaults for this Callout. */
   contributionDefaults: CalloutContributionDefaults;
-  /** The ContributionPolicy for this Callout. */
-  contributionPolicy: CalloutContributionPolicy;
   /** The Contributions that have been made to this Callout. */
   contributions: Array<CalloutContribution>;
   /** The user that created this Callout */
@@ -1039,14 +1068,12 @@ export type Callout = {
   publishedBy?: Maybe<User>;
   /** The timestamp for the publishing of this Callout. */
   publishedDate?: Maybe<Scalars["Float"]["output"]>;
+  /** The Callout Settings associated with this Callout. */
+  settings: CalloutSettings;
   /** The sorting order for this Callout. */
   sortOrder: Scalars["Float"]["output"];
-  /** The Callout type, e.g. Post, Whiteboard, Discussion */
-  type: CalloutType;
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
-  /** Visibility of the Callout. */
-  visibility: CalloutVisibility;
 };
 
 export type CalloutContributionsArgs = {
@@ -1054,6 +1081,12 @@ export type CalloutContributionsArgs = {
   limit?: InputMaybe<Scalars["Float"]["input"]>;
   shuffle?: InputMaybe<Scalars["Boolean"]["input"]>;
 };
+
+export enum CalloutAllowedContributors {
+  Admins = "ADMINS",
+  Members = "MEMBERS",
+  None = "NONE",
+}
 
 export type CalloutContribution = {
   /** The authorization rules for the entity */
@@ -1079,6 +1112,8 @@ export type CalloutContribution = {
 export type CalloutContributionDefaults = {
   /** The date at which the entity was created. */
   createdDate: Scalars["DateTime"]["output"];
+  /** The default title to use for new contributions. */
+  defaultDisplayName?: Maybe<Scalars["String"]["output"]>;
   /** The ID of the entity */
   id: Scalars["UUID"]["output"];
   /** The default description to use for new contributions. */
@@ -1087,19 +1122,6 @@ export type CalloutContributionDefaults = {
   updatedDate: Scalars["DateTime"]["output"];
   /** The default whiteboard content for whiteboard responses. */
   whiteboardContent?: Maybe<Scalars["WhiteboardContent"]["output"]>;
-};
-
-export type CalloutContributionPolicy = {
-  /** The allowed contribution types for this callout. */
-  allowedContributionTypes: Array<CalloutContributionType>;
-  /** The date at which the entity was created. */
-  createdDate: Scalars["DateTime"]["output"];
-  /** The ID of the entity */
-  id: Scalars["UUID"]["output"];
-  /** State of the Callout. */
-  state: CalloutState;
-  /** The date at which the entity was last updated. */
-  updatedDate: Scalars["DateTime"]["output"];
 };
 
 export enum CalloutContributionType {
@@ -1115,13 +1137,26 @@ export type CalloutFraming = {
   createdDate: Scalars["DateTime"]["output"];
   /** The ID of the entity */
   id: Scalars["UUID"]["output"];
+  /** The Link for framing the associated Callout. */
+  link?: Maybe<Link>;
+  /** The Memo for framing the associated Callout. */
+  memo?: Maybe<Memo>;
   /** The Profile for framing the associated Callout. */
   profile: Profile;
+  /** The type of the Callout Framing, the additional content attached to this callout */
+  type: CalloutFramingType;
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
   /** The Whiteboard for framing the associated Callout. */
   whiteboard?: Maybe<Whiteboard>;
 };
+
+export enum CalloutFramingType {
+  Link = "LINK",
+  Memo = "MEMO",
+  None = "NONE",
+  Whiteboard = "WHITEBOARD",
+}
 
 export type CalloutPostCreated = {
   /** The identifier of the Callout on which the post was created. */
@@ -1134,19 +1169,30 @@ export type CalloutPostCreated = {
   sortOrder: Scalars["Float"]["output"];
 };
 
-export enum CalloutState {
-  Archived = "ARCHIVED",
-  Closed = "CLOSED",
-  Open = "OPEN",
-}
+export type CalloutSettings = {
+  /** Callout Contribution Settings. */
+  contribution: CalloutSettingsContribution;
+  /** Callout Framing Settings. */
+  framing: CalloutSettingsFraming;
+  /** Callout Visibility. */
+  visibility: CalloutVisibility;
+};
 
-export enum CalloutType {
-  LinkCollection = "LINK_COLLECTION",
-  Post = "POST",
-  PostCollection = "POST_COLLECTION",
-  Whiteboard = "WHITEBOARD",
-  WhiteboardCollection = "WHITEBOARD_COLLECTION",
-}
+export type CalloutSettingsContribution = {
+  /** The allowed contribution types for this callout. */
+  allowedTypes: Array<CalloutContributionType>;
+  /** Indicate who can add more contributions to the callout. */
+  canAddContributions: CalloutAllowedContributors;
+  /** Can comment to contributions callout. */
+  commentsEnabled: Scalars["Boolean"]["output"];
+  /** Can add contributions to the Callout. Allowed Contribution types is going to be readOnly, so this field can be used to enable or disable the contribution temporarily instead of setting allowedTypes to None. */
+  enabled: Scalars["Boolean"]["output"];
+};
+
+export type CalloutSettingsFraming = {
+  /** Can comment to callout framing. */
+  commentsEnabled: Scalars["Boolean"]["output"];
+};
 
 export enum CalloutVisibility {
   Draft = "DRAFT",
@@ -1176,7 +1222,7 @@ export type CalloutsSetCalloutsArgs = {
   limit?: InputMaybe<Scalars["Float"]["input"]>;
   shuffle?: InputMaybe<Scalars["Boolean"]["input"]>;
   sortByActivity?: InputMaybe<Scalars["Boolean"]["input"]>;
-  types?: InputMaybe<Array<CalloutType>>;
+  withContributionTypes?: InputMaybe<Array<CalloutContributionType>>;
 };
 
 export enum CalloutsSetType {
@@ -1598,95 +1644,147 @@ export type CreateCalendarEventOnCalendarInput = {
   wholeDay: Scalars["Boolean"]["input"];
 };
 
+export type CreateCalloutContributionData = {
+  link?: Maybe<CreateLinkData>;
+  post?: Maybe<CreatePostData>;
+  /** The sort order to assign to this Contribution. */
+  sortOrder?: Maybe<Scalars["Float"]["output"]>;
+  whiteboard?: Maybe<CreateWhiteboardData>;
+};
+
 export type CreateCalloutContributionDefaultsData = {
+  /** The default title to use for new contributions. */
+  defaultDisplayName?: Maybe<Scalars["String"]["output"]>;
   /** The default description to use for new Post contributions. */
   postDescription?: Maybe<Scalars["Markdown"]["output"]>;
   whiteboardContent?: Maybe<Scalars["WhiteboardContent"]["output"]>;
 };
 
 export type CreateCalloutContributionDefaultsInput = {
+  /** The default title to use for new contributions. */
+  defaultDisplayName?: InputMaybe<Scalars["String"]["input"]>;
   /** The default description to use for new Post contributions. */
   postDescription?: InputMaybe<Scalars["Markdown"]["input"]>;
   whiteboardContent?: InputMaybe<Scalars["WhiteboardContent"]["input"]>;
 };
 
-export type CreateCalloutContributionPolicyData = {
-  /** State of the callout. */
-  state?: Maybe<CalloutState>;
-};
-
-export type CreateCalloutContributionPolicyInput = {
-  /** State of the callout. */
-  state?: InputMaybe<CalloutState>;
+export type CreateCalloutContributionInput = {
+  link?: InputMaybe<CreateLinkInput>;
+  post?: InputMaybe<CreatePostInput>;
+  /** The sort order to assign to this Contribution. */
+  sortOrder?: InputMaybe<Scalars["Float"]["input"]>;
+  whiteboard?: InputMaybe<CreateWhiteboardInput>;
 };
 
 export type CreateCalloutData = {
   classification?: Maybe<CreateClassificationData>;
   contributionDefaults?: Maybe<CreateCalloutContributionDefaultsData>;
-  contributionPolicy?: Maybe<CreateCalloutContributionPolicyData>;
-  /** Controls if the comments are enabled for this Callout. Defaults to false. */
-  enableComments?: Maybe<Scalars["Boolean"]["output"]>;
+  /** Contributions to be created with this Callout. */
+  contributions?: Maybe<Array<CreateCalloutContributionData>>;
   framing: CreateCalloutFramingData;
   /** A readable identifier, unique within the containing scope. */
   nameID?: Maybe<Scalars["NameID"]["output"]>;
   /** Send notification if this flag is true and visibility is PUBLISHED. Defaults to false. */
   sendNotification?: Maybe<Scalars["Boolean"]["output"]>;
+  settings?: Maybe<CreateCalloutSettingsData>;
   /** The sort order to assign to this Callout. */
   sortOrder?: Maybe<Scalars["Float"]["output"]>;
-  /** Callout type. */
-  type: CalloutType;
-  /** Visibility of the Callout. Defaults to DRAFT. */
-  visibility?: Maybe<CalloutVisibility>;
 };
 
 export type CreateCalloutFramingData = {
+  link?: Maybe<CreateLinkData>;
+  memo?: Maybe<CreateMemoData>;
   profile: CreateProfileData;
   tags?: Maybe<Array<Scalars["String"]["output"]>>;
+  /** The type of additional content attached to the framing of the callout. Defaults to None. */
+  type?: Maybe<CalloutFramingType>;
   whiteboard?: Maybe<CreateWhiteboardData>;
 };
 
 export type CreateCalloutFramingInput = {
+  link?: InputMaybe<CreateLinkInput>;
+  memo?: InputMaybe<CreateMemoInput>;
   profile: CreateProfileInput;
   tags?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  /** The type of additional content attached to the framing of the callout. Defaults to None. */
+  type?: InputMaybe<CalloutFramingType>;
   whiteboard?: InputMaybe<CreateWhiteboardInput>;
 };
 
 export type CreateCalloutInput = {
   classification?: InputMaybe<CreateClassificationInput>;
   contributionDefaults?: InputMaybe<CreateCalloutContributionDefaultsInput>;
-  contributionPolicy?: InputMaybe<CreateCalloutContributionPolicyInput>;
-  /** Controls if the comments are enabled for this Callout. Defaults to false. */
-  enableComments?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Contributions to be created with this Callout. */
+  contributions?: InputMaybe<Array<CreateCalloutContributionInput>>;
   framing: CreateCalloutFramingInput;
   /** A readable identifier, unique within the containing scope. */
   nameID?: InputMaybe<Scalars["NameID"]["input"]>;
   /** Send notification if this flag is true and visibility is PUBLISHED. Defaults to false. */
   sendNotification?: InputMaybe<Scalars["Boolean"]["input"]>;
+  settings?: InputMaybe<CreateCalloutSettingsInput>;
   /** The sort order to assign to this Callout. */
   sortOrder?: InputMaybe<Scalars["Float"]["input"]>;
-  /** Callout type. */
-  type: CalloutType;
-  /** Visibility of the Callout. Defaults to DRAFT. */
-  visibility?: InputMaybe<CalloutVisibility>;
 };
 
 export type CreateCalloutOnCalloutsSetInput = {
   calloutsSetID: Scalars["UUID"]["input"];
   classification?: InputMaybe<CreateClassificationInput>;
   contributionDefaults?: InputMaybe<CreateCalloutContributionDefaultsInput>;
-  contributionPolicy?: InputMaybe<CreateCalloutContributionPolicyInput>;
-  /** Controls if the comments are enabled for this Callout. Defaults to false. */
-  enableComments?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Contributions to be created with this Callout. */
+  contributions?: InputMaybe<Array<CreateCalloutContributionInput>>;
   framing: CreateCalloutFramingInput;
   /** A readable identifier, unique within the containing scope. */
   nameID?: InputMaybe<Scalars["NameID"]["input"]>;
   /** Send notification if this flag is true and visibility is PUBLISHED. Defaults to false. */
   sendNotification?: InputMaybe<Scalars["Boolean"]["input"]>;
+  settings?: InputMaybe<CreateCalloutSettingsInput>;
   /** The sort order to assign to this Callout. */
   sortOrder?: InputMaybe<Scalars["Float"]["input"]>;
-  /** Callout type. */
-  type: CalloutType;
-  /** Visibility of the Callout. Defaults to DRAFT. */
+};
+
+export type CreateCalloutSettingsContributionData = {
+  /** Allowed Contribution types. */
+  allowedTypes?: Maybe<Array<CalloutContributionType>>;
+  /** Indicate who can add more contributions to the callout. */
+  canAddContributions?: Maybe<CalloutAllowedContributors>;
+  /** Can comment to contributions callout. */
+  commentsEnabled?: Maybe<Scalars["Boolean"]["output"]>;
+  /** Can add contributions to the Callout. Allowed Contribution types is going to be readOnly, so this field can be used to enable or disable the contribution temporarily instead of setting allowedTypes to None. */
+  enabled?: Maybe<Scalars["Boolean"]["output"]>;
+};
+
+export type CreateCalloutSettingsContributionInput = {
+  /** Allowed Contribution types. */
+  allowedTypes?: InputMaybe<Array<CalloutContributionType>>;
+  /** Indicate who can add more contributions to the callout. */
+  canAddContributions?: InputMaybe<CalloutAllowedContributors>;
+  /** Can comment to contributions callout. */
+  commentsEnabled?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Can add contributions to the Callout. Allowed Contribution types is going to be readOnly, so this field can be used to enable or disable the contribution temporarily instead of setting allowedTypes to None. */
+  enabled?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type CreateCalloutSettingsData = {
+  contribution?: Maybe<CreateCalloutSettingsContributionData>;
+  framing?: Maybe<CreateCalloutSettingsFramingData>;
+  /** Visibility of the Callout. Defaults to PUBLISHED. */
+  visibility?: Maybe<CalloutVisibility>;
+};
+
+export type CreateCalloutSettingsFramingData = {
+  /** Can comment to callout framing. */
+  commentsEnabled?: Maybe<Scalars["Boolean"]["output"]>;
+};
+
+export type CreateCalloutSettingsFramingInput = {
+  /** Can comment to callout framing. */
+  commentsEnabled?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type CreateCalloutSettingsInput = {
+  contribution?: InputMaybe<CreateCalloutSettingsContributionInput>;
+  framing?: InputMaybe<CreateCalloutSettingsFramingInput>;
+  /** Visibility of the Callout. Defaults to PUBLISHED. */
   visibility?: InputMaybe<CalloutVisibility>;
 };
 
@@ -1761,17 +1859,33 @@ export type CreateInnovationFlowInput = {
 };
 
 export type CreateInnovationFlowStateData = {
-  /** The explation text to clarify the State. */
+  /** The explanation text to clarify the State. */
   description?: Maybe<Scalars["Markdown"]["output"]>;
   /** The display name for the State */
   displayName: Scalars["String"]["output"];
+  settings?: Maybe<CreateInnovationFlowStateSettingsData>;
+  /** The sort order for the State; if not specified, it will be set to the next highest order. */
+  sortOrder?: Maybe<Scalars["Float"]["output"]>;
 };
 
 export type CreateInnovationFlowStateInput = {
-  /** The explation text to clarify the State. */
+  /** The explanation text to clarify the State. */
   description?: InputMaybe<Scalars["Markdown"]["input"]>;
   /** The display name for the State */
   displayName: Scalars["String"]["input"];
+  settings?: InputMaybe<CreateInnovationFlowStateSettingsInput>;
+  /** The sort order for the State; if not specified, it will be set to the next highest order. */
+  sortOrder?: InputMaybe<Scalars["Float"]["input"]>;
+};
+
+export type CreateInnovationFlowStateSettingsData = {
+  /** The flag to set. */
+  allowNewCallouts: Scalars["Boolean"]["output"];
+};
+
+export type CreateInnovationFlowStateSettingsInput = {
+  /** The flag to set. */
+  allowNewCallouts: Scalars["Boolean"]["input"];
 };
 
 export type CreateInnovationHubOnAccountInput = {
@@ -1834,6 +1948,11 @@ export type CreateLicensePlanOnLicensingFrameworkInput = {
   type: LicensingCredentialBasedPlanType;
 };
 
+export type CreateLinkData = {
+  profile: CreateProfileData;
+  uri?: Maybe<Scalars["String"]["output"]>;
+};
+
 export type CreateLinkInput = {
   profile: CreateProfileInput;
   uri?: InputMaybe<Scalars["String"]["input"]>;
@@ -1857,6 +1976,14 @@ export type CreateLocationInput = {
   stateOrProvince?: InputMaybe<Scalars["String"]["input"]>;
 };
 
+export type CreateMemoData = {
+  profile?: Maybe<CreateProfileData>;
+};
+
+export type CreateMemoInput = {
+  profile?: InputMaybe<CreateProfileInput>;
+};
+
 export type CreateNvpInput = {
   name: Scalars["String"]["input"];
   sortOrder: Scalars["Float"]["input"];
@@ -1871,6 +1998,10 @@ export type CreateOrganizationInput = {
   nameID?: InputMaybe<Scalars["NameID"]["input"]>;
   profileData: CreateProfileInput;
   website?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+export type CreatePostData = {
+  tags?: Maybe<Array<Scalars["String"]["output"]>>;
 };
 
 export type CreatePostInput = {
@@ -1931,7 +2062,6 @@ export type CreateSpaceAboutInput = {
   /** The CommunityGuidelines for the Space */
   guidelines?: InputMaybe<CreateCommunityGuidelinesInput>;
   profileData: CreateProfileInput;
-  when?: InputMaybe<Scalars["Markdown"]["input"]>;
   who?: InputMaybe<Scalars["Markdown"]["input"]>;
   why?: InputMaybe<Scalars["Markdown"]["input"]>;
 };
@@ -1945,8 +2075,6 @@ export type CreateSpaceOnAccountInput = {
   licensePlanID?: InputMaybe<Scalars["UUID"]["input"]>;
   /** A readable identifier, unique within the containing scope. */
   nameID?: InputMaybe<Scalars["NameID"]["input"]>;
-  /** Pick up a different platform template. */
-  platformTemplate?: InputMaybe<TemplateDefaultType>;
   settings?: InputMaybe<CreateSpaceSettingsInput>;
   /** The Template to use for instantiating the Collaboration. */
   spaceTemplateID?: InputMaybe<Scalars["UUID"]["input"]>;
@@ -1984,13 +2112,22 @@ export type CreateSpaceSettingsPrivacyInput = {
   mode?: InputMaybe<SpacePrivacyMode>;
 };
 
+export type CreateStateOnInnovationFlowInput = {
+  /** The explanation text to clarify the State. */
+  description?: InputMaybe<Scalars["Markdown"]["input"]>;
+  /** The display name for the State */
+  displayName: Scalars["String"]["input"];
+  innovationFlowID: Scalars["UUID"]["input"];
+  settings?: InputMaybe<CreateInnovationFlowStateSettingsInput>;
+  /** The sort order for the State; if not specified, it will be set to the next highest order. */
+  sortOrder?: InputMaybe<Scalars["Float"]["input"]>;
+};
+
 export type CreateSubspaceInput = {
   about: CreateSpaceAboutInput;
   collaborationData: CreateCollaborationOnSpaceInput;
   /** A readable identifier, unique within the containing scope. */
   nameID?: InputMaybe<Scalars["NameID"]["input"]>;
-  /** Pick up a different platform template. */
-  platformTemplate?: InputMaybe<TemplateDefaultType>;
   settings?: InputMaybe<CreateSpaceSettingsInput>;
   spaceID: Scalars["UUID"]["input"];
   /** The Template to use for instantiating the Collaboration. */
@@ -2022,6 +2159,7 @@ export type CreateTemplateContentSpaceInput = {
   level: SpaceLevel;
   /** Create the settings for the Space. */
   settings: CreateSpaceSettingsInput;
+  subspaces?: InputMaybe<Array<CreateTemplateContentSpaceInput>>;
 };
 
 export type CreateTemplateFromContentSpaceOnTemplatesSetInput = {
@@ -2038,6 +2176,8 @@ export type CreateTemplateFromSpaceOnTemplatesSetInput = {
   /** A readable identifier, unique within the containing scope. */
   nameID?: InputMaybe<Scalars["NameID"]["input"]>;
   profileData: CreateProfileInput;
+  /** Whether to reproduce the hierarchy or just the space. */
+  recursive?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** The ID of the Space to use as the content for the Template. */
   spaceID: Scalars["UUID"]["input"];
   tags?: InputMaybe<Array<Scalars["String"]["input"]>>;
@@ -2174,6 +2314,7 @@ export enum CredentialType {
   OrganizationAssociate = "ORGANIZATION_ASSOCIATE",
   OrganizationOwner = "ORGANIZATION_OWNER",
   SpaceAdmin = "SPACE_ADMIN",
+  SpaceFeatureMemoMultiUser = "SPACE_FEATURE_MEMO_MULTI_USER",
   SpaceFeatureSaveAsTemplate = "SPACE_FEATURE_SAVE_AS_TEMPLATE",
   SpaceFeatureVirtualContributors = "SPACE_FEATURE_VIRTUAL_CONTRIBUTORS",
   SpaceFeatureWhiteboardMultiUser = "SPACE_FEATURE_WHITEBOARD_MULTI_USER",
@@ -2234,6 +2375,10 @@ export type DeleteLinkInput = {
   ID: Scalars["UUID"]["input"];
 };
 
+export type DeleteMemoInput = {
+  ID: Scalars["UUID"]["input"];
+};
+
 export type DeleteOrganizationInput = {
   ID: Scalars["UUID"]["input"];
 };
@@ -2252,6 +2397,11 @@ export type DeleteReferenceInput = {
 
 export type DeleteSpaceInput = {
   ID: Scalars["UUID"]["input"];
+};
+
+export type DeleteStateOnInnovationFlowInput = {
+  ID: Scalars["UUID"]["input"];
+  innovationFlowID: Scalars["UUID"]["input"];
 };
 
 export type DeleteStorageBuckeetInput = {
@@ -2511,101 +2661,193 @@ export type ISearchResults = {
   spaceResults: ISearchCategoryResult;
 };
 
-/** An in-app notification type. To not be queried directly */
 export type InAppNotification = {
-  /** Which category (role) is this notification targeted to. */
-  category: InAppNotificationCategory;
+  /** The category of the notification event. */
+  category: NotificationEventCategory;
+  /** The date at which the entity was created. */
+  createdDate: Scalars["DateTime"]["output"];
+  /** The ID of the entity */
   id: Scalars["UUID"]["output"];
+  /** The payload of the notification. */
+  payload: InAppNotificationPayload;
   /** The receiver of the notification. */
   receiver: Contributor;
-  /** The current state of the notification */
-  state: InAppNotificationState;
-  /** When (UTC) was the notification sent. */
+  /** The state of the notification event. */
+  state: NotificationEventInAppState;
+  /** The triggered date of the notification event. */
   triggeredAt: Scalars["DateTime"]["output"];
   /** The Contributor who triggered the notification. */
   triggeredBy?: Maybe<Contributor>;
-  /** The type of the notification */
-  type: NotificationEventType;
+  /** The type of the notification event. */
+  type: NotificationEvent;
+  /** The date at which the entity was last updated. */
+  updatedDate: Scalars["DateTime"]["output"];
 };
 
-export type InAppNotificationCalloutPublished = InAppNotification & {
-  /** The Callout that was published. */
-  callout?: Maybe<Callout>;
-  /** Which category (role) is this notification targeted to. */
-  category: InAppNotificationCategory;
-  id: Scalars["UUID"]["output"];
-  /** The receiver of the notification. */
-  receiver: Contributor;
-  /** Where the callout is located. */
-  space?: Maybe<Space>;
-  /** The current state of the notification */
-  state: InAppNotificationState;
-  /** When (UTC) was the notification sent. */
-  triggeredAt: Scalars["DateTime"]["output"];
-  /** The Contributor who triggered the notification. */
-  triggeredBy?: Maybe<Contributor>;
-  /** The type of the notification */
-  type: NotificationEventType;
+export type InAppNotificationFilterInput = {
+  /** Return Notifications with a type matching one of the provided types. */
+  types?: InputMaybe<Array<NotificationEvent>>;
 };
 
-/** Which category (role) is this notification targeted to. */
-export enum InAppNotificationCategory {
-  Admin = "ADMIN",
-  Member = "MEMBER",
-  Self = "SELF",
-}
-
-export type InAppNotificationCommunityNewMember = InAppNotification & {
-  /** The Contributor that joined. */
-  actor?: Maybe<Contributor>;
-  /** Which category (role) is this notification targeted to. */
-  category: InAppNotificationCategory;
-  /** The type of the Contributor that joined. */
-  contributorType: RoleSetContributorType;
-  id: Scalars["UUID"]["output"];
-  /** The receiver of the notification. */
-  receiver: Contributor;
-  /** The Space that was joined. */
-  space?: Maybe<Space>;
-  /** The current state of the notification */
-  state: InAppNotificationState;
-  /** When (UTC) was the notification sent. */
-  triggeredAt: Scalars["DateTime"]["output"];
-  /** The Contributor who triggered the notification. */
-  triggeredBy?: Maybe<Contributor>;
-  /** The type of the notification */
-  type: NotificationEventType;
+/** An in-app notification payload. To not be queried directly */
+export type InAppNotificationPayload = {
+  /** The payload type. */
+  type: NotificationEventPayload;
 };
 
-export enum InAppNotificationState {
-  Archived = "ARCHIVED",
-  Read = "READ",
-  Unread = "UNREAD",
-}
-
-export type InAppNotificationUserMentioned = InAppNotification & {
-  /** Which category (role) is this notification targeted to. */
-  category: InAppNotificationCategory;
-  /** The comment that the contributor was mentioned in. */
-  comment: Scalars["String"]["output"];
-  /** The display name of the resource where the comment was created. */
-  commentOriginName: Scalars["String"]["output"];
-  /** The url of the resource where the comment was created. */
-  commentUrl: Scalars["String"]["output"];
-  /** The type of the Contributor that joined. */
-  contributorType: RoleSetContributorType;
-  id: Scalars["UUID"]["output"];
-  /** The receiver of the notification. */
-  receiver: Contributor;
-  /** The current state of the notification */
-  state: InAppNotificationState;
-  /** When (UTC) was the notification sent. */
-  triggeredAt: Scalars["DateTime"]["output"];
-  /** The Contributor who triggered the notification. */
-  triggeredBy?: Maybe<Contributor>;
-  /** The type of the notification */
-  type: NotificationEventType;
+export type InAppNotificationPayloadOrganization = InAppNotificationPayload & {
+  /** The payload type. */
+  type: NotificationEventPayload;
 };
+
+export type InAppNotificationPayloadOrganizationMessageDirect =
+  InAppNotificationPayload & {
+    /** The message content. */
+    message: Scalars["String"]["output"];
+    /** The organization. */
+    organization: Contributor;
+    /** The payload type. */
+    type: NotificationEventPayload;
+  };
+
+export type InAppNotificationPayloadOrganizationMessageRoom =
+  InAppNotificationPayload & {
+    /** The comment that mentioned the organization. */
+    comment?: Maybe<Scalars["String"]["output"]>;
+    /** The organization. */
+    organization: Organization;
+    /** The Room ID with of the comment. */
+    roomID?: Maybe<Scalars["String"]["output"]>;
+    /** The payload type. */
+    type: NotificationEventPayload;
+  };
+
+export type InAppNotificationPayloadPlatform = InAppNotificationPayload & {
+  /** The payload type. */
+  type: NotificationEventPayload;
+};
+
+export type InAppNotificationPayloadPlatformForumDiscussion =
+  InAppNotificationPayload & {
+    /** The payload type. */
+    type: NotificationEventPayload;
+  };
+
+export type InAppNotificationPayloadPlatformGlobalRoleChange =
+  InAppNotificationPayload & {
+    /** The payload type. */
+    type: NotificationEventPayload;
+  };
+
+export type InAppNotificationPayloadPlatformUser = InAppNotificationPayload & {
+  /** The payload type. */
+  type: NotificationEventPayload;
+};
+
+export type InAppNotificationPayloadPlatformUserMessageRoom =
+  InAppNotificationPayload & {
+    /** The original message ID. */
+    comment?: Maybe<Scalars["String"]["output"]>;
+    /** The original message ID. */
+    commentOriginName?: Maybe<Scalars["String"]["output"]>;
+    /** The original message ID. */
+    commentUrl?: Maybe<Scalars["String"]["output"]>;
+    /** The original message ID. */
+    originalMessageID?: Maybe<Scalars["String"]["output"]>;
+    /** The room for the message. */
+    roomID?: Maybe<Scalars["String"]["output"]>;
+    /** The payload type. */
+    type: NotificationEventPayload;
+    /** The User for the message. */
+    user: User;
+  };
+
+export type InAppNotificationPayloadPlatformUserProfileRemoved =
+  InAppNotificationPayload & {
+    /** The payload type. */
+    type: NotificationEventPayload;
+  };
+
+export type InAppNotificationPayloadSpace = InAppNotificationPayload & {
+  /** The payload type. */
+  type: NotificationEventPayload;
+};
+
+export type InAppNotificationPayloadSpaceCollaborationCallout =
+  InAppNotificationPayload & {
+    /** The Callout that was published. */
+    callout: Callout;
+    /** Where the callout is located. */
+    space: Space;
+    /** The payload type. */
+    type: NotificationEventPayload;
+  };
+
+export type InAppNotificationPayloadSpaceCommunicationMessageDirect =
+  InAppNotificationPayload & {
+    /** The message content. */
+    message: Scalars["String"]["output"];
+    /** The Space where the message was sent. */
+    space: Space;
+    /** The payload type. */
+    type: NotificationEventPayload;
+  };
+
+export type InAppNotificationPayloadSpaceCommunicationUpdate =
+  InAppNotificationPayload & {
+    /** The Space where the update was sent. */
+    space: Space;
+    /** The payload type. */
+    type: NotificationEventPayload;
+    /** The update content. */
+    update?: Maybe<Scalars["String"]["output"]>;
+  };
+
+export type InAppNotificationPayloadSpaceCommunityApplication =
+  InAppNotificationPayload & {
+    /** The Application that the notification is related to. */
+    application: Application;
+    /** The Space that the application was made to. */
+    space: Space;
+    /** The payload type. */
+    type: NotificationEventPayload;
+  };
+
+export type InAppNotificationPayloadSpaceCommunityContributor =
+  InAppNotificationPayload & {
+    /** The Contributor that joined. */
+    contributor: Contributor;
+    /** The Space that was joined. */
+    space: Space;
+    /** The payload type. */
+    type: NotificationEventPayload;
+  };
+
+export type InAppNotificationPayloadSpaceCommunityInvitation =
+  InAppNotificationPayload & {
+    /** The Space that the invitation is for. */
+    space: Space;
+    /** The payload type. */
+    type: NotificationEventPayload;
+  };
+
+export type InAppNotificationPayloadSpaceCommunityInvitationPlatform =
+  InAppNotificationPayload & {
+    /** The Space that the invitation is for. */
+    space: Space;
+    /** The payload type. */
+    type: NotificationEventPayload;
+  };
+
+export type InAppNotificationPayloadUserMessageDirect =
+  InAppNotificationPayload & {
+    /** The message content. */
+    message?: Maybe<Scalars["String"]["output"]>;
+    /** The payload type. */
+    type: NotificationEventPayload;
+    /** The User that was sent the message. */
+    user: User;
+  };
 
 export type InnovationFlow = {
   /** The authorization rules for the entity */
@@ -2613,14 +2855,14 @@ export type InnovationFlow = {
   /** The date at which the entity was created. */
   createdDate: Scalars["DateTime"]["output"];
   /** The currently selected State in this Flow. */
-  currentState: InnovationFlowState;
+  currentState?: Maybe<InnovationFlowState>;
   /** The ID of the entity */
   id: Scalars["UUID"]["output"];
   /** The Profile for this InnovationFlow. */
   profile: Profile;
   /** The settings for this InnovationFlow. */
   settings: InnovationFlowSettings;
-  /** The set of States in use in this Flow. */
+  /** The States for this InnovationFlow. */
   states: Array<InnovationFlowState>;
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
@@ -2634,10 +2876,27 @@ export type InnovationFlowSettings = {
 };
 
 export type InnovationFlowState = {
+  /** The authorization rules for the entity */
+  authorization?: Maybe<Authorization>;
+  /** The date at which the entity was created. */
+  createdDate: Scalars["DateTime"]["output"];
   /** The explanation text to clarify the state. */
-  description: Scalars["Markdown"]["output"];
+  description?: Maybe<Scalars["Markdown"]["output"]>;
   /** The display name for the State */
   displayName: Scalars["String"]["output"];
+  /** The ID of the entity */
+  id: Scalars["UUID"]["output"];
+  /** The Settings associated with this InnovationFlowState. */
+  settings: InnovationFlowStateSettings;
+  /** The sorting order for this State. */
+  sortOrder: Scalars["Float"]["output"];
+  /** The date at which the entity was last updated. */
+  updatedDate: Scalars["DateTime"]["output"];
+};
+
+export type InnovationFlowStateSettings = {
+  /** Whether new callouts can be added to this State. */
+  allowNewCallouts: Scalars["Boolean"]["output"];
 };
 
 export type InnovationHub = {
@@ -2755,8 +3014,8 @@ export type Invitation = {
   createdBy?: Maybe<User>;
   /** The date at which the entity was created. */
   createdDate: Scalars["DateTime"]["output"];
-  /** An additional role to assign to the Contributor, in addition to the entry Role. */
-  extraRole?: Maybe<RoleName>;
+  /** Additional roles to assign to the Contributor, in addition to the entry Role. */
+  extraRoles: Array<RoleName>;
   /** The ID of the entity */
   id: Scalars["UUID"]["output"];
   /** Whether to also add the invited contributor to the parent community. */
@@ -2779,8 +3038,8 @@ export type InvitationEventInput = {
 };
 
 export type InviteForEntryRoleOnRoleSetInput = {
-  /** An additional role to assign in addition to the entry Role. */
-  extraRole?: InputMaybe<RoleName>;
+  /** Additional roles to assign in addition to the entry Role. */
+  extraRoles: Array<RoleName>;
   /** The identifiers for the contributors being invited. */
   invitedContributorIDs: Array<Scalars["UUID"]["input"]>;
   invitedUserEmails: Array<Scalars["String"]["input"]>;
@@ -2897,6 +3156,7 @@ export enum LicenseEntitlementType {
   AccountSpacePlus = "ACCOUNT_SPACE_PLUS",
   AccountSpacePremium = "ACCOUNT_SPACE_PREMIUM",
   AccountVirtualContributor = "ACCOUNT_VIRTUAL_CONTRIBUTOR",
+  SpaceFlagMemoMultiUser = "SPACE_FLAG_MEMO_MULTI_USER",
   SpaceFlagSaveAsTemplate = "SPACE_FLAG_SAVE_AS_TEMPLATE",
   SpaceFlagVirtualContributorAccess = "SPACE_FLAG_VIRTUAL_CONTRIBUTOR_ACCESS",
   SpaceFlagWhiteboardMultiUser = "SPACE_FLAG_WHITEBOARD_MULTI_USER",
@@ -2977,6 +3237,7 @@ export type Licensing = {
 
 export enum LicensingCredentialBasedCredentialType {
   AccountLicensePlus = "ACCOUNT_LICENSE_PLUS",
+  SpaceFeatureMemoMultiUser = "SPACE_FEATURE_MEMO_MULTI_USER",
   SpaceFeatureSaveAsTemplate = "SPACE_FEATURE_SAVE_AS_TEMPLATE",
   SpaceFeatureVirtualContributors = "SPACE_FEATURE_VIRTUAL_CONTRIBUTORS",
   SpaceFeatureWhiteboardMultiUser = "SPACE_FEATURE_WHITEBOARD_MULTI_USER",
@@ -3303,6 +3564,8 @@ export type LookupQueryResults = {
   knowledgeBase: KnowledgeBase;
   /** Lookup the specified License */
   license?: Maybe<License>;
+  /** Lookup the specified Memo */
+  memo?: Maybe<Memo>;
   /** Lookup myPrivileges on the specified entity. */
   myPrivileges?: Maybe<LookupMyPrivilegesQueryResults>;
   /** Lookup the specified Organization using a ID */
@@ -3416,6 +3679,10 @@ export type LookupQueryResultsLicenseArgs = {
   ID: Scalars["UUID"]["input"];
 };
 
+export type LookupQueryResultsMemoArgs = {
+  ID: Scalars["UUID"]["input"];
+};
+
 export type LookupQueryResultsOrganizationArgs = {
   ID: Scalars["UUID"]["input"];
 };
@@ -3517,6 +3784,31 @@ export type MeQueryResultsMySpacesArgs = {
 
 export type MeQueryResultsSpaceMembershipsHierarchicalArgs = {
   limit?: InputMaybe<Scalars["Float"]["input"]>;
+};
+
+export type Memo = {
+  /** The authorization rules for the entity */
+  authorization?: Maybe<Authorization>;
+  /** The last saved binary stateV2 of the Yjs document, used to collaborate on the Memo, represented in base64. */
+  content?: Maybe<Scalars["String"]["output"]>;
+  /** The policy governing who can update the Memo content. */
+  contentUpdatePolicy: ContentUpdatePolicy;
+  /** The user that created this Memo */
+  createdBy?: Maybe<User>;
+  /** The date at which the entity was created. */
+  createdDate: Scalars["DateTime"]["output"];
+  /** The ID of the entity */
+  id: Scalars["UUID"]["output"];
+  /** Whether the Memo is multi-user enabled on Space level. */
+  isMultiUser: Scalars["Boolean"]["output"];
+  /** The last saved content of the Memo, represented in Markdown. */
+  markdown?: Maybe<Scalars["Markdown"]["output"]>;
+  /** A name identifier of the entity, unique within a given scope. */
+  nameID: Scalars["NameID"]["output"];
+  /** The Profile for this Memo. */
+  profile: Profile;
+  /** The date at which the entity was last updated. */
+  updatedDate: Scalars["DateTime"]["output"];
 };
 
 /** A message that was sent either as an Update or as part of a Discussion. */
@@ -3669,6 +3961,8 @@ export type Mutation = {
   assignRoleToVirtualContributor: VirtualContributor;
   /** Assigns a User as a member of the specified User Group. */
   assignUserToGroup: UserGroup;
+  /** Ensure all access privileges for the platform roles are re-calculated */
+  authorizationPlatformRolesAccessReset: Scalars["Boolean"]["output"];
   /** Reset the Authorization Policy on all entities */
   authorizationPolicyResetAll: Scalars["String"]["output"];
   /** Reset the Authorization Policy on the specified Account. */
@@ -3723,6 +4017,8 @@ export type Mutation = {
   createReferenceOnProfile: Reference;
   /** Creates a new Level Zero Space within the specified Account. */
   createSpace: Space;
+  /** Create a new State on the InnovationFlow. */
+  createStateOnInnovationFlow: InnovationFlowState;
   /** Creates a new Subspace within the specified Space. */
   createSubspace: Space;
   /** Creates a new Tagset on the specified Profile */
@@ -3745,6 +4041,8 @@ export type Mutation = {
   deleteCalendarEvent: CalendarEvent;
   /** Delete a Callout. */
   deleteCallout: Callout;
+  /** Deletes a contribution. */
+  deleteContribution: CalloutContribution;
   /** Deletes the specified Discussion. */
   deleteDiscussion: Discussion;
   /** Deletes the specified Document. */
@@ -3759,6 +4057,8 @@ export type Mutation = {
   deleteLicensePlan: LicensePlan;
   /** Deletes the specified Link. */
   deleteLink: Link;
+  /** Deletes the specified Memo. */
+  deleteMemo: Memo;
   /** Deletes the specified Organization. */
   deleteOrganization: Organization;
   /** Removes the specified User platformInvitation. */
@@ -3769,6 +4069,8 @@ export type Mutation = {
   deleteReference: Reference;
   /** Deletes the specified Space. */
   deleteSpace: Space;
+  /** Delete a  State on the InnovationFlow. */
+  deleteStateOnInnovationFlow: InnovationFlowState;
   /** Deletes a Storage Bucket */
   deleteStorageBucket: StorageBucket;
   /** Deletes the specified Template. */
@@ -3867,6 +4169,8 @@ export type Mutation = {
   updateAnswerRelevance: Scalars["Boolean"]["output"];
   /** Update the Application Form used by this RoleSet. */
   updateApplicationFormOnRoleSet: RoleSet;
+  /** Update the baseline License Plan on the specified Account. */
+  updateBaselineLicensePlanOnAccount: Account;
   /** Updates the specified CalendarEvent. */
   updateCalendarEvent: CalendarEvent;
   /** Update a Callout. */
@@ -3892,9 +4196,11 @@ export type Mutation = {
   /** Updates the InnovationFlow. */
   updateInnovationFlow: InnovationFlow;
   /** Updates the InnovationFlow. */
-  updateInnovationFlowSelectedState: InnovationFlow;
+  updateInnovationFlowCurrentState: InnovationFlow;
   /** Updates the specified InnovationFlowState. */
-  updateInnovationFlowSingleState: InnovationFlow;
+  updateInnovationFlowState: InnovationFlowState;
+  /** Update the sortOrder field of the supplied InnovationFlowStates to increase as per the order that they are provided in. */
+  updateInnovationFlowStatesSortOrder: Array<InnovationFlowState>;
   /** Update Innovation Hub. */
   updateInnovationHub: InnovationHub;
   /** Updates the InnovationPack. */
@@ -3903,8 +4209,10 @@ export type Mutation = {
   updateLicensePlan: LicensePlan;
   /** Updates the specified Link. */
   updateLink: Link;
+  /** Updates the specified Memo. */
+  updateMemo: Memo;
   /** Update notification state and return the notification. */
-  updateNotificationState: InAppNotificationState;
+  updateNotificationState: NotificationEventInAppState;
   /** Updates the specified Organization. */
   updateOrganization: Organization;
   /** Updates the specified Organization platform settings. */
@@ -3915,8 +4223,6 @@ export type Mutation = {
   updatePlatformSettings: PlatformSettings;
   /** Updates the specified Post. */
   updatePost: Post;
-  /** Updates one of the Preferences on a Space */
-  updatePreferenceOnUser: Preference;
   /** Updates the specified Profile. */
   updateProfile: Profile;
   /** Updates the specified Reference. */
@@ -4132,6 +4438,10 @@ export type MutationCreateSpaceArgs = {
   spaceData: CreateSpaceOnAccountInput;
 };
 
+export type MutationCreateStateOnInnovationFlowArgs = {
+  stateData: CreateStateOnInnovationFlowInput;
+};
+
 export type MutationCreateSubspaceArgs = {
   subspaceData: CreateSubspaceInput;
 };
@@ -4172,6 +4482,10 @@ export type MutationDeleteCalloutArgs = {
   deleteData: DeleteCalloutInput;
 };
 
+export type MutationDeleteContributionArgs = {
+  contributionID: Scalars["String"]["input"];
+};
+
 export type MutationDeleteDiscussionArgs = {
   deleteData: DeleteDiscussionInput;
 };
@@ -4200,6 +4514,10 @@ export type MutationDeleteLinkArgs = {
   deleteData: DeleteLinkInput;
 };
 
+export type MutationDeleteMemoArgs = {
+  memoData: DeleteMemoInput;
+};
+
 export type MutationDeleteOrganizationArgs = {
   deleteData: DeleteOrganizationInput;
 };
@@ -4218,6 +4536,10 @@ export type MutationDeleteReferenceArgs = {
 
 export type MutationDeleteSpaceArgs = {
   deleteData: DeleteSpaceInput;
+};
+
+export type MutationDeleteStateOnInnovationFlowArgs = {
+  stateData: DeleteStateOnInnovationFlowInput;
 };
 
 export type MutationDeleteStorageBucketArgs = {
@@ -4404,6 +4726,10 @@ export type MutationUpdateApplicationFormOnRoleSetArgs = {
   applicationFormData: UpdateApplicationFormOnRoleSetInput;
 };
 
+export type MutationUpdateBaselineLicensePlanOnAccountArgs = {
+  updateData: UpdateBaselineLicensePlanOnAccount;
+};
+
 export type MutationUpdateCalendarEventArgs = {
   eventData: UpdateCalendarEventInput;
 };
@@ -4449,15 +4775,19 @@ export type MutationUpdateDocumentArgs = {
 };
 
 export type MutationUpdateInnovationFlowArgs = {
-  innovationFlowData: UpdateInnovationFlowEntityInput;
+  innovationFlowData: UpdateInnovationFlowInput;
 };
 
-export type MutationUpdateInnovationFlowSelectedStateArgs = {
-  innovationFlowStateData: UpdateInnovationFlowSelectedStateInput;
+export type MutationUpdateInnovationFlowCurrentStateArgs = {
+  innovationFlowStateData: UpdateInnovationFlowCurrentStateInput;
 };
 
-export type MutationUpdateInnovationFlowSingleStateArgs = {
-  innovationFlowStateData: UpdateInnovationFlowSingleStateInput;
+export type MutationUpdateInnovationFlowStateArgs = {
+  stateData: UpdateInnovationFlowStateInput;
+};
+
+export type MutationUpdateInnovationFlowStatesSortOrderArgs = {
+  sortOrderData: UpdateInnovationFlowStatesSortOrderInput;
 };
 
 export type MutationUpdateInnovationHubArgs = {
@@ -4474,6 +4804,10 @@ export type MutationUpdateLicensePlanArgs = {
 
 export type MutationUpdateLinkArgs = {
   linkData: UpdateLinkInput;
+};
+
+export type MutationUpdateMemoArgs = {
+  memoData: UpdateMemoEntityInput;
 };
 
 export type MutationUpdateNotificationStateArgs = {
@@ -4498,10 +4832,6 @@ export type MutationUpdatePlatformSettingsArgs = {
 
 export type MutationUpdatePostArgs = {
   postData: UpdatePostInput;
-};
-
-export type MutationUpdatePreferenceOnUserArgs = {
-  preferenceData: UpdateUserPreferenceInput;
 };
 
 export type MutationUpdateProfileArgs = {
@@ -4618,34 +4948,98 @@ export type Nvp = {
   value: Scalars["String"]["output"];
 };
 
-/** The type of the notification */
-export enum NotificationEventType {
-  CollaborationCalloutPublished = "COLLABORATION_CALLOUT_PUBLISHED",
-  CollaborationDiscussionComment = "COLLABORATION_DISCUSSION_COMMENT",
-  CollaborationPostComment = "COLLABORATION_POST_COMMENT",
-  CollaborationPostCreated = "COLLABORATION_POST_CREATED",
-  CollaborationWhiteboardCreated = "COLLABORATION_WHITEBOARD_CREATED",
-  CommentReply = "COMMENT_REPLY",
-  CommunicationCommentSent = "COMMUNICATION_COMMENT_SENT",
-  CommunicationCommunityMessage = "COMMUNICATION_COMMUNITY_MESSAGE",
-  CommunicationOrganizationMention = "COMMUNICATION_ORGANIZATION_MENTION",
-  CommunicationOrganizationMessage = "COMMUNICATION_ORGANIZATION_MESSAGE",
-  CommunicationUpdateSent = "COMMUNICATION_UPDATE_SENT",
-  CommunicationUserMention = "COMMUNICATION_USER_MENTION",
-  CommunicationUserMessage = "COMMUNICATION_USER_MESSAGE",
-  CommunityApplicationCreated = "COMMUNITY_APPLICATION_CREATED",
-  CommunityInvitationCreated = "COMMUNITY_INVITATION_CREATED",
-  CommunityInvitationCreatedVc = "COMMUNITY_INVITATION_CREATED_VC",
-  CommunityNewMember = "COMMUNITY_NEW_MEMBER",
-  CommunityPlatformInvitationCreated = "COMMUNITY_PLATFORM_INVITATION_CREATED",
+export enum NotificationEvent {
+  OrganizationAdminMentioned = "ORGANIZATION_ADMIN_MENTIONED",
+  OrganizationAdminMessage = "ORGANIZATION_ADMIN_MESSAGE",
+  OrganizationMessageSender = "ORGANIZATION_MESSAGE_SENDER",
+  PlatformAdminGlobalRoleChanged = "PLATFORM_ADMIN_GLOBAL_ROLE_CHANGED",
+  PlatformAdminSpaceCreated = "PLATFORM_ADMIN_SPACE_CREATED",
+  PlatformAdminUserProfileCreated = "PLATFORM_ADMIN_USER_PROFILE_CREATED",
+  PlatformAdminUserProfileRemoved = "PLATFORM_ADMIN_USER_PROFILE_REMOVED",
   PlatformForumDiscussionComment = "PLATFORM_FORUM_DISCUSSION_COMMENT",
   PlatformForumDiscussionCreated = "PLATFORM_FORUM_DISCUSSION_CREATED",
-  PlatformGlobalRoleChange = "PLATFORM_GLOBAL_ROLE_CHANGE",
-  PlatformUserInvitedToRole = "PLATFORM_USER_INVITED_TO_ROLE",
-  PlatformUserRegistered = "PLATFORM_USER_REGISTERED",
-  PlatformUserRemoved = "PLATFORM_USER_REMOVED",
-  SpaceCreated = "SPACE_CREATED",
+  SpaceAdminCollaborationCalloutContribution = "SPACE_ADMIN_COLLABORATION_CALLOUT_CONTRIBUTION",
+  SpaceAdminCommunityApplication = "SPACE_ADMIN_COMMUNITY_APPLICATION",
+  SpaceAdminCommunityNewMember = "SPACE_ADMIN_COMMUNITY_NEW_MEMBER",
+  SpaceCollaborationCalloutComment = "SPACE_COLLABORATION_CALLOUT_COMMENT",
+  SpaceCollaborationCalloutContribution = "SPACE_COLLABORATION_CALLOUT_CONTRIBUTION",
+  SpaceCollaborationCalloutPostContributionComment = "SPACE_COLLABORATION_CALLOUT_POST_CONTRIBUTION_COMMENT",
+  SpaceCollaborationCalloutPublished = "SPACE_COLLABORATION_CALLOUT_PUBLISHED",
+  SpaceCommunicationMessageSender = "SPACE_COMMUNICATION_MESSAGE_SENDER",
+  SpaceCommunicationUpdate = "SPACE_COMMUNICATION_UPDATE",
+  SpaceCommunityInvitationUserPlatform = "SPACE_COMMUNITY_INVITATION_USER_PLATFORM",
+  SpaceLeadCommunicationMessage = "SPACE_LEAD_COMMUNICATION_MESSAGE",
+  UserCommentReply = "USER_COMMENT_REPLY",
+  UserMentioned = "USER_MENTIONED",
+  UserMessage = "USER_MESSAGE",
+  UserMessageSender = "USER_MESSAGE_SENDER",
+  UserSignUpWelcome = "USER_SIGN_UP_WELCOME",
+  UserSpaceCommunityApplication = "USER_SPACE_COMMUNITY_APPLICATION",
+  UserSpaceCommunityInvitation = "USER_SPACE_COMMUNITY_INVITATION",
+  UserSpaceCommunityJoined = "USER_SPACE_COMMUNITY_JOINED",
+  VirtualContributorAdminSpaceCommunityInvitation = "VIRTUAL_CONTRIBUTOR_ADMIN_SPACE_COMMUNITY_INVITATION",
 }
+
+/** A categorization of notification type. */
+export enum NotificationEventCategory {
+  Organization = "ORGANIZATION",
+  Platform = "PLATFORM",
+  SpaceAdmin = "SPACE_ADMIN",
+  SpaceMember = "SPACE_MEMBER",
+  User = "USER",
+  VirtualContributor = "VIRTUAL_CONTRIBUTOR",
+}
+
+export enum NotificationEventInAppState {
+  Archived = "ARCHIVED",
+  Read = "READ",
+  Unread = "UNREAD",
+}
+
+export enum NotificationEventPayload {
+  OrganizationMessageDirect = "ORGANIZATION_MESSAGE_DIRECT",
+  OrganizationMessageRoom = "ORGANIZATION_MESSAGE_ROOM",
+  PlatformForumDiscussion = "PLATFORM_FORUM_DISCUSSION",
+  PlatformForumDiscussionComment = "PLATFORM_FORUM_DISCUSSION_COMMENT",
+  PlatformGlobalRoleChange = "PLATFORM_GLOBAL_ROLE_CHANGE",
+  PlatformUserProfileRemoved = "PLATFORM_USER_PROFILE_REMOVED",
+  Space = "SPACE",
+  SpaceCollaborationCallout = "SPACE_COLLABORATION_CALLOUT",
+  SpaceCommunicationMessageDirect = "SPACE_COMMUNICATION_MESSAGE_DIRECT",
+  SpaceCommunicationUpdate = "SPACE_COMMUNICATION_UPDATE",
+  SpaceCommunityApplication = "SPACE_COMMUNITY_APPLICATION",
+  SpaceCommunityContributor = "SPACE_COMMUNITY_CONTRIBUTOR",
+  SpaceCommunityInvitation = "SPACE_COMMUNITY_INVITATION",
+  SpaceCommunityInvitationUserPlatform = "SPACE_COMMUNITY_INVITATION_USER_PLATFORM",
+  User = "USER",
+  UserMessageDirect = "USER_MESSAGE_DIRECT",
+  UserMessageRoom = "USER_MESSAGE_ROOM",
+  VirtualContributor = "VIRTUAL_CONTRIBUTOR",
+}
+
+export type NotificationRecipientResult = {
+  /** The email recipients for the notification. */
+  emailRecipients: Array<User>;
+  /** The in-app recipients for the notification. */
+  inAppRecipients: Array<User>;
+  /** The user that triggered the event. */
+  triggeredBy?: Maybe<User>;
+};
+
+export type NotificationRecipientsInput = {
+  /** The type of notification setting to look up recipients for. */
+  eventType: NotificationEvent;
+  /** The ID of the Organization to use to determine recipients. */
+  organizationID?: InputMaybe<Scalars["UUID"]["input"]>;
+  /** The ID of the space to retrieve the recipients for. */
+  spaceID?: InputMaybe<Scalars["UUID"]["input"]>;
+  /** The ID of the User that triggered the event. */
+  triggeredBy?: InputMaybe<Scalars["UUID"]["input"]>;
+  /** The ID of the specific user recipient for user-related notifications (e.g., invitations, mentions). */
+  userID?: InputMaybe<Scalars["UUID"]["input"]>;
+  /** The ID of the Virtual Contributor to use to determine recipients. */
+  virtualContributorID?: InputMaybe<Scalars["UUID"]["input"]>;
+};
 
 export enum OpenAiModel {
   Babbage_002 = "BABBAGE_002",
@@ -4867,6 +5261,75 @@ export type PlatformInnovationHubArgs = {
   subdomain?: InputMaybe<Scalars["String"]["input"]>;
 };
 
+export type PlatformAccessRole = {
+  /** The privileges to be granted for this Platform Access Role. */
+  grantedPrivileges: Array<AuthorizationPrivilege>;
+  /** The role name for this Platform Access Role. */
+  roleName: RoleName;
+};
+
+export type PlatformAdminCommunicationQueryResults = {
+  /** All Users that are members of a given room */
+  adminCommunicationMembership: CommunicationAdminMembershipResult;
+  /** Usage of the messaging platform that are not tied to the domain model. */
+  adminCommunicationOrphanedUsage: CommunicationAdminOrphanedUsageResult;
+};
+
+export type PlatformAdminCommunicationQueryResultsAdminCommunicationMembershipArgs =
+  {
+    communicationData: CommunicationAdminMembershipInput;
+  };
+
+export type PlatformAdminQueryResults = {
+  /** Lookup Communication related information. */
+  communication: PlatformAdminCommunicationQueryResults;
+  /** Retrieve all Innovation Hubs on the Platform. This is only available to Platform Admins. */
+  innovationHubs: Array<InnovationHub>;
+  /** Retrieve all Innovation Packs on the Platform. This is only available to Platform Admins. */
+  innovationPacks: Array<InnovationPack>;
+  /** Retrieve all Organizations on the Platform. This is only available to Platform Admins. */
+  organizations: PaginatedOrganization;
+  /** Retrieve all Spaces on the Platform. This is only available to Platform Admins. */
+  spaces: Array<Space>;
+  /** Retrieve all Users on the Platform. This is only available to Platform Admins. */
+  users: PaginatedUsers;
+  /** Retrieve all Virtual Contributors on the Platform. This is only available to Platform Admins. */
+  virtualContributors: Array<VirtualContributor>;
+};
+
+export type PlatformAdminQueryResultsInnovationPacksArgs = {
+  queryData?: InputMaybe<InnovationPacksInput>;
+};
+
+export type PlatformAdminQueryResultsOrganizationsArgs = {
+  after?: InputMaybe<Scalars["UUID"]["input"]>;
+  before?: InputMaybe<Scalars["UUID"]["input"]>;
+  filter?: InputMaybe<OrganizationFilterInput>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  last?: InputMaybe<Scalars["Int"]["input"]>;
+  status?: InputMaybe<OrganizationVerificationEnum>;
+};
+
+export type PlatformAdminQueryResultsSpacesArgs = {
+  IDs?: InputMaybe<Array<Scalars["UUID"]["input"]>>;
+  filter?: InputMaybe<SpaceFilterInput>;
+};
+
+export type PlatformAdminQueryResultsUsersArgs = {
+  after?: InputMaybe<Scalars["UUID"]["input"]>;
+  before?: InputMaybe<Scalars["UUID"]["input"]>;
+  filter?: InputMaybe<UserFilterInput>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  last?: InputMaybe<Scalars["Int"]["input"]>;
+  withTags?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type PlatformAdminQueryResultsVirtualContributorsArgs = {
+  filter?: InputMaybe<ContributorFilterInput>;
+  limit?: InputMaybe<Scalars["Float"]["input"]>;
+  shuffle?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
 export type PlatformFeatureFlag = {
   /** Is this feature flag enabled? */
   enabled: Scalars["Boolean"]["output"];
@@ -4879,6 +5342,7 @@ export enum PlatformFeatureFlagName {
   CommunicationsDiscussions = "COMMUNICATIONS_DISCUSSIONS",
   GuidenceEngine = "GUIDENCE_ENGINE",
   LandingPage = "LANDING_PAGE",
+  Memo = "MEMO",
   Notifications = "NOTIFICATIONS",
   Ssi = "SSI",
   Subscriptions = "SUBSCRIPTIONS",
@@ -4907,8 +5371,8 @@ export type PlatformInvitation = {
   platformRole?: Maybe<RoleName>;
   /** Whether a new user profile has been created. */
   profileCreated: Scalars["Boolean"]["output"];
-  /** An additional role to assign to the Contributor, in addition to the entry Role. */
-  roleSetExtraRole?: Maybe<RoleName>;
+  /** Additional roles to assign to the Contributor, in addition to the entry Role. */
+  roleSetExtraRoles: Array<RoleName>;
   /** Whether to also add the invited user to the parent community. */
   roleSetInvitedToParent: Scalars["Boolean"]["output"];
   /** The date at which the entity was last updated. */
@@ -4969,6 +5433,11 @@ export type PlatformLocations = {
   tips: Scalars["String"]["output"];
 };
 
+export type PlatformRolesAccess = {
+  /** The platform roles with their associated privileges. */
+  roles: Array<PlatformAccessRole>;
+};
+
 export type PlatformSettings = {
   /** The integration settings for this Platform */
   integration: PlatformIntegrationSettings;
@@ -4992,77 +5461,6 @@ export type Post = {
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
 };
-
-export type Preference = {
-  /** The authorization rules for the entity */
-  authorization?: Maybe<Authorization>;
-  /** The date at which the entity was created. */
-  createdDate: Scalars["DateTime"]["output"];
-  /** The definition for the Preference */
-  definition: PreferenceDefinition;
-  /** The ID of the entity */
-  id: Scalars["UUID"]["output"];
-  /** The date at which the entity was last updated. */
-  updatedDate: Scalars["DateTime"]["output"];
-  /** Value of the preference */
-  value: Scalars["String"]["output"];
-};
-
-export type PreferenceDefinition = {
-  /** The date at which the entity was created. */
-  createdDate: Scalars["DateTime"]["output"];
-  /** Preference description */
-  description: Scalars["String"]["output"];
-  /** The name */
-  displayName: Scalars["String"]["output"];
-  /** The group for the preference within the containing entity type. */
-  group: Scalars["String"]["output"];
-  /** The ID of the entity */
-  id: Scalars["UUID"]["output"];
-  /** The type of the Preference, specific to the Entity it is on. */
-  type: PreferenceType;
-  /** The date at which the entity was last updated. */
-  updatedDate: Scalars["DateTime"]["output"];
-  /** Preference value type */
-  valueType: PreferenceValueType;
-};
-
-export enum PreferenceType {
-  NotificationApplicationReceived = "NOTIFICATION_APPLICATION_RECEIVED",
-  NotificationApplicationSubmitted = "NOTIFICATION_APPLICATION_SUBMITTED",
-  NotificationCalloutPublished = "NOTIFICATION_CALLOUT_PUBLISHED",
-  NotificationCommentReply = "NOTIFICATION_COMMENT_REPLY",
-  NotificationCommunicationDiscussionCreated = "NOTIFICATION_COMMUNICATION_DISCUSSION_CREATED",
-  NotificationCommunicationDiscussionCreatedAdmin = "NOTIFICATION_COMMUNICATION_DISCUSSION_CREATED_ADMIN",
-  NotificationCommunicationMention = "NOTIFICATION_COMMUNICATION_MENTION",
-  NotificationCommunicationUpdates = "NOTIFICATION_COMMUNICATION_UPDATES",
-  NotificationCommunicationUpdateSentAdmin = "NOTIFICATION_COMMUNICATION_UPDATE_SENT_ADMIN",
-  NotificationCommunityCollaborationInterestAdmin = "NOTIFICATION_COMMUNITY_COLLABORATION_INTEREST_ADMIN",
-  NotificationCommunityCollaborationInterestUser = "NOTIFICATION_COMMUNITY_COLLABORATION_INTEREST_USER",
-  NotificationCommunityInvitationUser = "NOTIFICATION_COMMUNITY_INVITATION_USER",
-  NotificationCommunityNewMember = "NOTIFICATION_COMMUNITY_NEW_MEMBER",
-  NotificationCommunityNewMemberAdmin = "NOTIFICATION_COMMUNITY_NEW_MEMBER_ADMIN",
-  NotificationCommunityReviewSubmitted = "NOTIFICATION_COMMUNITY_REVIEW_SUBMITTED",
-  NotificationCommunityReviewSubmittedAdmin = "NOTIFICATION_COMMUNITY_REVIEW_SUBMITTED_ADMIN",
-  NotificationDiscussionCommentCreated = "NOTIFICATION_DISCUSSION_COMMENT_CREATED",
-  NotificationForumDiscussionComment = "NOTIFICATION_FORUM_DISCUSSION_COMMENT",
-  NotificationForumDiscussionCreated = "NOTIFICATION_FORUM_DISCUSSION_CREATED",
-  NotificationOrganizationMention = "NOTIFICATION_ORGANIZATION_MENTION",
-  NotificationOrganizationMessage = "NOTIFICATION_ORGANIZATION_MESSAGE",
-  NotificationPostCommentCreated = "NOTIFICATION_POST_COMMENT_CREATED",
-  NotificationPostCreated = "NOTIFICATION_POST_CREATED",
-  NotificationPostCreatedAdmin = "NOTIFICATION_POST_CREATED_ADMIN",
-  NotificationUserRemoved = "NOTIFICATION_USER_REMOVED",
-  NotificationUserSignUp = "NOTIFICATION_USER_SIGN_UP",
-  NotificationWhiteboardCreated = "NOTIFICATION_WHITEBOARD_CREATED",
-}
-
-export enum PreferenceValueType {
-  Boolean = "BOOLEAN",
-  Float = "FLOAT",
-  Int = "INT",
-  String = "STRING",
-}
 
 export type Profile = {
   /** The authorization rules for the entity */
@@ -5124,6 +5522,7 @@ export enum ProfileType {
   InnovationHub = "INNOVATION_HUB",
   InnovationPack = "INNOVATION_PACK",
   KnowledgeBase = "KNOWLEDGE_BASE",
+  Memo = "MEMO",
   Organization = "ORGANIZATION",
   Post = "POST",
   SpaceAbout = "SPACE_ABOUT",
@@ -5144,10 +5543,6 @@ export type Query = {
   activityFeedGrouped: Array<ActivityLogEntry>;
   /** Retrieve the ActivityLog for the specified Collaboration */
   activityLogOnCollaboration: Array<ActivityLogEntry>;
-  /** All Users that are members of a given room */
-  adminCommunicationMembership: CommunicationAdminMembershipResult;
-  /** Usage of the messaging platform that are not tied to the domain model. */
-  adminCommunicationOrphanedUsage: CommunicationAdminOrphanedUsageResult;
   /** Alkemio AiServer */
   aiServer: AiServer;
   /** Active Spaces only, order by most active in the past X days. */
@@ -5162,8 +5557,10 @@ export type Query = {
   lookupByName: LookupByNameQueryResults;
   /** Information about the current authenticated user */
   me: MeQueryResults;
+  /** The notificationRecipients for the provided event on the given entity. */
+  notificationRecipients: NotificationRecipientResult;
   /** Get all notifications for the logged in user. */
-  notifications: Array<InAppNotification>;
+  notificationsInApp: Array<InAppNotification>;
   /** A particular Organization */
   organization: Organization;
   /** The Organizations on this platform */
@@ -5172,6 +5569,8 @@ export type Query = {
   organizationsPaginated: PaginatedOrganization;
   /** Alkemio Platform */
   platform: Platform;
+  /** Allow looking up of information for Platform administration. */
+  platformAdmin: PlatformAdminQueryResults;
   /** Get the list of restricted space names. */
   restrictedSpaceNames: Array<Scalars["String"]["output"]>;
   /** The roles that the specified Organization has. */
@@ -5194,8 +5593,6 @@ export type Query = {
   urlResolver: UrlResolverQueryResults;
   /** A particular user, identified by the ID or by email */
   user: User;
-  /** Privileges assigned to a User (based on held credentials) given an Authorization defnition. */
-  userAuthorizationPrivileges: Array<AuthorizationPrivilege>;
   /** The users who have profiles on this platform */
   users: Array<User>;
   /** The users who have profiles on this platform */
@@ -5224,12 +5621,16 @@ export type QueryActivityLogOnCollaborationArgs = {
   queryData: ActivityLogInput;
 };
 
-export type QueryAdminCommunicationMembershipArgs = {
-  communicationData: CommunicationAdminMembershipInput;
-};
-
 export type QueryExploreSpacesArgs = {
   options?: InputMaybe<ExploreSpacesInput>;
+};
+
+export type QueryNotificationRecipientsArgs = {
+  eventData: NotificationRecipientsInput;
+};
+
+export type QueryNotificationsInAppArgs = {
+  filter?: InputMaybe<InAppNotificationFilterInput>;
 };
 
 export type QueryOrganizationArgs = {
@@ -5294,10 +5695,6 @@ export type QueryUrlResolverArgs = {
 
 export type QueryUserArgs = {
   ID: Scalars["UUID"]["input"];
-};
-
-export type QueryUserAuthorizationPrivilegesArgs = {
-  userAuthorizationPrivilegesData: UserAuthorizationPrivilegesInput;
 };
 
 export type QueryUsersArgs = {
@@ -5402,6 +5799,8 @@ export type RelayPaginatedSpace = {
   license: License;
   /** A name identifier of the entity, unique within a given scope. */
   nameID: Scalars["NameID"]["output"];
+  /** The calculated platform access for this Space. */
+  platformAccess: PlatformRolesAccess;
   /** The settings for this Space. */
   settings: SpaceSettings;
   /** The StorageAggregator in use by this Space */
@@ -5539,6 +5938,7 @@ export type Role = {
 
 export enum RoleName {
   Admin = "ADMIN",
+  Anonymous = "ANONYMOUS",
   Associate = "ASSOCIATE",
   GlobalAdmin = "GLOBAL_ADMIN",
   GlobalCommunityReader = "GLOBAL_COMMUNITY_READER",
@@ -5552,6 +5952,7 @@ export enum RoleName {
   Owner = "OWNER",
   PlatformBetaTester = "PLATFORM_BETA_TESTER",
   PlatformVcCampaign = "PLATFORM_VC_CAMPAIGN",
+  Registered = "REGISTERED",
 }
 
 export type RoleSet = {
@@ -6043,6 +6444,8 @@ export type Space = {
   license: License;
   /** A name identifier of the entity, unique within a given scope. */
   nameID: Scalars["NameID"]["output"];
+  /** The calculated platform access for this Space. */
+  platformAccess: PlatformRolesAccess;
   /** The settings for this Space. */
   settings: SpaceSettings;
   /** The StorageAggregator in use by this Space */
@@ -6470,6 +6873,8 @@ export type TemplateContentSpace = {
   level: SpaceLevel;
   /** The settings for this TemplateContentSpace. */
   settings: SpaceSettings;
+  /** The template subspaces for the Template Content Space. */
+  subspaces: Array<TemplateContentSpace>;
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
 };
@@ -6630,6 +7035,23 @@ export type UpdateApplicationFormOnRoleSetInput = {
   roleSetID: Scalars["UUID"]["input"];
 };
 
+export type UpdateBaselineLicensePlanOnAccount = {
+  /** The Account to update the Baseline License Plan. */
+  accountID: Scalars["UUID"]["input"];
+  /** The number of Innovation Packs allowed. */
+  innovationPacks?: InputMaybe<Scalars["Int"]["input"]>;
+  /** The number of Free Spaces allowed. */
+  spaceFree?: InputMaybe<Scalars["Int"]["input"]>;
+  /** The number of Plus Spaces allowed. */
+  spacePlus?: InputMaybe<Scalars["Int"]["input"]>;
+  /** The number of Premium Spaces allowed. */
+  spacePremium?: InputMaybe<Scalars["Int"]["input"]>;
+  /** The number of Starting Pages allowed. */
+  startingPages?: InputMaybe<Scalars["Int"]["input"]>;
+  /** The number of Virtual Contributors allowed. */
+  virtualContributor?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
 export type UpdateCalendarEventInput = {
   ID: Scalars["UUID"]["input"];
   /** The length of the event in days. */
@@ -6652,34 +7074,36 @@ export type UpdateCalendarEventInput = {
 };
 
 export type UpdateCalloutContributionDefaultsInput = {
+  /** The default title to use for new contributions. */
+  defaultDisplayName?: InputMaybe<Scalars["String"]["input"]>;
   /** The default description to use for new Post contributions. */
   postDescription?: InputMaybe<Scalars["Markdown"]["input"]>;
   /** The default description to use for new Whiteboard contributions. */
   whiteboardContent?: InputMaybe<Scalars["WhiteboardContent"]["input"]>;
 };
 
-export type UpdateCalloutContributionPolicyInput = {
-  /** State of the callout. */
-  state?: InputMaybe<CalloutState>;
-};
-
 export type UpdateCalloutEntityInput = {
   ID: Scalars["UUID"]["input"];
   classification?: InputMaybe<UpdateClassificationInput>;
   contributionDefaults?: InputMaybe<UpdateCalloutContributionDefaultsInput>;
-  contributionPolicy?: InputMaybe<UpdateCalloutContributionPolicyInput>;
   framing?: InputMaybe<UpdateCalloutFramingInput>;
   /** Set Group for this Callout. */
   groupName?: InputMaybe<Scalars["String"]["input"]>;
   /** A display identifier, unique within the containing scope. Note: updating the nameID will affect URL on the client. */
   nameID?: InputMaybe<Scalars["NameID"]["input"]>;
+  settings?: InputMaybe<UpdateCalloutSettingsInput>;
   /** The sort order to assign to this Callout. */
   sortOrder?: InputMaybe<Scalars["Float"]["input"]>;
 };
 
 export type UpdateCalloutFramingInput = {
+  link?: InputMaybe<UpdateLinkInput>;
+  /** The new content to be used. */
+  memoContent?: InputMaybe<Scalars["Markdown"]["input"]>;
   /** The Profile of the Template. */
   profile?: InputMaybe<UpdateProfileInput>;
+  /** The type of additional content attached to the framing of the callout. */
+  type?: InputMaybe<CalloutFramingType>;
   /** The new content to be used. */
   whiteboardContent?: InputMaybe<Scalars["WhiteboardContent"]["input"]>;
 };
@@ -6691,6 +7115,27 @@ export type UpdateCalloutPublishInfoInput = {
   publishDate?: InputMaybe<Scalars["Float"]["input"]>;
   /** The identifier of the publisher of the Callout. */
   publisherID?: InputMaybe<Scalars["UUID"]["input"]>;
+};
+
+export type UpdateCalloutSettingsContributionInput = {
+  /** Indicate who can add more contributions to the callout. */
+  canAddContributions?: InputMaybe<CalloutAllowedContributors>;
+  /** Can comment to contributions callout. */
+  commentsEnabled?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Can add contributions to the Callout. Allowed Contribution types is going to be readOnly, so this field can be used to enable or disable the contribution temporarily instead of setting allowedTypes to None. */
+  enabled?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type UpdateCalloutSettingsFramingInput = {
+  /** Can comment to callout framing. */
+  commentsEnabled?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type UpdateCalloutSettingsInput = {
+  contribution?: InputMaybe<UpdateCalloutSettingsContributionInput>;
+  framing?: InputMaybe<UpdateCalloutSettingsFramingInput>;
+  /** Visibility of the Callout. */
+  visibility?: InputMaybe<CalloutVisibility>;
 };
 
 export type UpdateCalloutVisibilityInput = {
@@ -6775,34 +7220,39 @@ export type UpdateFormQuestionInput = {
   sortOrder: Scalars["Float"]["input"];
 };
 
-export type UpdateInnovationFlowEntityInput = {
+export type UpdateInnovationFlowCurrentStateInput = {
+  /** ID of the Innovation Flow State to be selected as the current one. */
+  currentStateID: Scalars["UUID"]["input"];
+  /** ID of the Innovation Flow */
+  innovationFlowID: Scalars["UUID"]["input"];
+};
+
+export type UpdateInnovationFlowInput = {
   /** ID of the Innovation Flow */
   innovationFlowID: Scalars["UUID"]["input"];
   /** The Profile of this entity. */
   profileData?: InputMaybe<UpdateProfileInput>;
-  states?: InputMaybe<Array<UpdateInnovationFlowStateInput>>;
-};
-
-export type UpdateInnovationFlowSelectedStateInput = {
-  /** ID of the Innovation Flow */
-  innovationFlowID: Scalars["UUID"]["input"];
-  /** The State that the Innovation Flow is in */
-  selectedState: Scalars["String"]["input"];
-};
-
-export type UpdateInnovationFlowSingleStateInput = {
-  /** ID of the Innovation Flow */
-  innovationFlowID: Scalars["UUID"]["input"];
-  /** The name of the Innovation Flow State to be updated */
-  stateDisplayName: Scalars["String"]["input"];
-  stateUpdatedData: UpdateInnovationFlowStateInput;
 };
 
 export type UpdateInnovationFlowStateInput = {
-  /** The explation text to clarify the State. */
+  /** The explanation text to clarify the State. */
   description?: InputMaybe<Scalars["Markdown"]["input"]>;
   /** The display name for the State */
   displayName: Scalars["String"]["input"];
+  /** ID of the Innovation Flow */
+  innovationFlowStateID: Scalars["UUID"]["input"];
+  settings?: InputMaybe<UpdateInnovationFlowStateSettingsInput>;
+};
+
+export type UpdateInnovationFlowStateSettingsInput = {
+  /** The flag to set. */
+  allowNewCallouts: Scalars["Boolean"]["input"];
+};
+
+export type UpdateInnovationFlowStatesSortOrderInput = {
+  innovationFlowID: Scalars["UUID"]["input"];
+  /** The IDs of the states to update the sort order on */
+  stateIDs: Array<Scalars["UUID"]["input"]>;
 };
 
 export type UpdateInnovationHubInput = {
@@ -6878,11 +7328,18 @@ export type UpdateLocationInput = {
   stateOrProvince?: InputMaybe<Scalars["String"]["input"]>;
 };
 
+export type UpdateMemoEntityInput = {
+  ID: Scalars["UUID"]["input"];
+  contentUpdatePolicy?: InputMaybe<ContentUpdatePolicy>;
+  /** The Profile of this entity. */
+  profile?: InputMaybe<UpdateProfileInput>;
+};
+
 export type UpdateNotificationStateInput = {
   /** The ID of the notification to update. */
   ID: Scalars["UUID"]["input"];
   /** The new state of the notification. */
-  state: InAppNotificationState;
+  state: NotificationEventInAppState;
 };
 
 export type UpdateOrganizationInput = {
@@ -6976,7 +7433,6 @@ export type UpdateReferenceInput = {
 export type UpdateSpaceAboutInput = {
   /** The Profile of this Space. */
   profile?: InputMaybe<UpdateProfileInput>;
-  when?: InputMaybe<Scalars["Markdown"]["input"]>;
   who?: InputMaybe<Scalars["Markdown"]["input"]>;
   why?: InputMaybe<Scalars["Markdown"]["input"]>;
 };
@@ -7057,6 +7513,8 @@ export type UpdateTemplateDefaultTemplateInput = {
 };
 
 export type UpdateTemplateFromSpaceInput = {
+  /** Whether to reproduce the hierarchy or just the space. */
+  recursive?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** The Space whose content should be copied to this Template. */
   spaceID: Scalars["UUID"]["input"];
   /** The ID of the Template. */
@@ -7101,22 +7559,16 @@ export type UpdateUserPlatformSettingsInput = {
   userID: Scalars["String"]["input"];
 };
 
-export type UpdateUserPreferenceInput = {
-  /** Type of the user preference */
-  type: PreferenceType;
-  /** ID of the User */
-  userID: Scalars["UUID"]["input"];
-  value: Scalars["String"]["input"];
-};
-
 export type UpdateUserSettingsCommunicationInput = {
   /** Allow Users to send messages to this User. */
-  allowOtherUsersToSendMessages: Scalars["Boolean"]["input"];
+  allowOtherUsersToSendMessages?: InputMaybe<Scalars["Boolean"]["input"]>;
 };
 
 export type UpdateUserSettingsEntityInput = {
   /** Settings related to this users Communication preferences. */
   communication?: InputMaybe<UpdateUserSettingsCommunicationInput>;
+  /** Settings related to this users Notifications preferences. */
+  notification?: InputMaybe<UpdateUserSettingsNotificationInput>;
   /** Settings related to Privacy. */
   privacy?: InputMaybe<UpdateUserSettingsPrivacyInput>;
 };
@@ -7128,9 +7580,108 @@ export type UpdateUserSettingsInput = {
   userID: Scalars["UUID"]["input"];
 };
 
+export type UpdateUserSettingsNotificationInput = {
+  /** Settings related to Organization Notifications. */
+  organization?: InputMaybe<UpdateUserSettingsNotificationOrganizationInput>;
+  /** Settings related to Platform Notifications. */
+  platform?: InputMaybe<UpdateUserSettingsNotificationPlatformInput>;
+  /** Settings related to Space Notifications. */
+  space?: InputMaybe<UpdateUserSettingsNotificationSpaceInput>;
+  /** Settings related to User Notifications. */
+  user?: InputMaybe<UpdateUserSettingsNotificationUserInput>;
+  /** Settings related to Virtual Contributor Notifications. */
+  virtualContributor?: InputMaybe<UpdateUserSettingsNotificationVirtualContributorInput>;
+};
+
+export type UpdateUserSettingsNotificationOrganizationInput = {
+  /** Receive a notification when the organization you are admin of is mentioned */
+  adminMentioned?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Receive notification when the organization you are admin of is messaged */
+  adminMessageReceived?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type UpdateUserSettingsNotificationPlatformAdminInput = {
+  /** [Admin] Receive a notification when a new L0 Space is created */
+  spaceCreated?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** [Admin] Receive a notification user is assigned or removed from a global role */
+  userGlobalRoleChanged?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** [Admin] Receive notification when a new user signs up */
+  userProfileCreated?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** [Admin] Receive a notification when a user profile is removed */
+  userProfileRemoved?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type UpdateUserSettingsNotificationPlatformInput = {
+  /** Settings related to Platform Admin Notifications. */
+  admin?: InputMaybe<UpdateUserSettingsNotificationPlatformAdminInput>;
+  /** Receive a notification when a new comment is added to a Discussion I created in the Forum */
+  forumDiscussionComment?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Receive a notification when a new Discussion is created in the Forum */
+  forumDiscussionCreated?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type UpdateUserSettingsNotificationSpaceAdminInput = {
+  /** Receive a notification when a contribution is added (admin) */
+  collaborationCalloutContributionCreated?: InputMaybe<
+    Scalars["Boolean"]["input"]
+  >;
+  /** Receive a notification when a message is sent to a Space I lead */
+  communicationMessageReceived?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Receive a notification when an application is received */
+  communityApplicationReceived?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Receive a notification when a new member joins the community (admin) */
+  communityNewMember?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type UpdateUserSettingsNotificationSpaceInput = {
+  /** Settings related to Space Admin Notifications. */
+  admin?: InputMaybe<UpdateUserSettingsNotificationSpaceAdminInput>;
+  /** Receive a notification when a comment is added to a Callout */
+  collaborationCalloutComment?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Receive a notification when a contribution is added */
+  collaborationCalloutContributionCreated?: InputMaybe<
+    Scalars["Boolean"]["input"]
+  >;
+  /** Receive a notification when a comment is created on a contribution */
+  collaborationCalloutPostContributionComment?: InputMaybe<
+    Scalars["Boolean"]["input"]
+  >;
+  /** Receive a notification when a callout is published */
+  collaborationCalloutPublished?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Receive a notification for community updates */
+  communicationUpdates?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type UpdateUserSettingsNotificationUserInput = {
+  /** Receive a notification when someone replies to a comment I made. */
+  commentReply?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Receive notification I send a message to a User, Organization or Space. */
+  copyOfMessageSent?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Settings related to User Membership Notifications. */
+  membership?: InputMaybe<UpdateUserSettingsNotificationUserMembershipInput>;
+  /** Receive a notification you are mentioned */
+  mentioned?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Receive notification when I receive a message. */
+  messageReceived?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type UpdateUserSettingsNotificationUserMembershipInput = {
+  /** Receive a notification when an application is submitted */
+  spaceCommunityApplicationSubmitted?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Receive a notification for community invitation */
+  spaceCommunityInvitationReceived?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Receive a notification when I join a new community */
+  spaceCommunityJoined?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+export type UpdateUserSettingsNotificationVirtualContributorInput = {
+  /** Receive notification when a Virtual Contributor receives an invitation to join a Space. */
+  adminSpaceCommunityInvitation?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
 export type UpdateUserSettingsPrivacyInput = {
   /** Allow contribution roles (communication, lead etc) in Spaces to be visible. */
-  contributionRolesPubliclyVisible: Scalars["Boolean"]["input"];
+  contributionRolesPubliclyVisible?: InputMaybe<Scalars["Boolean"]["input"]>;
 };
 
 export type UpdateVirtualContributorInput = {
@@ -7242,18 +7793,27 @@ export enum UrlType {
   ContributorsExplorer = "CONTRIBUTORS_EXPLORER",
   Discussion = "DISCUSSION",
   Documentation = "DOCUMENTATION",
+  Error = "ERROR",
   Flow = "FLOW",
   Forum = "FORUM",
   Home = "HOME",
   InnovationHub = "INNOVATION_HUB",
   InnovationLibrary = "INNOVATION_LIBRARY",
   InnovationPacks = "INNOVATION_PACKS",
+  Login = "LOGIN",
+  Logout = "LOGOUT",
   NotAuthorized = "NOT_AUTHORIZED",
   Organization = "ORGANIZATION",
+  Recovery = "RECOVERY",
+  Registration = "REGISTRATION",
+  Required = "REQUIRED",
+  Restricted = "RESTRICTED",
+  SignUp = "SIGN_UP",
   Space = "SPACE",
   SpaceExplorer = "SPACE_EXPLORER",
   Unknown = "UNKNOWN",
   User = "USER",
+  Verify = "VERIFY",
   VirtualContributor = "VIRTUAL_CONTRIBUTOR",
 }
 
@@ -7288,8 +7848,6 @@ export type User = Contributor & {
   nameID: Scalars["NameID"]["output"];
   /** The phone number for this User. */
   phone?: Maybe<Scalars["String"]["output"]>;
-  /** The preferences for this user */
-  preferences: Array<Preference>;
   /** The Profile for this User. */
   profile: Profile;
   /** The settings for this User. */
@@ -7305,15 +7863,8 @@ export type UserAuthenticationResult = {
   authenticatedAt?: Maybe<Scalars["DateTime"]["output"]>;
   /** When the Kratos Account for the user was created */
   createdAt?: Maybe<Scalars["DateTime"]["output"]>;
-  /** The Authentication Method used for this User. One of email, linkedin, microsoft, or unknown */
-  method: AuthenticationType;
-};
-
-export type UserAuthorizationPrivilegesInput = {
-  /** The authorization definition to evaluate the user credentials against. */
-  authorizationID: Scalars["UUID"]["input"];
-  /** The user to evaluate privileges granted based on held credentials. */
-  userID: Scalars["UUID"]["input"];
+  /** The Authentication Methods used for this User. One of email, linkedin, microsoft, github or unknown */
+  methods: Array<AuthenticationType>;
 };
 
 export type UserAuthorizationResetInput = {
@@ -7353,15 +7904,125 @@ export type UserSendMessageInput = {
 };
 
 export type UserSettings = {
+  /** The authorization rules for the entity */
+  authorization?: Maybe<Authorization>;
   /** The communication settings for this User. */
   communication: UserSettingsCommunication;
+  /** The date at which the entity was created. */
+  createdDate: Scalars["DateTime"]["output"];
+  /** The ID of the entity */
+  id: Scalars["UUID"]["output"];
+  /** The notification settings for this User. */
+  notification: UserSettingsNotification;
   /** The privacy settings for this User */
   privacy: UserSettingsPrivacy;
+  /** The date at which the entity was last updated. */
+  updatedDate: Scalars["DateTime"]["output"];
 };
 
 export type UserSettingsCommunication = {
   /** Allow Users to send messages to this User. */
   allowOtherUsersToSendMessages: Scalars["Boolean"]["output"];
+};
+
+export type UserSettingsNotification = {
+  /** The notifications settings for Organization events for this User */
+  organization: UserSettingsNotificationOrganization;
+  /** The notifications settings for Platform events for this User */
+  platform: UserSettingsNotificationPlatform;
+  /** The notifications settings for Space events for this User */
+  space: UserSettingsNotificationSpace;
+  /** The notifications settings for User events for this User */
+  user: UserSettingsNotificationUser;
+  /** The notifications settings for Virtual Contributor events for this User */
+  virtualContributor: UserSettingsNotificationVirtualContributor;
+};
+
+export type UserSettingsNotificationChannels = {
+  /** Receive notifications by email. */
+  email: Scalars["Boolean"]["output"];
+  /** Receive notifications by inApp. */
+  inApp: Scalars["Boolean"]["output"];
+};
+
+export type UserSettingsNotificationOrganization = {
+  /** Receive a notification when the organization you are admin of is mentioned */
+  adminMentioned: UserSettingsNotificationChannels;
+  /** Receive notification when the organization you are admin of is messaged */
+  adminMessageReceived: UserSettingsNotificationChannels;
+};
+
+export type UserSettingsNotificationPlatform = {
+  /** The notifications settings for Platform Admin events for this User */
+  admin: UserSettingsNotificationPlatformAdmin;
+  /** Receive a notification when a new comment is added to a Discussion I created in the Forum */
+  forumDiscussionComment: UserSettingsNotificationChannels;
+  /** Receive a notification when a new Discussion is created in the Forum */
+  forumDiscussionCreated: UserSettingsNotificationChannels;
+};
+
+export type UserSettingsNotificationPlatformAdmin = {
+  /** Receive a notification when a new L0 Space is created */
+  spaceCreated: UserSettingsNotificationChannels;
+  /** Receive a notification when a user global role is assigned or removed. */
+  userGlobalRoleChanged: UserSettingsNotificationChannels;
+  /** Receive notification when a new user signs up */
+  userProfileCreated: UserSettingsNotificationChannels;
+  /** Receive a notification when a user profile is removed */
+  userProfileRemoved: UserSettingsNotificationChannels;
+};
+
+export type UserSettingsNotificationSpace = {
+  /** The notifications settings for Space Admin events for this User */
+  admin: UserSettingsNotificationSpaceAdmin;
+  /** Receive a notification when a comment is made on a Callout */
+  collaborationCalloutComment: UserSettingsNotificationChannels;
+  /** Receive a notification when a contribution is created */
+  collaborationCalloutContributionCreated: UserSettingsNotificationChannels;
+  /** Receive a notification when a comment is created on a Post contribution */
+  collaborationCalloutPostContributionComment: UserSettingsNotificationChannels;
+  /** Receive a notification when a callout is published */
+  collaborationCalloutPublished: UserSettingsNotificationChannels;
+  /** Receive a notification for community updates */
+  communicationUpdates: UserSettingsNotificationChannels;
+};
+
+export type UserSettingsNotificationSpaceAdmin = {
+  /** Receive a notification when a contribution is created (admin) */
+  collaborationCalloutContributionCreated: UserSettingsNotificationChannels;
+  /** Receive a notification when a message is sent to a Space I lead */
+  communicationMessageReceived: UserSettingsNotificationChannels;
+  /** Receive a notification when an application is received */
+  communityApplicationReceived: UserSettingsNotificationChannels;
+  /** Receive a notification when a new member joins the community (admin) */
+  communityNewMember: UserSettingsNotificationChannels;
+};
+
+export type UserSettingsNotificationUser = {
+  /** Receive a notification when someone replies to a comment I made. */
+  commentReply: UserSettingsNotificationChannels;
+  /** Receive notification I send a message to a User, Organization or Space. */
+  copyOfMessageSent: UserSettingsNotificationChannels;
+  /** The notifications settings for membership events for this User */
+  membership: UserSettingsNotificationUserMembership;
+  /** Receive a notification you are mentioned */
+  mentioned: UserSettingsNotificationChannels;
+  /** Receive notification when I receive a direct message. */
+  messageReceived: UserSettingsNotificationChannels;
+};
+
+export type UserSettingsNotificationUserMembership = {
+  /** Receive a notification when an application for a Space is submitted */
+  spaceCommunityApplicationSubmitted: UserSettingsNotificationChannels;
+  /** Receive a notification when I am invited to join a Space community */
+  spaceCommunityInvitationReceived: UserSettingsNotificationChannels;
+  /** Receive a notification when I join a Space */
+  spaceCommunityJoined: UserSettingsNotificationChannels;
+};
+
+export type UserSettingsNotificationVirtualContributor = {
+  /** Receive notification when a Virtual Contributor receives an invitation to join a Space. */
+  adminSpaceCommunityInvitation: UserSettingsNotificationChannels;
 };
 
 export type UserSettingsPrivacy = {
@@ -7816,31 +8477,56 @@ export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> =
           profile: _RefType["Profile"];
           roleSet: _RefType["RoleSet"];
         });
-    InAppNotification:
+    InAppNotificationPayload:
+      | SchemaTypes.InAppNotificationPayloadOrganization
       | (Omit<
-          SchemaTypes.InAppNotificationCalloutPublished,
-          "callout" | "receiver" | "space" | "triggeredBy"
-        > & {
-          callout?: SchemaTypes.Maybe<_RefType["Callout"]>;
-          receiver: _RefType["Contributor"];
-          space?: SchemaTypes.Maybe<_RefType["Space"]>;
-          triggeredBy?: SchemaTypes.Maybe<_RefType["Contributor"]>;
-        })
+          SchemaTypes.InAppNotificationPayloadOrganizationMessageDirect,
+          "organization"
+        > & { organization: _RefType["Contributor"] })
       | (Omit<
-          SchemaTypes.InAppNotificationCommunityNewMember,
-          "actor" | "receiver" | "space" | "triggeredBy"
-        > & {
-          actor?: SchemaTypes.Maybe<_RefType["Contributor"]>;
-          receiver: _RefType["Contributor"];
-          space?: SchemaTypes.Maybe<_RefType["Space"]>;
-          triggeredBy?: SchemaTypes.Maybe<_RefType["Contributor"]>;
-        })
+          SchemaTypes.InAppNotificationPayloadOrganizationMessageRoom,
+          "organization"
+        > & { organization: _RefType["Organization"] })
+      | SchemaTypes.InAppNotificationPayloadPlatform
+      | SchemaTypes.InAppNotificationPayloadPlatformForumDiscussion
+      | SchemaTypes.InAppNotificationPayloadPlatformGlobalRoleChange
+      | SchemaTypes.InAppNotificationPayloadPlatformUser
       | (Omit<
-          SchemaTypes.InAppNotificationUserMentioned,
-          "receiver" | "triggeredBy"
-        > & {
-          receiver: _RefType["Contributor"];
-          triggeredBy?: SchemaTypes.Maybe<_RefType["Contributor"]>;
+          SchemaTypes.InAppNotificationPayloadPlatformUserMessageRoom,
+          "user"
+        > & { user: _RefType["User"] })
+      | SchemaTypes.InAppNotificationPayloadPlatformUserProfileRemoved
+      | SchemaTypes.InAppNotificationPayloadSpace
+      | (Omit<
+          SchemaTypes.InAppNotificationPayloadSpaceCollaborationCallout,
+          "callout" | "space"
+        > & { callout: _RefType["Callout"]; space: _RefType["Space"] })
+      | (Omit<
+          SchemaTypes.InAppNotificationPayloadSpaceCommunicationMessageDirect,
+          "space"
+        > & { space: _RefType["Space"] })
+      | (Omit<
+          SchemaTypes.InAppNotificationPayloadSpaceCommunicationUpdate,
+          "space"
+        > & { space: _RefType["Space"] })
+      | (Omit<
+          SchemaTypes.InAppNotificationPayloadSpaceCommunityApplication,
+          "application" | "space"
+        > & { application: _RefType["Application"]; space: _RefType["Space"] })
+      | (Omit<
+          SchemaTypes.InAppNotificationPayloadSpaceCommunityContributor,
+          "contributor" | "space"
+        > & { contributor: _RefType["Contributor"]; space: _RefType["Space"] })
+      | (Omit<
+          SchemaTypes.InAppNotificationPayloadSpaceCommunityInvitation,
+          "space"
+        > & { space: _RefType["Space"] })
+      | (Omit<
+          SchemaTypes.InAppNotificationPayloadSpaceCommunityInvitationPlatform,
+          "space"
+        > & { space: _RefType["Space"] })
+      | (Omit<SchemaTypes.InAppNotificationPayloadUserMessageDirect, "user"> & {
+          user: _RefType["User"];
         });
     SearchResult:
       | (Omit<SchemaTypes.SearchResultCallout, "callout" | "space"> & {
@@ -7884,6 +8570,7 @@ export type ResolversTypes = {
     }
   >;
   AccountAuthorizationResetInput: SchemaTypes.AccountAuthorizationResetInput;
+  AccountLicensePlan: ResolverTypeWrapper<SchemaTypes.AccountLicensePlan>;
   AccountLicenseResetInput: SchemaTypes.AccountLicenseResetInput;
   AccountSubscription: ResolverTypeWrapper<SchemaTypes.AccountSubscription>;
   AccountType: SchemaTypes.AccountType;
@@ -8113,6 +8800,7 @@ export type ResolversTypes = {
       publishedBy?: SchemaTypes.Maybe<ResolversTypes["User"]>;
     }
   >;
+  CalloutAllowedContributors: SchemaTypes.CalloutAllowedContributors;
   CalloutContribution: ResolverTypeWrapper<
     Omit<
       SchemaTypes.CalloutContribution,
@@ -8125,21 +8813,27 @@ export type ResolversTypes = {
     }
   >;
   CalloutContributionDefaults: ResolverTypeWrapper<SchemaTypes.CalloutContributionDefaults>;
-  CalloutContributionPolicy: ResolverTypeWrapper<SchemaTypes.CalloutContributionPolicy>;
   CalloutContributionType: SchemaTypes.CalloutContributionType;
   CalloutFraming: ResolverTypeWrapper<
-    Omit<SchemaTypes.CalloutFraming, "profile" | "whiteboard"> & {
+    Omit<
+      SchemaTypes.CalloutFraming,
+      "link" | "memo" | "profile" | "whiteboard"
+    > & {
+      link?: SchemaTypes.Maybe<ResolversTypes["Link"]>;
+      memo?: SchemaTypes.Maybe<ResolversTypes["Memo"]>;
       profile: ResolversTypes["Profile"];
       whiteboard?: SchemaTypes.Maybe<ResolversTypes["Whiteboard"]>;
     }
   >;
+  CalloutFramingType: SchemaTypes.CalloutFramingType;
   CalloutPostCreated: ResolverTypeWrapper<
     Omit<SchemaTypes.CalloutPostCreated, "post"> & {
       post: ResolversTypes["Post"];
     }
   >;
-  CalloutState: SchemaTypes.CalloutState;
-  CalloutType: SchemaTypes.CalloutType;
+  CalloutSettings: ResolverTypeWrapper<SchemaTypes.CalloutSettings>;
+  CalloutSettingsContribution: ResolverTypeWrapper<SchemaTypes.CalloutSettingsContribution>;
+  CalloutSettingsFraming: ResolverTypeWrapper<SchemaTypes.CalloutSettingsFraming>;
   CalloutVisibility: SchemaTypes.CalloutVisibility;
   CalloutsSet: ResolverTypeWrapper<
     Omit<SchemaTypes.CalloutsSet, "callouts"> & {
@@ -8247,15 +8941,21 @@ export type ResolversTypes = {
   CreateAiPersonaInput: SchemaTypes.CreateAiPersonaInput;
   CreateAiPersonaServiceInput: SchemaTypes.CreateAiPersonaServiceInput;
   CreateCalendarEventOnCalendarInput: SchemaTypes.CreateCalendarEventOnCalendarInput;
+  CreateCalloutContributionData: ResolverTypeWrapper<SchemaTypes.CreateCalloutContributionData>;
   CreateCalloutContributionDefaultsData: ResolverTypeWrapper<SchemaTypes.CreateCalloutContributionDefaultsData>;
   CreateCalloutContributionDefaultsInput: SchemaTypes.CreateCalloutContributionDefaultsInput;
-  CreateCalloutContributionPolicyData: ResolverTypeWrapper<SchemaTypes.CreateCalloutContributionPolicyData>;
-  CreateCalloutContributionPolicyInput: SchemaTypes.CreateCalloutContributionPolicyInput;
+  CreateCalloutContributionInput: SchemaTypes.CreateCalloutContributionInput;
   CreateCalloutData: ResolverTypeWrapper<SchemaTypes.CreateCalloutData>;
   CreateCalloutFramingData: ResolverTypeWrapper<SchemaTypes.CreateCalloutFramingData>;
   CreateCalloutFramingInput: SchemaTypes.CreateCalloutFramingInput;
   CreateCalloutInput: SchemaTypes.CreateCalloutInput;
   CreateCalloutOnCalloutsSetInput: SchemaTypes.CreateCalloutOnCalloutsSetInput;
+  CreateCalloutSettingsContributionData: ResolverTypeWrapper<SchemaTypes.CreateCalloutSettingsContributionData>;
+  CreateCalloutSettingsContributionInput: SchemaTypes.CreateCalloutSettingsContributionInput;
+  CreateCalloutSettingsData: ResolverTypeWrapper<SchemaTypes.CreateCalloutSettingsData>;
+  CreateCalloutSettingsFramingData: ResolverTypeWrapper<SchemaTypes.CreateCalloutSettingsFramingData>;
+  CreateCalloutSettingsFramingInput: SchemaTypes.CreateCalloutSettingsFramingInput;
+  CreateCalloutSettingsInput: SchemaTypes.CreateCalloutSettingsInput;
   CreateCalloutsSetData: ResolverTypeWrapper<SchemaTypes.CreateCalloutsSetData>;
   CreateCalloutsSetInput: SchemaTypes.CreateCalloutsSetInput;
   CreateClassificationData: ResolverTypeWrapper<SchemaTypes.CreateClassificationData>;
@@ -8270,15 +8970,21 @@ export type ResolversTypes = {
   CreateInnovationFlowInput: SchemaTypes.CreateInnovationFlowInput;
   CreateInnovationFlowStateData: ResolverTypeWrapper<SchemaTypes.CreateInnovationFlowStateData>;
   CreateInnovationFlowStateInput: SchemaTypes.CreateInnovationFlowStateInput;
+  CreateInnovationFlowStateSettingsData: ResolverTypeWrapper<SchemaTypes.CreateInnovationFlowStateSettingsData>;
+  CreateInnovationFlowStateSettingsInput: SchemaTypes.CreateInnovationFlowStateSettingsInput;
   CreateInnovationHubOnAccountInput: SchemaTypes.CreateInnovationHubOnAccountInput;
   CreateInnovationPackOnAccountInput: SchemaTypes.CreateInnovationPackOnAccountInput;
   CreateKnowledgeBaseInput: SchemaTypes.CreateKnowledgeBaseInput;
   CreateLicensePlanOnLicensingFrameworkInput: SchemaTypes.CreateLicensePlanOnLicensingFrameworkInput;
+  CreateLinkData: ResolverTypeWrapper<SchemaTypes.CreateLinkData>;
   CreateLinkInput: SchemaTypes.CreateLinkInput;
   CreateLocationData: ResolverTypeWrapper<SchemaTypes.CreateLocationData>;
   CreateLocationInput: SchemaTypes.CreateLocationInput;
+  CreateMemoData: ResolverTypeWrapper<SchemaTypes.CreateMemoData>;
+  CreateMemoInput: SchemaTypes.CreateMemoInput;
   CreateNVPInput: SchemaTypes.CreateNvpInput;
   CreateOrganizationInput: SchemaTypes.CreateOrganizationInput;
+  CreatePostData: ResolverTypeWrapper<SchemaTypes.CreatePostData>;
   CreatePostInput: SchemaTypes.CreatePostInput;
   CreateProfileData: ResolverTypeWrapper<SchemaTypes.CreateProfileData>;
   CreateProfileInput: SchemaTypes.CreateProfileInput;
@@ -8291,6 +8997,7 @@ export type ResolversTypes = {
   CreateSpaceSettingsInput: SchemaTypes.CreateSpaceSettingsInput;
   CreateSpaceSettingsMembershipInput: SchemaTypes.CreateSpaceSettingsMembershipInput;
   CreateSpaceSettingsPrivacyInput: SchemaTypes.CreateSpaceSettingsPrivacyInput;
+  CreateStateOnInnovationFlowInput: SchemaTypes.CreateStateOnInnovationFlowInput;
   CreateSubspaceInput: SchemaTypes.CreateSubspaceInput;
   CreateTagsetData: ResolverTypeWrapper<SchemaTypes.CreateTagsetData>;
   CreateTagsetInput: SchemaTypes.CreateTagsetInput;
@@ -8323,11 +9030,13 @@ export type ResolversTypes = {
   DeleteInvitationInput: SchemaTypes.DeleteInvitationInput;
   DeleteLicensePlanInput: SchemaTypes.DeleteLicensePlanInput;
   DeleteLinkInput: SchemaTypes.DeleteLinkInput;
+  DeleteMemoInput: SchemaTypes.DeleteMemoInput;
   DeleteOrganizationInput: SchemaTypes.DeleteOrganizationInput;
   DeletePlatformInvitationInput: SchemaTypes.DeletePlatformInvitationInput;
   DeletePostInput: SchemaTypes.DeletePostInput;
   DeleteReferenceInput: SchemaTypes.DeleteReferenceInput;
   DeleteSpaceInput: SchemaTypes.DeleteSpaceInput;
+  DeleteStateOnInnovationFlowInput: SchemaTypes.DeleteStateOnInnovationFlowInput;
   DeleteStorageBuckeetInput: SchemaTypes.DeleteStorageBuckeetInput;
   DeleteTemplateInput: SchemaTypes.DeleteTemplateInput;
   DeleteUserGroupInput: SchemaTypes.DeleteUserGroupInput;
@@ -8396,50 +9105,105 @@ export type ResolversTypes = {
     }
   >;
   InAppNotification: ResolverTypeWrapper<
-    ResolversInterfaceTypes<ResolversTypes>["InAppNotification"]
-  >;
-  InAppNotificationCalloutPublished: ResolverTypeWrapper<
     Omit<
-      SchemaTypes.InAppNotificationCalloutPublished,
-      "callout" | "receiver" | "space" | "triggeredBy"
+      SchemaTypes.InAppNotification,
+      "payload" | "receiver" | "triggeredBy"
     > & {
-      callout?: SchemaTypes.Maybe<ResolversTypes["Callout"]>;
+      payload: ResolversTypes["InAppNotificationPayload"];
       receiver: ResolversTypes["Contributor"];
-      space?: SchemaTypes.Maybe<ResolversTypes["Space"]>;
       triggeredBy?: SchemaTypes.Maybe<ResolversTypes["Contributor"]>;
     }
   >;
-  InAppNotificationCategory: SchemaTypes.InAppNotificationCategory;
-  InAppNotificationCommunityNewMember: ResolverTypeWrapper<
+  InAppNotificationFilterInput: SchemaTypes.InAppNotificationFilterInput;
+  InAppNotificationPayload: ResolverTypeWrapper<
+    ResolversInterfaceTypes<ResolversTypes>["InAppNotificationPayload"]
+  >;
+  InAppNotificationPayloadOrganization: ResolverTypeWrapper<SchemaTypes.InAppNotificationPayloadOrganization>;
+  InAppNotificationPayloadOrganizationMessageDirect: ResolverTypeWrapper<
     Omit<
-      SchemaTypes.InAppNotificationCommunityNewMember,
-      "actor" | "receiver" | "space" | "triggeredBy"
+      SchemaTypes.InAppNotificationPayloadOrganizationMessageDirect,
+      "organization"
+    > & { organization: ResolversTypes["Contributor"] }
+  >;
+  InAppNotificationPayloadOrganizationMessageRoom: ResolverTypeWrapper<
+    Omit<
+      SchemaTypes.InAppNotificationPayloadOrganizationMessageRoom,
+      "organization"
+    > & { organization: ResolversTypes["Organization"] }
+  >;
+  InAppNotificationPayloadPlatform: ResolverTypeWrapper<SchemaTypes.InAppNotificationPayloadPlatform>;
+  InAppNotificationPayloadPlatformForumDiscussion: ResolverTypeWrapper<SchemaTypes.InAppNotificationPayloadPlatformForumDiscussion>;
+  InAppNotificationPayloadPlatformGlobalRoleChange: ResolverTypeWrapper<SchemaTypes.InAppNotificationPayloadPlatformGlobalRoleChange>;
+  InAppNotificationPayloadPlatformUser: ResolverTypeWrapper<SchemaTypes.InAppNotificationPayloadPlatformUser>;
+  InAppNotificationPayloadPlatformUserMessageRoom: ResolverTypeWrapper<
+    Omit<
+      SchemaTypes.InAppNotificationPayloadPlatformUserMessageRoom,
+      "user"
+    > & { user: ResolversTypes["User"] }
+  >;
+  InAppNotificationPayloadPlatformUserProfileRemoved: ResolverTypeWrapper<SchemaTypes.InAppNotificationPayloadPlatformUserProfileRemoved>;
+  InAppNotificationPayloadSpace: ResolverTypeWrapper<SchemaTypes.InAppNotificationPayloadSpace>;
+  InAppNotificationPayloadSpaceCollaborationCallout: ResolverTypeWrapper<
+    Omit<
+      SchemaTypes.InAppNotificationPayloadSpaceCollaborationCallout,
+      "callout" | "space"
+    > & { callout: ResolversTypes["Callout"]; space: ResolversTypes["Space"] }
+  >;
+  InAppNotificationPayloadSpaceCommunicationMessageDirect: ResolverTypeWrapper<
+    Omit<
+      SchemaTypes.InAppNotificationPayloadSpaceCommunicationMessageDirect,
+      "space"
+    > & { space: ResolversTypes["Space"] }
+  >;
+  InAppNotificationPayloadSpaceCommunicationUpdate: ResolverTypeWrapper<
+    Omit<
+      SchemaTypes.InAppNotificationPayloadSpaceCommunicationUpdate,
+      "space"
+    > & { space: ResolversTypes["Space"] }
+  >;
+  InAppNotificationPayloadSpaceCommunityApplication: ResolverTypeWrapper<
+    Omit<
+      SchemaTypes.InAppNotificationPayloadSpaceCommunityApplication,
+      "application" | "space"
     > & {
-      actor?: SchemaTypes.Maybe<ResolversTypes["Contributor"]>;
-      receiver: ResolversTypes["Contributor"];
-      space?: SchemaTypes.Maybe<ResolversTypes["Space"]>;
-      triggeredBy?: SchemaTypes.Maybe<ResolversTypes["Contributor"]>;
+      application: ResolversTypes["Application"];
+      space: ResolversTypes["Space"];
     }
   >;
-  InAppNotificationState: SchemaTypes.InAppNotificationState;
-  InAppNotificationUserMentioned: ResolverTypeWrapper<
+  InAppNotificationPayloadSpaceCommunityContributor: ResolverTypeWrapper<
     Omit<
-      SchemaTypes.InAppNotificationUserMentioned,
-      "receiver" | "triggeredBy"
+      SchemaTypes.InAppNotificationPayloadSpaceCommunityContributor,
+      "contributor" | "space"
     > & {
-      receiver: ResolversTypes["Contributor"];
-      triggeredBy?: SchemaTypes.Maybe<ResolversTypes["Contributor"]>;
+      contributor: ResolversTypes["Contributor"];
+      space: ResolversTypes["Space"];
+    }
+  >;
+  InAppNotificationPayloadSpaceCommunityInvitation: ResolverTypeWrapper<
+    Omit<
+      SchemaTypes.InAppNotificationPayloadSpaceCommunityInvitation,
+      "space"
+    > & { space: ResolversTypes["Space"] }
+  >;
+  InAppNotificationPayloadSpaceCommunityInvitationPlatform: ResolverTypeWrapper<
+    Omit<
+      SchemaTypes.InAppNotificationPayloadSpaceCommunityInvitationPlatform,
+      "space"
+    > & { space: ResolversTypes["Space"] }
+  >;
+  InAppNotificationPayloadUserMessageDirect: ResolverTypeWrapper<
+    Omit<SchemaTypes.InAppNotificationPayloadUserMessageDirect, "user"> & {
+      user: ResolversTypes["User"];
     }
   >;
   InnovationFlow: ResolverTypeWrapper<
-    Omit<SchemaTypes.InnovationFlow, "currentState" | "profile" | "states"> & {
-      currentState: ResolversTypes["InnovationFlowState"];
+    Omit<SchemaTypes.InnovationFlow, "profile"> & {
       profile: ResolversTypes["Profile"];
-      states: Array<ResolversTypes["InnovationFlowState"]>;
     }
   >;
   InnovationFlowSettings: ResolverTypeWrapper<SchemaTypes.InnovationFlowSettings>;
   InnovationFlowState: ResolverTypeWrapper<SchemaTypes.InnovationFlowState>;
+  InnovationFlowStateSettings: ResolverTypeWrapper<SchemaTypes.InnovationFlowStateSettings>;
   InnovationHub: ResolverTypeWrapper<
     Omit<
       SchemaTypes.InnovationHub,
@@ -8540,6 +9304,7 @@ export type ResolversTypes = {
       | "innovationPack"
       | "invitation"
       | "knowledgeBase"
+      | "memo"
       | "organization"
       | "platformInvitation"
       | "post"
@@ -8574,6 +9339,7 @@ export type ResolversTypes = {
       innovationPack?: SchemaTypes.Maybe<ResolversTypes["InnovationPack"]>;
       invitation?: SchemaTypes.Maybe<ResolversTypes["Invitation"]>;
       knowledgeBase: ResolversTypes["KnowledgeBase"];
+      memo?: SchemaTypes.Maybe<ResolversTypes["Memo"]>;
       organization?: SchemaTypes.Maybe<ResolversTypes["Organization"]>;
       platformInvitation?: SchemaTypes.Maybe<
         ResolversTypes["PlatformInvitation"]
@@ -8620,6 +9386,15 @@ export type ResolversTypes = {
       user?: SchemaTypes.Maybe<ResolversTypes["User"]>;
     }
   >;
+  Memo: ResolverTypeWrapper<
+    Omit<SchemaTypes.Memo, "createdBy" | "profile"> & {
+      createdBy?: SchemaTypes.Maybe<ResolversTypes["User"]>;
+      profile: ResolversTypes["Profile"];
+    }
+  >;
+  MemoContent: ResolverTypeWrapper<
+    SchemaTypes.Scalars["MemoContent"]["output"]
+  >;
   Message: ResolverTypeWrapper<
     Omit<SchemaTypes.Message, "reactions" | "sender"> & {
       reactions: Array<ResolversTypes["Reaction"]>;
@@ -8645,7 +9420,21 @@ export type ResolversTypes = {
   >;
   NVP: ResolverTypeWrapper<SchemaTypes.Nvp>;
   NameID: ResolverTypeWrapper<SchemaTypes.Scalars["NameID"]["output"]>;
-  NotificationEventType: SchemaTypes.NotificationEventType;
+  NotificationEvent: SchemaTypes.NotificationEvent;
+  NotificationEventCategory: SchemaTypes.NotificationEventCategory;
+  NotificationEventInAppState: SchemaTypes.NotificationEventInAppState;
+  NotificationEventPayload: SchemaTypes.NotificationEventPayload;
+  NotificationRecipientResult: ResolverTypeWrapper<
+    Omit<
+      SchemaTypes.NotificationRecipientResult,
+      "emailRecipients" | "inAppRecipients" | "triggeredBy"
+    > & {
+      emailRecipients: Array<ResolversTypes["User"]>;
+      inAppRecipients: Array<ResolversTypes["User"]>;
+      triggeredBy?: SchemaTypes.Maybe<ResolversTypes["User"]>;
+    }
+  >;
+  NotificationRecipientsInput: SchemaTypes.NotificationRecipientsInput;
   OpenAIModel: SchemaTypes.OpenAiModel;
   Organization: ResolverTypeWrapper<
     Omit<
@@ -8721,6 +9510,26 @@ export type ResolversTypes = {
       templatesManager?: SchemaTypes.Maybe<ResolversTypes["TemplatesManager"]>;
     }
   >;
+  PlatformAccessRole: ResolverTypeWrapper<SchemaTypes.PlatformAccessRole>;
+  PlatformAdminCommunicationQueryResults: ResolverTypeWrapper<SchemaTypes.PlatformAdminCommunicationQueryResults>;
+  PlatformAdminQueryResults: ResolverTypeWrapper<
+    Omit<
+      SchemaTypes.PlatformAdminQueryResults,
+      | "innovationHubs"
+      | "innovationPacks"
+      | "organizations"
+      | "spaces"
+      | "users"
+      | "virtualContributors"
+    > & {
+      innovationHubs: Array<ResolversTypes["InnovationHub"]>;
+      innovationPacks: Array<ResolversTypes["InnovationPack"]>;
+      organizations: ResolversTypes["PaginatedOrganization"];
+      spaces: Array<ResolversTypes["Space"]>;
+      users: ResolversTypes["PaginatedUsers"];
+      virtualContributors: Array<ResolversTypes["VirtualContributor"]>;
+    }
+  >;
   PlatformFeatureFlag: ResolverTypeWrapper<SchemaTypes.PlatformFeatureFlag>;
   PlatformFeatureFlagName: SchemaTypes.PlatformFeatureFlagName;
   PlatformIntegrationSettings: ResolverTypeWrapper<SchemaTypes.PlatformIntegrationSettings>;
@@ -8730,6 +9539,7 @@ export type ResolversTypes = {
     }
   >;
   PlatformLocations: ResolverTypeWrapper<SchemaTypes.PlatformLocations>;
+  PlatformRolesAccess: ResolverTypeWrapper<SchemaTypes.PlatformRolesAccess>;
   PlatformSettings: ResolverTypeWrapper<SchemaTypes.PlatformSettings>;
   Post: ResolverTypeWrapper<
     Omit<SchemaTypes.Post, "comments" | "createdBy" | "profile"> & {
@@ -8738,10 +9548,6 @@ export type ResolversTypes = {
       profile: ResolversTypes["Profile"];
     }
   >;
-  Preference: ResolverTypeWrapper<SchemaTypes.Preference>;
-  PreferenceDefinition: ResolverTypeWrapper<SchemaTypes.PreferenceDefinition>;
-  PreferenceType: SchemaTypes.PreferenceType;
-  PreferenceValueType: SchemaTypes.PreferenceValueType;
   Profile: ResolverTypeWrapper<
     Omit<SchemaTypes.Profile, "references" | "storageBucket"> & {
       references?: SchemaTypes.Maybe<Array<ResolversTypes["Reference"]>>;
@@ -9047,9 +9853,13 @@ export type ResolversTypes = {
     }
   >;
   TemplateContentSpace: ResolverTypeWrapper<
-    Omit<SchemaTypes.TemplateContentSpace, "about" | "collaboration"> & {
+    Omit<
+      SchemaTypes.TemplateContentSpace,
+      "about" | "collaboration" | "subspaces"
+    > & {
       about: ResolversTypes["SpaceAbout"];
       collaboration: ResolversTypes["Collaboration"];
+      subspaces: Array<ResolversTypes["TemplateContentSpace"]>;
     }
   >;
   TemplateDefault: ResolverTypeWrapper<
@@ -9103,12 +9913,15 @@ export type ResolversTypes = {
   UpdateAiPersonaInput: SchemaTypes.UpdateAiPersonaInput;
   UpdateAiPersonaServiceInput: SchemaTypes.UpdateAiPersonaServiceInput;
   UpdateApplicationFormOnRoleSetInput: SchemaTypes.UpdateApplicationFormOnRoleSetInput;
+  UpdateBaselineLicensePlanOnAccount: SchemaTypes.UpdateBaselineLicensePlanOnAccount;
   UpdateCalendarEventInput: SchemaTypes.UpdateCalendarEventInput;
   UpdateCalloutContributionDefaultsInput: SchemaTypes.UpdateCalloutContributionDefaultsInput;
-  UpdateCalloutContributionPolicyInput: SchemaTypes.UpdateCalloutContributionPolicyInput;
   UpdateCalloutEntityInput: SchemaTypes.UpdateCalloutEntityInput;
   UpdateCalloutFramingInput: SchemaTypes.UpdateCalloutFramingInput;
   UpdateCalloutPublishInfoInput: SchemaTypes.UpdateCalloutPublishInfoInput;
+  UpdateCalloutSettingsContributionInput: SchemaTypes.UpdateCalloutSettingsContributionInput;
+  UpdateCalloutSettingsFramingInput: SchemaTypes.UpdateCalloutSettingsFramingInput;
+  UpdateCalloutSettingsInput: SchemaTypes.UpdateCalloutSettingsInput;
   UpdateCalloutVisibilityInput: SchemaTypes.UpdateCalloutVisibilityInput;
   UpdateCalloutsSortOrderInput: SchemaTypes.UpdateCalloutsSortOrderInput;
   UpdateClassificationInput: SchemaTypes.UpdateClassificationInput;
@@ -9120,16 +9933,18 @@ export type ResolversTypes = {
   UpdateDocumentInput: SchemaTypes.UpdateDocumentInput;
   UpdateFormInput: SchemaTypes.UpdateFormInput;
   UpdateFormQuestionInput: SchemaTypes.UpdateFormQuestionInput;
-  UpdateInnovationFlowEntityInput: SchemaTypes.UpdateInnovationFlowEntityInput;
-  UpdateInnovationFlowSelectedStateInput: SchemaTypes.UpdateInnovationFlowSelectedStateInput;
-  UpdateInnovationFlowSingleStateInput: SchemaTypes.UpdateInnovationFlowSingleStateInput;
+  UpdateInnovationFlowCurrentStateInput: SchemaTypes.UpdateInnovationFlowCurrentStateInput;
+  UpdateInnovationFlowInput: SchemaTypes.UpdateInnovationFlowInput;
   UpdateInnovationFlowStateInput: SchemaTypes.UpdateInnovationFlowStateInput;
+  UpdateInnovationFlowStateSettingsInput: SchemaTypes.UpdateInnovationFlowStateSettingsInput;
+  UpdateInnovationFlowStatesSortOrderInput: SchemaTypes.UpdateInnovationFlowStatesSortOrderInput;
   UpdateInnovationHubInput: SchemaTypes.UpdateInnovationHubInput;
   UpdateInnovationPackInput: SchemaTypes.UpdateInnovationPackInput;
   UpdateKnowledgeBaseInput: SchemaTypes.UpdateKnowledgeBaseInput;
   UpdateLicensePlanInput: SchemaTypes.UpdateLicensePlanInput;
   UpdateLinkInput: SchemaTypes.UpdateLinkInput;
   UpdateLocationInput: SchemaTypes.UpdateLocationInput;
+  UpdateMemoEntityInput: SchemaTypes.UpdateMemoEntityInput;
   UpdateNotificationStateInput: SchemaTypes.UpdateNotificationStateInput;
   UpdateOrganizationInput: SchemaTypes.UpdateOrganizationInput;
   UpdateOrganizationPlatformSettingsInput: SchemaTypes.UpdateOrganizationPlatformSettingsInput;
@@ -9159,10 +9974,18 @@ export type ResolversTypes = {
   UpdateUserGroupInput: SchemaTypes.UpdateUserGroupInput;
   UpdateUserInput: SchemaTypes.UpdateUserInput;
   UpdateUserPlatformSettingsInput: SchemaTypes.UpdateUserPlatformSettingsInput;
-  UpdateUserPreferenceInput: SchemaTypes.UpdateUserPreferenceInput;
   UpdateUserSettingsCommunicationInput: SchemaTypes.UpdateUserSettingsCommunicationInput;
   UpdateUserSettingsEntityInput: SchemaTypes.UpdateUserSettingsEntityInput;
   UpdateUserSettingsInput: SchemaTypes.UpdateUserSettingsInput;
+  UpdateUserSettingsNotificationInput: SchemaTypes.UpdateUserSettingsNotificationInput;
+  UpdateUserSettingsNotificationOrganizationInput: SchemaTypes.UpdateUserSettingsNotificationOrganizationInput;
+  UpdateUserSettingsNotificationPlatformAdminInput: SchemaTypes.UpdateUserSettingsNotificationPlatformAdminInput;
+  UpdateUserSettingsNotificationPlatformInput: SchemaTypes.UpdateUserSettingsNotificationPlatformInput;
+  UpdateUserSettingsNotificationSpaceAdminInput: SchemaTypes.UpdateUserSettingsNotificationSpaceAdminInput;
+  UpdateUserSettingsNotificationSpaceInput: SchemaTypes.UpdateUserSettingsNotificationSpaceInput;
+  UpdateUserSettingsNotificationUserInput: SchemaTypes.UpdateUserSettingsNotificationUserInput;
+  UpdateUserSettingsNotificationUserMembershipInput: SchemaTypes.UpdateUserSettingsNotificationUserMembershipInput;
+  UpdateUserSettingsNotificationVirtualContributorInput: SchemaTypes.UpdateUserSettingsNotificationVirtualContributorInput;
   UpdateUserSettingsPrivacyInput: SchemaTypes.UpdateUserSettingsPrivacyInput;
   UpdateVirtualContributorInput: SchemaTypes.UpdateVirtualContributorInput;
   UpdateVirtualContributorSettingsEntityInput: SchemaTypes.UpdateVirtualContributorSettingsEntityInput;
@@ -9195,7 +10018,6 @@ export type ResolversTypes = {
     }
   >;
   UserAuthenticationResult: ResolverTypeWrapper<SchemaTypes.UserAuthenticationResult>;
-  UserAuthorizationPrivilegesInput: SchemaTypes.UserAuthorizationPrivilegesInput;
   UserAuthorizationResetInput: SchemaTypes.UserAuthorizationResetInput;
   UserFilterInput: SchemaTypes.UserFilterInput;
   UserGroup: ResolverTypeWrapper<
@@ -9208,6 +10030,16 @@ export type ResolversTypes = {
   UserSendMessageInput: SchemaTypes.UserSendMessageInput;
   UserSettings: ResolverTypeWrapper<SchemaTypes.UserSettings>;
   UserSettingsCommunication: ResolverTypeWrapper<SchemaTypes.UserSettingsCommunication>;
+  UserSettingsNotification: ResolverTypeWrapper<SchemaTypes.UserSettingsNotification>;
+  UserSettingsNotificationChannels: ResolverTypeWrapper<SchemaTypes.UserSettingsNotificationChannels>;
+  UserSettingsNotificationOrganization: ResolverTypeWrapper<SchemaTypes.UserSettingsNotificationOrganization>;
+  UserSettingsNotificationPlatform: ResolverTypeWrapper<SchemaTypes.UserSettingsNotificationPlatform>;
+  UserSettingsNotificationPlatformAdmin: ResolverTypeWrapper<SchemaTypes.UserSettingsNotificationPlatformAdmin>;
+  UserSettingsNotificationSpace: ResolverTypeWrapper<SchemaTypes.UserSettingsNotificationSpace>;
+  UserSettingsNotificationSpaceAdmin: ResolverTypeWrapper<SchemaTypes.UserSettingsNotificationSpaceAdmin>;
+  UserSettingsNotificationUser: ResolverTypeWrapper<SchemaTypes.UserSettingsNotificationUser>;
+  UserSettingsNotificationUserMembership: ResolverTypeWrapper<SchemaTypes.UserSettingsNotificationUserMembership>;
+  UserSettingsNotificationVirtualContributor: ResolverTypeWrapper<SchemaTypes.UserSettingsNotificationVirtualContributor>;
   UserSettingsPrivacy: ResolverTypeWrapper<SchemaTypes.UserSettingsPrivacy>;
   UsersInRolesResponse: ResolverTypeWrapper<
     Omit<SchemaTypes.UsersInRolesResponse, "users"> & {
@@ -9279,6 +10111,7 @@ export type ResolversParentTypes = {
     virtualContributors: Array<ResolversParentTypes["VirtualContributor"]>;
   };
   AccountAuthorizationResetInput: SchemaTypes.AccountAuthorizationResetInput;
+  AccountLicensePlan: SchemaTypes.AccountLicensePlan;
   AccountLicenseResetInput: SchemaTypes.AccountLicenseResetInput;
   AccountSubscription: SchemaTypes.AccountSubscription;
   ActivityCreatedSubscriptionInput: SchemaTypes.ActivityCreatedSubscriptionInput;
@@ -9463,14 +10296,21 @@ export type ResolversParentTypes = {
     whiteboard?: SchemaTypes.Maybe<ResolversParentTypes["Whiteboard"]>;
   };
   CalloutContributionDefaults: SchemaTypes.CalloutContributionDefaults;
-  CalloutContributionPolicy: SchemaTypes.CalloutContributionPolicy;
-  CalloutFraming: Omit<SchemaTypes.CalloutFraming, "profile" | "whiteboard"> & {
+  CalloutFraming: Omit<
+    SchemaTypes.CalloutFraming,
+    "link" | "memo" | "profile" | "whiteboard"
+  > & {
+    link?: SchemaTypes.Maybe<ResolversParentTypes["Link"]>;
+    memo?: SchemaTypes.Maybe<ResolversParentTypes["Memo"]>;
     profile: ResolversParentTypes["Profile"];
     whiteboard?: SchemaTypes.Maybe<ResolversParentTypes["Whiteboard"]>;
   };
   CalloutPostCreated: Omit<SchemaTypes.CalloutPostCreated, "post"> & {
     post: ResolversParentTypes["Post"];
   };
+  CalloutSettings: SchemaTypes.CalloutSettings;
+  CalloutSettingsContribution: SchemaTypes.CalloutSettingsContribution;
+  CalloutSettingsFraming: SchemaTypes.CalloutSettingsFraming;
   CalloutsSet: Omit<SchemaTypes.CalloutsSet, "callouts"> & {
     callouts: Array<ResolversParentTypes["Callout"]>;
   };
@@ -9551,15 +10391,21 @@ export type ResolversParentTypes = {
   CreateAiPersonaInput: SchemaTypes.CreateAiPersonaInput;
   CreateAiPersonaServiceInput: SchemaTypes.CreateAiPersonaServiceInput;
   CreateCalendarEventOnCalendarInput: SchemaTypes.CreateCalendarEventOnCalendarInput;
+  CreateCalloutContributionData: SchemaTypes.CreateCalloutContributionData;
   CreateCalloutContributionDefaultsData: SchemaTypes.CreateCalloutContributionDefaultsData;
   CreateCalloutContributionDefaultsInput: SchemaTypes.CreateCalloutContributionDefaultsInput;
-  CreateCalloutContributionPolicyData: SchemaTypes.CreateCalloutContributionPolicyData;
-  CreateCalloutContributionPolicyInput: SchemaTypes.CreateCalloutContributionPolicyInput;
+  CreateCalloutContributionInput: SchemaTypes.CreateCalloutContributionInput;
   CreateCalloutData: SchemaTypes.CreateCalloutData;
   CreateCalloutFramingData: SchemaTypes.CreateCalloutFramingData;
   CreateCalloutFramingInput: SchemaTypes.CreateCalloutFramingInput;
   CreateCalloutInput: SchemaTypes.CreateCalloutInput;
   CreateCalloutOnCalloutsSetInput: SchemaTypes.CreateCalloutOnCalloutsSetInput;
+  CreateCalloutSettingsContributionData: SchemaTypes.CreateCalloutSettingsContributionData;
+  CreateCalloutSettingsContributionInput: SchemaTypes.CreateCalloutSettingsContributionInput;
+  CreateCalloutSettingsData: SchemaTypes.CreateCalloutSettingsData;
+  CreateCalloutSettingsFramingData: SchemaTypes.CreateCalloutSettingsFramingData;
+  CreateCalloutSettingsFramingInput: SchemaTypes.CreateCalloutSettingsFramingInput;
+  CreateCalloutSettingsInput: SchemaTypes.CreateCalloutSettingsInput;
   CreateCalloutsSetData: SchemaTypes.CreateCalloutsSetData;
   CreateCalloutsSetInput: SchemaTypes.CreateCalloutsSetInput;
   CreateClassificationData: SchemaTypes.CreateClassificationData;
@@ -9574,15 +10420,21 @@ export type ResolversParentTypes = {
   CreateInnovationFlowInput: SchemaTypes.CreateInnovationFlowInput;
   CreateInnovationFlowStateData: SchemaTypes.CreateInnovationFlowStateData;
   CreateInnovationFlowStateInput: SchemaTypes.CreateInnovationFlowStateInput;
+  CreateInnovationFlowStateSettingsData: SchemaTypes.CreateInnovationFlowStateSettingsData;
+  CreateInnovationFlowStateSettingsInput: SchemaTypes.CreateInnovationFlowStateSettingsInput;
   CreateInnovationHubOnAccountInput: SchemaTypes.CreateInnovationHubOnAccountInput;
   CreateInnovationPackOnAccountInput: SchemaTypes.CreateInnovationPackOnAccountInput;
   CreateKnowledgeBaseInput: SchemaTypes.CreateKnowledgeBaseInput;
   CreateLicensePlanOnLicensingFrameworkInput: SchemaTypes.CreateLicensePlanOnLicensingFrameworkInput;
+  CreateLinkData: SchemaTypes.CreateLinkData;
   CreateLinkInput: SchemaTypes.CreateLinkInput;
   CreateLocationData: SchemaTypes.CreateLocationData;
   CreateLocationInput: SchemaTypes.CreateLocationInput;
+  CreateMemoData: SchemaTypes.CreateMemoData;
+  CreateMemoInput: SchemaTypes.CreateMemoInput;
   CreateNVPInput: SchemaTypes.CreateNvpInput;
   CreateOrganizationInput: SchemaTypes.CreateOrganizationInput;
+  CreatePostData: SchemaTypes.CreatePostData;
   CreatePostInput: SchemaTypes.CreatePostInput;
   CreateProfileData: SchemaTypes.CreateProfileData;
   CreateProfileInput: SchemaTypes.CreateProfileInput;
@@ -9595,6 +10447,7 @@ export type ResolversParentTypes = {
   CreateSpaceSettingsInput: SchemaTypes.CreateSpaceSettingsInput;
   CreateSpaceSettingsMembershipInput: SchemaTypes.CreateSpaceSettingsMembershipInput;
   CreateSpaceSettingsPrivacyInput: SchemaTypes.CreateSpaceSettingsPrivacyInput;
+  CreateStateOnInnovationFlowInput: SchemaTypes.CreateStateOnInnovationFlowInput;
   CreateSubspaceInput: SchemaTypes.CreateSubspaceInput;
   CreateTagsetData: SchemaTypes.CreateTagsetData;
   CreateTagsetInput: SchemaTypes.CreateTagsetInput;
@@ -9626,11 +10479,13 @@ export type ResolversParentTypes = {
   DeleteInvitationInput: SchemaTypes.DeleteInvitationInput;
   DeleteLicensePlanInput: SchemaTypes.DeleteLicensePlanInput;
   DeleteLinkInput: SchemaTypes.DeleteLinkInput;
+  DeleteMemoInput: SchemaTypes.DeleteMemoInput;
   DeleteOrganizationInput: SchemaTypes.DeleteOrganizationInput;
   DeletePlatformInvitationInput: SchemaTypes.DeletePlatformInvitationInput;
   DeletePostInput: SchemaTypes.DeletePostInput;
   DeleteReferenceInput: SchemaTypes.DeleteReferenceInput;
   DeleteSpaceInput: SchemaTypes.DeleteSpaceInput;
+  DeleteStateOnInnovationFlowInput: SchemaTypes.DeleteStateOnInnovationFlowInput;
   DeleteStorageBuckeetInput: SchemaTypes.DeleteStorageBuckeetInput;
   DeleteTemplateInput: SchemaTypes.DeleteTemplateInput;
   DeleteUserGroupInput: SchemaTypes.DeleteUserGroupInput;
@@ -9681,42 +10536,82 @@ export type ResolversParentTypes = {
     contributorResults: ResolversParentTypes["ISearchCategoryResult"];
     spaceResults: ResolversParentTypes["ISearchCategoryResult"];
   };
-  InAppNotification: ResolversInterfaceTypes<ResolversParentTypes>["InAppNotification"];
-  InAppNotificationCalloutPublished: Omit<
-    SchemaTypes.InAppNotificationCalloutPublished,
-    "callout" | "receiver" | "space" | "triggeredBy"
+  InAppNotification: Omit<
+    SchemaTypes.InAppNotification,
+    "payload" | "receiver" | "triggeredBy"
   > & {
-    callout?: SchemaTypes.Maybe<ResolversParentTypes["Callout"]>;
-    receiver: ResolversParentTypes["Contributor"];
-    space?: SchemaTypes.Maybe<ResolversParentTypes["Space"]>;
-    triggeredBy?: SchemaTypes.Maybe<ResolversParentTypes["Contributor"]>;
-  };
-  InAppNotificationCommunityNewMember: Omit<
-    SchemaTypes.InAppNotificationCommunityNewMember,
-    "actor" | "receiver" | "space" | "triggeredBy"
-  > & {
-    actor?: SchemaTypes.Maybe<ResolversParentTypes["Contributor"]>;
-    receiver: ResolversParentTypes["Contributor"];
-    space?: SchemaTypes.Maybe<ResolversParentTypes["Space"]>;
-    triggeredBy?: SchemaTypes.Maybe<ResolversParentTypes["Contributor"]>;
-  };
-  InAppNotificationUserMentioned: Omit<
-    SchemaTypes.InAppNotificationUserMentioned,
-    "receiver" | "triggeredBy"
-  > & {
+    payload: ResolversParentTypes["InAppNotificationPayload"];
     receiver: ResolversParentTypes["Contributor"];
     triggeredBy?: SchemaTypes.Maybe<ResolversParentTypes["Contributor"]>;
   };
-  InnovationFlow: Omit<
-    SchemaTypes.InnovationFlow,
-    "currentState" | "profile" | "states"
+  InAppNotificationFilterInput: SchemaTypes.InAppNotificationFilterInput;
+  InAppNotificationPayload: ResolversInterfaceTypes<ResolversParentTypes>["InAppNotificationPayload"];
+  InAppNotificationPayloadOrganization: SchemaTypes.InAppNotificationPayloadOrganization;
+  InAppNotificationPayloadOrganizationMessageDirect: Omit<
+    SchemaTypes.InAppNotificationPayloadOrganizationMessageDirect,
+    "organization"
+  > & { organization: ResolversParentTypes["Contributor"] };
+  InAppNotificationPayloadOrganizationMessageRoom: Omit<
+    SchemaTypes.InAppNotificationPayloadOrganizationMessageRoom,
+    "organization"
+  > & { organization: ResolversParentTypes["Organization"] };
+  InAppNotificationPayloadPlatform: SchemaTypes.InAppNotificationPayloadPlatform;
+  InAppNotificationPayloadPlatformForumDiscussion: SchemaTypes.InAppNotificationPayloadPlatformForumDiscussion;
+  InAppNotificationPayloadPlatformGlobalRoleChange: SchemaTypes.InAppNotificationPayloadPlatformGlobalRoleChange;
+  InAppNotificationPayloadPlatformUser: SchemaTypes.InAppNotificationPayloadPlatformUser;
+  InAppNotificationPayloadPlatformUserMessageRoom: Omit<
+    SchemaTypes.InAppNotificationPayloadPlatformUserMessageRoom,
+    "user"
+  > & { user: ResolversParentTypes["User"] };
+  InAppNotificationPayloadPlatformUserProfileRemoved: SchemaTypes.InAppNotificationPayloadPlatformUserProfileRemoved;
+  InAppNotificationPayloadSpace: SchemaTypes.InAppNotificationPayloadSpace;
+  InAppNotificationPayloadSpaceCollaborationCallout: Omit<
+    SchemaTypes.InAppNotificationPayloadSpaceCollaborationCallout,
+    "callout" | "space"
   > & {
-    currentState: ResolversParentTypes["InnovationFlowState"];
+    callout: ResolversParentTypes["Callout"];
+    space: ResolversParentTypes["Space"];
+  };
+  InAppNotificationPayloadSpaceCommunicationMessageDirect: Omit<
+    SchemaTypes.InAppNotificationPayloadSpaceCommunicationMessageDirect,
+    "space"
+  > & { space: ResolversParentTypes["Space"] };
+  InAppNotificationPayloadSpaceCommunicationUpdate: Omit<
+    SchemaTypes.InAppNotificationPayloadSpaceCommunicationUpdate,
+    "space"
+  > & { space: ResolversParentTypes["Space"] };
+  InAppNotificationPayloadSpaceCommunityApplication: Omit<
+    SchemaTypes.InAppNotificationPayloadSpaceCommunityApplication,
+    "application" | "space"
+  > & {
+    application: ResolversParentTypes["Application"];
+    space: ResolversParentTypes["Space"];
+  };
+  InAppNotificationPayloadSpaceCommunityContributor: Omit<
+    SchemaTypes.InAppNotificationPayloadSpaceCommunityContributor,
+    "contributor" | "space"
+  > & {
+    contributor: ResolversParentTypes["Contributor"];
+    space: ResolversParentTypes["Space"];
+  };
+  InAppNotificationPayloadSpaceCommunityInvitation: Omit<
+    SchemaTypes.InAppNotificationPayloadSpaceCommunityInvitation,
+    "space"
+  > & { space: ResolversParentTypes["Space"] };
+  InAppNotificationPayloadSpaceCommunityInvitationPlatform: Omit<
+    SchemaTypes.InAppNotificationPayloadSpaceCommunityInvitationPlatform,
+    "space"
+  > & { space: ResolversParentTypes["Space"] };
+  InAppNotificationPayloadUserMessageDirect: Omit<
+    SchemaTypes.InAppNotificationPayloadUserMessageDirect,
+    "user"
+  > & { user: ResolversParentTypes["User"] };
+  InnovationFlow: Omit<SchemaTypes.InnovationFlow, "profile"> & {
     profile: ResolversParentTypes["Profile"];
-    states: Array<ResolversParentTypes["InnovationFlowState"]>;
   };
   InnovationFlowSettings: SchemaTypes.InnovationFlowSettings;
   InnovationFlowState: SchemaTypes.InnovationFlowState;
+  InnovationFlowStateSettings: SchemaTypes.InnovationFlowStateSettings;
   InnovationHub: Omit<
     SchemaTypes.InnovationHub,
     "account" | "profile" | "provider" | "spaceListFilter"
@@ -9796,6 +10691,7 @@ export type ResolversParentTypes = {
     | "innovationPack"
     | "invitation"
     | "knowledgeBase"
+    | "memo"
     | "organization"
     | "platformInvitation"
     | "post"
@@ -9830,6 +10726,7 @@ export type ResolversParentTypes = {
     innovationPack?: SchemaTypes.Maybe<ResolversParentTypes["InnovationPack"]>;
     invitation?: SchemaTypes.Maybe<ResolversParentTypes["Invitation"]>;
     knowledgeBase: ResolversParentTypes["KnowledgeBase"];
+    memo?: SchemaTypes.Maybe<ResolversParentTypes["Memo"]>;
     organization?: SchemaTypes.Maybe<ResolversParentTypes["Organization"]>;
     platformInvitation?: SchemaTypes.Maybe<
       ResolversParentTypes["PlatformInvitation"]
@@ -9879,6 +10776,11 @@ export type ResolversParentTypes = {
     >;
     user?: SchemaTypes.Maybe<ResolversParentTypes["User"]>;
   };
+  Memo: Omit<SchemaTypes.Memo, "createdBy" | "profile"> & {
+    createdBy?: SchemaTypes.Maybe<ResolversParentTypes["User"]>;
+    profile: ResolversParentTypes["Profile"];
+  };
+  MemoContent: SchemaTypes.Scalars["MemoContent"]["output"];
   Message: Omit<SchemaTypes.Message, "reactions" | "sender"> & {
     reactions: Array<ResolversParentTypes["Reaction"]>;
     sender?: SchemaTypes.Maybe<ResolversParentTypes["Contributor"]>;
@@ -9903,6 +10805,15 @@ export type ResolversParentTypes = {
   };
   NVP: SchemaTypes.Nvp;
   NameID: SchemaTypes.Scalars["NameID"]["output"];
+  NotificationRecipientResult: Omit<
+    SchemaTypes.NotificationRecipientResult,
+    "emailRecipients" | "inAppRecipients" | "triggeredBy"
+  > & {
+    emailRecipients: Array<ResolversParentTypes["User"]>;
+    inAppRecipients: Array<ResolversParentTypes["User"]>;
+    triggeredBy?: SchemaTypes.Maybe<ResolversParentTypes["User"]>;
+  };
+  NotificationRecipientsInput: SchemaTypes.NotificationRecipientsInput;
   Organization: Omit<
     SchemaTypes.Organization,
     "account" | "group" | "groups" | "profile" | "roleSet"
@@ -9968,20 +10879,37 @@ export type ResolversParentTypes = {
       ResolversParentTypes["TemplatesManager"]
     >;
   };
+  PlatformAccessRole: SchemaTypes.PlatformAccessRole;
+  PlatformAdminCommunicationQueryResults: SchemaTypes.PlatformAdminCommunicationQueryResults;
+  PlatformAdminQueryResults: Omit<
+    SchemaTypes.PlatformAdminQueryResults,
+    | "innovationHubs"
+    | "innovationPacks"
+    | "organizations"
+    | "spaces"
+    | "users"
+    | "virtualContributors"
+  > & {
+    innovationHubs: Array<ResolversParentTypes["InnovationHub"]>;
+    innovationPacks: Array<ResolversParentTypes["InnovationPack"]>;
+    organizations: ResolversParentTypes["PaginatedOrganization"];
+    spaces: Array<ResolversParentTypes["Space"]>;
+    users: ResolversParentTypes["PaginatedUsers"];
+    virtualContributors: Array<ResolversParentTypes["VirtualContributor"]>;
+  };
   PlatformFeatureFlag: SchemaTypes.PlatformFeatureFlag;
   PlatformIntegrationSettings: SchemaTypes.PlatformIntegrationSettings;
   PlatformInvitation: Omit<SchemaTypes.PlatformInvitation, "createdBy"> & {
     createdBy: ResolversParentTypes["User"];
   };
   PlatformLocations: SchemaTypes.PlatformLocations;
+  PlatformRolesAccess: SchemaTypes.PlatformRolesAccess;
   PlatformSettings: SchemaTypes.PlatformSettings;
   Post: Omit<SchemaTypes.Post, "comments" | "createdBy" | "profile"> & {
     comments: ResolversParentTypes["Room"];
     createdBy?: SchemaTypes.Maybe<ResolversParentTypes["User"]>;
     profile: ResolversParentTypes["Profile"];
   };
-  Preference: SchemaTypes.Preference;
-  PreferenceDefinition: SchemaTypes.PreferenceDefinition;
   Profile: Omit<SchemaTypes.Profile, "references" | "storageBucket"> & {
     references?: SchemaTypes.Maybe<Array<ResolversParentTypes["Reference"]>>;
     storageBucket: ResolversParentTypes["StorageBucket"];
@@ -10242,10 +11170,11 @@ export type ResolversParentTypes = {
   };
   TemplateContentSpace: Omit<
     SchemaTypes.TemplateContentSpace,
-    "about" | "collaboration"
+    "about" | "collaboration" | "subspaces"
   > & {
     about: ResolversParentTypes["SpaceAbout"];
     collaboration: ResolversParentTypes["Collaboration"];
+    subspaces: Array<ResolversParentTypes["TemplateContentSpace"]>;
   };
   TemplateDefault: Omit<SchemaTypes.TemplateDefault, "template"> & {
     template?: SchemaTypes.Maybe<ResolversParentTypes["Template"]>;
@@ -10292,12 +11221,15 @@ export type ResolversParentTypes = {
   UpdateAiPersonaInput: SchemaTypes.UpdateAiPersonaInput;
   UpdateAiPersonaServiceInput: SchemaTypes.UpdateAiPersonaServiceInput;
   UpdateApplicationFormOnRoleSetInput: SchemaTypes.UpdateApplicationFormOnRoleSetInput;
+  UpdateBaselineLicensePlanOnAccount: SchemaTypes.UpdateBaselineLicensePlanOnAccount;
   UpdateCalendarEventInput: SchemaTypes.UpdateCalendarEventInput;
   UpdateCalloutContributionDefaultsInput: SchemaTypes.UpdateCalloutContributionDefaultsInput;
-  UpdateCalloutContributionPolicyInput: SchemaTypes.UpdateCalloutContributionPolicyInput;
   UpdateCalloutEntityInput: SchemaTypes.UpdateCalloutEntityInput;
   UpdateCalloutFramingInput: SchemaTypes.UpdateCalloutFramingInput;
   UpdateCalloutPublishInfoInput: SchemaTypes.UpdateCalloutPublishInfoInput;
+  UpdateCalloutSettingsContributionInput: SchemaTypes.UpdateCalloutSettingsContributionInput;
+  UpdateCalloutSettingsFramingInput: SchemaTypes.UpdateCalloutSettingsFramingInput;
+  UpdateCalloutSettingsInput: SchemaTypes.UpdateCalloutSettingsInput;
   UpdateCalloutVisibilityInput: SchemaTypes.UpdateCalloutVisibilityInput;
   UpdateCalloutsSortOrderInput: SchemaTypes.UpdateCalloutsSortOrderInput;
   UpdateClassificationInput: SchemaTypes.UpdateClassificationInput;
@@ -10309,16 +11241,18 @@ export type ResolversParentTypes = {
   UpdateDocumentInput: SchemaTypes.UpdateDocumentInput;
   UpdateFormInput: SchemaTypes.UpdateFormInput;
   UpdateFormQuestionInput: SchemaTypes.UpdateFormQuestionInput;
-  UpdateInnovationFlowEntityInput: SchemaTypes.UpdateInnovationFlowEntityInput;
-  UpdateInnovationFlowSelectedStateInput: SchemaTypes.UpdateInnovationFlowSelectedStateInput;
-  UpdateInnovationFlowSingleStateInput: SchemaTypes.UpdateInnovationFlowSingleStateInput;
+  UpdateInnovationFlowCurrentStateInput: SchemaTypes.UpdateInnovationFlowCurrentStateInput;
+  UpdateInnovationFlowInput: SchemaTypes.UpdateInnovationFlowInput;
   UpdateInnovationFlowStateInput: SchemaTypes.UpdateInnovationFlowStateInput;
+  UpdateInnovationFlowStateSettingsInput: SchemaTypes.UpdateInnovationFlowStateSettingsInput;
+  UpdateInnovationFlowStatesSortOrderInput: SchemaTypes.UpdateInnovationFlowStatesSortOrderInput;
   UpdateInnovationHubInput: SchemaTypes.UpdateInnovationHubInput;
   UpdateInnovationPackInput: SchemaTypes.UpdateInnovationPackInput;
   UpdateKnowledgeBaseInput: SchemaTypes.UpdateKnowledgeBaseInput;
   UpdateLicensePlanInput: SchemaTypes.UpdateLicensePlanInput;
   UpdateLinkInput: SchemaTypes.UpdateLinkInput;
   UpdateLocationInput: SchemaTypes.UpdateLocationInput;
+  UpdateMemoEntityInput: SchemaTypes.UpdateMemoEntityInput;
   UpdateNotificationStateInput: SchemaTypes.UpdateNotificationStateInput;
   UpdateOrganizationInput: SchemaTypes.UpdateOrganizationInput;
   UpdateOrganizationPlatformSettingsInput: SchemaTypes.UpdateOrganizationPlatformSettingsInput;
@@ -10348,10 +11282,18 @@ export type ResolversParentTypes = {
   UpdateUserGroupInput: SchemaTypes.UpdateUserGroupInput;
   UpdateUserInput: SchemaTypes.UpdateUserInput;
   UpdateUserPlatformSettingsInput: SchemaTypes.UpdateUserPlatformSettingsInput;
-  UpdateUserPreferenceInput: SchemaTypes.UpdateUserPreferenceInput;
   UpdateUserSettingsCommunicationInput: SchemaTypes.UpdateUserSettingsCommunicationInput;
   UpdateUserSettingsEntityInput: SchemaTypes.UpdateUserSettingsEntityInput;
   UpdateUserSettingsInput: SchemaTypes.UpdateUserSettingsInput;
+  UpdateUserSettingsNotificationInput: SchemaTypes.UpdateUserSettingsNotificationInput;
+  UpdateUserSettingsNotificationOrganizationInput: SchemaTypes.UpdateUserSettingsNotificationOrganizationInput;
+  UpdateUserSettingsNotificationPlatformAdminInput: SchemaTypes.UpdateUserSettingsNotificationPlatformAdminInput;
+  UpdateUserSettingsNotificationPlatformInput: SchemaTypes.UpdateUserSettingsNotificationPlatformInput;
+  UpdateUserSettingsNotificationSpaceAdminInput: SchemaTypes.UpdateUserSettingsNotificationSpaceAdminInput;
+  UpdateUserSettingsNotificationSpaceInput: SchemaTypes.UpdateUserSettingsNotificationSpaceInput;
+  UpdateUserSettingsNotificationUserInput: SchemaTypes.UpdateUserSettingsNotificationUserInput;
+  UpdateUserSettingsNotificationUserMembershipInput: SchemaTypes.UpdateUserSettingsNotificationUserMembershipInput;
+  UpdateUserSettingsNotificationVirtualContributorInput: SchemaTypes.UpdateUserSettingsNotificationVirtualContributorInput;
   UpdateUserSettingsPrivacyInput: SchemaTypes.UpdateUserSettingsPrivacyInput;
   UpdateVirtualContributorInput: SchemaTypes.UpdateVirtualContributorInput;
   UpdateVirtualContributorSettingsEntityInput: SchemaTypes.UpdateVirtualContributorSettingsEntityInput;
@@ -10381,7 +11323,6 @@ export type ResolversParentTypes = {
     profile: ResolversParentTypes["Profile"];
   };
   UserAuthenticationResult: SchemaTypes.UserAuthenticationResult;
-  UserAuthorizationPrivilegesInput: SchemaTypes.UserAuthorizationPrivilegesInput;
   UserAuthorizationResetInput: SchemaTypes.UserAuthorizationResetInput;
   UserFilterInput: SchemaTypes.UserFilterInput;
   UserGroup: Omit<SchemaTypes.UserGroup, "members" | "parent" | "profile"> & {
@@ -10392,6 +11333,16 @@ export type ResolversParentTypes = {
   UserSendMessageInput: SchemaTypes.UserSendMessageInput;
   UserSettings: SchemaTypes.UserSettings;
   UserSettingsCommunication: SchemaTypes.UserSettingsCommunication;
+  UserSettingsNotification: SchemaTypes.UserSettingsNotification;
+  UserSettingsNotificationChannels: SchemaTypes.UserSettingsNotificationChannels;
+  UserSettingsNotificationOrganization: SchemaTypes.UserSettingsNotificationOrganization;
+  UserSettingsNotificationPlatform: SchemaTypes.UserSettingsNotificationPlatform;
+  UserSettingsNotificationPlatformAdmin: SchemaTypes.UserSettingsNotificationPlatformAdmin;
+  UserSettingsNotificationSpace: SchemaTypes.UserSettingsNotificationSpace;
+  UserSettingsNotificationSpaceAdmin: SchemaTypes.UserSettingsNotificationSpaceAdmin;
+  UserSettingsNotificationUser: SchemaTypes.UserSettingsNotificationUser;
+  UserSettingsNotificationUserMembership: SchemaTypes.UserSettingsNotificationUserMembership;
+  UserSettingsNotificationVirtualContributor: SchemaTypes.UserSettingsNotificationVirtualContributor;
   UserSettingsPrivacy: SchemaTypes.UserSettingsPrivacy;
   UsersInRolesResponse: Omit<SchemaTypes.UsersInRolesResponse, "users"> & {
     users: Array<ResolversParentTypes["User"]>;
@@ -10452,6 +11403,11 @@ export type AccountResolvers<
     ParentType,
     ContextType
   >;
+  baselineLicensePlan?: Resolver<
+    ResolversTypes["AccountLicensePlan"],
+    ParentType,
+    ContextType
+  >;
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   externalSubscriptionID?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["String"]>,
@@ -10497,6 +11453,19 @@ export type AccountResolvers<
     ParentType,
     ContextType
   >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type AccountLicensePlanResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["AccountLicensePlan"] = ResolversParentTypes["AccountLicensePlan"]
+> = {
+  innovationPacks?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  spaceFree?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  spacePlus?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  spacePremium?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  startingPages?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  virtualContributor?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -11171,6 +12140,12 @@ export type AuthorizationResolvers<
     ParentType,
     ContextType
   >;
+  hasPrivilege?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType,
+    RequireFields<SchemaTypes.AuthorizationHasPrivilegeArgs, "privilege">
+  >;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   myPrivileges?: Resolver<
     SchemaTypes.Maybe<Array<ResolversTypes["AuthorizationPrivilege"]>>,
@@ -11357,11 +12332,6 @@ export type CalloutResolvers<
     ParentType,
     ContextType
   >;
-  contributionPolicy?: Resolver<
-    ResolversTypes["CalloutContributionPolicy"],
-    ParentType,
-    ContextType
-  >;
   contributions?: Resolver<
     Array<ResolversTypes["CalloutContribution"]>,
     ParentType,
@@ -11393,14 +12363,13 @@ export type CalloutResolvers<
     ParentType,
     ContextType
   >;
-  sortOrder?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
-  type?: Resolver<ResolversTypes["CalloutType"], ParentType, ContextType>;
-  updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
-  visibility?: Resolver<
-    ResolversTypes["CalloutVisibility"],
+  settings?: Resolver<
+    ResolversTypes["CalloutSettings"],
     ParentType,
     ContextType
   >;
+  sortOrder?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -11445,6 +12414,11 @@ export type CalloutContributionDefaultsResolvers<
   ParentType extends ResolversParentTypes["CalloutContributionDefaults"] = ResolversParentTypes["CalloutContributionDefaults"]
 > = {
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  defaultDisplayName?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   postDescription?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Markdown"]>,
@@ -11460,22 +12434,6 @@ export type CalloutContributionDefaultsResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export type CalloutContributionPolicyResolvers<
-  ContextType = any,
-  ParentType extends ResolversParentTypes["CalloutContributionPolicy"] = ResolversParentTypes["CalloutContributionPolicy"]
-> = {
-  allowedContributionTypes?: Resolver<
-    Array<ResolversTypes["CalloutContributionType"]>,
-    ParentType,
-    ContextType
-  >;
-  createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
-  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
-  state?: Resolver<ResolversTypes["CalloutState"], ParentType, ContextType>;
-  updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
 export type CalloutFramingResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["CalloutFraming"] = ResolversParentTypes["CalloutFraming"]
@@ -11487,7 +12445,22 @@ export type CalloutFramingResolvers<
   >;
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  link?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Link"]>,
+    ParentType,
+    ContextType
+  >;
+  memo?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Memo"]>,
+    ParentType,
+    ContextType
+  >;
   profile?: Resolver<ResolversTypes["Profile"], ParentType, ContextType>;
+  type?: Resolver<
+    ResolversTypes["CalloutFramingType"],
+    ParentType,
+    ContextType
+  >;
   updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   whiteboard?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Whiteboard"]>,
@@ -11505,6 +12478,63 @@ export type CalloutPostCreatedResolvers<
   contributionID?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   post?: Resolver<ResolversTypes["Post"], ParentType, ContextType>;
   sortOrder?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CalloutSettingsResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CalloutSettings"] = ResolversParentTypes["CalloutSettings"]
+> = {
+  contribution?: Resolver<
+    ResolversTypes["CalloutSettingsContribution"],
+    ParentType,
+    ContextType
+  >;
+  framing?: Resolver<
+    ResolversTypes["CalloutSettingsFraming"],
+    ParentType,
+    ContextType
+  >;
+  visibility?: Resolver<
+    ResolversTypes["CalloutVisibility"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CalloutSettingsContributionResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CalloutSettingsContribution"] = ResolversParentTypes["CalloutSettingsContribution"]
+> = {
+  allowedTypes?: Resolver<
+    Array<ResolversTypes["CalloutContributionType"]>,
+    ParentType,
+    ContextType
+  >;
+  canAddContributions?: Resolver<
+    ResolversTypes["CalloutAllowedContributors"],
+    ParentType,
+    ContextType
+  >;
+  commentsEnabled?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
+  enabled?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CalloutSettingsFramingResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CalloutSettingsFraming"] = ResolversParentTypes["CalloutSettingsFraming"]
+> = {
+  commentsEnabled?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -11906,10 +12936,42 @@ export type ContributorRolesResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type CreateCalloutContributionDataResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CreateCalloutContributionData"] = ResolversParentTypes["CreateCalloutContributionData"]
+> = {
+  link?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["CreateLinkData"]>,
+    ParentType,
+    ContextType
+  >;
+  post?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["CreatePostData"]>,
+    ParentType,
+    ContextType
+  >;
+  sortOrder?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Float"]>,
+    ParentType,
+    ContextType
+  >;
+  whiteboard?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["CreateWhiteboardData"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type CreateCalloutContributionDefaultsDataResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["CreateCalloutContributionDefaultsData"] = ResolversParentTypes["CreateCalloutContributionDefaultsData"]
 > = {
+  defaultDisplayName?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
   postDescription?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Markdown"]>,
     ParentType,
@@ -11917,18 +12979,6 @@ export type CreateCalloutContributionDefaultsDataResolvers<
   >;
   whiteboardContent?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["WhiteboardContent"]>,
-    ParentType,
-    ContextType
-  >;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CreateCalloutContributionPolicyDataResolvers<
-  ContextType = any,
-  ParentType extends ResolversParentTypes["CreateCalloutContributionPolicyData"] = ResolversParentTypes["CreateCalloutContributionPolicyData"]
-> = {
-  state?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes["CalloutState"]>,
     ParentType,
     ContextType
   >;
@@ -11949,13 +12999,8 @@ export type CreateCalloutDataResolvers<
     ParentType,
     ContextType
   >;
-  contributionPolicy?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes["CreateCalloutContributionPolicyData"]>,
-    ParentType,
-    ContextType
-  >;
-  enableComments?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes["Boolean"]>,
+  contributions?: Resolver<
+    SchemaTypes.Maybe<Array<ResolversTypes["CreateCalloutContributionData"]>>,
     ParentType,
     ContextType
   >;
@@ -11974,14 +13019,13 @@ export type CreateCalloutDataResolvers<
     ParentType,
     ContextType
   >;
-  sortOrder?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes["Float"]>,
+  settings?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["CreateCalloutSettingsData"]>,
     ParentType,
     ContextType
   >;
-  type?: Resolver<ResolversTypes["CalloutType"], ParentType, ContextType>;
-  visibility?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes["CalloutVisibility"]>,
+  sortOrder?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Float"]>,
     ParentType,
     ContextType
   >;
@@ -11992,6 +13036,16 @@ export type CreateCalloutFramingDataResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["CreateCalloutFramingData"] = ResolversParentTypes["CreateCalloutFramingData"]
 > = {
+  link?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["CreateLinkData"]>,
+    ParentType,
+    ContextType
+  >;
+  memo?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["CreateMemoData"]>,
+    ParentType,
+    ContextType
+  >;
   profile?: Resolver<
     ResolversTypes["CreateProfileData"],
     ParentType,
@@ -12002,8 +13056,74 @@ export type CreateCalloutFramingDataResolvers<
     ParentType,
     ContextType
   >;
+  type?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["CalloutFramingType"]>,
+    ParentType,
+    ContextType
+  >;
   whiteboard?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["CreateWhiteboardData"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CreateCalloutSettingsContributionDataResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CreateCalloutSettingsContributionData"] = ResolversParentTypes["CreateCalloutSettingsContributionData"]
+> = {
+  allowedTypes?: Resolver<
+    SchemaTypes.Maybe<Array<ResolversTypes["CalloutContributionType"]>>,
+    ParentType,
+    ContextType
+  >;
+  canAddContributions?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["CalloutAllowedContributors"]>,
+    ParentType,
+    ContextType
+  >;
+  commentsEnabled?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Boolean"]>,
+    ParentType,
+    ContextType
+  >;
+  enabled?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Boolean"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CreateCalloutSettingsDataResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CreateCalloutSettingsData"] = ResolversParentTypes["CreateCalloutSettingsData"]
+> = {
+  contribution?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["CreateCalloutSettingsContributionData"]>,
+    ParentType,
+    ContextType
+  >;
+  framing?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["CreateCalloutSettingsFramingData"]>,
+    ParentType,
+    ContextType
+  >;
+  visibility?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["CalloutVisibility"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CreateCalloutSettingsFramingDataResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CreateCalloutSettingsFramingData"] = ResolversParentTypes["CreateCalloutSettingsFramingData"]
+> = {
+  commentsEnabled?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Boolean"]>,
     ParentType,
     ContextType
   >;
@@ -12090,6 +13210,45 @@ export type CreateInnovationFlowStateDataResolvers<
     ContextType
   >;
   displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  settings?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["CreateInnovationFlowStateSettingsData"]>,
+    ParentType,
+    ContextType
+  >;
+  sortOrder?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Float"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CreateInnovationFlowStateSettingsDataResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CreateInnovationFlowStateSettingsData"] = ResolversParentTypes["CreateInnovationFlowStateSettingsData"]
+> = {
+  allowNewCallouts?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CreateLinkDataResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CreateLinkData"] = ResolversParentTypes["CreateLinkData"]
+> = {
+  profile?: Resolver<
+    ResolversTypes["CreateProfileData"],
+    ParentType,
+    ContextType
+  >;
+  uri?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -12124,6 +13283,30 @@ export type CreateLocationDataResolvers<
   >;
   stateOrProvince?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CreateMemoDataResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CreateMemoData"] = ResolversParentTypes["CreateMemoData"]
+> = {
+  profile?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["CreateProfileData"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CreatePostDataResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CreatePostData"] = ResolversParentTypes["CreatePostData"]
+> = {
+  tags?: Resolver<
+    SchemaTypes.Maybe<Array<ResolversTypes["String"]>>,
     ParentType,
     ContextType
   >;
@@ -12567,162 +13750,358 @@ export type InAppNotificationResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["InAppNotification"] = ResolversParentTypes["InAppNotification"]
 > = {
+  category?: Resolver<
+    ResolversTypes["NotificationEventCategory"],
+    ParentType,
+    ContextType
+  >;
+  createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  payload?: Resolver<
+    ResolversTypes["InAppNotificationPayload"],
+    ParentType,
+    ContextType
+  >;
+  receiver?: Resolver<ResolversTypes["Contributor"], ParentType, ContextType>;
+  state?: Resolver<
+    ResolversTypes["NotificationEventInAppState"],
+    ParentType,
+    ContextType
+  >;
+  triggeredAt?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  triggeredBy?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Contributor"]>,
+    ParentType,
+    ContextType
+  >;
+  type?: Resolver<ResolversTypes["NotificationEvent"], ParentType, ContextType>;
+  updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type InAppNotificationPayloadResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["InAppNotificationPayload"] = ResolversParentTypes["InAppNotificationPayload"]
+> = {
   __resolveType: TypeResolveFn<
-    | "InAppNotificationCalloutPublished"
-    | "InAppNotificationCommunityNewMember"
-    | "InAppNotificationUserMentioned",
-    ParentType,
-    ContextType
-  >;
-  category?: Resolver<
-    ResolversTypes["InAppNotificationCategory"],
-    ParentType,
-    ContextType
-  >;
-  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
-  receiver?: Resolver<ResolversTypes["Contributor"], ParentType, ContextType>;
-  state?: Resolver<
-    ResolversTypes["InAppNotificationState"],
-    ParentType,
-    ContextType
-  >;
-  triggeredAt?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
-  triggeredBy?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes["Contributor"]>,
+    | "InAppNotificationPayloadOrganization"
+    | "InAppNotificationPayloadOrganizationMessageDirect"
+    | "InAppNotificationPayloadOrganizationMessageRoom"
+    | "InAppNotificationPayloadPlatform"
+    | "InAppNotificationPayloadPlatformForumDiscussion"
+    | "InAppNotificationPayloadPlatformGlobalRoleChange"
+    | "InAppNotificationPayloadPlatformUser"
+    | "InAppNotificationPayloadPlatformUserMessageRoom"
+    | "InAppNotificationPayloadPlatformUserProfileRemoved"
+    | "InAppNotificationPayloadSpace"
+    | "InAppNotificationPayloadSpaceCollaborationCallout"
+    | "InAppNotificationPayloadSpaceCommunicationMessageDirect"
+    | "InAppNotificationPayloadSpaceCommunicationUpdate"
+    | "InAppNotificationPayloadSpaceCommunityApplication"
+    | "InAppNotificationPayloadSpaceCommunityContributor"
+    | "InAppNotificationPayloadSpaceCommunityInvitation"
+    | "InAppNotificationPayloadSpaceCommunityInvitationPlatform"
+    | "InAppNotificationPayloadUserMessageDirect",
     ParentType,
     ContextType
   >;
   type?: Resolver<
-    ResolversTypes["NotificationEventType"],
+    ResolversTypes["NotificationEventPayload"],
     ParentType,
     ContextType
   >;
 };
 
-export type InAppNotificationCalloutPublishedResolvers<
+export type InAppNotificationPayloadOrganizationResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["InAppNotificationCalloutPublished"] = ResolversParentTypes["InAppNotificationCalloutPublished"]
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadOrganization"] = ResolversParentTypes["InAppNotificationPayloadOrganization"]
 > = {
-  callout?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes["Callout"]>,
-    ParentType,
-    ContextType
-  >;
-  category?: Resolver<
-    ResolversTypes["InAppNotificationCategory"],
-    ParentType,
-    ContextType
-  >;
-  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
-  receiver?: Resolver<ResolversTypes["Contributor"], ParentType, ContextType>;
-  space?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes["Space"]>,
-    ParentType,
-    ContextType
-  >;
-  state?: Resolver<
-    ResolversTypes["InAppNotificationState"],
-    ParentType,
-    ContextType
-  >;
-  triggeredAt?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
-  triggeredBy?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes["Contributor"]>,
-    ParentType,
-    ContextType
-  >;
   type?: Resolver<
-    ResolversTypes["NotificationEventType"],
+    ResolversTypes["NotificationEventPayload"],
     ParentType,
     ContextType
   >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export type InAppNotificationCommunityNewMemberResolvers<
+export type InAppNotificationPayloadOrganizationMessageDirectResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["InAppNotificationCommunityNewMember"] = ResolversParentTypes["InAppNotificationCommunityNewMember"]
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadOrganizationMessageDirect"] = ResolversParentTypes["InAppNotificationPayloadOrganizationMessageDirect"]
 > = {
-  actor?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes["Contributor"]>,
-    ParentType,
-    ContextType
-  >;
-  category?: Resolver<
-    ResolversTypes["InAppNotificationCategory"],
-    ParentType,
-    ContextType
-  >;
-  contributorType?: Resolver<
-    ResolversTypes["RoleSetContributorType"],
-    ParentType,
-    ContextType
-  >;
-  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
-  receiver?: Resolver<ResolversTypes["Contributor"], ParentType, ContextType>;
-  space?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes["Space"]>,
-    ParentType,
-    ContextType
-  >;
-  state?: Resolver<
-    ResolversTypes["InAppNotificationState"],
-    ParentType,
-    ContextType
-  >;
-  triggeredAt?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
-  triggeredBy?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes["Contributor"]>,
+  message?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  organization?: Resolver<
+    ResolversTypes["Contributor"],
     ParentType,
     ContextType
   >;
   type?: Resolver<
-    ResolversTypes["NotificationEventType"],
+    ResolversTypes["NotificationEventPayload"],
     ParentType,
     ContextType
   >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export type InAppNotificationUserMentionedResolvers<
+export type InAppNotificationPayloadOrganizationMessageRoomResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["InAppNotificationUserMentioned"] = ResolversParentTypes["InAppNotificationUserMentioned"]
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadOrganizationMessageRoom"] = ResolversParentTypes["InAppNotificationPayloadOrganizationMessageRoom"]
 > = {
-  category?: Resolver<
-    ResolversTypes["InAppNotificationCategory"],
+  comment?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["String"]>,
     ParentType,
     ContextType
   >;
-  comment?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  organization?: Resolver<
+    ResolversTypes["Organization"],
+    ParentType,
+    ContextType
+  >;
+  roomID?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
+  type?: Resolver<
+    ResolversTypes["NotificationEventPayload"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type InAppNotificationPayloadPlatformResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadPlatform"] = ResolversParentTypes["InAppNotificationPayloadPlatform"]
+> = {
+  type?: Resolver<
+    ResolversTypes["NotificationEventPayload"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type InAppNotificationPayloadPlatformForumDiscussionResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadPlatformForumDiscussion"] = ResolversParentTypes["InAppNotificationPayloadPlatformForumDiscussion"]
+> = {
+  type?: Resolver<
+    ResolversTypes["NotificationEventPayload"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type InAppNotificationPayloadPlatformGlobalRoleChangeResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadPlatformGlobalRoleChange"] = ResolversParentTypes["InAppNotificationPayloadPlatformGlobalRoleChange"]
+> = {
+  type?: Resolver<
+    ResolversTypes["NotificationEventPayload"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type InAppNotificationPayloadPlatformUserResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadPlatformUser"] = ResolversParentTypes["InAppNotificationPayloadPlatformUser"]
+> = {
+  type?: Resolver<
+    ResolversTypes["NotificationEventPayload"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type InAppNotificationPayloadPlatformUserMessageRoomResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadPlatformUserMessageRoom"] = ResolversParentTypes["InAppNotificationPayloadPlatformUserMessageRoom"]
+> = {
+  comment?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
   commentOriginName?: Resolver<
-    ResolversTypes["String"],
+    SchemaTypes.Maybe<ResolversTypes["String"]>,
     ParentType,
     ContextType
   >;
-  commentUrl?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  contributorType?: Resolver<
-    ResolversTypes["RoleSetContributorType"],
+  commentUrl?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["String"]>,
     ParentType,
     ContextType
   >;
-  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
-  receiver?: Resolver<ResolversTypes["Contributor"], ParentType, ContextType>;
-  state?: Resolver<
-    ResolversTypes["InAppNotificationState"],
+  originalMessageID?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["String"]>,
     ParentType,
     ContextType
   >;
-  triggeredAt?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
-  triggeredBy?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes["Contributor"]>,
+  roomID?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["String"]>,
     ParentType,
     ContextType
   >;
   type?: Resolver<
-    ResolversTypes["NotificationEventType"],
+    ResolversTypes["NotificationEventPayload"],
     ParentType,
     ContextType
   >;
+  user?: Resolver<ResolversTypes["User"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type InAppNotificationPayloadPlatformUserProfileRemovedResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadPlatformUserProfileRemoved"] = ResolversParentTypes["InAppNotificationPayloadPlatformUserProfileRemoved"]
+> = {
+  type?: Resolver<
+    ResolversTypes["NotificationEventPayload"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type InAppNotificationPayloadSpaceResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadSpace"] = ResolversParentTypes["InAppNotificationPayloadSpace"]
+> = {
+  type?: Resolver<
+    ResolversTypes["NotificationEventPayload"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type InAppNotificationPayloadSpaceCollaborationCalloutResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCollaborationCallout"] = ResolversParentTypes["InAppNotificationPayloadSpaceCollaborationCallout"]
+> = {
+  callout?: Resolver<ResolversTypes["Callout"], ParentType, ContextType>;
+  space?: Resolver<ResolversTypes["Space"], ParentType, ContextType>;
+  type?: Resolver<
+    ResolversTypes["NotificationEventPayload"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type InAppNotificationPayloadSpaceCommunicationMessageDirectResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCommunicationMessageDirect"] = ResolversParentTypes["InAppNotificationPayloadSpaceCommunicationMessageDirect"]
+> = {
+  message?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  space?: Resolver<ResolversTypes["Space"], ParentType, ContextType>;
+  type?: Resolver<
+    ResolversTypes["NotificationEventPayload"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type InAppNotificationPayloadSpaceCommunicationUpdateResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCommunicationUpdate"] = ResolversParentTypes["InAppNotificationPayloadSpaceCommunicationUpdate"]
+> = {
+  space?: Resolver<ResolversTypes["Space"], ParentType, ContextType>;
+  type?: Resolver<
+    ResolversTypes["NotificationEventPayload"],
+    ParentType,
+    ContextType
+  >;
+  update?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type InAppNotificationPayloadSpaceCommunityApplicationResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCommunityApplication"] = ResolversParentTypes["InAppNotificationPayloadSpaceCommunityApplication"]
+> = {
+  application?: Resolver<
+    ResolversTypes["Application"],
+    ParentType,
+    ContextType
+  >;
+  space?: Resolver<ResolversTypes["Space"], ParentType, ContextType>;
+  type?: Resolver<
+    ResolversTypes["NotificationEventPayload"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type InAppNotificationPayloadSpaceCommunityContributorResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCommunityContributor"] = ResolversParentTypes["InAppNotificationPayloadSpaceCommunityContributor"]
+> = {
+  contributor?: Resolver<
+    ResolversTypes["Contributor"],
+    ParentType,
+    ContextType
+  >;
+  space?: Resolver<ResolversTypes["Space"], ParentType, ContextType>;
+  type?: Resolver<
+    ResolversTypes["NotificationEventPayload"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type InAppNotificationPayloadSpaceCommunityInvitationResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCommunityInvitation"] = ResolversParentTypes["InAppNotificationPayloadSpaceCommunityInvitation"]
+> = {
+  space?: Resolver<ResolversTypes["Space"], ParentType, ContextType>;
+  type?: Resolver<
+    ResolversTypes["NotificationEventPayload"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type InAppNotificationPayloadSpaceCommunityInvitationPlatformResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCommunityInvitationPlatform"] = ResolversParentTypes["InAppNotificationPayloadSpaceCommunityInvitationPlatform"]
+> = {
+  space?: Resolver<ResolversTypes["Space"], ParentType, ContextType>;
+  type?: Resolver<
+    ResolversTypes["NotificationEventPayload"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type InAppNotificationPayloadUserMessageDirectResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadUserMessageDirect"] = ResolversParentTypes["InAppNotificationPayloadUserMessageDirect"]
+> = {
+  message?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
+  type?: Resolver<
+    ResolversTypes["NotificationEventPayload"],
+    ParentType,
+    ContextType
+  >;
+  user?: Resolver<ResolversTypes["User"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -12737,7 +14116,7 @@ export type InnovationFlowResolvers<
   >;
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   currentState?: Resolver<
-    ResolversTypes["InnovationFlowState"],
+    SchemaTypes.Maybe<ResolversTypes["InnovationFlowState"]>,
     ParentType,
     ContextType
   >;
@@ -12778,8 +14157,38 @@ export type InnovationFlowStateResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["InnovationFlowState"] = ResolversParentTypes["InnovationFlowState"]
 > = {
-  description?: Resolver<ResolversTypes["Markdown"], ParentType, ContextType>;
+  authorization?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
+    ParentType,
+    ContextType
+  >;
+  createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  description?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Markdown"]>,
+    ParentType,
+    ContextType
+  >;
   displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  settings?: Resolver<
+    ResolversTypes["InnovationFlowStateSettings"],
+    ParentType,
+    ContextType
+  >;
+  sortOrder?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type InnovationFlowStateSettingsResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["InnovationFlowStateSettings"] = ResolversParentTypes["InnovationFlowStateSettings"]
+> = {
+  allowNewCallouts?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -12914,8 +14323,8 @@ export type InvitationResolvers<
     ContextType
   >;
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
-  extraRole?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes["RoleName"]>,
+  extraRoles?: Resolver<
+    Array<ResolversTypes["RoleName"]>,
     ParentType,
     ContextType
   >;
@@ -13676,6 +15085,12 @@ export type LookupQueryResultsResolvers<
     ContextType,
     RequireFields<SchemaTypes.LookupQueryResultsLicenseArgs, "ID">
   >;
+  memo?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Memo"]>,
+    ParentType,
+    ContextType,
+    RequireFields<SchemaTypes.LookupQueryResultsMemoArgs, "ID">
+  >;
   myPrivileges?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["LookupMyPrivilegesQueryResults"]>,
     ParentType,
@@ -13832,6 +15247,49 @@ export type MeQueryResultsResolvers<
   >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
+
+export type MemoResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["Memo"] = ResolversParentTypes["Memo"]
+> = {
+  authorization?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
+    ParentType,
+    ContextType
+  >;
+  content?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
+  contentUpdatePolicy?: Resolver<
+    ResolversTypes["ContentUpdatePolicy"],
+    ParentType,
+    ContextType
+  >;
+  createdBy?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["User"]>,
+    ParentType,
+    ContextType
+  >;
+  createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  isMultiUser?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  markdown?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Markdown"]>,
+    ParentType,
+    ContextType
+  >;
+  nameID?: Resolver<ResolversTypes["NameID"], ParentType, ContextType>;
+  profile?: Resolver<ResolversTypes["Profile"], ParentType, ContextType>;
+  updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export interface MemoContentScalarConfig
+  extends GraphQLScalarTypeConfig<ResolversTypes["MemoContent"], any> {
+  name: "MemoContent";
+}
 
 export type MessageResolvers<
   ContextType = any,
@@ -14145,6 +15603,11 @@ export type MutationResolvers<
     ContextType,
     RequireFields<SchemaTypes.MutationAssignUserToGroupArgs, "membershipData">
   >;
+  authorizationPlatformRolesAccessReset?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
   authorizationPolicyResetAll?: Resolver<
     ResolversTypes["String"],
     ParentType,
@@ -14350,6 +15813,15 @@ export type MutationResolvers<
     ContextType,
     RequireFields<SchemaTypes.MutationCreateSpaceArgs, "spaceData">
   >;
+  createStateOnInnovationFlow?: Resolver<
+    ResolversTypes["InnovationFlowState"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationCreateStateOnInnovationFlowArgs,
+      "stateData"
+    >
+  >;
   createSubspace?: Resolver<
     ResolversTypes["Space"],
     ParentType,
@@ -14424,6 +15896,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<SchemaTypes.MutationDeleteCalloutArgs, "deleteData">
   >;
+  deleteContribution?: Resolver<
+    ResolversTypes["CalloutContribution"],
+    ParentType,
+    ContextType,
+    RequireFields<SchemaTypes.MutationDeleteContributionArgs, "contributionID">
+  >;
   deleteDiscussion?: Resolver<
     ResolversTypes["Discussion"],
     ParentType,
@@ -14466,6 +15944,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<SchemaTypes.MutationDeleteLinkArgs, "deleteData">
   >;
+  deleteMemo?: Resolver<
+    ResolversTypes["Memo"],
+    ParentType,
+    ContextType,
+    RequireFields<SchemaTypes.MutationDeleteMemoArgs, "memoData">
+  >;
   deleteOrganization?: Resolver<
     ResolversTypes["Organization"],
     ParentType,
@@ -14498,6 +15982,15 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<SchemaTypes.MutationDeleteSpaceArgs, "deleteData">
+  >;
+  deleteStateOnInnovationFlow?: Resolver<
+    ResolversTypes["InnovationFlowState"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationDeleteStateOnInnovationFlowArgs,
+      "stateData"
+    >
   >;
   deleteStorageBucket?: Resolver<
     ResolversTypes["StorageBucket"],
@@ -14868,6 +16361,15 @@ export type MutationResolvers<
       "applicationFormData"
     >
   >;
+  updateBaselineLicensePlanOnAccount?: Resolver<
+    ResolversTypes["Account"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationUpdateBaselineLicensePlanOnAccountArgs,
+      "updateData"
+    >
+  >;
   updateCalendarEvent?: Resolver<
     ResolversTypes["CalendarEvent"],
     ParentType,
@@ -14964,22 +16466,31 @@ export type MutationResolvers<
       "innovationFlowData"
     >
   >;
-  updateInnovationFlowSelectedState?: Resolver<
+  updateInnovationFlowCurrentState?: Resolver<
     ResolversTypes["InnovationFlow"],
     ParentType,
     ContextType,
     RequireFields<
-      SchemaTypes.MutationUpdateInnovationFlowSelectedStateArgs,
+      SchemaTypes.MutationUpdateInnovationFlowCurrentStateArgs,
       "innovationFlowStateData"
     >
   >;
-  updateInnovationFlowSingleState?: Resolver<
-    ResolversTypes["InnovationFlow"],
+  updateInnovationFlowState?: Resolver<
+    ResolversTypes["InnovationFlowState"],
     ParentType,
     ContextType,
     RequireFields<
-      SchemaTypes.MutationUpdateInnovationFlowSingleStateArgs,
-      "innovationFlowStateData"
+      SchemaTypes.MutationUpdateInnovationFlowStateArgs,
+      "stateData"
+    >
+  >;
+  updateInnovationFlowStatesSortOrder?: Resolver<
+    Array<ResolversTypes["InnovationFlowState"]>,
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationUpdateInnovationFlowStatesSortOrderArgs,
+      "sortOrderData"
     >
   >;
   updateInnovationHub?: Resolver<
@@ -15009,8 +16520,14 @@ export type MutationResolvers<
     ContextType,
     RequireFields<SchemaTypes.MutationUpdateLinkArgs, "linkData">
   >;
+  updateMemo?: Resolver<
+    ResolversTypes["Memo"],
+    ParentType,
+    ContextType,
+    RequireFields<SchemaTypes.MutationUpdateMemoArgs, "memoData">
+  >;
   updateNotificationState?: Resolver<
-    ResolversTypes["InAppNotificationState"],
+    ResolversTypes["NotificationEventInAppState"],
     ParentType,
     ContextType,
     RequireFields<
@@ -15059,15 +16576,6 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<SchemaTypes.MutationUpdatePostArgs, "postData">
-  >;
-  updatePreferenceOnUser?: Resolver<
-    ResolversTypes["Preference"],
-    ParentType,
-    ContextType,
-    RequireFields<
-      SchemaTypes.MutationUpdatePreferenceOnUserArgs,
-      "preferenceData"
-    >
   >;
   updateProfile?: Resolver<
     ResolversTypes["Profile"],
@@ -15262,6 +16770,28 @@ export interface NameIdScalarConfig
   extends GraphQLScalarTypeConfig<ResolversTypes["NameID"], any> {
   name: "NameID";
 }
+
+export type NotificationRecipientResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["NotificationRecipientResult"] = ResolversParentTypes["NotificationRecipientResult"]
+> = {
+  emailRecipients?: Resolver<
+    Array<ResolversTypes["User"]>,
+    ParentType,
+    ContextType
+  >;
+  inAppRecipients?: Resolver<
+    Array<ResolversTypes["User"]>,
+    ParentType,
+    ContextType
+  >;
+  triggeredBy?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["User"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
 
 export type OrganizationResolvers<
   ContextType = any,
@@ -15560,6 +17090,87 @@ export type PlatformResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type PlatformAccessRoleResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["PlatformAccessRole"] = ResolversParentTypes["PlatformAccessRole"]
+> = {
+  grantedPrivileges?: Resolver<
+    Array<ResolversTypes["AuthorizationPrivilege"]>,
+    ParentType,
+    ContextType
+  >;
+  roleName?: Resolver<ResolversTypes["RoleName"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type PlatformAdminCommunicationQueryResultsResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["PlatformAdminCommunicationQueryResults"] = ResolversParentTypes["PlatformAdminCommunicationQueryResults"]
+> = {
+  adminCommunicationMembership?: Resolver<
+    ResolversTypes["CommunicationAdminMembershipResult"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.PlatformAdminCommunicationQueryResultsAdminCommunicationMembershipArgs,
+      "communicationData"
+    >
+  >;
+  adminCommunicationOrphanedUsage?: Resolver<
+    ResolversTypes["CommunicationAdminOrphanedUsageResult"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type PlatformAdminQueryResultsResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["PlatformAdminQueryResults"] = ResolversParentTypes["PlatformAdminQueryResults"]
+> = {
+  communication?: Resolver<
+    ResolversTypes["PlatformAdminCommunicationQueryResults"],
+    ParentType,
+    ContextType
+  >;
+  innovationHubs?: Resolver<
+    Array<ResolversTypes["InnovationHub"]>,
+    ParentType,
+    ContextType
+  >;
+  innovationPacks?: Resolver<
+    Array<ResolversTypes["InnovationPack"]>,
+    ParentType,
+    ContextType,
+    Partial<SchemaTypes.PlatformAdminQueryResultsInnovationPacksArgs>
+  >;
+  organizations?: Resolver<
+    ResolversTypes["PaginatedOrganization"],
+    ParentType,
+    ContextType,
+    Partial<SchemaTypes.PlatformAdminQueryResultsOrganizationsArgs>
+  >;
+  spaces?: Resolver<
+    Array<ResolversTypes["Space"]>,
+    ParentType,
+    ContextType,
+    Partial<SchemaTypes.PlatformAdminQueryResultsSpacesArgs>
+  >;
+  users?: Resolver<
+    ResolversTypes["PaginatedUsers"],
+    ParentType,
+    ContextType,
+    Partial<SchemaTypes.PlatformAdminQueryResultsUsersArgs>
+  >;
+  virtualContributors?: Resolver<
+    Array<ResolversTypes["VirtualContributor"]>,
+    ParentType,
+    ContextType,
+    Partial<SchemaTypes.PlatformAdminQueryResultsVirtualContributorsArgs>
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type PlatformFeatureFlagResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["PlatformFeatureFlag"] = ResolversParentTypes["PlatformFeatureFlag"]
@@ -15614,8 +17225,8 @@ export type PlatformInvitationResolvers<
     ContextType
   >;
   profileCreated?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
-  roleSetExtraRole?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes["RoleName"]>,
+  roleSetExtraRoles?: Resolver<
+    Array<ResolversTypes["RoleName"]>,
     ParentType,
     ContextType
   >;
@@ -15669,6 +17280,18 @@ export type PlatformLocationsResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type PlatformRolesAccessResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["PlatformRolesAccess"] = ResolversParentTypes["PlatformRolesAccess"]
+> = {
+  roles?: Resolver<
+    Array<ResolversTypes["PlatformAccessRole"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type PlatformSettingsResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["PlatformSettings"] = ResolversParentTypes["PlatformSettings"]
@@ -15701,46 +17324,6 @@ export type PostResolvers<
   nameID?: Resolver<ResolversTypes["NameID"], ParentType, ContextType>;
   profile?: Resolver<ResolversTypes["Profile"], ParentType, ContextType>;
   updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type PreferenceResolvers<
-  ContextType = any,
-  ParentType extends ResolversParentTypes["Preference"] = ResolversParentTypes["Preference"]
-> = {
-  authorization?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
-    ParentType,
-    ContextType
-  >;
-  createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
-  definition?: Resolver<
-    ResolversTypes["PreferenceDefinition"],
-    ParentType,
-    ContextType
-  >;
-  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
-  updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
-  value?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type PreferenceDefinitionResolvers<
-  ContextType = any,
-  ParentType extends ResolversParentTypes["PreferenceDefinition"] = ResolversParentTypes["PreferenceDefinition"]
-> = {
-  createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
-  description?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  group?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
-  type?: Resolver<ResolversTypes["PreferenceType"], ParentType, ContextType>;
-  updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
-  valueType?: Resolver<
-    ResolversTypes["PreferenceValueType"],
-    ParentType,
-    ContextType
-  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -15845,20 +17428,6 @@ export type QueryResolvers<
     ContextType,
     RequireFields<SchemaTypes.QueryActivityLogOnCollaborationArgs, "queryData">
   >;
-  adminCommunicationMembership?: Resolver<
-    ResolversTypes["CommunicationAdminMembershipResult"],
-    ParentType,
-    ContextType,
-    RequireFields<
-      SchemaTypes.QueryAdminCommunicationMembershipArgs,
-      "communicationData"
-    >
-  >;
-  adminCommunicationOrphanedUsage?: Resolver<
-    ResolversTypes["CommunicationAdminOrphanedUsageResult"],
-    ParentType,
-    ContextType
-  >;
   aiServer?: Resolver<ResolversTypes["AiServer"], ParentType, ContextType>;
   exploreSpaces?: Resolver<
     Array<ResolversTypes["Space"]>,
@@ -15887,10 +17456,17 @@ export type QueryResolvers<
     ContextType
   >;
   me?: Resolver<ResolversTypes["MeQueryResults"], ParentType, ContextType>;
-  notifications?: Resolver<
+  notificationRecipients?: Resolver<
+    ResolversTypes["NotificationRecipientResult"],
+    ParentType,
+    ContextType,
+    RequireFields<SchemaTypes.QueryNotificationRecipientsArgs, "eventData">
+  >;
+  notificationsInApp?: Resolver<
     Array<ResolversTypes["InAppNotification"]>,
     ParentType,
-    ContextType
+    ContextType,
+    Partial<SchemaTypes.QueryNotificationsInAppArgs>
   >;
   organization?: Resolver<
     ResolversTypes["Organization"],
@@ -15911,6 +17487,11 @@ export type QueryResolvers<
     Partial<SchemaTypes.QueryOrganizationsPaginatedArgs>
   >;
   platform?: Resolver<ResolversTypes["Platform"], ParentType, ContextType>;
+  platformAdmin?: Resolver<
+    ResolversTypes["PlatformAdminQueryResults"],
+    ParentType,
+    ContextType
+  >;
   restrictedSpaceNames?: Resolver<
     Array<ResolversTypes["String"]>,
     ParentType,
@@ -15975,15 +17556,6 @@ export type QueryResolvers<
     ParentType,
     ContextType,
     RequireFields<SchemaTypes.QueryUserArgs, "ID">
-  >;
-  userAuthorizationPrivileges?: Resolver<
-    Array<ResolversTypes["AuthorizationPrivilege"]>,
-    ParentType,
-    ContextType,
-    RequireFields<
-      SchemaTypes.QueryUserAuthorizationPrivilegesArgs,
-      "userAuthorizationPrivilegesData"
-    >
   >;
   users?: Resolver<
     Array<ResolversTypes["User"]>,
@@ -16102,6 +17674,11 @@ export type RelayPaginatedSpaceResolvers<
   >;
   license?: Resolver<ResolversTypes["License"], ParentType, ContextType>;
   nameID?: Resolver<ResolversTypes["NameID"], ParentType, ContextType>;
+  platformAccess?: Resolver<
+    ResolversTypes["PlatformRolesAccess"],
+    ParentType,
+    ContextType
+  >;
   settings?: Resolver<ResolversTypes["SpaceSettings"], ParentType, ContextType>;
   storageAggregator?: Resolver<
     ResolversTypes["StorageAggregator"],
@@ -16665,6 +18242,11 @@ export type SpaceResolvers<
   >;
   license?: Resolver<ResolversTypes["License"], ParentType, ContextType>;
   nameID?: Resolver<ResolversTypes["NameID"], ParentType, ContextType>;
+  platformAccess?: Resolver<
+    ResolversTypes["PlatformRolesAccess"],
+    ParentType,
+    ContextType
+  >;
   settings?: Resolver<ResolversTypes["SpaceSettings"], ParentType, ContextType>;
   storageAggregator?: Resolver<
     ResolversTypes["StorageAggregator"],
@@ -17230,6 +18812,11 @@ export type TemplateContentSpaceResolvers<
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   level?: Resolver<ResolversTypes["SpaceLevel"], ParentType, ContextType>;
   settings?: Resolver<ResolversTypes["SpaceSettings"], ParentType, ContextType>;
+  subspaces?: Resolver<
+    Array<ResolversTypes["TemplateContentSpace"]>,
+    ParentType,
+    ContextType
+  >;
   updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -17616,11 +19203,6 @@ export type UserResolvers<
     ParentType,
     ContextType
   >;
-  preferences?: Resolver<
-    Array<ResolversTypes["Preference"]>,
-    ParentType,
-    ContextType
-  >;
   profile?: Resolver<ResolversTypes["Profile"], ParentType, ContextType>;
   settings?: Resolver<ResolversTypes["UserSettings"], ParentType, ContextType>;
   storageAggregator?: Resolver<
@@ -17646,8 +19228,8 @@ export type UserAuthenticationResultResolvers<
     ParentType,
     ContextType
   >;
-  method?: Resolver<
-    ResolversTypes["AuthenticationType"],
+  methods?: Resolver<
+    Array<ResolversTypes["AuthenticationType"]>,
     ParentType,
     ContextType
   >;
@@ -17688,8 +19270,20 @@ export type UserSettingsResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["UserSettings"] = ResolversParentTypes["UserSettings"]
 > = {
+  authorization?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
+    ParentType,
+    ContextType
+  >;
   communication?: Resolver<
     ResolversTypes["UserSettingsCommunication"],
+    ParentType,
+    ContextType
+  >;
+  createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  notification?: Resolver<
+    ResolversTypes["UserSettingsNotification"],
     ParentType,
     ContextType
   >;
@@ -17698,6 +19292,7 @@ export type UserSettingsResolvers<
     ParentType,
     ContextType
   >;
+  updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -17707,6 +19302,243 @@ export type UserSettingsCommunicationResolvers<
 > = {
   allowOtherUsersToSendMessages?: Resolver<
     ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type UserSettingsNotificationResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["UserSettingsNotification"] = ResolversParentTypes["UserSettingsNotification"]
+> = {
+  organization?: Resolver<
+    ResolversTypes["UserSettingsNotificationOrganization"],
+    ParentType,
+    ContextType
+  >;
+  platform?: Resolver<
+    ResolversTypes["UserSettingsNotificationPlatform"],
+    ParentType,
+    ContextType
+  >;
+  space?: Resolver<
+    ResolversTypes["UserSettingsNotificationSpace"],
+    ParentType,
+    ContextType
+  >;
+  user?: Resolver<
+    ResolversTypes["UserSettingsNotificationUser"],
+    ParentType,
+    ContextType
+  >;
+  virtualContributor?: Resolver<
+    ResolversTypes["UserSettingsNotificationVirtualContributor"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type UserSettingsNotificationChannelsResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["UserSettingsNotificationChannels"] = ResolversParentTypes["UserSettingsNotificationChannels"]
+> = {
+  email?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  inApp?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type UserSettingsNotificationOrganizationResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["UserSettingsNotificationOrganization"] = ResolversParentTypes["UserSettingsNotificationOrganization"]
+> = {
+  adminMentioned?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  adminMessageReceived?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type UserSettingsNotificationPlatformResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["UserSettingsNotificationPlatform"] = ResolversParentTypes["UserSettingsNotificationPlatform"]
+> = {
+  admin?: Resolver<
+    ResolversTypes["UserSettingsNotificationPlatformAdmin"],
+    ParentType,
+    ContextType
+  >;
+  forumDiscussionComment?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  forumDiscussionCreated?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type UserSettingsNotificationPlatformAdminResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["UserSettingsNotificationPlatformAdmin"] = ResolversParentTypes["UserSettingsNotificationPlatformAdmin"]
+> = {
+  spaceCreated?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  userGlobalRoleChanged?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  userProfileCreated?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  userProfileRemoved?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type UserSettingsNotificationSpaceResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["UserSettingsNotificationSpace"] = ResolversParentTypes["UserSettingsNotificationSpace"]
+> = {
+  admin?: Resolver<
+    ResolversTypes["UserSettingsNotificationSpaceAdmin"],
+    ParentType,
+    ContextType
+  >;
+  collaborationCalloutComment?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  collaborationCalloutContributionCreated?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  collaborationCalloutPostContributionComment?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  collaborationCalloutPublished?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  communicationUpdates?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type UserSettingsNotificationSpaceAdminResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["UserSettingsNotificationSpaceAdmin"] = ResolversParentTypes["UserSettingsNotificationSpaceAdmin"]
+> = {
+  collaborationCalloutContributionCreated?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  communicationMessageReceived?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  communityApplicationReceived?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  communityNewMember?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type UserSettingsNotificationUserResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["UserSettingsNotificationUser"] = ResolversParentTypes["UserSettingsNotificationUser"]
+> = {
+  commentReply?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  copyOfMessageSent?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  membership?: Resolver<
+    ResolversTypes["UserSettingsNotificationUserMembership"],
+    ParentType,
+    ContextType
+  >;
+  mentioned?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  messageReceived?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type UserSettingsNotificationUserMembershipResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["UserSettingsNotificationUserMembership"] = ResolversParentTypes["UserSettingsNotificationUserMembership"]
+> = {
+  spaceCommunityApplicationSubmitted?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  spaceCommunityInvitationReceived?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  spaceCommunityJoined?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type UserSettingsNotificationVirtualContributorResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["UserSettingsNotificationVirtualContributor"] = ResolversParentTypes["UserSettingsNotificationVirtualContributor"]
+> = {
+  adminSpaceCommunityInvitation?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
     ParentType,
     ContextType
   >;
@@ -17967,6 +19799,7 @@ export interface WhiteboardContentScalarConfig
 export type Resolvers<ContextType = any> = {
   APM?: ApmResolvers<ContextType>;
   Account?: AccountResolvers<ContextType>;
+  AccountLicensePlan?: AccountLicensePlanResolvers<ContextType>;
   AccountSubscription?: AccountSubscriptionResolvers<ContextType>;
   ActivityCreatedSubscriptionResult?: ActivityCreatedSubscriptionResultResolvers<ContextType>;
   ActivityFeed?: ActivityFeedResolvers<ContextType>;
@@ -18003,9 +19836,11 @@ export type Resolvers<ContextType = any> = {
   Callout?: CalloutResolvers<ContextType>;
   CalloutContribution?: CalloutContributionResolvers<ContextType>;
   CalloutContributionDefaults?: CalloutContributionDefaultsResolvers<ContextType>;
-  CalloutContributionPolicy?: CalloutContributionPolicyResolvers<ContextType>;
   CalloutFraming?: CalloutFramingResolvers<ContextType>;
   CalloutPostCreated?: CalloutPostCreatedResolvers<ContextType>;
+  CalloutSettings?: CalloutSettingsResolvers<ContextType>;
+  CalloutSettingsContribution?: CalloutSettingsContributionResolvers<ContextType>;
+  CalloutSettingsFraming?: CalloutSettingsFramingResolvers<ContextType>;
   CalloutsSet?: CalloutsSetResolvers<ContextType>;
   Classification?: ClassificationResolvers<ContextType>;
   Collaboration?: CollaborationResolvers<ContextType>;
@@ -18026,17 +19861,24 @@ export type Resolvers<ContextType = any> = {
   Contributor?: ContributorResolvers<ContextType>;
   ContributorRolePolicy?: ContributorRolePolicyResolvers<ContextType>;
   ContributorRoles?: ContributorRolesResolvers<ContextType>;
+  CreateCalloutContributionData?: CreateCalloutContributionDataResolvers<ContextType>;
   CreateCalloutContributionDefaultsData?: CreateCalloutContributionDefaultsDataResolvers<ContextType>;
-  CreateCalloutContributionPolicyData?: CreateCalloutContributionPolicyDataResolvers<ContextType>;
   CreateCalloutData?: CreateCalloutDataResolvers<ContextType>;
   CreateCalloutFramingData?: CreateCalloutFramingDataResolvers<ContextType>;
+  CreateCalloutSettingsContributionData?: CreateCalloutSettingsContributionDataResolvers<ContextType>;
+  CreateCalloutSettingsData?: CreateCalloutSettingsDataResolvers<ContextType>;
+  CreateCalloutSettingsFramingData?: CreateCalloutSettingsFramingDataResolvers<ContextType>;
   CreateCalloutsSetData?: CreateCalloutsSetDataResolvers<ContextType>;
   CreateClassificationData?: CreateClassificationDataResolvers<ContextType>;
   CreateCollaborationData?: CreateCollaborationDataResolvers<ContextType>;
   CreateCommunityGuidelinesData?: CreateCommunityGuidelinesDataResolvers<ContextType>;
   CreateInnovationFlowData?: CreateInnovationFlowDataResolvers<ContextType>;
   CreateInnovationFlowStateData?: CreateInnovationFlowStateDataResolvers<ContextType>;
+  CreateInnovationFlowStateSettingsData?: CreateInnovationFlowStateSettingsDataResolvers<ContextType>;
+  CreateLinkData?: CreateLinkDataResolvers<ContextType>;
   CreateLocationData?: CreateLocationDataResolvers<ContextType>;
+  CreateMemoData?: CreateMemoDataResolvers<ContextType>;
+  CreatePostData?: CreatePostDataResolvers<ContextType>;
   CreateProfileData?: CreateProfileDataResolvers<ContextType>;
   CreateReferenceData?: CreateReferenceDataResolvers<ContextType>;
   CreateTagsetData?: CreateTagsetDataResolvers<ContextType>;
@@ -18062,12 +19904,29 @@ export type Resolvers<ContextType = any> = {
   ISearchCategoryResult?: ISearchCategoryResultResolvers<ContextType>;
   ISearchResults?: ISearchResultsResolvers<ContextType>;
   InAppNotification?: InAppNotificationResolvers<ContextType>;
-  InAppNotificationCalloutPublished?: InAppNotificationCalloutPublishedResolvers<ContextType>;
-  InAppNotificationCommunityNewMember?: InAppNotificationCommunityNewMemberResolvers<ContextType>;
-  InAppNotificationUserMentioned?: InAppNotificationUserMentionedResolvers<ContextType>;
+  InAppNotificationPayload?: InAppNotificationPayloadResolvers<ContextType>;
+  InAppNotificationPayloadOrganization?: InAppNotificationPayloadOrganizationResolvers<ContextType>;
+  InAppNotificationPayloadOrganizationMessageDirect?: InAppNotificationPayloadOrganizationMessageDirectResolvers<ContextType>;
+  InAppNotificationPayloadOrganizationMessageRoom?: InAppNotificationPayloadOrganizationMessageRoomResolvers<ContextType>;
+  InAppNotificationPayloadPlatform?: InAppNotificationPayloadPlatformResolvers<ContextType>;
+  InAppNotificationPayloadPlatformForumDiscussion?: InAppNotificationPayloadPlatformForumDiscussionResolvers<ContextType>;
+  InAppNotificationPayloadPlatformGlobalRoleChange?: InAppNotificationPayloadPlatformGlobalRoleChangeResolvers<ContextType>;
+  InAppNotificationPayloadPlatformUser?: InAppNotificationPayloadPlatformUserResolvers<ContextType>;
+  InAppNotificationPayloadPlatformUserMessageRoom?: InAppNotificationPayloadPlatformUserMessageRoomResolvers<ContextType>;
+  InAppNotificationPayloadPlatformUserProfileRemoved?: InAppNotificationPayloadPlatformUserProfileRemovedResolvers<ContextType>;
+  InAppNotificationPayloadSpace?: InAppNotificationPayloadSpaceResolvers<ContextType>;
+  InAppNotificationPayloadSpaceCollaborationCallout?: InAppNotificationPayloadSpaceCollaborationCalloutResolvers<ContextType>;
+  InAppNotificationPayloadSpaceCommunicationMessageDirect?: InAppNotificationPayloadSpaceCommunicationMessageDirectResolvers<ContextType>;
+  InAppNotificationPayloadSpaceCommunicationUpdate?: InAppNotificationPayloadSpaceCommunicationUpdateResolvers<ContextType>;
+  InAppNotificationPayloadSpaceCommunityApplication?: InAppNotificationPayloadSpaceCommunityApplicationResolvers<ContextType>;
+  InAppNotificationPayloadSpaceCommunityContributor?: InAppNotificationPayloadSpaceCommunityContributorResolvers<ContextType>;
+  InAppNotificationPayloadSpaceCommunityInvitation?: InAppNotificationPayloadSpaceCommunityInvitationResolvers<ContextType>;
+  InAppNotificationPayloadSpaceCommunityInvitationPlatform?: InAppNotificationPayloadSpaceCommunityInvitationPlatformResolvers<ContextType>;
+  InAppNotificationPayloadUserMessageDirect?: InAppNotificationPayloadUserMessageDirectResolvers<ContextType>;
   InnovationFlow?: InnovationFlowResolvers<ContextType>;
   InnovationFlowSettings?: InnovationFlowSettingsResolvers<ContextType>;
   InnovationFlowState?: InnovationFlowStateResolvers<ContextType>;
+  InnovationFlowStateSettings?: InnovationFlowStateSettingsResolvers<ContextType>;
   InnovationHub?: InnovationHubResolvers<ContextType>;
   InnovationPack?: InnovationPackResolvers<ContextType>;
   InputCreatorQueryResults?: InputCreatorQueryResultsResolvers<ContextType>;
@@ -18092,6 +19951,8 @@ export type Resolvers<ContextType = any> = {
   LookupQueryResults?: LookupQueryResultsResolvers<ContextType>;
   Markdown?: GraphQLScalarType;
   MeQueryResults?: MeQueryResultsResolvers<ContextType>;
+  Memo?: MemoResolvers<ContextType>;
+  MemoContent?: GraphQLScalarType;
   Message?: MessageResolvers<ContextType>;
   MessageAnswerQuestion?: MessageAnswerQuestionResolvers<ContextType>;
   MessageID?: GraphQLScalarType;
@@ -18104,6 +19965,7 @@ export type Resolvers<ContextType = any> = {
   MySpaceResults?: MySpaceResultsResolvers<ContextType>;
   NVP?: NvpResolvers<ContextType>;
   NameID?: GraphQLScalarType;
+  NotificationRecipientResult?: NotificationRecipientResultResolvers<ContextType>;
   Organization?: OrganizationResolvers<ContextType>;
   OrganizationSettings?: OrganizationSettingsResolvers<ContextType>;
   OrganizationSettingsMembership?: OrganizationSettingsMembershipResolvers<ContextType>;
@@ -18117,14 +19979,16 @@ export type Resolvers<ContextType = any> = {
   PaginatedUsers?: PaginatedUsersResolvers<ContextType>;
   PaginatedVirtualContributor?: PaginatedVirtualContributorResolvers<ContextType>;
   Platform?: PlatformResolvers<ContextType>;
+  PlatformAccessRole?: PlatformAccessRoleResolvers<ContextType>;
+  PlatformAdminCommunicationQueryResults?: PlatformAdminCommunicationQueryResultsResolvers<ContextType>;
+  PlatformAdminQueryResults?: PlatformAdminQueryResultsResolvers<ContextType>;
   PlatformFeatureFlag?: PlatformFeatureFlagResolvers<ContextType>;
   PlatformIntegrationSettings?: PlatformIntegrationSettingsResolvers<ContextType>;
   PlatformInvitation?: PlatformInvitationResolvers<ContextType>;
   PlatformLocations?: PlatformLocationsResolvers<ContextType>;
+  PlatformRolesAccess?: PlatformRolesAccessResolvers<ContextType>;
   PlatformSettings?: PlatformSettingsResolvers<ContextType>;
   Post?: PostResolvers<ContextType>;
-  Preference?: PreferenceResolvers<ContextType>;
-  PreferenceDefinition?: PreferenceDefinitionResolvers<ContextType>;
   Profile?: ProfileResolvers<ContextType>;
   ProfileCredentialVerified?: ProfileCredentialVerifiedResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
@@ -18195,6 +20059,16 @@ export type Resolvers<ContextType = any> = {
   UserGroup?: UserGroupResolvers<ContextType>;
   UserSettings?: UserSettingsResolvers<ContextType>;
   UserSettingsCommunication?: UserSettingsCommunicationResolvers<ContextType>;
+  UserSettingsNotification?: UserSettingsNotificationResolvers<ContextType>;
+  UserSettingsNotificationChannels?: UserSettingsNotificationChannelsResolvers<ContextType>;
+  UserSettingsNotificationOrganization?: UserSettingsNotificationOrganizationResolvers<ContextType>;
+  UserSettingsNotificationPlatform?: UserSettingsNotificationPlatformResolvers<ContextType>;
+  UserSettingsNotificationPlatformAdmin?: UserSettingsNotificationPlatformAdminResolvers<ContextType>;
+  UserSettingsNotificationSpace?: UserSettingsNotificationSpaceResolvers<ContextType>;
+  UserSettingsNotificationSpaceAdmin?: UserSettingsNotificationSpaceAdminResolvers<ContextType>;
+  UserSettingsNotificationUser?: UserSettingsNotificationUserResolvers<ContextType>;
+  UserSettingsNotificationUserMembership?: UserSettingsNotificationUserMembershipResolvers<ContextType>;
+  UserSettingsNotificationVirtualContributor?: UserSettingsNotificationVirtualContributorResolvers<ContextType>;
   UserSettingsPrivacy?: UserSettingsPrivacyResolvers<ContextType>;
   UsersInRolesResponse?: UsersInRolesResponseResolvers<ContextType>;
   VcInteraction?: VcInteractionResolvers<ContextType>;
@@ -20596,19 +22470,12 @@ export type CalloutDataFragment = {
   nameID: string;
   publishedDate?: number | undefined;
   sortOrder: number;
-  type: SchemaTypes.CalloutType;
-  visibility: SchemaTypes.CalloutVisibility;
   authorization?:
     | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
     | undefined;
   comments?:
     | { id: string; messagesCount: number; messages: Array<{ message: any }> }
     | undefined;
-  contributionPolicy: {
-    allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
-    id: string;
-    state: SchemaTypes.CalloutState;
-  };
   contributions: Array<{
     authorization?:
       | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
@@ -20945,7 +22812,6 @@ export type CalloutDataFragment = {
     };
     whiteboard?:
       | {
-          id: string;
           nameID: string;
           profile: {
             id: string;
@@ -21021,6 +22887,533 @@ export type CalloutDataFragment = {
       | undefined;
   };
   publishedBy?: { email: string } | undefined;
+  settings: {
+    visibility: SchemaTypes.CalloutVisibility;
+    framing: { commentsEnabled: boolean };
+    contribution: {
+      enabled: boolean;
+      canAddContributions: SchemaTypes.CalloutAllowedContributors;
+      commentsEnabled: boolean;
+    };
+  };
+};
+
+export type CalloutDetailsFragment = {
+  __typename: "Callout";
+  id: string;
+  sortOrder: number;
+  activity: number;
+  framing: {
+    __typename: "CalloutFraming";
+    id: string;
+    type: SchemaTypes.CalloutFramingType;
+    profile: {
+      __typename: "Profile";
+      id: string;
+      displayName: string;
+      description?: any | undefined;
+      url: string;
+      tagset?:
+        | {
+            __typename: "Tagset";
+            id: string;
+            name: string;
+            tags: Array<string>;
+            allowedValues: Array<string>;
+            type: SchemaTypes.TagsetType;
+          }
+        | undefined;
+      references?:
+        | Array<{
+            __typename: "Reference";
+            id: string;
+            name: string;
+            uri: string;
+            description?: string | undefined;
+          }>
+        | undefined;
+      storageBucket: { __typename: "StorageBucket"; id: string };
+    };
+    whiteboard?:
+      | {
+          __typename: "Whiteboard";
+          id: string;
+          nameID: string;
+          createdDate: Date;
+          contentUpdatePolicy: SchemaTypes.ContentUpdatePolicy;
+          profile: {
+            __typename: "Profile";
+            id: string;
+            url: string;
+            displayName: string;
+            description?: any | undefined;
+            tagset?:
+              | {
+                  __typename: "Tagset";
+                  id: string;
+                  name: string;
+                  tags: Array<string>;
+                  allowedValues: Array<string>;
+                  type: SchemaTypes.TagsetType;
+                }
+              | undefined;
+            storageBucket: { __typename: "StorageBucket"; id: string };
+          };
+          authorization?:
+            | {
+                __typename: "Authorization";
+                id: string;
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+          createdBy?:
+            | {
+                __typename: "User";
+                id: string;
+                profile: {
+                  __typename: "Profile";
+                  id: string;
+                  displayName: string;
+                  url: string;
+                  location?:
+                    | {
+                        __typename: "Location";
+                        id: string;
+                        country?: string | undefined;
+                        city?: string | undefined;
+                      }
+                    | undefined;
+                };
+              }
+            | undefined;
+        }
+      | undefined;
+  };
+  contributionDefaults: {
+    __typename: "CalloutContributionDefaults";
+    id: string;
+    defaultDisplayName?: string | undefined;
+    postDescription?: any | undefined;
+    whiteboardContent?: any | undefined;
+  };
+  contributions: Array<{
+    authorization?:
+      | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
+      | undefined;
+    createdBy?: { email: string } | undefined;
+    link?:
+      | {
+          id: string;
+          uri: string;
+          authorization?:
+            | {
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+          profile: {
+            id: string;
+            displayName: string;
+            description?: any | undefined;
+            tagline?: string | undefined;
+            references?:
+              | Array<{
+                  id: string;
+                  name: string;
+                  uri: string;
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>
+              | undefined;
+            tagsets?:
+              | Array<{
+                  id: string;
+                  name: string;
+                  tags: Array<string>;
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>
+              | undefined;
+            location?:
+              | { country?: string | undefined; city?: string | undefined }
+              | undefined;
+            authorization?:
+              | {
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: SchemaTypes.ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
+          };
+        }
+      | undefined;
+    post?:
+      | {
+          id: string;
+          nameID: string;
+          createdDate: Date;
+          authorization?:
+            | {
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+          profile: {
+            id: string;
+            displayName: string;
+            description?: any | undefined;
+            tagline?: string | undefined;
+            references?:
+              | Array<{
+                  id: string;
+                  name: string;
+                  uri: string;
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>
+              | undefined;
+            visual?:
+              | { __typename: "Visual"; id: string; uri: string; name: string }
+              | undefined;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: SchemaTypes.ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
+            tagsets?:
+              | Array<{
+                  id: string;
+                  name: string;
+                  tags: Array<string>;
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>
+              | undefined;
+            location?:
+              | { country?: string | undefined; city?: string | undefined }
+              | undefined;
+            authorization?:
+              | {
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+          };
+          comments: {
+            id: string;
+            messagesCount: number;
+            messages: Array<{
+              id: any;
+              message: any;
+              sender?: { id: string } | {} | undefined;
+            }>;
+          };
+          createdBy?: { email: string } | undefined;
+        }
+      | undefined;
+    whiteboard?:
+      | {
+          id: string;
+          nameID: string;
+          content: any;
+          authorization?:
+            | {
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+          profile: {
+            id: string;
+            displayName: string;
+            description?: any | undefined;
+            tagline?: string | undefined;
+            visual?:
+              | { __typename: "Visual"; id: string; uri: string; name: string }
+              | undefined;
+            storageBucket: {
+              id: string;
+              authorization?:
+                | {
+                    myPrivileges?:
+                      | Array<SchemaTypes.AuthorizationPrivilege>
+                      | undefined;
+                  }
+                | undefined;
+              parentEntity?:
+                | { displayName: string; type: SchemaTypes.ProfileType }
+                | undefined;
+              documents: Array<{
+                id: string;
+                authorization?:
+                  | {
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+              }>;
+            };
+            references?:
+              | Array<{
+                  id: string;
+                  name: string;
+                  uri: string;
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>
+              | undefined;
+            tagsets?:
+              | Array<{
+                  id: string;
+                  name: string;
+                  tags: Array<string>;
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                }>
+              | undefined;
+            location?:
+              | { country?: string | undefined; city?: string | undefined }
+              | undefined;
+            authorization?:
+              | {
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+          };
+        }
+      | undefined;
+  }>;
+  comments?:
+    | {
+        __typename: "Room";
+        id: string;
+        messagesCount: number;
+        authorization?:
+          | {
+              __typename: "Authorization";
+              id: string;
+              myPrivileges?:
+                | Array<SchemaTypes.AuthorizationPrivilege>
+                | undefined;
+            }
+          | undefined;
+        messages: Array<{
+          __typename: "Message";
+          id: any;
+          message: any;
+          threadID?: string | undefined;
+          reactions: Array<{
+            __typename: "Reaction";
+            id: any;
+            emoji: any;
+            sender?:
+              | {
+                  __typename: "User";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                  };
+                }
+              | undefined;
+          }>;
+          sender?:
+            | {
+                __typename: "Organization";
+                id: string;
+                profile: {
+                  __typename: "Profile";
+                  id: string;
+                  displayName: string;
+                  url: string;
+                  description?: any | undefined;
+                  tagsets?:
+                    | Array<{
+                        __typename: "Tagset";
+                        id: string;
+                        name: string;
+                        tags: Array<string>;
+                        allowedValues: Array<string>;
+                        type: SchemaTypes.TagsetType;
+                      }>
+                    | undefined;
+                  location?:
+                    | {
+                        __typename: "Location";
+                        id: string;
+                        country?: string | undefined;
+                        city?: string | undefined;
+                      }
+                    | undefined;
+                };
+              }
+            | {
+                __typename: "User";
+                id: string;
+                profile: {
+                  __typename: "Profile";
+                  id: string;
+                  displayName: string;
+                  url: string;
+                  description?: any | undefined;
+                  tagsets?:
+                    | Array<{
+                        __typename: "Tagset";
+                        id: string;
+                        name: string;
+                        tags: Array<string>;
+                        allowedValues: Array<string>;
+                        type: SchemaTypes.TagsetType;
+                      }>
+                    | undefined;
+                  location?:
+                    | {
+                        __typename: "Location";
+                        id: string;
+                        country?: string | undefined;
+                        city?: string | undefined;
+                      }
+                    | undefined;
+                };
+              }
+            | {
+                __typename: "VirtualContributor";
+                id: string;
+                profile: {
+                  __typename: "Profile";
+                  id: string;
+                  displayName: string;
+                  url: string;
+                  description?: any | undefined;
+                  tagsets?:
+                    | Array<{
+                        __typename: "Tagset";
+                        id: string;
+                        name: string;
+                        tags: Array<string>;
+                        allowedValues: Array<string>;
+                        type: SchemaTypes.TagsetType;
+                      }>
+                    | undefined;
+                  location?:
+                    | {
+                        __typename: "Location";
+                        id: string;
+                        country?: string | undefined;
+                        city?: string | undefined;
+                      }
+                    | undefined;
+                };
+              }
+            | undefined;
+        }>;
+        vcInteractions: Array<{
+          __typename: "VcInteraction";
+          id: string;
+          threadID: string;
+          virtualContributorID: string;
+        }>;
+      }
+    | undefined;
+  authorization?:
+    | {
+        __typename: "Authorization";
+        id: string;
+        myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined;
+      }
+    | undefined;
+  settings: {
+    __typename: "CalloutSettings";
+    visibility: SchemaTypes.CalloutVisibility;
+    contribution: {
+      __typename: "CalloutSettingsContribution";
+      enabled: boolean;
+      allowedTypes: Array<SchemaTypes.CalloutContributionType>;
+      canAddContributions: SchemaTypes.CalloutAllowedContributors;
+      commentsEnabled: boolean;
+    };
+    framing: { __typename: "CalloutSettingsFraming"; commentsEnabled: boolean };
+  };
 };
 
 export type CalloutOnCollaborationWithStorageConfigFragment = {
@@ -21063,6 +23456,39 @@ export type CalloutOnCollaborationWithStorageConfigFragment = {
       };
     }>;
   };
+};
+
+export type CalloutSettingsFullFragment = {
+  __typename: "CalloutSettings";
+  visibility: SchemaTypes.CalloutVisibility;
+  contribution: {
+    __typename: "CalloutSettingsContribution";
+    enabled: boolean;
+    allowedTypes: Array<SchemaTypes.CalloutContributionType>;
+    canAddContributions: SchemaTypes.CalloutAllowedContributors;
+    commentsEnabled: boolean;
+  };
+  framing: { __typename: "CalloutSettingsFraming"; commentsEnabled: boolean };
+};
+
+export type ClassificationDetailsFragment = {
+  __typename: "Callout";
+  classification?:
+    | {
+        __typename: "Classification";
+        id: string;
+        flowState?:
+          | {
+              __typename: "Tagset";
+              id: string;
+              name: string;
+              tags: Array<string>;
+              allowedValues: Array<string>;
+              type: SchemaTypes.TagsetType;
+            }
+          | undefined;
+      }
+    | undefined;
 };
 
 export type CommentsDataFragment = {
@@ -21525,6 +23951,85 @@ export type PostDataFragment = {
   createdBy?: { email: string } | undefined;
 };
 
+export type VcInteractionsDetailsFragment = {
+  __typename: "VcInteraction";
+  id: string;
+  threadID: string;
+  virtualContributorID: string;
+};
+
+export type WhiteboardDetailsFragment = {
+  __typename: "Whiteboard";
+  id: string;
+  nameID: string;
+  createdDate: Date;
+  contentUpdatePolicy: SchemaTypes.ContentUpdatePolicy;
+  profile: {
+    __typename: "Profile";
+    id: string;
+    url: string;
+    displayName: string;
+    description?: any | undefined;
+    tagset?:
+      | {
+          __typename: "Tagset";
+          id: string;
+          name: string;
+          tags: Array<string>;
+          allowedValues: Array<string>;
+          type: SchemaTypes.TagsetType;
+        }
+      | undefined;
+    storageBucket: { __typename: "StorageBucket"; id: string };
+  };
+  authorization?:
+    | {
+        __typename: "Authorization";
+        id: string;
+        myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined;
+      }
+    | undefined;
+  createdBy?:
+    | {
+        __typename: "User";
+        id: string;
+        profile: {
+          __typename: "Profile";
+          id: string;
+          displayName: string;
+          url: string;
+          location?:
+            | {
+                __typename: "Location";
+                id: string;
+                country?: string | undefined;
+                city?: string | undefined;
+              }
+            | undefined;
+        };
+      }
+    | undefined;
+};
+
+export type WhiteboardProfileFragment = {
+  __typename: "Profile";
+  id: string;
+  url: string;
+  displayName: string;
+  description?: any | undefined;
+  tagset?:
+    | {
+        __typename: "Tagset";
+        id: string;
+        name: string;
+        tags: Array<string>;
+        allowedValues: Array<string>;
+        type: SchemaTypes.TagsetType;
+      }
+    | undefined;
+  storageBucket: { __typename: "StorageBucket"; id: string };
+};
+
 export type WhiteboardInCalloutOnCollaborationWithStorageConfigFragment = {
   __typename: "Collaboration";
   id: string;
@@ -21704,8 +24209,6 @@ export type CollaborationDataFragment = {
       nameID: string;
       publishedDate?: number | undefined;
       sortOrder: number;
-      type: SchemaTypes.CalloutType;
-      visibility: SchemaTypes.CalloutVisibility;
       authorization?:
         | {
             myPrivileges?:
@@ -21720,11 +24223,6 @@ export type CollaborationDataFragment = {
             messages: Array<{ message: any }>;
           }
         | undefined;
-      contributionPolicy: {
-        allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
-        id: string;
-        state: SchemaTypes.CalloutState;
-      };
       contributions: Array<{
         authorization?:
           | {
@@ -22075,7 +24573,6 @@ export type CollaborationDataFragment = {
         };
         whiteboard?:
           | {
-              id: string;
               nameID: string;
               profile: {
                 id: string;
@@ -22156,6 +24653,15 @@ export type CollaborationDataFragment = {
           | undefined;
       };
       publishedBy?: { email: string } | undefined;
+      settings: {
+        visibility: SchemaTypes.CalloutVisibility;
+        framing: { commentsEnabled: boolean };
+        contribution: {
+          enabled: boolean;
+          canAddContributions: SchemaTypes.CalloutAllowedContributors;
+          commentsEnabled: boolean;
+        };
+      };
     }>;
   };
   authorization?:
@@ -22233,8 +24739,10 @@ export type CollaborationDataFragment = {
     authorization?:
       | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
       | undefined;
-    currentState: { description: any; displayName: string };
-    states: Array<{ description: any; displayName: string }>;
+    currentState?:
+      | { description?: any | undefined; displayName: string }
+      | undefined;
+    states: Array<{ description?: any | undefined; displayName: string }>;
   };
 };
 
@@ -24216,15 +26724,115 @@ export type CommunityDataFragment = {
     updates: {
       id: string;
       messages: Array<{
+        __typename: "Message";
         id: any;
         message: any;
         threadID?: string | undefined;
-        sender?: { id: string } | {} | undefined;
         reactions: Array<{
+          __typename: "Reaction";
           id: any;
           emoji: any;
-          sender?: { email: string } | undefined;
+          sender?:
+            | {
+                __typename: "User";
+                id: string;
+                profile: {
+                  __typename: "Profile";
+                  id: string;
+                  displayName: string;
+                };
+              }
+            | undefined;
         }>;
+        sender?:
+          | {
+              __typename: "Organization";
+              id: string;
+              profile: {
+                __typename: "Profile";
+                id: string;
+                displayName: string;
+                url: string;
+                description?: any | undefined;
+                tagsets?:
+                  | Array<{
+                      __typename: "Tagset";
+                      id: string;
+                      name: string;
+                      tags: Array<string>;
+                      allowedValues: Array<string>;
+                      type: SchemaTypes.TagsetType;
+                    }>
+                  | undefined;
+                location?:
+                  | {
+                      __typename: "Location";
+                      id: string;
+                      country?: string | undefined;
+                      city?: string | undefined;
+                    }
+                  | undefined;
+              };
+            }
+          | {
+              __typename: "User";
+              id: string;
+              profile: {
+                __typename: "Profile";
+                id: string;
+                displayName: string;
+                url: string;
+                description?: any | undefined;
+                tagsets?:
+                  | Array<{
+                      __typename: "Tagset";
+                      id: string;
+                      name: string;
+                      tags: Array<string>;
+                      allowedValues: Array<string>;
+                      type: SchemaTypes.TagsetType;
+                    }>
+                  | undefined;
+                location?:
+                  | {
+                      __typename: "Location";
+                      id: string;
+                      country?: string | undefined;
+                      city?: string | undefined;
+                    }
+                  | undefined;
+              };
+            }
+          | {
+              __typename: "VirtualContributor";
+              id: string;
+              profile: {
+                __typename: "Profile";
+                id: string;
+                displayName: string;
+                url: string;
+                description?: any | undefined;
+                tagsets?:
+                  | Array<{
+                      __typename: "Tagset";
+                      id: string;
+                      name: string;
+                      tags: Array<string>;
+                      allowedValues: Array<string>;
+                      type: SchemaTypes.TagsetType;
+                    }>
+                  | undefined;
+                location?:
+                  | {
+                      __typename: "Location";
+                      id: string;
+                      country?: string | undefined;
+                      city?: string | undefined;
+                    }
+                  | undefined;
+              };
+            }
+          | undefined;
       }>;
       authorization?:
         | {
@@ -24458,6 +27066,101 @@ export type ContributorDataFragment =
   | ContributorData_User_Fragment
   | ContributorData_VirtualContributor_Fragment;
 
+type ContributorDetails_Organization_Fragment = {
+  __typename: "Organization";
+  id: string;
+  profile: {
+    __typename: "Profile";
+    id: string;
+    displayName: string;
+    url: string;
+    description?: any | undefined;
+    tagsets?:
+      | Array<{
+          __typename: "Tagset";
+          id: string;
+          name: string;
+          tags: Array<string>;
+          allowedValues: Array<string>;
+          type: SchemaTypes.TagsetType;
+        }>
+      | undefined;
+    location?:
+      | {
+          __typename: "Location";
+          id: string;
+          country?: string | undefined;
+          city?: string | undefined;
+        }
+      | undefined;
+  };
+};
+
+type ContributorDetails_User_Fragment = {
+  __typename: "User";
+  id: string;
+  profile: {
+    __typename: "Profile";
+    id: string;
+    displayName: string;
+    url: string;
+    description?: any | undefined;
+    tagsets?:
+      | Array<{
+          __typename: "Tagset";
+          id: string;
+          name: string;
+          tags: Array<string>;
+          allowedValues: Array<string>;
+          type: SchemaTypes.TagsetType;
+        }>
+      | undefined;
+    location?:
+      | {
+          __typename: "Location";
+          id: string;
+          country?: string | undefined;
+          city?: string | undefined;
+        }
+      | undefined;
+  };
+};
+
+type ContributorDetails_VirtualContributor_Fragment = {
+  __typename: "VirtualContributor";
+  id: string;
+  profile: {
+    __typename: "Profile";
+    id: string;
+    displayName: string;
+    url: string;
+    description?: any | undefined;
+    tagsets?:
+      | Array<{
+          __typename: "Tagset";
+          id: string;
+          name: string;
+          tags: Array<string>;
+          allowedValues: Array<string>;
+          type: SchemaTypes.TagsetType;
+        }>
+      | undefined;
+    location?:
+      | {
+          __typename: "Location";
+          id: string;
+          country?: string | undefined;
+          city?: string | undefined;
+        }
+      | undefined;
+  };
+};
+
+export type ContributorDetailsFragment =
+  | ContributorDetails_Organization_Fragment
+  | ContributorDetails_User_Fragment
+  | ContributorDetails_VirtualContributor_Fragment;
+
 export type CommunicationsDiscussionDataFragment = {
   id: string;
   category: SchemaTypes.ForumDiscussionCategory;
@@ -24467,15 +27170,115 @@ export type CommunicationsDiscussionDataFragment = {
     id: string;
     messagesCount: number;
     messages: Array<{
+      __typename: "Message";
       id: any;
       message: any;
       threadID?: string | undefined;
-      sender?: { id: string } | {} | undefined;
       reactions: Array<{
+        __typename: "Reaction";
         id: any;
         emoji: any;
-        sender?: { email: string } | undefined;
+        sender?:
+          | {
+              __typename: "User";
+              id: string;
+              profile: {
+                __typename: "Profile";
+                id: string;
+                displayName: string;
+              };
+            }
+          | undefined;
       }>;
+      sender?:
+        | {
+            __typename: "Organization";
+            id: string;
+            profile: {
+              __typename: "Profile";
+              id: string;
+              displayName: string;
+              url: string;
+              description?: any | undefined;
+              tagsets?:
+                | Array<{
+                    __typename: "Tagset";
+                    id: string;
+                    name: string;
+                    tags: Array<string>;
+                    allowedValues: Array<string>;
+                    type: SchemaTypes.TagsetType;
+                  }>
+                | undefined;
+              location?:
+                | {
+                    __typename: "Location";
+                    id: string;
+                    country?: string | undefined;
+                    city?: string | undefined;
+                  }
+                | undefined;
+            };
+          }
+        | {
+            __typename: "User";
+            id: string;
+            profile: {
+              __typename: "Profile";
+              id: string;
+              displayName: string;
+              url: string;
+              description?: any | undefined;
+              tagsets?:
+                | Array<{
+                    __typename: "Tagset";
+                    id: string;
+                    name: string;
+                    tags: Array<string>;
+                    allowedValues: Array<string>;
+                    type: SchemaTypes.TagsetType;
+                  }>
+                | undefined;
+              location?:
+                | {
+                    __typename: "Location";
+                    id: string;
+                    country?: string | undefined;
+                    city?: string | undefined;
+                  }
+                | undefined;
+            };
+          }
+        | {
+            __typename: "VirtualContributor";
+            id: string;
+            profile: {
+              __typename: "Profile";
+              id: string;
+              displayName: string;
+              url: string;
+              description?: any | undefined;
+              tagsets?:
+                | Array<{
+                    __typename: "Tagset";
+                    id: string;
+                    name: string;
+                    tags: Array<string>;
+                    allowedValues: Array<string>;
+                    type: SchemaTypes.TagsetType;
+                  }>
+                | undefined;
+              location?:
+                | {
+                    __typename: "Location";
+                    id: string;
+                    country?: string | undefined;
+                    city?: string | undefined;
+                  }
+                | undefined;
+            };
+          }
+        | undefined;
     }>;
   };
   authorization?:
@@ -24670,7 +27473,7 @@ export type MemberDataFragment = {
 };
 
 export type InnovationFlowStateDataFragment = {
-  description: any;
+  description?: any | undefined;
   displayName: string;
 };
 
@@ -24742,8 +27545,10 @@ export type InnovationFlowDataFragment = {
   authorization?:
     | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
     | undefined;
-  currentState: { description: any; displayName: string };
-  states: Array<{ description: any; displayName: string }>;
+  currentState?:
+    | { description?: any | undefined; displayName: string }
+    | undefined;
+  states: Array<{ description?: any | undefined; displayName: string }>;
 };
 
 export type AssignLicensePlanToAccountMutationVariables = SchemaTypes.Exact<{
@@ -24923,22 +27728,327 @@ export type LinkDataFragment = {
   };
 };
 
-export type MessageDataFragment = {
-  id: any;
-  message: any;
-  threadID?: string | undefined;
-  sender?: { id: string } | {} | undefined;
-  reactions: Array<{
+export type LinkDetailsWithAuthorizationFragment = {
+  __typename: "Link";
+  id: string;
+  uri: string;
+  profile: {
+    id: string;
+    displayName: string;
+    description?: any | undefined;
+    tagline?: string | undefined;
+    references?:
+      | Array<{
+          id: string;
+          name: string;
+          uri: string;
+          authorization?:
+            | {
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+        }>
+      | undefined;
+    tagsets?:
+      | Array<{
+          id: string;
+          name: string;
+          tags: Array<string>;
+          authorization?:
+            | {
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+        }>
+      | undefined;
+    location?:
+      | { country?: string | undefined; city?: string | undefined }
+      | undefined;
+    authorization?:
+      | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
+      | undefined;
+    storageBucket: {
+      id: string;
+      authorization?:
+        | {
+            myPrivileges?:
+              | Array<SchemaTypes.AuthorizationPrivilege>
+              | undefined;
+          }
+        | undefined;
+      parentEntity?:
+        | { displayName: string; type: SchemaTypes.ProfileType }
+        | undefined;
+      documents: Array<{
+        id: string;
+        authorization?:
+          | {
+              myPrivileges?:
+                | Array<SchemaTypes.AuthorizationPrivilege>
+                | undefined;
+            }
+          | undefined;
+      }>;
+    };
+  };
+  authorization?:
+    | {
+        __typename: "Authorization";
+        id: string;
+        myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined;
+      }
+    | undefined;
+};
+
+export type CommentsWithMessagesFragment = {
+  __typename: "Room";
+  id: string;
+  messagesCount: number;
+  authorization?:
+    | {
+        __typename: "Authorization";
+        id: string;
+        myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined;
+      }
+    | undefined;
+  messages: Array<{
+    __typename: "Message";
     id: any;
-    emoji: any;
-    sender?: { email: string } | undefined;
+    message: any;
+    threadID?: string | undefined;
+    reactions: Array<{
+      __typename: "Reaction";
+      id: any;
+      emoji: any;
+      sender?:
+        | {
+            __typename: "User";
+            id: string;
+            profile: { __typename: "Profile"; id: string; displayName: string };
+          }
+        | undefined;
+    }>;
+    sender?:
+      | {
+          __typename: "Organization";
+          id: string;
+          profile: {
+            __typename: "Profile";
+            id: string;
+            displayName: string;
+            url: string;
+            description?: any | undefined;
+            tagsets?:
+              | Array<{
+                  __typename: "Tagset";
+                  id: string;
+                  name: string;
+                  tags: Array<string>;
+                  allowedValues: Array<string>;
+                  type: SchemaTypes.TagsetType;
+                }>
+              | undefined;
+            location?:
+              | {
+                  __typename: "Location";
+                  id: string;
+                  country?: string | undefined;
+                  city?: string | undefined;
+                }
+              | undefined;
+          };
+        }
+      | {
+          __typename: "User";
+          id: string;
+          profile: {
+            __typename: "Profile";
+            id: string;
+            displayName: string;
+            url: string;
+            description?: any | undefined;
+            tagsets?:
+              | Array<{
+                  __typename: "Tagset";
+                  id: string;
+                  name: string;
+                  tags: Array<string>;
+                  allowedValues: Array<string>;
+                  type: SchemaTypes.TagsetType;
+                }>
+              | undefined;
+            location?:
+              | {
+                  __typename: "Location";
+                  id: string;
+                  country?: string | undefined;
+                  city?: string | undefined;
+                }
+              | undefined;
+          };
+        }
+      | {
+          __typename: "VirtualContributor";
+          id: string;
+          profile: {
+            __typename: "Profile";
+            id: string;
+            displayName: string;
+            url: string;
+            description?: any | undefined;
+            tagsets?:
+              | Array<{
+                  __typename: "Tagset";
+                  id: string;
+                  name: string;
+                  tags: Array<string>;
+                  allowedValues: Array<string>;
+                  type: SchemaTypes.TagsetType;
+                }>
+              | undefined;
+            location?:
+              | {
+                  __typename: "Location";
+                  id: string;
+                  country?: string | undefined;
+                  city?: string | undefined;
+                }
+              | undefined;
+          };
+        }
+      | undefined;
+  }>;
+  vcInteractions: Array<{
+    __typename: "VcInteraction";
+    id: string;
+    threadID: string;
+    virtualContributorID: string;
   }>;
 };
 
-export type ReactionDataFragment = {
+export type MessageDetailsFragment = {
+  __typename: "Message";
+  id: any;
+  message: any;
+  threadID?: string | undefined;
+  reactions: Array<{
+    __typename: "Reaction";
+    id: any;
+    emoji: any;
+    sender?:
+      | {
+          __typename: "User";
+          id: string;
+          profile: { __typename: "Profile"; id: string; displayName: string };
+        }
+      | undefined;
+  }>;
+  sender?:
+    | {
+        __typename: "Organization";
+        id: string;
+        profile: {
+          __typename: "Profile";
+          id: string;
+          displayName: string;
+          url: string;
+          description?: any | undefined;
+          tagsets?:
+            | Array<{
+                __typename: "Tagset";
+                id: string;
+                name: string;
+                tags: Array<string>;
+                allowedValues: Array<string>;
+                type: SchemaTypes.TagsetType;
+              }>
+            | undefined;
+          location?:
+            | {
+                __typename: "Location";
+                id: string;
+                country?: string | undefined;
+                city?: string | undefined;
+              }
+            | undefined;
+        };
+      }
+    | {
+        __typename: "User";
+        id: string;
+        profile: {
+          __typename: "Profile";
+          id: string;
+          displayName: string;
+          url: string;
+          description?: any | undefined;
+          tagsets?:
+            | Array<{
+                __typename: "Tagset";
+                id: string;
+                name: string;
+                tags: Array<string>;
+                allowedValues: Array<string>;
+                type: SchemaTypes.TagsetType;
+              }>
+            | undefined;
+          location?:
+            | {
+                __typename: "Location";
+                id: string;
+                country?: string | undefined;
+                city?: string | undefined;
+              }
+            | undefined;
+        };
+      }
+    | {
+        __typename: "VirtualContributor";
+        id: string;
+        profile: {
+          __typename: "Profile";
+          id: string;
+          displayName: string;
+          url: string;
+          description?: any | undefined;
+          tagsets?:
+            | Array<{
+                __typename: "Tagset";
+                id: string;
+                name: string;
+                tags: Array<string>;
+                allowedValues: Array<string>;
+                type: SchemaTypes.TagsetType;
+              }>
+            | undefined;
+          location?:
+            | {
+                __typename: "Location";
+                id: string;
+                country?: string | undefined;
+                city?: string | undefined;
+              }
+            | undefined;
+        };
+      }
+    | undefined;
+};
+
+export type ReactionDetailsFragment = {
+  __typename: "Reaction";
   id: any;
   emoji: any;
-  sender?: { email: string } | undefined;
+  sender?:
+    | {
+        __typename: "User";
+        id: string;
+        profile: { __typename: "Profile"; id: string; displayName: string };
+      }
+    | undefined;
 };
 
 export type OrganizationDataFragment = {
@@ -25456,21 +28566,6 @@ export type OrganizationDataFragment = {
     | undefined;
 };
 
-export type PreferenceDataFragment = {
-  id: string;
-  value: string;
-  definition: {
-    type: SchemaTypes.PreferenceType;
-    id: string;
-    displayName: string;
-    description: string;
-    group: string;
-  };
-  authorization?:
-    | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
-    | undefined;
-};
-
 export type ProfileDataFragment = {
   id: string;
   displayName: string;
@@ -25596,6 +28691,14 @@ export type ProfileStorageConfigFragment = {
   };
 };
 
+export type ReferenceDetailsFragment = {
+  __typename: "Reference";
+  id: string;
+  name: string;
+  uri: string;
+  description?: string | undefined;
+};
+
 export type ReferenceDataFragment = { id: string; name: string; uri: string };
 
 export type SettingsDataFragment = {
@@ -25716,8 +28819,6 @@ export type SubspaceL1DataFragment = {
           nameID: string;
           publishedDate?: number | undefined;
           sortOrder: number;
-          type: SchemaTypes.CalloutType;
-          visibility: SchemaTypes.CalloutVisibility;
           authorization?:
             | {
                 myPrivileges?:
@@ -25732,11 +28833,6 @@ export type SubspaceL1DataFragment = {
                 messages: Array<{ message: any }>;
               }
             | undefined;
-          contributionPolicy: {
-            allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
-            id: string;
-            state: SchemaTypes.CalloutState;
-          };
           contributions: Array<{
             authorization?:
               | {
@@ -26096,7 +29192,6 @@ export type SubspaceL1DataFragment = {
             };
             whiteboard?:
               | {
-                  id: string;
                   nameID: string;
                   profile: {
                     id: string;
@@ -26180,6 +29275,15 @@ export type SubspaceL1DataFragment = {
               | undefined;
           };
           publishedBy?: { email: string } | undefined;
+          settings: {
+            visibility: SchemaTypes.CalloutVisibility;
+            framing: { commentsEnabled: boolean };
+            contribution: {
+              enabled: boolean;
+              canAddContributions: SchemaTypes.CalloutAllowedContributors;
+              commentsEnabled: boolean;
+            };
+          };
         }>;
       };
       authorization?:
@@ -26265,8 +29369,10 @@ export type SubspaceL1DataFragment = {
                 | undefined;
             }
           | undefined;
-        currentState: { description: any; displayName: string };
-        states: Array<{ description: any; displayName: string }>;
+        currentState?:
+          | { description?: any | undefined; displayName: string }
+          | undefined;
+        states: Array<{ description?: any | undefined; displayName: string }>;
       };
     };
     authorization?:
@@ -28302,15 +31408,115 @@ export type SubspaceL1DataFragment = {
         updates: {
           id: string;
           messages: Array<{
+            __typename: "Message";
             id: any;
             message: any;
             threadID?: string | undefined;
-            sender?: { id: string } | {} | undefined;
             reactions: Array<{
+              __typename: "Reaction";
               id: any;
               emoji: any;
-              sender?: { email: string } | undefined;
+              sender?:
+                | {
+                    __typename: "User";
+                    id: string;
+                    profile: {
+                      __typename: "Profile";
+                      id: string;
+                      displayName: string;
+                    };
+                  }
+                | undefined;
             }>;
+            sender?:
+              | {
+                  __typename: "Organization";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                    description?: any | undefined;
+                    tagsets?:
+                      | Array<{
+                          __typename: "Tagset";
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          allowedValues: Array<string>;
+                          type: SchemaTypes.TagsetType;
+                        }>
+                      | undefined;
+                    location?:
+                      | {
+                          __typename: "Location";
+                          id: string;
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                  };
+                }
+              | {
+                  __typename: "User";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                    description?: any | undefined;
+                    tagsets?:
+                      | Array<{
+                          __typename: "Tagset";
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          allowedValues: Array<string>;
+                          type: SchemaTypes.TagsetType;
+                        }>
+                      | undefined;
+                    location?:
+                      | {
+                          __typename: "Location";
+                          id: string;
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                  };
+                }
+              | {
+                  __typename: "VirtualContributor";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                    description?: any | undefined;
+                    tagsets?:
+                      | Array<{
+                          __typename: "Tagset";
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          allowedValues: Array<string>;
+                          type: SchemaTypes.TagsetType;
+                        }>
+                      | undefined;
+                    location?:
+                      | {
+                          __typename: "Location";
+                          id: string;
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                  };
+                }
+              | undefined;
           }>;
           authorization?:
             | {
@@ -28420,8 +31626,6 @@ export type SubspaceL1DataFragment = {
         nameID: string;
         publishedDate?: number | undefined;
         sortOrder: number;
-        type: SchemaTypes.CalloutType;
-        visibility: SchemaTypes.CalloutVisibility;
         authorization?:
           | {
               myPrivileges?:
@@ -28436,11 +31640,6 @@ export type SubspaceL1DataFragment = {
               messages: Array<{ message: any }>;
             }
           | undefined;
-        contributionPolicy: {
-          allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
-          id: string;
-          state: SchemaTypes.CalloutState;
-        };
         contributions: Array<{
           authorization?:
             | {
@@ -28800,7 +31999,6 @@ export type SubspaceL1DataFragment = {
           };
           whiteboard?:
             | {
-                id: string;
                 nameID: string;
                 profile: {
                   id: string;
@@ -28884,6 +32082,15 @@ export type SubspaceL1DataFragment = {
             | undefined;
         };
         publishedBy?: { email: string } | undefined;
+        settings: {
+          visibility: SchemaTypes.CalloutVisibility;
+          framing: { commentsEnabled: boolean };
+          contribution: {
+            enabled: boolean;
+            canAddContributions: SchemaTypes.CalloutAllowedContributors;
+            commentsEnabled: boolean;
+          };
+        };
       }>;
     };
     authorization?:
@@ -28965,8 +32172,10 @@ export type SubspaceL1DataFragment = {
               | undefined;
           }
         | undefined;
-      currentState: { description: any; displayName: string };
-      states: Array<{ description: any; displayName: string }>;
+      currentState?:
+        | { description?: any | undefined; displayName: string }
+        | undefined;
+      states: Array<{ description?: any | undefined; displayName: string }>;
     };
   };
   authorization?:
@@ -30977,15 +34186,115 @@ export type SubspaceL1DataFragment = {
       updates: {
         id: string;
         messages: Array<{
+          __typename: "Message";
           id: any;
           message: any;
           threadID?: string | undefined;
-          sender?: { id: string } | {} | undefined;
           reactions: Array<{
+            __typename: "Reaction";
             id: any;
             emoji: any;
-            sender?: { email: string } | undefined;
+            sender?:
+              | {
+                  __typename: "User";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                  };
+                }
+              | undefined;
           }>;
+          sender?:
+            | {
+                __typename: "Organization";
+                id: string;
+                profile: {
+                  __typename: "Profile";
+                  id: string;
+                  displayName: string;
+                  url: string;
+                  description?: any | undefined;
+                  tagsets?:
+                    | Array<{
+                        __typename: "Tagset";
+                        id: string;
+                        name: string;
+                        tags: Array<string>;
+                        allowedValues: Array<string>;
+                        type: SchemaTypes.TagsetType;
+                      }>
+                    | undefined;
+                  location?:
+                    | {
+                        __typename: "Location";
+                        id: string;
+                        country?: string | undefined;
+                        city?: string | undefined;
+                      }
+                    | undefined;
+                };
+              }
+            | {
+                __typename: "User";
+                id: string;
+                profile: {
+                  __typename: "Profile";
+                  id: string;
+                  displayName: string;
+                  url: string;
+                  description?: any | undefined;
+                  tagsets?:
+                    | Array<{
+                        __typename: "Tagset";
+                        id: string;
+                        name: string;
+                        tags: Array<string>;
+                        allowedValues: Array<string>;
+                        type: SchemaTypes.TagsetType;
+                      }>
+                    | undefined;
+                  location?:
+                    | {
+                        __typename: "Location";
+                        id: string;
+                        country?: string | undefined;
+                        city?: string | undefined;
+                      }
+                    | undefined;
+                };
+              }
+            | {
+                __typename: "VirtualContributor";
+                id: string;
+                profile: {
+                  __typename: "Profile";
+                  id: string;
+                  displayName: string;
+                  url: string;
+                  description?: any | undefined;
+                  tagsets?:
+                    | Array<{
+                        __typename: "Tagset";
+                        id: string;
+                        name: string;
+                        tags: Array<string>;
+                        allowedValues: Array<string>;
+                        type: SchemaTypes.TagsetType;
+                      }>
+                    | undefined;
+                  location?:
+                    | {
+                        __typename: "Location";
+                        id: string;
+                        country?: string | undefined;
+                        city?: string | undefined;
+                      }
+                    | undefined;
+                };
+              }
+            | undefined;
         }>;
         authorization?:
           | {
@@ -31106,8 +34415,6 @@ export type SubspaceL2DataFragment = {
           nameID: string;
           publishedDate?: number | undefined;
           sortOrder: number;
-          type: SchemaTypes.CalloutType;
-          visibility: SchemaTypes.CalloutVisibility;
           authorization?:
             | {
                 myPrivileges?:
@@ -31122,11 +34429,6 @@ export type SubspaceL2DataFragment = {
                 messages: Array<{ message: any }>;
               }
             | undefined;
-          contributionPolicy: {
-            allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
-            id: string;
-            state: SchemaTypes.CalloutState;
-          };
           contributions: Array<{
             authorization?:
               | {
@@ -31486,7 +34788,6 @@ export type SubspaceL2DataFragment = {
             };
             whiteboard?:
               | {
-                  id: string;
                   nameID: string;
                   profile: {
                     id: string;
@@ -31570,6 +34871,15 @@ export type SubspaceL2DataFragment = {
               | undefined;
           };
           publishedBy?: { email: string } | undefined;
+          settings: {
+            visibility: SchemaTypes.CalloutVisibility;
+            framing: { commentsEnabled: boolean };
+            contribution: {
+              enabled: boolean;
+              canAddContributions: SchemaTypes.CalloutAllowedContributors;
+              commentsEnabled: boolean;
+            };
+          };
         }>;
       };
       authorization?:
@@ -31655,8 +34965,10 @@ export type SubspaceL2DataFragment = {
                 | undefined;
             }
           | undefined;
-        currentState: { description: any; displayName: string };
-        states: Array<{ description: any; displayName: string }>;
+        currentState?:
+          | { description?: any | undefined; displayName: string }
+          | undefined;
+        states: Array<{ description?: any | undefined; displayName: string }>;
       };
     };
     authorization?:
@@ -33692,15 +37004,115 @@ export type SubspaceL2DataFragment = {
         updates: {
           id: string;
           messages: Array<{
+            __typename: "Message";
             id: any;
             message: any;
             threadID?: string | undefined;
-            sender?: { id: string } | {} | undefined;
             reactions: Array<{
+              __typename: "Reaction";
               id: any;
               emoji: any;
-              sender?: { email: string } | undefined;
+              sender?:
+                | {
+                    __typename: "User";
+                    id: string;
+                    profile: {
+                      __typename: "Profile";
+                      id: string;
+                      displayName: string;
+                    };
+                  }
+                | undefined;
             }>;
+            sender?:
+              | {
+                  __typename: "Organization";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                    description?: any | undefined;
+                    tagsets?:
+                      | Array<{
+                          __typename: "Tagset";
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          allowedValues: Array<string>;
+                          type: SchemaTypes.TagsetType;
+                        }>
+                      | undefined;
+                    location?:
+                      | {
+                          __typename: "Location";
+                          id: string;
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                  };
+                }
+              | {
+                  __typename: "User";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                    description?: any | undefined;
+                    tagsets?:
+                      | Array<{
+                          __typename: "Tagset";
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          allowedValues: Array<string>;
+                          type: SchemaTypes.TagsetType;
+                        }>
+                      | undefined;
+                    location?:
+                      | {
+                          __typename: "Location";
+                          id: string;
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                  };
+                }
+              | {
+                  __typename: "VirtualContributor";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                    description?: any | undefined;
+                    tagsets?:
+                      | Array<{
+                          __typename: "Tagset";
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          allowedValues: Array<string>;
+                          type: SchemaTypes.TagsetType;
+                        }>
+                      | undefined;
+                    location?:
+                      | {
+                          __typename: "Location";
+                          id: string;
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                  };
+                }
+              | undefined;
           }>;
           authorization?:
             | {
@@ -33810,8 +37222,6 @@ export type SubspaceL2DataFragment = {
         nameID: string;
         publishedDate?: number | undefined;
         sortOrder: number;
-        type: SchemaTypes.CalloutType;
-        visibility: SchemaTypes.CalloutVisibility;
         authorization?:
           | {
               myPrivileges?:
@@ -33826,11 +37236,6 @@ export type SubspaceL2DataFragment = {
               messages: Array<{ message: any }>;
             }
           | undefined;
-        contributionPolicy: {
-          allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
-          id: string;
-          state: SchemaTypes.CalloutState;
-        };
         contributions: Array<{
           authorization?:
             | {
@@ -34190,7 +37595,6 @@ export type SubspaceL2DataFragment = {
           };
           whiteboard?:
             | {
-                id: string;
                 nameID: string;
                 profile: {
                   id: string;
@@ -34274,6 +37678,15 @@ export type SubspaceL2DataFragment = {
             | undefined;
         };
         publishedBy?: { email: string } | undefined;
+        settings: {
+          visibility: SchemaTypes.CalloutVisibility;
+          framing: { commentsEnabled: boolean };
+          contribution: {
+            enabled: boolean;
+            canAddContributions: SchemaTypes.CalloutAllowedContributors;
+            commentsEnabled: boolean;
+          };
+        };
       }>;
     };
     authorization?:
@@ -34355,8 +37768,10 @@ export type SubspaceL2DataFragment = {
               | undefined;
           }
         | undefined;
-      currentState: { description: any; displayName: string };
-      states: Array<{ description: any; displayName: string }>;
+      currentState?:
+        | { description?: any | undefined; displayName: string }
+        | undefined;
+      states: Array<{ description?: any | undefined; displayName: string }>;
     };
   };
   authorization?:
@@ -36367,15 +39782,115 @@ export type SubspaceL2DataFragment = {
       updates: {
         id: string;
         messages: Array<{
+          __typename: "Message";
           id: any;
           message: any;
           threadID?: string | undefined;
-          sender?: { id: string } | {} | undefined;
           reactions: Array<{
+            __typename: "Reaction";
             id: any;
             emoji: any;
-            sender?: { email: string } | undefined;
+            sender?:
+              | {
+                  __typename: "User";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                  };
+                }
+              | undefined;
           }>;
+          sender?:
+            | {
+                __typename: "Organization";
+                id: string;
+                profile: {
+                  __typename: "Profile";
+                  id: string;
+                  displayName: string;
+                  url: string;
+                  description?: any | undefined;
+                  tagsets?:
+                    | Array<{
+                        __typename: "Tagset";
+                        id: string;
+                        name: string;
+                        tags: Array<string>;
+                        allowedValues: Array<string>;
+                        type: SchemaTypes.TagsetType;
+                      }>
+                    | undefined;
+                  location?:
+                    | {
+                        __typename: "Location";
+                        id: string;
+                        country?: string | undefined;
+                        city?: string | undefined;
+                      }
+                    | undefined;
+                };
+              }
+            | {
+                __typename: "User";
+                id: string;
+                profile: {
+                  __typename: "Profile";
+                  id: string;
+                  displayName: string;
+                  url: string;
+                  description?: any | undefined;
+                  tagsets?:
+                    | Array<{
+                        __typename: "Tagset";
+                        id: string;
+                        name: string;
+                        tags: Array<string>;
+                        allowedValues: Array<string>;
+                        type: SchemaTypes.TagsetType;
+                      }>
+                    | undefined;
+                  location?:
+                    | {
+                        __typename: "Location";
+                        id: string;
+                        country?: string | undefined;
+                        city?: string | undefined;
+                      }
+                    | undefined;
+                };
+              }
+            | {
+                __typename: "VirtualContributor";
+                id: string;
+                profile: {
+                  __typename: "Profile";
+                  id: string;
+                  displayName: string;
+                  url: string;
+                  description?: any | undefined;
+                  tagsets?:
+                    | Array<{
+                        __typename: "Tagset";
+                        id: string;
+                        name: string;
+                        tags: Array<string>;
+                        allowedValues: Array<string>;
+                        type: SchemaTypes.TagsetType;
+                      }>
+                    | undefined;
+                  location?:
+                    | {
+                        __typename: "Location";
+                        id: string;
+                        country?: string | undefined;
+                        city?: string | undefined;
+                      }
+                    | undefined;
+                };
+              }
+            | undefined;
         }>;
         authorization?:
           | {
@@ -38809,15 +42324,115 @@ export type SpaceDataFragment = {
       updates: {
         id: string;
         messages: Array<{
+          __typename: "Message";
           id: any;
           message: any;
           threadID?: string | undefined;
-          sender?: { id: string } | {} | undefined;
           reactions: Array<{
+            __typename: "Reaction";
             id: any;
             emoji: any;
-            sender?: { email: string } | undefined;
+            sender?:
+              | {
+                  __typename: "User";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                  };
+                }
+              | undefined;
           }>;
+          sender?:
+            | {
+                __typename: "Organization";
+                id: string;
+                profile: {
+                  __typename: "Profile";
+                  id: string;
+                  displayName: string;
+                  url: string;
+                  description?: any | undefined;
+                  tagsets?:
+                    | Array<{
+                        __typename: "Tagset";
+                        id: string;
+                        name: string;
+                        tags: Array<string>;
+                        allowedValues: Array<string>;
+                        type: SchemaTypes.TagsetType;
+                      }>
+                    | undefined;
+                  location?:
+                    | {
+                        __typename: "Location";
+                        id: string;
+                        country?: string | undefined;
+                        city?: string | undefined;
+                      }
+                    | undefined;
+                };
+              }
+            | {
+                __typename: "User";
+                id: string;
+                profile: {
+                  __typename: "Profile";
+                  id: string;
+                  displayName: string;
+                  url: string;
+                  description?: any | undefined;
+                  tagsets?:
+                    | Array<{
+                        __typename: "Tagset";
+                        id: string;
+                        name: string;
+                        tags: Array<string>;
+                        allowedValues: Array<string>;
+                        type: SchemaTypes.TagsetType;
+                      }>
+                    | undefined;
+                  location?:
+                    | {
+                        __typename: "Location";
+                        id: string;
+                        country?: string | undefined;
+                        city?: string | undefined;
+                      }
+                    | undefined;
+                };
+              }
+            | {
+                __typename: "VirtualContributor";
+                id: string;
+                profile: {
+                  __typename: "Profile";
+                  id: string;
+                  displayName: string;
+                  url: string;
+                  description?: any | undefined;
+                  tagsets?:
+                    | Array<{
+                        __typename: "Tagset";
+                        id: string;
+                        name: string;
+                        tags: Array<string>;
+                        allowedValues: Array<string>;
+                        type: SchemaTypes.TagsetType;
+                      }>
+                    | undefined;
+                  location?:
+                    | {
+                        __typename: "Location";
+                        id: string;
+                        country?: string | undefined;
+                        city?: string | undefined;
+                      }
+                    | undefined;
+                };
+              }
+            | undefined;
         }>;
         authorization?:
           | {
@@ -38846,8 +42461,6 @@ export type SpaceDataFragment = {
         nameID: string;
         publishedDate?: number | undefined;
         sortOrder: number;
-        type: SchemaTypes.CalloutType;
-        visibility: SchemaTypes.CalloutVisibility;
         authorization?:
           | {
               myPrivileges?:
@@ -38862,11 +42475,6 @@ export type SpaceDataFragment = {
               messages: Array<{ message: any }>;
             }
           | undefined;
-        contributionPolicy: {
-          allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
-          id: string;
-          state: SchemaTypes.CalloutState;
-        };
         contributions: Array<{
           authorization?:
             | {
@@ -39226,7 +42834,6 @@ export type SpaceDataFragment = {
           };
           whiteboard?:
             | {
-                id: string;
                 nameID: string;
                 profile: {
                   id: string;
@@ -39310,6 +42917,15 @@ export type SpaceDataFragment = {
             | undefined;
         };
         publishedBy?: { email: string } | undefined;
+        settings: {
+          visibility: SchemaTypes.CalloutVisibility;
+          framing: { commentsEnabled: boolean };
+          contribution: {
+            enabled: boolean;
+            canAddContributions: SchemaTypes.CalloutAllowedContributors;
+            commentsEnabled: boolean;
+          };
+        };
       }>;
     };
     authorization?:
@@ -39391,8 +43007,10 @@ export type SpaceDataFragment = {
               | undefined;
           }
         | undefined;
-      currentState: { description: any; displayName: string };
-      states: Array<{ description: any; displayName: string }>;
+      currentState?:
+        | { description?: any | undefined; displayName: string }
+        | undefined;
+      states: Array<{ description?: any | undefined; displayName: string }>;
     };
   };
   subspaces: Array<{
@@ -39492,8 +43110,6 @@ export type SpaceDataFragment = {
           nameID: string;
           publishedDate?: number | undefined;
           sortOrder: number;
-          type: SchemaTypes.CalloutType;
-          visibility: SchemaTypes.CalloutVisibility;
           authorization?:
             | {
                 myPrivileges?:
@@ -39508,11 +43124,6 @@ export type SpaceDataFragment = {
                 messages: Array<{ message: any }>;
               }
             | undefined;
-          contributionPolicy: {
-            allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
-            id: string;
-            state: SchemaTypes.CalloutState;
-          };
           contributions: Array<{
             authorization?:
               | {
@@ -39872,7 +43483,6 @@ export type SpaceDataFragment = {
             };
             whiteboard?:
               | {
-                  id: string;
                   nameID: string;
                   profile: {
                     id: string;
@@ -39956,6 +43566,15 @@ export type SpaceDataFragment = {
               | undefined;
           };
           publishedBy?: { email: string } | undefined;
+          settings: {
+            visibility: SchemaTypes.CalloutVisibility;
+            framing: { commentsEnabled: boolean };
+            contribution: {
+              enabled: boolean;
+              canAddContributions: SchemaTypes.CalloutAllowedContributors;
+              commentsEnabled: boolean;
+            };
+          };
         }>;
       };
       authorization?:
@@ -40041,8 +43660,10 @@ export type SpaceDataFragment = {
                 | undefined;
             }
           | undefined;
-        currentState: { description: any; displayName: string };
-        states: Array<{ description: any; displayName: string }>;
+        currentState?:
+          | { description?: any | undefined; displayName: string }
+          | undefined;
+        states: Array<{ description?: any | undefined; displayName: string }>;
       };
     };
     authorization?:
@@ -42078,15 +45699,115 @@ export type SpaceDataFragment = {
         updates: {
           id: string;
           messages: Array<{
+            __typename: "Message";
             id: any;
             message: any;
             threadID?: string | undefined;
-            sender?: { id: string } | {} | undefined;
             reactions: Array<{
+              __typename: "Reaction";
               id: any;
               emoji: any;
-              sender?: { email: string } | undefined;
+              sender?:
+                | {
+                    __typename: "User";
+                    id: string;
+                    profile: {
+                      __typename: "Profile";
+                      id: string;
+                      displayName: string;
+                    };
+                  }
+                | undefined;
             }>;
+            sender?:
+              | {
+                  __typename: "Organization";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                    description?: any | undefined;
+                    tagsets?:
+                      | Array<{
+                          __typename: "Tagset";
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          allowedValues: Array<string>;
+                          type: SchemaTypes.TagsetType;
+                        }>
+                      | undefined;
+                    location?:
+                      | {
+                          __typename: "Location";
+                          id: string;
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                  };
+                }
+              | {
+                  __typename: "User";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                    description?: any | undefined;
+                    tagsets?:
+                      | Array<{
+                          __typename: "Tagset";
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          allowedValues: Array<string>;
+                          type: SchemaTypes.TagsetType;
+                        }>
+                      | undefined;
+                    location?:
+                      | {
+                          __typename: "Location";
+                          id: string;
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                  };
+                }
+              | {
+                  __typename: "VirtualContributor";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                    description?: any | undefined;
+                    tagsets?:
+                      | Array<{
+                          __typename: "Tagset";
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          allowedValues: Array<string>;
+                          type: SchemaTypes.TagsetType;
+                        }>
+                      | undefined;
+                    location?:
+                      | {
+                          __typename: "Location";
+                          id: string;
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                  };
+                }
+              | undefined;
           }>;
           authorization?:
             | {
@@ -42623,7 +46344,6 @@ export type SpaceDataFragment = {
                 callout?:
                   | {
                       id: string;
-                      type: SchemaTypes.CalloutType;
                       framing: {
                         profile: {
                           id: string;
@@ -42809,8 +46529,6 @@ export type SubspaceDataFragment = {
         nameID: string;
         publishedDate?: number | undefined;
         sortOrder: number;
-        type: SchemaTypes.CalloutType;
-        visibility: SchemaTypes.CalloutVisibility;
         authorization?:
           | {
               myPrivileges?:
@@ -42825,11 +46543,6 @@ export type SubspaceDataFragment = {
               messages: Array<{ message: any }>;
             }
           | undefined;
-        contributionPolicy: {
-          allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
-          id: string;
-          state: SchemaTypes.CalloutState;
-        };
         contributions: Array<{
           authorization?:
             | {
@@ -43189,7 +46902,6 @@ export type SubspaceDataFragment = {
           };
           whiteboard?:
             | {
-                id: string;
                 nameID: string;
                 profile: {
                   id: string;
@@ -43273,6 +46985,15 @@ export type SubspaceDataFragment = {
             | undefined;
         };
         publishedBy?: { email: string } | undefined;
+        settings: {
+          visibility: SchemaTypes.CalloutVisibility;
+          framing: { commentsEnabled: boolean };
+          contribution: {
+            enabled: boolean;
+            canAddContributions: SchemaTypes.CalloutAllowedContributors;
+            commentsEnabled: boolean;
+          };
+        };
       }>;
     };
     authorization?:
@@ -43354,8 +47075,10 @@ export type SubspaceDataFragment = {
               | undefined;
           }
         | undefined;
-      currentState: { description: any; displayName: string };
-      states: Array<{ description: any; displayName: string }>;
+      currentState?:
+        | { description?: any | undefined; displayName: string }
+        | undefined;
+      states: Array<{ description?: any | undefined; displayName: string }>;
     };
   };
   authorization?:
@@ -45366,15 +49089,115 @@ export type SubspaceDataFragment = {
       updates: {
         id: string;
         messages: Array<{
+          __typename: "Message";
           id: any;
           message: any;
           threadID?: string | undefined;
-          sender?: { id: string } | {} | undefined;
           reactions: Array<{
+            __typename: "Reaction";
             id: any;
             emoji: any;
-            sender?: { email: string } | undefined;
+            sender?:
+              | {
+                  __typename: "User";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                  };
+                }
+              | undefined;
           }>;
+          sender?:
+            | {
+                __typename: "Organization";
+                id: string;
+                profile: {
+                  __typename: "Profile";
+                  id: string;
+                  displayName: string;
+                  url: string;
+                  description?: any | undefined;
+                  tagsets?:
+                    | Array<{
+                        __typename: "Tagset";
+                        id: string;
+                        name: string;
+                        tags: Array<string>;
+                        allowedValues: Array<string>;
+                        type: SchemaTypes.TagsetType;
+                      }>
+                    | undefined;
+                  location?:
+                    | {
+                        __typename: "Location";
+                        id: string;
+                        country?: string | undefined;
+                        city?: string | undefined;
+                      }
+                    | undefined;
+                };
+              }
+            | {
+                __typename: "User";
+                id: string;
+                profile: {
+                  __typename: "Profile";
+                  id: string;
+                  displayName: string;
+                  url: string;
+                  description?: any | undefined;
+                  tagsets?:
+                    | Array<{
+                        __typename: "Tagset";
+                        id: string;
+                        name: string;
+                        tags: Array<string>;
+                        allowedValues: Array<string>;
+                        type: SchemaTypes.TagsetType;
+                      }>
+                    | undefined;
+                  location?:
+                    | {
+                        __typename: "Location";
+                        id: string;
+                        country?: string | undefined;
+                        city?: string | undefined;
+                      }
+                    | undefined;
+                };
+              }
+            | {
+                __typename: "VirtualContributor";
+                id: string;
+                profile: {
+                  __typename: "Profile";
+                  id: string;
+                  displayName: string;
+                  url: string;
+                  description?: any | undefined;
+                  tagsets?:
+                    | Array<{
+                        __typename: "Tagset";
+                        id: string;
+                        name: string;
+                        tags: Array<string>;
+                        allowedValues: Array<string>;
+                        type: SchemaTypes.TagsetType;
+                      }>
+                    | undefined;
+                  location?:
+                    | {
+                        __typename: "Location";
+                        id: string;
+                        country?: string | undefined;
+                        city?: string | undefined;
+                      }
+                    | undefined;
+                };
+              }
+            | undefined;
         }>;
         authorization?:
           | {
@@ -45402,6 +49225,15 @@ export type TagsetDataFragment = {
   authorization?:
     | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
     | undefined;
+};
+
+export type TagsetDetailsFragment = {
+  __typename: "Tagset";
+  id: string;
+  name: string;
+  tags: Array<string>;
+  allowedValues: Array<string>;
+  type: SchemaTypes.TagsetType;
 };
 
 export type TemplateProfileDataFragment = {
@@ -45952,7 +49784,6 @@ export type TemplatesManagerDataFragment = {
           callout?:
             | {
                 id: string;
-                type: SchemaTypes.CalloutType;
                 framing: {
                   profile: {
                     id: string;
@@ -46044,7 +49875,6 @@ export type CalloutTemplateDataFragment = {
   callout?:
     | {
         id: string;
-        type: SchemaTypes.CalloutType;
         framing: {
           profile: {
             id: string;
@@ -46582,7 +50412,6 @@ export type TemplatesSetDataFragment = {
     callout?:
       | {
           id: string;
-          type: SchemaTypes.CalloutType;
           framing: {
             profile: {
               id: string;
@@ -47045,23 +50874,169 @@ export type UserDataFragment = {
       | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
       | undefined;
   };
-  preferences: Array<{
-    id: string;
-    value: string;
-    definition: {
-      type: SchemaTypes.PreferenceType;
-      id: string;
-      displayName: string;
-      description: string;
-      group: string;
-    };
-    authorization?:
-      | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
-      | undefined;
-  }>;
   settings: {
-    privacy: { contributionRolesPubliclyVisible: boolean };
-    communication: { allowOtherUsersToSendMessages: boolean };
+    __typename: "UserSettings";
+    id: string;
+    communication: {
+      __typename: "UserSettingsCommunication";
+      allowOtherUsersToSendMessages: boolean;
+    };
+    privacy: {
+      __typename: "UserSettingsPrivacy";
+      contributionRolesPubliclyVisible: boolean;
+    };
+    notification: {
+      __typename: "UserSettingsNotification";
+      platform: {
+        __typename: "UserSettingsNotificationPlatform";
+        admin: {
+          __typename: "UserSettingsNotificationPlatformAdmin";
+          userProfileRemoved: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          userProfileCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          spaceCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          userGlobalRoleChanged: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        forumDiscussionComment: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+        };
+        forumDiscussionCreated: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+        };
+      };
+      organization: {
+        __typename: "UserSettingsNotificationOrganization";
+        adminMentioned: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+        };
+        adminMessageReceived: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+        };
+      };
+      space: {
+        __typename: "UserSettingsNotificationSpace";
+        admin: {
+          __typename: "UserSettingsNotificationSpaceAdmin";
+          communityApplicationReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          collaborationCalloutContributionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          communityNewMember: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          communicationMessageReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        collaborationCalloutContributionCreated: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+        };
+        communicationUpdates: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+        };
+        collaborationCalloutPublished: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+        };
+        collaborationCalloutComment: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+        };
+        collaborationCalloutPostContributionComment: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+        };
+      };
+      user: {
+        __typename: "UserSettingsNotificationUser";
+        membership: {
+          __typename: "UserSettingsNotificationUserMembership";
+          spaceCommunityInvitationReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          spaceCommunityJoined: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          spaceCommunityApplicationSubmitted: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        mentioned: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+        };
+        commentReply: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+        };
+        messageReceived: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+        };
+        copyOfMessageSent: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+        };
+      };
+      virtualContributor: {
+        __typename: "UserSettingsNotificationVirtualContributor";
+        adminSpaceCommunityInvitation: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+        };
+      };
+    };
   };
   authorization?:
     | {
@@ -47081,6 +51056,171 @@ export type UserDataLightFragment = {
   authorization?:
     | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
     | undefined;
+};
+
+export type UserSettingsFragmentFragment = {
+  __typename: "UserSettings";
+  id: string;
+  communication: {
+    __typename: "UserSettingsCommunication";
+    allowOtherUsersToSendMessages: boolean;
+  };
+  privacy: {
+    __typename: "UserSettingsPrivacy";
+    contributionRolesPubliclyVisible: boolean;
+  };
+  notification: {
+    __typename: "UserSettingsNotification";
+    platform: {
+      __typename: "UserSettingsNotificationPlatform";
+      admin: {
+        __typename: "UserSettingsNotificationPlatformAdmin";
+        userProfileRemoved: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+        };
+        userProfileCreated: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+        };
+        spaceCreated: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+        };
+        userGlobalRoleChanged: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+        };
+      };
+      forumDiscussionComment: {
+        __typename: "UserSettingsNotificationChannels";
+        email: boolean;
+        inApp: boolean;
+      };
+      forumDiscussionCreated: {
+        __typename: "UserSettingsNotificationChannels";
+        email: boolean;
+        inApp: boolean;
+      };
+    };
+    organization: {
+      __typename: "UserSettingsNotificationOrganization";
+      adminMentioned: {
+        __typename: "UserSettingsNotificationChannels";
+        email: boolean;
+        inApp: boolean;
+      };
+      adminMessageReceived: {
+        __typename: "UserSettingsNotificationChannels";
+        email: boolean;
+        inApp: boolean;
+      };
+    };
+    space: {
+      __typename: "UserSettingsNotificationSpace";
+      admin: {
+        __typename: "UserSettingsNotificationSpaceAdmin";
+        communityApplicationReceived: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+        };
+        collaborationCalloutContributionCreated: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+        };
+        communityNewMember: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+        };
+        communicationMessageReceived: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+        };
+      };
+      collaborationCalloutContributionCreated: {
+        __typename: "UserSettingsNotificationChannels";
+        email: boolean;
+        inApp: boolean;
+      };
+      communicationUpdates: {
+        __typename: "UserSettingsNotificationChannels";
+        email: boolean;
+        inApp: boolean;
+      };
+      collaborationCalloutPublished: {
+        __typename: "UserSettingsNotificationChannels";
+        email: boolean;
+        inApp: boolean;
+      };
+      collaborationCalloutComment: {
+        __typename: "UserSettingsNotificationChannels";
+        email: boolean;
+        inApp: boolean;
+      };
+      collaborationCalloutPostContributionComment: {
+        __typename: "UserSettingsNotificationChannels";
+        email: boolean;
+        inApp: boolean;
+      };
+    };
+    user: {
+      __typename: "UserSettingsNotificationUser";
+      membership: {
+        __typename: "UserSettingsNotificationUserMembership";
+        spaceCommunityInvitationReceived: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+        };
+        spaceCommunityJoined: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+        };
+        spaceCommunityApplicationSubmitted: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+        };
+      };
+      mentioned: {
+        __typename: "UserSettingsNotificationChannels";
+        email: boolean;
+        inApp: boolean;
+      };
+      commentReply: {
+        __typename: "UserSettingsNotificationChannels";
+        email: boolean;
+        inApp: boolean;
+      };
+      messageReceived: {
+        __typename: "UserSettingsNotificationChannels";
+        email: boolean;
+        inApp: boolean;
+      };
+      copyOfMessageSent: {
+        __typename: "UserSettingsNotificationChannels";
+        email: boolean;
+        inApp: boolean;
+      };
+    };
+    virtualContributor: {
+      __typename: "UserSettingsNotificationVirtualContributor";
+      adminSpaceCommunityInvitation: {
+        __typename: "UserSettingsNotificationChannels";
+        email: boolean;
+        inApp: boolean;
+      };
+    };
+  };
 };
 
 export type VisualUriFragment = {
@@ -47957,27 +52097,169 @@ export type AssignRoleToUserMutation = {
           }
         | undefined;
     };
-    preferences: Array<{
-      id: string;
-      value: string;
-      definition: {
-        type: SchemaTypes.PreferenceType;
-        id: string;
-        displayName: string;
-        description: string;
-        group: string;
-      };
-      authorization?:
-        | {
-            myPrivileges?:
-              | Array<SchemaTypes.AuthorizationPrivilege>
-              | undefined;
-          }
-        | undefined;
-    }>;
     settings: {
-      privacy: { contributionRolesPubliclyVisible: boolean };
-      communication: { allowOtherUsersToSendMessages: boolean };
+      __typename: "UserSettings";
+      id: string;
+      communication: {
+        __typename: "UserSettingsCommunication";
+        allowOtherUsersToSendMessages: boolean;
+      };
+      privacy: {
+        __typename: "UserSettingsPrivacy";
+        contributionRolesPubliclyVisible: boolean;
+      };
+      notification: {
+        __typename: "UserSettingsNotification";
+        platform: {
+          __typename: "UserSettingsNotificationPlatform";
+          admin: {
+            __typename: "UserSettingsNotificationPlatformAdmin";
+            userProfileRemoved: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            userProfileCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            spaceCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            userGlobalRoleChanged: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          forumDiscussionComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          forumDiscussionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        organization: {
+          __typename: "UserSettingsNotificationOrganization";
+          adminMentioned: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          adminMessageReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        space: {
+          __typename: "UserSettingsNotificationSpace";
+          admin: {
+            __typename: "UserSettingsNotificationSpaceAdmin";
+            communityApplicationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            communityNewMember: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            communicationMessageReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          collaborationCalloutContributionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          communicationUpdates: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          collaborationCalloutPublished: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          collaborationCalloutComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          collaborationCalloutPostContributionComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        user: {
+          __typename: "UserSettingsNotificationUser";
+          membership: {
+            __typename: "UserSettingsNotificationUserMembership";
+            spaceCommunityInvitationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            spaceCommunityJoined: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            spaceCommunityApplicationSubmitted: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          mentioned: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          commentReply: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          messageReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          copyOfMessageSent: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        virtualContributor: {
+          __typename: "UserSettingsNotificationVirtualContributor";
+          adminSpaceCommunityInvitation: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+      };
     };
     authorization?:
       | {
@@ -48314,27 +52596,169 @@ export type AssignRoleToUserExtendedDataMutation = {
           }
         | undefined;
     };
-    preferences: Array<{
-      id: string;
-      value: string;
-      definition: {
-        type: SchemaTypes.PreferenceType;
-        id: string;
-        displayName: string;
-        description: string;
-        group: string;
-      };
-      authorization?:
-        | {
-            myPrivileges?:
-              | Array<SchemaTypes.AuthorizationPrivilege>
-              | undefined;
-          }
-        | undefined;
-    }>;
     settings: {
-      privacy: { contributionRolesPubliclyVisible: boolean };
-      communication: { allowOtherUsersToSendMessages: boolean };
+      __typename: "UserSettings";
+      id: string;
+      communication: {
+        __typename: "UserSettingsCommunication";
+        allowOtherUsersToSendMessages: boolean;
+      };
+      privacy: {
+        __typename: "UserSettingsPrivacy";
+        contributionRolesPubliclyVisible: boolean;
+      };
+      notification: {
+        __typename: "UserSettingsNotification";
+        platform: {
+          __typename: "UserSettingsNotificationPlatform";
+          admin: {
+            __typename: "UserSettingsNotificationPlatformAdmin";
+            userProfileRemoved: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            userProfileCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            spaceCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            userGlobalRoleChanged: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          forumDiscussionComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          forumDiscussionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        organization: {
+          __typename: "UserSettingsNotificationOrganization";
+          adminMentioned: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          adminMessageReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        space: {
+          __typename: "UserSettingsNotificationSpace";
+          admin: {
+            __typename: "UserSettingsNotificationSpaceAdmin";
+            communityApplicationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            communityNewMember: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            communicationMessageReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          collaborationCalloutContributionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          communicationUpdates: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          collaborationCalloutPublished: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          collaborationCalloutComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          collaborationCalloutPostContributionComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        user: {
+          __typename: "UserSettingsNotificationUser";
+          membership: {
+            __typename: "UserSettingsNotificationUserMembership";
+            spaceCommunityInvitationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            spaceCommunityJoined: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            spaceCommunityApplicationSubmitted: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          mentioned: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          commentReply: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          messageReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          copyOfMessageSent: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        virtualContributor: {
+          __typename: "UserSettingsNotificationVirtualContributor";
+          adminSpaceCommunityInvitation: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+      };
     };
     authorization?:
       | {
@@ -48490,7 +52914,7 @@ export type InvitationStateEventMutation = {
 
 export type InviteForEntryRoleOnRoleSetMutationVariables = SchemaTypes.Exact<{
   roleSetId: SchemaTypes.Scalars["UUID"]["input"];
-  invitedContributorIDs:
+  invitedContributorIds:
     | Array<SchemaTypes.Scalars["UUID"]["input"]>
     | SchemaTypes.Scalars["UUID"]["input"];
   invitedUserEmails:
@@ -48499,14 +52923,57 @@ export type InviteForEntryRoleOnRoleSetMutationVariables = SchemaTypes.Exact<{
   welcomeMessage?: SchemaTypes.InputMaybe<
     SchemaTypes.Scalars["String"]["input"]
   >;
+  extraRoles: Array<SchemaTypes.RoleName> | SchemaTypes.RoleName;
 }>;
 
 export type InviteForEntryRoleOnRoleSetMutation = {
   inviteForEntryRoleOnRoleSet: Array<{
     __typename: "RoleSetInvitationResult";
     type: SchemaTypes.RoleSetInvitationResultType;
-    invitation?: { id: string; state: string } | undefined;
-    platformInvitation?: { id: string } | undefined;
+    invitation?:
+      | {
+          __typename: "Invitation";
+          id: string;
+          state: string;
+          contributor:
+            | {
+                __typename: "Organization";
+                id: string;
+                profile: {
+                  __typename: "Profile";
+                  id: string;
+                  displayName: string;
+                };
+              }
+            | {
+                __typename: "User";
+                id: string;
+                profile: {
+                  __typename: "Profile";
+                  id: string;
+                  displayName: string;
+                };
+              }
+            | {
+                __typename: "VirtualContributor";
+                id: string;
+                profile: {
+                  __typename: "Profile";
+                  id: string;
+                  displayName: string;
+                };
+              };
+        }
+      | undefined;
+    platformInvitation?:
+      | {
+          __typename: "PlatformInvitation";
+          id: string;
+          email: string;
+          firstName?: string | undefined;
+          lastName?: string | undefined;
+        }
+      | undefined;
   }>;
 };
 
@@ -49383,27 +53850,169 @@ export type RemoveRoleFromUserMutation = {
           }
         | undefined;
     };
-    preferences: Array<{
-      id: string;
-      value: string;
-      definition: {
-        type: SchemaTypes.PreferenceType;
-        id: string;
-        displayName: string;
-        description: string;
-        group: string;
-      };
-      authorization?:
-        | {
-            myPrivileges?:
-              | Array<SchemaTypes.AuthorizationPrivilege>
-              | undefined;
-          }
-        | undefined;
-    }>;
     settings: {
-      privacy: { contributionRolesPubliclyVisible: boolean };
-      communication: { allowOtherUsersToSendMessages: boolean };
+      __typename: "UserSettings";
+      id: string;
+      communication: {
+        __typename: "UserSettingsCommunication";
+        allowOtherUsersToSendMessages: boolean;
+      };
+      privacy: {
+        __typename: "UserSettingsPrivacy";
+        contributionRolesPubliclyVisible: boolean;
+      };
+      notification: {
+        __typename: "UserSettingsNotification";
+        platform: {
+          __typename: "UserSettingsNotificationPlatform";
+          admin: {
+            __typename: "UserSettingsNotificationPlatformAdmin";
+            userProfileRemoved: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            userProfileCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            spaceCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            userGlobalRoleChanged: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          forumDiscussionComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          forumDiscussionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        organization: {
+          __typename: "UserSettingsNotificationOrganization";
+          adminMentioned: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          adminMessageReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        space: {
+          __typename: "UserSettingsNotificationSpace";
+          admin: {
+            __typename: "UserSettingsNotificationSpaceAdmin";
+            communityApplicationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            communityNewMember: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            communicationMessageReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          collaborationCalloutContributionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          communicationUpdates: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          collaborationCalloutPublished: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          collaborationCalloutComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          collaborationCalloutPostContributionComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        user: {
+          __typename: "UserSettingsNotificationUser";
+          membership: {
+            __typename: "UserSettingsNotificationUserMembership";
+            spaceCommunityInvitationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            spaceCommunityJoined: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            spaceCommunityApplicationSubmitted: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          mentioned: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          commentReply: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          messageReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          copyOfMessageSent: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        virtualContributor: {
+          __typename: "UserSettingsNotificationVirtualContributor";
+          adminSpaceCommunityInvitation: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+      };
     };
     authorization?:
       | {
@@ -49741,27 +54350,169 @@ export type RemoveRoleFromUserExtendedDataMutation = {
           }
         | undefined;
     };
-    preferences: Array<{
-      id: string;
-      value: string;
-      definition: {
-        type: SchemaTypes.PreferenceType;
-        id: string;
-        displayName: string;
-        description: string;
-        group: string;
-      };
-      authorization?:
-        | {
-            myPrivileges?:
-              | Array<SchemaTypes.AuthorizationPrivilege>
-              | undefined;
-          }
-        | undefined;
-    }>;
     settings: {
-      privacy: { contributionRolesPubliclyVisible: boolean };
-      communication: { allowOtherUsersToSendMessages: boolean };
+      __typename: "UserSettings";
+      id: string;
+      communication: {
+        __typename: "UserSettingsCommunication";
+        allowOtherUsersToSendMessages: boolean;
+      };
+      privacy: {
+        __typename: "UserSettingsPrivacy";
+        contributionRolesPubliclyVisible: boolean;
+      };
+      notification: {
+        __typename: "UserSettingsNotification";
+        platform: {
+          __typename: "UserSettingsNotificationPlatform";
+          admin: {
+            __typename: "UserSettingsNotificationPlatformAdmin";
+            userProfileRemoved: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            userProfileCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            spaceCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            userGlobalRoleChanged: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          forumDiscussionComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          forumDiscussionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        organization: {
+          __typename: "UserSettingsNotificationOrganization";
+          adminMentioned: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          adminMessageReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        space: {
+          __typename: "UserSettingsNotificationSpace";
+          admin: {
+            __typename: "UserSettingsNotificationSpaceAdmin";
+            communityApplicationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            communityNewMember: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            communicationMessageReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          collaborationCalloutContributionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          communicationUpdates: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          collaborationCalloutPublished: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          collaborationCalloutComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          collaborationCalloutPostContributionComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        user: {
+          __typename: "UserSettingsNotificationUser";
+          membership: {
+            __typename: "UserSettingsNotificationUserMembership";
+            spaceCommunityInvitationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            spaceCommunityJoined: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            spaceCommunityApplicationSubmitted: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          mentioned: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          commentReply: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          messageReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          copyOfMessageSent: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        virtualContributor: {
+          __typename: "UserSettingsNotificationVirtualContributor";
+          adminSpaceCommunityInvitation: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+      };
     };
     authorization?:
       | {
@@ -49852,23 +54603,104 @@ export type CreateCalloutOnCalloutsSetMutationVariables = SchemaTypes.Exact<{
 
 export type CreateCalloutOnCalloutsSetMutation = {
   createCalloutOnCalloutsSet: {
+    __typename: "Callout";
     id: string;
-    activity: number;
-    nameID: string;
-    publishedDate?: number | undefined;
     sortOrder: number;
-    type: SchemaTypes.CalloutType;
-    visibility: SchemaTypes.CalloutVisibility;
-    authorization?:
-      | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
-      | undefined;
-    comments?:
-      | { id: string; messagesCount: number; messages: Array<{ message: any }> }
-      | undefined;
-    contributionPolicy: {
-      allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
+    activity: number;
+    framing: {
+      __typename: "CalloutFraming";
       id: string;
-      state: SchemaTypes.CalloutState;
+      type: SchemaTypes.CalloutFramingType;
+      profile: {
+        __typename: "Profile";
+        id: string;
+        displayName: string;
+        description?: any | undefined;
+        url: string;
+        tagset?:
+          | {
+              __typename: "Tagset";
+              id: string;
+              name: string;
+              tags: Array<string>;
+              allowedValues: Array<string>;
+              type: SchemaTypes.TagsetType;
+            }
+          | undefined;
+        references?:
+          | Array<{
+              __typename: "Reference";
+              id: string;
+              name: string;
+              uri: string;
+              description?: string | undefined;
+            }>
+          | undefined;
+        storageBucket: { __typename: "StorageBucket"; id: string };
+      };
+      whiteboard?:
+        | {
+            __typename: "Whiteboard";
+            id: string;
+            nameID: string;
+            createdDate: Date;
+            contentUpdatePolicy: SchemaTypes.ContentUpdatePolicy;
+            profile: {
+              __typename: "Profile";
+              id: string;
+              url: string;
+              displayName: string;
+              description?: any | undefined;
+              tagset?:
+                | {
+                    __typename: "Tagset";
+                    id: string;
+                    name: string;
+                    tags: Array<string>;
+                    allowedValues: Array<string>;
+                    type: SchemaTypes.TagsetType;
+                  }
+                | undefined;
+              storageBucket: { __typename: "StorageBucket"; id: string };
+            };
+            authorization?:
+              | {
+                  __typename: "Authorization";
+                  id: string;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+            createdBy?:
+              | {
+                  __typename: "User";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                    location?:
+                      | {
+                          __typename: "Location";
+                          id: string;
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                  };
+                }
+              | undefined;
+          }
+        | undefined;
+    };
+    contributionDefaults: {
+      __typename: "CalloutContributionDefaults";
+      id: string;
+      defaultDisplayName?: string | undefined;
+      postDescription?: any | undefined;
+      whiteboardContent?: any | undefined;
     };
     contributions: Array<{
       authorization?:
@@ -50148,159 +54980,161 @@ export type CreateCalloutOnCalloutsSetMutation = {
           }
         | undefined;
     }>;
-    createdBy?: { email: string } | undefined;
-    framing: {
-      id: string;
-      profile: {
-        id: string;
-        displayName: string;
-        description?: any | undefined;
-        tagline?: string | undefined;
-        references?:
-          | Array<{
-              id: string;
-              name: string;
-              uri: string;
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-            }>
-          | undefined;
-        tagsets?:
-          | Array<{
-              id: string;
-              name: string;
-              tags: Array<string>;
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-            }>
-          | undefined;
-        location?:
-          | { country?: string | undefined; city?: string | undefined }
-          | undefined;
-        authorization?:
-          | {
-              myPrivileges?:
-                | Array<SchemaTypes.AuthorizationPrivilege>
-                | undefined;
-            }
-          | undefined;
-        storageBucket: {
+    comments?:
+      | {
+          __typename: "Room";
           id: string;
+          messagesCount: number;
           authorization?:
             | {
+                __typename: "Authorization";
+                id: string;
                 myPrivileges?:
                   | Array<SchemaTypes.AuthorizationPrivilege>
                   | undefined;
               }
             | undefined;
-          parentEntity?:
-            | { displayName: string; type: SchemaTypes.ProfileType }
-            | undefined;
-          documents: Array<{
-            id: string;
-            authorization?:
+          messages: Array<{
+            __typename: "Message";
+            id: any;
+            message: any;
+            threadID?: string | undefined;
+            reactions: Array<{
+              __typename: "Reaction";
+              id: any;
+              emoji: any;
+              sender?:
+                | {
+                    __typename: "User";
+                    id: string;
+                    profile: {
+                      __typename: "Profile";
+                      id: string;
+                      displayName: string;
+                    };
+                  }
+                | undefined;
+            }>;
+            sender?:
               | {
-                  myPrivileges?:
-                    | Array<SchemaTypes.AuthorizationPrivilege>
-                    | undefined;
+                  __typename: "Organization";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                    description?: any | undefined;
+                    tagsets?:
+                      | Array<{
+                          __typename: "Tagset";
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          allowedValues: Array<string>;
+                          type: SchemaTypes.TagsetType;
+                        }>
+                      | undefined;
+                    location?:
+                      | {
+                          __typename: "Location";
+                          id: string;
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                  };
+                }
+              | {
+                  __typename: "User";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                    description?: any | undefined;
+                    tagsets?:
+                      | Array<{
+                          __typename: "Tagset";
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          allowedValues: Array<string>;
+                          type: SchemaTypes.TagsetType;
+                        }>
+                      | undefined;
+                    location?:
+                      | {
+                          __typename: "Location";
+                          id: string;
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                  };
+                }
+              | {
+                  __typename: "VirtualContributor";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                    description?: any | undefined;
+                    tagsets?:
+                      | Array<{
+                          __typename: "Tagset";
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          allowedValues: Array<string>;
+                          type: SchemaTypes.TagsetType;
+                        }>
+                      | undefined;
+                    location?:
+                      | {
+                          __typename: "Location";
+                          id: string;
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                  };
                 }
               | undefined;
           }>;
-        };
-      };
-      whiteboard?:
-        | {
+          vcInteractions: Array<{
+            __typename: "VcInteraction";
             id: string;
-            nameID: string;
-            profile: {
-              id: string;
-              displayName: string;
-              description?: any | undefined;
-              tagline?: string | undefined;
-              visual?:
-                | {
-                    __typename: "Visual";
-                    id: string;
-                    uri: string;
-                    name: string;
-                  }
-                | undefined;
-              storageBucket: {
-                id: string;
-                authorization?:
-                  | {
-                      myPrivileges?:
-                        | Array<SchemaTypes.AuthorizationPrivilege>
-                        | undefined;
-                    }
-                  | undefined;
-                parentEntity?:
-                  | { displayName: string; type: SchemaTypes.ProfileType }
-                  | undefined;
-                documents: Array<{
-                  id: string;
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<SchemaTypes.AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                }>;
-              };
-              references?:
-                | Array<{
-                    id: string;
-                    name: string;
-                    uri: string;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }>
-                | undefined;
-              tagsets?:
-                | Array<{
-                    id: string;
-                    name: string;
-                    tags: Array<string>;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }>
-                | undefined;
-              location?:
-                | { country?: string | undefined; city?: string | undefined }
-                | undefined;
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-            };
-          }
-        | undefined;
+            threadID: string;
+            virtualContributorID: string;
+          }>;
+        }
+      | undefined;
+    authorization?:
+      | {
+          __typename: "Authorization";
+          id: string;
+          myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined;
+        }
+      | undefined;
+    settings: {
+      __typename: "CalloutSettings";
+      visibility: SchemaTypes.CalloutVisibility;
+      contribution: {
+        __typename: "CalloutSettingsContribution";
+        enabled: boolean;
+        allowedTypes: Array<SchemaTypes.CalloutContributionType>;
+        canAddContributions: SchemaTypes.CalloutAllowedContributors;
+        commentsEnabled: boolean;
+      };
+      framing: {
+        __typename: "CalloutSettingsFraming";
+        commentsEnabled: boolean;
+      };
     };
-    publishedBy?: { email: string } | undefined;
   };
 };
 
@@ -50328,23 +55162,104 @@ export type UpdateCalloutMutationVariables = SchemaTypes.Exact<{
 
 export type UpdateCalloutMutation = {
   updateCallout: {
+    __typename: "Callout";
     id: string;
-    activity: number;
-    nameID: string;
-    publishedDate?: number | undefined;
     sortOrder: number;
-    type: SchemaTypes.CalloutType;
-    visibility: SchemaTypes.CalloutVisibility;
-    authorization?:
-      | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
-      | undefined;
-    comments?:
-      | { id: string; messagesCount: number; messages: Array<{ message: any }> }
-      | undefined;
-    contributionPolicy: {
-      allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
+    activity: number;
+    framing: {
+      __typename: "CalloutFraming";
       id: string;
-      state: SchemaTypes.CalloutState;
+      type: SchemaTypes.CalloutFramingType;
+      profile: {
+        __typename: "Profile";
+        id: string;
+        displayName: string;
+        description?: any | undefined;
+        url: string;
+        tagset?:
+          | {
+              __typename: "Tagset";
+              id: string;
+              name: string;
+              tags: Array<string>;
+              allowedValues: Array<string>;
+              type: SchemaTypes.TagsetType;
+            }
+          | undefined;
+        references?:
+          | Array<{
+              __typename: "Reference";
+              id: string;
+              name: string;
+              uri: string;
+              description?: string | undefined;
+            }>
+          | undefined;
+        storageBucket: { __typename: "StorageBucket"; id: string };
+      };
+      whiteboard?:
+        | {
+            __typename: "Whiteboard";
+            id: string;
+            nameID: string;
+            createdDate: Date;
+            contentUpdatePolicy: SchemaTypes.ContentUpdatePolicy;
+            profile: {
+              __typename: "Profile";
+              id: string;
+              url: string;
+              displayName: string;
+              description?: any | undefined;
+              tagset?:
+                | {
+                    __typename: "Tagset";
+                    id: string;
+                    name: string;
+                    tags: Array<string>;
+                    allowedValues: Array<string>;
+                    type: SchemaTypes.TagsetType;
+                  }
+                | undefined;
+              storageBucket: { __typename: "StorageBucket"; id: string };
+            };
+            authorization?:
+              | {
+                  __typename: "Authorization";
+                  id: string;
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+            createdBy?:
+              | {
+                  __typename: "User";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                    location?:
+                      | {
+                          __typename: "Location";
+                          id: string;
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                  };
+                }
+              | undefined;
+          }
+        | undefined;
+    };
+    contributionDefaults: {
+      __typename: "CalloutContributionDefaults";
+      id: string;
+      defaultDisplayName?: string | undefined;
+      postDescription?: any | undefined;
+      whiteboardContent?: any | undefined;
     };
     contributions: Array<{
       authorization?:
@@ -50624,159 +55539,161 @@ export type UpdateCalloutMutation = {
           }
         | undefined;
     }>;
-    createdBy?: { email: string } | undefined;
-    framing: {
-      id: string;
-      profile: {
-        id: string;
-        displayName: string;
-        description?: any | undefined;
-        tagline?: string | undefined;
-        references?:
-          | Array<{
-              id: string;
-              name: string;
-              uri: string;
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-            }>
-          | undefined;
-        tagsets?:
-          | Array<{
-              id: string;
-              name: string;
-              tags: Array<string>;
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-            }>
-          | undefined;
-        location?:
-          | { country?: string | undefined; city?: string | undefined }
-          | undefined;
-        authorization?:
-          | {
-              myPrivileges?:
-                | Array<SchemaTypes.AuthorizationPrivilege>
-                | undefined;
-            }
-          | undefined;
-        storageBucket: {
+    comments?:
+      | {
+          __typename: "Room";
           id: string;
+          messagesCount: number;
           authorization?:
             | {
+                __typename: "Authorization";
+                id: string;
                 myPrivileges?:
                   | Array<SchemaTypes.AuthorizationPrivilege>
                   | undefined;
               }
             | undefined;
-          parentEntity?:
-            | { displayName: string; type: SchemaTypes.ProfileType }
-            | undefined;
-          documents: Array<{
-            id: string;
-            authorization?:
+          messages: Array<{
+            __typename: "Message";
+            id: any;
+            message: any;
+            threadID?: string | undefined;
+            reactions: Array<{
+              __typename: "Reaction";
+              id: any;
+              emoji: any;
+              sender?:
+                | {
+                    __typename: "User";
+                    id: string;
+                    profile: {
+                      __typename: "Profile";
+                      id: string;
+                      displayName: string;
+                    };
+                  }
+                | undefined;
+            }>;
+            sender?:
               | {
-                  myPrivileges?:
-                    | Array<SchemaTypes.AuthorizationPrivilege>
-                    | undefined;
+                  __typename: "Organization";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                    description?: any | undefined;
+                    tagsets?:
+                      | Array<{
+                          __typename: "Tagset";
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          allowedValues: Array<string>;
+                          type: SchemaTypes.TagsetType;
+                        }>
+                      | undefined;
+                    location?:
+                      | {
+                          __typename: "Location";
+                          id: string;
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                  };
+                }
+              | {
+                  __typename: "User";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                    description?: any | undefined;
+                    tagsets?:
+                      | Array<{
+                          __typename: "Tagset";
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          allowedValues: Array<string>;
+                          type: SchemaTypes.TagsetType;
+                        }>
+                      | undefined;
+                    location?:
+                      | {
+                          __typename: "Location";
+                          id: string;
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                  };
+                }
+              | {
+                  __typename: "VirtualContributor";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                    description?: any | undefined;
+                    tagsets?:
+                      | Array<{
+                          __typename: "Tagset";
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          allowedValues: Array<string>;
+                          type: SchemaTypes.TagsetType;
+                        }>
+                      | undefined;
+                    location?:
+                      | {
+                          __typename: "Location";
+                          id: string;
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                  };
                 }
               | undefined;
           }>;
-        };
-      };
-      whiteboard?:
-        | {
+          vcInteractions: Array<{
+            __typename: "VcInteraction";
             id: string;
-            nameID: string;
-            profile: {
-              id: string;
-              displayName: string;
-              description?: any | undefined;
-              tagline?: string | undefined;
-              visual?:
-                | {
-                    __typename: "Visual";
-                    id: string;
-                    uri: string;
-                    name: string;
-                  }
-                | undefined;
-              storageBucket: {
-                id: string;
-                authorization?:
-                  | {
-                      myPrivileges?:
-                        | Array<SchemaTypes.AuthorizationPrivilege>
-                        | undefined;
-                    }
-                  | undefined;
-                parentEntity?:
-                  | { displayName: string; type: SchemaTypes.ProfileType }
-                  | undefined;
-                documents: Array<{
-                  id: string;
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<SchemaTypes.AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                }>;
-              };
-              references?:
-                | Array<{
-                    id: string;
-                    name: string;
-                    uri: string;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }>
-                | undefined;
-              tagsets?:
-                | Array<{
-                    id: string;
-                    name: string;
-                    tags: Array<string>;
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }>
-                | undefined;
-              location?:
-                | { country?: string | undefined; city?: string | undefined }
-                | undefined;
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-            };
-          }
-        | undefined;
+            threadID: string;
+            virtualContributorID: string;
+          }>;
+        }
+      | undefined;
+    authorization?:
+      | {
+          __typename: "Authorization";
+          id: string;
+          myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined;
+        }
+      | undefined;
+    settings: {
+      __typename: "CalloutSettings";
+      visibility: SchemaTypes.CalloutVisibility;
+      contribution: {
+        __typename: "CalloutSettingsContribution";
+        enabled: boolean;
+        allowedTypes: Array<SchemaTypes.CalloutContributionType>;
+        canAddContributions: SchemaTypes.CalloutAllowedContributors;
+        commentsEnabled: boolean;
+      };
+      framing: {
+        __typename: "CalloutSettingsFraming";
+        commentsEnabled: boolean;
+      };
     };
-    publishedBy?: { email: string } | undefined;
   };
 };
 
@@ -50791,19 +55708,12 @@ export type UpdateCalloutVisibilityMutation = {
     nameID: string;
     publishedDate?: number | undefined;
     sortOrder: number;
-    type: SchemaTypes.CalloutType;
-    visibility: SchemaTypes.CalloutVisibility;
     authorization?:
       | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
       | undefined;
     comments?:
       | { id: string; messagesCount: number; messages: Array<{ message: any }> }
       | undefined;
-    contributionPolicy: {
-      allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
-      id: string;
-      state: SchemaTypes.CalloutState;
-    };
     contributions: Array<{
       authorization?:
         | {
@@ -51154,7 +56064,6 @@ export type UpdateCalloutVisibilityMutation = {
       };
       whiteboard?:
         | {
-            id: string;
             nameID: string;
             profile: {
               id: string;
@@ -51235,6 +56144,15 @@ export type UpdateCalloutVisibilityMutation = {
         | undefined;
     };
     publishedBy?: { email: string } | undefined;
+    settings: {
+      visibility: SchemaTypes.CalloutVisibility;
+      framing: { commentsEnabled: boolean };
+      contribution: {
+        enabled: boolean;
+        canAddContributions: SchemaTypes.CalloutAllowedContributors;
+        commentsEnabled: boolean;
+      };
+    };
   };
 };
 
@@ -51518,7 +56436,7 @@ export type TransferCalloutMutation = {
     id: string;
     nameID: string;
     isTemplate: boolean;
-    visibility: SchemaTypes.CalloutVisibility;
+    settings: { visibility: SchemaTypes.CalloutVisibility };
   };
 };
 
@@ -51548,15 +56466,115 @@ export type CreateDiscussionMutation = {
       id: string;
       messagesCount: number;
       messages: Array<{
+        __typename: "Message";
         id: any;
         message: any;
         threadID?: string | undefined;
-        sender?: { id: string } | {} | undefined;
         reactions: Array<{
+          __typename: "Reaction";
           id: any;
           emoji: any;
-          sender?: { email: string } | undefined;
+          sender?:
+            | {
+                __typename: "User";
+                id: string;
+                profile: {
+                  __typename: "Profile";
+                  id: string;
+                  displayName: string;
+                };
+              }
+            | undefined;
         }>;
+        sender?:
+          | {
+              __typename: "Organization";
+              id: string;
+              profile: {
+                __typename: "Profile";
+                id: string;
+                displayName: string;
+                url: string;
+                description?: any | undefined;
+                tagsets?:
+                  | Array<{
+                      __typename: "Tagset";
+                      id: string;
+                      name: string;
+                      tags: Array<string>;
+                      allowedValues: Array<string>;
+                      type: SchemaTypes.TagsetType;
+                    }>
+                  | undefined;
+                location?:
+                  | {
+                      __typename: "Location";
+                      id: string;
+                      country?: string | undefined;
+                      city?: string | undefined;
+                    }
+                  | undefined;
+              };
+            }
+          | {
+              __typename: "User";
+              id: string;
+              profile: {
+                __typename: "Profile";
+                id: string;
+                displayName: string;
+                url: string;
+                description?: any | undefined;
+                tagsets?:
+                  | Array<{
+                      __typename: "Tagset";
+                      id: string;
+                      name: string;
+                      tags: Array<string>;
+                      allowedValues: Array<string>;
+                      type: SchemaTypes.TagsetType;
+                    }>
+                  | undefined;
+                location?:
+                  | {
+                      __typename: "Location";
+                      id: string;
+                      country?: string | undefined;
+                      city?: string | undefined;
+                    }
+                  | undefined;
+              };
+            }
+          | {
+              __typename: "VirtualContributor";
+              id: string;
+              profile: {
+                __typename: "Profile";
+                id: string;
+                displayName: string;
+                url: string;
+                description?: any | undefined;
+                tagsets?:
+                  | Array<{
+                      __typename: "Tagset";
+                      id: string;
+                      name: string;
+                      tags: Array<string>;
+                      allowedValues: Array<string>;
+                      type: SchemaTypes.TagsetType;
+                    }>
+                  | undefined;
+                location?:
+                  | {
+                      __typename: "Location";
+                      id: string;
+                      country?: string | undefined;
+                      city?: string | undefined;
+                    }
+                  | undefined;
+              };
+            }
+          | undefined;
       }>;
     };
     authorization?:
@@ -51591,15 +56609,111 @@ export type SendMessageReplyToRoomMutationVariables = SchemaTypes.Exact<{
 
 export type SendMessageReplyToRoomMutation = {
   sendMessageReplyToRoom: {
+    __typename: "Message";
     id: any;
     message: any;
     threadID?: string | undefined;
-    sender?: { id: string } | {} | undefined;
     reactions: Array<{
+      __typename: "Reaction";
       id: any;
       emoji: any;
-      sender?: { email: string } | undefined;
+      sender?:
+        | {
+            __typename: "User";
+            id: string;
+            profile: { __typename: "Profile"; id: string; displayName: string };
+          }
+        | undefined;
     }>;
+    sender?:
+      | {
+          __typename: "Organization";
+          id: string;
+          profile: {
+            __typename: "Profile";
+            id: string;
+            displayName: string;
+            url: string;
+            description?: any | undefined;
+            tagsets?:
+              | Array<{
+                  __typename: "Tagset";
+                  id: string;
+                  name: string;
+                  tags: Array<string>;
+                  allowedValues: Array<string>;
+                  type: SchemaTypes.TagsetType;
+                }>
+              | undefined;
+            location?:
+              | {
+                  __typename: "Location";
+                  id: string;
+                  country?: string | undefined;
+                  city?: string | undefined;
+                }
+              | undefined;
+          };
+        }
+      | {
+          __typename: "User";
+          id: string;
+          profile: {
+            __typename: "Profile";
+            id: string;
+            displayName: string;
+            url: string;
+            description?: any | undefined;
+            tagsets?:
+              | Array<{
+                  __typename: "Tagset";
+                  id: string;
+                  name: string;
+                  tags: Array<string>;
+                  allowedValues: Array<string>;
+                  type: SchemaTypes.TagsetType;
+                }>
+              | undefined;
+            location?:
+              | {
+                  __typename: "Location";
+                  id: string;
+                  country?: string | undefined;
+                  city?: string | undefined;
+                }
+              | undefined;
+          };
+        }
+      | {
+          __typename: "VirtualContributor";
+          id: string;
+          profile: {
+            __typename: "Profile";
+            id: string;
+            displayName: string;
+            url: string;
+            description?: any | undefined;
+            tagsets?:
+              | Array<{
+                  __typename: "Tagset";
+                  id: string;
+                  name: string;
+                  tags: Array<string>;
+                  allowedValues: Array<string>;
+                  type: SchemaTypes.TagsetType;
+                }>
+              | undefined;
+            location?:
+              | {
+                  __typename: "Location";
+                  id: string;
+                  country?: string | undefined;
+                  city?: string | undefined;
+                }
+              | undefined;
+          };
+        }
+      | undefined;
   };
 };
 
@@ -51625,15 +56739,111 @@ export type SendMessageToRoomMutationVariables = SchemaTypes.Exact<{
 
 export type SendMessageToRoomMutation = {
   sendMessageToRoom: {
+    __typename: "Message";
     id: any;
     message: any;
     threadID?: string | undefined;
-    sender?: { id: string } | {} | undefined;
     reactions: Array<{
+      __typename: "Reaction";
       id: any;
       emoji: any;
-      sender?: { email: string } | undefined;
+      sender?:
+        | {
+            __typename: "User";
+            id: string;
+            profile: { __typename: "Profile"; id: string; displayName: string };
+          }
+        | undefined;
     }>;
+    sender?:
+      | {
+          __typename: "Organization";
+          id: string;
+          profile: {
+            __typename: "Profile";
+            id: string;
+            displayName: string;
+            url: string;
+            description?: any | undefined;
+            tagsets?:
+              | Array<{
+                  __typename: "Tagset";
+                  id: string;
+                  name: string;
+                  tags: Array<string>;
+                  allowedValues: Array<string>;
+                  type: SchemaTypes.TagsetType;
+                }>
+              | undefined;
+            location?:
+              | {
+                  __typename: "Location";
+                  id: string;
+                  country?: string | undefined;
+                  city?: string | undefined;
+                }
+              | undefined;
+          };
+        }
+      | {
+          __typename: "User";
+          id: string;
+          profile: {
+            __typename: "Profile";
+            id: string;
+            displayName: string;
+            url: string;
+            description?: any | undefined;
+            tagsets?:
+              | Array<{
+                  __typename: "Tagset";
+                  id: string;
+                  name: string;
+                  tags: Array<string>;
+                  allowedValues: Array<string>;
+                  type: SchemaTypes.TagsetType;
+                }>
+              | undefined;
+            location?:
+              | {
+                  __typename: "Location";
+                  id: string;
+                  country?: string | undefined;
+                  city?: string | undefined;
+                }
+              | undefined;
+          };
+        }
+      | {
+          __typename: "VirtualContributor";
+          id: string;
+          profile: {
+            __typename: "Profile";
+            id: string;
+            displayName: string;
+            url: string;
+            description?: any | undefined;
+            tagsets?:
+              | Array<{
+                  __typename: "Tagset";
+                  id: string;
+                  name: string;
+                  tags: Array<string>;
+                  allowedValues: Array<string>;
+                  type: SchemaTypes.TagsetType;
+                }>
+              | undefined;
+            location?:
+              | {
+                  __typename: "Location";
+                  id: string;
+                  country?: string | undefined;
+                  city?: string | undefined;
+                }
+              | undefined;
+          };
+        }
+      | undefined;
   };
 };
 
@@ -51657,15 +56867,115 @@ export type UpdateDiscussionMutation = {
       id: string;
       messagesCount: number;
       messages: Array<{
+        __typename: "Message";
         id: any;
         message: any;
         threadID?: string | undefined;
-        sender?: { id: string } | {} | undefined;
         reactions: Array<{
+          __typename: "Reaction";
           id: any;
           emoji: any;
-          sender?: { email: string } | undefined;
+          sender?:
+            | {
+                __typename: "User";
+                id: string;
+                profile: {
+                  __typename: "Profile";
+                  id: string;
+                  displayName: string;
+                };
+              }
+            | undefined;
         }>;
+        sender?:
+          | {
+              __typename: "Organization";
+              id: string;
+              profile: {
+                __typename: "Profile";
+                id: string;
+                displayName: string;
+                url: string;
+                description?: any | undefined;
+                tagsets?:
+                  | Array<{
+                      __typename: "Tagset";
+                      id: string;
+                      name: string;
+                      tags: Array<string>;
+                      allowedValues: Array<string>;
+                      type: SchemaTypes.TagsetType;
+                    }>
+                  | undefined;
+                location?:
+                  | {
+                      __typename: "Location";
+                      id: string;
+                      country?: string | undefined;
+                      city?: string | undefined;
+                    }
+                  | undefined;
+              };
+            }
+          | {
+              __typename: "User";
+              id: string;
+              profile: {
+                __typename: "Profile";
+                id: string;
+                displayName: string;
+                url: string;
+                description?: any | undefined;
+                tagsets?:
+                  | Array<{
+                      __typename: "Tagset";
+                      id: string;
+                      name: string;
+                      tags: Array<string>;
+                      allowedValues: Array<string>;
+                      type: SchemaTypes.TagsetType;
+                    }>
+                  | undefined;
+                location?:
+                  | {
+                      __typename: "Location";
+                      id: string;
+                      country?: string | undefined;
+                      city?: string | undefined;
+                    }
+                  | undefined;
+              };
+            }
+          | {
+              __typename: "VirtualContributor";
+              id: string;
+              profile: {
+                __typename: "Profile";
+                id: string;
+                displayName: string;
+                url: string;
+                description?: any | undefined;
+                tagsets?:
+                  | Array<{
+                      __typename: "Tagset";
+                      id: string;
+                      name: string;
+                      tags: Array<string>;
+                      allowedValues: Array<string>;
+                      type: SchemaTypes.TagsetType;
+                    }>
+                  | undefined;
+                location?:
+                  | {
+                      __typename: "Location";
+                      id: string;
+                      country?: string | undefined;
+                      city?: string | undefined;
+                    }
+                  | undefined;
+              };
+            }
+          | undefined;
       }>;
     };
     authorization?:
@@ -54143,15 +59453,115 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
         updates: {
           id: string;
           messages: Array<{
+            __typename: "Message";
             id: any;
             message: any;
             threadID?: string | undefined;
-            sender?: { id: string } | {} | undefined;
             reactions: Array<{
+              __typename: "Reaction";
               id: any;
               emoji: any;
-              sender?: { email: string } | undefined;
+              sender?:
+                | {
+                    __typename: "User";
+                    id: string;
+                    profile: {
+                      __typename: "Profile";
+                      id: string;
+                      displayName: string;
+                    };
+                  }
+                | undefined;
             }>;
+            sender?:
+              | {
+                  __typename: "Organization";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                    description?: any | undefined;
+                    tagsets?:
+                      | Array<{
+                          __typename: "Tagset";
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          allowedValues: Array<string>;
+                          type: SchemaTypes.TagsetType;
+                        }>
+                      | undefined;
+                    location?:
+                      | {
+                          __typename: "Location";
+                          id: string;
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                  };
+                }
+              | {
+                  __typename: "User";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                    description?: any | undefined;
+                    tagsets?:
+                      | Array<{
+                          __typename: "Tagset";
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          allowedValues: Array<string>;
+                          type: SchemaTypes.TagsetType;
+                        }>
+                      | undefined;
+                    location?:
+                      | {
+                          __typename: "Location";
+                          id: string;
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                  };
+                }
+              | {
+                  __typename: "VirtualContributor";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                    description?: any | undefined;
+                    tagsets?:
+                      | Array<{
+                          __typename: "Tagset";
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          allowedValues: Array<string>;
+                          type: SchemaTypes.TagsetType;
+                        }>
+                      | undefined;
+                    location?:
+                      | {
+                          __typename: "Location";
+                          id: string;
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                  };
+                }
+              | undefined;
           }>;
           authorization?:
             | {
@@ -54180,8 +59590,6 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
           nameID: string;
           publishedDate?: number | undefined;
           sortOrder: number;
-          type: SchemaTypes.CalloutType;
-          visibility: SchemaTypes.CalloutVisibility;
           authorization?:
             | {
                 myPrivileges?:
@@ -54196,11 +59604,6 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                 messages: Array<{ message: any }>;
               }
             | undefined;
-          contributionPolicy: {
-            allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
-            id: string;
-            state: SchemaTypes.CalloutState;
-          };
           contributions: Array<{
             authorization?:
               | {
@@ -54560,7 +59963,6 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
             };
             whiteboard?:
               | {
-                  id: string;
                   nameID: string;
                   profile: {
                     id: string;
@@ -54644,6 +60046,15 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
               | undefined;
           };
           publishedBy?: { email: string } | undefined;
+          settings: {
+            visibility: SchemaTypes.CalloutVisibility;
+            framing: { commentsEnabled: boolean };
+            contribution: {
+              enabled: boolean;
+              canAddContributions: SchemaTypes.CalloutAllowedContributors;
+              commentsEnabled: boolean;
+            };
+          };
         }>;
       };
       authorization?:
@@ -54729,8 +60140,10 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                 | undefined;
             }
           | undefined;
-        currentState: { description: any; displayName: string };
-        states: Array<{ description: any; displayName: string }>;
+        currentState?:
+          | { description?: any | undefined; displayName: string }
+          | undefined;
+        states: Array<{ description?: any | undefined; displayName: string }>;
       };
     };
     subspaces: Array<{
@@ -54832,8 +60245,6 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
             nameID: string;
             publishedDate?: number | undefined;
             sortOrder: number;
-            type: SchemaTypes.CalloutType;
-            visibility: SchemaTypes.CalloutVisibility;
             authorization?:
               | {
                   myPrivileges?:
@@ -54848,11 +60259,6 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                   messages: Array<{ message: any }>;
                 }
               | undefined;
-            contributionPolicy: {
-              allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
-              id: string;
-              state: SchemaTypes.CalloutState;
-            };
             contributions: Array<{
               authorization?:
                 | {
@@ -55221,7 +60627,6 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
               };
               whiteboard?:
                 | {
-                    id: string;
                     nameID: string;
                     profile: {
                       id: string;
@@ -55308,6 +60713,15 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                 | undefined;
             };
             publishedBy?: { email: string } | undefined;
+            settings: {
+              visibility: SchemaTypes.CalloutVisibility;
+              framing: { commentsEnabled: boolean };
+              contribution: {
+                enabled: boolean;
+                canAddContributions: SchemaTypes.CalloutAllowedContributors;
+                commentsEnabled: boolean;
+              };
+            };
           }>;
         };
         authorization?:
@@ -55393,8 +60807,10 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                   | undefined;
               }
             | undefined;
-          currentState: { description: any; displayName: string };
-          states: Array<{ description: any; displayName: string }>;
+          currentState?:
+            | { description?: any | undefined; displayName: string }
+            | undefined;
+          states: Array<{ description?: any | undefined; displayName: string }>;
         };
       };
       authorization?:
@@ -57446,15 +62862,115 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
           updates: {
             id: string;
             messages: Array<{
+              __typename: "Message";
               id: any;
               message: any;
               threadID?: string | undefined;
-              sender?: { id: string } | {} | undefined;
               reactions: Array<{
+                __typename: "Reaction";
                 id: any;
                 emoji: any;
-                sender?: { email: string } | undefined;
+                sender?:
+                  | {
+                      __typename: "User";
+                      id: string;
+                      profile: {
+                        __typename: "Profile";
+                        id: string;
+                        displayName: string;
+                      };
+                    }
+                  | undefined;
               }>;
+              sender?:
+                | {
+                    __typename: "Organization";
+                    id: string;
+                    profile: {
+                      __typename: "Profile";
+                      id: string;
+                      displayName: string;
+                      url: string;
+                      description?: any | undefined;
+                      tagsets?:
+                        | Array<{
+                            __typename: "Tagset";
+                            id: string;
+                            name: string;
+                            tags: Array<string>;
+                            allowedValues: Array<string>;
+                            type: SchemaTypes.TagsetType;
+                          }>
+                        | undefined;
+                      location?:
+                        | {
+                            __typename: "Location";
+                            id: string;
+                            country?: string | undefined;
+                            city?: string | undefined;
+                          }
+                        | undefined;
+                    };
+                  }
+                | {
+                    __typename: "User";
+                    id: string;
+                    profile: {
+                      __typename: "Profile";
+                      id: string;
+                      displayName: string;
+                      url: string;
+                      description?: any | undefined;
+                      tagsets?:
+                        | Array<{
+                            __typename: "Tagset";
+                            id: string;
+                            name: string;
+                            tags: Array<string>;
+                            allowedValues: Array<string>;
+                            type: SchemaTypes.TagsetType;
+                          }>
+                        | undefined;
+                      location?:
+                        | {
+                            __typename: "Location";
+                            id: string;
+                            country?: string | undefined;
+                            city?: string | undefined;
+                          }
+                        | undefined;
+                    };
+                  }
+                | {
+                    __typename: "VirtualContributor";
+                    id: string;
+                    profile: {
+                      __typename: "Profile";
+                      id: string;
+                      displayName: string;
+                      url: string;
+                      description?: any | undefined;
+                      tagsets?:
+                        | Array<{
+                            __typename: "Tagset";
+                            id: string;
+                            name: string;
+                            tags: Array<string>;
+                            allowedValues: Array<string>;
+                            type: SchemaTypes.TagsetType;
+                          }>
+                        | undefined;
+                      location?:
+                        | {
+                            __typename: "Location";
+                            id: string;
+                            country?: string | undefined;
+                            city?: string | undefined;
+                          }
+                        | undefined;
+                    };
+                  }
+                | undefined;
             }>;
             authorization?:
               | {
@@ -57991,7 +63507,6 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                   callout?:
                     | {
                         id: string;
-                        type: SchemaTypes.CalloutType;
                         framing: {
                           profile: {
                             id: string;
@@ -60459,15 +65974,115 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
         updates: {
           id: string;
           messages: Array<{
+            __typename: "Message";
             id: any;
             message: any;
             threadID?: string | undefined;
-            sender?: { id: string } | {} | undefined;
             reactions: Array<{
+              __typename: "Reaction";
               id: any;
               emoji: any;
-              sender?: { email: string } | undefined;
+              sender?:
+                | {
+                    __typename: "User";
+                    id: string;
+                    profile: {
+                      __typename: "Profile";
+                      id: string;
+                      displayName: string;
+                    };
+                  }
+                | undefined;
             }>;
+            sender?:
+              | {
+                  __typename: "Organization";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                    description?: any | undefined;
+                    tagsets?:
+                      | Array<{
+                          __typename: "Tagset";
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          allowedValues: Array<string>;
+                          type: SchemaTypes.TagsetType;
+                        }>
+                      | undefined;
+                    location?:
+                      | {
+                          __typename: "Location";
+                          id: string;
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                  };
+                }
+              | {
+                  __typename: "User";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                    description?: any | undefined;
+                    tagsets?:
+                      | Array<{
+                          __typename: "Tagset";
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          allowedValues: Array<string>;
+                          type: SchemaTypes.TagsetType;
+                        }>
+                      | undefined;
+                    location?:
+                      | {
+                          __typename: "Location";
+                          id: string;
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                  };
+                }
+              | {
+                  __typename: "VirtualContributor";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                    description?: any | undefined;
+                    tagsets?:
+                      | Array<{
+                          __typename: "Tagset";
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          allowedValues: Array<string>;
+                          type: SchemaTypes.TagsetType;
+                        }>
+                      | undefined;
+                    location?:
+                      | {
+                          __typename: "Location";
+                          id: string;
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                  };
+                }
+              | undefined;
           }>;
           authorization?:
             | {
@@ -60496,8 +66111,6 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
           nameID: string;
           publishedDate?: number | undefined;
           sortOrder: number;
-          type: SchemaTypes.CalloutType;
-          visibility: SchemaTypes.CalloutVisibility;
           authorization?:
             | {
                 myPrivileges?:
@@ -60512,11 +66125,6 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                 messages: Array<{ message: any }>;
               }
             | undefined;
-          contributionPolicy: {
-            allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
-            id: string;
-            state: SchemaTypes.CalloutState;
-          };
           contributions: Array<{
             authorization?:
               | {
@@ -60876,7 +66484,6 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
             };
             whiteboard?:
               | {
-                  id: string;
                   nameID: string;
                   profile: {
                     id: string;
@@ -60960,6 +66567,15 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
               | undefined;
           };
           publishedBy?: { email: string } | undefined;
+          settings: {
+            visibility: SchemaTypes.CalloutVisibility;
+            framing: { commentsEnabled: boolean };
+            contribution: {
+              enabled: boolean;
+              canAddContributions: SchemaTypes.CalloutAllowedContributors;
+              commentsEnabled: boolean;
+            };
+          };
         }>;
       };
       authorization?:
@@ -61045,8 +66661,10 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                 | undefined;
             }
           | undefined;
-        currentState: { description: any; displayName: string };
-        states: Array<{ description: any; displayName: string }>;
+        currentState?:
+          | { description?: any | undefined; displayName: string }
+          | undefined;
+        states: Array<{ description?: any | undefined; displayName: string }>;
       };
     };
     subspaces: Array<{
@@ -61148,8 +66766,6 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
             nameID: string;
             publishedDate?: number | undefined;
             sortOrder: number;
-            type: SchemaTypes.CalloutType;
-            visibility: SchemaTypes.CalloutVisibility;
             authorization?:
               | {
                   myPrivileges?:
@@ -61164,11 +66780,6 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                   messages: Array<{ message: any }>;
                 }
               | undefined;
-            contributionPolicy: {
-              allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
-              id: string;
-              state: SchemaTypes.CalloutState;
-            };
             contributions: Array<{
               authorization?:
                 | {
@@ -61537,7 +67148,6 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
               };
               whiteboard?:
                 | {
-                    id: string;
                     nameID: string;
                     profile: {
                       id: string;
@@ -61624,6 +67234,15 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                 | undefined;
             };
             publishedBy?: { email: string } | undefined;
+            settings: {
+              visibility: SchemaTypes.CalloutVisibility;
+              framing: { commentsEnabled: boolean };
+              contribution: {
+                enabled: boolean;
+                canAddContributions: SchemaTypes.CalloutAllowedContributors;
+                commentsEnabled: boolean;
+              };
+            };
           }>;
         };
         authorization?:
@@ -61709,8 +67328,10 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                   | undefined;
               }
             | undefined;
-          currentState: { description: any; displayName: string };
-          states: Array<{ description: any; displayName: string }>;
+          currentState?:
+            | { description?: any | undefined; displayName: string }
+            | undefined;
+          states: Array<{ description?: any | undefined; displayName: string }>;
         };
       };
       authorization?:
@@ -63762,15 +69383,115 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
           updates: {
             id: string;
             messages: Array<{
+              __typename: "Message";
               id: any;
               message: any;
               threadID?: string | undefined;
-              sender?: { id: string } | {} | undefined;
               reactions: Array<{
+                __typename: "Reaction";
                 id: any;
                 emoji: any;
-                sender?: { email: string } | undefined;
+                sender?:
+                  | {
+                      __typename: "User";
+                      id: string;
+                      profile: {
+                        __typename: "Profile";
+                        id: string;
+                        displayName: string;
+                      };
+                    }
+                  | undefined;
               }>;
+              sender?:
+                | {
+                    __typename: "Organization";
+                    id: string;
+                    profile: {
+                      __typename: "Profile";
+                      id: string;
+                      displayName: string;
+                      url: string;
+                      description?: any | undefined;
+                      tagsets?:
+                        | Array<{
+                            __typename: "Tagset";
+                            id: string;
+                            name: string;
+                            tags: Array<string>;
+                            allowedValues: Array<string>;
+                            type: SchemaTypes.TagsetType;
+                          }>
+                        | undefined;
+                      location?:
+                        | {
+                            __typename: "Location";
+                            id: string;
+                            country?: string | undefined;
+                            city?: string | undefined;
+                          }
+                        | undefined;
+                    };
+                  }
+                | {
+                    __typename: "User";
+                    id: string;
+                    profile: {
+                      __typename: "Profile";
+                      id: string;
+                      displayName: string;
+                      url: string;
+                      description?: any | undefined;
+                      tagsets?:
+                        | Array<{
+                            __typename: "Tagset";
+                            id: string;
+                            name: string;
+                            tags: Array<string>;
+                            allowedValues: Array<string>;
+                            type: SchemaTypes.TagsetType;
+                          }>
+                        | undefined;
+                      location?:
+                        | {
+                            __typename: "Location";
+                            id: string;
+                            country?: string | undefined;
+                            city?: string | undefined;
+                          }
+                        | undefined;
+                    };
+                  }
+                | {
+                    __typename: "VirtualContributor";
+                    id: string;
+                    profile: {
+                      __typename: "Profile";
+                      id: string;
+                      displayName: string;
+                      url: string;
+                      description?: any | undefined;
+                      tagsets?:
+                        | Array<{
+                            __typename: "Tagset";
+                            id: string;
+                            name: string;
+                            tags: Array<string>;
+                            allowedValues: Array<string>;
+                            type: SchemaTypes.TagsetType;
+                          }>
+                        | undefined;
+                      location?:
+                        | {
+                            __typename: "Location";
+                            id: string;
+                            country?: string | undefined;
+                            city?: string | undefined;
+                          }
+                        | undefined;
+                    };
+                  }
+                | undefined;
             }>;
             authorization?:
               | {
@@ -64307,7 +70028,6 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                   callout?:
                     | {
                         id: string;
-                        type: SchemaTypes.CalloutType;
                         framing: {
                           profile: {
                             id: string;
@@ -66793,15 +72513,115 @@ export type UpdateSpaceMutation = {
         updates: {
           id: string;
           messages: Array<{
+            __typename: "Message";
             id: any;
             message: any;
             threadID?: string | undefined;
-            sender?: { id: string } | {} | undefined;
             reactions: Array<{
+              __typename: "Reaction";
               id: any;
               emoji: any;
-              sender?: { email: string } | undefined;
+              sender?:
+                | {
+                    __typename: "User";
+                    id: string;
+                    profile: {
+                      __typename: "Profile";
+                      id: string;
+                      displayName: string;
+                    };
+                  }
+                | undefined;
             }>;
+            sender?:
+              | {
+                  __typename: "Organization";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                    description?: any | undefined;
+                    tagsets?:
+                      | Array<{
+                          __typename: "Tagset";
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          allowedValues: Array<string>;
+                          type: SchemaTypes.TagsetType;
+                        }>
+                      | undefined;
+                    location?:
+                      | {
+                          __typename: "Location";
+                          id: string;
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                  };
+                }
+              | {
+                  __typename: "User";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                    description?: any | undefined;
+                    tagsets?:
+                      | Array<{
+                          __typename: "Tagset";
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          allowedValues: Array<string>;
+                          type: SchemaTypes.TagsetType;
+                        }>
+                      | undefined;
+                    location?:
+                      | {
+                          __typename: "Location";
+                          id: string;
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                  };
+                }
+              | {
+                  __typename: "VirtualContributor";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                    description?: any | undefined;
+                    tagsets?:
+                      | Array<{
+                          __typename: "Tagset";
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          allowedValues: Array<string>;
+                          type: SchemaTypes.TagsetType;
+                        }>
+                      | undefined;
+                    location?:
+                      | {
+                          __typename: "Location";
+                          id: string;
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                  };
+                }
+              | undefined;
           }>;
           authorization?:
             | {
@@ -66830,8 +72650,6 @@ export type UpdateSpaceMutation = {
           nameID: string;
           publishedDate?: number | undefined;
           sortOrder: number;
-          type: SchemaTypes.CalloutType;
-          visibility: SchemaTypes.CalloutVisibility;
           authorization?:
             | {
                 myPrivileges?:
@@ -66846,11 +72664,6 @@ export type UpdateSpaceMutation = {
                 messages: Array<{ message: any }>;
               }
             | undefined;
-          contributionPolicy: {
-            allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
-            id: string;
-            state: SchemaTypes.CalloutState;
-          };
           contributions: Array<{
             authorization?:
               | {
@@ -67210,7 +73023,6 @@ export type UpdateSpaceMutation = {
             };
             whiteboard?:
               | {
-                  id: string;
                   nameID: string;
                   profile: {
                     id: string;
@@ -67294,6 +73106,15 @@ export type UpdateSpaceMutation = {
               | undefined;
           };
           publishedBy?: { email: string } | undefined;
+          settings: {
+            visibility: SchemaTypes.CalloutVisibility;
+            framing: { commentsEnabled: boolean };
+            contribution: {
+              enabled: boolean;
+              canAddContributions: SchemaTypes.CalloutAllowedContributors;
+              commentsEnabled: boolean;
+            };
+          };
         }>;
       };
       authorization?:
@@ -67379,8 +73200,10 @@ export type UpdateSpaceMutation = {
                 | undefined;
             }
           | undefined;
-        currentState: { description: any; displayName: string };
-        states: Array<{ description: any; displayName: string }>;
+        currentState?:
+          | { description?: any | undefined; displayName: string }
+          | undefined;
+        states: Array<{ description?: any | undefined; displayName: string }>;
       };
     };
     subspaces: Array<{
@@ -67482,8 +73305,6 @@ export type UpdateSpaceMutation = {
             nameID: string;
             publishedDate?: number | undefined;
             sortOrder: number;
-            type: SchemaTypes.CalloutType;
-            visibility: SchemaTypes.CalloutVisibility;
             authorization?:
               | {
                   myPrivileges?:
@@ -67498,11 +73319,6 @@ export type UpdateSpaceMutation = {
                   messages: Array<{ message: any }>;
                 }
               | undefined;
-            contributionPolicy: {
-              allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
-              id: string;
-              state: SchemaTypes.CalloutState;
-            };
             contributions: Array<{
               authorization?:
                 | {
@@ -67871,7 +73687,6 @@ export type UpdateSpaceMutation = {
               };
               whiteboard?:
                 | {
-                    id: string;
                     nameID: string;
                     profile: {
                       id: string;
@@ -67958,6 +73773,15 @@ export type UpdateSpaceMutation = {
                 | undefined;
             };
             publishedBy?: { email: string } | undefined;
+            settings: {
+              visibility: SchemaTypes.CalloutVisibility;
+              framing: { commentsEnabled: boolean };
+              contribution: {
+                enabled: boolean;
+                canAddContributions: SchemaTypes.CalloutAllowedContributors;
+                commentsEnabled: boolean;
+              };
+            };
           }>;
         };
         authorization?:
@@ -68043,8 +73867,10 @@ export type UpdateSpaceMutation = {
                   | undefined;
               }
             | undefined;
-          currentState: { description: any; displayName: string };
-          states: Array<{ description: any; displayName: string }>;
+          currentState?:
+            | { description?: any | undefined; displayName: string }
+            | undefined;
+          states: Array<{ description?: any | undefined; displayName: string }>;
         };
       };
       authorization?:
@@ -70096,15 +75922,115 @@ export type UpdateSpaceMutation = {
           updates: {
             id: string;
             messages: Array<{
+              __typename: "Message";
               id: any;
               message: any;
               threadID?: string | undefined;
-              sender?: { id: string } | {} | undefined;
               reactions: Array<{
+                __typename: "Reaction";
                 id: any;
                 emoji: any;
-                sender?: { email: string } | undefined;
+                sender?:
+                  | {
+                      __typename: "User";
+                      id: string;
+                      profile: {
+                        __typename: "Profile";
+                        id: string;
+                        displayName: string;
+                      };
+                    }
+                  | undefined;
               }>;
+              sender?:
+                | {
+                    __typename: "Organization";
+                    id: string;
+                    profile: {
+                      __typename: "Profile";
+                      id: string;
+                      displayName: string;
+                      url: string;
+                      description?: any | undefined;
+                      tagsets?:
+                        | Array<{
+                            __typename: "Tagset";
+                            id: string;
+                            name: string;
+                            tags: Array<string>;
+                            allowedValues: Array<string>;
+                            type: SchemaTypes.TagsetType;
+                          }>
+                        | undefined;
+                      location?:
+                        | {
+                            __typename: "Location";
+                            id: string;
+                            country?: string | undefined;
+                            city?: string | undefined;
+                          }
+                        | undefined;
+                    };
+                  }
+                | {
+                    __typename: "User";
+                    id: string;
+                    profile: {
+                      __typename: "Profile";
+                      id: string;
+                      displayName: string;
+                      url: string;
+                      description?: any | undefined;
+                      tagsets?:
+                        | Array<{
+                            __typename: "Tagset";
+                            id: string;
+                            name: string;
+                            tags: Array<string>;
+                            allowedValues: Array<string>;
+                            type: SchemaTypes.TagsetType;
+                          }>
+                        | undefined;
+                      location?:
+                        | {
+                            __typename: "Location";
+                            id: string;
+                            country?: string | undefined;
+                            city?: string | undefined;
+                          }
+                        | undefined;
+                    };
+                  }
+                | {
+                    __typename: "VirtualContributor";
+                    id: string;
+                    profile: {
+                      __typename: "Profile";
+                      id: string;
+                      displayName: string;
+                      url: string;
+                      description?: any | undefined;
+                      tagsets?:
+                        | Array<{
+                            __typename: "Tagset";
+                            id: string;
+                            name: string;
+                            tags: Array<string>;
+                            allowedValues: Array<string>;
+                            type: SchemaTypes.TagsetType;
+                          }>
+                        | undefined;
+                      location?:
+                        | {
+                            __typename: "Location";
+                            id: string;
+                            country?: string | undefined;
+                            city?: string | undefined;
+                          }
+                        | undefined;
+                    };
+                  }
+                | undefined;
             }>;
             authorization?:
               | {
@@ -70641,7 +76567,6 @@ export type UpdateSpaceMutation = {
                   callout?:
                     | {
                         id: string;
-                        type: SchemaTypes.CalloutType;
                         framing: {
                           profile: {
                             id: string;
@@ -70842,8 +76767,6 @@ export type CreateSubspaceMutation = {
             nameID: string;
             publishedDate?: number | undefined;
             sortOrder: number;
-            type: SchemaTypes.CalloutType;
-            visibility: SchemaTypes.CalloutVisibility;
             authorization?:
               | {
                   myPrivileges?:
@@ -70858,11 +76781,6 @@ export type CreateSubspaceMutation = {
                   messages: Array<{ message: any }>;
                 }
               | undefined;
-            contributionPolicy: {
-              allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
-              id: string;
-              state: SchemaTypes.CalloutState;
-            };
             contributions: Array<{
               authorization?:
                 | {
@@ -71231,7 +77149,6 @@ export type CreateSubspaceMutation = {
               };
               whiteboard?:
                 | {
-                    id: string;
                     nameID: string;
                     profile: {
                       id: string;
@@ -71318,6 +77235,15 @@ export type CreateSubspaceMutation = {
                 | undefined;
             };
             publishedBy?: { email: string } | undefined;
+            settings: {
+              visibility: SchemaTypes.CalloutVisibility;
+              framing: { commentsEnabled: boolean };
+              contribution: {
+                enabled: boolean;
+                canAddContributions: SchemaTypes.CalloutAllowedContributors;
+                commentsEnabled: boolean;
+              };
+            };
           }>;
         };
         authorization?:
@@ -71403,8 +77329,10 @@ export type CreateSubspaceMutation = {
                   | undefined;
               }
             | undefined;
-          currentState: { description: any; displayName: string };
-          states: Array<{ description: any; displayName: string }>;
+          currentState?:
+            | { description?: any | undefined; displayName: string }
+            | undefined;
+          states: Array<{ description?: any | undefined; displayName: string }>;
         };
       };
       authorization?:
@@ -73456,15 +79384,115 @@ export type CreateSubspaceMutation = {
           updates: {
             id: string;
             messages: Array<{
+              __typename: "Message";
               id: any;
               message: any;
               threadID?: string | undefined;
-              sender?: { id: string } | {} | undefined;
               reactions: Array<{
+                __typename: "Reaction";
                 id: any;
                 emoji: any;
-                sender?: { email: string } | undefined;
+                sender?:
+                  | {
+                      __typename: "User";
+                      id: string;
+                      profile: {
+                        __typename: "Profile";
+                        id: string;
+                        displayName: string;
+                      };
+                    }
+                  | undefined;
               }>;
+              sender?:
+                | {
+                    __typename: "Organization";
+                    id: string;
+                    profile: {
+                      __typename: "Profile";
+                      id: string;
+                      displayName: string;
+                      url: string;
+                      description?: any | undefined;
+                      tagsets?:
+                        | Array<{
+                            __typename: "Tagset";
+                            id: string;
+                            name: string;
+                            tags: Array<string>;
+                            allowedValues: Array<string>;
+                            type: SchemaTypes.TagsetType;
+                          }>
+                        | undefined;
+                      location?:
+                        | {
+                            __typename: "Location";
+                            id: string;
+                            country?: string | undefined;
+                            city?: string | undefined;
+                          }
+                        | undefined;
+                    };
+                  }
+                | {
+                    __typename: "User";
+                    id: string;
+                    profile: {
+                      __typename: "Profile";
+                      id: string;
+                      displayName: string;
+                      url: string;
+                      description?: any | undefined;
+                      tagsets?:
+                        | Array<{
+                            __typename: "Tagset";
+                            id: string;
+                            name: string;
+                            tags: Array<string>;
+                            allowedValues: Array<string>;
+                            type: SchemaTypes.TagsetType;
+                          }>
+                        | undefined;
+                      location?:
+                        | {
+                            __typename: "Location";
+                            id: string;
+                            country?: string | undefined;
+                            city?: string | undefined;
+                          }
+                        | undefined;
+                    };
+                  }
+                | {
+                    __typename: "VirtualContributor";
+                    id: string;
+                    profile: {
+                      __typename: "Profile";
+                      id: string;
+                      displayName: string;
+                      url: string;
+                      description?: any | undefined;
+                      tagsets?:
+                        | Array<{
+                            __typename: "Tagset";
+                            id: string;
+                            name: string;
+                            tags: Array<string>;
+                            allowedValues: Array<string>;
+                            type: SchemaTypes.TagsetType;
+                          }>
+                        | undefined;
+                      location?:
+                        | {
+                            __typename: "Location";
+                            id: string;
+                            country?: string | undefined;
+                            city?: string | undefined;
+                          }
+                        | undefined;
+                    };
+                  }
+                | undefined;
             }>;
             authorization?:
               | {
@@ -73578,8 +79606,6 @@ export type CreateSubspaceMutation = {
           nameID: string;
           publishedDate?: number | undefined;
           sortOrder: number;
-          type: SchemaTypes.CalloutType;
-          visibility: SchemaTypes.CalloutVisibility;
           authorization?:
             | {
                 myPrivileges?:
@@ -73594,11 +79620,6 @@ export type CreateSubspaceMutation = {
                 messages: Array<{ message: any }>;
               }
             | undefined;
-          contributionPolicy: {
-            allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
-            id: string;
-            state: SchemaTypes.CalloutState;
-          };
           contributions: Array<{
             authorization?:
               | {
@@ -73958,7 +79979,6 @@ export type CreateSubspaceMutation = {
             };
             whiteboard?:
               | {
-                  id: string;
                   nameID: string;
                   profile: {
                     id: string;
@@ -74042,6 +80062,15 @@ export type CreateSubspaceMutation = {
               | undefined;
           };
           publishedBy?: { email: string } | undefined;
+          settings: {
+            visibility: SchemaTypes.CalloutVisibility;
+            framing: { commentsEnabled: boolean };
+            contribution: {
+              enabled: boolean;
+              canAddContributions: SchemaTypes.CalloutAllowedContributors;
+              commentsEnabled: boolean;
+            };
+          };
         }>;
       };
       authorization?:
@@ -74127,8 +80156,10 @@ export type CreateSubspaceMutation = {
                 | undefined;
             }
           | undefined;
-        currentState: { description: any; displayName: string };
-        states: Array<{ description: any; displayName: string }>;
+        currentState?:
+          | { description?: any | undefined; displayName: string }
+          | undefined;
+        states: Array<{ description?: any | undefined; displayName: string }>;
       };
     };
     authorization?:
@@ -76164,15 +82195,115 @@ export type CreateSubspaceMutation = {
         updates: {
           id: string;
           messages: Array<{
+            __typename: "Message";
             id: any;
             message: any;
             threadID?: string | undefined;
-            sender?: { id: string } | {} | undefined;
             reactions: Array<{
+              __typename: "Reaction";
               id: any;
               emoji: any;
-              sender?: { email: string } | undefined;
+              sender?:
+                | {
+                    __typename: "User";
+                    id: string;
+                    profile: {
+                      __typename: "Profile";
+                      id: string;
+                      displayName: string;
+                    };
+                  }
+                | undefined;
             }>;
+            sender?:
+              | {
+                  __typename: "Organization";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                    description?: any | undefined;
+                    tagsets?:
+                      | Array<{
+                          __typename: "Tagset";
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          allowedValues: Array<string>;
+                          type: SchemaTypes.TagsetType;
+                        }>
+                      | undefined;
+                    location?:
+                      | {
+                          __typename: "Location";
+                          id: string;
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                  };
+                }
+              | {
+                  __typename: "User";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                    description?: any | undefined;
+                    tagsets?:
+                      | Array<{
+                          __typename: "Tagset";
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          allowedValues: Array<string>;
+                          type: SchemaTypes.TagsetType;
+                        }>
+                      | undefined;
+                    location?:
+                      | {
+                          __typename: "Location";
+                          id: string;
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                  };
+                }
+              | {
+                  __typename: "VirtualContributor";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                    description?: any | undefined;
+                    tagsets?:
+                      | Array<{
+                          __typename: "Tagset";
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          allowedValues: Array<string>;
+                          type: SchemaTypes.TagsetType;
+                        }>
+                      | undefined;
+                    location?:
+                      | {
+                          __typename: "Location";
+                          id: string;
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                  };
+                }
+              | undefined;
           }>;
           authorization?:
             | {
@@ -76301,8 +82432,6 @@ export type UpdateSubspaceMutation = {
             nameID: string;
             publishedDate?: number | undefined;
             sortOrder: number;
-            type: SchemaTypes.CalloutType;
-            visibility: SchemaTypes.CalloutVisibility;
             authorization?:
               | {
                   myPrivileges?:
@@ -76317,11 +82446,6 @@ export type UpdateSubspaceMutation = {
                   messages: Array<{ message: any }>;
                 }
               | undefined;
-            contributionPolicy: {
-              allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
-              id: string;
-              state: SchemaTypes.CalloutState;
-            };
             contributions: Array<{
               authorization?:
                 | {
@@ -76690,7 +82814,6 @@ export type UpdateSubspaceMutation = {
               };
               whiteboard?:
                 | {
-                    id: string;
                     nameID: string;
                     profile: {
                       id: string;
@@ -76777,6 +82900,15 @@ export type UpdateSubspaceMutation = {
                 | undefined;
             };
             publishedBy?: { email: string } | undefined;
+            settings: {
+              visibility: SchemaTypes.CalloutVisibility;
+              framing: { commentsEnabled: boolean };
+              contribution: {
+                enabled: boolean;
+                canAddContributions: SchemaTypes.CalloutAllowedContributors;
+                commentsEnabled: boolean;
+              };
+            };
           }>;
         };
         authorization?:
@@ -76862,8 +82994,10 @@ export type UpdateSubspaceMutation = {
                   | undefined;
               }
             | undefined;
-          currentState: { description: any; displayName: string };
-          states: Array<{ description: any; displayName: string }>;
+          currentState?:
+            | { description?: any | undefined; displayName: string }
+            | undefined;
+          states: Array<{ description?: any | undefined; displayName: string }>;
         };
       };
       authorization?:
@@ -78915,15 +85049,115 @@ export type UpdateSubspaceMutation = {
           updates: {
             id: string;
             messages: Array<{
+              __typename: "Message";
               id: any;
               message: any;
               threadID?: string | undefined;
-              sender?: { id: string } | {} | undefined;
               reactions: Array<{
+                __typename: "Reaction";
                 id: any;
                 emoji: any;
-                sender?: { email: string } | undefined;
+                sender?:
+                  | {
+                      __typename: "User";
+                      id: string;
+                      profile: {
+                        __typename: "Profile";
+                        id: string;
+                        displayName: string;
+                      };
+                    }
+                  | undefined;
               }>;
+              sender?:
+                | {
+                    __typename: "Organization";
+                    id: string;
+                    profile: {
+                      __typename: "Profile";
+                      id: string;
+                      displayName: string;
+                      url: string;
+                      description?: any | undefined;
+                      tagsets?:
+                        | Array<{
+                            __typename: "Tagset";
+                            id: string;
+                            name: string;
+                            tags: Array<string>;
+                            allowedValues: Array<string>;
+                            type: SchemaTypes.TagsetType;
+                          }>
+                        | undefined;
+                      location?:
+                        | {
+                            __typename: "Location";
+                            id: string;
+                            country?: string | undefined;
+                            city?: string | undefined;
+                          }
+                        | undefined;
+                    };
+                  }
+                | {
+                    __typename: "User";
+                    id: string;
+                    profile: {
+                      __typename: "Profile";
+                      id: string;
+                      displayName: string;
+                      url: string;
+                      description?: any | undefined;
+                      tagsets?:
+                        | Array<{
+                            __typename: "Tagset";
+                            id: string;
+                            name: string;
+                            tags: Array<string>;
+                            allowedValues: Array<string>;
+                            type: SchemaTypes.TagsetType;
+                          }>
+                        | undefined;
+                      location?:
+                        | {
+                            __typename: "Location";
+                            id: string;
+                            country?: string | undefined;
+                            city?: string | undefined;
+                          }
+                        | undefined;
+                    };
+                  }
+                | {
+                    __typename: "VirtualContributor";
+                    id: string;
+                    profile: {
+                      __typename: "Profile";
+                      id: string;
+                      displayName: string;
+                      url: string;
+                      description?: any | undefined;
+                      tagsets?:
+                        | Array<{
+                            __typename: "Tagset";
+                            id: string;
+                            name: string;
+                            tags: Array<string>;
+                            allowedValues: Array<string>;
+                            type: SchemaTypes.TagsetType;
+                          }>
+                        | undefined;
+                      location?:
+                        | {
+                            __typename: "Location";
+                            id: string;
+                            country?: string | undefined;
+                            city?: string | undefined;
+                          }
+                        | undefined;
+                    };
+                  }
+                | undefined;
             }>;
             authorization?:
               | {
@@ -79037,8 +85271,6 @@ export type UpdateSubspaceMutation = {
           nameID: string;
           publishedDate?: number | undefined;
           sortOrder: number;
-          type: SchemaTypes.CalloutType;
-          visibility: SchemaTypes.CalloutVisibility;
           authorization?:
             | {
                 myPrivileges?:
@@ -79053,11 +85285,6 @@ export type UpdateSubspaceMutation = {
                 messages: Array<{ message: any }>;
               }
             | undefined;
-          contributionPolicy: {
-            allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
-            id: string;
-            state: SchemaTypes.CalloutState;
-          };
           contributions: Array<{
             authorization?:
               | {
@@ -79417,7 +85644,6 @@ export type UpdateSubspaceMutation = {
             };
             whiteboard?:
               | {
-                  id: string;
                   nameID: string;
                   profile: {
                     id: string;
@@ -79501,6 +85727,15 @@ export type UpdateSubspaceMutation = {
               | undefined;
           };
           publishedBy?: { email: string } | undefined;
+          settings: {
+            visibility: SchemaTypes.CalloutVisibility;
+            framing: { commentsEnabled: boolean };
+            contribution: {
+              enabled: boolean;
+              canAddContributions: SchemaTypes.CalloutAllowedContributors;
+              commentsEnabled: boolean;
+            };
+          };
         }>;
       };
       authorization?:
@@ -79586,8 +85821,10 @@ export type UpdateSubspaceMutation = {
                 | undefined;
             }
           | undefined;
-        currentState: { description: any; displayName: string };
-        states: Array<{ description: any; displayName: string }>;
+        currentState?:
+          | { description?: any | undefined; displayName: string }
+          | undefined;
+        states: Array<{ description?: any | undefined; displayName: string }>;
       };
     };
     authorization?:
@@ -81623,15 +87860,115 @@ export type UpdateSubspaceMutation = {
         updates: {
           id: string;
           messages: Array<{
+            __typename: "Message";
             id: any;
             message: any;
             threadID?: string | undefined;
-            sender?: { id: string } | {} | undefined;
             reactions: Array<{
+              __typename: "Reaction";
               id: any;
               emoji: any;
-              sender?: { email: string } | undefined;
+              sender?:
+                | {
+                    __typename: "User";
+                    id: string;
+                    profile: {
+                      __typename: "Profile";
+                      id: string;
+                      displayName: string;
+                    };
+                  }
+                | undefined;
             }>;
+            sender?:
+              | {
+                  __typename: "Organization";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                    description?: any | undefined;
+                    tagsets?:
+                      | Array<{
+                          __typename: "Tagset";
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          allowedValues: Array<string>;
+                          type: SchemaTypes.TagsetType;
+                        }>
+                      | undefined;
+                    location?:
+                      | {
+                          __typename: "Location";
+                          id: string;
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                  };
+                }
+              | {
+                  __typename: "User";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                    description?: any | undefined;
+                    tagsets?:
+                      | Array<{
+                          __typename: "Tagset";
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          allowedValues: Array<string>;
+                          type: SchemaTypes.TagsetType;
+                        }>
+                      | undefined;
+                    location?:
+                      | {
+                          __typename: "Location";
+                          id: string;
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                  };
+                }
+              | {
+                  __typename: "VirtualContributor";
+                  id: string;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                    description?: any | undefined;
+                    tagsets?:
+                      | Array<{
+                          __typename: "Tagset";
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          allowedValues: Array<string>;
+                          type: SchemaTypes.TagsetType;
+                        }>
+                      | undefined;
+                    location?:
+                      | {
+                          __typename: "Location";
+                          id: string;
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                  };
+                }
+              | undefined;
           }>;
           authorization?:
             | {
@@ -81729,87 +88066,19 @@ export type EventOnOrganizationVerificationMutation = {
   };
 };
 
-export type UpdateInnovationFlowSelectedStateMutationVariables =
+export type UpdateInnovationFlowCurrentStateMutationVariables =
   SchemaTypes.Exact<{
     innovationFlowId: SchemaTypes.Scalars["UUID"]["input"];
-    selectedState: SchemaTypes.Scalars["String"]["input"];
+    currentStateID: SchemaTypes.Scalars["UUID"]["input"];
   }>;
 
-export type UpdateInnovationFlowSelectedStateMutation = {
-  updateInnovationFlowSelectedState: {
+export type UpdateInnovationFlowCurrentStateMutation = {
+  updateInnovationFlowCurrentState: {
+    __typename: "InnovationFlow";
     id: string;
-    profile: {
-      id: string;
-      displayName: string;
-      description?: any | undefined;
-      tagline?: string | undefined;
-      references?:
-        | Array<{
-            id: string;
-            name: string;
-            uri: string;
-            authorization?:
-              | {
-                  myPrivileges?:
-                    | Array<SchemaTypes.AuthorizationPrivilege>
-                    | undefined;
-                }
-              | undefined;
-          }>
-        | undefined;
-      tagsets?:
-        | Array<{
-            id: string;
-            name: string;
-            tags: Array<string>;
-            authorization?:
-              | {
-                  myPrivileges?:
-                    | Array<SchemaTypes.AuthorizationPrivilege>
-                    | undefined;
-                }
-              | undefined;
-          }>
-        | undefined;
-      location?:
-        | { country?: string | undefined; city?: string | undefined }
-        | undefined;
-      authorization?:
-        | {
-            myPrivileges?:
-              | Array<SchemaTypes.AuthorizationPrivilege>
-              | undefined;
-          }
-        | undefined;
-      storageBucket: {
-        id: string;
-        authorization?:
-          | {
-              myPrivileges?:
-                | Array<SchemaTypes.AuthorizationPrivilege>
-                | undefined;
-            }
-          | undefined;
-        parentEntity?:
-          | { displayName: string; type: SchemaTypes.ProfileType }
-          | undefined;
-        documents: Array<{
-          id: string;
-          authorization?:
-            | {
-                myPrivileges?:
-                  | Array<SchemaTypes.AuthorizationPrivilege>
-                  | undefined;
-              }
-            | undefined;
-        }>;
-      };
-    };
-    authorization?:
-      | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
+    currentState?:
+      | { __typename: "InnovationFlowState"; displayName: string }
       | undefined;
-    currentState: { description: any; displayName: string };
-    states: Array<{ description: any; displayName: string }>;
   };
 };
 
@@ -82902,8 +89171,7 @@ export type UpdateOrganizationMutation = {
 };
 
 export type UpdateOrganizationSettingsMutationVariables = SchemaTypes.Exact<{
-  organizationID: SchemaTypes.Scalars["UUID"]["input"];
-  settingsData: SchemaTypes.UpdateOrganizationSettingsEntityInput;
+  settingsData: SchemaTypes.UpdateOrganizationSettingsInput;
 }>;
 
 export type UpdateOrganizationSettingsMutation = {
@@ -83302,7 +89570,6 @@ export type UpdateTemplateMutation = {
     callout?:
       | {
           id: string;
-          type: SchemaTypes.CalloutType;
           framing: {
             profile: {
               id: string;
@@ -83795,27 +90062,169 @@ export type CreateUserMutation = {
           }
         | undefined;
     };
-    preferences: Array<{
-      id: string;
-      value: string;
-      definition: {
-        type: SchemaTypes.PreferenceType;
-        id: string;
-        displayName: string;
-        description: string;
-        group: string;
-      };
-      authorization?:
-        | {
-            myPrivileges?:
-              | Array<SchemaTypes.AuthorizationPrivilege>
-              | undefined;
-          }
-        | undefined;
-    }>;
     settings: {
-      privacy: { contributionRolesPubliclyVisible: boolean };
-      communication: { allowOtherUsersToSendMessages: boolean };
+      __typename: "UserSettings";
+      id: string;
+      communication: {
+        __typename: "UserSettingsCommunication";
+        allowOtherUsersToSendMessages: boolean;
+      };
+      privacy: {
+        __typename: "UserSettingsPrivacy";
+        contributionRolesPubliclyVisible: boolean;
+      };
+      notification: {
+        __typename: "UserSettingsNotification";
+        platform: {
+          __typename: "UserSettingsNotificationPlatform";
+          admin: {
+            __typename: "UserSettingsNotificationPlatformAdmin";
+            userProfileRemoved: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            userProfileCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            spaceCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            userGlobalRoleChanged: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          forumDiscussionComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          forumDiscussionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        organization: {
+          __typename: "UserSettingsNotificationOrganization";
+          adminMentioned: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          adminMessageReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        space: {
+          __typename: "UserSettingsNotificationSpace";
+          admin: {
+            __typename: "UserSettingsNotificationSpaceAdmin";
+            communityApplicationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            communityNewMember: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            communicationMessageReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          collaborationCalloutContributionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          communicationUpdates: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          collaborationCalloutPublished: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          collaborationCalloutComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          collaborationCalloutPostContributionComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        user: {
+          __typename: "UserSettingsNotificationUser";
+          membership: {
+            __typename: "UserSettingsNotificationUserMembership";
+            spaceCommunityInvitationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            spaceCommunityJoined: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            spaceCommunityApplicationSubmitted: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          mentioned: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          commentReply: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          messageReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          copyOfMessageSent: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        virtualContributor: {
+          __typename: "UserSettingsNotificationVirtualContributor";
+          adminSpaceCommunityInvitation: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+      };
     };
     authorization?:
       | {
@@ -84152,27 +90561,169 @@ export type CreateUserNewRegistrationMutation = {
           }
         | undefined;
     };
-    preferences: Array<{
-      id: string;
-      value: string;
-      definition: {
-        type: SchemaTypes.PreferenceType;
-        id: string;
-        displayName: string;
-        description: string;
-        group: string;
-      };
-      authorization?:
-        | {
-            myPrivileges?:
-              | Array<SchemaTypes.AuthorizationPrivilege>
-              | undefined;
-          }
-        | undefined;
-    }>;
     settings: {
-      privacy: { contributionRolesPubliclyVisible: boolean };
-      communication: { allowOtherUsersToSendMessages: boolean };
+      __typename: "UserSettings";
+      id: string;
+      communication: {
+        __typename: "UserSettingsCommunication";
+        allowOtherUsersToSendMessages: boolean;
+      };
+      privacy: {
+        __typename: "UserSettingsPrivacy";
+        contributionRolesPubliclyVisible: boolean;
+      };
+      notification: {
+        __typename: "UserSettingsNotification";
+        platform: {
+          __typename: "UserSettingsNotificationPlatform";
+          admin: {
+            __typename: "UserSettingsNotificationPlatformAdmin";
+            userProfileRemoved: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            userProfileCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            spaceCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            userGlobalRoleChanged: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          forumDiscussionComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          forumDiscussionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        organization: {
+          __typename: "UserSettingsNotificationOrganization";
+          adminMentioned: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          adminMessageReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        space: {
+          __typename: "UserSettingsNotificationSpace";
+          admin: {
+            __typename: "UserSettingsNotificationSpaceAdmin";
+            communityApplicationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            communityNewMember: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            communicationMessageReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          collaborationCalloutContributionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          communicationUpdates: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          collaborationCalloutPublished: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          collaborationCalloutComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          collaborationCalloutPostContributionComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        user: {
+          __typename: "UserSettingsNotificationUser";
+          membership: {
+            __typename: "UserSettingsNotificationUserMembership";
+            spaceCommunityInvitationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            spaceCommunityJoined: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            spaceCommunityApplicationSubmitted: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          mentioned: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          commentReply: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          messageReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          copyOfMessageSent: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        virtualContributor: {
+          __typename: "UserSettingsNotificationVirtualContributor";
+          adminSpaceCommunityInvitation: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+      };
     };
     authorization?:
       | {
@@ -84188,27 +90739,6 @@ export type DeleteUserMutationVariables = SchemaTypes.Exact<{
 }>;
 
 export type DeleteUserMutation = { deleteUser: { id: string } };
-
-export type UpdatePreferenceOnUserMutationVariables = SchemaTypes.Exact<{
-  preferenceData: SchemaTypes.UpdateUserPreferenceInput;
-}>;
-
-export type UpdatePreferenceOnUserMutation = {
-  updatePreferenceOnUser: {
-    id: string;
-    value: string;
-    definition: {
-      type: SchemaTypes.PreferenceType;
-      id: string;
-      displayName: string;
-      description: string;
-      group: string;
-    };
-    authorization?:
-      | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
-      | undefined;
-  };
-};
 
 export type UpdateUserMutationVariables = SchemaTypes.Exact<{
   userData: SchemaTypes.UpdateUserInput;
@@ -84536,27 +91066,169 @@ export type UpdateUserMutation = {
           }
         | undefined;
     };
-    preferences: Array<{
-      id: string;
-      value: string;
-      definition: {
-        type: SchemaTypes.PreferenceType;
-        id: string;
-        displayName: string;
-        description: string;
-        group: string;
-      };
-      authorization?:
-        | {
-            myPrivileges?:
-              | Array<SchemaTypes.AuthorizationPrivilege>
-              | undefined;
-          }
-        | undefined;
-    }>;
     settings: {
-      privacy: { contributionRolesPubliclyVisible: boolean };
-      communication: { allowOtherUsersToSendMessages: boolean };
+      __typename: "UserSettings";
+      id: string;
+      communication: {
+        __typename: "UserSettingsCommunication";
+        allowOtherUsersToSendMessages: boolean;
+      };
+      privacy: {
+        __typename: "UserSettingsPrivacy";
+        contributionRolesPubliclyVisible: boolean;
+      };
+      notification: {
+        __typename: "UserSettingsNotification";
+        platform: {
+          __typename: "UserSettingsNotificationPlatform";
+          admin: {
+            __typename: "UserSettingsNotificationPlatformAdmin";
+            userProfileRemoved: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            userProfileCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            spaceCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            userGlobalRoleChanged: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          forumDiscussionComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          forumDiscussionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        organization: {
+          __typename: "UserSettingsNotificationOrganization";
+          adminMentioned: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          adminMessageReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        space: {
+          __typename: "UserSettingsNotificationSpace";
+          admin: {
+            __typename: "UserSettingsNotificationSpaceAdmin";
+            communityApplicationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            communityNewMember: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            communicationMessageReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          collaborationCalloutContributionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          communicationUpdates: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          collaborationCalloutPublished: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          collaborationCalloutComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          collaborationCalloutPostContributionComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        user: {
+          __typename: "UserSettingsNotificationUser";
+          membership: {
+            __typename: "UserSettingsNotificationUserMembership";
+            spaceCommunityInvitationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            spaceCommunityJoined: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            spaceCommunityApplicationSubmitted: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          mentioned: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          commentReply: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          messageReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          copyOfMessageSent: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        virtualContributor: {
+          __typename: "UserSettingsNotificationVirtualContributor";
+          adminSpaceCommunityInvitation: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+      };
     };
     authorization?:
       | {
@@ -84568,17 +91240,180 @@ export type UpdateUserMutation = {
 };
 
 export type UpdateUserSettingsMutationVariables = SchemaTypes.Exact<{
-  userID: SchemaTypes.Scalars["UUID"]["input"];
-  settingsData: SchemaTypes.UpdateUserSettingsEntityInput;
+  settingsData: SchemaTypes.UpdateUserSettingsInput;
 }>;
 
 export type UpdateUserSettingsMutation = {
   updateUserSettings: {
+    __typename: "User";
     id: string;
     settings: {
-      privacy: { contributionRolesPubliclyVisible: boolean };
-      communication: { allowOtherUsersToSendMessages: boolean };
+      __typename: "UserSettings";
+      id: string;
+      communication: {
+        __typename: "UserSettingsCommunication";
+        allowOtherUsersToSendMessages: boolean;
+      };
+      privacy: {
+        __typename: "UserSettingsPrivacy";
+        contributionRolesPubliclyVisible: boolean;
+      };
+      notification: {
+        __typename: "UserSettingsNotification";
+        platform: {
+          __typename: "UserSettingsNotificationPlatform";
+          admin: {
+            __typename: "UserSettingsNotificationPlatformAdmin";
+            userProfileRemoved: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            userProfileCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            spaceCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            userGlobalRoleChanged: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          forumDiscussionComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          forumDiscussionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        organization: {
+          __typename: "UserSettingsNotificationOrganization";
+          adminMentioned: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          adminMessageReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        space: {
+          __typename: "UserSettingsNotificationSpace";
+          admin: {
+            __typename: "UserSettingsNotificationSpaceAdmin";
+            communityApplicationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            communityNewMember: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            communicationMessageReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          collaborationCalloutContributionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          communicationUpdates: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          collaborationCalloutPublished: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          collaborationCalloutComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          collaborationCalloutPostContributionComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        user: {
+          __typename: "UserSettingsNotificationUser";
+          membership: {
+            __typename: "UserSettingsNotificationUserMembership";
+            spaceCommunityInvitationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            spaceCommunityJoined: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            spaceCommunityApplicationSubmitted: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          mentioned: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          commentReply: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          messageReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          copyOfMessageSent: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        virtualContributor: {
+          __typename: "UserSettingsNotificationVirtualContributor";
+          adminSpaceCommunityInvitation: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+      };
     };
+    authorization?:
+      | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
+      | undefined;
   };
 };
 
@@ -84781,15 +91616,6 @@ export type UpdateVirtualContributorSettingsMutation = {
         | undefined;
     };
   };
-};
-
-export type TagsetDetailsFragment = {
-  __typename: "Tagset";
-  id: string;
-  name: string;
-  tags: Array<string>;
-  allowedValues: Array<string>;
-  type: SchemaTypes.TagsetType;
 };
 
 export type RoleSetAvailableMembersQueryVariables = SchemaTypes.Exact<{
@@ -85321,31 +92147,107 @@ export type SpaceCalloutQuery = {
           collaboration: {
             calloutsSet: {
               callouts: Array<{
+                __typename: "Callout";
                 id: string;
-                activity: number;
-                nameID: string;
-                publishedDate?: number | undefined;
                 sortOrder: number;
-                type: SchemaTypes.CalloutType;
-                visibility: SchemaTypes.CalloutVisibility;
-                authorization?:
-                  | {
-                      myPrivileges?:
-                        | Array<SchemaTypes.AuthorizationPrivilege>
-                        | undefined;
-                    }
-                  | undefined;
-                comments?:
-                  | {
-                      id: string;
-                      messagesCount: number;
-                      messages: Array<{ message: any }>;
-                    }
-                  | undefined;
-                contributionPolicy: {
-                  allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
+                activity: number;
+                framing: {
+                  __typename: "CalloutFraming";
                   id: string;
-                  state: SchemaTypes.CalloutState;
+                  type: SchemaTypes.CalloutFramingType;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    description?: any | undefined;
+                    url: string;
+                    tagset?:
+                      | {
+                          __typename: "Tagset";
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          allowedValues: Array<string>;
+                          type: SchemaTypes.TagsetType;
+                        }
+                      | undefined;
+                    references?:
+                      | Array<{
+                          __typename: "Reference";
+                          id: string;
+                          name: string;
+                          uri: string;
+                          description?: string | undefined;
+                        }>
+                      | undefined;
+                    storageBucket: { __typename: "StorageBucket"; id: string };
+                  };
+                  whiteboard?:
+                    | {
+                        __typename: "Whiteboard";
+                        id: string;
+                        nameID: string;
+                        createdDate: Date;
+                        contentUpdatePolicy: SchemaTypes.ContentUpdatePolicy;
+                        profile: {
+                          __typename: "Profile";
+                          id: string;
+                          url: string;
+                          displayName: string;
+                          description?: any | undefined;
+                          tagset?:
+                            | {
+                                __typename: "Tagset";
+                                id: string;
+                                name: string;
+                                tags: Array<string>;
+                                allowedValues: Array<string>;
+                                type: SchemaTypes.TagsetType;
+                              }
+                            | undefined;
+                          storageBucket: {
+                            __typename: "StorageBucket";
+                            id: string;
+                          };
+                        };
+                        authorization?:
+                          | {
+                              __typename: "Authorization";
+                              id: string;
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                        createdBy?:
+                          | {
+                              __typename: "User";
+                              id: string;
+                              profile: {
+                                __typename: "Profile";
+                                id: string;
+                                displayName: string;
+                                url: string;
+                                location?:
+                                  | {
+                                      __typename: "Location";
+                                      id: string;
+                                      country?: string | undefined;
+                                      city?: string | undefined;
+                                    }
+                                  | undefined;
+                              };
+                            }
+                          | undefined;
+                      }
+                    | undefined;
+                };
+                contributionDefaults: {
+                  __typename: "CalloutContributionDefaults";
+                  id: string;
+                  defaultDisplayName?: string | undefined;
+                  postDescription?: any | undefined;
+                  whiteboardContent?: any | undefined;
                 };
                 contributions: Array<{
                   authorization?:
@@ -85643,9 +92545,299 @@ export type SpaceCalloutQuery = {
                       }
                     | undefined;
                 }>;
-                createdBy?: { email: string } | undefined;
-                framing: {
+                comments?:
+                  | {
+                      __typename: "Room";
+                      id: string;
+                      messagesCount: number;
+                      authorization?:
+                        | {
+                            __typename: "Authorization";
+                            id: string;
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      messages: Array<{
+                        __typename: "Message";
+                        id: any;
+                        message: any;
+                        threadID?: string | undefined;
+                        reactions: Array<{
+                          __typename: "Reaction";
+                          id: any;
+                          emoji: any;
+                          sender?:
+                            | {
+                                __typename: "User";
+                                id: string;
+                                profile: {
+                                  __typename: "Profile";
+                                  id: string;
+                                  displayName: string;
+                                };
+                              }
+                            | undefined;
+                        }>;
+                        sender?:
+                          | {
+                              __typename: "Organization";
+                              id: string;
+                              profile: {
+                                __typename: "Profile";
+                                id: string;
+                                displayName: string;
+                                url: string;
+                                description?: any | undefined;
+                                tagsets?:
+                                  | Array<{
+                                      __typename: "Tagset";
+                                      id: string;
+                                      name: string;
+                                      tags: Array<string>;
+                                      allowedValues: Array<string>;
+                                      type: SchemaTypes.TagsetType;
+                                    }>
+                                  | undefined;
+                                location?:
+                                  | {
+                                      __typename: "Location";
+                                      id: string;
+                                      country?: string | undefined;
+                                      city?: string | undefined;
+                                    }
+                                  | undefined;
+                              };
+                            }
+                          | {
+                              __typename: "User";
+                              id: string;
+                              profile: {
+                                __typename: "Profile";
+                                id: string;
+                                displayName: string;
+                                url: string;
+                                description?: any | undefined;
+                                tagsets?:
+                                  | Array<{
+                                      __typename: "Tagset";
+                                      id: string;
+                                      name: string;
+                                      tags: Array<string>;
+                                      allowedValues: Array<string>;
+                                      type: SchemaTypes.TagsetType;
+                                    }>
+                                  | undefined;
+                                location?:
+                                  | {
+                                      __typename: "Location";
+                                      id: string;
+                                      country?: string | undefined;
+                                      city?: string | undefined;
+                                    }
+                                  | undefined;
+                              };
+                            }
+                          | {
+                              __typename: "VirtualContributor";
+                              id: string;
+                              profile: {
+                                __typename: "Profile";
+                                id: string;
+                                displayName: string;
+                                url: string;
+                                description?: any | undefined;
+                                tagsets?:
+                                  | Array<{
+                                      __typename: "Tagset";
+                                      id: string;
+                                      name: string;
+                                      tags: Array<string>;
+                                      allowedValues: Array<string>;
+                                      type: SchemaTypes.TagsetType;
+                                    }>
+                                  | undefined;
+                                location?:
+                                  | {
+                                      __typename: "Location";
+                                      id: string;
+                                      country?: string | undefined;
+                                      city?: string | undefined;
+                                    }
+                                  | undefined;
+                              };
+                            }
+                          | undefined;
+                      }>;
+                      vcInteractions: Array<{
+                        __typename: "VcInteraction";
+                        id: string;
+                        threadID: string;
+                        virtualContributorID: string;
+                      }>;
+                    }
+                  | undefined;
+                authorization?:
+                  | {
+                      __typename: "Authorization";
+                      id: string;
+                      myPrivileges?:
+                        | Array<SchemaTypes.AuthorizationPrivilege>
+                        | undefined;
+                    }
+                  | undefined;
+                settings: {
+                  __typename: "CalloutSettings";
+                  visibility: SchemaTypes.CalloutVisibility;
+                  contribution: {
+                    __typename: "CalloutSettingsContribution";
+                    enabled: boolean;
+                    allowedTypes: Array<SchemaTypes.CalloutContributionType>;
+                    canAddContributions: SchemaTypes.CalloutAllowedContributors;
+                    commentsEnabled: boolean;
+                  };
+                  framing: {
+                    __typename: "CalloutSettingsFraming";
+                    commentsEnabled: boolean;
+                  };
+                };
+              }>;
+            };
+          };
+        }
+      | undefined;
+  };
+};
+
+export type CalloutDetailsQueryVariables = SchemaTypes.Exact<{
+  calloutId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type CalloutDetailsQuery = {
+  lookup: {
+    __typename: "LookupQueryResults";
+    callout?:
+      | {
+          __typename: "Callout";
+          id: string;
+          sortOrder: number;
+          activity: number;
+          framing: {
+            __typename: "CalloutFraming";
+            id: string;
+            type: SchemaTypes.CalloutFramingType;
+            profile: {
+              __typename: "Profile";
+              id: string;
+              displayName: string;
+              description?: any | undefined;
+              url: string;
+              tagset?:
+                | {
+                    __typename: "Tagset";
+                    id: string;
+                    name: string;
+                    tags: Array<string>;
+                    allowedValues: Array<string>;
+                    type: SchemaTypes.TagsetType;
+                  }
+                | undefined;
+              references?:
+                | Array<{
+                    __typename: "Reference";
+                    id: string;
+                    name: string;
+                    uri: string;
+                    description?: string | undefined;
+                  }>
+                | undefined;
+              storageBucket: { __typename: "StorageBucket"; id: string };
+            };
+            whiteboard?:
+              | {
+                  __typename: "Whiteboard";
                   id: string;
+                  nameID: string;
+                  createdDate: Date;
+                  contentUpdatePolicy: SchemaTypes.ContentUpdatePolicy;
+                  profile: {
+                    __typename: "Profile";
+                    id: string;
+                    url: string;
+                    displayName: string;
+                    description?: any | undefined;
+                    tagset?:
+                      | {
+                          __typename: "Tagset";
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          allowedValues: Array<string>;
+                          type: SchemaTypes.TagsetType;
+                        }
+                      | undefined;
+                    storageBucket: { __typename: "StorageBucket"; id: string };
+                  };
+                  authorization?:
+                    | {
+                        __typename: "Authorization";
+                        id: string;
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  createdBy?:
+                    | {
+                        __typename: "User";
+                        id: string;
+                        profile: {
+                          __typename: "Profile";
+                          id: string;
+                          displayName: string;
+                          url: string;
+                          location?:
+                            | {
+                                __typename: "Location";
+                                id: string;
+                                country?: string | undefined;
+                                city?: string | undefined;
+                              }
+                            | undefined;
+                        };
+                      }
+                    | undefined;
+                }
+              | undefined;
+          };
+          contributionDefaults: {
+            __typename: "CalloutContributionDefaults";
+            id: string;
+            defaultDisplayName?: string | undefined;
+            postDescription?: any | undefined;
+            whiteboardContent?: any | undefined;
+          };
+          contributions: Array<{
+            authorization?:
+              | {
+                  myPrivileges?:
+                    | Array<SchemaTypes.AuthorizationPrivilege>
+                    | undefined;
+                }
+              | undefined;
+            createdBy?: { email: string } | undefined;
+            link?:
+              | {
+                  id: string;
+                  uri: string;
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
                   profile: {
                     id: string;
                     displayName: string;
@@ -85716,83 +92908,30 @@ export type SpaceCalloutQuery = {
                       }>;
                     };
                   };
-                  whiteboard?:
+                }
+              | undefined;
+            post?:
+              | {
+                  id: string;
+                  nameID: string;
+                  createdDate: Date;
+                  authorization?:
                     | {
-                        id: string;
-                        nameID: string;
-                        profile: {
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  profile: {
+                    id: string;
+                    displayName: string;
+                    description?: any | undefined;
+                    tagline?: string | undefined;
+                    references?:
+                      | Array<{
                           id: string;
-                          displayName: string;
-                          description?: any | undefined;
-                          tagline?: string | undefined;
-                          visual?:
-                            | {
-                                __typename: "Visual";
-                                id: string;
-                                uri: string;
-                                name: string;
-                              }
-                            | undefined;
-                          storageBucket: {
-                            id: string;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                            parentEntity?:
-                              | {
-                                  displayName: string;
-                                  type: SchemaTypes.ProfileType;
-                                }
-                              | undefined;
-                            documents: Array<{
-                              id: string;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<SchemaTypes.AuthorizationPrivilege>
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>;
-                          };
-                          references?:
-                            | Array<{
-                                id: string;
-                                name: string;
-                                uri: string;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<SchemaTypes.AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>
-                            | undefined;
-                          tagsets?:
-                            | Array<{
-                                id: string;
-                                name: string;
-                                tags: Array<string>;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<SchemaTypes.AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>
-                            | undefined;
-                          location?:
-                            | {
-                                country?: string | undefined;
-                                city?: string | undefined;
-                              }
-                            | undefined;
+                          name: string;
+                          uri: string;
                           authorization?:
                             | {
                                 myPrivileges?:
@@ -85800,191 +92939,169 @@ export type SpaceCalloutQuery = {
                                   | undefined;
                               }
                             | undefined;
-                        };
-                      }
-                    | undefined;
-                };
-                publishedBy?: { email: string } | undefined;
-              }>;
-            };
-          };
-        }
-      | undefined;
-  };
-};
-
-export type CalloutDetailsQueryVariables = SchemaTypes.Exact<{
-  calloutId: SchemaTypes.Scalars["UUID"]["input"];
-}>;
-
-export type CalloutDetailsQuery = {
-  lookup: {
-    __typename: "LookupQueryResults";
-    callout?:
-      | {
-          __typename: "Callout";
-          id: string;
-          nameID: string;
-          type: SchemaTypes.CalloutType;
-          sortOrder: number;
-          activity: number;
-          visibility: SchemaTypes.CalloutVisibility;
-          framing: {
-            __typename: "CalloutFraming";
-            profile: {
-              __typename: "Profile";
-              id: string;
-              displayName: string;
-              description?: any | undefined;
-              tagset?:
-                | {
-                    __typename: "Tagset";
-                    id: string;
-                    name: string;
-                    tags: Array<string>;
-                    allowedValues: Array<string>;
-                    type: SchemaTypes.TagsetType;
-                  }
-                | undefined;
-              tagsets?:
-                | Array<{
-                    __typename: "Tagset";
-                    id: string;
-                    name: string;
-                    tags: Array<string>;
-                    allowedValues: Array<string>;
-                    type: SchemaTypes.TagsetType;
-                  }>
-                | undefined;
-              references?:
-                | Array<{
-                    __typename: "Reference";
-                    id: string;
-                    name: string;
-                    uri: string;
-                    description?: string | undefined;
-                  }>
-                | undefined;
-            };
-            whiteboard?:
-              | {
-                  __typename: "Whiteboard";
-                  id: string;
-                  nameID: string;
-                  createdDate: Date;
-                  contentUpdatePolicy: SchemaTypes.ContentUpdatePolicy;
-                  profile: {
-                    __typename: "Profile";
-                    id: string;
-                    displayName: string;
-                    description?: any | undefined;
+                        }>
+                      | undefined;
                     visual?:
                       | {
                           __typename: "Visual";
                           id: string;
                           uri: string;
                           name: string;
-                          allowedTypes: Array<string>;
-                          aspectRatio: number;
-                          maxHeight: number;
-                          maxWidth: number;
-                          minHeight: number;
-                          minWidth: number;
-                          alternativeText?: string | undefined;
                         }
                       | undefined;
-                    preview?:
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
+                    tagsets?:
+                      | Array<{
+                          id: string;
+                          name: string;
+                          tags: Array<string>;
+                          authorization?:
+                            | {
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>
+                      | undefined;
+                    location?:
+                      | {
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                    authorization?:
+                      | {
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
+                            | undefined;
+                        }
+                      | undefined;
+                  };
+                  comments: {
+                    id: string;
+                    messagesCount: number;
+                    messages: Array<{
+                      id: any;
+                      message: any;
+                      sender?: { id: string } | {} | undefined;
+                    }>;
+                  };
+                  createdBy?: { email: string } | undefined;
+                }
+              | undefined;
+            whiteboard?:
+              | {
+                  id: string;
+                  nameID: string;
+                  content: any;
+                  authorization?:
+                    | {
+                        myPrivileges?:
+                          | Array<SchemaTypes.AuthorizationPrivilege>
+                          | undefined;
+                      }
+                    | undefined;
+                  profile: {
+                    id: string;
+                    displayName: string;
+                    description?: any | undefined;
+                    tagline?: string | undefined;
+                    visual?:
                       | {
                           __typename: "Visual";
                           id: string;
                           uri: string;
                           name: string;
-                          allowedTypes: Array<string>;
-                          aspectRatio: number;
-                          maxHeight: number;
-                          maxWidth: number;
-                          minHeight: number;
-                          minWidth: number;
-                          alternativeText?: string | undefined;
                         }
                       | undefined;
-                    tagset?:
-                      | {
-                          __typename: "Tagset";
+                    storageBucket: {
+                      id: string;
+                      authorization?:
+                        | {
+                            myPrivileges?:
+                              | Array<SchemaTypes.AuthorizationPrivilege>
+                              | undefined;
+                          }
+                        | undefined;
+                      parentEntity?:
+                        | { displayName: string; type: SchemaTypes.ProfileType }
+                        | undefined;
+                      documents: Array<{
+                        id: string;
+                        authorization?:
+                          | {
+                              myPrivileges?:
+                                | Array<SchemaTypes.AuthorizationPrivilege>
+                                | undefined;
+                            }
+                          | undefined;
+                      }>;
+                    };
+                    references?:
+                      | Array<{
+                          id: string;
+                          name: string;
+                          uri: string;
+                          authorization?:
+                            | {
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
+                              }
+                            | undefined;
+                        }>
+                      | undefined;
+                    tagsets?:
+                      | Array<{
                           id: string;
                           name: string;
                           tags: Array<string>;
-                          allowedValues: Array<string>;
-                          type: SchemaTypes.TagsetType;
-                        }
-                      | undefined;
-                    storageBucket: { __typename: "StorageBucket"; id: string };
-                  };
-                  authorization?:
-                    | {
-                        __typename: "Authorization";
-                        id: string;
-                        myPrivileges?:
-                          | Array<SchemaTypes.AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                  createdBy?:
-                    | {
-                        __typename: "User";
-                        id: string;
-                        profile: {
-                          __typename: "Profile";
-                          id: string;
-                          displayName: string;
-                          url: string;
-                          location?:
+                          authorization?:
                             | {
-                                __typename: "Location";
-                                id: string;
-                                country?: string | undefined;
-                                city?: string | undefined;
+                                myPrivileges?:
+                                  | Array<SchemaTypes.AuthorizationPrivilege>
+                                  | undefined;
                               }
                             | undefined;
-                          avatar?:
-                            | { __typename: "Visual"; id: string; uri: string }
+                        }>
+                      | undefined;
+                    location?:
+                      | {
+                          country?: string | undefined;
+                          city?: string | undefined;
+                        }
+                      | undefined;
+                    authorization?:
+                      | {
+                          myPrivileges?:
+                            | Array<SchemaTypes.AuthorizationPrivilege>
                             | undefined;
-                        };
-                      }
-                    | undefined;
-                }
-              | undefined;
-          };
-          contributionPolicy: {
-            __typename: "CalloutContributionPolicy";
-            state: SchemaTypes.CalloutState;
-          };
-          contributionDefaults: {
-            __typename: "CalloutContributionDefaults";
-            id: string;
-            postDescription?: any | undefined;
-            whiteboardContent?: any | undefined;
-          };
-          contributions: Array<{
-            __typename: "CalloutContribution";
-            link?:
-              | {
-                  __typename: "Link";
-                  id: string;
-                  uri: string;
-                  profile: {
-                    id: string;
-                    displayName: string;
-                    description?: any | undefined;
+                        }
+                      | undefined;
                   };
-                  authorization?:
-                    | {
-                        id: string;
-                        myPrivileges?:
-                          | Array<SchemaTypes.AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
                 }
               | undefined;
           }>;
@@ -85995,6 +93112,7 @@ export type CalloutDetailsQuery = {
                 messagesCount: number;
                 authorization?:
                   | {
+                      __typename: "Authorization";
                       id: string;
                       myPrivileges?:
                         | Array<SchemaTypes.AuthorizationPrivilege>
@@ -86002,394 +93120,121 @@ export type CalloutDetailsQuery = {
                     }
                   | undefined;
                 messages: Array<{
+                  __typename: "Message";
                   id: any;
                   message: any;
-                  timestamp: number;
                   threadID?: string | undefined;
                   reactions: Array<{
+                    __typename: "Reaction";
                     id: any;
                     emoji: any;
                     sender?:
-                      | { id: string; firstName: string; lastName: string }
+                      | {
+                          __typename: "User";
+                          id: string;
+                          profile: {
+                            __typename: "Profile";
+                            id: string;
+                            displayName: string;
+                          };
+                        }
                       | undefined;
                   }>;
                   sender?:
                     | {
+                        __typename: "Organization";
                         id: string;
-                        nameID: string;
-                        firstName: string;
-                        lastName: string;
-                        email: string;
-                        phone?: string | undefined;
-                        accountUpn: string;
-                        account?:
-                          | {
-                              id: string;
-                              spaces: Array<{ id: string }>;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<SchemaTypes.AuthorizationPrivilege>
-                                      | undefined;
-                                  }
-                                | undefined;
-                              host?:
-                                | {
-                                    id: string;
-                                    nameID: string;
-                                    profile: {
-                                      id: string;
-                                      displayName: string;
-                                      description?: any | undefined;
-                                      tagline?: string | undefined;
-                                      references?:
-                                        | Array<{
-                                            id: string;
-                                            name: string;
-                                            uri: string;
-                                            authorization?:
-                                              | {
-                                                  myPrivileges?:
-                                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                                    | undefined;
-                                                }
-                                              | undefined;
-                                          }>
-                                        | undefined;
-                                      tagsets?:
-                                        | Array<{
-                                            id: string;
-                                            name: string;
-                                            tags: Array<string>;
-                                            authorization?:
-                                              | {
-                                                  myPrivileges?:
-                                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                                    | undefined;
-                                                }
-                                              | undefined;
-                                          }>
-                                        | undefined;
-                                      location?:
-                                        | {
-                                            country?: string | undefined;
-                                            city?: string | undefined;
-                                          }
-                                        | undefined;
-                                      authorization?:
-                                        | {
-                                            myPrivileges?:
-                                              | Array<SchemaTypes.AuthorizationPrivilege>
-                                              | undefined;
-                                          }
-                                        | undefined;
-                                      storageBucket: {
-                                        id: string;
-                                        authorization?:
-                                          | {
-                                              myPrivileges?:
-                                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                                | undefined;
-                                            }
-                                          | undefined;
-                                        parentEntity?:
-                                          | {
-                                              displayName: string;
-                                              type: SchemaTypes.ProfileType;
-                                            }
-                                          | undefined;
-                                        documents: Array<{
-                                          id: string;
-                                          authorization?:
-                                            | {
-                                                myPrivileges?:
-                                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                                  | undefined;
-                                              }
-                                            | undefined;
-                                        }>;
-                                      };
-                                    };
-                                    authorization?:
-                                      | {
-                                          myPrivileges?:
-                                            | Array<SchemaTypes.AuthorizationPrivilege>
-                                            | undefined;
-                                        }
-                                      | undefined;
-                                  }
-                                | {
-                                    id: string;
-                                    nameID: string;
-                                    profile: {
-                                      id: string;
-                                      displayName: string;
-                                      description?: any | undefined;
-                                      tagline?: string | undefined;
-                                      references?:
-                                        | Array<{
-                                            id: string;
-                                            name: string;
-                                            uri: string;
-                                            authorization?:
-                                              | {
-                                                  myPrivileges?:
-                                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                                    | undefined;
-                                                }
-                                              | undefined;
-                                          }>
-                                        | undefined;
-                                      tagsets?:
-                                        | Array<{
-                                            id: string;
-                                            name: string;
-                                            tags: Array<string>;
-                                            authorization?:
-                                              | {
-                                                  myPrivileges?:
-                                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                                    | undefined;
-                                                }
-                                              | undefined;
-                                          }>
-                                        | undefined;
-                                      location?:
-                                        | {
-                                            country?: string | undefined;
-                                            city?: string | undefined;
-                                          }
-                                        | undefined;
-                                      authorization?:
-                                        | {
-                                            myPrivileges?:
-                                              | Array<SchemaTypes.AuthorizationPrivilege>
-                                              | undefined;
-                                          }
-                                        | undefined;
-                                      storageBucket: {
-                                        id: string;
-                                        authorization?:
-                                          | {
-                                              myPrivileges?:
-                                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                                | undefined;
-                                            }
-                                          | undefined;
-                                        parentEntity?:
-                                          | {
-                                              displayName: string;
-                                              type: SchemaTypes.ProfileType;
-                                            }
-                                          | undefined;
-                                        documents: Array<{
-                                          id: string;
-                                          authorization?:
-                                            | {
-                                                myPrivileges?:
-                                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                                  | undefined;
-                                              }
-                                            | undefined;
-                                        }>;
-                                      };
-                                    };
-                                    authorization?:
-                                      | {
-                                          myPrivileges?:
-                                            | Array<SchemaTypes.AuthorizationPrivilege>
-                                            | undefined;
-                                        }
-                                      | undefined;
-                                  }
-                                | {
-                                    id: string;
-                                    nameID: string;
-                                    profile: {
-                                      id: string;
-                                      displayName: string;
-                                      description?: any | undefined;
-                                      tagline?: string | undefined;
-                                      references?:
-                                        | Array<{
-                                            id: string;
-                                            name: string;
-                                            uri: string;
-                                            authorization?:
-                                              | {
-                                                  myPrivileges?:
-                                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                                    | undefined;
-                                                }
-                                              | undefined;
-                                          }>
-                                        | undefined;
-                                      tagsets?:
-                                        | Array<{
-                                            id: string;
-                                            name: string;
-                                            tags: Array<string>;
-                                            authorization?:
-                                              | {
-                                                  myPrivileges?:
-                                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                                    | undefined;
-                                                }
-                                              | undefined;
-                                          }>
-                                        | undefined;
-                                      location?:
-                                        | {
-                                            country?: string | undefined;
-                                            city?: string | undefined;
-                                          }
-                                        | undefined;
-                                      authorization?:
-                                        | {
-                                            myPrivileges?:
-                                              | Array<SchemaTypes.AuthorizationPrivilege>
-                                              | undefined;
-                                          }
-                                        | undefined;
-                                      storageBucket: {
-                                        id: string;
-                                        authorization?:
-                                          | {
-                                              myPrivileges?:
-                                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                                | undefined;
-                                            }
-                                          | undefined;
-                                        parentEntity?:
-                                          | {
-                                              displayName: string;
-                                              type: SchemaTypes.ProfileType;
-                                            }
-                                          | undefined;
-                                        documents: Array<{
-                                          id: string;
-                                          authorization?:
-                                            | {
-                                                myPrivileges?:
-                                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                                  | undefined;
-                                              }
-                                            | undefined;
-                                        }>;
-                                      };
-                                    };
-                                    authorization?:
-                                      | {
-                                          myPrivileges?:
-                                            | Array<SchemaTypes.AuthorizationPrivilege>
-                                            | undefined;
-                                        }
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }
-                          | undefined;
-                        agent: {
-                          id: string;
-                          credentials?:
-                            | Array<{
-                                id: string;
-                                resourceID: string;
-                                type: SchemaTypes.CredentialType;
-                              }>
-                            | undefined;
-                        };
                         profile: {
+                          __typename: "Profile";
                           id: string;
                           displayName: string;
+                          url: string;
                           description?: any | undefined;
-                          tagline?: string | undefined;
-                          references?:
-                            | Array<{
-                                id: string;
-                                name: string;
-                                uri: string;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<SchemaTypes.AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                              }>
-                            | undefined;
                           tagsets?:
                             | Array<{
+                                __typename: "Tagset";
                                 id: string;
                                 name: string;
                                 tags: Array<string>;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<SchemaTypes.AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
+                                allowedValues: Array<string>;
+                                type: SchemaTypes.TagsetType;
                               }>
                             | undefined;
                           location?:
                             | {
+                                __typename: "Location";
+                                id: string;
                                 country?: string | undefined;
                                 city?: string | undefined;
                               }
                             | undefined;
-                          visuals: Array<{
-                            id: string;
-                            name: string;
-                            uri: string;
-                          }>;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
                         };
-                        preferences: Array<{
-                          id: string;
-                          value: string;
-                          definition: {
-                            type: SchemaTypes.PreferenceType;
-                            id: string;
-                            displayName: string;
-                            description: string;
-                            group: string;
-                          };
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>;
-                        settings: {
-                          privacy: {
-                            contributionRolesPubliclyVisible: boolean;
-                          };
-                          communication: {
-                            allowOtherUsersToSendMessages: boolean;
-                          };
-                        };
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                              credentialRules?:
-                                | Array<{ name?: string | undefined }>
-                                | undefined;
-                            }
-                          | undefined;
                       }
-                    | {}
+                    | {
+                        __typename: "User";
+                        id: string;
+                        profile: {
+                          __typename: "Profile";
+                          id: string;
+                          displayName: string;
+                          url: string;
+                          description?: any | undefined;
+                          tagsets?:
+                            | Array<{
+                                __typename: "Tagset";
+                                id: string;
+                                name: string;
+                                tags: Array<string>;
+                                allowedValues: Array<string>;
+                                type: SchemaTypes.TagsetType;
+                              }>
+                            | undefined;
+                          location?:
+                            | {
+                                __typename: "Location";
+                                id: string;
+                                country?: string | undefined;
+                                city?: string | undefined;
+                              }
+                            | undefined;
+                        };
+                      }
+                    | {
+                        __typename: "VirtualContributor";
+                        id: string;
+                        profile: {
+                          __typename: "Profile";
+                          id: string;
+                          displayName: string;
+                          url: string;
+                          description?: any | undefined;
+                          tagsets?:
+                            | Array<{
+                                __typename: "Tagset";
+                                id: string;
+                                name: string;
+                                tags: Array<string>;
+                                allowedValues: Array<string>;
+                                type: SchemaTypes.TagsetType;
+                              }>
+                            | undefined;
+                          location?:
+                            | {
+                                __typename: "Location";
+                                id: string;
+                                country?: string | undefined;
+                                city?: string | undefined;
+                              }
+                            | undefined;
+                        };
+                      }
                     | undefined;
+                }>;
+                vcInteractions: Array<{
+                  __typename: "VcInteraction";
+                  id: string;
+                  threadID: string;
+                  virtualContributorID: string;
                 }>;
               }
             | undefined;
@@ -86402,1507 +93247,24 @@ export type CalloutDetailsQuery = {
                   | undefined;
               }
             | undefined;
-        }
-      | undefined;
-  };
-};
-
-export type CalloutDetailsFragment = {
-  __typename: "Callout";
-  id: string;
-  nameID: string;
-  type: SchemaTypes.CalloutType;
-  sortOrder: number;
-  activity: number;
-  visibility: SchemaTypes.CalloutVisibility;
-  framing: {
-    __typename: "CalloutFraming";
-    profile: {
-      __typename: "Profile";
-      id: string;
-      displayName: string;
-      description?: any | undefined;
-      tagset?:
-        | {
-            __typename: "Tagset";
-            id: string;
-            name: string;
-            tags: Array<string>;
-            allowedValues: Array<string>;
-            type: SchemaTypes.TagsetType;
-          }
-        | undefined;
-      tagsets?:
-        | Array<{
-            __typename: "Tagset";
-            id: string;
-            name: string;
-            tags: Array<string>;
-            allowedValues: Array<string>;
-            type: SchemaTypes.TagsetType;
-          }>
-        | undefined;
-      references?:
-        | Array<{
-            __typename: "Reference";
-            id: string;
-            name: string;
-            uri: string;
-            description?: string | undefined;
-          }>
-        | undefined;
-    };
-    whiteboard?:
-      | {
-          __typename: "Whiteboard";
-          id: string;
-          nameID: string;
-          createdDate: Date;
-          contentUpdatePolicy: SchemaTypes.ContentUpdatePolicy;
-          profile: {
-            __typename: "Profile";
-            id: string;
-            displayName: string;
-            description?: any | undefined;
-            visual?:
-              | {
-                  __typename: "Visual";
-                  id: string;
-                  uri: string;
-                  name: string;
-                  allowedTypes: Array<string>;
-                  aspectRatio: number;
-                  maxHeight: number;
-                  maxWidth: number;
-                  minHeight: number;
-                  minWidth: number;
-                  alternativeText?: string | undefined;
-                }
-              | undefined;
-            preview?:
-              | {
-                  __typename: "Visual";
-                  id: string;
-                  uri: string;
-                  name: string;
-                  allowedTypes: Array<string>;
-                  aspectRatio: number;
-                  maxHeight: number;
-                  maxWidth: number;
-                  minHeight: number;
-                  minWidth: number;
-                  alternativeText?: string | undefined;
-                }
-              | undefined;
-            tagset?:
-              | {
-                  __typename: "Tagset";
-                  id: string;
-                  name: string;
-                  tags: Array<string>;
-                  allowedValues: Array<string>;
-                  type: SchemaTypes.TagsetType;
-                }
-              | undefined;
-            storageBucket: { __typename: "StorageBucket"; id: string };
-          };
-          authorization?:
-            | {
-                __typename: "Authorization";
-                id: string;
-                myPrivileges?:
-                  | Array<SchemaTypes.AuthorizationPrivilege>
-                  | undefined;
-              }
-            | undefined;
-          createdBy?:
-            | {
-                __typename: "User";
-                id: string;
-                profile: {
-                  __typename: "Profile";
-                  id: string;
-                  displayName: string;
-                  url: string;
-                  location?:
-                    | {
-                        __typename: "Location";
-                        id: string;
-                        country?: string | undefined;
-                        city?: string | undefined;
-                      }
-                    | undefined;
-                  avatar?:
-                    | { __typename: "Visual"; id: string; uri: string }
-                    | undefined;
-                };
-              }
-            | undefined;
-        }
-      | undefined;
-  };
-  contributionPolicy: {
-    __typename: "CalloutContributionPolicy";
-    state: SchemaTypes.CalloutState;
-  };
-  contributionDefaults: {
-    __typename: "CalloutContributionDefaults";
-    id: string;
-    postDescription?: any | undefined;
-    whiteboardContent?: any | undefined;
-  };
-  contributions: Array<{
-    __typename: "CalloutContribution";
-    link?:
-      | {
-          __typename: "Link";
-          id: string;
-          uri: string;
-          profile: {
-            id: string;
-            displayName: string;
-            description?: any | undefined;
-          };
-          authorization?:
-            | {
-                id: string;
-                myPrivileges?:
-                  | Array<SchemaTypes.AuthorizationPrivilege>
-                  | undefined;
-              }
-            | undefined;
-        }
-      | undefined;
-  }>;
-  comments?:
-    | {
-        __typename: "Room";
-        id: string;
-        messagesCount: number;
-        authorization?:
-          | {
-              id: string;
-              myPrivileges?:
-                | Array<SchemaTypes.AuthorizationPrivilege>
-                | undefined;
-            }
-          | undefined;
-        messages: Array<{
-          id: any;
-          message: any;
-          timestamp: number;
-          threadID?: string | undefined;
-          reactions: Array<{
-            id: any;
-            emoji: any;
-            sender?:
-              | { id: string; firstName: string; lastName: string }
-              | undefined;
-          }>;
-          sender?:
-            | {
-                id: string;
-                nameID: string;
-                firstName: string;
-                lastName: string;
-                email: string;
-                phone?: string | undefined;
-                accountUpn: string;
-                account?:
-                  | {
-                      id: string;
-                      spaces: Array<{ id: string }>;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                      host?:
-                        | {
-                            id: string;
-                            nameID: string;
-                            profile: {
-                              id: string;
-                              displayName: string;
-                              description?: any | undefined;
-                              tagline?: string | undefined;
-                              references?:
-                                | Array<{
-                                    id: string;
-                                    name: string;
-                                    uri: string;
-                                    authorization?:
-                                      | {
-                                          myPrivileges?:
-                                            | Array<SchemaTypes.AuthorizationPrivilege>
-                                            | undefined;
-                                        }
-                                      | undefined;
-                                  }>
-                                | undefined;
-                              tagsets?:
-                                | Array<{
-                                    id: string;
-                                    name: string;
-                                    tags: Array<string>;
-                                    authorization?:
-                                      | {
-                                          myPrivileges?:
-                                            | Array<SchemaTypes.AuthorizationPrivilege>
-                                            | undefined;
-                                        }
-                                      | undefined;
-                                  }>
-                                | undefined;
-                              location?:
-                                | {
-                                    country?: string | undefined;
-                                    city?: string | undefined;
-                                  }
-                                | undefined;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<SchemaTypes.AuthorizationPrivilege>
-                                      | undefined;
-                                  }
-                                | undefined;
-                              storageBucket: {
-                                id: string;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<SchemaTypes.AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                                parentEntity?:
-                                  | {
-                                      displayName: string;
-                                      type: SchemaTypes.ProfileType;
-                                    }
-                                  | undefined;
-                                documents: Array<{
-                                  id: string;
-                                  authorization?:
-                                    | {
-                                        myPrivileges?:
-                                          | Array<SchemaTypes.AuthorizationPrivilege>
-                                          | undefined;
-                                      }
-                                    | undefined;
-                                }>;
-                              };
-                            };
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }
-                        | {
-                            id: string;
-                            nameID: string;
-                            profile: {
-                              id: string;
-                              displayName: string;
-                              description?: any | undefined;
-                              tagline?: string | undefined;
-                              references?:
-                                | Array<{
-                                    id: string;
-                                    name: string;
-                                    uri: string;
-                                    authorization?:
-                                      | {
-                                          myPrivileges?:
-                                            | Array<SchemaTypes.AuthorizationPrivilege>
-                                            | undefined;
-                                        }
-                                      | undefined;
-                                  }>
-                                | undefined;
-                              tagsets?:
-                                | Array<{
-                                    id: string;
-                                    name: string;
-                                    tags: Array<string>;
-                                    authorization?:
-                                      | {
-                                          myPrivileges?:
-                                            | Array<SchemaTypes.AuthorizationPrivilege>
-                                            | undefined;
-                                        }
-                                      | undefined;
-                                  }>
-                                | undefined;
-                              location?:
-                                | {
-                                    country?: string | undefined;
-                                    city?: string | undefined;
-                                  }
-                                | undefined;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<SchemaTypes.AuthorizationPrivilege>
-                                      | undefined;
-                                  }
-                                | undefined;
-                              storageBucket: {
-                                id: string;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<SchemaTypes.AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                                parentEntity?:
-                                  | {
-                                      displayName: string;
-                                      type: SchemaTypes.ProfileType;
-                                    }
-                                  | undefined;
-                                documents: Array<{
-                                  id: string;
-                                  authorization?:
-                                    | {
-                                        myPrivileges?:
-                                          | Array<SchemaTypes.AuthorizationPrivilege>
-                                          | undefined;
-                                      }
-                                    | undefined;
-                                }>;
-                              };
-                            };
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }
-                        | {
-                            id: string;
-                            nameID: string;
-                            profile: {
-                              id: string;
-                              displayName: string;
-                              description?: any | undefined;
-                              tagline?: string | undefined;
-                              references?:
-                                | Array<{
-                                    id: string;
-                                    name: string;
-                                    uri: string;
-                                    authorization?:
-                                      | {
-                                          myPrivileges?:
-                                            | Array<SchemaTypes.AuthorizationPrivilege>
-                                            | undefined;
-                                        }
-                                      | undefined;
-                                  }>
-                                | undefined;
-                              tagsets?:
-                                | Array<{
-                                    id: string;
-                                    name: string;
-                                    tags: Array<string>;
-                                    authorization?:
-                                      | {
-                                          myPrivileges?:
-                                            | Array<SchemaTypes.AuthorizationPrivilege>
-                                            | undefined;
-                                        }
-                                      | undefined;
-                                  }>
-                                | undefined;
-                              location?:
-                                | {
-                                    country?: string | undefined;
-                                    city?: string | undefined;
-                                  }
-                                | undefined;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<SchemaTypes.AuthorizationPrivilege>
-                                      | undefined;
-                                  }
-                                | undefined;
-                              storageBucket: {
-                                id: string;
-                                authorization?:
-                                  | {
-                                      myPrivileges?:
-                                        | Array<SchemaTypes.AuthorizationPrivilege>
-                                        | undefined;
-                                    }
-                                  | undefined;
-                                parentEntity?:
-                                  | {
-                                      displayName: string;
-                                      type: SchemaTypes.ProfileType;
-                                    }
-                                  | undefined;
-                                documents: Array<{
-                                  id: string;
-                                  authorization?:
-                                    | {
-                                        myPrivileges?:
-                                          | Array<SchemaTypes.AuthorizationPrivilege>
-                                          | undefined;
-                                      }
-                                    | undefined;
-                                }>;
-                              };
-                            };
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }
-                        | undefined;
-                    }
-                  | undefined;
-                agent: {
-                  id: string;
-                  credentials?:
-                    | Array<{
-                        id: string;
-                        resourceID: string;
-                        type: SchemaTypes.CredentialType;
-                      }>
-                    | undefined;
-                };
-                profile: {
-                  id: string;
-                  displayName: string;
-                  description?: any | undefined;
-                  tagline?: string | undefined;
-                  references?:
-                    | Array<{
-                        id: string;
-                        name: string;
-                        uri: string;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>
-                    | undefined;
-                  tagsets?:
-                    | Array<{
-                        id: string;
-                        name: string;
-                        tags: Array<string>;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                      }>
-                    | undefined;
-                  location?:
-                    | {
-                        country?: string | undefined;
-                        city?: string | undefined;
-                      }
-                    | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<SchemaTypes.AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                };
-                preferences: Array<{
-                  id: string;
-                  value: string;
-                  definition: {
-                    type: SchemaTypes.PreferenceType;
-                    id: string;
-                    displayName: string;
-                    description: string;
-                    group: string;
-                  };
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<SchemaTypes.AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                }>;
-                settings: {
-                  privacy: { contributionRolesPubliclyVisible: boolean };
-                  communication: { allowOtherUsersToSendMessages: boolean };
-                };
-                authorization?:
-                  | {
-                      myPrivileges?:
-                        | Array<SchemaTypes.AuthorizationPrivilege>
-                        | undefined;
-                      credentialRules?:
-                        | Array<{ name?: string | undefined }>
-                        | undefined;
-                    }
-                  | undefined;
-              }
-            | {}
-            | undefined;
-        }>;
-      }
-    | undefined;
-  authorization?:
-    | {
-        __typename: "Authorization";
-        id: string;
-        myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined;
-      }
-    | undefined;
-};
-
-export type ReferenceDetailsFragment = {
-  __typename: "Reference";
-  id: string;
-  name: string;
-  uri: string;
-  description?: string | undefined;
-};
-
-export type WhiteboardDetailsFragment = {
-  __typename: "Whiteboard";
-  id: string;
-  nameID: string;
-  createdDate: Date;
-  contentUpdatePolicy: SchemaTypes.ContentUpdatePolicy;
-  profile: {
-    __typename: "Profile";
-    id: string;
-    displayName: string;
-    description?: any | undefined;
-    visual?:
-      | {
-          __typename: "Visual";
-          id: string;
-          uri: string;
-          name: string;
-          allowedTypes: Array<string>;
-          aspectRatio: number;
-          maxHeight: number;
-          maxWidth: number;
-          minHeight: number;
-          minWidth: number;
-          alternativeText?: string | undefined;
-        }
-      | undefined;
-    preview?:
-      | {
-          __typename: "Visual";
-          id: string;
-          uri: string;
-          name: string;
-          allowedTypes: Array<string>;
-          aspectRatio: number;
-          maxHeight: number;
-          maxWidth: number;
-          minHeight: number;
-          minWidth: number;
-          alternativeText?: string | undefined;
-        }
-      | undefined;
-    tagset?:
-      | {
-          __typename: "Tagset";
-          id: string;
-          name: string;
-          tags: Array<string>;
-          allowedValues: Array<string>;
-          type: SchemaTypes.TagsetType;
-        }
-      | undefined;
-    storageBucket: { __typename: "StorageBucket"; id: string };
-  };
-  authorization?:
-    | {
-        __typename: "Authorization";
-        id: string;
-        myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined;
-      }
-    | undefined;
-  createdBy?:
-    | {
-        __typename: "User";
-        id: string;
-        profile: {
-          __typename: "Profile";
-          id: string;
-          displayName: string;
-          url: string;
-          location?:
-            | {
-                __typename: "Location";
-                id: string;
-                country?: string | undefined;
-                city?: string | undefined;
-              }
-            | undefined;
-          avatar?:
-            | { __typename: "Visual"; id: string; uri: string }
-            | undefined;
-        };
-      }
-    | undefined;
-};
-
-export type WhiteboardProfileFragment = {
-  __typename: "Profile";
-  id: string;
-  displayName: string;
-  description?: any | undefined;
-  visual?:
-    | {
-        __typename: "Visual";
-        id: string;
-        uri: string;
-        name: string;
-        allowedTypes: Array<string>;
-        aspectRatio: number;
-        maxHeight: number;
-        maxWidth: number;
-        minHeight: number;
-        minWidth: number;
-        alternativeText?: string | undefined;
-      }
-    | undefined;
-  preview?:
-    | {
-        __typename: "Visual";
-        id: string;
-        uri: string;
-        name: string;
-        allowedTypes: Array<string>;
-        aspectRatio: number;
-        maxHeight: number;
-        maxWidth: number;
-        minHeight: number;
-        minWidth: number;
-        alternativeText?: string | undefined;
-      }
-    | undefined;
-  tagset?:
-    | {
-        __typename: "Tagset";
-        id: string;
-        name: string;
-        tags: Array<string>;
-        allowedValues: Array<string>;
-        type: SchemaTypes.TagsetType;
-      }
-    | undefined;
-  storageBucket: { __typename: "StorageBucket"; id: string };
-};
-
-export type LinkDetailsWithAuthorizationFragment = {
-  id: string;
-  uri: string;
-  profile: { id: string; displayName: string; description?: any | undefined };
-  authorization?:
-    | {
-        id: string;
-        myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined;
-      }
-    | undefined;
-};
-
-export type CommentsWithMessagesFragment = {
-  id: string;
-  messagesCount: number;
-  authorization?:
-    | {
-        id: string;
-        myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined;
-      }
-    | undefined;
-  messages: Array<{
-    id: any;
-    message: any;
-    timestamp: number;
-    threadID?: string | undefined;
-    reactions: Array<{
-      id: any;
-      emoji: any;
-      sender?: { id: string; firstName: string; lastName: string } | undefined;
-    }>;
-    sender?:
-      | {
-          id: string;
-          nameID: string;
-          firstName: string;
-          lastName: string;
-          email: string;
-          phone?: string | undefined;
-          accountUpn: string;
-          account?:
-            | {
-                id: string;
-                spaces: Array<{ id: string }>;
-                authorization?:
-                  | {
-                      myPrivileges?:
-                        | Array<SchemaTypes.AuthorizationPrivilege>
-                        | undefined;
-                    }
-                  | undefined;
-                host?:
-                  | {
-                      id: string;
-                      nameID: string;
-                      profile: {
-                        id: string;
-                        displayName: string;
-                        description?: any | undefined;
-                        tagline?: string | undefined;
-                        references?:
-                          | Array<{
-                              id: string;
-                              name: string;
-                              uri: string;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<SchemaTypes.AuthorizationPrivilege>
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>
-                          | undefined;
-                        tagsets?:
-                          | Array<{
-                              id: string;
-                              name: string;
-                              tags: Array<string>;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<SchemaTypes.AuthorizationPrivilege>
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>
-                          | undefined;
-                        location?:
-                          | {
-                              country?: string | undefined;
-                              city?: string | undefined;
-                            }
-                          | undefined;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                        storageBucket: {
-                          id: string;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                          parentEntity?:
-                            | {
-                                displayName: string;
-                                type: SchemaTypes.ProfileType;
-                              }
-                            | undefined;
-                          documents: Array<{
-                            id: string;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>;
-                        };
-                      };
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    }
-                  | {
-                      id: string;
-                      nameID: string;
-                      profile: {
-                        id: string;
-                        displayName: string;
-                        description?: any | undefined;
-                        tagline?: string | undefined;
-                        references?:
-                          | Array<{
-                              id: string;
-                              name: string;
-                              uri: string;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<SchemaTypes.AuthorizationPrivilege>
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>
-                          | undefined;
-                        tagsets?:
-                          | Array<{
-                              id: string;
-                              name: string;
-                              tags: Array<string>;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<SchemaTypes.AuthorizationPrivilege>
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>
-                          | undefined;
-                        location?:
-                          | {
-                              country?: string | undefined;
-                              city?: string | undefined;
-                            }
-                          | undefined;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                        storageBucket: {
-                          id: string;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                          parentEntity?:
-                            | {
-                                displayName: string;
-                                type: SchemaTypes.ProfileType;
-                              }
-                            | undefined;
-                          documents: Array<{
-                            id: string;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>;
-                        };
-                      };
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    }
-                  | {
-                      id: string;
-                      nameID: string;
-                      profile: {
-                        id: string;
-                        displayName: string;
-                        description?: any | undefined;
-                        tagline?: string | undefined;
-                        references?:
-                          | Array<{
-                              id: string;
-                              name: string;
-                              uri: string;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<SchemaTypes.AuthorizationPrivilege>
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>
-                          | undefined;
-                        tagsets?:
-                          | Array<{
-                              id: string;
-                              name: string;
-                              tags: Array<string>;
-                              authorization?:
-                                | {
-                                    myPrivileges?:
-                                      | Array<SchemaTypes.AuthorizationPrivilege>
-                                      | undefined;
-                                  }
-                                | undefined;
-                            }>
-                          | undefined;
-                        location?:
-                          | {
-                              country?: string | undefined;
-                              city?: string | undefined;
-                            }
-                          | undefined;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                        storageBucket: {
-                          id: string;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                          parentEntity?:
-                            | {
-                                displayName: string;
-                                type: SchemaTypes.ProfileType;
-                              }
-                            | undefined;
-                          documents: Array<{
-                            id: string;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>;
-                        };
-                      };
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                    }
-                  | undefined;
-              }
-            | undefined;
-          agent: {
-            id: string;
-            credentials?:
-              | Array<{
-                  id: string;
-                  resourceID: string;
-                  type: SchemaTypes.CredentialType;
-                }>
-              | undefined;
-          };
-          profile: {
-            id: string;
-            displayName: string;
-            description?: any | undefined;
-            tagline?: string | undefined;
-            references?:
-              | Array<{
-                  id: string;
-                  name: string;
-                  uri: string;
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<SchemaTypes.AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                }>
-              | undefined;
-            tagsets?:
-              | Array<{
-                  id: string;
-                  name: string;
-                  tags: Array<string>;
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<SchemaTypes.AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                }>
-              | undefined;
-            location?:
-              | { country?: string | undefined; city?: string | undefined }
-              | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
-            authorization?:
-              | {
-                  myPrivileges?:
-                    | Array<SchemaTypes.AuthorizationPrivilege>
-                    | undefined;
-                }
-              | undefined;
-          };
-          preferences: Array<{
-            id: string;
-            value: string;
-            definition: {
-              type: SchemaTypes.PreferenceType;
-              id: string;
-              displayName: string;
-              description: string;
-              group: string;
-            };
-            authorization?:
-              | {
-                  myPrivileges?:
-                    | Array<SchemaTypes.AuthorizationPrivilege>
-                    | undefined;
-                }
-              | undefined;
-          }>;
           settings: {
-            privacy: { contributionRolesPubliclyVisible: boolean };
-            communication: { allowOtherUsersToSendMessages: boolean };
+            __typename: "CalloutSettings";
+            visibility: SchemaTypes.CalloutVisibility;
+            contribution: {
+              __typename: "CalloutSettingsContribution";
+              enabled: boolean;
+              allowedTypes: Array<SchemaTypes.CalloutContributionType>;
+              canAddContributions: SchemaTypes.CalloutAllowedContributors;
+              commentsEnabled: boolean;
+            };
+            framing: {
+              __typename: "CalloutSettingsFraming";
+              commentsEnabled: boolean;
+            };
           };
-          authorization?:
-            | {
-                myPrivileges?:
-                  | Array<SchemaTypes.AuthorizationPrivilege>
-                  | undefined;
-                credentialRules?:
-                  | Array<{ name?: string | undefined }>
-                  | undefined;
-              }
-            | undefined;
         }
-      | {}
       | undefined;
-  }>;
-};
-
-export type MessageDetailsFragment = {
-  id: any;
-  message: any;
-  timestamp: number;
-  threadID?: string | undefined;
-  reactions: Array<{
-    id: any;
-    emoji: any;
-    sender?: { id: string; firstName: string; lastName: string } | undefined;
-  }>;
-  sender?:
-    | {
-        id: string;
-        nameID: string;
-        firstName: string;
-        lastName: string;
-        email: string;
-        phone?: string | undefined;
-        accountUpn: string;
-        account?:
-          | {
-              id: string;
-              spaces: Array<{ id: string }>;
-              authorization?:
-                | {
-                    myPrivileges?:
-                      | Array<SchemaTypes.AuthorizationPrivilege>
-                      | undefined;
-                  }
-                | undefined;
-              host?:
-                | {
-                    id: string;
-                    nameID: string;
-                    profile: {
-                      id: string;
-                      displayName: string;
-                      description?: any | undefined;
-                      tagline?: string | undefined;
-                      references?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            uri: string;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      tagsets?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            tags: Array<string>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      location?:
-                        | {
-                            country?: string | undefined;
-                            city?: string | undefined;
-                          }
-                        | undefined;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                      storageBucket: {
-                        id: string;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                        parentEntity?:
-                          | {
-                              displayName: string;
-                              type: SchemaTypes.ProfileType;
-                            }
-                          | undefined;
-                        documents: Array<{
-                          id: string;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>;
-                      };
-                    };
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }
-                | {
-                    id: string;
-                    nameID: string;
-                    profile: {
-                      id: string;
-                      displayName: string;
-                      description?: any | undefined;
-                      tagline?: string | undefined;
-                      references?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            uri: string;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      tagsets?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            tags: Array<string>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      location?:
-                        | {
-                            country?: string | undefined;
-                            city?: string | undefined;
-                          }
-                        | undefined;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                      storageBucket: {
-                        id: string;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                        parentEntity?:
-                          | {
-                              displayName: string;
-                              type: SchemaTypes.ProfileType;
-                            }
-                          | undefined;
-                        documents: Array<{
-                          id: string;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>;
-                      };
-                    };
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }
-                | {
-                    id: string;
-                    nameID: string;
-                    profile: {
-                      id: string;
-                      displayName: string;
-                      description?: any | undefined;
-                      tagline?: string | undefined;
-                      references?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            uri: string;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      tagsets?:
-                        | Array<{
-                            id: string;
-                            name: string;
-                            tags: Array<string>;
-                            authorization?:
-                              | {
-                                  myPrivileges?:
-                                    | Array<SchemaTypes.AuthorizationPrivilege>
-                                    | undefined;
-                                }
-                              | undefined;
-                          }>
-                        | undefined;
-                      location?:
-                        | {
-                            country?: string | undefined;
-                            city?: string | undefined;
-                          }
-                        | undefined;
-                      authorization?:
-                        | {
-                            myPrivileges?:
-                              | Array<SchemaTypes.AuthorizationPrivilege>
-                              | undefined;
-                          }
-                        | undefined;
-                      storageBucket: {
-                        id: string;
-                        authorization?:
-                          | {
-                              myPrivileges?:
-                                | Array<SchemaTypes.AuthorizationPrivilege>
-                                | undefined;
-                            }
-                          | undefined;
-                        parentEntity?:
-                          | {
-                              displayName: string;
-                              type: SchemaTypes.ProfileType;
-                            }
-                          | undefined;
-                        documents: Array<{
-                          id: string;
-                          authorization?:
-                            | {
-                                myPrivileges?:
-                                  | Array<SchemaTypes.AuthorizationPrivilege>
-                                  | undefined;
-                              }
-                            | undefined;
-                        }>;
-                      };
-                    };
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<SchemaTypes.AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }
-                | undefined;
-            }
-          | undefined;
-        agent: {
-          id: string;
-          credentials?:
-            | Array<{
-                id: string;
-                resourceID: string;
-                type: SchemaTypes.CredentialType;
-              }>
-            | undefined;
-        };
-        profile: {
-          id: string;
-          displayName: string;
-          description?: any | undefined;
-          tagline?: string | undefined;
-          references?:
-            | Array<{
-                id: string;
-                name: string;
-                uri: string;
-                authorization?:
-                  | {
-                      myPrivileges?:
-                        | Array<SchemaTypes.AuthorizationPrivilege>
-                        | undefined;
-                    }
-                  | undefined;
-              }>
-            | undefined;
-          tagsets?:
-            | Array<{
-                id: string;
-                name: string;
-                tags: Array<string>;
-                authorization?:
-                  | {
-                      myPrivileges?:
-                        | Array<SchemaTypes.AuthorizationPrivilege>
-                        | undefined;
-                    }
-                  | undefined;
-              }>
-            | undefined;
-          location?:
-            | { country?: string | undefined; city?: string | undefined }
-            | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
-          authorization?:
-            | {
-                myPrivileges?:
-                  | Array<SchemaTypes.AuthorizationPrivilege>
-                  | undefined;
-              }
-            | undefined;
-        };
-        preferences: Array<{
-          id: string;
-          value: string;
-          definition: {
-            type: SchemaTypes.PreferenceType;
-            id: string;
-            displayName: string;
-            description: string;
-            group: string;
-          };
-          authorization?:
-            | {
-                myPrivileges?:
-                  | Array<SchemaTypes.AuthorizationPrivilege>
-                  | undefined;
-              }
-            | undefined;
-        }>;
-        settings: {
-          privacy: { contributionRolesPubliclyVisible: boolean };
-          communication: { allowOtherUsersToSendMessages: boolean };
-        };
-        authorization?:
-          | {
-              myPrivileges?:
-                | Array<SchemaTypes.AuthorizationPrivilege>
-                | undefined;
-              credentialRules?:
-                | Array<{ name?: string | undefined }>
-                | undefined;
-            }
-          | undefined;
-      }
-    | {}
-    | undefined;
-};
-
-export type ReactionDetailsFragment = {
-  id: any;
-  emoji: any;
-  sender?: { id: string; firstName: string; lastName: string } | undefined;
+  };
 };
 
 export type CalloutStorageConfigQueryVariables = SchemaTypes.Exact<{
@@ -88357,10 +93719,8 @@ export type GetCalloutsOnCalloutsSetUsingClassificationQuery = {
             __typename: "Callout";
             id: string;
             nameID: string;
-            type: SchemaTypes.CalloutType;
             sortOrder: number;
             activity: number;
-            visibility: SchemaTypes.CalloutVisibility;
             authorization?:
               | {
                   __typename: "Authorization";
@@ -88379,6 +93739,10 @@ export type GetCalloutsOnCalloutsSetUsingClassificationQuery = {
                 url: string;
                 displayName: string;
               };
+            };
+            settings: {
+              __typename: "CalloutSettings";
+              visibility: SchemaTypes.CalloutVisibility;
             };
             classification?:
               | {
@@ -88403,13 +93767,10 @@ export type GetCalloutsOnCalloutsSetUsingClassificationQuery = {
 };
 
 export type CalloutFragment = {
-  __typename: "Callout";
   id: string;
   nameID: string;
-  type: SchemaTypes.CalloutType;
   sortOrder: number;
   activity: number;
-  visibility: SchemaTypes.CalloutVisibility;
   authorization?:
     | {
         __typename: "Authorization";
@@ -88427,26 +93788,10 @@ export type CalloutFragment = {
       displayName: string;
     };
   };
-};
-
-export type ClassificationDetailsFragment = {
-  __typename: "Callout";
-  classification?:
-    | {
-        __typename: "Classification";
-        id: string;
-        flowState?:
-          | {
-              __typename: "Tagset";
-              id: string;
-              name: string;
-              tags: Array<string>;
-              allowedValues: Array<string>;
-              type: SchemaTypes.TagsetType;
-            }
-          | undefined;
-      }
-    | undefined;
+  settings: {
+    __typename: "CalloutSettings";
+    visibility: SchemaTypes.CalloutVisibility;
+  };
 };
 
 export type GetPostDataQueryVariables = SchemaTypes.Exact<{
@@ -88616,15 +93961,115 @@ export type GetPlatformDiscussionsDataQuery = {
               id: string;
               messagesCount: number;
               messages: Array<{
+                __typename: "Message";
                 id: any;
                 message: any;
                 threadID?: string | undefined;
-                sender?: { id: string } | {} | undefined;
                 reactions: Array<{
+                  __typename: "Reaction";
                   id: any;
                   emoji: any;
-                  sender?: { email: string } | undefined;
+                  sender?:
+                    | {
+                        __typename: "User";
+                        id: string;
+                        profile: {
+                          __typename: "Profile";
+                          id: string;
+                          displayName: string;
+                        };
+                      }
+                    | undefined;
                 }>;
+                sender?:
+                  | {
+                      __typename: "Organization";
+                      id: string;
+                      profile: {
+                        __typename: "Profile";
+                        id: string;
+                        displayName: string;
+                        url: string;
+                        description?: any | undefined;
+                        tagsets?:
+                          | Array<{
+                              __typename: "Tagset";
+                              id: string;
+                              name: string;
+                              tags: Array<string>;
+                              allowedValues: Array<string>;
+                              type: SchemaTypes.TagsetType;
+                            }>
+                          | undefined;
+                        location?:
+                          | {
+                              __typename: "Location";
+                              id: string;
+                              country?: string | undefined;
+                              city?: string | undefined;
+                            }
+                          | undefined;
+                      };
+                    }
+                  | {
+                      __typename: "User";
+                      id: string;
+                      profile: {
+                        __typename: "Profile";
+                        id: string;
+                        displayName: string;
+                        url: string;
+                        description?: any | undefined;
+                        tagsets?:
+                          | Array<{
+                              __typename: "Tagset";
+                              id: string;
+                              name: string;
+                              tags: Array<string>;
+                              allowedValues: Array<string>;
+                              type: SchemaTypes.TagsetType;
+                            }>
+                          | undefined;
+                        location?:
+                          | {
+                              __typename: "Location";
+                              id: string;
+                              country?: string | undefined;
+                              city?: string | undefined;
+                            }
+                          | undefined;
+                      };
+                    }
+                  | {
+                      __typename: "VirtualContributor";
+                      id: string;
+                      profile: {
+                        __typename: "Profile";
+                        id: string;
+                        displayName: string;
+                        url: string;
+                        description?: any | undefined;
+                        tagsets?:
+                          | Array<{
+                              __typename: "Tagset";
+                              id: string;
+                              name: string;
+                              tags: Array<string>;
+                              allowedValues: Array<string>;
+                              type: SchemaTypes.TagsetType;
+                            }>
+                          | undefined;
+                        location?:
+                          | {
+                              __typename: "Location";
+                              id: string;
+                              country?: string | undefined;
+                              city?: string | undefined;
+                            }
+                          | undefined;
+                      };
+                    }
+                  | undefined;
               }>;
             };
             authorization?:
@@ -88658,15 +94103,115 @@ export type GetPlatformDiscussionsDataByIdQuery = {
               id: string;
               messagesCount: number;
               messages: Array<{
+                __typename: "Message";
                 id: any;
                 message: any;
                 threadID?: string | undefined;
-                sender?: { id: string } | {} | undefined;
                 reactions: Array<{
+                  __typename: "Reaction";
                   id: any;
                   emoji: any;
-                  sender?: { email: string } | undefined;
+                  sender?:
+                    | {
+                        __typename: "User";
+                        id: string;
+                        profile: {
+                          __typename: "Profile";
+                          id: string;
+                          displayName: string;
+                        };
+                      }
+                    | undefined;
                 }>;
+                sender?:
+                  | {
+                      __typename: "Organization";
+                      id: string;
+                      profile: {
+                        __typename: "Profile";
+                        id: string;
+                        displayName: string;
+                        url: string;
+                        description?: any | undefined;
+                        tagsets?:
+                          | Array<{
+                              __typename: "Tagset";
+                              id: string;
+                              name: string;
+                              tags: Array<string>;
+                              allowedValues: Array<string>;
+                              type: SchemaTypes.TagsetType;
+                            }>
+                          | undefined;
+                        location?:
+                          | {
+                              __typename: "Location";
+                              id: string;
+                              country?: string | undefined;
+                              city?: string | undefined;
+                            }
+                          | undefined;
+                      };
+                    }
+                  | {
+                      __typename: "User";
+                      id: string;
+                      profile: {
+                        __typename: "Profile";
+                        id: string;
+                        displayName: string;
+                        url: string;
+                        description?: any | undefined;
+                        tagsets?:
+                          | Array<{
+                              __typename: "Tagset";
+                              id: string;
+                              name: string;
+                              tags: Array<string>;
+                              allowedValues: Array<string>;
+                              type: SchemaTypes.TagsetType;
+                            }>
+                          | undefined;
+                        location?:
+                          | {
+                              __typename: "Location";
+                              id: string;
+                              country?: string | undefined;
+                              city?: string | undefined;
+                            }
+                          | undefined;
+                      };
+                    }
+                  | {
+                      __typename: "VirtualContributor";
+                      id: string;
+                      profile: {
+                        __typename: "Profile";
+                        id: string;
+                        displayName: string;
+                        url: string;
+                        description?: any | undefined;
+                        tagsets?:
+                          | Array<{
+                              __typename: "Tagset";
+                              id: string;
+                              name: string;
+                              tags: Array<string>;
+                              allowedValues: Array<string>;
+                              type: SchemaTypes.TagsetType;
+                            }>
+                          | undefined;
+                        location?:
+                          | {
+                              __typename: "Location";
+                              id: string;
+                              country?: string | undefined;
+                              city?: string | undefined;
+                            }
+                          | undefined;
+                      };
+                    }
+                  | undefined;
               }>;
             };
             authorization?:
@@ -98637,27 +104182,169 @@ export type UsersPaginatedQuery = {
             }
           | undefined;
       };
-      preferences: Array<{
-        id: string;
-        value: string;
-        definition: {
-          type: SchemaTypes.PreferenceType;
-          id: string;
-          displayName: string;
-          description: string;
-          group: string;
-        };
-        authorization?:
-          | {
-              myPrivileges?:
-                | Array<SchemaTypes.AuthorizationPrivilege>
-                | undefined;
-            }
-          | undefined;
-      }>;
       settings: {
-        privacy: { contributionRolesPubliclyVisible: boolean };
-        communication: { allowOtherUsersToSendMessages: boolean };
+        __typename: "UserSettings";
+        id: string;
+        communication: {
+          __typename: "UserSettingsCommunication";
+          allowOtherUsersToSendMessages: boolean;
+        };
+        privacy: {
+          __typename: "UserSettingsPrivacy";
+          contributionRolesPubliclyVisible: boolean;
+        };
+        notification: {
+          __typename: "UserSettingsNotification";
+          platform: {
+            __typename: "UserSettingsNotificationPlatform";
+            admin: {
+              __typename: "UserSettingsNotificationPlatformAdmin";
+              userProfileRemoved: {
+                __typename: "UserSettingsNotificationChannels";
+                email: boolean;
+                inApp: boolean;
+              };
+              userProfileCreated: {
+                __typename: "UserSettingsNotificationChannels";
+                email: boolean;
+                inApp: boolean;
+              };
+              spaceCreated: {
+                __typename: "UserSettingsNotificationChannels";
+                email: boolean;
+                inApp: boolean;
+              };
+              userGlobalRoleChanged: {
+                __typename: "UserSettingsNotificationChannels";
+                email: boolean;
+                inApp: boolean;
+              };
+            };
+            forumDiscussionComment: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            forumDiscussionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          organization: {
+            __typename: "UserSettingsNotificationOrganization";
+            adminMentioned: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            adminMessageReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          space: {
+            __typename: "UserSettingsNotificationSpace";
+            admin: {
+              __typename: "UserSettingsNotificationSpaceAdmin";
+              communityApplicationReceived: {
+                __typename: "UserSettingsNotificationChannels";
+                email: boolean;
+                inApp: boolean;
+              };
+              collaborationCalloutContributionCreated: {
+                __typename: "UserSettingsNotificationChannels";
+                email: boolean;
+                inApp: boolean;
+              };
+              communityNewMember: {
+                __typename: "UserSettingsNotificationChannels";
+                email: boolean;
+                inApp: boolean;
+              };
+              communicationMessageReceived: {
+                __typename: "UserSettingsNotificationChannels";
+                email: boolean;
+                inApp: boolean;
+              };
+            };
+            collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            communicationUpdates: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            collaborationCalloutPublished: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            collaborationCalloutComment: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            collaborationCalloutPostContributionComment: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          user: {
+            __typename: "UserSettingsNotificationUser";
+            membership: {
+              __typename: "UserSettingsNotificationUserMembership";
+              spaceCommunityInvitationReceived: {
+                __typename: "UserSettingsNotificationChannels";
+                email: boolean;
+                inApp: boolean;
+              };
+              spaceCommunityJoined: {
+                __typename: "UserSettingsNotificationChannels";
+                email: boolean;
+                inApp: boolean;
+              };
+              spaceCommunityApplicationSubmitted: {
+                __typename: "UserSettingsNotificationChannels";
+                email: boolean;
+                inApp: boolean;
+              };
+            };
+            mentioned: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            commentReply: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            messageReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            copyOfMessageSent: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          virtualContributor: {
+            __typename: "UserSettingsNotificationVirtualContributor";
+            adminSpaceCommunityInvitation: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+        };
       };
       authorization?:
         | {
@@ -98806,7 +104493,6 @@ export type SearchQuery = {
             id: string;
             callout: {
               id: string;
-              type: SchemaTypes.CalloutType;
               framing: {
                 id: string;
                 profile: { id: string; displayName: string };
@@ -98833,7 +104519,6 @@ export type SearchQuery = {
             id: string;
             callout: {
               id: string;
-              type: SchemaTypes.CalloutType;
               framing: {
                 id: string;
                 profile: { id: string; displayName: string };
@@ -98902,7 +104587,6 @@ export type SearchResultCalloutFragment = {
   id: string;
   callout: {
     id: string;
-    type: SchemaTypes.CalloutType;
     framing: { id: string; profile: { id: string; displayName: string } };
     contributions: Array<{
       id: string;
@@ -101401,15 +107085,115 @@ export type GetSpaceDataQuery = {
               updates: {
                 id: string;
                 messages: Array<{
+                  __typename: "Message";
                   id: any;
                   message: any;
                   threadID?: string | undefined;
-                  sender?: { id: string } | {} | undefined;
                   reactions: Array<{
+                    __typename: "Reaction";
                     id: any;
                     emoji: any;
-                    sender?: { email: string } | undefined;
+                    sender?:
+                      | {
+                          __typename: "User";
+                          id: string;
+                          profile: {
+                            __typename: "Profile";
+                            id: string;
+                            displayName: string;
+                          };
+                        }
+                      | undefined;
                   }>;
+                  sender?:
+                    | {
+                        __typename: "Organization";
+                        id: string;
+                        profile: {
+                          __typename: "Profile";
+                          id: string;
+                          displayName: string;
+                          url: string;
+                          description?: any | undefined;
+                          tagsets?:
+                            | Array<{
+                                __typename: "Tagset";
+                                id: string;
+                                name: string;
+                                tags: Array<string>;
+                                allowedValues: Array<string>;
+                                type: SchemaTypes.TagsetType;
+                              }>
+                            | undefined;
+                          location?:
+                            | {
+                                __typename: "Location";
+                                id: string;
+                                country?: string | undefined;
+                                city?: string | undefined;
+                              }
+                            | undefined;
+                        };
+                      }
+                    | {
+                        __typename: "User";
+                        id: string;
+                        profile: {
+                          __typename: "Profile";
+                          id: string;
+                          displayName: string;
+                          url: string;
+                          description?: any | undefined;
+                          tagsets?:
+                            | Array<{
+                                __typename: "Tagset";
+                                id: string;
+                                name: string;
+                                tags: Array<string>;
+                                allowedValues: Array<string>;
+                                type: SchemaTypes.TagsetType;
+                              }>
+                            | undefined;
+                          location?:
+                            | {
+                                __typename: "Location";
+                                id: string;
+                                country?: string | undefined;
+                                city?: string | undefined;
+                              }
+                            | undefined;
+                        };
+                      }
+                    | {
+                        __typename: "VirtualContributor";
+                        id: string;
+                        profile: {
+                          __typename: "Profile";
+                          id: string;
+                          displayName: string;
+                          url: string;
+                          description?: any | undefined;
+                          tagsets?:
+                            | Array<{
+                                __typename: "Tagset";
+                                id: string;
+                                name: string;
+                                tags: Array<string>;
+                                allowedValues: Array<string>;
+                                type: SchemaTypes.TagsetType;
+                              }>
+                            | undefined;
+                          location?:
+                            | {
+                                __typename: "Location";
+                                id: string;
+                                country?: string | undefined;
+                                city?: string | undefined;
+                              }
+                            | undefined;
+                        };
+                      }
+                    | undefined;
                 }>;
                 authorization?:
                   | {
@@ -101438,8 +107222,6 @@ export type GetSpaceDataQuery = {
                 nameID: string;
                 publishedDate?: number | undefined;
                 sortOrder: number;
-                type: SchemaTypes.CalloutType;
-                visibility: SchemaTypes.CalloutVisibility;
                 authorization?:
                   | {
                       myPrivileges?:
@@ -101454,11 +107236,6 @@ export type GetSpaceDataQuery = {
                       messages: Array<{ message: any }>;
                     }
                   | undefined;
-                contributionPolicy: {
-                  allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
-                  id: string;
-                  state: SchemaTypes.CalloutState;
-                };
                 contributions: Array<{
                   authorization?:
                     | {
@@ -101830,7 +107607,6 @@ export type GetSpaceDataQuery = {
                   };
                   whiteboard?:
                     | {
-                        id: string;
                         nameID: string;
                         profile: {
                           id: string;
@@ -101917,6 +107693,15 @@ export type GetSpaceDataQuery = {
                     | undefined;
                 };
                 publishedBy?: { email: string } | undefined;
+                settings: {
+                  visibility: SchemaTypes.CalloutVisibility;
+                  framing: { commentsEnabled: boolean };
+                  contribution: {
+                    enabled: boolean;
+                    canAddContributions: SchemaTypes.CalloutAllowedContributors;
+                    commentsEnabled: boolean;
+                  };
+                };
               }>;
             };
             authorization?:
@@ -102002,8 +107787,13 @@ export type GetSpaceDataQuery = {
                       | undefined;
                   }
                 | undefined;
-              currentState: { description: any; displayName: string };
-              states: Array<{ description: any; displayName: string }>;
+              currentState?:
+                | { description?: any | undefined; displayName: string }
+                | undefined;
+              states: Array<{
+                description?: any | undefined;
+                displayName: string;
+              }>;
             };
           };
           subspaces: Array<{
@@ -102105,8 +107895,6 @@ export type GetSpaceDataQuery = {
                   nameID: string;
                   publishedDate?: number | undefined;
                   sortOrder: number;
-                  type: SchemaTypes.CalloutType;
-                  visibility: SchemaTypes.CalloutVisibility;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -102121,11 +107909,6 @@ export type GetSpaceDataQuery = {
                         messages: Array<{ message: any }>;
                       }
                     | undefined;
-                  contributionPolicy: {
-                    allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
-                    id: string;
-                    state: SchemaTypes.CalloutState;
-                  };
                   contributions: Array<{
                     authorization?:
                       | {
@@ -102500,7 +108283,6 @@ export type GetSpaceDataQuery = {
                     };
                     whiteboard?:
                       | {
-                          id: string;
                           nameID: string;
                           profile: {
                             id: string;
@@ -102587,6 +108369,15 @@ export type GetSpaceDataQuery = {
                       | undefined;
                   };
                   publishedBy?: { email: string } | undefined;
+                  settings: {
+                    visibility: SchemaTypes.CalloutVisibility;
+                    framing: { commentsEnabled: boolean };
+                    contribution: {
+                      enabled: boolean;
+                      canAddContributions: SchemaTypes.CalloutAllowedContributors;
+                      commentsEnabled: boolean;
+                    };
+                  };
                 }>;
               };
               authorization?:
@@ -102675,8 +108466,13 @@ export type GetSpaceDataQuery = {
                         | undefined;
                     }
                   | undefined;
-                currentState: { description: any; displayName: string };
-                states: Array<{ description: any; displayName: string }>;
+                currentState?:
+                  | { description?: any | undefined; displayName: string }
+                  | undefined;
+                states: Array<{
+                  description?: any | undefined;
+                  displayName: string;
+                }>;
               };
             };
             authorization?:
@@ -104768,15 +110564,115 @@ export type GetSpaceDataQuery = {
                 updates: {
                   id: string;
                   messages: Array<{
+                    __typename: "Message";
                     id: any;
                     message: any;
                     threadID?: string | undefined;
-                    sender?: { id: string } | {} | undefined;
                     reactions: Array<{
+                      __typename: "Reaction";
                       id: any;
                       emoji: any;
-                      sender?: { email: string } | undefined;
+                      sender?:
+                        | {
+                            __typename: "User";
+                            id: string;
+                            profile: {
+                              __typename: "Profile";
+                              id: string;
+                              displayName: string;
+                            };
+                          }
+                        | undefined;
                     }>;
+                    sender?:
+                      | {
+                          __typename: "Organization";
+                          id: string;
+                          profile: {
+                            __typename: "Profile";
+                            id: string;
+                            displayName: string;
+                            url: string;
+                            description?: any | undefined;
+                            tagsets?:
+                              | Array<{
+                                  __typename: "Tagset";
+                                  id: string;
+                                  name: string;
+                                  tags: Array<string>;
+                                  allowedValues: Array<string>;
+                                  type: SchemaTypes.TagsetType;
+                                }>
+                              | undefined;
+                            location?:
+                              | {
+                                  __typename: "Location";
+                                  id: string;
+                                  country?: string | undefined;
+                                  city?: string | undefined;
+                                }
+                              | undefined;
+                          };
+                        }
+                      | {
+                          __typename: "User";
+                          id: string;
+                          profile: {
+                            __typename: "Profile";
+                            id: string;
+                            displayName: string;
+                            url: string;
+                            description?: any | undefined;
+                            tagsets?:
+                              | Array<{
+                                  __typename: "Tagset";
+                                  id: string;
+                                  name: string;
+                                  tags: Array<string>;
+                                  allowedValues: Array<string>;
+                                  type: SchemaTypes.TagsetType;
+                                }>
+                              | undefined;
+                            location?:
+                              | {
+                                  __typename: "Location";
+                                  id: string;
+                                  country?: string | undefined;
+                                  city?: string | undefined;
+                                }
+                              | undefined;
+                          };
+                        }
+                      | {
+                          __typename: "VirtualContributor";
+                          id: string;
+                          profile: {
+                            __typename: "Profile";
+                            id: string;
+                            displayName: string;
+                            url: string;
+                            description?: any | undefined;
+                            tagsets?:
+                              | Array<{
+                                  __typename: "Tagset";
+                                  id: string;
+                                  name: string;
+                                  tags: Array<string>;
+                                  allowedValues: Array<string>;
+                                  type: SchemaTypes.TagsetType;
+                                }>
+                              | undefined;
+                            location?:
+                              | {
+                                  __typename: "Location";
+                                  id: string;
+                                  country?: string | undefined;
+                                  city?: string | undefined;
+                                }
+                              | undefined;
+                          };
+                        }
+                      | undefined;
                   }>;
                   authorization?:
                     | {
@@ -105328,7 +111224,6 @@ export type GetSpaceDataQuery = {
                         callout?:
                           | {
                               id: string;
-                              type: SchemaTypes.CalloutType;
                               framing: {
                                 profile: {
                                   id: string;
@@ -105559,8 +111454,6 @@ export type GetSubspacePageQuery = {
                   nameID: string;
                   publishedDate?: number | undefined;
                   sortOrder: number;
-                  type: SchemaTypes.CalloutType;
-                  visibility: SchemaTypes.CalloutVisibility;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -105575,11 +111468,6 @@ export type GetSubspacePageQuery = {
                         messages: Array<{ message: any }>;
                       }
                     | undefined;
-                  contributionPolicy: {
-                    allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
-                    id: string;
-                    state: SchemaTypes.CalloutState;
-                  };
                   contributions: Array<{
                     authorization?:
                       | {
@@ -105954,7 +111842,6 @@ export type GetSubspacePageQuery = {
                     };
                     whiteboard?:
                       | {
-                          id: string;
                           nameID: string;
                           profile: {
                             id: string;
@@ -106041,6 +111928,15 @@ export type GetSubspacePageQuery = {
                       | undefined;
                   };
                   publishedBy?: { email: string } | undefined;
+                  settings: {
+                    visibility: SchemaTypes.CalloutVisibility;
+                    framing: { commentsEnabled: boolean };
+                    contribution: {
+                      enabled: boolean;
+                      canAddContributions: SchemaTypes.CalloutAllowedContributors;
+                      commentsEnabled: boolean;
+                    };
+                  };
                 }>;
               };
               authorization?:
@@ -106129,8 +112025,13 @@ export type GetSubspacePageQuery = {
                         | undefined;
                     }
                   | undefined;
-                currentState: { description: any; displayName: string };
-                states: Array<{ description: any; displayName: string }>;
+                currentState?:
+                  | { description?: any | undefined; displayName: string }
+                  | undefined;
+                states: Array<{
+                  description?: any | undefined;
+                  displayName: string;
+                }>;
               };
             };
             authorization?:
@@ -108222,15 +114123,115 @@ export type GetSubspacePageQuery = {
                 updates: {
                   id: string;
                   messages: Array<{
+                    __typename: "Message";
                     id: any;
                     message: any;
                     threadID?: string | undefined;
-                    sender?: { id: string } | {} | undefined;
                     reactions: Array<{
+                      __typename: "Reaction";
                       id: any;
                       emoji: any;
-                      sender?: { email: string } | undefined;
+                      sender?:
+                        | {
+                            __typename: "User";
+                            id: string;
+                            profile: {
+                              __typename: "Profile";
+                              id: string;
+                              displayName: string;
+                            };
+                          }
+                        | undefined;
                     }>;
+                    sender?:
+                      | {
+                          __typename: "Organization";
+                          id: string;
+                          profile: {
+                            __typename: "Profile";
+                            id: string;
+                            displayName: string;
+                            url: string;
+                            description?: any | undefined;
+                            tagsets?:
+                              | Array<{
+                                  __typename: "Tagset";
+                                  id: string;
+                                  name: string;
+                                  tags: Array<string>;
+                                  allowedValues: Array<string>;
+                                  type: SchemaTypes.TagsetType;
+                                }>
+                              | undefined;
+                            location?:
+                              | {
+                                  __typename: "Location";
+                                  id: string;
+                                  country?: string | undefined;
+                                  city?: string | undefined;
+                                }
+                              | undefined;
+                          };
+                        }
+                      | {
+                          __typename: "User";
+                          id: string;
+                          profile: {
+                            __typename: "Profile";
+                            id: string;
+                            displayName: string;
+                            url: string;
+                            description?: any | undefined;
+                            tagsets?:
+                              | Array<{
+                                  __typename: "Tagset";
+                                  id: string;
+                                  name: string;
+                                  tags: Array<string>;
+                                  allowedValues: Array<string>;
+                                  type: SchemaTypes.TagsetType;
+                                }>
+                              | undefined;
+                            location?:
+                              | {
+                                  __typename: "Location";
+                                  id: string;
+                                  country?: string | undefined;
+                                  city?: string | undefined;
+                                }
+                              | undefined;
+                          };
+                        }
+                      | {
+                          __typename: "VirtualContributor";
+                          id: string;
+                          profile: {
+                            __typename: "Profile";
+                            id: string;
+                            displayName: string;
+                            url: string;
+                            description?: any | undefined;
+                            tagsets?:
+                              | Array<{
+                                  __typename: "Tagset";
+                                  id: string;
+                                  name: string;
+                                  tags: Array<string>;
+                                  allowedValues: Array<string>;
+                                  type: SchemaTypes.TagsetType;
+                                }>
+                              | undefined;
+                            location?:
+                              | {
+                                  __typename: "Location";
+                                  id: string;
+                                  country?: string | undefined;
+                                  city?: string | undefined;
+                                }
+                              | undefined;
+                          };
+                        }
+                      | undefined;
                   }>;
                   authorization?:
                     | {
@@ -108346,8 +114347,6 @@ export type GetSubspacePageQuery = {
                 nameID: string;
                 publishedDate?: number | undefined;
                 sortOrder: number;
-                type: SchemaTypes.CalloutType;
-                visibility: SchemaTypes.CalloutVisibility;
                 authorization?:
                   | {
                       myPrivileges?:
@@ -108362,11 +114361,6 @@ export type GetSubspacePageQuery = {
                       messages: Array<{ message: any }>;
                     }
                   | undefined;
-                contributionPolicy: {
-                  allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
-                  id: string;
-                  state: SchemaTypes.CalloutState;
-                };
                 contributions: Array<{
                   authorization?:
                     | {
@@ -108738,7 +114732,6 @@ export type GetSubspacePageQuery = {
                   };
                   whiteboard?:
                     | {
-                        id: string;
                         nameID: string;
                         profile: {
                           id: string;
@@ -108825,6 +114818,15 @@ export type GetSubspacePageQuery = {
                     | undefined;
                 };
                 publishedBy?: { email: string } | undefined;
+                settings: {
+                  visibility: SchemaTypes.CalloutVisibility;
+                  framing: { commentsEnabled: boolean };
+                  contribution: {
+                    enabled: boolean;
+                    canAddContributions: SchemaTypes.CalloutAllowedContributors;
+                    commentsEnabled: boolean;
+                  };
+                };
               }>;
             };
             authorization?:
@@ -108910,8 +114912,13 @@ export type GetSubspacePageQuery = {
                       | undefined;
                   }
                 | undefined;
-              currentState: { description: any; displayName: string };
-              states: Array<{ description: any; displayName: string }>;
+              currentState?:
+                | { description?: any | undefined; displayName: string }
+                | undefined;
+              states: Array<{
+                description?: any | undefined;
+                displayName: string;
+              }>;
             };
           };
           authorization?:
@@ -110984,15 +116991,115 @@ export type GetSubspacePageQuery = {
               updates: {
                 id: string;
                 messages: Array<{
+                  __typename: "Message";
                   id: any;
                   message: any;
                   threadID?: string | undefined;
-                  sender?: { id: string } | {} | undefined;
                   reactions: Array<{
+                    __typename: "Reaction";
                     id: any;
                     emoji: any;
-                    sender?: { email: string } | undefined;
+                    sender?:
+                      | {
+                          __typename: "User";
+                          id: string;
+                          profile: {
+                            __typename: "Profile";
+                            id: string;
+                            displayName: string;
+                          };
+                        }
+                      | undefined;
                   }>;
+                  sender?:
+                    | {
+                        __typename: "Organization";
+                        id: string;
+                        profile: {
+                          __typename: "Profile";
+                          id: string;
+                          displayName: string;
+                          url: string;
+                          description?: any | undefined;
+                          tagsets?:
+                            | Array<{
+                                __typename: "Tagset";
+                                id: string;
+                                name: string;
+                                tags: Array<string>;
+                                allowedValues: Array<string>;
+                                type: SchemaTypes.TagsetType;
+                              }>
+                            | undefined;
+                          location?:
+                            | {
+                                __typename: "Location";
+                                id: string;
+                                country?: string | undefined;
+                                city?: string | undefined;
+                              }
+                            | undefined;
+                        };
+                      }
+                    | {
+                        __typename: "User";
+                        id: string;
+                        profile: {
+                          __typename: "Profile";
+                          id: string;
+                          displayName: string;
+                          url: string;
+                          description?: any | undefined;
+                          tagsets?:
+                            | Array<{
+                                __typename: "Tagset";
+                                id: string;
+                                name: string;
+                                tags: Array<string>;
+                                allowedValues: Array<string>;
+                                type: SchemaTypes.TagsetType;
+                              }>
+                            | undefined;
+                          location?:
+                            | {
+                                __typename: "Location";
+                                id: string;
+                                country?: string | undefined;
+                                city?: string | undefined;
+                              }
+                            | undefined;
+                        };
+                      }
+                    | {
+                        __typename: "VirtualContributor";
+                        id: string;
+                        profile: {
+                          __typename: "Profile";
+                          id: string;
+                          displayName: string;
+                          url: string;
+                          description?: any | undefined;
+                          tagsets?:
+                            | Array<{
+                                __typename: "Tagset";
+                                id: string;
+                                name: string;
+                                tags: Array<string>;
+                                allowedValues: Array<string>;
+                                type: SchemaTypes.TagsetType;
+                              }>
+                            | undefined;
+                          location?:
+                            | {
+                                __typename: "Location";
+                                id: string;
+                                country?: string | undefined;
+                                city?: string | undefined;
+                              }
+                            | undefined;
+                        };
+                      }
+                    | undefined;
                 }>;
                 authorization?:
                   | {
@@ -111122,8 +117229,6 @@ export type GetSpaceAboutDetailsQuery = {
                 nameID: string;
                 publishedDate?: number | undefined;
                 sortOrder: number;
-                type: SchemaTypes.CalloutType;
-                visibility: SchemaTypes.CalloutVisibility;
                 authorization?:
                   | {
                       myPrivileges?:
@@ -111138,11 +117243,6 @@ export type GetSpaceAboutDetailsQuery = {
                       messages: Array<{ message: any }>;
                     }
                   | undefined;
-                contributionPolicy: {
-                  allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
-                  id: string;
-                  state: SchemaTypes.CalloutState;
-                };
                 contributions: Array<{
                   authorization?:
                     | {
@@ -111514,7 +117614,6 @@ export type GetSpaceAboutDetailsQuery = {
                   };
                   whiteboard?:
                     | {
-                        id: string;
                         nameID: string;
                         profile: {
                           id: string;
@@ -111601,6 +117700,15 @@ export type GetSpaceAboutDetailsQuery = {
                     | undefined;
                 };
                 publishedBy?: { email: string } | undefined;
+                settings: {
+                  visibility: SchemaTypes.CalloutVisibility;
+                  framing: { commentsEnabled: boolean };
+                  contribution: {
+                    enabled: boolean;
+                    canAddContributions: SchemaTypes.CalloutAllowedContributors;
+                    commentsEnabled: boolean;
+                  };
+                };
               }>;
             };
             authorization?:
@@ -111686,8 +117794,13 @@ export type GetSpaceAboutDetailsQuery = {
                       | undefined;
                   }
                 | undefined;
-              currentState: { description: any; displayName: string };
-              states: Array<{ description: any; displayName: string }>;
+              currentState?:
+                | { description?: any | undefined; displayName: string }
+                | undefined;
+              states: Array<{
+                description?: any | undefined;
+                displayName: string;
+              }>;
             };
           };
           authorization?:
@@ -113760,15 +119873,115 @@ export type GetSpaceAboutDetailsQuery = {
               updates: {
                 id: string;
                 messages: Array<{
+                  __typename: "Message";
                   id: any;
                   message: any;
                   threadID?: string | undefined;
-                  sender?: { id: string } | {} | undefined;
                   reactions: Array<{
+                    __typename: "Reaction";
                     id: any;
                     emoji: any;
-                    sender?: { email: string } | undefined;
+                    sender?:
+                      | {
+                          __typename: "User";
+                          id: string;
+                          profile: {
+                            __typename: "Profile";
+                            id: string;
+                            displayName: string;
+                          };
+                        }
+                      | undefined;
                   }>;
+                  sender?:
+                    | {
+                        __typename: "Organization";
+                        id: string;
+                        profile: {
+                          __typename: "Profile";
+                          id: string;
+                          displayName: string;
+                          url: string;
+                          description?: any | undefined;
+                          tagsets?:
+                            | Array<{
+                                __typename: "Tagset";
+                                id: string;
+                                name: string;
+                                tags: Array<string>;
+                                allowedValues: Array<string>;
+                                type: SchemaTypes.TagsetType;
+                              }>
+                            | undefined;
+                          location?:
+                            | {
+                                __typename: "Location";
+                                id: string;
+                                country?: string | undefined;
+                                city?: string | undefined;
+                              }
+                            | undefined;
+                        };
+                      }
+                    | {
+                        __typename: "User";
+                        id: string;
+                        profile: {
+                          __typename: "Profile";
+                          id: string;
+                          displayName: string;
+                          url: string;
+                          description?: any | undefined;
+                          tagsets?:
+                            | Array<{
+                                __typename: "Tagset";
+                                id: string;
+                                name: string;
+                                tags: Array<string>;
+                                allowedValues: Array<string>;
+                                type: SchemaTypes.TagsetType;
+                              }>
+                            | undefined;
+                          location?:
+                            | {
+                                __typename: "Location";
+                                id: string;
+                                country?: string | undefined;
+                                city?: string | undefined;
+                              }
+                            | undefined;
+                        };
+                      }
+                    | {
+                        __typename: "VirtualContributor";
+                        id: string;
+                        profile: {
+                          __typename: "Profile";
+                          id: string;
+                          displayName: string;
+                          url: string;
+                          description?: any | undefined;
+                          tagsets?:
+                            | Array<{
+                                __typename: "Tagset";
+                                id: string;
+                                name: string;
+                                tags: Array<string>;
+                                allowedValues: Array<string>;
+                                type: SchemaTypes.TagsetType;
+                              }>
+                            | undefined;
+                          location?:
+                            | {
+                                __typename: "Location";
+                                id: string;
+                                country?: string | undefined;
+                                city?: string | undefined;
+                              }
+                            | undefined;
+                        };
+                      }
+                    | undefined;
                 }>;
                 authorization?:
                   | {
@@ -113906,8 +120119,6 @@ export type GetSubspacesDataQuery = {
                     nameID: string;
                     publishedDate?: number | undefined;
                     sortOrder: number;
-                    type: SchemaTypes.CalloutType;
-                    visibility: SchemaTypes.CalloutVisibility;
                     authorization?:
                       | {
                           myPrivileges?:
@@ -113922,11 +120133,6 @@ export type GetSubspacesDataQuery = {
                           messages: Array<{ message: any }>;
                         }
                       | undefined;
-                    contributionPolicy: {
-                      allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
-                      id: string;
-                      state: SchemaTypes.CalloutState;
-                    };
                     contributions: Array<{
                       authorization?:
                         | {
@@ -114301,7 +120507,6 @@ export type GetSubspacesDataQuery = {
                       };
                       whiteboard?:
                         | {
-                            id: string;
                             nameID: string;
                             profile: {
                               id: string;
@@ -114388,6 +120593,15 @@ export type GetSubspacesDataQuery = {
                         | undefined;
                     };
                     publishedBy?: { email: string } | undefined;
+                    settings: {
+                      visibility: SchemaTypes.CalloutVisibility;
+                      framing: { commentsEnabled: boolean };
+                      contribution: {
+                        enabled: boolean;
+                        canAddContributions: SchemaTypes.CalloutAllowedContributors;
+                        commentsEnabled: boolean;
+                      };
+                    };
                   }>;
                 };
                 authorization?:
@@ -114476,8 +120690,13 @@ export type GetSubspacesDataQuery = {
                           | undefined;
                       }
                     | undefined;
-                  currentState: { description: any; displayName: string };
-                  states: Array<{ description: any; displayName: string }>;
+                  currentState?:
+                    | { description?: any | undefined; displayName: string }
+                    | undefined;
+                  states: Array<{
+                    description?: any | undefined;
+                    displayName: string;
+                  }>;
                 };
               };
               authorization?:
@@ -116569,15 +122788,115 @@ export type GetSubspacesDataQuery = {
                   updates: {
                     id: string;
                     messages: Array<{
+                      __typename: "Message";
                       id: any;
                       message: any;
                       threadID?: string | undefined;
-                      sender?: { id: string } | {} | undefined;
                       reactions: Array<{
+                        __typename: "Reaction";
                         id: any;
                         emoji: any;
-                        sender?: { email: string } | undefined;
+                        sender?:
+                          | {
+                              __typename: "User";
+                              id: string;
+                              profile: {
+                                __typename: "Profile";
+                                id: string;
+                                displayName: string;
+                              };
+                            }
+                          | undefined;
                       }>;
+                      sender?:
+                        | {
+                            __typename: "Organization";
+                            id: string;
+                            profile: {
+                              __typename: "Profile";
+                              id: string;
+                              displayName: string;
+                              url: string;
+                              description?: any | undefined;
+                              tagsets?:
+                                | Array<{
+                                    __typename: "Tagset";
+                                    id: string;
+                                    name: string;
+                                    tags: Array<string>;
+                                    allowedValues: Array<string>;
+                                    type: SchemaTypes.TagsetType;
+                                  }>
+                                | undefined;
+                              location?:
+                                | {
+                                    __typename: "Location";
+                                    id: string;
+                                    country?: string | undefined;
+                                    city?: string | undefined;
+                                  }
+                                | undefined;
+                            };
+                          }
+                        | {
+                            __typename: "User";
+                            id: string;
+                            profile: {
+                              __typename: "Profile";
+                              id: string;
+                              displayName: string;
+                              url: string;
+                              description?: any | undefined;
+                              tagsets?:
+                                | Array<{
+                                    __typename: "Tagset";
+                                    id: string;
+                                    name: string;
+                                    tags: Array<string>;
+                                    allowedValues: Array<string>;
+                                    type: SchemaTypes.TagsetType;
+                                  }>
+                                | undefined;
+                              location?:
+                                | {
+                                    __typename: "Location";
+                                    id: string;
+                                    country?: string | undefined;
+                                    city?: string | undefined;
+                                  }
+                                | undefined;
+                            };
+                          }
+                        | {
+                            __typename: "VirtualContributor";
+                            id: string;
+                            profile: {
+                              __typename: "Profile";
+                              id: string;
+                              displayName: string;
+                              url: string;
+                              description?: any | undefined;
+                              tagsets?:
+                                | Array<{
+                                    __typename: "Tagset";
+                                    id: string;
+                                    name: string;
+                                    tags: Array<string>;
+                                    allowedValues: Array<string>;
+                                    type: SchemaTypes.TagsetType;
+                                  }>
+                                | undefined;
+                              location?:
+                                | {
+                                    __typename: "Location";
+                                    id: string;
+                                    country?: string | undefined;
+                                    city?: string | undefined;
+                                  }
+                                | undefined;
+                            };
+                          }
+                        | undefined;
                     }>;
                     authorization?:
                       | {
@@ -116693,8 +123012,6 @@ export type GetSubspacesDataQuery = {
                   nameID: string;
                   publishedDate?: number | undefined;
                   sortOrder: number;
-                  type: SchemaTypes.CalloutType;
-                  visibility: SchemaTypes.CalloutVisibility;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -116709,11 +123026,6 @@ export type GetSubspacesDataQuery = {
                         messages: Array<{ message: any }>;
                       }
                     | undefined;
-                  contributionPolicy: {
-                    allowedContributionTypes: Array<SchemaTypes.CalloutContributionType>;
-                    id: string;
-                    state: SchemaTypes.CalloutState;
-                  };
                   contributions: Array<{
                     authorization?:
                       | {
@@ -117088,7 +123400,6 @@ export type GetSubspacesDataQuery = {
                     };
                     whiteboard?:
                       | {
-                          id: string;
                           nameID: string;
                           profile: {
                             id: string;
@@ -117175,6 +123486,15 @@ export type GetSubspacesDataQuery = {
                       | undefined;
                   };
                   publishedBy?: { email: string } | undefined;
+                  settings: {
+                    visibility: SchemaTypes.CalloutVisibility;
+                    framing: { commentsEnabled: boolean };
+                    contribution: {
+                      enabled: boolean;
+                      canAddContributions: SchemaTypes.CalloutAllowedContributors;
+                      commentsEnabled: boolean;
+                    };
+                  };
                 }>;
               };
               authorization?:
@@ -117263,8 +123583,13 @@ export type GetSubspacesDataQuery = {
                         | undefined;
                     }
                   | undefined;
-                currentState: { description: any; displayName: string };
-                states: Array<{ description: any; displayName: string }>;
+                currentState?:
+                  | { description?: any | undefined; displayName: string }
+                  | undefined;
+                states: Array<{
+                  description?: any | undefined;
+                  displayName: string;
+                }>;
               };
             };
             authorization?:
@@ -119356,15 +125681,115 @@ export type GetSubspacesDataQuery = {
                 updates: {
                   id: string;
                   messages: Array<{
+                    __typename: "Message";
                     id: any;
                     message: any;
                     threadID?: string | undefined;
-                    sender?: { id: string } | {} | undefined;
                     reactions: Array<{
+                      __typename: "Reaction";
                       id: any;
                       emoji: any;
-                      sender?: { email: string } | undefined;
+                      sender?:
+                        | {
+                            __typename: "User";
+                            id: string;
+                            profile: {
+                              __typename: "Profile";
+                              id: string;
+                              displayName: string;
+                            };
+                          }
+                        | undefined;
                     }>;
+                    sender?:
+                      | {
+                          __typename: "Organization";
+                          id: string;
+                          profile: {
+                            __typename: "Profile";
+                            id: string;
+                            displayName: string;
+                            url: string;
+                            description?: any | undefined;
+                            tagsets?:
+                              | Array<{
+                                  __typename: "Tagset";
+                                  id: string;
+                                  name: string;
+                                  tags: Array<string>;
+                                  allowedValues: Array<string>;
+                                  type: SchemaTypes.TagsetType;
+                                }>
+                              | undefined;
+                            location?:
+                              | {
+                                  __typename: "Location";
+                                  id: string;
+                                  country?: string | undefined;
+                                  city?: string | undefined;
+                                }
+                              | undefined;
+                          };
+                        }
+                      | {
+                          __typename: "User";
+                          id: string;
+                          profile: {
+                            __typename: "Profile";
+                            id: string;
+                            displayName: string;
+                            url: string;
+                            description?: any | undefined;
+                            tagsets?:
+                              | Array<{
+                                  __typename: "Tagset";
+                                  id: string;
+                                  name: string;
+                                  tags: Array<string>;
+                                  allowedValues: Array<string>;
+                                  type: SchemaTypes.TagsetType;
+                                }>
+                              | undefined;
+                            location?:
+                              | {
+                                  __typename: "Location";
+                                  id: string;
+                                  country?: string | undefined;
+                                  city?: string | undefined;
+                                }
+                              | undefined;
+                          };
+                        }
+                      | {
+                          __typename: "VirtualContributor";
+                          id: string;
+                          profile: {
+                            __typename: "Profile";
+                            id: string;
+                            displayName: string;
+                            url: string;
+                            description?: any | undefined;
+                            tagsets?:
+                              | Array<{
+                                  __typename: "Tagset";
+                                  id: string;
+                                  name: string;
+                                  tags: Array<string>;
+                                  allowedValues: Array<string>;
+                                  type: SchemaTypes.TagsetType;
+                                }>
+                              | undefined;
+                            location?:
+                              | {
+                                  __typename: "Location";
+                                  id: string;
+                                  country?: string | undefined;
+                                  city?: string | undefined;
+                                }
+                              | undefined;
+                          };
+                        }
+                      | undefined;
                   }>;
                   authorization?:
                     | {
@@ -119912,27 +126337,169 @@ export type GetUserDataQuery = {
           }
         | undefined;
     };
-    preferences: Array<{
-      id: string;
-      value: string;
-      definition: {
-        type: SchemaTypes.PreferenceType;
-        id: string;
-        displayName: string;
-        description: string;
-        group: string;
-      };
-      authorization?:
-        | {
-            myPrivileges?:
-              | Array<SchemaTypes.AuthorizationPrivilege>
-              | undefined;
-          }
-        | undefined;
-    }>;
     settings: {
-      privacy: { contributionRolesPubliclyVisible: boolean };
-      communication: { allowOtherUsersToSendMessages: boolean };
+      __typename: "UserSettings";
+      id: string;
+      communication: {
+        __typename: "UserSettingsCommunication";
+        allowOtherUsersToSendMessages: boolean;
+      };
+      privacy: {
+        __typename: "UserSettingsPrivacy";
+        contributionRolesPubliclyVisible: boolean;
+      };
+      notification: {
+        __typename: "UserSettingsNotification";
+        platform: {
+          __typename: "UserSettingsNotificationPlatform";
+          admin: {
+            __typename: "UserSettingsNotificationPlatformAdmin";
+            userProfileRemoved: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            userProfileCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            spaceCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            userGlobalRoleChanged: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          forumDiscussionComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          forumDiscussionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        organization: {
+          __typename: "UserSettingsNotificationOrganization";
+          adminMentioned: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          adminMessageReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        space: {
+          __typename: "UserSettingsNotificationSpace";
+          admin: {
+            __typename: "UserSettingsNotificationSpaceAdmin";
+            communityApplicationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            communityNewMember: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            communicationMessageReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          collaborationCalloutContributionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          communicationUpdates: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          collaborationCalloutPublished: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          collaborationCalloutComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          collaborationCalloutPostContributionComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        user: {
+          __typename: "UserSettingsNotificationUser";
+          membership: {
+            __typename: "UserSettingsNotificationUserMembership";
+            spaceCommunityInvitationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            spaceCommunityJoined: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            spaceCommunityApplicationSubmitted: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          mentioned: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          commentReply: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          messageReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          copyOfMessageSent: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        virtualContributor: {
+          __typename: "UserSettingsNotificationVirtualContributor";
+          adminSpaceCommunityInvitation: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+      };
     };
     authorization?:
       | {
@@ -120289,27 +126856,169 @@ export type GetUsersDataQuery = {
           }
         | undefined;
     };
-    preferences: Array<{
-      id: string;
-      value: string;
-      definition: {
-        type: SchemaTypes.PreferenceType;
-        id: string;
-        displayName: string;
-        description: string;
-        group: string;
-      };
-      authorization?:
-        | {
-            myPrivileges?:
-              | Array<SchemaTypes.AuthorizationPrivilege>
-              | undefined;
-          }
-        | undefined;
-    }>;
     settings: {
-      privacy: { contributionRolesPubliclyVisible: boolean };
-      communication: { allowOtherUsersToSendMessages: boolean };
+      __typename: "UserSettings";
+      id: string;
+      communication: {
+        __typename: "UserSettingsCommunication";
+        allowOtherUsersToSendMessages: boolean;
+      };
+      privacy: {
+        __typename: "UserSettingsPrivacy";
+        contributionRolesPubliclyVisible: boolean;
+      };
+      notification: {
+        __typename: "UserSettingsNotification";
+        platform: {
+          __typename: "UserSettingsNotificationPlatform";
+          admin: {
+            __typename: "UserSettingsNotificationPlatformAdmin";
+            userProfileRemoved: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            userProfileCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            spaceCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            userGlobalRoleChanged: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          forumDiscussionComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          forumDiscussionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        organization: {
+          __typename: "UserSettingsNotificationOrganization";
+          adminMentioned: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          adminMessageReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        space: {
+          __typename: "UserSettingsNotificationSpace";
+          admin: {
+            __typename: "UserSettingsNotificationSpaceAdmin";
+            communityApplicationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            communityNewMember: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            communicationMessageReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          collaborationCalloutContributionCreated: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          communicationUpdates: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          collaborationCalloutPublished: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          collaborationCalloutComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          collaborationCalloutPostContributionComment: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        user: {
+          __typename: "UserSettingsNotificationUser";
+          membership: {
+            __typename: "UserSettingsNotificationUserMembership";
+            spaceCommunityInvitationReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            spaceCommunityJoined: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+            spaceCommunityApplicationSubmitted: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+            };
+          };
+          mentioned: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          commentReply: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          messageReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+          copyOfMessageSent: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+        virtualContributor: {
+          __typename: "UserSettingsNotificationVirtualContributor";
+          adminSpaceCommunityInvitation: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+          };
+        };
+      };
     };
     authorization?:
       | {
@@ -121243,6 +127952,248 @@ export const CalloutContributionDataFragmentDoc = gql`
   }
   ${ContributionsDataFragmentDoc}
 `;
+export const TagsetDetailsFragmentDoc = gql`
+  fragment TagsetDetails on Tagset {
+    id
+    name
+    tags
+    allowedValues
+    type
+    __typename
+  }
+`;
+export const ReferenceDetailsFragmentDoc = gql`
+  fragment ReferenceDetails on Reference {
+    id
+    name
+    uri
+    description
+    __typename
+  }
+`;
+export const WhiteboardProfileFragmentDoc = gql`
+  fragment WhiteboardProfile on Profile {
+    id
+    url
+    displayName
+    description
+    tagset {
+      ...TagsetDetails
+      __typename
+    }
+    storageBucket {
+      id
+      __typename
+    }
+    __typename
+  }
+  ${TagsetDetailsFragmentDoc}
+`;
+export const WhiteboardDetailsFragmentDoc = gql`
+  fragment WhiteboardDetails on Whiteboard {
+    id
+    nameID
+    createdDate
+    profile {
+      ...WhiteboardProfile
+      __typename
+    }
+    authorization {
+      id
+      myPrivileges
+      __typename
+    }
+    contentUpdatePolicy
+    createdBy {
+      id
+      profile {
+        id
+        displayName
+        url
+        location {
+          id
+          country
+          city
+          __typename
+        }
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+  ${WhiteboardProfileFragmentDoc}
+`;
+export const ReactionDetailsFragmentDoc = gql`
+  fragment ReactionDetails on Reaction {
+    id
+    emoji
+    sender {
+      id
+      profile {
+        id
+        displayName
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+`;
+export const ContributorDetailsFragmentDoc = gql`
+  fragment ContributorDetails on Contributor {
+    id
+    profile {
+      id
+      displayName
+      url
+      description
+      tagsets {
+        ...TagsetDetails
+        __typename
+      }
+      location {
+        id
+        country
+        city
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+  ${TagsetDetailsFragmentDoc}
+`;
+export const MessageDetailsFragmentDoc = gql`
+  fragment MessageDetails on Message {
+    id
+    message
+    reactions {
+      ...ReactionDetails
+      __typename
+    }
+    threadID
+    sender {
+      ...ContributorDetails
+      __typename
+    }
+    __typename
+  }
+  ${ReactionDetailsFragmentDoc}
+  ${ContributorDetailsFragmentDoc}
+`;
+export const VcInteractionsDetailsFragmentDoc = gql`
+  fragment VcInteractionsDetails on VcInteraction {
+    id
+    threadID
+    virtualContributorID
+    __typename
+  }
+`;
+export const CommentsWithMessagesFragmentDoc = gql`
+  fragment CommentsWithMessages on Room {
+    id
+    messagesCount
+    authorization {
+      id
+      myPrivileges
+      __typename
+    }
+    messages {
+      ...MessageDetails
+      __typename
+    }
+    vcInteractions {
+      ...VcInteractionsDetails
+      __typename
+    }
+    __typename
+  }
+  ${MessageDetailsFragmentDoc}
+  ${VcInteractionsDetailsFragmentDoc}
+`;
+export const CalloutSettingsFullFragmentDoc = gql`
+  fragment CalloutSettingsFull on CalloutSettings {
+    contribution {
+      enabled
+      allowedTypes
+      canAddContributions
+      commentsEnabled
+      __typename
+    }
+    framing {
+      commentsEnabled
+      __typename
+    }
+    visibility
+    __typename
+  }
+`;
+export const CalloutDetailsFragmentDoc = gql`
+  fragment CalloutDetails on Callout {
+    id
+    framing {
+      id
+      profile {
+        id
+        displayName
+        description
+        tagset {
+          ...TagsetDetails
+          __typename
+        }
+        references {
+          ...ReferenceDetails
+          __typename
+        }
+        storageBucket {
+          id
+          __typename
+        }
+        url
+        __typename
+      }
+      type
+      whiteboard {
+        ...WhiteboardDetails
+        __typename
+      }
+      __typename
+    }
+    contributionDefaults {
+      id
+      defaultDisplayName
+      postDescription
+      whiteboardContent
+      __typename
+    }
+    sortOrder
+    activity
+    contributions {
+      ...ContributionsData
+    }
+    comments {
+      ...CommentsWithMessages
+      __typename
+    }
+    authorization {
+      id
+      myPrivileges
+      __typename
+    }
+    settings {
+      ...CalloutSettingsFull
+      __typename
+    }
+    __typename
+  }
+  ${TagsetDetailsFragmentDoc}
+  ${ReferenceDetailsFragmentDoc}
+  ${WhiteboardDetailsFragmentDoc}
+  ${ContributionsDataFragmentDoc}
+  ${CommentsWithMessagesFragmentDoc}
+  ${CalloutSettingsFullFragmentDoc}
+`;
 export const CalloutOnCollaborationWithStorageConfigFragmentDoc = gql`
   fragment CalloutOnCollaborationWithStorageConfig on Collaboration {
     id
@@ -121263,6 +128214,20 @@ export const CalloutOnCollaborationWithStorageConfigFragmentDoc = gql`
     __typename
   }
   ${ProfileStorageConfigFragmentDoc}
+`;
+export const ClassificationDetailsFragmentDoc = gql`
+  fragment ClassificationDetails on Callout {
+    classification {
+      id
+      flowState: tagset(tagsetName: FLOW_STATE) {
+        ...TagsetDetails
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+  ${TagsetDetailsFragmentDoc}
 `;
 export const LinkContributionInCalloutOnCollaborationWithStorageConfigFragmentDoc = gql`
   fragment LinkContributionInCalloutOnCollaborationWithStorageConfig on Collaboration {
@@ -121366,31 +128331,6 @@ export const WhiteboardCalloutWithStorageConfigFragmentDoc = gql`
   }
   ${ProfileStorageConfigFragmentDoc}
 `;
-export const ReactionDataFragmentDoc = gql`
-  fragment ReactionData on Reaction {
-    id
-    emoji
-    sender {
-      email
-    }
-  }
-`;
-export const MessageDataFragmentDoc = gql`
-  fragment MessageData on Message {
-    id
-    message
-    threadID
-    sender {
-      ... on User {
-        id
-      }
-    }
-    reactions {
-      ...ReactionData
-    }
-  }
-  ${ReactionDataFragmentDoc}
-`;
 export const CommunicationsDiscussionDataFragmentDoc = gql`
   fragment CommunicationsDiscussionData on Discussion {
     id
@@ -121404,14 +128344,14 @@ export const CommunicationsDiscussionDataFragmentDoc = gql`
       id
       messagesCount
       messages {
-        ...MessageData
+        ...MessageDetails
       }
     }
     authorization {
       myPrivileges
     }
   }
-  ${MessageDataFragmentDoc}
+  ${MessageDetailsFragmentDoc}
 `;
 export const LicensePlanDataFragmentDoc = gql`
   fragment LicensePlanData on LicensePlan {
@@ -121458,6 +128398,22 @@ export const LicensingDataFragmentDoc = gql`
   ${LicensePolicyDataFragmentDoc}
   ${AuthorizationDataFragmentDoc}
 `;
+export const LinkDetailsWithAuthorizationFragmentDoc = gql`
+  fragment LinkDetailsWithAuthorization on Link {
+    id
+    uri
+    profile {
+      ...ProfileData
+    }
+    authorization {
+      id
+      myPrivileges
+      __typename
+    }
+    __typename
+  }
+  ${ProfileDataFragmentDoc}
+`;
 export const SpaceAboutDetailsFragmentDoc = gql`
   fragment SpaceAboutDetails on SpaceAbout {
     id
@@ -121496,11 +128452,6 @@ export const CalloutDataFragmentDoc = gql`
       }
       messagesCount
     }
-    contributionPolicy {
-      allowedContributionTypes
-      id
-      state
-    }
     contributions {
       ...ContributionsData
     }
@@ -121513,7 +128464,6 @@ export const CalloutDataFragmentDoc = gql`
         ...ProfileData
       }
       whiteboard {
-        id
         nameID
         profile {
           ...ProfileStorageConfig
@@ -121531,8 +128481,17 @@ export const CalloutDataFragmentDoc = gql`
     }
     publishedDate
     sortOrder
-    type
-    visibility
+    settings {
+      framing {
+        commentsEnabled
+      }
+      contribution {
+        enabled
+        canAddContributions
+        commentsEnabled
+      }
+      visibility
+    }
   }
   ${ContributionsDataFragmentDoc}
   ${ProfileDataFragmentDoc}
@@ -121795,7 +128754,7 @@ export const CommunityDataFragmentDoc = gql`
       updates {
         id
         messages {
-          ...MessageData
+          ...MessageDetails
         }
         authorization {
           myPrivileges
@@ -121810,7 +128769,7 @@ export const CommunityDataFragmentDoc = gql`
   ${GroupDataFragmentDoc}
   ${MembersAndLeadsDataFragmentDoc}
   ${ApplicationDataFragmentDoc}
-  ${MessageDataFragmentDoc}
+  ${MessageDetailsFragmentDoc}
 `;
 export const SubspaceDataFragmentDoc = gql`
   fragment SubspaceData on Space {
@@ -121931,7 +128890,6 @@ export const CalloutTemplateDataFragmentDoc = gql`
           ...ProfileData
         }
       }
-      type
     }
   }
   ${ProfileDataFragmentDoc}
@@ -122025,6 +128983,215 @@ export const SpaceDataFragmentDoc = gql`
   ${SubspaceDataFragmentDoc}
   ${SettingsDataFragmentDoc}
   ${TemplatesManagerDataFragmentDoc}
+`;
+export const AgentDataFragmentDoc = gql`
+  fragment AgentData on Agent {
+    id
+    credentials {
+      id
+      resourceID
+      type
+    }
+  }
+`;
+export const UserSettingsFragmentFragmentDoc = gql`
+  fragment userSettingsFragment on UserSettings {
+    id
+    communication {
+      allowOtherUsersToSendMessages
+      __typename
+    }
+    privacy {
+      contributionRolesPubliclyVisible
+      __typename
+    }
+    notification {
+      platform {
+        admin {
+          userProfileRemoved {
+            email
+            inApp
+            __typename
+          }
+          userProfileCreated {
+            email
+            inApp
+            __typename
+          }
+          spaceCreated {
+            email
+            inApp
+            __typename
+          }
+          userGlobalRoleChanged {
+            email
+            inApp
+            __typename
+          }
+          __typename
+        }
+        forumDiscussionComment {
+          email
+          inApp
+          __typename
+        }
+        forumDiscussionCreated {
+          email
+          inApp
+          __typename
+        }
+        __typename
+      }
+      organization {
+        adminMentioned {
+          email
+          inApp
+          __typename
+        }
+        adminMessageReceived {
+          email
+          inApp
+          __typename
+        }
+        __typename
+      }
+      space {
+        admin {
+          communityApplicationReceived {
+            email
+            inApp
+            __typename
+          }
+          collaborationCalloutContributionCreated {
+            email
+            inApp
+            __typename
+          }
+          communityNewMember {
+            email
+            inApp
+            __typename
+          }
+          communicationMessageReceived {
+            email
+            inApp
+            __typename
+          }
+          __typename
+        }
+        collaborationCalloutContributionCreated {
+          email
+          inApp
+          __typename
+        }
+        communicationUpdates {
+          email
+          inApp
+          __typename
+        }
+        collaborationCalloutPublished {
+          email
+          inApp
+          __typename
+        }
+        collaborationCalloutComment {
+          email
+          inApp
+          __typename
+        }
+        collaborationCalloutPostContributionComment {
+          email
+          inApp
+          __typename
+        }
+        __typename
+      }
+      user {
+        membership {
+          spaceCommunityInvitationReceived {
+            email
+            inApp
+            __typename
+          }
+          spaceCommunityJoined {
+            email
+            inApp
+            __typename
+          }
+          spaceCommunityApplicationSubmitted {
+            email
+            inApp
+            __typename
+          }
+          __typename
+        }
+        mentioned {
+          email
+          inApp
+          __typename
+        }
+        commentReply {
+          email
+          inApp
+          __typename
+        }
+        messageReceived {
+          email
+          inApp
+          __typename
+        }
+        copyOfMessageSent {
+          email
+          inApp
+          __typename
+        }
+        __typename
+      }
+      virtualContributor {
+        adminSpaceCommunityInvitation {
+          email
+          inApp
+          __typename
+        }
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+`;
+export const UserDataFragmentDoc = gql`
+  fragment UserData on User {
+    id
+    nameID
+    firstName
+    lastName
+    email
+    phone
+    accountUpn
+    account {
+      ...AccountData
+    }
+    agent {
+      ...AgentData
+    }
+    profile {
+      ...ProfileDataUser
+    }
+    settings {
+      ...userSettingsFragment
+    }
+    authorization {
+      myPrivileges
+      credentialRules {
+        name
+      }
+    }
+  }
+  ${AccountDataFragmentDoc}
+  ${AgentDataFragmentDoc}
+  ${ProfileDataUserFragmentDoc}
+  ${UserSettingsFragmentFragmentDoc}
 `;
 export const AvailableUserFragmentDoc = gql`
   fragment AvailableUser on User {
@@ -122131,25 +129298,6 @@ export const RoleSetMembersDetailsFragmentDoc = gql`
   ${OrganizationDetailsFragmentDoc}
   ${CommunityMemberVirtualContributorFragmentDoc}
 `;
-export const TagsetDetailsFragmentDoc = gql`
-  fragment TagsetDetails on Tagset {
-    id
-    name
-    tags
-    allowedValues
-    type
-    __typename
-  }
-`;
-export const ReferenceDetailsFragmentDoc = gql`
-  fragment ReferenceDetails on Reference {
-    id
-    name
-    uri
-    description
-    __typename
-  }
-`;
 export const VisualFullFragmentDoc = gql`
   fragment VisualFull on Visual {
     id
@@ -122164,262 +129312,6 @@ export const VisualFullFragmentDoc = gql`
     alternativeText
     __typename
   }
-`;
-export const WhiteboardProfileFragmentDoc = gql`
-  fragment WhiteboardProfile on Profile {
-    id
-    displayName
-    description
-    visual(type: CARD) {
-      ...VisualFull
-      __typename
-    }
-    preview: visual(type: BANNER) {
-      ...VisualFull
-      __typename
-    }
-    tagset {
-      ...TagsetDetails
-      __typename
-    }
-    storageBucket {
-      id
-      __typename
-    }
-    __typename
-  }
-  ${VisualFullFragmentDoc}
-  ${TagsetDetailsFragmentDoc}
-`;
-export const WhiteboardDetailsFragmentDoc = gql`
-  fragment WhiteboardDetails on Whiteboard {
-    id
-    nameID
-    createdDate
-    profile {
-      ...WhiteboardProfile
-      __typename
-    }
-    authorization {
-      id
-      myPrivileges
-      __typename
-    }
-    contentUpdatePolicy
-    createdBy {
-      id
-      profile {
-        id
-        displayName
-        url
-        location {
-          id
-          country
-          city
-          __typename
-        }
-        avatar: visual(type: AVATAR) {
-          id
-          uri
-          __typename
-        }
-        __typename
-      }
-      __typename
-    }
-    __typename
-  }
-  ${WhiteboardProfileFragmentDoc}
-`;
-export const LinkDetailsWithAuthorizationFragmentDoc = gql`
-  fragment LinkDetailsWithAuthorization on Link {
-    id
-    uri
-    profile {
-      id
-      displayName
-      description
-    }
-    authorization {
-      id
-      myPrivileges
-    }
-  }
-`;
-export const ReactionDetailsFragmentDoc = gql`
-  fragment ReactionDetails on Reaction {
-    id
-    emoji
-    sender {
-      id
-      firstName
-      lastName
-    }
-  }
-`;
-export const AgentDataFragmentDoc = gql`
-  fragment AgentData on Agent {
-    id
-    credentials {
-      id
-      resourceID
-      type
-    }
-  }
-`;
-export const PreferenceDataFragmentDoc = gql`
-  fragment PreferenceData on Preference {
-    id
-    value
-    definition {
-      type
-      id
-      displayName
-      description
-      group
-    }
-    authorization {
-      myPrivileges
-    }
-  }
-`;
-export const UserDataFragmentDoc = gql`
-  fragment UserData on User {
-    id
-    nameID
-    firstName
-    lastName
-    email
-    phone
-    accountUpn
-    account {
-      ...AccountData
-    }
-    agent {
-      ...AgentData
-    }
-    profile {
-      ...ProfileDataUser
-    }
-    preferences {
-      ...PreferenceData
-    }
-    settings {
-      privacy {
-        contributionRolesPubliclyVisible
-      }
-      communication {
-        allowOtherUsersToSendMessages
-      }
-    }
-    authorization {
-      myPrivileges
-      credentialRules {
-        name
-      }
-    }
-  }
-  ${AccountDataFragmentDoc}
-  ${AgentDataFragmentDoc}
-  ${ProfileDataUserFragmentDoc}
-  ${PreferenceDataFragmentDoc}
-`;
-export const MessageDetailsFragmentDoc = gql`
-  fragment MessageDetails on Message {
-    id
-    message
-    timestamp
-    reactions {
-      ...ReactionDetails
-    }
-    threadID
-    sender {
-      ...UserData
-    }
-  }
-  ${ReactionDetailsFragmentDoc}
-  ${UserDataFragmentDoc}
-`;
-export const CommentsWithMessagesFragmentDoc = gql`
-  fragment CommentsWithMessages on Room {
-    id
-    messagesCount
-    authorization {
-      id
-      myPrivileges
-    }
-    messages {
-      ...MessageDetails
-    }
-  }
-  ${MessageDetailsFragmentDoc}
-`;
-export const CalloutDetailsFragmentDoc = gql`
-  fragment CalloutDetails on Callout {
-    id
-    nameID
-    type
-    framing {
-      profile {
-        id
-        displayName
-        description
-        tagset {
-          ...TagsetDetails
-          __typename
-        }
-        tagsets {
-          ...TagsetDetails
-          __typename
-        }
-        references {
-          ...ReferenceDetails
-          __typename
-        }
-        __typename
-      }
-      whiteboard {
-        ...WhiteboardDetails
-        __typename
-      }
-      __typename
-    }
-    contributionPolicy {
-      state
-      __typename
-    }
-    contributionDefaults {
-      id
-      postDescription
-      whiteboardContent
-      __typename
-    }
-    sortOrder
-    activity
-    contributions {
-      link {
-        ...LinkDetailsWithAuthorization
-        __typename
-      }
-      __typename
-    }
-    comments {
-      ...CommentsWithMessages
-      __typename
-    }
-    authorization {
-      id
-      myPrivileges
-      __typename
-    }
-    visibility
-    __typename
-  }
-  ${TagsetDetailsFragmentDoc}
-  ${ReferenceDetailsFragmentDoc}
-  ${WhiteboardDetailsFragmentDoc}
-  ${LinkDetailsWithAuthorizationFragmentDoc}
-  ${CommentsWithMessagesFragmentDoc}
 `;
 export const PostCardFragmentDoc = gql`
   fragment PostCard on Post {
@@ -122482,7 +129374,6 @@ export const CalloutFragmentDoc = gql`
   fragment Callout on Callout {
     id
     nameID
-    type
     sortOrder
     activity
     authorization {
@@ -122500,23 +129391,11 @@ export const CalloutFragmentDoc = gql`
       }
       __typename
     }
-    visibility
-    __typename
-  }
-`;
-export const ClassificationDetailsFragmentDoc = gql`
-  fragment ClassificationDetails on Callout {
-    classification {
-      id
-      flowState: tagset(tagsetName: FLOW_STATE) {
-        ...TagsetDetails
-        __typename
-      }
+    settings {
+      visibility
       __typename
     }
-    __typename
   }
-  ${TagsetDetailsFragmentDoc}
 `;
 export const PendingMembershipsJourneyProfileFragmentDoc = gql`
   fragment PendingMembershipsJourneyProfile on Profile {
@@ -122562,7 +129441,6 @@ export const SearchResultCalloutFragmentDoc = gql`
     id
     callout {
       id
-      type
       framing {
         id
         profile {
@@ -122811,25 +129689,41 @@ export const InvitationStateEventDocument = gql`
 export const InviteForEntryRoleOnRoleSetDocument = gql`
   mutation InviteForEntryRoleOnRoleSet(
     $roleSetId: UUID!
-    $invitedContributorIDs: [UUID!]!
+    $invitedContributorIds: [UUID!]!
     $invitedUserEmails: [String!]!
     $welcomeMessage: String
+    $extraRoles: [RoleName!]!
   ) {
     inviteForEntryRoleOnRoleSet(
       invitationData: {
-        roleSetID: $roleSetId
-        invitedContributorIDs: $invitedContributorIDs
+        invitedContributorIDs: $invitedContributorIds
         invitedUserEmails: $invitedUserEmails
+        roleSetID: $roleSetId
         welcomeMessage: $welcomeMessage
+        extraRoles: $extraRoles
       }
     ) {
       type
       invitation {
         id
         state
+        contributor {
+          id
+          profile {
+            id
+            displayName
+            __typename
+          }
+          __typename
+        }
+        __typename
       }
       platformInvitation {
         id
+        email
+        firstName
+        lastName
+        __typename
       }
       __typename
     }
@@ -122948,10 +129842,10 @@ export const CreateCalloutOnCalloutsSetDocument = gql`
     $calloutData: CreateCalloutOnCalloutsSetInput!
   ) {
     createCalloutOnCalloutsSet(calloutData: $calloutData) {
-      ...CalloutData
+      ...CalloutDetails
     }
   }
-  ${CalloutDataFragmentDoc}
+  ${CalloutDetailsFragmentDoc}
 `;
 export const DeleteCalloutDocument = gql`
   mutation deleteCallout($calloutId: UUID!) {
@@ -122977,10 +129871,10 @@ export const DeleteWhiteboardDocument = gql`
 export const UpdateCalloutDocument = gql`
   mutation UpdateCallout($calloutData: UpdateCalloutEntityInput!) {
     updateCallout(calloutData: $calloutData) {
-      ...CalloutData
+      ...CalloutDetails
     }
   }
-  ${CalloutDataFragmentDoc}
+  ${CalloutDetailsFragmentDoc}
 `;
 export const UpdateCalloutVisibilityDocument = gql`
   mutation UpdateCalloutVisibility(
@@ -123008,7 +129902,9 @@ export const TransferCalloutDocument = gql`
       id
       nameID
       isTemplate
-      visibility
+      settings {
+        visibility
+      }
     }
   }
 `;
@@ -123055,10 +129951,10 @@ export const RemoveReactionToMessageInRoomDocument = gql`
 export const SendMessageReplyToRoomDocument = gql`
   mutation SendMessageReplyToRoom($messageData: RoomSendMessageReplyInput!) {
     sendMessageReplyToRoom(messageData: $messageData) {
-      ...MessageData
+      ...MessageDetails
     }
   }
-  ${MessageDataFragmentDoc}
+  ${MessageDetailsFragmentDoc}
 `;
 export const SendMessageToCommunityLeadsDocument = gql`
   mutation SendMessageToCommunityLeads(
@@ -123077,10 +129973,10 @@ export const SendMessageToOrganizationDocument = gql`
 export const SendMessageToRoomDocument = gql`
   mutation SendMessageToRoom($messageData: RoomSendMessageInput!) {
     sendMessageToRoom(messageData: $messageData) {
-      ...MessageData
+      ...MessageDetails
     }
   }
-  ${MessageDataFragmentDoc}
+  ${MessageDetailsFragmentDoc}
 `;
 export const SendMessageToUserDocument = gql`
   mutation SendMessageToUser(
@@ -123216,21 +130112,25 @@ export const EventOnOrganizationVerificationDocument = gql`
   }
   ${AuthorizationDataFragmentDoc}
 `;
-export const UpdateInnovationFlowSelectedStateDocument = gql`
-  mutation UpdateInnovationFlowSelectedState(
+export const UpdateInnovationFlowCurrentStateDocument = gql`
+  mutation updateInnovationFlowCurrentState(
     $innovationFlowId: UUID!
-    $selectedState: String!
+    $currentStateID: UUID!
   ) {
-    updateInnovationFlowSelectedState(
+    updateInnovationFlowCurrentState(
       innovationFlowStateData: {
         innovationFlowID: $innovationFlowId
-        selectedState: $selectedState
+        currentStateID: $currentStateID
       }
     ) {
-      ...InnovationFlowData
+      id
+      currentState {
+        displayName
+        __typename
+      }
+      __typename
     }
   }
-  ${InnovationFlowDataFragmentDoc}
 `;
 export const CreateOrganizationDocument = gql`
   mutation CreateOrganization($organizationData: CreateOrganizationInput!) {
@@ -123256,13 +130156,10 @@ export const UpdateOrganizationDocument = gql`
   ${OrganizationDataFragmentDoc}
 `;
 export const UpdateOrganizationSettingsDocument = gql`
-  mutation updateOrganizationSettings(
-    $organizationID: UUID!
-    $settingsData: UpdateOrganizationSettingsEntityInput!
+  mutation UpdateOrganizationSettings(
+    $settingsData: UpdateOrganizationSettingsInput!
   ) {
-    updateOrganizationSettings(
-      settingsData: { organizationID: $organizationID, settings: $settingsData }
-    ) {
+    updateOrganizationSettings(settingsData: $settingsData) {
       id
       settings {
         privacy {
@@ -123660,14 +130557,6 @@ export const DeleteUserDocument = gql`
     }
   }
 `;
-export const UpdatePreferenceOnUserDocument = gql`
-  mutation UpdatePreferenceOnUser($preferenceData: UpdateUserPreferenceInput!) {
-    updatePreferenceOnUser(preferenceData: $preferenceData) {
-      ...PreferenceData
-    }
-  }
-  ${PreferenceDataFragmentDoc}
-`;
 export const UpdateUserDocument = gql`
   mutation updateUser($userData: UpdateUserInput!) {
     updateUser(userData: $userData) {
@@ -123677,24 +130566,20 @@ export const UpdateUserDocument = gql`
   ${UserDataFragmentDoc}
 `;
 export const UpdateUserSettingsDocument = gql`
-  mutation updateUserSettings(
-    $userID: UUID!
-    $settingsData: UpdateUserSettingsEntityInput!
-  ) {
-    updateUserSettings(
-      settingsData: { userID: $userID, settings: $settingsData }
-    ) {
+  mutation UpdateUserSettings($settingsData: UpdateUserSettingsInput!) {
+    updateUserSettings(settingsData: $settingsData) {
       id
       settings {
-        privacy {
-          contributionRolesPubliclyVisible
-        }
-        communication {
-          allowOtherUsersToSendMessages
-        }
+        ...userSettingsFragment
+        __typename
+      }
+      __typename
+      authorization {
+        myPrivileges
       }
     }
   }
+  ${UserSettingsFragmentFragmentDoc}
 `;
 export const ConvertVirtualContributorToUseKnowledgeBaseDocument = gql`
   mutation convertVirtualContributorToUseKnowledgeBase(
@@ -123967,14 +130852,14 @@ export const SpaceCalloutDocument = gql`
         collaboration {
           calloutsSet {
             callouts(IDs: [$calloutId]) {
-              ...CalloutData
+              ...CalloutDetails
             }
           }
         }
       }
     }
   }
-  ${CalloutDataFragmentDoc}
+  ${CalloutDetailsFragmentDoc}
 `;
 export const CalloutDetailsDocument = gql`
   query CalloutDetails($calloutId: UUID!) {
@@ -125471,8 +132356,8 @@ const UpdateLicensePlanDocumentString = print(UpdateLicensePlanDocument);
 const EventOnOrganizationVerificationDocumentString = print(
   EventOnOrganizationVerificationDocument
 );
-const UpdateInnovationFlowSelectedStateDocumentString = print(
-  UpdateInnovationFlowSelectedStateDocument
+const UpdateInnovationFlowCurrentStateDocumentString = print(
+  UpdateInnovationFlowCurrentStateDocument
 );
 const CreateOrganizationDocumentString = print(CreateOrganizationDocument);
 const DeleteOrganizationDocumentString = print(DeleteOrganizationDocument);
@@ -125521,9 +132406,6 @@ const CreateUserNewRegistrationDocumentString = print(
   CreateUserNewRegistrationDocument
 );
 const DeleteUserDocumentString = print(DeleteUserDocument);
-const UpdatePreferenceOnUserDocumentString = print(
-  UpdatePreferenceOnUserDocument
-);
 const UpdateUserDocumentString = print(UpdateUserDocument);
 const UpdateUserSettingsDocumentString = print(UpdateUserSettingsDocument);
 const ConvertVirtualContributorToUseKnowledgeBaseDocumentString = print(
@@ -126884,11 +133766,11 @@ export function getSdk(
         variables
       );
     },
-    UpdateInnovationFlowSelectedState(
-      variables: SchemaTypes.UpdateInnovationFlowSelectedStateMutationVariables,
+    updateInnovationFlowCurrentState(
+      variables: SchemaTypes.UpdateInnovationFlowCurrentStateMutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
-      data: SchemaTypes.UpdateInnovationFlowSelectedStateMutation;
+      data: SchemaTypes.UpdateInnovationFlowCurrentStateMutation;
       errors?: GraphQLError[];
       extensions?: any;
       headers: Headers;
@@ -126896,12 +133778,12 @@ export function getSdk(
     }> {
       return withWrapper(
         (wrappedRequestHeaders) =>
-          client.rawRequest<SchemaTypes.UpdateInnovationFlowSelectedStateMutation>(
-            UpdateInnovationFlowSelectedStateDocumentString,
+          client.rawRequest<SchemaTypes.UpdateInnovationFlowCurrentStateMutation>(
+            UpdateInnovationFlowCurrentStateDocumentString,
             variables,
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
-        "UpdateInnovationFlowSelectedState",
+        "updateInnovationFlowCurrentState",
         "mutation",
         variables
       );
@@ -126972,7 +133854,7 @@ export function getSdk(
         variables
       );
     },
-    updateOrganizationSettings(
+    UpdateOrganizationSettings(
       variables: SchemaTypes.UpdateOrganizationSettingsMutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
@@ -126989,7 +133871,7 @@ export function getSdk(
             variables,
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
-        "updateOrganizationSettings",
+        "UpdateOrganizationSettings",
         "mutation",
         variables
       );
@@ -127500,28 +134382,6 @@ export function getSdk(
         variables
       );
     },
-    UpdatePreferenceOnUser(
-      variables: SchemaTypes.UpdatePreferenceOnUserMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders
-    ): Promise<{
-      data: SchemaTypes.UpdatePreferenceOnUserMutation;
-      errors?: GraphQLError[];
-      extensions?: any;
-      headers: Headers;
-      status: number;
-    }> {
-      return withWrapper(
-        (wrappedRequestHeaders) =>
-          client.rawRequest<SchemaTypes.UpdatePreferenceOnUserMutation>(
-            UpdatePreferenceOnUserDocumentString,
-            variables,
-            { ...requestHeaders, ...wrappedRequestHeaders }
-          ),
-        "UpdatePreferenceOnUser",
-        "mutation",
-        variables
-      );
-    },
     updateUser(
       variables: SchemaTypes.UpdateUserMutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -127544,7 +134404,7 @@ export function getSdk(
         variables
       );
     },
-    updateUserSettings(
+    UpdateUserSettings(
       variables: SchemaTypes.UpdateUserSettingsMutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
@@ -127561,7 +134421,7 @@ export function getSdk(
             variables,
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
-        "updateUserSettings",
+        "UpdateUserSettings",
         "mutation",
         variables
       );

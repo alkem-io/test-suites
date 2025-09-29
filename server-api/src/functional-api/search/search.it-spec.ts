@@ -75,9 +75,8 @@ const scenarioConfig: TestScenarioConfig = {
   name: 'search',
   space: {
     collaboration: {
-      //addPostCallout: true,
       addPostCollectionCallout: true,
-      //addWhiteboardCallout: true,
+      addTutorialCallouts: false,
     },
     community: {
       admins: [TestUser.SPACE_ADMIN],
@@ -92,9 +91,7 @@ const scenarioConfig: TestScenarioConfig = {
     },
     subspace: {
       collaboration: {
-        //addPostCallout: true,
         addPostCollectionCallout: true,
-        //addWhiteboardCallout: true,
       },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
@@ -107,9 +104,7 @@ const scenarioConfig: TestScenarioConfig = {
       },
       subspace: {
         collaboration: {
-          //   addPostCallout: true,
           addPostCollectionCallout: true,
-          //   addWhiteboardCallout: true,
         },
         community: {
           admins: [TestUser.SUBSUBSPACE_ADMIN],

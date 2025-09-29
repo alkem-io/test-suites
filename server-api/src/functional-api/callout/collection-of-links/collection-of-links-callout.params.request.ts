@@ -1,7 +1,7 @@
 import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
 import {
-  CalloutType,
-  CalloutVisibility,
+  CalloutContributionType,
+  CalloutFramingType,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 
@@ -18,13 +18,17 @@ export const createLinkCollectionCallout = async (
         calloutData: {
           calloutsSetID,
           nameID,
-          type: CalloutType.LinkCollection,
-
-          visibility: CalloutVisibility.Published,
           framing: {
             profile: {
               displayName,
               description: 'Link collection callout',
+            },
+            type: CalloutFramingType.None,
+          },
+          settings: {
+            contribution: {
+              enabled: true,
+              allowedTypes: [CalloutContributionType.Link],
             },
           },
         },

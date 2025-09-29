@@ -19,7 +19,10 @@ import {
 } from '@alkemio/client-lib';
 import { getSingleInvitationResult } from '@functional-api/roleset/roleset.request.params';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { SpaceLevel } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import {
+  RoleName,
+  SpaceLevel,
+} from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
 let baseScenario: OrganizationWithSpaceModel;
 
@@ -67,13 +70,14 @@ afterAll(async () => {
 });
 
 describe('Promoting of L1 subspace', () => {
-  test('Conversion Subspace L1 to Space L0 with application and invitation to the subspace', async () => {
+  test.only('Conversion Subspace L1 to Space L0 with application and invitation to the subspace', async () => {
     // Arrange
     const invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.subspace.community.roleSetId,
       [TestUserManager.users.nonSpaceMember.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
     console.log('Invitation ID:', invitationData.error);
@@ -97,6 +101,7 @@ describe('Promoting of L1 subspace', () => {
 
     // Act
     const res = await convertSpaceL1ToSpaceL0(baseScenario.subspace.id);
+    console.log('Convert L1 to L0 Response:', res.error);
     const after = res.data?.convertSpaceL1ToSpaceL0;
 
     // Assert

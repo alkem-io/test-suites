@@ -60,6 +60,7 @@ const scenarioConfig: TestScenarioConfig = {
       addPostCallout: true,
       addPostCollectionCallout: true,
       addWhiteboardCallout: true,
+      addTutorialCallouts: false,
     },
     community: {
       admins: [TestUser.SPACE_ADMIN],

@@ -79,7 +79,7 @@ export class TestUserManager {
       ),
       qaUser: TestUserManager.getUserModelByEmail("qa.user@alkem.io"),
       // notificationsAdmin: TestUserManager.getUserModelByEmail(
-      //   'notifications@alkem.io' // TODO: notifications seems to not be properly setup
+      //   "notifications@alkem.io"
       // ),
       nonSpaceMember: TestUserManager.getUserModelByEmail("non.space@alkem.io"),
       betaTester: TestUserManager.getUserModelByEmail("beta.tester@alkem.io"),

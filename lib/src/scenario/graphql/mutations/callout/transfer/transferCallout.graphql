@@ -3,6 +3,8 @@ mutation transferCallout($transferData: TransferCalloutInput!) {
     id
     nameID
     isTemplate
-    visibility
+    settings {
+      visibility
+    }
   }
 }

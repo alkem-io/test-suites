@@ -6,7 +6,7 @@ fragment ContributionsData on CalloutContribution {
     email
   }
   link {
-    authorization{
+    authorization {
       myPrivileges
     }
     ...LinkData

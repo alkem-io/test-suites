@@ -1,0 +1,8 @@
+fragment TagsetDetails on Tagset {
+  id
+  name
+  tags
+  allowedValues
+  type
+  __typename
+}

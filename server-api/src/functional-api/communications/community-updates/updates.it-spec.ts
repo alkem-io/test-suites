@@ -26,9 +26,7 @@ const scenarioConfig: TestScenarioConfig = {
   name: 'community-updates',
   space: {
     collaboration: {
-      addPostCallout: true,
-      addPostCollectionCallout: true,
-      addWhiteboardCallout: true,
+      addTutorialCallouts: false,
     },
     community: {
       admins: [TestUser.SPACE_ADMIN],
@@ -97,34 +95,34 @@ describe('Communities', () => {
       const getMessageReaderMember =
         spaceDataReaderMember?.data?.lookup?.space?.community?.communication
           ?.updates.messages ?? [];
-      await delay(600);
-      const spaceDataReader = await getSpaceData(
+      await delay(100);
+      const nonSpaceDataReader = await getSpaceData(
         baseScenario.space.id,
         TestUser.NON_SPACE_MEMBER
       );
 
       // Assert
       expect(retrievedMessage).toHaveLength(1);
-      expect(retrievedMessage[0]).toEqual({
-        id: baseScenario.space.communication.messageId,
-        message: 'test',
-        sender: { id: TestUserManager.users.globalAdmin.id },
-        reactions: [],
-        threadID: null,
-      });
+      expect(retrievedMessage[0].id).toEqual(
+        baseScenario.space.communication.messageId
+      );
+      expect(retrievedMessage[0].message).toEqual('test');
+      expect(retrievedMessage[0].sender?.id).toEqual(
+        TestUserManager.users.globalAdmin.id
+      );
 
       expect(retrievedMessage).toHaveLength(1);
-      expect(getMessageReaderMember[0]).toEqual({
-        id: baseScenario.space.communication.messageId,
-        message: 'test',
-        sender: { id: TestUserManager.users.globalAdmin.id },
-        reactions: [],
-        threadID: null,
-      });
+      expect(getMessageReaderMember[0].id).toEqual(
+        baseScenario.space.communication.messageId
+      );
+      expect(getMessageReaderMember[0].message).toEqual('test');
+      expect(getMessageReaderMember[0].sender?.id).toEqual(
+        TestUserManager.users.globalAdmin.id
+      );
 
       await delay(600);
-      expect(spaceDataReader.error?.errors[0].message).toContain(
-        `User (${TestUserManager.users.nonSpaceMember.email}) does not have credentials that grant 'read' access `
+      expect(nonSpaceDataReader.error?.errors[0].message).toContain(
+        "Authorization: unable to grant 'read' privilege: authorize data loader result user"
       );
     });
 
@@ -160,29 +158,29 @@ describe('Communities', () => {
 
       // Assert
       expect(retrievedMessage).toHaveLength(1);
-      expect(retrievedMessage[0]).toEqual({
-        id: baseScenario.space.communication.messageId,
-        message: 'test',
-        sender: { id: TestUserManager.users.globalAdmin.id },
-        reactions: [],
-        threadID: null,
-      });
+      expect(retrievedMessage[0].id).toEqual(
+        baseScenario.space.communication.messageId
+      );
+      expect(retrievedMessage[0].message).toEqual('test');
+      expect(retrievedMessage[0].sender?.id).toEqual(
+        TestUserManager.users.globalAdmin.id
+      );
 
-      expect(getMessageReaderMember[0]).toEqual({
-        id: baseScenario.space.communication.messageId,
-        message: 'test',
-        sender: { id: TestUserManager.users.globalAdmin.id },
-        reactions: [],
-        threadID: null,
-      });
+      expect(getMessageReaderMember[0].id).toEqual(
+        baseScenario.space.communication.messageId
+      );
+      expect(getMessageReaderMember[0].message).toEqual('test');
+      expect(getMessageReaderMember[0].sender?.id).toEqual(
+        TestUserManager.users.globalAdmin.id
+      );
 
-      expect(spaceDataReaderNotMember[0]).toEqual({
-        id: baseScenario.space.communication.messageId,
-        message: 'test',
-        sender: { id: TestUserManager.users.globalAdmin.id },
-        reactions: [],
-        threadID: null,
-      });
+      expect(spaceDataReaderNotMember[0].id).toEqual(
+        baseScenario.space.communication.messageId
+      );
+      expect(spaceDataReaderNotMember[0].message).toEqual('test');
+      expect(spaceDataReaderNotMember[0].sender?.id).toEqual(
+        TestUserManager.users.globalAdmin.id
+      );
     });
   });
 
@@ -202,13 +200,13 @@ describe('Communities', () => {
           .messages ?? [];
       // Assert
       expect(retrievedMessage).toHaveLength(1);
-      expect(retrievedMessage[0]).toEqual({
-        id: baseScenario.space.communication.messageId,
-        message: 'test',
-        sender: { id: TestUserManager.users.globalAdmin.id },
-        reactions: [],
-        threadID: null,
-      });
+      expect(retrievedMessage[0].id).toEqual(
+        baseScenario.space.communication.messageId
+      );
+      expect(retrievedMessage[0].message).toEqual('test');
+      expect(retrievedMessage[0].sender?.id).toEqual(
+        TestUserManager.users.globalAdmin.id
+      );
 
       await removeMessageOnRoom(
         baseScenario.space.communication.updatesId,

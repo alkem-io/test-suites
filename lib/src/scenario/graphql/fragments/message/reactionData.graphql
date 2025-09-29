@@ -1,7 +1,0 @@
-fragment ReactionData on Reaction {
-  id
-  emoji
-  sender {
-    email
-  }
-}

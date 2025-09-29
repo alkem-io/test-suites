@@ -19,7 +19,6 @@ import {
   createSpaceAndGetData,
   deleteSpace,
 } from '../journey/space/space.request.params';
-
 import { lookupProfileVisuals } from '@functional-api/lookup/lookup-request.params';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import {
@@ -140,7 +139,6 @@ describe('Upload document', () => {
       path.join(__dirname, 'files-to-upload', 'image.png'),
       refId
     );
-
     documentEndPoint = res.data?.uploadFileOnReference?.uri || 'not found';
     documentId = getLastPartOfUrl(documentEndPoint);
     referenceUri = await getReferenceUri(baseScenario.organization.id);

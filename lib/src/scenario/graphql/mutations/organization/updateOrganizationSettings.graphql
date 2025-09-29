@@ -1,13 +1,7 @@
-mutation updateOrganizationSettings(
-  $organizationID: UUID!
-  $settingsData: UpdateOrganizationSettingsEntityInput!
+mutation UpdateOrganizationSettings(
+  $settingsData: UpdateOrganizationSettingsInput!
 ) {
-  updateOrganizationSettings(
-    settingsData: {
-      organizationID: $organizationID
-      settings: $settingsData
-    }
-  ) {
+  updateOrganizationSettings(settingsData: $settingsData) {
     id
     settings {
       privacy {

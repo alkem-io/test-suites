@@ -9,7 +9,7 @@ import { UserModel } from "./models/UserModel";
 import { OrganizationModel } from "./models/OrganizationModel";
 import { LogManager } from "./LogManager";
 import {
-  CalloutType,
+  CalloutAllowedContributors,
   CalloutVisibility,
   RoleName,
 } from "../core/generated/alkemio-schema";
@@ -29,6 +29,7 @@ import {
   updateCalloutVisibility,
   updateSpaceSettings,
 } from "./baseFunctions";
+import { CalloutContributionType } from "@alkemio/client-lib/dist/generated/graphql";
 
 export class TestScenarioFactory {
   public static async createBaseScenarioEmpty(
@@ -122,6 +123,7 @@ export class TestScenarioFactory {
         e?.stack
       );
       process.exit(1); // Exit the Jest process with an error code.
+      //throw new Error(`Unable to create core scenario setup: ${e}`);
     }
 
     return baseScenario;
@@ -155,7 +157,10 @@ export class TestScenarioFactory {
         LogManager.getLogger().error(
           `User ID is missing for ${userModel.type}, cannot assign role ${role}`
         );
-        process.exit(1); // Exit the Jest process with an error code.
+        throw new Error(
+          process.exit(1) // Exit the Jest process with an error code.
+          //`User ID is missing for ${userModel.type}, cannot assign role ${role}`
+        );
       }
       await assignPlatformRole(userModel.id, role);
     }
@@ -184,7 +189,10 @@ export class TestScenarioFactory {
       LogManager.getLogger().error(
         `Unable to tear down core scenario setup for '${baseScenario.name}: ${e}`
       );
-      process.exit(1); // Exit the Jest process with an error code.
+      throw new Error(
+        process.exit(1) // Exit the Jest process with an error code.
+        //`Unable to tear down core scenario setup for '${baseScenario.name}: ${e}`
+      );
     }
   }
 
@@ -374,18 +382,24 @@ export class TestScenarioFactory {
         framing: {
           profile: { displayName: `${scenarioName} - post` },
         },
-        type: CalloutType.Post,
+        settings: {
+          framing: { commentsEnabled: true },
+          contribution: {
+            allowedTypes: [CalloutContributionType.Link],
+            canAddContributions: CalloutAllowedContributors.Members,
+            enabled: true,
+            commentsEnabled: true,
+          },
+          visibility: CalloutVisibility.Published,
+        },
       }
     );
+
     const postCalloutData = createPostCallout.data?.createCalloutOnCalloutsSet;
 
     spaceModel.collaboration.calloutPostId = postCalloutData?.id ?? "";
     spaceModel.collaboration.calloutPostCommentsId =
       postCalloutData?.comments?.id ?? "";
-    await updateCalloutVisibility(
-      spaceModel.collaboration.calloutPostId,
-      CalloutVisibility.Published
-    );
 
     return spaceModel;
   }
@@ -403,17 +417,22 @@ export class TestScenarioFactory {
             description: `postCollectionCallout-${scenarioName} - created as part of scenario setup for tests`,
           },
         },
-        type: CalloutType.PostCollection,
+        settings: {
+          //framing: { commentsEnabled: true },
+          contribution: {
+            allowedTypes: [CalloutContributionType.Post],
+            canAddContributions: CalloutAllowedContributors.Members,
+            enabled: true,
+            commentsEnabled: true,
+          },
+          visibility: CalloutVisibility.Published,
+        },
       }
     );
 
     spaceModel.collaboration.calloutPostCollectionId =
       callForPostCalloutData?.data?.createCalloutOnCalloutsSet?.id ?? "";
 
-    await updateCalloutVisibility(
-      spaceModel.collaboration.calloutPostCollectionId,
-      CalloutVisibility.Published
-    );
     return spaceModel;
   }
 
@@ -430,18 +449,18 @@ export class TestScenarioFactory {
             description: "Whiteboard - initial",
           },
         },
-        type: CalloutType.WhiteboardCollection,
+        settings: {
+          contribution: {
+            allowedTypes: [CalloutContributionType.Whiteboard],
+          },
+          visibility: CalloutVisibility.Published,
+        },
       },
       TestUser.GLOBAL_ADMIN
     );
 
     spaceModel.collaboration.calloutWhiteboardId =
       whiteboardCalloutData?.data?.createCalloutOnCalloutsSet?.id ?? "";
-
-    await updateCalloutVisibility(
-      spaceModel.collaboration.calloutWhiteboardId,
-      CalloutVisibility.Published
-    );
 
     return spaceModel;
   }

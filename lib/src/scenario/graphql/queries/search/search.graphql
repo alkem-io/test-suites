@@ -46,7 +46,6 @@ fragment SearchResultCallout on SearchResultCallout {
   id
   callout {
     id
-    type
     framing {
       id
       profile {

@@ -1,8 +1,8 @@
 import request from "supertest";
-const environment = process.env.MAIL_SLURPER_ENDPOINT || "localhost:4437/mail";
+import { testConfiguration } from "..";
 
 export const deleteMailSlurperMails = async () => {
-  return await request(environment)
+  return await request(testConfiguration.endPoints.mailSlurper)
     .delete("")
     .send({
       pruneCode: "all",
@@ -13,7 +13,7 @@ export const deleteMailSlurperMails = async () => {
 };
 
 export const getMails = async () => {
-  return await request(environment)
+  return await request(testConfiguration.endPoints.mailSlurper)
     .get("")
     .set("Accept", "application/json")
     .set("Content-Type", "application/json")
@@ -28,23 +28,3 @@ export const getMailsData = async () => {
 
   return [emailsData, emailsCount];
 };
-
-// export const deleteMailSlurperMails = async () => {
-//   return await request(testConfiguration.endPoints.mailSlurper)
-//     .delete('')
-//     .send({
-//       pruneCode: 'all',
-//     })
-//     .set('Accept', 'application/json')
-//     .set('Content-Type', 'application/json')
-//     .set('Connection', 'keep-alive');
-// };
-
-// export const getMails = async () => {
-//   return await request(testConfiguration.endPoints.mailSlurper)
-//     .get('')
-//     .set('Accept', 'application/json')
-//     .set('Content-Type', 'application/json')
-//     .set('Connection', 'keep-alive')
-//     .set('Accept-Encoding', 'gzip, deflate, br');
-// };

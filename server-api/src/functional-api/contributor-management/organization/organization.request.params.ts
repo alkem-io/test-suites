@@ -140,10 +140,12 @@ export const updateOrganizationSettings = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.updateOrganizationSettings(
+    graphqlClient.UpdateOrganizationSettings(
       {
-        organizationID,
-        settingsData,
+        settingsData: {
+          organizationID,
+          settings: settingsData,
+        },
       },
       {
         authorization: `Bearer ${authToken}`,

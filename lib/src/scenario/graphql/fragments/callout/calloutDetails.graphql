@@ -1,0 +1,66 @@
+fragment CalloutDetails on Callout {
+  id
+  framing {
+    id
+    profile {
+      id
+      displayName
+      description
+      tagset {
+        ...TagsetDetails
+        __typename
+      }
+      references {
+        ...ReferenceDetails
+        __typename
+      }
+      storageBucket {
+        id
+        __typename
+      }
+      url
+      __typename
+    }
+    type
+    whiteboard {
+      ...WhiteboardDetails
+      __typename
+    }
+    __typename
+  }
+  contributionDefaults {
+    id
+    defaultDisplayName
+    postDescription
+    whiteboardContent
+    __typename
+  }
+  sortOrder
+  activity
+  contributions {
+    ...ContributionsData
+  }
+  # contributions {
+  #   id
+  #   sortOrder
+  #   link {
+  #     ...LinkDetailsWithAuthorization
+  #     __typename
+  #   }
+  #   __typename
+  # }
+  comments {
+    ...CommentsWithMessages
+    __typename
+  }
+  authorization {
+    id
+    myPrivileges
+    __typename
+  }
+  settings {
+    ...CalloutSettingsFull
+    __typename
+  }
+  __typename
+}

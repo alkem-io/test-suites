@@ -1,0 +1,18 @@
+fragment CommentsWithMessages on Room {
+  id
+  messagesCount
+  authorization {
+    id
+    myPrivileges
+    __typename
+  }
+  messages {
+    ...MessageDetails
+    __typename
+  }
+  vcInteractions {
+    ...VcInteractionsDetails
+    __typename
+  }
+  __typename
+}

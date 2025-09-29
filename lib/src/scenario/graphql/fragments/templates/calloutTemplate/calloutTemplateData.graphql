@@ -6,6 +6,5 @@ fragment CalloutTemplateData on Template {
         ...ProfileData
       }
     }
-    type
   }
 }

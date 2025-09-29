@@ -20,6 +20,7 @@ import { deleteUser } from '../../contributor-management/user/user.request.param
 import { eventOnRoleSetInvitation } from '../roleset-events.request.params';
 import {
   registerInAlkemioOrFail,
+  sorted__create_read_readAbout_update_delete_grant_createSubspace_readLicense,
   sorted_read_readAbout,
   TestScenarioConfig,
   TestScenarioFactory,
@@ -44,6 +45,9 @@ let baseScenario: OrganizationWithSpaceModel;
 const scenarioConfig: TestScenarioConfig = {
   name: 'access-invitations',
   space: {
+    collaboration: {
+      addTutorialCallouts: false,
+    },
     settings: {
       privacy: {
         mode: SpacePrivacyMode.Private,
@@ -93,6 +97,7 @@ describe('Invitations', () => {
       [TestUserManager.users.nonSpaceMember.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
 
@@ -119,6 +124,7 @@ describe('Invitations', () => {
       [TestUserManager.users.nonSpaceMember.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
 
@@ -139,6 +145,7 @@ describe('Invitations', () => {
       [TestUserManager.users.nonSpaceMember.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
 
@@ -175,6 +182,7 @@ describe('Invitations', () => {
       [TestUserManager.users.nonSpaceMember.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
     invitationId = 'invitationIdNotRetrieved';
@@ -201,6 +209,7 @@ describe('Invitations', () => {
       [TestUserManager.users.nonSpaceMember.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
     invitationId = 'invitationIdNotRetrieved';
@@ -233,6 +242,7 @@ describe('Invitations', () => {
       [TestUserManager.users.nonSpaceMember.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
 
@@ -249,6 +259,7 @@ describe('Invitations', () => {
       [TestUserManager.users.nonSpaceMember.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
     const invitationResult2 = getSingleInvitationResult(invitationData2);
@@ -269,6 +280,7 @@ describe('Invitations', () => {
       [TestUserManager.users.betaTester.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
 
@@ -306,6 +318,55 @@ describe('Invitations-flows', () => {
     await deleteInvitation(invitationId);
   });
 
+  test('invitee is able to ACCEPT EXTRA ROLES invitation and access space data', async () => {
+    // Act
+    invitationData = await inviteForEntryRoleOnRoleSet(
+      baseScenario.space.community.roleSetId,
+      [TestUserManager.users.qaUser.id],
+      [],
+      'welcome',
+      [RoleName.Admin, RoleName.Lead],
+      TestUser.GLOBAL_ADMIN
+    );
+
+    invitationId = 'invitationIdNotRetrieved';
+    const invitationResult = getSingleInvitationResult(invitationData);
+    if (invitationResult && invitationResult.invitation) {
+      invitationId = invitationResult.invitation.id;
+    }
+    expect(invitationId.length).toEqual(36);
+
+    // Approve Space invitation
+    await eventOnRoleSetInvitation(invitationId, 'ACCEPT', TestUser.QA_USER);
+
+    const spaceData = await getSpaceData(
+      baseScenario.space.id,
+      TestUser.QA_USER
+    );
+
+    // Assert
+    expect(spaceData?.data?.lookup?.space?.authorization?.myPrivileges).toEqual(
+      expect.arrayContaining(
+        sorted__create_read_readAbout_update_delete_grant_createSubspace_readLicense
+      )
+    );
+    await removeRoleFromUser(
+      TestUserManager.users.nonSpaceMember.id,
+      baseScenario.space.community.roleSetId,
+      RoleName.Lead
+    );
+    await removeRoleFromUser(
+      TestUserManager.users.nonSpaceMember.id,
+      baseScenario.space.community.roleSetId,
+      RoleName.Admin
+    );
+    await removeRoleFromUser(
+      TestUserManager.users.qaUser.id,
+      baseScenario.space.community.roleSetId,
+      RoleName.Member
+    );
+  });
+
   test('invitee is able to ACCEPT invitation and access space data', async () => {
     // Act
     invitationData = await inviteForEntryRoleOnRoleSet(
@@ -313,6 +374,7 @@ describe('Invitations-flows', () => {
       [TestUserManager.users.nonSpaceMember.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
     invitationId = 'invitationIdNotRetrieved';
@@ -338,6 +400,13 @@ describe('Invitations-flows', () => {
     expect(spaceData?.data?.lookup?.space?.authorization?.myPrivileges).toEqual(
       expect.arrayContaining(sorted_read_readAbout)
     );
+    expect(
+      spaceData?.data?.lookup?.space?.authorization?.myPrivileges
+    ).not.toEqual(
+      expect.arrayContaining(
+        sorted__create_read_readAbout_update_delete_grant_createSubspace_readLicense
+      )
+    );
   });
 
   test('invitee is able to REJECT and ARCHIVE invitation: no access to space data', async () => {
@@ -347,6 +416,7 @@ describe('Invitations-flows', () => {
       [TestUserManager.users.nonSpaceMember.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
     invitationId = 'invitationIdNotRetrieved';
@@ -400,6 +470,7 @@ describe('Invitations-flows', () => {
       [TestUserManager.users.nonSpaceMember.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
 
@@ -427,6 +498,7 @@ describe('Invitations-flows', () => {
       [TestUserManager.users.nonSpaceMember.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
 
@@ -444,6 +516,7 @@ describe('Invitations-flows', () => {
       [TestUserManager.users.nonSpaceMember.id],
       [],
       'welcome',
+      [RoleName.Member],
       TestUser.GLOBAL_ADMIN
     );
 
@@ -512,6 +585,7 @@ describe('Invitations - Authorization', () => {
           [TestUserManager.users.nonSpaceMember.id],
           [],
           'welcome',
+          [RoleName.Member],
           TestUser.GLOBAL_ADMIN
         );
         invitationId = 'invitationIdNotRetrieved';
@@ -544,6 +618,7 @@ describe('Invitations - Authorization', () => {
           [TestUserManager.users.nonSpaceMember.id],
           [],
           'welcome',
+          [RoleName.Member],
           TestUser.GLOBAL_ADMIN
         );
         invitationId = 'invitationIdNotRetrieved';
@@ -579,6 +654,7 @@ describe('Invitations - Authorization', () => {
           [TestUserManager.users.nonSpaceMember.id],
           [],
           'welcome',
+          [RoleName.Member],
           user
         );
 
@@ -613,6 +689,7 @@ describe('Invitations - Authorization', () => {
           [TestUserManager.users.nonSpaceMember.id],
           [],
           'welcome',
+          [RoleName.Member],
           user
         );
 

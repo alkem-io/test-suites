@@ -1,7 +1,4 @@
-import {
-  CalloutType,
-  CalloutVisibility,
-} from '@alkemio/client-lib/dist/types/alkemio-schema';
+import { CalloutContributionType } from '@alkemio/client-lib';
 import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 
@@ -18,12 +15,16 @@ export const createWhiteboardCollectionCallout = async (
         calloutData: {
           calloutsSetID,
           nameID,
-          type: CalloutType.WhiteboardCollection,
-          visibility: CalloutVisibility.Published,
           framing: {
             profile: {
               displayName,
               description: 'Whiteboard collection callout',
+            },
+          },
+          settings: {
+            contribution: {
+              enabled: true,
+              allowedTypes: [CalloutContributionType.Whiteboard],
             },
           },
           contributionDefaults: {

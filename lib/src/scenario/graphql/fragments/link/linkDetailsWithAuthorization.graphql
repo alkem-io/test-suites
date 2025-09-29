@@ -1,0 +1,13 @@
+fragment LinkDetailsWithAuthorization on Link {
+  id
+  uri
+  profile {
+    ...ProfileData
+  }
+  authorization {
+    id
+    myPrivileges
+    __typename
+  }
+  __typename
+}

@@ -57,6 +57,7 @@ const scenarioConfig: TestScenarioConfig = {
       addPostCallout: true,
       addPostCollectionCallout: true,
       addWhiteboardCallout: true,
+      addTutorialCallouts: false,
     },
     settings: {
       privacy: { mode: SpacePrivacyMode.Public },
@@ -98,6 +99,7 @@ describe('Public Space - visual on profile', () => {
       const visualData = await lookupProfileVisuals(
         baseScenario.space.about.profile.id
       );
+      console.log('visualData', visualData.data?.lookup.profile);
       const visualId = visualData.data?.lookup.profile?.visuals[0].id ?? '';
       await uploadImageOnVisual(
         path.join(__dirname, 'files-to-upload', '190-410.jpg'),

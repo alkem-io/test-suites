@@ -12,7 +12,13 @@ let baseScenario: OrganizationWithSpaceModel;
 const scenarioConfig: TestScenarioConfig = {
   name: 'assign-remove-members-to-community',
   space: {
+    collaboration: {
+      addTutorialCallouts: false,
+    },
     subspace: {
+      collaboration: {
+        addTutorialCallouts: false,
+      },
       subspace: {},
     },
   },
