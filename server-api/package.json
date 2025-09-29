@@ -27,6 +27,7 @@
     "lint:fix": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" tsc --noEmit && eslint src/**/*.ts{,x} --fix",
     "codegen": "graphql-codegen --config codegen.ts",
     "test": "jest",
+    "ts:watch": "tsc --noEmit --watch",
     "stop-process": "fuser 4000/tcp -k",
     "test:watch": "jest --watch",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",

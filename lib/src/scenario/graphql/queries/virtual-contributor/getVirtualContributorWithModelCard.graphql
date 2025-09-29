@@ -14,33 +14,28 @@ query GetVirtualContributorWithModelCard($id: UUID!) {
       searchVisibility
       listedInStore
       status
-      aiPersona {
-        id
-        bodyOfKnowledgeID
-        bodyOfKnowledgeType
-        bodyOfKnowledge
-        engine
-        aiPersonaServiceID
-        modelCard {
-          spaceUsage {
-            modelCardEntry
-            flags {
-              name
-              enabled
-            }
+      bodyOfKnowledgeID
+      bodyOfKnowledgeType
+      bodyOfKnowledgeDescription
+      modelCard {
+        spaceUsage {
+          modelCardEntry
+          flags {
+            name
+            enabled
           }
-          aiEngine {
-            isExternal
-            hostingLocation
-            isUsingOpenWeightsModel
-            isInteractionDataUsedForTraining
-            canAccessWebWhenAnswering
-            areAnswersRestrictedToBodyOfKnowledge
-            additionalTechnicalDetails
-          }
-          monitoring {
-            isUsageMonitoredByAlkemio
-          }
+        }
+        aiEngine {
+          isExternal
+          hostingLocation
+          isUsingOpenWeightsModel
+          isInteractionDataUsedForTraining
+          canAccessWebWhenAnswering
+          areAnswersRestrictedToBodyOfKnowledge
+          additionalTechnicalDetails
+        }
+        monitoring {
+          isUsageMonitoredByAlkemio
         }
       }
       profile {

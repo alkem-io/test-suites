@@ -11,7 +11,7 @@ import {
   queryVCData,
   updateVirtualContributor,
   updateVirtualContributorSettings,
-} from '../virtual-contributor/vc.request.params';
+} from '../vc.request.params';
 import {
   assignLicensePlanToAccount,
   getLicensePlanByName,
@@ -19,12 +19,12 @@ import {
 import {
   createSpaceAndGetData,
   deleteSpace,
-} from '../../journey/space/space.request.params';
-import { getModelCardForAiPersona } from './ai-persona-model-card.request.params';
+} from '../../../journey/space/space.request.params';
+import { getModelCardForAiPersona } from './model-card.request.params';
 import {
   createVirtualContributorWithEngineType,
   createExternalVirtualContributorWithEngineType,
-} from './ai-persona-engine.request.params';
+} from './engine.request.params';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import {
   AiPersonaEngine,
@@ -56,121 +56,119 @@ let baseScenario: OrganizationWithSpaceModel;
 const scenarioConfig: TestScenarioConfig = {
   name: 'ai-persona-engine-types',
 };
+beforeAll(async () => {
+  baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
 
-describe('AI Persona Engine Types Model Card', () => {
-  beforeAll(async () => {
-    baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
+  // Assign license for virtual contributors
+  const vcLicensePlan = await getLicensePlanByName(
+    'FEATURE_VIRTUAL_CONTRIBUTORS'
+  );
+  vcLicensePlanId = vcLicensePlan[0].id;
 
-    // Assign license for virtual contributors
-    const vcLicensePlan = await getLicensePlanByName(
-      'FEATURE_VIRTUAL_CONTRIBUTORS'
-    );
-    vcLicensePlanId = vcLicensePlan[0].id;
+  await assignLicensePlanToAccount(
+    baseScenario.organization.accountId,
+    vcLicensePlanId
+  );
 
-    await assignLicensePlanToAccount(
+  // Create a space for the VCs
+  const responceVcSpace = await createSpaceAndGetData(
+    spaceNameVC,
+    spaceNameIdVC,
+    TestUserManager.users.betaTester.accountId
+  );
+  vcSpaceId = responceVcSpace?.data?.lookup?.space?.id ?? '';
+
+  // Create VCs with different engine types
+  const libraFlowVcData = await createVirtualContributorWithEngineType(
+    libraFlowVcName,
+    baseScenario.organization.accountId,
+    vcSpaceId,
+    AiPersonaEngine.LibraFlow,
+    TestUser.GLOBAL_ADMIN
+  );
+
+  libraFlowVcId = libraFlowVcData?.data?.createVirtualContributor?.id ?? '';
+  await updateVirtualContributor(
+    libraFlowVcId,
+    SearchVisibility.Public,
+    TestUser.GLOBAL_ADMIN
+  );
+  await updateVirtualContributorSettings(
+    libraFlowVcId,
+    true,
+    TestUser.GLOBAL_ADMIN
+  );
+
+  const expertVcData = await createVirtualContributorWithEngineType(
+    expertVcName,
+    baseScenario.organization.accountId,
+    vcSpaceId,
+    AiPersonaEngine.Expert,
+    TestUser.GLOBAL_ADMIN
+  );
+  expertVcId = expertVcData?.data?.createVirtualContributor?.id ?? '';
+  await updateVirtualContributor(
+    expertVcId,
+    SearchVisibility.Public,
+    TestUser.GLOBAL_ADMIN
+  );
+  await updateVirtualContributorSettings(
+    expertVcId,
+    true,
+    TestUser.GLOBAL_ADMIN
+  );
+
+  // Create a knowledge-based VC with OpenAI engine
+  const genericOpenAiVcData =
+    await createExternalVirtualContributorWithEngineType(
+      genericOpenAiVcName,
       baseScenario.organization.accountId,
-      vcLicensePlanId
+      AiPersonaEngine.GenericOpenai,
+      TestUser.GLOBAL_ADMIN
     );
+  genericOpenAiVcId =
+    genericOpenAiVcData?.data?.createVirtualContributor?.id ?? '';
+  await updateVirtualContributor(
+    genericOpenAiVcId,
+    SearchVisibility.Public,
+    TestUser.GLOBAL_ADMIN
+  );
+  await updateVirtualContributorSettings(
+    genericOpenAiVcId,
+    true,
+    TestUser.GLOBAL_ADMIN
+  );
 
-    // Create a space for the VCs
-    const responceVcSpace = await createSpaceAndGetData(
-      spaceNameVC,
-      spaceNameIdVC,
-      TestUserManager.users.betaTester.accountId
-    );
-    vcSpaceId = responceVcSpace?.data?.lookup?.space?.id ?? '';
+  // Create a knowledge-based VC with Guidance engine
+  const guidanceVcData = await createExternalVirtualContributorWithEngineType(
+    guidanceVcName,
+    baseScenario.organization.accountId,
+    AiPersonaEngine.Guidance,
+    TestUser.GLOBAL_ADMIN
+  );
+  guidanceVcId = guidanceVcData?.data?.createVirtualContributor?.id ?? '';
+  await updateVirtualContributor(
+    guidanceVcId,
+    SearchVisibility.Public,
+    TestUser.GLOBAL_ADMIN
+  );
+  await updateVirtualContributorSettings(
+    guidanceVcId,
+    true,
+    TestUser.GLOBAL_ADMIN
+  );
+});
 
-    // Create VCs with different engine types
-    const libraFlowVcData = await createVirtualContributorWithEngineType(
-      libraFlowVcName,
-      baseScenario.organization.accountId,
-      vcSpaceId,
-      AiPersonaEngine.LibraFlow,
-      TestUser.GLOBAL_ADMIN
-    );
-
-    libraFlowVcId = libraFlowVcData?.data?.createVirtualContributor?.id ?? '';
-    await updateVirtualContributor(
-      libraFlowVcId,
-      SearchVisibility.Public,
-      TestUser.GLOBAL_ADMIN
-    );
-    await updateVirtualContributorSettings(
-      libraFlowVcId,
-      true,
-      TestUser.GLOBAL_ADMIN
-    );
-
-    const expertVcData = await createVirtualContributorWithEngineType(
-      expertVcName,
-      baseScenario.organization.accountId,
-      vcSpaceId,
-      AiPersonaEngine.Expert,
-      TestUser.GLOBAL_ADMIN
-    );
-    expertVcId = expertVcData?.data?.createVirtualContributor?.id ?? '';
-    await updateVirtualContributor(
-      expertVcId,
-      SearchVisibility.Public,
-      TestUser.GLOBAL_ADMIN
-    );
-    await updateVirtualContributorSettings(
-      expertVcId,
-      true,
-      TestUser.GLOBAL_ADMIN
-    );
-
-    // Create a knowledge-based VC with OpenAI engine
-    const genericOpenAiVcData =
-      await createExternalVirtualContributorWithEngineType(
-        genericOpenAiVcName,
-        baseScenario.organization.accountId,
-        AiPersonaEngine.GenericOpenai,
-        TestUser.GLOBAL_ADMIN
-      );
-    genericOpenAiVcId =
-      genericOpenAiVcData?.data?.createVirtualContributor?.id ?? '';
-    await updateVirtualContributor(
-      genericOpenAiVcId,
-      SearchVisibility.Public,
-      TestUser.GLOBAL_ADMIN
-    );
-    await updateVirtualContributorSettings(
-      genericOpenAiVcId,
-      true,
-      TestUser.GLOBAL_ADMIN
-    );
-
-    // Create a knowledge-based VC with Guidance engine
-    const guidanceVcData = await createExternalVirtualContributorWithEngineType(
-      guidanceVcName,
-      baseScenario.organization.accountId,
-      AiPersonaEngine.Guidance,
-      TestUser.GLOBAL_ADMIN
-    );
-    guidanceVcId = guidanceVcData?.data?.createVirtualContributor?.id ?? '';
-    await updateVirtualContributor(
-      guidanceVcId,
-      SearchVisibility.Public,
-      TestUser.GLOBAL_ADMIN
-    );
-    await updateVirtualContributorSettings(
-      guidanceVcId,
-      true,
-      TestUser.GLOBAL_ADMIN
-    );
-  });
-
-  afterAll(async () => {
-    // Clean up all created VCs
-    await deleteVirtualContributorOnAccount(expertVcId).catch();
-    await deleteVirtualContributorOnAccount(libraFlowVcId).catch();
-    await deleteVirtualContributorOnAccount(genericOpenAiVcId).catch();
-    await deleteVirtualContributorOnAccount(guidanceVcId).catch();
-    await deleteSpace(vcSpaceId).catch();
-  });
-
-  it('should create virtual contributors with different engine types', async () => {
+afterAll(async () => {
+  // Clean up all created VCs
+  await deleteVirtualContributorOnAccount(expertVcId).catch();
+  await deleteVirtualContributorOnAccount(libraFlowVcId).catch();
+  await deleteVirtualContributorOnAccount(genericOpenAiVcId).catch();
+  await deleteVirtualContributorOnAccount(guidanceVcId).catch();
+  await deleteSpace(vcSpaceId).catch();
+});
+describe('Virtual Contributor Engine Types Model Card', () => {
+  test('should create virtual contributors with different engine types', async () => {
     // Verify all VCs were created successfully
     const vcIds = [libraFlowVcId, expertVcId, genericOpenAiVcId, guidanceVcId];
     for (const vcId of vcIds) {
@@ -179,8 +177,7 @@ describe('AI Persona Engine Types Model Card', () => {
     }
   });
 
-  it('should have correct engine type in each model card', async () => {
-    // Query all VC data in parallel
+  test('should have correct engine type in each model card', async () => {
     const [libraFlowData, expertData, genericOpenAiData, guidanceData] =
       await Promise.all([
         queryVCData(libraFlowVcId, TestUser.GLOBAL_ADMIN),
@@ -201,13 +198,12 @@ describe('AI Persona Engine Types Model Card', () => {
     ];
 
     for (const { vcData, expectedType } of engineTypeTests) {
-      const engine = vcData?.data?.lookup.virtualContributor?.aiPersona?.engine;
+      const engine = vcData?.data?.lookup?.virtualContributor?.aiPersona.engine;
       expect(engine).toBe(expectedType);
     }
   });
 
-  it('should have different model card information for different engines', async () => {
-    // Get model card data for different engines in parallel
+  test('should have different model card information for different engines', async () => {
     const [
       libraFlowModelCard,
       expertModelCard,
@@ -222,8 +218,7 @@ describe('AI Persona Engine Types Model Card', () => {
 
     // Extract AI engine data from responses
     const getAiEngineData = (response: any) => {
-      return response?.data?.lookup?.virtualContributor?.aiPersona?.modelCard
-        ?.aiEngine;
+      return response?.data?.lookup?.virtualContributor?.modelCard?.aiEngine;
     };
 
     // Extract and verify each engine's data
@@ -281,8 +276,7 @@ describe('AI Persona Engine Types Model Card', () => {
     expect(guidanceEngine.additionalTechnicalDetails).toBeDefined();
   });
 
-  it('should have different monitoring data for different engines', async () => {
-    // Get model card data for different engines in parallel
+  test('should have different monitoring data for different engines', async () => {
     const [expertModelCard, genericOpenAiModelCard] = await Promise.all([
       getModelCardForAiPersona(expertVcId),
       getModelCardForAiPersona(genericOpenAiVcId),
@@ -290,11 +284,10 @@ describe('AI Persona Engine Types Model Card', () => {
 
     // Get monitoring data
     const expertMonitoring =
-      expertModelCard?.data?.lookup?.virtualContributor?.aiPersona?.modelCard
-        ?.monitoring;
+      expertModelCard?.data?.lookup?.virtualContributor?.modelCard?.monitoring;
     const genericOpenAiMonitoring =
-      genericOpenAiModelCard?.data?.lookup?.virtualContributor?.aiPersona
-        ?.modelCard?.monitoring;
+      genericOpenAiModelCard?.data?.lookup?.virtualContributor?.modelCard
+        ?.monitoring;
 
     // Verify monitoring data exists
     expect(expertMonitoring).toBeDefined();
@@ -307,8 +300,8 @@ describe('AI Persona Engine Types Model Card', () => {
     expect(genericOpenAiMonitoring?.isUsageMonitoredByAlkemio).toBeDefined();
   });
 
-  it('should have model card for registered user access', async () => {
-    // Test accessing model card as non-admin user
+  //test('should have model card for registered user access', async () => {
+  test('should have Virtual Contributor model card for registered user access', async () => {
     const externalModelCard = await getModelCardForAiPersona(
       expertVcId,
       TestUser.NON_SPACE_MEMBER
@@ -316,15 +309,15 @@ describe('AI Persona Engine Types Model Card', () => {
 
     // Verify model card can be accessed by registered user
     expect(
-      externalModelCard?.data?.lookup?.virtualContributor?.aiPersona?.modelCard
+      externalModelCard?.data?.lookup?.virtualContributor?.modelCard
     ).toBeDefined();
 
     // Verify specific fields are visible to registered users
     const aiEngine =
-      externalModelCard?.data?.lookup?.virtualContributor?.aiPersona?.modelCard
-        ?.aiEngine;
+      externalModelCard?.data?.lookup?.virtualContributor?.modelCard?.aiEngine;
     expect(aiEngine).toBeDefined();
     expect(aiEngine?.isExternal).toBeDefined();
     expect(aiEngine?.hostingLocation).toBeDefined();
   });
+  //});
 });
