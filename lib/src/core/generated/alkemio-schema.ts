@@ -3940,6 +3940,8 @@ export type Mutation = {
   adminCommunicationUpdateRoomState: Scalars["Boolean"]["output"];
   /** Delete a Kratos identity by ID. */
   adminIdentityDeleteKratosIdentity: Scalars["Boolean"]["output"];
+  /** Prunes InAppNotifications according to the platform defined criteria. The effects of the pruning are returned. */
+  adminInAppNotificationsPrune: PruneInAppNotificationAdminResult;
   /** Ingests new data into Elasticsearch from scratch. This will delete all existing data and ingest new data from the source. This is an admin only operation. */
   adminSearchIngestFromScratch: Scalars["String"]["output"];
   /** Update the Avatar on the Profile with the spedified profileID to be stored as a Document. */
@@ -5572,6 +5574,13 @@ export enum ProfileType {
   VirtualPersona = "VIRTUAL_PERSONA",
   Whiteboard = "WHITEBOARD",
 }
+
+export type PruneInAppNotificationAdminResult = {
+  /** The number of InAppNotifications that were removed due to exceeding the maximum allowed per user. */
+  removedCountExceedingUserLimit: Scalars["Int"]["output"];
+  /** The number of InAppNotifications that were removed due to being outside the retention period. */
+  removedCountOutsideRetentionPeriod: Scalars["Int"]["output"];
+};
 
 export type Query = {
   /** The Accounts on this platform; If accessed through an Innovation Hub will return ONLY the Accounts defined in it. */
@@ -9692,6 +9701,7 @@ export type ResolversTypes = {
   >;
   ProfileCredentialVerified: ResolverTypeWrapper<ProfileCredentialVerified>;
   ProfileType: ProfileType;
+  PruneInAppNotificationAdminResult: ResolverTypeWrapper<PruneInAppNotificationAdminResult>;
   Query: ResolverTypeWrapper<{}>;
   Question: ResolverTypeWrapper<Question>;
   Reaction: ResolverTypeWrapper<
@@ -11040,6 +11050,7 @@ export type ResolversParentTypes = {
     storageBucket: ResolversParentTypes["StorageBucket"];
   };
   ProfileCredentialVerified: ProfileCredentialVerified;
+  PruneInAppNotificationAdminResult: PruneInAppNotificationAdminResult;
   Query: {};
   Question: Question;
   Reaction: Omit<Reaction, "sender"> & {
@@ -15305,6 +15316,11 @@ export type MutationResolvers<
       "kratosIdentityId"
     >
   >;
+  adminInAppNotificationsPrune?: Resolver<
+    ResolversTypes["PruneInAppNotificationAdminResult"],
+    ParentType,
+    ContextType
+  >;
   adminSearchIngestFromScratch?: Resolver<
     ResolversTypes["String"],
     ParentType,
@@ -17050,6 +17066,23 @@ export type ProfileCredentialVerifiedResolvers<
 > = {
   userEmail?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   vc?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type PruneInAppNotificationAdminResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["PruneInAppNotificationAdminResult"] = ResolversParentTypes["PruneInAppNotificationAdminResult"]
+> = {
+  removedCountExceedingUserLimit?: Resolver<
+    ResolversTypes["Int"],
+    ParentType,
+    ContextType
+  >;
+  removedCountOutsideRetentionPeriod?: Resolver<
+    ResolversTypes["Int"],
+    ParentType,
+    ContextType
+  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -19633,6 +19666,7 @@ export type Resolvers<ContextType = any> = {
   Post?: PostResolvers<ContextType>;
   Profile?: ProfileResolvers<ContextType>;
   ProfileCredentialVerified?: ProfileCredentialVerifiedResolvers<ContextType>;
+  PruneInAppNotificationAdminResult?: PruneInAppNotificationAdminResultResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   Question?: QuestionResolvers<ContextType>;
   Reaction?: ReactionResolvers<ContextType>;

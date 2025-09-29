@@ -41,8 +41,7 @@ let baseScenario: OrganizationWithSpaceModel;
 const scenarioConfig: TestScenarioConfig = {
   name: 'virtual-contributor-model-card',
 };
-
-describe('Virtual Contributor Model Card', async () => {
+beforeAll(async () => {
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
 
   const vcLicensePlan = await getLicensePlanByName(
@@ -61,14 +60,6 @@ describe('Virtual Contributor Model Card', async () => {
     TestUserManager.users.betaTester.accountId
   );
   vcSpaceId = responceVcSpace?.data?.lookup?.space?.id ?? '';
-});
-
-afterAll(async () => {
-  await deleteVirtualContributorOnAccount(vcId).catch();
-  await deleteSpace(vcSpaceId).catch();
-});
-
-it('should create a virtual contributor with a model card', async () => {
   const vcData = await createVirtualContributorOnAccountSpaceBased(
     vcName,
     baseScenario.organization.accountId,
@@ -77,86 +68,97 @@ it('should create a virtual contributor with a model card', async () => {
   );
 
   vcId = vcData?.data?.createVirtualContributor?.id ?? '';
-  expect(vcId).toBeDefined();
-
-  // Query the VC data to get AI Persona ID
-  const vcDataQuery = await queryVCData(vcId);
-  const aiPersonaId =
-    vcDataQuery?.data?.lookup.virtualContributor?.aiPersona.id;
-  expect(aiPersonaId).toBeDefined();
-
-  // Query model card data
-  const modelCardData = await getModelCardForAiPersona(vcId);
-
-  // Verify model card exists
-  expect(
-    modelCardData?.data?.lookup?.virtualContributor?.modelCard
-  ).toBeDefined();
 });
+afterAll(async () => {
+  await deleteVirtualContributorOnAccount(vcId).catch();
+  await deleteSpace(vcSpaceId).catch();
+});
+describe('Virtual Contributor Model Card', () => {
+  it('should create a virtual contributor with a model card', async () => {
+    expect(vcId).toBeDefined();
 
-it('should have correct space usage data in model card', async () => {
-  const modelCardData = await getModelCardForAiPersona(vcId);
-  const spaceUsage =
-    modelCardData?.data?.lookup.virtualContributor?.modelCard?.spaceUsage;
+    // Query the VC data to get AI Persona ID
+    const vcDataQuery = await queryVCData(vcId, TestUser.GLOBAL_ADMIN);
+    const aiPersonaId =
+      vcDataQuery?.data?.lookup.virtualContributor?.aiPersona.id;
+    expect(aiPersonaId).toBeDefined();
 
-  // Verify space usage data exists
-  expect(spaceUsage).toBeDefined();
-  expect(spaceUsage?.length).toBeGreaterThan(0);
+    // Query model card data
+    const modelCardData = await getModelCardForAiPersona(vcId);
 
-  // Verify expected model card entries are present
-  const entries = spaceUsage?.map(
-    (entry: {
-      modelCardEntry: VirtualContributorModelCardEntry;
-      flags: { name: VirtualContributorModelCardEntryFlagName }[];
-    }) => entry.modelCardEntry
-  );
-  expect(entries).toContain(VirtualContributorModelCardEntry.SpaceCapabilities);
-  expect(entries).toContain(VirtualContributorModelCardEntry.SpaceDataAccess);
-  expect(entries).toContain(VirtualContributorModelCardEntry.SpaceRoleRequired);
+    // Verify model card exists
+    expect(
+      modelCardData?.data?.lookup?.virtualContributor?.modelCard
+    ).toBeDefined();
+  });
 
-  // Verify each entry has appropriate flags
-  const capabilitiesEntry = spaceUsage?.find(
-    (entry: {
-      modelCardEntry: VirtualContributorModelCardEntry;
-      flags: { name: VirtualContributorModelCardEntryFlagName }[];
-    }) =>
-      entry.modelCardEntry ===
+  it('should have correct space usage data in model card', async () => {
+    const modelCardData = await getModelCardForAiPersona(vcId);
+    const spaceUsage =
+      modelCardData?.data?.lookup.virtualContributor?.modelCard?.spaceUsage;
+
+    // Verify space usage data exists
+    expect(spaceUsage).toBeDefined();
+    expect(spaceUsage?.length).toBeGreaterThan(0);
+
+    // Verify expected model card entries are present
+    const entries = spaceUsage?.map(
+      (entry: {
+        modelCardEntry: VirtualContributorModelCardEntry;
+        flags: { name: VirtualContributorModelCardEntryFlagName }[];
+      }) => entry.modelCardEntry
+    );
+    expect(entries).toContain(
       VirtualContributorModelCardEntry.SpaceCapabilities
-  );
-  expect(capabilitiesEntry?.flags).toBeDefined();
-  expect(capabilitiesEntry?.flags.length).toBeGreaterThan(0);
+    );
+    expect(entries).toContain(VirtualContributorModelCardEntry.SpaceDataAccess);
+    expect(entries).toContain(
+      VirtualContributorModelCardEntry.SpaceRoleRequired
+    );
 
-  // Check for specific flags
-  const flagNames = capabilitiesEntry?.flags.map(
-    (flag: { name: VirtualContributorModelCardEntryFlagName }) => flag.name
-  );
-  expect(flagNames).toContain(
-    VirtualContributorModelCardEntryFlagName.SpaceCapabilityTagging
-  );
-});
+    // Verify each entry has appropriate flags
+    const capabilitiesEntry = spaceUsage?.find(
+      (entry: {
+        modelCardEntry: VirtualContributorModelCardEntry;
+        flags: { name: VirtualContributorModelCardEntryFlagName }[];
+      }) =>
+        entry.modelCardEntry ===
+        VirtualContributorModelCardEntry.SpaceCapabilities
+    );
+    expect(capabilitiesEntry?.flags).toBeDefined();
+    expect(capabilitiesEntry?.flags.length).toBeGreaterThan(0);
 
-it('should have correct AI engine data in model card', async () => {
-  const modelCardData = await getModelCardForAiPersona(vcId);
-  const aiEngine =
-    modelCardData?.data?.lookup.virtualContributor?.modelCard?.aiEngine;
+    // Check for specific flags
+    const flagNames = capabilitiesEntry?.flags.map(
+      (flag: { name: VirtualContributorModelCardEntryFlagName }) => flag.name
+    );
+    expect(flagNames).toContain(
+      VirtualContributorModelCardEntryFlagName.SpaceCapabilityTagging
+    );
+  });
 
-  // Verify AI engine data exists
-  expect(aiEngine).toBeDefined();
+  it('should have correct AI engine data in model card', async () => {
+    const modelCardData = await getModelCardForAiPersona(vcId);
+    const aiEngine =
+      modelCardData?.data?.lookup.virtualContributor?.modelCard?.aiEngine;
 
-  // Verify all required fields are present
-  expect(aiEngine?.isExternal).toBeDefined();
-  expect(aiEngine?.hostingLocation).toBeDefined();
-  expect(aiEngine?.isUsingOpenWeightsModel).toBeDefined();
-  expect(aiEngine?.areAnswersRestrictedToBodyOfKnowledge).toBeDefined();
-  expect(aiEngine?.canAccessWebWhenAnswering).toBeDefined();
-  expect(aiEngine?.additionalTechnicalDetails).toBeDefined();
+    // Verify AI engine data exists
+    expect(aiEngine).toBeDefined();
 
-  // Verify values for typical Mistral engine (default for space-based VCs)
-  expect(typeof aiEngine?.isExternal).toBe('boolean');
-  expect(typeof aiEngine?.canAccessWebWhenAnswering).toBe('boolean');
-});
+    // Verify all required fields are present
+    expect(aiEngine?.isExternal).toBeDefined();
+    expect(aiEngine?.hostingLocation).toBeDefined();
+    expect(aiEngine?.isUsingOpenWeightsModel).toBeDefined();
+    expect(aiEngine?.areAnswersRestrictedToBodyOfKnowledge).toBeDefined();
+    expect(aiEngine?.canAccessWebWhenAnswering).toBeDefined();
+    expect(aiEngine?.additionalTechnicalDetails).toBeDefined();
 
-it('should have correct monitoring data in model card', async () => {
+    // Verify values for typical Mistral engine (default for space-based VCs)
+    expect(typeof aiEngine?.isExternal).toBe('boolean');
+    expect(typeof aiEngine?.canAccessWebWhenAnswering).toBe('boolean');
+  });
+
+  //it('should have correct monitoring data in model card', async () => {
   it('should have correct monitoring data in Virtual Contributor model card', async () => {
     const modelCardData = await getModelCardForAiPersona(vcId);
     const monitoring =
@@ -169,4 +171,5 @@ it('should have correct monitoring data in model card', async () => {
     expect(monitoring?.isUsageMonitoredByAlkemio).toBeDefined();
     expect(monitoring?.isUsageMonitoredByAlkemio).toBe(true);
   });
+  //});
 });

@@ -56,8 +56,7 @@ let baseScenario: OrganizationWithSpaceModel;
 const scenarioConfig: TestScenarioConfig = {
   name: 'ai-persona-engine-types',
 };
-
-describe('Virtual Contributor Engine Types Model Card', async () => {
+beforeAll(async () => {
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
 
   // Assign license for virtual contributors
@@ -168,136 +167,141 @@ afterAll(async () => {
   await deleteVirtualContributorOnAccount(guidanceVcId).catch();
   await deleteSpace(vcSpaceId).catch();
 });
+describe('Virtual Contributor Engine Types Model Card', () => {
+  test('should create virtual contributors with different engine types', async () => {
+    // Verify all VCs were created successfully
+    const vcIds = [libraFlowVcId, expertVcId, genericOpenAiVcId, guidanceVcId];
+    for (const vcId of vcIds) {
+      expect(vcId).toBeDefined();
+      expect(vcId.length).toBeGreaterThan(0);
+    }
+  });
 
-it('should create virtual contributors with different engine types', async () => {
-  // Verify all VCs were created successfully
-  const vcIds = [libraFlowVcId, expertVcId, genericOpenAiVcId, guidanceVcId];
-  for (const vcId of vcIds) {
-    expect(vcId).toBeDefined();
-    expect(vcId.length).toBeGreaterThan(0);
-  }
-});
+  test('should have correct engine type in each model card', async () => {
+    const [libraFlowData, expertData, genericOpenAiData, guidanceData] =
+      await Promise.all([
+        queryVCData(libraFlowVcId, TestUser.GLOBAL_ADMIN),
+        queryVCData(expertVcId, TestUser.GLOBAL_ADMIN),
+        queryVCData(genericOpenAiVcId, TestUser.GLOBAL_ADMIN),
+        queryVCData(guidanceVcId, TestUser.GLOBAL_ADMIN),
+      ]);
 
-it('should have correct engine type in each model card', async () => {
-  const [libraFlowData, expertData, genericOpenAiData, guidanceData] =
-    await Promise.all([
-      queryVCData(libraFlowVcId, TestUser.GLOBAL_ADMIN),
-      queryVCData(expertVcId, TestUser.GLOBAL_ADMIN),
-      queryVCData(genericOpenAiVcId, TestUser.GLOBAL_ADMIN),
-      queryVCData(guidanceVcId, TestUser.GLOBAL_ADMIN),
+    // Verify engine types
+    const engineTypeTests = [
+      { vcData: libraFlowData, expectedType: AiPersonaEngine.LibraFlow },
+      { vcData: expertData, expectedType: AiPersonaEngine.Expert },
+      {
+        vcData: genericOpenAiData,
+        expectedType: AiPersonaEngine.GenericOpenai,
+      },
+      { vcData: guidanceData, expectedType: AiPersonaEngine.Guidance },
+    ];
+
+    for (const { vcData, expectedType } of engineTypeTests) {
+      const engine = vcData?.data?.lookup?.virtualContributor?.aiPersona.engine;
+      expect(engine).toBe(expectedType);
+    }
+  });
+
+  test('should have different model card information for different engines', async () => {
+    const [
+      libraFlowModelCard,
+      expertModelCard,
+      genericOpenAiModelCard,
+      guidanceModelCard,
+    ] = await Promise.all([
+      getModelCardForAiPersona(libraFlowVcId),
+      getModelCardForAiPersona(expertVcId),
+      getModelCardForAiPersona(genericOpenAiVcId),
+      getModelCardForAiPersona(guidanceVcId),
     ]);
 
-  // Verify engine types
-  const engineTypeTests = [
-    { vcData: libraFlowData, expectedType: AiPersonaEngine.LibraFlow },
-    { vcData: expertData, expectedType: AiPersonaEngine.Expert },
-    {
-      vcData: genericOpenAiData,
-      expectedType: AiPersonaEngine.GenericOpenai,
-    },
-    { vcData: guidanceData, expectedType: AiPersonaEngine.Guidance },
-  ];
+    // Extract AI engine data from responses
+    const getAiEngineData = (response: any) => {
+      return response?.data?.lookup?.virtualContributor?.modelCard?.aiEngine;
+    };
 
-  for (const { vcData, expectedType } of engineTypeTests) {
-    const engine = vcData?.data?.lookup?.virtualContributor?.aiPersona.engine;
-    expect(engine).toBe(expectedType);
-  }
-});
+    // Extract and verify each engine's data
+    const libraFlowEngine = getAiEngineData(libraFlowModelCard);
+    const expertEngine = getAiEngineData(expertModelCard);
+    const genericOpenAiEngine = getAiEngineData(genericOpenAiModelCard);
+    const guidanceEngine = getAiEngineData(guidanceModelCard);
 
-it('should have different model card information for different engines', async () => {
-  const [
-    libraFlowModelCard,
-    expertModelCard,
-    genericOpenAiModelCard,
-    guidanceModelCard,
-  ] = await Promise.all([
-    getModelCardForAiPersona(libraFlowVcId),
-    getModelCardForAiPersona(expertVcId),
-    getModelCardForAiPersona(genericOpenAiVcId),
-    getModelCardForAiPersona(guidanceVcId),
-  ]);
-
-  // Extract AI engine data from responses
-  const getAiEngineData = (response: any) => {
-    return response?.data?.lookup?.virtualContributor?.modelCard?.aiEngine;
-  };
-
-  // Extract and verify each engine's data
-  const libraFlowEngine = getAiEngineData(libraFlowModelCard);
-  const expertEngine = getAiEngineData(expertModelCard);
-  const genericOpenAiEngine = getAiEngineData(genericOpenAiModelCard);
-  const guidanceEngine = getAiEngineData(guidanceModelCard);
-
-  // Verify all engine data exists
-  [libraFlowEngine, expertEngine, genericOpenAiEngine, guidanceEngine].forEach(
-    engine => {
+    // Verify all engine data exists
+    [
+      libraFlowEngine,
+      expertEngine,
+      genericOpenAiEngine,
+      guidanceEngine,
+    ].forEach(engine => {
       expect(engine).toBeDefined();
-    }
-  );
+    });
 
-  // Test LibraFlow engine properties
-  expect(libraFlowEngine.isExternal).toBe(true);
-  expect(libraFlowEngine.hostingLocation).toBe('Unknown');
-  expect(libraFlowEngine.isUsingOpenWeightsModel).toBe(true);
-  expect(libraFlowEngine.isInteractionDataUsedForTraining).toBe(null);
-  expect(libraFlowEngine.canAccessWebWhenAnswering).toBe(true);
-  expect(libraFlowEngine.areAnswersRestrictedToBodyOfKnowledge).toBe('Yes');
-  expect(libraFlowEngine.additionalTechnicalDetails).toBeDefined();
+    // Test LibraFlow engine properties
+    expect(libraFlowEngine.isExternal).toBe(true);
+    expect(libraFlowEngine.hostingLocation).toBe('Unknown');
+    expect(libraFlowEngine.isUsingOpenWeightsModel).toBe(true);
+    expect(libraFlowEngine.isInteractionDataUsedForTraining).toBe(null);
+    expect(libraFlowEngine.canAccessWebWhenAnswering).toBe(true);
+    expect(libraFlowEngine.areAnswersRestrictedToBodyOfKnowledge).toBe('Yes');
+    expect(libraFlowEngine.additionalTechnicalDetails).toBeDefined();
 
-  // Test Expert engine properties
-  expect(expertEngine.isExternal).toBe(false);
-  expect(expertEngine.hostingLocation).toBe('Sweden, EU');
-  expect(expertEngine.isUsingOpenWeightsModel).toBe(false);
-  expect(expertEngine.isInteractionDataUsedForTraining).toBe(false);
-  expect(expertEngine.canAccessWebWhenAnswering).toBe(false);
-  expect(expertEngine.areAnswersRestrictedToBodyOfKnowledge).toBe('Yes');
-  expect(expertEngine.additionalTechnicalDetails).toBeDefined();
+    // Test Expert engine properties
+    expect(expertEngine.isExternal).toBe(false);
+    expect(expertEngine.hostingLocation).toBe('Sweden, EU');
+    expect(expertEngine.isUsingOpenWeightsModel).toBe(false);
+    expect(expertEngine.isInteractionDataUsedForTraining).toBe(false);
+    expect(expertEngine.canAccessWebWhenAnswering).toBe(false);
+    expect(expertEngine.areAnswersRestrictedToBodyOfKnowledge).toBe('Yes');
+    expect(expertEngine.additionalTechnicalDetails).toBeDefined();
 
-  // Test GenericOpenAI engine properties
-  expect(genericOpenAiEngine.isExternal).toBe(true);
-  expect(genericOpenAiEngine.hostingLocation).toBe('Unknown');
-  expect(genericOpenAiEngine.isUsingOpenWeightsModel).toBe(true);
-  expect(genericOpenAiEngine.isInteractionDataUsedForTraining).toBe(null);
-  expect(genericOpenAiEngine.canAccessWebWhenAnswering).toBe(true);
-  expect(genericOpenAiEngine.areAnswersRestrictedToBodyOfKnowledge).toBe('No');
-  expect(genericOpenAiEngine.additionalTechnicalDetails).toBeDefined();
+    // Test GenericOpenAI engine properties
+    expect(genericOpenAiEngine.isExternal).toBe(true);
+    expect(genericOpenAiEngine.hostingLocation).toBe('Unknown');
+    expect(genericOpenAiEngine.isUsingOpenWeightsModel).toBe(true);
+    expect(genericOpenAiEngine.isInteractionDataUsedForTraining).toBe(null);
+    expect(genericOpenAiEngine.canAccessWebWhenAnswering).toBe(true);
+    expect(genericOpenAiEngine.areAnswersRestrictedToBodyOfKnowledge).toBe(
+      'No'
+    );
+    expect(genericOpenAiEngine.additionalTechnicalDetails).toBeDefined();
 
-  // Test Guidance engine properties
-  expect(guidanceEngine.isExternal).toBe(false);
-  expect(guidanceEngine.hostingLocation).toBeDefined();
-  expect(guidanceEngine.isUsingOpenWeightsModel).toBe(false);
-  expect(guidanceEngine.isInteractionDataUsedForTraining).toBe(false);
-  expect(guidanceEngine.canAccessWebWhenAnswering).toBe(false);
-  expect(guidanceEngine.areAnswersRestrictedToBodyOfKnowledge).toBe('Yes');
-  expect(guidanceEngine.additionalTechnicalDetails).toBeDefined();
-});
+    // Test Guidance engine properties
+    expect(guidanceEngine.isExternal).toBe(false);
+    expect(guidanceEngine.hostingLocation).toBeDefined();
+    expect(guidanceEngine.isUsingOpenWeightsModel).toBe(false);
+    expect(guidanceEngine.isInteractionDataUsedForTraining).toBe(false);
+    expect(guidanceEngine.canAccessWebWhenAnswering).toBe(false);
+    expect(guidanceEngine.areAnswersRestrictedToBodyOfKnowledge).toBe('Yes');
+    expect(guidanceEngine.additionalTechnicalDetails).toBeDefined();
+  });
 
-it('should have different monitoring data for different engines', async () => {
-  const [expertModelCard, genericOpenAiModelCard] = await Promise.all([
-    getModelCardForAiPersona(expertVcId),
-    getModelCardForAiPersona(genericOpenAiVcId),
-  ]);
+  test('should have different monitoring data for different engines', async () => {
+    const [expertModelCard, genericOpenAiModelCard] = await Promise.all([
+      getModelCardForAiPersona(expertVcId),
+      getModelCardForAiPersona(genericOpenAiVcId),
+    ]);
 
-  // Get monitoring data
-  const expertMonitoring =
-    expertModelCard?.data?.lookup?.virtualContributor?.modelCard?.monitoring;
-  const genericOpenAiMonitoring =
-    genericOpenAiModelCard?.data?.lookup?.virtualContributor?.modelCard
-      ?.monitoring;
+    // Get monitoring data
+    const expertMonitoring =
+      expertModelCard?.data?.lookup?.virtualContributor?.modelCard?.monitoring;
+    const genericOpenAiMonitoring =
+      genericOpenAiModelCard?.data?.lookup?.virtualContributor?.modelCard
+        ?.monitoring;
 
-  // Verify monitoring data exists
-  expect(expertMonitoring).toBeDefined();
-  expect(genericOpenAiMonitoring).toBeDefined();
+    // Verify monitoring data exists
+    expect(expertMonitoring).toBeDefined();
+    expect(genericOpenAiMonitoring).toBeDefined();
 
-  // Alkemio hosted engines should have monitoring by Alkemio
-  expect(expertMonitoring?.isUsageMonitoredByAlkemio).toBe(true);
+    // Alkemio hosted engines should have monitoring by Alkemio
+    expect(expertMonitoring?.isUsageMonitoredByAlkemio).toBe(true);
 
-  // External engines might have different monitoring settings
-  expect(genericOpenAiMonitoring?.isUsageMonitoredByAlkemio).toBeDefined();
-});
+    // External engines might have different monitoring settings
+    expect(genericOpenAiMonitoring?.isUsageMonitoredByAlkemio).toBeDefined();
+  });
 
-it('should have model card for registered user access', async () => {
-  it('should have Virtual Contributor model card for registered user access', async () => {
+  //test('should have model card for registered user access', async () => {
+  test('should have Virtual Contributor model card for registered user access', async () => {
     const externalModelCard = await getModelCardForAiPersona(
       expertVcId,
       TestUser.NON_SPACE_MEMBER
@@ -315,4 +319,5 @@ it('should have model card for registered user access', async () => {
     expect(aiEngine?.isExternal).toBeDefined();
     expect(aiEngine?.hostingLocation).toBeDefined();
   });
+  //});
 });
