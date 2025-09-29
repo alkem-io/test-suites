@@ -67,13 +67,12 @@ query VirtualContributor($id: UUID!) {
       searchVisibility
       listedInStore
       status
+      bodyOfKnowledgeID
+      bodyOfKnowledgeType
+      bodyOfKnowledgeDescription
       aiPersona {
         id
         engine
-        bodyOfKnowledgeID
-        bodyOfKnowledgeType
-        bodyOfKnowledge
-        __typename
       }
       profile {
         id

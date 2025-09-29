@@ -201,7 +201,7 @@ describe('Virtual Contributor', () => {
       vcSpaceAccountId
     );
     expect(
-      vcDataQuery?.data?.lookup.virtualContributor?.aiPersona?.bodyOfKnowledgeID
+      vcDataQuery?.data?.lookup.virtualContributor?.bodyOfKnowledgeID
     ).toEqual(l1VCId);
   });
 });

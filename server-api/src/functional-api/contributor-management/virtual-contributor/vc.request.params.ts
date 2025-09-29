@@ -3,9 +3,10 @@ import { createCalloutOnCalloutsSet } from '@functional-api/callout/callouts.req
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import { CalloutContributionType } from '@alkemio/client-lib';
 import {
-  AiPersonaBodyOfKnowledgeType,
+  AiPersonaEngine,
   CalloutVisibility,
   SearchVisibility,
+  VirtualContributorBodyOfKnowledgeType,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
 export const createVirtualContributorOnAccountSpaceBased = async (
@@ -23,10 +24,9 @@ export const createVirtualContributorOnAccountSpaceBased = async (
             displayName,
           },
           accountID,
+          bodyOfKnowledgeID,
           aiPersona: {
-            aiPersonaService: {
-              bodyOfKnowledgeID,
-            },
+            engine: AiPersonaEngine.Expert,
           },
         },
       },
@@ -51,11 +51,10 @@ export const createVirtualContributorOnAccountKnowledgeBased = async (
             displayName,
           },
           accountID,
+          bodyOfKnowledgeType:
+            VirtualContributorBodyOfKnowledgeType.AlkemioKnowledgeBase,
           aiPersona: {
-            aiPersonaService: {
-              bodyOfKnowledgeType:
-                AiPersonaBodyOfKnowledgeType.AlkemioKnowledgeBase,
-            },
+            engine: AiPersonaEngine.Expert,
           },
         },
       },

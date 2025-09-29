@@ -1,7 +1,7 @@
 import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
 import {
-  AiPersonaBodyOfKnowledgeType,
   AiPersonaEngine,
+  VirtualContributorBodyOfKnowledgeType,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 
@@ -21,12 +21,11 @@ export const createVirtualContributorWithEngineType = async (
             displayName,
           },
           accountID,
+          bodyOfKnowledgeID,
+          bodyOfKnowledgeType:
+            VirtualContributorBodyOfKnowledgeType.AlkemioSpace,
           aiPersona: {
-            aiPersonaService: {
-              bodyOfKnowledgeID,
-              bodyOfKnowledgeType: AiPersonaBodyOfKnowledgeType.AlkemioSpace,
-              engine: engineType,
-            },
+            engine: engineType,
           },
         },
       },
@@ -52,12 +51,10 @@ export const createExternalVirtualContributorWithEngineType = async (
             displayName,
           },
           accountID,
+          bodyOfKnowledgeType:
+            VirtualContributorBodyOfKnowledgeType.AlkemioKnowledgeBase,
           aiPersona: {
-            aiPersonaService: {
-              bodyOfKnowledgeType:
-                AiPersonaBodyOfKnowledgeType.AlkemioKnowledgeBase,
-              engine: engineType,
-            },
+            engine: engineType,
           },
         },
       },
