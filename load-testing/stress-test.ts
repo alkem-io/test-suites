@@ -66,7 +66,16 @@ const config: StressTestConfig = {
   ],
 };
 
-const elements: any[] = [];
+const elementsByRoom = new Map<string, any[]>();
+
+const getRoomElements = (roomID: string) => {
+  let arr = elementsByRoom.get(roomID);
+  if (!arr) {
+     arr = [];
+     elementsByRoom.set(roomID, arr);
+  }
+  return arr;
+};
 
 const IDLE_STATE_INTERVAL = 3000;
 const MOUSE_LOCATION_INTERVAL = 100;
@@ -151,7 +160,7 @@ const runTest = async (url: string, path: string, scenario: StressScenario) => {
   await setTimeout(1000); // ensure the plot is displayed
 
   console.log(`Stress test completed. Cleaning up...`);
-  elements.length = 0; // clear elements
+  elementsByRoom.clear(); // clear all rooms
   actionsExecuted = 0;
   clearInterval(reporter);
   // await deletePrerequisites(baseScenario);
@@ -159,6 +168,7 @@ const runTest = async (url: string, path: string, scenario: StressScenario) => {
 
 const spawnClient = (roomID: string, scenario: StressScenario) => {
   return (async () => {
+    const elements = getRoomElements(roomID);
     const socketName = generateSillyName();
     const socket: SocketIoSocket = io(config.url, {
       path: config.path,
@@ -183,6 +193,8 @@ const spawnClient = (roomID: string, scenario: StressScenario) => {
         if (mode === 'read') {
           console.warn(`Client ${socket.id} is in '${mode}' mode ${reason ? `due to: '${reason}'` : ''}`);
           console.warn(`Client ${socket.id} will not perform any actions.`);
+          clearInterval(idleStateInterval);
+          clearInterval(mouseLocationInterval);
           resolve();
           return;
         }
