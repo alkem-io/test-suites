@@ -1,7 +1,4 @@
-export const getRandomInt = (max: number, min?: number) => {
-  if (min === undefined) {
-    min = 0;
-  }
+export const getRandomInt = (max: number, min = 0) => {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
@@ -73,7 +70,7 @@ export const createRandomText = () => {
     "textAlign": "left",
     "verticalAlign": "top",
     "containerId": null,
-    "originalText": "asdd",
+    "originalText": generateRandomText(10),
     "autoResize": false,
     "lineHeight": 1.15
   };
@@ -81,15 +78,6 @@ export const createRandomText = () => {
 
 export const getBackgroundColor = () => {
   return `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`
-}
-
-export const generateElement = (length: number) => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_0123456789';
-  let result = '';
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
 }
 
 export const generateRandomText = (length: number) => {
@@ -103,6 +91,9 @@ export const generateRandomText = (length: number) => {
 
 export const getRandomElement = (elements: any[]) => {
   const nonDeletedElements = elements.filter(el => !el.isDeleted && el.type !== 'text');
+  if (nonDeletedElements.length === 0) {
+    return undefined;
+  }
   return nonDeletedElements[Math.floor(getRandomInt(nonDeletedElements.length))];
 }
 

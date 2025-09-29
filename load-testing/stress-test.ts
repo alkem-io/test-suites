@@ -158,7 +158,7 @@ const runTest = async (url: string, path: string, scenario: StressScenario) => {
 };
 
 const spawnClient = (roomID: string, scenario: StressScenario) => {
-  return new Promise<void>(async (resolve) => {
+  return (async () => {
     const socketName = generateSillyName();
     const socket: SocketIoSocket = io(config.url, {
       path: config.path,
@@ -172,37 +172,41 @@ const spawnClient = (roomID: string, scenario: StressScenario) => {
       console.error(`Client ${socket.id} encountered an error:`, JSON.stringify(error));
     });
 
-    socket.once(INIT_ROOM, async () => socket.emit('join-room', roomID));
+    socket.once(INIT_ROOM, () => socket.emit('join-room', roomID));
 
     const idleStateInterval = setInterval(() => emitIdleState(socket, roomID, socketName), IDLE_STATE_INTERVAL);
     const mouseLocationInterval = setInterval(() => emitMouseLocation(socket, roomID, socketName), MOUSE_LOCATION_INTERVAL);
 
-    socket.once(COLLABORATOR_MODE, async ({ mode, reason }) => {
-      if (mode === 'read') {
-        console.warn(`Client ${socket.id} is in '${mode}' mode ${reason ? `due to: '${reason}'` : ''}`);
-        console.warn(`Client ${socket.id} will not perform any actions.`);
-        return;
-      }
-      // wait a bit before starting actions
-      await setTimeout(500);
+    await new Promise<void>((resolve) => {
+      // @ts-ignore
+      socket.once(COLLABORATOR_MODE, async ({ mode, reason }) => {
+        if (mode === 'read') {
+          console.warn(`Client ${socket.id} is in '${mode}' mode ${reason ? `due to: '${reason}'` : ''}`);
+          console.warn(`Client ${socket.id} will not perform any actions.`);
+          resolve();
+          return;
+        }
+        // wait a bit before starting actions
+        await setTimeout(500);
 
-      for (let j = 0; j < scenario.repeat; j++) {
-        // pick a random action
-        const action = getRandomAction();
-        // execute the random action
-        action(socket, roomID, elements);
-        actionsExecuted++;
-        // wait preconfigured time before next action
-        await setTimeout(getRandomInt(scenario.maxWait, scenario.minWait));
-      }
+        for (let j = 0; j < scenario.repeat; j++) {
+          // pick a random action
+          const action = getRandomAction();
+          // execute the random action
+          action(socket, roomID, elements);
+          actionsExecuted++;
+          // wait preconfigured time before next action
+          await setTimeout(getRandomInt(scenario.maxWait, scenario.minWait));
+        }
 
-      console.log(`Client '${socket.id}' finished all actions for '${roomID}'`);
-      // tear down
-      clearInterval(idleStateInterval);
-      clearInterval(mouseLocationInterval);
-      socket.disconnect();
+        console.log(`Client '${socket.id}' finished all actions for '${roomID}'`);
+        // tear down
+        clearInterval(idleStateInterval);
+        clearInterval(mouseLocationInterval);
+        socket.disconnect();
 
-      resolve();
+        resolve();
+      });
     });
   });
 }

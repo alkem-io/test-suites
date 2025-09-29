@@ -139,6 +139,7 @@ export const writeTextInShapeRandom = (socket: SocketIoSocket, roomID: string, e
   const shape = getRandomShape(elements);
 
   const text = createRandomText();
+  elements.push(text); // Add text element to the elements array
 
   shape.boundElements = [{ type: 'text', id: text.id }]
   shape.version += 1;
@@ -175,7 +176,7 @@ export const emitIdleState = (socket: SocketIoSocket, roomID: string, username: 
   const data = {
     type:'IDLE_STATUS',
     payload:{
-      socketId: 'oflgTK8f4xv530KJAABz',
+      socketId: socket.id,
       userState: 'active',
       username,
     }

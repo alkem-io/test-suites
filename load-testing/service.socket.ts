@@ -37,7 +37,7 @@ export class ServiceSocket {
   }
   // todo: does not work
   public deleteAllElementsInRoom = async (roomID: string, elements: any[]) => {
-    return new Promise<void>(async (resolve) => {
+    return (async () => {
       const nonDeletedElements = elements.filter(element => !element.isDeleted);
       // batch it 20 elements at a time
       for (let i = 0; i < nonDeletedElements.length; i += 20) {
@@ -58,9 +58,7 @@ export class ServiceSocket {
         this.socket.emit(SERVER_BROADCAST, roomID, buffer);
         await setTimeout(300);
       }
-
-      resolve();
-    });
+    })();
   }
 
   public startPing(interval: number = 1000) {
@@ -80,11 +78,14 @@ export class ServiceSocket {
       return undefined;
     }
 
+    const movingWindowSize = Math.min(20, this.pings.length);
+    const movingWindowPings = this.pings.slice(-movingWindowSize);
+
     return {
       min: Math.min(...this.pings),
       max: Math.max(...this.pings),
       avg: this.pings.reduce((sum, ping) => sum + ping, 0) / this.pings.length,
-      movingAvg: this.pings.slice(-20).reduce((sum, ping) => sum + ping, 0) / Math.min(10, this.pings.length),
+      movingAvg: movingWindowPings.reduce((sum, ping) => sum + ping, 0) / movingWindowSize,
       count: this.pings.length,
     }
   }
