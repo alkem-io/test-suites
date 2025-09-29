@@ -177,24 +177,31 @@ const spawnClient = (roomID: string, scenario: StressScenario) => {
       reconnection: false,
     });
 
-    socket.on(ERROR, (error: any) => {
-      socket.disconnect();
-      console.error(`Client ${socket.id} encountered an error:`, JSON.stringify(error));
-    });
-
     socket.once(INIT_ROOM, () => socket.emit('join-room', roomID));
 
     const idleStateInterval = setInterval(() => emitIdleState(socket, roomID, socketName), IDLE_STATE_INTERVAL);
     const mouseLocationInterval = setInterval(() => emitMouseLocation(socket, roomID, socketName), MOUSE_LOCATION_INTERVAL);
 
     await new Promise<void>((resolve) => {
-      // @ts-ignore
+      const teardown = () => {
+        clearInterval(idleStateInterval);
+        clearInterval(mouseLocationInterval);
+        socket.disconnect();
+      };
+      socket.on(ERROR, (error: any) => {
+         console.error(`Client ${socket.id} encountered an error:`, JSON.stringify(error));
+         teardown();
+         resolve();
+       });
+       socket.on('disconnect', () => {
+         teardown();
+         resolve();
+       });
       socket.once(COLLABORATOR_MODE, async ({ mode, reason }) => {
         if (mode === 'read') {
           console.warn(`Client ${socket.id} is in '${mode}' mode ${reason ? `due to: '${reason}'` : ''}`);
           console.warn(`Client ${socket.id} will not perform any actions.`);
-          clearInterval(idleStateInterval);
-          clearInterval(mouseLocationInterval);
+          teardown();
           resolve();
           return;
         }
@@ -213,10 +220,7 @@ const spawnClient = (roomID: string, scenario: StressScenario) => {
 
         console.log(`Client '${socket.id}' finished all actions for '${roomID}'`);
         // tear down
-        clearInterval(idleStateInterval);
-        clearInterval(mouseLocationInterval);
-        socket.disconnect();
-
+        teardown();
         resolve();
       });
     });
