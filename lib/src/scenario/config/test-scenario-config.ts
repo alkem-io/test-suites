@@ -1,5 +1,4 @@
-// import { SpacePrivacyMode, CommunityMembershipPolicy } from "@src/core/generated/alkemio-schema";
-import { SpacePrivacyMode, CommunityMembershipPolicy } from "../../../../lib/src/core/generated/alkemio-schema";
+import { SpacePrivacyMode, CommunityMembershipPolicy } from "@src/core/generated/alkemio-schema";
 import { TestUser } from "../../common/enums/test.user";
 
 export interface TestScenarioConfig {
