@@ -23,6 +23,7 @@ env:
 before_install:
   # Install Node 17.9.1 for server-api compatibility
   - nvm install 17.9.1
+  - nvm install 20.9.0
 install:
   # Build lib with Node 20.11.0 (current default, compatible with Ubuntu 20.04)
   - echo "Building lib with Node $(node --version) and npm $(npm --version)"
