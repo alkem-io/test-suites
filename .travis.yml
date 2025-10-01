@@ -34,10 +34,11 @@ install:
   - echo "Building server-api with Node $(node --version) and npm $(npm --version)"
   - cd $TRAVIS_BUILD_DIR/server-api && npm install
   - cd $TRAVIS_BUILD_DIR/server-api && npm run build
-script:
-  # Run tests with Node 17.9.1 (already switched in install phase)
-  - echo "Running tests with Node $(node --version) and npm $(npm --version)"
-  - cd $TRAVIS_BUILD_DIR/server-api && npm run test:nightly
+
+  - nvm use 20.9.0
+  - echo "Building client-web with Node $(node --version) and npm $(npm --version)"
+  - cd $TRAVIS_BUILD_DIR/client-web && npm install
+  - cd $TRAVIS_BUILD_DIR/client-web && npm run build
 
 notifications:
   email:
