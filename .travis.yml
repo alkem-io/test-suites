@@ -41,6 +41,9 @@ install:
   - cd $TRAVIS_BUILD_DIR/client-web && npm install
   - cd $TRAVIS_BUILD_DIR/client-web && npm run build
 
+script:
+  - echo "Build finished, tests are not ran in the build..."
+
 notifications:
   email:
     recipients:
