@@ -13,23 +13,22 @@ import { updateUserSettings } from '@functional-api/contributor-management/user/
 import { assignRoleToUser } from '@functional-api/roleset/roles-request.params';
 import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import { notif } from '../notification.helpers';
 
-// Helper functions for organization message notification settings
+// Settings objects now match UpdateUserSettingsEntityInput expected shape
 const organizationMessageNotificationSettings = {
   notification: {
     organization: {
-      adminMentioned: false,
-      adminMessageReceived: true,
+      adminMentioned: notif(false),
+      adminMessageReceived: notif(true),
     },
     user: {
-      commentReply: false,
-      mentioned: false,
-      messageReceived: true,
-      copyOfMessageSent: true,
+      commentReply: notif(false),
+      mentioned: notif(false),
+      messageReceived: notif(true),
       membership: {
-        spaceCommunityApplicationSubmitted: false,
-        spaceCommunityInvitationReceived: false,
-        spaceCommunityJoined: false,
+        spaceCommunityInvitationReceived: notif(false),
+        spaceCommunityJoined: notif(false),
       },
     },
   },
@@ -38,18 +37,16 @@ const organizationMessageNotificationSettings = {
 const disabledOrganizationMessageNotificationSettings = {
   notification: {
     organization: {
-      adminMentioned: false,
-      adminMessageReceived: false,
+      adminMentioned: notif(false),
+      adminMessageReceived: notif(false),
     },
     user: {
-      commentReply: false,
-      mentioned: false,
-      messageReceived: false,
-      copyOfMessageSent: false,
+      commentReply: notif(false),
+      mentioned: notif(false),
+      messageReceived: notif(false),
       membership: {
-        spaceCommunityApplicationSubmitted: false,
-        spaceCommunityInvitationReceived: false,
-        spaceCommunityJoined: false,
+        spaceCommunityInvitationReceived: notif(false),
+        spaceCommunityJoined: notif(false),
       },
     },
   },
@@ -71,7 +68,7 @@ const disableOrganizationMessageNotifications = async (userId: string) => {
 };
 
 let receivers = '';
-let sender = '';
+//let sender = '';
 
 let baseScenario: OrganizationWithSpaceModel;
 const scenarioConfig: TestScenarioConfig = {
@@ -120,7 +117,6 @@ beforeAll(async () => {
   );
 
   receivers = `${TestUserManager.users.nonSpaceMember.displayName} sent a message to your organization`;
-  sender = `You have sent a message to ${baseScenario.organization.profile.displayName}!`;
 });
 
 afterAll(async () => {
@@ -140,47 +136,7 @@ describe('Notifications - user to organization messages', () => {
     await deleteMailSlurperMails();
   });
 
-  test("User 'A' sends message to Organization(both admins ORGANIZATION_MESSAGE:true) (3 admins) - 4 messages are sent", async () => {
-    // Act
-    await sendMessageToOrganization(
-      baseScenario.organization.id,
-      'Test message',
-      TestUser.NON_SPACE_MEMBER
-    );
-    await delay(1000);
-
-    const getEmailsData = await getMailsData();
-
-    // Assert
-    expect(getEmailsData[1]).toEqual(4);
-    expect(getEmailsData[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: receivers,
-          toAddresses: [TestUserManager.users.spaceAdmin.email],
-        }),
-        expect.objectContaining({
-          subject: receivers,
-          toAddresses: [TestUserManager.users.spaceMember.email],
-        }),
-        expect.objectContaining({
-          subject: receivers,
-          toAddresses: [TestUserManager.users.globalAdmin.email],
-        }),
-        expect.objectContaining({
-          subject: sender,
-          toAddresses: [TestUserManager.users.nonSpaceMember.email],
-        }),
-      ])
-    );
-  });
-
-  test("User 'A' sends message to Organization (3 admins, one admin has ORGANIZATION_MESSAGE:false) - 3 messages are sent", async () => {
-    // Arrange - Disable organization message notifications for one admin
-    await disableOrganizationMessageNotifications(
-      TestUserManager.users.spaceAdmin.id
-    );
-
+  test("User 'A' sends message to Organization(both admins ORGANIZATION_MESSAGE:true) (3 admins) - 3 messages are sent", async () => {
     // Act
     await sendMessageToOrganization(
       baseScenario.organization.id,
@@ -197,15 +153,47 @@ describe('Notifications - user to organization messages', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: receivers,
+          toAddresses: [TestUserManager.users.spaceAdmin.email],
+        }),
+        expect.objectContaining({
+          subject: receivers,
           toAddresses: [TestUserManager.users.spaceMember.email],
         }),
         expect.objectContaining({
           subject: receivers,
           toAddresses: [TestUserManager.users.globalAdmin.email],
         }),
+      ])
+    );
+  });
+
+  test("User 'A' sends message to Organization (3 admins, one admin has ORGANIZATION_MESSAGE:false) - 2 messages are sent", async () => {
+    // Arrange - Disable organization message notifications for one admin
+    await disableOrganizationMessageNotifications(
+      TestUserManager.users.spaceAdmin.id
+    );
+
+    // Act
+    await sendMessageToOrganization(
+      baseScenario.organization.id,
+      'Test message',
+      TestUser.NON_SPACE_MEMBER
+    );
+    await delay(1000);
+
+    const getEmailsData = await getMailsData();
+
+    // Assert
+    expect(getEmailsData[1]).toEqual(2);
+    expect(getEmailsData[0]).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
-          subject: sender,
-          toAddresses: [TestUserManager.users.nonSpaceMember.email],
+          subject: receivers,
+          toAddresses: [TestUserManager.users.spaceMember.email],
+        }),
+        expect.objectContaining({
+          subject: receivers,
+          toAddresses: [TestUserManager.users.globalAdmin.email],
         }),
       ])
     );
@@ -213,13 +201,13 @@ describe('Notifications - user to organization messages', () => {
 
   // first admin has ORGANIZATION_MESSAGE:true and COMMUNICATION_MESSAGE:true
   // second admin has ORGANIZATION_MESSAGE:true and COMMUNICATION_MESSAGE:false
-  test("User 'A' sends message to Organization (3 admins, one admin has ORGANIZATION_MESSAGE:true and COMMUNICATION_MESSAGE:false) - 4 messages are sent", async () => {
+  test("User 'A' sends message to Organization (3 admins, one admin has ORGANIZATION_MESSAGE:true and COMMUNICATION_MESSAGE:false) - 3 messages are sent", async () => {
     // Arrange - Enable organization message notifications but disable communication messages
     await updateUserSettings(TestUserManager.users.spaceAdmin.id, {
       notification: {
         organization: {
-          adminMessageReceived: true,
-          adminMentioned: false,
+          adminMessageReceived: notif(true),
+          adminMentioned: notif(false),
         },
       },
       communication: {
@@ -238,7 +226,7 @@ describe('Notifications - user to organization messages', () => {
     const getEmailsData = await getMailsData();
 
     // Assert
-    expect(getEmailsData[1]).toEqual(4);
+    expect(getEmailsData[1]).toEqual(3);
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -252,10 +240,6 @@ describe('Notifications - user to organization messages', () => {
         expect.objectContaining({
           subject: receivers,
           toAddresses: [TestUserManager.users.globalAdmin.email],
-        }),
-        expect.objectContaining({
-          subject: sender,
-          toAddresses: [TestUserManager.users.nonSpaceMember.email],
         }),
       ])
     );

@@ -16,6 +16,7 @@ import {
 } from '@functional-api/callout/post/post.request.params';
 import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import { notif } from '../../notification.helpers';
 
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -29,16 +30,16 @@ const postNotificationSettings = {
   notification: {
     space: {
       admin: {
-        communityApplicationReceived: false,
-        communityNewMember: false,
-        collaborationCalloutContributionCreated: false,
-        communicationMessageReceived: false,
+        communityApplicationReceived: notif(false),
+        communityNewMember: notif(false),
+        collaborationCalloutContributionCreated: notif(false),
+        communicationMessageReceived: notif(false),
       },
-      collaborationCalloutPublished: false,
-      communicationUpdates: false,
-      collaborationCalloutPostContributionComment: false,
-      collaborationCalloutContributionCreated: true,
-      collaborationCalloutComment: false,
+      collaborationCalloutPublished: notif(false),
+      communicationUpdates: notif(false),
+      collaborationCalloutPostContributionComment: notif(false),
+      collaborationCalloutContributionCreated: notif(true),
+      collaborationCalloutComment: notif(false),
     },
   },
 };
@@ -47,16 +48,16 @@ const disablePostNotificationSettings = {
   notification: {
     space: {
       admin: {
-        communityApplicationReceived: false,
-        communityNewMember: false,
-        collaborationCalloutContributionCreated: false,
-        communicationMessageReceived: false,
+        communityApplicationReceived: notif(false),
+        communityNewMember: notif(false),
+        collaborationCalloutContributionCreated: notif(false),
+        communicationMessageReceived: notif(false),
       },
-      collaborationCalloutPublished: false,
-      communicationUpdates: false,
-      collaborationCalloutPostContributionComment: false,
-      collaborationCalloutContributionCreated: false,
-      collaborationCalloutComment: false,
+      collaborationCalloutPublished: notif(false),
+      communicationUpdates: notif(false),
+      collaborationCalloutPostContributionComment: notif(false),
+      collaborationCalloutContributionCreated: notif(false),
+      collaborationCalloutComment: notif(false),
     },
   },
 };

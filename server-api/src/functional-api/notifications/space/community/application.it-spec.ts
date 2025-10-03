@@ -24,33 +24,23 @@ import {
   RoleName,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import { notif } from '../../notification.helpers';
 
 // Notification settings for application events
 const applicationNotificationSettings = {
   notification: {
     space: {
       admin: {
-        communityApplicationReceived: true,
-        communityNewMember: false,
-        collaborationCalloutContributionCreated: false,
-        communicationMessageReceived: false,
+        communityApplicationReceived: notif(true),
+        communityNewMember: notif(false),
+        collaborationCalloutContributionCreated: notif(false),
+        communicationMessageReceived: notif(false),
       },
-      collaborationCalloutPublished: false,
-      communicationUpdates: false,
-      collaborationCalloutPostContributionComment: false,
-      collaborationCalloutContributionCreated: false,
-      collaborationCalloutComment: false,
-    },
-    user: {
-      commentReply: false,
-      mentioned: false,
-      messageReceived: false,
-      copyOfMessageSent: false,
-      membership: {
-        spaceCommunityApplicationSubmitted: true,
-        spaceCommunityInvitationReceived: false,
-        spaceCommunityJoined: false,
-      },
+      collaborationCalloutPublished: notif(false),
+      communicationUpdates: notif(false),
+      collaborationCalloutPostContributionComment: notif(false),
+      collaborationCalloutContributionCreated: notif(false),
+      collaborationCalloutComment: notif(false),
     },
   },
 };
@@ -59,27 +49,16 @@ const disabledApplicationNotificationSettings = {
   notification: {
     space: {
       admin: {
-        communityApplicationReceived: false,
-        communityNewMember: false,
-        collaborationCalloutContributionCreated: false,
-        communicationMessageReceived: false,
+        communityApplicationReceived: notif(false),
+        communityNewMember: notif(false),
+        collaborationCalloutContributionCreated: notif(false),
+        communicationMessageReceived: notif(false),
       },
-      collaborationCalloutPublished: false,
-      communicationUpdates: false,
-      collaborationCalloutPostContributionComment: false,
-      collaborationCalloutContributionCreated: false,
-      collaborationCalloutComment: false,
-    },
-    user: {
-      commentReply: false,
-      mentioned: false,
-      messageReceived: false,
-      copyOfMessageSent: false,
-      membership: {
-        spaceCommunityApplicationSubmitted: false,
-        spaceCommunityInvitationReceived: false,
-        spaceCommunityJoined: false,
-      },
+      collaborationCalloutPublished: notif(false),
+      communicationUpdates: notif(false),
+      collaborationCalloutPostContributionComment: notif(false),
+      collaborationCalloutContributionCreated: notif(false),
+      collaborationCalloutComment: notif(false),
     },
   },
 };
@@ -211,7 +190,7 @@ describe('Notifications - applications', () => {
     await deleteMailSlurperMails();
   });
 
-  test('receive notification for non space user application to space- GA, EA and Applicant', async () => {
+  test('receive notification for non space user application to space- GA, EA', async () => {
     // Act
     const { emailsData, applicationId } = await createApplicationAndGetEmails(
       baseScenario.space.community.roleSetId
@@ -220,7 +199,7 @@ describe('Notifications - applications', () => {
     baseScenario.space.community.applicationId = applicationId;
 
     // Assert
-    expect(emailsData[1]).toEqual(3);
+    expect(emailsData[1]).toEqual(2);
     expect(emailsData[0]).toEqual(
       expect.arrayContaining([
         expectedEmail(
@@ -231,15 +210,11 @@ describe('Notifications - applications', () => {
           `${baseScenario.space.about.profile.displayName}: Application from qa`,
           TestUserManager.users.spaceAdmin.email
         ),
-        expectedEmail(
-          `${baseScenario.space.about.profile.displayName} - Your Application to join was received!`,
-          TestUserManager.users.qaUser.email
-        ),
       ])
     );
   });
 
-  test('receive notification for non space user application to subspace- GA, EA, CA and Applicant', async () => {
+  test('receive notification for non space user application to subspace- GA, CA', async () => {
     // Arrange
     await assignRoleToUser(
       TestUserManager.users.qaUser.id,
@@ -260,7 +235,7 @@ describe('Notifications - applications', () => {
     );
 
     // Assert
-    expect(emailsData[1]).toEqual(3);
+    expect(emailsData[1]).toEqual(2);
     expect(emailsData[0]).toEqual(
       expect.arrayContaining([
         expectedEmail(
@@ -270,10 +245,6 @@ describe('Notifications - applications', () => {
         expectedEmail(
           `${baseScenario.subspace.about.profile.displayName}: Application from qa`,
           TestUserManager.users.subspaceAdmin.email
-        ),
-        expectedEmail(
-          `${baseScenario.subspace.about.profile.displayName} - Your Application to join was received!`,
-          TestUserManager.users.qaUser.email
         ),
       ])
     );

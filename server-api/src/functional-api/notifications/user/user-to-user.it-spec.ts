@@ -10,12 +10,11 @@ import {
 import { TestUser } from '@alkemio/tests-lib';
 import { sendMessageToUser } from '@functional-api/communications/communication.params';
 import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
+import { notif } from '../notification.helpers';
 
-let receiver_userDisplayName = '';
 let sender_userDisplayName = '';
 let usersList: any[] = [];
 let receiver = '';
-let sender = '';
 const scenarioConfig: TestScenarioNoPreCreationConfig = {
   name: 'user-to-user-messages',
 };
@@ -34,14 +33,12 @@ const communicationMessageNotificationSettings = {
   },
   notification: {
     user: {
-      commentReply: false,
-      mentioned: false,
-      messageReceived: true,
-      copyOfMessageSent: true,
+      commentReply: notif(false),
+      mentioned: notif(false),
+      messageReceived: notif(true),
       membership: {
-        spaceCommunityApplicationSubmitted: false,
-        spaceCommunityInvitationReceived: false,
-        spaceCommunityJoined: false,
+        spaceCommunityInvitationReceived: notif(false),
+        spaceCommunityJoined: notif(false),
       },
     },
   },
@@ -56,14 +53,12 @@ const disabledCommunicationMessageNotificationSettings = {
   },
   notification: {
     user: {
-      commentReply: false,
-      mentioned: false,
-      messageReceived: false,
-      copyOfMessageSent: false,
+      commentReply: notif(false),
+      mentioned: notif(false),
+      messageReceived: notif(false),
       membership: {
-        spaceCommunityApplicationSubmitted: false,
-        spaceCommunityInvitationReceived: false,
-        spaceCommunityJoined: false,
+        spaceCommunityInvitationReceived: notif(false),
+        spaceCommunityJoined: notif(false),
       },
     },
   },
@@ -84,11 +79,9 @@ beforeAll(async () => {
   await TestScenarioFactory.createBaseScenarioEmpty(scenarioConfig);
   await deleteMailSlurperMails();
 
-  receiver_userDisplayName = TestUserManager.users.globalAdmin.displayName;
   sender_userDisplayName = TestUserManager.users.nonSpaceMember.displayName;
 
   receiver = `${sender_userDisplayName} sent you a message!`;
-  sender = `You have sent a message to ${receiver_userDisplayName}!`;
 
   usersList = [
     TestUserManager.users.globalAdmin.id,
@@ -120,23 +113,18 @@ describe('Notifications - user to user messages', () => {
     const getEmailsData = await getMailsData();
 
     // Assert
-    expect(getEmailsData[1]).toEqual(2);
+    expect(getEmailsData[1]).toEqual(1);
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           subject: receiver,
           toAddresses: [TestUserManager.users.globalAdmin.email],
         }),
-        expect.objectContaining({
-          subject: sender,
-          toAddresses: [TestUserManager.users.nonSpaceMember.email],
-        }),
       ])
     );
   });
 
-  // Skipping until behavior is cleared, whather the bahavior of receiving email for each sent message is right
-  test("User 'A'(pref:true) send message to 2 users: 'B' and 'C'(pref:true) - 4 messages are sent", async () => {
+  test("User 'A'(pref:true) send message to 2 users: 'B' and 'C'(pref:true) - 2 messages are sent", async () => {
     // Act
     await sendMessageToUser(
       [TestUserManager.users.globalAdmin.id, TestUserManager.users.qaUser.id],
@@ -148,7 +136,7 @@ describe('Notifications - user to user messages', () => {
     const getEmailsData = await getMailsData();
 
     // Assert
-    expect(getEmailsData[1]).toEqual(4);
+    expect(getEmailsData[1]).toEqual(2);
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -159,16 +147,11 @@ describe('Notifications - user to user messages', () => {
           subject: receivers(TestUserManager.users.nonSpaceMember.displayName),
           toAddresses: [TestUserManager.users.globalAdmin.email],
         }),
-        expect.objectContaining({
-          subject: sender,
-          toAddresses: [TestUserManager.users.nonSpaceMember.email],
-        }),
       ])
     );
   });
 
-  // Skipping until behavior is cleared, whather the bahavior of receiving email for each sent message is right
-  test("User 'A'(pref:true) send message to 2 users: 'B'(pref:true) and 'C'(pref:false) - 3 messages are sent", async () => {
+  test("User 'A'(pref:true) send message to 2 users: 'B'(pref:true) and 'C'(pref:false) - 1 messages are sent", async () => {
     // Arrange
     await disableCommunicationMessageNotifications(
       TestUserManager.users.qaUser.id
@@ -185,16 +168,12 @@ describe('Notifications - user to user messages', () => {
     const getEmailsData = await getMailsData();
 
     // Assert
-    expect(getEmailsData[1]).toEqual(2);
+    expect(getEmailsData[1]).toEqual(1);
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           subject: receivers(TestUserManager.users.nonSpaceMember.displayName),
           toAddresses: [TestUserManager.users.globalAdmin.email],
-        }),
-        expect.objectContaining({
-          subject: sender,
-          toAddresses: [TestUserManager.users.nonSpaceMember.email],
         }),
       ])
     );
@@ -255,10 +234,6 @@ describe('Notifications - user to user messages', () => {
           subject: receiver,
           toAddresses: [TestUserManager.users.globalAdmin.email],
         }),
-        // expect.objectContaining({
-        //   subject: sender,
-        //   toAddresses: [TestUserManager.users.nonSpaceMember.email],
-        // }),
       ])
     );
   });

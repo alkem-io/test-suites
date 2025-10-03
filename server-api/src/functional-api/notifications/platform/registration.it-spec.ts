@@ -12,6 +12,7 @@ import {
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
 import { delay } from '@alkemio/tests-lib';
+import { notif } from '../notification.helpers';
 
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -22,17 +23,17 @@ const scenarioConfig: TestScenarioNoPreCreationConfig = {
   name: 'notifications-user-registration',
 };
 
-// Reusable notification settings
+// Reusable notification settings using NotificationSettingInput shape
 const notificationSettings = {
   notification: {
     platform: {
-      forumDiscussionComment: false,
-      forumDiscussionCreated: false,
+      forumDiscussionComment: notif(false),
+      forumDiscussionCreated: notif(false),
       admin: {
-        userProfileCreated: true,
-        userProfileRemoved: false,
-        spaceCreated: false,
-        userGlobalRoleChanged: false,
+        userProfileCreated: notif(true),
+        userProfileRemoved: notif(false),
+        spaceCreated: notif(false),
+        userGlobalRoleChanged: notif(false),
       },
     },
   },
@@ -56,13 +57,13 @@ const disableAllAdminNotifications = async () => {
   const disabledNotificationSettings = {
     notification: {
       platform: {
-        forumDiscussionComment: false,
-        forumDiscussionCreated: false,
+        forumDiscussionComment: notif(false),
+        forumDiscussionCreated: notif(false),
         admin: {
-          userProfileCreated: false,
-          userProfileRemoved: false,
-          spaceCreated: false,
-          userGlobalRoleChanged: false,
+          userProfileCreated: notif(false),
+          userProfileRemoved: notif(false),
+          spaceCreated: notif(false),
+          userGlobalRoleChanged: notif(false),
         },
       },
     },
@@ -183,13 +184,13 @@ describe('Notifications - User removal', () => {
     await updateUserSettings(TestUserManager.users.globalAdmin.id, {
       notification: {
         platform: {
-          forumDiscussionComment: false,
-          forumDiscussionCreated: false,
+          forumDiscussionComment: notif(false),
+          forumDiscussionCreated: notif(false),
           admin: {
-            userProfileCreated: false,
-            userProfileRemoved: true,
-            spaceCreated: false,
-            userGlobalRoleChanged: false,
+            userProfileCreated: notif(false),
+            userProfileRemoved: notif(true),
+            spaceCreated: notif(false),
+            userGlobalRoleChanged: notif(false),
           },
         },
       },
