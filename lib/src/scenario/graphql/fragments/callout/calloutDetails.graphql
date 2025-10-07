@@ -40,15 +40,6 @@ fragment CalloutDetails on Callout {
   contributions {
     ...ContributionsData
   }
-  # contributions {
-  #   id
-  #   sortOrder
-  #   link {
-  #     ...LinkDetailsWithAuthorization
-  #     __typename
-  #   }
-  #   __typename
-  # }
   comments {
     ...CommentsWithMessages
     __typename

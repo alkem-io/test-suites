@@ -47,6 +47,7 @@ export const createPostCardOnCallout = async (
       {
         contributionData: {
           calloutID,
+          type: CalloutContributionType.Post,
           post: {
             profileData: {
               displayName: '111',
