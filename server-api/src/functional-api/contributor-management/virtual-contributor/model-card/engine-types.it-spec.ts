@@ -198,7 +198,8 @@ describe('Virtual Contributor Engine Types Model Card', () => {
     ];
 
     for (const { vcData, expectedType } of engineTypeTests) {
-      const engine = vcData?.data?.lookup?.virtualContributor?.aiPersona.engine;
+      const engine =
+        vcData?.data?.lookup?.virtualContributor?.aiPersona?.engine;
       expect(engine).toBe(expectedType);
     }
   });

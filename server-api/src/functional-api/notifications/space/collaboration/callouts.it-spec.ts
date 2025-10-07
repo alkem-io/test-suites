@@ -20,22 +20,23 @@ import {
   updateCalloutVisibility,
 } from '@functional-api/callout/callouts.request.params';
 import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
+import { notif } from '../../notification.helpers';
 
 // Helper functions for callout published notification settings
 const calloutPublishedNotificationSettings = {
   notification: {
     space: {
       admin: {
-        communityApplicationReceived: false,
-        communityNewMember: false,
-        collaborationCalloutContributionCreated: false,
-        communicationMessageReceived: false,
+        communityApplicationReceived: notif(false),
+        communityNewMember: notif(false),
+        collaborationCalloutContributionCreated: notif(false),
+        communicationMessageReceived: notif(false),
       },
-      collaborationCalloutPublished: true,
-      communicationUpdates: false,
-      collaborationCalloutPostContributionComment: false,
-      collaborationCalloutContributionCreated: false,
-      collaborationCalloutComment: false,
+      collaborationCalloutPublished: notif(true),
+      communicationUpdates: notif(false),
+      collaborationCalloutPostContributionComment: notif(false),
+      collaborationCalloutContributionCreated: notif(false),
+      collaborationCalloutComment: notif(false),
     },
   },
 };
@@ -44,16 +45,16 @@ const disabledCalloutPublishedNotificationSettings = {
   notification: {
     space: {
       admin: {
-        communityApplicationReceived: false,
-        communityNewMember: false,
-        collaborationCalloutContributionCreated: false,
-        communicationMessageReceived: false,
+        communityApplicationReceived: notif(false),
+        communityNewMember: notif(false),
+        collaborationCalloutContributionCreated: notif(false),
+        communicationMessageReceived: notif(false),
       },
-      collaborationCalloutPublished: false,
-      communicationUpdates: false,
-      collaborationCalloutPostContributionComment: false,
-      collaborationCalloutContributionCreated: false,
-      collaborationCalloutComment: false,
+      collaborationCalloutPublished: notif(false),
+      communicationUpdates: notif(false),
+      collaborationCalloutPostContributionComment: notif(false),
+      collaborationCalloutContributionCreated: notif(false),
+      collaborationCalloutComment: notif(false),
     },
   },
 };

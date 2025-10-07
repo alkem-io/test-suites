@@ -18,6 +18,7 @@ import { updateUserSettings } from '@functional-api/contributor-management/user/
 import { getSingleInvitationResult } from '@functional-api/roleset/roleset.request.params';
 import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import { notif } from '../../notification.helpers';
 
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -25,14 +26,12 @@ const uniqueId = UniqueIDGenerator.getID();
 const invitationNotificationSettings = {
   notification: {
     user: {
-      commentReply: false,
-      mentioned: false,
-      messageReceived: false,
-      copyOfMessageSent: false,
+      commentReply: notif(false),
+      mentioned: notif(false),
+      messageReceived: notif(false),
       membership: {
-        spaceCommunityApplicationSubmitted: false,
-        spaceCommunityInvitationReceived: true,
-        spaceCommunityJoined: false,
+        spaceCommunityInvitationReceived: notif(true),
+        spaceCommunityJoined: notif(false),
       },
     },
   },
@@ -41,14 +40,12 @@ const invitationNotificationSettings = {
 const disabledInvitationNotificationSettings = {
   notification: {
     user: {
-      commentReply: false,
-      mentioned: false,
-      messageReceived: false,
-      copyOfMessageSent: false,
+      commentReply: notif(false),
+      mentioned: notif(false),
+      messageReceived: notif(false),
       membership: {
-        spaceCommunityApplicationSubmitted: false,
-        spaceCommunityInvitationReceived: false,
-        spaceCommunityJoined: false,
+        spaceCommunityInvitationReceived: notif(false),
+        spaceCommunityJoined: notif(false),
       },
     },
   },

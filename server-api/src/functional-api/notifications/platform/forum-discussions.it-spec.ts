@@ -19,30 +19,31 @@ import {
 } from '@functional-api/communications/communication.params';
 import { sendMessageReplyToRoom } from '@functional-api/communications/replies/reply.request.params';
 import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
+import { notif } from '../notification.helpers';
 const uniqueId = UniqueIDGenerator.getID();
 
-// Helper functions for forum discussion notification settings
+// Notification settings objects using proper NotificationSettingInput shape
 const forumDiscussionCreatedNotificationSettings = {
   notification: {
     platform: {
-      forumDiscussionComment: true,
-      forumDiscussionCreated: true,
+      forumDiscussionComment: notif(true),
+      forumDiscussionCreated: notif(true),
       admin: {
-        userProfileCreated: false,
-        userProfileRemoved: false,
-        spaceCreated: false,
-        userGlobalRoleChanged: false,
+        userProfileCreated: notif(false),
+        userProfileRemoved: notif(false),
+        spaceCreated: notif(false),
+        userGlobalRoleChanged: notif(false),
       },
     },
     user: {
-      commentReply: true,
-      mentioned: false,
-      messageReceived: false,
-      copyOfMessageSent: false,
+      commentReply: notif(true),
+      mentioned: notif(false),
+      messageReceived: notif(false),
+      // copyOfMessageSent: notif(false), // not part of current schema; keep commented
       membership: {
-        spaceCommunityApplicationSubmitted: false,
-        spaceCommunityInvitationReceived: false,
-        spaceCommunityJoined: false,
+        // spaceCommunityApplicationSubmitted: notif(false), // not in schema; removed
+        spaceCommunityInvitationReceived: notif(false),
+        spaceCommunityJoined: notif(false),
       },
     },
   },
@@ -51,24 +52,24 @@ const forumDiscussionCreatedNotificationSettings = {
 const disabledForumDiscussionCreatedNotificationSettings = {
   notification: {
     platform: {
-      forumDiscussionComment: false,
-      forumDiscussionCreated: false,
+      forumDiscussionComment: notif(false),
+      forumDiscussionCreated: notif(false),
       admin: {
-        userProfileCreated: false,
-        userProfileRemoved: false,
-        spaceCreated: false,
-        userGlobalRoleChanged: false,
+        userProfileCreated: notif(false),
+        userProfileRemoved: notif(false),
+        spaceCreated: notif(false),
+        userGlobalRoleChanged: notif(false),
       },
     },
     user: {
-      commentReply: false,
-      mentioned: false,
-      messageReceived: false,
-      copyOfMessageSent: false,
+      commentReply: notif(false),
+      mentioned: notif(false),
+      messageReceived: notif(false),
+      // copyOfMessageSent: notif(false),
       membership: {
-        spaceCommunityApplicationSubmitted: false,
-        spaceCommunityInvitationReceived: false,
-        spaceCommunityJoined: false,
+        // spaceCommunityApplicationSubmitted: notif(false),
+        spaceCommunityInvitationReceived: notif(false),
+        spaceCommunityJoined: notif(false),
       },
     },
   },
@@ -77,13 +78,13 @@ const disabledForumDiscussionCreatedNotificationSettings = {
 const forumDiscussionCommentNotificationSettings = {
   notification: {
     platform: {
-      forumDiscussionComment: true,
-      forumDiscussionCreated: false,
+      forumDiscussionComment: notif(true),
+      forumDiscussionCreated: notif(false),
       admin: {
-        userProfileCreated: false,
-        userProfileRemoved: false,
-        spaceCreated: false,
-        userGlobalRoleChanged: false,
+        userProfileCreated: notif(false),
+        userProfileRemoved: notif(false),
+        spaceCreated: notif(false),
+        userGlobalRoleChanged: notif(false),
       },
     },
   },
@@ -92,13 +93,13 @@ const forumDiscussionCommentNotificationSettings = {
 const disabledForumDiscussionCommentNotificationSettings = {
   notification: {
     platform: {
-      forumDiscussionComment: false,
-      forumDiscussionCreated: false,
+      forumDiscussionComment: notif(false),
+      forumDiscussionCreated: notif(false),
       admin: {
-        userProfileCreated: false,
-        userProfileRemoved: false,
-        spaceCreated: false,
-        userGlobalRoleChanged: false,
+        userProfileCreated: notif(false),
+        userProfileRemoved: notif(false),
+        spaceCreated: notif(false),
+        userGlobalRoleChanged: notif(false),
       },
     },
   },
@@ -107,8 +108,8 @@ const disabledForumDiscussionCommentNotificationSettings = {
 const commentReplyNotificationSettings = {
   notification: {
     user: {
-      commentReply: true,
-      mentioned: false,
+      commentReply: notif(true),
+      mentioned: notif(false),
     },
   },
 };
@@ -116,8 +117,8 @@ const commentReplyNotificationSettings = {
 const disabledCommentReplyNotificationSettings = {
   notification: {
     user: {
-      commentReply: false,
-      mentioned: false,
+      commentReply: notif(false),
+      mentioned: notif(false),
     },
   },
 };

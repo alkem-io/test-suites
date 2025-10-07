@@ -553,6 +553,8 @@ export type AiPersona = {
   id: Scalars["UUID"]["output"];
   /** The prompt used by this AI Persona */
   prompt: Array<Scalars["String"]["output"]>;
+  /** The prompt graph for this AI Persona. */
+  promptGraph?: Maybe<PromptGraph>;
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
 };
@@ -1845,6 +1847,12 @@ export type CreateLicensePlanOnLicensingFrameworkInput = {
   type: LicensingCredentialBasedPlanType;
 };
 
+export type CreateLicensePolicyCredentialRuleInput = {
+  credentialType: LicensingCredentialBasedCredentialType;
+  grantedEntitlements: Array<LicensingGrantedEntitlementInput>;
+  name: Scalars["String"]["input"];
+};
+
 export type CreateLinkData = {
   profile: CreateProfileData;
   uri?: Maybe<Scalars["String"]["output"]>;
@@ -1986,6 +1994,8 @@ export type CreateSpaceSettingsCollaborationInput = {
   allowMembersToCreateCallouts: Scalars["Boolean"]["input"];
   /** Flag to control if members can create subspaces. */
   allowMembersToCreateSubspaces: Scalars["Boolean"]["input"];
+  /** Flag to control if members can create video calls in this Space. */
+  allowMembersToVideoCall: Scalars["Boolean"]["input"];
   /** Flag to control if ability to contribute is inherited from parent Space. */
   inheritMembershipRights: Scalars["Boolean"]["input"];
 };
@@ -2274,6 +2284,10 @@ export type DeleteInvitationInput = {
 };
 
 export type DeleteLicensePlanInput = {
+  ID: Scalars["UUID"]["input"];
+};
+
+export type DeleteLicensePolicyCredentialRuleInput = {
   ID: Scalars["UUID"]["input"];
 };
 
@@ -3236,11 +3250,18 @@ export enum LicensingCredentialBasedPlanType {
 export type LicensingCredentialBasedPolicyCredentialRule = {
   credentialType: LicensingCredentialBasedCredentialType;
   grantedEntitlements: Array<LicensingGrantedEntitlement>;
+  id: Scalars["String"]["output"];
   name?: Maybe<Scalars["String"]["output"]>;
 };
 
 export type LicensingGrantedEntitlement = {
   limit: Scalars["Float"]["output"];
+  /** The entitlement that is granted. */
+  type: LicenseEntitlementType;
+};
+
+export type LicensingGrantedEntitlementInput = {
+  limit: Scalars["Float"]["input"];
   /** The entitlement that is granted. */
   type: LicenseEntitlementType;
 };
@@ -3942,6 +3963,12 @@ export type Mutation = {
   adminIdentityDeleteKratosIdentity: Scalars["Boolean"]["output"];
   /** Prunes InAppNotifications according to the platform defined criteria. The effects of the pruning are returned. */
   adminInAppNotificationsPrune: PruneInAppNotificationAdminResult;
+  /** Creates a CredentialRule on the LicensePolicy. */
+  adminLicensePolicyCreateCredentialRule: LicensingCredentialBasedPolicyCredentialRule;
+  /** Deletes the specified LicensePolicy. */
+  adminLicensePolicyDeleteCredentialRule: LicensingCredentialBasedPolicyCredentialRule;
+  /** Updates a CredentialRule on the LicensePolicy. */
+  adminLicensePolicyUpdateCredentialRule: LicensingCredentialBasedPolicyCredentialRule;
   /** Ingests new data into Elasticsearch from scratch. This will delete all existing data and ingest new data from the source. This is an admin only operation. */
   adminSearchIngestFromScratch: Scalars["String"]["output"];
   /** Update the Avatar on the Profile with the spedified profileID to be stored as a Document. */
@@ -4308,6 +4335,18 @@ export type MutationAdminCommunicationUpdateRoomStateArgs = {
 
 export type MutationAdminIdentityDeleteKratosIdentityArgs = {
   kratosIdentityId: Scalars["UUID"]["input"];
+};
+
+export type MutationAdminLicensePolicyCreateCredentialRuleArgs = {
+  createData: CreateLicensePolicyCredentialRuleInput;
+};
+
+export type MutationAdminLicensePolicyDeleteCredentialRuleArgs = {
+  deleteData: DeleteLicensePolicyCredentialRuleInput;
+};
+
+export type MutationAdminLicensePolicyUpdateCredentialRuleArgs = {
+  updateData: UpdateLicensePolicyCredentialRuleInput;
 };
 
 export type MutationAdminUpdateContributorAvatarsArgs = {
@@ -4991,7 +5030,6 @@ export enum NotificationEvent {
   UserMessage = "USER_MESSAGE",
   UserMessageSender = "USER_MESSAGE_SENDER",
   UserSignUpWelcome = "USER_SIGN_UP_WELCOME",
-  UserSpaceCommunityApplication = "USER_SPACE_COMMUNITY_APPLICATION",
   UserSpaceCommunityInvitation = "USER_SPACE_COMMUNITY_INVITATION",
   UserSpaceCommunityJoined = "USER_SPACE_COMMUNITY_JOINED",
   VirtualContributorAdminSpaceCommunityInvitation = "VIRTUAL_CONTRIBUTOR_ADMIN_SPACE_COMMUNITY_INVITATION",
@@ -5063,6 +5101,13 @@ export type NotificationRecipientsInput = {
   userID?: InputMaybe<Scalars["UUID"]["input"]>;
   /** The ID of the Virtual Contributor to use to determine recipients. */
   virtualContributorID?: InputMaybe<Scalars["UUID"]["input"]>;
+};
+
+export type NotificationSettingInput = {
+  /** Enable email notifications for this setting */
+  email?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Enable in-app notifications for this setting */
+  inApp?: InputMaybe<Scalars["Boolean"]["input"]>;
 };
 
 export enum OpenAiModel {
@@ -5574,6 +5619,105 @@ export enum ProfileType {
   VirtualPersona = "VIRTUAL_PERSONA",
   Whiteboard = "WHITEBOARD",
 }
+
+export type PromptGraph = {
+  edges?: Maybe<Array<PromptGraphEdge>>;
+  end?: Maybe<Scalars["String"]["output"]>;
+  nodes?: Maybe<Array<PromptGraphNode>>;
+  start?: Maybe<Scalars["String"]["output"]>;
+  state?: Maybe<PromptGraphDataStruct>;
+};
+
+export type PromptGraphDataPoint = {
+  description?: Maybe<Scalars["String"]["output"]>;
+  name: Scalars["String"]["output"];
+  optional?: Maybe<Scalars["Boolean"]["output"]>;
+  type?: Maybe<Scalars["String"]["output"]>;
+};
+
+export type PromptGraphDataPointInput = {
+  description?: InputMaybe<Scalars["String"]["input"]>;
+  name: Scalars["String"]["input"];
+  optional?: InputMaybe<Scalars["Boolean"]["input"]>;
+  type?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+export type PromptGraphDataStruct = {
+  properties?: Maybe<Array<PromptGraphDataPoint>>;
+  title?: Maybe<Scalars["String"]["output"]>;
+  type?: Maybe<Scalars["String"]["output"]>;
+};
+
+export type PromptGraphDataStructInput = {
+  properties?: InputMaybe<Array<PromptGraphDataPointInput>>;
+  title?: InputMaybe<Scalars["String"]["input"]>;
+  type?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+export type PromptGraphDefinition = {
+  edges?: Maybe<Array<PromptGraphDefinitionEdge>>;
+  end?: Maybe<Scalars["String"]["output"]>;
+  nodes?: Maybe<Array<PromptGraphDefinitionNode>>;
+  start?: Maybe<Scalars["String"]["output"]>;
+  state?: Maybe<PromptGraphDefinitionDataStruct>;
+};
+
+export type PromptGraphDefinitionDataPoint = {
+  description?: Maybe<Scalars["String"]["output"]>;
+  name: Scalars["String"]["output"];
+  optional?: Maybe<Scalars["Boolean"]["output"]>;
+  type?: Maybe<Scalars["String"]["output"]>;
+};
+
+export type PromptGraphDefinitionDataStruct = {
+  properties?: Maybe<Array<PromptGraphDefinitionDataPoint>>;
+  title?: Maybe<Scalars["String"]["output"]>;
+  type?: Maybe<Scalars["String"]["output"]>;
+};
+
+export type PromptGraphDefinitionEdge = {
+  from?: Maybe<Scalars["String"]["output"]>;
+  to?: Maybe<Scalars["String"]["output"]>;
+};
+
+export type PromptGraphDefinitionNode = {
+  input_variables?: Maybe<Array<Scalars["String"]["output"]>>;
+  name: Scalars["String"]["output"];
+  output?: Maybe<PromptGraphDefinitionDataStruct>;
+  prompt?: Maybe<Scalars["String"]["output"]>;
+};
+
+export type PromptGraphEdge = {
+  from?: Maybe<Scalars["String"]["output"]>;
+  to?: Maybe<Scalars["String"]["output"]>;
+};
+
+export type PromptGraphEdgeInput = {
+  from?: InputMaybe<Scalars["String"]["input"]>;
+  to?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+export type PromptGraphInput = {
+  edges?: InputMaybe<Array<PromptGraphEdgeInput>>;
+  end?: InputMaybe<Scalars["String"]["input"]>;
+  nodes?: InputMaybe<Array<PromptGraphNodeInput>>;
+  start?: InputMaybe<Scalars["String"]["input"]>;
+  state?: InputMaybe<PromptGraphDataStructInput>;
+};
+
+export type PromptGraphNode = {
+  input_variables?: Maybe<Array<Scalars["String"]["output"]>>;
+  name: Scalars["String"]["output"];
+  output?: Maybe<PromptGraphDataStruct>;
+  prompt?: Maybe<Scalars["String"]["output"]>;
+};
+
+export type PromptGraphNodeInput = {
+  input_variables?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  name: Scalars["String"]["input"];
+  output?: InputMaybe<PromptGraphDataStructInput>;
+  prompt?: InputMaybe<Scalars["String"]["input"]>;
+};
 
 export type PruneInAppNotificationAdminResult = {
   /** The number of InAppNotifications that were removed due to exceeding the maximum allowed per user. */
@@ -6606,6 +6750,8 @@ export type SpaceSettingsCollaboration = {
   allowMembersToCreateCallouts: Scalars["Boolean"]["output"];
   /** Flag to control if members can create subspaces. */
   allowMembersToCreateSubspaces: Scalars["Boolean"]["output"];
+  /** Flag to control if members can create video calls in this Space. */
+  allowMembersToVideoCall: Scalars["Boolean"]["output"];
   /** Flag to control if ability to contribute is inherited from parent Space. */
   inheritMembershipRights: Scalars["Boolean"]["output"];
 };
@@ -7353,6 +7499,13 @@ export type UpdateLicensePlanInput = {
   trialEnabled?: InputMaybe<Scalars["Boolean"]["input"]>;
 };
 
+export type UpdateLicensePolicyCredentialRuleInput = {
+  ID: Scalars["UUID"]["input"];
+  credentialType: LicensingCredentialBasedCredentialType;
+  grantedEntitlements: Array<LicensingGrantedEntitlementInput>;
+  name?: InputMaybe<Scalars["String"]["input"]>;
+};
+
 export type UpdateLinkInput = {
   ID: Scalars["UUID"]["input"];
   /** The Profile of the Link. */
@@ -7500,6 +7653,8 @@ export type UpdateSpaceSettingsCollaborationInput = {
   allowMembersToCreateCallouts: Scalars["Boolean"]["input"];
   /** Flag to control if members can create subspaces. */
   allowMembersToCreateSubspaces: Scalars["Boolean"]["input"];
+  /** Flag to control if members can create video calls in this Space. */
+  allowMembersToVideoCall: Scalars["Boolean"]["input"];
   /** Flag to control if ability to contribute is inherited from parent Space. */
   inheritMembershipRights: Scalars["Boolean"]["input"];
 };
@@ -7636,88 +7791,78 @@ export type UpdateUserSettingsNotificationInput = {
 
 export type UpdateUserSettingsNotificationOrganizationInput = {
   /** Receive a notification when the organization you are admin of is mentioned */
-  adminMentioned?: InputMaybe<Scalars["Boolean"]["input"]>;
+  adminMentioned?: InputMaybe<NotificationSettingInput>;
   /** Receive notification when the organization you are admin of is messaged */
-  adminMessageReceived?: InputMaybe<Scalars["Boolean"]["input"]>;
+  adminMessageReceived?: InputMaybe<NotificationSettingInput>;
 };
 
 export type UpdateUserSettingsNotificationPlatformAdminInput = {
   /** [Admin] Receive a notification when a new L0 Space is created */
-  spaceCreated?: InputMaybe<Scalars["Boolean"]["input"]>;
+  spaceCreated?: InputMaybe<NotificationSettingInput>;
   /** [Admin] Receive a notification user is assigned or removed from a global role */
-  userGlobalRoleChanged?: InputMaybe<Scalars["Boolean"]["input"]>;
+  userGlobalRoleChanged?: InputMaybe<NotificationSettingInput>;
   /** [Admin] Receive notification when a new user signs up */
-  userProfileCreated?: InputMaybe<Scalars["Boolean"]["input"]>;
+  userProfileCreated?: InputMaybe<NotificationSettingInput>;
   /** [Admin] Receive a notification when a user profile is removed */
-  userProfileRemoved?: InputMaybe<Scalars["Boolean"]["input"]>;
+  userProfileRemoved?: InputMaybe<NotificationSettingInput>;
 };
 
 export type UpdateUserSettingsNotificationPlatformInput = {
   /** Settings related to Platform Admin Notifications. */
   admin?: InputMaybe<UpdateUserSettingsNotificationPlatformAdminInput>;
   /** Receive a notification when a new comment is added to a Discussion I created in the Forum */
-  forumDiscussionComment?: InputMaybe<Scalars["Boolean"]["input"]>;
+  forumDiscussionComment?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification when a new Discussion is created in the Forum */
-  forumDiscussionCreated?: InputMaybe<Scalars["Boolean"]["input"]>;
+  forumDiscussionCreated?: InputMaybe<NotificationSettingInput>;
 };
 
 export type UpdateUserSettingsNotificationSpaceAdminInput = {
   /** Receive a notification when a contribution is added (admin) */
-  collaborationCalloutContributionCreated?: InputMaybe<
-    Scalars["Boolean"]["input"]
-  >;
+  collaborationCalloutContributionCreated?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification when a message is sent to a Space I lead */
-  communicationMessageReceived?: InputMaybe<Scalars["Boolean"]["input"]>;
+  communicationMessageReceived?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification when an application is received */
-  communityApplicationReceived?: InputMaybe<Scalars["Boolean"]["input"]>;
+  communityApplicationReceived?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification when a new member joins the community (admin) */
-  communityNewMember?: InputMaybe<Scalars["Boolean"]["input"]>;
+  communityNewMember?: InputMaybe<NotificationSettingInput>;
 };
 
 export type UpdateUserSettingsNotificationSpaceInput = {
   /** Settings related to Space Admin Notifications. */
   admin?: InputMaybe<UpdateUserSettingsNotificationSpaceAdminInput>;
   /** Receive a notification when a comment is added to a Callout */
-  collaborationCalloutComment?: InputMaybe<Scalars["Boolean"]["input"]>;
+  collaborationCalloutComment?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification when a contribution is added */
-  collaborationCalloutContributionCreated?: InputMaybe<
-    Scalars["Boolean"]["input"]
-  >;
+  collaborationCalloutContributionCreated?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification when a comment is created on a contribution */
-  collaborationCalloutPostContributionComment?: InputMaybe<
-    Scalars["Boolean"]["input"]
-  >;
+  collaborationCalloutPostContributionComment?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification when a callout is published */
-  collaborationCalloutPublished?: InputMaybe<Scalars["Boolean"]["input"]>;
+  collaborationCalloutPublished?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification for community updates */
-  communicationUpdates?: InputMaybe<Scalars["Boolean"]["input"]>;
+  communicationUpdates?: InputMaybe<NotificationSettingInput>;
 };
 
 export type UpdateUserSettingsNotificationUserInput = {
   /** Receive a notification when someone replies to a comment I made. */
-  commentReply?: InputMaybe<Scalars["Boolean"]["input"]>;
-  /** Receive notification I send a message to a User, Organization or Space. */
-  copyOfMessageSent?: InputMaybe<Scalars["Boolean"]["input"]>;
+  commentReply?: InputMaybe<NotificationSettingInput>;
   /** Settings related to User Membership Notifications. */
   membership?: InputMaybe<UpdateUserSettingsNotificationUserMembershipInput>;
   /** Receive a notification you are mentioned */
-  mentioned?: InputMaybe<Scalars["Boolean"]["input"]>;
+  mentioned?: InputMaybe<NotificationSettingInput>;
   /** Receive notification when I receive a message. */
-  messageReceived?: InputMaybe<Scalars["Boolean"]["input"]>;
+  messageReceived?: InputMaybe<NotificationSettingInput>;
 };
 
 export type UpdateUserSettingsNotificationUserMembershipInput = {
-  /** Receive a notification when an application is submitted */
-  spaceCommunityApplicationSubmitted?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** Receive a notification for community invitation */
-  spaceCommunityInvitationReceived?: InputMaybe<Scalars["Boolean"]["input"]>;
+  spaceCommunityInvitationReceived?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification when I join a new community */
-  spaceCommunityJoined?: InputMaybe<Scalars["Boolean"]["input"]>;
+  spaceCommunityJoined?: InputMaybe<NotificationSettingInput>;
 };
 
 export type UpdateUserSettingsNotificationVirtualContributorInput = {
   /** Receive notification when a Virtual Contributor receives an invitation to join a Space. */
-  adminSpaceCommunityInvitation?: InputMaybe<Scalars["Boolean"]["input"]>;
+  adminSpaceCommunityInvitation?: InputMaybe<NotificationSettingInput>;
 };
 
 export type UpdateUserSettingsPrivacyInput = {
@@ -8046,8 +8191,6 @@ export type UserSettingsNotificationSpaceAdmin = {
 export type UserSettingsNotificationUser = {
   /** Receive a notification when someone replies to a comment I made. */
   commentReply: UserSettingsNotificationChannels;
-  /** Receive notification I send a message to a User, Organization or Space. */
-  copyOfMessageSent: UserSettingsNotificationChannels;
   /** The notifications settings for membership events for this User */
   membership: UserSettingsNotificationUserMembership;
   /** Receive a notification you are mentioned */
@@ -8057,8 +8200,6 @@ export type UserSettingsNotificationUser = {
 };
 
 export type UserSettingsNotificationUserMembership = {
-  /** Receive a notification when an application for a Space is submitted */
-  spaceCommunityApplicationSubmitted: UserSettingsNotificationChannels;
   /** Receive a notification when I am invited to join a Space community */
   spaceCommunityInvitationReceived: UserSettingsNotificationChannels;
   /** Receive a notification when I join a Space */
@@ -8128,8 +8269,8 @@ export type VirtualContributor = Contributor & {
   account?: Maybe<Account>;
   /** The Agent representing this User. */
   agent: Agent;
-  /** The aiPersona behind this Virtual Contributor */
-  aiPersona: AiPersona;
+  /** The AI persona associated with this Virtual Contributor. */
+  aiPersona?: Maybe<AiPersona>;
   /** The authorization rules for the Contributor */
   authorization?: Maybe<Authorization>;
   /** Description of the body of knowledge for this VC. */
@@ -8160,6 +8301,8 @@ export type VirtualContributor = Contributor & {
   nameID: Scalars["NameID"]["output"];
   /** The profile for this Virtual. */
   profile: Profile;
+  /** Prompt graph definition for this Virtual Contributor. */
+  promptGraphDefinition?: Maybe<PromptGraphDefinition>;
   /** The Virtual Contributor provider. */
   provider: Contributor;
   /** Visibility of the VC in searches. */
@@ -9089,6 +9232,7 @@ export type ResolversTypes = {
   CreateInnovationPackOnAccountInput: CreateInnovationPackOnAccountInput;
   CreateKnowledgeBaseInput: CreateKnowledgeBaseInput;
   CreateLicensePlanOnLicensingFrameworkInput: CreateLicensePlanOnLicensingFrameworkInput;
+  CreateLicensePolicyCredentialRuleInput: CreateLicensePolicyCredentialRuleInput;
   CreateLinkData: ResolverTypeWrapper<CreateLinkData>;
   CreateLinkInput: CreateLinkInput;
   CreateLocationData: ResolverTypeWrapper<CreateLocationData>;
@@ -9142,6 +9286,7 @@ export type ResolversTypes = {
   DeleteInnovationPackInput: DeleteInnovationPackInput;
   DeleteInvitationInput: DeleteInvitationInput;
   DeleteLicensePlanInput: DeleteLicensePlanInput;
+  DeleteLicensePolicyCredentialRuleInput: DeleteLicensePolicyCredentialRuleInput;
   DeleteLinkInput: DeleteLinkInput;
   DeleteMemoInput: DeleteMemoInput;
   DeleteOrganizationInput: DeleteOrganizationInput;
@@ -9413,6 +9558,7 @@ export type ResolversTypes = {
   LicensingCredentialBasedPlanType: LicensingCredentialBasedPlanType;
   LicensingCredentialBasedPolicyCredentialRule: ResolverTypeWrapper<LicensingCredentialBasedPolicyCredentialRule>;
   LicensingGrantedEntitlement: ResolverTypeWrapper<LicensingGrantedEntitlement>;
+  LicensingGrantedEntitlementInput: LicensingGrantedEntitlementInput;
   Lifecycle: ResolverTypeWrapper<Lifecycle>;
   LifecycleDefinition: ResolverTypeWrapper<
     Scalars["LifecycleDefinition"]["output"]
@@ -9576,6 +9722,7 @@ export type ResolversTypes = {
     }
   >;
   NotificationRecipientsInput: NotificationRecipientsInput;
+  NotificationSettingInput: NotificationSettingInput;
   OpenAIModel: OpenAiModel;
   Organization: ResolverTypeWrapper<
     Omit<
@@ -9701,6 +9848,21 @@ export type ResolversTypes = {
   >;
   ProfileCredentialVerified: ResolverTypeWrapper<ProfileCredentialVerified>;
   ProfileType: ProfileType;
+  PromptGraph: ResolverTypeWrapper<PromptGraph>;
+  PromptGraphDataPoint: ResolverTypeWrapper<PromptGraphDataPoint>;
+  PromptGraphDataPointInput: PromptGraphDataPointInput;
+  PromptGraphDataStruct: ResolverTypeWrapper<PromptGraphDataStruct>;
+  PromptGraphDataStructInput: PromptGraphDataStructInput;
+  PromptGraphDefinition: ResolverTypeWrapper<PromptGraphDefinition>;
+  PromptGraphDefinitionDataPoint: ResolverTypeWrapper<PromptGraphDefinitionDataPoint>;
+  PromptGraphDefinitionDataStruct: ResolverTypeWrapper<PromptGraphDefinitionDataStruct>;
+  PromptGraphDefinitionEdge: ResolverTypeWrapper<PromptGraphDefinitionEdge>;
+  PromptGraphDefinitionNode: ResolverTypeWrapper<PromptGraphDefinitionNode>;
+  PromptGraphEdge: ResolverTypeWrapper<PromptGraphEdge>;
+  PromptGraphEdgeInput: PromptGraphEdgeInput;
+  PromptGraphInput: PromptGraphInput;
+  PromptGraphNode: ResolverTypeWrapper<PromptGraphNode>;
+  PromptGraphNodeInput: PromptGraphNodeInput;
   PruneInAppNotificationAdminResult: ResolverTypeWrapper<PruneInAppNotificationAdminResult>;
   Query: ResolverTypeWrapper<{}>;
   Question: ResolverTypeWrapper<Question>;
@@ -10050,6 +10212,7 @@ export type ResolversTypes = {
   UpdateInnovationPackInput: UpdateInnovationPackInput;
   UpdateKnowledgeBaseInput: UpdateKnowledgeBaseInput;
   UpdateLicensePlanInput: UpdateLicensePlanInput;
+  UpdateLicensePolicyCredentialRuleInput: UpdateLicensePolicyCredentialRuleInput;
   UpdateLinkInput: UpdateLinkInput;
   UpdateLocationInput: UpdateLocationInput;
   UpdateMemoEntityInput: UpdateMemoEntityInput;
@@ -10533,6 +10696,7 @@ export type ResolversParentTypes = {
   CreateInnovationPackOnAccountInput: CreateInnovationPackOnAccountInput;
   CreateKnowledgeBaseInput: CreateKnowledgeBaseInput;
   CreateLicensePlanOnLicensingFrameworkInput: CreateLicensePlanOnLicensingFrameworkInput;
+  CreateLicensePolicyCredentialRuleInput: CreateLicensePolicyCredentialRuleInput;
   CreateLinkData: CreateLinkData;
   CreateLinkInput: CreateLinkInput;
   CreateLocationData: CreateLocationData;
@@ -10585,6 +10749,7 @@ export type ResolversParentTypes = {
   DeleteInnovationPackInput: DeleteInnovationPackInput;
   DeleteInvitationInput: DeleteInvitationInput;
   DeleteLicensePlanInput: DeleteLicensePlanInput;
+  DeleteLicensePolicyCredentialRuleInput: DeleteLicensePolicyCredentialRuleInput;
   DeleteLinkInput: DeleteLinkInput;
   DeleteMemoInput: DeleteMemoInput;
   DeleteOrganizationInput: DeleteOrganizationInput;
@@ -10802,6 +10967,7 @@ export type ResolversParentTypes = {
   Licensing: Licensing;
   LicensingCredentialBasedPolicyCredentialRule: LicensingCredentialBasedPolicyCredentialRule;
   LicensingGrantedEntitlement: LicensingGrantedEntitlement;
+  LicensingGrantedEntitlementInput: LicensingGrantedEntitlementInput;
   Lifecycle: Lifecycle;
   LifecycleDefinition: Scalars["LifecycleDefinition"]["output"];
   Link: Omit<Link, "profile"> & { profile: ResolversParentTypes["Profile"] };
@@ -10943,6 +11109,7 @@ export type ResolversParentTypes = {
     triggeredBy?: Maybe<ResolversParentTypes["User"]>;
   };
   NotificationRecipientsInput: NotificationRecipientsInput;
+  NotificationSettingInput: NotificationSettingInput;
   Organization: Omit<
     Organization,
     "account" | "group" | "groups" | "profile" | "roleSet"
@@ -11050,6 +11217,21 @@ export type ResolversParentTypes = {
     storageBucket: ResolversParentTypes["StorageBucket"];
   };
   ProfileCredentialVerified: ProfileCredentialVerified;
+  PromptGraph: PromptGraph;
+  PromptGraphDataPoint: PromptGraphDataPoint;
+  PromptGraphDataPointInput: PromptGraphDataPointInput;
+  PromptGraphDataStruct: PromptGraphDataStruct;
+  PromptGraphDataStructInput: PromptGraphDataStructInput;
+  PromptGraphDefinition: PromptGraphDefinition;
+  PromptGraphDefinitionDataPoint: PromptGraphDefinitionDataPoint;
+  PromptGraphDefinitionDataStruct: PromptGraphDefinitionDataStruct;
+  PromptGraphDefinitionEdge: PromptGraphDefinitionEdge;
+  PromptGraphDefinitionNode: PromptGraphDefinitionNode;
+  PromptGraphEdge: PromptGraphEdge;
+  PromptGraphEdgeInput: PromptGraphEdgeInput;
+  PromptGraphInput: PromptGraphInput;
+  PromptGraphNode: PromptGraphNode;
+  PromptGraphNodeInput: PromptGraphNodeInput;
   PruneInAppNotificationAdminResult: PruneInAppNotificationAdminResult;
   Query: {};
   Question: Question;
@@ -11360,6 +11542,7 @@ export type ResolversParentTypes = {
   UpdateInnovationPackInput: UpdateInnovationPackInput;
   UpdateKnowledgeBaseInput: UpdateKnowledgeBaseInput;
   UpdateLicensePlanInput: UpdateLicensePlanInput;
+  UpdateLicensePolicyCredentialRuleInput: UpdateLicensePolicyCredentialRuleInput;
   UpdateLinkInput: UpdateLinkInput;
   UpdateLocationInput: UpdateLocationInput;
   UpdateMemoEntityInput: UpdateMemoEntityInput;
@@ -11978,6 +12161,11 @@ export type AiPersonaResolvers<
   >;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   prompt?: Resolver<Array<ResolversTypes["String"]>, ParentType, ContextType>;
+  promptGraph?: Resolver<
+    Maybe<ResolversTypes["PromptGraph"]>,
+    ParentType,
+    ContextType
+  >;
   updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -14489,6 +14677,7 @@ export type LicensingCredentialBasedPolicyCredentialRuleResolvers<
     ParentType,
     ContextType
   >;
+  id?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   name?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -15320,6 +15509,33 @@ export type MutationResolvers<
     ResolversTypes["PruneInAppNotificationAdminResult"],
     ParentType,
     ContextType
+  >;
+  adminLicensePolicyCreateCredentialRule?: Resolver<
+    ResolversTypes["LicensingCredentialBasedPolicyCredentialRule"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      MutationAdminLicensePolicyCreateCredentialRuleArgs,
+      "createData"
+    >
+  >;
+  adminLicensePolicyDeleteCredentialRule?: Resolver<
+    ResolversTypes["LicensingCredentialBasedPolicyCredentialRule"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      MutationAdminLicensePolicyDeleteCredentialRuleArgs,
+      "deleteData"
+    >
+  >;
+  adminLicensePolicyUpdateCredentialRule?: Resolver<
+    ResolversTypes["LicensingCredentialBasedPolicyCredentialRule"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      MutationAdminLicensePolicyUpdateCredentialRuleArgs,
+      "updateData"
+    >
   >;
   adminSearchIngestFromScratch?: Resolver<
     ResolversTypes["String"],
@@ -17069,6 +17285,176 @@ export type ProfileCredentialVerifiedResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type PromptGraphResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["PromptGraph"] = ResolversParentTypes["PromptGraph"]
+> = {
+  edges?: Resolver<
+    Maybe<Array<ResolversTypes["PromptGraphEdge"]>>,
+    ParentType,
+    ContextType
+  >;
+  end?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  nodes?: Resolver<
+    Maybe<Array<ResolversTypes["PromptGraphNode"]>>,
+    ParentType,
+    ContextType
+  >;
+  start?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  state?: Resolver<
+    Maybe<ResolversTypes["PromptGraphDataStruct"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type PromptGraphDataPointResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["PromptGraphDataPoint"] = ResolversParentTypes["PromptGraphDataPoint"]
+> = {
+  description?: Resolver<
+    Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
+  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  optional?: Resolver<
+    Maybe<ResolversTypes["Boolean"]>,
+    ParentType,
+    ContextType
+  >;
+  type?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type PromptGraphDataStructResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["PromptGraphDataStruct"] = ResolversParentTypes["PromptGraphDataStruct"]
+> = {
+  properties?: Resolver<
+    Maybe<Array<ResolversTypes["PromptGraphDataPoint"]>>,
+    ParentType,
+    ContextType
+  >;
+  title?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  type?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type PromptGraphDefinitionResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["PromptGraphDefinition"] = ResolversParentTypes["PromptGraphDefinition"]
+> = {
+  edges?: Resolver<
+    Maybe<Array<ResolversTypes["PromptGraphDefinitionEdge"]>>,
+    ParentType,
+    ContextType
+  >;
+  end?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  nodes?: Resolver<
+    Maybe<Array<ResolversTypes["PromptGraphDefinitionNode"]>>,
+    ParentType,
+    ContextType
+  >;
+  start?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  state?: Resolver<
+    Maybe<ResolversTypes["PromptGraphDefinitionDataStruct"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type PromptGraphDefinitionDataPointResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["PromptGraphDefinitionDataPoint"] = ResolversParentTypes["PromptGraphDefinitionDataPoint"]
+> = {
+  description?: Resolver<
+    Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
+  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  optional?: Resolver<
+    Maybe<ResolversTypes["Boolean"]>,
+    ParentType,
+    ContextType
+  >;
+  type?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type PromptGraphDefinitionDataStructResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["PromptGraphDefinitionDataStruct"] = ResolversParentTypes["PromptGraphDefinitionDataStruct"]
+> = {
+  properties?: Resolver<
+    Maybe<Array<ResolversTypes["PromptGraphDefinitionDataPoint"]>>,
+    ParentType,
+    ContextType
+  >;
+  title?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  type?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type PromptGraphDefinitionEdgeResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["PromptGraphDefinitionEdge"] = ResolversParentTypes["PromptGraphDefinitionEdge"]
+> = {
+  from?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  to?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type PromptGraphDefinitionNodeResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["PromptGraphDefinitionNode"] = ResolversParentTypes["PromptGraphDefinitionNode"]
+> = {
+  input_variables?: Resolver<
+    Maybe<Array<ResolversTypes["String"]>>,
+    ParentType,
+    ContextType
+  >;
+  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  output?: Resolver<
+    Maybe<ResolversTypes["PromptGraphDefinitionDataStruct"]>,
+    ParentType,
+    ContextType
+  >;
+  prompt?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type PromptGraphEdgeResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["PromptGraphEdge"] = ResolversParentTypes["PromptGraphEdge"]
+> = {
+  from?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  to?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type PromptGraphNodeResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["PromptGraphNode"] = ResolversParentTypes["PromptGraphNode"]
+> = {
+  input_variables?: Resolver<
+    Maybe<Array<ResolversTypes["String"]>>,
+    ParentType,
+    ContextType
+  >;
+  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  output?: Resolver<
+    Maybe<ResolversTypes["PromptGraphDataStruct"]>,
+    ParentType,
+    ContextType
+  >;
+  prompt?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type PruneInAppNotificationAdminResultResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["PruneInAppNotificationAdminResult"] = ResolversParentTypes["PruneInAppNotificationAdminResult"]
@@ -18068,6 +18454,11 @@ export type SpaceSettingsCollaborationResolvers<
     ContextType
   >;
   allowMembersToCreateSubspaces?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
+  allowMembersToVideoCall?: Resolver<
     ResolversTypes["Boolean"],
     ParentType,
     ContextType
@@ -19103,11 +19494,6 @@ export type UserSettingsNotificationUserResolvers<
     ParentType,
     ContextType
   >;
-  copyOfMessageSent?: Resolver<
-    ResolversTypes["UserSettingsNotificationChannels"],
-    ParentType,
-    ContextType
-  >;
   membership?: Resolver<
     ResolversTypes["UserSettingsNotificationUserMembership"],
     ParentType,
@@ -19130,11 +19516,6 @@ export type UserSettingsNotificationUserMembershipResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["UserSettingsNotificationUserMembership"] = ResolversParentTypes["UserSettingsNotificationUserMembership"]
 > = {
-  spaceCommunityApplicationSubmitted?: Resolver<
-    ResolversTypes["UserSettingsNotificationChannels"],
-    ParentType,
-    ContextType
-  >;
   spaceCommunityInvitationReceived?: Resolver<
     ResolversTypes["UserSettingsNotificationChannels"],
     ParentType,
@@ -19231,7 +19612,11 @@ export type VirtualContributorResolvers<
 > = {
   account?: Resolver<Maybe<ResolversTypes["Account"]>, ParentType, ContextType>;
   agent?: Resolver<ResolversTypes["Agent"], ParentType, ContextType>;
-  aiPersona?: Resolver<ResolversTypes["AiPersona"], ParentType, ContextType>;
+  aiPersona?: Resolver<
+    Maybe<ResolversTypes["AiPersona"]>,
+    ParentType,
+    ContextType
+  >;
   authorization?: Resolver<
     Maybe<ResolversTypes["Authorization"]>,
     ParentType,
@@ -19279,6 +19664,11 @@ export type VirtualContributorResolvers<
   >;
   nameID?: Resolver<ResolversTypes["NameID"], ParentType, ContextType>;
   profile?: Resolver<ResolversTypes["Profile"], ParentType, ContextType>;
+  promptGraphDefinition?: Resolver<
+    Maybe<ResolversTypes["PromptGraphDefinition"]>,
+    ParentType,
+    ContextType
+  >;
   provider?: Resolver<ResolversTypes["Contributor"], ParentType, ContextType>;
   searchVisibility?: Resolver<
     ResolversTypes["SearchVisibility"],
@@ -19666,6 +20056,16 @@ export type Resolvers<ContextType = any> = {
   Post?: PostResolvers<ContextType>;
   Profile?: ProfileResolvers<ContextType>;
   ProfileCredentialVerified?: ProfileCredentialVerifiedResolvers<ContextType>;
+  PromptGraph?: PromptGraphResolvers<ContextType>;
+  PromptGraphDataPoint?: PromptGraphDataPointResolvers<ContextType>;
+  PromptGraphDataStruct?: PromptGraphDataStructResolvers<ContextType>;
+  PromptGraphDefinition?: PromptGraphDefinitionResolvers<ContextType>;
+  PromptGraphDefinitionDataPoint?: PromptGraphDefinitionDataPointResolvers<ContextType>;
+  PromptGraphDefinitionDataStruct?: PromptGraphDefinitionDataStructResolvers<ContextType>;
+  PromptGraphDefinitionEdge?: PromptGraphDefinitionEdgeResolvers<ContextType>;
+  PromptGraphDefinitionNode?: PromptGraphDefinitionNodeResolvers<ContextType>;
+  PromptGraphEdge?: PromptGraphEdgeResolvers<ContextType>;
+  PromptGraphNode?: PromptGraphNodeResolvers<ContextType>;
   PruneInAppNotificationAdminResult?: PruneInAppNotificationAdminResultResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   Question?: QuestionResolvers<ContextType>;
@@ -27265,6 +27665,7 @@ export type SettingsDataFragment = {
     allowMembersToCreateSubspaces: boolean;
     inheritMembershipRights: boolean;
     allowEventsFromSubspaces: boolean;
+    allowMembersToVideoCall: boolean;
   };
 };
 
@@ -42747,6 +43148,7 @@ export type SpaceDataFragment = {
       allowMembersToCreateSubspaces: boolean;
       inheritMembershipRights: boolean;
       allowEventsFromSubspaces: boolean;
+      allowMembersToVideoCall: boolean;
     };
   };
   templatesManager?:
@@ -47281,11 +47683,6 @@ export type UserDataFragment = {
             email: boolean;
             inApp: boolean;
           };
-          spaceCommunityApplicationSubmitted: {
-            __typename: "UserSettingsNotificationChannels";
-            email: boolean;
-            inApp: boolean;
-          };
         };
         mentioned: {
           __typename: "UserSettingsNotificationChannels";
@@ -47298,11 +47695,6 @@ export type UserDataFragment = {
           inApp: boolean;
         };
         messageReceived: {
-          __typename: "UserSettingsNotificationChannels";
-          email: boolean;
-          inApp: boolean;
-        };
-        copyOfMessageSent: {
           __typename: "UserSettingsNotificationChannels";
           email: boolean;
           inApp: boolean;
@@ -47465,11 +47857,6 @@ export type UserSettingsFragmentFragment = {
           email: boolean;
           inApp: boolean;
         };
-        spaceCommunityApplicationSubmitted: {
-          __typename: "UserSettingsNotificationChannels";
-          email: boolean;
-          inApp: boolean;
-        };
       };
       mentioned: {
         __typename: "UserSettingsNotificationChannels";
@@ -47482,11 +47869,6 @@ export type UserSettingsFragmentFragment = {
         inApp: boolean;
       };
       messageReceived: {
-        __typename: "UserSettingsNotificationChannels";
-        email: boolean;
-        inApp: boolean;
-      };
-      copyOfMessageSent: {
         __typename: "UserSettingsNotificationChannels";
         email: boolean;
         inApp: boolean;
@@ -48416,11 +48798,6 @@ export type AssignRoleToUserMutation = {
               email: boolean;
               inApp: boolean;
             };
-            spaceCommunityApplicationSubmitted: {
-              __typename: "UserSettingsNotificationChannels";
-              email: boolean;
-              inApp: boolean;
-            };
           };
           mentioned: {
             __typename: "UserSettingsNotificationChannels";
@@ -48433,11 +48810,6 @@ export type AssignRoleToUserMutation = {
             inApp: boolean;
           };
           messageReceived: {
-            __typename: "UserSettingsNotificationChannels";
-            email: boolean;
-            inApp: boolean;
-          };
-          copyOfMessageSent: {
             __typename: "UserSettingsNotificationChannels";
             email: boolean;
             inApp: boolean;
@@ -48883,11 +49255,6 @@ export type AssignRoleToUserExtendedDataMutation = {
               email: boolean;
               inApp: boolean;
             };
-            spaceCommunityApplicationSubmitted: {
-              __typename: "UserSettingsNotificationChannels";
-              email: boolean;
-              inApp: boolean;
-            };
           };
           mentioned: {
             __typename: "UserSettingsNotificationChannels";
@@ -48900,11 +49267,6 @@ export type AssignRoleToUserExtendedDataMutation = {
             inApp: boolean;
           };
           messageReceived: {
-            __typename: "UserSettingsNotificationChannels";
-            email: boolean;
-            inApp: boolean;
-          };
-          copyOfMessageSent: {
             __typename: "UserSettingsNotificationChannels";
             email: boolean;
             inApp: boolean;
@@ -50031,11 +50393,6 @@ export type RemoveRoleFromUserMutation = {
               email: boolean;
               inApp: boolean;
             };
-            spaceCommunityApplicationSubmitted: {
-              __typename: "UserSettingsNotificationChannels";
-              email: boolean;
-              inApp: boolean;
-            };
           };
           mentioned: {
             __typename: "UserSettingsNotificationChannels";
@@ -50048,11 +50405,6 @@ export type RemoveRoleFromUserMutation = {
             inApp: boolean;
           };
           messageReceived: {
-            __typename: "UserSettingsNotificationChannels";
-            email: boolean;
-            inApp: boolean;
-          };
-          copyOfMessageSent: {
             __typename: "UserSettingsNotificationChannels";
             email: boolean;
             inApp: boolean;
@@ -50498,11 +50850,6 @@ export type RemoveRoleFromUserExtendedDataMutation = {
               email: boolean;
               inApp: boolean;
             };
-            spaceCommunityApplicationSubmitted: {
-              __typename: "UserSettingsNotificationChannels";
-              email: boolean;
-              inApp: boolean;
-            };
           };
           mentioned: {
             __typename: "UserSettingsNotificationChannels";
@@ -50515,11 +50862,6 @@ export type RemoveRoleFromUserExtendedDataMutation = {
             inApp: boolean;
           };
           messageReceived: {
-            __typename: "UserSettingsNotificationChannels";
-            email: boolean;
-            inApp: boolean;
-          };
-          copyOfMessageSent: {
             __typename: "UserSettingsNotificationChannels";
             email: boolean;
             inApp: boolean;
@@ -58309,6 +58651,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
         allowMembersToCreateSubspaces: boolean;
         inheritMembershipRights: boolean;
         allowEventsFromSubspaces: boolean;
+        allowMembersToVideoCall: boolean;
       };
     };
     templatesManager?:
@@ -64331,6 +64674,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
         allowMembersToCreateSubspaces: boolean;
         inheritMembershipRights: boolean;
         allowEventsFromSubspaces: boolean;
+        allowMembersToVideoCall: boolean;
       };
     };
     templatesManager?:
@@ -70371,6 +70715,7 @@ export type UpdateSpaceMutation = {
         allowMembersToCreateSubspaces: boolean;
         inheritMembershipRights: boolean;
         allowEventsFromSubspaces: boolean;
+        allowMembersToVideoCall: boolean;
       };
     };
     templatesManager?:
@@ -82629,6 +82974,7 @@ export type UpdateSpaceSettingsMutation = {
         allowMembersToCreateSubspaces: boolean;
         inheritMembershipRights: boolean;
         allowEventsFromSubspaces: boolean;
+        allowMembersToVideoCall: boolean;
       };
     };
   };
@@ -83395,11 +83741,6 @@ export type CreateUserMutation = {
               email: boolean;
               inApp: boolean;
             };
-            spaceCommunityApplicationSubmitted: {
-              __typename: "UserSettingsNotificationChannels";
-              email: boolean;
-              inApp: boolean;
-            };
           };
           mentioned: {
             __typename: "UserSettingsNotificationChannels";
@@ -83412,11 +83753,6 @@ export type CreateUserMutation = {
             inApp: boolean;
           };
           messageReceived: {
-            __typename: "UserSettingsNotificationChannels";
-            email: boolean;
-            inApp: boolean;
-          };
-          copyOfMessageSent: {
             __typename: "UserSettingsNotificationChannels";
             email: boolean;
             inApp: boolean;
@@ -83862,11 +84198,6 @@ export type CreateUserNewRegistrationMutation = {
               email: boolean;
               inApp: boolean;
             };
-            spaceCommunityApplicationSubmitted: {
-              __typename: "UserSettingsNotificationChannels";
-              email: boolean;
-              inApp: boolean;
-            };
           };
           mentioned: {
             __typename: "UserSettingsNotificationChannels";
@@ -83879,11 +84210,6 @@ export type CreateUserNewRegistrationMutation = {
             inApp: boolean;
           };
           messageReceived: {
-            __typename: "UserSettingsNotificationChannels";
-            email: boolean;
-            inApp: boolean;
-          };
-          copyOfMessageSent: {
             __typename: "UserSettingsNotificationChannels";
             email: boolean;
             inApp: boolean;
@@ -84335,11 +84661,6 @@ export type UpdateUserMutation = {
               email: boolean;
               inApp: boolean;
             };
-            spaceCommunityApplicationSubmitted: {
-              __typename: "UserSettingsNotificationChannels";
-              email: boolean;
-              inApp: boolean;
-            };
           };
           mentioned: {
             __typename: "UserSettingsNotificationChannels";
@@ -84352,11 +84673,6 @@ export type UpdateUserMutation = {
             inApp: boolean;
           };
           messageReceived: {
-            __typename: "UserSettingsNotificationChannels";
-            email: boolean;
-            inApp: boolean;
-          };
-          copyOfMessageSent: {
             __typename: "UserSettingsNotificationChannels";
             email: boolean;
             inApp: boolean;
@@ -84516,11 +84832,6 @@ export type UpdateUserSettingsMutation = {
               email: boolean;
               inApp: boolean;
             };
-            spaceCommunityApplicationSubmitted: {
-              __typename: "UserSettingsNotificationChannels";
-              email: boolean;
-              inApp: boolean;
-            };
           };
           mentioned: {
             __typename: "UserSettingsNotificationChannels";
@@ -84533,11 +84844,6 @@ export type UpdateUserSettingsMutation = {
             inApp: boolean;
           };
           messageReceived: {
-            __typename: "UserSettingsNotificationChannels";
-            email: boolean;
-            inApp: boolean;
-          };
-          copyOfMessageSent: {
             __typename: "UserSettingsNotificationChannels";
             email: boolean;
             inApp: boolean;
@@ -84586,7 +84892,7 @@ export type CreateVirtualContributorOnAccountMutation = {
     __typename: "VirtualContributor";
     id: string;
     profile: { __typename: "Profile"; id: string; url: string };
-    aiPersona: { engine: AiPersonaEngine };
+    aiPersona?: { engine: AiPersonaEngine } | undefined;
     knowledgeBase: {
       __typename: "KnowledgeBase";
       id: string;
@@ -96885,11 +97191,6 @@ export type UsersPaginatedQuery = {
                 email: boolean;
                 inApp: boolean;
               };
-              spaceCommunityApplicationSubmitted: {
-                __typename: "UserSettingsNotificationChannels";
-                email: boolean;
-                inApp: boolean;
-              };
             };
             mentioned: {
               __typename: "UserSettingsNotificationChannels";
@@ -96902,11 +97203,6 @@ export type UsersPaginatedQuery = {
               inApp: boolean;
             };
             messageReceived: {
-              __typename: "UserSettingsNotificationChannels";
-              email: boolean;
-              inApp: boolean;
-            };
-            copyOfMessageSent: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -103039,6 +103335,7 @@ export type GetSpaceDataQuery = {
               allowMembersToCreateSubspaces: boolean;
               inheritMembershipRights: boolean;
               allowEventsFromSubspaces: boolean;
+              allowMembersToVideoCall: boolean;
             };
           };
           templatesManager?:
@@ -118275,11 +118572,6 @@ export type GetUserDataQuery = {
               email: boolean;
               inApp: boolean;
             };
-            spaceCommunityApplicationSubmitted: {
-              __typename: "UserSettingsNotificationChannels";
-              email: boolean;
-              inApp: boolean;
-            };
           };
           mentioned: {
             __typename: "UserSettingsNotificationChannels";
@@ -118292,11 +118584,6 @@ export type GetUserDataQuery = {
             inApp: boolean;
           };
           messageReceived: {
-            __typename: "UserSettingsNotificationChannels";
-            email: boolean;
-            inApp: boolean;
-          };
-          copyOfMessageSent: {
             __typename: "UserSettingsNotificationChannels";
             email: boolean;
             inApp: boolean;
@@ -118760,11 +119047,6 @@ export type GetUsersDataQuery = {
               email: boolean;
               inApp: boolean;
             };
-            spaceCommunityApplicationSubmitted: {
-              __typename: "UserSettingsNotificationChannels";
-              email: boolean;
-              inApp: boolean;
-            };
           };
           mentioned: {
             __typename: "UserSettingsNotificationChannels";
@@ -118777,11 +119059,6 @@ export type GetUsersDataQuery = {
             inApp: boolean;
           };
           messageReceived: {
-            __typename: "UserSettingsNotificationChannels";
-            email: boolean;
-            inApp: boolean;
-          };
-          copyOfMessageSent: {
             __typename: "UserSettingsNotificationChannels";
             email: boolean;
             inApp: boolean;
@@ -119232,7 +119509,7 @@ export type VirtualContributorQuery = {
                     | undefined;
                 };
               };
-          aiPersona: { id: string; engine: AiPersonaEngine };
+          aiPersona?: { id: string; engine: AiPersonaEngine } | undefined;
           profile: {
             __typename: "Profile";
             id: string;

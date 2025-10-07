@@ -210,9 +210,8 @@ export const updateSpaceSettings = async (
       allowMembersToCreateSubspaces?: boolean;
       inheritMembershipRights?: boolean;
       allowEventsFromSubspaces?: boolean;
+      allowMembersToVideoCall?: boolean;
     };
-    //},
-    // },
   },
 
   userRole: TestUser = TestUser.GLOBAL_ADMIN
@@ -251,6 +250,8 @@ export const updateSpaceSettings = async (
                 settings?.collaboration?.inheritMembershipRights ?? true,
               allowEventsFromSubspaces:
                 settings?.collaboration?.allowEventsFromSubspaces || true,
+              allowMembersToVideoCall:
+                settings?.collaboration?.allowMembersToVideoCall ?? true,
             },
           }, // Add an empty object for the settings property
         },

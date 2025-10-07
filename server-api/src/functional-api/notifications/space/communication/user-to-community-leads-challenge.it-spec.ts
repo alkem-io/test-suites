@@ -20,32 +20,31 @@ import { updateUserSettings } from '@functional-api/contributor-management/user/
 import { SpacePrivacyMode } from '@alkemio/client-lib';
 import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import { notif } from '../../notification.helpers';
 
 // Notification settings for communication message events
 const communicationMessageNotificationSettings = {
   notification: {
     space: {
       admin: {
-        communityApplicationReceived: false,
-        communityNewMember: false,
-        collaborationCalloutContributionCreated: false,
-        communicationMessageReceived: true,
+        communityApplicationReceived: notif(false),
+        communityNewMember: notif(false),
+        collaborationCalloutContributionCreated: notif(false),
+        communicationMessageReceived: notif(true),
       },
-      collaborationCalloutPublished: false,
-      communicationUpdates: false,
-      collaborationCalloutPostContributionComment: false,
-      collaborationCalloutContributionCreated: false,
-      collaborationCalloutComment: false,
+      collaborationCalloutPublished: notif(false),
+      communicationUpdates: notif(false),
+      collaborationCalloutPostContributionComment: notif(false),
+      collaborationCalloutContributionCreated: notif(false),
+      collaborationCalloutComment: notif(false),
     },
     user: {
-      commentReply: false,
-      mentioned: false,
-      messageReceived: true,
-      copyOfMessageSent: true,
+      commentReply: notif(false),
+      mentioned: notif(false),
+      messageReceived: notif(true),
       membership: {
-        spaceCommunityApplicationSubmitted: false,
-        spaceCommunityInvitationReceived: false,
-        spaceCommunityJoined: false,
+        spaceCommunityInvitationReceived: notif(false),
+        spaceCommunityJoined: notif(false),
       },
     },
   },
@@ -61,10 +60,6 @@ const enableCommunicationMessageNotifications = async (userIds: string[]) => {
 };
 
 let usersList: string[] = [];
-
-const senders = (communityName: string) => {
-  return `You have sent a message to ${communityName} community`;
-};
 
 const receivers = (senderDisplayName: string) => {
   return `${senderDisplayName} sent a message to your community`;
@@ -161,8 +156,7 @@ describe('Notifications - send messages to Private Space, Public Subspace Commun
     await deleteMailSlurperMails();
   });
 
-  // ToDo: fix test
-  test('NOT space member sends message to Subspace community (2 User Leads, 1 Org Lead) - 3 messages sent', async () => {
+  test('NOT space member sends message to Subspace community (2 User Leads, 1 Org Lead) - 2 messages sent', async () => {
     // Act
     await sendMessageToCommunityLeads(
       baseScenario.subspace.community.id,
@@ -174,7 +168,7 @@ describe('Notifications - send messages to Private Space, Public Subspace Commun
     const getEmailsData = await getMailsData();
 
     // Assert
-    expect(getEmailsData[1]).toEqual(3);
+    expect(getEmailsData[1]).toEqual(2);
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -185,15 +179,11 @@ describe('Notifications - send messages to Private Space, Public Subspace Commun
           subject: receivers(TestUserManager.users.nonSpaceMember.displayName),
           toAddresses: [TestUserManager.users.subspaceMember.email],
         }),
-        expect.objectContaining({
-          subject: senders(baseScenario.subspace.about.profile.displayName),
-          toAddresses: [TestUserManager.users.nonSpaceMember.email],
-        }),
       ])
     );
   });
 
-  test('Space member send message to Subspace community (2 User Leads, 1 Org Lead) - 3 messages sent', async () => {
+  test('Space member send message to Subspace community (2 User Leads, 1 Org Lead) - 2 messages sent', async () => {
     // Act
     await sendMessageToCommunityLeads(
       baseScenario.subspace.community.id,
@@ -205,7 +195,7 @@ describe('Notifications - send messages to Private Space, Public Subspace Commun
     const getEmailsData = await getMailsData();
 
     // Assert
-    expect(getEmailsData[1]).toEqual(3);
+    expect(getEmailsData[1]).toEqual(2);
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -219,10 +209,6 @@ describe('Notifications - send messages to Private Space, Public Subspace Commun
             TestUserManager.users.subsubspaceMember.displayName
           ),
           toAddresses: [TestUserManager.users.subspaceMember.email],
-        }),
-        expect.objectContaining({
-          subject: senders(baseScenario.subspace.about.profile.displayName),
-          toAddresses: [TestUserManager.users.subsubspaceMember.email],
         }),
       ])
     );
@@ -242,7 +228,7 @@ describe('Notifications - send messages to Private Space, Private Subspace Commu
     await deleteMailSlurperMails();
   });
 
-  test('NOT space member sends message to Subspace community (2 User Leads, 1 Org Lead) - 3 messages sent', async () => {
+  test('NOT space member sends message to Subspace community (2 User Leads, 1 Org Lead) - 2 messages sent', async () => {
     // Act
     await sendMessageToCommunityLeads(
       baseScenario.subspace.community.id,
@@ -254,7 +240,7 @@ describe('Notifications - send messages to Private Space, Private Subspace Commu
     const getEmailsData = await getMailsData();
 
     // Assert
-    expect(getEmailsData[1]).toEqual(3);
+    expect(getEmailsData[1]).toEqual(2);
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -265,15 +251,11 @@ describe('Notifications - send messages to Private Space, Private Subspace Commu
           subject: receivers(TestUserManager.users.nonSpaceMember.displayName),
           toAddresses: [TestUserManager.users.subspaceMember.email],
         }),
-        expect.objectContaining({
-          subject: senders(baseScenario.subspace.about.profile.displayName),
-          toAddresses: [TestUserManager.users.nonSpaceMember.email],
-        }),
       ])
     );
   });
 
-  test('Subspace member send message to Subspace community (2 User Leads, 1 Org Lead) - 3 messages sent', async () => {
+  test('Subspace member send message to Subspace community (2 User Leads, 1 Org Lead) - 2 messages sent', async () => {
     // Act
     await sendMessageToCommunityLeads(
       baseScenario.subspace.community.id,
@@ -285,7 +267,7 @@ describe('Notifications - send messages to Private Space, Private Subspace Commu
     const getEmailsData = await getMailsData();
 
     // Assert
-    expect(getEmailsData[1]).toEqual(3);
+    expect(getEmailsData[1]).toEqual(2);
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -299,10 +281,6 @@ describe('Notifications - send messages to Private Space, Private Subspace Commu
             TestUserManager.users.subsubspaceMember.displayName
           ),
           toAddresses: [TestUserManager.users.subspaceMember.email],
-        }),
-        expect.objectContaining({
-          subject: senders(baseScenario.subspace.about.profile.displayName),
-          toAddresses: [TestUserManager.users.subsubspaceMember.email],
         }),
       ])
     );
@@ -352,14 +330,6 @@ describe('Notifications - send messages to Private Space, Public Subspace NO Com
     const getEmailsData = await getMailsData();
 
     // Assert
-    expect(getEmailsData[1]).toEqual(1);
-    expect(getEmailsData[0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: senders(baseScenario.subspace.about.profile.displayName),
-          toAddresses: [TestUserManager.users.nonSpaceMember.email],
-        }),
-      ])
-    );
+    expect(getEmailsData[1]).toEqual(0);
   });
 });

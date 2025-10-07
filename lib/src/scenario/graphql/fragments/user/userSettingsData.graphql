@@ -121,11 +121,11 @@ fragment userSettingsFragment on UserSettings {
           inApp
           __typename
         }
-        spaceCommunityApplicationSubmitted {
-          email
-          inApp
-          __typename
-        }
+        # spaceCommunityApplicationSubmitted {
+        #   email
+        #   inApp
+        #   __typename
+        # }
         __typename
       }
       mentioned {
@@ -143,11 +143,11 @@ fragment userSettingsFragment on UserSettings {
         inApp
         __typename
       }
-      copyOfMessageSent {
-        email
-        inApp
-        __typename
-      }
+      # copyOfMessageSent {
+      #   email
+      #   inApp
+      #   __typename
+      # }
       __typename
     }
     virtualContributor {
