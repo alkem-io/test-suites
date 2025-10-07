@@ -959,6 +959,8 @@ export type Callout = {
   contributionDefaults: CalloutContributionDefaults;
   /** The Contributions that have been made to this Callout. */
   contributions: Array<CalloutContribution>;
+  /** The Contributions that have been made to this Callout. */
+  contributionsCount: CalloutContributionsCountOutput;
   /** The user that created this Callout */
   createdBy?: Maybe<User>;
   /** The date at which the entity was created. */
@@ -986,8 +988,8 @@ export type Callout = {
 };
 
 export type CalloutContributionsArgs = {
-  IDs?: InputMaybe<Array<Scalars["UUID"]["input"]>>;
-  limit?: InputMaybe<Scalars["Float"]["input"]>;
+  filter?: InputMaybe<ContributionsFilterInput>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
   shuffle?: InputMaybe<Scalars["Boolean"]["input"]>;
 };
 
@@ -1035,9 +1037,21 @@ export type CalloutContributionDefaults = {
 
 export enum CalloutContributionType {
   Link = "LINK",
+  Memo = "MEMO",
   Post = "POST",
   Whiteboard = "WHITEBOARD",
 }
+
+export type CalloutContributionsCountOutput = {
+  /** The number of contributions of type Link in this callout */
+  link: Scalars["Float"]["output"];
+  /** The number of contributions of type Memo in this callout */
+  memo: Scalars["Float"]["output"];
+  /** The number of contributions of type Post in this callout */
+  post: Scalars["Float"]["output"];
+  /** The number of contributions of type Whiteboard in this callout */
+  whiteboard: Scalars["Float"]["output"];
+};
 
 export type CalloutFraming = {
   /** The authorization rules for the entity */
@@ -1445,6 +1459,13 @@ export enum ContentUpdatePolicy {
   Owner = "OWNER",
 }
 
+export type ContributionsFilterInput = {
+  /** The IDs of the Contributions to return. If omitted return all. */
+  IDs?: InputMaybe<Array<Scalars["UUID"]["input"]>>;
+  /** The contributions types to return. If omitted return all. */
+  types?: InputMaybe<Array<CalloutContributionType>>;
+};
+
 export type Contributor = {
   /** The Agent for the Contributor. */
   agent: Agent;
@@ -1545,9 +1566,11 @@ export type CreateCalendarEventOnCalendarInput = {
 
 export type CreateCalloutContributionData = {
   link?: Maybe<CreateLinkData>;
+  memo?: Maybe<CreateMemoData>;
   post?: Maybe<CreatePostData>;
   /** The sort order to assign to this Contribution. */
   sortOrder?: Maybe<Scalars["Float"]["output"]>;
+  type: CalloutContributionType;
   whiteboard?: Maybe<CreateWhiteboardData>;
 };
 
@@ -1569,9 +1592,11 @@ export type CreateCalloutContributionDefaultsInput = {
 
 export type CreateCalloutContributionInput = {
   link?: InputMaybe<CreateLinkInput>;
+  memo?: InputMaybe<CreateMemoInput>;
   post?: InputMaybe<CreatePostInput>;
   /** The sort order to assign to this Contribution. */
   sortOrder?: InputMaybe<Scalars["Float"]["input"]>;
+  type: CalloutContributionType;
   whiteboard?: InputMaybe<CreateWhiteboardInput>;
 };
 
@@ -1741,9 +1766,11 @@ export type CreateCommunityGuidelinesInput = {
 export type CreateContributionOnCalloutInput = {
   calloutID: Scalars["UUID"]["input"];
   link?: InputMaybe<CreateLinkInput>;
+  memo?: InputMaybe<CreateMemoInput>;
   post?: InputMaybe<CreatePostInput>;
   /** The sort order to assign to this Contribution. */
   sortOrder?: InputMaybe<Scalars["Float"]["input"]>;
+  type: CalloutContributionType;
   whiteboard?: InputMaybe<CreateWhiteboardInput>;
 };
 
@@ -2260,6 +2287,10 @@ export type DeleteCalendarEventInput = {
 };
 
 export type DeleteCalloutInput = {
+  ID: Scalars["UUID"]["input"];
+};
+
+export type DeleteContributionInput = {
   ID: Scalars["UUID"]["input"];
 };
 
@@ -3550,6 +3581,8 @@ export type LookupQueryResults = {
   community?: Maybe<Community>;
   /** Lookup the specified Community guidelines */
   communityGuidelines?: Maybe<CommunityGuidelines>;
+  /** Lookup the specified CalloutContribution */
+  contribution?: Maybe<CalloutContribution>;
   /** Lookup the specified Document */
   document?: Maybe<Document>;
   /** Lookup the specified InnovationFlow */
@@ -3648,6 +3681,10 @@ export type LookupQueryResultsCommunityArgs = {
 };
 
 export type LookupQueryResultsCommunityGuidelinesArgs = {
+  ID: Scalars["UUID"]["input"];
+};
+
+export type LookupQueryResultsContributionArgs = {
   ID: Scalars["UUID"]["input"];
 };
 
@@ -4543,7 +4580,7 @@ export type MutationDeleteCalloutArgs = {
 };
 
 export type MutationDeleteContributionArgs = {
-  contributionID: Scalars["String"]["input"];
+  deleteData: DeleteContributionInput;
 };
 
 export type MutationDeleteDiscussionArgs = {
@@ -5021,7 +5058,6 @@ export enum NotificationEvent {
   SpaceCollaborationCalloutContribution = "SPACE_COLLABORATION_CALLOUT_CONTRIBUTION",
   SpaceCollaborationCalloutPostContributionComment = "SPACE_COLLABORATION_CALLOUT_POST_CONTRIBUTION_COMMENT",
   SpaceCollaborationCalloutPublished = "SPACE_COLLABORATION_CALLOUT_PUBLISHED",
-  SpaceCommunicationMessageSender = "SPACE_COMMUNICATION_MESSAGE_SENDER",
   SpaceCommunicationUpdate = "SPACE_COMMUNICATION_UPDATE",
   SpaceCommunityInvitationUserPlatform = "SPACE_COMMUNITY_INVITATION_USER_PLATFORM",
   SpaceLeadCommunicationMessage = "SPACE_LEAD_COMMUNICATION_MESSAGE",
@@ -8276,7 +8312,7 @@ export type VirtualContributor = Contributor & {
   /** Description of the body of knowledge for this VC. */
   bodyOfKnowledgeDescription?: Maybe<Scalars["Markdown"]["output"]>;
   /** The ID of the body of knowledge used by this Virtual Contributor. */
-  bodyOfKnowledgeID: Scalars["UUID"]["output"];
+  bodyOfKnowledgeID?: Maybe<Scalars["UUID"]["output"]>;
   /** The type of body of knowledge used by this Virtual Contributor. */
   bodyOfKnowledgeType: VirtualContributorBodyOfKnowledgeType;
   /** The date at which the entity was created. */
@@ -9087,6 +9123,7 @@ export type ResolversTypes = {
   >;
   CalloutContributionDefaults: ResolverTypeWrapper<CalloutContributionDefaults>;
   CalloutContributionType: CalloutContributionType;
+  CalloutContributionsCountOutput: ResolverTypeWrapper<CalloutContributionsCountOutput>;
   CalloutFraming: ResolverTypeWrapper<
     Omit<CalloutFraming, "link" | "memo" | "profile" | "whiteboard"> & {
       link?: Maybe<ResolversTypes["Link"]>;
@@ -9185,6 +9222,7 @@ export type ResolversTypes = {
     }
   >;
   ContentUpdatePolicy: ContentUpdatePolicy;
+  ContributionsFilterInput: ContributionsFilterInput;
   Contributor: ResolverTypeWrapper<
     ResolversInterfaceTypes<ResolversTypes>["Contributor"]
   >;
@@ -9280,6 +9318,7 @@ export type ResolversTypes = {
   DeleteApplicationInput: DeleteApplicationInput;
   DeleteCalendarEventInput: DeleteCalendarEventInput;
   DeleteCalloutInput: DeleteCalloutInput;
+  DeleteContributionInput: DeleteContributionInput;
   DeleteDiscussionInput: DeleteDiscussionInput;
   DeleteDocumentInput: DeleteDocumentInput;
   DeleteInnovationHubInput: DeleteInnovationHubInput;
@@ -9586,6 +9625,7 @@ export type ResolversTypes = {
       | "collaboration"
       | "community"
       | "communityGuidelines"
+      | "contribution"
       | "document"
       | "innovationFlow"
       | "innovationHub"
@@ -9619,6 +9659,7 @@ export type ResolversTypes = {
       collaboration?: Maybe<ResolversTypes["Collaboration"]>;
       community?: Maybe<ResolversTypes["Community"]>;
       communityGuidelines?: Maybe<ResolversTypes["CommunityGuidelines"]>;
+      contribution?: Maybe<ResolversTypes["CalloutContribution"]>;
       document?: Maybe<ResolversTypes["Document"]>;
       innovationFlow?: Maybe<ResolversTypes["InnovationFlow"]>;
       innovationHub?: Maybe<ResolversTypes["InnovationHub"]>;
@@ -10567,6 +10608,7 @@ export type ResolversParentTypes = {
     whiteboard?: Maybe<ResolversParentTypes["Whiteboard"]>;
   };
   CalloutContributionDefaults: CalloutContributionDefaults;
+  CalloutContributionsCountOutput: CalloutContributionsCountOutput;
   CalloutFraming: Omit<
     CalloutFraming,
     "link" | "memo" | "profile" | "whiteboard"
@@ -10651,6 +10693,7 @@ export type ResolversParentTypes = {
   Config: Omit<Config, "authentication"> & {
     authentication: ResolversParentTypes["AuthenticationConfig"];
   };
+  ContributionsFilterInput: ContributionsFilterInput;
   Contributor: ResolversInterfaceTypes<ResolversParentTypes>["Contributor"];
   ContributorFilterInput: ContributorFilterInput;
   ContributorRolePolicy: ContributorRolePolicy;
@@ -10743,6 +10786,7 @@ export type ResolversParentTypes = {
   DeleteApplicationInput: DeleteApplicationInput;
   DeleteCalendarEventInput: DeleteCalendarEventInput;
   DeleteCalloutInput: DeleteCalloutInput;
+  DeleteContributionInput: DeleteContributionInput;
   DeleteDiscussionInput: DeleteDiscussionInput;
   DeleteDocumentInput: DeleteDocumentInput;
   DeleteInnovationHubInput: DeleteInnovationHubInput;
@@ -10988,6 +11032,7 @@ export type ResolversParentTypes = {
     | "collaboration"
     | "community"
     | "communityGuidelines"
+    | "contribution"
     | "document"
     | "innovationFlow"
     | "innovationHub"
@@ -11021,6 +11066,7 @@ export type ResolversParentTypes = {
     collaboration?: Maybe<ResolversParentTypes["Collaboration"]>;
     community?: Maybe<ResolversParentTypes["Community"]>;
     communityGuidelines?: Maybe<ResolversParentTypes["CommunityGuidelines"]>;
+    contribution?: Maybe<ResolversParentTypes["CalloutContribution"]>;
     document?: Maybe<ResolversParentTypes["Document"]>;
     innovationFlow?: Maybe<ResolversParentTypes["InnovationFlow"]>;
     innovationHub?: Maybe<ResolversParentTypes["InnovationHub"]>;
@@ -12453,6 +12499,11 @@ export type CalloutResolvers<
     ContextType,
     Partial<CalloutContributionsArgs>
   >;
+  contributionsCount?: Resolver<
+    ResolversTypes["CalloutContributionsCountOutput"],
+    ParentType,
+    ContextType
+  >;
   createdBy?: Resolver<Maybe<ResolversTypes["User"]>, ParentType, ContextType>;
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   framing?: Resolver<ResolversTypes["CalloutFraming"], ParentType, ContextType>;
@@ -12530,6 +12581,17 @@ export type CalloutContributionDefaultsResolvers<
     ParentType,
     ContextType
   >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CalloutContributionsCountOutputResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CalloutContributionsCountOutput"] = ResolversParentTypes["CalloutContributionsCountOutput"]
+> = {
+  link?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  memo?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  post?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  whiteboard?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -13036,12 +13098,22 @@ export type CreateCalloutContributionDataResolvers<
     ParentType,
     ContextType
   >;
+  memo?: Resolver<
+    Maybe<ResolversTypes["CreateMemoData"]>,
+    ParentType,
+    ContextType
+  >;
   post?: Resolver<
     Maybe<ResolversTypes["CreatePostData"]>,
     ParentType,
     ContextType
   >;
   sortOrder?: Resolver<Maybe<ResolversTypes["Float"]>, ParentType, ContextType>;
+  type?: Resolver<
+    ResolversTypes["CalloutContributionType"],
+    ParentType,
+    ContextType
+  >;
   whiteboard?: Resolver<
     Maybe<ResolversTypes["CreateWhiteboardData"]>,
     ParentType,
@@ -15070,6 +15142,12 @@ export type LookupQueryResultsResolvers<
     ContextType,
     RequireFields<LookupQueryResultsCommunityGuidelinesArgs, "ID">
   >;
+  contribution?: Resolver<
+    Maybe<ResolversTypes["CalloutContribution"]>,
+    ParentType,
+    ContextType,
+    RequireFields<LookupQueryResultsContributionArgs, "ID">
+  >;
   document?: Resolver<
     Maybe<ResolversTypes["Document"]>,
     ParentType,
@@ -15911,7 +15989,7 @@ export type MutationResolvers<
     ResolversTypes["CalloutContribution"],
     ParentType,
     ContextType,
-    RequireFields<MutationDeleteContributionArgs, "contributionID">
+    RequireFields<MutationDeleteContributionArgs, "deleteData">
   >;
   deleteDiscussion?: Resolver<
     ResolversTypes["Discussion"],
@@ -19627,7 +19705,11 @@ export type VirtualContributorResolvers<
     ParentType,
     ContextType
   >;
-  bodyOfKnowledgeID?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  bodyOfKnowledgeID?: Resolver<
+    Maybe<ResolversTypes["UUID"]>,
+    ParentType,
+    ContextType
+  >;
   bodyOfKnowledgeType?: Resolver<
     ResolversTypes["VirtualContributorBodyOfKnowledgeType"],
     ParentType,
@@ -19893,6 +19975,7 @@ export type Resolvers<ContextType = any> = {
   Callout?: CalloutResolvers<ContextType>;
   CalloutContribution?: CalloutContributionResolvers<ContextType>;
   CalloutContributionDefaults?: CalloutContributionDefaultsResolvers<ContextType>;
+  CalloutContributionsCountOutput?: CalloutContributionsCountOutputResolvers<ContextType>;
   CalloutFraming?: CalloutFramingResolvers<ContextType>;
   CalloutPostCreated?: CalloutPostCreatedResolvers<ContextType>;
   CalloutSettings?: CalloutSettingsResolvers<ContextType>;
@@ -119212,7 +119295,7 @@ export type GetVirtualContributorWithModelCardQuery = {
           searchVisibility: SearchVisibility;
           listedInStore: boolean;
           status: VirtualContributorStatus;
-          bodyOfKnowledgeID: string;
+          bodyOfKnowledgeID?: string | undefined;
           bodyOfKnowledgeType: VirtualContributorBodyOfKnowledgeType;
           bodyOfKnowledgeDescription?: any | undefined;
           authorization?:
@@ -119303,7 +119386,7 @@ export type VirtualContributorQuery = {
           searchVisibility: SearchVisibility;
           listedInStore: boolean;
           status: VirtualContributorStatus;
-          bodyOfKnowledgeID: string;
+          bodyOfKnowledgeID?: string | undefined;
           bodyOfKnowledgeType: VirtualContributorBodyOfKnowledgeType;
           bodyOfKnowledgeDescription?: any | undefined;
           authorization?:

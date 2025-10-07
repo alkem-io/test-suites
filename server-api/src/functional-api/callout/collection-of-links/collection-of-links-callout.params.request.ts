@@ -51,6 +51,7 @@ export const createLinkOnCallout = async (
       {
         contributionData: {
           calloutID,
+          type: CalloutContributionType.Link,
           link: {
             profile: {
               displayName: 'Link Callout reference name',
