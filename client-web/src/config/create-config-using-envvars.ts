@@ -28,7 +28,8 @@ export const createConfigUsingEnvVars = (): AlkemioTestConfig => {
     },
     identities: {
       admin: {
-        email: '',
+        // Email for the admin / test harness user used in UI authentication helpers
+        email: process.env.AUTH_TEST_HARNESS_EMAIL || 'admin@alkem.io',
         password: process.env.AUTH_TEST_HARNESS_PASSWORD ?? 'not set',
       },
     },
