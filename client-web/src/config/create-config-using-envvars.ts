@@ -41,7 +41,8 @@ export const stringifyConfig = (config: AlkemioTestConfig): string => {
   const fieldsToMask = ['password'];
   return JSON.stringify(
     config,
-    (key, value) => (fieldsToMask.includes(key) ? `**${value.length}**` : value),
+    (key, value) =>
+      fieldsToMask.includes(key) ? `**${value.length}**` : value,
     2 // Indentation for pretty output
   );
 };
