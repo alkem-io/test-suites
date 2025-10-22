@@ -31,18 +31,18 @@
 
 _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
-The following MUST be satisfied (derived from Constitution v2.0.0):
+The following MUST be satisfied (derived from Constitution v2.1.0):
 
 1. Requirements Numbering: All functional/non-functional requirements are sequential `R-###`.
 2. Traceability: No orphan requirements (each mapped in tasks) and no orphan tasks (each references ≥1 `R-###`).
-3. API Coverage Plan: For server features already implemented, enumerate endpoints under scope with planned coverage depth (smoke → contract → edge). Internal harness utilities (factories/helpers) MAY use test-first; not required at API layer.
+3. GraphQL Operation Coverage Plan: List Queries/Mutations (and Subscriptions if any) in scope with intended categories (SMOKE|SCHEMA|NEGATIVE|EDGE|SEC|PERF) and risk levels. New HIGH risk operations/fields must have SMOKE coverage scheduled (≤5 days).
 4. Independence: Each user story describes an independent testable slice (MVP viable alone).
-5. Stability & Determinism: Environment setup documents seed data strategy, isolation of test accounts, and handling of non-deterministic fields via invariant assertions; randomness seeded.
+5. Stability & Determinism: Environment setup documents seed data strategy, isolation of test accounts, non-deterministic field handling via invariant assertions, and schema hash capture (SHA256 of `schema.graphql`) per run; randomness seeded.
 6. Observability: Plan lists report artifacts (e.g., Playwright HTML under `html-report/`) and retention (≥30 latest runs).
 7. Quickstart Prep: `quickstart.md` deliverable identified with minimal end-to-end scenario before IMPLEMENTING phase.
-8. Versioning: Any planned breaking contract change includes migration note + semantic version bump rationale.
+8. Contract Drift Response: Planned breaking schema change upstream references task(s) here capturing test impact & remediation path.
 9. Simplicity Justification: Any added dependency or complex pattern has an entry in Complexity Tracking table if non-trivial.
-10. Accessibility (client-web flows): P1 UI story includes at least one accessibility assertion placeholder.
+10. Accessibility (client-web flows): P1 UI story includes at least one accessibility assertion placeholder (unchanged).
 11. Security & Data: Test data isolation/reset strategy documented; no secrets committed.
 12. Signed Commits: Acknowledgment that all implementation commits will be signed (enforced at PR review).
 13. Flaky Test Protocol: Plan states quarantine path (`@flaky` tag + remediation task) if instability arises.

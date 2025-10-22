@@ -1,21 +1,20 @@
 <!--
 Sync Impact Report
-Version Change: 1.0.0 → 2.0.0 (MAJOR: Principle II redefined, Principle III adjusted to reflect real API harness constraints)
+Version Change: 2.0.0 → 2.1.0 (MINOR: GraphQL-specific governance & coverage artifacts added; Principle II specialized, no removal)
 Modified Principles:
-	II. "Test-First & Independent Story Verification" → "Post-Implementation API Coverage & Progressive Hardening"
-	III. "Deterministic, Idempotent, Isolated Tests" → "Stable Environments & Controlled Determinism"
-Added Guidance: Clarified API vs internal utility testing strategy; introduced stability env requirements; clarified data seeding.
-Removed Requirements: Mandatory test-first for API layer (now conditional for internal harness utilities only).
+  II. "Post-Implementation API Coverage & Progressive Hardening" → "GraphQL Schema Contract & Operation Coverage Governance"
+Added Sections: Appendix A: GraphQL Coverage Artifacts
+Removed Sections: None
 Templates Requiring Updates:
-	- .specify/templates/plan-template.md ✅ (Gate #3 updated: API Coverage Plan replaces Test-First)
-	- .specify/templates/spec-template.md ⚠ (Add note: API coverage added post-implementation – keep R-### numbering)
-	- .specify/templates/tasks-template.md ⚠ (No wording change; ensure tasks can represent coverage additions)
-Deferred TODOs: None
+  - .specify/templates/plan-template.md ✅ (Endpoint language → GraphQL operations; coverage gates updated)
+  - .specify/templates/spec-template.md ⚠ (Optional note: specs referencing API endpoints SHOULD instead reference GraphQL operations & schema elements)
+  - .specify/templates/tasks-template.md ⚠ (Consider adding operation IDs in task descriptions; not mandatory—left unchanged)
+Follow-up TODOs: None
 -->
 
 Status: APPROVED
 Spec-ID: CONSTITUTION
-Spec-Version: 2.0.0
+Spec-Version: 2.1.0
 Last-Updated: 2025-10-22
 Owner: valentin@alkem.io
 
@@ -31,17 +30,20 @@ once APPROVED. Tasks (`T-###`) MUST reference at least one requirement; no orpha
 requirements or tasks. Any scope change requires spec version increment and impact analysis.
 Rationale: Ensures auditability, prevents silent scope drift, and enables deterministic QA.
 
-### II. Post-Implementation API Coverage & Progressive Hardening
+### II. GraphQL Schema Contract & Operation Coverage Governance
 
-For Alkemio server features, primary implementation occurs in the server repository first.
-The test harness introduces API coverage AFTER endpoint behavior exists. Initial coverage
-MUST prioritize: (a) high-risk endpoints (auth, data integrity), (b) recently changed
-contracts, (c) regression-prone flows. Internal harness utilities (data factories,
-normalizers) SHOULD follow test-first (TDD) to keep abstraction lean.
-Progressive Hardening: Each iteration SHOULD elevate coverage depth: smoke → contract →
-behavioral → edge. Coverage debt MUST be tracked with tasks referencing `R-###`.
-Rationale: Reflects actual delivery order while still enforcing disciplined expansion of
-quality safeguards.
+The harness validates the external `alkem-io/server` GraphQL contract. Implementation of
+features happens upstream; this repository adds post-implementation assurance.
+
+Contract Source of Truth: - Canonical snapshot: `schema.graphql` (sourced from server repo commit) hashed (SHA256) → `schemaHash`. - Change artifacts (produced upstream): `change-report.json`, `deprecations.json` (NOT committed here; referenced for risk targeting when available).
+
+Operation Coverage Manifest (future optional artifact): - File: `coverage/operation-coverage.yaml` storing list of exercised Queries, Mutations, Subscriptions. - Fields: operation name, type (QUERY|MUTATION|SUBSCRIPTION), risk (HIGH|MEDIUM|LOW), categories (SMOKE|SCHEMA|NEGATIVE|EDGE|PERF|SEC), lastTestedCommit.
+
+Minimum Governance Rules: 1. New GraphQL field or operation of HIGH risk (auth, data mutation, permission boundary) MUST gain SMOKE coverage within 5 calendar days of detection. 2. Any BREAKING or PREMATURE_REMOVAL classification upstream MUST trigger a tracking task (`T-###`) referencing governing requirement (`R-###`). 3. Deprecation lifecycle (REMOVE_AFTER date) compliance MAY be asserted indirectly—tests MUST avoid relying on fields marked for removal beyond their schedule. 4. Coverage debt past grace creates a blocking task before adding unrelated new coverage. 5. Internal harness utilities (data factories, stable seed orchestration) SHOULD be test-first to constrain complexity; GraphQL operation tests are post-implementation.
+
+Scope of Assertions: - Prefer invariant assertions (non-null fields, list lengths, auth enforcement) over volatile values. - Avoid overspecifying full deep response trees—assert only contract-relevant nodes.
+
+Rationale: Tailors contract assurance to a GraphQL-first system where schema diffs & governance live in another repository while enabling incremental, risk-prioritized validation here.
 
 ### III. Stable Environments & Controlled Determinism
 
@@ -113,4 +115,25 @@ Drift Detection: `/analyze` phase MUST flag unmapped `R-###` or unreferenced `T-
 IMPLEMENTING. Breaking contract changes REQUIRE migration notes under `contracts/`.
 Deprecation: Mark principle as DEPRECATED with rationale & migration path; retain history.
 Audit: Quarterly review ensures observability artifacts retention and dependency pruning.
-**Version**: 2.0.0 | **Ratified**: 2025-10-22 | **Last Amended**: 2025-10-22
+
+## Appendix A: GraphQL Coverage Artifacts
+
+Artifacts (present or planned) supporting Principle II:
+| Artifact | Location | Commit Policy | Purpose |
+|----------|----------|---------------|---------|
+| schema.graphql | (external server repo) | Committed upstream | Canonical contract snapshot |
+| schemaHash (SHA256) | (captured in test logs or manifest) | Ephemeral | Trace test run to schema version |
+| operation-coverage.yaml (optional) | coverage/ | Committed | Track which operations & risk classes covered |
+| gap-report.json (optional) | coverage/ (CI artifact) | Ephemeral | Identifies newly added operations lacking coverage |
+| flakiness-log.json | reports/ (CI artifact) | Ephemeral | Surfaces quarantined tests & timestamps |
+
+Classification Mapping Guidance:
+| Classification (upstream) | Harness Response |
+|---------------------------|------------------|
+| BREAKING / PREMATURE_REMOVAL | Create blocking task + evaluate need for compensating tests |
+| INVALID_DEPRECATION_FORMAT | Raise issue upstream (not fixable here) |
+| DEPRECATION_GRACE | Monitor; schedule removal of dependent assertions |
+| DEPRECATED | Start planning removal from tests before REMOVE_AFTER |
+| ADDITIVE | Schedule SMOKE coverage if risk=HIGH |
+
+**Version**: 2.1.0 | **Ratified**: 2025-10-22 | **Last Amended**: 2025-10-22
