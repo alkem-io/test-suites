@@ -31,20 +31,19 @@
 
 _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
-The following MUST be satisfied (derived from Constitution v3.0.0):
+The following MUST be satisfied (derived from Constitution v4.0.0):
 
 1. Requirements Numbering: All functional/non-functional requirements are sequential `R-###`.
 2. Traceability: No orphan requirements (each mapped in tasks) and no orphan tasks (each references ≥1 `R-###`).
-3. GraphQL Operation Coverage Plan: List Queries/Mutations (and Subscriptions if any) in scope with intended categories (SMOKE|SCHEMA|NEGATIVE|EDGE|SEC|PERF) and risk levels. New HIGH risk operations/fields must have SMOKE coverage scheduled (≤5 days).
-4. Independence: Each user story describes an independent testable slice (MVP viable alone).
-5. Stability & Determinism: Environment setup documents seed data strategy, isolation of test accounts, non-deterministic field handling via invariant assertions, and schema hash capture (SHA256 of `schema.graphql`) per run; randomness seeded.
-6. Observability: Plan lists report artifacts (e.g., Playwright HTML under `html-report/`) and retention (≥30 latest runs).
-7. Quickstart Prep: `quickstart.md` deliverable identified with minimal end-to-end scenario before IMPLEMENTING phase.
-8. Contract Drift Response: Planned breaking schema change upstream references task(s) here capturing test impact & remediation path.
-9. Simplicity Justification: Any added dependency or complex pattern has an entry in Complexity Tracking table if non-trivial.
-10. Security & Data: Test data isolation/reset strategy documented; no secrets committed.
-11. Signed Commits: Acknowledgment that all implementation commits will be signed (enforced at PR review).
-12. Flaky Test Protocol: Plan states quarantine path (`@flaky` tag + remediation task) if instability arises.
+3. Independence: Each user story describes an independent testable slice (MVP viable alone).
+4. Stability & Determinism: Environment setup documents seed data strategy, isolation of test accounts, non-deterministic field handling via invariant assertions, and schema hash capture (SHA256 of `schema.graphql`) per run; randomness seeded.
+5. Observability: Plan lists report artifacts (e.g., Playwright HTML under `html-report/`) and retention (≥30 latest runs).
+6. Quickstart Prep: `quickstart.md` deliverable identified with minimal end-to-end scenario before IMPLEMENTING phase.
+7. Contract Drift Response: Planned breaking schema change upstream references task(s) here capturing test impact & remediation path.
+8. Simplicity Justification: Any added dependency or complex pattern has an entry in Complexity Tracking table if non-trivial.
+9. Security & Data: Test data isolation/reset strategy documented; no secrets committed.
+10. Signed Commits: Acknowledgment that all implementation commits will be signed (enforced at PR review).
+11. Flaky Test Protocol: Plan states quarantine path (`@flaky` tag + remediation task) if instability arises.
 
 Failure to meet any MUST blocks advancement. "SHOULD" guidelines may proceed with documented rationale in Complexity Tracking.
 

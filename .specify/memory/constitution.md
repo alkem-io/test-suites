@@ -1,21 +1,22 @@
 <!--
 Sync Impact Report
-Version Change: 2.1.0 → 3.0.0 (MAJOR: Removal of mandatory Accessibility & Reliability gates)
-Modified Principles: None
-Removed Quality Gates:
-  - Accessibility (client-web tests) mandatory assertion requirement
-  - Reliability CI failure threshold (>2 consecutive runs) escalation rule
+Version Change: 3.0.1 → 4.0.0 (MAJOR: Removal of mandatory high-risk operation coverage SLA & grace debt concept)
+Modified Principles:
+  - II: Removed "Minimum Governance Rule" requiring HIGH risk operation SMOKE coverage ≤5 days and grace/debt blocking rule.
+Removed Governance Rules:
+  - High risk classification based scheduling requirement
+  - Coverage debt grace blocking rule
 Added Sections: None
 Templates Requiring Updates:
-  - .specify/templates/plan-template.md ⚠ (Remove Accessibility gate reference if present)
-  - .specify/templates/spec-template.md ✅ (No dependency on removed gates)
-  - .specify/templates/tasks-template.md ✅ (Unaffected)
-Follow-up TODOs: Update plan template gating list to drop Accessibility reference (separate patch applied if accepted)
+  - .specify/templates/plan-template.md ⚠ (Remove risk-level + SLA text in Gate 3)
+  - .specify/templates/spec-template.md ✅ (No dependency on removed SLA)
+  - .specify/templates/tasks-template.md ✅
+Follow-up TODOs: None
 -->
 
 Status: APPROVED
 Spec-ID: CONSTITUTION
-Spec-Version: 2.1.0
+Spec-Version: 4.0.0
 Last-Updated: 2025-10-22
 Owner: valentin@alkem.io
 
@@ -38,9 +39,7 @@ features happens upstream; this repository adds post-implementation assurance.
 
 Contract Source of Truth: - Canonical snapshot: `schema.graphql` (sourced from server repo commit) hashed (SHA256) → `schemaHash`. - Change artifacts (produced upstream): `change-report.json`, `deprecations.json` (NOT committed here; referenced for risk targeting when available).
 
-Operation Coverage Manifest (future optional artifact): - File: `coverage/operation-coverage.yaml` storing list of exercised Queries, Mutations, Subscriptions. - Fields: operation name, type (QUERY|MUTATION|SUBSCRIPTION), risk (HIGH|MEDIUM|LOW), categories (SMOKE|SCHEMA|NEGATIVE|EDGE|PERF|SEC), lastTestedCommit.
-
-Minimum Governance Rules: 1. New GraphQL field or operation of HIGH risk (auth, data mutation, permission boundary) MUST gain SMOKE coverage within 5 calendar days of detection. 2. Any BREAKING or PREMATURE_REMOVAL classification upstream MUST trigger a tracking task (`T-###`) referencing governing requirement (`R-###`). 3. Deprecation lifecycle (REMOVE_AFTER date) compliance MAY be asserted indirectly—tests MUST avoid relying on fields marked for removal beyond their schedule. 4. Coverage debt past grace creates a blocking task before adding unrelated new coverage. 5. Internal harness utilities (data factories, stable seed orchestration) SHOULD be test-first to constrain complexity; GraphQL operation tests are post-implementation.
+Minimum Governance Rules: 1. Any BREAKING or PREMATURE_REMOVAL classification upstream MUST trigger a tracking task (`T-###`) referencing governing requirement (`R-###`). 2. Deprecation lifecycle (REMOVE_AFTER date) compliance MAY be asserted indirectly—tests MUST avoid relying on fields marked for removal beyond their schedule. 3. Internal harness utilities (data factories, stable seed orchestration) SHOULD be test-first to constrain complexity; GraphQL operation tests are post-implementation.
 
 Scope of Assertions: - Prefer invariant assertions (non-null fields, list lengths, auth enforcement) over volatile values. - Avoid overspecifying full deep response trees—assert only contract-relevant nodes.
 
@@ -134,4 +133,4 @@ Classification Mapping Guidance:
 | DEPRECATED | Start planning removal from tests before REMOVE_AFTER |
 | ADDITIVE | Schedule SMOKE coverage if risk=HIGH |
 
-**Version**: 3.0.0 | **Ratified**: 2025-10-22 | **Last Amended**: 2025-10-22
+**Version**: 4.0.0 | **Ratified**: 2025-10-22 | **Last Amended**: 2025-10-22
