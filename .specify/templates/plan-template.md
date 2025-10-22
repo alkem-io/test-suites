@@ -31,7 +31,7 @@
 
 _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
-The following MUST be satisfied (derived from Constitution v2.1.0):
+The following MUST be satisfied (derived from Constitution v3.0.0):
 
 1. Requirements Numbering: All functional/non-functional requirements are sequential `R-###`.
 2. Traceability: No orphan requirements (each mapped in tasks) and no orphan tasks (each references ≥1 `R-###`).
@@ -42,10 +42,9 @@ The following MUST be satisfied (derived from Constitution v2.1.0):
 7. Quickstart Prep: `quickstart.md` deliverable identified with minimal end-to-end scenario before IMPLEMENTING phase.
 8. Contract Drift Response: Planned breaking schema change upstream references task(s) here capturing test impact & remediation path.
 9. Simplicity Justification: Any added dependency or complex pattern has an entry in Complexity Tracking table if non-trivial.
-10. Accessibility (client-web flows): P1 UI story includes at least one accessibility assertion placeholder (unchanged).
-11. Security & Data: Test data isolation/reset strategy documented; no secrets committed.
-12. Signed Commits: Acknowledgment that all implementation commits will be signed (enforced at PR review).
-13. Flaky Test Protocol: Plan states quarantine path (`@flaky` tag + remediation task) if instability arises.
+10. Security & Data: Test data isolation/reset strategy documented; no secrets committed.
+11. Signed Commits: Acknowledgment that all implementation commits will be signed (enforced at PR review).
+12. Flaky Test Protocol: Plan states quarantine path (`@flaky` tag + remediation task) if instability arises.
 
 Failure to meet any MUST blocks advancement. "SHOULD" guidelines may proceed with documented rationale in Complexity Tracking.
 
