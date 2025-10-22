@@ -28,12 +28,12 @@ test.describe('Space Test', () => {
 
   test('navigate to space', async ({ authenticatedPage }) => {
     // Use the authenticatedPage fixture which is already logged in
-    
+
     // Navigate to created space - this should now have data from the scenario
     const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
     await authenticatedPage.goto(baseUrl);
     await authenticatedPage.waitForLoadState('networkidle');
-    
+
     // Add your test assertions here
     await expect(authenticatedPage.locator('body')).toContainText('Welcome');
   });

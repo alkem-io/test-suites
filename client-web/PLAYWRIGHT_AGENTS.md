@@ -20,20 +20,26 @@ client-web/src/functional-e2e/
 ## Key Components
 
 ### 1. `fixtures.ts`
+
 Defines custom Playwright fixtures that provide:
+
 - **`authenticatedPage`**: A Page instance that's already logged in
 - **`authenticatedContext`**: A BrowserContext with authentication
 - **`scenarioData`**: Test scenario data (spaces, users, etc.) - scoped to worker
 
 ### 2. `seed.spec.ts`
+
 The main seed file that:
+
 - Imports test and expect from `./fixtures` (NOT from `@playwright/test`)
 - Uses the `authenticatedPage` fixture to provide an already-authenticated page
 - Sets up the initial state for AI-generated tests
 - This file will be copied by Playwright Agents into generated tests
 
 ### 3. Authentication Helpers
+
 Located in `authentication/auth-helpers.ts`:
+
 - `loginWithEnvCredentials()`: Logs in using environment variables
 - Uses credentials from `.env` file or test configuration
 
@@ -48,6 +54,7 @@ Located in `authentication/auth-helpers.ts`:
 ## Usage
 
 ### Running the Seed Test
+
 ```bash
 npm run test:auth-playwright -- seed.spec.ts
 ```
@@ -55,6 +62,7 @@ npm run test:auth-playwright -- seed.spec.ts
 ### Using Playwright Agents
 
 #### 1. Initialize Agents (if not done)
+
 ```bash
 npx playwright init-agents --loop vscode
 # or
@@ -62,19 +70,25 @@ npx playwright init-agents --loop claude
 ```
 
 #### 2. Generate Tests with Planner Agent
+
 ```bash
 npx playwright agent-planner
 ```
+
 The agent will:
+
 - Read your `seed.spec.ts` file
 - Understand the authentication and fixture setup
 - Create a test plan based on your application
 
 #### 3. Generate Test Code
+
 ```bash
 npx playwright agent-generator
 ```
+
 The generated tests will:
+
 - Import from `./fixtures`
 - Use the `authenticatedPage` fixture automatically
 - Have access to the scenario data
@@ -87,7 +101,7 @@ import { test, expect } from './fixtures';
 test('my test', async ({ authenticatedPage, scenarioData }) => {
   // authenticatedPage is already logged in
   await authenticatedPage.goto('/some-path');
-  
+
   // Your test logic here
   await expect(authenticatedPage.locator('h1')).toBeVisible();
 });
@@ -96,10 +110,12 @@ test('my test', async ({ authenticatedPage, scenarioData }) => {
 ## Important Notes
 
 ### ⚠️ One Seed File Only
+
 - You should have **only ONE** `seed.spec.ts` file at the root of your test directory
 - Other test files should have different names (e.g., `space-navigation.spec.ts`)
 
 ### ⚠️ Always Import from Fixtures
+
 ```typescript
 // ✅ Correct
 import { test, expect } from './fixtures';
@@ -109,6 +125,7 @@ import { test, expect } from '@playwright/test';
 ```
 
 ### ⚠️ Use Fixtures, Not Hooks
+
 ```typescript
 // ✅ Correct - Using fixture
 test('my test', async ({ authenticatedPage }) => {
@@ -124,6 +141,7 @@ test.beforeAll(async ({ page }) => {
 ## Environment Variables
 
 Required environment variables (set in `.env` file):
+
 ```env
 AUTH_TEST_HARNESS_EMAIL=your-email@example.com
 AUTH_TEST_HARNESS_PASSWORD=your-password
@@ -133,19 +151,25 @@ ALKEMIO_BASE_URL=http://localhost:3000
 ## Troubleshooting
 
 ### Agent-generated tests don't recognize authentication
+
 **Solution**: Ensure generated tests import from `./fixtures` instead of `@playwright/test`
 
 ### Multiple seed files causing confusion
+
 **Solution**: Keep only one `seed.spec.ts` at the test root (`src/functional-e2e/seed.spec.ts`)
 
 ### Tests fail with authentication errors
+
 **Solution**: Check that:
+
 1. Environment variables are set correctly
 2. The `loginWithEnvCredentials` function works
 3. Fixtures are being used in your tests
 
 ### Scenario data not available
+
 **Solution**: The `scenarioData` fixture runs once per worker. Make sure your test imports it:
+
 ```typescript
 test('my test', async ({ authenticatedPage, scenarioData }) => {
   // scenarioData is available here
