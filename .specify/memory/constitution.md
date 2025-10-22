@@ -1,15 +1,16 @@
 <!--
 Sync Impact Report
-Version Change: 2.0.0 → 2.1.0 (MINOR: GraphQL-specific governance & coverage artifacts added; Principle II specialized, no removal)
-Modified Principles:
-  II. "Post-Implementation API Coverage & Progressive Hardening" → "GraphQL Schema Contract & Operation Coverage Governance"
-Added Sections: Appendix A: GraphQL Coverage Artifacts
-Removed Sections: None
+Version Change: 2.1.0 → 3.0.0 (MAJOR: Removal of mandatory Accessibility & Reliability gates)
+Modified Principles: None
+Removed Quality Gates:
+  - Accessibility (client-web tests) mandatory assertion requirement
+  - Reliability CI failure threshold (>2 consecutive runs) escalation rule
+Added Sections: None
 Templates Requiring Updates:
-  - .specify/templates/plan-template.md ✅ (Endpoint language → GraphQL operations; coverage gates updated)
-  - .specify/templates/spec-template.md ⚠ (Optional note: specs referencing API endpoints SHOULD instead reference GraphQL operations & schema elements)
-  - .specify/templates/tasks-template.md ⚠ (Consider adding operation IDs in task descriptions; not mandatory—left unchanged)
-Follow-up TODOs: None
+  - .specify/templates/plan-template.md ⚠ (Remove Accessibility gate reference if present)
+  - .specify/templates/spec-template.md ✅ (No dependency on removed gates)
+  - .specify/templates/tasks-template.md ✅ (Unaffected)
+Follow-up TODOs: Update plan template gating list to drop Accessibility reference (separate patch applied if accepted)
 -->
 
 Status: APPROVED
@@ -81,9 +82,6 @@ single API validation; UI interaction scripts SHOULD keep p95 action <1500ms unl
 `[PERF-EXEMPT]` in spec.
 Security: Secrets MUST NOT be committed; environment variables loaded via secure runtime
 configuration. Sensitive fixtures MUST be masked.
-Accessibility (for client-web tests): Critical flows MUST include at least one accessibility
-assertion (contrast, ARIA landmark presence) for P1 stories.
-Reliability: CI failure threshold >2 consecutive runs triggers mandatory investigation task.
 Data Management: Test data MUST be reset or namespaced per run; no leakage across suites.
 Definition of Done (DoD): Requirements implemented, tests passing, quickstart validated,
 reports generated, and spec/tasks cross-reference clean.
@@ -136,4 +134,4 @@ Classification Mapping Guidance:
 | DEPRECATED | Start planning removal from tests before REMOVE_AFTER |
 | ADDITIVE | Schedule SMOKE coverage if risk=HIGH |
 
-**Version**: 2.1.0 | **Ratified**: 2025-10-22 | **Last Amended**: 2025-10-22
+**Version**: 3.0.0 | **Ratified**: 2025-10-22 | **Last Amended**: 2025-10-22
