@@ -1,21 +1,32 @@
 {
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "editor.formatOnSave": true,
-  "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "files.eol": "\n",
-  "cSpell.words": [
-    "alkem",
-    "Alkemio",
-    "codegen",
-    "kratos",
-    "mailslurper",
-    "NAMEID",
-    "roleset",
-    "subsubspace"
-  ]
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "[javascript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "files.eol": "\n",
+    "cSpell.words": [
+        "alkem",
+        "Alkemio",
+        "codegen",
+        "kratos",
+        "mailslurper",
+        "NAMEID",
+        "roleset",
+        "subsubspace"
+    ],
+    "chat.promptFilesRecommendations": {
+        "speckit.constitution": true,
+        "speckit.specify": true,
+        "speckit.plan": true,
+        "speckit.tasks": true,
+        "speckit.implement": true
+    },
+    "chat.tools.terminal.autoApprove": {
+        ".specify/scripts/bash/": true,
+        ".specify/scripts/powershell/": true
+    }
 }
