@@ -1,22 +1,18 @@
 <!--
 Sync Impact Report
-Version Change: 3.0.1 → 4.0.0 (MAJOR: Removal of mandatory high-risk operation coverage SLA & grace debt concept)
-Modified Principles:
-  - II: Removed "Minimum Governance Rule" requiring HIGH risk operation SMOKE coverage ≤5 days and grace/debt blocking rule.
-Removed Governance Rules:
-  - High risk classification based scheduling requirement
-  - Coverage debt grace blocking rule
+Version Change: 4.0.2 → 4.0.3 (PATCH: Removed unimplemented flakiness-log.json artifact & synced footer version)
+Modified Sections:
+  - Appendix A: Removed flakiness-log.json row (artifact not implemented; aligns with removal of @flaky protocol).
+  - Footer version string updated to 4.0.3 (previous mismatch after earlier edits).
 Added Sections: None
-Templates Requiring Updates:
-  - .specify/templates/plan-template.md ⚠ (Remove risk-level + SLA text in Gate 3)
-  - .specify/templates/spec-template.md ✅ (No dependency on removed SLA)
-  - .specify/templates/tasks-template.md ✅
+Templates Requiring Updates: None
+Behavioral Change: None (documentation minimization only)
 Follow-up TODOs: None
 -->
 
 Status: APPROVED
 Spec-ID: CONSTITUTION
-Spec-Version: 4.0.0
+Spec-Version: 4.0.3
 Last-Updated: 2025-10-22
 Owner: valentin@alkem.io
 
@@ -51,9 +47,9 @@ API tests MAY interact with a running Alkemio server instance; environment stabi
 achieved via: predictable seed data, isolated test accounts, and resettable states.
 Where full determinism is impossible (timestamps, distributed IDs), assertions MUST focus
 on invariant properties (status codes, schema shapes, required field presence) instead of
-volatile values. Randomness MUST be seeded when used for data generation. Flaky tests
-MUST be tagged `@flaky` and quarantined within 24h; environment instability root cause
-MUST be documented before re-enabling.
+volatile values. Randomness MUST be seeded when used for data generation. Recurrently
+unstable tests SHOULD be temporarily disabled and a remediation task created; broad retry
+inflation is discouraged.
 Rationale: Balances real integration fidelity with practical stability constraints of a
 live server dependency.
 
@@ -94,8 +90,9 @@ commits are REQUIRED. Test evidence (screenshot/report path) MUST be provided fo
 changed user story.
 Checklist Enforcement: Generated checklist MUST show zero orphan requirements and full
 acceptance criteria coverage before tasks generation.
-Quarantine Protocol: Flaky test identified → mark with `@flaky` tag → create remediation
-task referencing original requirement.
+
+<!-- Quarantine protocol removed: simplified to remediation task creation when instability persists -->
+
 Continuous Improvement: Monthly governance review updates Success Criteria enforcement and
 removes deprecated practices.
 
@@ -115,14 +112,11 @@ Audit: Quarterly review ensures observability artifacts retention and dependency
 
 ## Appendix A: GraphQL Coverage Artifacts
 
-Artifacts (present or planned) supporting Principle II:
+Artifacts (minimal) supporting Principle II:
 | Artifact | Location | Commit Policy | Purpose |
 |----------|----------|---------------|---------|
 | schema.graphql | (external server repo) | Committed upstream | Canonical contract snapshot |
-| schemaHash (SHA256) | (captured in test logs or manifest) | Ephemeral | Trace test run to schema version |
-| operation-coverage.yaml (optional) | coverage/ | Committed | Track which operations & risk classes covered |
-| gap-report.json (optional) | coverage/ (CI artifact) | Ephemeral | Identifies newly added operations lacking coverage |
-| flakiness-log.json | reports/ (CI artifact) | Ephemeral | Surfaces quarantined tests & timestamps |
+| schemaHash (SHA256) | test run logs | Ephemeral | Trace test run to schema version |
 
 Classification Mapping Guidance:
 | Classification (upstream) | Harness Response |
@@ -130,7 +124,6 @@ Classification Mapping Guidance:
 | BREAKING / PREMATURE_REMOVAL | Create blocking task + evaluate need for compensating tests |
 | INVALID_DEPRECATION_FORMAT | Raise issue upstream (not fixable here) |
 | DEPRECATION_GRACE | Monitor; schedule removal of dependent assertions |
-| DEPRECATED | Start planning removal from tests before REMOVE_AFTER |
-| ADDITIVE | Schedule SMOKE coverage if risk=HIGH |
+| DEPRECATED | Plan removal from tests before REMOVE_AFTER |
 
-**Version**: 4.0.0 | **Ratified**: 2025-10-22 | **Last Amended**: 2025-10-22
+**Version**: 4.0.3 | **Ratified**: 2025-10-22 | **Last Amended**: 2025-10-22

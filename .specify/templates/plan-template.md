@@ -31,7 +31,7 @@
 
 _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
-The following MUST be satisfied (derived from Constitution v4.0.0):
+The following MUST be satisfied (derived from Constitution v4.0.3):
 
 1. Requirements Numbering: All functional/non-functional requirements are sequential `R-###`.
 2. Traceability: No orphan requirements (each mapped in tasks) and no orphan tasks (each references ≥1 `R-###`).
@@ -40,10 +40,9 @@ The following MUST be satisfied (derived from Constitution v4.0.0):
 5. Observability: Plan lists report artifacts (e.g., Playwright HTML under `html-report/`) and retention (≥30 latest runs).
 6. Quickstart Prep: `quickstart.md` deliverable identified with minimal end-to-end scenario before IMPLEMENTING phase.
 7. Contract Drift Response: Planned breaking schema change upstream references task(s) here capturing test impact & remediation path.
-8. Simplicity Justification: Any added dependency or complex pattern has an entry in Complexity Tracking table if non-trivial.
-9. Security & Data: Test data isolation/reset strategy documented; no secrets committed.
-10. Signed Commits: Acknowledgment that all implementation commits will be signed (enforced at PR review).
-11. Flaky Test Protocol: Plan states quarantine path (`@flaky` tag + remediation task) if instability arises.
+8. Security & Data: Test data isolation/reset strategy documented; no secrets committed.
+9. Signed Commits: Acknowledgment that all implementation commits will be signed (enforced at PR review).
+10. (Removed in Constitution v4.0.2) Former flaky test tagging requirement eliminated; persistent instability still requires a remediation task.
 
 Failure to meet any MUST blocks advancement. "SHOULD" guidelines may proceed with documented rationale in Complexity Tracking.
 
