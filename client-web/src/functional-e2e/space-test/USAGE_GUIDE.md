@@ -52,7 +52,7 @@ Create or update your `.env` file:
 
 ```bash
 # Authentication credentials
-AUTH_TEST_HARNESS_EMAIL=admin@test.alkem.io
+AUTH_TEST_HARNESS_EMAIL=admin@alkem.io
 AUTH_TEST_HARNESS_PASSWORD=YourSecurePassword123!
 
 # Base URL for the application

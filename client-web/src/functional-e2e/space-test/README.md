@@ -109,7 +109,7 @@ Ensure these environment variables are set (typically in `.env` file):
 
 ```bash
 # Authentication
-AUTH_TEST_HARNESS_EMAIL=admin@test.com
+AUTH_TEST_HARNESS_EMAIL=admin@alkem.com
 AUTH_TEST_HARNESS_PASSWORD=your_password
 
 # Base URL

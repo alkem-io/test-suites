@@ -1,45 +1,39 @@
-import {
-  testConfiguration,
-  TestScenarioConfig,
-  TestScenarioFactory,
-  TestUser,
-} from '@alkemio/tests-lib';
-import { test, expect } from '@playwright/test';
-import { TabsPage } from './authentication/TabsPage';
-import { loginWithEnvCredentials } from './authentication/auth-helpers';
-const baseUrl = `${testConfiguration.endPoints.server}/`; //'https://dev-alkem.io/checkdefaultcallouts';
+import { testConfiguration } from '@alkemio/tests-lib';
+import { test, expect } from './fixtures';
 
-const scenarioConfig: TestScenarioConfig = {
-  name: 'check-playwright-agents',
-  space: {
-    collaboration: {
-      addPostCollectionCallout: true,
-      addTutorialCallouts: false,
-    },
-    community: {
-      admins: [TestUser.SPACE_ADMIN],
-    },
-  },
-};
+const baseUrl = `${testConfiguration.endPoints.server}/`;
 
-test.beforeAll(async ({ page }) => {
-  await TestScenarioFactory.createBaseScenarioEmpty(scenarioConfig);
-  console.log('Scenario setup completed');
-  await loginWithEnvCredentials(page, { verify: true });
-});
+/**
+ * This is the seed file for Playwright Agents.
+ * It sets up the initial state and authentication for AI-generated tests.
+ * 
+ * The fixtures.ts file handles:
+ * - Authentication (authenticatedPage fixture)
+ * - Scenario setup (scenarioData fixture)
+ * 
+ * This seed test will be copied into generated tests by the Playwright Agent.
+ */
+test.describe('Playwright Agents Seed', () => {
+  test('seed - authenticated user on home page', async ({ authenticatedPage, scenarioData }) => {
+    // The authenticatedPage fixture provides an already logged-in page
+    // The scenarioData fixture provides the test scenario with spaces and users
+    
+    // Navigate to the base URL
+    await authenticatedPage.goto(baseUrl);
+    await authenticatedPage.waitForLoadState('networkidle');
 
-test.describe('Test group', () => {
-  let tabsPage: TabsPage;
-
-  test.beforeEach(async ({ page }) => {
-    tabsPage = new TabsPage(page);
-    await page.goto(baseUrl);
-  });
-
-  test('seed', async ({ page }) => {
-    // Additional seeding steps can be added here after successful login.
-    // await expect(
-    //   page.getByRole('button', { name: 'Invitations' })
-    // ).toBeVisible();
+    // Verify authentication worked
+    await expect(authenticatedPage.locator('body')).toContainText('Welcome');
+    
+    // Add any additional setup or verification here that should be present
+    // for all generated tests
+    console.log('Seed completed - authenticated and ready for agent exploration');
+    console.log('Scenario data available:', !!scenarioData);
+    if (scenarioData) {
+      console.log('Scenario details:', {
+        type: typeof scenarioData,
+        keys: Object.keys(scenarioData || {}),
+      });
+    }
   });
 });
