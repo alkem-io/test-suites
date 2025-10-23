@@ -1,21 +1,3 @@
-<!--
-Sync Impact Report
-Version Change: 4.0.2 → 4.0.3 (PATCH: Removed unimplemented flakiness-log.json artifact & synced footer version)
-Modified Sections:
-  - Appendix A: Removed flakiness-log.json row (artifact not implemented; aligns with removal of @flaky protocol).
-  - Footer version string updated to 4.0.3 (previous mismatch after earlier edits).
-Added Sections: None
-Templates Requiring Updates: None
-Behavioral Change: None (documentation minimization only)
-Follow-up TODOs: None
--->
-
-Status: APPROVED
-Spec-ID: CONSTITUTION
-Spec-Version: 4.0.3
-Last-Updated: 2025-10-22
-Owner: valentin@alkem.io
-
 # Alkemio Test Suites Constitution
 
 ## Core Principles
