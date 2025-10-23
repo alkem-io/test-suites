@@ -5,13 +5,13 @@
 **Status**: Draft  
 **Input**: User description: "Add automated API tests covering cascade deletion and notification payload enrichment from PR #5493 (entity tracking FKs, contributorType resolution, new notification events, deletion by message ID)."
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 <!--
   IMPORTANT: User stories should be PRIORITIZED as user journeys ordered by importance.
   Each user story/journey must be INDEPENDENTLY TESTABLE - meaning if you implement just ONE of them,
   you should still have a viable MVP (Minimum Viable Product) that delivers value.
-  
+
   Assign priorities (P1, P2, P3, etc.) to each story, where P1 is the most critical.
   Think of each story as a standalone slice of functionality that can be:
   - Developed independently
@@ -46,6 +46,7 @@ Notifications must expose correct enriched payload fields (e.g., contributorType
 **Independent Test**: Trigger each new / modified notification type and assert returned payload fields match specification (presence, absence, types, normalized IDs).
 
 **Acceptance Scenarios**:
+
 1. **Given** a new contributor joins a space, **When** the notification is fetched, **Then** `contributorType` matches the actual entity (user, organization, virtual) and contributorID maps correctly.
 2. **Given** a post comment event originally storing postID, **When** notification is fetched, **Then** `contributionID` reflects the parent contribution ID not the postID.
 3. **Given** a communication update is published, **When** notifications are listed, **Then** the SPACE_COMMUNICATION_UPDATE payload contains a non-null `update` field.
@@ -63,6 +64,7 @@ Fields marked nullable vs non-null in enriched payloads must correspond to actua
 **Independent Test**: For a sample of legacy + new notifications, compare DB entity references (queried via API) to payload fields; for each payload type assert mandatory fields are present and optional fields absent where not applicable.
 
 **Acceptance Scenarios**:
+
 1. **Given** a SPACE_COLLABORATION_CALLOUT_COMMENT notification, **When** fetched, **Then** mandatory fields (calloutID, contributionID, messageID, roomID) are present and non-empty.
 2. **Given** a PLATFORM_FORUM_DISCUSSION notification without a comment, **When** fetched, **Then** `comment` sub-object is absent rather than null (or present with only expected fields) per contract.
 3. **Given** a legacy notification migrated with newly added FK columns, **When** FKs are inspected via notification detail query (or listing), **Then** each FK either resolves to an existing entity or the notification has been removed if entity was missing.
@@ -81,7 +83,7 @@ Fields marked nullable vs non-null in enriched payloads must correspond to actua
 - Migrated notification referencing a now-deleted entity should have been purged; test ensures absence rather than presence with null FK.
 - contributorType resolution throws for unknown type—should never occur; test asserts only allowed enum values appear.
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 <!--
   ACTION REQUIRED: The content in this section represents placeholders.
@@ -103,7 +105,7 @@ Fields marked nullable vs non-null in enriched payloads must correspond to actua
 
 No further clarifications required; defaults chosen based on migration intent and PR description (no [NEEDS CLARIFICATION] markers necessary).
 
-### Key Entities *(include if feature involves data)*
+### Key Entities _(include if feature involves data)_
 
 - **Notification**: Represents a user-targeted in-app event; key attributes: id, type (event), payload fields (vary by type), foreign key columns (spaceID, organizationID, userID, applicationID, invitationID, calloutID, contributionID, roomID, messageID (non-FK)), receiverID, timestamps.
 - **Space**: Collaboration container; deletion cascades to notifications referencing spaceID.
@@ -112,7 +114,7 @@ No further clarifications required; defaults chosen based on migration intent an
 - **Room/Message**: Communication channel/message; room deletion cascades; message deletion triggers manual removal via messageID.
 - **Contributor (User/Organization/Virtual)**: Entity joining community; contributorType captured and stored; deletion cascades through contributor-specific FK columns.
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 <!--
   ACTION REQUIRED: Define measurable success criteria.
