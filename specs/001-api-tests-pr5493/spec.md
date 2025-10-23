@@ -1,8 +1,8 @@
 # Feature Specification: Automated API Tests for Notification Cascade & Payload Enrichment (PR #5493)
 
-**Feature Branch**: `001-api-tests-pr5493`  
-**Created**: 2025-10-23  
-**Status**: Draft  
+**Feature Branch**: `001-api-tests-pr5493`
+**Created**: 2025-10-23
+**Status**: Draft
 **Input**: User description: "Add automated API tests covering cascade deletion and notification payload enrichment from PR #5493 (entity tracking FKs, contributorType resolution, new notification events, deletion by message ID)."
 
 ## User Scenarios & Testing _(mandatory)_
@@ -99,9 +99,9 @@ Fields marked nullable vs non-null in enriched payloads must correspond to actua
 - **FR-005**: Test suite MUST confirm contributionID normalization for post comment notifications (postID replaced by parent contributionID) by comparing expected ID mapping.
 - **FR-006**: Test suite MUST ensure nullability contracts: mandatory fields always present; optional fields omitted when not applicable across sampled notifications.
 - **FR-007**: Test suite MUST verify no orphan notifications remain after entity deletions: listing notifications for affected receiver returns none referencing deleted entity IDs.
-- **FR-008**: Test suite MUST sample legacy migrated notifications (if accessible via seed or fixture) to assert FK columns align with payload or notification absent if referenced entity missing.
-- **FR-009**: Test suite MUST differentiate deletion scopes: deleting a space should not remove platform-level global role or signup notifications for the user.
-- **FR-010**: Test suite MUST record baseline counts before deletion and assert delta equals number of notifications referencing deleted entity + messageID subset.
+- **FR-008**: Test suite MUST differentiate deletion scopes: deleting a space should not remove platform-level global role or signup notifications for the user.
+- **FR-009**: Test suite MUST record baseline counts before deletion and assert delta equals number of notifications referencing deleted entity + messageID subset.
+- **FR-010**: Legacy migrated notifications are excluded from scope; suite SHOULD focus solely on newly generated notifications (removed prior FR about legacy sampling).
 
 No further clarifications required; defaults chosen based on migration intent and PR description (no [NEEDS CLARIFICATION] markers necessary).
 
@@ -128,7 +128,7 @@ No further clarifications required; defaults chosen based on migration intent an
 - **SC-003**: contributorType accuracy rate is 100% across user, organization, virtual contributor creation scenarios.
 - **SC-004**: Post comment notification tests show 100% normalization: contributionID always equals parent contribution (never raw postID) for post comment events.
 - **SC-005**: Message deletion tests remove 100% of notifications referencing deleted messageID.
-- **SC-006**: Legacy migrated notifications sampled show 0 mismatched FK vs payload references or are absent if entity removed.
+- **SC-006 (Removed)**: Legacy migration validation excluded; scope narrowed to current runtime-generated notifications.
 
 ## Assumptions
 
@@ -156,3 +156,9 @@ No further clarifications required; defaults chosen based on migration intent an
 ## No Clarifications Needed
 
 All critical scope decisions inferred from PR description: cascade deletion list, payload enrichment fields, new events; no ambiguous choices significantly impacting user value.
+
+## Clarifications
+
+### Session 2025-10-23
+
+- Q: Should legacy migrated notifications be included in mandatory test scope? → A: Exclude legacy; focus on new notifications (Option C).
