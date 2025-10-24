@@ -89,4 +89,4 @@ Use the most specific MCP server before any generic one.
 #### Examples
 
 - “List open PRs in alkem-io/server” → **GitHub MCP**
-- “Summarize the governance model of Alkemio” → **Context7 MCP**, fallback to **Tavily**
+- "How do I use the useSWR hook with TypeScript in a Next.js application, specifically for data fetching with client-side caching and revalidation, according to the latest SWR documentation?" → Context7 MCP, fallback to Tavily
