@@ -9,7 +9,6 @@ reviews:
     - "**/*"
     - "!**/.github/workflows/*"
     - "!**/.specify/**"
-    - "!**/prompts/**"
   path_instructions:
     - path: "**/*"
       instructions: |
