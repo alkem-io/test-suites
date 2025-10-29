@@ -9,6 +9,7 @@ reviews:
     - "**/*"
     - "!**/.github/workflows/*"
     - "!**/.specify/**"
+    - "!**/.github/prompts/*" # Exclude Prompt files
   path_instructions:
     - path: "**/*"
       instructions: |
