@@ -31,7 +31,7 @@ export const sendMessageToUser = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.SendMessageToUser(
+    graphqlClient.sendMessageToUsers(
       {
         messageData: {
           receiverIds,

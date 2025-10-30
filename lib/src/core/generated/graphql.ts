@@ -871,7 +871,6 @@ export enum AuthorizationPrivilege {
   ReadUserSettings = "READ_USER_SETTINGS",
   ReceiveNotifications = "RECEIVE_NOTIFICATIONS",
   ReceiveNotificationsAdmin = "RECEIVE_NOTIFICATIONS_ADMIN",
-  ReceiveNotificationsInApp = "RECEIVE_NOTIFICATIONS_IN_APP",
   ReceiveNotificationsOrganizationAdmin = "RECEIVE_NOTIFICATIONS_ORGANIZATION_ADMIN",
   ReceiveNotificationsSpaceAdmin = "RECEIVE_NOTIFICATIONS_SPACE_ADMIN",
   ReceiveNotificationsSpaceLead = "RECEIVE_NOTIFICATIONS_SPACE_LEAD",
@@ -1284,15 +1283,6 @@ export type CommunicationAdminUpdateRoomStateInput = {
   roomID: Scalars["String"]["input"];
 };
 
-export type CommunicationRoom = {
-  /** The display name of the room */
-  displayName: Scalars["String"]["output"];
-  /** The identifier of the room */
-  id: Scalars["String"]["output"];
-  /** The messages that have been sent to the Room. */
-  messages: Array<Message>;
-};
-
 export type CommunicationSendMessageToCommunityLeadsInput = {
   /** The Community the message is being sent to */
   communityId: Scalars["UUID"]["input"];
@@ -1307,7 +1297,7 @@ export type CommunicationSendMessageToOrganizationInput = {
   organizationId: Scalars["UUID"]["input"];
 };
 
-export type CommunicationSendMessageToUserInput = {
+export type CommunicationSendMessageToUsersInput = {
   /** The message being sent */
   message: Scalars["String"]["input"];
   /** All Users the message is being sent to */
@@ -3803,7 +3793,7 @@ export type MeQueryResults = {
   mySpaces: Array<MySpaceResults>;
   /** Get all notifications for the logged in user. */
   notifications: PaginatedInAppNotifications;
-  /** The number of unread notifications for the current authenticated user. */
+  /** The total number of unread notifications for the current authenticated user across all notification types. */
   notificationsUnreadCount: Scalars["Float"]["output"];
   /** The Spaces the current user is a member of as a flat list. */
   spaceMembershipsFlat: Array<CommunityMembershipResult>;
@@ -3835,10 +3825,6 @@ export type MeQueryResultsNotificationsArgs = {
   filter?: InputMaybe<NotificationEventsFilterInput>;
   first?: InputMaybe<Scalars["Int"]["input"]>;
   last?: InputMaybe<Scalars["Int"]["input"]>;
-};
-
-export type MeQueryResultsNotificationsUnreadCountArgs = {
-  filter?: InputMaybe<NotificationEventsFilterInput>;
 };
 
 export type MeQueryResultsSpaceMembershipsHierarchicalArgs = {
@@ -4190,12 +4176,10 @@ export type Mutation = {
   joinRoleSet: RoleSet;
   /** Reset the License with Entitlements on the specified Account. */
   licenseResetOnAccount: Account;
-  /** Mark multiple notifications as read. If no IDs are provided, marks all user notifications as read. */
+  /** Mark notifications as read. If no filter is provided, marks all user notifications as read. If filter with types is provided, marks only those notification types as read. */
   markNotificationsAsRead: Scalars["Boolean"]["output"];
-  /** Mark multiple notifications as unread. If no IDs are provided, marks all user notifications as unread. */
+  /** Mark notifications as unread. If no filter is provided, marks all user notifications as unread. If filter with types is provided, marks only those notification types as unread. */
   markNotificationsAsUnread: Scalars["Boolean"]["output"];
-  /** Sends a message on the specified User`s behalf and returns the room id */
-  messageUser: Scalars["String"]["output"];
   /** Moves the specified Contribution to another Callout. */
   moveContributionToCallout: CalloutContribution;
   /** Refresh the Bodies of Knowledge on All VCs */
@@ -4240,8 +4224,10 @@ export type Mutation = {
   sendMessageToOrganization: Scalars["Boolean"]["output"];
   /** Sends an comment message. Returns the id of the new Update message. */
   sendMessageToRoom: Message;
-  /** Send message to a User. */
-  sendMessageToUser: Scalars["Boolean"]["output"];
+  /** Sends a message on the specified User`s behalf and returns the room id */
+  sendMessageToUserDirect: Scalars["String"]["output"];
+  /** Send message to multiple Users. */
+  sendMessageToUsers: Scalars["Boolean"]["output"];
   /** Transfer the specified Callout from its current CalloutsSet to the target CalloutsSet. Note: this is experimental, and only for GlobalAdmins. The user that executes the transfer becomes the creator of the Callout. */
   transferCallout: Callout;
   /** Transfer the specified InnovationHub to another Account. */
@@ -4706,15 +4692,11 @@ export type MutationLicenseResetOnAccountArgs = {
 };
 
 export type MutationMarkNotificationsAsReadArgs = {
-  notificationIds: Array<Scalars["String"]["input"]>;
+  filter?: InputMaybe<NotificationEventsFilterInput>;
 };
 
 export type MutationMarkNotificationsAsUnreadArgs = {
-  notificationIds: Array<Scalars["String"]["input"]>;
-};
-
-export type MutationMessageUserArgs = {
-  messageData: UserSendMessageInput;
+  filter?: InputMaybe<NotificationEventsFilterInput>;
 };
 
 export type MutationMoveContributionToCalloutArgs = {
@@ -4793,8 +4775,12 @@ export type MutationSendMessageToRoomArgs = {
   messageData: RoomSendMessageInput;
 };
 
-export type MutationSendMessageToUserArgs = {
-  messageData: CommunicationSendMessageToUserInput;
+export type MutationSendMessageToUserDirectArgs = {
+  messageData: UserSendMessageInput;
+};
+
+export type MutationSendMessageToUsersArgs = {
+  messageData: CommunicationSendMessageToUsersInput;
 };
 
 export type MutationTransferCalloutArgs = {
@@ -5060,6 +5046,7 @@ export enum NotificationEvent {
   SpaceAdminCollaborationCalloutContribution = "SPACE_ADMIN_COLLABORATION_CALLOUT_CONTRIBUTION",
   SpaceAdminCommunityApplication = "SPACE_ADMIN_COMMUNITY_APPLICATION",
   SpaceAdminCommunityNewMember = "SPACE_ADMIN_COMMUNITY_NEW_MEMBER",
+  SpaceAdminVirtualContributorCommunityInvitationDeclined = "SPACE_ADMIN_VIRTUAL_CONTRIBUTOR_COMMUNITY_INVITATION_DECLINED",
   SpaceCollaborationCalloutComment = "SPACE_COLLABORATION_CALLOUT_COMMENT",
   SpaceCollaborationCalloutContribution = "SPACE_COLLABORATION_CALLOUT_CONTRIBUTION",
   SpaceCollaborationCalloutPostContributionComment = "SPACE_COLLABORATION_CALLOUT_POST_CONTRIBUTION_COMMENT",
@@ -5072,6 +5059,7 @@ export enum NotificationEvent {
   UserMessage = "USER_MESSAGE",
   UserMessageSender = "USER_MESSAGE_SENDER",
   UserSignUpWelcome = "USER_SIGN_UP_WELCOME",
+  UserSpaceCommunityApplicationDeclined = "USER_SPACE_COMMUNITY_APPLICATION_DECLINED",
   UserSpaceCommunityInvitation = "USER_SPACE_COMMUNITY_INVITATION",
   UserSpaceCommunityJoined = "USER_SPACE_COMMUNITY_JOINED",
   VirtualContributorAdminSpaceCommunityInvitation = "VIRTUAL_CONTRIBUTOR_ADMIN_SPACE_COMMUNITY_INVITATION",
@@ -5727,6 +5715,7 @@ export type PromptGraphDefinitionNode = {
   name: Scalars["String"]["output"];
   output?: Maybe<PromptGraphDefinitionDataStruct>;
   prompt?: Maybe<Scalars["String"]["output"]>;
+  system: Scalars["Boolean"]["output"];
 };
 
 export type PromptGraphEdge = {
@@ -5752,6 +5741,7 @@ export type PromptGraphNode = {
   name: Scalars["String"]["output"];
   output?: Maybe<PromptGraphDataStruct>;
   prompt?: Maybe<Scalars["String"]["output"]>;
+  system: Scalars["Boolean"]["output"];
 };
 
 export type PromptGraphNodeInput = {
@@ -5759,6 +5749,7 @@ export type PromptGraphNodeInput = {
   name: Scalars["String"]["input"];
   output?: InputMaybe<PromptGraphDataStructInput>;
   prompt?: InputMaybe<Scalars["String"]["input"]>;
+  system: Scalars["Boolean"]["input"];
 };
 
 export type PruneInAppNotificationAdminResult = {
@@ -7898,7 +7889,7 @@ export type UpdateUserSettingsNotificationUserInput = {
 export type UpdateUserSettingsNotificationUserMembershipInput = {
   /** Receive a notification for community invitation */
   spaceCommunityInvitationReceived?: InputMaybe<NotificationSettingInput>;
-  /** Receive a notification when I join a new community */
+  /** Receive a notification when I join a new community or when my application is declined */
   spaceCommunityJoined?: InputMaybe<NotificationSettingInput>;
 };
 
@@ -7957,8 +7948,34 @@ export type UpdateWhiteboardEntityInput = {
   contentUpdatePolicy?: InputMaybe<ContentUpdatePolicy>;
   /** A display identifier, unique within the containing scope. Note: updating the nameID will affect URL on the client. */
   nameID?: InputMaybe<Scalars["NameID"]["input"]>;
+  /** The preview settings for the Whiteboard. */
+  previewSettings?: InputMaybe<UpdateWhiteboardPreviewSettingsInput>;
   /** The Profile of this entity. */
   profile?: InputMaybe<UpdateProfileInput>;
+};
+
+export type UpdateWhiteboardPreviewCoordinatesInput = {
+  /** The height. */
+  height: Scalars["Float"]["input"];
+  /** The width. */
+  width: Scalars["Float"]["input"];
+  /** The x coordinate. */
+  x: Scalars["Float"]["input"];
+  /** The y coordinate. */
+  y: Scalars["Float"]["input"];
+};
+
+export type UpdateWhiteboardPreviewSettingsInput = {
+  /** The coordinates for the preview. */
+  coordinates?: InputMaybe<UpdateWhiteboardPreviewCoordinatesInput>;
+  /**
+   * The preview mode.
+   *       AUTO: Generate Whiteboard preview automatically when closing the dialog
+   *       CUSTOM: Generate Whiteboard preview based on user-defined coordinates when closing the dialog
+   *       FIXED: Use a fixed Whiteboard preview that does not change when closing the dialog
+   *
+   */
+  mode?: InputMaybe<WhiteboardPreviewMode>;
 };
 
 export type UrlResolverQueryResultCalendar = {
@@ -8060,8 +8077,6 @@ export type User = Contributor & {
   authentication?: Maybe<UserAuthenticationResult>;
   /** The authorization rules for the Contributor */
   authorization?: Maybe<Authorization>;
-  /** The Community rooms this user is a member of */
-  communityRooms?: Maybe<Array<CommunicationRoom>>;
   /** The date at which the entity was created. */
   createdDate: Scalars["DateTime"]["output"];
   /** The direct rooms this user is a member of */
@@ -8244,7 +8259,7 @@ export type UserSettingsNotificationUser = {
 export type UserSettingsNotificationUserMembership = {
   /** Receive a notification when I am invited to join a Space community */
   spaceCommunityInvitationReceived: UserSettingsNotificationChannels;
-  /** Receive a notification when I join a Space */
+  /** Receive a notification when I join a Space or when my application is declined */
   spaceCommunityJoined: UserSettingsNotificationChannels;
 };
 
@@ -8479,6 +8494,7 @@ export enum VisualType {
   Banner = "BANNER",
   BannerWide = "BANNER_WIDE",
   Card = "CARD",
+  WhiteboardPreview = "WHITEBOARD_PREVIEW",
 }
 
 export type VisualUploadImageInput = {
@@ -8503,10 +8519,42 @@ export type Whiteboard = {
   isMultiUser: Scalars["Boolean"]["output"];
   /** A name identifier of the entity, unique within a given scope. */
   nameID: Scalars["NameID"]["output"];
+  /** The preview settings for the Whiteboard. */
+  previewSettings: WhiteboardPreviewSettings;
   /** The Profile for this Whiteboard. */
   profile: Profile;
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
+};
+
+export type WhiteboardPreviewCoordinates = {
+  /** The height. */
+  height: Scalars["Float"]["output"];
+  /** The width. */
+  width: Scalars["Float"]["output"];
+  /** The x coordinate. */
+  x: Scalars["Float"]["output"];
+  /** The y coordinate. */
+  y: Scalars["Float"]["output"];
+};
+
+export enum WhiteboardPreviewMode {
+  Auto = "AUTO",
+  Custom = "CUSTOM",
+  Fixed = "FIXED",
+}
+
+export type WhiteboardPreviewSettings = {
+  /** The coordinates for the preview. */
+  coordinates?: Maybe<WhiteboardPreviewCoordinates>;
+  /**
+   * The preview mode.
+   *       AUTO: Generate Whiteboard preview automatically when closing the dialog
+   *       CUSTOM: Generate Whiteboard preview based on user-defined coordinates when closing the dialog
+   *       FIXED: Use a fixed Whiteboard preview that does not change when closing the dialog
+   *
+   */
+  mode: WhiteboardPreviewMode;
 };
 
 export type ResolverTypeWrapper<T> = Promise<T> | T;
@@ -8731,16 +8779,9 @@ export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> =
         })
       | (Omit<
           SchemaTypes.User,
-          | "account"
-          | "communityRooms"
-          | "directRooms"
-          | "guidanceRoom"
-          | "profile"
+          "account" | "directRooms" | "guidanceRoom" | "profile"
         > & {
           account?: SchemaTypes.Maybe<_RefType["Account"]>;
-          communityRooms?: SchemaTypes.Maybe<
-            Array<_RefType["CommunicationRoom"]>
-          >;
           directRooms?: SchemaTypes.Maybe<Array<_RefType["DirectRoom"]>>;
           guidanceRoom?: SchemaTypes.Maybe<_RefType["Room"]>;
           profile: _RefType["Profile"];
@@ -9202,14 +9243,9 @@ export type ResolversTypes = {
   CommunicationAdminRoomMembershipResult: ResolverTypeWrapper<SchemaTypes.CommunicationAdminRoomMembershipResult>;
   CommunicationAdminRoomResult: ResolverTypeWrapper<SchemaTypes.CommunicationAdminRoomResult>;
   CommunicationAdminUpdateRoomStateInput: SchemaTypes.CommunicationAdminUpdateRoomStateInput;
-  CommunicationRoom: ResolverTypeWrapper<
-    Omit<SchemaTypes.CommunicationRoom, "messages"> & {
-      messages: Array<ResolversTypes["Message"]>;
-    }
-  >;
   CommunicationSendMessageToCommunityLeadsInput: SchemaTypes.CommunicationSendMessageToCommunityLeadsInput;
   CommunicationSendMessageToOrganizationInput: SchemaTypes.CommunicationSendMessageToOrganizationInput;
-  CommunicationSendMessageToUserInput: SchemaTypes.CommunicationSendMessageToUserInput;
+  CommunicationSendMessageToUsersInput: SchemaTypes.CommunicationSendMessageToUsersInput;
   Community: ResolverTypeWrapper<
     Omit<
       SchemaTypes.Community,
@@ -10414,6 +10450,8 @@ export type ResolversTypes = {
   UpdateVirtualContributorSettingsPrivacyInput: SchemaTypes.UpdateVirtualContributorSettingsPrivacyInput;
   UpdateVisualInput: SchemaTypes.UpdateVisualInput;
   UpdateWhiteboardEntityInput: SchemaTypes.UpdateWhiteboardEntityInput;
+  UpdateWhiteboardPreviewCoordinatesInput: SchemaTypes.UpdateWhiteboardPreviewCoordinatesInput;
+  UpdateWhiteboardPreviewSettingsInput: SchemaTypes.UpdateWhiteboardPreviewSettingsInput;
   Upload: ResolverTypeWrapper<SchemaTypes.Scalars["Upload"]["output"]>;
   UrlResolverQueryResultCalendar: ResolverTypeWrapper<SchemaTypes.UrlResolverQueryResultCalendar>;
   UrlResolverQueryResultCalloutsSet: ResolverTypeWrapper<SchemaTypes.UrlResolverQueryResultCalloutsSet>;
@@ -10427,12 +10465,9 @@ export type ResolversTypes = {
   User: ResolverTypeWrapper<
     Omit<
       SchemaTypes.User,
-      "account" | "communityRooms" | "directRooms" | "guidanceRoom" | "profile"
+      "account" | "directRooms" | "guidanceRoom" | "profile"
     > & {
       account?: SchemaTypes.Maybe<ResolversTypes["Account"]>;
-      communityRooms?: SchemaTypes.Maybe<
-        Array<ResolversTypes["CommunicationRoom"]>
-      >;
       directRooms?: SchemaTypes.Maybe<Array<ResolversTypes["DirectRoom"]>>;
       guidanceRoom?: SchemaTypes.Maybe<ResolversTypes["Room"]>;
       profile: ResolversTypes["Profile"];
@@ -10520,6 +10555,9 @@ export type ResolversTypes = {
   WhiteboardContent: ResolverTypeWrapper<
     SchemaTypes.Scalars["WhiteboardContent"]["output"]
   >;
+  WhiteboardPreviewCoordinates: ResolverTypeWrapper<SchemaTypes.WhiteboardPreviewCoordinates>;
+  WhiteboardPreviewMode: SchemaTypes.WhiteboardPreviewMode;
+  WhiteboardPreviewSettings: ResolverTypeWrapper<SchemaTypes.WhiteboardPreviewSettings>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
@@ -10763,12 +10801,9 @@ export type ResolversParentTypes = {
   CommunicationAdminRoomMembershipResult: SchemaTypes.CommunicationAdminRoomMembershipResult;
   CommunicationAdminRoomResult: SchemaTypes.CommunicationAdminRoomResult;
   CommunicationAdminUpdateRoomStateInput: SchemaTypes.CommunicationAdminUpdateRoomStateInput;
-  CommunicationRoom: Omit<SchemaTypes.CommunicationRoom, "messages"> & {
-    messages: Array<ResolversParentTypes["Message"]>;
-  };
   CommunicationSendMessageToCommunityLeadsInput: SchemaTypes.CommunicationSendMessageToCommunityLeadsInput;
   CommunicationSendMessageToOrganizationInput: SchemaTypes.CommunicationSendMessageToOrganizationInput;
-  CommunicationSendMessageToUserInput: SchemaTypes.CommunicationSendMessageToUserInput;
+  CommunicationSendMessageToUsersInput: SchemaTypes.CommunicationSendMessageToUsersInput;
   Community: Omit<
     SchemaTypes.Community,
     "communication" | "group" | "groups" | "roleSet"
@@ -11801,6 +11836,8 @@ export type ResolversParentTypes = {
   UpdateVirtualContributorSettingsPrivacyInput: SchemaTypes.UpdateVirtualContributorSettingsPrivacyInput;
   UpdateVisualInput: SchemaTypes.UpdateVisualInput;
   UpdateWhiteboardEntityInput: SchemaTypes.UpdateWhiteboardEntityInput;
+  UpdateWhiteboardPreviewCoordinatesInput: SchemaTypes.UpdateWhiteboardPreviewCoordinatesInput;
+  UpdateWhiteboardPreviewSettingsInput: SchemaTypes.UpdateWhiteboardPreviewSettingsInput;
   Upload: SchemaTypes.Scalars["Upload"]["output"];
   UrlResolverQueryResultCalendar: SchemaTypes.UrlResolverQueryResultCalendar;
   UrlResolverQueryResultCalloutsSet: SchemaTypes.UrlResolverQueryResultCalloutsSet;
@@ -11812,12 +11849,9 @@ export type ResolversParentTypes = {
   UrlResolverQueryResults: SchemaTypes.UrlResolverQueryResults;
   User: Omit<
     SchemaTypes.User,
-    "account" | "communityRooms" | "directRooms" | "guidanceRoom" | "profile"
+    "account" | "directRooms" | "guidanceRoom" | "profile"
   > & {
     account?: SchemaTypes.Maybe<ResolversParentTypes["Account"]>;
-    communityRooms?: SchemaTypes.Maybe<
-      Array<ResolversParentTypes["CommunicationRoom"]>
-    >;
     directRooms?: SchemaTypes.Maybe<Array<ResolversParentTypes["DirectRoom"]>>;
     guidanceRoom?: SchemaTypes.Maybe<ResolversParentTypes["Room"]>;
     profile: ResolversParentTypes["Profile"];
@@ -11885,6 +11919,8 @@ export type ResolversParentTypes = {
     profile: ResolversParentTypes["Profile"];
   };
   WhiteboardContent: SchemaTypes.Scalars["WhiteboardContent"]["output"];
+  WhiteboardPreviewCoordinates: SchemaTypes.WhiteboardPreviewCoordinates;
+  WhiteboardPreviewSettings: SchemaTypes.WhiteboardPreviewSettings;
 };
 
 export type ApmResolvers<
@@ -13108,20 +13144,6 @@ export type CommunicationAdminRoomResultResolvers<
   displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   members?: Resolver<Array<ResolversTypes["String"]>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type CommunicationRoomResolvers<
-  ContextType = any,
-  ParentType extends ResolversParentTypes["CommunicationRoom"] = ResolversParentTypes["CommunicationRoom"]
-> = {
-  displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  id?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  messages?: Resolver<
-    Array<ResolversTypes["Message"]>,
-    ParentType,
-    ContextType
-  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -15864,8 +15886,7 @@ export type MeQueryResultsResolvers<
   notificationsUnreadCount?: Resolver<
     ResolversTypes["Float"],
     ParentType,
-    ContextType,
-    Partial<SchemaTypes.MeQueryResultsNotificationsUnreadCountArgs>
+    ContextType
   >;
   spaceMembershipsFlat?: Resolver<
     Array<ResolversTypes["CommunityMembershipResult"]>,
@@ -16792,25 +16813,13 @@ export type MutationResolvers<
     ResolversTypes["Boolean"],
     ParentType,
     ContextType,
-    RequireFields<
-      SchemaTypes.MutationMarkNotificationsAsReadArgs,
-      "notificationIds"
-    >
+    Partial<SchemaTypes.MutationMarkNotificationsAsReadArgs>
   >;
   markNotificationsAsUnread?: Resolver<
     ResolversTypes["Boolean"],
     ParentType,
     ContextType,
-    RequireFields<
-      SchemaTypes.MutationMarkNotificationsAsUnreadArgs,
-      "notificationIds"
-    >
-  >;
-  messageUser?: Resolver<
-    ResolversTypes["String"],
-    ParentType,
-    ContextType,
-    RequireFields<SchemaTypes.MutationMessageUserArgs, "messageData">
+    Partial<SchemaTypes.MutationMarkNotificationsAsUnreadArgs>
   >;
   moveContributionToCallout?: Resolver<
     ResolversTypes["CalloutContribution"],
@@ -16983,11 +16992,20 @@ export type MutationResolvers<
     ContextType,
     RequireFields<SchemaTypes.MutationSendMessageToRoomArgs, "messageData">
   >;
-  sendMessageToUser?: Resolver<
+  sendMessageToUserDirect?: Resolver<
+    ResolversTypes["String"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationSendMessageToUserDirectArgs,
+      "messageData"
+    >
+  >;
+  sendMessageToUsers?: Resolver<
     ResolversTypes["Boolean"],
     ParentType,
     ContextType,
-    RequireFields<SchemaTypes.MutationSendMessageToUserArgs, "messageData">
+    RequireFields<SchemaTypes.MutationSendMessageToUsersArgs, "messageData">
   >;
   transferCallout?: Resolver<
     ResolversTypes["Callout"],
@@ -18312,6 +18330,7 @@ export type PromptGraphDefinitionNodeResolvers<
     ParentType,
     ContextType
   >;
+  system?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -18352,6 +18371,7 @@ export type PromptGraphNodeResolvers<
     ParentType,
     ContextType
   >;
+  system?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -20157,11 +20177,6 @@ export type UserResolvers<
     ParentType,
     ContextType
   >;
-  communityRooms?: Resolver<
-    SchemaTypes.Maybe<Array<ResolversTypes["CommunicationRoom"]>>,
-    ParentType,
-    ContextType
-  >;
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   directRooms?: Resolver<
     SchemaTypes.Maybe<Array<ResolversTypes["DirectRoom"]>>,
@@ -20833,6 +20848,11 @@ export type WhiteboardResolvers<
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   isMultiUser?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   nameID?: Resolver<ResolversTypes["NameID"], ParentType, ContextType>;
+  previewSettings?: Resolver<
+    ResolversTypes["WhiteboardPreviewSettings"],
+    ParentType,
+    ContextType
+  >;
   profile?: Resolver<ResolversTypes["Profile"], ParentType, ContextType>;
   updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -20842,6 +20862,34 @@ export interface WhiteboardContentScalarConfig
   extends GraphQLScalarTypeConfig<ResolversTypes["WhiteboardContent"], any> {
   name: "WhiteboardContent";
 }
+
+export type WhiteboardPreviewCoordinatesResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["WhiteboardPreviewCoordinates"] = ResolversParentTypes["WhiteboardPreviewCoordinates"]
+> = {
+  height?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  width?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  x?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  y?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type WhiteboardPreviewSettingsResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["WhiteboardPreviewSettings"] = ResolversParentTypes["WhiteboardPreviewSettings"]
+> = {
+  coordinates?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["WhiteboardPreviewCoordinates"]>,
+    ParentType,
+    ContextType
+  >;
+  mode?: Resolver<
+    ResolversTypes["WhiteboardPreviewMode"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
 
 export type Resolvers<ContextType = any> = {
   APM?: ApmResolvers<ContextType>;
@@ -20894,7 +20942,6 @@ export type Resolvers<ContextType = any> = {
   CommunicationAdminOrphanedUsageResult?: CommunicationAdminOrphanedUsageResultResolvers<ContextType>;
   CommunicationAdminRoomMembershipResult?: CommunicationAdminRoomMembershipResultResolvers<ContextType>;
   CommunicationAdminRoomResult?: CommunicationAdminRoomResultResolvers<ContextType>;
-  CommunicationRoom?: CommunicationRoomResolvers<ContextType>;
   Community?: CommunityResolvers<ContextType>;
   CommunityApplicationForRoleResult?: CommunityApplicationForRoleResultResolvers<ContextType>;
   CommunityApplicationResult?: CommunityApplicationResultResolvers<ContextType>;
@@ -21149,6 +21196,8 @@ export type Resolvers<ContextType = any> = {
   VisualConstraints?: VisualConstraintsResolvers<ContextType>;
   Whiteboard?: WhiteboardResolvers<ContextType>;
   WhiteboardContent?: GraphQLScalarType;
+  WhiteboardPreviewCoordinates?: WhiteboardPreviewCoordinatesResolvers<ContextType>;
+  WhiteboardPreviewSettings?: WhiteboardPreviewSettingsResolvers<ContextType>;
 };
 
 export type ApplicationDataFragment = {
@@ -57855,11 +57904,11 @@ export type SendMessageToRoomMutation = {
   };
 };
 
-export type SendMessageToUserMutationVariables = SchemaTypes.Exact<{
-  messageData: SchemaTypes.CommunicationSendMessageToUserInput;
+export type SendMessageToUsersMutationVariables = SchemaTypes.Exact<{
+  messageData: SchemaTypes.CommunicationSendMessageToUsersInput;
 }>;
 
-export type SendMessageToUserMutation = { sendMessageToUser: boolean };
+export type SendMessageToUsersMutation = { sendMessageToUsers: boolean };
 
 export type UpdateDiscussionMutationVariables = SchemaTypes.Exact<{
   updateData: SchemaTypes.UpdateDiscussionInput;
@@ -130874,11 +130923,11 @@ export const SendMessageToRoomDocument = gql`
   }
   ${MessageDetailsFragmentDoc}
 `;
-export const SendMessageToUserDocument = gql`
-  mutation SendMessageToUser(
-    $messageData: CommunicationSendMessageToUserInput!
+export const SendMessageToUsersDocument = gql`
+  mutation sendMessageToUsers(
+    $messageData: CommunicationSendMessageToUsersInput!
   ) {
-    sendMessageToUser(messageData: $messageData)
+    sendMessageToUsers(messageData: $messageData)
   }
 `;
 export const UpdateDiscussionDocument = gql`
@@ -133222,7 +133271,7 @@ const SendMessageToOrganizationDocumentString = print(
   SendMessageToOrganizationDocument
 );
 const SendMessageToRoomDocumentString = print(SendMessageToRoomDocument);
-const SendMessageToUserDocumentString = print(SendMessageToUserDocument);
+const SendMessageToUsersDocumentString = print(SendMessageToUsersDocument);
 const UpdateDiscussionDocumentString = print(UpdateDiscussionDocument);
 const UpdatePostDocumentString = print(UpdatePostDocument);
 const ConvertSpaceL1ToSpaceL0DocumentString = print(
@@ -134323,11 +134372,11 @@ export function getSdk(
         variables
       );
     },
-    SendMessageToUser(
-      variables: SchemaTypes.SendMessageToUserMutationVariables,
+    sendMessageToUsers(
+      variables: SchemaTypes.SendMessageToUsersMutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
-      data: SchemaTypes.SendMessageToUserMutation;
+      data: SchemaTypes.SendMessageToUsersMutation;
       errors?: GraphQLError[];
       extensions?: any;
       headers: Headers;
@@ -134335,12 +134384,12 @@ export function getSdk(
     }> {
       return withWrapper(
         (wrappedRequestHeaders) =>
-          client.rawRequest<SchemaTypes.SendMessageToUserMutation>(
-            SendMessageToUserDocumentString,
+          client.rawRequest<SchemaTypes.SendMessageToUsersMutation>(
+            SendMessageToUsersDocumentString,
             variables,
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
-        "SendMessageToUser",
+        "sendMessageToUsers",
         "mutation",
         variables
       );
