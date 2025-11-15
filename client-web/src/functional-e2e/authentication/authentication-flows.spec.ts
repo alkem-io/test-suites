@@ -43,7 +43,7 @@ import {
   verifyVerificationPageWithSendAgainButtonElements,
 } from '../identity-flows/verify-page-objects';
 
-const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
+const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'Ch3rrytw1$t@0rG!';
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const uniqueId = UniqueIDGenerator.getID();
 
