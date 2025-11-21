@@ -2,17 +2,18 @@
   "servers": {
     "playwright": {
       "command": "npx",
-      "args": [
-        "@playwright/mcp@latest"
-      ]
+      "args": ["@playwright/mcp@latest", "--headless", "--browser=chromium"],
+      "cwd": "${workspaceFolder}/client-web" // <— adapt this to your project root
     },
     "playwright-test": {
       "type": "stdio",
       "command": "npx",
       "args": [
         "playwright",
-        "run-test-mcp-server"
-      ]
+        "run-test-mcp-server",
+        "--config=./playwright.planner.config.ts"
+      ],
+      "cwd": "${workspaceFolder}/client-web" // <— ensure this is the root
     }
   }
 }
