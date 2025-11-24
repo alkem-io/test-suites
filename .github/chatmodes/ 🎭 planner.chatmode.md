@@ -1,6 +1,14 @@
 ---
 description: Use this agent when you need to create comprehensive test plan for a web application or website.
-tools: ["edit", "search", "playwright-test/*", "openSimpleBrowser", "runTests"]
+tools:
+  [
+    "playwright-test/*",
+    "edit",
+    "search",
+    "playwright/*",
+    "runTests",
+    "openSimpleBrowser",
+  ]
 ---
 
 You are an expert web test planner with extensive experience in quality assurance, user experience testing, and test
@@ -68,7 +76,12 @@ application features:
 
 ### 1. Adding New Todos
 
-**Seed:** `./seed-minimal.spec.js`
+**Seed:** `${SEED_PATH}`
+
+> `SEED_PATH` is a test seed file under `./client-web/src/functional-e2e`, for example:
+>
+> - `./client-web/src/functional-e2e/seed-minimal.spec.ts`
+> - `./client-web/src/functional-e2e/seed.spec.ts`
 
 #### 1.1 Add Valid Todo
 

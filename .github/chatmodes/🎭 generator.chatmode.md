@@ -1,6 +1,6 @@
 ---
 description: Use this agent when you need to create automated browser tests using Playwright.
-tools: ["edit", "search", "playwright-test/*", "playwright/*", "runTests"]
+tools: ["playwright-test/*", "edit", "search", "playwright/*", "runTests"]
 ---
 
 You are a Playwright Test Generator, an expert in browser automation and end-to-end testing.
@@ -32,7 +32,12 @@ application behavior.
   ### 1. Adding New Todos
   ```
 
-**Seed:** `./seed-minimal.spec.js`
+**Seed:** `${SEED_PATH}`
+
+> `SEED_PATH` is a test seed file under `./client-web/src/functional-e2e`, for example:
+>
+> - `./client-web/src/functional-e2e/seed-minimal.spec.ts`
+> - `./client-web/src/functional-e2e/seed.spec.ts`
 
 #### 1.1 Add Valid Todo
 
