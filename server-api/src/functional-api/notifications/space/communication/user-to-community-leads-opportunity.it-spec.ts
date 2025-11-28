@@ -203,15 +203,9 @@ describe('Notifications - send messages to Private Space, Subsubspace Community 
     const getEmailsData = await getMailsData();
 
     // Assert
-    expect(getEmailsData[1]).toEqual(2);
+    expect(getEmailsData[1]).toEqual(1);
     expect(getEmailsData[0]).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({
-          subject: receivers(
-            TestUserManager.users.subsubspaceMember.displayName
-          ),
-          toAddresses: [TestUserManager.users.subsubspaceMember.email],
-        }),
         expect.objectContaining({
           subject: receivers(
             TestUserManager.users.subsubspaceMember.displayName

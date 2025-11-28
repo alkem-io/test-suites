@@ -507,6 +507,7 @@ export const updateSpaceSettings = async (
       inheritMembershipRights?: boolean;
       allowEventsFromSubspaces?: boolean;
       allowMembersToVideoCall?: boolean;
+      allowGuestContributions?: boolean;
     };
   },
 
@@ -546,6 +547,8 @@ export const updateSpaceSettings = async (
                 settings?.collaboration?.allowEventsFromSubspaces || true,
               allowMembersToVideoCall:
                 settings?.collaboration?.allowMembersToVideoCall ?? true,
+              allowGuestContributions:
+                settings?.collaboration?.allowGuestContributions ?? false,
             },
           },
         },

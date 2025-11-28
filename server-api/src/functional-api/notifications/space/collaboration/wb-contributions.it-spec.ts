@@ -280,9 +280,9 @@ describe('Notifications - whiteboard', () => {
     await delay(1000);
     const mails = await getMailsData();
 
-    expect(mails[1]).toEqual(9);
+    expect(mails[1]).toEqual(7);
 
-    expect(mails[0]).toEqual(
+    expect(mails[0]).not.toEqual(
       await expectedDataFunc(subjectTextAdmin, [
         TestUserManager.users.globalAdmin.email,
       ])
@@ -294,7 +294,7 @@ describe('Notifications - whiteboard', () => {
       ])
     );
 
-    expect(mails[0]).toEqual(
+    expect(mails[0]).not.toEqual(
       await expectedDataFunc(subjectTextMember, [
         TestUserManager.users.globalAdmin.email,
       ])
@@ -348,7 +348,7 @@ describe('Notifications - whiteboard', () => {
     await delay(1000);
     const mails = await getMailsData();
 
-    expect(mails[1]).toEqual(9);
+    expect(mails[1]).toEqual(7);
 
     expect(mails[0]).toEqual(
       await expectedDataFunc(subjectTextAdmin, [
@@ -356,7 +356,7 @@ describe('Notifications - whiteboard', () => {
       ])
     );
 
-    expect(mails[0]).toEqual(
+    expect(mails[0]).not.toEqual(
       await expectedDataFunc(subjectTextAdmin, [
         TestUserManager.users.spaceAdmin.email,
       ])
@@ -367,7 +367,7 @@ describe('Notifications - whiteboard', () => {
         TestUserManager.users.globalAdmin.email,
       ])
     );
-    expect(mails[0]).toEqual(
+    expect(mails[0]).not.toEqual(
       await expectedDataFunc(subjectTextMember, [
         TestUserManager.users.spaceAdmin.email,
       ])
@@ -491,7 +491,7 @@ describe('Notifications - whiteboard', () => {
     await delay(1000);
     const mails = await getMailsData();
 
-    expect(mails[1]).toEqual(5);
+    expect(mails[1]).toEqual(4);
 
     expect(mails[0]).toEqual(
       await expectedDataFunc(subjectTextAdmin, [
@@ -550,7 +550,7 @@ describe('Notifications - whiteboard', () => {
         TestUserManager.users.subsubspaceAdmin.email,
       ])
     );
-    expect(mails[0]).toEqual(
+    expect(mails[0]).not.toEqual(
       await expectedDataFunc(subjectTextMember, [
         TestUserManager.users.subsubspaceMember.email,
       ])

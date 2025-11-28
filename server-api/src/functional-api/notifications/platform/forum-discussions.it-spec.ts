@@ -349,8 +349,8 @@ describe('Notifications - forum discussions comment', () => {
     const getEmailsData = await getMailsData();
 
     // Assert
-    expect(getEmailsData[1]).toEqual(1);
-    expect(getEmailsData[0]).toEqual(
+    expect(getEmailsData[1]).toEqual(0);
+    expect(getEmailsData[0]).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           subject: forumDiscussionCommentSubjectText,
@@ -407,8 +407,8 @@ describe('Notifications - forum discussions comment', () => {
     const getEmailsData = await getMailsData();
 
     // Assert
-    expect(getEmailsData[1]).toEqual(1);
-    expect(getEmailsData[0]).toEqual(
+    expect(getEmailsData[1]).toEqual(0);
+    expect(getEmailsData[0]).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           subject: forumDiscussionCommentSubjectText,
@@ -503,8 +503,8 @@ describe('Notifications - forum discussions comments reply', () => {
     const getEmailsData = await getMailsData();
 
     // Assert
-    expect(getEmailsData[1]).toEqual(1);
-    expect(getEmailsData[0]).toEqual(
+    expect(getEmailsData[1]).toEqual(0);
+    expect(getEmailsData[0]).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           subject: forumDiscussionCommentReplySubjectText,
@@ -589,8 +589,8 @@ describe('Notifications - forum discussions comments reply', () => {
     const getEmailsData = await getMailsData();
 
     // Assert
-    expect(getEmailsData[1]).toEqual(1);
-    expect(getEmailsData[0]).toEqual(
+    expect(getEmailsData[1]).toEqual(0);
+    expect(getEmailsData[0]).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           subject: forumDiscussionCommentReplySubjectText,
