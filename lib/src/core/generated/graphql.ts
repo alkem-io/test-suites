@@ -813,6 +813,8 @@ export enum AuthorizationPolicyType {
   Classification = "CLASSIFICATION",
   Collaboration = "COLLABORATION",
   Communication = "COMMUNICATION",
+  CommunicationConversation = "COMMUNICATION_CONVERSATION",
+  CommunicationConversationsSet = "COMMUNICATION_CONVERSATIONS_SET",
   Community = "COMMUNITY",
   CommunityGuidelines = "COMMUNITY_GUIDELINES",
   Discussion = "DISCUSSION",
@@ -1194,20 +1196,6 @@ export enum CalloutsSetType {
   KnowledgeBase = "KNOWLEDGE_BASE",
 }
 
-export type ChatGuidanceAnswerRelevanceInput = {
-  /** The answer id. */
-  id: Scalars["String"]["input"];
-  /** Is the answer relevant or not. */
-  relevant: Scalars["Boolean"]["input"];
-};
-
-export type ChatGuidanceInput = {
-  /** The language of the answer. */
-  language?: InputMaybe<Scalars["String"]["input"]>;
-  /** The question that is being asked. */
-  question: Scalars["String"]["input"];
-};
-
 export type Classification = {
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
@@ -1318,6 +1306,11 @@ export type CommunicationAdminUpdateRoomStateInput = {
   isWorldVisible: Scalars["Boolean"]["input"];
   roomID: Scalars["String"]["input"];
 };
+
+export enum CommunicationConversationType {
+  UserUser = "USER_USER",
+  UserVc = "USER_VC",
+}
 
 export type CommunicationSendMessageToCommunityLeadsInput = {
   /** The Community the message is being sent to */
@@ -1545,6 +1538,48 @@ export type ContributorRolesApplicationsArgs = {
 
 export type ContributorRolesInvitationsArgs = {
   states?: InputMaybe<Array<Scalars["String"]["input"]>>;
+};
+
+export type Conversation = {
+  /** The authorization rules for the entity */
+  authorization?: Maybe<Authorization>;
+  /** The date at which the entity was created. */
+  createdDate: Scalars["DateTime"]["output"];
+  /** The ID of the entity */
+  id: Scalars["UUID"]["output"];
+  /** The room for this Conversation. */
+  room?: Maybe<Room>;
+  type: CommunicationConversationType;
+  /** The date at which the entity was last updated. */
+  updatedDate: Scalars["DateTime"]["output"];
+  /** The user participating in this Conversation. */
+  user?: Maybe<User>;
+  /** The virtual contributor participating in this Conversation (only for USER_AGENT conversations). */
+  virtualContributor?: Maybe<VirtualContributor>;
+  wellKnownVirtualContributor?: Maybe<VirtualContributorWellKnown>;
+};
+
+export type ConversationVcAnswerRelevanceInput = {
+  /** The ID of the conversation. */
+  conversationID: Scalars["UUID"]["input"];
+  /** The answer id. */
+  id: Scalars["String"]["input"];
+  /** Is the answer relevant or not. */
+  relevant: Scalars["Boolean"]["input"];
+};
+
+export type ConversationVcAskQuestionInput = {
+  /** The ID of the conversation. */
+  conversationID: Scalars["UUID"]["input"];
+  /** The language of the answer. */
+  language?: InputMaybe<Scalars["String"]["input"]>;
+  /** The question that is being asked. */
+  question: Scalars["String"]["input"];
+};
+
+export type ConversationVcResetInput = {
+  /** The ID of the conversation. */
+  conversationID: Scalars["UUID"]["input"];
 };
 
 export type ConversionVcSpaceToVcKnowledgeBaseInput = {
@@ -1804,6 +1839,13 @@ export type CreateContributionOnCalloutInput = {
   sortOrder?: InputMaybe<Scalars["Float"]["input"]>;
   type: CalloutContributionType;
   whiteboard?: InputMaybe<CreateWhiteboardInput>;
+};
+
+export type CreateConversationInput = {
+  type: CommunicationConversationType;
+  userID: Scalars["UUID"]["input"];
+  virtualContributorID?: InputMaybe<Scalars["UUID"]["input"]>;
+  wellKnownVirtualContributor?: InputMaybe<VirtualContributorWellKnown>;
 };
 
 export type CreateInnovationFlowData = {
@@ -2359,6 +2401,10 @@ export type DeleteContributionInput = {
   ID: Scalars["UUID"]["input"];
 };
 
+export type DeleteConversationInput = {
+  ID: Scalars["UUID"]["input"];
+};
+
 export type DeleteDiscussionInput = {
   ID: Scalars["UUID"]["input"];
 };
@@ -2443,17 +2489,6 @@ export type DeleteVirtualContributorInput = {
 
 export type DeleteWhiteboardInput = {
   ID: Scalars["UUID"]["input"];
-};
-
-export type DirectRoom = {
-  /** The display name of the room */
-  displayName: Scalars["String"]["output"];
-  /** The identifier of the room */
-  id: Scalars["String"]["output"];
-  /** The messages that have been sent to the Room. */
-  messages: Array<Message>;
-  /** The recipient userID */
-  receiverID?: Maybe<Scalars["String"]["output"]>;
 };
 
 export type Discussion = {
@@ -3660,6 +3695,8 @@ export type LookupQueryResults = {
   communityGuidelines?: Maybe<CommunityGuidelines>;
   /** Lookup the specified CalloutContribution */
   contribution?: Maybe<CalloutContribution>;
+  /** Lookup the specified Conversation */
+  conversation?: Maybe<Conversation>;
   /** Lookup the specified Document */
   document?: Maybe<Document>;
   /** Lookup the specified InnovationFlow */
@@ -3765,6 +3802,10 @@ export type LookupQueryResultsContributionArgs = {
   ID: Scalars["UUID"]["input"];
 };
 
+export type LookupQueryResultsConversationArgs = {
+  ID: Scalars["UUID"]["input"];
+};
+
 export type LookupQueryResultsDocumentArgs = {
   ID: Scalars["UUID"]["input"];
 };
@@ -3861,6 +3902,19 @@ export type LookupQueryResultsWhiteboardArgs = {
   ID: Scalars["UUID"]["input"];
 };
 
+export type MeConversationsResult = {
+  /** Conversations between users. */
+  users: Array<Conversation>;
+  /** Get a conversation with a well-known virtual contributor for the current user. */
+  virtualContributor?: Maybe<Conversation>;
+  /** Conversations between users and virtual contributors. */
+  virtualContributors: Array<Conversation>;
+};
+
+export type MeConversationsResultVirtualContributorArgs = {
+  wellKnown: VirtualContributorWellKnown;
+};
+
 export type MeQueryResults = {
   /** The community applications current authenticated user can act on. */
   communityApplications: Array<CommunityApplicationResult>;
@@ -3868,6 +3922,8 @@ export type MeQueryResults = {
   communityInvitations: Array<CommunityInvitationResult>;
   /** The number of invitations the current authenticated user can act on. */
   communityInvitationsCount: Scalars["Float"]["output"];
+  /** The conversations the current authenticated user is part of. */
+  conversations: MeConversationsResult;
   /** The query id */
   id: Scalars["String"]["output"];
   /** The Spaces I am contributing to */
@@ -4104,7 +4160,7 @@ export type Mutation = {
   /** Apply to join the specified RoleSet in the entry Role. */
   applyForEntryRoleOnRoleSet: Application;
   /** Ask the chat engine for guidance. */
-  askChatGuidanceQuestion: MessageAnswerQuestion;
+  askVcQuestion: MessageAnswerQuestion;
   /** Assign the specified LicensePlan to an Account. */
   assignLicensePlanToAccount: Account;
   /** Assign the specified LicensePlan to a Space. */
@@ -4151,10 +4207,10 @@ export type Mutation = {
   convertVirtualContributorToUseKnowledgeBase: VirtualContributor;
   /** Create a new Callout on the CalloutsSet. */
   createCalloutOnCalloutsSet: Callout;
-  /** Create a guidance chat room. */
-  createChatGuidanceRoom?: Maybe<Room>;
   /** Create a new Contribution on the Callout. */
   createContributionOnCallout: CalloutContribution;
+  /** Create a new Conversation on the ConversationsSet. */
+  createConversationOnConversationsSet: Conversation;
   /** Creates a new Discussion as part of this Forum. */
   createDiscussion: Discussion;
   /** Create a new CalendarEvent on the Calendar. */
@@ -4201,6 +4257,8 @@ export type Mutation = {
   deleteCallout: Callout;
   /** Deletes a contribution. */
   deleteContribution: CalloutContribution;
+  /** Deletes a Conversation. The Matrix room is only deleted if no reciprocal conversation exists. */
+  deleteConversation: Conversation;
   /** Deletes the specified Discussion. */
   deleteDiscussion: Discussion;
   /** Deletes the specified Document. */
@@ -4249,6 +4307,8 @@ export type Mutation = {
   eventOnInvitation: Invitation;
   /** Trigger an event on the Organization Verification. */
   eventOnOrganizationVerification: OrganizationVerification;
+  /** User vote if a specific answer is relevant. */
+  feedbackOnVcAnswerRelevance: Scalars["Boolean"]["output"];
   /** Grants an authorization credential to an Organization. */
   grantCredentialToOrganization: Organization;
   /** Grants an authorization credential to a User. */
@@ -4290,7 +4350,7 @@ export type Mutation = {
   /** Removes the specified User from specified user group */
   removeUserFromGroup: UserGroup;
   /** Resets the interaction with the chat engine. */
-  resetChatGuidance: Scalars["Boolean"]["output"];
+  resetConversationVc: Conversation;
   /** Reset all license plans on Accounts */
   resetLicenseOnAccounts: Space;
   /** Removes an authorization credential from an Organization. */
@@ -4309,10 +4369,10 @@ export type Mutation = {
   sendMessageToOrganization: Scalars["Boolean"]["output"];
   /** Sends an comment message. Returns the id of the new Update message. */
   sendMessageToRoom: Message;
-  /** Sends a message on the specified User`s behalf and returns the room id */
-  sendMessageToUserDirect: Scalars["String"]["output"];
   /** Send message to multiple Users. */
   sendMessageToUsers: Scalars["Boolean"]["output"];
+  /** Set the mapping of a well-known Virtual Contributor to a specific Virtual Contributor UUID. */
+  setPlatformWellKnownVirtualContributor: PlatformWellKnownVirtualContributors;
   /** Transfer the specified Callout from its current CalloutsSet to the target CalloutsSet. Note: this is experimental, and only for GlobalAdmins. The user that executes the transfer becomes the creator of the Callout. */
   transferCallout: Callout;
   /** Transfer the specified InnovationHub to another Account. */
@@ -4323,8 +4383,6 @@ export type Mutation = {
   transferSpaceToAccount: Space;
   /** Transfer the specified Virtual Contributor to another Account. */
   transferVirtualContributorToAccount: InnovationPack;
-  /** User vote if a specific answer is relevant. */
-  updateAnswerRelevance: Scalars["Boolean"]["output"];
   /** Update the Application Form used by this RoleSet. */
   updateApplicationFormOnRoleSet: RoleSet;
   /** Update the baseline License Plan on the specified Account. */
@@ -4411,7 +4469,9 @@ export type Mutation = {
   updateUserSettings: User;
   /** Updates the specified VirtualContributor. */
   updateVirtualContributor: VirtualContributor;
-  /** Updates one of the Setting on an Organization */
+  /** Updates platform-level settings of a VirtualContributor (platform admins only). */
+  updateVirtualContributorPlatformSettings: VirtualContributor;
+  /** Updates one of the Setting on an Virtual Contributor */
   updateVirtualContributorSettings: VirtualContributor;
   /** Updates the image URI for the specified Visual. */
   updateVisual: Visual;
@@ -4497,8 +4557,8 @@ export type MutationApplyForEntryRoleOnRoleSetArgs = {
   applicationData: ApplyForEntryRoleOnRoleSetInput;
 };
 
-export type MutationAskChatGuidanceQuestionArgs = {
-  chatData: ChatGuidanceInput;
+export type MutationAskVcQuestionArgs = {
+  input: ConversationVcAskQuestionInput;
 };
 
 export type MutationAssignLicensePlanToAccountArgs = {
@@ -4576,6 +4636,10 @@ export type MutationCreateCalloutOnCalloutsSetArgs = {
 
 export type MutationCreateContributionOnCalloutArgs = {
   contributionData: CreateContributionOnCalloutInput;
+};
+
+export type MutationCreateConversationOnConversationsSetArgs = {
+  conversationData: CreateConversationInput;
 };
 
 export type MutationCreateDiscussionArgs = {
@@ -4664,6 +4728,10 @@ export type MutationDeleteCalloutArgs = {
 
 export type MutationDeleteContributionArgs = {
   deleteData: DeleteContributionInput;
+};
+
+export type MutationDeleteConversationArgs = {
+  deleteData: DeleteConversationInput;
 };
 
 export type MutationDeleteDiscussionArgs = {
@@ -4762,6 +4830,10 @@ export type MutationEventOnOrganizationVerificationArgs = {
   eventData: OrganizationVerificationEventInput;
 };
 
+export type MutationFeedbackOnVcAnswerRelevanceArgs = {
+  input: ConversationVcAnswerRelevanceInput;
+};
+
 export type MutationGrantCredentialToOrganizationArgs = {
   grantCredentialData: GrantOrganizationAuthorizationCredentialInput;
 };
@@ -4838,6 +4910,10 @@ export type MutationRemoveUserFromGroupArgs = {
   membershipData: RemoveUserGroupMemberInput;
 };
 
+export type MutationResetConversationVcArgs = {
+  input: ConversationVcResetInput;
+};
+
 export type MutationRevokeCredentialFromOrganizationArgs = {
   revokeCredentialData: RevokeOrganizationAuthorizationCredentialInput;
 };
@@ -4870,12 +4946,12 @@ export type MutationSendMessageToRoomArgs = {
   messageData: RoomSendMessageInput;
 };
 
-export type MutationSendMessageToUserDirectArgs = {
-  messageData: UserSendMessageInput;
-};
-
 export type MutationSendMessageToUsersArgs = {
   messageData: CommunicationSendMessageToUsersInput;
+};
+
+export type MutationSetPlatformWellKnownVirtualContributorArgs = {
+  mappingData: SetPlatformWellKnownVirtualContributorInput;
 };
 
 export type MutationTransferCalloutArgs = {
@@ -4896,10 +4972,6 @@ export type MutationTransferSpaceToAccountArgs = {
 
 export type MutationTransferVirtualContributorToAccountArgs = {
   transferData: TransferAccountVirtualContributorInput;
-};
-
-export type MutationUpdateAnswerRelevanceArgs = {
-  input: ChatGuidanceAnswerRelevanceInput;
 };
 
 export type MutationUpdateApplicationFormOnRoleSetArgs = {
@@ -5072,6 +5144,10 @@ export type MutationUpdateUserSettingsArgs = {
 
 export type MutationUpdateVirtualContributorArgs = {
   virtualContributorData: UpdateVirtualContributorInput;
+};
+
+export type MutationUpdateVirtualContributorPlatformSettingsArgs = {
+  settingsData: UpdateVirtualContributorPlatformSettingsInput;
 };
 
 export type MutationUpdateVirtualContributorSettingsArgs = {
@@ -5435,8 +5511,6 @@ export type PaginatedVirtualContributor = {
 export type Platform = {
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
-  /** The Virtual Contributor that is used to provide chat help on the platform. */
-  chatGuidanceVirtualContributor: VirtualContributor;
   /** Alkemio configuration. Provides configuration to external services in the Alkemio ecosystem. */
   configuration: Config;
   /** The date at which the entity was created. */
@@ -5465,6 +5539,8 @@ export type Platform = {
   templatesManager?: Maybe<TemplatesManager>;
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
+  /** The mappings of well-known Virtual Contributors to their UUIDs. */
+  wellKnownVirtualContributors: PlatformWellKnownVirtualContributors;
 };
 
 export type PlatformInnovationHubArgs = {
@@ -5665,6 +5741,18 @@ export type PlatformRolesAccess = {
 export type PlatformSettings = {
   /** The integration settings for this Platform */
   integration: PlatformIntegrationSettings;
+};
+
+export type PlatformWellKnownVirtualContributorMapping = {
+  /** The UUID of the Virtual Contributor. */
+  virtualContributorID: Scalars["UUID"]["output"];
+  /** The well-known identifier for the Virtual Contributor. */
+  wellKnown: VirtualContributorWellKnown;
+};
+
+export type PlatformWellKnownVirtualContributors = {
+  /** The mappings of well-known Virtual Contributors to their UUIDs. */
+  mappings: Array<PlatformWellKnownVirtualContributorMapping>;
 };
 
 export type Post = {
@@ -6748,6 +6836,13 @@ export type ServiceMetadata = {
   name?: Maybe<Scalars["String"]["output"]>;
   /** Version in the format {major.minor.patch} - using SemVer. */
   version?: Maybe<Scalars["String"]["output"]>;
+};
+
+export type SetPlatformWellKnownVirtualContributorInput = {
+  /** The UUID of the Virtual Contributor. */
+  virtualContributorID: Scalars["UUID"]["input"];
+  /** The well-known Virtual Contributor type. */
+  wellKnown: VirtualContributorWellKnown;
 };
 
 export type Space = {
@@ -8043,6 +8138,18 @@ export type UpdateVirtualContributorInput = {
   searchVisibility?: InputMaybe<SearchVisibility>;
 };
 
+export type UpdateVirtualContributorPlatformSettingsEntityInput = {
+  /** Enable or disable the editing of the prompt graph for this Virtual Contributor. */
+  promptGraphEditingEnabled: Scalars["Boolean"]["input"];
+};
+
+export type UpdateVirtualContributorPlatformSettingsInput = {
+  /** Platform-level settings to apply to this Virtual Contributor. */
+  settings: UpdateVirtualContributorPlatformSettingsEntityInput;
+  /** ID of the Virtual Contributor to update. */
+  virtualContributorID: Scalars["UUID"]["input"];
+};
+
 export type UpdateVirtualContributorSettingsEntityInput = {
   privacy?: InputMaybe<UpdateVirtualContributorSettingsPrivacyInput>;
 };
@@ -8206,13 +8313,9 @@ export type User = Contributor & {
   authorization?: Maybe<Authorization>;
   /** The date at which the entity was created. */
   createdDate: Scalars["DateTime"]["output"];
-  /** The direct rooms this user is a member of */
-  directRooms?: Maybe<Array<DirectRoom>>;
   /** The email address for this User. */
   email: Scalars["String"]["output"];
   firstName: Scalars["String"]["output"];
-  /** Guidance Chat Room for this user */
-  guidanceRoom?: Maybe<Room>;
   /** The ID of the Contributor */
   id: Scalars["UUID"]["output"];
   /** Can a message be sent to this User. */
@@ -8268,13 +8371,6 @@ export type UserGroup = {
   profile?: Maybe<Profile>;
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
-};
-
-export type UserSendMessageInput = {
-  /** The message being sent */
-  message: Scalars["String"]["input"];
-  /** The user a message is being sent to */
-  receivingUserID: Scalars["String"]["input"];
 };
 
 export type UserSettings = {
@@ -8485,6 +8581,8 @@ export type VirtualContributor = Contributor & {
   modelCard: VirtualContributorModelCard;
   /** A name identifier of the Contributor, unique within a given scope. */
   nameID: Scalars["NameID"]["output"];
+  /** Platform-level settings of this Virtual Contributor, modifiable only by platform admins. */
+  platformSettings: VirtualContributorPlatformSettings;
   /** The profile for this Virtual. */
   profile: Profile;
   /** Prompt graph definition for this Virtual Contributor. */
@@ -8552,6 +8650,11 @@ export type VirtualContributorModelCardFlag = {
   name: VirtualContributorModelCardEntryFlagName;
 };
 
+export type VirtualContributorPlatformSettings = {
+  /** Enable or disable the editing of the prompt graph for this Virtual Contributor. */
+  promptGraphEditingEnabled: Scalars["Boolean"]["output"];
+};
+
 export type VirtualContributorSettings = {
   /** The privacy settings for this VirtualContributor */
   privacy: VirtualContributorSettingsPrivacy;
@@ -8572,6 +8675,11 @@ export type VirtualContributorUpdatedSubscriptionResult = {
   /** The Virtual Contributor that was updated */
   virtualContributor: VirtualContributor;
 };
+
+export enum VirtualContributorWellKnown {
+  ChatGuidance = "CHAT_GUIDANCE",
+  StewardOwnershipExpert = "STEWARD_OWNERSHIP_EXPERT",
+}
 
 export type VirtualContributorsInRolesResponse = {
   role: RoleName;
@@ -8939,13 +9047,8 @@ export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> =
           profile: _RefType["Profile"];
           roleSet: _RefType["RoleSet"];
         })
-      | (Omit<
-          SchemaTypes.User,
-          "account" | "directRooms" | "guidanceRoom" | "profile"
-        > & {
+      | (Omit<SchemaTypes.User, "account" | "profile"> & {
           account?: SchemaTypes.Maybe<_RefType["Account"]>;
-          directRooms?: SchemaTypes.Maybe<Array<_RefType["DirectRoom"]>>;
-          guidanceRoom?: SchemaTypes.Maybe<_RefType["Room"]>;
           profile: _RefType["Profile"];
         })
       | (Omit<
@@ -9394,8 +9497,6 @@ export type ResolversTypes = {
     }
   >;
   CalloutsSetType: SchemaTypes.CalloutsSetType;
-  ChatGuidanceAnswerRelevanceInput: SchemaTypes.ChatGuidanceAnswerRelevanceInput;
-  ChatGuidanceInput: SchemaTypes.ChatGuidanceInput;
   Classification: ResolverTypeWrapper<SchemaTypes.Classification>;
   Collaboration: ResolverTypeWrapper<
     Omit<
@@ -9420,6 +9521,7 @@ export type ResolversTypes = {
   CommunicationAdminRoomMembershipResult: ResolverTypeWrapper<SchemaTypes.CommunicationAdminRoomMembershipResult>;
   CommunicationAdminRoomResult: ResolverTypeWrapper<SchemaTypes.CommunicationAdminRoomResult>;
   CommunicationAdminUpdateRoomStateInput: SchemaTypes.CommunicationAdminUpdateRoomStateInput;
+  CommunicationConversationType: SchemaTypes.CommunicationConversationType;
   CommunicationSendMessageToCommunityLeadsInput: SchemaTypes.CommunicationSendMessageToCommunityLeadsInput;
   CommunicationSendMessageToOrganizationInput: SchemaTypes.CommunicationSendMessageToOrganizationInput;
   CommunicationSendMessageToUsersInput: SchemaTypes.CommunicationSendMessageToUsersInput;
@@ -9483,6 +9585,18 @@ export type ResolversTypes = {
   ContributorFilterInput: SchemaTypes.ContributorFilterInput;
   ContributorRolePolicy: ResolverTypeWrapper<SchemaTypes.ContributorRolePolicy>;
   ContributorRoles: ResolverTypeWrapper<SchemaTypes.ContributorRoles>;
+  Conversation: ResolverTypeWrapper<
+    Omit<SchemaTypes.Conversation, "room" | "user" | "virtualContributor"> & {
+      room?: SchemaTypes.Maybe<ResolversTypes["Room"]>;
+      user?: SchemaTypes.Maybe<ResolversTypes["User"]>;
+      virtualContributor?: SchemaTypes.Maybe<
+        ResolversTypes["VirtualContributor"]
+      >;
+    }
+  >;
+  ConversationVcAnswerRelevanceInput: SchemaTypes.ConversationVcAnswerRelevanceInput;
+  ConversationVcAskQuestionInput: SchemaTypes.ConversationVcAskQuestionInput;
+  ConversationVcResetInput: SchemaTypes.ConversationVcResetInput;
   ConversionVcSpaceToVcKnowledgeBaseInput: SchemaTypes.ConversionVcSpaceToVcKnowledgeBaseInput;
   ConvertSpaceL1ToSpaceL0Input: SchemaTypes.ConvertSpaceL1ToSpaceL0Input;
   ConvertSpaceL1ToSpaceL2Input: SchemaTypes.ConvertSpaceL1ToSpaceL2Input;
@@ -9514,6 +9628,7 @@ export type ResolversTypes = {
   CreateCommunityGuidelinesData: ResolverTypeWrapper<SchemaTypes.CreateCommunityGuidelinesData>;
   CreateCommunityGuidelinesInput: SchemaTypes.CreateCommunityGuidelinesInput;
   CreateContributionOnCalloutInput: SchemaTypes.CreateContributionOnCalloutInput;
+  CreateConversationInput: SchemaTypes.CreateConversationInput;
   CreateInnovationFlowData: ResolverTypeWrapper<SchemaTypes.CreateInnovationFlowData>;
   CreateInnovationFlowInput: SchemaTypes.CreateInnovationFlowInput;
   CreateInnovationFlowStateData: ResolverTypeWrapper<SchemaTypes.CreateInnovationFlowStateData>;
@@ -9575,6 +9690,7 @@ export type ResolversTypes = {
   DeleteCalendarEventInput: SchemaTypes.DeleteCalendarEventInput;
   DeleteCalloutInput: SchemaTypes.DeleteCalloutInput;
   DeleteContributionInput: SchemaTypes.DeleteContributionInput;
+  DeleteConversationInput: SchemaTypes.DeleteConversationInput;
   DeleteDiscussionInput: SchemaTypes.DeleteDiscussionInput;
   DeleteDocumentInput: SchemaTypes.DeleteDocumentInput;
   DeleteInnovationHubInput: SchemaTypes.DeleteInnovationHubInput;
@@ -9596,11 +9712,6 @@ export type ResolversTypes = {
   DeleteUserInput: SchemaTypes.DeleteUserInput;
   DeleteVirtualContributorInput: SchemaTypes.DeleteVirtualContributorInput;
   DeleteWhiteboardInput: SchemaTypes.DeleteWhiteboardInput;
-  DirectRoom: ResolverTypeWrapper<
-    Omit<SchemaTypes.DirectRoom, "messages"> & {
-      messages: Array<ResolversTypes["Message"]>;
-    }
-  >;
   Discussion: ResolverTypeWrapper<
     Omit<SchemaTypes.Discussion, "comments" | "profile"> & {
       comments: ResolversTypes["Room"];
@@ -9912,6 +10023,7 @@ export type ResolversTypes = {
       | "community"
       | "communityGuidelines"
       | "contribution"
+      | "conversation"
       | "document"
       | "innovationFlow"
       | "innovationHub"
@@ -9948,6 +10060,7 @@ export type ResolversTypes = {
         ResolversTypes["CommunityGuidelines"]
       >;
       contribution?: SchemaTypes.Maybe<ResolversTypes["CalloutContribution"]>;
+      conversation?: SchemaTypes.Maybe<ResolversTypes["Conversation"]>;
       document?: SchemaTypes.Maybe<ResolversTypes["Document"]>;
       innovationFlow?: SchemaTypes.Maybe<ResolversTypes["InnovationFlow"]>;
       innovationHub?: SchemaTypes.Maybe<ResolversTypes["InnovationHub"]>;
@@ -9979,11 +10092,22 @@ export type ResolversTypes = {
     }
   >;
   Markdown: ResolverTypeWrapper<SchemaTypes.Scalars["Markdown"]["output"]>;
+  MeConversationsResult: ResolverTypeWrapper<
+    Omit<
+      SchemaTypes.MeConversationsResult,
+      "users" | "virtualContributor" | "virtualContributors"
+    > & {
+      users: Array<ResolversTypes["Conversation"]>;
+      virtualContributor?: SchemaTypes.Maybe<ResolversTypes["Conversation"]>;
+      virtualContributors: Array<ResolversTypes["Conversation"]>;
+    }
+  >;
   MeQueryResults: ResolverTypeWrapper<
     Omit<
       SchemaTypes.MeQueryResults,
       | "communityApplications"
       | "communityInvitations"
+      | "conversations"
       | "mySpaces"
       | "notifications"
       | "spaceMembershipsFlat"
@@ -9994,6 +10118,7 @@ export type ResolversTypes = {
         ResolversTypes["CommunityApplicationResult"]
       >;
       communityInvitations: Array<ResolversTypes["CommunityInvitationResult"]>;
+      conversations: ResolversTypes["MeConversationsResult"];
       mySpaces: Array<ResolversTypes["MySpaceResults"]>;
       notifications: ResolversTypes["PaginatedInAppNotifications"];
       spaceMembershipsFlat: Array<ResolversTypes["CommunityMembershipResult"]>;
@@ -10126,7 +10251,6 @@ export type ResolversTypes = {
   Platform: ResolverTypeWrapper<
     Omit<
       SchemaTypes.Platform,
-      | "chatGuidanceVirtualContributor"
       | "configuration"
       | "forum"
       | "innovationHub"
@@ -10134,7 +10258,6 @@ export type ResolversTypes = {
       | "roleSet"
       | "templatesManager"
     > & {
-      chatGuidanceVirtualContributor: ResolversTypes["VirtualContributor"];
       configuration: ResolversTypes["Config"];
       forum: ResolversTypes["Forum"];
       innovationHub?: SchemaTypes.Maybe<ResolversTypes["InnovationHub"]>;
@@ -10175,6 +10298,8 @@ export type ResolversTypes = {
   PlatformLocations: ResolverTypeWrapper<SchemaTypes.PlatformLocations>;
   PlatformRolesAccess: ResolverTypeWrapper<SchemaTypes.PlatformRolesAccess>;
   PlatformSettings: ResolverTypeWrapper<SchemaTypes.PlatformSettings>;
+  PlatformWellKnownVirtualContributorMapping: ResolverTypeWrapper<SchemaTypes.PlatformWellKnownVirtualContributorMapping>;
+  PlatformWellKnownVirtualContributors: ResolverTypeWrapper<SchemaTypes.PlatformWellKnownVirtualContributors>;
   Post: ResolverTypeWrapper<
     Omit<SchemaTypes.Post, "comments" | "createdBy" | "profile"> & {
       comments: ResolversTypes["Room"];
@@ -10390,6 +10515,7 @@ export type ResolversTypes = {
   SearchVisibility: SchemaTypes.SearchVisibility;
   Sentry: ResolverTypeWrapper<SchemaTypes.Sentry>;
   ServiceMetadata: ResolverTypeWrapper<SchemaTypes.ServiceMetadata>;
+  SetPlatformWellKnownVirtualContributorInput: SchemaTypes.SetPlatformWellKnownVirtualContributorInput;
   Space: ResolverTypeWrapper<
     Omit<
       SchemaTypes.Space,
@@ -10638,6 +10764,8 @@ export type ResolversTypes = {
   UpdateUserSettingsNotificationVirtualContributorInput: SchemaTypes.UpdateUserSettingsNotificationVirtualContributorInput;
   UpdateUserSettingsPrivacyInput: SchemaTypes.UpdateUserSettingsPrivacyInput;
   UpdateVirtualContributorInput: SchemaTypes.UpdateVirtualContributorInput;
+  UpdateVirtualContributorPlatformSettingsEntityInput: SchemaTypes.UpdateVirtualContributorPlatformSettingsEntityInput;
+  UpdateVirtualContributorPlatformSettingsInput: SchemaTypes.UpdateVirtualContributorPlatformSettingsInput;
   UpdateVirtualContributorSettingsEntityInput: SchemaTypes.UpdateVirtualContributorSettingsEntityInput;
   UpdateVirtualContributorSettingsInput: SchemaTypes.UpdateVirtualContributorSettingsInput;
   UpdateVirtualContributorSettingsPrivacyInput: SchemaTypes.UpdateVirtualContributorSettingsPrivacyInput;
@@ -10661,13 +10789,8 @@ export type ResolversTypes = {
   UrlResolverQueryResults: ResolverTypeWrapper<SchemaTypes.UrlResolverQueryResults>;
   UrlType: SchemaTypes.UrlType;
   User: ResolverTypeWrapper<
-    Omit<
-      SchemaTypes.User,
-      "account" | "directRooms" | "guidanceRoom" | "profile"
-    > & {
+    Omit<SchemaTypes.User, "account" | "profile"> & {
       account?: SchemaTypes.Maybe<ResolversTypes["Account"]>;
-      directRooms?: SchemaTypes.Maybe<Array<ResolversTypes["DirectRoom"]>>;
-      guidanceRoom?: SchemaTypes.Maybe<ResolversTypes["Room"]>;
       profile: ResolversTypes["Profile"];
     }
   >;
@@ -10681,7 +10804,6 @@ export type ResolversTypes = {
       profile?: SchemaTypes.Maybe<ResolversTypes["Profile"]>;
     }
   >;
-  UserSendMessageInput: SchemaTypes.UserSendMessageInput;
   UserSettings: ResolverTypeWrapper<SchemaTypes.UserSettings>;
   UserSettingsCommunication: ResolverTypeWrapper<SchemaTypes.UserSettingsCommunication>;
   UserSettingsNotification: ResolverTypeWrapper<SchemaTypes.UserSettingsNotification>;
@@ -10725,6 +10847,7 @@ export type ResolversTypes = {
   VirtualContributorModelCardEntry: SchemaTypes.VirtualContributorModelCardEntry;
   VirtualContributorModelCardEntryFlagName: SchemaTypes.VirtualContributorModelCardEntryFlagName;
   VirtualContributorModelCardFlag: ResolverTypeWrapper<SchemaTypes.VirtualContributorModelCardFlag>;
+  VirtualContributorPlatformSettings: ResolverTypeWrapper<SchemaTypes.VirtualContributorPlatformSettings>;
   VirtualContributorSettings: ResolverTypeWrapper<SchemaTypes.VirtualContributorSettings>;
   VirtualContributorSettingsPrivacy: ResolverTypeWrapper<SchemaTypes.VirtualContributorSettingsPrivacy>;
   VirtualContributorStatus: SchemaTypes.VirtualContributorStatus;
@@ -10734,6 +10857,7 @@ export type ResolversTypes = {
       "virtualContributor"
     > & { virtualContributor: ResolversTypes["VirtualContributor"] }
   >;
+  VirtualContributorWellKnown: SchemaTypes.VirtualContributorWellKnown;
   VirtualContributorsInRolesResponse: ResolverTypeWrapper<
     Omit<
       SchemaTypes.VirtualContributorsInRolesResponse,
@@ -10989,8 +11113,6 @@ export type ResolversParentTypes = {
   CalloutsSet: Omit<SchemaTypes.CalloutsSet, "callouts"> & {
     callouts: Array<ResolversParentTypes["Callout"]>;
   };
-  ChatGuidanceAnswerRelevanceInput: SchemaTypes.ChatGuidanceAnswerRelevanceInput;
-  ChatGuidanceInput: SchemaTypes.ChatGuidanceInput;
   Classification: SchemaTypes.Classification;
   Collaboration: Omit<
     SchemaTypes.Collaboration,
@@ -11057,6 +11179,19 @@ export type ResolversParentTypes = {
   ContributorFilterInput: SchemaTypes.ContributorFilterInput;
   ContributorRolePolicy: SchemaTypes.ContributorRolePolicy;
   ContributorRoles: SchemaTypes.ContributorRoles;
+  Conversation: Omit<
+    SchemaTypes.Conversation,
+    "room" | "user" | "virtualContributor"
+  > & {
+    room?: SchemaTypes.Maybe<ResolversParentTypes["Room"]>;
+    user?: SchemaTypes.Maybe<ResolversParentTypes["User"]>;
+    virtualContributor?: SchemaTypes.Maybe<
+      ResolversParentTypes["VirtualContributor"]
+    >;
+  };
+  ConversationVcAnswerRelevanceInput: SchemaTypes.ConversationVcAnswerRelevanceInput;
+  ConversationVcAskQuestionInput: SchemaTypes.ConversationVcAskQuestionInput;
+  ConversationVcResetInput: SchemaTypes.ConversationVcResetInput;
   ConversionVcSpaceToVcKnowledgeBaseInput: SchemaTypes.ConversionVcSpaceToVcKnowledgeBaseInput;
   ConvertSpaceL1ToSpaceL0Input: SchemaTypes.ConvertSpaceL1ToSpaceL0Input;
   ConvertSpaceL1ToSpaceL2Input: SchemaTypes.ConvertSpaceL1ToSpaceL2Input;
@@ -11088,6 +11223,7 @@ export type ResolversParentTypes = {
   CreateCommunityGuidelinesData: SchemaTypes.CreateCommunityGuidelinesData;
   CreateCommunityGuidelinesInput: SchemaTypes.CreateCommunityGuidelinesInput;
   CreateContributionOnCalloutInput: SchemaTypes.CreateContributionOnCalloutInput;
+  CreateConversationInput: SchemaTypes.CreateConversationInput;
   CreateInnovationFlowData: SchemaTypes.CreateInnovationFlowData;
   CreateInnovationFlowInput: SchemaTypes.CreateInnovationFlowInput;
   CreateInnovationFlowStateData: SchemaTypes.CreateInnovationFlowStateData;
@@ -11148,6 +11284,7 @@ export type ResolversParentTypes = {
   DeleteCalendarEventInput: SchemaTypes.DeleteCalendarEventInput;
   DeleteCalloutInput: SchemaTypes.DeleteCalloutInput;
   DeleteContributionInput: SchemaTypes.DeleteContributionInput;
+  DeleteConversationInput: SchemaTypes.DeleteConversationInput;
   DeleteDiscussionInput: SchemaTypes.DeleteDiscussionInput;
   DeleteDocumentInput: SchemaTypes.DeleteDocumentInput;
   DeleteInnovationHubInput: SchemaTypes.DeleteInnovationHubInput;
@@ -11169,9 +11306,6 @@ export type ResolversParentTypes = {
   DeleteUserInput: SchemaTypes.DeleteUserInput;
   DeleteVirtualContributorInput: SchemaTypes.DeleteVirtualContributorInput;
   DeleteWhiteboardInput: SchemaTypes.DeleteWhiteboardInput;
-  DirectRoom: Omit<SchemaTypes.DirectRoom, "messages"> & {
-    messages: Array<ResolversParentTypes["Message"]>;
-  };
   Discussion: Omit<SchemaTypes.Discussion, "comments" | "profile"> & {
     comments: ResolversParentTypes["Room"];
     profile: ResolversParentTypes["Profile"];
@@ -11411,6 +11545,7 @@ export type ResolversParentTypes = {
     | "community"
     | "communityGuidelines"
     | "contribution"
+    | "conversation"
     | "document"
     | "innovationFlow"
     | "innovationHub"
@@ -11449,6 +11584,7 @@ export type ResolversParentTypes = {
     contribution?: SchemaTypes.Maybe<
       ResolversParentTypes["CalloutContribution"]
     >;
+    conversation?: SchemaTypes.Maybe<ResolversParentTypes["Conversation"]>;
     document?: SchemaTypes.Maybe<ResolversParentTypes["Document"]>;
     innovationFlow?: SchemaTypes.Maybe<ResolversParentTypes["InnovationFlow"]>;
     innovationHub?: SchemaTypes.Maybe<ResolversParentTypes["InnovationHub"]>;
@@ -11481,10 +11617,21 @@ export type ResolversParentTypes = {
     whiteboard?: SchemaTypes.Maybe<ResolversParentTypes["Whiteboard"]>;
   };
   Markdown: SchemaTypes.Scalars["Markdown"]["output"];
+  MeConversationsResult: Omit<
+    SchemaTypes.MeConversationsResult,
+    "users" | "virtualContributor" | "virtualContributors"
+  > & {
+    users: Array<ResolversParentTypes["Conversation"]>;
+    virtualContributor?: SchemaTypes.Maybe<
+      ResolversParentTypes["Conversation"]
+    >;
+    virtualContributors: Array<ResolversParentTypes["Conversation"]>;
+  };
   MeQueryResults: Omit<
     SchemaTypes.MeQueryResults,
     | "communityApplications"
     | "communityInvitations"
+    | "conversations"
     | "mySpaces"
     | "notifications"
     | "spaceMembershipsFlat"
@@ -11497,6 +11644,7 @@ export type ResolversParentTypes = {
     communityInvitations: Array<
       ResolversParentTypes["CommunityInvitationResult"]
     >;
+    conversations: ResolversParentTypes["MeConversationsResult"];
     mySpaces: Array<ResolversParentTypes["MySpaceResults"]>;
     notifications: ResolversParentTypes["PaginatedInAppNotifications"];
     spaceMembershipsFlat: Array<
@@ -11606,7 +11754,6 @@ export type ResolversParentTypes = {
   };
   Platform: Omit<
     SchemaTypes.Platform,
-    | "chatGuidanceVirtualContributor"
     | "configuration"
     | "forum"
     | "innovationHub"
@@ -11614,7 +11761,6 @@ export type ResolversParentTypes = {
     | "roleSet"
     | "templatesManager"
   > & {
-    chatGuidanceVirtualContributor: ResolversParentTypes["VirtualContributor"];
     configuration: ResolversParentTypes["Config"];
     forum: ResolversParentTypes["Forum"];
     innovationHub?: SchemaTypes.Maybe<ResolversParentTypes["InnovationHub"]>;
@@ -11651,6 +11797,8 @@ export type ResolversParentTypes = {
   PlatformLocations: SchemaTypes.PlatformLocations;
   PlatformRolesAccess: SchemaTypes.PlatformRolesAccess;
   PlatformSettings: SchemaTypes.PlatformSettings;
+  PlatformWellKnownVirtualContributorMapping: SchemaTypes.PlatformWellKnownVirtualContributorMapping;
+  PlatformWellKnownVirtualContributors: SchemaTypes.PlatformWellKnownVirtualContributors;
   Post: Omit<SchemaTypes.Post, "comments" | "createdBy" | "profile"> & {
     comments: ResolversParentTypes["Room"];
     createdBy?: SchemaTypes.Maybe<ResolversParentTypes["User"]>;
@@ -11837,6 +11985,7 @@ export type ResolversParentTypes = {
   };
   Sentry: SchemaTypes.Sentry;
   ServiceMetadata: SchemaTypes.ServiceMetadata;
+  SetPlatformWellKnownVirtualContributorInput: SchemaTypes.SetPlatformWellKnownVirtualContributorInput;
   Space: Omit<
     SchemaTypes.Space,
     | "about"
@@ -12058,6 +12207,8 @@ export type ResolversParentTypes = {
   UpdateUserSettingsNotificationVirtualContributorInput: SchemaTypes.UpdateUserSettingsNotificationVirtualContributorInput;
   UpdateUserSettingsPrivacyInput: SchemaTypes.UpdateUserSettingsPrivacyInput;
   UpdateVirtualContributorInput: SchemaTypes.UpdateVirtualContributorInput;
+  UpdateVirtualContributorPlatformSettingsEntityInput: SchemaTypes.UpdateVirtualContributorPlatformSettingsEntityInput;
+  UpdateVirtualContributorPlatformSettingsInput: SchemaTypes.UpdateVirtualContributorPlatformSettingsInput;
   UpdateVirtualContributorSettingsEntityInput: SchemaTypes.UpdateVirtualContributorSettingsEntityInput;
   UpdateVirtualContributorSettingsInput: SchemaTypes.UpdateVirtualContributorSettingsInput;
   UpdateVirtualContributorSettingsPrivacyInput: SchemaTypes.UpdateVirtualContributorSettingsPrivacyInput;
@@ -12078,13 +12229,8 @@ export type ResolversParentTypes = {
   UrlResolverQueryResultTemplatesSet: SchemaTypes.UrlResolverQueryResultTemplatesSet;
   UrlResolverQueryResultVirtualContributor: SchemaTypes.UrlResolverQueryResultVirtualContributor;
   UrlResolverQueryResults: SchemaTypes.UrlResolverQueryResults;
-  User: Omit<
-    SchemaTypes.User,
-    "account" | "directRooms" | "guidanceRoom" | "profile"
-  > & {
+  User: Omit<SchemaTypes.User, "account" | "profile"> & {
     account?: SchemaTypes.Maybe<ResolversParentTypes["Account"]>;
-    directRooms?: SchemaTypes.Maybe<Array<ResolversParentTypes["DirectRoom"]>>;
-    guidanceRoom?: SchemaTypes.Maybe<ResolversParentTypes["Room"]>;
     profile: ResolversParentTypes["Profile"];
   };
   UserAuthenticationResult: SchemaTypes.UserAuthenticationResult;
@@ -12095,7 +12241,6 @@ export type ResolversParentTypes = {
     parent?: SchemaTypes.Maybe<ResolversParentTypes["Groupable"]>;
     profile?: SchemaTypes.Maybe<ResolversParentTypes["Profile"]>;
   };
-  UserSendMessageInput: SchemaTypes.UserSendMessageInput;
   UserSettings: SchemaTypes.UserSettings;
   UserSettingsCommunication: SchemaTypes.UserSettingsCommunication;
   UserSettingsNotification: SchemaTypes.UserSettingsNotification;
@@ -12130,6 +12275,7 @@ export type ResolversParentTypes = {
   };
   VirtualContributorModelCard: SchemaTypes.VirtualContributorModelCard;
   VirtualContributorModelCardFlag: SchemaTypes.VirtualContributorModelCardFlag;
+  VirtualContributorPlatformSettings: SchemaTypes.VirtualContributorPlatformSettings;
   VirtualContributorSettings: SchemaTypes.VirtualContributorSettings;
   VirtualContributorSettingsPrivacy: SchemaTypes.VirtualContributorSettingsPrivacy;
   VirtualContributorUpdatedSubscriptionResult: Omit<
@@ -13647,6 +13793,46 @@ export type ContributorRolesResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type ConversationResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["Conversation"] = ResolversParentTypes["Conversation"]
+> = {
+  authorization?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
+    ParentType,
+    ContextType
+  >;
+  createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  room?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Room"]>,
+    ParentType,
+    ContextType
+  >;
+  type?: Resolver<
+    ResolversTypes["CommunicationConversationType"],
+    ParentType,
+    ContextType
+  >;
+  updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  user?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["User"]>,
+    ParentType,
+    ContextType
+  >;
+  virtualContributor?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["VirtualContributor"]>,
+    ParentType,
+    ContextType
+  >;
+  wellKnownVirtualContributor?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["VirtualContributorWellKnown"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type CreateCalloutContributionDataResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["CreateCalloutContributionData"] = ResolversParentTypes["CreateCalloutContributionData"]
@@ -14224,25 +14410,6 @@ export interface DateTimeScalarConfig
   extends GraphQLScalarTypeConfig<ResolversTypes["DateTime"], any> {
   name: "DateTime";
 }
-
-export type DirectRoomResolvers<
-  ContextType = any,
-  ParentType extends ResolversParentTypes["DirectRoom"] = ResolversParentTypes["DirectRoom"]
-> = {
-  displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  id?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  messages?: Resolver<
-    Array<ResolversTypes["Message"]>,
-    ParentType,
-    ContextType
-  >;
-  receiverID?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes["String"]>,
-    ParentType,
-    ContextType
-  >;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
 
 export type DiscussionResolvers<
   ContextType = any,
@@ -15912,6 +16079,12 @@ export type LookupQueryResultsResolvers<
     ContextType,
     RequireFields<SchemaTypes.LookupQueryResultsContributionArgs, "ID">
   >;
+  conversation?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Conversation"]>,
+    ParentType,
+    ContextType,
+    RequireFields<SchemaTypes.LookupQueryResultsConversationArgs, "ID">
+  >;
   document?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Document"]>,
     ParentType,
@@ -16069,6 +16242,32 @@ export interface MarkdownScalarConfig
   name: "Markdown";
 }
 
+export type MeConversationsResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["MeConversationsResult"] = ResolversParentTypes["MeConversationsResult"]
+> = {
+  users?: Resolver<
+    Array<ResolversTypes["Conversation"]>,
+    ParentType,
+    ContextType
+  >;
+  virtualContributor?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Conversation"]>,
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MeConversationsResultVirtualContributorArgs,
+      "wellKnown"
+    >
+  >;
+  virtualContributors?: Resolver<
+    Array<ResolversTypes["Conversation"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type MeQueryResultsResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["MeQueryResults"] = ResolversParentTypes["MeQueryResults"]
@@ -16090,6 +16289,11 @@ export type MeQueryResultsResolvers<
     ParentType,
     ContextType,
     Partial<SchemaTypes.MeQueryResultsCommunityInvitationsCountArgs>
+  >;
+  conversations?: Resolver<
+    ResolversTypes["MeConversationsResult"],
+    ParentType,
+    ContextType
   >;
   id?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   mySpaces?: Resolver<
@@ -16491,11 +16695,11 @@ export type MutationResolvers<
       "applicationData"
     >
   >;
-  askChatGuidanceQuestion?: Resolver<
+  askVcQuestion?: Resolver<
     ResolversTypes["MessageAnswerQuestion"],
     ParentType,
     ContextType,
-    RequireFields<SchemaTypes.MutationAskChatGuidanceQuestionArgs, "chatData">
+    RequireFields<SchemaTypes.MutationAskVcQuestionArgs, "input">
   >;
   assignLicensePlanToAccount?: Resolver<
     ResolversTypes["Account"],
@@ -16669,11 +16873,6 @@ export type MutationResolvers<
       "calloutData"
     >
   >;
-  createChatGuidanceRoom?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes["Room"]>,
-    ParentType,
-    ContextType
-  >;
   createContributionOnCallout?: Resolver<
     ResolversTypes["CalloutContribution"],
     ParentType,
@@ -16681,6 +16880,15 @@ export type MutationResolvers<
     RequireFields<
       SchemaTypes.MutationCreateContributionOnCalloutArgs,
       "contributionData"
+    >
+  >;
+  createConversationOnConversationsSet?: Resolver<
+    ResolversTypes["Conversation"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationCreateConversationOnConversationsSetArgs,
+      "conversationData"
     >
   >;
   createDiscussion?: Resolver<
@@ -16844,6 +17052,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<SchemaTypes.MutationDeleteContributionArgs, "deleteData">
   >;
+  deleteConversation?: Resolver<
+    ResolversTypes["Conversation"],
+    ParentType,
+    ContextType,
+    RequireFields<SchemaTypes.MutationDeleteConversationArgs, "deleteData">
+  >;
   deleteDiscussion?: Resolver<
     ResolversTypes["Discussion"],
     ParentType,
@@ -17000,6 +17214,12 @@ export type MutationResolvers<
       "eventData"
     >
   >;
+  feedbackOnVcAnswerRelevance?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType,
+    RequireFields<SchemaTypes.MutationFeedbackOnVcAnswerRelevanceArgs, "input">
+  >;
   grantCredentialToOrganization?: Resolver<
     ResolversTypes["Organization"],
     ParentType,
@@ -17155,10 +17375,11 @@ export type MutationResolvers<
     ContextType,
     RequireFields<SchemaTypes.MutationRemoveUserFromGroupArgs, "membershipData">
   >;
-  resetChatGuidance?: Resolver<
-    ResolversTypes["Boolean"],
+  resetConversationVc?: Resolver<
+    ResolversTypes["Conversation"],
     ParentType,
-    ContextType
+    ContextType,
+    RequireFields<SchemaTypes.MutationResetConversationVcArgs, "input">
   >;
   resetLicenseOnAccounts?: Resolver<
     ResolversTypes["Space"],
@@ -17231,20 +17452,20 @@ export type MutationResolvers<
     ContextType,
     RequireFields<SchemaTypes.MutationSendMessageToRoomArgs, "messageData">
   >;
-  sendMessageToUserDirect?: Resolver<
-    ResolversTypes["String"],
-    ParentType,
-    ContextType,
-    RequireFields<
-      SchemaTypes.MutationSendMessageToUserDirectArgs,
-      "messageData"
-    >
-  >;
   sendMessageToUsers?: Resolver<
     ResolversTypes["Boolean"],
     ParentType,
     ContextType,
     RequireFields<SchemaTypes.MutationSendMessageToUsersArgs, "messageData">
+  >;
+  setPlatformWellKnownVirtualContributor?: Resolver<
+    ResolversTypes["PlatformWellKnownVirtualContributors"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationSetPlatformWellKnownVirtualContributorArgs,
+      "mappingData"
+    >
   >;
   transferCallout?: Resolver<
     ResolversTypes["Callout"],
@@ -17287,12 +17508,6 @@ export type MutationResolvers<
       SchemaTypes.MutationTransferVirtualContributorToAccountArgs,
       "transferData"
     >
-  >;
-  updateAnswerRelevance?: Resolver<
-    ResolversTypes["Boolean"],
-    ParentType,
-    ContextType,
-    RequireFields<SchemaTypes.MutationUpdateAnswerRelevanceArgs, "input">
   >;
   updateApplicationFormOnRoleSet?: Resolver<
     ResolversTypes["RoleSet"],
@@ -17622,6 +17837,15 @@ export type MutationResolvers<
     RequireFields<
       SchemaTypes.MutationUpdateVirtualContributorArgs,
       "virtualContributorData"
+    >
+  >;
+  updateVirtualContributorPlatformSettings?: Resolver<
+    ResolversTypes["VirtualContributor"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationUpdateVirtualContributorPlatformSettingsArgs,
+      "settingsData"
     >
   >;
   updateVirtualContributorSettings?: Resolver<
@@ -18005,11 +18229,6 @@ export type PlatformResolvers<
     ParentType,
     ContextType
   >;
-  chatGuidanceVirtualContributor?: Resolver<
-    ResolversTypes["VirtualContributor"],
-    ParentType,
-    ContextType
-  >;
   configuration?: Resolver<ResolversTypes["Config"], ParentType, ContextType>;
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   forum?: Resolver<ResolversTypes["Forum"], ParentType, ContextType>;
@@ -18049,6 +18268,11 @@ export type PlatformResolvers<
     ContextType
   >;
   updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  wellKnownVirtualContributors?: Resolver<
+    ResolversTypes["PlatformWellKnownVirtualContributors"],
+    ParentType,
+    ContextType
+  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -18286,6 +18510,35 @@ export type PlatformSettingsResolvers<
 > = {
   integration?: Resolver<
     ResolversTypes["PlatformIntegrationSettings"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type PlatformWellKnownVirtualContributorMappingResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["PlatformWellKnownVirtualContributorMapping"] = ResolversParentTypes["PlatformWellKnownVirtualContributorMapping"]
+> = {
+  virtualContributorID?: Resolver<
+    ResolversTypes["UUID"],
+    ParentType,
+    ContextType
+  >;
+  wellKnown?: Resolver<
+    ResolversTypes["VirtualContributorWellKnown"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type PlatformWellKnownVirtualContributorsResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["PlatformWellKnownVirtualContributors"] = ResolversParentTypes["PlatformWellKnownVirtualContributors"]
+> = {
+  mappings?: Resolver<
+    Array<ResolversTypes["PlatformWellKnownVirtualContributorMapping"]>,
     ParentType,
     ContextType
   >;
@@ -20456,18 +20709,8 @@ export type UserResolvers<
     ContextType
   >;
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
-  directRooms?: Resolver<
-    SchemaTypes.Maybe<Array<ResolversTypes["DirectRoom"]>>,
-    ParentType,
-    ContextType
-  >;
   email?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   firstName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  guidanceRoom?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes["Room"]>,
-    ParentType,
-    ContextType
-  >;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   isContactable?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   lastName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
@@ -20944,6 +21187,11 @@ export type VirtualContributorResolvers<
     ContextType
   >;
   nameID?: Resolver<ResolversTypes["NameID"], ParentType, ContextType>;
+  platformSettings?: Resolver<
+    ResolversTypes["VirtualContributorPlatformSettings"],
+    ParentType,
+    ContextType
+  >;
   profile?: Resolver<ResolversTypes["Profile"], ParentType, ContextType>;
   promptGraphDefinition?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["PromptGraphDefinition"]>,
@@ -20999,6 +21247,18 @@ export type VirtualContributorModelCardFlagResolvers<
   enabled?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   name?: Resolver<
     ResolversTypes["VirtualContributorModelCardEntryFlagName"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type VirtualContributorPlatformSettingsResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["VirtualContributorPlatformSettings"] = ResolversParentTypes["VirtualContributorPlatformSettings"]
+> = {
+  promptGraphEditingEnabled?: Resolver<
+    ResolversTypes["Boolean"],
     ParentType,
     ContextType
   >;
@@ -21253,6 +21513,7 @@ export type Resolvers<ContextType = any> = {
   Contributor?: ContributorResolvers<ContextType>;
   ContributorRolePolicy?: ContributorRolePolicyResolvers<ContextType>;
   ContributorRoles?: ContributorRolesResolvers<ContextType>;
+  Conversation?: ConversationResolvers<ContextType>;
   CreateCalloutContributionData?: CreateCalloutContributionDataResolvers<ContextType>;
   CreateCalloutContributionDefaultsData?: CreateCalloutContributionDefaultsDataResolvers<ContextType>;
   CreateCalloutData?: CreateCalloutDataResolvers<ContextType>;
@@ -21282,7 +21543,6 @@ export type Resolvers<ContextType = any> = {
   CredentialMetadataOutput?: CredentialMetadataOutputResolvers<ContextType>;
   DID?: GraphQLScalarType;
   DateTime?: GraphQLScalarType;
-  DirectRoom?: DirectRoomResolvers<ContextType>;
   Discussion?: DiscussionResolvers<ContextType>;
   DiscussionDetails?: DiscussionDetailsResolvers<ContextType>;
   Document?: DocumentResolvers<ContextType>;
@@ -21348,6 +21608,7 @@ export type Resolvers<ContextType = any> = {
   LookupMyPrivilegesQueryResults?: LookupMyPrivilegesQueryResultsResolvers<ContextType>;
   LookupQueryResults?: LookupQueryResultsResolvers<ContextType>;
   Markdown?: GraphQLScalarType;
+  MeConversationsResult?: MeConversationsResultResolvers<ContextType>;
   MeQueryResults?: MeQueryResultsResolvers<ContextType>;
   Memo?: MemoResolvers<ContextType>;
   Message?: MessageResolvers<ContextType>;
@@ -21389,6 +21650,8 @@ export type Resolvers<ContextType = any> = {
   PlatformLocations?: PlatformLocationsResolvers<ContextType>;
   PlatformRolesAccess?: PlatformRolesAccessResolvers<ContextType>;
   PlatformSettings?: PlatformSettingsResolvers<ContextType>;
+  PlatformWellKnownVirtualContributorMapping?: PlatformWellKnownVirtualContributorMappingResolvers<ContextType>;
+  PlatformWellKnownVirtualContributors?: PlatformWellKnownVirtualContributorsResolvers<ContextType>;
   Post?: PostResolvers<ContextType>;
   Profile?: ProfileResolvers<ContextType>;
   ProfileCredentialVerified?: ProfileCredentialVerifiedResolvers<ContextType>;
@@ -21490,6 +21753,7 @@ export type Resolvers<ContextType = any> = {
   VirtualContributor?: VirtualContributorResolvers<ContextType>;
   VirtualContributorModelCard?: VirtualContributorModelCardResolvers<ContextType>;
   VirtualContributorModelCardFlag?: VirtualContributorModelCardFlagResolvers<ContextType>;
+  VirtualContributorPlatformSettings?: VirtualContributorPlatformSettingsResolvers<ContextType>;
   VirtualContributorSettings?: VirtualContributorSettingsResolvers<ContextType>;
   VirtualContributorSettingsPrivacy?: VirtualContributorSettingsPrivacyResolvers<ContextType>;
   VirtualContributorUpdatedSubscriptionResult?: VirtualContributorUpdatedSubscriptionResultResolvers<ContextType>;
