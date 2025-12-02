@@ -12,7 +12,7 @@ export default {
     '/src/functional-api/journey/.*\\.it-spec\\.ts',
     '/src/functional-api/storage/.*\\.it-spec\\.ts',
     '/src/functional-api/entitlements/.*\\.it-spec\\.ts',
-    '/src/functional-api/template/.*\\.it-spec\\.ts',
+    '/src/functional-api/templates/.*\\.it-spec\\.ts',
   ],
   coverageDirectory: '<rootDir>/coverage-nightly',
 };
