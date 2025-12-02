@@ -152,6 +152,7 @@ export type ActivityCreatedSubscriptionResult = {
 export enum ActivityEventType {
   CalendarEventCreated = "CALENDAR_EVENT_CREATED",
   CalloutLinkCreated = "CALLOUT_LINK_CREATED",
+  CalloutMemoCreated = "CALLOUT_MEMO_CREATED",
   CalloutPostComment = "CALLOUT_POST_COMMENT",
   CalloutPostCreated = "CALLOUT_POST_CREATED",
   CalloutPublished = "CALLOUT_PUBLISHED",
@@ -283,6 +284,30 @@ export type ActivityLogEntryCalloutLinkCreated = ActivityLogEntry & {
   id: Scalars["UUID"]["output"];
   /** The Link that was created. */
   link: Link;
+  /** The display name of the parent */
+  parentDisplayName: Scalars["String"]["output"];
+  /** The Space where the activity happened */
+  space?: Maybe<Space>;
+  /** The user that triggered this Activity. */
+  triggeredBy: User;
+  /** The event type for this Activity. */
+  type: ActivityEventType;
+};
+
+export type ActivityLogEntryCalloutMemoCreated = ActivityLogEntry & {
+  /** The Callout in which the Memo was created. */
+  callout: Callout;
+  /** Indicates if this Activity happened on a child Collaboration. Child results can be included via the "includeChild" parameter. */
+  child: Scalars["Boolean"]["output"];
+  /** The id of the Collaboration entity within which the Activity was generated. */
+  collaborationID: Scalars["UUID"]["output"];
+  /** The timestamp for the Activity. */
+  createdDate: Scalars["DateTime"]["output"];
+  /** The text details for this Activity. */
+  description: Scalars["String"]["output"];
+  id: Scalars["UUID"]["output"];
+  /** The Memo that was created. */
+  memo: Memo;
   /** The display name of the parent */
   parentDisplayName: Scalars["String"]["output"];
   /** The Space where the activity happened */
@@ -728,6 +753,7 @@ export enum AuthorizationCredential {
   GlobalAdmin = "GLOBAL_ADMIN",
   GlobalAnonymous = "GLOBAL_ANONYMOUS",
   GlobalCommunityRead = "GLOBAL_COMMUNITY_READ",
+  GlobalGuest = "GLOBAL_GUEST",
   GlobalLicenseManager = "GLOBAL_LICENSE_MANAGER",
   GlobalPlatformManager = "GLOBAL_PLATFORM_MANAGER",
   GlobalRegistered = "GLOBAL_REGISTERED",
@@ -781,6 +807,8 @@ export enum AuthorizationPolicyType {
   Classification = "CLASSIFICATION",
   Collaboration = "COLLABORATION",
   Communication = "COMMUNICATION",
+  CommunicationConversation = "COMMUNICATION_CONVERSATION",
+  CommunicationConversationsSet = "COMMUNICATION_CONVERSATIONS_SET",
   Community = "COMMUNITY",
   CommunityGuidelines = "COMMUNITY_GUIDELINES",
   Discussion = "DISCUSSION",
@@ -857,6 +885,7 @@ export enum AuthorizationPrivilege {
   MovePost = "MOVE_POST",
   PlatformAdmin = "PLATFORM_ADMIN",
   PlatformSettingsAdmin = "PLATFORM_SETTINGS_ADMIN",
+  PublicShare = "PUBLIC_SHARE",
   Read = "READ",
   ReadAbout = "READ_ABOUT",
   ReadLicense = "READ_LICENSE",
@@ -1009,6 +1038,8 @@ export type CalloutContribution = {
   id: Scalars["UUID"]["output"];
   /** The Link that was contributed. */
   link?: Maybe<Link>;
+  /** The Memo that was contributed. */
+  memo?: Maybe<Memo>;
   /** The Post that was contributed. */
   post?: Maybe<Post>;
   /** The sorting order for this Contribution. */
@@ -1130,6 +1161,8 @@ export type CalloutsSet = {
   createdDate: Scalars["DateTime"]["output"];
   /** The ID of the entity */
   id: Scalars["UUID"]["output"];
+  /** All the tags of the Callouts and its contributions in this CalloutsSet. Sorted by frequency, then alphabetically. */
+  tags: Array<Scalars["String"]["output"]>;
   /** The tagset templates on this CalloutsSet. */
   tagsetTemplates?: Maybe<Array<TagsetTemplate>>;
   /** The set of CalloutGroups in use in this CalloutsSet. */
@@ -1145,26 +1178,17 @@ export type CalloutsSetCalloutsArgs = {
   shuffle?: InputMaybe<Scalars["Boolean"]["input"]>;
   sortByActivity?: InputMaybe<Scalars["Boolean"]["input"]>;
   withContributionTypes?: InputMaybe<Array<CalloutContributionType>>;
+  withTags?: InputMaybe<Array<Scalars["String"]["input"]>>;
+};
+
+export type CalloutsSetTagsArgs = {
+  classificationTagsets?: InputMaybe<Array<TagsetArgs>>;
 };
 
 export enum CalloutsSetType {
   Collaboration = "COLLABORATION",
   KnowledgeBase = "KNOWLEDGE_BASE",
 }
-
-export type ChatGuidanceAnswerRelevanceInput = {
-  /** The answer id. */
-  id: Scalars["String"]["input"];
-  /** Is the answer relevant or not. */
-  relevant: Scalars["Boolean"]["input"];
-};
-
-export type ChatGuidanceInput = {
-  /** The language of the answer. */
-  language?: InputMaybe<Scalars["String"]["input"]>;
-  /** The question that is being asked. */
-  question: Scalars["String"]["input"];
-};
 
 export type Classification = {
   /** The authorization rules for the entity */
@@ -1276,6 +1300,11 @@ export type CommunicationAdminUpdateRoomStateInput = {
   isWorldVisible: Scalars["Boolean"]["input"];
   roomID: Scalars["String"]["input"];
 };
+
+export enum CommunicationConversationType {
+  UserUser = "USER_USER",
+  UserVc = "USER_VC",
+}
 
 export type CommunicationSendMessageToCommunityLeadsInput = {
   /** The Community the message is being sent to */
@@ -1503,6 +1532,48 @@ export type ContributorRolesApplicationsArgs = {
 
 export type ContributorRolesInvitationsArgs = {
   states?: InputMaybe<Array<Scalars["String"]["input"]>>;
+};
+
+export type Conversation = {
+  /** The authorization rules for the entity */
+  authorization?: Maybe<Authorization>;
+  /** The date at which the entity was created. */
+  createdDate: Scalars["DateTime"]["output"];
+  /** The ID of the entity */
+  id: Scalars["UUID"]["output"];
+  /** The room for this Conversation. */
+  room?: Maybe<Room>;
+  type: CommunicationConversationType;
+  /** The date at which the entity was last updated. */
+  updatedDate: Scalars["DateTime"]["output"];
+  /** The user participating in this Conversation. */
+  user?: Maybe<User>;
+  /** The virtual contributor participating in this Conversation (only for USER_AGENT conversations). */
+  virtualContributor?: Maybe<VirtualContributor>;
+  wellKnownVirtualContributor?: Maybe<VirtualContributorWellKnown>;
+};
+
+export type ConversationVcAnswerRelevanceInput = {
+  /** The ID of the conversation. */
+  conversationID: Scalars["UUID"]["input"];
+  /** The answer id. */
+  id: Scalars["String"]["input"];
+  /** Is the answer relevant or not. */
+  relevant: Scalars["Boolean"]["input"];
+};
+
+export type ConversationVcAskQuestionInput = {
+  /** The ID of the conversation. */
+  conversationID: Scalars["UUID"]["input"];
+  /** The language of the answer. */
+  language?: InputMaybe<Scalars["String"]["input"]>;
+  /** The question that is being asked. */
+  question: Scalars["String"]["input"];
+};
+
+export type ConversationVcResetInput = {
+  /** The ID of the conversation. */
+  conversationID: Scalars["UUID"]["input"];
 };
 
 export type ConversionVcSpaceToVcKnowledgeBaseInput = {
@@ -1764,6 +1835,13 @@ export type CreateContributionOnCalloutInput = {
   whiteboard?: InputMaybe<CreateWhiteboardInput>;
 };
 
+export type CreateConversationInput = {
+  type: CommunicationConversationType;
+  userID: Scalars["UUID"]["input"];
+  virtualContributorID?: InputMaybe<Scalars["UUID"]["input"]>;
+  wellKnownVirtualContributor?: InputMaybe<VirtualContributorWellKnown>;
+};
+
 export type CreateInnovationFlowData = {
   profile: CreateProfileData;
   states: Array<CreateInnovationFlowStateData>;
@@ -2007,6 +2085,8 @@ export type CreateSpaceOnAccountInput = {
 export type CreateSpaceSettingsCollaborationInput = {
   /** Flag to control if events from Subspaces are visible on this Space calendar as well. */
   allowEventsFromSubspaces: Scalars["Boolean"]["input"];
+  /** Flag to control if guest users can contribute to this Space. */
+  allowGuestContributions: Scalars["Boolean"]["input"];
   /** Flag to control if members can create callouts. */
   allowMembersToCreateCallouts: Scalars["Boolean"]["input"];
   /** Flag to control if members can create subspaces. */
@@ -2183,6 +2263,8 @@ export type CreateWhiteboardData = {
   content?: Maybe<Scalars["WhiteboardContent"]["output"]>;
   /** A readable identifier, unique within the containing scope. */
   nameID?: Maybe<Scalars["NameID"]["output"]>;
+  /** The preview settings for the whiteboard. */
+  previewSettings?: Maybe<CreateWhiteboardPreviewSettingsData>;
   profile?: Maybe<CreateProfileData>;
 };
 
@@ -2190,7 +2272,35 @@ export type CreateWhiteboardInput = {
   content?: InputMaybe<Scalars["WhiteboardContent"]["input"]>;
   /** A readable identifier, unique within the containing scope. */
   nameID?: InputMaybe<Scalars["NameID"]["input"]>;
+  /** The preview settings for the whiteboard. */
+  previewSettings?: InputMaybe<CreateWhiteboardPreviewSettingsInput>;
   profile?: InputMaybe<CreateProfileInput>;
+};
+
+export type CreateWhiteboardPreviewSettingsData = {
+  /** The coordinates for the preview. */
+  coordinates?: Maybe<WhiteboardPreviewCoordinatesData>;
+  /**
+   * The preview mode.
+   *       AUTO: Generate Whiteboard preview automatically when closing the dialog
+   *       CUSTOM: Generate Whiteboard preview based on user-defined coordinates when closing the dialog
+   *       FIXED: Use a fixed Whiteboard preview that does not change when closing the dialog
+   *
+   */
+  mode?: Maybe<WhiteboardPreviewMode>;
+};
+
+export type CreateWhiteboardPreviewSettingsInput = {
+  /** The coordinates for the preview. */
+  coordinates?: InputMaybe<WhiteboardPreviewCoordinatesInput>;
+  /**
+   * The preview mode.
+   *       AUTO: Generate Whiteboard preview automatically when closing the dialog
+   *       CUSTOM: Generate Whiteboard preview based on user-defined coordinates when closing the dialog
+   *       FIXED: Use a fixed Whiteboard preview that does not change when closing the dialog
+   *
+   */
+  mode?: InputMaybe<WhiteboardPreviewMode>;
 };
 
 export type Credential = {
@@ -2237,6 +2347,7 @@ export enum CredentialType {
   GlobalAdmin = "GLOBAL_ADMIN",
   GlobalAnonymous = "GLOBAL_ANONYMOUS",
   GlobalCommunityRead = "GLOBAL_COMMUNITY_READ",
+  GlobalGuest = "GLOBAL_GUEST",
   GlobalLicenseManager = "GLOBAL_LICENSE_MANAGER",
   GlobalPlatformManager = "GLOBAL_PLATFORM_MANAGER",
   GlobalRegistered = "GLOBAL_REGISTERED",
@@ -2281,6 +2392,10 @@ export type DeleteCalloutInput = {
 };
 
 export type DeleteContributionInput = {
+  ID: Scalars["UUID"]["input"];
+};
+
+export type DeleteConversationInput = {
   ID: Scalars["UUID"]["input"];
 };
 
@@ -2368,17 +2483,6 @@ export type DeleteVirtualContributorInput = {
 
 export type DeleteWhiteboardInput = {
   ID: Scalars["UUID"]["input"];
-};
-
-export type DirectRoom = {
-  /** The display name of the room */
-  displayName: Scalars["String"]["output"];
-  /** The identifier of the room */
-  id: Scalars["String"]["output"];
-  /** The messages that have been sent to the Room. */
-  messages: Array<Message>;
-  /** The recipient userID */
-  receiverID?: Maybe<Scalars["String"]["output"]>;
 };
 
 export type Discussion = {
@@ -2653,17 +2757,12 @@ export type InAppNotificationPayload = {
   type: NotificationEventPayload;
 };
 
-export type InAppNotificationPayloadOrganization = InAppNotificationPayload & {
-  /** The payload type. */
-  type: NotificationEventPayload;
-};
-
 export type InAppNotificationPayloadOrganizationMessageDirect =
   InAppNotificationPayload & {
     /** The message content. */
     message: Scalars["String"]["output"];
     /** The organization. */
-    organization: Contributor;
+    organization?: Maybe<Organization>;
     /** The payload type. */
     type: NotificationEventPayload;
   };
@@ -2680,17 +2779,12 @@ export type InAppNotificationPayloadOrganizationMessageRoom =
     type: NotificationEventPayload;
   };
 
-export type InAppNotificationPayloadPlatform = InAppNotificationPayload & {
-  /** The payload type. */
-  type: NotificationEventPayload;
-};
-
 export type InAppNotificationPayloadPlatformForumDiscussion =
   InAppNotificationPayload & {
     /** The comment message. */
     comment?: Maybe<Scalars["String"]["output"]>;
     /** The discussion details. */
-    discussion?: Maybe<DiscussionDetails>;
+    discussion: DiscussionDetails;
     /** The payload type. */
     type: NotificationEventPayload;
   };
@@ -2698,7 +2792,7 @@ export type InAppNotificationPayloadPlatformForumDiscussion =
 export type InAppNotificationPayloadPlatformGlobalRoleChange =
   InAppNotificationPayload & {
     /** The new role. */
-    role?: Maybe<Scalars["String"]["output"]>;
+    role: Scalars["String"]["output"];
     /** The payload type. */
     type: NotificationEventPayload;
     /** The User whose role was changed. */
@@ -2716,8 +2810,8 @@ export type InAppNotificationPayloadPlatformUserMessageRoom =
     messageDetails?: Maybe<MessageDetails>;
     /** The payload type. */
     type: NotificationEventPayload;
-    /** The User for the message. */
-    user?: Maybe<User>;
+    /** The User receiver of the message. */
+    user: User;
   };
 
 export type InAppNotificationPayloadPlatformUserProfileRemoved =
@@ -2725,14 +2819,14 @@ export type InAppNotificationPayloadPlatformUserProfileRemoved =
     /** The payload type. */
     type: NotificationEventPayload;
     /** The display name of the User that was removed. */
-    userDisplayName?: Maybe<Scalars["String"]["output"]>;
+    userDisplayName: Scalars["String"]["output"];
     /** The email of the User that was removed. */
-    userEmail?: Maybe<Scalars["String"]["output"]>;
+    userEmail: Scalars["String"]["output"];
   };
 
 export type InAppNotificationPayloadSpace = InAppNotificationPayload & {
   /** The space details. */
-  space?: Maybe<Space>;
+  space: Space;
   /** The payload type. */
   type: NotificationEventPayload;
 };
@@ -2740,9 +2834,9 @@ export type InAppNotificationPayloadSpace = InAppNotificationPayload & {
 export type InAppNotificationPayloadSpaceCollaborationCallout =
   InAppNotificationPayload & {
     /** The Callout that was published. */
-    callout?: Maybe<Callout>;
+    callout: Callout;
     /** Where the callout is located. */
-    space?: Maybe<Space>;
+    space: Space;
     /** The payload type. */
     type: NotificationEventPayload;
   };
@@ -2750,11 +2844,11 @@ export type InAppNotificationPayloadSpaceCollaborationCallout =
 export type InAppNotificationPayloadSpaceCollaborationCalloutComment =
   InAppNotificationPayload & {
     /** The Callout that was published. */
-    callout?: Maybe<Callout>;
+    callout: Callout;
     /** The details of the message. */
     messageDetails?: Maybe<MessageDetails>;
     /** The Space where the comment was made. */
-    space?: Maybe<Space>;
+    space: Space;
     /** The payload type. */
     type: NotificationEventPayload;
   };
@@ -2762,11 +2856,11 @@ export type InAppNotificationPayloadSpaceCollaborationCalloutComment =
 export type InAppNotificationPayloadSpaceCollaborationCalloutPostComment =
   InAppNotificationPayload & {
     /** The Callout that was published. */
-    callout?: Maybe<Callout>;
+    callout: Callout;
     /** The details of the message. */
     messageDetails?: Maybe<MessageDetails>;
     /** The Space where the comment was made. */
-    space?: Maybe<Space>;
+    space: Space;
     /** The payload type. */
     type: NotificationEventPayload;
   };
@@ -2775,28 +2869,50 @@ export type InAppNotificationPayloadSpaceCommunicationMessageDirect =
   InAppNotificationPayload & {
     /** The message content. */
     message: Scalars["String"]["output"];
-    /** The space details. */
-    space?: Maybe<Space>;
+    /** The Space where the message was sent. */
+    space: Space;
     /** The payload type. */
     type: NotificationEventPayload;
   };
 
 export type InAppNotificationPayloadSpaceCommunicationUpdate =
   InAppNotificationPayload & {
-    /** The space details. */
-    space?: Maybe<Space>;
+    /** The Space where the update was sent. */
+    space: Space;
     /** The payload type. */
     type: NotificationEventPayload;
     /** The update content. */
-    update?: Maybe<Scalars["String"]["output"]>;
+    update: Scalars["String"]["output"];
   };
 
 export type InAppNotificationPayloadSpaceCommunityApplication =
   InAppNotificationPayload & {
     /** The Application that the notification is related to. */
-    application?: Maybe<Application>;
+    application: Application;
+    /** The Space that the application was made to. */
+    space: Space;
+    /** The payload type. */
+    type: NotificationEventPayload;
+  };
+
+export type InAppNotificationPayloadSpaceCommunityCalendarEvent =
+  InAppNotificationPayload & {
+    /** The CalendarEvent that was created. */
+    calendarEvent: CalendarEvent;
+    /** The Space where the calendar event was created. */
+    space: Space;
+    /** The payload type. */
+    type: NotificationEventPayload;
+  };
+
+export type InAppNotificationPayloadSpaceCommunityCalendarEventComment =
+  InAppNotificationPayload & {
+    /** The calendar event that was commented on. */
+    calendarEvent: CalendarEvent;
+    /** Preview text of the comment */
+    commentText: Scalars["String"]["output"];
     /** The space details. */
-    space?: Maybe<Space>;
+    space: Space;
     /** The payload type. */
     type: NotificationEventPayload;
   };
@@ -2804,25 +2920,25 @@ export type InAppNotificationPayloadSpaceCommunityApplication =
 export type InAppNotificationPayloadSpaceCommunityContributor =
   InAppNotificationPayload & {
     /** The Contributor that joined. */
-    contributor?: Maybe<Contributor>;
-    /** The space details. */
-    space?: Maybe<Space>;
+    contributor: Contributor;
+    /** The Space that was joined. */
+    space: Space;
     /** The payload type. */
     type: NotificationEventPayload;
   };
 
 export type InAppNotificationPayloadSpaceCommunityInvitation =
   InAppNotificationPayload & {
-    /** The space details. */
-    space?: Maybe<Space>;
+    /** The Space that the invitation is for. */
+    space: Space;
     /** The payload type. */
     type: NotificationEventPayload;
   };
 
 export type InAppNotificationPayloadSpaceCommunityInvitationPlatform =
   InAppNotificationPayload & {
-    /** The space details. */
-    space?: Maybe<Space>;
+    /** The Space that the invitation is for. */
+    space: Space;
     /** The payload type. */
     type: NotificationEventPayload;
   };
@@ -2830,7 +2946,7 @@ export type InAppNotificationPayloadSpaceCommunityInvitationPlatform =
 export type InAppNotificationPayloadUserMessageDirect =
   InAppNotificationPayload & {
     /** The message content. */
-    message?: Maybe<Scalars["String"]["output"]>;
+    message: Scalars["String"]["output"];
     /** The payload type. */
     type: NotificationEventPayload;
     /** The User that was sent the message. */
@@ -2839,11 +2955,11 @@ export type InAppNotificationPayloadUserMessageDirect =
 
 export type InAppNotificationPayloadVirtualContributor =
   InAppNotificationPayload & {
-    contributor?: Maybe<VirtualContributor>;
-    space?: Maybe<Space>;
+    contributor: VirtualContributor;
+    /** The Space related to the notification */
+    space: Space;
     /** The payload type. */
     type: NotificationEventPayload;
-    virtualContributorID: Scalars["String"]["output"];
   };
 
 export type InnovationFlow = {
@@ -3573,6 +3689,8 @@ export type LookupQueryResults = {
   communityGuidelines?: Maybe<CommunityGuidelines>;
   /** Lookup the specified CalloutContribution */
   contribution?: Maybe<CalloutContribution>;
+  /** Lookup the specified Conversation */
+  conversation?: Maybe<Conversation>;
   /** Lookup the specified Document */
   document?: Maybe<Document>;
   /** Lookup the specified InnovationFlow */
@@ -3678,6 +3796,10 @@ export type LookupQueryResultsContributionArgs = {
   ID: Scalars["UUID"]["input"];
 };
 
+export type LookupQueryResultsConversationArgs = {
+  ID: Scalars["UUID"]["input"];
+};
+
 export type LookupQueryResultsDocumentArgs = {
   ID: Scalars["UUID"]["input"];
 };
@@ -3774,6 +3896,19 @@ export type LookupQueryResultsWhiteboardArgs = {
   ID: Scalars["UUID"]["input"];
 };
 
+export type MeConversationsResult = {
+  /** Conversations between users. */
+  users: Array<Conversation>;
+  /** Get a conversation with a well-known virtual contributor for the current user. */
+  virtualContributor?: Maybe<Conversation>;
+  /** Conversations between users and virtual contributors. */
+  virtualContributors: Array<Conversation>;
+};
+
+export type MeConversationsResultVirtualContributorArgs = {
+  wellKnown: VirtualContributorWellKnown;
+};
+
 export type MeQueryResults = {
   /** The community applications current authenticated user can act on. */
   communityApplications: Array<CommunityApplicationResult>;
@@ -3781,6 +3916,8 @@ export type MeQueryResults = {
   communityInvitations: Array<CommunityInvitationResult>;
   /** The number of invitations the current authenticated user can act on. */
   communityInvitationsCount: Scalars["Float"]["output"];
+  /** The conversations the current authenticated user is part of. */
+  conversations: MeConversationsResult;
   /** The query id */
   id: Scalars["String"]["output"];
   /** The Spaces I am contributing to */
@@ -3974,6 +4111,8 @@ export type MoveCalloutContributionInput = {
 export type Mutation = {
   /** Adds an Iframe Allowed URL to the Platform Settings */
   addIframeAllowedURL: Array<Scalars["String"]["output"]>;
+  /** Adds a full email address to the platform notification blacklist */
+  addNotificationEmailToBlacklist: Array<Scalars["String"]["output"]>;
   /** Add a reaction to a message from the specified Room. */
   addReactionToMessageInRoom: Reaction;
   /** Ensure all community members are registered for communications. */
@@ -4015,7 +4154,7 @@ export type Mutation = {
   /** Apply to join the specified RoleSet in the entry Role. */
   applyForEntryRoleOnRoleSet: Application;
   /** Ask the chat engine for guidance. */
-  askChatGuidanceQuestion: MessageAnswerQuestion;
+  askVcQuestion: MessageAnswerQuestion;
   /** Assign the specified LicensePlan to an Account. */
   assignLicensePlanToAccount: Account;
   /** Assign the specified LicensePlan to a Space. */
@@ -4062,10 +4201,10 @@ export type Mutation = {
   convertVirtualContributorToUseKnowledgeBase: VirtualContributor;
   /** Create a new Callout on the CalloutsSet. */
   createCalloutOnCalloutsSet: Callout;
-  /** Create a guidance chat room. */
-  createChatGuidanceRoom?: Maybe<Room>;
   /** Create a new Contribution on the Callout. */
   createContributionOnCallout: CalloutContribution;
+  /** Create a new Conversation on the ConversationsSet. */
+  createConversationOnConversationsSet: Conversation;
   /** Creates a new Discussion as part of this Forum. */
   createDiscussion: Discussion;
   /** Create a new CalendarEvent on the Calendar. */
@@ -4112,6 +4251,8 @@ export type Mutation = {
   deleteCallout: Callout;
   /** Deletes a contribution. */
   deleteContribution: CalloutContribution;
+  /** Deletes a Conversation. The Matrix room is only deleted if no reciprocal conversation exists. */
+  deleteConversation: Conversation;
   /** Deletes the specified Discussion. */
   deleteDiscussion: Discussion;
   /** Deletes the specified Document. */
@@ -4160,6 +4301,8 @@ export type Mutation = {
   eventOnInvitation: Invitation;
   /** Trigger an event on the Organization Verification. */
   eventOnOrganizationVerification: OrganizationVerification;
+  /** User vote if a specific answer is relevant. */
+  feedbackOnVcAnswerRelevance: Scalars["Boolean"]["output"];
   /** Grants an authorization credential to an Organization. */
   grantCredentialToOrganization: Organization;
   /** Grants an authorization credential to a User. */
@@ -4186,6 +4329,8 @@ export type Mutation = {
   removeIframeAllowedURL: Array<Scalars["String"]["output"]>;
   /** Removes a message. */
   removeMessageOnRoom: Scalars["MessageID"]["output"];
+  /** Removes an email address from the platform notification blacklist */
+  removeNotificationEmailFromBlacklist: Array<Scalars["String"]["output"]>;
   /** Removes a User from a Role on the Platform. */
   removePlatformRoleFromUser: User;
   /** Remove a reaction on a message from the specified Room. */
@@ -4199,7 +4344,7 @@ export type Mutation = {
   /** Removes the specified User from specified user group */
   removeUserFromGroup: UserGroup;
   /** Resets the interaction with the chat engine. */
-  resetChatGuidance: Scalars["Boolean"]["output"];
+  resetConversationVc: Conversation;
   /** Reset all license plans on Accounts */
   resetLicenseOnAccounts: Space;
   /** Removes an authorization credential from an Organization. */
@@ -4218,10 +4363,10 @@ export type Mutation = {
   sendMessageToOrganization: Scalars["Boolean"]["output"];
   /** Sends an comment message. Returns the id of the new Update message. */
   sendMessageToRoom: Message;
-  /** Sends a message on the specified User`s behalf and returns the room id */
-  sendMessageToUserDirect: Scalars["String"]["output"];
   /** Send message to multiple Users. */
   sendMessageToUsers: Scalars["Boolean"]["output"];
+  /** Set the mapping of a well-known Virtual Contributor to a specific Virtual Contributor UUID. */
+  setPlatformWellKnownVirtualContributor: PlatformWellKnownVirtualContributors;
   /** Transfer the specified Callout from its current CalloutsSet to the target CalloutsSet. Note: this is experimental, and only for GlobalAdmins. The user that executes the transfer becomes the creator of the Callout. */
   transferCallout: Callout;
   /** Transfer the specified InnovationHub to another Account. */
@@ -4232,8 +4377,6 @@ export type Mutation = {
   transferSpaceToAccount: Space;
   /** Transfer the specified Virtual Contributor to another Account. */
   transferVirtualContributorToAccount: InnovationPack;
-  /** User vote if a specific answer is relevant. */
-  updateAnswerRelevance: Scalars["Boolean"]["output"];
   /** Update the Application Form used by this RoleSet. */
   updateApplicationFormOnRoleSet: RoleSet;
   /** Update the baseline License Plan on the specified Account. */
@@ -4320,12 +4463,16 @@ export type Mutation = {
   updateUserSettings: User;
   /** Updates the specified VirtualContributor. */
   updateVirtualContributor: VirtualContributor;
-  /** Updates one of the Setting on an Organization */
+  /** Updates platform-level settings of a VirtualContributor (platform admins only). */
+  updateVirtualContributorPlatformSettings: VirtualContributor;
+  /** Updates one of the Setting on an Virtual Contributor */
   updateVirtualContributorSettings: VirtualContributor;
   /** Updates the image URI for the specified Visual. */
   updateVisual: Visual;
   /** Updates the specified Whiteboard. */
   updateWhiteboard: Whiteboard;
+  /** Grants or revokes GLOBAL_GUEST permissions for a whiteboard using a single toggle. */
+  updateWhiteboardGuestAccess: UpdateWhiteboardGuestAccessResult;
   /** Create a new Document on the Storage and return the value as part of the returned Link. */
   uploadFileOnLink: Link;
   /** Create a new Document on the Storage and return the value as part of the returned Reference. */
@@ -4338,6 +4485,10 @@ export type Mutation = {
 
 export type MutationAddIframeAllowedUrlArgs = {
   whitelistedURL: Scalars["String"]["input"];
+};
+
+export type MutationAddNotificationEmailToBlacklistArgs = {
+  input: NotificationEmailAddressInput;
 };
 
 export type MutationAddReactionToMessageInRoomArgs = {
@@ -4400,8 +4551,8 @@ export type MutationApplyForEntryRoleOnRoleSetArgs = {
   applicationData: ApplyForEntryRoleOnRoleSetInput;
 };
 
-export type MutationAskChatGuidanceQuestionArgs = {
-  chatData: ChatGuidanceInput;
+export type MutationAskVcQuestionArgs = {
+  input: ConversationVcAskQuestionInput;
 };
 
 export type MutationAssignLicensePlanToAccountArgs = {
@@ -4479,6 +4630,10 @@ export type MutationCreateCalloutOnCalloutsSetArgs = {
 
 export type MutationCreateContributionOnCalloutArgs = {
   contributionData: CreateContributionOnCalloutInput;
+};
+
+export type MutationCreateConversationOnConversationsSetArgs = {
+  conversationData: CreateConversationInput;
 };
 
 export type MutationCreateDiscussionArgs = {
@@ -4567,6 +4722,10 @@ export type MutationDeleteCalloutArgs = {
 
 export type MutationDeleteContributionArgs = {
   deleteData: DeleteContributionInput;
+};
+
+export type MutationDeleteConversationArgs = {
+  deleteData: DeleteConversationInput;
 };
 
 export type MutationDeleteDiscussionArgs = {
@@ -4665,6 +4824,10 @@ export type MutationEventOnOrganizationVerificationArgs = {
   eventData: OrganizationVerificationEventInput;
 };
 
+export type MutationFeedbackOnVcAnswerRelevanceArgs = {
+  input: ConversationVcAnswerRelevanceInput;
+};
+
 export type MutationGrantCredentialToOrganizationArgs = {
   grantCredentialData: GrantOrganizationAuthorizationCredentialInput;
 };
@@ -4713,6 +4876,10 @@ export type MutationRemoveMessageOnRoomArgs = {
   messageData: RoomRemoveMessageInput;
 };
 
+export type MutationRemoveNotificationEmailFromBlacklistArgs = {
+  input: NotificationEmailAddressInput;
+};
+
 export type MutationRemovePlatformRoleFromUserArgs = {
   roleData: RemovePlatformRoleInput;
 };
@@ -4735,6 +4902,10 @@ export type MutationRemoveRoleFromVirtualContributorArgs = {
 
 export type MutationRemoveUserFromGroupArgs = {
   membershipData: RemoveUserGroupMemberInput;
+};
+
+export type MutationResetConversationVcArgs = {
+  input: ConversationVcResetInput;
 };
 
 export type MutationRevokeCredentialFromOrganizationArgs = {
@@ -4769,12 +4940,12 @@ export type MutationSendMessageToRoomArgs = {
   messageData: RoomSendMessageInput;
 };
 
-export type MutationSendMessageToUserDirectArgs = {
-  messageData: UserSendMessageInput;
-};
-
 export type MutationSendMessageToUsersArgs = {
   messageData: CommunicationSendMessageToUsersInput;
+};
+
+export type MutationSetPlatformWellKnownVirtualContributorArgs = {
+  mappingData: SetPlatformWellKnownVirtualContributorInput;
 };
 
 export type MutationTransferCalloutArgs = {
@@ -4795,10 +4966,6 @@ export type MutationTransferSpaceToAccountArgs = {
 
 export type MutationTransferVirtualContributorToAccountArgs = {
   transferData: TransferAccountVirtualContributorInput;
-};
-
-export type MutationUpdateAnswerRelevanceArgs = {
-  input: ChatGuidanceAnswerRelevanceInput;
 };
 
 export type MutationUpdateApplicationFormOnRoleSetArgs = {
@@ -4973,6 +5140,10 @@ export type MutationUpdateVirtualContributorArgs = {
   virtualContributorData: UpdateVirtualContributorInput;
 };
 
+export type MutationUpdateVirtualContributorPlatformSettingsArgs = {
+  settingsData: UpdateVirtualContributorPlatformSettingsInput;
+};
+
 export type MutationUpdateVirtualContributorSettingsArgs = {
   settingsData: UpdateVirtualContributorSettingsInput;
 };
@@ -4983,6 +5154,10 @@ export type MutationUpdateVisualArgs = {
 
 export type MutationUpdateWhiteboardArgs = {
   whiteboardData: UpdateWhiteboardEntityInput;
+};
+
+export type MutationUpdateWhiteboardGuestAccessArgs = {
+  input: UpdateWhiteboardGuestAccessInput;
 };
 
 export type MutationUploadFileOnLinkArgs = {
@@ -5027,6 +5202,11 @@ export type Nvp = {
   value: Scalars["String"]["output"];
 };
 
+export type NotificationEmailAddressInput = {
+  /** Full email address to add/remove; lowercase enforced by server */
+  email: Scalars["String"]["input"];
+};
+
 export enum NotificationEvent {
   OrganizationAdminMentioned = "ORGANIZATION_ADMIN_MENTIONED",
   OrganizationAdminMessage = "ORGANIZATION_ADMIN_MESSAGE",
@@ -5046,12 +5226,13 @@ export enum NotificationEvent {
   SpaceCollaborationCalloutPostContributionComment = "SPACE_COLLABORATION_CALLOUT_POST_CONTRIBUTION_COMMENT",
   SpaceCollaborationCalloutPublished = "SPACE_COLLABORATION_CALLOUT_PUBLISHED",
   SpaceCommunicationUpdate = "SPACE_COMMUNICATION_UPDATE",
+  SpaceCommunityCalendarEventComment = "SPACE_COMMUNITY_CALENDAR_EVENT_COMMENT",
+  SpaceCommunityCalendarEventCreated = "SPACE_COMMUNITY_CALENDAR_EVENT_CREATED",
   SpaceCommunityInvitationUserPlatform = "SPACE_COMMUNITY_INVITATION_USER_PLATFORM",
   SpaceLeadCommunicationMessage = "SPACE_LEAD_COMMUNICATION_MESSAGE",
   UserCommentReply = "USER_COMMENT_REPLY",
   UserMentioned = "USER_MENTIONED",
   UserMessage = "USER_MESSAGE",
-  UserMessageSender = "USER_MESSAGE_SENDER",
   UserSignUpWelcome = "USER_SIGN_UP_WELCOME",
   UserSpaceCommunityApplicationDeclined = "USER_SPACE_COMMUNITY_APPLICATION_DECLINED",
   UserSpaceCommunityInvitation = "USER_SPACE_COMMUNITY_INVITATION",
@@ -5079,7 +5260,6 @@ export enum NotificationEventPayload {
   OrganizationMessageDirect = "ORGANIZATION_MESSAGE_DIRECT",
   OrganizationMessageRoom = "ORGANIZATION_MESSAGE_ROOM",
   PlatformForumDiscussion = "PLATFORM_FORUM_DISCUSSION",
-  PlatformForumDiscussionComment = "PLATFORM_FORUM_DISCUSSION_COMMENT",
   PlatformGlobalRoleChange = "PLATFORM_GLOBAL_ROLE_CHANGE",
   PlatformUserProfileRemoved = "PLATFORM_USER_PROFILE_REMOVED",
   Space = "SPACE",
@@ -5089,6 +5269,8 @@ export enum NotificationEventPayload {
   SpaceCommunicationMessageDirect = "SPACE_COMMUNICATION_MESSAGE_DIRECT",
   SpaceCommunicationUpdate = "SPACE_COMMUNICATION_UPDATE",
   SpaceCommunityApplication = "SPACE_COMMUNITY_APPLICATION",
+  SpaceCommunityCalendarEvent = "SPACE_COMMUNITY_CALENDAR_EVENT",
+  SpaceCommunityCalendarEventComment = "SPACE_COMMUNITY_CALENDAR_EVENT_COMMENT",
   SpaceCommunityContributor = "SPACE_COMMUNITY_CONTRIBUTOR",
   SpaceCommunityInvitation = "SPACE_COMMUNITY_INVITATION",
   SpaceCommunityInvitationUserPlatform = "SPACE_COMMUNITY_INVITATION_USER_PLATFORM",
@@ -5323,8 +5505,6 @@ export type PaginatedVirtualContributor = {
 export type Platform = {
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
-  /** The Virtual Contributor that is used to provide chat help on the platform. */
-  chatGuidanceVirtualContributor: VirtualContributor;
   /** Alkemio configuration. Provides configuration to external services in the Alkemio ecosystem. */
   configuration: Config;
   /** The date at which the entity was created. */
@@ -5353,6 +5533,8 @@ export type Platform = {
   templatesManager?: Maybe<TemplatesManager>;
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
+  /** The mappings of well-known Virtual Contributors to their UUIDs. */
+  wellKnownVirtualContributors: PlatformWellKnownVirtualContributors;
 };
 
 export type PlatformInnovationHubArgs = {
@@ -5462,6 +5644,8 @@ export enum PlatformFeatureFlagName {
 export type PlatformIntegrationSettings = {
   /** The list of allowed URLs for iFrames within Markdown content. */
   iframeAllowedUrls: Array<Scalars["String"]["output"]>;
+  /** List of fully-qualified email addresses blocked from receiving notifications */
+  notificationEmailBlacklist: Array<Scalars["String"]["output"]>;
 };
 
 export type PlatformInvitation = {
@@ -5551,6 +5735,18 @@ export type PlatformRolesAccess = {
 export type PlatformSettings = {
   /** The integration settings for this Platform */
   integration: PlatformIntegrationSettings;
+};
+
+export type PlatformWellKnownVirtualContributorMapping = {
+  /** The UUID of the Virtual Contributor. */
+  virtualContributorID: Scalars["UUID"]["output"];
+  /** The well-known identifier for the Virtual Contributor. */
+  wellKnown: VirtualContributorWellKnown;
+};
+
+export type PlatformWellKnownVirtualContributors = {
+  /** The mappings of well-known Virtual Contributors to their UUIDs. */
+  mappings: Array<PlatformWellKnownVirtualContributorMapping>;
 };
 
 export type Post = {
@@ -5654,6 +5850,7 @@ export type PromptGraph = {
 
 export type PromptGraphDataPoint = {
   description?: Maybe<Scalars["String"]["output"]>;
+  items?: Maybe<PromptGraphDataStruct>;
   name: Scalars["String"]["output"];
   optional?: Maybe<Scalars["Boolean"]["output"]>;
   type?: Maybe<Scalars["String"]["output"]>;
@@ -5661,6 +5858,7 @@ export type PromptGraphDataPoint = {
 
 export type PromptGraphDataPointInput = {
   description?: InputMaybe<Scalars["String"]["input"]>;
+  items?: InputMaybe<PromptGraphDataStructInput>;
   name: Scalars["String"]["input"];
   optional?: InputMaybe<Scalars["Boolean"]["input"]>;
   type?: InputMaybe<Scalars["String"]["input"]>;
@@ -6162,6 +6360,7 @@ export enum RoleName {
   GlobalSpacesReader = "GLOBAL_SPACES_READER",
   GlobalSupport = "GLOBAL_SUPPORT",
   GlobalSupportManager = "GLOBAL_SUPPORT_MANAGER",
+  Guest = "GUEST",
   Lead = "LEAD",
   Member = "MEMBER",
   Owner = "OWNER",
@@ -6633,6 +6832,13 @@ export type ServiceMetadata = {
   version?: Maybe<Scalars["String"]["output"]>;
 };
 
+export type SetPlatformWellKnownVirtualContributorInput = {
+  /** The UUID of the Virtual Contributor. */
+  virtualContributorID: Scalars["UUID"]["input"];
+  /** The well-known Virtual Contributor type. */
+  wellKnown: VirtualContributorWellKnown;
+};
+
 export type Space = {
   /** About this space. */
   about: SpaceAbout;
@@ -6773,6 +6979,8 @@ export type SpaceSettings = {
 export type SpaceSettingsCollaboration = {
   /** Flag to control if events from Subspaces are visible on this Space calendar as well. */
   allowEventsFromSubspaces: Scalars["Boolean"]["output"];
+  /** Flag to control if guest users can contribute to this Space. */
+  allowGuestContributions: Scalars["Boolean"]["output"];
   /** Flag to control if members can create callouts. */
   allowMembersToCreateCallouts: Scalars["Boolean"]["output"];
   /** Flag to control if members can create subspaces. */
@@ -7242,6 +7450,7 @@ export type UpdateAiPersonaInput = {
   engine?: InputMaybe<AiPersonaEngine>;
   externalConfig?: InputMaybe<ExternalConfigInput>;
   prompt?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  promptGraph?: InputMaybe<PromptGraphInput>;
 };
 
 export type UpdateApplicationFormOnRoleSetInput = {
@@ -7320,6 +7529,8 @@ export type UpdateCalloutFramingInput = {
   type?: InputMaybe<CalloutFramingType>;
   /** The new content to be used. */
   whiteboardContent?: InputMaybe<Scalars["WhiteboardContent"]["input"]>;
+  /** The new preview settings for the Whiteboard. */
+  whiteboardPreviewSettings?: InputMaybe<UpdateWhiteboardPreviewSettingsInput>;
 };
 
 export type UpdateCalloutPublishInfoInput = {
@@ -7611,6 +7822,8 @@ export type UpdatePlatformSettingsInput = {
 export type UpdatePlatformSettingsIntegrationInput = {
   /** Update the list of allowed URLs for iFrames within Markdown content. */
   iframeAllowedUrls: Array<Scalars["String"]["input"]>;
+  /** Update the list of email addresses blocked from receiving notifications. */
+  notificationEmailBlacklist?: InputMaybe<Array<Scalars["String"]["input"]>>;
 };
 
 export type UpdatePostInput = {
@@ -7676,6 +7889,8 @@ export type UpdateSpacePlatformSettingsInput = {
 export type UpdateSpaceSettingsCollaborationInput = {
   /** Flag to control if events from Subspaces are visible on this Space calendar as well. */
   allowEventsFromSubspaces: Scalars["Boolean"]["input"];
+  /** Flag to control if guest users can contribute to this Space. */
+  allowGuestContributions: Scalars["Boolean"]["input"];
   /** Flag to control if members can create callouts. */
   allowMembersToCreateCallouts: Scalars["Boolean"]["input"];
   /** Flag to control if members can create subspaces. */
@@ -7867,6 +8082,8 @@ export type UpdateUserSettingsNotificationSpaceInput = {
   collaborationCalloutPublished?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification for community updates */
   communicationUpdates?: InputMaybe<NotificationSettingInput>;
+  /** Receive a notification when a calendar event is created */
+  communityCalendarEvents?: InputMaybe<NotificationSettingInput>;
 };
 
 export type UpdateUserSettingsNotificationUserInput = {
@@ -7915,6 +8132,18 @@ export type UpdateVirtualContributorInput = {
   searchVisibility?: InputMaybe<SearchVisibility>;
 };
 
+export type UpdateVirtualContributorPlatformSettingsEntityInput = {
+  /** Enable or disable the editing of the prompt graph for this Virtual Contributor. */
+  promptGraphEditingEnabled: Scalars["Boolean"]["input"];
+};
+
+export type UpdateVirtualContributorPlatformSettingsInput = {
+  /** Platform-level settings to apply to this Virtual Contributor. */
+  settings: UpdateVirtualContributorPlatformSettingsEntityInput;
+  /** ID of the Virtual Contributor to update. */
+  virtualContributorID: Scalars["UUID"]["input"];
+};
+
 export type UpdateVirtualContributorSettingsEntityInput = {
   privacy?: InputMaybe<UpdateVirtualContributorSettingsPrivacyInput>;
 };
@@ -7948,20 +8177,23 @@ export type UpdateWhiteboardEntityInput = {
   profile?: InputMaybe<UpdateProfileInput>;
 };
 
-export type UpdateWhiteboardPreviewCoordinatesInput = {
-  /** The height. */
-  height: Scalars["Float"]["input"];
-  /** The width. */
-  width: Scalars["Float"]["input"];
-  /** The x coordinate. */
-  x: Scalars["Float"]["input"];
-  /** The y coordinate. */
-  y: Scalars["Float"]["input"];
+export type UpdateWhiteboardGuestAccessInput = {
+  /** Target state for guest collaboration. True enables GLOBAL_GUEST privileges. */
+  guestAccessEnabled: Scalars["Boolean"]["input"];
+  /** The identifier of the whiteboard whose guest access should be toggled. */
+  whiteboardId: Scalars["UUID"]["input"];
+};
+
+export type UpdateWhiteboardGuestAccessResult = {
+  /** Indicates whether the mutation completed successfully. */
+  success: Scalars["Boolean"]["output"];
+  /** Whiteboard snapshot reflecting the latest guest access state. */
+  whiteboard?: Maybe<Whiteboard>;
 };
 
 export type UpdateWhiteboardPreviewSettingsInput = {
   /** The coordinates for the preview. */
-  coordinates?: InputMaybe<UpdateWhiteboardPreviewCoordinatesInput>;
+  coordinates?: InputMaybe<WhiteboardPreviewCoordinatesInput>;
   /**
    * The preview mode.
    *       AUTO: Generate Whiteboard preview automatically when closing the dialog
@@ -7981,6 +8213,7 @@ export type UrlResolverQueryResultCalloutsSet = {
   calloutId?: Maybe<Scalars["UUID"]["output"]>;
   contributionId?: Maybe<Scalars["UUID"]["output"]>;
   id: Scalars["UUID"]["output"];
+  memoId?: Maybe<Scalars["UUID"]["output"]>;
   postId?: Maybe<Scalars["UUID"]["output"]>;
   type: UrlType;
   whiteboardId?: Maybe<Scalars["UUID"]["output"]>;
@@ -8031,6 +8264,7 @@ export enum UrlType {
   Admin = "ADMIN",
   Callout = "CALLOUT",
   CalloutsSet = "CALLOUTS_SET",
+  ContributionMemo = "CONTRIBUTION_MEMO",
   ContributionPost = "CONTRIBUTION_POST",
   ContributionWhiteboard = "CONTRIBUTION_WHITEBOARD",
   ContributorsExplorer = "CONTRIBUTORS_EXPLORER",
@@ -8073,13 +8307,9 @@ export type User = Contributor & {
   authorization?: Maybe<Authorization>;
   /** The date at which the entity was created. */
   createdDate: Scalars["DateTime"]["output"];
-  /** The direct rooms this user is a member of */
-  directRooms?: Maybe<Array<DirectRoom>>;
   /** The email address for this User. */
   email: Scalars["String"]["output"];
   firstName: Scalars["String"]["output"];
-  /** Guidance Chat Room for this user */
-  guidanceRoom?: Maybe<Room>;
   /** The ID of the Contributor */
   id: Scalars["UUID"]["output"];
   /** Can a message be sent to this User. */
@@ -8135,13 +8365,6 @@ export type UserGroup = {
   profile?: Maybe<Profile>;
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
-};
-
-export type UserSendMessageInput = {
-  /** The message being sent */
-  message: Scalars["String"]["input"];
-  /** The user a message is being sent to */
-  receivingUserID: Scalars["String"]["input"];
 };
 
 export type UserSettings = {
@@ -8226,6 +8449,8 @@ export type UserSettingsNotificationSpace = {
   collaborationCalloutPublished: UserSettingsNotificationChannels;
   /** Receive a notification for community updates */
   communicationUpdates: UserSettingsNotificationChannels;
+  /** Receive a notification when a calendar event is created */
+  communityCalendarEvents: UserSettingsNotificationChannels;
 };
 
 export type UserSettingsNotificationSpaceAdmin = {
@@ -8350,6 +8575,8 @@ export type VirtualContributor = Contributor & {
   modelCard: VirtualContributorModelCard;
   /** A name identifier of the Contributor, unique within a given scope. */
   nameID: Scalars["NameID"]["output"];
+  /** Platform-level settings of this Virtual Contributor, modifiable only by platform admins. */
+  platformSettings: VirtualContributorPlatformSettings;
   /** The profile for this Virtual. */
   profile: Profile;
   /** Prompt graph definition for this Virtual Contributor. */
@@ -8417,6 +8644,11 @@ export type VirtualContributorModelCardFlag = {
   name: VirtualContributorModelCardEntryFlagName;
 };
 
+export type VirtualContributorPlatformSettings = {
+  /** Enable or disable the editing of the prompt graph for this Virtual Contributor. */
+  promptGraphEditingEnabled: Scalars["Boolean"]["output"];
+};
+
 export type VirtualContributorSettings = {
   /** The privacy settings for this VirtualContributor */
   privacy: VirtualContributorSettingsPrivacy;
@@ -8437,6 +8669,11 @@ export type VirtualContributorUpdatedSubscriptionResult = {
   /** The Virtual Contributor that was updated */
   virtualContributor: VirtualContributor;
 };
+
+export enum VirtualContributorWellKnown {
+  ChatGuidance = "CHAT_GUIDANCE",
+  StewardOwnershipExpert = "STEWARD_OWNERSHIP_EXPERT",
+}
 
 export type VirtualContributorsInRolesResponse = {
   role: RoleName;
@@ -8462,7 +8699,7 @@ export type Visual = {
   minHeight: Scalars["Float"]["output"];
   /** Minimum width resolution. */
   minWidth: Scalars["Float"]["output"];
-  name: Scalars["String"]["output"];
+  name: VisualType;
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
   uri: Scalars["String"]["output"];
@@ -8507,6 +8744,8 @@ export type Whiteboard = {
   createdBy?: Maybe<User>;
   /** The date at which the entity was created. */
   createdDate: Scalars["DateTime"]["output"];
+  /** Indicates whether guest collaborators are currently allowed via GLOBAL_GUEST permissions. */
+  guestContributionsAllowed: Scalars["Boolean"]["output"];
   /** The ID of the entity */
   id: Scalars["UUID"]["output"];
   /** Whether the Whiteboard is multi-user enabled on Space level. */
@@ -8530,6 +8769,28 @@ export type WhiteboardPreviewCoordinates = {
   x: Scalars["Float"]["output"];
   /** The y coordinate. */
   y: Scalars["Float"]["output"];
+};
+
+export type WhiteboardPreviewCoordinatesData = {
+  /** The height. */
+  height: Scalars["Float"]["output"];
+  /** The width. */
+  width: Scalars["Float"]["output"];
+  /** The x coordinate. */
+  x: Scalars["Float"]["output"];
+  /** The y coordinate. */
+  y: Scalars["Float"]["output"];
+};
+
+export type WhiteboardPreviewCoordinatesInput = {
+  /** The height. */
+  height: Scalars["Float"]["input"];
+  /** The width. */
+  width: Scalars["Float"]["input"];
+  /** The x coordinate. */
+  x: Scalars["Float"]["input"];
+  /** The y coordinate. */
+  y: Scalars["Float"]["input"];
 };
 
 export enum WhiteboardPreviewMode {
@@ -8692,6 +8953,15 @@ export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> =
           triggeredBy: _RefType["User"];
         })
       | (Omit<
+          ActivityLogEntryCalloutMemoCreated,
+          "callout" | "memo" | "space" | "triggeredBy"
+        > & {
+          callout: _RefType["Callout"];
+          memo: _RefType["Memo"];
+          space?: Maybe<_RefType["Space"]>;
+          triggeredBy: _RefType["User"];
+        })
+      | (Omit<
           ActivityLogEntryCalloutPostComment,
           "callout" | "post" | "space" | "triggeredBy"
         > & {
@@ -8771,10 +9041,8 @@ export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> =
           profile: _RefType["Profile"];
           roleSet: _RefType["RoleSet"];
         })
-      | (Omit<User, "account" | "directRooms" | "guidanceRoom" | "profile"> & {
+      | (Omit<User, "account" | "profile"> & {
           account?: Maybe<_RefType["Account"]>;
-          directRooms?: Maybe<Array<_RefType["DirectRoom"]>>;
-          guidanceRoom?: Maybe<_RefType["Room"]>;
           profile: _RefType["Profile"];
         })
       | (Omit<
@@ -8809,16 +9077,14 @@ export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> =
           roleSet: _RefType["RoleSet"];
         });
     InAppNotificationPayload:
-      | InAppNotificationPayloadOrganization
       | (Omit<
           InAppNotificationPayloadOrganizationMessageDirect,
           "organization"
-        > & { organization: _RefType["Contributor"] })
+        > & { organization?: Maybe<_RefType["Organization"]> })
       | (Omit<
           InAppNotificationPayloadOrganizationMessageRoom,
           "organization"
         > & { organization: _RefType["Organization"] })
-      | InAppNotificationPayloadPlatform
       | InAppNotificationPayloadPlatformForumDiscussion
       | (Omit<InAppNotificationPayloadPlatformGlobalRoleChange, "user"> & {
           user?: Maybe<_RefType["User"]>;
@@ -8829,63 +9095,68 @@ export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> =
           "messageDetails" | "user"
         > & {
           messageDetails?: Maybe<_RefType["MessageDetails"]>;
-          user?: Maybe<_RefType["User"]>;
+          user: _RefType["User"];
         })
       | InAppNotificationPayloadPlatformUserProfileRemoved
       | (Omit<InAppNotificationPayloadSpace, "space"> & {
-          space?: Maybe<_RefType["Space"]>;
+          space: _RefType["Space"];
         })
       | (Omit<
           InAppNotificationPayloadSpaceCollaborationCallout,
           "callout" | "space"
-        > & {
-          callout?: Maybe<_RefType["Callout"]>;
-          space?: Maybe<_RefType["Space"]>;
-        })
+        > & { callout: _RefType["Callout"]; space: _RefType["Space"] })
       | (Omit<
           InAppNotificationPayloadSpaceCollaborationCalloutComment,
           "callout" | "messageDetails" | "space"
         > & {
-          callout?: Maybe<_RefType["Callout"]>;
+          callout: _RefType["Callout"];
           messageDetails?: Maybe<_RefType["MessageDetails"]>;
-          space?: Maybe<_RefType["Space"]>;
+          space: _RefType["Space"];
         })
       | (Omit<
           InAppNotificationPayloadSpaceCollaborationCalloutPostComment,
           "callout" | "messageDetails" | "space"
         > & {
-          callout?: Maybe<_RefType["Callout"]>;
+          callout: _RefType["Callout"];
           messageDetails?: Maybe<_RefType["MessageDetails"]>;
-          space?: Maybe<_RefType["Space"]>;
+          space: _RefType["Space"];
         })
       | (Omit<
           InAppNotificationPayloadSpaceCommunicationMessageDirect,
           "space"
-        > & { space?: Maybe<_RefType["Space"]> })
+        > & { space: _RefType["Space"] })
       | (Omit<InAppNotificationPayloadSpaceCommunicationUpdate, "space"> & {
-          space?: Maybe<_RefType["Space"]>;
+          space: _RefType["Space"];
         })
       | (Omit<
           InAppNotificationPayloadSpaceCommunityApplication,
           "application" | "space"
+        > & { application: _RefType["Application"]; space: _RefType["Space"] })
+      | (Omit<
+          InAppNotificationPayloadSpaceCommunityCalendarEvent,
+          "calendarEvent" | "space"
         > & {
-          application?: Maybe<_RefType["Application"]>;
-          space?: Maybe<_RefType["Space"]>;
+          calendarEvent: _RefType["CalendarEvent"];
+          space: _RefType["Space"];
+        })
+      | (Omit<
+          InAppNotificationPayloadSpaceCommunityCalendarEventComment,
+          "calendarEvent" | "space"
+        > & {
+          calendarEvent: _RefType["CalendarEvent"];
+          space: _RefType["Space"];
         })
       | (Omit<
           InAppNotificationPayloadSpaceCommunityContributor,
           "contributor" | "space"
-        > & {
-          contributor?: Maybe<_RefType["Contributor"]>;
-          space?: Maybe<_RefType["Space"]>;
-        })
+        > & { contributor: _RefType["Contributor"]; space: _RefType["Space"] })
       | (Omit<InAppNotificationPayloadSpaceCommunityInvitation, "space"> & {
-          space?: Maybe<_RefType["Space"]>;
+          space: _RefType["Space"];
         })
       | (Omit<
           InAppNotificationPayloadSpaceCommunityInvitationPlatform,
           "space"
-        > & { space?: Maybe<_RefType["Space"]> })
+        > & { space: _RefType["Space"] })
       | (Omit<InAppNotificationPayloadUserMessageDirect, "user"> & {
           user?: Maybe<_RefType["User"]>;
         })
@@ -8893,8 +9164,8 @@ export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> =
           InAppNotificationPayloadVirtualContributor,
           "contributor" | "space"
         > & {
-          contributor?: Maybe<_RefType["VirtualContributor"]>;
-          space?: Maybe<_RefType["Space"]>;
+          contributor: _RefType["VirtualContributor"];
+          space: _RefType["Space"];
         });
     SearchResult:
       | (Omit<SearchResultCallout, "callout" | "space"> & {
@@ -8987,6 +9258,17 @@ export type ResolversTypes = {
     > & {
       callout: ResolversTypes["Callout"];
       link: ResolversTypes["Link"];
+      space?: Maybe<ResolversTypes["Space"]>;
+      triggeredBy: ResolversTypes["User"];
+    }
+  >;
+  ActivityLogEntryCalloutMemoCreated: ResolverTypeWrapper<
+    Omit<
+      ActivityLogEntryCalloutMemoCreated,
+      "callout" | "memo" | "space" | "triggeredBy"
+    > & {
+      callout: ResolversTypes["Callout"];
+      memo: ResolversTypes["Memo"];
       space?: Maybe<ResolversTypes["Space"]>;
       triggeredBy: ResolversTypes["User"];
     }
@@ -9154,9 +9436,13 @@ export type ResolversTypes = {
   >;
   CalloutAllowedContributors: CalloutAllowedContributors;
   CalloutContribution: ResolverTypeWrapper<
-    Omit<CalloutContribution, "createdBy" | "link" | "post" | "whiteboard"> & {
+    Omit<
+      CalloutContribution,
+      "createdBy" | "link" | "memo" | "post" | "whiteboard"
+    > & {
       createdBy?: Maybe<ResolversTypes["User"]>;
       link?: Maybe<ResolversTypes["Link"]>;
+      memo?: Maybe<ResolversTypes["Memo"]>;
       post?: Maybe<ResolversTypes["Post"]>;
       whiteboard?: Maybe<ResolversTypes["Whiteboard"]>;
     }
@@ -9186,8 +9472,6 @@ export type ResolversTypes = {
     }
   >;
   CalloutsSetType: CalloutsSetType;
-  ChatGuidanceAnswerRelevanceInput: ChatGuidanceAnswerRelevanceInput;
-  ChatGuidanceInput: ChatGuidanceInput;
   Classification: ResolverTypeWrapper<Classification>;
   Collaboration: ResolverTypeWrapper<
     Omit<Collaboration, "calloutsSet" | "innovationFlow" | "timeline"> & {
@@ -9207,6 +9491,7 @@ export type ResolversTypes = {
   CommunicationAdminRoomMembershipResult: ResolverTypeWrapper<CommunicationAdminRoomMembershipResult>;
   CommunicationAdminRoomResult: ResolverTypeWrapper<CommunicationAdminRoomResult>;
   CommunicationAdminUpdateRoomStateInput: CommunicationAdminUpdateRoomStateInput;
+  CommunicationConversationType: CommunicationConversationType;
   CommunicationSendMessageToCommunityLeadsInput: CommunicationSendMessageToCommunityLeadsInput;
   CommunicationSendMessageToOrganizationInput: CommunicationSendMessageToOrganizationInput;
   CommunicationSendMessageToUsersInput: CommunicationSendMessageToUsersInput;
@@ -9264,6 +9549,16 @@ export type ResolversTypes = {
   ContributorFilterInput: ContributorFilterInput;
   ContributorRolePolicy: ResolverTypeWrapper<ContributorRolePolicy>;
   ContributorRoles: ResolverTypeWrapper<ContributorRoles>;
+  Conversation: ResolverTypeWrapper<
+    Omit<Conversation, "room" | "user" | "virtualContributor"> & {
+      room?: Maybe<ResolversTypes["Room"]>;
+      user?: Maybe<ResolversTypes["User"]>;
+      virtualContributor?: Maybe<ResolversTypes["VirtualContributor"]>;
+    }
+  >;
+  ConversationVcAnswerRelevanceInput: ConversationVcAnswerRelevanceInput;
+  ConversationVcAskQuestionInput: ConversationVcAskQuestionInput;
+  ConversationVcResetInput: ConversationVcResetInput;
   ConversionVcSpaceToVcKnowledgeBaseInput: ConversionVcSpaceToVcKnowledgeBaseInput;
   ConvertSpaceL1ToSpaceL0Input: ConvertSpaceL1ToSpaceL0Input;
   ConvertSpaceL1ToSpaceL2Input: ConvertSpaceL1ToSpaceL2Input;
@@ -9295,6 +9590,7 @@ export type ResolversTypes = {
   CreateCommunityGuidelinesData: ResolverTypeWrapper<CreateCommunityGuidelinesData>;
   CreateCommunityGuidelinesInput: CreateCommunityGuidelinesInput;
   CreateContributionOnCalloutInput: CreateContributionOnCalloutInput;
+  CreateConversationInput: CreateConversationInput;
   CreateInnovationFlowData: ResolverTypeWrapper<CreateInnovationFlowData>;
   CreateInnovationFlowInput: CreateInnovationFlowInput;
   CreateInnovationFlowStateData: ResolverTypeWrapper<CreateInnovationFlowStateData>;
@@ -9343,6 +9639,8 @@ export type ResolversTypes = {
   CreateVisualOnProfileInput: CreateVisualOnProfileInput;
   CreateWhiteboardData: ResolverTypeWrapper<CreateWhiteboardData>;
   CreateWhiteboardInput: CreateWhiteboardInput;
+  CreateWhiteboardPreviewSettingsData: ResolverTypeWrapper<CreateWhiteboardPreviewSettingsData>;
+  CreateWhiteboardPreviewSettingsInput: CreateWhiteboardPreviewSettingsInput;
   Credential: ResolverTypeWrapper<Credential>;
   CredentialDefinition: ResolverTypeWrapper<CredentialDefinition>;
   CredentialMetadataOutput: ResolverTypeWrapper<CredentialMetadataOutput>;
@@ -9354,6 +9652,7 @@ export type ResolversTypes = {
   DeleteCalendarEventInput: DeleteCalendarEventInput;
   DeleteCalloutInput: DeleteCalloutInput;
   DeleteContributionInput: DeleteContributionInput;
+  DeleteConversationInput: DeleteConversationInput;
   DeleteDiscussionInput: DeleteDiscussionInput;
   DeleteDocumentInput: DeleteDocumentInput;
   DeleteInnovationHubInput: DeleteInnovationHubInput;
@@ -9375,11 +9674,6 @@ export type ResolversTypes = {
   DeleteUserInput: DeleteUserInput;
   DeleteVirtualContributorInput: DeleteVirtualContributorInput;
   DeleteWhiteboardInput: DeleteWhiteboardInput;
-  DirectRoom: ResolverTypeWrapper<
-    Omit<DirectRoom, "messages"> & {
-      messages: Array<ResolversTypes["Message"]>;
-    }
-  >;
   Discussion: ResolverTypeWrapper<
     Omit<Discussion, "comments" | "profile"> & {
       comments: ResolversTypes["Room"];
@@ -9446,10 +9740,9 @@ export type ResolversTypes = {
   InAppNotificationPayload: ResolverTypeWrapper<
     ResolversInterfaceTypes<ResolversTypes>["InAppNotificationPayload"]
   >;
-  InAppNotificationPayloadOrganization: ResolverTypeWrapper<InAppNotificationPayloadOrganization>;
   InAppNotificationPayloadOrganizationMessageDirect: ResolverTypeWrapper<
     Omit<InAppNotificationPayloadOrganizationMessageDirect, "organization"> & {
-      organization: ResolversTypes["Contributor"];
+      organization?: Maybe<ResolversTypes["Organization"]>;
     }
   >;
   InAppNotificationPayloadOrganizationMessageRoom: ResolverTypeWrapper<
@@ -9457,7 +9750,6 @@ export type ResolversTypes = {
       organization: ResolversTypes["Organization"];
     }
   >;
-  InAppNotificationPayloadPlatform: ResolverTypeWrapper<InAppNotificationPayloadPlatform>;
   InAppNotificationPayloadPlatformForumDiscussion: ResolverTypeWrapper<InAppNotificationPayloadPlatformForumDiscussion>;
   InAppNotificationPayloadPlatformGlobalRoleChange: ResolverTypeWrapper<
     Omit<InAppNotificationPayloadPlatformGlobalRoleChange, "user"> & {
@@ -9471,32 +9763,29 @@ export type ResolversTypes = {
       "messageDetails" | "user"
     > & {
       messageDetails?: Maybe<ResolversTypes["MessageDetails"]>;
-      user?: Maybe<ResolversTypes["User"]>;
+      user: ResolversTypes["User"];
     }
   >;
   InAppNotificationPayloadPlatformUserProfileRemoved: ResolverTypeWrapper<InAppNotificationPayloadPlatformUserProfileRemoved>;
   InAppNotificationPayloadSpace: ResolverTypeWrapper<
     Omit<InAppNotificationPayloadSpace, "space"> & {
-      space?: Maybe<ResolversTypes["Space"]>;
+      space: ResolversTypes["Space"];
     }
   >;
   InAppNotificationPayloadSpaceCollaborationCallout: ResolverTypeWrapper<
     Omit<
       InAppNotificationPayloadSpaceCollaborationCallout,
       "callout" | "space"
-    > & {
-      callout?: Maybe<ResolversTypes["Callout"]>;
-      space?: Maybe<ResolversTypes["Space"]>;
-    }
+    > & { callout: ResolversTypes["Callout"]; space: ResolversTypes["Space"] }
   >;
   InAppNotificationPayloadSpaceCollaborationCalloutComment: ResolverTypeWrapper<
     Omit<
       InAppNotificationPayloadSpaceCollaborationCalloutComment,
       "callout" | "messageDetails" | "space"
     > & {
-      callout?: Maybe<ResolversTypes["Callout"]>;
+      callout: ResolversTypes["Callout"];
       messageDetails?: Maybe<ResolversTypes["MessageDetails"]>;
-      space?: Maybe<ResolversTypes["Space"]>;
+      space: ResolversTypes["Space"];
     }
   >;
   InAppNotificationPayloadSpaceCollaborationCalloutPostComment: ResolverTypeWrapper<
@@ -9504,19 +9793,19 @@ export type ResolversTypes = {
       InAppNotificationPayloadSpaceCollaborationCalloutPostComment,
       "callout" | "messageDetails" | "space"
     > & {
-      callout?: Maybe<ResolversTypes["Callout"]>;
+      callout: ResolversTypes["Callout"];
       messageDetails?: Maybe<ResolversTypes["MessageDetails"]>;
-      space?: Maybe<ResolversTypes["Space"]>;
+      space: ResolversTypes["Space"];
     }
   >;
   InAppNotificationPayloadSpaceCommunicationMessageDirect: ResolverTypeWrapper<
     Omit<InAppNotificationPayloadSpaceCommunicationMessageDirect, "space"> & {
-      space?: Maybe<ResolversTypes["Space"]>;
+      space: ResolversTypes["Space"];
     }
   >;
   InAppNotificationPayloadSpaceCommunicationUpdate: ResolverTypeWrapper<
     Omit<InAppNotificationPayloadSpaceCommunicationUpdate, "space"> & {
-      space?: Maybe<ResolversTypes["Space"]>;
+      space: ResolversTypes["Space"];
     }
   >;
   InAppNotificationPayloadSpaceCommunityApplication: ResolverTypeWrapper<
@@ -9524,8 +9813,26 @@ export type ResolversTypes = {
       InAppNotificationPayloadSpaceCommunityApplication,
       "application" | "space"
     > & {
-      application?: Maybe<ResolversTypes["Application"]>;
-      space?: Maybe<ResolversTypes["Space"]>;
+      application: ResolversTypes["Application"];
+      space: ResolversTypes["Space"];
+    }
+  >;
+  InAppNotificationPayloadSpaceCommunityCalendarEvent: ResolverTypeWrapper<
+    Omit<
+      InAppNotificationPayloadSpaceCommunityCalendarEvent,
+      "calendarEvent" | "space"
+    > & {
+      calendarEvent: ResolversTypes["CalendarEvent"];
+      space: ResolversTypes["Space"];
+    }
+  >;
+  InAppNotificationPayloadSpaceCommunityCalendarEventComment: ResolverTypeWrapper<
+    Omit<
+      InAppNotificationPayloadSpaceCommunityCalendarEventComment,
+      "calendarEvent" | "space"
+    > & {
+      calendarEvent: ResolversTypes["CalendarEvent"];
+      space: ResolversTypes["Space"];
     }
   >;
   InAppNotificationPayloadSpaceCommunityContributor: ResolverTypeWrapper<
@@ -9533,18 +9840,18 @@ export type ResolversTypes = {
       InAppNotificationPayloadSpaceCommunityContributor,
       "contributor" | "space"
     > & {
-      contributor?: Maybe<ResolversTypes["Contributor"]>;
-      space?: Maybe<ResolversTypes["Space"]>;
+      contributor: ResolversTypes["Contributor"];
+      space: ResolversTypes["Space"];
     }
   >;
   InAppNotificationPayloadSpaceCommunityInvitation: ResolverTypeWrapper<
     Omit<InAppNotificationPayloadSpaceCommunityInvitation, "space"> & {
-      space?: Maybe<ResolversTypes["Space"]>;
+      space: ResolversTypes["Space"];
     }
   >;
   InAppNotificationPayloadSpaceCommunityInvitationPlatform: ResolverTypeWrapper<
     Omit<InAppNotificationPayloadSpaceCommunityInvitationPlatform, "space"> & {
-      space?: Maybe<ResolversTypes["Space"]>;
+      space: ResolversTypes["Space"];
     }
   >;
   InAppNotificationPayloadUserMessageDirect: ResolverTypeWrapper<
@@ -9557,8 +9864,8 @@ export type ResolversTypes = {
       InAppNotificationPayloadVirtualContributor,
       "contributor" | "space"
     > & {
-      contributor?: Maybe<ResolversTypes["VirtualContributor"]>;
-      space?: Maybe<ResolversTypes["Space"]>;
+      contributor: ResolversTypes["VirtualContributor"];
+      space: ResolversTypes["Space"];
     }
   >;
   InnovationFlow: ResolverTypeWrapper<
@@ -9661,6 +9968,7 @@ export type ResolversTypes = {
       | "community"
       | "communityGuidelines"
       | "contribution"
+      | "conversation"
       | "document"
       | "innovationFlow"
       | "innovationHub"
@@ -9695,6 +10003,7 @@ export type ResolversTypes = {
       community?: Maybe<ResolversTypes["Community"]>;
       communityGuidelines?: Maybe<ResolversTypes["CommunityGuidelines"]>;
       contribution?: Maybe<ResolversTypes["CalloutContribution"]>;
+      conversation?: Maybe<ResolversTypes["Conversation"]>;
       document?: Maybe<ResolversTypes["Document"]>;
       innovationFlow?: Maybe<ResolversTypes["InnovationFlow"]>;
       innovationHub?: Maybe<ResolversTypes["InnovationHub"]>;
@@ -9720,11 +10029,22 @@ export type ResolversTypes = {
     }
   >;
   Markdown: ResolverTypeWrapper<Scalars["Markdown"]["output"]>;
+  MeConversationsResult: ResolverTypeWrapper<
+    Omit<
+      MeConversationsResult,
+      "users" | "virtualContributor" | "virtualContributors"
+    > & {
+      users: Array<ResolversTypes["Conversation"]>;
+      virtualContributor?: Maybe<ResolversTypes["Conversation"]>;
+      virtualContributors: Array<ResolversTypes["Conversation"]>;
+    }
+  >;
   MeQueryResults: ResolverTypeWrapper<
     Omit<
       MeQueryResults,
       | "communityApplications"
       | "communityInvitations"
+      | "conversations"
       | "mySpaces"
       | "notifications"
       | "spaceMembershipsFlat"
@@ -9735,6 +10055,7 @@ export type ResolversTypes = {
         ResolversTypes["CommunityApplicationResult"]
       >;
       communityInvitations: Array<ResolversTypes["CommunityInvitationResult"]>;
+      conversations: ResolversTypes["MeConversationsResult"];
       mySpaces: Array<ResolversTypes["MySpaceResults"]>;
       notifications: ResolversTypes["PaginatedInAppNotifications"];
       spaceMembershipsFlat: Array<ResolversTypes["CommunityMembershipResult"]>;
@@ -9782,6 +10103,7 @@ export type ResolversTypes = {
   >;
   NVP: ResolverTypeWrapper<Nvp>;
   NameID: ResolverTypeWrapper<Scalars["NameID"]["output"]>;
+  NotificationEmailAddressInput: NotificationEmailAddressInput;
   NotificationEvent: NotificationEvent;
   NotificationEventCategory: NotificationEventCategory;
   NotificationEventInAppState: NotificationEventInAppState;
@@ -9860,7 +10182,6 @@ export type ResolversTypes = {
   Platform: ResolverTypeWrapper<
     Omit<
       Platform,
-      | "chatGuidanceVirtualContributor"
       | "configuration"
       | "forum"
       | "innovationHub"
@@ -9868,7 +10189,6 @@ export type ResolversTypes = {
       | "roleSet"
       | "templatesManager"
     > & {
-      chatGuidanceVirtualContributor: ResolversTypes["VirtualContributor"];
       configuration: ResolversTypes["Config"];
       forum: ResolversTypes["Forum"];
       innovationHub?: Maybe<ResolversTypes["InnovationHub"]>;
@@ -9909,6 +10229,8 @@ export type ResolversTypes = {
   PlatformLocations: ResolverTypeWrapper<PlatformLocations>;
   PlatformRolesAccess: ResolverTypeWrapper<PlatformRolesAccess>;
   PlatformSettings: ResolverTypeWrapper<PlatformSettings>;
+  PlatformWellKnownVirtualContributorMapping: ResolverTypeWrapper<PlatformWellKnownVirtualContributorMapping>;
+  PlatformWellKnownVirtualContributors: ResolverTypeWrapper<PlatformWellKnownVirtualContributors>;
   Post: ResolverTypeWrapper<
     Omit<Post, "comments" | "createdBy" | "profile"> & {
       comments: ResolversTypes["Room"];
@@ -10108,6 +10430,7 @@ export type ResolversTypes = {
   SearchVisibility: SearchVisibility;
   Sentry: ResolverTypeWrapper<Sentry>;
   ServiceMetadata: ResolverTypeWrapper<ServiceMetadata>;
+  SetPlatformWellKnownVirtualContributorInput: SetPlatformWellKnownVirtualContributorInput;
   Space: ResolverTypeWrapper<
     Omit<
       Space,
@@ -10335,12 +10658,19 @@ export type ResolversTypes = {
   UpdateUserSettingsNotificationVirtualContributorInput: UpdateUserSettingsNotificationVirtualContributorInput;
   UpdateUserSettingsPrivacyInput: UpdateUserSettingsPrivacyInput;
   UpdateVirtualContributorInput: UpdateVirtualContributorInput;
+  UpdateVirtualContributorPlatformSettingsEntityInput: UpdateVirtualContributorPlatformSettingsEntityInput;
+  UpdateVirtualContributorPlatformSettingsInput: UpdateVirtualContributorPlatformSettingsInput;
   UpdateVirtualContributorSettingsEntityInput: UpdateVirtualContributorSettingsEntityInput;
   UpdateVirtualContributorSettingsInput: UpdateVirtualContributorSettingsInput;
   UpdateVirtualContributorSettingsPrivacyInput: UpdateVirtualContributorSettingsPrivacyInput;
   UpdateVisualInput: UpdateVisualInput;
   UpdateWhiteboardEntityInput: UpdateWhiteboardEntityInput;
-  UpdateWhiteboardPreviewCoordinatesInput: UpdateWhiteboardPreviewCoordinatesInput;
+  UpdateWhiteboardGuestAccessInput: UpdateWhiteboardGuestAccessInput;
+  UpdateWhiteboardGuestAccessResult: ResolverTypeWrapper<
+    Omit<UpdateWhiteboardGuestAccessResult, "whiteboard"> & {
+      whiteboard?: Maybe<ResolversTypes["Whiteboard"]>;
+    }
+  >;
   UpdateWhiteboardPreviewSettingsInput: UpdateWhiteboardPreviewSettingsInput;
   Upload: ResolverTypeWrapper<Scalars["Upload"]["output"]>;
   UrlResolverQueryResultCalendar: ResolverTypeWrapper<UrlResolverQueryResultCalendar>;
@@ -10353,10 +10683,8 @@ export type ResolversTypes = {
   UrlResolverQueryResults: ResolverTypeWrapper<UrlResolverQueryResults>;
   UrlType: UrlType;
   User: ResolverTypeWrapper<
-    Omit<User, "account" | "directRooms" | "guidanceRoom" | "profile"> & {
+    Omit<User, "account" | "profile"> & {
       account?: Maybe<ResolversTypes["Account"]>;
-      directRooms?: Maybe<Array<ResolversTypes["DirectRoom"]>>;
-      guidanceRoom?: Maybe<ResolversTypes["Room"]>;
       profile: ResolversTypes["Profile"];
     }
   >;
@@ -10370,7 +10698,6 @@ export type ResolversTypes = {
       profile?: Maybe<ResolversTypes["Profile"]>;
     }
   >;
-  UserSendMessageInput: UserSendMessageInput;
   UserSettings: ResolverTypeWrapper<UserSettings>;
   UserSettingsCommunication: ResolverTypeWrapper<UserSettingsCommunication>;
   UserSettingsNotification: ResolverTypeWrapper<UserSettingsNotification>;
@@ -10414,6 +10741,7 @@ export type ResolversTypes = {
   VirtualContributorModelCardEntry: VirtualContributorModelCardEntry;
   VirtualContributorModelCardEntryFlagName: VirtualContributorModelCardEntryFlagName;
   VirtualContributorModelCardFlag: ResolverTypeWrapper<VirtualContributorModelCardFlag>;
+  VirtualContributorPlatformSettings: ResolverTypeWrapper<VirtualContributorPlatformSettings>;
   VirtualContributorSettings: ResolverTypeWrapper<VirtualContributorSettings>;
   VirtualContributorSettingsPrivacy: ResolverTypeWrapper<VirtualContributorSettingsPrivacy>;
   VirtualContributorStatus: VirtualContributorStatus;
@@ -10422,6 +10750,7 @@ export type ResolversTypes = {
       virtualContributor: ResolversTypes["VirtualContributor"];
     }
   >;
+  VirtualContributorWellKnown: VirtualContributorWellKnown;
   VirtualContributorsInRolesResponse: ResolverTypeWrapper<
     Omit<VirtualContributorsInRolesResponse, "virtualContributors"> & {
       virtualContributors: Array<ResolversTypes["VirtualContributor"]>;
@@ -10441,6 +10770,8 @@ export type ResolversTypes = {
     Scalars["WhiteboardContent"]["output"]
   >;
   WhiteboardPreviewCoordinates: ResolverTypeWrapper<WhiteboardPreviewCoordinates>;
+  WhiteboardPreviewCoordinatesData: ResolverTypeWrapper<WhiteboardPreviewCoordinatesData>;
+  WhiteboardPreviewCoordinatesInput: WhiteboardPreviewCoordinatesInput;
   WhiteboardPreviewMode: WhiteboardPreviewMode;
   WhiteboardPreviewSettings: ResolverTypeWrapper<WhiteboardPreviewSettings>;
 };
@@ -10501,6 +10832,15 @@ export type ResolversParentTypes = {
   > & {
     callout: ResolversParentTypes["Callout"];
     link: ResolversParentTypes["Link"];
+    space?: Maybe<ResolversParentTypes["Space"]>;
+    triggeredBy: ResolversParentTypes["User"];
+  };
+  ActivityLogEntryCalloutMemoCreated: Omit<
+    ActivityLogEntryCalloutMemoCreated,
+    "callout" | "memo" | "space" | "triggeredBy"
+  > & {
+    callout: ResolversParentTypes["Callout"];
+    memo: ResolversParentTypes["Memo"];
     space?: Maybe<ResolversParentTypes["Space"]>;
     triggeredBy: ResolversParentTypes["User"];
   };
@@ -10636,10 +10976,11 @@ export type ResolversParentTypes = {
   };
   CalloutContribution: Omit<
     CalloutContribution,
-    "createdBy" | "link" | "post" | "whiteboard"
+    "createdBy" | "link" | "memo" | "post" | "whiteboard"
   > & {
     createdBy?: Maybe<ResolversParentTypes["User"]>;
     link?: Maybe<ResolversParentTypes["Link"]>;
+    memo?: Maybe<ResolversParentTypes["Memo"]>;
     post?: Maybe<ResolversParentTypes["Post"]>;
     whiteboard?: Maybe<ResolversParentTypes["Whiteboard"]>;
   };
@@ -10663,8 +11004,6 @@ export type ResolversParentTypes = {
   CalloutsSet: Omit<CalloutsSet, "callouts"> & {
     callouts: Array<ResolversParentTypes["Callout"]>;
   };
-  ChatGuidanceAnswerRelevanceInput: ChatGuidanceAnswerRelevanceInput;
-  ChatGuidanceInput: ChatGuidanceInput;
   Classification: Classification;
   Collaboration: Omit<
     Collaboration,
@@ -10731,6 +11070,14 @@ export type ResolversParentTypes = {
   ContributorFilterInput: ContributorFilterInput;
   ContributorRolePolicy: ContributorRolePolicy;
   ContributorRoles: ContributorRoles;
+  Conversation: Omit<Conversation, "room" | "user" | "virtualContributor"> & {
+    room?: Maybe<ResolversParentTypes["Room"]>;
+    user?: Maybe<ResolversParentTypes["User"]>;
+    virtualContributor?: Maybe<ResolversParentTypes["VirtualContributor"]>;
+  };
+  ConversationVcAnswerRelevanceInput: ConversationVcAnswerRelevanceInput;
+  ConversationVcAskQuestionInput: ConversationVcAskQuestionInput;
+  ConversationVcResetInput: ConversationVcResetInput;
   ConversionVcSpaceToVcKnowledgeBaseInput: ConversionVcSpaceToVcKnowledgeBaseInput;
   ConvertSpaceL1ToSpaceL0Input: ConvertSpaceL1ToSpaceL0Input;
   ConvertSpaceL1ToSpaceL2Input: ConvertSpaceL1ToSpaceL2Input;
@@ -10762,6 +11109,7 @@ export type ResolversParentTypes = {
   CreateCommunityGuidelinesData: CreateCommunityGuidelinesData;
   CreateCommunityGuidelinesInput: CreateCommunityGuidelinesInput;
   CreateContributionOnCalloutInput: CreateContributionOnCalloutInput;
+  CreateConversationInput: CreateConversationInput;
   CreateInnovationFlowData: CreateInnovationFlowData;
   CreateInnovationFlowInput: CreateInnovationFlowInput;
   CreateInnovationFlowStateData: CreateInnovationFlowStateData;
@@ -10810,6 +11158,8 @@ export type ResolversParentTypes = {
   CreateVisualOnProfileInput: CreateVisualOnProfileInput;
   CreateWhiteboardData: CreateWhiteboardData;
   CreateWhiteboardInput: CreateWhiteboardInput;
+  CreateWhiteboardPreviewSettingsData: CreateWhiteboardPreviewSettingsData;
+  CreateWhiteboardPreviewSettingsInput: CreateWhiteboardPreviewSettingsInput;
   Credential: Credential;
   CredentialDefinition: CredentialDefinition;
   CredentialMetadataOutput: CredentialMetadataOutput;
@@ -10820,6 +11170,7 @@ export type ResolversParentTypes = {
   DeleteCalendarEventInput: DeleteCalendarEventInput;
   DeleteCalloutInput: DeleteCalloutInput;
   DeleteContributionInput: DeleteContributionInput;
+  DeleteConversationInput: DeleteConversationInput;
   DeleteDiscussionInput: DeleteDiscussionInput;
   DeleteDocumentInput: DeleteDocumentInput;
   DeleteInnovationHubInput: DeleteInnovationHubInput;
@@ -10841,9 +11192,6 @@ export type ResolversParentTypes = {
   DeleteUserInput: DeleteUserInput;
   DeleteVirtualContributorInput: DeleteVirtualContributorInput;
   DeleteWhiteboardInput: DeleteWhiteboardInput;
-  DirectRoom: Omit<DirectRoom, "messages"> & {
-    messages: Array<ResolversParentTypes["Message"]>;
-  };
   Discussion: Omit<Discussion, "comments" | "profile"> & {
     comments: ResolversParentTypes["Room"];
     profile: ResolversParentTypes["Profile"];
@@ -10895,16 +11243,14 @@ export type ResolversParentTypes = {
     triggeredBy?: Maybe<ResolversParentTypes["Contributor"]>;
   };
   InAppNotificationPayload: ResolversInterfaceTypes<ResolversParentTypes>["InAppNotificationPayload"];
-  InAppNotificationPayloadOrganization: InAppNotificationPayloadOrganization;
   InAppNotificationPayloadOrganizationMessageDirect: Omit<
     InAppNotificationPayloadOrganizationMessageDirect,
     "organization"
-  > & { organization: ResolversParentTypes["Contributor"] };
+  > & { organization?: Maybe<ResolversParentTypes["Organization"]> };
   InAppNotificationPayloadOrganizationMessageRoom: Omit<
     InAppNotificationPayloadOrganizationMessageRoom,
     "organization"
   > & { organization: ResolversParentTypes["Organization"] };
-  InAppNotificationPayloadPlatform: InAppNotificationPayloadPlatform;
   InAppNotificationPayloadPlatformForumDiscussion: InAppNotificationPayloadPlatformForumDiscussion;
   InAppNotificationPayloadPlatformGlobalRoleChange: Omit<
     InAppNotificationPayloadPlatformGlobalRoleChange,
@@ -10916,66 +11262,80 @@ export type ResolversParentTypes = {
     "messageDetails" | "user"
   > & {
     messageDetails?: Maybe<ResolversParentTypes["MessageDetails"]>;
-    user?: Maybe<ResolversParentTypes["User"]>;
+    user: ResolversParentTypes["User"];
   };
   InAppNotificationPayloadPlatformUserProfileRemoved: InAppNotificationPayloadPlatformUserProfileRemoved;
   InAppNotificationPayloadSpace: Omit<
     InAppNotificationPayloadSpace,
     "space"
-  > & { space?: Maybe<ResolversParentTypes["Space"]> };
+  > & { space: ResolversParentTypes["Space"] };
   InAppNotificationPayloadSpaceCollaborationCallout: Omit<
     InAppNotificationPayloadSpaceCollaborationCallout,
     "callout" | "space"
   > & {
-    callout?: Maybe<ResolversParentTypes["Callout"]>;
-    space?: Maybe<ResolversParentTypes["Space"]>;
+    callout: ResolversParentTypes["Callout"];
+    space: ResolversParentTypes["Space"];
   };
   InAppNotificationPayloadSpaceCollaborationCalloutComment: Omit<
     InAppNotificationPayloadSpaceCollaborationCalloutComment,
     "callout" | "messageDetails" | "space"
   > & {
-    callout?: Maybe<ResolversParentTypes["Callout"]>;
+    callout: ResolversParentTypes["Callout"];
     messageDetails?: Maybe<ResolversParentTypes["MessageDetails"]>;
-    space?: Maybe<ResolversParentTypes["Space"]>;
+    space: ResolversParentTypes["Space"];
   };
   InAppNotificationPayloadSpaceCollaborationCalloutPostComment: Omit<
     InAppNotificationPayloadSpaceCollaborationCalloutPostComment,
     "callout" | "messageDetails" | "space"
   > & {
-    callout?: Maybe<ResolversParentTypes["Callout"]>;
+    callout: ResolversParentTypes["Callout"];
     messageDetails?: Maybe<ResolversParentTypes["MessageDetails"]>;
-    space?: Maybe<ResolversParentTypes["Space"]>;
+    space: ResolversParentTypes["Space"];
   };
   InAppNotificationPayloadSpaceCommunicationMessageDirect: Omit<
     InAppNotificationPayloadSpaceCommunicationMessageDirect,
     "space"
-  > & { space?: Maybe<ResolversParentTypes["Space"]> };
+  > & { space: ResolversParentTypes["Space"] };
   InAppNotificationPayloadSpaceCommunicationUpdate: Omit<
     InAppNotificationPayloadSpaceCommunicationUpdate,
     "space"
-  > & { space?: Maybe<ResolversParentTypes["Space"]> };
+  > & { space: ResolversParentTypes["Space"] };
   InAppNotificationPayloadSpaceCommunityApplication: Omit<
     InAppNotificationPayloadSpaceCommunityApplication,
     "application" | "space"
   > & {
-    application?: Maybe<ResolversParentTypes["Application"]>;
-    space?: Maybe<ResolversParentTypes["Space"]>;
+    application: ResolversParentTypes["Application"];
+    space: ResolversParentTypes["Space"];
+  };
+  InAppNotificationPayloadSpaceCommunityCalendarEvent: Omit<
+    InAppNotificationPayloadSpaceCommunityCalendarEvent,
+    "calendarEvent" | "space"
+  > & {
+    calendarEvent: ResolversParentTypes["CalendarEvent"];
+    space: ResolversParentTypes["Space"];
+  };
+  InAppNotificationPayloadSpaceCommunityCalendarEventComment: Omit<
+    InAppNotificationPayloadSpaceCommunityCalendarEventComment,
+    "calendarEvent" | "space"
+  > & {
+    calendarEvent: ResolversParentTypes["CalendarEvent"];
+    space: ResolversParentTypes["Space"];
   };
   InAppNotificationPayloadSpaceCommunityContributor: Omit<
     InAppNotificationPayloadSpaceCommunityContributor,
     "contributor" | "space"
   > & {
-    contributor?: Maybe<ResolversParentTypes["Contributor"]>;
-    space?: Maybe<ResolversParentTypes["Space"]>;
+    contributor: ResolversParentTypes["Contributor"];
+    space: ResolversParentTypes["Space"];
   };
   InAppNotificationPayloadSpaceCommunityInvitation: Omit<
     InAppNotificationPayloadSpaceCommunityInvitation,
     "space"
-  > & { space?: Maybe<ResolversParentTypes["Space"]> };
+  > & { space: ResolversParentTypes["Space"] };
   InAppNotificationPayloadSpaceCommunityInvitationPlatform: Omit<
     InAppNotificationPayloadSpaceCommunityInvitationPlatform,
     "space"
-  > & { space?: Maybe<ResolversParentTypes["Space"]> };
+  > & { space: ResolversParentTypes["Space"] };
   InAppNotificationPayloadUserMessageDirect: Omit<
     InAppNotificationPayloadUserMessageDirect,
     "user"
@@ -10984,8 +11344,8 @@ export type ResolversParentTypes = {
     InAppNotificationPayloadVirtualContributor,
     "contributor" | "space"
   > & {
-    contributor?: Maybe<ResolversParentTypes["VirtualContributor"]>;
-    space?: Maybe<ResolversParentTypes["Space"]>;
+    contributor: ResolversParentTypes["VirtualContributor"];
+    space: ResolversParentTypes["Space"];
   };
   InnovationFlow: Omit<InnovationFlow, "profile"> & {
     profile: ResolversParentTypes["Profile"];
@@ -11066,6 +11426,7 @@ export type ResolversParentTypes = {
     | "community"
     | "communityGuidelines"
     | "contribution"
+    | "conversation"
     | "document"
     | "innovationFlow"
     | "innovationHub"
@@ -11100,6 +11461,7 @@ export type ResolversParentTypes = {
     community?: Maybe<ResolversParentTypes["Community"]>;
     communityGuidelines?: Maybe<ResolversParentTypes["CommunityGuidelines"]>;
     contribution?: Maybe<ResolversParentTypes["CalloutContribution"]>;
+    conversation?: Maybe<ResolversParentTypes["Conversation"]>;
     document?: Maybe<ResolversParentTypes["Document"]>;
     innovationFlow?: Maybe<ResolversParentTypes["InnovationFlow"]>;
     innovationHub?: Maybe<ResolversParentTypes["InnovationHub"]>;
@@ -11124,10 +11486,19 @@ export type ResolversParentTypes = {
     whiteboard?: Maybe<ResolversParentTypes["Whiteboard"]>;
   };
   Markdown: Scalars["Markdown"]["output"];
+  MeConversationsResult: Omit<
+    MeConversationsResult,
+    "users" | "virtualContributor" | "virtualContributors"
+  > & {
+    users: Array<ResolversParentTypes["Conversation"]>;
+    virtualContributor?: Maybe<ResolversParentTypes["Conversation"]>;
+    virtualContributors: Array<ResolversParentTypes["Conversation"]>;
+  };
   MeQueryResults: Omit<
     MeQueryResults,
     | "communityApplications"
     | "communityInvitations"
+    | "conversations"
     | "mySpaces"
     | "notifications"
     | "spaceMembershipsFlat"
@@ -11140,6 +11511,7 @@ export type ResolversParentTypes = {
     communityInvitations: Array<
       ResolversParentTypes["CommunityInvitationResult"]
     >;
+    conversations: ResolversParentTypes["MeConversationsResult"];
     mySpaces: Array<ResolversParentTypes["MySpaceResults"]>;
     notifications: ResolversParentTypes["PaginatedInAppNotifications"];
     spaceMembershipsFlat: Array<
@@ -11178,6 +11550,7 @@ export type ResolversParentTypes = {
   };
   NVP: Nvp;
   NameID: Scalars["NameID"]["output"];
+  NotificationEmailAddressInput: NotificationEmailAddressInput;
   NotificationEventsFilterInput: NotificationEventsFilterInput;
   NotificationRecipientResult: Omit<
     NotificationRecipientResult,
@@ -11243,7 +11616,6 @@ export type ResolversParentTypes = {
   };
   Platform: Omit<
     Platform,
-    | "chatGuidanceVirtualContributor"
     | "configuration"
     | "forum"
     | "innovationHub"
@@ -11251,7 +11623,6 @@ export type ResolversParentTypes = {
     | "roleSet"
     | "templatesManager"
   > & {
-    chatGuidanceVirtualContributor: ResolversParentTypes["VirtualContributor"];
     configuration: ResolversParentTypes["Config"];
     forum: ResolversParentTypes["Forum"];
     innovationHub?: Maybe<ResolversParentTypes["InnovationHub"]>;
@@ -11286,6 +11657,8 @@ export type ResolversParentTypes = {
   PlatformLocations: PlatformLocations;
   PlatformRolesAccess: PlatformRolesAccess;
   PlatformSettings: PlatformSettings;
+  PlatformWellKnownVirtualContributorMapping: PlatformWellKnownVirtualContributorMapping;
+  PlatformWellKnownVirtualContributors: PlatformWellKnownVirtualContributors;
   Post: Omit<Post, "comments" | "createdBy" | "profile"> & {
     comments: ResolversParentTypes["Room"];
     createdBy?: Maybe<ResolversParentTypes["User"]>;
@@ -11456,6 +11829,7 @@ export type ResolversParentTypes = {
   };
   Sentry: Sentry;
   ServiceMetadata: ServiceMetadata;
+  SetPlatformWellKnownVirtualContributorInput: SetPlatformWellKnownVirtualContributorInput;
   Space: Omit<
     Space,
     | "about"
@@ -11668,12 +12042,18 @@ export type ResolversParentTypes = {
   UpdateUserSettingsNotificationVirtualContributorInput: UpdateUserSettingsNotificationVirtualContributorInput;
   UpdateUserSettingsPrivacyInput: UpdateUserSettingsPrivacyInput;
   UpdateVirtualContributorInput: UpdateVirtualContributorInput;
+  UpdateVirtualContributorPlatformSettingsEntityInput: UpdateVirtualContributorPlatformSettingsEntityInput;
+  UpdateVirtualContributorPlatformSettingsInput: UpdateVirtualContributorPlatformSettingsInput;
   UpdateVirtualContributorSettingsEntityInput: UpdateVirtualContributorSettingsEntityInput;
   UpdateVirtualContributorSettingsInput: UpdateVirtualContributorSettingsInput;
   UpdateVirtualContributorSettingsPrivacyInput: UpdateVirtualContributorSettingsPrivacyInput;
   UpdateVisualInput: UpdateVisualInput;
   UpdateWhiteboardEntityInput: UpdateWhiteboardEntityInput;
-  UpdateWhiteboardPreviewCoordinatesInput: UpdateWhiteboardPreviewCoordinatesInput;
+  UpdateWhiteboardGuestAccessInput: UpdateWhiteboardGuestAccessInput;
+  UpdateWhiteboardGuestAccessResult: Omit<
+    UpdateWhiteboardGuestAccessResult,
+    "whiteboard"
+  > & { whiteboard?: Maybe<ResolversParentTypes["Whiteboard"]> };
   UpdateWhiteboardPreviewSettingsInput: UpdateWhiteboardPreviewSettingsInput;
   Upload: Scalars["Upload"]["output"];
   UrlResolverQueryResultCalendar: UrlResolverQueryResultCalendar;
@@ -11684,10 +12064,8 @@ export type ResolversParentTypes = {
   UrlResolverQueryResultTemplatesSet: UrlResolverQueryResultTemplatesSet;
   UrlResolverQueryResultVirtualContributor: UrlResolverQueryResultVirtualContributor;
   UrlResolverQueryResults: UrlResolverQueryResults;
-  User: Omit<User, "account" | "directRooms" | "guidanceRoom" | "profile"> & {
+  User: Omit<User, "account" | "profile"> & {
     account?: Maybe<ResolversParentTypes["Account"]>;
-    directRooms?: Maybe<Array<ResolversParentTypes["DirectRoom"]>>;
-    guidanceRoom?: Maybe<ResolversParentTypes["Room"]>;
     profile: ResolversParentTypes["Profile"];
   };
   UserAuthenticationResult: UserAuthenticationResult;
@@ -11698,7 +12076,6 @@ export type ResolversParentTypes = {
     parent?: Maybe<ResolversParentTypes["Groupable"]>;
     profile?: Maybe<ResolversParentTypes["Profile"]>;
   };
-  UserSendMessageInput: UserSendMessageInput;
   UserSettings: UserSettings;
   UserSettingsCommunication: UserSettingsCommunication;
   UserSettingsNotification: UserSettingsNotification;
@@ -11733,6 +12110,7 @@ export type ResolversParentTypes = {
   };
   VirtualContributorModelCard: VirtualContributorModelCard;
   VirtualContributorModelCardFlag: VirtualContributorModelCardFlag;
+  VirtualContributorPlatformSettings: VirtualContributorPlatformSettings;
   VirtualContributorSettings: VirtualContributorSettings;
   VirtualContributorSettingsPrivacy: VirtualContributorSettingsPrivacy;
   VirtualContributorUpdatedSubscriptionResult: Omit<
@@ -11754,6 +12132,8 @@ export type ResolversParentTypes = {
   };
   WhiteboardContent: Scalars["WhiteboardContent"]["output"];
   WhiteboardPreviewCoordinates: WhiteboardPreviewCoordinates;
+  WhiteboardPreviewCoordinatesData: WhiteboardPreviewCoordinatesData;
+  WhiteboardPreviewCoordinatesInput: WhiteboardPreviewCoordinatesInput;
   WhiteboardPreviewSettings: WhiteboardPreviewSettings;
 };
 
@@ -11893,6 +12273,7 @@ export type ActivityLogEntryResolvers<
     | "ActivityLogEntryCalendarEventCreated"
     | "ActivityLogEntryCalloutDiscussionComment"
     | "ActivityLogEntryCalloutLinkCreated"
+    | "ActivityLogEntryCalloutMemoCreated"
     | "ActivityLogEntryCalloutPostComment"
     | "ActivityLogEntryCalloutPostCreated"
     | "ActivityLogEntryCalloutPublished"
@@ -11977,6 +12358,28 @@ export type ActivityLogEntryCalloutLinkCreatedResolvers<
   description?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   link?: Resolver<ResolversTypes["Link"], ParentType, ContextType>;
+  parentDisplayName?: Resolver<
+    ResolversTypes["String"],
+    ParentType,
+    ContextType
+  >;
+  space?: Resolver<Maybe<ResolversTypes["Space"]>, ParentType, ContextType>;
+  triggeredBy?: Resolver<ResolversTypes["User"], ParentType, ContextType>;
+  type?: Resolver<ResolversTypes["ActivityEventType"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type ActivityLogEntryCalloutMemoCreatedResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["ActivityLogEntryCalloutMemoCreated"] = ResolversParentTypes["ActivityLogEntryCalloutMemoCreated"]
+> = {
+  callout?: Resolver<ResolversTypes["Callout"], ParentType, ContextType>;
+  child?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  collaborationID?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  description?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  memo?: Resolver<ResolversTypes["Memo"], ParentType, ContextType>;
   parentDisplayName?: Resolver<
     ResolversTypes["String"],
     ParentType,
@@ -12581,6 +12984,7 @@ export type CalloutContributionResolvers<
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   link?: Resolver<Maybe<ResolversTypes["Link"]>, ParentType, ContextType>;
+  memo?: Resolver<Maybe<ResolversTypes["Memo"]>, ParentType, ContextType>;
   post?: Resolver<Maybe<ResolversTypes["Post"]>, ParentType, ContextType>;
   sortOrder?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
@@ -12741,6 +13145,12 @@ export type CalloutsSetResolvers<
   >;
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  tags?: Resolver<
+    Array<ResolversTypes["String"]>,
+    ParentType,
+    ContextType,
+    Partial<CalloutsSetTagsArgs>
+  >;
   tagsetTemplates?: Resolver<
     Maybe<Array<ResolversTypes["TagsetTemplate"]>>,
     ParentType,
@@ -13102,6 +13512,38 @@ export type ContributorRolesResolvers<
   >;
   spaces?: Resolver<
     Array<ResolversTypes["RolesResultSpace"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type ConversationResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["Conversation"] = ResolversParentTypes["Conversation"]
+> = {
+  authorization?: Resolver<
+    Maybe<ResolversTypes["Authorization"]>,
+    ParentType,
+    ContextType
+  >;
+  createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  room?: Resolver<Maybe<ResolversTypes["Room"]>, ParentType, ContextType>;
+  type?: Resolver<
+    ResolversTypes["CommunicationConversationType"],
+    ParentType,
+    ContextType
+  >;
+  updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  user?: Resolver<Maybe<ResolversTypes["User"]>, ParentType, ContextType>;
+  virtualContributor?: Resolver<
+    Maybe<ResolversTypes["VirtualContributor"]>,
+    ParentType,
+    ContextType
+  >;
+  wellKnownVirtualContributor?: Resolver<
+    Maybe<ResolversTypes["VirtualContributorWellKnown"]>,
     ParentType,
     ContextType
   >;
@@ -13554,8 +13996,30 @@ export type CreateWhiteboardDataResolvers<
     ContextType
   >;
   nameID?: Resolver<Maybe<ResolversTypes["NameID"]>, ParentType, ContextType>;
+  previewSettings?: Resolver<
+    Maybe<ResolversTypes["CreateWhiteboardPreviewSettingsData"]>,
+    ParentType,
+    ContextType
+  >;
   profile?: Resolver<
     Maybe<ResolversTypes["CreateProfileData"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CreateWhiteboardPreviewSettingsDataResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CreateWhiteboardPreviewSettingsData"] = ResolversParentTypes["CreateWhiteboardPreviewSettingsData"]
+> = {
+  coordinates?: Resolver<
+    Maybe<ResolversTypes["WhiteboardPreviewCoordinatesData"]>,
+    ParentType,
+    ContextType
+  >;
+  mode?: Resolver<
+    Maybe<ResolversTypes["WhiteboardPreviewMode"]>,
     ParentType,
     ContextType
   >;
@@ -13607,25 +14071,6 @@ export interface DateTimeScalarConfig
   extends GraphQLScalarTypeConfig<ResolversTypes["DateTime"], any> {
   name: "DateTime";
 }
-
-export type DirectRoomResolvers<
-  ContextType = any,
-  ParentType extends ResolversParentTypes["DirectRoom"] = ResolversParentTypes["DirectRoom"]
-> = {
-  displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  id?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  messages?: Resolver<
-    Array<ResolversTypes["Message"]>,
-    ParentType,
-    ContextType
-  >;
-  receiverID?: Resolver<
-    Maybe<ResolversTypes["String"]>,
-    ParentType,
-    ContextType
-  >;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
 
 export type DiscussionResolvers<
   ContextType = any,
@@ -13908,10 +14353,8 @@ export type InAppNotificationPayloadResolvers<
   ParentType extends ResolversParentTypes["InAppNotificationPayload"] = ResolversParentTypes["InAppNotificationPayload"]
 > = {
   __resolveType: TypeResolveFn<
-    | "InAppNotificationPayloadOrganization"
     | "InAppNotificationPayloadOrganizationMessageDirect"
     | "InAppNotificationPayloadOrganizationMessageRoom"
-    | "InAppNotificationPayloadPlatform"
     | "InAppNotificationPayloadPlatformForumDiscussion"
     | "InAppNotificationPayloadPlatformGlobalRoleChange"
     | "InAppNotificationPayloadPlatformUser"
@@ -13924,6 +14367,8 @@ export type InAppNotificationPayloadResolvers<
     | "InAppNotificationPayloadSpaceCommunicationMessageDirect"
     | "InAppNotificationPayloadSpaceCommunicationUpdate"
     | "InAppNotificationPayloadSpaceCommunityApplication"
+    | "InAppNotificationPayloadSpaceCommunityCalendarEvent"
+    | "InAppNotificationPayloadSpaceCommunityCalendarEventComment"
     | "InAppNotificationPayloadSpaceCommunityContributor"
     | "InAppNotificationPayloadSpaceCommunityInvitation"
     | "InAppNotificationPayloadSpaceCommunityInvitationPlatform"
@@ -13939,25 +14384,13 @@ export type InAppNotificationPayloadResolvers<
   >;
 };
 
-export type InAppNotificationPayloadOrganizationResolvers<
-  ContextType = any,
-  ParentType extends ResolversParentTypes["InAppNotificationPayloadOrganization"] = ResolversParentTypes["InAppNotificationPayloadOrganization"]
-> = {
-  type?: Resolver<
-    ResolversTypes["NotificationEventPayload"],
-    ParentType,
-    ContextType
-  >;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
 export type InAppNotificationPayloadOrganizationMessageDirectResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["InAppNotificationPayloadOrganizationMessageDirect"] = ResolversParentTypes["InAppNotificationPayloadOrganizationMessageDirect"]
 > = {
   message?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   organization?: Resolver<
-    ResolversTypes["Contributor"],
+    Maybe<ResolversTypes["Organization"]>,
     ParentType,
     ContextType
   >;
@@ -13988,25 +14421,13 @@ export type InAppNotificationPayloadOrganizationMessageRoomResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export type InAppNotificationPayloadPlatformResolvers<
-  ContextType = any,
-  ParentType extends ResolversParentTypes["InAppNotificationPayloadPlatform"] = ResolversParentTypes["InAppNotificationPayloadPlatform"]
-> = {
-  type?: Resolver<
-    ResolversTypes["NotificationEventPayload"],
-    ParentType,
-    ContextType
-  >;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
 export type InAppNotificationPayloadPlatformForumDiscussionResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["InAppNotificationPayloadPlatformForumDiscussion"] = ResolversParentTypes["InAppNotificationPayloadPlatformForumDiscussion"]
 > = {
   comment?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
   discussion?: Resolver<
-    Maybe<ResolversTypes["DiscussionDetails"]>,
+    ResolversTypes["DiscussionDetails"],
     ParentType,
     ContextType
   >;
@@ -14022,7 +14443,7 @@ export type InAppNotificationPayloadPlatformGlobalRoleChangeResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["InAppNotificationPayloadPlatformGlobalRoleChange"] = ResolversParentTypes["InAppNotificationPayloadPlatformGlobalRoleChange"]
 > = {
-  role?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  role?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   type?: Resolver<
     ResolversTypes["NotificationEventPayload"],
     ParentType,
@@ -14058,7 +14479,7 @@ export type InAppNotificationPayloadPlatformUserMessageRoomResolvers<
     ParentType,
     ContextType
   >;
-  user?: Resolver<Maybe<ResolversTypes["User"]>, ParentType, ContextType>;
+  user?: Resolver<ResolversTypes["User"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -14071,16 +14492,8 @@ export type InAppNotificationPayloadPlatformUserProfileRemovedResolvers<
     ParentType,
     ContextType
   >;
-  userDisplayName?: Resolver<
-    Maybe<ResolversTypes["String"]>,
-    ParentType,
-    ContextType
-  >;
-  userEmail?: Resolver<
-    Maybe<ResolversTypes["String"]>,
-    ParentType,
-    ContextType
-  >;
+  userDisplayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  userEmail?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -14088,7 +14501,7 @@ export type InAppNotificationPayloadSpaceResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["InAppNotificationPayloadSpace"] = ResolversParentTypes["InAppNotificationPayloadSpace"]
 > = {
-  space?: Resolver<Maybe<ResolversTypes["Space"]>, ParentType, ContextType>;
+  space?: Resolver<ResolversTypes["Space"], ParentType, ContextType>;
   type?: Resolver<
     ResolversTypes["NotificationEventPayload"],
     ParentType,
@@ -14101,8 +14514,8 @@ export type InAppNotificationPayloadSpaceCollaborationCalloutResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCollaborationCallout"] = ResolversParentTypes["InAppNotificationPayloadSpaceCollaborationCallout"]
 > = {
-  callout?: Resolver<Maybe<ResolversTypes["Callout"]>, ParentType, ContextType>;
-  space?: Resolver<Maybe<ResolversTypes["Space"]>, ParentType, ContextType>;
+  callout?: Resolver<ResolversTypes["Callout"], ParentType, ContextType>;
+  space?: Resolver<ResolversTypes["Space"], ParentType, ContextType>;
   type?: Resolver<
     ResolversTypes["NotificationEventPayload"],
     ParentType,
@@ -14115,13 +14528,13 @@ export type InAppNotificationPayloadSpaceCollaborationCalloutCommentResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCollaborationCalloutComment"] = ResolversParentTypes["InAppNotificationPayloadSpaceCollaborationCalloutComment"]
 > = {
-  callout?: Resolver<Maybe<ResolversTypes["Callout"]>, ParentType, ContextType>;
+  callout?: Resolver<ResolversTypes["Callout"], ParentType, ContextType>;
   messageDetails?: Resolver<
     Maybe<ResolversTypes["MessageDetails"]>,
     ParentType,
     ContextType
   >;
-  space?: Resolver<Maybe<ResolversTypes["Space"]>, ParentType, ContextType>;
+  space?: Resolver<ResolversTypes["Space"], ParentType, ContextType>;
   type?: Resolver<
     ResolversTypes["NotificationEventPayload"],
     ParentType,
@@ -14134,13 +14547,13 @@ export type InAppNotificationPayloadSpaceCollaborationCalloutPostCommentResolver
   ContextType = any,
   ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCollaborationCalloutPostComment"] = ResolversParentTypes["InAppNotificationPayloadSpaceCollaborationCalloutPostComment"]
 > = {
-  callout?: Resolver<Maybe<ResolversTypes["Callout"]>, ParentType, ContextType>;
+  callout?: Resolver<ResolversTypes["Callout"], ParentType, ContextType>;
   messageDetails?: Resolver<
     Maybe<ResolversTypes["MessageDetails"]>,
     ParentType,
     ContextType
   >;
-  space?: Resolver<Maybe<ResolversTypes["Space"]>, ParentType, ContextType>;
+  space?: Resolver<ResolversTypes["Space"], ParentType, ContextType>;
   type?: Resolver<
     ResolversTypes["NotificationEventPayload"],
     ParentType,
@@ -14154,7 +14567,7 @@ export type InAppNotificationPayloadSpaceCommunicationMessageDirectResolvers<
   ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCommunicationMessageDirect"] = ResolversParentTypes["InAppNotificationPayloadSpaceCommunicationMessageDirect"]
 > = {
   message?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  space?: Resolver<Maybe<ResolversTypes["Space"]>, ParentType, ContextType>;
+  space?: Resolver<ResolversTypes["Space"], ParentType, ContextType>;
   type?: Resolver<
     ResolversTypes["NotificationEventPayload"],
     ParentType,
@@ -14167,13 +14580,13 @@ export type InAppNotificationPayloadSpaceCommunicationUpdateResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCommunicationUpdate"] = ResolversParentTypes["InAppNotificationPayloadSpaceCommunicationUpdate"]
 > = {
-  space?: Resolver<Maybe<ResolversTypes["Space"]>, ParentType, ContextType>;
+  space?: Resolver<ResolversTypes["Space"], ParentType, ContextType>;
   type?: Resolver<
     ResolversTypes["NotificationEventPayload"],
     ParentType,
     ContextType
   >;
-  update?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  update?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -14182,11 +14595,48 @@ export type InAppNotificationPayloadSpaceCommunityApplicationResolvers<
   ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCommunityApplication"] = ResolversParentTypes["InAppNotificationPayloadSpaceCommunityApplication"]
 > = {
   application?: Resolver<
-    Maybe<ResolversTypes["Application"]>,
+    ResolversTypes["Application"],
     ParentType,
     ContextType
   >;
-  space?: Resolver<Maybe<ResolversTypes["Space"]>, ParentType, ContextType>;
+  space?: Resolver<ResolversTypes["Space"], ParentType, ContextType>;
+  type?: Resolver<
+    ResolversTypes["NotificationEventPayload"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type InAppNotificationPayloadSpaceCommunityCalendarEventResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCommunityCalendarEvent"] = ResolversParentTypes["InAppNotificationPayloadSpaceCommunityCalendarEvent"]
+> = {
+  calendarEvent?: Resolver<
+    ResolversTypes["CalendarEvent"],
+    ParentType,
+    ContextType
+  >;
+  space?: Resolver<ResolversTypes["Space"], ParentType, ContextType>;
+  type?: Resolver<
+    ResolversTypes["NotificationEventPayload"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type InAppNotificationPayloadSpaceCommunityCalendarEventCommentResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCommunityCalendarEventComment"] = ResolversParentTypes["InAppNotificationPayloadSpaceCommunityCalendarEventComment"]
+> = {
+  calendarEvent?: Resolver<
+    ResolversTypes["CalendarEvent"],
+    ParentType,
+    ContextType
+  >;
+  commentText?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  space?: Resolver<ResolversTypes["Space"], ParentType, ContextType>;
   type?: Resolver<
     ResolversTypes["NotificationEventPayload"],
     ParentType,
@@ -14200,11 +14650,11 @@ export type InAppNotificationPayloadSpaceCommunityContributorResolvers<
   ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCommunityContributor"] = ResolversParentTypes["InAppNotificationPayloadSpaceCommunityContributor"]
 > = {
   contributor?: Resolver<
-    Maybe<ResolversTypes["Contributor"]>,
+    ResolversTypes["Contributor"],
     ParentType,
     ContextType
   >;
-  space?: Resolver<Maybe<ResolversTypes["Space"]>, ParentType, ContextType>;
+  space?: Resolver<ResolversTypes["Space"], ParentType, ContextType>;
   type?: Resolver<
     ResolversTypes["NotificationEventPayload"],
     ParentType,
@@ -14217,7 +14667,7 @@ export type InAppNotificationPayloadSpaceCommunityInvitationResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCommunityInvitation"] = ResolversParentTypes["InAppNotificationPayloadSpaceCommunityInvitation"]
 > = {
-  space?: Resolver<Maybe<ResolversTypes["Space"]>, ParentType, ContextType>;
+  space?: Resolver<ResolversTypes["Space"], ParentType, ContextType>;
   type?: Resolver<
     ResolversTypes["NotificationEventPayload"],
     ParentType,
@@ -14230,7 +14680,7 @@ export type InAppNotificationPayloadSpaceCommunityInvitationPlatformResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCommunityInvitationPlatform"] = ResolversParentTypes["InAppNotificationPayloadSpaceCommunityInvitationPlatform"]
 > = {
-  space?: Resolver<Maybe<ResolversTypes["Space"]>, ParentType, ContextType>;
+  space?: Resolver<ResolversTypes["Space"], ParentType, ContextType>;
   type?: Resolver<
     ResolversTypes["NotificationEventPayload"],
     ParentType,
@@ -14243,7 +14693,7 @@ export type InAppNotificationPayloadUserMessageDirectResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["InAppNotificationPayloadUserMessageDirect"] = ResolversParentTypes["InAppNotificationPayloadUserMessageDirect"]
 > = {
-  message?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  message?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   type?: Resolver<
     ResolversTypes["NotificationEventPayload"],
     ParentType,
@@ -14258,18 +14708,13 @@ export type InAppNotificationPayloadVirtualContributorResolvers<
   ParentType extends ResolversParentTypes["InAppNotificationPayloadVirtualContributor"] = ResolversParentTypes["InAppNotificationPayloadVirtualContributor"]
 > = {
   contributor?: Resolver<
-    Maybe<ResolversTypes["VirtualContributor"]>,
+    ResolversTypes["VirtualContributor"],
     ParentType,
     ContextType
   >;
-  space?: Resolver<Maybe<ResolversTypes["Space"]>, ParentType, ContextType>;
+  space?: Resolver<ResolversTypes["Space"], ParentType, ContextType>;
   type?: Resolver<
     ResolversTypes["NotificationEventPayload"],
-    ParentType,
-    ContextType
-  >;
-  virtualContributorID?: Resolver<
-    ResolversTypes["String"],
     ParentType,
     ContextType
   >;
@@ -15167,6 +15612,12 @@ export type LookupQueryResultsResolvers<
     ContextType,
     RequireFields<LookupQueryResultsContributionArgs, "ID">
   >;
+  conversation?: Resolver<
+    Maybe<ResolversTypes["Conversation"]>,
+    ParentType,
+    ContextType,
+    RequireFields<LookupQueryResultsConversationArgs, "ID">
+  >;
   document?: Resolver<
     Maybe<ResolversTypes["Document"]>,
     ParentType,
@@ -15324,6 +15775,29 @@ export interface MarkdownScalarConfig
   name: "Markdown";
 }
 
+export type MeConversationsResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["MeConversationsResult"] = ResolversParentTypes["MeConversationsResult"]
+> = {
+  users?: Resolver<
+    Array<ResolversTypes["Conversation"]>,
+    ParentType,
+    ContextType
+  >;
+  virtualContributor?: Resolver<
+    Maybe<ResolversTypes["Conversation"]>,
+    ParentType,
+    ContextType,
+    RequireFields<MeConversationsResultVirtualContributorArgs, "wellKnown">
+  >;
+  virtualContributors?: Resolver<
+    Array<ResolversTypes["Conversation"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type MeQueryResultsResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["MeQueryResults"] = ResolversParentTypes["MeQueryResults"]
@@ -15345,6 +15819,11 @@ export type MeQueryResultsResolvers<
     ParentType,
     ContextType,
     Partial<MeQueryResultsCommunityInvitationsCountArgs>
+  >;
+  conversations?: Resolver<
+    ResolversTypes["MeConversationsResult"],
+    ParentType,
+    ContextType
   >;
   id?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   mySpaces?: Resolver<
@@ -15559,6 +16038,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationAddIframeAllowedUrlArgs, "whitelistedURL">
   >;
+  addNotificationEmailToBlacklist?: Resolver<
+    Array<ResolversTypes["String"]>,
+    ParentType,
+    ContextType,
+    RequireFields<MutationAddNotificationEmailToBlacklistArgs, "input">
+  >;
   addReactionToMessageInRoom?: Resolver<
     ResolversTypes["Reaction"],
     ParentType,
@@ -15698,11 +16183,11 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationApplyForEntryRoleOnRoleSetArgs, "applicationData">
   >;
-  askChatGuidanceQuestion?: Resolver<
+  askVcQuestion?: Resolver<
     ResolversTypes["MessageAnswerQuestion"],
     ParentType,
     ContextType,
-    RequireFields<MutationAskChatGuidanceQuestionArgs, "chatData">
+    RequireFields<MutationAskVcQuestionArgs, "input">
   >;
   assignLicensePlanToAccount?: Resolver<
     ResolversTypes["Account"],
@@ -15858,16 +16343,20 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationCreateCalloutOnCalloutsSetArgs, "calloutData">
   >;
-  createChatGuidanceRoom?: Resolver<
-    Maybe<ResolversTypes["Room"]>,
-    ParentType,
-    ContextType
-  >;
   createContributionOnCallout?: Resolver<
     ResolversTypes["CalloutContribution"],
     ParentType,
     ContextType,
     RequireFields<MutationCreateContributionOnCalloutArgs, "contributionData">
+  >;
+  createConversationOnConversationsSet?: Resolver<
+    ResolversTypes["Conversation"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      MutationCreateConversationOnConversationsSetArgs,
+      "conversationData"
+    >
   >;
   createDiscussion?: Resolver<
     ResolversTypes["Discussion"],
@@ -16008,6 +16497,12 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationDeleteContributionArgs, "deleteData">
+  >;
+  deleteConversation?: Resolver<
+    ResolversTypes["Conversation"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationDeleteConversationArgs, "deleteData">
   >;
   deleteDiscussion?: Resolver<
     ResolversTypes["Discussion"],
@@ -16153,6 +16648,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationEventOnOrganizationVerificationArgs, "eventData">
   >;
+  feedbackOnVcAnswerRelevance?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationFeedbackOnVcAnswerRelevanceArgs, "input">
+  >;
   grantCredentialToOrganization?: Resolver<
     ResolversTypes["Organization"],
     ParentType,
@@ -16239,6 +16740,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationRemoveMessageOnRoomArgs, "messageData">
   >;
+  removeNotificationEmailFromBlacklist?: Resolver<
+    Array<ResolversTypes["String"]>,
+    ParentType,
+    ContextType,
+    RequireFields<MutationRemoveNotificationEmailFromBlacklistArgs, "input">
+  >;
   removePlatformRoleFromUser?: Resolver<
     ResolversTypes["User"],
     ParentType,
@@ -16275,10 +16782,11 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationRemoveUserFromGroupArgs, "membershipData">
   >;
-  resetChatGuidance?: Resolver<
-    ResolversTypes["Boolean"],
+  resetConversationVc?: Resolver<
+    ResolversTypes["Conversation"],
     ParentType,
-    ContextType
+    ContextType,
+    RequireFields<MutationResetConversationVcArgs, "input">
   >;
   resetLicenseOnAccounts?: Resolver<
     ResolversTypes["Space"],
@@ -16336,17 +16844,20 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationSendMessageToRoomArgs, "messageData">
   >;
-  sendMessageToUserDirect?: Resolver<
-    ResolversTypes["String"],
-    ParentType,
-    ContextType,
-    RequireFields<MutationSendMessageToUserDirectArgs, "messageData">
-  >;
   sendMessageToUsers?: Resolver<
     ResolversTypes["Boolean"],
     ParentType,
     ContextType,
     RequireFields<MutationSendMessageToUsersArgs, "messageData">
+  >;
+  setPlatformWellKnownVirtualContributor?: Resolver<
+    ResolversTypes["PlatformWellKnownVirtualContributors"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      MutationSetPlatformWellKnownVirtualContributorArgs,
+      "mappingData"
+    >
   >;
   transferCallout?: Resolver<
     ResolversTypes["Callout"],
@@ -16380,12 +16891,6 @@ export type MutationResolvers<
       MutationTransferVirtualContributorToAccountArgs,
       "transferData"
     >
-  >;
-  updateAnswerRelevance?: Resolver<
-    ResolversTypes["Boolean"],
-    ParentType,
-    ContextType,
-    RequireFields<MutationUpdateAnswerRelevanceArgs, "input">
   >;
   updateApplicationFormOnRoleSet?: Resolver<
     ResolversTypes["RoleSet"],
@@ -16669,6 +17174,15 @@ export type MutationResolvers<
       "virtualContributorData"
     >
   >;
+  updateVirtualContributorPlatformSettings?: Resolver<
+    ResolversTypes["VirtualContributor"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      MutationUpdateVirtualContributorPlatformSettingsArgs,
+      "settingsData"
+    >
+  >;
   updateVirtualContributorSettings?: Resolver<
     ResolversTypes["VirtualContributor"],
     ParentType,
@@ -16686,6 +17200,12 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationUpdateWhiteboardArgs, "whiteboardData">
+  >;
+  updateWhiteboardGuestAccess?: Resolver<
+    ResolversTypes["UpdateWhiteboardGuestAccessResult"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationUpdateWhiteboardGuestAccessArgs, "input">
   >;
   uploadFileOnLink?: Resolver<
     ResolversTypes["Link"],
@@ -17017,11 +17537,6 @@ export type PlatformResolvers<
     ParentType,
     ContextType
   >;
-  chatGuidanceVirtualContributor?: Resolver<
-    ResolversTypes["VirtualContributor"],
-    ParentType,
-    ContextType
-  >;
   configuration?: Resolver<ResolversTypes["Config"], ParentType, ContextType>;
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   forum?: Resolver<ResolversTypes["Forum"], ParentType, ContextType>;
@@ -17061,6 +17576,11 @@ export type PlatformResolvers<
     ContextType
   >;
   updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  wellKnownVirtualContributors?: Resolver<
+    ResolversTypes["PlatformWellKnownVirtualContributors"],
+    ParentType,
+    ContextType
+  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -17185,6 +17705,11 @@ export type PlatformIntegrationSettingsResolvers<
     ParentType,
     ContextType
   >;
+  notificationEmailBlacklist?: Resolver<
+    Array<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -17286,6 +17811,35 @@ export type PlatformSettingsResolvers<
 > = {
   integration?: Resolver<
     ResolversTypes["PlatformIntegrationSettings"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type PlatformWellKnownVirtualContributorMappingResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["PlatformWellKnownVirtualContributorMapping"] = ResolversParentTypes["PlatformWellKnownVirtualContributorMapping"]
+> = {
+  virtualContributorID?: Resolver<
+    ResolversTypes["UUID"],
+    ParentType,
+    ContextType
+  >;
+  wellKnown?: Resolver<
+    ResolversTypes["VirtualContributorWellKnown"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type PlatformWellKnownVirtualContributorsResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["PlatformWellKnownVirtualContributors"] = ResolversParentTypes["PlatformWellKnownVirtualContributors"]
+> = {
+  mappings?: Resolver<
+    Array<ResolversTypes["PlatformWellKnownVirtualContributorMapping"]>,
     ParentType,
     ContextType
   >;
@@ -17411,6 +17965,11 @@ export type PromptGraphDataPointResolvers<
 > = {
   description?: Resolver<
     Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
+  items?: Resolver<
+    Maybe<ResolversTypes["PromptGraphDataStruct"]>,
     ParentType,
     ContextType
   >;
@@ -18546,6 +19105,11 @@ export type SpaceSettingsCollaborationResolvers<
     ParentType,
     ContextType
   >;
+  allowGuestContributions?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
   allowMembersToCreateCallouts?: Resolver<
     ResolversTypes["Boolean"],
     ParentType,
@@ -19115,6 +19679,19 @@ export interface UuidScalarConfig
   name: "UUID";
 }
 
+export type UpdateWhiteboardGuestAccessResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["UpdateWhiteboardGuestAccessResult"] = ResolversParentTypes["UpdateWhiteboardGuestAccessResult"]
+> = {
+  success?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  whiteboard?: Resolver<
+    Maybe<ResolversTypes["Whiteboard"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export interface UploadScalarConfig
   extends GraphQLScalarTypeConfig<ResolversTypes["Upload"], any> {
   name: "Upload";
@@ -19144,6 +19721,7 @@ export type UrlResolverQueryResultCalloutsSetResolvers<
     ContextType
   >;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  memoId?: Resolver<Maybe<ResolversTypes["UUID"]>, ParentType, ContextType>;
   postId?: Resolver<Maybe<ResolversTypes["UUID"]>, ParentType, ContextType>;
   type?: Resolver<ResolversTypes["UrlType"], ParentType, ContextType>;
   whiteboardId?: Resolver<
@@ -19289,18 +19867,8 @@ export type UserResolvers<
     ContextType
   >;
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
-  directRooms?: Resolver<
-    Maybe<Array<ResolversTypes["DirectRoom"]>>,
-    ParentType,
-    ContextType
-  >;
   email?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   firstName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  guidanceRoom?: Resolver<
-    Maybe<ResolversTypes["Room"]>,
-    ParentType,
-    ContextType
-  >;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   isContactable?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   lastName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
@@ -19548,6 +20116,11 @@ export type UserSettingsNotificationSpaceResolvers<
     ParentType,
     ContextType
   >;
+  communityCalendarEvents?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -19760,6 +20333,11 @@ export type VirtualContributorResolvers<
     ContextType
   >;
   nameID?: Resolver<ResolversTypes["NameID"], ParentType, ContextType>;
+  platformSettings?: Resolver<
+    ResolversTypes["VirtualContributorPlatformSettings"],
+    ParentType,
+    ContextType
+  >;
   profile?: Resolver<ResolversTypes["Profile"], ParentType, ContextType>;
   promptGraphDefinition?: Resolver<
     Maybe<ResolversTypes["PromptGraphDefinition"]>,
@@ -19815,6 +20393,18 @@ export type VirtualContributorModelCardFlagResolvers<
   enabled?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   name?: Resolver<
     ResolversTypes["VirtualContributorModelCardEntryFlagName"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type VirtualContributorPlatformSettingsResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["VirtualContributorPlatformSettings"] = ResolversParentTypes["VirtualContributorPlatformSettings"]
+> = {
+  promptGraphEditingEnabled?: Resolver<
+    ResolversTypes["Boolean"],
     ParentType,
     ContextType
   >;
@@ -19896,7 +20486,7 @@ export type VisualResolvers<
   maxWidth?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   minHeight?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   minWidth?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
-  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes["VisualType"], ParentType, ContextType>;
   updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   uri?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -19940,6 +20530,11 @@ export type WhiteboardResolvers<
   >;
   createdBy?: Resolver<Maybe<ResolversTypes["User"]>, ParentType, ContextType>;
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  guestContributionsAllowed?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   isMultiUser?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   nameID?: Resolver<ResolversTypes["NameID"], ParentType, ContextType>;
@@ -19961,6 +20556,17 @@ export interface WhiteboardContentScalarConfig
 export type WhiteboardPreviewCoordinatesResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["WhiteboardPreviewCoordinates"] = ResolversParentTypes["WhiteboardPreviewCoordinates"]
+> = {
+  height?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  width?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  x?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  y?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type WhiteboardPreviewCoordinatesDataResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["WhiteboardPreviewCoordinatesData"] = ResolversParentTypes["WhiteboardPreviewCoordinatesData"]
 > = {
   height?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   width?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
@@ -19997,6 +20603,7 @@ export type Resolvers<ContextType = any> = {
   ActivityLogEntryCalendarEventCreated?: ActivityLogEntryCalendarEventCreatedResolvers<ContextType>;
   ActivityLogEntryCalloutDiscussionComment?: ActivityLogEntryCalloutDiscussionCommentResolvers<ContextType>;
   ActivityLogEntryCalloutLinkCreated?: ActivityLogEntryCalloutLinkCreatedResolvers<ContextType>;
+  ActivityLogEntryCalloutMemoCreated?: ActivityLogEntryCalloutMemoCreatedResolvers<ContextType>;
   ActivityLogEntryCalloutPostComment?: ActivityLogEntryCalloutPostCommentResolvers<ContextType>;
   ActivityLogEntryCalloutPostCreated?: ActivityLogEntryCalloutPostCreatedResolvers<ContextType>;
   ActivityLogEntryCalloutPublished?: ActivityLogEntryCalloutPublishedResolvers<ContextType>;
@@ -20048,6 +20655,7 @@ export type Resolvers<ContextType = any> = {
   Contributor?: ContributorResolvers<ContextType>;
   ContributorRolePolicy?: ContributorRolePolicyResolvers<ContextType>;
   ContributorRoles?: ContributorRolesResolvers<ContextType>;
+  Conversation?: ConversationResolvers<ContextType>;
   CreateCalloutContributionData?: CreateCalloutContributionDataResolvers<ContextType>;
   CreateCalloutContributionDefaultsData?: CreateCalloutContributionDefaultsDataResolvers<ContextType>;
   CreateCalloutData?: CreateCalloutDataResolvers<ContextType>;
@@ -20071,12 +20679,12 @@ export type Resolvers<ContextType = any> = {
   CreateTagsetData?: CreateTagsetDataResolvers<ContextType>;
   CreateVisualOnProfileData?: CreateVisualOnProfileDataResolvers<ContextType>;
   CreateWhiteboardData?: CreateWhiteboardDataResolvers<ContextType>;
+  CreateWhiteboardPreviewSettingsData?: CreateWhiteboardPreviewSettingsDataResolvers<ContextType>;
   Credential?: CredentialResolvers<ContextType>;
   CredentialDefinition?: CredentialDefinitionResolvers<ContextType>;
   CredentialMetadataOutput?: CredentialMetadataOutputResolvers<ContextType>;
   DID?: GraphQLScalarType;
   DateTime?: GraphQLScalarType;
-  DirectRoom?: DirectRoomResolvers<ContextType>;
   Discussion?: DiscussionResolvers<ContextType>;
   DiscussionDetails?: DiscussionDetailsResolvers<ContextType>;
   Document?: DocumentResolvers<ContextType>;
@@ -20093,10 +20701,8 @@ export type Resolvers<ContextType = any> = {
   ISearchResults?: ISearchResultsResolvers<ContextType>;
   InAppNotification?: InAppNotificationResolvers<ContextType>;
   InAppNotificationPayload?: InAppNotificationPayloadResolvers<ContextType>;
-  InAppNotificationPayloadOrganization?: InAppNotificationPayloadOrganizationResolvers<ContextType>;
   InAppNotificationPayloadOrganizationMessageDirect?: InAppNotificationPayloadOrganizationMessageDirectResolvers<ContextType>;
   InAppNotificationPayloadOrganizationMessageRoom?: InAppNotificationPayloadOrganizationMessageRoomResolvers<ContextType>;
-  InAppNotificationPayloadPlatform?: InAppNotificationPayloadPlatformResolvers<ContextType>;
   InAppNotificationPayloadPlatformForumDiscussion?: InAppNotificationPayloadPlatformForumDiscussionResolvers<ContextType>;
   InAppNotificationPayloadPlatformGlobalRoleChange?: InAppNotificationPayloadPlatformGlobalRoleChangeResolvers<ContextType>;
   InAppNotificationPayloadPlatformUser?: InAppNotificationPayloadPlatformUserResolvers<ContextType>;
@@ -20109,6 +20715,8 @@ export type Resolvers<ContextType = any> = {
   InAppNotificationPayloadSpaceCommunicationMessageDirect?: InAppNotificationPayloadSpaceCommunicationMessageDirectResolvers<ContextType>;
   InAppNotificationPayloadSpaceCommunicationUpdate?: InAppNotificationPayloadSpaceCommunicationUpdateResolvers<ContextType>;
   InAppNotificationPayloadSpaceCommunityApplication?: InAppNotificationPayloadSpaceCommunityApplicationResolvers<ContextType>;
+  InAppNotificationPayloadSpaceCommunityCalendarEvent?: InAppNotificationPayloadSpaceCommunityCalendarEventResolvers<ContextType>;
+  InAppNotificationPayloadSpaceCommunityCalendarEventComment?: InAppNotificationPayloadSpaceCommunityCalendarEventCommentResolvers<ContextType>;
   InAppNotificationPayloadSpaceCommunityContributor?: InAppNotificationPayloadSpaceCommunityContributorResolvers<ContextType>;
   InAppNotificationPayloadSpaceCommunityInvitation?: InAppNotificationPayloadSpaceCommunityInvitationResolvers<ContextType>;
   InAppNotificationPayloadSpaceCommunityInvitationPlatform?: InAppNotificationPayloadSpaceCommunityInvitationPlatformResolvers<ContextType>;
@@ -20142,6 +20750,7 @@ export type Resolvers<ContextType = any> = {
   LookupMyPrivilegesQueryResults?: LookupMyPrivilegesQueryResultsResolvers<ContextType>;
   LookupQueryResults?: LookupQueryResultsResolvers<ContextType>;
   Markdown?: GraphQLScalarType;
+  MeConversationsResult?: MeConversationsResultResolvers<ContextType>;
   MeQueryResults?: MeQueryResultsResolvers<ContextType>;
   Memo?: MemoResolvers<ContextType>;
   Message?: MessageResolvers<ContextType>;
@@ -20183,6 +20792,8 @@ export type Resolvers<ContextType = any> = {
   PlatformLocations?: PlatformLocationsResolvers<ContextType>;
   PlatformRolesAccess?: PlatformRolesAccessResolvers<ContextType>;
   PlatformSettings?: PlatformSettingsResolvers<ContextType>;
+  PlatformWellKnownVirtualContributorMapping?: PlatformWellKnownVirtualContributorMappingResolvers<ContextType>;
+  PlatformWellKnownVirtualContributors?: PlatformWellKnownVirtualContributorsResolvers<ContextType>;
   Post?: PostResolvers<ContextType>;
   Profile?: ProfileResolvers<ContextType>;
   ProfileCredentialVerified?: ProfileCredentialVerifiedResolvers<ContextType>;
@@ -20251,6 +20862,7 @@ export type Resolvers<ContextType = any> = {
   TemplatesSet?: TemplatesSetResolvers<ContextType>;
   Timeline?: TimelineResolvers<ContextType>;
   UUID?: GraphQLScalarType;
+  UpdateWhiteboardGuestAccessResult?: UpdateWhiteboardGuestAccessResultResolvers<ContextType>;
   Upload?: GraphQLScalarType;
   UrlResolverQueryResultCalendar?: UrlResolverQueryResultCalendarResolvers<ContextType>;
   UrlResolverQueryResultCalloutsSet?: UrlResolverQueryResultCalloutsSetResolvers<ContextType>;
@@ -20283,6 +20895,7 @@ export type Resolvers<ContextType = any> = {
   VirtualContributor?: VirtualContributorResolvers<ContextType>;
   VirtualContributorModelCard?: VirtualContributorModelCardResolvers<ContextType>;
   VirtualContributorModelCardFlag?: VirtualContributorModelCardFlagResolvers<ContextType>;
+  VirtualContributorPlatformSettings?: VirtualContributorPlatformSettingsResolvers<ContextType>;
   VirtualContributorSettings?: VirtualContributorSettingsResolvers<ContextType>;
   VirtualContributorSettingsPrivacy?: VirtualContributorSettingsPrivacyResolvers<ContextType>;
   VirtualContributorUpdatedSubscriptionResult?: VirtualContributorUpdatedSubscriptionResultResolvers<ContextType>;
@@ -20292,6 +20905,7 @@ export type Resolvers<ContextType = any> = {
   Whiteboard?: WhiteboardResolvers<ContextType>;
   WhiteboardContent?: GraphQLScalarType;
   WhiteboardPreviewCoordinates?: WhiteboardPreviewCoordinatesResolvers<ContextType>;
+  WhiteboardPreviewCoordinatesData?: WhiteboardPreviewCoordinatesDataResolvers<ContextType>;
   WhiteboardPreviewSettings?: WhiteboardPreviewSettingsResolvers<ContextType>;
 };
 
@@ -20403,7 +21017,7 @@ export type MembersAndLeadsDataFragment = {
       location?:
         | { country?: string | undefined; city?: string | undefined }
         | undefined;
-      visuals: Array<{ id: string; name: string; uri: string }>;
+      visuals: Array<{ id: string; name: VisualType; uri: string }>;
       authorization?:
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
@@ -20446,7 +21060,7 @@ export type MembersAndLeadsDataFragment = {
       location?:
         | { country?: string | undefined; city?: string | undefined }
         | undefined;
-      visuals: Array<{ id: string; name: string; uri: string }>;
+      visuals: Array<{ id: string; name: VisualType; uri: string }>;
       authorization?:
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
@@ -20489,7 +21103,7 @@ export type MembersAndLeadsDataFragment = {
       location?:
         | { country?: string | undefined; city?: string | undefined }
         | undefined;
-      visuals: Array<{ id: string; name: string; uri: string }>;
+      visuals: Array<{ id: string; name: VisualType; uri: string }>;
       authorization?:
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
@@ -20541,7 +21155,7 @@ export type MembersAndLeadsDataFragment = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -20843,7 +21457,7 @@ export type MembersAndLeadsDataFragment = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -20952,7 +21566,7 @@ export type MembersAndLeadsDataFragment = {
       location?:
         | { country?: string | undefined; city?: string | undefined }
         | undefined;
-      visuals: Array<{ id: string; name: string; uri: string }>;
+      visuals: Array<{ id: string; name: VisualType; uri: string }>;
       authorization?:
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
@@ -21019,7 +21633,7 @@ export type MembersAndLeadsDataFragment = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -21321,7 +21935,7 @@ export type MembersAndLeadsDataFragment = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -21430,7 +22044,7 @@ export type MembersAndLeadsDataFragment = {
       location?:
         | { country?: string | undefined; city?: string | undefined }
         | undefined;
-      visuals: Array<{ id: string; name: string; uri: string }>;
+      visuals: Array<{ id: string; name: VisualType; uri: string }>;
       authorization?:
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
@@ -21497,7 +22111,7 @@ export type MembersAndLeadsDataFragment = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -21799,7 +22413,7 @@ export type MembersAndLeadsDataFragment = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -21908,7 +22522,7 @@ export type MembersAndLeadsDataFragment = {
       location?:
         | { country?: string | undefined; city?: string | undefined }
         | undefined;
-      visuals: Array<{ id: string; name: string; uri: string }>;
+      visuals: Array<{ id: string; name: VisualType; uri: string }>;
       authorization?:
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
@@ -22202,7 +22816,12 @@ export type CalloutContributionDataFragment = {
               }>
             | undefined;
           visual?:
-            | { __typename: "Visual"; id: string; uri: string; name: string }
+            | {
+                __typename: "Visual";
+                id: string;
+                uri: string;
+                name: VisualType;
+              }
             | undefined;
           storageBucket: {
             id: string;
@@ -22262,7 +22881,12 @@ export type CalloutContributionDataFragment = {
           description?: any | undefined;
           tagline?: string | undefined;
           visual?:
-            | { __typename: "Visual"; id: string; uri: string; name: string }
+            | {
+                __typename: "Visual";
+                id: string;
+                uri: string;
+                name: VisualType;
+              }
             | undefined;
           storageBucket: {
             id: string;
@@ -22419,7 +23043,12 @@ export type CalloutDataFragment = {
                 }>
               | undefined;
             visual?:
-              | { __typename: "Visual"; id: string; uri: string; name: string }
+              | {
+                  __typename: "Visual";
+                  id: string;
+                  uri: string;
+                  name: VisualType;
+                }
               | undefined;
             storageBucket: {
               id: string;
@@ -22483,7 +23112,12 @@ export type CalloutDataFragment = {
             description?: any | undefined;
             tagline?: string | undefined;
             visual?:
-              | { __typename: "Visual"; id: string; uri: string; name: string }
+              | {
+                  __typename: "Visual";
+                  id: string;
+                  uri: string;
+                  name: VisualType;
+                }
               | undefined;
             storageBucket: {
               id: string;
@@ -22595,7 +23229,12 @@ export type CalloutDataFragment = {
             description?: any | undefined;
             tagline?: string | undefined;
             visual?:
-              | { __typename: "Visual"; id: string; uri: string; name: string }
+              | {
+                  __typename: "Visual";
+                  id: string;
+                  uri: string;
+                  name: VisualType;
+                }
               | undefined;
             storageBucket: {
               id: string;
@@ -22857,7 +23496,12 @@ export type CalloutDetailsFragment = {
                 }>
               | undefined;
             visual?:
-              | { __typename: "Visual"; id: string; uri: string; name: string }
+              | {
+                  __typename: "Visual";
+                  id: string;
+                  uri: string;
+                  name: VisualType;
+                }
               | undefined;
             storageBucket: {
               id: string;
@@ -22921,7 +23565,12 @@ export type CalloutDetailsFragment = {
             description?: any | undefined;
             tagline?: string | undefined;
             visual?:
-              | { __typename: "Visual"; id: string; uri: string; name: string }
+              | {
+                  __typename: "Visual";
+                  id: string;
+                  uri: string;
+                  name: VisualType;
+                }
               | undefined;
             storageBucket: {
               id: string;
@@ -23290,7 +23939,12 @@ export type ContributionsDataFragment = {
               }>
             | undefined;
           visual?:
-            | { __typename: "Visual"; id: string; uri: string; name: string }
+            | {
+                __typename: "Visual";
+                id: string;
+                uri: string;
+                name: VisualType;
+              }
             | undefined;
           storageBucket: {
             id: string;
@@ -23350,7 +24004,12 @@ export type ContributionsDataFragment = {
           description?: any | undefined;
           tagline?: string | undefined;
           visual?:
-            | { __typename: "Visual"; id: string; uri: string; name: string }
+            | {
+                __typename: "Visual";
+                id: string;
+                uri: string;
+                name: VisualType;
+              }
             | undefined;
           storageBucket: {
             id: string;
@@ -23521,7 +24180,7 @@ export type PostDataFragment = {
         }>
       | undefined;
     visual?:
-      | { __typename: "Visual"; id: string; uri: string; name: string }
+      | { __typename: "Visual"; id: string; uri: string; name: VisualType }
       | undefined;
     storageBucket: {
       id: string;
@@ -23751,7 +24410,7 @@ export type WhiteboardDataFragment = {
     description?: any | undefined;
     tagline?: string | undefined;
     visual?:
-      | { __typename: "Visual"; id: string; uri: string; name: string }
+      | { __typename: "Visual"; id: string; uri: string; name: VisualType }
       | undefined;
     storageBucket: {
       id: string;
@@ -23924,7 +24583,7 @@ export type CollaborationDataFragment = {
                       __typename: "Visual";
                       id: string;
                       uri: string;
-                      name: string;
+                      name: VisualType;
                     }
                   | undefined;
                 storageBucket: {
@@ -24001,7 +24660,7 @@ export type CollaborationDataFragment = {
                       __typename: "Visual";
                       id: string;
                       uri: string;
-                      name: string;
+                      name: VisualType;
                     }
                   | undefined;
                 storageBucket: {
@@ -24128,7 +24787,7 @@ export type CollaborationDataFragment = {
                       __typename: "Visual";
                       id: string;
                       uri: string;
-                      name: string;
+                      name: VisualType;
                     }
                   | undefined;
                 storageBucket: {
@@ -24314,7 +24973,7 @@ export type CommunityDataFragment = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -24434,7 +25093,7 @@ export type CommunityDataFragment = {
         location?:
           | { country?: string | undefined; city?: string | undefined }
           | undefined;
-        visuals: Array<{ id: string; name: string; uri: string }>;
+        visuals: Array<{ id: string; name: VisualType; uri: string }>;
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
@@ -24477,7 +25136,7 @@ export type CommunityDataFragment = {
         location?:
           | { country?: string | undefined; city?: string | undefined }
           | undefined;
-        visuals: Array<{ id: string; name: string; uri: string }>;
+        visuals: Array<{ id: string; name: VisualType; uri: string }>;
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
@@ -24520,7 +25179,7 @@ export type CommunityDataFragment = {
         location?:
           | { country?: string | undefined; city?: string | undefined }
           | undefined;
-        visuals: Array<{ id: string; name: string; uri: string }>;
+        visuals: Array<{ id: string; name: VisualType; uri: string }>;
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
@@ -24580,7 +25239,7 @@ export type CommunityDataFragment = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -24894,7 +25553,11 @@ export type CommunityDataFragment = {
                           city?: string | undefined;
                         }
                       | undefined;
-                    visuals: Array<{ id: string; name: string; uri: string }>;
+                    visuals: Array<{
+                      id: string;
+                      name: VisualType;
+                      uri: string;
+                    }>;
                     authorization?:
                       | {
                           myPrivileges?:
@@ -25014,7 +25677,7 @@ export type CommunityDataFragment = {
         location?:
           | { country?: string | undefined; city?: string | undefined }
           | undefined;
-        visuals: Array<{ id: string; name: string; uri: string }>;
+        visuals: Array<{ id: string; name: VisualType; uri: string }>;
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
@@ -25089,7 +25752,7 @@ export type CommunityDataFragment = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -25403,7 +26066,11 @@ export type CommunityDataFragment = {
                           city?: string | undefined;
                         }
                       | undefined;
-                    visuals: Array<{ id: string; name: string; uri: string }>;
+                    visuals: Array<{
+                      id: string;
+                      name: VisualType;
+                      uri: string;
+                    }>;
                     authorization?:
                       | {
                           myPrivileges?:
@@ -25523,7 +26190,7 @@ export type CommunityDataFragment = {
         location?:
           | { country?: string | undefined; city?: string | undefined }
           | undefined;
-        visuals: Array<{ id: string; name: string; uri: string }>;
+        visuals: Array<{ id: string; name: VisualType; uri: string }>;
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
@@ -25598,7 +26265,7 @@ export type CommunityDataFragment = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -25912,7 +26579,11 @@ export type CommunityDataFragment = {
                           city?: string | undefined;
                         }
                       | undefined;
-                    visuals: Array<{ id: string; name: string; uri: string }>;
+                    visuals: Array<{
+                      id: string;
+                      name: VisualType;
+                      uri: string;
+                    }>;
                     authorization?:
                       | {
                           myPrivileges?:
@@ -26032,7 +26703,7 @@ export type CommunityDataFragment = {
         location?:
           | { country?: string | undefined; city?: string | undefined }
           | undefined;
-        visuals: Array<{ id: string; name: string; uri: string }>;
+        visuals: Array<{ id: string; name: VisualType; uri: string }>;
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
@@ -26603,7 +27274,7 @@ export type GroupDataFragment = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -26696,7 +27367,7 @@ export type MemberDataFragment = {
     location?:
       | { country?: string | undefined; city?: string | undefined }
       | undefined;
-    visuals: Array<{ id: string; name: string; uri: string }>;
+    visuals: Array<{ id: string; name: VisualType; uri: string }>;
     authorization?:
       | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
       | undefined;
@@ -27274,7 +27945,7 @@ export type OrganizationDataFragment = {
         location?:
           | { country?: string | undefined; city?: string | undefined }
           | undefined;
-        visuals: Array<{ id: string; name: string; uri: string }>;
+        visuals: Array<{ id: string; name: VisualType; uri: string }>;
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
@@ -27552,7 +28223,7 @@ export type OrganizationDataFragment = {
                 location?:
                   | { country?: string | undefined; city?: string | undefined }
                   | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
+                visuals: Array<{ id: string; name: VisualType; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -27653,7 +28324,7 @@ export type OrganizationDataFragment = {
     location?:
       | { country?: string | undefined; city?: string | undefined }
       | undefined;
-    visuals: Array<{ id: string; name: string; uri: string }>;
+    visuals: Array<{ id: string; name: VisualType; uri: string }>;
     authorization?:
       | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
       | undefined;
@@ -27752,7 +28423,7 @@ export type ProfileDataUserFragment = {
   location?:
     | { country?: string | undefined; city?: string | undefined }
     | undefined;
-  visuals: Array<{ id: string; name: string; uri: string }>;
+  visuals: Array<{ id: string; name: VisualType; uri: string }>;
   authorization?:
     | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
     | undefined;
@@ -28009,7 +28680,7 @@ export type SubspaceL1DataFragment = {
                           __typename: "Visual";
                           id: string;
                           uri: string;
-                          name: string;
+                          name: VisualType;
                         }
                       | undefined;
                     storageBucket: {
@@ -28097,7 +28768,7 @@ export type SubspaceL1DataFragment = {
                           __typename: "Visual";
                           id: string;
                           uri: string;
-                          name: string;
+                          name: VisualType;
                         }
                       | undefined;
                     storageBucket: {
@@ -28243,7 +28914,7 @@ export type SubspaceL1DataFragment = {
                           __typename: "Visual";
                           id: string;
                           uri: string;
-                          name: string;
+                          name: VisualType;
                         }
                       | undefined;
                     storageBucket: {
@@ -28440,7 +29111,7 @@ export type SubspaceL1DataFragment = {
                 location?:
                   | { country?: string | undefined; city?: string | undefined }
                   | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
+                visuals: Array<{ id: string; name: VisualType; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -28580,7 +29251,7 @@ export type SubspaceL1DataFragment = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -28631,7 +29302,7 @@ export type SubspaceL1DataFragment = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -28682,7 +29353,7 @@ export type SubspaceL1DataFragment = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -28742,7 +29413,7 @@ export type SubspaceL1DataFragment = {
                 location?:
                   | { country?: string | undefined; city?: string | undefined }
                   | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
+                visuals: Array<{ id: string; name: VisualType; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -29058,7 +29729,7 @@ export type SubspaceL1DataFragment = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -29188,7 +29859,7 @@ export type SubspaceL1DataFragment = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -29263,7 +29934,7 @@ export type SubspaceL1DataFragment = {
                 location?:
                   | { country?: string | undefined; city?: string | undefined }
                   | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
+                visuals: Array<{ id: string; name: VisualType; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -29579,7 +30250,7 @@ export type SubspaceL1DataFragment = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -29709,7 +30380,7 @@ export type SubspaceL1DataFragment = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -29784,7 +30455,7 @@ export type SubspaceL1DataFragment = {
                 location?:
                   | { country?: string | undefined; city?: string | undefined }
                   | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
+                visuals: Array<{ id: string; name: VisualType; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -30100,7 +30771,7 @@ export type SubspaceL1DataFragment = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -30230,7 +30901,7 @@ export type SubspaceL1DataFragment = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -30574,7 +31245,7 @@ export type SubspaceL1DataFragment = {
                         __typename: "Visual";
                         id: string;
                         uri: string;
-                        name: string;
+                        name: VisualType;
                       }
                     | undefined;
                   storageBucket: {
@@ -30658,7 +31329,7 @@ export type SubspaceL1DataFragment = {
                         __typename: "Visual";
                         id: string;
                         uri: string;
-                        name: string;
+                        name: VisualType;
                       }
                     | undefined;
                   storageBucket: {
@@ -30800,7 +31471,7 @@ export type SubspaceL1DataFragment = {
                         __typename: "Visual";
                         id: string;
                         uri: string;
-                        name: string;
+                        name: VisualType;
                       }
                     | undefined;
                   storageBucket: {
@@ -30995,7 +31666,7 @@ export type SubspaceL1DataFragment = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -31123,7 +31794,7 @@ export type SubspaceL1DataFragment = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -31166,7 +31837,7 @@ export type SubspaceL1DataFragment = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -31209,7 +31880,7 @@ export type SubspaceL1DataFragment = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -31269,7 +31940,7 @@ export type SubspaceL1DataFragment = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -31583,7 +32254,11 @@ export type SubspaceL1DataFragment = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -31703,7 +32378,7 @@ export type SubspaceL1DataFragment = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -31778,7 +32453,7 @@ export type SubspaceL1DataFragment = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -32092,7 +32767,11 @@ export type SubspaceL1DataFragment = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -32212,7 +32891,7 @@ export type SubspaceL1DataFragment = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -32287,7 +32966,7 @@ export type SubspaceL1DataFragment = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -32601,7 +33280,11 @@ export type SubspaceL1DataFragment = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -32721,7 +33404,7 @@ export type SubspaceL1DataFragment = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -33080,7 +33763,7 @@ export type SubspaceL2DataFragment = {
                           __typename: "Visual";
                           id: string;
                           uri: string;
-                          name: string;
+                          name: VisualType;
                         }
                       | undefined;
                     storageBucket: {
@@ -33168,7 +33851,7 @@ export type SubspaceL2DataFragment = {
                           __typename: "Visual";
                           id: string;
                           uri: string;
-                          name: string;
+                          name: VisualType;
                         }
                       | undefined;
                     storageBucket: {
@@ -33314,7 +33997,7 @@ export type SubspaceL2DataFragment = {
                           __typename: "Visual";
                           id: string;
                           uri: string;
-                          name: string;
+                          name: VisualType;
                         }
                       | undefined;
                     storageBucket: {
@@ -33511,7 +34194,7 @@ export type SubspaceL2DataFragment = {
                 location?:
                   | { country?: string | undefined; city?: string | undefined }
                   | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
+                visuals: Array<{ id: string; name: VisualType; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -33651,7 +34334,7 @@ export type SubspaceL2DataFragment = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -33702,7 +34385,7 @@ export type SubspaceL2DataFragment = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -33753,7 +34436,7 @@ export type SubspaceL2DataFragment = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -33813,7 +34496,7 @@ export type SubspaceL2DataFragment = {
                 location?:
                   | { country?: string | undefined; city?: string | undefined }
                   | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
+                visuals: Array<{ id: string; name: VisualType; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -34129,7 +34812,7 @@ export type SubspaceL2DataFragment = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -34259,7 +34942,7 @@ export type SubspaceL2DataFragment = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -34334,7 +35017,7 @@ export type SubspaceL2DataFragment = {
                 location?:
                   | { country?: string | undefined; city?: string | undefined }
                   | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
+                visuals: Array<{ id: string; name: VisualType; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -34650,7 +35333,7 @@ export type SubspaceL2DataFragment = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -34780,7 +35463,7 @@ export type SubspaceL2DataFragment = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -34855,7 +35538,7 @@ export type SubspaceL2DataFragment = {
                 location?:
                   | { country?: string | undefined; city?: string | undefined }
                   | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
+                visuals: Array<{ id: string; name: VisualType; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -35171,7 +35854,7 @@ export type SubspaceL2DataFragment = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -35301,7 +35984,7 @@ export type SubspaceL2DataFragment = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -35645,7 +36328,7 @@ export type SubspaceL2DataFragment = {
                         __typename: "Visual";
                         id: string;
                         uri: string;
-                        name: string;
+                        name: VisualType;
                       }
                     | undefined;
                   storageBucket: {
@@ -35729,7 +36412,7 @@ export type SubspaceL2DataFragment = {
                         __typename: "Visual";
                         id: string;
                         uri: string;
-                        name: string;
+                        name: VisualType;
                       }
                     | undefined;
                   storageBucket: {
@@ -35871,7 +36554,7 @@ export type SubspaceL2DataFragment = {
                         __typename: "Visual";
                         id: string;
                         uri: string;
-                        name: string;
+                        name: VisualType;
                       }
                     | undefined;
                   storageBucket: {
@@ -36066,7 +36749,7 @@ export type SubspaceL2DataFragment = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -36194,7 +36877,7 @@ export type SubspaceL2DataFragment = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -36237,7 +36920,7 @@ export type SubspaceL2DataFragment = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -36280,7 +36963,7 @@ export type SubspaceL2DataFragment = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -36340,7 +37023,7 @@ export type SubspaceL2DataFragment = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -36654,7 +37337,11 @@ export type SubspaceL2DataFragment = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -36774,7 +37461,7 @@ export type SubspaceL2DataFragment = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -36849,7 +37536,7 @@ export type SubspaceL2DataFragment = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -37163,7 +37850,11 @@ export type SubspaceL2DataFragment = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -37283,7 +37974,7 @@ export type SubspaceL2DataFragment = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -37358,7 +38049,7 @@ export type SubspaceL2DataFragment = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -37672,7 +38363,11 @@ export type SubspaceL2DataFragment = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -37792,7 +38487,7 @@ export type SubspaceL2DataFragment = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -38313,7 +39008,7 @@ export type SpaceDataFragment = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -38441,7 +39136,7 @@ export type SpaceDataFragment = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -38484,7 +39179,7 @@ export type SpaceDataFragment = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -38527,7 +39222,7 @@ export type SpaceDataFragment = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -38587,7 +39282,7 @@ export type SpaceDataFragment = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -38901,7 +39596,11 @@ export type SpaceDataFragment = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -39021,7 +39720,7 @@ export type SpaceDataFragment = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -39096,7 +39795,7 @@ export type SpaceDataFragment = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -39410,7 +40109,11 @@ export type SpaceDataFragment = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -39530,7 +40233,7 @@ export type SpaceDataFragment = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -39605,7 +40308,7 @@ export type SpaceDataFragment = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -39919,7 +40622,11 @@ export type SpaceDataFragment = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -40039,7 +40746,7 @@ export type SpaceDataFragment = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -40324,7 +41031,7 @@ export type SpaceDataFragment = {
                         __typename: "Visual";
                         id: string;
                         uri: string;
-                        name: string;
+                        name: VisualType;
                       }
                     | undefined;
                   storageBucket: {
@@ -40408,7 +41115,7 @@ export type SpaceDataFragment = {
                         __typename: "Visual";
                         id: string;
                         uri: string;
-                        name: string;
+                        name: VisualType;
                       }
                     | undefined;
                   storageBucket: {
@@ -40550,7 +41257,7 @@ export type SpaceDataFragment = {
                         __typename: "Visual";
                         id: string;
                         uri: string;
-                        name: string;
+                        name: VisualType;
                       }
                     | undefined;
                   storageBucket: {
@@ -40897,7 +41604,7 @@ export type SpaceDataFragment = {
                           __typename: "Visual";
                           id: string;
                           uri: string;
-                          name: string;
+                          name: VisualType;
                         }
                       | undefined;
                     storageBucket: {
@@ -40985,7 +41692,7 @@ export type SpaceDataFragment = {
                           __typename: "Visual";
                           id: string;
                           uri: string;
-                          name: string;
+                          name: VisualType;
                         }
                       | undefined;
                     storageBucket: {
@@ -41131,7 +41838,7 @@ export type SpaceDataFragment = {
                           __typename: "Visual";
                           id: string;
                           uri: string;
-                          name: string;
+                          name: VisualType;
                         }
                       | undefined;
                     storageBucket: {
@@ -41328,7 +42035,7 @@ export type SpaceDataFragment = {
                 location?:
                   | { country?: string | undefined; city?: string | undefined }
                   | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
+                visuals: Array<{ id: string; name: VisualType; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -41468,7 +42175,7 @@ export type SpaceDataFragment = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -41519,7 +42226,7 @@ export type SpaceDataFragment = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -41570,7 +42277,7 @@ export type SpaceDataFragment = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -41630,7 +42337,7 @@ export type SpaceDataFragment = {
                 location?:
                   | { country?: string | undefined; city?: string | undefined }
                   | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
+                visuals: Array<{ id: string; name: VisualType; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -41946,7 +42653,7 @@ export type SpaceDataFragment = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -42076,7 +42783,7 @@ export type SpaceDataFragment = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -42151,7 +42858,7 @@ export type SpaceDataFragment = {
                 location?:
                   | { country?: string | undefined; city?: string | undefined }
                   | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
+                visuals: Array<{ id: string; name: VisualType; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -42467,7 +43174,7 @@ export type SpaceDataFragment = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -42597,7 +43304,7 @@ export type SpaceDataFragment = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -42672,7 +43379,7 @@ export type SpaceDataFragment = {
                 location?:
                   | { country?: string | undefined; city?: string | undefined }
                   | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
+                visuals: Array<{ id: string; name: VisualType; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -42988,7 +43695,7 @@ export type SpaceDataFragment = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -43118,7 +43825,7 @@ export type SpaceDataFragment = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -44038,7 +44745,7 @@ export type SubspaceDataFragment = {
                         __typename: "Visual";
                         id: string;
                         uri: string;
-                        name: string;
+                        name: VisualType;
                       }
                     | undefined;
                   storageBucket: {
@@ -44122,7 +44829,7 @@ export type SubspaceDataFragment = {
                         __typename: "Visual";
                         id: string;
                         uri: string;
-                        name: string;
+                        name: VisualType;
                       }
                     | undefined;
                   storageBucket: {
@@ -44264,7 +44971,7 @@ export type SubspaceDataFragment = {
                         __typename: "Visual";
                         id: string;
                         uri: string;
-                        name: string;
+                        name: VisualType;
                       }
                     | undefined;
                   storageBucket: {
@@ -44459,7 +45166,7 @@ export type SubspaceDataFragment = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -44587,7 +45294,7 @@ export type SubspaceDataFragment = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -44630,7 +45337,7 @@ export type SubspaceDataFragment = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -44673,7 +45380,7 @@ export type SubspaceDataFragment = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -44733,7 +45440,7 @@ export type SubspaceDataFragment = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -45047,7 +45754,11 @@ export type SubspaceDataFragment = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -45167,7 +45878,7 @@ export type SubspaceDataFragment = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -45242,7 +45953,7 @@ export type SubspaceDataFragment = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -45556,7 +46267,11 @@ export type SubspaceDataFragment = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -45676,7 +46391,7 @@ export type SubspaceDataFragment = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -45751,7 +46466,7 @@ export type SubspaceDataFragment = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -46065,7 +46780,11 @@ export type SubspaceDataFragment = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -46185,7 +46904,7 @@ export type SubspaceDataFragment = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -47683,7 +48402,7 @@ export type UserDataFragment = {
     location?:
       | { country?: string | undefined; city?: string | undefined }
       | undefined;
-    visuals: Array<{ id: string; name: string; uri: string }>;
+    visuals: Array<{ id: string; name: VisualType; uri: string }>;
     authorization?:
       | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
       | undefined;
@@ -48021,7 +48740,7 @@ export type VisualUriFragment = {
   __typename: "Visual";
   id: string;
   uri: string;
-  name: string;
+  name: VisualType;
 };
 
 export type AssignRoleToOrganizationMutationVariables = Exact<{
@@ -48072,7 +48791,7 @@ export type AssignRoleToOrganizationMutation = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -48374,7 +49093,7 @@ export type AssignRoleToOrganizationMutation = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -48483,7 +49202,7 @@ export type AssignRoleToOrganizationMutation = {
       location?:
         | { country?: string | undefined; city?: string | undefined }
         | undefined;
-      visuals: Array<{ id: string; name: string; uri: string }>;
+      visuals: Array<{ id: string; name: VisualType; uri: string }>;
       authorization?:
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
@@ -48798,7 +49517,7 @@ export type AssignRoleToUserMutation = {
       location?:
         | { country?: string | undefined; city?: string | undefined }
         | undefined;
-      visuals: Array<{ id: string; name: string; uri: string }>;
+      visuals: Array<{ id: string; name: VisualType; uri: string }>;
       authorization?:
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
@@ -49255,7 +49974,7 @@ export type AssignRoleToUserExtendedDataMutation = {
       location?:
         | { country?: string | undefined; city?: string | undefined }
         | undefined;
-      visuals: Array<{ id: string; name: string; uri: string }>;
+      visuals: Array<{ id: string; name: VisualType; uri: string }>;
       authorization?:
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
@@ -49667,7 +50386,7 @@ export type RemoveRoleFromOrganizationMutation = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -49969,7 +50688,7 @@ export type RemoveRoleFromOrganizationMutation = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -50078,7 +50797,7 @@ export type RemoveRoleFromOrganizationMutation = {
       location?:
         | { country?: string | undefined; city?: string | undefined }
         | undefined;
-      visuals: Array<{ id: string; name: string; uri: string }>;
+      visuals: Array<{ id: string; name: VisualType; uri: string }>;
       authorization?:
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
@@ -50393,7 +51112,7 @@ export type RemoveRoleFromUserMutation = {
       location?:
         | { country?: string | undefined; city?: string | undefined }
         | undefined;
-      visuals: Array<{ id: string; name: string; uri: string }>;
+      visuals: Array<{ id: string; name: VisualType; uri: string }>;
       authorization?:
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
@@ -50850,7 +51569,7 @@ export type RemoveRoleFromUserExtendedDataMutation = {
       location?:
         | { country?: string | undefined; city?: string | undefined }
         | undefined;
-      visuals: Array<{ id: string; name: string; uri: string }>;
+      visuals: Array<{ id: string; name: VisualType; uri: string }>;
       authorization?:
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
@@ -51296,7 +52015,7 @@ export type CreateCalloutOnCalloutsSetMutation = {
                     __typename: "Visual";
                     id: string;
                     uri: string;
-                    name: string;
+                    name: VisualType;
                   }
                 | undefined;
               storageBucket: {
@@ -51369,7 +52088,7 @@ export type CreateCalloutOnCalloutsSetMutation = {
                     __typename: "Visual";
                     id: string;
                     uri: string;
-                    name: string;
+                    name: VisualType;
                   }
                 | undefined;
               storageBucket: {
@@ -51811,7 +52530,7 @@ export type UpdateCalloutMutation = {
                     __typename: "Visual";
                     id: string;
                     uri: string;
-                    name: string;
+                    name: VisualType;
                   }
                 | undefined;
               storageBucket: {
@@ -51884,7 +52603,7 @@ export type UpdateCalloutMutation = {
                     __typename: "Visual";
                     id: string;
                     uri: string;
-                    name: string;
+                    name: VisualType;
                   }
                 | undefined;
               storageBucket: {
@@ -52222,7 +52941,7 @@ export type UpdateCalloutVisibilityMutation = {
                     __typename: "Visual";
                     id: string;
                     uri: string;
-                    name: string;
+                    name: VisualType;
                   }
                 | undefined;
               storageBucket: {
@@ -52295,7 +53014,7 @@ export type UpdateCalloutVisibilityMutation = {
                     __typename: "Visual";
                     id: string;
                     uri: string;
-                    name: string;
+                    name: VisualType;
                   }
                 | undefined;
               storageBucket: {
@@ -52416,7 +53135,7 @@ export type UpdateCalloutVisibilityMutation = {
                     __typename: "Visual";
                     id: string;
                     uri: string;
-                    name: string;
+                    name: VisualType;
                   }
                 | undefined;
               storageBucket: {
@@ -52591,7 +53310,12 @@ export type CreateContributionOnCalloutMutation = {
                 }>
               | undefined;
             visual?:
-              | { __typename: "Visual"; id: string; uri: string; name: string }
+              | {
+                  __typename: "Visual";
+                  id: string;
+                  uri: string;
+                  name: VisualType;
+                }
               | undefined;
             storageBucket: {
               id: string;
@@ -52655,7 +53379,12 @@ export type CreateContributionOnCalloutMutation = {
             description?: any | undefined;
             tagline?: string | undefined;
             visual?:
-              | { __typename: "Visual"; id: string; uri: string; name: string }
+              | {
+                  __typename: "Visual";
+                  id: string;
+                  uri: string;
+                  name: VisualType;
+                }
               | undefined;
             storageBucket: {
               id: string;
@@ -53297,7 +54026,7 @@ export type UpdatePostMutation = {
           }>
         | undefined;
       visual?:
-        | { __typename: "Visual"; id: string; uri: string; name: string }
+        | { __typename: "Visual"; id: string; uri: string; name: VisualType }
         | undefined;
       storageBucket: {
         id: string;
@@ -53670,7 +54399,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                 location?:
                   | { country?: string | undefined; city?: string | undefined }
                   | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
+                visuals: Array<{ id: string; name: VisualType; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -53810,7 +54539,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -53861,7 +54590,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -53912,7 +54641,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -53972,7 +54701,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                 location?:
                   | { country?: string | undefined; city?: string | undefined }
                   | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
+                visuals: Array<{ id: string; name: VisualType; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -54288,7 +55017,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -54418,7 +55147,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -54493,7 +55222,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                 location?:
                   | { country?: string | undefined; city?: string | undefined }
                   | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
+                visuals: Array<{ id: string; name: VisualType; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -54809,7 +55538,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -54939,7 +55668,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -55014,7 +55743,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                 location?:
                   | { country?: string | undefined; city?: string | undefined }
                   | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
+                visuals: Array<{ id: string; name: VisualType; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -55330,7 +56059,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -55460,7 +56189,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -55753,7 +56482,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                           __typename: "Visual";
                           id: string;
                           uri: string;
-                          name: string;
+                          name: VisualType;
                         }
                       | undefined;
                     storageBucket: {
@@ -55841,7 +56570,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                           __typename: "Visual";
                           id: string;
                           uri: string;
-                          name: string;
+                          name: VisualType;
                         }
                       | undefined;
                     storageBucket: {
@@ -55987,7 +56716,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                           __typename: "Visual";
                           id: string;
                           uri: string;
-                          name: string;
+                          name: VisualType;
                         }
                       | undefined;
                     storageBucket: {
@@ -56340,7 +57069,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                             __typename: "Visual";
                             id: string;
                             uri: string;
-                            name: string;
+                            name: VisualType;
                           }
                         | undefined;
                       storageBucket: {
@@ -56428,7 +57157,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                             __typename: "Visual";
                             id: string;
                             uri: string;
-                            name: string;
+                            name: VisualType;
                           }
                         | undefined;
                       storageBucket: {
@@ -56578,7 +57307,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                             __typename: "Visual";
                             id: string;
                             uri: string;
-                            name: string;
+                            name: VisualType;
                           }
                         | undefined;
                       storageBucket: {
@@ -56786,7 +57515,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -56938,7 +57667,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -56989,7 +57718,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -57040,7 +57769,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -57103,7 +57832,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -57427,7 +58156,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                             | undefined;
                           visuals: Array<{
                             id: string;
-                            name: string;
+                            name: VisualType;
                             uri: string;
                           }>;
                           authorization?:
@@ -57557,7 +58286,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -57635,7 +58364,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -57959,7 +58688,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                             | undefined;
                           visuals: Array<{
                             id: string;
-                            name: string;
+                            name: VisualType;
                             uri: string;
                           }>;
                           authorization?:
@@ -58089,7 +58818,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -58167,7 +58896,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -58491,7 +59220,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                             | undefined;
                           visuals: Array<{
                             id: string;
-                            name: string;
+                            name: VisualType;
                             uri: string;
                           }>;
                           authorization?:
@@ -58621,7 +59350,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -59693,7 +60422,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                 location?:
                   | { country?: string | undefined; city?: string | undefined }
                   | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
+                visuals: Array<{ id: string; name: VisualType; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -59833,7 +60562,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -59884,7 +60613,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -59935,7 +60664,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -59995,7 +60724,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                 location?:
                   | { country?: string | undefined; city?: string | undefined }
                   | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
+                visuals: Array<{ id: string; name: VisualType; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -60311,7 +61040,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -60441,7 +61170,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -60516,7 +61245,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                 location?:
                   | { country?: string | undefined; city?: string | undefined }
                   | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
+                visuals: Array<{ id: string; name: VisualType; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -60832,7 +61561,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -60962,7 +61691,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -61037,7 +61766,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                 location?:
                   | { country?: string | undefined; city?: string | undefined }
                   | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
+                visuals: Array<{ id: string; name: VisualType; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -61353,7 +62082,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -61483,7 +62212,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -61776,7 +62505,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                           __typename: "Visual";
                           id: string;
                           uri: string;
-                          name: string;
+                          name: VisualType;
                         }
                       | undefined;
                     storageBucket: {
@@ -61864,7 +62593,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                           __typename: "Visual";
                           id: string;
                           uri: string;
-                          name: string;
+                          name: VisualType;
                         }
                       | undefined;
                     storageBucket: {
@@ -62010,7 +62739,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                           __typename: "Visual";
                           id: string;
                           uri: string;
-                          name: string;
+                          name: VisualType;
                         }
                       | undefined;
                     storageBucket: {
@@ -62363,7 +63092,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                             __typename: "Visual";
                             id: string;
                             uri: string;
-                            name: string;
+                            name: VisualType;
                           }
                         | undefined;
                       storageBucket: {
@@ -62451,7 +63180,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                             __typename: "Visual";
                             id: string;
                             uri: string;
-                            name: string;
+                            name: VisualType;
                           }
                         | undefined;
                       storageBucket: {
@@ -62601,7 +63330,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                             __typename: "Visual";
                             id: string;
                             uri: string;
-                            name: string;
+                            name: VisualType;
                           }
                         | undefined;
                       storageBucket: {
@@ -62809,7 +63538,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -62961,7 +63690,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -63012,7 +63741,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -63063,7 +63792,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -63126,7 +63855,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -63450,7 +64179,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                             | undefined;
                           visuals: Array<{
                             id: string;
-                            name: string;
+                            name: VisualType;
                             uri: string;
                           }>;
                           authorization?:
@@ -63580,7 +64309,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -63658,7 +64387,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -63982,7 +64711,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                             | undefined;
                           visuals: Array<{
                             id: string;
-                            name: string;
+                            name: VisualType;
                             uri: string;
                           }>;
                           authorization?:
@@ -64112,7 +64841,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -64190,7 +64919,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -64514,7 +65243,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                             | undefined;
                           visuals: Array<{
                             id: string;
-                            name: string;
+                            name: VisualType;
                             uri: string;
                           }>;
                           authorization?:
@@ -64644,7 +65373,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -65734,7 +66463,7 @@ export type UpdateSpaceMutation = {
                 location?:
                   | { country?: string | undefined; city?: string | undefined }
                   | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
+                visuals: Array<{ id: string; name: VisualType; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -65874,7 +66603,7 @@ export type UpdateSpaceMutation = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -65925,7 +66654,7 @@ export type UpdateSpaceMutation = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -65976,7 +66705,7 @@ export type UpdateSpaceMutation = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -66036,7 +66765,7 @@ export type UpdateSpaceMutation = {
                 location?:
                   | { country?: string | undefined; city?: string | undefined }
                   | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
+                visuals: Array<{ id: string; name: VisualType; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -66352,7 +67081,7 @@ export type UpdateSpaceMutation = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -66482,7 +67211,7 @@ export type UpdateSpaceMutation = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -66557,7 +67286,7 @@ export type UpdateSpaceMutation = {
                 location?:
                   | { country?: string | undefined; city?: string | undefined }
                   | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
+                visuals: Array<{ id: string; name: VisualType; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -66873,7 +67602,7 @@ export type UpdateSpaceMutation = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -67003,7 +67732,7 @@ export type UpdateSpaceMutation = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -67078,7 +67807,7 @@ export type UpdateSpaceMutation = {
                 location?:
                   | { country?: string | undefined; city?: string | undefined }
                   | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
+                visuals: Array<{ id: string; name: VisualType; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -67394,7 +68123,7 @@ export type UpdateSpaceMutation = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -67524,7 +68253,7 @@ export type UpdateSpaceMutation = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -67817,7 +68546,7 @@ export type UpdateSpaceMutation = {
                           __typename: "Visual";
                           id: string;
                           uri: string;
-                          name: string;
+                          name: VisualType;
                         }
                       | undefined;
                     storageBucket: {
@@ -67905,7 +68634,7 @@ export type UpdateSpaceMutation = {
                           __typename: "Visual";
                           id: string;
                           uri: string;
-                          name: string;
+                          name: VisualType;
                         }
                       | undefined;
                     storageBucket: {
@@ -68051,7 +68780,7 @@ export type UpdateSpaceMutation = {
                           __typename: "Visual";
                           id: string;
                           uri: string;
-                          name: string;
+                          name: VisualType;
                         }
                       | undefined;
                     storageBucket: {
@@ -68404,7 +69133,7 @@ export type UpdateSpaceMutation = {
                             __typename: "Visual";
                             id: string;
                             uri: string;
-                            name: string;
+                            name: VisualType;
                           }
                         | undefined;
                       storageBucket: {
@@ -68492,7 +69221,7 @@ export type UpdateSpaceMutation = {
                             __typename: "Visual";
                             id: string;
                             uri: string;
-                            name: string;
+                            name: VisualType;
                           }
                         | undefined;
                       storageBucket: {
@@ -68642,7 +69371,7 @@ export type UpdateSpaceMutation = {
                             __typename: "Visual";
                             id: string;
                             uri: string;
-                            name: string;
+                            name: VisualType;
                           }
                         | undefined;
                       storageBucket: {
@@ -68850,7 +69579,7 @@ export type UpdateSpaceMutation = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -69002,7 +69731,7 @@ export type UpdateSpaceMutation = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -69053,7 +69782,7 @@ export type UpdateSpaceMutation = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -69104,7 +69833,7 @@ export type UpdateSpaceMutation = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -69167,7 +69896,7 @@ export type UpdateSpaceMutation = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -69491,7 +70220,7 @@ export type UpdateSpaceMutation = {
                             | undefined;
                           visuals: Array<{
                             id: string;
-                            name: string;
+                            name: VisualType;
                             uri: string;
                           }>;
                           authorization?:
@@ -69621,7 +70350,7 @@ export type UpdateSpaceMutation = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -69699,7 +70428,7 @@ export type UpdateSpaceMutation = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -70023,7 +70752,7 @@ export type UpdateSpaceMutation = {
                             | undefined;
                           visuals: Array<{
                             id: string;
-                            name: string;
+                            name: VisualType;
                             uri: string;
                           }>;
                           authorization?:
@@ -70153,7 +70882,7 @@ export type UpdateSpaceMutation = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -70231,7 +70960,7 @@ export type UpdateSpaceMutation = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -70555,7 +71284,7 @@ export type UpdateSpaceMutation = {
                             | undefined;
                           visuals: Array<{
                             id: string;
-                            name: string;
+                            name: VisualType;
                             uri: string;
                           }>;
                           authorization?:
@@ -70685,7 +71414,7 @@ export type UpdateSpaceMutation = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -71646,7 +72375,7 @@ export type CreateSubspaceMutation = {
                             __typename: "Visual";
                             id: string;
                             uri: string;
-                            name: string;
+                            name: VisualType;
                           }
                         | undefined;
                       storageBucket: {
@@ -71734,7 +72463,7 @@ export type CreateSubspaceMutation = {
                             __typename: "Visual";
                             id: string;
                             uri: string;
-                            name: string;
+                            name: VisualType;
                           }
                         | undefined;
                       storageBucket: {
@@ -71884,7 +72613,7 @@ export type CreateSubspaceMutation = {
                             __typename: "Visual";
                             id: string;
                             uri: string;
-                            name: string;
+                            name: VisualType;
                           }
                         | undefined;
                       storageBucket: {
@@ -72092,7 +72821,7 @@ export type CreateSubspaceMutation = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -72244,7 +72973,7 @@ export type CreateSubspaceMutation = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -72295,7 +73024,7 @@ export type CreateSubspaceMutation = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -72346,7 +73075,7 @@ export type CreateSubspaceMutation = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -72409,7 +73138,7 @@ export type CreateSubspaceMutation = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -72733,7 +73462,7 @@ export type CreateSubspaceMutation = {
                             | undefined;
                           visuals: Array<{
                             id: string;
-                            name: string;
+                            name: VisualType;
                             uri: string;
                           }>;
                           authorization?:
@@ -72863,7 +73592,7 @@ export type CreateSubspaceMutation = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -72941,7 +73670,7 @@ export type CreateSubspaceMutation = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -73265,7 +73994,7 @@ export type CreateSubspaceMutation = {
                             | undefined;
                           visuals: Array<{
                             id: string;
-                            name: string;
+                            name: VisualType;
                             uri: string;
                           }>;
                           authorization?:
@@ -73395,7 +74124,7 @@ export type CreateSubspaceMutation = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -73473,7 +74202,7 @@ export type CreateSubspaceMutation = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -73797,7 +74526,7 @@ export type CreateSubspaceMutation = {
                             | undefined;
                           visuals: Array<{
                             id: string;
-                            name: string;
+                            name: VisualType;
                             uri: string;
                           }>;
                           authorization?:
@@ -73927,7 +74656,7 @@ export type CreateSubspaceMutation = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -74279,7 +75008,7 @@ export type CreateSubspaceMutation = {
                           __typename: "Visual";
                           id: string;
                           uri: string;
-                          name: string;
+                          name: VisualType;
                         }
                       | undefined;
                     storageBucket: {
@@ -74367,7 +75096,7 @@ export type CreateSubspaceMutation = {
                           __typename: "Visual";
                           id: string;
                           uri: string;
-                          name: string;
+                          name: VisualType;
                         }
                       | undefined;
                     storageBucket: {
@@ -74513,7 +75242,7 @@ export type CreateSubspaceMutation = {
                           __typename: "Visual";
                           id: string;
                           uri: string;
-                          name: string;
+                          name: VisualType;
                         }
                       | undefined;
                     storageBucket: {
@@ -74710,7 +75439,7 @@ export type CreateSubspaceMutation = {
                 location?:
                   | { country?: string | undefined; city?: string | undefined }
                   | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
+                visuals: Array<{ id: string; name: VisualType; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -74850,7 +75579,7 @@ export type CreateSubspaceMutation = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -74901,7 +75630,7 @@ export type CreateSubspaceMutation = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -74952,7 +75681,7 @@ export type CreateSubspaceMutation = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -75012,7 +75741,7 @@ export type CreateSubspaceMutation = {
                 location?:
                   | { country?: string | undefined; city?: string | undefined }
                   | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
+                visuals: Array<{ id: string; name: VisualType; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -75328,7 +76057,7 @@ export type CreateSubspaceMutation = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -75458,7 +76187,7 @@ export type CreateSubspaceMutation = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -75533,7 +76262,7 @@ export type CreateSubspaceMutation = {
                 location?:
                   | { country?: string | undefined; city?: string | undefined }
                   | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
+                visuals: Array<{ id: string; name: VisualType; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -75849,7 +76578,7 @@ export type CreateSubspaceMutation = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -75979,7 +76708,7 @@ export type CreateSubspaceMutation = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -76054,7 +76783,7 @@ export type CreateSubspaceMutation = {
                 location?:
                   | { country?: string | undefined; city?: string | undefined }
                   | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
+                visuals: Array<{ id: string; name: VisualType; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -76370,7 +77099,7 @@ export type CreateSubspaceMutation = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -76500,7 +77229,7 @@ export type CreateSubspaceMutation = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -76869,7 +77598,7 @@ export type UpdateSubspaceMutation = {
                             __typename: "Visual";
                             id: string;
                             uri: string;
-                            name: string;
+                            name: VisualType;
                           }
                         | undefined;
                       storageBucket: {
@@ -76957,7 +77686,7 @@ export type UpdateSubspaceMutation = {
                             __typename: "Visual";
                             id: string;
                             uri: string;
-                            name: string;
+                            name: VisualType;
                           }
                         | undefined;
                       storageBucket: {
@@ -77107,7 +77836,7 @@ export type UpdateSubspaceMutation = {
                             __typename: "Visual";
                             id: string;
                             uri: string;
-                            name: string;
+                            name: VisualType;
                           }
                         | undefined;
                       storageBucket: {
@@ -77315,7 +78044,7 @@ export type UpdateSubspaceMutation = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -77467,7 +78196,7 @@ export type UpdateSubspaceMutation = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -77518,7 +78247,7 @@ export type UpdateSubspaceMutation = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -77569,7 +78298,7 @@ export type UpdateSubspaceMutation = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -77632,7 +78361,7 @@ export type UpdateSubspaceMutation = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -77956,7 +78685,7 @@ export type UpdateSubspaceMutation = {
                             | undefined;
                           visuals: Array<{
                             id: string;
-                            name: string;
+                            name: VisualType;
                             uri: string;
                           }>;
                           authorization?:
@@ -78086,7 +78815,7 @@ export type UpdateSubspaceMutation = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -78164,7 +78893,7 @@ export type UpdateSubspaceMutation = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -78488,7 +79217,7 @@ export type UpdateSubspaceMutation = {
                             | undefined;
                           visuals: Array<{
                             id: string;
-                            name: string;
+                            name: VisualType;
                             uri: string;
                           }>;
                           authorization?:
@@ -78618,7 +79347,7 @@ export type UpdateSubspaceMutation = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -78696,7 +79425,7 @@ export type UpdateSubspaceMutation = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -79020,7 +79749,7 @@ export type UpdateSubspaceMutation = {
                             | undefined;
                           visuals: Array<{
                             id: string;
-                            name: string;
+                            name: VisualType;
                             uri: string;
                           }>;
                           authorization?:
@@ -79150,7 +79879,7 @@ export type UpdateSubspaceMutation = {
               location?:
                 | { country?: string | undefined; city?: string | undefined }
                 | undefined;
-              visuals: Array<{ id: string; name: string; uri: string }>;
+              visuals: Array<{ id: string; name: VisualType; uri: string }>;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -79502,7 +80231,7 @@ export type UpdateSubspaceMutation = {
                           __typename: "Visual";
                           id: string;
                           uri: string;
-                          name: string;
+                          name: VisualType;
                         }
                       | undefined;
                     storageBucket: {
@@ -79590,7 +80319,7 @@ export type UpdateSubspaceMutation = {
                           __typename: "Visual";
                           id: string;
                           uri: string;
-                          name: string;
+                          name: VisualType;
                         }
                       | undefined;
                     storageBucket: {
@@ -79736,7 +80465,7 @@ export type UpdateSubspaceMutation = {
                           __typename: "Visual";
                           id: string;
                           uri: string;
-                          name: string;
+                          name: VisualType;
                         }
                       | undefined;
                     storageBucket: {
@@ -79933,7 +80662,7 @@ export type UpdateSubspaceMutation = {
                 location?:
                   | { country?: string | undefined; city?: string | undefined }
                   | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
+                visuals: Array<{ id: string; name: VisualType; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -80073,7 +80802,7 @@ export type UpdateSubspaceMutation = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -80124,7 +80853,7 @@ export type UpdateSubspaceMutation = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -80175,7 +80904,7 @@ export type UpdateSubspaceMutation = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -80235,7 +80964,7 @@ export type UpdateSubspaceMutation = {
                 location?:
                   | { country?: string | undefined; city?: string | undefined }
                   | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
+                visuals: Array<{ id: string; name: VisualType; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -80551,7 +81280,7 @@ export type UpdateSubspaceMutation = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -80681,7 +81410,7 @@ export type UpdateSubspaceMutation = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -80756,7 +81485,7 @@ export type UpdateSubspaceMutation = {
                 location?:
                   | { country?: string | undefined; city?: string | undefined }
                   | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
+                visuals: Array<{ id: string; name: VisualType; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -81072,7 +81801,7 @@ export type UpdateSubspaceMutation = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -81202,7 +81931,7 @@ export type UpdateSubspaceMutation = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -81277,7 +82006,7 @@ export type UpdateSubspaceMutation = {
                 location?:
                   | { country?: string | undefined; city?: string | undefined }
                   | undefined;
-                visuals: Array<{ id: string; name: string; uri: string }>;
+                visuals: Array<{ id: string; name: VisualType; uri: string }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -81593,7 +82322,7 @@ export type UpdateSubspaceMutation = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -81723,7 +82452,7 @@ export type UpdateSubspaceMutation = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -82013,7 +82742,7 @@ export type CreateOrganizationMutation = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -82315,7 +83044,7 @@ export type CreateOrganizationMutation = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -82424,7 +83153,7 @@ export type CreateOrganizationMutation = {
       location?:
         | { country?: string | undefined; city?: string | undefined }
         | undefined;
-      visuals: Array<{ id: string; name: string; uri: string }>;
+      visuals: Array<{ id: string; name: VisualType; uri: string }>;
       authorization?:
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
@@ -82504,7 +83233,7 @@ export type UpdateOrganizationMutation = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -82806,7 +83535,7 @@ export type UpdateOrganizationMutation = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -82915,7 +83644,7 @@ export type UpdateOrganizationMutation = {
       location?:
         | { country?: string | undefined; city?: string | undefined }
         | undefined;
-      visuals: Array<{ id: string; name: string; uri: string }>;
+      visuals: Array<{ id: string; name: VisualType; uri: string }>;
       authorization?:
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
@@ -83741,7 +84470,7 @@ export type CreateUserMutation = {
       location?:
         | { country?: string | undefined; city?: string | undefined }
         | undefined;
-      visuals: Array<{ id: string; name: string; uri: string }>;
+      visuals: Array<{ id: string; name: VisualType; uri: string }>;
       authorization?:
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
@@ -84198,7 +84927,7 @@ export type CreateUserNewRegistrationMutation = {
       location?:
         | { country?: string | undefined; city?: string | undefined }
         | undefined;
-      visuals: Array<{ id: string; name: string; uri: string }>;
+      visuals: Array<{ id: string; name: VisualType; uri: string }>;
       authorization?:
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
@@ -84661,7 +85390,7 @@ export type UpdateUserMutation = {
       location?:
         | { country?: string | undefined; city?: string | undefined }
         | undefined;
-      visuals: Array<{ id: string; name: string; uri: string }>;
+      visuals: Array<{ id: string; name: VisualType; uri: string }>;
       authorization?:
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
@@ -85648,6 +86377,12 @@ export type GetActivityLogOnCollaborationQuery = {
         type: ActivityEventType;
         triggeredBy: { id: string };
       }
+    | {
+        collaborationID: string;
+        description: string;
+        type: ActivityEventType;
+        triggeredBy: { id: string };
+      }
   >;
 };
 
@@ -85894,7 +86629,7 @@ export type SpaceCalloutQuery = {
                                 __typename: "Visual";
                                 id: string;
                                 uri: string;
-                                name: string;
+                                name: VisualType;
                               }
                             | undefined;
                           storageBucket: {
@@ -85982,7 +86717,7 @@ export type SpaceCalloutQuery = {
                                 __typename: "Visual";
                                 id: string;
                                 uri: string;
-                                name: string;
+                                name: VisualType;
                               }
                             | undefined;
                           storageBucket: {
@@ -86448,7 +87183,7 @@ export type CalloutDetailsQuery = {
                           __typename: "Visual";
                           id: string;
                           uri: string;
-                          name: string;
+                          name: VisualType;
                         }
                       | undefined;
                     storageBucket: {
@@ -86536,7 +87271,7 @@ export type CalloutDetailsQuery = {
                           __typename: "Visual";
                           id: string;
                           uri: string;
-                          name: string;
+                          name: VisualType;
                         }
                       | undefined;
                     storageBucket: {
@@ -86965,7 +87700,7 @@ export type GetCalloutPostsQuery = {
                       __typename: "Visual";
                       id: string;
                       uri: string;
-                      name: string;
+                      name: VisualType;
                       allowedTypes: Array<string>;
                       aspectRatio: number;
                       maxHeight: number;
@@ -87031,7 +87766,7 @@ export type ContributeTabPostFragment = {
       __typename: "Visual";
       id: string;
       uri: string;
-      name: string;
+      name: VisualType;
       allowedTypes: Array<string>;
       aspectRatio: number;
       maxHeight: number;
@@ -87084,7 +87819,7 @@ export type PostCardFragment = {
       __typename: "Visual";
       id: string;
       uri: string;
-      name: string;
+      name: VisualType;
       allowedTypes: Array<string>;
       aspectRatio: number;
       maxHeight: number;
@@ -87119,7 +87854,7 @@ export type VisualFullFragment = {
   __typename: "Visual";
   id: string;
   uri: string;
-  name: string;
+  name: VisualType;
   allowedTypes: Array<string>;
   aspectRatio: number;
   maxHeight: number;
@@ -87309,7 +88044,12 @@ export type GetPostDataQuery = {
                 }>
               | undefined;
             visual?:
-              | { __typename: "Visual"; id: string; uri: string; name: string }
+              | {
+                  __typename: "Visual";
+                  id: string;
+                  uri: string;
+                  name: VisualType;
+                }
               | undefined;
             storageBucket: {
               id: string;
@@ -87771,7 +88511,7 @@ export type GetSpaceAvailableMembersQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -87829,7 +88569,7 @@ export type GetSpaceAvailableMembersQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -87887,7 +88627,7 @@ export type GetSpaceAvailableMembersQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -87954,7 +88694,11 @@ export type GetSpaceAvailableMembersQuery = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -88282,7 +89026,7 @@ export type GetSpaceAvailableMembersQuery = {
                                 | undefined;
                               visuals: Array<{
                                 id: string;
-                                name: string;
+                                name: VisualType;
                                 uri: string;
                               }>;
                               authorization?:
@@ -88415,7 +89159,7 @@ export type GetSpaceAvailableMembersQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -88501,7 +89245,11 @@ export type GetSpaceAvailableMembersQuery = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -88829,7 +89577,7 @@ export type GetSpaceAvailableMembersQuery = {
                                 | undefined;
                               visuals: Array<{
                                 id: string;
-                                name: string;
+                                name: VisualType;
                                 uri: string;
                               }>;
                               authorization?:
@@ -88962,7 +89710,7 @@ export type GetSpaceAvailableMembersQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -89048,7 +89796,11 @@ export type GetSpaceAvailableMembersQuery = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -89376,7 +90128,7 @@ export type GetSpaceAvailableMembersQuery = {
                                 | undefined;
                               visuals: Array<{
                                 id: string;
-                                name: string;
+                                name: VisualType;
                                 uri: string;
                               }>;
                               authorization?:
@@ -89509,7 +90261,7 @@ export type GetSpaceAvailableMembersQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -89606,7 +90358,7 @@ export type GetSpaceCommunityQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -89664,7 +90416,7 @@ export type GetSpaceCommunityQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -89722,7 +90474,7 @@ export type GetSpaceCommunityQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -89789,7 +90541,11 @@ export type GetSpaceCommunityQuery = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -90117,7 +90873,7 @@ export type GetSpaceCommunityQuery = {
                                 | undefined;
                               visuals: Array<{
                                 id: string;
-                                name: string;
+                                name: VisualType;
                                 uri: string;
                               }>;
                               authorization?:
@@ -90250,7 +91006,7 @@ export type GetSpaceCommunityQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -90336,7 +91092,11 @@ export type GetSpaceCommunityQuery = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -90664,7 +91424,7 @@ export type GetSpaceCommunityQuery = {
                                 | undefined;
                               visuals: Array<{
                                 id: string;
-                                name: string;
+                                name: VisualType;
                                 uri: string;
                               }>;
                               authorization?:
@@ -90797,7 +91557,7 @@ export type GetSpaceCommunityQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -90883,7 +91643,11 @@ export type GetSpaceCommunityQuery = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -91211,7 +91975,7 @@ export type GetSpaceCommunityQuery = {
                                 | undefined;
                               visuals: Array<{
                                 id: string;
-                                name: string;
+                                name: VisualType;
                                 uri: string;
                               }>;
                               authorization?:
@@ -91344,7 +92108,7 @@ export type GetSpaceCommunityQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -91440,7 +92204,7 @@ export type GetSubspaceAvailableMembersQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -91498,7 +92262,7 @@ export type GetSubspaceAvailableMembersQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -91556,7 +92320,7 @@ export type GetSubspaceAvailableMembersQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -91623,7 +92387,11 @@ export type GetSubspaceAvailableMembersQuery = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -91951,7 +92719,7 @@ export type GetSubspaceAvailableMembersQuery = {
                                 | undefined;
                               visuals: Array<{
                                 id: string;
-                                name: string;
+                                name: VisualType;
                                 uri: string;
                               }>;
                               authorization?:
@@ -92084,7 +92852,7 @@ export type GetSubspaceAvailableMembersQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -92170,7 +92938,11 @@ export type GetSubspaceAvailableMembersQuery = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -92498,7 +93270,7 @@ export type GetSubspaceAvailableMembersQuery = {
                                 | undefined;
                               visuals: Array<{
                                 id: string;
-                                name: string;
+                                name: VisualType;
                                 uri: string;
                               }>;
                               authorization?:
@@ -92631,7 +93403,7 @@ export type GetSubspaceAvailableMembersQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -92717,7 +93489,11 @@ export type GetSubspaceAvailableMembersQuery = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -93045,7 +93821,7 @@ export type GetSubspaceAvailableMembersQuery = {
                                 | undefined;
                               visuals: Array<{
                                 id: string;
-                                name: string;
+                                name: VisualType;
                                 uri: string;
                               }>;
                               authorization?:
@@ -93178,7 +93954,7 @@ export type GetSubspaceAvailableMembersQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -93274,7 +94050,7 @@ export type GetSubspaceCommunityQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -93332,7 +94108,7 @@ export type GetSubspaceCommunityQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -93390,7 +94166,7 @@ export type GetSubspaceCommunityQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -93457,7 +94233,11 @@ export type GetSubspaceCommunityQuery = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -93785,7 +94565,7 @@ export type GetSubspaceCommunityQuery = {
                                 | undefined;
                               visuals: Array<{
                                 id: string;
-                                name: string;
+                                name: VisualType;
                                 uri: string;
                               }>;
                               authorization?:
@@ -93918,7 +94698,7 @@ export type GetSubspaceCommunityQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -94004,7 +94784,11 @@ export type GetSubspaceCommunityQuery = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -94332,7 +95116,7 @@ export type GetSubspaceCommunityQuery = {
                                 | undefined;
                               visuals: Array<{
                                 id: string;
-                                name: string;
+                                name: VisualType;
                                 uri: string;
                               }>;
                               authorization?:
@@ -94465,7 +95249,7 @@ export type GetSubspaceCommunityQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -94551,7 +95335,11 @@ export type GetSubspaceCommunityQuery = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -94879,7 +95667,7 @@ export type GetSubspaceCommunityQuery = {
                                 | undefined;
                               visuals: Array<{
                                 id: string;
-                                name: string;
+                                name: VisualType;
                                 uri: string;
                               }>;
                               authorization?:
@@ -95012,7 +95800,7 @@ export type GetSubspaceCommunityQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -95324,7 +96112,7 @@ export type LookupProfileVisualsQuery = {
           };
           visuals: Array<{
             id: string;
-            name: string;
+            name: VisualType;
             uri: string;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -95362,7 +96150,7 @@ export type GetOrgVisualUriQueryVariables = Exact<{
 export type GetOrgVisualUriQuery = {
   organization: {
     nameID: string;
-    profile: { visuals: Array<{ id: string; name: string; uri: string }> };
+    profile: { visuals: Array<{ id: string; name: VisualType; uri: string }> };
   };
 };
 
@@ -95414,7 +96202,7 @@ export type GetOrganizationDataQuery = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -95716,7 +96504,7 @@ export type GetOrganizationDataQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -95825,7 +96613,7 @@ export type GetOrganizationDataQuery = {
       location?:
         | { country?: string | undefined; city?: string | undefined }
         | undefined;
-      visuals: Array<{ id: string; name: string; uri: string }>;
+      visuals: Array<{ id: string; name: VisualType; uri: string }>;
       authorization?:
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
@@ -95899,7 +96687,7 @@ export type GetOrganizationsDataQuery = {
           location?:
             | { country?: string | undefined; city?: string | undefined }
             | undefined;
-          visuals: Array<{ id: string; name: string; uri: string }>;
+          visuals: Array<{ id: string; name: VisualType; uri: string }>;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -96201,7 +96989,7 @@ export type GetOrganizationsDataQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -96310,7 +97098,7 @@ export type GetOrganizationsDataQuery = {
       location?:
         | { country?: string | undefined; city?: string | undefined }
         | undefined;
-      visuals: Array<{ id: string; name: string; uri: string }>;
+      visuals: Array<{ id: string; name: VisualType; uri: string }>;
       authorization?:
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
@@ -96418,7 +97206,7 @@ export type OrganizationsPaginatedQuery = {
             location?:
               | { country?: string | undefined; city?: string | undefined }
               | undefined;
-            visuals: Array<{ id: string; name: string; uri: string }>;
+            visuals: Array<{ id: string; name: VisualType; uri: string }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -96732,7 +97520,11 @@ export type OrganizationsPaginatedQuery = {
                           city?: string | undefined;
                         }
                       | undefined;
-                    visuals: Array<{ id: string; name: string; uri: string }>;
+                    visuals: Array<{
+                      id: string;
+                      name: VisualType;
+                      uri: string;
+                    }>;
                     authorization?:
                       | {
                           myPrivileges?:
@@ -96852,7 +97644,7 @@ export type OrganizationsPaginatedQuery = {
         location?:
           | { country?: string | undefined; city?: string | undefined }
           | undefined;
-        visuals: Array<{ id: string; name: string; uri: string }>;
+        visuals: Array<{ id: string; name: VisualType; uri: string }>;
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
@@ -97191,7 +97983,7 @@ export type UsersPaginatedQuery = {
         location?:
           | { country?: string | undefined; city?: string | undefined }
           | undefined;
-        visuals: Array<{ id: string; name: string; uri: string }>;
+        visuals: Array<{ id: string; name: VisualType; uri: string }>;
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
@@ -97436,7 +98228,7 @@ export type GetProfileDocumentsQuery = {
           };
           visuals: Array<{
             id: string;
-            name: string;
+            name: VisualType;
             uri: string;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
@@ -98021,7 +98813,11 @@ export type GetSpaceDataQuery = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -98187,7 +98983,7 @@ export type GetSpaceDataQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -98245,7 +99041,7 @@ export type GetSpaceDataQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -98303,7 +99099,7 @@ export type GetSpaceDataQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -98370,7 +99166,11 @@ export type GetSpaceDataQuery = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -98698,7 +99498,7 @@ export type GetSpaceDataQuery = {
                                 | undefined;
                               visuals: Array<{
                                 id: string;
-                                name: string;
+                                name: VisualType;
                                 uri: string;
                               }>;
                               authorization?:
@@ -98831,7 +99631,7 @@ export type GetSpaceDataQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -98917,7 +99717,11 @@ export type GetSpaceDataQuery = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -99245,7 +100049,7 @@ export type GetSpaceDataQuery = {
                                 | undefined;
                               visuals: Array<{
                                 id: string;
-                                name: string;
+                                name: VisualType;
                                 uri: string;
                               }>;
                               authorization?:
@@ -99378,7 +100182,7 @@ export type GetSpaceDataQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -99464,7 +100268,11 @@ export type GetSpaceDataQuery = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -99792,7 +100600,7 @@ export type GetSpaceDataQuery = {
                                 | undefined;
                               visuals: Array<{
                                 id: string;
-                                name: string;
+                                name: VisualType;
                                 uri: string;
                               }>;
                               authorization?:
@@ -99925,7 +100733,7 @@ export type GetSpaceDataQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -100230,7 +101038,7 @@ export type GetSpaceDataQuery = {
                                 __typename: "Visual";
                                 id: string;
                                 uri: string;
-                                name: string;
+                                name: VisualType;
                               }
                             | undefined;
                           storageBucket: {
@@ -100318,7 +101126,7 @@ export type GetSpaceDataQuery = {
                                 __typename: "Visual";
                                 id: string;
                                 uri: string;
-                                name: string;
+                                name: VisualType;
                               }
                             | undefined;
                           storageBucket: {
@@ -100475,7 +101283,7 @@ export type GetSpaceDataQuery = {
                                 __typename: "Visual";
                                 id: string;
                                 uri: string;
-                                name: string;
+                                name: VisualType;
                               }
                             | undefined;
                           storageBucket: {
@@ -100871,7 +101679,7 @@ export type GetSpaceDataQuery = {
                                   __typename: "Visual";
                                   id: string;
                                   uri: string;
-                                  name: string;
+                                  name: VisualType;
                                 }
                               | undefined;
                             storageBucket: {
@@ -100959,7 +101767,7 @@ export type GetSpaceDataQuery = {
                                   __typename: "Visual";
                                   id: string;
                                   uri: string;
-                                  name: string;
+                                  name: VisualType;
                                 }
                               | undefined;
                             storageBucket: {
@@ -101116,7 +101924,7 @@ export type GetSpaceDataQuery = {
                                   __typename: "Visual";
                                   id: string;
                                   uri: string;
-                                  name: string;
+                                  name: VisualType;
                                 }
                               | undefined;
                             storageBucket: {
@@ -101344,7 +102152,7 @@ export type GetSpaceDataQuery = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -101516,7 +102324,11 @@ export type GetSpaceDataQuery = {
                           city?: string | undefined;
                         }
                       | undefined;
-                    visuals: Array<{ id: string; name: string; uri: string }>;
+                    visuals: Array<{
+                      id: string;
+                      name: VisualType;
+                      uri: string;
+                    }>;
                     authorization?:
                       | {
                           myPrivileges?:
@@ -101578,7 +102390,11 @@ export type GetSpaceDataQuery = {
                           city?: string | undefined;
                         }
                       | undefined;
-                    visuals: Array<{ id: string; name: string; uri: string }>;
+                    visuals: Array<{
+                      id: string;
+                      name: VisualType;
+                      uri: string;
+                    }>;
                     authorization?:
                       | {
                           myPrivileges?:
@@ -101640,7 +102456,11 @@ export type GetSpaceDataQuery = {
                           city?: string | undefined;
                         }
                       | undefined;
-                    visuals: Array<{ id: string; name: string; uri: string }>;
+                    visuals: Array<{
+                      id: string;
+                      name: VisualType;
+                      uri: string;
+                    }>;
                     authorization?:
                       | {
                           myPrivileges?:
@@ -101713,7 +102533,7 @@ export type GetSpaceDataQuery = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -102043,7 +102863,7 @@ export type GetSpaceDataQuery = {
                                   | undefined;
                                 visuals: Array<{
                                   id: string;
-                                  name: string;
+                                  name: VisualType;
                                   uri: string;
                                 }>;
                                 authorization?:
@@ -102176,7 +102996,11 @@ export type GetSpaceDataQuery = {
                           city?: string | undefined;
                         }
                       | undefined;
-                    visuals: Array<{ id: string; name: string; uri: string }>;
+                    visuals: Array<{
+                      id: string;
+                      name: VisualType;
+                      uri: string;
+                    }>;
                     authorization?:
                       | {
                           myPrivileges?:
@@ -102268,7 +103092,7 @@ export type GetSpaceDataQuery = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -102598,7 +103422,7 @@ export type GetSpaceDataQuery = {
                                   | undefined;
                                 visuals: Array<{
                                   id: string;
-                                  name: string;
+                                  name: VisualType;
                                   uri: string;
                                 }>;
                                 authorization?:
@@ -102731,7 +103555,11 @@ export type GetSpaceDataQuery = {
                           city?: string | undefined;
                         }
                       | undefined;
-                    visuals: Array<{ id: string; name: string; uri: string }>;
+                    visuals: Array<{
+                      id: string;
+                      name: VisualType;
+                      uri: string;
+                    }>;
                     authorization?:
                       | {
                           myPrivileges?:
@@ -102823,7 +103651,7 @@ export type GetSpaceDataQuery = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -103153,7 +103981,7 @@ export type GetSpaceDataQuery = {
                                   | undefined;
                                 visuals: Array<{
                                   id: string;
-                                  name: string;
+                                  name: VisualType;
                                   uri: string;
                                 }>;
                                 authorization?:
@@ -103286,7 +104114,11 @@ export type GetSpaceDataQuery = {
                           city?: string | undefined;
                         }
                       | undefined;
-                    visuals: Array<{ id: string; name: string; uri: string }>;
+                    visuals: Array<{
+                      id: string;
+                      name: VisualType;
+                      uri: string;
+                    }>;
                     authorization?:
                       | {
                           myPrivileges?:
@@ -104323,7 +105155,7 @@ export type GetSubspacePageQuery = {
                                   __typename: "Visual";
                                   id: string;
                                   uri: string;
-                                  name: string;
+                                  name: VisualType;
                                 }
                               | undefined;
                             storageBucket: {
@@ -104411,7 +105243,7 @@ export type GetSubspacePageQuery = {
                                   __typename: "Visual";
                                   id: string;
                                   uri: string;
-                                  name: string;
+                                  name: VisualType;
                                 }
                               | undefined;
                             storageBucket: {
@@ -104568,7 +105400,7 @@ export type GetSubspacePageQuery = {
                                   __typename: "Visual";
                                   id: string;
                                   uri: string;
-                                  name: string;
+                                  name: VisualType;
                                 }
                               | undefined;
                             storageBucket: {
@@ -104796,7 +105628,7 @@ export type GetSubspacePageQuery = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -104968,7 +105800,11 @@ export type GetSubspacePageQuery = {
                           city?: string | undefined;
                         }
                       | undefined;
-                    visuals: Array<{ id: string; name: string; uri: string }>;
+                    visuals: Array<{
+                      id: string;
+                      name: VisualType;
+                      uri: string;
+                    }>;
                     authorization?:
                       | {
                           myPrivileges?:
@@ -105030,7 +105866,11 @@ export type GetSubspacePageQuery = {
                           city?: string | undefined;
                         }
                       | undefined;
-                    visuals: Array<{ id: string; name: string; uri: string }>;
+                    visuals: Array<{
+                      id: string;
+                      name: VisualType;
+                      uri: string;
+                    }>;
                     authorization?:
                       | {
                           myPrivileges?:
@@ -105092,7 +105932,11 @@ export type GetSubspacePageQuery = {
                           city?: string | undefined;
                         }
                       | undefined;
-                    visuals: Array<{ id: string; name: string; uri: string }>;
+                    visuals: Array<{
+                      id: string;
+                      name: VisualType;
+                      uri: string;
+                    }>;
                     authorization?:
                       | {
                           myPrivileges?:
@@ -105165,7 +106009,7 @@ export type GetSubspacePageQuery = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -105495,7 +106339,7 @@ export type GetSubspacePageQuery = {
                                   | undefined;
                                 visuals: Array<{
                                   id: string;
-                                  name: string;
+                                  name: VisualType;
                                   uri: string;
                                 }>;
                                 authorization?:
@@ -105628,7 +106472,11 @@ export type GetSubspacePageQuery = {
                           city?: string | undefined;
                         }
                       | undefined;
-                    visuals: Array<{ id: string; name: string; uri: string }>;
+                    visuals: Array<{
+                      id: string;
+                      name: VisualType;
+                      uri: string;
+                    }>;
                     authorization?:
                       | {
                           myPrivileges?:
@@ -105720,7 +106568,7 @@ export type GetSubspacePageQuery = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -106050,7 +106898,7 @@ export type GetSubspacePageQuery = {
                                   | undefined;
                                 visuals: Array<{
                                   id: string;
-                                  name: string;
+                                  name: VisualType;
                                   uri: string;
                                 }>;
                                 authorization?:
@@ -106183,7 +107031,11 @@ export type GetSubspacePageQuery = {
                           city?: string | undefined;
                         }
                       | undefined;
-                    visuals: Array<{ id: string; name: string; uri: string }>;
+                    visuals: Array<{
+                      id: string;
+                      name: VisualType;
+                      uri: string;
+                    }>;
                     authorization?:
                       | {
                           myPrivileges?:
@@ -106275,7 +107127,7 @@ export type GetSubspacePageQuery = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -106605,7 +107457,7 @@ export type GetSubspacePageQuery = {
                                   | undefined;
                                 visuals: Array<{
                                   id: string;
-                                  name: string;
+                                  name: VisualType;
                                   uri: string;
                                 }>;
                                 authorization?:
@@ -106738,7 +107590,11 @@ export type GetSubspacePageQuery = {
                           city?: string | undefined;
                         }
                       | undefined;
-                    visuals: Array<{ id: string; name: string; uri: string }>;
+                    visuals: Array<{
+                      id: string;
+                      name: VisualType;
+                      uri: string;
+                    }>;
                     authorization?:
                       | {
                           myPrivileges?:
@@ -107126,7 +107982,7 @@ export type GetSubspacePageQuery = {
                                 __typename: "Visual";
                                 id: string;
                                 uri: string;
-                                name: string;
+                                name: VisualType;
                               }
                             | undefined;
                           storageBucket: {
@@ -107214,7 +108070,7 @@ export type GetSubspacePageQuery = {
                                 __typename: "Visual";
                                 id: string;
                                 uri: string;
-                                name: string;
+                                name: VisualType;
                               }
                             | undefined;
                           storageBucket: {
@@ -107371,7 +108227,7 @@ export type GetSubspacePageQuery = {
                                 __typename: "Visual";
                                 id: string;
                                 uri: string;
-                                name: string;
+                                name: VisualType;
                               }
                             | undefined;
                           storageBucket: {
@@ -107590,7 +108446,11 @@ export type GetSubspacePageQuery = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -107756,7 +108616,7 @@ export type GetSubspacePageQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -107814,7 +108674,7 @@ export type GetSubspacePageQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -107872,7 +108732,7 @@ export type GetSubspacePageQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -107939,7 +108799,11 @@ export type GetSubspacePageQuery = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -108267,7 +109131,7 @@ export type GetSubspacePageQuery = {
                                 | undefined;
                               visuals: Array<{
                                 id: string;
-                                name: string;
+                                name: VisualType;
                                 uri: string;
                               }>;
                               authorization?:
@@ -108400,7 +109264,7 @@ export type GetSubspacePageQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -108486,7 +109350,11 @@ export type GetSubspacePageQuery = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -108814,7 +109682,7 @@ export type GetSubspacePageQuery = {
                                 | undefined;
                               visuals: Array<{
                                 id: string;
-                                name: string;
+                                name: VisualType;
                                 uri: string;
                               }>;
                               authorization?:
@@ -108947,7 +109815,7 @@ export type GetSubspacePageQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -109033,7 +109901,11 @@ export type GetSubspacePageQuery = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -109361,7 +110233,7 @@ export type GetSubspacePageQuery = {
                                 | undefined;
                               visuals: Array<{
                                 id: string;
-                                name: string;
+                                name: VisualType;
                                 uri: string;
                               }>;
                               authorization?:
@@ -109494,7 +110366,7 @@ export type GetSubspacePageQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -109888,7 +110760,7 @@ export type GetSpaceAboutDetailsQuery = {
                                 __typename: "Visual";
                                 id: string;
                                 uri: string;
-                                name: string;
+                                name: VisualType;
                               }
                             | undefined;
                           storageBucket: {
@@ -109976,7 +110848,7 @@ export type GetSpaceAboutDetailsQuery = {
                                 __typename: "Visual";
                                 id: string;
                                 uri: string;
-                                name: string;
+                                name: VisualType;
                               }
                             | undefined;
                           storageBucket: {
@@ -110133,7 +111005,7 @@ export type GetSpaceAboutDetailsQuery = {
                                 __typename: "Visual";
                                 id: string;
                                 uri: string;
-                                name: string;
+                                name: VisualType;
                               }
                             | undefined;
                           storageBucket: {
@@ -110352,7 +111224,11 @@ export type GetSpaceAboutDetailsQuery = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -110518,7 +111394,7 @@ export type GetSpaceAboutDetailsQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -110576,7 +111452,7 @@ export type GetSpaceAboutDetailsQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -110634,7 +111510,7 @@ export type GetSpaceAboutDetailsQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -110701,7 +111577,11 @@ export type GetSpaceAboutDetailsQuery = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -111029,7 +111909,7 @@ export type GetSpaceAboutDetailsQuery = {
                                 | undefined;
                               visuals: Array<{
                                 id: string;
-                                name: string;
+                                name: VisualType;
                                 uri: string;
                               }>;
                               authorization?:
@@ -111162,7 +112042,7 @@ export type GetSpaceAboutDetailsQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -111248,7 +112128,11 @@ export type GetSpaceAboutDetailsQuery = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -111576,7 +112460,7 @@ export type GetSpaceAboutDetailsQuery = {
                                 | undefined;
                               visuals: Array<{
                                 id: string;
-                                name: string;
+                                name: VisualType;
                                 uri: string;
                               }>;
                               authorization?:
@@ -111709,7 +112593,7 @@ export type GetSpaceAboutDetailsQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -111795,7 +112679,11 @@ export type GetSpaceAboutDetailsQuery = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -112123,7 +113011,7 @@ export type GetSpaceAboutDetailsQuery = {
                                 | undefined;
                               visuals: Array<{
                                 id: string;
-                                name: string;
+                                name: VisualType;
                                 uri: string;
                               }>;
                               authorization?:
@@ -112256,7 +113144,7 @@ export type GetSpaceAboutDetailsQuery = {
                         city?: string | undefined;
                       }
                     | undefined;
-                  visuals: Array<{ id: string; name: string; uri: string }>;
+                  visuals: Array<{ id: string; name: VisualType; uri: string }>;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -112670,7 +113558,7 @@ export type GetSubspacesDataQuery = {
                                     __typename: "Visual";
                                     id: string;
                                     uri: string;
-                                    name: string;
+                                    name: VisualType;
                                   }
                                 | undefined;
                               storageBucket: {
@@ -112758,7 +113646,7 @@ export type GetSubspacesDataQuery = {
                                     __typename: "Visual";
                                     id: string;
                                     uri: string;
-                                    name: string;
+                                    name: VisualType;
                                   }
                                 | undefined;
                               storageBucket: {
@@ -112915,7 +113803,7 @@ export type GetSubspacesDataQuery = {
                                     __typename: "Visual";
                                     id: string;
                                     uri: string;
-                                    name: string;
+                                    name: VisualType;
                                   }
                                 | undefined;
                               storageBucket: {
@@ -113147,7 +114035,7 @@ export type GetSubspacesDataQuery = {
                             | undefined;
                           visuals: Array<{
                             id: string;
-                            name: string;
+                            name: VisualType;
                             uri: string;
                           }>;
                           authorization?:
@@ -113319,7 +114207,11 @@ export type GetSubspacesDataQuery = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -113381,7 +114273,11 @@ export type GetSubspacesDataQuery = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -113443,7 +114339,11 @@ export type GetSubspacesDataQuery = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -113516,7 +114416,7 @@ export type GetSubspacesDataQuery = {
                             | undefined;
                           visuals: Array<{
                             id: string;
-                            name: string;
+                            name: VisualType;
                             uri: string;
                           }>;
                           authorization?:
@@ -113855,7 +114755,7 @@ export type GetSubspacesDataQuery = {
                                     | undefined;
                                   visuals: Array<{
                                     id: string;
-                                    name: string;
+                                    name: VisualType;
                                     uri: string;
                                   }>;
                                   authorization?:
@@ -113988,7 +114888,11 @@ export type GetSubspacesDataQuery = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -114080,7 +114984,7 @@ export type GetSubspacesDataQuery = {
                             | undefined;
                           visuals: Array<{
                             id: string;
-                            name: string;
+                            name: VisualType;
                             uri: string;
                           }>;
                           authorization?:
@@ -114419,7 +115323,7 @@ export type GetSubspacesDataQuery = {
                                     | undefined;
                                   visuals: Array<{
                                     id: string;
-                                    name: string;
+                                    name: VisualType;
                                     uri: string;
                                   }>;
                                   authorization?:
@@ -114552,7 +115456,11 @@ export type GetSubspacesDataQuery = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -114644,7 +115552,7 @@ export type GetSubspacesDataQuery = {
                             | undefined;
                           visuals: Array<{
                             id: string;
-                            name: string;
+                            name: VisualType;
                             uri: string;
                           }>;
                           authorization?:
@@ -114983,7 +115891,7 @@ export type GetSubspacesDataQuery = {
                                     | undefined;
                                   visuals: Array<{
                                     id: string;
-                                    name: string;
+                                    name: VisualType;
                                     uri: string;
                                   }>;
                                   authorization?:
@@ -115116,7 +116024,11 @@ export type GetSubspacesDataQuery = {
                             city?: string | undefined;
                           }
                         | undefined;
-                      visuals: Array<{ id: string; name: string; uri: string }>;
+                      visuals: Array<{
+                        id: string;
+                        name: VisualType;
+                        uri: string;
+                      }>;
                       authorization?:
                         | {
                             myPrivileges?:
@@ -115516,7 +116428,7 @@ export type GetSubspacesDataQuery = {
                                   __typename: "Visual";
                                   id: string;
                                   uri: string;
-                                  name: string;
+                                  name: VisualType;
                                 }
                               | undefined;
                             storageBucket: {
@@ -115604,7 +116516,7 @@ export type GetSubspacesDataQuery = {
                                   __typename: "Visual";
                                   id: string;
                                   uri: string;
-                                  name: string;
+                                  name: VisualType;
                                 }
                               | undefined;
                             storageBucket: {
@@ -115761,7 +116673,7 @@ export type GetSubspacesDataQuery = {
                                   __typename: "Visual";
                                   id: string;
                                   uri: string;
-                                  name: string;
+                                  name: VisualType;
                                 }
                               | undefined;
                             storageBucket: {
@@ -115989,7 +116901,7 @@ export type GetSubspacesDataQuery = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -116161,7 +117073,11 @@ export type GetSubspacesDataQuery = {
                           city?: string | undefined;
                         }
                       | undefined;
-                    visuals: Array<{ id: string; name: string; uri: string }>;
+                    visuals: Array<{
+                      id: string;
+                      name: VisualType;
+                      uri: string;
+                    }>;
                     authorization?:
                       | {
                           myPrivileges?:
@@ -116223,7 +117139,11 @@ export type GetSubspacesDataQuery = {
                           city?: string | undefined;
                         }
                       | undefined;
-                    visuals: Array<{ id: string; name: string; uri: string }>;
+                    visuals: Array<{
+                      id: string;
+                      name: VisualType;
+                      uri: string;
+                    }>;
                     authorization?:
                       | {
                           myPrivileges?:
@@ -116285,7 +117205,11 @@ export type GetSubspacesDataQuery = {
                           city?: string | undefined;
                         }
                       | undefined;
-                    visuals: Array<{ id: string; name: string; uri: string }>;
+                    visuals: Array<{
+                      id: string;
+                      name: VisualType;
+                      uri: string;
+                    }>;
                     authorization?:
                       | {
                           myPrivileges?:
@@ -116358,7 +117282,7 @@ export type GetSubspacesDataQuery = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -116688,7 +117612,7 @@ export type GetSubspacesDataQuery = {
                                   | undefined;
                                 visuals: Array<{
                                   id: string;
-                                  name: string;
+                                  name: VisualType;
                                   uri: string;
                                 }>;
                                 authorization?:
@@ -116821,7 +117745,11 @@ export type GetSubspacesDataQuery = {
                           city?: string | undefined;
                         }
                       | undefined;
-                    visuals: Array<{ id: string; name: string; uri: string }>;
+                    visuals: Array<{
+                      id: string;
+                      name: VisualType;
+                      uri: string;
+                    }>;
                     authorization?:
                       | {
                           myPrivileges?:
@@ -116913,7 +117841,7 @@ export type GetSubspacesDataQuery = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -117243,7 +118171,7 @@ export type GetSubspacesDataQuery = {
                                   | undefined;
                                 visuals: Array<{
                                   id: string;
-                                  name: string;
+                                  name: VisualType;
                                   uri: string;
                                 }>;
                                 authorization?:
@@ -117376,7 +118304,11 @@ export type GetSubspacesDataQuery = {
                           city?: string | undefined;
                         }
                       | undefined;
-                    visuals: Array<{ id: string; name: string; uri: string }>;
+                    visuals: Array<{
+                      id: string;
+                      name: VisualType;
+                      uri: string;
+                    }>;
                     authorization?:
                       | {
                           myPrivileges?:
@@ -117468,7 +118400,7 @@ export type GetSubspacesDataQuery = {
                           | undefined;
                         visuals: Array<{
                           id: string;
-                          name: string;
+                          name: VisualType;
                           uri: string;
                         }>;
                         authorization?:
@@ -117798,7 +118730,7 @@ export type GetSubspacesDataQuery = {
                                   | undefined;
                                 visuals: Array<{
                                   id: string;
-                                  name: string;
+                                  name: VisualType;
                                   uri: string;
                                 }>;
                                 authorization?:
@@ -117931,7 +118863,11 @@ export type GetSubspacesDataQuery = {
                           city?: string | undefined;
                         }
                       | undefined;
-                    visuals: Array<{ id: string; name: string; uri: string }>;
+                    visuals: Array<{
+                      id: string;
+                      name: VisualType;
+                      uri: string;
+                    }>;
                     authorization?:
                       | {
                           myPrivileges?:
@@ -118572,7 +119508,7 @@ export type GetUserDataQuery = {
       location?:
         | { country?: string | undefined; city?: string | undefined }
         | undefined;
-      visuals: Array<{ id: string; name: string; uri: string }>;
+      visuals: Array<{ id: string; name: VisualType; uri: string }>;
       authorization?:
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
@@ -119047,7 +119983,7 @@ export type GetUsersDataQuery = {
       location?:
         | { country?: string | undefined; city?: string | undefined }
         | undefined;
-      visuals: Array<{ id: string; name: string; uri: string }>;
+      visuals: Array<{ id: string; name: VisualType; uri: string }>;
       authorization?:
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
@@ -119396,7 +120332,7 @@ export type GetVirtualContributorWithModelCardQuery = {
               | {
                   id: string;
                   uri: string;
-                  name: string;
+                  name: VisualType;
                   allowedTypes: Array<string>;
                   aspectRatio: number;
                   maxHeight: number;
@@ -119544,7 +120480,7 @@ export type VirtualContributorQuery = {
                         __typename: "Visual";
                         id: string;
                         uri: string;
-                        name: string;
+                        name: VisualType;
                         allowedTypes: Array<string>;
                         aspectRatio: number;
                         maxHeight: number;
@@ -119583,7 +120519,7 @@ export type VirtualContributorQuery = {
                         __typename: "Visual";
                         id: string;
                         uri: string;
-                        name: string;
+                        name: VisualType;
                         allowedTypes: Array<string>;
                         aspectRatio: number;
                         maxHeight: number;
@@ -119622,7 +120558,7 @@ export type VirtualContributorQuery = {
                         __typename: "Visual";
                         id: string;
                         uri: string;
-                        name: string;
+                        name: VisualType;
                         allowedTypes: Array<string>;
                         aspectRatio: number;
                         maxHeight: number;
@@ -119664,7 +120600,7 @@ export type VirtualContributorQuery = {
                   __typename: "Visual";
                   id: string;
                   uri: string;
-                  name: string;
+                  name: VisualType;
                   allowedTypes: Array<string>;
                   aspectRatio: number;
                   maxHeight: number;

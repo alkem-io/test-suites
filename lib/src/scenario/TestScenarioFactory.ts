@@ -18,6 +18,8 @@ import { UniqueIDGenerator } from "../utils/uniqueId";
 import {
   assignPlatformRole,
   assignRoleToUser,
+  assignLicensePlanToAccount,
+  getLicensePlanByName,
   createCalloutOnCalloutsSet,
   createOrganization,
   createSpaceBasicData,
@@ -306,6 +308,20 @@ export class TestScenarioFactory {
       id: orgResponseData.profile.id ?? "",
       displayName: orgResponseData.profile.displayName ?? "",
     };
+
+    const licensePlan = await getLicensePlanByName("ACCOUNT_LICENSE_PLUS");
+    if (licensePlan && licensePlan.length > 0) {
+      const licensePlanId = licensePlan[0].id;
+      if (model.accountId) {
+        await assignLicensePlanToAccount(model.accountId, licensePlanId);
+      }
+
+      const adminUser = TestUserManager.users.globalAdmin;
+      if (adminUser && adminUser.accountId) {
+        await assignLicensePlanToAccount(adminUser.accountId, licensePlanId);
+      }
+    }
+
     return model;
   }
 

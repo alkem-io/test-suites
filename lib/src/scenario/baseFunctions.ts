@@ -507,6 +507,7 @@ export const updateSpaceSettings = async (
       inheritMembershipRights?: boolean;
       allowEventsFromSubspaces?: boolean;
       allowMembersToVideoCall?: boolean;
+      allowGuestContributions?: boolean;
     };
   },
 
@@ -546,6 +547,8 @@ export const updateSpaceSettings = async (
                 settings?.collaboration?.allowEventsFromSubspaces || true,
               allowMembersToVideoCall:
                 settings?.collaboration?.allowMembersToVideoCall ?? true,
+              allowGuestContributions:
+                settings?.collaboration?.allowGuestContributions ?? false,
             },
           },
         },
@@ -589,6 +592,58 @@ export const deleteSpace = async (
         deleteData: {
           ID: spaceId,
         },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const getLicensePlans = async (
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.GetPlatformLicensePlans(
+      {},
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const getLicensePlanByName = async (licenseCredential: string) => {
+  const response = await getLicensePlans();
+  const allLicensePlans =
+    response.data?.platform.licensingFramework.plans ?? [];
+  const filteredLicensePlan = allLicensePlans.filter(
+    (plan: { licenseCredential: string; id: string }) =>
+      plan.licenseCredential.includes(licenseCredential) ||
+      plan.id === licenseCredential
+  );
+  const licensePlan = filteredLicensePlan;
+
+  return licensePlan;
+};
+
+export const assignLicensePlanToAccount = async (
+  accountId: string,
+  licensePlanId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const res = await getLicensePlans();
+  const licensingId = res.data?.platform.licensingFramework.id ?? "";
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.AssignLicensePlanToAccount(
+      {
+        accountId: accountId,
+        licensePlanId: licensePlanId,
+        licensingId: licensingId,
       },
       {
         authorization: `Bearer ${authToken}`,

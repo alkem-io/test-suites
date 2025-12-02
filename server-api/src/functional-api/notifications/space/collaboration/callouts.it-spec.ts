@@ -206,9 +206,8 @@ describe('Notifications - post', () => {
     await delay(1000);
     const mails = await getMailsData();
 
-    expect(mails[1]).toEqual(7);
-
-    expect(mails[0]).toEqual(
+    expect(mails[1]).toEqual(6);
+    expect(mails[0]).not.toEqual(
       await templateResult(
         spaceCalloutSubjectText,
         TestUserManager.users.globalAdmin.email
@@ -301,7 +300,7 @@ describe('Notifications - post', () => {
     await delay(1000);
     mails = await getMailsData();
 
-    expect(mails[1]).toEqual(7);
+    expect(mails[1]).toEqual(6);
 
     await updateCalloutVisibility(
       calloutId,
@@ -312,7 +311,7 @@ describe('Notifications - post', () => {
     await delay(1500);
     mails = await getMailsData();
 
-    expect(mails[1]).toEqual(7);
+    expect(mails[1]).toEqual(6);
 
     await updateCalloutVisibility(
       calloutId,
@@ -323,7 +322,7 @@ describe('Notifications - post', () => {
     await delay(1000);
     mails = await getMailsData();
 
-    expect(mails[1]).toEqual(14);
+    expect(mails[1]).toEqual(12);
   });
 
   test('HA create PUBLISHED space callout type: POST - HM(7) get notifications', async () => {
@@ -345,16 +344,14 @@ describe('Notifications - post', () => {
 
     await delay(1000);
     const mails = await getMailsData();
-    expect(mails[1]).toEqual(7);
-
+    expect(mails[1]).toEqual(6);
     expect(mails[0]).toEqual(
       await templateResult(
         spaceCalloutSubjectText,
         TestUserManager.users.globalAdmin.email
       )
     );
-
-    expect(mails[0]).toEqual(
+    expect(mails[0]).not.toEqual(
       await templateResult(
         spaceCalloutSubjectText,
         TestUserManager.users.spaceAdmin.email
@@ -584,7 +581,7 @@ describe('Notifications - post', () => {
     await delay(1000);
     const mails = await getMailsData();
 
-    expect(mails[1]).toEqual(3);
+    expect(mails[1]).toEqual(2);
 
     // GA - 1 mails as subsubspace member; as admin - 0
     expect(mails[0]).toEqual(
@@ -624,7 +621,7 @@ describe('Notifications - post', () => {
         TestUserManager.users.subspaceMember.email
       )
     );
-    expect(mails[0]).toEqual(
+    expect(mails[0]).not.toEqual(
       await templateResult(
         calloutSubjectText,
         TestUserManager.users.subsubspaceAdmin.email

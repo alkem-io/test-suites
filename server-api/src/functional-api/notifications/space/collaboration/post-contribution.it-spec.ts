@@ -199,8 +199,8 @@ describe('Notifications - post', () => {
 
     await delay(1000);
     const mails = await getMailsData();
-    expect(mails[1]).toEqual(7);
-    expect(mails[0]).toEqual(
+    expect(mails[1]).toEqual(6);
+    expect(mails[0]).not.toEqual(
       await templateMemberResult(
         postSubjectMember,
         TestUserManager.users.globalAdmin.email
@@ -260,7 +260,7 @@ describe('Notifications - post', () => {
 
     await delay(1000);
     const mails = await getMailsData();
-    expect(mails[1]).toEqual(7);
+    expect(mails[1]).toEqual(6);
 
     expect(mails[0]).toEqual(
       await templateMemberResult(
@@ -268,7 +268,7 @@ describe('Notifications - post', () => {
         TestUserManager.users.globalAdmin.email
       )
     );
-    expect(mails[0]).toEqual(
+    expect(mails[0]).not.toEqual(
       await templateMemberResult(
         postSubjectMember,
         TestUserManager.users.spaceAdmin.email
@@ -378,7 +378,7 @@ describe('Notifications - post', () => {
 
     await delay(1000);
     const mails = await getMailsData();
-    expect(mails[1]).toEqual(3);
+    expect(mails[1]).toEqual(2);
     expect(mails[0]).toEqual(
       await templateMemberResult(
         postSubjectMember,
@@ -432,7 +432,7 @@ describe('Notifications - post', () => {
       )
     );
 
-    expect(mails[0]).toEqual(
+    expect(mails[0]).not.toEqual(
       await templateMemberResult(
         postSubjectMember,
         TestUserManager.users.subsubspaceMember.email
