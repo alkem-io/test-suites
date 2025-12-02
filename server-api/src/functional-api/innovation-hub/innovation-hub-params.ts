@@ -1,4 +1,8 @@
-import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
+import {
+  getGraphqlClient,
+  TestUser,
+  UniqueIDGenerator,
+} from '@alkemio/tests-lib';
 import {
   InnovationHubType,
   SpaceVisibility,
@@ -9,17 +13,18 @@ export const createInnovationHub = async (
   accountID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
+  const uniqueId = UniqueIDGenerator.getID();
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
     graphqlClient.CreateInnovationHub(
       {
         input: {
           accountID,
-          subdomain: 'demo',
+          subdomain: `demo-${uniqueId}`,
           type: InnovationHubType.Visibility,
-          nameID: 'demo',
+          nameID: `demo-${uniqueId}`,
           profileData: {
-            displayName: 'demo space',
+            displayName: `demo space ${uniqueId}`,
           },
           spaceVisibilityFilter: SpaceVisibility.Demo,
         },

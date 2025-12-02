@@ -101,6 +101,7 @@ export const sorted__create_read_update_delete_grant_readUserPii_platformAdmin =
 export const sorted__create_read_update_delete_grant_readUserPii = [
   ...sorted__create_read_update_delete_grant,
   "READ_USER_PII",
+  "READ_USER_SETTINGS",
 ].sort();
 
 export const sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii_platformAdmin =
@@ -116,6 +117,7 @@ export const sorted__create_read_update_delete_grant_fileUpload_fileDelete_readU
   [
     ...sorted__create_read_update_delete_grant,
     "READ_USER_PII",
+    "READ_USER_SETTINGS",
     "FILE_UPLOAD",
     "FILE_DELETE",
   ].sort();

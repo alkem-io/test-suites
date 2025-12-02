@@ -1,6 +1,4 @@
 import {
-  CalloutState,
-  //CalloutType,
   CalloutVisibility,
   CommunityMembershipPolicy,
   CreateOrganizationInput,

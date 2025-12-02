@@ -440,7 +440,7 @@ describe('Upload visual to innovation space', () => {
       baseScenario.organization.accountId
     );
     const innovationHubInfo = innovationHubData?.data?.createInnovationHub;
-    innovationHubVisualId = innovationHubInfo?.profile.visuals[0].id ?? '';
+    innovationHubVisualId = innovationHubInfo?.profile.visuals[0]?.id ?? '';
     innovationHubId = innovationHubInfo?.id ?? '';
   });
 
