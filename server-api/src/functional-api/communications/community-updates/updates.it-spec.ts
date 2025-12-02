@@ -195,8 +195,8 @@ describe('Communities', () => {
   describe('Community updates - create / delete', () => {
     let messageId: string;
 
-    beforeAll(async () => {
-      // Clean up any existing messages first
+    beforeEach(async () => {
+      // Clean up any existing messages before each test
       await cleanupAllMessages();
     });
 
