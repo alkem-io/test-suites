@@ -22,7 +22,7 @@
     "codegen": "graphql-codegen --config codegen.ts"
   },
   "dependencies": {
-    "@alkemio/client-lib": "^0.32.0",
+    "@alkemio/client-lib": "^0.36.0",
     "@ory/kratos-client": "^0.11.1",
     "supertest": "^7.0.0"
   },
