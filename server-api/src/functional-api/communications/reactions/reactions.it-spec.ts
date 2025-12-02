@@ -159,7 +159,7 @@ describe('Reaction - Discussion messages', () => {
         .messages[0].reactions[0].emoji
     );
     expect(reactionDataTwo.error?.errors[0].message).toContain(
-      `Can't send same reaction twice`
+      `Failed to add reaction to message in room`
     );
   });
 

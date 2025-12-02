@@ -22,6 +22,20 @@ import {
 
 let baseScenario: OrganizationWithSpaceModel;
 
+// Helper function to clean up all messages in the updates room
+async function cleanupAllMessages() {
+  const spaceData = await getSpaceData(baseScenario.space.id);
+  const messages =
+    spaceData?.data?.lookup?.space?.community?.communication?.updates
+      .messages ?? [];
+  for (const message of messages) {
+    await removeMessageOnRoom(
+      baseScenario.space.communication.updatesId,
+      message.id
+    );
+  }
+}
+
 const scenarioConfig: TestScenarioConfig = {
   name: 'community-updates',
   space: {
@@ -52,7 +66,12 @@ afterAll(async () => {
 
 describe('Communities', () => {
   describe('Community updates - read access', () => {
+    let messageId: string;
+
     beforeAll(async () => {
+      // Clean up any existing messages first
+      await cleanupAllMessages();
+
       await updateSpaceSettings(baseScenario.space.id, {
         privacy: { mode: SpacePrivacyMode.Private },
       });
@@ -67,14 +86,13 @@ describe('Communities', () => {
         baseScenario.space.communication.updatesId,
         'test'
       );
-      baseScenario.space.communication.messageId =
-        res?.data?.sendMessageToRoom.id;
+      messageId = res?.data?.sendMessageToRoom.id;
     });
 
     afterAll(async () => {
       await removeMessageOnRoom(
         baseScenario.space.communication.updatesId,
-        baseScenario.space.communication.messageId
+        messageId
       );
     });
     test('community updates - PRIVATE space - read access - sender / reader (member) / reader (not member)', async () => {
@@ -103,18 +121,14 @@ describe('Communities', () => {
 
       // Assert
       expect(retrievedMessage).toHaveLength(1);
-      expect(retrievedMessage[0].id).toEqual(
-        baseScenario.space.communication.messageId
-      );
+      expect(retrievedMessage[0].id).toEqual(messageId);
       expect(retrievedMessage[0].message).toEqual('test');
       expect(retrievedMessage[0].sender?.id).toEqual(
         TestUserManager.users.globalAdmin.id
       );
 
       expect(retrievedMessage).toHaveLength(1);
-      expect(getMessageReaderMember[0].id).toEqual(
-        baseScenario.space.communication.messageId
-      );
+      expect(getMessageReaderMember[0].id).toEqual(messageId);
       expect(getMessageReaderMember[0].message).toEqual('test');
       expect(getMessageReaderMember[0].sender?.id).toEqual(
         TestUserManager.users.globalAdmin.id
@@ -158,25 +172,19 @@ describe('Communities', () => {
 
       // Assert
       expect(retrievedMessage).toHaveLength(1);
-      expect(retrievedMessage[0].id).toEqual(
-        baseScenario.space.communication.messageId
-      );
+      expect(retrievedMessage[0].id).toEqual(messageId);
       expect(retrievedMessage[0].message).toEqual('test');
       expect(retrievedMessage[0].sender?.id).toEqual(
         TestUserManager.users.globalAdmin.id
       );
 
-      expect(getMessageReaderMember[0].id).toEqual(
-        baseScenario.space.communication.messageId
-      );
+      expect(getMessageReaderMember[0].id).toEqual(messageId);
       expect(getMessageReaderMember[0].message).toEqual('test');
       expect(getMessageReaderMember[0].sender?.id).toEqual(
         TestUserManager.users.globalAdmin.id
       );
 
-      expect(spaceDataReaderNotMember[0].id).toEqual(
-        baseScenario.space.communication.messageId
-      );
+      expect(spaceDataReaderNotMember[0].id).toEqual(messageId);
       expect(spaceDataReaderNotMember[0].message).toEqual('test');
       expect(spaceDataReaderNotMember[0].sender?.id).toEqual(
         TestUserManager.users.globalAdmin.id
@@ -185,14 +193,20 @@ describe('Communities', () => {
   });
 
   describe('Community updates - create / delete', () => {
+    let messageId: string;
+
+    beforeAll(async () => {
+      // Clean up any existing messages first
+      await cleanupAllMessages();
+    });
+
     test('should create community update', async () => {
       // Act
       const res = await sendMessageToRoom(
         baseScenario.space.communication.updatesId,
         'test'
       );
-      baseScenario.space.communication.messageId =
-        res?.data?.sendMessageToRoom.id;
+      messageId = res?.data?.sendMessageToRoom.id;
 
       const spaceDataSender = await getSpaceData(baseScenario.space.id);
       const retrievedMessage =
@@ -200,9 +214,7 @@ describe('Communities', () => {
           .messages ?? [];
       // Assert
       expect(retrievedMessage).toHaveLength(1);
-      expect(retrievedMessage[0].id).toEqual(
-        baseScenario.space.communication.messageId
-      );
+      expect(retrievedMessage[0].id).toEqual(messageId);
       expect(retrievedMessage[0].message).toEqual('test');
       expect(retrievedMessage[0].sender?.id).toEqual(
         TestUserManager.users.globalAdmin.id
@@ -210,7 +222,7 @@ describe('Communities', () => {
 
       await removeMessageOnRoom(
         baseScenario.space.communication.updatesId,
-        baseScenario.space.communication.messageId
+        messageId
       );
     });
 
@@ -220,13 +232,12 @@ describe('Communities', () => {
         baseScenario.space.communication.updatesId,
         'test'
       );
-      baseScenario.space.communication.messageId =
-        res?.data?.sendMessageToRoom.id;
+      messageId = res?.data?.sendMessageToRoom.id;
       await delay(600);
       // Act
       await removeMessageOnRoom(
         baseScenario.space.communication.updatesId,
-        baseScenario.space.communication.messageId
+        messageId
       );
 
       await delay(600);
