@@ -4477,8 +4477,8 @@ export type Mutation = {
   uploadFileOnLink: Link;
   /** Create a new Document on the Storage and return the value as part of the returned Reference. */
   uploadFileOnReference: Reference;
-  /** Create a new Document on the Storage and return the public Url. */
-  uploadFileOnStorageBucket: Scalars["String"]["output"];
+  /** Create a new Document on the Storage and return the ID and public URL. */
+  uploadFileOnStorageBucket: StorageBucketUploadFileResult;
   /** Uploads and sets an image for the specified Visual. */
   uploadImageOnVisual: Visual;
 };
@@ -7118,6 +7118,13 @@ export type StorageBucketUploadFileOnLinkInput = {
 
 export type StorageBucketUploadFileOnReferenceInput = {
   referenceID: Scalars["String"]["input"];
+};
+
+export type StorageBucketUploadFileResult = {
+  /** The ID of the uploaded Document. */
+  id: Scalars["UUID"]["output"];
+  /** The publicly accessible URL for the uploaded file. */
+  url: Scalars["String"]["output"];
 };
 
 export type StorageConfig = {
@@ -10498,6 +10505,7 @@ export type ResolversTypes = {
   StorageBucketUploadFileInput: StorageBucketUploadFileInput;
   StorageBucketUploadFileOnLinkInput: StorageBucketUploadFileOnLinkInput;
   StorageBucketUploadFileOnReferenceInput: StorageBucketUploadFileOnReferenceInput;
+  StorageBucketUploadFileResult: ResolverTypeWrapper<StorageBucketUploadFileResult>;
   StorageConfig: ResolverTypeWrapper<StorageConfig>;
   String: ResolverTypeWrapper<Scalars["String"]["output"]>;
   Subscription: ResolverTypeWrapper<{}>;
@@ -11893,6 +11901,7 @@ export type ResolversParentTypes = {
   StorageBucketUploadFileInput: StorageBucketUploadFileInput;
   StorageBucketUploadFileOnLinkInput: StorageBucketUploadFileOnLinkInput;
   StorageBucketUploadFileOnReferenceInput: StorageBucketUploadFileOnReferenceInput;
+  StorageBucketUploadFileResult: StorageBucketUploadFileResult;
   StorageConfig: StorageConfig;
   String: Scalars["String"]["output"];
   Subscription: {};
@@ -17220,7 +17229,7 @@ export type MutationResolvers<
     RequireFields<MutationUploadFileOnReferenceArgs, "file" | "uploadData">
   >;
   uploadFileOnStorageBucket?: Resolver<
-    ResolversTypes["String"],
+    ResolversTypes["StorageBucketUploadFileResult"],
     ParentType,
     ContextType,
     RequireFields<MutationUploadFileOnStorageBucketArgs, "file" | "uploadData">
@@ -19291,6 +19300,15 @@ export type StorageBucketParentResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type StorageBucketUploadFileResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["StorageBucketUploadFileResult"] = ResolversParentTypes["StorageBucketUploadFileResult"]
+> = {
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  url?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type StorageConfigResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["StorageConfig"] = ResolversParentTypes["StorageConfig"]
@@ -20848,6 +20866,7 @@ export type Resolvers<ContextType = any> = {
   StorageAggregatorParent?: StorageAggregatorParentResolvers<ContextType>;
   StorageBucket?: StorageBucketResolvers<ContextType>;
   StorageBucketParent?: StorageBucketParentResolvers<ContextType>;
+  StorageBucketUploadFileResult?: StorageBucketUploadFileResultResolvers<ContextType>;
   StorageConfig?: StorageConfigResolvers<ContextType>;
   Subscription?: SubscriptionResolvers<ContextType>;
   SubspaceCreated?: SubspaceCreatedResolvers<ContextType>;
