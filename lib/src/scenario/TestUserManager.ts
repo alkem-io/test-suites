@@ -83,6 +83,9 @@ export class TestUserManager {
       // ),
       nonSpaceMember: TestUserManager.getUserModelByEmail("non.space@alkem.io"),
       betaTester: TestUserManager.getUserModelByEmail("beta.tester@alkem.io"),
+      organizationAdmin: TestUserManager.getUserModelByEmail(
+        "organization.admin@alkem.io"
+      ),
     };
   }
 

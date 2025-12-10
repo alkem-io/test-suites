@@ -14,4 +14,5 @@ export interface TestUserModels {
   // notificationsAdmin: UserModel;
   nonSpaceMember: UserModel;
   betaTester: UserModel;
+  organizationAdmin: UserModel;
 }
