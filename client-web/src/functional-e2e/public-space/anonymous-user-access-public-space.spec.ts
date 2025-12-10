@@ -4,17 +4,44 @@
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
 import { test, expect } from '@playwright/test';
-import { scenarioConfig } from '../seed-public-space.spec';
+import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
+import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
+import { SpacePrivacyMode } from '@alkemio/client-lib/dist/generated/graphql';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let baseScenario: OrganizationWithSpaceModel;
 
+const scenarioConfig: TestScenarioConfig = {
+  name: 'seed-public-space',
+  space: {
+    about: {
+      profile: {
+        displayName: 'Public Space for E2E Tests',
+      },
+    },
+    collaboration: {
+      addTutorialCallouts: false,
+      addPostCollectionCallout: true,
+      addWhiteboardCallout: true,
+    },
+    community: {
+      admins: [TestUser.SPACE_ADMIN],
+      members: [TestUser.SPACE_ADMIN],
+    },
+    settings: {
+      privacy: { mode: SpacePrivacyMode.Public },
+    },
+  },
+};
+
 test.describe('Public Space Discovery and Access', () => {
   test.beforeAll(async () => {
+    test.setTimeout(25_000);
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
   });
 
   test.afterAll(async () => {
+    test.setTimeout(20_000);
     await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 

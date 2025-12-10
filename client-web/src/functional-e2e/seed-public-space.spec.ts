@@ -16,9 +16,14 @@ const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
 let baseScenario: OrganizationWithSpaceModel;
 
-export const scenarioConfig: TestScenarioConfig = {
+const scenarioConfig: TestScenarioConfig = {
   name: 'seed-public-space',
   space: {
+    about: {
+      profile: {
+        displayName: 'Public Space for E2E Tests',
+      },
+    },
     collaboration: {
       addTutorialCallouts: false,
       addPostCollectionCallout: true,
@@ -72,9 +77,11 @@ export const scenarioConfig: TestScenarioConfig = {
   },
 };
 test.beforeAll(async () => {
+  test.setTimeout(45_000); // 30 seconds for scenario setup
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
 });
 test.afterAll(async () => {
+  test.setTimeout(30_000); // 30 seconds for cleanup
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 test('seed', async ({ page }) => {

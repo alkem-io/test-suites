@@ -29,7 +29,7 @@ test.describe('Subspace Navigation for Non-Members', () => {
     await expect(
       page.getByRole('link', {
         name: new RegExp(
-          `Card banner:.*${baseScenario.space.profile.displayName}`
+          `Card banner:.*${baseScenario.space.about.profile.displayName}`
         ),
       })
     ).toBeVisible();
@@ -38,7 +38,7 @@ test.describe('Subspace Navigation for Non-Members', () => {
     await page
       .getByRole('link', {
         name: new RegExp(
-          `Card banner:.*${baseScenario.space.profile.displayName}`
+          `Card banner:.*${baseScenario.space.about.profile.displayName}`
         ),
       })
       .click();
@@ -50,7 +50,7 @@ test.describe('Subspace Navigation for Non-Members', () => {
     await expect(
       page.getByRole('heading', {
         level: 1,
-        name: baseScenario.space.profile.displayName,
+        name: baseScenario.space.about.profile.displayName,
       })
     ).toBeVisible();
 
@@ -76,7 +76,7 @@ test.describe('Subspace Navigation for Non-Members', () => {
     await page
       .getByRole('link', {
         name: new RegExp(
-          `Card banner:.*${baseScenario.space.profile.displayName}`
+          `Card banner:.*${baseScenario.space.about.profile.displayName}`
         ),
       })
       .click();
@@ -85,14 +85,16 @@ test.describe('Subspace Navigation for Non-Members', () => {
     await expect(
       page.getByRole('heading', {
         level: 1,
-        name: baseScenario.space.profile.displayName,
+        name: baseScenario.space.about.profile.displayName,
       })
     ).toBeVisible();
 
     // Verify sub-subspace is visible in the hierarchy
     await expect(
       page.getByRole('link', {
-        name: new RegExp(`Avatar ${baseScenario.space.profile.displayName}`),
+        name: new RegExp(
+          `Avatar ${baseScenario.space.about.profile.displayName}`
+        ),
       })
     ).toBeVisible();
   });
@@ -110,7 +112,7 @@ test.describe('Subspace Navigation for Non-Members', () => {
     await page
       .getByRole('link', {
         name: new RegExp(
-          `Card banner:.*${baseScenario.space.profile.displayName}`
+          `Card banner:.*${baseScenario.space.about.profile.displayName}`
         ),
       })
       .click();
@@ -118,7 +120,9 @@ test.describe('Subspace Navigation for Non-Members', () => {
     // Click on sub-subspace link in hierarchy
     await page
       .getByRole('link', {
-        name: new RegExp(`Avatar ${baseScenario.space.profile.displayName}`),
+        name: new RegExp(
+          `Avatar ${baseScenario.space.about.profile.displayName}`
+        ),
       })
       .click();
 
@@ -148,7 +152,7 @@ test.describe('Subspace Navigation for Non-Members', () => {
     await page
       .getByRole('link', {
         name: new RegExp(
-          `Card banner:.*${baseScenario.space.profile.displayName}`
+          `Card banner:.*${baseScenario.space.about.profile.displayName}`
         ),
       })
       .click();
