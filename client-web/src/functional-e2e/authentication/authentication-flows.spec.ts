@@ -2,7 +2,8 @@ import { test, expect } from '@playwright/test';
 import {
   navigateToLoginPageFromMenu,
   navigateToRegistrationFromAcceptTerms,
-  navigateToRegistrationFromSignUpAcceptTermsAndContinue,
+  navigateToRegistrationPage,
+  navigateToRegistrationFromSignUpFillFormAndContinue,
   navigateToSignUpFromSignIn,
   navigateToVerificationPage,
 } from './login-page-objects';
@@ -57,7 +58,7 @@ test.beforeEach(async ({ context }) => {
 test.describe.configure({ mode: 'serial' });
 
 test('verify registration page', async ({ page }) => {
-  await navigateToRegistrationFromSignUpAcceptTermsAndContinue(baseUrl, page);
+  await navigateToRegistrationPage(baseUrl, page);
   await verifyRegistrationPageElements(page);
 });
 
@@ -91,10 +92,13 @@ test('user successful authentication', async ({ page }) => {
 test.skip('user successful registration email accept terms first', async ({
   page,
 }) => {
-  await navigateToRegistrationFromSignUpAcceptTermsAndContinue(baseUrl, page);
-  await fillUpSignUpPageElements(userEmail, 'Test', 'Alkemio', page);
-  await pressSignUpButtonRegistrationPage(page);
-  await signUpButton(page).click();
+  await navigateToRegistrationFromSignUpFillFormAndContinue(
+    baseUrl,
+    page,
+    userEmail,
+    'Test',
+    'Alkemio'
+  );
   await fillUpSignUpPasswordElements(password, page);
   await pressSignUpButtonRegistrationPage(page);
 
@@ -123,9 +127,7 @@ test.skip('user successful registration email accept terms first', async ({
   await fillUpSignInPageElements(userEmail, password, page);
 
   await pressSignInButtonSignInPage(page);
-  await expect(
-    page.getByRole('heading', { name: 'Welcome, Test!' })
-  ).toBeVisible();
+  await verifyMyDashboardWelcomeElement(page, 'Test');
 
   // const getUserId = await getUserData(userEmail);
   // const registeredUserId = getUserId.data?.user.id ?? '';
@@ -136,6 +138,8 @@ test.skip('user successful registration email accept terms first', async ({
 test('user successful registration email accept terms and fill all required fields', async ({
   page,
 }) => {
+  test.setTimeout(30000); // Set timeout to 30 seconds for this test
+
   await navigateToRegistrationFromAcceptTerms(baseUrl, page);
   await fillUpSignUpPageElements(userEmail, 'Test', 'Alkemio', page);
   await nextButton(page).click();
@@ -169,9 +173,7 @@ test('user successful registration email accept terms and fill all required fiel
 
   await pressSignInButtonSignInPage(page);
 
-  await expect(
-    page.getByRole('heading', { name: 'Welcome, Test!' })
-  ).toBeVisible();
+  await verifyMyDashboardWelcomeElement(page, 'Test');
 
   // const getUserId = await getUserData(userEmail);
   // const registeredUserId = getUserId.data?.user.id ?? '';
