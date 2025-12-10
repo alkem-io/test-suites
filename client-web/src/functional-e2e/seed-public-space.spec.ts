@@ -16,7 +16,7 @@ const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
 let baseScenario: OrganizationWithSpaceModel;
 
-const scenarioConfig: TestScenarioConfig = {
+export const scenarioConfig: TestScenarioConfig = {
   name: 'seed-public-space',
   space: {
     collaboration: {
