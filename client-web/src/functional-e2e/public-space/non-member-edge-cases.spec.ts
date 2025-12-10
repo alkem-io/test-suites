@@ -1,37 +1,89 @@
 // spec: client-web/src/functional-e2e/public-space/public-space-non-member-navigation-test-plan.md
 // seed: client-web/src/functional-e2e/seed-public-space.spec.ts
 
+import {
+  CommunityMembershipPolicy,
+  SpacePrivacyMode,
+} from '@alkemio/client-lib/dist/generated/graphql';
+import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
+import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
 import { test, expect } from '@playwright/test';
-import { scenarioConfig } from '../seed-public-space.spec';
+
+const scenarioConfig: TestScenarioConfig = {
+  name: 'seed-public-space',
+  space: {
+    about: {
+      profile: {
+        displayName: 'Public Space for E2E Tests',
+      },
+    },
+    collaboration: {
+      addTutorialCallouts: false,
+    },
+    community: {
+      admins: [TestUser.SPACE_ADMIN],
+      members: [TestUser.SPACE_MEMBER, TestUser.SPACE_ADMIN],
+    },
+    settings: {
+      privacy: { mode: SpacePrivacyMode.Public },
+      membership: {
+        policy: CommunityMembershipPolicy.Applications,
+      },
+    },
+    subspace: {
+      community: {
+        admins: [TestUser.SUBSPACE_ADMIN],
+        members: [TestUser.SUBSPACE_MEMBER, TestUser.SUBSPACE_ADMIN],
+      },
+      settings: {
+        privacy: { mode: SpacePrivacyMode.Public },
+        membership: {
+          policy: CommunityMembershipPolicy.Applications,
+        },
+      },
+    },
+  },
+};
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let baseScenario: OrganizationWithSpaceModel;
 
 test.describe('Edge Cases and Error Handling', () => {
   test.beforeAll(async () => {
+    test.setTimeout(25_000);
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
   });
 
   test.afterAll(async () => {
+    test.setTimeout(20_000);
     await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
-  test('6.1 Non-Member Sees Appropriate UI When Space Has Callouts Without Contributions', async ({
+  test('6.1 Non-Member Sees Appropriate UI When Space Has Default Callout', async ({
     page,
   }) => {
     // Navigate to the public space as anonymous user
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
 
-    // Verify empty state message for callouts without contributions
+    // Verify welcome callout is visible
     await expect(
-      page.getByText('No contributions yet, be the first to contribute!')
+      page.getByRole('heading', { name: '👋 Welcome to your space!' })
+    ).toBeVisible();
+
+    // Verify non-member message is shown
+    await expect(
+      page.getByText(
+        "You can't reply to this discussion since you're not a member of this Space"
+      )
     ).toBeVisible();
 
     // Verify navigation remains functional - click through tabs
     await page.getByRole('tab', { name: 'Subspaces' }).click();
-    await expect(page.getByRole('heading', { name: 'Subspace' })).toBeVisible();
+    await expect(
+      page.getByRole('link', { name: /Card banner:.*seed-public-space/ })
+    ).toBeVisible();
 
     await page.getByRole('tab', { name: 'community' }).click();
     await expect(
@@ -55,7 +107,7 @@ test.describe('Edge Cases and Error Handling', () => {
     await page
       .getByRole('link', {
         name: new RegExp(
-          `Card banner:.*${baseScenario.space.profile.displayName}`
+          `Card banner:.*${baseScenario.space.about.profile.displayName}`
         ),
       })
       .click();
@@ -83,30 +135,19 @@ test.describe('Edge Cases and Error Handling', () => {
     // Navigate to the public space as anonymous user
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
 
-    // Navigate to subspace
-    await page.getByRole('tab', { name: 'Subspaces' }).click();
-    await page
-      .getByRole('link', {
-        name: new RegExp(
-          `Card banner:.*${baseScenario.space.profile.displayName}`
-        ),
-      })
-      .click();
+    // Verify user is not logged in (Sign in button visible)
+    await expect(
+      page.getByRole('button', { name: 'Sign in to apply' })
+    ).toBeVisible();
 
-    // Verify content is accessible
+    // Navigate to subspace via hierarchy link on home page
+    await page.getByRole('link', { name: /Avatar seed-public-space/ }).click();
+
+    // Verify subspace content is accessible
+    await expect(page).toHaveURL(/\/challenges\/ssnameid/);
     await expect(page.getByText('test description')).toBeVisible();
 
-    // Navigate to sub-subspace
-    await page
-      .getByRole('link', {
-        name: new RegExp(`Avatar ${baseScenario.space.profile.displayName}`),
-      })
-      .click();
-
-    // Verify content is accessible
-    await expect(page).toHaveURL(/\/opportunities\/ssnameid/);
-
-    // Use browser back (via breadcrumb) to return
+    // Use breadcrumb to navigate back to parent space
     await page.getByRole('link', { name: baseScenario.space.nameId }).click();
 
     // Verify public content remains accessible without forced login

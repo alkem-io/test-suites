@@ -1,10 +1,45 @@
 // spec: client-web/src/functional-e2e/public-space/public-space-non-member-navigation-test-plan.md
 // seed: client-web/src/functional-e2e/seed-public-space.spec.ts
 
+import {
+  CommunityMembershipPolicy,
+  SpacePrivacyMode,
+} from '@alkemio/client-lib/dist/generated/graphql';
+import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
+import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
 import { test, expect } from '@playwright/test';
-import { scenarioConfig } from '../seed-public-space.spec';
+
+const scenarioConfig: TestScenarioConfig = {
+  name: 'seed-public-space',
+  space: {
+    about: {
+      profile: {
+        displayName: 'Public Space for E2E Tests',
+      },
+    },
+    collaboration: {
+      addTutorialCallouts: false,
+    },
+    community: {
+      admins: [TestUser.SPACE_ADMIN],
+      members: [TestUser.SPACE_MEMBER, TestUser.SPACE_ADMIN],
+    },
+    settings: {
+      privacy: { mode: SpacePrivacyMode.Public },
+      membership: {
+        policy: CommunityMembershipPolicy.Applications,
+      },
+    },
+    subspace: {
+      community: {
+        admins: [TestUser.SUBSPACE_ADMIN],
+        members: [TestUser.SUBSPACE_MEMBER, TestUser.SUBSPACE_ADMIN],
+      },
+    },
+  },
+};
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let baseScenario: OrganizationWithSpaceModel;

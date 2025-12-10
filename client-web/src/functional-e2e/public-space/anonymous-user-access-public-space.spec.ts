@@ -21,8 +21,6 @@ const scenarioConfig: TestScenarioConfig = {
     },
     collaboration: {
       addTutorialCallouts: false,
-      addPostCollectionCallout: true,
-      addWhiteboardCallout: true,
     },
     community: {
       admins: [TestUser.SPACE_ADMIN],

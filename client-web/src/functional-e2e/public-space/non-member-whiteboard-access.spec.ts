@@ -1,10 +1,58 @@
 // spec: client-web/src/functional-e2e/public-space/public-space-non-member-navigation-test-plan.md
 // seed: client-web/src/functional-e2e/seed-public-space.spec.ts
 
+import {
+  CommunityMembershipPolicy,
+  SpacePrivacyMode,
+} from '@alkemio/client-lib/dist/generated/graphql';
+import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
+import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
 import { test, expect } from '@playwright/test';
-import { scenarioConfig } from '../seed-public-space.spec';
+
+const scenarioConfig: TestScenarioConfig = {
+  name: 'seed-public-space',
+  space: {
+    about: {
+      profile: {
+        displayName: 'Public Space for E2E Tests',
+      },
+    },
+    collaboration: {
+      addTutorialCallouts: false,
+      addWhiteboardCallout: true,
+    },
+    community: {
+      admins: [TestUser.SPACE_ADMIN],
+      members: [TestUser.SPACE_MEMBER, TestUser.SPACE_ADMIN],
+    },
+    settings: {
+      privacy: { mode: SpacePrivacyMode.Public },
+      membership: {
+        policy: CommunityMembershipPolicy.Applications,
+      },
+    },
+    subspace: {
+      community: {
+        admins: [TestUser.SUBSPACE_ADMIN],
+        members: [TestUser.SUBSPACE_MEMBER, TestUser.SUBSPACE_ADMIN],
+      },
+      settings: {
+        privacy: { mode: SpacePrivacyMode.Public },
+        membership: {
+          policy: CommunityMembershipPolicy.Applications,
+        },
+      },
+      subspace: {
+        community: {
+          admins: [TestUser.SUBSPACE_ADMIN],
+          members: [TestUser.SUBSUBSPACE_MEMBER, TestUser.SUBSUBSPACE_ADMIN],
+        },
+      },
+    },
+  },
+};
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let baseScenario: OrganizationWithSpaceModel;
@@ -27,7 +75,7 @@ test.describe('Whiteboard Access for Non-Members', () => {
     // Verify whiteboard callout is visible on the home tab
     await expect(
       page.getByRole('heading', {
-        name: `${baseScenario.space.profile.displayName} - whiteboard callout`,
+        name: `${baseScenario.space.about.profile.displayName} - whiteboard callout`,
       })
     ).toBeVisible();
 
@@ -51,7 +99,7 @@ test.describe('Whiteboard Access for Non-Members', () => {
     // Click on the whiteboard callout heading to open it
     await page
       .getByRole('heading', {
-        name: `${baseScenario.space.profile.displayName} - whiteboard callout`,
+        name: `${baseScenario.space.about.profile.displayName} - whiteboard callout`,
       })
       .click();
 
@@ -59,7 +107,7 @@ test.describe('Whiteboard Access for Non-Members', () => {
     await expect(
       page.getByRole('dialog', {
         name: new RegExp(
-          `${baseScenario.space.profile.displayName} - whiteboard callout`
+          `${baseScenario.space.about.profile.displayName} - whiteboard callout`
         ),
       })
     ).toBeVisible();
@@ -84,14 +132,14 @@ test.describe('Whiteboard Access for Non-Members', () => {
     // As anonymous user (not logged in), verify whiteboard is visible
     await expect(
       page.getByRole('heading', {
-        name: `${baseScenario.space.profile.displayName} - whiteboard callout`,
+        name: `${baseScenario.space.about.profile.displayName} - whiteboard callout`,
       })
     ).toBeVisible();
 
     // Click to open the whiteboard callout
     await page
       .getByRole('heading', {
-        name: `${baseScenario.space.profile.displayName} - whiteboard callout`,
+        name: `${baseScenario.space.about.profile.displayName} - whiteboard callout`,
       })
       .click();
 
@@ -99,7 +147,7 @@ test.describe('Whiteboard Access for Non-Members', () => {
     await expect(
       page.getByRole('dialog', {
         name: new RegExp(
-          `${baseScenario.space.profile.displayName} - whiteboard callout`
+          `${baseScenario.space.about.profile.displayName} - whiteboard callout`
         ),
       })
     ).toBeVisible();
