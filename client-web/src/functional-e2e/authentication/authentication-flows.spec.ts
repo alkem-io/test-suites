@@ -2,7 +2,8 @@ import { test, expect } from '@playwright/test';
 import {
   navigateToLoginPageFromMenu,
   navigateToRegistrationFromAcceptTerms,
-  navigateToRegistrationFromSignUpAcceptTermsAndContinue,
+  navigateToRegistrationPage,
+  navigateToRegistrationFromSignUpFillFormAndContinue,
   navigateToSignUpFromSignIn,
   navigateToVerificationPage,
 } from './login-page-objects';
@@ -57,7 +58,7 @@ test.beforeEach(async ({ context }) => {
 test.describe.configure({ mode: 'serial' });
 
 test('verify registration page', async ({ page }) => {
-  await navigateToRegistrationFromSignUpAcceptTermsAndContinue(baseUrl, page);
+  await navigateToRegistrationPage(baseUrl, page);
   await verifyRegistrationPageElements(page);
 });
 
@@ -91,10 +92,13 @@ test('user successful authentication', async ({ page }) => {
 test.skip('user successful registration email accept terms first', async ({
   page,
 }) => {
-  await navigateToRegistrationFromSignUpAcceptTermsAndContinue(baseUrl, page);
-  await fillUpSignUpPageElements(userEmail, 'Test', 'Alkemio', page);
-  await pressSignUpButtonRegistrationPage(page);
-  await signUpButton(page).click();
+  await navigateToRegistrationFromSignUpFillFormAndContinue(
+    baseUrl,
+    page,
+    userEmail,
+    'Test',
+    'Alkemio'
+  );
   await fillUpSignUpPasswordElements(password, page);
   await pressSignUpButtonRegistrationPage(page);
 
