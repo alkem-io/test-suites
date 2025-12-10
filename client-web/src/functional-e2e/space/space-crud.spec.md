@@ -28,7 +28,7 @@ The Alkemio platform provides Space entities as the primary organizational unit 
 
 ### 0. CREATE Space Operations (Organization Account) - HIGH PRIORITY
 
-**Seed:** `./client-web/src/functional-e2e/seed-minimal.spec.ts`
+**Seed:** `../seed-minimal.spec.ts`
 **Implementation:** `./organization-space-create.spec.ts`
 
 > **Priority Note:** These tests verify the primary use case for Space creation - organizations (Hosts) creating Spaces from their organization account. This aligns with the "Host" persona (Organization admin) workflow.
@@ -450,7 +450,7 @@ The Alkemio platform provides Space entities as the primary organizational unit 
 
 ### 1. CREATE Space Operations (User Account)
 
-**Seed:** `./client-web/src/functional-e2e/seed-minimal.spec.ts`
+**Seed:** `../seed-minimal.spec.ts`
 **Implementation:** `./space-create.spec.ts`
 
 > **Note:** These tests cover Space creation from a user's personal account. For the primary organization-based workflow, see Section 0 above.
@@ -793,7 +793,8 @@ The Alkemio platform provides Space entities as the primary organizational unit 
 
 ### 2. READ Space Operations
 
-**Seed:** `./client-web/src/functional-e2e/seed-minimal.spec.ts`
+**Status:** Not Implemented
+**Seed:** `../seed-minimal.spec.ts`
 
 #### 2.1 View Space List - Explore Spaces Page
 
@@ -940,7 +941,8 @@ The Alkemio platform provides Space entities as the primary organizational unit 
 
 ### 3. UPDATE Space Operations
 
-**Seed:** `./client-web/src/functional-e2e/seed-minimal.spec.ts`
+**Status:** Not Implemented
+**Seed:** `../seed-minimal.spec.ts`
 
 #### 3.1 Update Space Profile - About Tab
 
@@ -1261,7 +1263,8 @@ The Alkemio platform provides Space entities as the primary organizational unit 
 
 ### 4. DELETE Space Operations
 
-**Seed:** `./client-web/src/functional-e2e/seed-minimal.spec.ts`
+**Status:** Not Implemented
+**Seed:** `../seed-minimal.spec.ts`
 
 #### 4.1 Delete Space - Happy Path
 

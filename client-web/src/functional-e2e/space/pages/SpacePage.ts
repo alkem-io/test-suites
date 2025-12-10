@@ -79,7 +79,7 @@ export class SpacePage {
   }
 
   async verifyTutorialsPresent(minCount: number = 2) {
-    const tutorialHeadingPattern = /^[👋📚↪️🤝⚙️🧩🧹]/;
+    const tutorialHeadingPattern = /^[👋📚↪️🤝⚙️🧩🧹]/u;
     const allHeadings = this.tutorialHeadings;
 
     // Wait for at least one tutorial heading to appear
