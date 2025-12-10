@@ -839,42 +839,47 @@ Level 0: Space (Private, Applications Required)
 7. **Accessibility**: Validate that keyboard navigation works for all application workflows (Tab, Enter, Escape)
 
 8. **Frontend Caching**: The Settings → Community page may cache data. If expected information (applications, notifications, member lists) is missing or not updated, **refresh the page first** before reporting a bug. This is especially important after:
+
    - Submitting a new application
    - Approving/rejecting/deleting an application
    - Changing user permissions
    - Receiving notifications that data has changed
 
 9. **Using baseScenario for Navigation**: The `baseScenario` variable (of type `OrganizationWithSpaceModel`) contains the space tree created for the test run. When implementing automated tests, use this structure to navigate to specific spaces programmatically:
+
    ```typescript
    // baseScenario structure:
-   baseScenario.space        // Level 0 Space (contains id, nameId, community.id, etc.)
-   baseScenario.subspace     // Level 1 Subspace
-   baseScenario.subsubspace  // Level 2 Subsubspace
-   
+   baseScenario.space; // Level 0 Space (contains id, nameId, community.id, etc.)
+   baseScenario.subspace; // Level 1 Subspace
+   baseScenario.subsubspace; // Level 2 Subsubspace
+
    // Example navigation using space display names from cards:
    // All spaces are listed as cards on the home page with their display names
    // Space cards contain: avatar, banner, title (h2), and lock icon (for private spaces)
    const spaceDisplayName = baseScenario.space.profile.displayName;
-   
+
    // Click on the card link (the entire card is clickable):
    await page.getByRole('link', { name: spaceDisplayName }).click();
-   
+
    // Alternative: use the heading if more specific targeting is needed
-   await page.getByRole('heading', { name: spaceDisplayName, level: 2 }).click();
-   
+   await page
+     .getByRole('heading', { name: spaceDisplayName, level: 2 })
+     .click();
+
    // Navigate to subspace (from within space):
    const subspaceDisplayName = baseScenario.subspace.profile.displayName;
    await page.getByRole('link', { name: subspaceDisplayName }).click();
-   
+
    // Navigate to subsubspace (from within subspace):
    const subsubspaceDisplayName = baseScenario.subsubspace.profile.displayName;
    await page.getByRole('link', { name: subsubspaceDisplayName }).click();
-   
+
    // Access IDs for API calls or verification:
    const spaceId = baseScenario.space.id;
    const communityId = baseScenario.space.community.id;
    const applicationId = baseScenario.space.community.applicationId;
    ```
+
    **Note**: Space cards are rendered as links containing the display name (h2 heading), avatar, banner image, and a lock icon (`LockOutlinedIcon`) for private spaces. The entire card is clickable and navigates to the space page.
 
 ---
