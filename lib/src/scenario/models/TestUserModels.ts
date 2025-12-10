@@ -15,4 +15,5 @@ export interface TestUserModels {
   nonSpaceMember: UserModel;
   betaTester: UserModel;
   organizationAdmin: UserModel;
+  innovationPackOwner: UserModel;
 }

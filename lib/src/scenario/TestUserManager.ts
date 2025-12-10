@@ -86,6 +86,7 @@ export class TestUserManager {
       organizationAdmin: TestUserManager.getUserModelByEmail(
         "organization.admin@alkem.io"
       ),
+      innovationPackOwner: this.getUserModelByEmail("innovation.pack.owner@alkem.io"),
     };
   }
 
