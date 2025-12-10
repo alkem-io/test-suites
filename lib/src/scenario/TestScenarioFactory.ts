@@ -51,6 +51,31 @@ export class TestScenarioFactory {
     return result;
   }
 
+  public static async createBaseScenarioOrganization(
+    scenarioConfig: TestScenarioConfig
+  ): Promise<OrganizationWithSpaceModel> {
+    const baseScenario: OrganizationWithSpaceModel =
+      this.createEmptyBaseScenario();
+    baseScenario.name = scenarioConfig.name;
+
+    try {
+      await TestUserManager.populateUserModelMap();
+      await this.populateGlobalRoles();
+      await this.createOrganization(
+        baseScenario.name,
+        baseScenario.organization
+      );
+      baseScenario.scenarioSetupSucceeded = true;
+    } catch (e) {
+      LogManager.getLogger().error(
+        `Unable to create organization scenario setup: ${e}`
+      );
+      process.exit(1);
+    }
+
+    return baseScenario;
+  }
+
   private static async createBaseScenarioPrivate(
     scenarioConfig: TestScenarioConfig
   ): Promise<OrganizationWithSpaceModel> {
@@ -320,6 +345,22 @@ export class TestScenarioFactory {
       if (adminUser && adminUser.accountId) {
         await assignLicensePlanToAccount(adminUser.accountId, licensePlanId);
       }
+    }
+
+    // Assign the organization admin user to the organization's roleSet as Member and Admin
+    const organizationAdmin = TestUserManager.users.organizationAdmin;
+    if (organizationAdmin && organizationAdmin.id) {
+      await assignRoleToUser(
+        organizationAdmin.id,
+        model.roleSetId,
+        RoleName.Associate
+      );
+
+      await assignRoleToUser(
+        organizationAdmin.id,
+        model.roleSetId,
+        RoleName.Admin
+      );
     }
 
     return model;
