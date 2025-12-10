@@ -1,16 +1,28 @@
 // spec: client-web/src/functional-e2e/public-space/public-space-non-member-navigation-test-plan.md
 // seed: client-web/src/functional-e2e/seed-public-space.spec.ts
 
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
 import { test, expect } from '@playwright/test';
+import { scenarioConfig } from '../seed-public-space.spec';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
+let baseScenario: OrganizationWithSpaceModel;
 
 test.describe('Edge Cases and Error Handling', () => {
+  test.beforeAll(async () => {
+    baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
+  });
+
+  test.afterAll(async () => {
+    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  });
+
   test('6.1 Non-Member Sees Appropriate UI When Space Has Callouts Without Contributions', async ({
     page,
   }) => {
     // Navigate to the public space as anonymous user
-    await page.goto(`${baseUrl}/seed-public-space-629016`);
+    await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
 
     // Verify empty state message for callouts without contributions
     await expect(
@@ -36,24 +48,32 @@ test.describe('Edge Cases and Error Handling', () => {
     page,
   }) => {
     // Navigate to the public space
-    await page.goto(`${baseUrl}/seed-public-space-629016`);
+    await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
 
     // Navigate to Subspaces tab and enter a subspace
     await page.getByRole('tab', { name: 'Subspaces' }).click();
-    await page.getByRole('link', { name: /Card banner:.*seed-public-space/ }).click();
+    await page
+      .getByRole('link', {
+        name: new RegExp(
+          `Card banner:.*${baseScenario.space.profile.displayName}`
+        ),
+      })
+      .click();
 
     // Verify we are in the subspace
     await expect(page).toHaveURL(/\/challenges\/ssnameid/);
 
     // Use breadcrumb to navigate back to parent space
-    await page.getByRole('link', { name: 'seed-public-space-629016' }).click();
+    await page.getByRole('link', { name: baseScenario.space.nameId }).click();
 
     // Verify user returns to the space successfully
-    await expect(page).toHaveURL(/seed-public-space-629016$/);
+    await expect(page).toHaveURL(new RegExp(`${baseScenario.space.nameId}$`));
 
     // Verify space context is maintained
     await expect(
-      page.getByRole('heading', { level: 1 }).filter({ hasText: 'seed-public-space-629016' })
+      page
+        .getByRole('heading', { level: 1 })
+        .filter({ hasText: baseScenario.space.nameId })
     ).toBeVisible();
   });
 
@@ -61,28 +81,36 @@ test.describe('Edge Cases and Error Handling', () => {
     page,
   }) => {
     // Navigate to the public space as anonymous user
-    await page.goto(`${baseUrl}/seed-public-space-629016`);
+    await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
 
     // Navigate to subspace
     await page.getByRole('tab', { name: 'Subspaces' }).click();
-    await page.getByRole('link', { name: /Card banner:.*seed-public-space/ }).click();
+    await page
+      .getByRole('link', {
+        name: new RegExp(
+          `Card banner:.*${baseScenario.space.profile.displayName}`
+        ),
+      })
+      .click();
 
     // Verify content is accessible
     await expect(page.getByText('test description')).toBeVisible();
 
     // Navigate to sub-subspace
-    await page.getByRole('link', { name: /Avatar seed-public-space/ }).click();
+    await page
+      .getByRole('link', {
+        name: new RegExp(`Avatar ${baseScenario.space.profile.displayName}`),
+      })
+      .click();
 
     // Verify content is accessible
     await expect(page).toHaveURL(/\/opportunities\/ssnameid/);
 
     // Use browser back (via breadcrumb) to return
-    await page.getByRole('link', { name: 'seed-public-space-629016' }).click();
+    await page.getByRole('link', { name: baseScenario.space.nameId }).click();
 
     // Verify public content remains accessible without forced login
-    await expect(
-      page.getByRole('tab', { name: 'Home' })
-    ).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Home' })).toBeVisible();
 
     // Verify user is still not logged in (Sign in button visible)
     await expect(

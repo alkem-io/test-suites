@@ -1,19 +1,29 @@
 // spec: client-web/src/functional-e2e/public-space/public-space-non-member-navigation-test-plan.md
 // seed: client-web/src/functional-e2e/seed-public-space.spec.ts
 
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
 import { test, expect } from '@playwright/test';
+import { scenarioConfig } from '../seed-public-space.spec';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
+let baseScenario: OrganizationWithSpaceModel;
 
 test.describe('Space Lead Profile Access', () => {
-  test.beforeEach(async ({ page }) => {
-    // Navigate to the public space as anonymous user
-    await page.goto(`${baseUrl}/seed-public-space-629016`);
+  test.beforeAll(async () => {
+    baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
+  });
+
+  test.afterAll(async () => {
+    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
   test('4.1 Non-Member Can See Space Leads Section on Community Tab', async ({
     page,
   }) => {
+    // Navigate to the public space as anonymous user
+    await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
+
     // Navigate to the Community tab
     await page.getByRole('tab', { name: 'community' }).click();
 
@@ -31,12 +41,15 @@ test.describe('Space Lead Profile Access', () => {
   test('4.4 Anonymous User Can Access Community Tab in Public Space', async ({
     page,
   }) => {
+    // Navigate to the public space as anonymous user
+    await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
+
     // Navigate to the Community tab as anonymous user
     await page.getByRole('tab', { name: 'community' }).click();
 
     // Verify community content is visible without login
     await expect(
-      page.getByText("The contributors to this Space!")
+      page.getByText('The contributors to this Space!')
     ).toBeVisible();
 
     // Verify People/Organizations toggle is visible
@@ -45,7 +58,9 @@ test.describe('Space Lead Profile Access', () => {
 
     // Anonymous users see login prompt for full member list
     await expect(
-      page.getByRole('heading', { name: 'Please log in to see all contributing users' })
+      page.getByRole('heading', {
+        name: 'Please log in to see all contributing users',
+      })
     ).toBeVisible();
 
     // Verify Sign in and Sign up buttons are available
