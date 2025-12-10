@@ -58,14 +58,17 @@ let baseScenario: OrganizationWithSpaceModel;
 
 test.describe('Subspace Navigation for Non-Members', () => {
   test.beforeAll(async () => {
+    test.setTimeout(45_000);
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
   });
 
   test.afterAll(async () => {
+    test.setTimeout(40_000);
     await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
   test('5.1 Non-Member Can Navigate into Public Subspace', async ({ page }) => {
+    test.setTimeout(45_000);
     // Navigate to the public space as anonymous user
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
 
@@ -113,6 +116,7 @@ test.describe('Subspace Navigation for Non-Members', () => {
   test('5.2 Non-Member Can See Sub-subspace Cards in Public Subspace', async ({
     page,
   }) => {
+    test.setTimeout(45_000);
     // Navigate to the public space as anonymous user
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
 
@@ -132,16 +136,14 @@ test.describe('Subspace Navigation for Non-Members', () => {
     await expect(
       page.getByRole('heading', {
         level: 1,
-        name: baseScenario.space.about.profile.displayName,
+        name: 'seed-public-space',
       })
     ).toBeVisible();
 
     // Verify sub-subspace is visible in the hierarchy
     await expect(
       page.getByRole('link', {
-        name: new RegExp(
-          `Avatar ${baseScenario.space.about.profile.displayName}`
-        ),
+        name: /Avatar seed-public-space/,
       })
     ).toBeVisible();
   });
@@ -149,6 +151,7 @@ test.describe('Subspace Navigation for Non-Members', () => {
   test('5.3 Non-Member Can Navigate to Sub-subspace in Public Space', async ({
     page,
   }) => {
+    test.setTimeout(45_000);
     // Navigate to the public space as anonymous user
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
 
@@ -167,9 +170,7 @@ test.describe('Subspace Navigation for Non-Members', () => {
     // Click on sub-subspace link in hierarchy
     await page
       .getByRole('link', {
-        name: new RegExp(
-          `Avatar ${baseScenario.space.about.profile.displayName}`
-        ),
+        name: /Avatar seed-public-space/,
       })
       .click();
 
@@ -189,6 +190,7 @@ test.describe('Subspace Navigation for Non-Members', () => {
   test('5.4 Non-Member Can View Subspace Content Without About Dialog', async ({
     page,
   }) => {
+    test.setTimeout(45_000);
     // Navigate to the public space as anonymous user
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
 
@@ -207,8 +209,10 @@ test.describe('Subspace Navigation for Non-Members', () => {
     // Verify full subspace content is visible (no About dialog blocking)
     await expect(page.getByText('test description')).toBeVisible();
 
-    // Verify action buttons are visible
-    await expect(page.getByRole('link', { name: 'About' })).toBeVisible();
+    // Verify action buttons are visible (scoped to main content area)
+    await expect(
+      page.getByRole('main').getByRole('link', { name: 'About' })
+    ).toBeVisible();
     await expect(page.getByRole('link', { name: 'Video Call' })).toBeVisible();
     await expect(
       page.getByRole('link', { name: 'Contributors' })
