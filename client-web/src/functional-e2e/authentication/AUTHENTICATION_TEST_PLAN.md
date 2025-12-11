@@ -20,18 +20,21 @@ This document outlines the comprehensive test coverage for authentication flows 
 ### 1. Page Element Verification
 
 - ✅ **Registration page elements**
+
   - Form fields: email, firstName, lastName
   - Next button (visible but disabled until all fields filled)
   - Third-party sign-in options: GitHub, Microsoft, LinkedIn (if available)
   - Sign-in link for existing users
 
 - ✅ **Sign-up page elements**
+
   - Terms & conditions checkbox (unchecked by default)
   - Next button (disabled until terms accepted)
   - Terms text and links (privacy policy, terms of service)
   - Sign-in link for existing users
 
 - ✅ **Login page elements**
+
   - Email and password form fields
   - Sign-in button
   - **Third-party authentication buttons: GitHub, Microsoft, LinkedIn**
@@ -64,12 +67,14 @@ This document outlines the comprehensive test coverage for authentication flows 
 #### Scenarios:
 
 - **Test 1.1**: Cookie consent banner appears on first visit
+
   - Navigate to platform as unauthenticated user
   - Verify cookie consent banner is visible
   - Accept cookies
   - Verify banner disappears
 
 - **Test 1.2**: Cookie consent persists across sessions
+
   - Accept cookie consent
   - Refresh page
   - Verify banner does not appear again
@@ -92,6 +97,7 @@ This document outlines the comprehensive test coverage for authentication flows 
 ##### 2.1 Unauthenticated Access to Restricted Pages
 
 - **Test 2.1.1**: Access admin area without authentication
+
   - Navigate directly to `/admin/spaces` (unauthenticated)
   - Verify "Restricted Access" page is shown
   - Verify "Sign In" option is available
@@ -104,12 +110,14 @@ This document outlines the comprehensive test coverage for authentication flows 
 ##### 2.2 Authenticated but Unauthorized Access
 
 - **Test 2.2.1**: Regular user tries to access admin area
+
   - Sign in as regular user (`non.space@alkem.io`)
   - Navigate to `/admin/spaces`
   - Verify "No Access" page is shown
   - Verify automatic redirect to home dashboard
 
 - **Test 2.2.2**: Sign in after restricted page attempt
+
   - Navigate to `/admin/spaces` (unauthenticated)
   - Click "Sign In" from restricted page
   - Sign in as regular user
@@ -138,6 +146,47 @@ This document outlines the comprehensive test coverage for authentication flows 
 
 **Note**: Full end-to-end testing of third-party authentication (OAuth flows, 2FA, etc.) is intentionally excluded due to complexity and external dependencies. We only verify that the options are present and accessible to users.
 
+#### ⚠️ CRITICAL: Manual Testing Required
+
+**Third-party authentication MUST be manually tested** before each release. Automated tests only verify button availability, not actual OAuth flows.
+
+##### Manual Test Checklist:
+
+- [ ] **GitHub OAuth Flow**
+
+  - Click GitHub button from sign-in page
+  - Complete GitHub authentication
+  - Verify successful sign-in and redirect to dashboard
+  - Verify user profile data imported correctly
+
+- [ ] **Microsoft OAuth Flow**
+
+  - Click Microsoft button from sign-in page
+  - Complete Microsoft authentication
+  - Verify successful sign-in and redirect to dashboard
+  - Verify user profile data imported correctly
+
+- [ ] **LinkedIn OAuth Flow**
+
+  - Click LinkedIn button from sign-in page
+  - Complete LinkedIn authentication
+  - Verify successful sign-in and redirect to dashboard
+  - Verify user profile data imported correctly
+
+- [ ] **Registration via Third-Party**
+
+  - Use third-party button from registration page
+  - Complete OAuth flow
+  - Verify new user account created
+  - Verify profile data populated
+
+- [ ] **Error Scenarios**
+  - Cancel OAuth flow (verify graceful return to sign-in)
+  - Deny permissions (verify error handling)
+  - OAuth provider timeout (verify error message)
+
+**Testing Frequency**: Before each major release or when third-party provider credentials are updated.
+
 ---
 
 ### 4. Logout Flow
@@ -148,6 +197,7 @@ This document outlines the comprehensive test coverage for authentication flows 
 #### Scenarios:
 
 - **Test 4.1**: User logout and session cleanup
+
   - Sign in as any user
   - Navigate to user menu
   - Click logout
@@ -211,22 +261,27 @@ This document outlines the comprehensive test coverage for authentication flows 
 #### Scenarios:
 
 - **Test 7.1**: Invalid credentials
+
   - Sign in with wrong password
   - Verify error message
 
 - **Test 7.2**: Non-existent user
+
   - Sign in with non-existent email
   - Verify appropriate error
 
 - **Test 7.3**: Email already registered
+
   - Try to register with existing email
   - Verify error message
 
 - **Test 7.4**: Invalid email format
+
   - Try to register with invalid email
   - Verify validation error
 
 - **Test 7.5**: Weak password
+
   - Try to register with weak password
   - Verify password requirements message
 
@@ -249,6 +304,7 @@ Testing accessibility ensures that authentication flows are usable by all users,
 ##### 8.1 Keyboard Navigation
 
 - **Test 8.1.1**: Complete registration flow using keyboard only
+
   - Navigate through sign-up → registration → password → verification using Tab/Shift+Tab
   - Activate all buttons using Enter/Space
   - Fill all form fields without mouse
@@ -256,6 +312,7 @@ Testing accessibility ensures that authentication flows are usable by all users,
   - Verify logical tab order (top to bottom, left to right)
 
 - **Test 8.1.2**: Complete sign-in flow using keyboard only
+
   - Navigate to sign-in page
   - Tab through email, password, third-party buttons, forgot password link
   - Submit form using Enter key
@@ -270,12 +327,14 @@ Testing accessibility ensures that authentication flows are usable by all users,
 ##### 8.2 Screen Reader Support
 
 - **Test 8.2.1**: Form labels and ARIA attributes
+
   - Verify all form fields have proper labels
   - Verify required field indicators use `aria-required="true"`
   - Verify form field types are correctly identified (email, password, text)
   - Verify button purpose is clear from label/aria-label
 
 - **Test 8.2.2**: Error message announcements
+
   - Trigger validation errors (invalid email, weak password)
   - Verify errors use `aria-live` regions for screen reader announcement
   - Verify error messages are associated with fields via `aria-describedby`
@@ -290,6 +349,7 @@ Testing accessibility ensures that authentication flows are usable by all users,
 ##### 8.3 Visual Accessibility
 
 - **Test 8.3.1**: Color contrast compliance
+
   - Verify text color contrast meets WCAG AA standards (4.5:1 for normal text)
   - Verify error messages have sufficient contrast
   - Verify button states (enabled/disabled) are distinguishable without color alone
@@ -304,6 +364,7 @@ Testing accessibility ensures that authentication flows are usable by all users,
 ##### 8.4 Responsive & Zoom Testing
 
 - **Test 8.4.1**: Authentication at 200% zoom
+
   - Verify all forms are usable at 200% browser zoom
   - Verify no content is cut off or overlaps
   - Verify text remains readable
@@ -344,6 +405,72 @@ test('accessibility - registration page meets WCAG standards', async ({
   );
 });
 ```
+
+---
+
+## Sign In / Sign Up Button Locations
+
+**Purpose**: Document all entry points where users can access authentication flows across the platform.
+
+### Locations:
+
+1. **Home Dashboard** - `/home`
+
+   - **Element**: Sign up button
+   - **Visibility**: Unauthenticated users only
+   - **Action**: Navigates to registration flow
+
+2. **User Menu**
+
+   - **Element**: Avatar/menu button (top navigation)
+   - **Visibility**: All pages (when authenticated: shows user menu; when unauthenticated: shows sign in/sign up)
+   - **Action**: Opens user menu with sign in/sign up options
+   - **Note**: Same component used across all pages where logout is accessible
+
+3. **Collaboration Callouts**
+
+   - **Locations**: Memo callout, Whiteboard callout
+   - **Element**: Sign in/sign up link
+   - **Visibility**: Unauthenticated users attempting to interact
+   - **Action**: Prompts user to authenticate before contributing
+
+4. **Access Restricted Page** (Authentication Required)
+
+   - **Element**: "Sign in / Sign up" button
+   - **Visibility**: Unauthenticated users accessing restricted content
+   - **Action**: Navigates to sign-in page
+
+5. **Public Whiteboard Page**
+
+   - **Element**: Sign in/sign up prompt
+   - **Visibility**: Unauthenticated users on public whiteboards
+   - **Action**: Encourages authentication for full access
+
+6. **Space About Dialog**
+   - **Element**: Sign in/sign up option
+   - **Visibility**: Unauthenticated users viewing space information
+   - **Action**: Navigates to authentication flow to join space
+
+### Testing Strategy:
+
+**Automated Tests** (Phase 1/2):
+
+- ✅ Access Restricted Page (Test 2.1.1) - IMPLEMENTED
+- 🔴 User Menu sign in/sign up option visibility (not yet tested)
+- 🔴 Home dashboard sign up button (not yet tested)
+
+**Manual Testing** (Release Checklist):
+
+- Verify all entry points are visible to unauthenticated users
+- Verify navigation to correct authentication flow
+- Verify return URL preservation after authentication
+- Verify authenticated users do NOT see redundant sign in/sign up buttons
+
+**Future Automation Considerations**:
+
+- Create reusable helper to verify sign in/sign up buttons across pages
+- Add smoke tests for critical entry points (home, user menu, restricted page)
+- Test return URL preservation for each entry point
 
 ---
 
