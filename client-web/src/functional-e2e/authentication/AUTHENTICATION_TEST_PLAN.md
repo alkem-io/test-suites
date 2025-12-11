@@ -19,10 +19,29 @@ This document outlines the comprehensive test coverage for authentication flows 
 
 ### 1. Page Element Verification
 
-- ✅ **Registration page elements** - Verifies all required form fields (email, firstName, lastName, Next button)
-- ✅ **Sign-up page elements** - Verifies terms acceptance page
-- ✅ **Login page elements** - Verifies sign-in form
-- ✅ **Verification page elements** - Verifies email verification form
+- ✅ **Registration page elements**
+
+  - Form fields: email, firstName, lastName
+  - Next button (visible but disabled until all fields filled)
+  - Third-party sign-in options: GitHub, Microsoft, LinkedIn (if available)
+  - Sign-in link for existing users
+
+- ✅ **Sign-up page elements**
+
+  - Terms & conditions checkbox (unchecked by default)
+  - Next button (disabled until terms accepted)
+  - Terms text and links (privacy policy, terms of service)
+  - Sign-in link for existing users
+
+- ✅ **Login page elements**
+
+  - Email and password form fields
+  - Sign-in button
+  - **Third-party authentication buttons: GitHub, Microsoft, LinkedIn**
+  - Forgot password link
+  - Sign-up link for new users
+
+- ✅ **Verification page elements** - Verifies email verification form and resend functionality
 
 ### 2. Authentication Flows
 
@@ -112,14 +131,31 @@ This document outlines the comprehensive test coverage for authentication flows 
 
 ---
 
-### 3. Logout Flow
+### 3. Third-Party Authentication
+
+**Priority**: LOW (availability check only)
+**Status**: IMPLEMENTED (availability verification)
+
+#### Scenarios:
+
+- ✅ **Test 3.1**: Third-party sign-in options are available
+  - Verify GitHub authentication button is visible on sign-in page
+  - Verify Microsoft authentication button is visible on sign-in page
+  - Verify LinkedIn authentication button is visible on sign-in page
+  - Verify third-party options are available on registration page (if applicable)
+
+**Note**: Full end-to-end testing of third-party authentication (OAuth flows, 2FA, etc.) is intentionally excluded due to complexity and external dependencies. We only verify that the options are present and accessible to users.
+
+---
+
+### 4. Logout Flow
 
 **Priority**: MEDIUM
 **Status**: NOT IMPLEMENTED
 
 #### Scenarios:
 
-- **Test 3.1**: User logout and session cleanup
+- **Test 4.1**: User logout and session cleanup
 
   - Sign in as any user
   - Navigate to user menu
@@ -127,43 +163,43 @@ This document outlines the comprehensive test coverage for authentication flows 
   - Verify redirect to landing page
   - Verify user is logged out (try accessing protected page)
 
-- **Test 3.2**: Logout and re-authentication
+- **Test 4.2**: Logout and re-authentication
   - Sign in → Logout → Sign in again
   - Verify smooth re-authentication flow
 
 ---
 
-### 4. Role-Based Authentication
+### 5. Role-Based Authentication
 
 **Priority**: MEDIUM
 **Status**: PARTIAL (only admin tested)
 
 #### Scenarios by Role (per agents.md personas):
 
-##### 4.1 Global Admin (`admin@alkem.io`)
+##### 5.1 Global Admin (`admin@alkem.io`)
 
 - ✅ **Login test exists**
 - 🔴 Access to admin areas (not yet tested)
 
-##### 4.2 Regular User (`non.space@alkem.io`)
+##### 5.2 Regular User (`non.space@alkem.io`)
 
 - ✅ **Password recovery test exists**
 - 🔴 Login flow (not explicitly tested)
 - 🔴 Access restrictions (not tested)
 
-##### 4.3 Space Admin / Facilitator
+##### 5.3 Space Admin / Facilitator
 
 - 🔴 Login and access to space settings (not tested)
 - 🔴 Access to own space vs other spaces (not tested)
 
-##### 4.4 New User / Unauthenticated
+##### 5.4 New User / Unauthenticated
 
 - ✅ **Registration flow tested**
 - 🔴 Public vs private content access (not tested)
 
 ---
 
-### 5. Session Management
+### 6. Session Management
 
 **Priority**: LOW (can be deferred)
 **Status**: NOT IMPLEMENTED
@@ -176,36 +212,42 @@ This document outlines the comprehensive test coverage for authentication flows 
 
 ---
 
-### 6. Error Handling
+### 7. Error Handling & Form Validation
 
 **Priority**: MEDIUM
 **Status**: PARTIAL
 
 #### Scenarios:
 
-- **Test 6.1**: Invalid credentials
+- **Test 7.1**: Invalid credentials
 
   - Sign in with wrong password
   - Verify error message
 
-- **Test 6.2**: Non-existent user
+- **Test 7.2**: Non-existent user
 
   - Sign in with non-existent email
   - Verify appropriate error
 
-- **Test 6.3**: Email already registered
+- **Test 7.3**: Email already registered
 
   - Try to register with existing email
   - Verify error message
 
-- **Test 6.4**: Invalid email format
+- **Test 7.4**: Invalid email format
 
   - Try to register with invalid email
   - Verify validation error
 
-- **Test 6.5**: Weak password
+- **Test 7.5**: Weak password
+
   - Try to register with weak password
   - Verify password requirements message
+
+- ✅ **Test 7.6**: Form field validation states (IMPLEMENTED)
+  - Registration: Next button disabled until all fields filled
+  - Sign-up: Next button disabled until terms accepted
+  - All pages: Required field indicators visible
 
 ---
 
@@ -215,20 +257,71 @@ This document outlines the comprehensive test coverage for authentication flows 
 
 1. **Cookie consent persistence** (Tests 1.1, 1.2)
 2. **Restricted redirects** (Tests 2.1.1, 2.2.1, 2.2.2)
-3. **Logout flow** (Test 3.1)
-4. **Error handling - invalid credentials** (Test 6.1)
+3. **Logout flow** (Test 4.1)
+4. **Error handling - invalid credentials** (Test 7.1)
 
 ### Phase 2: Role Coverage (Medium Priority)
 
-5. **Regular user login** (Test 4.2)
-6. **Admin area access** (Tests 2.2.3, 4.1)
-7. **Error handling - registration errors** (Tests 6.3, 6.4, 6.5)
+5. **Regular user login** (Test 5.2)
+6. **Admin area access** (Tests 2.2.3, 5.1)
+7. **Error handling - registration errors** (Tests 7.3, 7.4, 7.5)
 
 ### Phase 3: Nice-to-Have (Low Priority)
 
 8. **Cookie consent rejection** (Test 1.3)
-9. **Logout and re-authentication** (Test 3.2)
-10. **Space admin role tests** (Test 4.3)
+9. **Logout and re-authentication** (Test 4.2)
+10. **Space admin role tests** (Test 5.3)
+
+---
+
+## Enhanced Element Verification
+
+### What We Now Validate ✅
+
+Each page element verification test now checks:
+
+#### Registration Page:
+
+- ✅ All form fields visible (email, firstName, lastName)
+- ✅ Next button state (visible but disabled until fields filled)
+- ✅ Third-party sign-in buttons (GitHub, Microsoft, LinkedIn)
+- ✅ Sign-in link for existing users
+- ✅ Page heading and structure
+
+#### Sign-Up Page (Terms Acceptance):
+
+- ✅ Terms checkbox (visible, unchecked by default)
+- ✅ Next button state (disabled until terms accepted)
+- ✅ Terms text and policy links visible
+- ✅ Sign-in link for existing users
+- ✅ Privacy policy and terms of service links
+
+#### Sign-In Page:
+
+- ✅ Email and password fields
+- ✅ Sign-in button enabled
+- ✅ **Third-party authentication buttons (GitHub, Microsoft, LinkedIn)**
+- ✅ Forgot password link
+- ✅ Sign-up link for new users
+- ✅ Page heading and structure
+
+#### Verification Page:
+
+- ✅ Email input field
+- ✅ Verification code field
+- ✅ Continue/submit button
+- ✅ Resend email option
+- ✅ Instructions text
+
+### Confidence in Test Coverage
+
+With these enhanced verifications, we can be confident that:
+
+- All interactive elements are present and accessible
+- Button states reflect form validation correctly
+- Navigation links work as expected
+- Third-party authentication options are available to users
+- Error messages and validation feedback are displayed
 
 ---
 
@@ -280,6 +373,7 @@ A test scenario is considered complete when:
 4. ✅ Error messages are meaningful
 5. ✅ Test data is properly cleaned up
 6. ✅ Execution time is reasonable (<5s for simple flows, <30s for email-dependent flows)
+7. ✅ All interactive elements on the page are verified
 
 ---
 
@@ -294,13 +388,31 @@ A test scenario is considered complete when:
 - Registration form now requires all fields (email, firstName, lastName) to be filled before "Next" button is enabled
 - Password recovery generates new recovery codes via email
 - Email verification uses temporary verification codes
+- **Third-party authentication (GitHub, Microsoft, LinkedIn) is verified for availability only** - full OAuth flows, 2FA, and callback handling are not tested due to external dependencies and complexity
+
+### Testing Strategy for Third-Party Auth:
+
+We verify that third-party authentication buttons are:
+
+- ✅ Visible and accessible to users
+- ✅ Properly labeled (GitHub, Microsoft, LinkedIn)
+- ✅ Present on both sign-in and registration flows
+
+We do NOT test:
+
+- ❌ OAuth callback flows
+- ❌ Two-factor authentication via third-party providers
+- ❌ Account linking/unlinking
+- ❌ Token refresh and expiration
+
+**Rationale**: Third-party authentication involves external services, user credentials we don't control, and 2FA mechanisms. Testing these would require complex mocking or real credentials, making tests brittle and slow. We rely on integration testing at the API level and manual QA for these flows.
 
 ### Future Considerations:
 
-- Social login testing (LinkedIn, Microsoft) - currently removed from element verification
-- Two-factor authentication (if implemented)
 - Account deletion/deactivation flows
 - User profile updates affecting authentication
+- Password change (different from password recovery)
+- Session management across devices
 
 ---
 

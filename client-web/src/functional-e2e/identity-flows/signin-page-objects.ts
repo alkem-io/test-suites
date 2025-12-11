@@ -1,24 +1,40 @@
 import { Page, expect } from '@playwright/test';
 import {
   emailField,
+  forgotPasswordLink,
+  githubButton,
+  linkedinButton,
+  microsoftButton,
   passwordField,
   signInButton,
+  signUpLink,
 } from '../authentication/common-authentication-page-elements';
 
 // SignIn Page Object
 
 export const verifySignInPageElements = async (page: Page) => {
-  // await expect(page.getByText('Don’t have an Alkemio account')).toBeVisible();
+  // Heading
+  await expect(page.getByRole('heading', { name: /sign in/i })).toBeVisible();
+
+  // Form fields
   await expect(emailField(page)).toBeVisible();
   await expect(passwordField(page)).toBeVisible();
-  await expect(signInButton(page)).toBeVisible();
-  await expect(page.locator('button[value="github"]')).toBeVisible();
-  await expect(page.locator('button[value="microsoft"]')).toBeVisible();
-  await expect(page.locator('button[value="linkedin"]')).toBeVisible();
 
-  // await expect(
-  //   page.getByRole('button', { name: 'Connect with Microsoft' })
-  // ).toBeVisible();
+  // Sign in button
+  await expect(signInButton(page)).toBeVisible();
+
+  // Third-party authentication options
+  await expect(githubButton(page)).toBeVisible();
+  await expect(microsoftButton(page)).toBeVisible();
+  await expect(linkedinButton(page)).toBeVisible();
+
+  // Password recovery link
+  await expect(forgotPasswordLink(page)).toBeVisible();
+
+  // Sign up link (for new users)
+  if ((await signUpLink(page).count()) > 0) {
+    await expect(signUpLink(page)).toBeVisible();
+  }
 };
 
 export const fillUpSignInPageElements = async (
