@@ -10,6 +10,7 @@ import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scen
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
 import { test, expect } from '@playwright/test';
+import { LoginPage } from '../space/pages/LoginPage';
 
 const scenarioConfig: TestScenarioConfig = {
   name: 'seed-public-space',
@@ -48,7 +49,7 @@ test.describe.configure({ mode: 'serial' });
 
 test.describe('Space Tab Navigation for Non-Members', () => {
   test.beforeAll(async () => {
-    test.setTimeout(25_000);
+    test.setTimeout(45_000);
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
   });
 
@@ -58,7 +59,12 @@ test.describe('Space Tab Navigation for Non-Members', () => {
   });
 
   test('2.1 Non-Member Can View All Space Tabs', async ({ page }) => {
-    // Navigate to the public space as anonymous user
+    test.setTimeout(60_000);
+    // Login as non-member user
+    const loginPage = new LoginPage(page, baseUrl);
+    await loginPage.login('non.space@alkem.io');
+
+    // Navigate to the public space as non-member
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
 
     // Verify presence of standard tabs

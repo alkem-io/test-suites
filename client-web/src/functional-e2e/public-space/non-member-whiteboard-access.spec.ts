@@ -10,6 +10,7 @@ import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scen
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
 import { test, expect } from '@playwright/test';
+import { LoginPage } from '../space/pages/LoginPage';
 
 const scenarioConfig: TestScenarioConfig = {
   name: 'seed-public-space',
@@ -56,7 +57,11 @@ test.describe('Whiteboard Access for Non-Members', () => {
     page,
   }) => {
     test.setTimeout(120_000);
-    // Navigate to the public space as anonymous user
+    // Login as non-member user
+    const loginPage = new LoginPage(page, baseUrl);
+    await loginPage.login('non.space@alkem.io');
+
+    // Navigate to the public space as non-member
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
     await page.waitForLoadState('networkidle');
 
@@ -83,7 +88,11 @@ test.describe('Whiteboard Access for Non-Members', () => {
     page,
   }) => {
     test.setTimeout(60_000);
-    // Navigate to the public space as anonymous user
+    // Login as non-member user
+    const loginPage = new LoginPage(page, baseUrl);
+    await loginPage.login('non.space@alkem.io');
+
+    // Navigate to the public space as non-member
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
     await page.waitForLoadState('networkidle');
 
