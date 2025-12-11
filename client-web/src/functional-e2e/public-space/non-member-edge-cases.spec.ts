@@ -64,6 +64,7 @@ test.describe('Edge Cases and Error Handling', () => {
   test('6.1 Non-Member Sees Appropriate UI When Space Has Default Callout', async ({
     page,
   }) => {
+    test.setTimeout(15_000);
     // Navigate to the public space as anonymous user
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
 
@@ -132,6 +133,7 @@ test.describe('Edge Cases and Error Handling', () => {
   test('6.3 Anonymous User Can Navigate Between Different Areas Without Login Prompts', async ({
     page,
   }) => {
+    test.setTimeout(15_000);
     // Navigate to the public space as anonymous user
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
 

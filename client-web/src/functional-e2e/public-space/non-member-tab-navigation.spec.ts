@@ -46,10 +46,12 @@ let baseScenario: OrganizationWithSpaceModel;
 
 test.describe('Space Tab Navigation for Non-Members', () => {
   test.beforeAll(async () => {
+    test.setTimeout(25_000);
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
   });
 
   test.afterAll(async () => {
+    test.setTimeout(20_000);
     await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
@@ -94,6 +96,7 @@ test.describe('Space Tab Navigation for Non-Members', () => {
   });
 
   test('2.3 Non-Member Can Navigate to Subspaces Tab', async ({ page }) => {
+    test.setTimeout(25_000);
     // Navigate to the public space as anonymous user
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
 
@@ -105,7 +108,7 @@ test.describe('Space Tab Navigation for Non-Members', () => {
 
     // Verify subspace card is visible and clickable
     await expect(
-      page.getByRole('link', { name: /seed-public-space/ })
+      page.getByRole('link', { name: /Card banner:.*seed-public-space/ })
     ).toBeVisible();
   });
 
