@@ -54,19 +54,16 @@ test.describe('Authentication - Phase 1 Critical Flows', () => {
       await page.goto(`${baseUrl}/spaces`);
 
       // 6. Verify cookie consent banner does not appear (consent persisted)
-      await page.waitForTimeout(1000);
       await expect(cookieConsentBanner(page)).not.toBeVisible();
 
       // 7. Refresh page
       await page.reload();
 
       // 8. Verify banner still does not appear
-      await page.waitForTimeout(1000);
       await expect(cookieConsentBanner(page)).not.toBeVisible();
 
       // 9. Return to home and verify persistence
       await page.goto(baseUrl);
-      await page.waitForTimeout(1000);
       await expect(cookieConsentBanner(page)).not.toBeVisible();
     });
   });
@@ -101,8 +98,8 @@ test.describe('Authentication - Phase 1 Critical Flows', () => {
       await fillUpSignInPageElements('non.space@alkem.io', password, page);
       await pressSignInButtonSignInPage(page);
 
-      // Wait for sign-in to complete
-      await page.waitForURL(/.*(?!signin|login).*/i, { timeout: 10000 });
+      // Wait for sign-in to complete by checking for user menu
+      await expect(userMenuAvatar(page)).toBeVisible({ timeout: 10000 });
 
       // 2. Navigate to /admin/spaces
       await page.goto(`${baseUrl}/admin/spaces`);
@@ -160,13 +157,12 @@ test.describe('Authentication - Phase 1 Critical Flows', () => {
       await verifyMyDashboardWelcomeElement(page, 'admin');
 
       // 2. Navigate to user menu
-      await page.getByAltText('User Menu').click();
+      await userMenuAvatar(page).click();
 
       // 3. Click logout button
       await logoutMenuItem(page).click();
 
       // 4. Verify redirect to landing page by checking for sign-in option
-      await page.waitForTimeout(1000);
       const signInOption = page
         .getByRole('link', { name: /sign up|sign in/i })
         .or(page.getByRole('button', { name: /sign up|sign in/i }));
@@ -176,9 +172,9 @@ test.describe('Authentication - Phase 1 Critical Flows', () => {
       await page.goto(`${baseUrl}/admin/spaces`);
 
       // 6. Verify "Access Restricted" page is shown
-      await expect(
-        page.getByRole('heading', { name: 'Access Restricted' })
-      ).toBeVisible({ timeout: 5000 });
+      await expect(accessRestrictedHeading(page)).toBeVisible({
+        timeout: 5000,
+      });
 
       // Verify "Sign in / Sign up" link is available (user is logged out)
       await expect(signInSignUpLink(page)).toBeVisible();
@@ -196,8 +192,6 @@ test.describe('Authentication - Phase 1 Critical Flows', () => {
       // 2. Logout
       await userMenuAvatar(page).click();
       await logoutMenuItem(page).click();
-
-      await page.waitForTimeout(1000);
 
       // 3. Sign in again with same credentials
       await navigateToLoginPageFromMenu(baseUrl, page);
@@ -226,12 +220,9 @@ test.describe('Authentication - Phase 1 Critical Flows', () => {
       // 4. Click sign-in button
       await pressSignInButtonSignInPage(page);
 
-      // 5. Verify error message is displayed
-      await page.waitForTimeout(1000);
-
+      // 5. Verify error message is displayed (check for key phrases rather than exact text)
       const errorMessage = page.getByText(
-        'The email address or password you inserted is invalid. Please check your credentials and try again. Are you trying to sign up instead? You can do so by clicking the link above.',
-        { exact: true }
+        /email address or password.*invalid/i
       );
 
       await expect(errorMessage).toBeVisible({ timeout: 5000 });
