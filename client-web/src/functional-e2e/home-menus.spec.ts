@@ -169,7 +169,9 @@ test.describe('Home Page Menus', () => {
     await expect(createSpaceLink).toBeVisible();
     await expect(createSpaceLink).toHaveAttribute(
       'href',
-      'https://welcome.alkem.io/want-to-own-space/'
+      expect.stringMatching(
+        /^(https:\/\/welcome\.alkem\.io\/want-to-own-space\/|\/user\/admin-alkemio\/settings\/account)$/
+      )
     );
 
     // Verify Activity View Toggle

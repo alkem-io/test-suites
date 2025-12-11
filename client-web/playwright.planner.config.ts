@@ -17,7 +17,7 @@ export default defineConfig({
   reporter: 'list',
   use: {
     trace: 'on-first-retry',
-    headless: process.env.UI_HEADLESS === 'false',
+    headless: process.env.UI_HEADLESS !== 'false',
   },
   timeout: 30000,
   expect: {
