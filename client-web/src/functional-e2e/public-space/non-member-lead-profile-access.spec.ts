@@ -38,6 +38,8 @@ const scenarioConfig: TestScenarioConfig = {
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let baseScenario: OrganizationWithSpaceModel;
 
+test.describe.configure({ mode: 'serial' });
+
 test.describe('Space Lead Profile Access', () => {
   test.beforeAll(async () => {
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);

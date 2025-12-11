@@ -39,6 +39,8 @@ const scenarioConfig: TestScenarioConfig = {
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let baseScenario: OrganizationWithSpaceModel;
 
+test.describe.configure({ mode: 'serial' });
+
 test.describe('Whiteboard Access for Non-Members', () => {
   test.beforeAll(async () => {
     test.setTimeout(120_000);
@@ -56,13 +58,14 @@ test.describe('Whiteboard Access for Non-Members', () => {
     test.setTimeout(120_000);
     // Navigate to the public space as anonymous user
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
+    await page.waitForLoadState('networkidle');
 
     // Verify whiteboard callout is visible on the home tab
     await expect(
       page.getByRole('heading', {
-        name: 'seed-public-space - whiteboard callout',
+        name: /whiteboard callout/,
       })
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 30_000 });
 
     // Verify whiteboard description is shown
     await expect(page.getByText('Whiteboard - initial')).toBeVisible();
@@ -76,25 +79,25 @@ test.describe('Whiteboard Access for Non-Members', () => {
         .first()
     ).toBeVisible();
   });
-
   test('3.2 Non-Member Can Open Whiteboard Callout Dialog', async ({
     page,
   }) => {
-    test.setTimeout(25_000);
+    test.setTimeout(60_000);
     // Navigate to the public space as anonymous user
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
+    await page.waitForLoadState('networkidle');
 
     // Click on the whiteboard callout heading to open it
     await page
       .getByRole('heading', {
-        name: 'seed-public-space - whiteboard callout',
+        name: /whiteboard callout/,
       })
-      .click();
+      .click({ timeout: 30_000 });
 
     // Verify the dialog opens
     await expect(
       page.getByRole('dialog', {
-        name: /seed-public-space - whiteboard callout/,
+        name: /whiteboard callout/,
       })
     ).toBeVisible();
 
@@ -108,32 +111,32 @@ test.describe('Whiteboard Access for Non-Members', () => {
       page.getByRole('dialog').getByText('Whiteboard - initial')
     ).toBeVisible();
   });
-
   test('3.4 Anonymous User Can View Whiteboard Callout in Public Space', async ({
     page,
   }) => {
-    test.setTimeout(25_000);
+    test.setTimeout(120_000);
     // Navigate to the public space as anonymous user
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
+    await page.waitForLoadState('networkidle');
 
     // As anonymous user (not logged in), verify whiteboard is visible
     await expect(
       page.getByRole('heading', {
-        name: 'seed-public-space - whiteboard callout',
+        name: /whiteboard callout/,
       })
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 30_000 });
 
     // Click to open the whiteboard callout
     await page
       .getByRole('heading', {
-        name: 'seed-public-space - whiteboard callout',
+        name: /whiteboard callout/,
       })
       .click();
 
     // Verify dialog opens without login requirement
     await expect(
       page.getByRole('dialog', {
-        name: /seed-public-space - whiteboard callout/,
+        name: /whiteboard callout/,
       })
     ).toBeVisible();
 

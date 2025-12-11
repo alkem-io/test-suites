@@ -50,6 +50,8 @@ const scenarioConfig: TestScenarioConfig = {
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let baseScenario: OrganizationWithSpaceModel;
 
+test.describe.configure({ mode: 'serial' });
+
 test.describe('Edge Cases and Error Handling', () => {
   test.beforeAll(async () => {
     test.setTimeout(25_000);
