@@ -251,6 +251,122 @@ This document outlines the comprehensive test coverage for authentication flows 
 
 ---
 
+### 8. Accessibility Testing
+
+**Priority**: LOW
+**Status**: NOT IMPLEMENTED
+
+Testing accessibility ensures that authentication flows are usable by all users, including those using assistive technologies.
+
+#### Scenarios:
+
+##### 8.1 Keyboard Navigation
+
+- **Test 8.1.1**: Complete registration flow using keyboard only
+
+  - Navigate through sign-up → registration → password → verification using Tab/Shift+Tab
+  - Activate all buttons using Enter/Space
+  - Fill all form fields without mouse
+  - Verify focus is visible at each step
+  - Verify logical tab order (top to bottom, left to right)
+
+- **Test 8.1.2**: Complete sign-in flow using keyboard only
+
+  - Navigate to sign-in page
+  - Tab through email, password, third-party buttons, forgot password link
+  - Submit form using Enter key
+  - Verify focus management after submission
+
+- **Test 8.1.3**: Focus trap in modals (if applicable)
+  - Open any modal dialog (e.g., error messages)
+  - Verify focus is trapped within modal
+  - Verify Escape key closes modal
+  - Verify focus returns to trigger element after close
+
+##### 8.2 Screen Reader Support
+
+- **Test 8.2.1**: Form labels and ARIA attributes
+
+  - Verify all form fields have proper labels
+  - Verify required field indicators use `aria-required="true"`
+  - Verify form field types are correctly identified (email, password, text)
+  - Verify button purpose is clear from label/aria-label
+
+- **Test 8.2.2**: Error message announcements
+
+  - Trigger validation errors (invalid email, weak password)
+  - Verify errors use `aria-live` regions for screen reader announcement
+  - Verify error messages are associated with fields via `aria-describedby`
+  - Verify error state uses `aria-invalid="true"`
+
+- **Test 8.2.3**: Form validation state feedback
+  - Fill form fields and trigger validation
+  - Verify success states are announced
+  - Verify inline validation messages are accessible
+  - Verify disabled button states include `aria-disabled` attribute
+
+##### 8.3 Visual Accessibility
+
+- **Test 8.3.1**: Color contrast compliance
+
+  - Verify text color contrast meets WCAG AA standards (4.5:1 for normal text)
+  - Verify error messages have sufficient contrast
+  - Verify button states (enabled/disabled) are distinguishable without color alone
+  - Verify link colors meet contrast requirements
+
+- **Test 8.3.2**: Visual indicators for form states
+  - Verify required fields have non-color indicators (asterisk, text)
+  - Verify error states show icon + color + message
+  - Verify success states are visually distinct
+  - Verify focus indicators are clearly visible (not relying on default browser outline)
+
+##### 8.4 Responsive & Zoom Testing
+
+- **Test 8.4.1**: Authentication at 200% zoom
+
+  - Verify all forms are usable at 200% browser zoom
+  - Verify no content is cut off or overlaps
+  - Verify text remains readable
+  - Verify buttons remain clickable
+
+- **Test 8.4.2**: Mobile screen reader compatibility
+  - Test authentication flow with mobile screen reader (iOS VoiceOver or Android TalkBack)
+  - Verify touch navigation works correctly
+  - Verify form fields are accessible on mobile
+
+#### Tools & Techniques:
+
+- **Automated Testing**: Use Playwright's accessibility snapshot feature
+- **axe-core Integration**: Add axe accessibility testing to existing tests
+- **Manual Testing**: Keyboard-only navigation, screen reader testing
+- **Browser DevTools**: Lighthouse accessibility audit, ARIA inspector
+
+#### Example Implementation:
+
+```typescript
+test('accessibility - registration page meets WCAG standards', async ({
+  page,
+}) => {
+  await navigateToRegistrationPage(baseUrl, page);
+
+  // Run automated accessibility scan
+  const accessibilitySnapshot = await page.accessibility.snapshot();
+  // Verify no critical violations
+
+  // Test keyboard navigation
+  await page.keyboard.press('Tab'); // Focus email field
+  await expect(page.locator('input[type="email"]')).toBeFocused();
+
+  // Verify ARIA attributes
+  await expect(page.locator('input[type="email"]')).toHaveAttribute(
+    'aria-required',
+    'true'
+  );
+});
+```
+
+---
+
 ## Recommended Implementation Priority
 
 ### Phase 1: Critical Flows (High Priority)
@@ -271,6 +387,15 @@ This document outlines the comprehensive test coverage for authentication flows 
 8. **Cookie consent rejection** (Test 1.3)
 9. **Logout and re-authentication** (Test 4.2)
 10. **Space admin role tests** (Test 5.3)
+
+### Phase 4: Accessibility (Low Priority)
+
+11. **Keyboard navigation** (Tests 8.1.1, 8.1.2)
+12. **Screen reader support** (Tests 8.2.1, 8.2.2)
+13. **Color contrast & visual indicators** (Tests 8.3.1, 8.3.2)
+14. **Zoom & responsive accessibility** (Tests 8.4.1)
+
+**Note**: Accessibility testing can be partially automated using axe-core and Playwright's accessibility features. Focus on critical user journeys first (registration, sign-in) before expanding to all pages.
 
 ---
 
@@ -322,6 +447,13 @@ With these enhanced verifications, we can be confident that:
 - Navigation links work as expected
 - Third-party authentication options are available to users
 - Error messages and validation feedback are displayed
+
+**Future Accessibility Confidence** (Phase 4):
+
+- Keyboard-only users can complete all authentication flows
+- Screen reader users receive appropriate feedback at each step
+- Visual indicators meet accessibility standards
+- Forms are usable at high zoom levels and on mobile devices
 
 ---
 
@@ -375,6 +507,14 @@ A test scenario is considered complete when:
 6. ✅ Execution time is reasonable (<5s for simple flows, <30s for email-dependent flows)
 7. ✅ All interactive elements on the page are verified
 
+**Additional Criteria for Accessibility Tests** (Phase 4):
+
+- ✅ No automated accessibility violations (axe-core)
+- ✅ Keyboard navigation tested manually or automated
+- ✅ ARIA attributes verified where applicable
+- ✅ Focus management verified
+- ✅ Color contrast meets WCAG AA standards (can be automated)
+
 ---
 
 ## Notes & Limitations
@@ -407,12 +547,37 @@ We do NOT test:
 
 **Rationale**: Third-party authentication involves external services, user credentials we don't control, and 2FA mechanisms. Testing these would require complex mocking or real credentials, making tests brittle and slow. We rely on integration testing at the API level and manual QA for these flows.
 
+### Testing Strategy for Accessibility:
+
+Accessibility testing is included as **Phase 4 (Low Priority)** but is important for:
+
+- Legal compliance (WCAG 2.1 AA standards)
+- Inclusive user experience for all users
+- Keyboard-only and screen reader users
+
+**Approach**:
+
+- ✅ **Automated scans**: Use axe-core and Playwright accessibility features to catch common issues
+- ✅ **Keyboard testing**: Partially automated (focus management, tab order)
+- 🔍 **Screen reader testing**: Requires manual testing with NVDA/JAWS (Windows) or VoiceOver (Mac/iOS)
+- 🔍 **Color contrast**: Can be automated with Lighthouse or axe-core
+
+**Why Low Priority**:
+While accessibility is important, we prioritize it lower because:
+
+1. Automated tools can catch most critical issues
+2. Design system should handle accessibility at component level
+3. Manual accessibility QA should be part of release cycle
+4. E2E tests focus on functional flows first
+
 ### Future Considerations:
 
 - Account deletion/deactivation flows
 - User profile updates affecting authentication
 - Password change (different from password recovery)
 - Session management across devices
+- Biometric authentication (if implemented)
+- Multi-factor authentication (MFA) setup and usage
 
 ---
 
