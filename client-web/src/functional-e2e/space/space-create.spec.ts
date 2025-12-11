@@ -1,20 +1,27 @@
 // spec: space/space-crud.spec.md
 // seed: client-web/src/functional-e2e/seed-minimal.spec.ts
 
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
 import {
   TestScenarioFactory,
   TestScenarioNoPreCreationConfig,
+  TestUserManager,
 } from '@alkemio/tests-lib';
 import {
-  LoginPage,
   HomePage,
   MyAccountPage,
   CreateSpaceDialog,
   SpacePage,
   SpaceSettingsPage,
 } from './pages';
+import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 
+// Create the authenticated fixture with a unique storage state name for this test suite
+const { test, setupAuthentication, teardownAuthentication } =
+  createAuthenticatedSessionFixture({
+    storageStateName: 'my-feature-test.json',
+    cleanupAfterTests: process.env.cleanupAfterTests === 'true',
+  });
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
 const scenarioConfig: TestScenarioNoPreCreationConfig = {
@@ -22,13 +29,16 @@ const scenarioConfig: TestScenarioNoPreCreationConfig = {
 };
 
 test.describe('CREATE Space Operations', () => {
-  test.beforeAll(async () => {
+  test.beforeAll(async ({ browser }) => {
     await TestScenarioFactory.createBaseScenarioEmpty(scenarioConfig);
+    await setupAuthentication(browser, TestUserManager.users.globalAdmin.email);
   });
-
+  test.afterAll(async () => {
+    // Clean up authentication
+    await teardownAuthentication();
+  });
   test.beforeEach(async ({ page }) => {
-    const loginPage = new LoginPage(page, baseUrl);
-    await loginPage.login();
+    await page.goto(baseUrl);
   });
 
   test('1.1 Create Space - Happy Path (Valid Data)', async ({ page }) => {
