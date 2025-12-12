@@ -1,0 +1,49 @@
+{
+  "cookies": [
+    {
+      "name": "returnUrl",
+      "value": "http%3A%2F%2Flocalhost%3A3000%2Fhome",
+      "domain": "localhost",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "csrf_token_2c2005f09cc12815c64e5662778918f853d5de05a6238f50eee5bc71b2f63c30",
+      "value": "67ipNEeP3gxqnByI1yOLtECzGKklH1cEuaNWZXmAx0M=",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1797070250.368806,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "ory_kratos_session",
+      "value": "MTc2NTUzNDI1MHxZZjZWLVEtLVVqQWY5MWp3Mnl3RUZLczhlRk9sY1JqMFN6V1lYTnM4aVNEWXVNdG9VMUttS21pOWFDMlVtZEduN2t0ekFnNVk0S0JzVjY5OU1hcUVtanF6MmgzajBaMzFGVTRSb2E3ZGk0T1B0SndPcjZwdjNUMXRMUzdDZ1c4TmhYVG9zQzBhMFYxenhDbkw1dzZvUWU3NUFlWHRfYUxNcENoLTdvWTJ2a1ptTDd3SzdOQXBQTkNqcHBYOW53b2ZuX005TWVhTlJXX2hkY2FSMlNPZVNhYVhZblV6cml3SXNHeXZCdzlkWnBBeTlKMGJmR0toVF9BclVVMzFNdE15ZmJIQXZ5UklvTzQ5S1ZMbzBkRUV8oCjkJMujuSqGWBE2Bq2SV7ikUQJjZlDah96jRuPBNM0=",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1765707049.368872,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "http://localhost:3000",
+      "localStorage": [
+        {
+          "name": "i18nextLng",
+          "value": "en"
+        },
+        {
+          "name": "alkemio.notifications.filter",
+          "value": "ALL"
+        }
+      ]
+    }
+  ]
+}
