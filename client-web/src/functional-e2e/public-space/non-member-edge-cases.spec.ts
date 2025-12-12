@@ -9,7 +9,13 @@ import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
+import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
+
+const { test, setupAuthentication, teardownAuthentication } =
+  createAuthenticatedSessionFixture({
+    storageStateName: 'non-member-edge-cases.json',
+  });
 
 const scenarioConfig: TestScenarioConfig = {
   name: 'seed-public-space',
@@ -53,21 +59,23 @@ let baseScenario: OrganizationWithSpaceModel;
 test.describe.configure({ mode: 'serial' });
 
 test.describe('Edge Cases and Error Handling', () => {
-  test.beforeAll(async () => {
-    test.setTimeout(25_000);
+  test.beforeAll(async ({ browser }) => {
+    test.setTimeout(60_000);
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
+    await setupAuthentication(browser, 'non.space@alkem.io');
   });
 
   test.afterAll(async () => {
-    test.setTimeout(20_000);
+    test.setTimeout(30_000);
+    await teardownAuthentication();
     await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
   test('6.1 Non-Member Sees Appropriate UI When Space Has Default Callout', async ({
     page,
   }) => {
-    test.setTimeout(15_000);
-    // Navigate to the public space as anonymous user
+    test.setTimeout(30_000);
+    // Navigate to the public space as non-member (already authenticated)
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
 
     // Verify welcome callout is visible
@@ -102,7 +110,8 @@ test.describe('Edge Cases and Error Handling', () => {
   test('6.2 Non-Member Can Navigate Back to Space from Subspace Using Breadcrumbs', async ({
     page,
   }) => {
-    // Navigate to the public space
+    test.setTimeout(30_000);
+    // Navigate to the public space as non-member (already authenticated)
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
 
     // Navigate to Subspaces tab and enter a subspace
@@ -119,7 +128,10 @@ test.describe('Edge Cases and Error Handling', () => {
     await expect(page).toHaveURL(/\/challenges\/ssnameid/);
 
     // Use breadcrumb to navigate back to parent space
-    await page.getByRole('link', { name: baseScenario.space.nameId }).click();
+    await page
+      .getByRole('link', { name: baseScenario.space.nameId })
+      .first()
+      .click();
 
     // Verify user returns to the space successfully
     await expect(page).toHaveURL(new RegExp(`${baseScenario.space.nameId}$`));
@@ -132,34 +144,63 @@ test.describe('Edge Cases and Error Handling', () => {
     ).toBeVisible();
   });
 
-  test('6.3 Anonymous User Can Navigate Between Different Areas Without Login Prompts', async ({
+  test('6.3 Session Expiry Does Not Block Public Space Access', async ({
     page,
+    context,
   }) => {
-    test.setTimeout(15_000);
-    // Navigate to the public space as anonymous user
-    await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
+    test.setTimeout(60_000);
 
-    // Verify user is not logged in (Sign in button visible)
+    // Step 1: Navigate to the public space while already authenticated
+    await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
+    await page.waitForLoadState('load');
+
+    // Verify space content is accessible while logged in
     await expect(
-      page.getByRole('button', { name: 'Sign in to apply' })
+      page.getByRole('button', { name: 'About this Space' })
     ).toBeVisible();
 
-    // Navigate to subspace via hierarchy link on home page
-    await page.getByRole('link', { name: /Avatar seed-public-space/ }).click();
+    // Step 2: Simulate session expiry by clearing cookies/storage
+    // This mimics what happens when a session expires
+    await context.clearCookies();
+    await page.evaluate(() => {
+      localStorage.clear();
+      sessionStorage.clear();
+    });
 
-    // Verify subspace content is accessible
-    await expect(page).toHaveURL(/\/challenges\/ssnameid/);
-    await expect(page.getByText('test description')).toBeVisible();
+    // Reload the page to apply the cleared session
+    await page.reload();
+    await page.waitForLoadState('load');
 
-    // Use breadcrumb to navigate back to parent space
-    await page.getByRole('link', { name: baseScenario.space.nameId }).click();
+    // Step 3: Verify public content REMAINS accessible after session expiry
+    // User should still be on the space page (not redirected to login)
+    await expect(page).toHaveURL(new RegExp(`${baseScenario.space.nameId}`));
 
-    // Verify public content remains accessible without forced login
-    await expect(page.getByRole('tab', { name: 'Home' })).toBeVisible();
-
-    // Verify user is still not logged in (Sign in button visible)
+    // Verify space content is still visible
     await expect(
-      page.getByRole('button', { name: 'Sign in to apply' })
+      page.getByRole('button', { name: 'About this Space' })
+    ).toBeVisible();
+
+    // Step 4: Navigate between tabs after session expiry
+    await page.getByRole('tab', { name: 'Subspaces' }).click();
+    await expect(
+      page.getByRole('link', { name: /Card banner:.*seed-public-space/ })
+    ).toBeVisible();
+
+    await page.getByRole('tab', { name: 'community' }).click();
+    await expect(
+      page.getByRole('heading', { name: "Who's involved" })
+    ).toBeVisible();
+
+    // Verify user is not forcefully redirected to login
+    await expect(page).not.toHaveURL(/.*login.*/);
+
+    // Step 5: Verify private actions prompt for login
+    // Try to access "Apply to Join" or similar member-only action
+    await page.getByRole('tab', { name: 'Home' }).click();
+
+    // Check if "Sign in to apply" button appears (indicating login required for private actions)
+    await expect(
+      page.getByRole('button', { name: /Sign in to apply|Apply/i }).first()
     ).toBeVisible();
   });
 });

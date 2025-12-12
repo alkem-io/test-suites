@@ -72,12 +72,18 @@ const scenarioConfig: TestScenarioConfig = {
             TestUser.SUBSUBSPACE_ADMIN,
           ],
         },
+        settings: {
+          privacy: { mode: SpacePrivacyMode.Private },
+          membership: {
+            policy: CommunityMembershipPolicy.Applications,
+          },
+        },
       },
     },
   },
 };
 test.beforeAll(async () => {
-  test.setTimeout(45_000); // 30 seconds for scenario setup
+  test.setTimeout(45_000); // 45 seconds for scenario setup
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
 });
 test.afterAll(async () => {

@@ -72,4 +72,34 @@ test.describe('Public Space Discovery and Access', () => {
       page.getByRole('button', { name: 'Sign in to apply' })
     ).toBeVisible();
   });
+
+  test('4.4 Anonymous User Can Access Community Tab in Public Space', async ({
+    page,
+  }) => {
+    // Navigate to the public space as anonymous user
+    await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
+
+    // Navigate to the Community tab as anonymous user
+    await page.getByRole('tab', { name: 'community' }).click();
+
+    // Verify community content is visible without login
+    await expect(
+      page.getByText('The contributors to this Space!')
+    ).toBeVisible();
+
+    // Verify People/Organizations toggle is visible
+    await expect(page.getByText('People')).toBeVisible();
+    await expect(page.getByText('organizations')).toBeVisible();
+
+    // Anonymous users see login prompt for full member list
+    await expect(
+      page.getByRole('heading', {
+        name: 'Please log in to see all contributing users',
+      })
+    ).toBeVisible();
+
+    // Verify Sign in and Sign up buttons are available
+    await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Sign up' })).toBeVisible();
+  });
 });

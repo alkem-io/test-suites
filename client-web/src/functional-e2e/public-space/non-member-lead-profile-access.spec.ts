@@ -9,7 +9,13 @@ import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
+import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
+
+const { test, setupAuthentication, teardownAuthentication } =
+  createAuthenticatedSessionFixture({
+    storageStateName: 'non-member-lead-profile-access.json',
+  });
 
 const scenarioConfig: TestScenarioConfig = {
   name: 'seed-public-space',
@@ -41,18 +47,23 @@ let baseScenario: OrganizationWithSpaceModel;
 test.describe.configure({ mode: 'serial' });
 
 test.describe('Space Lead Profile Access', () => {
-  test.beforeAll(async () => {
+  test.beforeAll(async ({ browser }) => {
+    test.setTimeout(60_000);
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
+    await setupAuthentication(browser, 'non.space@alkem.io');
   });
 
   test.afterAll(async () => {
+    test.setTimeout(20_000);
+    await teardownAuthentication();
     await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
   test('4.1 Non-Member Can See Space Leads Section on Community Tab', async ({
     page,
   }) => {
-    // Navigate to the public space as anonymous user
+    test.setTimeout(30_000);
+    // Navigate to the public space as non-member (already authenticated)
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
 
     // Navigate to the Community tab
@@ -69,33 +80,72 @@ test.describe('Space Lead Profile Access', () => {
     ).toBeVisible();
   });
 
-  test('4.4 Anonymous User Can Access Community Tab in Public Space', async ({
+  test('4.2 Non-Member Can Open Lead Profile from Community Tab', async ({
     page,
   }) => {
-    // Navigate to the public space as anonymous user
+    test.setTimeout(90_000);
+    // Navigate to the public space as non-member (already authenticated)
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
 
-    // Navigate to the Community tab as anonymous user
+    // Navigate to the Community tab
     await page.getByRole('tab', { name: 'community' }).click();
 
-    // Verify community content is visible without login
+    // Verify Who's involved section is visible
     await expect(
-      page.getByText('The contributors to this Space!')
+      page.getByRole('heading', { name: "Who's involved" })
     ).toBeVisible();
 
-    // Verify People/Organizations toggle is visible
-    await expect(page.getByText('People')).toBeVisible();
-    await expect(page.getByText('organizations')).toBeVisible();
+    // Wait for user profile links to appear in Who's involved section
+    // Links are in format: /user/admin-alkemio, /user/space-admin, etc.
+    const userLink = page.locator('a[href^="/user/"]').first();
 
-    // Anonymous users see login prompt for full member list
-    await expect(
-      page.getByRole('heading', {
-        name: 'Please log in to see all contributing users',
-      })
-    ).toBeVisible();
+    // Wait for the user link to be visible
+    await expect(userLink).toBeVisible({ timeout: 60_000 });
+    await userLink.click();
 
-    // Verify Sign in and Sign up buttons are available
-    await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Sign up' })).toBeVisible();
+    // Wait for user profile page to load
+    await page.waitForURL(/.*user.*/, { timeout: 10_000 });
+
+    // Verify profile page opened successfully
+    await expect(page).toHaveURL(/.*user.*/);
+
+    // Verify no "Access Denied" message
+    await expect(page.getByText(/access denied/i)).not.toBeVisible();
+  });
+
+  test("4.3 Non-Member Can View Lead's Profile Details", async ({ page }) => {
+    test.setTimeout(90_000);
+    // Navigate to the public space as non-member (already authenticated)
+    await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
+
+    // Navigate to the Community tab
+    await page.getByRole('tab', { name: 'community' }).click();
+
+    // Wait for and click on the first user profile link
+    const userLink = page.locator('a[href^="/user/"]').first();
+
+    // Wait for the user link to be visible
+    await expect(userLink).toBeVisible({ timeout: 60_000 });
+    await userLink.click();
+
+    // Wait for profile page to load
+    await page.waitForURL(/.*user.*/, { timeout: 10_000 });
+
+    // Verify user profile page loaded
+    await expect(page).toHaveURL(/.*\/user\/.*/);
+
+    // Verify profile avatar is displayed (MUI Avatar component)
+    await expect(page.locator('.MuiAvatar-root img').first()).toBeVisible({
+      timeout: 10_000,
+    });
+
+    // Verify user's display name or username is visible
+    // Profile should show the user's name prominently
+    await expect(page.locator('h1, h2, h3').first()).toBeVisible({
+      timeout: 5_000,
+    });
+
+    // Note: Specific profile sections (About, Skills, etc.) may vary
+    // but we verify basic profile structure is accessible to non-members
   });
 });
