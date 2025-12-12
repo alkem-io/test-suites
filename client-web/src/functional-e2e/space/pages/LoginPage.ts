@@ -23,7 +23,7 @@ export class LoginPage {
   }
 
   async login(
-    email: string = 'admin@alkem.io',
+    email: string = process.env.AUTH_TEST_HARNESS_EMAIL || 'admin@alkem.io',
     userPassword: string = password
   ) {
     await this.goto();
@@ -39,10 +39,10 @@ export class LoginPage {
     await this.page.waitForURL(/.*home.*/);
   }
 
-  async isLoggedIn(): Promise<boolean> {
-    return await this.page
-      .getByRole('link', { name: 'My Account' })
-      .isVisible({ timeout: 2000 })
-      .catch(() => false);
-  }
+  // async isLoggedIn(): Promise<boolean> {
+  //   return await this.page
+  //     .getByRole('link', { name: 'My Account' })
+  //     .isVisible({ timeout: 2000 })
+  //     .catch(() => false);
+  // }
 }
