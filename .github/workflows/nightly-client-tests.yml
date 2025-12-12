@@ -64,6 +64,31 @@ jobs:
           echo "Date: $RUN_DATE" >> out/nightly/$RUN_DATE/$RUN_ID/runinfo.txt
           echo "Branch: $GITHUB_REF" >> out/nightly/$RUN_DATE/$RUN_ID/runinfo.txt
 
+      - name: Generate summary index.html
+        run: |
+          mkdir -p out
+          INDEX="out/index.html"
+          cat > $INDEX << 'EOF'
+          <!DOCTYPE html>
+          <html><head><meta charset="UTF-8"><title>Nightly Reports</title></head>
+          <body>
+          <h1>Nightly Playwright E2E Reports</h1>
+          <ul>
+          EOF
+
+          for dateDir in out/nightly/*/ ; do
+            DATE=$(basename $dateDir)
+            for runDir in "$dateDir"*/ ; do
+              RID=$(basename $runDir)
+              echo "  <li><a href=\"nightly/$DATE/$RID/\">$DATE / $RID</a></li>" >> $INDEX
+            done
+          done
+
+          cat >> $INDEX << 'EOF'
+          </ul>
+          </body></html>
+          EOF
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
@@ -87,5 +112,11 @@ jobs:
 
     steps:
       - name: Deploy to GitHub Pages
-        id: deployment
+        id: deploy
         uses: actions/deploy-pages@v4.0.5
+
+      - name: Print deployed Pages URL
+        run: |
+          echo "GitHub Pages site URL:"
+          echo "${{ steps.deployment.outputs.page_url }}"
+
