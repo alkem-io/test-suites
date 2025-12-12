@@ -59,6 +59,8 @@ jobs:
           path: client-web/playwright-report/
 
   deploy:
+    #  ensures the job is considered for execution no matter the outcome of the previous job, including failures.
+    if: ${{ always() }}
     needs: test
     runs-on: arc-runner-set
     # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
