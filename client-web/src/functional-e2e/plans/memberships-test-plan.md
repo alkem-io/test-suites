@@ -1444,15 +1444,12 @@ Based on the comprehensive test plan above, the following scenarios are **critic
 ### **Critical Priority 1: Core Membership Viewing**
 
 1. **Scenario 2.1** - Access Own Membership Settings
-
    - Essential baseline functionality for users to view their memberships
 
 2. **Scenario 2.5** - Cannot Access Other User's Membership Settings
-
    - Critical security/privacy test
 
 3. **Scenario 3.1** - View Own Account Settings
-
    - Core functionality for account management
 
 4. **Scenario 6.1** - View Organization Membership Settings - As Admin
@@ -1461,15 +1458,12 @@ Based on the comprehensive test plan above, the following scenarios are **critic
 ### **Critical Priority 2: Access Control**
 
 5. **Scenario 8.1** - Access Space Settings - As Space Admin
-
    - Verify admin capabilities work correctly
 
 6. **Scenario 8.2** - Access Space Settings - As Space Member
-
    - Verify members cannot access admin settings (security)
 
 7. **Scenario 8.5** - Access Private Subsubspace - As Non-Member
-
    - Privacy enforcement test
 
 8. **Scenario 13.2** - Attempt Privilege Escalation - Member to Admin
@@ -1478,15 +1472,12 @@ Based on the comprehensive test plan above, the following scenarios are **critic
 ### **Critical Priority 3: Membership Management**
 
 9. **Scenario 2.3** - Leave a Space Membership
-
    - Core user action for managing own memberships
 
 10. **Scenario 9.1** - Apply to Join Public Space
-
     - Essential onboarding workflow
 
 11. **Scenario 9.3** - Approve Membership Application - As Space Admin
-
     - Core admin workflow for community building
 
 12. **Scenario 10.3** - Remove Organization Associate
@@ -1495,11 +1486,9 @@ Based on the comprehensive test plan above, the following scenarios are **critic
 ### **Critical Priority 4: Multi-Level Visibility**
 
 13. **Scenario 7.1** - View Home Dashboard - Authenticated User
-
     - Central user experience showing memberships
 
 14. **Scenario 7.2** - View Home Dashboard - Multiple Memberships
-
     - Verify correct display of complex membership scenarios
 
 15. **Scenario 11.3** - View Space Community Members
@@ -1508,19 +1497,15 @@ Based on the comprehensive test plan above, the following scenarios are **critic
 ### **Critical Priority 5: VirtualContributor Memberships**
 
 16. **Scenario 12.2** - Access VC Membership Settings - As Host
-
     - Core VC membership functionality
 
 17. **Scenario 12.3** - VC Added to Space Community - Direct Assignment
-
     - Essential VC community integration
 
 18. **Scenario 12.5** - VC Opt Out from Space Membership - As Host
-
     - Core VC management capability
 
 19. **Scenario 12.7** - VC Cannot Be Added to Subspace (L1)
-
     - Verify L0-only constraint enforcement
 
 20. **Scenario 12.6** - Cannot Access VC Membership Settings - Non-Host
@@ -1545,3 +1530,131 @@ Based on the comprehensive test plan above, the following scenarios are **critic
 - Integration with external identity providers
 - Detailed audit logging verification
 - Migration scenarios for existing memberships
+
+---
+
+## Summary of All Test Scenarios
+
+### Category 1: User Profile Membership Display (3 scenarios)
+
+1. **1.1** - View Own User Profile - Public Information - P1
+2. **1.2** - View Another User's Profile - Public View - P1
+3. **1.3** - View Unauthenticated User Profile - P1
+
+### Category 2: User Membership Settings (5 scenarios)
+
+4. **2.1** - Access Own Membership Settings - P1
+5. **2.2** - View All Membership Levels - P1
+6. **2.3** - Leave a Space Membership - P2
+7. **2.4** - View Pending Applications - P3
+8. **2.5** - Cannot Access Other User's Membership Settings - P1
+
+### Category 3: User Account Settings (3 scenarios)
+
+9. **3.1** - View Own Account Settings - P1
+10. **3.2** - View Account with No Hosted Resources - P2
+11. **3.3** - Cannot Access Other User's Account Settings P1
+
+### Category 4: Organization Profile Access (3 scenarios)
+
+12. **4.1** - View Organization Profile - Public - P1
+13. **4.2** - View Organization Profile - As Member - P1
+14. **4.3** - View Organization Profile - As Admin - P1
+
+### Category 5: Organization Account Settings (3 scenarios)
+
+15. **5.1** - View Organization Account Settings - As Admin - P1
+16. **5.2** - Cannot Access Organization Account Settings - Non-Admin - P3 (covered on API)
+17. **5.3** - View Organization with Hosted Spaces - P1
+
+### Category 6: Organization Membership Settings (4 scenarios)
+
+18. **6.1** - View Organization Membership Settings - As Admin - P3
+19. **6.2** - Manage Organization Members - P1
+20. **6.3** - Organization Domain-Based Auto-Join - P4
+21. **6.4** - Cannot Access Organization Membership Settings - Non-Admin - there is no such settings
+
+### Category 7: Home Dashboard Membership Display (4 scenarios) - skip (to be redesigned)
+
+22. **7.1** - View Home Dashboard - Authenticated User
+23. **7.2** - View Home Dashboard - Multiple Memberships
+24. **7.3** - View Home Dashboard - No Memberships
+25. **7.4** - View Home Dashboard - Organization Memberships
+
+### Category 8: Space/Subspace Settings Access Control (7 scenarios)
+
+26. **8.1** - Access Space Settings - As Space Admin - P1
+27. **8.2** - Access Space Settings - As Space Member - P1
+28. **8.3** - Access Subspace Settings - As Subspace Admin - P1
+29. **8.4** - Access Subspace Settings - As Space Admin (Parent) - P1
+30. **8.5** - Access Private Subsubspace - As Non-Member - P1
+31. **8.6** - Access Private Subsubspace - As Member - P2
+32. **8.7** - Access Private Subsubspace Settings - As Subsubspace Admin - P3
+
+### Category 9: Membership Application Workflows (3 scenarios)
+
+33. **9.1** - Apply to Join Public Space - covered in another suite
+34. **9.2** - Withdraw Pending Application (not implemented feature)
+35. **9.3** - Approve Membership Application - As Space Admin covered in another suite
+
+### Category 10: Organization Associate Management (3 scenarios)
+
+36. **10.1** - Add User as Organization Associate - P1
+37. **10.2** - Accept Organization Invitation - not implemented on client as feature
+38. **10.3** - Remove Organization Associate - P3
+
+### Category 11: Cross-Level Membership Visibility (3 scenarios)
+
+39. **11.1** - View User Profile Showing Multiple Membership Levels - P2
+40. **11.2** - View Organization Members List - P2
+41. **11.3** - View Space Community Members - P1
+
+### Category 12: VirtualContributor Membership Management (22 scenarios)
+
+42. **12.1** - View VirtualContributor Profile - P1
+43. **12.2** - Access VC Membership Settings - As Host - P1
+44. **12.3** - VC Added to Space Community - Direct Assignment - P1
+45. **12.4** - View VC in Space Community Members List - P1
+46. **12.5** - VC Opt Out from Space Membership - As Host - TBD
+47. **12.6** - Cannot Access VC Membership Settings - Non-Host - P1
+48. **12.7** - VC Cannot Be Added to Subspace (L1) - P3
+49. **12.8** - VC Cannot Be Added to Subsubspace (L2) - P3
+50. **12.9** - Remove VC from Space - By Space Admin - P1
+51. **12.10** - Account VC - Profile Not Accessible to Non-Host - TBD
+52. **12.11** - Hidden VC - Cannot Be Added to Any Space - P3
+53. **12.12** - Hidden VC - Profile Only Accessible to Host - P3
+54. **12.13** - Hidden VC - Host Can View and Manage - P1
+55. **12.14** - Public VC - View Profile as Non-Host (Authenticated) - P2
+56. **12.15** - Public VC - Listed in Store and Available for Invite - P1
+57. **12.16** - Public VC - Not Listed in Store, Not Available for Invite - P3
+58. **12.17** - Public VC - Accept Invitation from Different Account - P1
+59. **12.18** - Account VC - Cannot Invite from Different Account - P3
+60. **12.19** - Change VC Visibility - Account to Public - P1
+61. **12.20** - Change VC Visibility - Public to Hidden - P3
+62. **12.21** - VC Memberships Visible in Organization Account Settings - P2
+63. **12.22** - VC Shows in Home Dashboard - For VC Host - P3
+
+### Category 13: Permissions and Authorization Edge Cases (4 scenarios)
+
+64. **13.1** - Global Admin Access to Any Membership Settings - P1
+65. **13.2** - Attempt Privilege Escalation - Member to Admin - P1
+66. **13.3** - Removed Member Cannot Access Previous Space - P1
+67. **13.4** - Expired or Invalid Session Access - P1
+
+---
+
+**Total Test Scenarios: 67**
+
+- **Category 1**: 3 scenarios
+- **Category 2**: 5 scenarios
+- **Category 3**: 3 scenarios
+- **Category 4**: 3 scenarios
+- **Category 5**: 3 scenarios
+- **Category 6**: 4 scenarios
+- **Category 7**: 4 scenarios
+- **Category 8**: 7 scenarios
+- **Category 9**: 3 scenarios
+- **Category 10**: 3 scenarios
+- **Category 11**: 3 scenarios
+- **Category 12**: 22 scenarios
+- **Category 13**: 4 scenarios
