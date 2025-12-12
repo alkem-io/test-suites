@@ -1437,79 +1437,61 @@ The seed creates:
 
 ---
 
-## Critical Scenarios for Implementation (Priority)
+## Critical Scenarios for Implementation (P1 Priority)
 
-Based on the comprehensive test plan above, the following scenarios are **critical** and should be implemented first:
+Based on the comprehensive test plan above, the following scenarios are **P1 priority** and should be implemented first:
 
-### **Critical Priority 1: Core Membership Viewing**
+### **User Profile & Membership Settings (8 scenarios)**
 
-1. **Scenario 2.1** - Access Own Membership Settings
-   - Essential baseline functionality for users to view their memberships
+1. **1.1** - View Own User Profile - Public Information
+2. **1.2** - View Another User's Profile - Public View
+3. **1.3** - View Unauthenticated User Profile
+4. **2.1** - Access Own Membership Settings
+5. **2.2** - View All Membership Levels
+6. **2.5** - Cannot Access Other User's Membership Settings
+7. **3.1** - View Own Account Settings
+8. **3.3** - Cannot Access Other User's Account Settings
 
-2. **Scenario 2.5** - Cannot Access Other User's Membership Settings
-   - Critical security/privacy test
+### **Organization Management (6 scenarios)**
 
-3. **Scenario 3.1** - View Own Account Settings
-   - Core functionality for account management
+9. **4.1** - View Organization Profile - Public
+10. **4.2** - View Organization Profile - As Member
+11. **4.3** - View Organization Profile - As Admin
+12. **5.1** - View Organization Account Settings - As Admin
+13. **5.3** - View Organization with Hosted Spaces
+14. **6.2** - Manage Organization Members
+15. **10.1** - Add User as Organization Associate
 
-4. **Scenario 6.1** - View Organization Membership Settings - As Admin
-   - Essential for organization management
+### **Space/Subspace Access Control (5 scenarios)**
 
-### **Critical Priority 2: Access Control**
+16. **8.1** - Access Space Settings - As Space Admin
+17. **8.2** - Access Space Settings - As Space Member
+18. **8.3** - Access Subspace Settings - As Subspace Admin
+19. **8.4** - Access Subspace Settings - As Space Admin (Parent)
+20. **8.5** - Access Private Subsubspace - As Non-Member
+21. **11.3** - View Space Community Members
 
-5. **Scenario 8.1** - Access Space Settings - As Space Admin
-   - Verify admin capabilities work correctly
+### **VirtualContributor Memberships (11 scenarios)**
 
-6. **Scenario 8.2** - Access Space Settings - As Space Member
-   - Verify members cannot access admin settings (security)
+22. **12.1** - View VirtualContributor Profile
+23. **12.2** - Access VC Membership Settings - As Host
+24. **12.3** - VC Added to Space Community - Direct Assignment
+25. **12.4** - View VC in Space Community Members List
+26. **12.6** - Cannot Access VC Membership Settings - Non-Host
+27. **12.9** - Remove VC from Space - By Space Admin
+28. **12.13** - Hidden VC - Host Can View and Manage
+29. **12.15** - Public VC - Listed in Store and Available for Invite
+30. **12.17** - Public VC - Accept Invitation from Different Account
+31. **12.19** - Change VC Visibility - Account to Public
 
-7. **Scenario 8.5** - Access Private Subsubspace - As Non-Member
-   - Privacy enforcement test
+### **Security & Permissions (4 scenarios)**
 
-8. **Scenario 13.2** - Attempt Privilege Escalation - Member to Admin
-   - Critical security test
+32. **13.1** - Global Admin Access to Any Membership Settings
+33. **13.2** - Attempt Privilege Escalation - Member to Admin
+34. **13.3** - Removed Member Cannot Access Previous Space
+35. **13.4** - Expired or Invalid Session Access
 
-### **Critical Priority 3: Membership Management**
-
-9. **Scenario 2.3** - Leave a Space Membership
-   - Core user action for managing own memberships
-
-10. **Scenario 9.1** - Apply to Join Public Space
-    - Essential onboarding workflow
-
-11. **Scenario 9.3** - Approve Membership Application - As Space Admin
-    - Core admin workflow for community building
-
-12. **Scenario 10.3** - Remove Organization Associate
-    - Essential organization management capability
-
-### **Critical Priority 4: Multi-Level Visibility**
-
-13. **Scenario 7.1** - View Home Dashboard - Authenticated User
-    - Central user experience showing memberships
-
-14. **Scenario 7.2** - View Home Dashboard - Multiple Memberships
-    - Verify correct display of complex membership scenarios
-
-15. **Scenario 11.3** - View Space Community Members
-    - Important for community engagement
-
-### **Critical Priority 5: VirtualContributor Memberships**
-
-16. **Scenario 12.2** - Access VC Membership Settings - As Host
-    - Core VC membership functionality
-
-17. **Scenario 12.3** - VC Added to Space Community - Direct Assignment
-    - Essential VC community integration
-
-18. **Scenario 12.5** - VC Opt Out from Space Membership - As Host
-    - Core VC management capability
-
-19. **Scenario 12.7** - VC Cannot Be Added to Subspace (L1)
-    - Verify L0-only constraint enforcement
-
-20. **Scenario 12.6** - Cannot Access VC Membership Settings - Non-Host
-    - Critical security test for VC access control
+**Total P1 Scenarios: 35**
 
 ---
 
