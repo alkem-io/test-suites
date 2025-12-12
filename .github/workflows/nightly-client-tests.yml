@@ -115,8 +115,3 @@ jobs:
         id: deploy
         uses: actions/deploy-pages@v4.0.5
 
-      - name: Print deployed Pages URL
-        run: |
-          echo "GitHub Pages site URL:"
-          echo "${{ steps.deployment.outputs.page_url }}"
-
