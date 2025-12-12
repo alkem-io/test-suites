@@ -47,3 +47,34 @@ export const termsLink = (page: Page) =>
   page.getByRole('link', { name: /terms/i });
 export const forgotPasswordLink = (page: Page) =>
   page.getByRole('link', { name: /forgot password/i });
+
+// Specific exact links for restricted pages
+export const signInSignUpLink = (page: Page) =>
+  page.getByRole('link', { name: 'Sign in / Sign up', exact: true });
+export const returnToDashboardLink = (page: Page) =>
+  page.getByRole('link', { name: 'Return to Dashboard', exact: true });
+
+// Menu items
+export const logoutMenuItem = (page: Page) =>
+  page.getByRole('menuitem', { name: 'Sign out', exact: true });
+
+// User menu
+export const userMenuAvatar = (page: Page) => page.getByAltText('User Menu');
+
+// Page headings
+export const signInHeading = (page: Page) =>
+  page.getByRole('heading', { name: 'Sign in', exact: true });
+export const accessRestrictedHeading = (page: Page) =>
+  page.getByRole('heading', { name: 'Access Restricted', exact: true });
+export const welcomeHeading = (page: Page) =>
+  page.getByRole('heading', { name: /welcome/i });
+
+// Cookie consent
+export const cookieConsentBanner = (page: Page) =>
+  page.getByText(
+    'By clicking "Accept All Cookies", you agree to the storing of cookies on your device to enhance site navigation and analyze site usage.'
+  );
+export const acceptAllCookiesButton = (page: Page) =>
+  page.getByRole('button', { name: 'Accept All Cookies', exact: true });
+export const cookieSettingsButton = (page: Page) =>
+  page.getByRole('button', { name: 'settings', exact: true });
