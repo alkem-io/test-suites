@@ -32,6 +32,15 @@ jobs:
         run:  cd client-web && npx playwright install --with-deps
 
       - name: Run Playwright tests
+        env:
+          ALKEMIO_BASE_URL: ${{ vars.ALKEMIO_BASE_URL }}
+          ALKEMIO_SERVER: ${{ vars.ALKEMIO_SERVER }}
+          ALKEMIO_SERVER_REST: ${{ vars.ALKEMIO_SERVER_REST }}
+          ALKEMIO_SERVER_URL: ${{ vars.ALKEMIO_SERVER_URL }}
+          ALKEMIO_SERVER_WS: ${{ vars.ALKEMIO_SERVER_WS }}
+          KRATOS_ENDPOINT: ${{ vars.KRATOS_ENDPOINT }}
+          MAIL_SLURPER_ENDPOINT: ${{ vars.MAIL_SLURPER_ENDPOINT }}
+          NPM_CONFIG_ENGINE_STRICT: ${{ vars.NPM_CONFIG_ENGINE_STRICT }}
         run:  cd client-web && npx playwright test --config=config/playwright.pattern.config.ts
 
       - uses: actions/upload-artifact@v5
