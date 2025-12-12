@@ -12,9 +12,10 @@ import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFac
 import { expect } from '@playwright/test';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 
-const { test, setupAuthentication } = createAuthenticatedSessionFixture({
-  storageStateName: 'non-member-subspace-navigation.json',
-});
+const { test, setupAuthentication, teardownAuthentication } =
+  createAuthenticatedSessionFixture({
+    storageStateName: 'non-member-subspace-navigation.json',
+  });
 
 const scenarioConfig: TestScenarioConfig = {
   name: 'seed-public-space',
@@ -94,15 +95,13 @@ test.describe('Subspace Navigation for Non-Members', () => {
     await setupAuthentication(browser, 'non.space@alkem.io');
   });
 
-  // test.afterAll(async () => {
-  //   test.setTimeout(40_000);
-  //   await teardownAuthentication();
-  //   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
-  // });
+  test.afterAll(async () => {
+    test.setTimeout(40_000);
+    await teardownAuthentication();
+    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  });
 
-  test.only('5.1 Non-Member Can Navigate into Public Subspace', async ({
-    page,
-  }) => {
+  test('5.1 Non-Member Can Navigate into Public Subspace', async ({ page }) => {
     test.setTimeout(30_000);
     // Navigate to the public space as non-member (already authenticated)
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
@@ -129,8 +128,10 @@ test.describe('Subspace Navigation for Non-Members', () => {
       .click();
 
     // Verify subspace landing page loads successfully
-    await expect(page).toHaveURL(/\/challenges\/ssnameid/);
-    baseScenario.subspace.about.profile.tagline;
+    await expect(page).toHaveURL(
+      new RegExp(`/challenges/${baseScenario.subspace.nameId}`)
+    );
+
     // Verify subspace heading is visible
     await expect(
       page.getByRole('heading', {
@@ -140,13 +141,16 @@ test.describe('Subspace Navigation for Non-Members', () => {
     ).toBeVisible();
 
     // Verify subspace content is visible (not About dialog)
-    console.log(
-      'Verifying subspace tagline:',
-      baseScenario.subspace.about.profile.tagline
-    );
-    await expect(
-      page.getByText(baseScenario.subspace.about.profile.tagline)
-    ).toBeVisible({ timeout: 10_000 });
+    // Note: Tagline might not be populated in the model returned by factory, using literal from config
+    const expectedTagline =
+      baseScenario.subspace.about.profile.tagline || 'test description';
+    console.log('Verifying subspace tagline:', expectedTagline);
+
+    if (expectedTagline) {
+      await expect(page.getByText(expectedTagline)).toBeVisible({
+        timeout: 10_000,
+      });
+    }
 
     // Verify breadcrumb shows parent space > subspace hierarchy
     await expect(
