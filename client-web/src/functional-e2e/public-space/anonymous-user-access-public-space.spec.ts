@@ -6,7 +6,10 @@ import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFac
 import { test, expect } from '@playwright/test';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
-import { SpacePrivacyMode } from '@alkemio/client-lib/dist/generated/graphql';
+import {
+  CommunityMembershipPolicy,
+  SpacePrivacyMode,
+} from '@alkemio/client-lib/dist/generated/graphql';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let baseScenario: OrganizationWithSpaceModel;
@@ -24,17 +27,20 @@ const scenarioConfig: TestScenarioConfig = {
     },
     community: {
       admins: [TestUser.SPACE_ADMIN],
-      members: [TestUser.SPACE_ADMIN],
+      members: [TestUser.SPACE_MEMBER, TestUser.SPACE_ADMIN],
     },
     settings: {
       privacy: { mode: SpacePrivacyMode.Public },
+      membership: {
+        policy: CommunityMembershipPolicy.Applications,
+      },
     },
   },
 };
 
 test.describe('Public Space Discovery and Access', () => {
   test.beforeAll(async () => {
-    test.setTimeout(25_000);
+    test.setTimeout(30_000);
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
   });
 
