@@ -49,4 +49,14 @@ jobs:
         with:
           name: playwright-report
           path: client-web/playwright-report/
-          retention-days: 30
+          retention-days: 5
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5.0.0
+      - name: Upload Playwright Report to GitHub Pages
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: client-web/playwright-report/
+      - name: Deploy to GitHub Pages
+        id: deploy-pages
+        uses: actions/deploy-pages@v1
