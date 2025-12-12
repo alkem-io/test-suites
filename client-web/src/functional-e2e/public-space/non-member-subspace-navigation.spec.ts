@@ -142,8 +142,7 @@ test.describe('Subspace Navigation for Non-Members', () => {
 
     // Verify subspace content is visible (not About dialog)
     // Note: Tagline might not be populated in the model returned by factory, using literal from config
-    const expectedTagline =
-      baseScenario.subspace.about.profile.tagline || 'test description';
+    const expectedTagline = baseScenario.subspace.about.profile.tagline;
     console.log('Verifying subspace tagline:', expectedTagline);
 
     if (expectedTagline) {
@@ -245,7 +244,9 @@ test.describe('Subspace Navigation for Non-Members', () => {
       .click();
 
     // Verify we are in the subspace
-    await expect(page).toHaveURL(/\/challenges\/ssnameid/);
+    await expect(page).toHaveURL(
+      new RegExp(`/challenges/${baseScenario.subspace.nameId}`)
+    );
 
     // Navigate to the subspace Community tab
     await page.getByRole('tab', { name: 'community' }).click();
