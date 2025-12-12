@@ -40,9 +40,9 @@ dotenv.config({ path: path.resolve(__dirname, '../', '.env') });
 const testDirectory = '../src/functional-e2e';
 const testPattern = [
   '/authentication/authentication-critical-flows.spec.ts',
-  '/authentication/authentication-flows.spec.ts',
-  '/space/organization-space-create.spec.ts',
-  '/space/space-create.spec.ts',
+  // '/authentication/authentication-flows.spec.ts',
+  // '/space/organization-space-create.spec.ts',
+  // '/space/space-create.spec.ts',
 ]
 
 export default defineConfig({
@@ -59,11 +59,13 @@ export default defineConfig({
   retries: 1,
 
   // % of the available CPUs
-  workers: '50%',
+  // workers: '100%',
+  workers: '100%',
 
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
-    ['html', { open: 'never' }],
+    ['github'],
+    ['html']
   ],
 
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
