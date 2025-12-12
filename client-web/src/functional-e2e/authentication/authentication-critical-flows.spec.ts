@@ -145,64 +145,64 @@ test.describe('Authentication - Phase 1 Critical Flows', () => {
     });
   });
 
-  // test.describe('Logout Flow', () => {
-  //   test('4.1 - User logout and session cleanup', async ({ page }) => {
-  //     test.setTimeout(30000);
-  //     // 1. Sign in as user (admin@alkem.io)
-  //     await navigateToLoginPageFromMenu(baseUrl, page);
-  //     await fillUpSignInPageElements('admin@alkem.io', password, page);
-  //     await pressSignInButtonSignInPage(page);
-  //
-  //     // Wait for sign-in to complete
-  //     await verifyMyDashboardWelcomeElement(page, 'admin');
-  //
-  //     // 2. Navigate to user menu
-  //     await userMenuAvatar(page).click();
-  //
-  //     // 3. Click logout button
-  //     await logoutMenuItem(page).click();
-  //
-  //     // 4. Verify redirect to landing page by checking for sign-in option
-  //     const signInOption = page
-  //       .getByRole('link', { name: /sign up|sign in/i })
-  //       .or(page.getByRole('button', { name: /sign up|sign in/i }));
-  //     await expect(signInOption.first()).toBeVisible({ timeout: 5000 });
-  //
-  //     // 5. Try accessing protected page (e.g., /admin/spaces)
-  //     await page.goto(`${baseUrl}/admin/spaces`);
-  //
-  //     // 6. Verify "Access Restricted" page is shown
-  //     await expect(accessRestrictedHeading(page)).toBeVisible({
-  //       timeout: 5000,
-  //     });
-  //
-  //     // Verify "Sign in / Sign up" link is available (user is logged out)
-  //     await expect(signInSignUpLink(page)).toBeVisible();
-  //   });
-  //
-  //   // skipped because it fails on Evgeni's machine (to be investigated)
-  //   test.skip('4.2 - Logout and re-authentication', async ({ page }) => {
-  //     test.setTimeout(30000);
-  //     // 1. Sign in as user (admin@alkem.io)
-  //     await navigateToLoginPageFromMenu(baseUrl, page);
-  //     await fillUpSignInPageElements('admin@alkem.io', password, page);
-  //     await pressSignInButtonSignInPage(page);
-  //
-  //     await verifyMyDashboardWelcomeElement(page, 'admin');
-  //
-  //     // 2. Logout
-  //     await userMenuAvatar(page).click();
-  //     await logoutMenuItem(page).click();
-  //
-  //     // 3. Sign in again with same credentials
-  //     await navigateToLoginPageFromMenu(baseUrl, page);
-  //     await fillUpSignInPageElements('admin@alkem.io', password, page);
-  //     await pressSignInButtonSignInPage(page);
-  //
-  //     // 4. Verify successful re-authentication and welcome message
-  //     await verifyMyDashboardWelcomeElement(page, 'admin');
-  //   });
-  // });
+  test.describe('Logout Flow', () => {
+    test('4.1 - User logout and session cleanup', async ({ page }) => {
+      test.setTimeout(30000);
+      // 1. Sign in as user (admin@alkem.io)
+      await navigateToLoginPageFromMenu(baseUrl, page);
+      await fillUpSignInPageElements('admin@alkem.io', password, page);
+      await pressSignInButtonSignInPage(page);
+
+      // Wait for sign-in to complete
+      await verifyMyDashboardWelcomeElement(page, 'admin');
+
+      // 2. Navigate to user menu
+      await userMenuAvatar(page).click();
+
+      // 3. Click logout button
+      await logoutMenuItem(page).click();
+
+      // 4. Verify redirect to landing page by checking for sign-in option
+      const signInOption = page
+        .getByRole('link', { name: /sign up|sign in/i })
+        .or(page.getByRole('button', { name: /sign up|sign in/i }));
+      await expect(signInOption.first()).toBeVisible({ timeout: 5000 });
+
+      // 5. Try accessing protected page (e.g., /admin/spaces)
+      await page.goto(`${baseUrl}/admin/spaces`);
+
+      // 6. Verify "Access Restricted" page is shown
+      await expect(accessRestrictedHeading(page)).toBeVisible({
+        timeout: 5000,
+      });
+
+      // Verify "Sign in / Sign up" link is available (user is logged out)
+      await expect(signInSignUpLink(page)).toBeVisible();
+    });
+
+    // skipped because it fails on Evgeni's machine (to be investigated)
+    test.skip('4.2 - Logout and re-authentication', async ({ page }) => {
+      test.setTimeout(30000);
+      // 1. Sign in as user (admin@alkem.io)
+      await navigateToLoginPageFromMenu(baseUrl, page);
+      await fillUpSignInPageElements('admin@alkem.io', password, page);
+      await pressSignInButtonSignInPage(page);
+
+      await verifyMyDashboardWelcomeElement(page, 'admin');
+
+      // 2. Logout
+      await userMenuAvatar(page).click();
+      await logoutMenuItem(page).click();
+
+      // 3. Sign in again with same credentials
+      await navigateToLoginPageFromMenu(baseUrl, page);
+      await fillUpSignInPageElements('admin@alkem.io', password, page);
+      await pressSignInButtonSignInPage(page);
+
+      // 4. Verify successful re-authentication and welcome message
+      await verifyMyDashboardWelcomeElement(page, 'admin');
+    });
+  });
 
   // test.describe('Error Handling', () => {
   //   test('7.1 - Invalid credentials', async ({ context, page }) => {
