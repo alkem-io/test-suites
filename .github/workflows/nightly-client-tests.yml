@@ -54,9 +54,9 @@ jobs:
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5.0.0
       - name: Upload Playwright Report to GitHub Pages
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-pages-artifact@v4.0.0
         with:
           path: client-web/playwright-report/
       - name: Deploy to GitHub Pages
         id: deploy-pages
-        uses: actions/deploy-pages@v1
+        uses: actions/deploy-pages@v4.0.5
