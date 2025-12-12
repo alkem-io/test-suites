@@ -65,3 +65,6 @@ web_modules/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Authentication state files (contain session tokens)
+.auth/

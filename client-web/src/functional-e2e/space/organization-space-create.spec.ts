@@ -1,10 +1,11 @@
 // spec: space/space-crud.spec.md
 // seed: client-web/src/functional-e2e/seed-minimal.spec.ts
 
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
 import {
   TestScenarioFactory,
   TestScenarioNoPreCreationConfig,
+  TestUserManager,
 } from '@alkemio/tests-lib';
 import {
   LoginPage,
@@ -14,6 +15,14 @@ import {
   SpaceSettingsPage,
 } from './pages';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
+
+// Create the authenticated fixture with a unique storage state name for this test suite
+const { test, setupAuthentication, teardownAuthentication } =
+  createAuthenticatedSessionFixture({
+    storageStateName: 'my-feature-test.json',
+    cleanupAfterTests: process.env.cleanupAfterTests === 'true',
+  });
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let baseScenario: OrganizationWithSpaceModel;
@@ -21,23 +30,22 @@ const scenarioConfig: TestScenarioNoPreCreationConfig = {
   name: 'org-space-create',
 };
 
-// Organization admin email for login
-const organizationAdminEmail = 'organization.admin@alkem.io';
-
 test.describe('CREATE Space Operations (Organization Account)', () => {
-  test.beforeAll(async () => {
+  test.beforeAll(async ({ browser }) => {
     baseScenario =
       await TestScenarioFactory.createBaseScenarioOrganization(scenarioConfig);
+    await setupAuthentication(
+      browser,
+      TestUserManager.users.organizationAdmin.email
+    );
   });
-
   test.afterAll(async () => {
+    // Clean up authentication
+    await teardownAuthentication();
     await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
-
   test.beforeEach(async ({ page }) => {
-    const loginPage = new LoginPage(page, baseUrl);
-    // Login as organization admin
-    await loginPage.login(organizationAdminEmail);
+    await page.goto(baseUrl);
   });
 
   test('1.1 Create Space from Organization - Happy Path (Valid Data)', async ({
