@@ -204,37 +204,37 @@ test.describe('Authentication - Phase 1 Critical Flows', () => {
     });
   });
 
-  // test.describe('Error Handling', () => {
-  //   test('7.1 - Invalid credentials', async ({ context, page }) => {
-  //     // 1. Navigate to sign-in page
-  //     await context.clearCookies();
-  //     await navigateToLoginPageFromMenu(baseUrl, page);
-  //
-  //     // 2. Enter valid email (admin@alkem.io)
-  //     // 3. Enter wrong password (wrongpassword123)
-  //     await fillUpSignInPageElements(
-  //       'admin@alkem.io',
-  //       'wrongpassword123',
-  //       page
-  //     );
-  //
-  //     // 4. Click sign-in button
-  //     await pressSignInButtonSignInPage(page);
-  //
-  //     // 5. Verify error message is displayed (check for key phrases rather than exact text)
-  //     const errorMessage = page.getByText(
-  //       /email address or password.*invalid/i
-  //     );
-  //
-  //     await expect(errorMessage).toBeVisible({ timeout: 5000 });
-  //
-  //     // 6. Verify user is NOT signed in by checking sign-in form elements are still visible
-  //     await expect(emailField(page)).toBeVisible();
-  //     await expect(passwordField(page)).toBeVisible();
-  //     await expect(signInButton(page)).toBeVisible();
-  //
-  //     // Verify sign-in heading is still present
-  //     await expect(signInHeading(page)).toBeVisible();
-  //   });
-  // });
+  test.describe('Error Handling', () => {
+    test('7.1 - Invalid credentials', async ({ context, page }) => {
+      // 1. Navigate to sign-in page
+      await context.clearCookies();
+      await navigateToLoginPageFromMenu(baseUrl, page);
+
+      // 2. Enter valid email (admin@alkem.io)
+      // 3. Enter wrong password (wrongpassword123)
+      await fillUpSignInPageElements(
+        'admin@alkem.io',
+        'wrongpassword123',
+        page
+      );
+
+      // 4. Click sign-in button
+      await pressSignInButtonSignInPage(page);
+
+      // 5. Verify error message is displayed (check for key phrases rather than exact text)
+      const errorMessage = page.getByText(
+        /email address or password.*invalid/i
+      );
+
+      await expect(errorMessage).toBeVisible({ timeout: 5000 });
+
+      // 6. Verify user is NOT signed in by checking sign-in form elements are still visible
+      await expect(emailField(page)).toBeVisible();
+      await expect(passwordField(page)).toBeVisible();
+      await expect(signInButton(page)).toBeVisible();
+
+      // Verify sign-in heading is still present
+      await expect(signInHeading(page)).toBeVisible();
+    });
+  });
 });
