@@ -24,13 +24,17 @@ let baseScenario: OrganizationWithSpaceModel;
  *
  * Structure:
  * - Organization with admin and members
+ * - VirtualContributor (to be created manually in test setup)
  * - Space (L0) - Public with multiple admins, members, and leads
+ *   - VirtualContributor can be added to Space (L0 only)
  *   - Subspace (L1) - Public with different membership configuration
+ *     - VCs cannot be added to subspaces
  *     - Subsubspace (L2) - Private with restricted membership
+ *       - VCs cannot be added to subsubspaces
  *
  * Users configured:
  * - GLOBAL_ADMIN: Platform admin
- * - ORGANIZATION_ADMIN: Organization admin
+ * - ORGANIZATION_ADMIN: Organization admin (VC host)
  * - SPACE_ADMIN: Space level admin
  * - SPACE_MEMBER: Space level member
  * - SUBSPACE_ADMIN: Subspace level admin
@@ -38,6 +42,13 @@ let baseScenario: OrganizationWithSpaceModel;
  * - SUBSUBSPACE_ADMIN: Subsubspace level admin
  * - SUBSUBSPACE_MEMBER: Subsubspace level member
  * - NON_SPACE_MEMBER: User not part of any space/community
+ *
+ * VirtualContributor Setup:
+ * - VCs must be created under the organization account in individual tests
+ * - VCs can only be added to Level 0 (L0) spaces
+ * - Only VCs from the same account as the space can be added
+ * - VC host can manage memberships via /vc/[:vcNameId]/settings/memberships
+ * - Test invitations are excluded from this seed (direct assignment only)
  */
 const scenarioConfig: TestScenarioConfig = {
   name: 'seed-memberships',

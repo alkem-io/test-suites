@@ -4,6 +4,31 @@
 
 **GitHub Issue:** https://github.com/alkem-io/alkemio/issues/1698
 
+## Executive Summary
+
+This comprehensive test plan covers user, organization, and VirtualContributor membership management across the Alkemio platform.
+
+**Scope:**
+
+- **13 Major Test Categories** covering 80+ detailed scenarios
+- **20 Critical Priority Scenarios** identified for initial implementation
+- **5 Test Coverage Areas**: Core viewing, access control, membership management, multi-level visibility, and VirtualContributor memberships
+
+**Key Test Areas:**
+
+1. User Profile & Membership Settings (`/user/[:userNameId]/settings/membership`)
+2. Organization Membership Management (`/organization/[:organizationNameId]/settings/membership`)
+3. VirtualContributor Memberships (`/vc/[:vcNameId]/settings/memberships`)
+4. Space/Subspace Access Control (L0, L1, L2 levels)
+5. Home Dashboard Integration (`/home`)
+
+**VirtualContributor Constraints:**
+
+- VCs can only be added to Level 0 (L0) spaces
+- Direct assignment: Only VCs from the same account as the space
+- VC host manages memberships; can opt out from spaces
+- Invitation workflows excluded (tested separately in invitations suite)
+
 ## Application Overview
 
 This test plan covers membership management for Users and Organizations across the Alkemio platform. The membership system affects access control, settings visibility, and permissions across multiple areas:
@@ -880,9 +905,464 @@ The seed creates:
 
 ---
 
-### Category 12: Permissions and Authorization Edge Cases
+### Category 12: VirtualContributor Membership Management
 
-#### 12.1 Global Admin Access to Any Membership Settings
+#### 12.1 View VirtualContributor Profile
+
+**User:** ORGANIZATION_ADMIN (VC host)
+
+**Steps:**
+
+1. Navigate to `/vc/[:vcNameId]`
+2. Review VC profile information
+3. Check for settings access
+
+**Expected Results:**
+
+- VC profile page loads successfully
+- Displays VC information:
+  - Name and avatar
+  - Description/tagline
+  - Body of Knowledge information
+  - AI Persona details (if applicable)
+- As host, "Settings" option is visible
+- Can access VC configuration
+- Non-hosts see limited public profile only
+
+#### 12.2 Access VC Membership Settings - As Host
+
+**User:** ORGANIZATION_ADMIN (VC host)
+
+**Steps:**
+
+1. Navigate to `/vc/[:vcNameId]/settings/memberships`
+2. Review VC memberships list
+
+**Expected Results:**
+
+- URL: `/vc/[:vcNameId]/settings/memberships`
+- "VC Memberships" section is displayed
+- Shows list of spaces where VC is a member
+- Each membership card displays:
+  - Space name and avatar
+  - Space tagline
+  - "Opt Out" button
+- Only shows Level 0 (L0) spaces (no subspaces)
+- Membership count is accurate
+
+#### 12.3 VC Added to Space Community - Direct Assignment
+
+**User:** SPACE_ADMIN
+
+**Steps:**
+
+1. Navigate to "Membership Test Space" settings
+2. Access "Community" or "Members" section
+3. Click "Add VirtualContributor" or similar action
+4. Select VC from organization account (same account as space)
+5. Assign VC to space community
+6. Confirm addition
+
+**Expected Results:**
+
+- Can search/select VCs from same account
+- Only VCs under the space's account are available
+- VC is added as community member
+- VC appears in space members list with "Virtual Contributor" badge
+- VC can only be added to L0 space (not subspaces)
+- Success notification appears
+- VC host is notified of membership (optional)
+
+#### 12.4 View VC in Space Community Members List
+
+**User:** SPACE_MEMBER
+
+**Steps:**
+
+1. Navigate to "Membership Test Space"
+2. Access "Community" or "Members" section
+3. Locate the VC in members list
+
+**Expected Results:**
+
+- VC appears in community members list
+- Clearly labeled as "Virtual Contributor"
+- Shows VC avatar and name
+- Distinguishable from regular users
+- Link to VC profile works
+- May show "AI" or "Bot" indicator
+
+#### 12.5 VC Opt Out from Space Membership - As Host
+
+**User:** ORGANIZATION_ADMIN (VC host)
+
+**Steps:**
+
+1. Navigate to `/vc/[:vcNameId]/settings/memberships`
+2. Locate "Membership Test Space" in memberships list
+3. Click "Opt Out" button
+4. Confirm action in dialog
+
+**Expected Results:**
+
+- "Opt Out" button is visible on membership card
+- Confirmation dialog: "Opt out [VC Name] from [Space Name]?"
+- After confirming:
+  - Success message appears
+  - Membership card is removed from list
+  - VC is removed from space community
+  - VC loses access to space
+  - Space admins may be notified
+
+#### 12.6 Cannot Access VC Membership Settings - Non-Host
+
+**User:** SPACE_ADMIN (not VC host)
+
+**Steps:**
+
+1. Attempt to navigate to `/vc/[:vcNameId]/settings/memberships`
+2. Observe access control
+
+**Expected Results:**
+
+- Access denied (403 Forbidden)
+- Error: "Only the host can manage this Virtual Contributor"
+- Cannot view or modify VC memberships
+- Redirected to appropriate page
+- Only VC host has management access
+
+#### 12.7 VC Cannot Be Added to Subspace (L1)
+
+**User:** SUBSPACE_ADMIN
+
+**Steps:**
+
+1. Navigate to "Subspace for Membership Tests" settings
+2. Access "Community" section
+3. Attempt to add VirtualContributor
+
+**Expected Results:**
+
+- "Add VirtualContributor" option is not available OR
+- If attempted, error message: "Virtual Contributors can only be added to Level 0 spaces"
+- VCs cannot be added to subspaces
+- Only L0 spaces support VC membership
+- This restriction is enforced at UI and API level
+
+#### 12.8 VC Cannot Be Added to Subsubspace (L2)
+
+**User:** SUBSUBSPACE_ADMIN
+
+**Steps:**
+
+1. Navigate to "Subsubspace for Membership Tests" settings
+2. Access "Community" section
+3. Verify no VC addition option
+
+**Expected Results:**
+
+- No "Add VirtualContributor" option available
+- VCs cannot be added to L2 spaces
+- Only L0 spaces support VC membership
+- UI doesn't present the option at all
+
+#### 12.9 Remove VC from Space - By Space Admin
+
+**User:** SPACE_ADMIN
+
+**Steps:**
+
+1. Navigate to "Membership Test Space" settings
+2. Access "Community" members list
+3. Locate the VC in members
+4. Click "Remove" or similar action
+5. Confirm removal
+
+**Expected Results:**
+
+- Can remove VC from space community
+- Confirmation dialog appears
+- After confirming:
+  - VC is removed from members list
+  - VC disappears from community
+  - VC host sees membership removed in VC settings
+  - Success notification appears
+- Space admin can remove VCs even without being the host
+
+#### 12.10 Account VC - Profile Not Accessible to Non-Host
+
+**User:** SPACE_ADMIN (not VC host)
+
+**Steps:**
+
+1. Navigate to `/vc/[:accountVcNameId]` (Account visibility VC)
+2. Attempt to view VC profile
+3. Observe access restrictions
+
+**Expected Results:**
+
+- Access denied or very limited profile view
+- Cannot see VC details (description, Body of Knowledge)
+- Error message: "This Virtual Contributor is not publicly accessible"
+- Only host can view full Account VC profile
+- Profile settings indicate "Account" visibility
+- Non-hosts see minimal or no information
+
+#### 12.11 Hidden VC - Cannot Be Added to Any Space
+
+**User:** SPACE_ADMIN (VC host)
+
+**Steps:**
+
+1. Create or have a Hidden VC in organization
+2. Navigate to "Membership Test Space" settings
+3. Access "Community" section
+4. Attempt to add the Hidden VC
+
+**Expected Results:**
+
+- Hidden VC does not appear in VC selection list
+- Cannot be searched or found when adding to community
+- Hidden VCs are excluded from community assignment
+- Only host can see Hidden VC exists
+- Error or message: "No VirtualContributors available" (if no other VCs exist)
+- Hidden status prevents any community membership
+
+#### 12.12 Hidden VC - Profile Only Accessible to Host
+
+**User:** SPACE_MEMBER (not VC host)
+
+**Steps:**
+
+1. Attempt to navigate to `/vc/[:hiddenVcNameId]` (Hidden visibility VC)
+2. Observe access control
+
+**Expected Results:**
+
+- Access completely denied (403 Forbidden or 404 Not Found)
+- Error: "Virtual Contributor not found" or "Access denied"
+- Hidden VCs are invisible to non-hosts
+- Cannot discover or access Hidden VC profile
+- Only host can view and manage Hidden VCs
+- Profile is completely private to host
+
+#### 12.13 Hidden VC - Host Can View and Manage
+
+**User:** ORGANIZATION_ADMIN (VC host)
+
+**Steps:**
+
+1. Navigate to `/vc/[:hiddenVcNameId]`
+2. Access VC settings
+3. Verify management capabilities
+
+**Expected Results:**
+
+- Full access to Hidden VC profile as host
+- Can view all VC details and settings
+- Can modify VC configuration
+- Visibility setting shows "Hidden"
+- Cannot add to any community (option disabled/unavailable)
+- Can change visibility to Account or Public if desired
+- Membership settings show no memberships (and cannot have any)
+
+#### 12.14 Public VC - View Profile as Non-Host (Authenticated)
+
+**User:** SPACE_MEMBER (not VC host, authenticated)
+
+**Steps:**
+
+1. Navigate to `/vc/[:publicVcNameId]` (Public visibility VC)
+2. Review accessible profile information
+3. Check for interaction options
+
+**Expected Results:**
+
+- Public VC profile is fully accessible
+- Can view VC information:
+  - Name, avatar, description
+  - Body of Knowledge details
+  - AI Persona information
+  - Public activity/contributions
+- Profile indicates "Public" visibility
+- Cannot access VC settings (not host)
+- May see "Invite to Community" option
+- Can see which spaces VC is member of (if public spaces)
+
+#### 12.15 Public VC - Listed in Store and Available for Invite
+
+**User:** SPACE_ADMIN (different account, not VC host)
+
+**Steps:**
+
+1. Navigate to "Membership Test Space" settings
+2. Access "Community" section
+3. Click "Add VirtualContributor" or "Invite VC"
+4. Search for Public VC (listedInStore: true)
+5. Send invitation to VC
+
+**Expected Results:**
+
+- Public VC with `listedInStore: true` appears in search/browse
+- Can find VC in store/directory
+- Can select Public VC from different account
+- "Invite" option is available (not direct add)
+- Can send invitation to VC
+- Invitation goes to VC host for approval
+- Cannot directly add cross-account Public VC (must invite)
+- Success message: "Invitation sent to Virtual Contributor host"
+
+#### 12.16 Public VC - Not Listed in Store, Not Available for Invite
+
+**User:** SPACE_ADMIN (different account, not VC host)
+
+**Steps:**
+
+1. Navigate to "Membership Test Space" settings
+2. Access "Community" section
+3. Attempt to search for Public VC (listedInStore: false)
+4. Try to invite the VC
+
+**Expected Results:**
+
+- Public VC with `listedInStore: false` does NOT appear in store/directory
+- Cannot find VC through search in community invite flow
+- VC is public (profile accessible) but not listed for invitations
+- Can still access VC profile directly via URL
+- Cannot invite VC that's not listed in store
+- Only same-account VCs or listed Public VCs can be invited
+
+#### 12.17 Public VC - Accept Invitation from Different Account
+
+**User:** ORGANIZATION_ADMIN (VC host of Public VC)
+
+**Steps:**
+
+1. Receive invitation for Public VC to join a space from different account
+2. Navigate to notifications or VC invitations section
+3. Review invitation details
+4. Accept invitation on behalf of VC
+
+**Expected Results:**
+
+- Invitation notification appears for VC host
+- Shows which space is inviting the VC
+- Can review space details before accepting
+- Can accept or decline invitation
+- After accepting:
+  - VC becomes member of the inviting space
+  - VC appears in `/vc/[:vcNameId]/settings/memberships`
+  - VC can be removed by space admin or opted out by host
+  - Cross-account membership is established
+
+#### 12.18 Account VC - Cannot Invite from Different Account
+
+**User:** SPACE_ADMIN (different account, not VC host)
+
+**Steps:**
+
+1. Navigate to space settings in different account
+2. Attempt to find/invite Account visibility VC
+3. Search in VC directory/store
+
+**Expected Results:**
+
+- Account VCs do not appear in search for different accounts
+- Cannot discover Account VCs from other accounts
+- Account VCs are restricted to same-account operations only
+- Only Public VCs (listed in store) are discoverable cross-account
+- Message may indicate: "No VirtualContributors available for invitation"
+
+#### 12.19 Change VC Visibility - Account to Public
+
+**User:** ORGANIZATION_ADMIN (VC host)
+
+**Steps:**
+
+1. Navigate to `/vc/[:vcNameId]/settings`
+2. Locate visibility settings
+3. Change from "Account" to "Public"
+4. Enable or disable "Listed in Store"
+5. Save changes
+
+**Expected Results:**
+
+- Visibility setting is available in VC settings
+- Can change between: Account, Hidden, Public
+- "Listed in Store" toggle appears when Public is selected
+- After changing to Public:
+  - VC profile becomes accessible to all authenticated users
+  - If listed in store, VC becomes available for invitations
+  - Existing same-account memberships remain
+  - Can now receive invitations from other accounts
+- Success notification confirms visibility change
+
+#### 12.20 Change VC Visibility - Public to Hidden
+
+**User:** ORGANIZATION_ADMIN (VC host)
+
+**Steps:**
+
+1. Navigate to `/vc/[:publicVcNameId]/settings`
+2. Change visibility from "Public" to "Hidden"
+3. Confirm change
+4. Observe impact on memberships
+
+**Expected Results:**
+
+- Can change Public VC to Hidden
+- After changing to Hidden:
+  - VC profile becomes inaccessible to non-hosts
+  - VC cannot be added to any community
+  - Only host can see and manage the VC
+- Success notification confirms visibility change
+- **Note:** Additional behaviors (automatic membership removal, warnings) are TBD
+
+#### 12.21 VC Memberships Visible in Organization Account Settings
+
+**User:** ORGANIZATION_ADMIN
+
+**Steps:**
+
+1. Navigate to `/organization/[:organizationNameId]/settings/account`
+2. Check "Virtual Contributors" section
+3. Click on the VC
+4. Navigate to VC memberships
+
+**Expected Results:**
+
+- VCs owned by organization are listed
+- Can navigate to VC profile from organization settings
+- VC count is accurate
+- Quick access to VC memberships management
+- Shows which spaces each VC is member of (summary view)
+
+#### 12.22 VC Shows in Home Dashboard - For VC Host
+
+**User:** ORGANIZATION_ADMIN (VC host)
+
+**Steps:**
+
+1. Navigate to `/home`
+2. Check for VirtualContributors section
+
+**Expected Results:**
+
+- "My Virtual Contributors" section appears (if VCs exist)
+- Shows VCs owned by user's organizations
+- Shows all VCs regardless of visibility (Account, Hidden, Public)
+- Each VC card displays:
+  - VC avatar
+  - VC name
+  - Link to VC profile
+- All other VC information (visibility, memberships, settings) accessible in VC's settings
+- Can quickly access VC management from home
+
+---
+
+### Category 13: Permissions and Authorization Edge Cases
+
+#### 13.1 Global Admin Access to Any Membership Settings
 
 **User:** GLOBAL_ADMIN
 
@@ -901,7 +1381,7 @@ The seed creates:
 - Can manage memberships across the platform
 - Audit logs may track global admin actions
 
-#### 12.2 Attempt Privilege Escalation - Member to Admin
+#### 13.2 Attempt Privilege Escalation - Member to Admin
 
 **User:** SPACE_MEMBER
 
@@ -919,7 +1399,7 @@ The seed creates:
 - Cannot access admin-only features
 - Security is enforced at both UI and API levels
 
-#### 12.3 Removed Member Cannot Access Previous Space
+#### 13.3 Removed Member Cannot Access Previous Space
 
 **User:** SUBSPACE_MEMBER (after being removed from subspace)
 
@@ -937,7 +1417,7 @@ The seed creates:
 - Cannot view subspace content or discussions
 - Membership removal is immediate and effective
 
-#### 12.4 Expired or Invalid Session Access
+#### 13.4 Expired or Invalid Session Access
 
 **User:** Any authenticated user with expired session
 
@@ -992,7 +1472,7 @@ Based on the comprehensive test plan above, the following scenarios are **critic
 
    - Privacy enforcement test
 
-8. **Scenario 12.2** - Attempt Privilege Escalation - Member to Admin
+8. **Scenario 13.2** - Attempt Privilege Escalation - Member to Admin
    - Critical security test
 
 ### **Critical Priority 3: Membership Management**
@@ -1024,6 +1504,27 @@ Based on the comprehensive test plan above, the following scenarios are **critic
 
 15. **Scenario 11.3** - View Space Community Members
     - Important for community engagement
+
+### **Critical Priority 5: VirtualContributor Memberships**
+
+16. **Scenario 12.2** - Access VC Membership Settings - As Host
+
+    - Core VC membership functionality
+
+17. **Scenario 12.3** - VC Added to Space Community - Direct Assignment
+
+    - Essential VC community integration
+
+18. **Scenario 12.5** - VC Opt Out from Space Membership - As Host
+
+    - Core VC management capability
+
+19. **Scenario 12.7** - VC Cannot Be Added to Subspace (L1)
+
+    - Verify L0-only constraint enforcement
+
+20. **Scenario 12.6** - Cannot Access VC Membership Settings - Non-Host
+    - Critical security test for VC access control
 
 ---
 
