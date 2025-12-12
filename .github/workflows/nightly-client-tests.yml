@@ -57,6 +57,19 @@ jobs:
         uses: actions/upload-pages-artifact@v4.0.0
         with:
           path: client-web/playwright-report/
+
+  deploy:
+    needs: test
+    runs-on: arc-runner-set
+    # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
+    permissions:
+      pages: write      # to deploy to Pages
+      id-token: write   # to verify the deployment originates from an appropriate source
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+
+    steps:
       - name: Deploy to GitHub Pages
-        id: deploy-pages
+        id: deploy
         uses: actions/deploy-pages@v4.0.5
