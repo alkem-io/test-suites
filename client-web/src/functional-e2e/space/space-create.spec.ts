@@ -8,7 +8,6 @@ import {
   TestUserManager,
 } from '@alkemio/tests-lib';
 import {
-  LoginPage,
   HomePage,
   MyAccountPage,
   CreateSpaceDialog,
