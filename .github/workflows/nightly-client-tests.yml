@@ -10,7 +10,7 @@ jobs:
 
     container:
       # it is recommended to match the image version with the installed playwright version
-      image: mcr.microsoft.com/playwright:v1.57.0-noble
+#      image: mcr.microsoft.com/playwright:v1.57.0-noble
 
     steps:
       - uses: actions/checkout@v4
