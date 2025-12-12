@@ -19,7 +19,13 @@ jobs:
         with:
           node-version: 18.20.8
 
-      - name: Install dependencies
+      - name: Install lib dependencies
+        run: cd lib && npm ci
+
+      - name: Install server-api dependencies
+        run: cd server-api && npm ci
+
+      - name: Install client-web dependencies
         run: cd client-web && npm ci
 
       - name: Install Playwright Browsers
