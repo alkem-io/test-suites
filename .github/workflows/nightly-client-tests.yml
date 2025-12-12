@@ -1,0 +1,25 @@
+name: Playwright E2E
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: arc-runner-set
+
+    container:
+      # it is recommended to match the image version with the installed playwright version
+      image: mcr.microsoft.com/playwright:v1.56.1-noble
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Change dir
+        run: cd client-web
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Playwright tests
+        run: npx playwright test --config=config/playwright.pattern.config.ts
