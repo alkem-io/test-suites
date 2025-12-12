@@ -41,7 +41,8 @@ jobs:
           KRATOS_ENDPOINT: ${{ vars.KRATOS_ENDPOINT }}
           MAIL_SLURPER_ENDPOINT: ${{ vars.MAIL_SLURPER_ENDPOINT }}
           NPM_CONFIG_ENGINE_STRICT: ${{ vars.NPM_CONFIG_ENGINE_STRICT }}
-        run:  cd client-web && npx playwright test --config=config/playwright.pattern.config.ts
+          AUTH_TEST_HARNESS_PASSWORD: ${{ secrets.AUTH_TEST_HARNESS_PASSWORD }}
+        run: cd client-web && npx playwright test --config=config/playwright.pattern.config.ts
 
       - uses: actions/upload-artifact@v5
         if: ${{ !cancelled() }}
