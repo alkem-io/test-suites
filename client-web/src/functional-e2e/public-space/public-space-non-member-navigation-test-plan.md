@@ -27,6 +27,32 @@ This test plan covers navigation and content access scenarios for **non-member u
 
 ## Test Scenarios
 
+## Automation Coverage Summary
+
+- Summary: Implemented 18/21, Skipped 1/21, Missing 2/21
+- Skipped: 5.3 (present but marked `test.skip`)
+- Missing: 4.4, 6.2
+
+By Section
+
+- 1. Public Space Discovery and Access:
+  - 1.1 Implemented in `non-member-tab-navigation.spec.ts`
+  - 1.2 Implemented in `anonymous-user-access-public-space.spec.ts`
+- 2. Space Tab Navigation for Non-Members:
+  - 2.1–2.5 Implemented in `non-member-tab-navigation.spec.ts`
+- 3. Whiteboard Access for Non-Members:
+  - 3.1–3.4 Implemented in `non-member-whiteboard-access.spec.ts`
+- 4. Space Lead Profile Access:
+  - 4.1–4.3 Implemented in `non-member-lead-profile-access.spec.ts`
+  - 4.4 Missing (anonymous lead profile access)
+- 5. Subspace Navigation for Non-Members:
+  - 5.1–5.2 Implemented in `non-member-subspace-navigation.spec.ts`
+  - 5.3 Skipped in `non-member-subspace-navigation.spec.ts`
+- 6. Edge Cases and Error Handling:
+  - 6.1 Implemented in `non-member-edge-cases.spec.ts`
+  - 6.2 Missing (navigate back from user profile)
+  - 6.3 Implemented in `non-member-edge-cases.spec.ts`
+
 ### 1. Public Space Discovery and Access
 
 **Seed:** `client-web/src/functional-e2e/seed-public-space.spec.ts`
@@ -50,6 +76,8 @@ This test plan covers navigation and content access scenarios for **non-member u
 - Space name, tagline, and description are visible
 - No "Space About" dialog is displayed, which is displayed when member has no read access to space
 
+- Status: [x] Implemented in `non-member-tab-navigation.spec.ts` (test "1.1 Non-Member Can Navigate to Public Space from Home")
+
 #### 1.2 Anonymous User Can Access Public Space via Direct URL
 
 **Preconditions:**
@@ -66,6 +94,8 @@ This test plan covers navigation and content access scenarios for **non-member u
 - Space landing page loads without login prompt
 - Space content is visible
 - Login/Sign Up option remains available in navigation->profile
+
+- Status: [x] Implemented in `anonymous-user-access-public-space.spec.ts` (test "1.2 Anonymous User Can Access Public Space via Direct URL")
 
 ---
 
@@ -91,6 +121,8 @@ This test plan covers navigation and content access scenarios for **non-member u
 - Tabs are not grayed out or disabled
 - No "Members Only" indicators on tabs
 
+- Status: [x] Implemented in `non-member-tab-navigation.spec.ts` (test "2.1 Non-Member Can View All Space Tabs")
+
 #### 2.2 Non-Member Can Navigate to Dashboard Tab
 
 **Preconditions:**
@@ -107,6 +139,8 @@ This test plan covers navigation and content access scenarios for **non-member u
 - Dashboard content loads successfully
 - Recent activity or updates are visible (if any)
 - Space description/context is displayed
+
+- Status: [x] Implemented in `non-member-tab-navigation.spec.ts` (test "2.2 Non-Member Can Navigate to Dashboard Tab")
 
 #### 2.3 Non-Member Can Navigate to Subspaces Tab
 
@@ -126,6 +160,8 @@ This test plan covers navigation and content access scenarios for **non-member u
 - Subspace cards show name, description preview
 - Subspaces are clickable
 
+- Status: [x] Implemented in `non-member-tab-navigation.spec.ts` (test "2.3 Non-Member Can Navigate to Subspaces Tab")
+
 #### 2.4 Non-Member Can Navigate to Knowledge Base Tab
 
 **Preconditions:**
@@ -143,6 +179,8 @@ This test plan covers navigation and content access scenarios for **non-member u
 - Callouts are visible (e.g., post collection callout)
 - Content is readable (not blurred or hidden)
 
+- Status: [x] Implemented in `non-member-tab-navigation.spec.ts` (test "2.4 Non-Member Can Navigate to Knowledge Base Tab")
+
 #### 2.5 Non-Member Can Navigate to Community Tab
 
 **Preconditions:**
@@ -159,6 +197,8 @@ This test plan covers navigation and content access scenarios for **non-member u
 - Community tab content loads
 - Space leads section is visible
 - Member list or member count is displayed
+
+- Status: [x] Implemented in `non-member-tab-navigation.spec.ts` (test "2.5 Non-Member Can Navigate to Community Tab")
 
 ---
 
@@ -187,6 +227,8 @@ This test plan covers navigation and content access scenarios for **non-member u
 - Whiteboard title and description are shown
 - "View" or "Open" action is available
 
+- Status: [x] Implemented in `non-member-whiteboard-access.spec.ts` (test "3.1 Non-Member Can View Whiteboard Callout in Space")
+
 #### 3.2 Non-Member Can Open and View Whiteboard Content
 
 **Preconditions:**
@@ -206,6 +248,8 @@ This test plan covers navigation and content access scenarios for **non-member u
 - Zoom and pan controls are functional
 - User cannot edit the whiteboard (read-only mode)
 
+- Status: [x] Implemented in `non-member-whiteboard-access.spec.ts` (test "3.2 Non-Member Can Open and View Whiteboard Content")
+
 #### 3.3 Non-Member Cannot Edit Whiteboard in Public Space
 
 **Preconditions:**
@@ -223,6 +267,8 @@ This test plan covers navigation and content access scenarios for **non-member u
 - No changes can be made to the whiteboard
 - Appropriate message shown if edit is attempted (e.g., "View only" indicator)
 
+- Status: [x] Implemented in `non-member-whiteboard-access.spec.ts` (test "3.3 Non-Member Cannot Edit Whiteboard (Read-Only Access)")
+
 #### 3.4 Anonymous User Can View Whiteboard in Public Space
 
 **Preconditions:**
@@ -239,6 +285,8 @@ This test plan covers navigation and content access scenarios for **non-member u
 
 - Whiteboard content is visible without login
 - Same read-only behavior as authenticated non-member
+
+- Status: [x] Implemented in `non-member-whiteboard-access.spec.ts` (test "3.4 Anonymous User Can View Whiteboard Callout in Public Space")
 
 ---
 
@@ -266,6 +314,8 @@ This test plan covers navigation and content access scenarios for **non-member u
 - Lead user cards show avatar, name
 - Lead user cards are clickable
 
+- Status: [x] Implemented in `non-member-lead-profile-access.spec.ts` (test "4.1 Non-Member Can See Space Leads Section on Community Tab")
+
 #### 4.2 Non-Member Can Open Lead User Profile from Space
 
 **Preconditions:**
@@ -283,6 +333,8 @@ This test plan covers navigation and content access scenarios for **non-member u
 - Profile shows user's public information (name, tagline, bio)
 - Profile avatar is displayed
 - No "Access Denied" message
+
+- Status: [x] Implemented in `non-member-lead-profile-access.spec.ts` (test "4.2 Non-Member Can Open Lead Profile from Community Tab")
 
 #### 4.3 Non-Member Can View Lead's Profile Details
 
@@ -303,6 +355,8 @@ This test plan covers navigation and content access scenarios for **non-member u
 - Skills/Keywords are displayed (if set)
 - Social links are displayed (if set)
 
+- Status: [x] Implemented in `non-member-lead-profile-access.spec.ts` (test "4.3 Non-Member Can View Lead's Profile Details")
+
 #### 4.4 Anonymous User Can Access Lead Profile from Public Space
 
 **Preconditions:**
@@ -320,6 +374,8 @@ This test plan covers navigation and content access scenarios for **non-member u
 - Profile page loads without login requirement
 - Public profile information is accessible
 - Login prompt does not block profile viewing
+
+- Status: [ ] Not implemented (no anonymous lead profile test yet)
 
 ---
 
@@ -345,6 +401,8 @@ This test plan covers navigation and content access scenarios for **non-member u
 - Subspace tabs are visible and accessible
 - Breadcrumb shows parent space > subspace hierarchy
 
+- Status: [x] Implemented in `non-member-subspace-navigation.spec.ts` (test "5.1 Non-Member Can Navigate into Public Subspace")
+
 #### 5.2 Non-Member Sees About Dialog When Accessing Private Sub-subspace
 
 **Preconditions:**
@@ -367,6 +425,8 @@ This test plan covers navigation and content access scenarios for **non-member u
 - User cannot access the full sub-subspace tabs/content
 - Dialog may include option to apply for membership (if applicable)
 
+- Status: [x] Implemented in `non-member-subspace-navigation.spec.ts` (test "5.2 Non-Member Sees About Dialog When Accessing Private Sub-subspace")
+
 #### 5.3 Non-Member Can View Subspace Community and Leads
 
 **Preconditions:**
@@ -383,6 +443,8 @@ This test plan covers navigation and content access scenarios for **non-member u
 - Subspace leads are displayed (SUBSPACE_ADMIN)
 - Lead profiles are clickable
 - Community members are visible
+
+- Status: [ ] Skipped in `non-member-subspace-navigation.spec.ts` (test is marked with `test.skip`)
 
 ---
 
@@ -407,6 +469,8 @@ This test plan covers navigation and content access scenarios for **non-member u
 - No broken UI elements
 - Navigation remains functional
 
+- Status: [x] Implemented in `non-member-edge-cases.spec.ts` (test "6.1 Non-Member Sees Appropriate UI When Space Has Default Callout")
+
 #### 6.2 Non-Member Can Navigate Back to Space from User Profile
 
 **Preconditions:**
@@ -423,6 +487,8 @@ This test plan covers navigation and content access scenarios for **non-member u
 - User returns to the space successfully
 - Space context is maintained
 - No navigation errors
+
+- Status: [ ] Not implemented as specified (related coverage: `non-member-edge-cases.spec.ts` has breadcrumb return from Subspace)
 
 #### 6.3 Session Expiry Does Not Block Public Space Access
 
@@ -441,6 +507,8 @@ This test plan covers navigation and content access scenarios for **non-member u
 - Public content remains accessible
 - User is not forcefully redirected to login
 - Private actions (if any) prompt for login
+
+- Status: [x] Implemented in `non-member-edge-cases.spec.ts` (test "6.3 Session Expiry Does Not Block Public Space Access")
 
 ---
 
@@ -470,9 +538,9 @@ collaboration: {
 
 ## Success Criteria
 
-- [ ] All non-member navigation scenarios pass
-- [ ] Whiteboard viewing works for non-members
-- [ ] Lead profiles are accessible from public spaces
-- [ ] No access denied errors for public content
-- [ ] Anonymous users have equivalent access to authenticated non-members
-- [ ] UI clearly indicates read-only/view-only mode where applicable
+- [ ] All non-member navigation scenarios pass (pending 4.4, 5.3, 6.2)
+- [x] Whiteboard viewing works for non-members
+- [x] Lead profiles are accessible from public spaces (verified for non-members)
+- [x] No access denied errors for public content (covered in 4.2 and others)
+- [ ] Anonymous users have equivalent access to authenticated non-members (partial: community + whiteboard)
+- [x] UI clearly indicates read-only/view-only mode where applicable (whiteboard)

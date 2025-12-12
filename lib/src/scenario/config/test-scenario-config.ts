@@ -23,6 +23,7 @@ export interface TestScenarioSpaceConfig {
   about?: {
     profile?: {
       displayName?: string;
+      tagline?: string;
     };
   };
   community?: {

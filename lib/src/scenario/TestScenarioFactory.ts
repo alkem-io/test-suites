@@ -332,6 +332,7 @@ export class TestScenarioFactory {
     model.profile = {
       id: orgResponseData.profile.id ?? "",
       displayName: orgResponseData.profile.displayName ?? "",
+      tagline: orgResponseData.profile.tagline ?? "",
     };
 
     const licensePlan = await getLicensePlanByName("ACCOUNT_LICENSE_PLUS");
@@ -413,6 +414,7 @@ export class TestScenarioFactory {
       profile: {
         id: spaceData?.about.profile?.id ?? "",
         displayName: spaceData?.about.profile?.displayName ?? "",
+        tagline: spaceData?.about.profile?.tagline ?? "",
       },
     };
     spaceModel.collaboration.id = spaceData?.collaboration.id ?? "";
@@ -613,6 +615,7 @@ export class TestScenarioFactory {
         profile: {
           id: "",
           displayName: "",
+          tagline: "",
         },
         nameId: "",
       },
@@ -636,6 +639,7 @@ export class TestScenarioFactory {
         profile: {
           id: "",
           displayName: "",
+          tagline: "",
         },
       },
       collaboration: {

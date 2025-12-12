@@ -71,18 +71,18 @@ export function createAuthenticatedSessionFixture(
     /**
      * Call this in your test.afterAll to clean up
      */
-    teardownAuthentication: async () => {
-      await sharedContext?.close();
+    // teardownAuthentication: async () => {
+    //   await sharedContext?.close();
 
-      // Clean up storage state file if requested
-      if (options.cleanupAfterTests) {
-        try {
-          await fs.promises.unlink(storageStatePath);
-        } catch (error) {
-          // Ignore if file doesn't exist
-        }
-      }
-    },
+    //   // Clean up storage state file if requested
+    //   if (options.cleanupAfterTests) {
+    //     try {
+    //       await fs.promises.unlink(storageStatePath);
+    //     } catch (error) {
+    //       // Ignore if file doesn't exist
+    //     }
+    //   }
+    // },
     /**
      * Get the shared page instance (useful for additional setup)
      */

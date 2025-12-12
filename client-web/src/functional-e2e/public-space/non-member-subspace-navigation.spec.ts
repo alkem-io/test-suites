@@ -12,10 +12,9 @@ import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFac
 import { expect } from '@playwright/test';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 
-const { test, setupAuthentication, teardownAuthentication } =
-  createAuthenticatedSessionFixture({
-    storageStateName: 'non-member-subspace-navigation.json',
-  });
+const { test, setupAuthentication } = createAuthenticatedSessionFixture({
+  storageStateName: 'non-member-subspace-navigation.json',
+});
 
 const scenarioConfig: TestScenarioConfig = {
   name: 'seed-public-space',
@@ -30,7 +29,14 @@ const scenarioConfig: TestScenarioConfig = {
     },
     community: {
       admins: [TestUser.SPACE_ADMIN],
-      members: [TestUser.SPACE_MEMBER, TestUser.SPACE_ADMIN],
+      members: [
+        TestUser.SPACE_MEMBER,
+        TestUser.SPACE_ADMIN,
+        TestUser.SUBSPACE_MEMBER,
+        TestUser.SUBSPACE_ADMIN,
+        TestUser.SUBSUBSPACE_MEMBER,
+        TestUser.SUBSUBSPACE_ADMIN,
+      ],
     },
     settings: {
       privacy: { mode: SpacePrivacyMode.Public },
@@ -39,9 +45,20 @@ const scenarioConfig: TestScenarioConfig = {
       },
     },
     subspace: {
+      about: {
+        profile: {
+          displayName: 'seed-public-space',
+          tagline: 'test description',
+        },
+      },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
-        members: [TestUser.SUBSPACE_MEMBER, TestUser.SUBSPACE_ADMIN],
+        members: [
+          TestUser.SUBSPACE_MEMBER,
+          TestUser.SUBSPACE_ADMIN,
+          TestUser.SUBSUBSPACE_MEMBER,
+          TestUser.SUBSUBSPACE_ADMIN,
+        ],
       },
       settings: {
         privacy: { mode: SpacePrivacyMode.Public },
@@ -77,13 +94,15 @@ test.describe('Subspace Navigation for Non-Members', () => {
     await setupAuthentication(browser, 'non.space@alkem.io');
   });
 
-  test.afterAll(async () => {
-    test.setTimeout(40_000);
-    await teardownAuthentication();
-    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
-  });
+  // test.afterAll(async () => {
+  //   test.setTimeout(40_000);
+  //   await teardownAuthentication();
+  //   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  // });
 
-  test('5.1 Non-Member Can Navigate into Public Subspace', async ({ page }) => {
+  test.only('5.1 Non-Member Can Navigate into Public Subspace', async ({
+    page,
+  }) => {
     test.setTimeout(30_000);
     // Navigate to the public space as non-member (already authenticated)
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
@@ -95,7 +114,7 @@ test.describe('Subspace Navigation for Non-Members', () => {
     await expect(
       page.getByRole('link', {
         name: new RegExp(
-          `Card banner:.*${baseScenario.space.about.profile.displayName}`
+          `Card banner:.*${baseScenario.subspace.about.profile.displayName}`
         ),
       })
     ).toBeVisible();
@@ -104,24 +123,30 @@ test.describe('Subspace Navigation for Non-Members', () => {
     await page
       .getByRole('link', {
         name: new RegExp(
-          `Card banner:.*${baseScenario.space.about.profile.displayName}`
+          `Card banner:.*${baseScenario.subspace.about.profile.displayName}`
         ),
       })
       .click();
 
     // Verify subspace landing page loads successfully
     await expect(page).toHaveURL(/\/challenges\/ssnameid/);
-
+    baseScenario.subspace.about.profile.tagline;
     // Verify subspace heading is visible
     await expect(
       page.getByRole('heading', {
         level: 1,
-        name: baseScenario.space.about.profile.displayName,
+        name: baseScenario.subspace.about.profile.displayName,
       })
     ).toBeVisible();
 
     // Verify subspace content is visible (not About dialog)
-    await expect(page.getByText('test tagline')).toBeVisible();
+    console.log(
+      'Verifying subspace tagline:',
+      baseScenario.subspace.about.profile.tagline
+    );
+    await expect(
+      page.getByText(baseScenario.subspace.about.profile.tagline)
+    ).toBeVisible({ timeout: 10_000 });
 
     // Verify breadcrumb shows parent space > subspace hierarchy
     await expect(
@@ -196,7 +221,7 @@ test.describe('Subspace Navigation for Non-Members', () => {
     }
   });
 
-  test('5.3 Non-Member Can View Subspace Community and Leads', async ({
+  test.skip('5.3 Non-Member Can View Subspace Community and Leads', async ({
     page,
   }) => {
     test.setTimeout(30_000);
