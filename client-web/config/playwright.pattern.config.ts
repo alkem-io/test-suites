@@ -58,12 +58,12 @@ export default defineConfig({
 
   retries: 1,
 
-  // 50% of the available CPUs
+  // % of the available CPUs
   workers: '50%',
 
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
-    // ['html', { open: 'never' }],
+    ['html', { open: 'never' }],
     ['list', { printSteps: true }],
     // ['json', { outputFile: 'test-results/pattern-results.json' }],
   ],
