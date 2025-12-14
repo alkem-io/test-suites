@@ -47,7 +47,7 @@ By Section
   - 4.4 Missing (anonymous lead profile access)
 - 5. Subspace Navigation for Non-Members:
   - 5.1–5.2 Implemented in `non-member-subspace-navigation.spec.ts`
-  - 5.3 Skipped in `non-member-subspace-navigation.spec.ts`
+  - 5.3 Implemented in `non-member-subspace-navigation.spec.ts`
 - 6. Edge Cases and Error Handling:
   - 6.1 Implemented in `non-member-edge-cases.spec.ts`
   - 6.2 Missing (navigate back from user profile)

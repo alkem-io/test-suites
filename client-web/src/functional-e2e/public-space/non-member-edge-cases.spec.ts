@@ -11,10 +11,12 @@ import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/O
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
 import { expect } from '@playwright/test';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
+import { TestUserManager } from '@alkemio/tests-lib';
 
 const { test, setupAuthentication, teardownAuthentication } =
   createAuthenticatedSessionFixture({
     storageStateName: 'non-member-edge-cases.json',
+    cleanupAfterTests: process.env.cleanupAfterTests === 'true',
   });
 
 const scenarioConfig: TestScenarioConfig = {
@@ -67,7 +69,10 @@ test.describe('Edge Cases and Error Handling', () => {
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(60_000);
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
-    await setupAuthentication(browser, 'non.space@alkem.io');
+    await setupAuthentication(
+      browser,
+      TestUserManager.users.nonSpaceMember.email
+    );
   });
 
   test.afterAll(async () => {
@@ -121,16 +126,26 @@ test.describe('Edge Cases and Error Handling', () => {
 
     // Navigate to Subspaces tab and enter a subspace
     await page.getByRole('tab', { name: 'Subspaces' }).click();
+
+    // Click on the subspace card to enter the public subspace - clicking on Card banner should be provided Space Avatar, which in my opinion is not correct
+    // await page
+    //   .getByRole('link', {
+    //     name: new RegExp(
+    //       `Card banner:.*${baseScenario.space.about.profile.displayName}`
+    //     ),
+    //   })
+    //   .click();
+
     await page
       .getByRole('link', {
-        name: new RegExp(
-          `Card banner:.*${baseScenario.space.about.profile.displayName}`
-        ),
+        name: `Avatar ${baseScenario.subspace.about.profile.displayName}`,
       })
       .click();
 
     // Verify we are in the subspace
-    await expect(page).toHaveURL(/\/challenges\/ssnameid/);
+    await expect(page).toHaveURL(
+      new RegExp(`/challenges/${baseScenario.subspace.nameId}$`)
+    );
 
     // Use breadcrumb to navigate back to parent space
     await page

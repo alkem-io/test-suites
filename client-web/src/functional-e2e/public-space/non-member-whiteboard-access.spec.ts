@@ -11,10 +11,12 @@ import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/O
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
 import { expect } from '@playwright/test';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
+import { TestUserManager } from '@alkemio/tests-lib';
 
 const { test, setupAuthentication, teardownAuthentication } =
   createAuthenticatedSessionFixture({
     storageStateName: 'non-member-whiteboard-access.json',
+    cleanupAfterTests: process.env.cleanupAfterTests === 'true',
   });
 
 const scenarioConfig: TestScenarioConfig = {
@@ -51,7 +53,10 @@ test.describe('Whiteboard Access for Non-Members', () => {
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(120_000);
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
-    await setupAuthentication(browser, 'non.space@alkem.io');
+    await setupAuthentication(
+      browser,
+      TestUserManager.users.nonSpaceMember.email
+    );
   });
 
   test.afterAll(async () => {
