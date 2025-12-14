@@ -56,6 +56,7 @@ const scenarioConfig: TestScenarioConfig = {
       },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
+        leads: [TestUser.SUBSPACE_ADMIN],
         members: [
           TestUser.SUBSPACE_MEMBER,
           TestUser.SUBSPACE_ADMIN,
@@ -281,7 +282,7 @@ test.describe('Subspace Navigation for Non-Members', () => {
     // Click on the lead profile link
     await page
       .getByRole('link', {
-        name: `User avatar ${TestUserManager.users.globalAdmin.displayName}`,
+        name: `User avatar ${TestUserManager.users.subspaceAdmin.displayName}`,
       })
       .click({ timeout: 10_000 });
 
