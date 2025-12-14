@@ -132,7 +132,8 @@ describe('Organization settings', () => {
         organizationData?.data?.organization.roleSet.usersInRole;
 
       // Assert
-      expect(organizationMembers).toHaveLength(1);
+      // The users are 2 because in the initialization we assign 2 users to org
+      expect(organizationMembers).toHaveLength(2);
       expect(organizationMembers).not.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -161,7 +162,8 @@ describe('Organization settings', () => {
         organizationData?.data?.organization.roleSet.usersInRole;
 
       // Assert
-      expect(organizationMembers).toHaveLength(1);
+      // The users are 2 because in the initialization we assign 2 users to org
+      expect(organizationMembers).toHaveLength(2);
       expect(organizationMembers).not.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -190,8 +192,8 @@ describe('Organization settings', () => {
         organizationData?.data?.organization.roleSet.usersInRole;
 
       // Assert
-
-      expect(organizationMembers).toHaveLength(1);
+      // The users are 2 because in the initialization we assign 2 users to orgs
+      expect(organizationMembers).toHaveLength(2);
       expect(organizationMembers).not.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -275,7 +277,7 @@ describe('Organization settings', () => {
         organizationData?.data?.organization.roleSet.usersInRole;
 
       // Assert
-      expect(organizationMembers).toHaveLength(1);
+      expect(organizationMembers).toHaveLength(2);
       expect(organizationMembers).not.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -304,8 +306,8 @@ describe('Organization settings', () => {
         organizationData?.data?.organization.roleSet.usersInRole;
 
       // Assert
-
-      expect(organizationMembers).toHaveLength(1);
+      // The users are 2 because in the initialization we assign 2 users to org
+      expect(organizationMembers).toHaveLength(2);
       expect(organizationMembers).not.toEqual(
         expect.arrayContaining([
           expect.objectContaining({

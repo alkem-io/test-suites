@@ -9,7 +9,8 @@ export const createSubspace = async (
   subspaceName: string,
   subspaceNameId: string,
   parentId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  tagline?: string
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -18,7 +19,8 @@ export const createSubspace = async (
         subspaceData: subspaceVariablesData(
           subspaceName,
           subspaceNameId,
-          parentId
+          parentId,
+          tagline
         ),
       },
       {
@@ -32,7 +34,8 @@ export const createSubspace = async (
 export const subspaceVariablesData = (
   displayName: string,
   nameId: string,
-  spaceId: string
+  spaceId: string,
+  tagline?: string
 ) => {
   const variables = {
     nameID: nameId,
@@ -40,7 +43,7 @@ export const subspaceVariablesData = (
     about: {
       profileData: {
         displayName,
-        tagline: "test tagline" + uniqueId,
+        tagline: tagline ?? "test tagline" + uniqueId,
         description: "test description" + uniqueId,
         referencesData: [
           {
