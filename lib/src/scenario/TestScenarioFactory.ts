@@ -119,13 +119,14 @@ export class TestScenarioFactory {
 
       await this.createSubspace(
         baseScenario.space.id,
-        baseScenario.name,
-        baseScenario.subspace
+        "l1-" + baseScenario.name,
+        baseScenario.subspace,
+        subspace
       );
       await this.populateSpace(
         subspace,
         baseScenario.subspace,
-        baseScenario.name
+        "l1-" + baseScenario.name
       );
 
       const subsubspace = subspace.subspace;
@@ -136,13 +137,14 @@ export class TestScenarioFactory {
 
       await this.createSubspace(
         baseScenario.subspace.id,
-        baseScenario.name,
-        baseScenario.subsubspace
+        "l2-" + baseScenario.name,
+        baseScenario.subsubspace,
+        subsubspace
       );
       await this.populateSpace(
         subsubspace,
         baseScenario.subsubspace,
-        baseScenario.name
+        "l2-" + baseScenario.name
       );
     } catch (e) {
       LogManager.getLogger().error(
@@ -332,6 +334,7 @@ export class TestScenarioFactory {
     model.profile = {
       id: orgResponseData.profile.id ?? "",
       displayName: orgResponseData.profile.displayName ?? "",
+      tagline: orgResponseData.profile.tagline ?? "",
     };
 
     const licensePlan = await getLicensePlanByName("ACCOUNT_LICENSE_PLUS");
@@ -401,7 +404,7 @@ export class TestScenarioFactory {
     }
 
     const responseRootSpace = await this.createSpaceAndGetData(
-      spaceName,
+      "l0-" + spaceName,
       spaceNameId,
       accountID,
       addTutorialCallouts
@@ -423,6 +426,7 @@ export class TestScenarioFactory {
       profile: {
         id: spaceData?.about.profile?.id ?? "",
         displayName: spaceData?.about.profile?.displayName ?? "",
+        tagline: spaceData?.about.profile?.tagline ?? "",
       },
     };
     spaceModel.collaboration.id = spaceData?.collaboration.id ?? "";
@@ -534,13 +538,18 @@ export class TestScenarioFactory {
   private static async createSubspace(
     parentSpaceID: string,
     subspaceName: string,
-    targetModel: SpaceModel
+    targetModel: SpaceModel,
+    config?: TestScenarioSpaceConfig
   ): Promise<SpaceModel> {
     const uniqueId = UniqueIDGenerator.getID();
+    const displayName = config?.about?.profile?.displayName ?? subspaceName;
+    const tagline = config?.about?.profile?.tagline;
     const responseSubspace = await createSubspace(
-      subspaceName,
-      `ssnameid${uniqueId}`,
-      parentSpaceID
+      displayName,
+      `l1nameid${uniqueId}`,
+      parentSpaceID,
+      TestUser.GLOBAL_ADMIN,
+      tagline
     );
 
     const subspaceData = responseSubspace.data?.createSubspace;
@@ -560,6 +569,8 @@ export class TestScenarioFactory {
     targetModel.about.profile.id = subspaceData?.about.profile?.id ?? "";
     targetModel.about.profile.displayName =
       subspaceData?.about.profile?.displayName ?? "";
+    targetModel.about.profile.tagline =
+      subspaceData?.about.profile?.tagline ?? "";
 
     return targetModel;
   }
@@ -623,6 +634,7 @@ export class TestScenarioFactory {
         profile: {
           id: "",
           displayName: "",
+          tagline: "",
         },
         nameId: "",
       },
@@ -646,6 +658,7 @@ export class TestScenarioFactory {
         profile: {
           id: "",
           displayName: "",
+          tagline: "",
         },
       },
       collaboration: {

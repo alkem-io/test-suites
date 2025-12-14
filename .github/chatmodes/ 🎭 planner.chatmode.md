@@ -82,6 +82,7 @@ application features:
 >
 > - `./client-web/src/functional-e2e/seed-minimal.spec.ts`
 > - `./client-web/src/functional-e2e/seed.spec.ts`
+> - `./client-web/src/functional-e2e/seed-public-space.spec.ts`
 
 #### 1.1 Add Valid Todo
 
