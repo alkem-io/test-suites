@@ -1,6 +1,9 @@
 language: node_js
 # Use Ubuntu 20.04 for better Node.js compatibility
 dist: focal
+branches:
+  only:
+    - __disable_travis_never_build__ # Disable automatic builds on branches
 # Use Node.js 20.11.0 as default (compatible with Ubuntu 20.04)
 node_js:
   - 20.11.0
