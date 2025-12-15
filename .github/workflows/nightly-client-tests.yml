@@ -7,6 +7,8 @@ on:
 jobs:
   test:
     runs-on: arc-runner-set
+    permissions:
+      contents: write
 
     #container:
     # it is recommended to match the image version with the installed playwright version
@@ -87,8 +89,6 @@ jobs:
         run: |
           # Ensure output directory exists even if gh-pages checkout failed or branch doesn't exist yet.
           mkdir -p out
-          # Avoid uploading git metadata inside the Pages artifact.
-          rm -rf out/.git
           TARGET="nightly/$RUN_DATE/$RUN_ID"
           mkdir -p out/$TARGET
           cp -r client-web/playwright-report/* out/$TARGET/
@@ -126,8 +126,36 @@ jobs:
           </body></html>
           EOF
 
+      # Persist the accumulated report history so next runs can append and re-index.
+      - name: Commit updated reports to gh-pages branch
+        if: ${{ always() }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          cd out
+
+          if [ ! -d .git ]; then
+            git init
+            git checkout -b gh-pages
+            git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          else
+            git checkout gh-pages || git checkout -b gh-pages
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add -A
+          git commit -m "Update Playwright report: ${RUN_DATE}/${RUN_ID}" || echo "No changes to commit"
+          git push origin gh-pages
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
+
+      - name: Remove git metadata from Pages artifact
+        run: rm -rf out/.git
 
       - name: Upload artifact for GitHub Pages
         uses: actions/upload-pages-artifact@v4
