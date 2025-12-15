@@ -151,35 +151,15 @@ jobs:
           git commit -m "Update Playwright report: ${RUN_DATE}/${RUN_ID}" || echo "No changes to commit"
           git push origin gh-pages
 
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
-
-      - name: Remove git metadata from Pages artifact
-        run: rm -rf out/.git
-
-      - name: Upload artifact for GitHub Pages
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: out/
-
       - name: Fail job if Playwright tests failed
         if: ${{ steps.playwright.outcome == 'failure' }}
         run: exit 1
 
   deploy:
-    #  ensures the job is considered for execution no matter the outcome of the previous job, including failures.
+    # deploy regardless of test outcome so failures still publish reports
     if: ${{ always() }}
     needs: test
-    runs-on: arc-runner-set
-    # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
-    permissions:
-      pages: write # to deploy to Pages
-      id-token: write # to verify the deployment originates from an appropriate source
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
-
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deploy
-        uses: actions/deploy-pages@v4.0.5
+    uses: ./.github/workflows/deploy-github-pages.yml
+    with:
+      ref: gh-pages
+      path: .
