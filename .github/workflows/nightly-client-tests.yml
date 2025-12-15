@@ -85,6 +85,11 @@ jobs:
           cd client-web
           npx playwright test --config=config/playwright.config.nightly.ts
 
+      - name: Capture Playwright outcome
+        if: ${{ always() }}
+        run: |
+          echo "PLAYWRIGHT_OUTCOME=${{ steps.playwright.outcome }}" >> $GITHUB_ENV
+
       - name: Organize report for GitHub Pages
         run: |
           # Ensure output directory exists even if gh-pages checkout failed or branch doesn't exist yet.
@@ -98,6 +103,17 @@ jobs:
           echo "Run ID: $RUN_ID" > out/nightly/$RUN_DATE/$RUN_ID/runinfo.txt
           echo "Date: $RUN_DATE" >> out/nightly/$RUN_DATE/$RUN_ID/runinfo.txt
           echo "Branch: $GITHUB_REF" >> out/nightly/$RUN_DATE/$RUN_ID/runinfo.txt
+          echo "Commit: $GITHUB_SHA" >> out/nightly/$RUN_DATE/$RUN_ID/runinfo.txt
+          echo "Playwright outcome: ${PLAYWRIGHT_OUTCOME:-unknown}" >> out/nightly/$RUN_DATE/$RUN_ID/runinfo.txt
+
+          echo "$GITHUB_SHA" > out/nightly/$RUN_DATE/$RUN_ID/commit.txt
+          echo "${GITHUB_REF_NAME:-unknown}" > out/nightly/$RUN_DATE/$RUN_ID/branch.txt
+
+          if [ "${PLAYWRIGHT_OUTCOME:-}" = "success" ]; then
+            echo "passed" > out/nightly/$RUN_DATE/$RUN_ID/status.txt
+          else
+            echo "failed" > out/nightly/$RUN_DATE/$RUN_ID/status.txt
+          fi
 
       - name: Generate summary index.html
         run: |
@@ -105,25 +121,68 @@ jobs:
           INDEX="out/index.html"
           cat > $INDEX << 'EOF'
           <!DOCTYPE html>
-          <html><head><meta charset="UTF-8"><title>Nightly Reports</title></head>
-          <body>
-          <h1>Nightly Playwright E2E Reports</h1>
-          <ul>
+          <html>
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1" />
+              <title>Nightly Reports</title>
+              <style>
+                body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin: 24px; line-height: 1.4; }
+                h1 { margin: 0 0 12px 0; }
+                h2 { margin: 20px 0 8px 0; }
+                ul { margin: 0 0 12px 0; }
+              </style>
+            </head>
+            <body>
+              <h1>Nightly Playwright E2E Reports</h1>
           EOF
 
-          # Build a full list of all stored runs (across all prior deployments).
-          # Sort newest-first for convenience.
+          # Render by date with runs underneath (newest-first)
           if [ -d "out/nightly" ]; then
-            find out/nightly -mindepth 2 -maxdepth 2 -type d -printf '%P\n' | sort -r | while read -r entry; do
-              DATE="${entry%%/*}"
-              RID="${entry##*/}"
-              echo "  <li><a href=\"nightly/$DATE/$RID/\">$DATE / $RID</a></li>" >> $INDEX
+            for dateDir in $(ls -1 out/nightly | sort -r); do
+              [ -d "out/nightly/$dateDir" ] || continue
+              echo "<h2>$dateDir</h2>" >> $INDEX
+              echo "<ul>" >> $INDEX
+
+              for runDir in $(ls -1 "out/nightly/$dateDir" | sort -r); do
+                [ -d "out/nightly/$dateDir/$runDir" ] || continue
+                statusFile="out/nightly/$dateDir/$runDir/status.txt"
+                commitFile="out/nightly/$dateDir/$runDir/commit.txt"
+                branchFile="out/nightly/$dateDir/$runDir/branch.txt"
+                status="unknown"
+                if [ -f "$statusFile" ]; then
+                  status=$(tr -d '\n\r' < "$statusFile")
+                fi
+
+                shaShort="unknown"
+                if [ -f "$commitFile" ]; then
+                  shaShort=$(tr -d '\n\r' < "$commitFile" | cut -c1-7)
+                fi
+
+                branchName="unknown"
+                if [ -f "$branchFile" ]; then
+                  branchName=$(tr -d '\n\r' < "$branchFile")
+                fi
+
+                icon="❔"
+                if [ "$status" = "passed" ]; then
+                  icon="✅"
+                elif [ "$status" = "failed" ]; then
+                  icon="❌"
+                fi
+
+                echo "  <li>$icon <a href=\"nightly/$dateDir/$runDir/\">$runDir ($shaShort - $branchName)</a></li>" >> $INDEX
+              done
+
+              echo "</ul>" >> $INDEX
             done
+          else
+            echo "<p>No reports yet.</p>" >> $INDEX
           fi
 
           cat >> $INDEX << 'EOF'
-          </ul>
-          </body></html>
+            </body>
+          </html>
           EOF
 
       # Persist the accumulated report history so next runs can append and re-index.
