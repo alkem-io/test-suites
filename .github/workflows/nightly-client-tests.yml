@@ -61,6 +61,8 @@ jobs:
           npm run register-users
 
       - name: Run Playwright tests
+        id: playwright
+        continue-on-error: true
         env:
           ALKEMIO_BASE_URL: ${{ vars.ALKEMIO_BASE_URL }}
           ALKEMIO_SERVER: ${{ vars.ALKEMIO_SERVER }}
@@ -73,7 +75,7 @@ jobs:
           AUTH_TEST_HARNESS_PASSWORD: ${{ secrets.AUTH_TEST_HARNESS_PASSWORD }}
         run: |
           cd client-web
-          npx playwright test --config=config/playwright.config.nightly.ts || true
+          npx playwright test --config=config/playwright.config.nightly.ts
 
       - name: Organize report for GitHub Pages
         run: |
@@ -125,6 +127,10 @@ jobs:
         uses: actions/upload-pages-artifact@v4
         with:
           path: out/
+
+      - name: Fail job if Playwright tests failed
+        if: ${{ steps.playwright.outcome == 'failure' }}
+        run: exit 1
 
   deploy:
     #  ensures the job is considered for execution no matter the outcome of the previous job, including failures.

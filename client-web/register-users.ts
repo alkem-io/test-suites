@@ -7,8 +7,10 @@ import {
   TestUser,
   verifyInKratosOrFail,
 } from '@alkemio/tests-lib';
+import dotenv from 'dotenv';
+import path from 'path';
 
-
+dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 const getUserName = (userName: string): [string, string] => {
   const [first, last] = userName.split('.');
@@ -44,9 +46,7 @@ export const userRegisterFlow = async (userName: string) => {
   } catch (e) {
     const err = e as Error;
     if (err.message.indexOf('already registered') > -1) {
-      console.warn(
-        `User ${email} already registered in Alkemio`
-      );
+      console.warn(`User ${email} already registered in Alkemio`);
     } else {
       throw new Error(err.message);
     }
@@ -69,9 +69,7 @@ const start = async () => {
     try {
       await userRegisterFlow(username);
     } catch (error) {
-      console.error(
-        `Unable to register user ${username}: ${error}`
-      );
+      console.error(`Unable to register user ${username}: ${error}`);
     }
   }
 };
