@@ -68,7 +68,7 @@ test.describe('Authentication - Phase 1 Critical Flows', () => {
     });
   });
 
-  test.describe.skip('Restricted Access & Redirects', () => {
+  test.describe('Restricted Access & Redirects', () => {
     test('2.1.1 - Access admin area without authentication', async ({
       context,
       page,
