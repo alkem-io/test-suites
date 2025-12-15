@@ -145,7 +145,7 @@ test.describe('Authentication - Phase 1 Critical Flows', () => {
     });
   });
 
-  test.describe.skip('Logout Flow', () => {
+  test.describe('Logout Flow', () => {
     test('4.1 - User logout and session cleanup', async ({ page }) => {
       test.setTimeout(30000);
       // 1. Sign in as user (admin@alkem.io)
