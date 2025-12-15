@@ -14,6 +14,19 @@ on:
         type: string
         default: .
 
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref to deploy (e.g. gh-pages)"
+        required: false
+        default: gh-pages
+        type: string
+      path:
+        description: "Folder path within the ref to deploy"
+        required: false
+        default: .
+        type: string
+
 jobs:
   deploy:
     runs-on: arc-runner-set
