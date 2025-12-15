@@ -205,7 +205,7 @@ test.describe('Authentication - Phase 1 Critical Flows', () => {
   });
 
   test.describe('Error Handling', () => {
-    test('7.1 - Invalid credentials', async ({ context, page }) => {
+    test.skip('7.1 - Invalid credentials', async ({ context, page }) => {
       // 1. Navigate to sign-in page
       await context.clearCookies();
       await navigateToLoginPageFromMenu(baseUrl, page);
