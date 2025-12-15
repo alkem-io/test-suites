@@ -41,8 +41,8 @@ const testDirectory = '../src/functional-e2e';
 const testPattern = [
   '/authentication/authentication-critical-flows.spec.ts',
   '/authentication/authentication-flows.spec.ts',
-  // '/space/organization-space-create.spec.ts',
-  // '/space/space-create.spec.ts',
+  '/space/organization-space-create.spec.ts',
+  '/space/space-create.spec.ts',
 ]
 
 export default defineConfig({
@@ -50,13 +50,17 @@ export default defineConfig({
   // testDir: '../src/functional-e2e',
   testMatch: testPattern,
 
-  /* Run tests in files in parallel */
+  /*
+    Playwright Test runs tests in parallel. In order to achieve that, it runs several worker processes that run at the same time.
+    By default, test files are run in parallel. Tests in a single file are run in order, in the same worker process.
+    You can configure entire test run to concurrently execute all tests in all files using this option.
+   */
   fullyParallel: false,
 
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: true,
 
-  retries: 1,
+  retries: 2,
 
   // % of the available CPUs
   // workers: '100%',
