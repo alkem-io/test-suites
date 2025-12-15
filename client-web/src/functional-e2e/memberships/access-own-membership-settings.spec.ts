@@ -14,7 +14,6 @@ import {
   SpacePrivacyMode,
 } from '@alkemio/client-lib';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
-import { time } from 'console';
 
 const { test, setupAuthentication, teardownAuthentication } =
   createAuthenticatedSessionFixture({
@@ -31,8 +30,6 @@ const scenarioConfig: TestScenarioConfig = {
     about: {
       profile: {
         displayName: 'Membership Test Space',
-        description:
-          'Public space for testing membership scenarios at space level',
         tagline: 'Testing space memberships',
       },
     },
@@ -81,7 +78,9 @@ test.describe('User Membership Settings', () => {
     // - "Leave" button available
     const leaveBtn = page.getByRole('button', { name: 'Leave' });
     await expect(leaveBtn).toBeVisible();
-    await expect(page.getByText(/seed-memberships-*/i)).toBeVisible();
+    await expect(
+      page.getByText(baseScenario.space.about.profile.displayName)
+    ).toBeVisible();
 
     // 4. leave community
     await leaveBtn.click();
@@ -92,6 +91,8 @@ test.describe('User Membership Settings', () => {
       `${baseUrl}/user/${TestUserManager.users.spaceMember.nameId}/settings/membership`
     );
 
-    await expect(page.getByText(/seed-memberships-*/i)).not.toBeVisible();
+    await expect(
+      page.getByText(baseScenario.space.about.profile.displayName)
+    ).not.toBeVisible();
   });
 });
