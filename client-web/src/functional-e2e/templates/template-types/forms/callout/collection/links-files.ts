@@ -4,7 +4,7 @@
  */
 
 import { Page, expect } from '@playwright/test';
-import { CollectionLinksFiles } from '../callout-template-form.models';
+import { ResponseLinksFiles } from '../callout-template-form.models';
 
 /**
  * Selects "Links & Files" for collection type.
@@ -25,7 +25,7 @@ export const selectCollectionLinksFiles = async (page: Page): Promise<void> => {
  */
 export const fillCollectionLinksFiles = async (
   page: Page,
-  settings: CollectionLinksFiles
+  settings: ResponseLinksFiles
 ): Promise<void> => {
   // Open collection settings dialog
   await page.getByRole('button', { name: 'Collection settings' }).click();

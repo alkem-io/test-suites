@@ -11,19 +11,11 @@ import { Page } from '@playwright/test';
 export const selectAdditionalContentNone = async (
   page: Page
 ): Promise<void> => {
-  const noneButton = page
-    //.getByLabel('No additional content')
+  const AdditionalContentBlock =
+    page.locator('div').filter({ hasText: /^Additional Content$/ }).first();
+
+  const noneButton = AdditionalContentBlock
     .getByRole('button', { name: 'None' });
-  // // .getByRole('heading', { name: 'Additional Content' })
-  // // .locator('..')
-  //.getByRole('button', { name: 'None' });
 
   await noneButton.click();
-};
-
-/**
- * No editing needed for "None" additional content.
- */
-export const editAdditionalContentNone = async (_page: Page): Promise<void> => {
-  // No-op: nothing to edit
 };

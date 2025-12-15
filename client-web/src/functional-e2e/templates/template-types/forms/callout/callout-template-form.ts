@@ -6,11 +6,11 @@
  */
 
 import { Page, expect } from '@playwright/test';
-import { fillTemplateForm, clearAndEditTemplateForm } from '../template-form';
+import { fillTemplateForm } from '../template-form';
 import {
   CalloutTemplateForm,
   AdditionalContent,
-  Collection,
+  ResponseCollection,
 } from './callout-template-form.models';
 
 // Additional Content helpers
@@ -105,50 +105,6 @@ const fillCalloutBaseFields = async (
   }
 };
 
-/**
- * Clears and edits the callout base fields.
- */
-const clearAndEditCalloutBaseFields = async (
-  page: Page,
-  templateData: CalloutTemplateForm
-): Promise<void> => {
-  // Clear and fill callout title
-  const titleField = page.getByRole('textbox', { name: 'Title' });
-  await titleField.click();
-  await titleField.press('Control+a');
-  await titleField.fill(templateData.calloutTitle);
-
-  // For tags, we need to clear existing and add new ones
-  // This is complex - for now we'll just add the new tag
-  if (templateData.calloutTags.length > 0) {
-    const tagsCombobox = page
-      .getByRole('heading', { name: 'Collaboration Tool Template' })
-      .locator('..')
-      .locator('..')
-      .getByRole('combobox')
-      .first();
-
-    // Add the last tag (typically the new one during edit)
-    const lastTag =
-      templateData.calloutTags[templateData.calloutTags.length - 1];
-    await tagsCombobox.fill(lastTag);
-    await tagsCombobox.press('Enter');
-  }
-
-  // Clear and fill callout description
-  if (templateData.calloutDescription) {
-    const descriptionEditor = page
-      .getByRole('heading', { name: 'Collaboration Tool Template' })
-      .locator('..')
-      .locator('..')
-      .getByRole('textbox', { name: 'Markdown editor' })
-      .first();
-    await descriptionEditor.click();
-    await descriptionEditor.press('Control+a');
-    await descriptionEditor.fill(templateData.calloutDescription);
-  }
-};
-
 // ============================================================================
 // Additional Content Dispatcher
 // ============================================================================
@@ -229,7 +185,7 @@ const setCommentsEnabled = async (
 
 const selectAndFillCollection = async (
   page: Page,
-  collection: Collection
+  collection: ResponseCollection
 ): Promise<void> => {
   switch (collection.type) {
     case 'none':
@@ -257,7 +213,7 @@ const selectAndFillCollection = async (
 
 const editCollection = async (
   page: Page,
-  collection: Collection
+  collection: ResponseCollection
 ): Promise<void> => {
   switch (collection.type) {
     case 'none':
@@ -305,28 +261,5 @@ export const fillCalloutTemplateForm = async (
   await setCommentsEnabled(page, templateData.commentsEnabled);
 
   // 5. Select and fill collection
-  await selectAndFillCollection(page, templateData.collection);
-};
-
-/**
- * Clears and edits an existing Callout Template form.
- */
-export const clearAndEditCalloutTemplateForm = async (
-  page: Page,
-  templateData: CalloutTemplateForm
-): Promise<void> => {
-  // 1. Edit template metadata
-  await clearAndEditTemplateForm(page, templateData);
-
-  // 2. Edit callout base fields
-  await clearAndEditCalloutBaseFields(page, templateData);
-
-  // 3. Edit additional content (type should match existing)
-  await editAdditionalContent(page, templateData.additionalContent);
-
-  // 4. Set comments enabled/disabled
-  await setCommentsEnabled(page, templateData.commentsEnabled);
-
-  // 5. Edit collection settings
-  await editCollection(page, templateData.collection);
+  await selectAndFillCollection(page, templateData.responseOptions);
 };

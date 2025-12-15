@@ -17,17 +17,3 @@ export const fillTemplateForm = async (page: Page, templateData: TemplateForm) =
   }
 }
 
-export const clearAndEditTemplateForm = async (page: Page, templateData: TemplateForm) => {
-  // Clear and edit the template title
-  const titleInput = page.getByRole('textbox', { name: 'Template title' });
-  await titleInput.clear();
-  await titleInput.fill(templateData.displayName);
-
-  // Clear and edit the template description
-  const descriptionInput = page.getByRole('textbox', { name: 'Markdown editor' }).first();
-  await descriptionInput.clear();
-  await descriptionInput.fill(templateData.description);
-
-  // Add a new tag (the last one in the array)
-  await page.getByRole('combobox', { name: 'Template tags' }).fill(templateData.tags[templateData.tags.length - 1]);
-}

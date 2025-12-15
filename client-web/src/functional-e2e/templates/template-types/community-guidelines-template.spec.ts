@@ -6,7 +6,7 @@ import { createAuthenticatedSessionFixture } from '@src/functional-e2e/fixtures/
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { randomInt, verify } from 'crypto';
 import { CommunityGuidelinesTemplateForm } from './forms/template-form.models';
-import { clearAndEditCommunityGuidelinesForm, fillCommunityGuidelinesForm } from './forms/community-guidelines-template-form';
+import { fillCommunityGuidelinesForm } from './forms/community-guidelines-template-form';
 import { verifyCommunityGuidelinesTemplate } from './verify/comunity-guidelines-template-verify';
 
 
@@ -30,10 +30,6 @@ const scenarioConfig: TestScenarioConfig = {
       members: [
         TestUser.SPACE_MEMBER,
         TestUser.SPACE_ADMIN,
-        TestUser.SUBSPACE_MEMBER,
-        TestUser.SUBSPACE_ADMIN,
-        TestUser.SUBSUBSPACE_MEMBER,
-        TestUser.SUBSUBSPACE_ADMIN,
       ],
     },
   },
@@ -61,13 +57,18 @@ test.describe.serial('Community Guidelines Template', () => {
     await teardownAuthentication();
   });
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
+    await page.goto(`${baseUrl}/${baseScenario.space.nameId}/settings/templates`);
+
+    // Verify we are on the Templates settings page
+    await expect(page.getByText('Here you can create and edit Templates for this space.')).toBeVisible();
   });
 
-
-  test('1.1 Create Community Guidelines Template', async ({
+  test('1.0 Navigate to templates settings', async ({
     page,
   }) => {
+    // Navigate to the root of the space
+    await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
+
     // Click Settings tab to access space settings
     await page.getByRole('tab', { name: 'Settings' }).click();
 
@@ -75,8 +76,12 @@ test.describe.serial('Community Guidelines Template', () => {
     await page.getByRole('tab', { name: 'Templates' }).click();
 
     // Verify we are on the Templates settings page
-    await expect(page.getByText('Here you can create and edit Templates for this space.')).toBeVisible();
+    await expect(page.url()).toMatch(/\/settings\/templates$/);
+  });
 
+  test('1.1 Create Community Guidelines Template', async ({
+    page,
+  }) => {
     // Verify all template sections are visible
     await expect(page.getByRole('heading', { name: 'Community Guidelines Templates' })).toBeVisible();
 
@@ -110,12 +115,6 @@ test.describe.serial('Community Guidelines Template', () => {
   }) => {
     const EditedTag = ' Edited-' + randomInt(1000, 9999);
 
-    // Click Settings tab to access space settings
-    await page.getByRole('tab', { name: 'Settings' }).click();
-
-    // Click Templates tab to access template management
-    await page.getByRole('tab', { name: 'Templates' }).click();
-
     // Find the template title and click on it to open the template
     await page.getByRole('heading', { name: templateData.displayName }).click();
 
@@ -132,7 +131,8 @@ test.describe.serial('Community Guidelines Template', () => {
     // Wait for the edit dialog to appear
     await expect(page.getByRole('heading', { name: 'Edit Community Guidelines Template' })).toBeVisible();
 
-    await clearAndEditCommunityGuidelinesForm(page, templateData);
+    await fillCommunityGuidelinesForm(page, templateData);
+
 
     // Click the Save button to save the changes
     const saveButton = page.getByRole('button', { name: 'Update' });
@@ -142,17 +142,41 @@ test.describe.serial('Community Guidelines Template', () => {
     // Verify the dialog closes
     await expect(page.getByRole('heading', { name: 'Edit Community Guidelines Template' })).not.toBeVisible();
 
+    // Verify the data was updated
+    await verifyCommunityGuidelinesTemplate(page, templateData);
+
+    // Reload the page to ensure changes persist
+    await page.reload();
+
     await verifyCommunityGuidelinesTemplate(page, templateData);
   });
-  test('1.3 Delete Community Guidelines Template', async ({
+
+  test('1.3 Verify edit and cancel and confirm dialog', async ({
     page,
   }) => {
-    // Click Settings tab to access space settings
-    await page.getByRole('tab', { name: 'Settings' }).click();
+    await page.getByRole('heading', { name: templateData.displayName }).click();
 
-    // Click Templates tab to access template management
-    await page.getByRole('tab', { name: 'Templates' }).click();
+    const originalDescription = templateData.guidelines.description;
+    templateData.guidelines.description = originalDescription + ' This edit will be discarded.';
 
+    await page.getByRole('button', { name: 'Edit' }).click();
+
+    await fillCommunityGuidelinesForm(page, templateData);
+
+    // Close and discard changes to test the discard confirmation dialog
+    await page.getByRole('button', { name: 'Close' }).click();
+    await page.getByRole('button', { name: 'Yes, Discard' }).click();
+
+    // Verify we are back on the template view page with original data
+    templateData.guidelines.description = originalDescription;
+    await page.getByRole('heading', { name: templateData.displayName }).click();
+    await verifyCommunityGuidelinesTemplate(page, templateData);
+
+  });
+
+  test('1.4 Delete Community Guidelines Template', async ({
+    page,
+  }) => {
     // Find the template title and click on it to open the template
     await page.getByRole('heading', { name: templateData.displayName }).click();
 

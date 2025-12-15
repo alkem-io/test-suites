@@ -40,49 +40,49 @@ export type AdditionalContent =
   | AdditionalContentCallToAction;
 
 // ============================================================================
-// Collection Types
+// Response Types
 // ============================================================================
 
-export type CollectionType = 'none' | 'linksFiles' | 'posts' | 'memos' | 'whiteboards';
+export type ResponseType = 'none' | 'linksFiles' | 'posts' | 'memos' | 'whiteboards';
 
-export interface CollectionSettingsBase {
+export interface ResponseSettingsBase {
   membersCanAdd: boolean;
   adminsCanAdd: boolean;
 }
 
-export interface CollectionNone {
+export interface ResponseNone {
   type: 'none';
 }
 
-export interface CollectionLinksFiles extends CollectionSettingsBase {
+export interface ResponseLinksFiles extends ResponseSettingsBase {
   type: 'linksFiles';
 }
 
-export interface CollectionPosts extends CollectionSettingsBase {
+export interface ResponsePosts extends ResponseSettingsBase {
   type: 'posts';
   defaultTitle: string;
   defaultDescription: string;
   enableCommentsOnPosts: boolean;
 }
 
-export interface CollectionMemos extends CollectionSettingsBase {
+export interface ResponseMemos extends ResponseSettingsBase {
   type: 'memos';
   defaultTitle: string;
   defaultDescription: string;
 }
 
-export interface CollectionWhiteboards extends CollectionSettingsBase {
+export interface ResponseWhiteboards extends ResponseSettingsBase {
   type: 'whiteboards';
   defaultTitle: string;
   textInWhiteboard: string;
 }
 
-export type Collection =
-  | CollectionNone
-  | CollectionLinksFiles
-  | CollectionPosts
-  | CollectionMemos
-  | CollectionWhiteboards;
+export type ResponseCollection =
+  | ResponseNone
+  | ResponseLinksFiles
+  | ResponsePosts
+  | ResponseMemos
+  | ResponseWhiteboards;
 
 // ============================================================================
 // Main Callout Template Form Interface
@@ -102,104 +102,100 @@ export interface CalloutTemplateForm extends TemplateForm {
   calloutTitle: string;
   calloutTags: string[];
   calloutDescription: string;
+  calloutReferences: { title: string; url: string }[];
 
   // Additional content (mutually exclusive)
   additionalContent: AdditionalContent;
 
   // Response options
   commentsEnabled: boolean;
-  collection: Collection;
+  responseOptions: ResponseCollection;
 }
 
-// ============================================================================
-// Factory Functions for Creating Default Form Data
-// ============================================================================
+export const createCalloutTemplateData = ({
+  additionalContentType,
+  commentsEnabled,
+  responseType,
+}: {
+  additionalContentType: AdditionalContentType,
+  commentsEnabled: boolean,
+  responseType: ResponseType,
+}): CalloutTemplateForm => {
+  let additionalContent: AdditionalContent = { type: 'none' };
+  switch (additionalContentType) {
+    case 'whiteboard':
+      additionalContent = { type: 'whiteboard', textInWhiteboard: 'Whiteboard content in Callout Template' };
+      break;
+    case 'memo':
+      additionalContent = { type: 'memo', memoContent: 'Memo content in Callout Template' };
+      break;
+    case 'callToAction':
+      additionalContent = { type: 'callToAction', ctaText: 'Click Here', ctaUrl: 'https://alkem.io' };
+      break;
+    case 'none':
+    default:
+  }
 
-export const createDefaultCalloutTemplateForm = (
-  overrides: Partial<CalloutTemplateForm> = {}
-): CalloutTemplateForm => ({
-  displayName: '',
-  description: '',
-  tags: [],
-  calloutTitle: '',
-  calloutTags: [],
-  calloutDescription: '',
-  additionalContent: { type: 'none' },
-  commentsEnabled: false,
-  collection: { type: 'none' },
-  ...overrides,
-});
+  let responseOptions: ResponseCollection = { type: 'none' };
+  switch (responseType) {
+    case 'linksFiles':
+      responseOptions = {
+        type: 'linksFiles',
+        membersCanAdd: true,
+        adminsCanAdd: true,
+      };
+      break;
+    case 'whiteboards':
+      responseOptions = {
+        type: 'whiteboards',
+        defaultTitle: 'Default Whiteboard Title',
+        textInWhiteboard: 'Default Whiteboard Content in whiteboard template',
+        membersCanAdd: true,
+        adminsCanAdd: true,
+      };
+      break;
+    case 'memos':
+      responseOptions = {
+        type: 'memos',
+        defaultDescription: 'Default Memo Description',
+        defaultTitle: 'Default Memo Title',
+        membersCanAdd: true,
+        adminsCanAdd: true,
+      };
+      break;
+    case 'posts':
+      responseOptions = {
+        type: 'posts',
+        defaultDescription: 'Default Post Description',
+        defaultTitle: 'Default Post Title',
+        enableCommentsOnPosts: true,
+        membersCanAdd: true,
+        adminsCanAdd: true,
+      };
+      break;
+    case 'none':
+    default:
+  }
 
-export const createAdditionalContentNone = (): AdditionalContentNone => ({
-  type: 'none',
-});
 
-export const createAdditionalContentWhiteboard = (
-  textInWhiteboard: string
-): AdditionalContentWhiteboard => ({
-  type: 'whiteboard',
-  textInWhiteboard,
-});
+  return {
+    // Template metadata
+    displayName: `CT Title - AC:${additionalContentType}, Response:${responseType}, Com:${commentsEnabled ? 'On' : 'Off'}`,
+    description:
+      `Callout Template Description - AC:${additionalContentType}, Response:${responseType}, Com:${commentsEnabled ? 'On' : 'Off'}`,
+    tags: ['callout', 'template', additionalContentType, responseType, commentsEnabled ? 'comments-enabled' : 'comments-disabled'],
 
-export const createAdditionalContentMemo = (
-  memoContent: string
-): AdditionalContentMemo => ({
-  type: 'memo',
-  memoContent,
-});
+    // Callout base fields
+    calloutTitle: 'Callout Template - Callout Title',
+    calloutTags: ['callout', 'tags', additionalContentType, responseType, commentsEnabled ? 'comments-enabled' : 'comments-disabled'],
+    calloutDescription: `Callout Template Callout Description - AC:${additionalContentType}, Response:${responseType}, Com:${commentsEnabled ? 'On' : 'Off'}`,
+    calloutReferences: [],
 
-export const createAdditionalContentCallToAction = (
-  ctaText: string,
-  ctaUrl: string
-): AdditionalContentCallToAction => ({
-  type: 'callToAction',
-  ctaText,
-  ctaUrl,
-});
+    // Additional content: None
+    additionalContent,
 
-export const createCollectionNone = (): CollectionNone => ({
-  type: 'none',
-});
-
-export const createCollectionLinksFiles = (
-  settings: Partial<Omit<CollectionLinksFiles, 'type'>> = {}
-): CollectionLinksFiles => ({
-  type: 'linksFiles',
-  membersCanAdd: true,
-  adminsCanAdd: true,
-  ...settings,
-});
-
-export const createCollectionPosts = (
-  settings: Partial<Omit<CollectionPosts, 'type'>> = {}
-): CollectionPosts => ({
-  type: 'posts',
-  defaultTitle: '',
-  defaultDescription: '',
-  membersCanAdd: true,
-  adminsCanAdd: true,
-  enableCommentsOnPosts: true,
-  ...settings,
-});
-
-export const createCollectionMemos = (
-  settings: Partial<Omit<CollectionMemos, 'type'>> = {}
-): CollectionMemos => ({
-  type: 'memos',
-  defaultTitle: '',
-  defaultDescription: '',
-  membersCanAdd: true,
-  adminsCanAdd: true,
-  ...settings,
-});
-
-export const createCollectionWhiteboards = (
-  settings: Partial<Omit<CollectionWhiteboards, 'type'>> = {}
-): CollectionWhiteboards => ({
-  type: 'whiteboards',
-  defaultTitle: '',
-  textInWhiteboard: '',
-  membersCanAdd: true,
-  adminsCanAdd: true,
-  ...settings,
-});
+    // Response options
+    commentsEnabled,
+    responseOptions,
+  };
+};

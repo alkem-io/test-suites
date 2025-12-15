@@ -353,11 +353,6 @@ export class TestScenarioFactory {
       if (spaceAdmin && spaceAdmin.accountId) {
         await assignLicensePlanToAccount(spaceAdmin.accountId, licensePlanId);
       }
-
-      const innovationPackOwner = TestUserManager.users.innovationPackOwner;
-      if (innovationPackOwner && innovationPackOwner.accountId) {
-        await assignLicensePlanToAccount(innovationPackOwner.accountId, licensePlanId);
-      }
     }
 
     // Assign the organization admin user to the organization's roleSet as Member and Admin

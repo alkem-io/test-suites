@@ -4,7 +4,7 @@
  */
 
 import { Page, expect } from '@playwright/test';
-import { CollectionPosts } from '../callout-template-form.models';
+import { ResponsePosts } from '../callout-template-form.models';
 
 /**
  * Selects "Posts" for collection type.
@@ -27,7 +27,7 @@ export const selectCollectionPosts = async (page: Page): Promise<void> => {
  */
 export const fillCollectionPosts = async (
   page: Page,
-  settings: CollectionPosts
+  settings: ResponsePosts
 ): Promise<void> => {
   // Open collection settings dialog
   await page.getByRole('button', { name: 'Collection settings' }).click();
@@ -84,7 +84,7 @@ export const fillCollectionPosts = async (
  */
 export const editCollectionPosts = async (
   page: Page,
-  settings: CollectionPosts
+  settings: ResponsePosts
 ): Promise<void> => {
   // Open collection settings dialog
   await page.getByRole('button', { name: 'Collection settings' }).click();

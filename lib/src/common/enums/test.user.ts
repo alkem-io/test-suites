@@ -15,5 +15,4 @@ export enum TestUser {
   QA_USER = "qa.user",
   GLOBAL_BETA_TESTER = "beta.tester",
   ORGANIZATION_ADMIN = "organization.admin",
-  INNOVATION_PACK_OWNER = 'innovation.pack.owner',
 }

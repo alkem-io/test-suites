@@ -4,7 +4,7 @@
  */
 
 import { Page, expect } from '@playwright/test';
-import { CollectionWhiteboards } from '../callout-template-form.models';
+import { ResponseWhiteboards } from '../callout-template-form.models';
 
 /**
  * Selects "Whiteboards" for collection type.
@@ -28,7 +28,7 @@ export const selectCollectionWhiteboards = async (page: Page): Promise<void> => 
  */
 export const fillCollectionWhiteboards = async (
   page: Page,
-  settings: CollectionWhiteboards
+  settings: ResponseWhiteboards
 ): Promise<void> => {
   // Open collection settings dialog
   await page.getByRole('button', { name: 'Collection settings' }).click();
@@ -97,7 +97,7 @@ export const fillCollectionWhiteboards = async (
  */
 export const editCollectionWhiteboards = async (
   page: Page,
-  settings: CollectionWhiteboards
+  settings: ResponseWhiteboards
 ): Promise<void> => {
   // Open collection settings dialog
   await page.getByRole('button', { name: 'Collection settings' }).click();

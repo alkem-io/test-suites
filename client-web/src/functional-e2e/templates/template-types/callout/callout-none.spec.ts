@@ -18,7 +18,6 @@ import {
 } from '../forms/callout/callout-template-form.models';
 import {
   fillCalloutTemplateForm,
-  clearAndEditCalloutTemplateForm,
 } from '../forms/callout/callout-template-form';
 import { verifyCalloutTemplate } from '../verify/callout/callout-template-verify';
 
@@ -42,10 +41,6 @@ const scenarioConfig: TestScenarioConfig = {
       members: [
         TestUser.SPACE_MEMBER,
         TestUser.SPACE_ADMIN,
-        // TestUser.SUBSPACE_MEMBER,
-        // TestUser.SUBSPACE_ADMIN,
-        // TestUser.SUBSUBSPACE_MEMBER,
-        // TestUser.SUBSUBSPACE_ADMIN,
       ],
     },
   },
@@ -68,7 +63,7 @@ const templateData: CalloutTemplateForm = {
 
   // Response options
   commentsEnabled: false,
-  collection: createCollectionNone(),
+  responseOptions: createCollectionNone(),
 };
 
 test.describe.serial('Callout Templates - None Additional Content', () => {
@@ -156,7 +151,7 @@ test.describe.serial('Callout Templates - None Additional Content', () => {
     ).toBeVisible();
 
     // Edit the form
-    await clearAndEditCalloutTemplateForm(page, templateData);
+    await fillCalloutTemplateForm(page, templateData);
 
     // Save changes
     const saveButton = page.getByRole('button', { name: 'Update' });

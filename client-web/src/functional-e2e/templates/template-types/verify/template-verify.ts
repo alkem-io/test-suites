@@ -12,7 +12,7 @@ export const verifyTemplate = async (page: Page, templateData: TemplateForm) => 
   await expect(page.getByRole('heading', { name: templateData.displayName }).first()).toBeVisible();
 
   // Verify the template description is visible
-  await expect(card.locator('.markdown')).toHaveText(templateData.description);
+  await expect(page.locator('.markdown')).toHaveText(templateData.description);
 
   await expect(page.getByText(templateData.description).first()).toBeVisible();
   // Verify the template tags are visible

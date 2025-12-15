@@ -4,7 +4,7 @@
  */
 
 import { Page, expect } from '@playwright/test';
-import { CollectionMemos } from '../callout-template-form.models';
+import { ResponseMemos } from '../callout-template-form.models';
 
 /**
  * Selects "Memos" for collection type.
@@ -27,7 +27,7 @@ export const selectCollectionMemos = async (page: Page): Promise<void> => {
  */
 export const fillCollectionMemos = async (
   page: Page,
-  settings: CollectionMemos
+  settings: ResponseMemos
 ): Promise<void> => {
   // Open collection settings dialog
   await page.getByRole('button', { name: 'Collection settings' }).click();
@@ -75,7 +75,7 @@ export const fillCollectionMemos = async (
  */
 export const editCollectionMemos = async (
   page: Page,
-  settings: CollectionMemos
+  settings: ResponseMemos
 ): Promise<void> => {
   // Open collection settings dialog
   await page.getByRole('button', { name: 'Collection settings' }).click();
