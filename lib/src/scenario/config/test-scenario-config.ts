@@ -20,6 +20,12 @@ export interface TestScenarioNoPreCreationConfig {
 }
 
 export interface TestScenarioSpaceConfig {
+  about?: {
+    profile?: {
+      displayName?: string;
+      tagline?: string;
+    };
+  };
   community?: {
     members?: TestUser[];
     admins?: TestUser[];
