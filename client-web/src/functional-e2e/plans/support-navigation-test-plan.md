@@ -376,7 +376,7 @@ The Alkemio platform provides support and documentation access through the Suppo
 - Support link is visible and clickable on mobile
 - Dialog displays properly on small screens
 - All buttons are accessible and appropriately sized
-- Tex6 is readable without horizontal scrolling
+- Text is readable without horizontal scrolling
 - Touch targets meet minimum size requirements (44x44px)
 - Dialog can be closed easily
 
