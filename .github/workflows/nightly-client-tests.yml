@@ -56,6 +56,12 @@ jobs:
           echo "RUN_ID=${{ github.run_id }}" >> $GITHUB_ENV
 
       - name: Register users
+        env:
+          ALKEMIO_SERVER: ${{ vars.ALKEMIO_SERVER }}
+          ALKEMIO_SERVER_URL: ${{ vars.ALKEMIO_SERVER_URL }}
+          KRATOS_ENDPOINT: ${{ vars.KRATOS_ENDPOINT }}
+          MAIL_SLURPER_ENDPOINT: ${{ vars.MAIL_SLURPER_ENDPOINT }}
+          AUTH_TEST_HARNESS_PASSWORD: ${{ secrets.AUTH_TEST_HARNESS_PASSWORD }}
         run: |
           cd client-web
           npm run register-users
