@@ -40,7 +40,7 @@ dotenv.config({ path: path.resolve(__dirname, '../', '.env') });
 const testDirectory = '../src/functional-e2e';
 const testPattern = [
   '/authentication/authentication-critical-flows.spec.ts',
-  // '/authentication/authentication-flows.spec.ts',
+  '/authentication/authentication-flows.spec.ts',
   // '/space/organization-space-create.spec.ts',
   // '/space/space-create.spec.ts',
 ]
