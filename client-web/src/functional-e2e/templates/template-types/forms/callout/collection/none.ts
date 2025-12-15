@@ -9,15 +9,10 @@ import { Page } from '@playwright/test';
  * Selects "None" for collection type.
  */
 export const selectCollectionNone = async (page: Page): Promise<void> => {
-  // First expand Response Options if collapsed
-  const expandButton = page.getByRole('button', { name: 'Expand' });
-  if (await expandButton.isVisible()) {
-    await expandButton.click();
-  }
-
   // Select None in Collection section
-  const collectionSection = page.getByRole('heading', { name: 'Collection' }).locator('..');
-  const noneButton = collectionSection.getByRole('button', { name: 'None' });
+  const noneButton = page
+    .getByLabel('No collection')
+    .getByRole('button', { name: 'None' });
   await noneButton.click();
 };
 

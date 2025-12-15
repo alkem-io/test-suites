@@ -14,6 +14,7 @@ import { createAuthenticatedSessionFixture } from '@src/functional-e2e/fixtures/
 import {
   CalloutTemplateForm,
   createCollectionLinksFiles,
+  createCollectionNone,
 } from '../forms/callout/callout-template-form.models';
 import {
   fillCalloutTemplateForm,
@@ -41,10 +42,10 @@ const scenarioConfig: TestScenarioConfig = {
       members: [
         TestUser.SPACE_MEMBER,
         TestUser.SPACE_ADMIN,
-        TestUser.SUBSPACE_MEMBER,
-        TestUser.SUBSPACE_ADMIN,
-        TestUser.SUBSUBSPACE_MEMBER,
-        TestUser.SUBSUBSPACE_ADMIN,
+        // TestUser.SUBSPACE_MEMBER,
+        // TestUser.SUBSPACE_ADMIN,
+        // TestUser.SUBSUBSPACE_MEMBER,
+        // TestUser.SUBSUBSPACE_ADMIN,
       ],
     },
   },
@@ -53,7 +54,8 @@ const scenarioConfig: TestScenarioConfig = {
 const templateData: CalloutTemplateForm = {
   // Template metadata
   displayName: 'Links Collection Callout',
-  description: 'A callout template for collecting links and files from the community.',
+  description:
+    'A callout template for collecting links and files from the community.',
   tags: ['callout', 'links'],
 
   // Callout base fields
@@ -66,10 +68,7 @@ const templateData: CalloutTemplateForm = {
 
   // Response options
   commentsEnabled: false,
-  collection: createCollectionLinksFiles({
-    membersCanAdd: true,
-    adminsCanAdd: true,
-  }),
+  collection: createCollectionNone(),
 };
 
 test.describe.serial('Callout Templates - None Additional Content', () => {
@@ -83,13 +82,17 @@ test.describe.serial('Callout Templates - None Additional Content', () => {
   });
 
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
+    await page.goto(
+      `${baseUrl}/${baseScenario.space.nameId}/settings/templates`
+    );
   });
 
-  test('1.1 Create Callout Template with No Additional Content', async ({ page }) => {
+  test('1.1 Create Callout Template with No Additional Content', async ({
+    page,
+  }) => {
     // Navigate to Settings > Templates
-    await page.getByRole('tab', { name: 'Settings' }).click();
-    await page.getByRole('tab', { name: 'Templates' }).click();
+    // await page.getByRole('tab', { name: 'Settings' }).click();
+    // await page.getByRole('tab', { name: 'Templates' }).click();
 
     await expect(
       page.getByText('Here you can create and edit Templates for this space.')
@@ -105,7 +108,9 @@ test.describe.serial('Callout Templates - None Additional Content', () => {
 
     await createNewButton.click();
     await expect(
-      page.getByRole('heading', { name: 'Create new Collaboration Tool Template' })
+      page.getByRole('heading', {
+        name: 'Create new Collaboration Tool Template',
+      })
     ).toBeVisible();
 
     // Fill the form
@@ -118,7 +123,9 @@ test.describe.serial('Callout Templates - None Additional Content', () => {
 
     // Verify dialog closes
     await expect(
-      page.getByRole('heading', { name: 'Create new Collaboration Tool Template' })
+      page.getByRole('heading', {
+        name: 'Create new Collaboration Tool Template',
+      })
     ).not.toBeVisible();
 
     // Verify template was created
@@ -189,7 +196,9 @@ test.describe.serial('Callout Templates - None Additional Content', () => {
     await page.getByRole('button', { name: 'Delete' }).click();
 
     // Verify dialogs close
-    await expect(page.getByRole('heading', { name: 'Warning' })).not.toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Warning' })
+    ).not.toBeVisible();
     await expect(
       page.getByRole('heading', { name: 'Edit Collaboration Tool Template' })
     ).not.toBeVisible();

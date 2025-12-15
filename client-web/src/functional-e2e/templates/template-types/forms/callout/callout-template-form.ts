@@ -35,7 +35,11 @@ import {
 } from './additional-content/call-to-action';
 
 // Collection helpers
-import { selectCollectionNone, fillCollectionNone, editCollectionNone } from './collection/none';
+import {
+  selectCollectionNone,
+  fillCollectionNone,
+  editCollectionNone,
+} from './collection/none';
 import {
   selectCollectionLinksFiles,
   fillCollectionLinksFiles,
@@ -125,7 +129,8 @@ const clearAndEditCalloutBaseFields = async (
       .first();
 
     // Add the last tag (typically the new one during edit)
-    const lastTag = templateData.calloutTags[templateData.calloutTags.length - 1];
+    const lastTag =
+      templateData.calloutTags[templateData.calloutTags.length - 1];
     await tagsCombobox.fill(lastTag);
     await tagsCombobox.press('Enter');
   }
@@ -192,19 +197,30 @@ const editAdditionalContent = async (
 };
 
 // ============================================================================
+// Expand Response Options
+// ============================================================================
+
+const expandResponseOptions = async (page: Page): Promise<void> => {
+  // Expand Response Options if collapsed
+  await page.getByRole('button', { name: 'Expand' }).click();
+  // if (await expandButton.isVisible()) {
+  //   await expandButton.click();
+  // }
+};
+
+// ============================================================================
 // Comments Toggle
 // ============================================================================
 
-const setCommentsEnabled = async (page: Page, enabled: boolean): Promise<void> => {
-  // Expand Response Options if collapsed
-  const expandButton = page.getByRole('button', { name: 'Expand' });
-  if (await expandButton.isVisible()) {
-    await expandButton.click();
-  }
-
-  const commentsSection = page.getByRole('heading', { name: 'Comments' }).locator('..');
+const setCommentsEnabled = async (
+  page: Page,
+  enabled: boolean
+): Promise<void> => {
+  // const commentsSection = page
+  //   .getByRole('heading', { name: 'Comments' })
+  //   .locator('..');
   const buttonName = enabled ? 'Comments' : 'No Comments';
-  await commentsSection.getByRole('button', { name: buttonName }).click();
+  await page.getByRole('button', { name: buttonName }).click();
 };
 
 // ============================================================================
@@ -239,7 +255,10 @@ const selectAndFillCollection = async (
   }
 };
 
-const editCollection = async (page: Page, collection: Collection): Promise<void> => {
+const editCollection = async (
+  page: Page,
+  collection: Collection
+): Promise<void> => {
   switch (collection.type) {
     case 'none':
       await editCollectionNone(page);
@@ -279,7 +298,10 @@ export const fillCalloutTemplateForm = async (
   // 3. Select and fill additional content
   await selectAndFillAdditionalContent(page, templateData.additionalContent);
 
-  // 4. Set comments enabled/disabled
+  // 4. Expand Response Options
+  await expandResponseOptions(page);
+
+  // 5. Set comments enabled/disabled
   await setCommentsEnabled(page, templateData.commentsEnabled);
 
   // 5. Select and fill collection
