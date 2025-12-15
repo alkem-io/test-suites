@@ -43,6 +43,7 @@ const testPattern = [
   '/authentication/authentication-flows.spec.ts',
   '/space/organization-space-create.spec.ts',
   '/space/space-create.spec.ts',
+  '/public-space/*.spec.ts',
 ]
 
 export default defineConfig({
