@@ -20,22 +20,35 @@ jobs:
           node-version: 20.19.6
 
       - name: Install lib dependencies
-        run: cd lib && npm ci
+        run: |
+          cd lib
+          npm ci
 
       - name: Install server-api dependencies
-        run: cd server-api && npm ci
+        run: |
+          cd server-api
+          npm ci
 
       - name: Install client-web dependencies
-        run: cd client-web && npm ci
+        run: |
+          cd client-web
+          npm ci
 
       - name: Install Playwright Browsers
-        run:  cd client-web && npx playwright install --with-deps
+        run:  |
+          cd client-web
+          npx playwright install --with-deps
 
       - name: Set run folder variables
         run: |
           DATE=$(date +'%Y-%m-%d')
           echo "RUN_DATE=$DATE" >> $GITHUB_ENV
           echo "RUN_ID=${{ github.run_id }}" >> $GITHUB_ENV
+
+      - name: Register users
+        run: |
+          cd client-web
+          npm run register-users
 
       - name: Run Playwright tests
         env:
