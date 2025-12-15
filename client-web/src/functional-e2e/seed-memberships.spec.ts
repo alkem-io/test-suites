@@ -62,8 +62,6 @@ const scenarioConfig: TestScenarioConfig = {
     about: {
       profile: {
         displayName: 'Membership Test Space',
-        description:
-          'Public space for testing membership scenarios at space level',
         tagline: 'Testing space memberships',
       },
     },
@@ -96,8 +94,6 @@ const scenarioConfig: TestScenarioConfig = {
       about: {
         profile: {
           displayName: 'Subspace for Membership Tests',
-          description:
-            'Public subspace for testing membership scenarios at subspace level',
           tagline: 'Testing subspace memberships',
         },
       },
@@ -127,8 +123,6 @@ const scenarioConfig: TestScenarioConfig = {
         about: {
           profile: {
             displayName: 'Subsubspace for Membership Tests',
-            description:
-              'Private subsubspace for testing restricted membership scenarios',
             tagline: 'Testing subsubspace memberships',
           },
         },
