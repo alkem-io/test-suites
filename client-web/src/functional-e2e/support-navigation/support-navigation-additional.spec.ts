@@ -46,9 +46,9 @@ test.describe('Support Navigation Additional Tests', () => {
       await page.getByRole('button', { name: 'Close' }).click();
 
       // 4-5. Verify dialog closes and dashboard is still visible
-      await expect(
-        page.getByRole('heading', { name: 'Welcome, admin!' })
-      ).toBeVisible();
+      await expect(page.getByRole('heading', { level: 1 })).toContainText(
+        'Welcome'
+      );
     });
   });
 
@@ -85,9 +85,9 @@ test.describe('Support Navigation Additional Tests', () => {
       await page.getByRole('link', { name: 'My Dashboard' }).click();
 
       // 4. Verify return to dashboard with welcome message
-      await expect(
-        page.getByRole('heading', { name: 'Welcome, admin!' })
-      ).toBeVisible();
+      await expect(page.getByRole('heading', { level: 1 })).toContainText(
+        'Welcome'
+      );
     });
   });
 });

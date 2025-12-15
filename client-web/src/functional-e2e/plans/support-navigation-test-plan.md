@@ -58,7 +58,7 @@ The Alkemio platform provides support and documentation access through the Suppo
   - Page title: "Documentation"
   - Banner text: "Platform Manual & Support"
   - Embedded documentation iframe
-- Original dashboard ta or page navigates to `/docs` URL
+- Original dashboard tab or page navigates to `/docs` URL
 - Documentation page loads with:
   - Page title: "Documentation"
   - Banner text: "Platform Manual & Support"
@@ -399,7 +399,6 @@ The Alkemio platform provides support and documentation access through the Suppo
 - Navigation elements work consistently
 - No browser-specific rendering issues
 - All interactive elements function correctly
-  6
 
 ## Testing Notes
 
@@ -412,76 +411,39 @@ The Alkemio platform provides support and documentation access through the Suppo
 
 ### Known Limitations
 
-- Documentation iframe may not load in local development if documentation server is not running
-- Some documentation links point to production environment (`https://alkem.io`)
-- External links require internet connectivity
+- Documentation iframe may not load in local development if the documentation service is down
+- Some documentation links point to production (`https://alkem.io`) and require internet connectivity
+- Support navigation flow is fully automated; manual testing may still be needed for content changes
 
 ### Test Data Requirements
 
 - Valid test user account (e.g., admin@alkem.io)
-- Access to test environment
-- Network connectivity for external links
+- Access to the test environment with external connectivity for documentation links
 
 ### Automation Considerations
 
 - Use Playwright's tab handling for multi-tab scenarios
 - Implement proper wait strategies for dialog animations
-- Handle iframe content carefully (may require frame switching)
+- Handle iframe content carefully (frame switching required)
 
-### Known Limitations
+### Coverage
 
-- Documentation iframe may not load in local development if documentation server is not running
-  ✅ **Support navigation flow is fully automated**
-- Scenarios 1.1-1.5 cover support dialog navigation
-- Scenarios 3.1-3.5 cover Tips & Tricks navigation
-- Scenario 4.1-4.2 cover complete flows
+- Support dialog open/close (Scenarios 1.1, 1.3)
+- Documentation via Support dialog (Scenario 1.2)
+- Direct documentation access and layout (Scenarios 2.1, 2.2)
+- Return to dashboard from documentation (Scenario 2.3)
+- Inviting doc and embedded tutorial interaction (Scenarios 4.1, 4.2)
+- Return to dashboard from inviting doc (Scenario 4.3)
+- Edge cases and cross-checks (Section 5)
 
-✅ **Documentation links are accessible**
+### Priority
 
-- Scenario 1.2 validates documentation access
-- Scenario 3.2-3.3 validate documentation access from Tips & Tricks
+**P1 (Critical Path)**
 
-✅ **Tutorial content loads correctly**
+1. Scenario 1.2 - Navigate to Documentation from Support Dialog
+2. Scenario 4.2 - Complete flow to "Inviting People" documentation (includes embedded tutorial)
+3. Scenario 4.3 - Navigate back to Dashboard from inviting documentation
 
-- Scenario 3.1 validates Tips & Tricks panel content
-- Scenario 3.4 validates Welcome Space tutorial access
-- Scenario 5.1 validates "Inviting People" documentation navigation
-- Scenario 5.2 validates complete flow to invitation documentation
+**P2 (Core Features)** 4. Scenario 1.1 - Open Support Dialog 5. Scenario 1.3 - Close Support Dialog 6. Scenario 2.1 - Direct Documentation Access 7. Scenario 2.2 - Documentation Page Layout Verification 8. Scenario 2.3 - Navigate back to Dashboard from Documentation 9. Scenario 3.1 - Open Tips & Tricks 10. Scenario 3.2 - Documentation from Tips & Tricks
 
-✅ **Navigation back to dashboard works**
-
-- Scenario 2.3 validates dashboard return navigation
-- Scenario 4.1 includes return navigation verification
-
-✅ **Tests are integrated into CI/CD pipeline**
-
-- Tests use standard cover support dialog navigation
-- Scenario 3.1 covers complete flow
-
-✅ **Documentation links are accessible**
-
-- Scenario 1.2 validates documentation access from support
-- Scenario 2.1 validates direct documentation access
-
-✅ **Tutorial content loads correctly**
-
-- Scenario 4.1 validates "Inviting People" documentation navigation
-- Scenario 4.2 validates complete flow to invitation documentation
-
-✅ **Navigation back to dashboard works**
-
-- Scenario 2.3 validates dashboard return navigation
-- Scenario 4.3 validates return from invitation document
-  **P2 (Core Features):**
-
-7. Scenario 3.1 - Open Tips & Tricks
-8. Scenario 3.2 - Documentation from Tips & Tricks
-9. Scenario 1.2 - Navigate to Documentation from Support Dialog
-10. Scenario 4.1 - Navigate to "Inviting People" Documentation
-11. Scenario 4.2 - Complete Flow to Invitation Documentation
-12. Scenario 4.3 - Navigate back to Dashboard from Invitation Docs
-13. Scenario 3.1 - Complete support journey
-
-**P2 (Core Features):** 7. Scenario 1.3 - Close Support Dialog 8. Scenario 2.1 - Direct Documentation Access 9. Scenario 2.2 - Documentation Page Layout Verification 10. Scenario 2.3 - Navigate back to Dashboard
-
-**P3 (Additional Coverage):** 11. Section 5 - Edge cases 12. Section 6
+**P3 (Additional Coverage)** 11. Section 5 - Edge cases 12. Section 6 - Cross-browser/visual checks
