@@ -15,6 +15,16 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # Pull the existing GitHub Pages site so we can append this run's report
+      # and keep a full history (incremental runs) across deployments.
+      - name: Checkout existing GitHub Pages content (gh-pages)
+        continue-on-error: true
+        uses: actions/checkout@v5
+        with:
+          ref: gh-pages
+          path: out
+          fetch-depth: 1
+
       - uses: actions/setup-node@v6
         with:
           node-version: 20.19.6
@@ -35,7 +45,7 @@ jobs:
           npm ci
 
       - name: Install Playwright Browsers
-        run:  |
+        run: |
           cd client-web
           npx playwright install --with-deps
 
@@ -67,6 +77,10 @@ jobs:
 
       - name: Organize report for GitHub Pages
         run: |
+          # Ensure output directory exists even if gh-pages checkout failed or branch doesn't exist yet.
+          mkdir -p out
+          # Avoid uploading git metadata inside the Pages artifact.
+          rm -rf out/.git
           TARGET="nightly/$RUN_DATE/$RUN_ID"
           mkdir -p out/$TARGET
           cp -r client-web/playwright-report/* out/$TARGET/
@@ -89,13 +103,15 @@ jobs:
           <ul>
           EOF
 
-          for dateDir in out/nightly/*/ ; do
-            DATE=$(basename $dateDir)
-            for runDir in "$dateDir"*/ ; do
-              RID=$(basename $runDir)
+          # Build a full list of all stored runs (across all prior deployments).
+          # Sort newest-first for convenience.
+          if [ -d "out/nightly" ]; then
+            find out/nightly -mindepth 2 -maxdepth 2 -type d -printf '%P\n' | sort -r | while read -r entry; do
+              DATE="${entry%%/*}"
+              RID="${entry##*/}"
               echo "  <li><a href=\"nightly/$DATE/$RID/\">$DATE / $RID</a></li>" >> $INDEX
             done
-          done
+          fi
 
           cat >> $INDEX << 'EOF'
           </ul>
@@ -117,8 +133,8 @@ jobs:
     runs-on: arc-runner-set
     # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
     permissions:
-      pages: write      # to deploy to Pages
-      id-token: write   # to verify the deployment originates from an appropriate source
+      pages: write # to deploy to Pages
+      id-token: write # to verify the deployment originates from an appropriate source
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
@@ -127,4 +143,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deploy
         uses: actions/deploy-pages@v4.0.5
-
