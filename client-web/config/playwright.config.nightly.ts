@@ -74,7 +74,7 @@ export default defineConfig({
   ],
   // % or number of the available CPUs
   // workers: '100%',
-  workers: 3,
+  workers: 2,
 
   /*
     Playwright Test runs tests in parallel. In order to achieve that, it runs several worker processes that run at the same time.
