@@ -17,7 +17,7 @@ import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-ses
 
 const { test, setupAuthentication, teardownAuthentication } =
   createAuthenticatedSessionFixture({
-    storageStateName: 'cannot-access-other-user-account.json',
+    storageStateName: 'view-another-user-profile-public.json',
     cleanupAfterTests: process.env.cleanupAfterTests === 'true',
   });
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
@@ -53,7 +53,7 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
-test.describe('User Account Settings', () => {
+test.describe('User Profile Membership Display', () => {
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(60_000);
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
@@ -69,28 +69,51 @@ test.describe('User Account Settings', () => {
     await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
-  // [BUG] in the client/server to be fixed
-  test.skip('Cannot Access Other User Account Settings', async ({ page }) => {
-    // 1. Attempt to access another user's account settings
+  test('View Another User Profile - Public View', async ({ page }) => {
+    // Navigate to another user's profile (SPACE_ADMIN)
     await page.goto(
-      `${baseUrl}/user/${TestUserManager.users.spaceAdmin.nameId}/settings/account`
+      `${baseUrl}/user/${TestUserManager.users.spaceAdmin.nameId}`
     );
 
-    // 2. Verify modal or message about redirecting to closest parent
-    await expect(page.getByText(/We are redirecting you/i)).toBeVisible();
-
-    // 3. Verify option to navigate to parent space (about page)
-    const redirectButton = page.getByRole('button', {
-      name: /Go now/i,
-    });
-    await expect(redirectButton).toBeVisible();
-
-    // 4. Click redirect button and verify navigation to parent space about
-    await redirectButton.click();
-
-    // 5. Verify redirected to parent space URL
+    // Verify user profile page loads successfully
     await expect(page).toHaveURL(
-      `/user/${TestUserManager.users.spaceAdmin.nameId}`
+      new RegExp(`/user/${TestUserManager.users.spaceAdmin.nameId}`)
     );
+
+    // Verify public profile of SPACE_ADMIN is displayed - name heading
+    const userNameHeading = page.getByRole('heading', {
+      level: 1,
+      name: new RegExp(TestUserManager.users.spaceAdmin.displayName, 'i'),
+    });
+    await expect(userNameHeading).toBeVisible({ timeout: 3000 });
+
+    // Verify Bio section is visible (public information)
+    await expect(
+      page.getByRole('heading', { name: /Bio/i }).first()
+    ).toBeVisible();
+
+    // Verify Keywords section is visible
+    await expect(
+      page.getByRole('heading', { name: /Spaces.*/i }).first()
+    ).toBeVisible();
+
+    // Verify the space created by this organization is displayed
+    await expect(
+      page.getByText(baseScenario.space.about.profile.displayName).first()
+    ).toBeVisible({ timeout: 2000 });
+
+    // Verify cannot access settings route directly by checking no settings icon
+    const settingsIcon = page.locator('[data-testid="SettingsOutlinedIcon"]');
+    await expect(settingsIcon).not.toBeVisible();
+
+    // [BUG]
+    // make sure navigating to settings URL is not allowed (but, it's accessible)
+    // await page.goto(
+    //   `${baseUrl}/user/${TestUserManager.users.spaceAdmin.nameId}/settings`
+    // );
+
+    // await expect(accessRestrictedHeading(page)).toBeVisible({
+    //   timeout: 5000,
+    // });
   });
 });

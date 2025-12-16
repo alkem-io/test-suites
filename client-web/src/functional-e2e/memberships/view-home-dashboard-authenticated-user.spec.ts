@@ -74,8 +74,8 @@ test.describe('Home Dashboard Membership Display', () => {
 
     // 4. Verify displays card for "Membership Test Space" (member)
     await expect(
-      page.getByText(baseScenario.space.about.profile.displayName)
-    ).toBeVisible();
+      page.getByText(baseScenario.space.about.profile.displayName).first()
+    ).toBeVisible({ timeout: 2000 });
 
     // 5. Verify each card shows quick access links
     const spaceCard = page

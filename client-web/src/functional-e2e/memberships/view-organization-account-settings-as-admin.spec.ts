@@ -85,10 +85,6 @@ test.describe('Organization Account Settings', () => {
     await expect(page).toHaveURL(/.*\/organization\/.*\/settings\/account/);
 
     // 3. Verify resource sections for organization are displayed
-    // - Hosted Spaces (organization-owned spaces)
-    // - Virtual Contributors
-    // - Templates
-    // - Custom Homepages
     await expect(page.getByText(/Hosted Spaces/i).first()).toBeVisible();
     await expect(page.getByText(/Virtual Contributors/i).first()).toBeVisible();
     await expect(page.getByText(/Template Packs/i).first()).toBeVisible();
@@ -96,8 +92,8 @@ test.describe('Organization Account Settings', () => {
 
     // 4. Verify "Membership Test Space" is listed in Hosted Spaces
     await expect(
-      page.getByText(baseScenario.space.about.profile.displayName)
-    ).toBeVisible();
+      page.getByText(baseScenario.space.about.profile.displayName).first()
+    ).toBeVisible({ timeout: 2000 });
 
     // 5. Verify shows organization's resource quotas and usage
     // await expect(page.getByText(/\d+\/\d+/).first()).toBeVisible();

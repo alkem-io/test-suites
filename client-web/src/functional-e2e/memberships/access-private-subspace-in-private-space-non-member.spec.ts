@@ -137,7 +137,7 @@ test.describe('Space/Subspace Settings Access Control', () => {
 
     // 3. Verify "Access Restricted" page is displayed
     await expect(page.getByText(/Access Restricted/i)).toBeVisible({
-      timeout: 10000,
+      timeout: 3000,
     });
 
     // 4. Verify "Sign in / Sign up" button is available

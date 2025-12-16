@@ -62,7 +62,7 @@ test.describe('User Membership Settings', () => {
     await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
-  // bug in the client/server to be fixed
+  // [BUG] in the client/server to be fixed
   test.skip('Cannot Access Other User Membership Settings', async ({
     page,
   }) => {

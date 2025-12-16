@@ -99,13 +99,13 @@ test.describe('Home Dashboard Membership Display', () => {
     // 3. Verify shows memberships at all levels
     // Space (L0) - with Admin badge
     await expect(
-      page.getByText(baseScenario.space.about.profile.displayName)
-    ).toBeVisible();
+      page.getByText(baseScenario.space.about.profile.displayName).first()
+    ).toBeVisible({ timeout: 2000 });
 
-    // Subspace (L1) - with Lead badge
+    // 4. Subspace (L1) - with Lead badge
     await expect(
-      page.getByText(baseScenario.subspace.about.profile.displayName)
-    ).toBeVisible();
+      page.getByText(baseScenario.subspace.about.profile.displayName).first()
+    ).toBeVisible({ timeout: 2000 });
 
     // 5. Verify each membership is clickable to navigate
     const spaceCard = page

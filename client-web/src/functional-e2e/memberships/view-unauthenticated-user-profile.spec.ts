@@ -1,7 +1,7 @@
 // spec: client-web/src/functional-e2e/plans/memberships-test-plan.md
 // seed: client-web/src/functional-e2e/seed-memberships.spec.ts
 
-import { expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import {
   TestUser,
   TestScenarioFactory,
@@ -13,13 +13,7 @@ import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
 } from '@alkemio/client-lib';
-import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 
-const { test, setupAuthentication, teardownAuthentication } =
-  createAuthenticatedSessionFixture({
-    storageStateName: 'access-space-settings-admin.json',
-    cleanupAfterTests: process.env.cleanupAfterTests === 'true',
-  });
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
 let baseScenario: OrganizationWithSpaceModel;
@@ -49,34 +43,24 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
-test.describe('Space/Subspace Settings Access Control', () => {
-  test.beforeAll(async ({ browser }) => {
+test.describe('User Profile Membership Display', () => {
+  test.beforeAll(async () => {
     test.setTimeout(60_000);
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
-    await setupAuthentication(browser, TestUserManager.users.spaceAdmin.email);
   });
 
   test.afterAll(async () => {
     test.setTimeout(45_000);
-    await teardownAuthentication();
     await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
-  test('Access Space Settings - As Space Admin', async ({ page }) => {
-    // 1. Navigate to "Membership Test Space"
-    await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
-
-    // 2. Access space settings
-    const settingsIcon = page.locator('[data-testid="SettingsOutlinedIcon"]');
-    await expect(settingsIcon).toBeVisible({ timeout: 5000 });
-    await settingsIcon.click();
-
-    // 3. Verify navigated to settings page
-    await expect(page).toHaveURL(
-      new RegExp(`/${baseScenario.space.nameId}/settings`)
+  test('View Unauthenticated User Profile', async ({ page }) => {
+    await page.goto(
+      `${baseUrl}/user/${TestUserManager.users.spaceMember.nameId}`
     );
 
-    // 4. Verify settings sections are available
-    await expect(page.getByText(/Layout/i)).toBeVisible();
+    await expect(page.getByText(/Access Restricted/i)).toBeVisible({
+      timeout: 3000,
+    });
   });
 });

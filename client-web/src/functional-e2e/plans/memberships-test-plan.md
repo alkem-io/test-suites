@@ -310,23 +310,26 @@ The seed creates:
 - Cannot see organization members list (if private)
 - Cannot access organization settings
 
-#### 4.2 View Organization Profile - As Member
+#### 4.2 View Organization Profile - Unauthenticated
 
-**User:** ORGANIZATION_ADMIN
+**User:** Not logged in
 
 **Steps:**
 
-1. Navigate to `/organization/[:organizationNameId]`
-2. Review available tabs and information
+1. As unauthenticated user, navigate to `/organization/[:organizationNameId]`
+2. Review accessible information
 
 **Expected Results:**
 
-- Full organization profile is visible
-- "Settings" tabs are available (Account, Membership, etc.)
-- Can see organization members (depends on privacy)
-- Associates list is visible
-- Admin actions are available
-- Additional management options appear
+- Organization profile page loads (org profiles are public)
+- Public information displayed:
+  - Organization name and avatar
+  - Description/tagline
+  - Bio section
+  - Spaces they lead
+- No "Settings" tab visible
+- Sign-in option is available in UI
+- Cannot access organization settings
 
 #### 4.3 View Organization Profile - As Admin
 
@@ -1439,59 +1442,90 @@ The seed creates:
 
 ## Critical Scenarios for Implementation (P1 Priority)
 
-Based on the comprehensive test plan above, the following scenarios are **P1 priority** and should be implemented first:
+Based on the comprehensive test plan above, the following scenarios are **P1 priority** and should be implemented first.
+
+**Legend:** ✅ Implemented | ⏸️ Skipped (blocked) | ❌ Not implemented
 
 ### **User Profile & Membership Settings (8 scenarios)**
 
-1. **1.1** - View Own User Profile - Public Information
-2. **1.2** - View Another User's Profile - Public View
-3. **1.3** - View Unauthenticated User Profile
-4. **2.1** - Access Own Membership Settings
-5. **2.2** - View All Membership Levels
-6. **2.5** - Cannot Access Other User's Membership Settings
-7. **3.1** - View Own Account Settings
-8. **3.3** - Cannot Access Other User's Account Settings
+| #   | Scenario                                                 | Status | Test File                                                                           |
+| --- | -------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------- |
+| 1   | **1.1** - View Own User Profile - Public Information     | ✅     | `view-own-user-profile-public-information.spec.ts`                                  |
+| 2   | **1.2** - View Another User's Profile - Public View      | ✅     | `view-another-user-profile-public-view.spec.ts`                                     |
+| 3   | **1.3** - View Unauthenticated User Profile              | ✅     | `view-unauthenticated-user-profile.spec.ts`                                         |
+| 4   | **2.1** - Access Own Membership Settings                 | ✅     | `access-own-membership-settings.spec.ts`                                            |
+| 5   | **2.2** - View All Membership Levels                     | ❌     | -                                                                                   |
+| 6   | **2.5** - Cannot Access Other User's Membership Settings | ⏸️     | `cannot-access-other-user-membership-settings.spec.ts` (blocked: client/server bug) |
+| 7   | **3.1** - View Own Account Settings                      | ⏸️     | `view-own-account-settings.spec.ts` (blocked: user should be a host)                |
+| 8   | **3.3** - Cannot Access Other User's Account Settings    | ⏸️     | `cannot-access-other-user-account-settings.spec.ts` (blocked: client/server bug)    |
 
-### **Organization Management (6 scenarios)**
+### **Organization Management (7 scenarios)**
 
-9. **4.1** - View Organization Profile - Public
-10. **4.2** - View Organization Profile - As Member
-11. **4.3** - View Organization Profile - As Admin
-12. **5.1** - View Organization Account Settings - As Admin
-13. **5.3** - View Organization with Hosted Spaces
-14. **6.2** - Manage Organization Members
-15. **10.1** - Add User as Organization Associate
+| #   | Scenario                                                          | Status | Test File                                                                 |
+| --- | ----------------------------------------------------------------- | ------ | ------------------------------------------------------------------------- |
+| 9   | **4.1** - View Organization Profile - Public                      | ✅     | `view-organization-profile-public.spec.ts`                                |
+| 10  | **4.2** - View Organization Profile - Unauthenticated             | ✅     | `view-organization-profile-public.spec.ts` (combined with 4.1)            |
+| 11  | **4.3** - View Organization Profile - As Admin                    | ✅     | `view-organization-profile-as-admin.spec.ts`                              |
+| 12  | **5.1** - View Organization Account Settings - As Admin           | ✅     | `view-organization-account-settings-as-admin.spec.ts`                     |
+| 13  | **5.2** - Cannot Access Organization Account Settings - Non-Admin | ✅     | `cannot-access-organization-account-settings-non-admin.spec.ts`           |
+| 14  | **5.3** - View Organization with Hosted Spaces                    | ✅     | `view-organization-account-settings-as-admin.spec.ts` (combined with 5.1) |
+| 15  | **6.2** - Manage Organization Members                             | ❌     | -                                                                         |
+| 16  | **10.1** - Add User as Organization Associate                     | ❌     | -                                                                         |
 
-### **Space/Subspace Access Control (5 scenarios)**
+### **Space/Subspace Access Control (6 scenarios)**
 
-16. **8.1** - Access Space Settings - As Space Admin
-17. **8.2** - Access Space Settings - As Space Member
-18. **8.3** - Access Subspace Settings - As Subspace Admin
-19. **8.4** - Access Subspace Settings - As Space Admin (Parent)
-20. **8.5** - Access Private Subsubspace - As Non-Member
-21. **11.3** - View Space Community Members
+| #   | Scenario                                                     | Status | Test File                                            |
+| --- | ------------------------------------------------------------ | ------ | ---------------------------------------------------- |
+| 17  | **8.1** - Access Space Settings - As Space Admin             | ✅     | `access-space-settings-as-space-admin.spec.ts`       |
+| 18  | **8.2** - Access Space Settings - As Space Member            | ✅     | `access-space-settings-as-space-member.spec.ts`      |
+| 19  | **8.3** - Access Subspace Settings - As Subspace Admin       | ✅     | `access-subspace-settings-as-subspace-admin.spec.ts` |
+| 20  | **8.4** - Access Subspace Settings - As Space Admin (Parent) | ✅     | `access-subspace-settings-as-space-admin.spec.ts`    |
+| 21  | **8.5** - Access Private Subsubspace - As Non-Member         | ✅     | `access-private-subsubspace-as-non-member.spec.ts`   |
+| 22  | **11.3** - View Space Community Members                      | ❌     | -                                                    |
 
-### **VirtualContributor Memberships (11 scenarios)**
+### **VirtualContributor Memberships (10 scenarios)**
 
-22. **12.1** - View VirtualContributor Profile
-23. **12.2** - Access VC Membership Settings - As Host
-24. **12.3** - VC Added to Space Community - Direct Assignment
-25. **12.4** - View VC in Space Community Members List
-26. **12.6** - Cannot Access VC Membership Settings - Non-Host
-27. **12.9** - Remove VC from Space - By Space Admin
-28. **12.13** - Hidden VC - Host Can View and Manage
-29. **12.15** - Public VC - Listed in Store and Available for Invite
-30. **12.17** - Public VC - Accept Invitation from Different Account
-31. **12.19** - Change VC Visibility - Account to Public
+| #   | Scenario                                                         | Status | Test File |
+| --- | ---------------------------------------------------------------- | ------ | --------- |
+| 23  | **12.1** - View VirtualContributor Profile                       | ❌     | -         |
+| 24  | **12.2** - Access VC Membership Settings - As Host               | ❌     | -         |
+| 25  | **12.3** - VC Added to Space Community - Direct Assignment       | ❌     | -         |
+| 26  | **12.4** - View VC in Space Community Members List               | ❌     | -         |
+| 27  | **12.6** - Cannot Access VC Membership Settings - Non-Host       | ❌     | -         |
+| 28  | **12.9** - Remove VC from Space - By Space Admin                 | ❌     | -         |
+| 29  | **12.13** - Hidden VC - Host Can View and Manage                 | ❌     | -         |
+| 30  | **12.15** - Public VC - Listed in Store and Available for Invite | ❌     | -         |
+| 31  | **12.17** - Public VC - Accept Invitation from Different Account | ❌     | -         |
+| 32  | **12.19** - Change VC Visibility - Account to Public             | ❌     | -         |
 
 ### **Security & Permissions (4 scenarios)**
 
-32. **13.1** - Global Admin Access to Any Membership Settings
-33. **13.2** - Attempt Privilege Escalation - Member to Admin
-34. **13.3** - Removed Member Cannot Access Previous Space
-35. **13.4** - Expired or Invalid Session Access
+| #   | Scenario                                                  | Status | Test File                                           |
+| --- | --------------------------------------------------------- | ------ | --------------------------------------------------- |
+| 33  | **13.1** - Global Admin Access to Any Membership Settings | ❌     | -                                                   |
+| 34  | **13.2** - Attempt Privilege Escalation - Member to Admin | ❌     | -                                                   |
+| 35  | **13.3** - Removed Member Cannot Access Previous Space    | ✅     | removed-member-cannot-access-previous-space.spec.ts |
+| 36  | **13.4** - Expired or Invalid Session Access              | ❌     | -                                                   |
 
-**Total P1 Scenarios: 35**
+### **P1 Implementation Summary**
+
+| Category                           | Total  | ✅ Implemented | ⏸️ Skipped | ❌ Not Implemented |
+| ---------------------------------- | ------ | -------------- | ---------- | ------------------ |
+| User Profile & Membership Settings | 8      | 4              | 3          | 1                  |
+| Organization Management            | 7      | 6              | 0          | 1                  |
+| Space/Subspace Access Control      | 6      | 6              | 0          | 0                  |
+| VirtualContributor Memberships     | 10     | 0              | 0          | 10                 |
+| Security & Permissions             | 4      | 1              | 0          | 3                  |
+| **Total P1 Scenarios**             | **35** | **17**         | **3**      | **15**             |
+
+### **Additional Implemented Tests (Beyond P1)**
+
+| Scenario                                              | Test File                                                     | Notes                                                          |
+| ----------------------------------------------------- | ------------------------------------------------------------- | -------------------------------------------------------------- |
+| **8.6** - Access Private Subsubspace - As Member (P2) | `access-private-subsubspace-as-member.spec.ts`                | Verifies member access to private subsubspace                  |
+| **7.1** - View Home Dashboard - Authenticated User    | `view-home-dashboard-authenticated-user.spec.ts`              | Category 7 marked as "skip (to be redesigned)" but test exists |
+| **7.2** - View Home Dashboard - Multiple Memberships  | `view-home-dashboard-multiple-memberships.spec.ts`            | Category 7 marked as "skip (to be redesigned)" but test exists |
+| Access Private Subspace in Private Space - Non-Member | `access-private-subspace-in-private-space-non-member.spec.ts` | Additional edge case test                                      |
 
 ---
 
@@ -1517,126 +1551,158 @@ Based on the comprehensive test plan above, the following scenarios are **P1 pri
 
 ## Summary of All Test Scenarios
 
+**Legend:** ✅ Implemented | ⏸️ Skipped (blocked) | ❌ Not implemented
+
 ### Category 1: User Profile Membership Display (3 scenarios)
 
-1. **1.1** - View Own User Profile - Public Information - P1
-2. **1.2** - View Another User's Profile - Public View - P1
-3. **1.3** - View Unauthenticated User Profile - P1
+1. **1.1** - View Own User Profile - Public Information - P1 ✅ `view-own-user-profile-public-information.spec.ts`
+2. **1.2** - View Another User's Profile - Public View - P1 ✅ `view-another-user-profile-public-view.spec.ts`
+3. **1.3** - View Unauthenticated User Profile - P1 ✅ `view-unauthenticated-user-profile.spec.ts`
 
 ### Category 2: User Membership Settings (5 scenarios)
 
-4. **2.1** - Access Own Membership Settings - P1
-5. **2.2** - View All Membership Levels - P1
-6. **2.3** - Leave a Space Membership - P2
-7. **2.4** - View Pending Applications - P3
-8. **2.5** - Cannot Access Other User's Membership Settings - P1
+4. **2.1** - Access Own Membership Settings - P1 ✅ `access-own-membership-settings.spec.ts`
+5. **2.2** - View All Membership Levels - P1 ❌
+6. **2.3** - Leave a Space Membership - P2 ✅ `access-own-membership-settings.spec.ts` (combined with 2.1)
+7. **2.4** - View Pending Applications - P3 ❌
+8. **2.5** - Cannot Access Other User's Membership Settings - P1 ⏸️ `cannot-access-other-user-membership-settings.spec.ts`
 
 ### Category 3: User Account Settings (3 scenarios)
 
-9. **3.1** - View Own Account Settings - P1
-10. **3.2** - View Account with No Hosted Resources - P2
-11. **3.3** - Cannot Access Other User's Account Settings P1
+9. **3.1** - View Own Account Settings - P1 ⏸️ `view-own-account-settings.spec.ts`
+10. **3.2** - View Account with No Hosted Resources - P2 ❌
+11. **3.3** - Cannot Access Other User's Account Settings - P1 ⏸️ `cannot-access-other-user-account-settings.spec.ts`
 
 ### Category 4: Organization Profile Access (3 scenarios)
 
-12. **4.1** - View Organization Profile - Public - P1
-13. **4.2** - View Organization Profile - As Member - P1
-14. **4.3** - View Organization Profile - As Admin - P1
+12. **4.1** - View Organization Profile - Public - P1 ✅ `view-organization-profile-public.spec.ts`
+13. **4.2** - View Organization Profile - Unauthenticated - P1 ✅ `view-organization-profile-public.spec.ts` (combined with 4.1)
+14. **4.3** - View Organization Profile - As Admin - P1 ✅ `view-organization-profile-as-admin.spec.ts`
 
 ### Category 5: Organization Account Settings (3 scenarios)
 
-15. **5.1** - View Organization Account Settings - As Admin - P1
-16. **5.2** - Cannot Access Organization Account Settings - Non-Admin - P3 (covered on API)
-17. **5.3** - View Organization with Hosted Spaces - P1
+15. **5.1** - View Organization Account Settings - As Admin - P1 ✅ `view-organization-account-settings-as-admin.spec.ts`
+16. **5.2** - Cannot Access Organization Account Settings - Non-Admin - P3 ✅ `cannot-access-organization-account-settings-non-admin.spec.ts`
+17. **5.3** - View Organization with Hosted Spaces - P1 ✅ `view-organization-account-settings-as-admin.spec.ts` (combined with 5.1)
 
 ### Category 6: Organization Membership Settings (4 scenarios)
 
-18. **6.1** - View Organization Membership Settings - As Admin - P3
-19. **6.2** - Manage Organization Members - P1
-20. **6.3** - Organization Domain-Based Auto-Join - P4
-21. **6.4** - Cannot Access Organization Membership Settings - Non-Admin - there is no such settings
+18. **6.1** - View Organization Membership Settings - As Admin - P3 ❌
+19. **6.2** - Manage Organization Members - P1 ❌
+20. **6.3** - Organization Domain-Based Auto-Join - P4 ❌
+21. **6.4** - Cannot Access Organization Membership Settings - Non-Admin - N/A (no such settings)
 
 ### Category 7: Home Dashboard Membership Display (4 scenarios) - skip (to be redesigned)
 
-22. **7.1** - View Home Dashboard - Authenticated User
-23. **7.2** - View Home Dashboard - Multiple Memberships
-24. **7.3** - View Home Dashboard - No Memberships
-25. **7.4** - View Home Dashboard - Organization Memberships
+22. **7.1** - View Home Dashboard - Authenticated User ✅ `view-home-dashboard-authenticated-user.spec.ts`
+23. **7.2** - View Home Dashboard - Multiple Memberships ✅ `view-home-dashboard-multiple-memberships.spec.ts`
+24. **7.3** - View Home Dashboard - No Memberships ❌
+25. **7.4** - View Home Dashboard - Organization Memberships ❌
 
 ### Category 8: Space/Subspace Settings Access Control (7 scenarios)
 
-26. **8.1** - Access Space Settings - As Space Admin - P1
-27. **8.2** - Access Space Settings - As Space Member - P1
-28. **8.3** - Access Subspace Settings - As Subspace Admin - P1
-29. **8.4** - Access Subspace Settings - As Space Admin (Parent) - P1
-30. **8.5** - Access Private Subsubspace - As Non-Member - P1
-31. **8.6** - Access Private Subsubspace - As Member - P2
-32. **8.7** - Access Private Subsubspace Settings - As Subsubspace Admin - P3
+26. **8.1** - Access Space Settings - As Space Admin - P1 ✅ `access-space-settings-as-space-admin.spec.ts`
+27. **8.2** - Access Space Settings - As Space Member - P1 ✅ `access-space-settings-as-space-member.spec.ts`
+28. **8.3** - Access Subspace Settings - As Subspace Admin - P1 ✅ `access-subspace-settings-as-subspace-admin.spec.ts`
+29. **8.4** - Access Subspace Settings - As Space Admin (Parent) - P1 ✅ `access-subspace-settings-as-space-admin.spec.ts`
+30. **8.5** - Access Private Subsubspace - As Non-Member - P1 ✅ `access-private-subsubspace-as-non-member.spec.ts`
+31. **8.6** - Access Private Subsubspace - As Member - P2 ✅ `access-private-subsubspace-as-member.spec.ts`
+32. **8.7** - Access Private Subsubspace Settings - As Subsubspace Admin - P3 ❌
+
+### Category 8 (Additional): Private Space Scenarios
+
+- Access Private Subspace in Private Space - As Non-Member ✅ `access-private-subspace-in-private-space-non-member.spec.ts`
+- Access Private Subspace in Private Space - Unauthenticated ✅ `access-private-subspace-in-private-space-non-member.spec.ts` (second test)
 
 ### Category 9: Membership Application Workflows (3 scenarios)
 
 33. **9.1** - Apply to Join Public Space - covered in another suite
-34. **9.2** - Withdraw Pending Application (not implemented feature)
-35. **9.3** - Approve Membership Application - As Space Admin covered in another suite
+34. **9.2** - Withdraw Pending Application - N/A (not implemented feature)
+35. **9.3** - Approve Membership Application - As Space Admin - covered in another suite
 
 ### Category 10: Organization Associate Management (3 scenarios)
 
-36. **10.1** - Add User as Organization Associate - P1
-37. **10.2** - Accept Organization Invitation - not implemented on client as feature
-38. **10.3** - Remove Organization Associate - P3
+36. **10.1** - Add User as Organization Associate - P1 ❌
+37. **10.2** - Accept Organization Invitation - N/A (not implemented on client as feature)
+38. **10.3** - Remove Organization Associate - P3 ❌
 
 ### Category 11: Cross-Level Membership Visibility (3 scenarios)
 
-39. **11.1** - View User Profile Showing Multiple Membership Levels - P2
-40. **11.2** - View Organization Members List - P2
-41. **11.3** - View Space Community Members - P1
+39. **11.1** - View User Profile Showing Multiple Membership Levels - P2 ❌
+40. **11.2** - View Organization Members List - P2 ❌
+41. **11.3** - View Space Community Members - P1 ❌
 
 ### Category 12: VirtualContributor Membership Management (22 scenarios)
 
-42. **12.1** - View VirtualContributor Profile - P1
-43. **12.2** - Access VC Membership Settings - As Host - P1
-44. **12.3** - VC Added to Space Community - Direct Assignment - P1
-45. **12.4** - View VC in Space Community Members List - P1
-46. **12.5** - VC Opt Out from Space Membership - As Host - TBD
-47. **12.6** - Cannot Access VC Membership Settings - Non-Host - P1
-48. **12.7** - VC Cannot Be Added to Subspace (L1) - P3
-49. **12.8** - VC Cannot Be Added to Subsubspace (L2) - P3
-50. **12.9** - Remove VC from Space - By Space Admin - P1
-51. **12.10** - Account VC - Profile Not Accessible to Non-Host - TBD
-52. **12.11** - Hidden VC - Cannot Be Added to Any Space - P3
-53. **12.12** - Hidden VC - Profile Only Accessible to Host - P3
-54. **12.13** - Hidden VC - Host Can View and Manage - P1
-55. **12.14** - Public VC - View Profile as Non-Host (Authenticated) - P2
-56. **12.15** - Public VC - Listed in Store and Available for Invite - P1
-57. **12.16** - Public VC - Not Listed in Store, Not Available for Invite - P3
-58. **12.17** - Public VC - Accept Invitation from Different Account - P1
-59. **12.18** - Account VC - Cannot Invite from Different Account - P3
-60. **12.19** - Change VC Visibility - Account to Public - P1
-61. **12.20** - Change VC Visibility - Public to Hidden - P3
-62. **12.21** - VC Memberships Visible in Organization Account Settings - P2
-63. **12.22** - VC Shows in Home Dashboard - For VC Host - P3
+42. **12.1** - View VirtualContributor Profile - P1 ❌
+43. **12.2** - Access VC Membership Settings - As Host - P1 ❌
+44. **12.3** - VC Added to Space Community - Direct Assignment - P1 ❌
+45. **12.4** - View VC in Space Community Members List - P1 ❌
+46. **12.5** - VC Opt Out from Space Membership - As Host - TBD ❌
+47. **12.6** - Cannot Access VC Membership Settings - Non-Host - P1 ❌
+48. **12.7** - VC Cannot Be Added to Subspace (L1) - P3 ❌
+49. **12.8** - VC Cannot Be Added to Subsubspace (L2) - P3 ❌
+50. **12.9** - Remove VC from Space - By Space Admin - P1 ❌
+51. **12.10** - Account VC - Profile Not Accessible to Non-Host - TBD ❌
+52. **12.11** - Hidden VC - Cannot Be Added to Any Space - P3 ❌
+53. **12.12** - Hidden VC - Profile Only Accessible to Host - P3 ❌
+54. **12.13** - Hidden VC - Host Can View and Manage - P1 ❌
+55. **12.14** - Public VC - View Profile as Non-Host (Authenticated) - P2 ❌
+56. **12.15** - Public VC - Listed in Store and Available for Invite - P1 ❌
+57. **12.16** - Public VC - Not Listed in Store, Not Available for Invite - P3 ❌
+58. **12.17** - Public VC - Accept Invitation from Different Account - P1 ❌
+59. **12.18** - Account VC - Cannot Invite from Different Account - P3 ❌
+60. **12.19** - Change VC Visibility - Account to Public - P1 ❌
+61. **12.20** - Change VC Visibility - Public to Hidden - P3 ❌
+62. **12.21** - VC Memberships Visible in Organization Account Settings - P2 ❌
+63. **12.22** - VC Shows in Home Dashboard - For VC Host - P3 ❌
 
 ### Category 13: Permissions and Authorization Edge Cases (4 scenarios)
 
-64. **13.1** - Global Admin Access to Any Membership Settings - P1
-65. **13.2** - Attempt Privilege Escalation - Member to Admin - P1
-66. **13.3** - Removed Member Cannot Access Previous Space - P1
-67. **13.4** - Expired or Invalid Session Access - P1
+64. **13.1** - Global Admin Access to Any Membership Settings - P1 ❌
+65. **13.2** - Attempt Privilege Escalation - Member to Admin - P1 ❌
+66. **13.3** - Removed Member Cannot Access Previous Space - P1 ✅
+67. **13.4** - Expired or Invalid Session Access - P1 ❌
 
 ---
 
-**Total Test Scenarios: 67**
+## Implementation Statistics
 
-- **Category 1**: 3 scenarios
-- **Category 2**: 5 scenarios
-- **Category 3**: 3 scenarios
-- **Category 4**: 3 scenarios
-- **Category 5**: 3 scenarios
-- **Category 6**: 4 scenarios
-- **Category 7**: 4 scenarios
-- **Category 8**: 7 scenarios
-- **Category 9**: 3 scenarios
-- **Category 10**: 3 scenarios
-- **Category 11**: 3 scenarios
-- **Category 12**: 22 scenarios
-- **Category 13**: 4 scenarios
+| Category                                     | Total  | ✅ Implemented | ⏸️ Skipped | ❌ Not Implemented | N/A   |
+| -------------------------------------------- | ------ | -------------- | ---------- | ------------------ | ----- |
+| 1. User Profile Membership Display           | 3      | 3              | 0          | 0                  | 0     |
+| 2. User Membership Settings                  | 5      | 2              | 1          | 2                  | 0     |
+| 3. User Account Settings                     | 3      | 0              | 2          | 1                  | 0     |
+| 4. Organization Profile Access               | 3      | 3              | 0          | 0                  | 0     |
+| 5. Organization Account Settings             | 3      | 3              | 0          | 0                  | 0     |
+| 6. Organization Membership Settings          | 4      | 0              | 0          | 3                  | 1     |
+| 7. Home Dashboard Membership Display         | 4      | 2              | 0          | 2                  | 0     |
+| 8. Space/Subspace Settings Access Control    | 7 + 2  | 8              | 0          | 1                  | 0     |
+| 9. Membership Application Workflows          | 3      | 0              | 0          | 0                  | 3     |
+| 10. Organization Associate Management        | 3      | 0              | 0          | 2                  | 1     |
+| 11. Cross-Level Membership Visibility        | 3      | 0              | 0          | 3                  | 0     |
+| 12. VirtualContributor Membership Management | 22     | 0              | 0          | 22                 | 0     |
+| 13. Permissions and Authorization Edge Cases | 4      | 0              | 0          | 4                  | 0     |
+| **Total**                                    | **69** | **21**         | **3**      | **40**             | **5** |
+
+**Test Files Location:** `client-web/src/functional-e2e/memberships/`
+
+**Total Test Files:** 21
+
+---
+
+**Total Test Scenarios: 67** (+ 2 additional private space scenarios)
+
+- **Category 1**: 3 scenarios (3 implemented)
+- **Category 2**: 5 scenarios (2 implemented, 1 skipped)
+- **Category 3**: 3 scenarios (0 implemented, 2 skipped)
+- **Category 4**: 3 scenarios (3 implemented)
+- **Category 5**: 3 scenarios (3 implemented)
+- **Category 6**: 4 scenarios (0 implemented)
+- **Category 7**: 4 scenarios (2 implemented)
+- **Category 8**: 7 scenarios + 2 additional (8 implemented)
+- **Category 9**: 3 scenarios (covered elsewhere / N/A)
+- **Category 10**: 3 scenarios (0 implemented)
+- **Category 11**: 3 scenarios (0 implemented)
+- **Category 12**: 22 scenarios (0 implemented)
+- **Category 13**: 4 scenarios (0 implemented)

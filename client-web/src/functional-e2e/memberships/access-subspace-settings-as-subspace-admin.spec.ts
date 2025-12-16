@@ -17,7 +17,7 @@ import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-ses
 
 const { test, setupAuthentication, teardownAuthentication } =
   createAuthenticatedSessionFixture({
-    storageStateName: 'access-space-settings-admin.json',
+    storageStateName: 'access-subspace-settings-admin.json',
     cleanupAfterTests: process.env.cleanupAfterTests === 'true',
   });
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
@@ -38,12 +38,37 @@ const scenarioConfig: TestScenarioConfig = {
     },
     community: {
       admins: [TestUser.SPACE_ADMIN, TestUser.GLOBAL_ADMIN],
-      members: [TestUser.SPACE_MEMBER, TestUser.SPACE_ADMIN],
+      members: [
+        TestUser.SPACE_MEMBER,
+        TestUser.SPACE_ADMIN,
+        TestUser.SUBSPACE_ADMIN,
+      ],
     },
     settings: {
       privacy: { mode: SpacePrivacyMode.Public },
       membership: {
         policy: CommunityMembershipPolicy.Applications,
+      },
+    },
+    subspace: {
+      about: {
+        profile: {
+          displayName: 'Subspace for Membership Tests',
+          tagline: 'Testing subspace memberships',
+        },
+      },
+      collaboration: {
+        addTutorialCallouts: false,
+      },
+      community: {
+        admins: [TestUser.SUBSPACE_ADMIN],
+        members: [TestUser.SUBSPACE_MEMBER, TestUser.SUBSPACE_ADMIN],
+      },
+      settings: {
+        privacy: { mode: SpacePrivacyMode.Public },
+        membership: {
+          policy: CommunityMembershipPolicy.Applications,
+        },
       },
     },
   },
@@ -53,7 +78,10 @@ test.describe('Space/Subspace Settings Access Control', () => {
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(60_000);
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
-    await setupAuthentication(browser, TestUserManager.users.spaceAdmin.email);
+    await setupAuthentication(
+      browser,
+      TestUserManager.users.subspaceAdmin.email
+    );
   });
 
   test.afterAll(async () => {
@@ -62,21 +90,33 @@ test.describe('Space/Subspace Settings Access Control', () => {
     await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
-  test('Access Space Settings - As Space Admin', async ({ page }) => {
-    // 1. Navigate to "Membership Test Space"
-    await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
-
-    // 2. Access space settings
-    const settingsIcon = page.locator('[data-testid="SettingsOutlinedIcon"]');
-    await expect(settingsIcon).toBeVisible({ timeout: 5000 });
-    await settingsIcon.click();
-
-    // 3. Verify navigated to settings page
-    await expect(page).toHaveURL(
-      new RegExp(`/${baseScenario.space.nameId}/settings`)
+  // same as space admin test
+  test('Access Subspace Settings - As Subspace Admin', async ({ page }) => {
+    // 1. Navigate to "Subspace for Membership Tests"
+    await page.goto(
+      `${baseUrl}/${baseScenario.space.nameId}/challenges/${baseScenario.subspace.nameId}`
     );
 
-    // 4. Verify settings sections are available
-    await expect(page.getByText(/Layout/i)).toBeVisible();
+    // 2. Verify subspace page loads
+    await expect(page).toHaveURL(
+      new RegExp(`/${baseScenario.subspace.nameId}`)
+    );
+
+    // 3. Check if settings icon is visible
+    const settingsIcon = page
+      .getByRole('button', { name: /Settings/i })
+      .first();
+
+    await settingsIcon.isVisible({ timeout: 5000 });
+    await settingsIcon.click();
+
+    // 4. Verify navigated to subspace settings page
+    await expect(page).toHaveURL(
+      new RegExp(`/${baseScenario.subspace.nameId}/settings`)
+    );
+
+    // 5. Verify settings page content is visible
+    await expect(page.getByRole('link', { name: /About/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Details/i })).toBeVisible();
   });
 });

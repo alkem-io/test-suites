@@ -17,7 +17,7 @@ import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-ses
 
 const { test, setupAuthentication, teardownAuthentication } =
   createAuthenticatedSessionFixture({
-    storageStateName: 'access-space-settings-admin.json',
+    storageStateName: 'view-own-user-profile-public.json',
     cleanupAfterTests: process.env.cleanupAfterTests === 'true',
   });
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
@@ -49,11 +49,11 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
-test.describe('Space/Subspace Settings Access Control', () => {
+test.describe('User Profile Membership Display', () => {
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(60_000);
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
-    await setupAuthentication(browser, TestUserManager.users.spaceAdmin.email);
+    await setupAuthentication(browser, TestUserManager.users.spaceMember.email);
   });
 
   test.afterAll(async () => {
@@ -62,21 +62,43 @@ test.describe('Space/Subspace Settings Access Control', () => {
     await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
-  test('Access Space Settings - As Space Admin', async ({ page }) => {
-    // 1. Navigate to "Membership Test Space"
-    await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
-
-    // 2. Access space settings
-    const settingsIcon = page.locator('[data-testid="SettingsOutlinedIcon"]');
-    await expect(settingsIcon).toBeVisible({ timeout: 5000 });
-    await settingsIcon.click();
-
-    // 3. Verify navigated to settings page
-    await expect(page).toHaveURL(
-      new RegExp(`/${baseScenario.space.nameId}/settings`)
+  test('View Own User Profile - Public Information', async ({ page }) => {
+    await page.goto(
+      `${baseUrl}/user/${TestUserManager.users.spaceMember.nameId}`
     );
 
-    // 4. Verify settings sections are available
-    await expect(page.getByText(/Layout/i)).toBeVisible();
+    await expect(page).toHaveURL(
+      new RegExp(`/user/${TestUserManager.users.spaceMember.nameId}`)
+    );
+
+    const userNameHeading = page.getByRole('heading', {
+      level: 1,
+      name: new RegExp(TestUserManager.users.spaceMember.displayName, 'i'),
+    });
+    await expect(userNameHeading).toBeVisible({ timeout: 3000 });
+
+    await expect(
+      page.getByRole('heading', { name: /Bio/i }).first()
+    ).toBeVisible();
+
+    await expect(
+      page.getByRole('heading', { name: /Spaces.*/i }).first()
+    ).toBeVisible();
+
+    await expect(
+      page.getByText(baseScenario.space.about.profile.displayName).first()
+    ).toBeVisible({ timeout: 2000 });
+
+    const settingsIcon = page.locator('[data-testid="SettingsOutlinedIcon"]');
+    await expect(settingsIcon).toBeVisible();
+    await settingsIcon.click();
+
+    await expect(page).toHaveURL(
+      new RegExp(`/user/${TestUserManager.users.spaceMember.nameId}/settings`)
+    );
+
+    await expect(
+      page.getByText(/Here you can edit your profile details*/i)
+    ).toBeVisible();
   });
 });
