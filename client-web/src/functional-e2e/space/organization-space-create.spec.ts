@@ -87,7 +87,7 @@ test.describe('CREATE Space Operations (Organization Account)', () => {
     await createSpaceDialog.waitForHidden();
   });
 
-  test.skip('1.4 Create Space from Organization - With Tutorials Enabled', async ({
+  test('1.4 Create Space from Organization - With Tutorials Enabled', async ({
     page,
   }) => {
     const orgAccountPage = new OrganizationAccountPage(page, baseUrl);

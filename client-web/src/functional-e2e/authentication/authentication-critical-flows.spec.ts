@@ -181,7 +181,7 @@ test.describe('Authentication - Phase 1 Critical Flows', () => {
     });
 
     // skipped because it fails on Evgeni's machine (to be investigated)
-    test.skip('4.2 - Logout and re-authentication', async ({ page }) => {
+    test('4.2 - Logout and re-authentication', async ({ page }) => {
       test.setTimeout(30000);
       // 1. Sign in as user (admin@alkem.io)
       await navigateToLoginPageFromMenu(baseUrl, page);
@@ -205,7 +205,7 @@ test.describe('Authentication - Phase 1 Critical Flows', () => {
   });
 
   test.describe('Error Handling', () => {
-    test.skip('7.1 - Invalid credentials', async ({ context, page }) => {
+    test('7.1 - Invalid credentials', async ({ context, page }) => {
       // 1. Navigate to sign-in page
       await context.clearCookies();
       await navigateToLoginPageFromMenu(baseUrl, page);

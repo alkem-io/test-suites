@@ -79,7 +79,7 @@ test.describe('CREATE Space Operations', () => {
     await createSpaceDialog.waitForHidden();
   });
 
-  test.skip('1.4 Create Space - With Tutorials Enabled', async ({ page }) => {
+  test('1.4 Create Space - With Tutorials Enabled', async ({ page }) => {
     const homePage = new HomePage(page, baseUrl);
     const myAccountPage = new MyAccountPage(page, baseUrl);
     const createSpaceDialog = new CreateSpaceDialog(page);
