@@ -64,8 +64,8 @@ export default defineConfig({
   retries: 2,
 
   // % of the available CPUs
-  // workers: '100%',
-  workers: 3,
+  workers: '100%',
+  // workers: 7,
 
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
