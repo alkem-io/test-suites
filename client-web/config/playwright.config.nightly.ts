@@ -44,6 +44,7 @@ const testPattern = [
   '/space/organization-space-create.spec.ts',
   '/space/space-create.spec.ts',
   '/public-space/*.spec.ts',
+  '/support-navigation/*.spec.ts',
 ]
 
 export default defineConfig({
