@@ -65,7 +65,7 @@ export default defineConfig({
 
   // % of the available CPUs
   // workers: '100%',
-  workers: 4,
+  workers: 3,
 
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
@@ -79,20 +79,20 @@ export default defineConfig({
     // baseURL: 'http://127.0.0.1:3000',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    // trace: 'on-first-retry',
+    trace: 'on-all-retries',
     headless: true,
 
     /* Screenshot on failure */
-    // screenshot: 'only-on-failure',
+    screenshot: 'only-on-failure',
 
     /* Video on retry */
-    // video: 'retain-on-failure',
+    video: 'on-first-retry',
   },
 
   timeout: 30000,
 
   expect: {
-    timeout: 10 * 500,
+    timeout: 5000,
   },
 
   /* Configure projects for major browsers */
