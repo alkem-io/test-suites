@@ -1,0 +1,120 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - navigation [ref=e4]:
+      - generic [ref=e6]:
+        - button "Skip main menu"
+        - generic [ref=e8]:
+          - button "Search" [ref=e11] [cursor=pointer]:
+            - img [ref=e12]
+          - button "Notifications Button" [ref=e14] [cursor=pointer]:
+            - img [ref=e15]
+            - generic [ref=e17]: "1"
+          - button "Tools Menu" [ref=e20] [cursor=pointer]:
+            - img [ref=e21]
+          - generic [ref=e24]:
+            - generic:
+              - link "My profile":
+                - /url: ""
+        - generic [ref=e26]:
+          - link "My Dashboard" [ref=e27] [cursor=pointer]:
+            - /url: /home
+            - img [ref=e29]
+          - img [ref=e34]
+          - link "l0-seed-public-space-916136" [ref=e37] [cursor=pointer]:
+            - /url: /seed-public-space-916136
+            - img [ref=e39]
+          - img [ref=e42]
+          - link "l1-seed-public-space" [ref=e45] [cursor=pointer]:
+            - /url: /seed-public-space-916136/challenges/l1nameid731793
+            - img [ref=e47]
+    - banner [ref=e50]:
+      - img "Page banner:" [ref=e52]
+      - generic [ref=e55]:
+        - img "Avatar of l1-seed-public-space" [ref=e58]
+        - generic [ref=e60]:
+          - heading "l1-seed-public-space" [level=1] [ref=e62]
+          - heading "test tagline420a19" [level=3] [ref=e63]
+    - main [ref=e65]:
+      - generic [ref=e67]:
+        - button "Apply to our community and start making change!" [ref=e68] [cursor=pointer]:
+          - img [ref=e70]
+          - text: Apply to our community and start making change!
+        - button "Skip to next block"
+    - main [ref=e72]:
+      - generic [ref=e73]:
+        - generic [ref=e74]:
+          - generic [ref=e75]:
+            - paragraph [ref=e80]: 🔍 A journey of discovery! Gather insights through research and observation.
+            - generic [ref=e81]:
+              - link "User avatar admin alkemio" [ref=e82] [cursor=pointer]:
+                - /url: /user/admin-alkemio
+                - generic "User avatar" [ref=e83]:
+                  - img "Avatar of admin alkemio" [ref=e84]
+                - generic [ref=e87]:
+                  - heading "admin alkemio" [level=3] [ref=e88]
+                  - heading [level=3]
+              - link "User avatar seed-public-space-b9916a" [ref=e89] [cursor=pointer]:
+                - /url: /organization/seed-public-space-b9916a
+                - generic "User avatar" [ref=e90]:
+                  - img "Avatar of seed-public-space-b9916a" [ref=e91]
+                - generic [ref=e94]:
+                  - heading "seed-public-space-b9916a" [level=3] [ref=e95]
+                  - heading [level=3]
+          - button "About this Space" [ref=e96] [cursor=pointer]:
+            - img [ref=e98]
+            - text: About this Space
+          - generic [ref=e100]:
+            - link "Skip to next block l0-seed-public-space-916136 Hierarchy of this Space." [ref=e104] [cursor=pointer]:
+              - /url: /seed-public-space-916136
+              - generic [ref=e105]:
+                - button "Skip to next block"
+                - generic [ref=e108]: l0-seed-public-space-916136
+                - button "Hierarchy of this Space." [ref=e110]:
+                  - img [ref=e111]
+            - link "Avatar l1-seed-public-space" [ref=e119] [cursor=pointer]:
+              - /url: /seed-public-space-916136/challenges/l1nameid731793
+              - img "Avatar" [ref=e122]
+              - generic [ref=e124]: l1-seed-public-space
+          - button "Skip to next block"
+        - generic [ref=e125]:
+          - generic [ref=e128]:
+            - generic [ref=e130]:
+              - generic [ref=e131]:
+                - heading "👋 Welcome to your space!" [level=2] [ref=e132] [cursor=pointer]
+                - button "Skip to next block"
+              - button "settings" [ref=e134] [cursor=pointer]:
+                - img [ref=e135]
+            - generic [ref=e137]:
+              - paragraph [ref=e140]: An empty space for you to configure!.
+              - generic [ref=e143]: You can't reply to this discussion since you're not a member of this Space
+          - button "Skip to next block"
+    - complementary [ref=e144]:
+      - generic "Help" [ref=e145]:
+        - button "1 Close chat" [ref=e147] [cursor=pointer]:
+          - generic [ref=e148]: "1"
+          - img "Close chat" [ref=e149]
+    - contentinfo [ref=e150]:
+      - link "Alkemio" [ref=e153] [cursor=pointer]:
+        - /url: /
+        - img "Alkemio" [ref=e154]
+      - generic [ref=e155]:
+        - link "Terms" [ref=e157] [cursor=pointer]:
+          - /url: https://welcome.alkem.io/legal/#tc
+        - link "Privacy" [ref=e159] [cursor=pointer]:
+          - /url: https://welcome.alkem.io/privacy/
+        - link "Security" [ref=e161] [cursor=pointer]:
+          - /url: https://welcome.alkem.io/security/
+      - generic [ref=e162]:
+        - generic [ref=e164] [cursor=pointer]: Support
+        - link "About" [ref=e166] [cursor=pointer]:
+          - /url: https://welcome.alkem.io
+        - button "Language" [ref=e168] [cursor=pointer]:
+          - img [ref=e170]
+          - text: Language
+      - generic [ref=e173]: © 2025 Alkemio B.V.
+  - tooltip "l0-seed-public-space-916136" [ref=e174]:
+    - generic [ref=e176]: l0-seed-public-space-916136
+```
