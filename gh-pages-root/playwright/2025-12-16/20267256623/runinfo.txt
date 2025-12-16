@@ -1,5 +1,0 @@
-Run ID: 20267256623
-Date: 2025-12-16
-Branch: refs/heads/nightly-web
-Commit: ed51f513017852b6a53fc39c22f0a0fa5ac0c508
-Playwright outcome: failure
