@@ -1,5 +1,11 @@
 // spec: client-web/src/functional-e2e/plans/support-navigation-test-plan.md
 // seed: client-web/src/functional-e2e/seed-docs.spec.ts
+// NOTE: In order to run these tests locally, documentations service must be running:
+// Loading an Iframe of documentation site
+// to run it locally
+// checkout the documentation repo: https://github.com/alkem-io/documentation
+// and follow its readme to run it locally;
+// update your local .env server file with PLATFORM_DOCUMENTATION_PATH=http://localhost:3010/documentation
 
 import { expect } from '@playwright/test';
 import { TestUserManager } from '@alkemio/tests-lib';
