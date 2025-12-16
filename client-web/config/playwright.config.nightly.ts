@@ -38,19 +38,43 @@ dotenv.config({ path: path.resolve(__dirname, '../', '.env') });
  */
 // the testing directory relative to this config file
 const testDirectory = '../src/functional-e2e';
-const testPattern = [
-  '/authentication/authentication-critical-flows.spec.ts',
-  '/authentication/authentication-flows.spec.ts',
-  '/space/organization-space-create.spec.ts',
-  '/space/space-create.spec.ts',
-  '/public-space/*.spec.ts',
-  '/support-navigation/*.spec.ts',
-]
 
 export default defineConfig({
   testDir: testDirectory,
-  // testDir: '../src/functional-e2e',
-  testMatch: testPattern,
+
+  /* Configure projects for major browsers */
+  projects: [
+    {
+      name: 'Authentication',
+      testMatch: [
+        '/authentication/authentication-critical-flows.spec.ts',
+        '/authentication/authentication-flows.spec.ts',
+      ],
+    },
+    {
+      name: 'Space',
+      testMatch: [
+        '/space/organization-space-create.spec.ts',
+        '/space/space-create.spec.ts',
+      ],
+    },
+    {
+      name: 'Public Space',
+      testMatch: [
+        '/public-space/*.spec.ts',
+      ],
+    },
+    {
+      name: 'Support navigation',
+      testMatch: [
+        '/support-navigation/support-navigation.spec.ts',
+        '/support-navigation/support-navigation-additional.spec.ts',
+      ],
+    },
+  ],
+  // % or number of the available CPUs
+  // workers: '100%',
+  workers: 3,
 
   /*
     Playwright Test runs tests in parallel. In order to achieve that, it runs several worker processes that run at the same time.
@@ -63,10 +87,6 @@ export default defineConfig({
   forbidOnly: true,
 
   retries: 2,
-
-  // % of the available CPUs
-  // workers: '100%',
-  workers: 3,
 
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
@@ -93,31 +113,5 @@ export default defineConfig({
   expect: {
     timeout: 5000,
   },
-
-  /* Configure projects for major browsers */
-  projects: [
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
-
-    // Uncomment to test on Firefox
-    // {
-    //   name: 'firefox',
-    //   use: { ...devices['Desktop Firefox'] },
-    // },
-
-    // Uncomment to test on WebKit
-    // {
-    //   name: 'webkit',
-    //   use: { ...devices['Desktop Safari'] },
-    // },
-
-    // Uncomment to use branded Chrome
-    // {
-    //   name: 'Google Chrome',
-    //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
-    // },
-  ],
 });
 
