@@ -9,57 +9,30 @@ import { Page, expect } from '@playwright/test';
 import { fillTemplateForm } from '../template-form';
 import {
   CalloutTemplateForm,
-  AdditionalContent,
-  ResponseCollection,
+  CalloutTemplateFraming,
+  CalloutTemplateResponseCollection,
 } from './callout-template-form.models';
-
-// Additional Content helpers
-import {
-  selectAdditionalContentNone,
-  editAdditionalContentNone,
-} from './additional-content/none';
-import {
-  selectAdditionalContentWhiteboard,
-  fillAdditionalContentWhiteboard,
-  editAdditionalContentWhiteboard,
-} from './additional-content/whiteboard';
-import {
-  selectAdditionalContentMemo,
-  fillAdditionalContentMemo,
-  editAdditionalContentMemo,
-} from './additional-content/memo';
-import {
-  selectAdditionalContentCallToAction,
-  fillAdditionalContentCallToAction,
-  editAdditionalContentCallToAction,
-} from './additional-content/call-to-action';
-
 // Collection helpers
 import {
   selectCollectionNone,
-  fillCollectionNone,
-  editCollectionNone,
 } from './collection/none';
 import {
   selectCollectionLinksFiles,
   fillCollectionLinksFiles,
-  editCollectionLinksFiles,
 } from './collection/links-files';
 import {
   selectCollectionPosts,
   fillCollectionPosts,
-  editCollectionPosts,
 } from './collection/posts';
 import {
   selectCollectionMemos,
   fillCollectionMemos,
-  editCollectionMemos,
 } from './collection/memos';
 import {
   selectCollectionWhiteboards,
   fillCollectionWhiteboards,
-  editCollectionWhiteboards,
 } from './collection/whiteboards';
+import { fillCalloutTemplateFramingCallToAction, fillCalloutTemplateFramingMemo, fillCalloutTemplateFramingWhiteboard, selectCalloutTemplateFramingCallToAction, selectCalloutTemplateFramingMemo, selectCalloutTemplateFramingNone, selectCalloutTemplateFramingWhiteboard } from './callout-template-framing';
 
 // ============================================================================
 // Callout Base Fields
@@ -111,43 +84,23 @@ const fillCalloutBaseFields = async (
 
 const selectAndFillAdditionalContent = async (
   page: Page,
-  content: AdditionalContent
+  content: CalloutTemplateFraming
 ): Promise<void> => {
   switch (content.type) {
     case 'none':
-      await selectAdditionalContentNone(page);
+      await selectCalloutTemplateFramingNone(page);
       break;
     case 'whiteboard':
-      await selectAdditionalContentWhiteboard(page);
-      await fillAdditionalContentWhiteboard(page, content);
+      await selectCalloutTemplateFramingWhiteboard(page);
+      await fillCalloutTemplateFramingWhiteboard(page, content);
       break;
     case 'memo':
-      await selectAdditionalContentMemo(page);
-      await fillAdditionalContentMemo(page, content);
+      await selectCalloutTemplateFramingMemo(page);
+      await fillCalloutTemplateFramingMemo(page, content);
       break;
     case 'callToAction':
-      await selectAdditionalContentCallToAction(page);
-      await fillAdditionalContentCallToAction(page, content);
-      break;
-  }
-};
-
-const editAdditionalContent = async (
-  page: Page,
-  content: AdditionalContent
-): Promise<void> => {
-  switch (content.type) {
-    case 'none':
-      await editAdditionalContentNone(page);
-      break;
-    case 'whiteboard':
-      await editAdditionalContentWhiteboard(page, content);
-      break;
-    case 'memo':
-      await editAdditionalContentMemo(page, content);
-      break;
-    case 'callToAction':
-      await editAdditionalContentCallToAction(page, content);
+      await selectCalloutTemplateFramingCallToAction(page);
+      await fillCalloutTemplateFramingCallToAction(page, content);
       break;
   }
 };
@@ -159,9 +112,6 @@ const editAdditionalContent = async (
 const expandResponseOptions = async (page: Page): Promise<void> => {
   // Expand Response Options if collapsed
   await page.getByRole('button', { name: 'Expand' }).click();
-  // if (await expandButton.isVisible()) {
-  //   await expandButton.click();
-  // }
 };
 
 // ============================================================================
@@ -172,9 +122,6 @@ const setCommentsEnabled = async (
   page: Page,
   enabled: boolean
 ): Promise<void> => {
-  // const commentsSection = page
-  //   .getByRole('heading', { name: 'Comments' })
-  //   .locator('..');
   const buttonName = enabled ? 'Comments' : 'No Comments';
   await page.getByRole('button', { name: buttonName }).click();
 };
@@ -185,12 +132,11 @@ const setCommentsEnabled = async (
 
 const selectAndFillCollection = async (
   page: Page,
-  collection: ResponseCollection
+  collection: CalloutTemplateResponseCollection
 ): Promise<void> => {
   switch (collection.type) {
     case 'none':
       await selectCollectionNone(page);
-      await fillCollectionNone(page);
       break;
     case 'linksFiles':
       await selectCollectionLinksFiles(page);
@@ -207,29 +153,6 @@ const selectAndFillCollection = async (
     case 'whiteboards':
       await selectCollectionWhiteboards(page);
       await fillCollectionWhiteboards(page, collection);
-      break;
-  }
-};
-
-const editCollection = async (
-  page: Page,
-  collection: ResponseCollection
-): Promise<void> => {
-  switch (collection.type) {
-    case 'none':
-      await editCollectionNone(page);
-      break;
-    case 'linksFiles':
-      await editCollectionLinksFiles(page, collection);
-      break;
-    case 'posts':
-      await editCollectionPosts(page, collection);
-      break;
-    case 'memos':
-      await editCollectionMemos(page, collection);
-      break;
-    case 'whiteboards':
-      await editCollectionWhiteboards(page, collection);
       break;
   }
 };
@@ -252,7 +175,7 @@ export const fillCalloutTemplateForm = async (
   await fillCalloutBaseFields(page, templateData);
 
   // 3. Select and fill additional content
-  await selectAndFillAdditionalContent(page, templateData.additionalContent);
+  await selectAndFillAdditionalContent(page, templateData.framing);
 
   // 4. Expand Response Options
   await expandResponseOptions(page);

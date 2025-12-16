@@ -8,81 +8,81 @@
 import { TemplateForm } from '../template-form.models';
 
 // ============================================================================
-// Additional Content Types
+// Framing Types
 // ============================================================================
 
-export type AdditionalContentType = 'none' | 'whiteboard' | 'memo' | 'callToAction';
+export type CalloutTemplateFramingType = 'none' | 'whiteboard' | 'memo' | 'callToAction';
 
-export interface AdditionalContentNone {
+export interface CalloutTemplateFramingNone {
   type: 'none';
 }
 
-export interface AdditionalContentWhiteboard {
+export interface CalloutTemplateFramingWhiteboard {
   type: 'whiteboard';
   textInWhiteboard: string;
 }
 
-export interface AdditionalContentMemo {
+export interface CalloutTemplateFramingMemo {
   type: 'memo';
   memoContent: string;
 }
 
-export interface AdditionalContentCallToAction {
+export interface CalloutTemplateFramingCallToAction {
   type: 'callToAction';
   ctaText: string;
   ctaUrl: string;
 }
 
-export type AdditionalContent =
-  | AdditionalContentNone
-  | AdditionalContentWhiteboard
-  | AdditionalContentMemo
-  | AdditionalContentCallToAction;
+export type CalloutTemplateFraming =
+  | CalloutTemplateFramingNone
+  | CalloutTemplateFramingWhiteboard
+  | CalloutTemplateFramingMemo
+  | CalloutTemplateFramingCallToAction;
 
 // ============================================================================
 // Response Types
 // ============================================================================
 
-export type ResponseType = 'none' | 'linksFiles' | 'posts' | 'memos' | 'whiteboards';
+export type CalloutTemplateResponseType = 'none' | 'linksFiles' | 'posts' | 'memos' | 'whiteboards';
 
-export interface ResponseSettingsBase {
+export interface CalloutTemplateResponseSettingsBase {
   membersCanAdd: boolean;
   adminsCanAdd: boolean;
 }
 
-export interface ResponseNone {
+export interface CalloutTemplateResponseNone {
   type: 'none';
 }
 
-export interface ResponseLinksFiles extends ResponseSettingsBase {
+export interface CalloutTemplateResponseLinksFiles extends CalloutTemplateResponseSettingsBase {
   type: 'linksFiles';
 }
 
-export interface ResponsePosts extends ResponseSettingsBase {
+export interface CalloutTemplateResponsePosts extends CalloutTemplateResponseSettingsBase {
   type: 'posts';
   defaultTitle: string;
   defaultDescription: string;
   enableCommentsOnPosts: boolean;
 }
 
-export interface ResponseMemos extends ResponseSettingsBase {
+export interface CalloutTemplateResponseMemos extends CalloutTemplateResponseSettingsBase {
   type: 'memos';
   defaultTitle: string;
   defaultDescription: string;
 }
 
-export interface ResponseWhiteboards extends ResponseSettingsBase {
+export interface CalloutTemplateResponseWhiteboards extends CalloutTemplateResponseSettingsBase {
   type: 'whiteboards';
   defaultTitle: string;
   textInWhiteboard: string;
 }
 
-export type ResponseCollection =
-  | ResponseNone
-  | ResponseLinksFiles
-  | ResponsePosts
-  | ResponseMemos
-  | ResponseWhiteboards;
+export type CalloutTemplateResponseCollection =
+  | CalloutTemplateResponseNone
+  | CalloutTemplateResponseLinksFiles
+  | CalloutTemplateResponsePosts
+  | CalloutTemplateResponseMemos
+  | CalloutTemplateResponseWhiteboards;
 
 // ============================================================================
 // Main Callout Template Form Interface
@@ -104,39 +104,39 @@ export interface CalloutTemplateForm extends TemplateForm {
   calloutDescription: string;
   calloutReferences: { title: string; url: string }[];
 
-  // Additional content (mutually exclusive)
-  additionalContent: AdditionalContent;
+  // Additional content
+  framing: CalloutTemplateFraming;
 
-  // Response options
+  // Response:
   commentsEnabled: boolean;
-  responseOptions: ResponseCollection;
+  responseOptions: CalloutTemplateResponseCollection;
 }
 
 export const createCalloutTemplateData = ({
-  additionalContentType,
+  framingType,
   commentsEnabled,
   responseType,
 }: {
-  additionalContentType: AdditionalContentType,
-  commentsEnabled: boolean,
-  responseType: ResponseType,
+    framingType: CalloutTemplateFramingType,
+    commentsEnabled: boolean,
+    responseType: CalloutTemplateResponseType,
 }): CalloutTemplateForm => {
-  let additionalContent: AdditionalContent = { type: 'none' };
-  switch (additionalContentType) {
+  let framing: CalloutTemplateFraming = { type: 'none' };
+  switch (framingType) {
     case 'whiteboard':
-      additionalContent = { type: 'whiteboard', textInWhiteboard: 'Whiteboard content in Callout Template' };
+      framing = { type: 'whiteboard', textInWhiteboard: 'Whiteboard content in Callout Template' };
       break;
     case 'memo':
-      additionalContent = { type: 'memo', memoContent: 'Memo content in Callout Template' };
+      framing = { type: 'memo', memoContent: 'Memo content in Callout Template' };
       break;
     case 'callToAction':
-      additionalContent = { type: 'callToAction', ctaText: 'Click Here', ctaUrl: 'https://alkem.io' };
+      framing = { type: 'callToAction', ctaText: 'Click Here', ctaUrl: 'https://alkem.io' };
       break;
     case 'none':
     default:
   }
 
-  let responseOptions: ResponseCollection = { type: 'none' };
+  let responseOptions: CalloutTemplateResponseCollection = { type: 'none' };
   switch (responseType) {
     case 'linksFiles':
       responseOptions = {
@@ -180,19 +180,19 @@ export const createCalloutTemplateData = ({
 
   return {
     // Template metadata
-    displayName: `CT Title - AC:${additionalContentType}, Response:${responseType}, Com:${commentsEnabled ? 'On' : 'Off'}`,
+    displayName: `CT Title - AC:${framingType}, Response:${responseType}, Com:${commentsEnabled ? 'On' : 'Off'}`,
     description:
-      `Callout Template Description - AC:${additionalContentType}, Response:${responseType}, Com:${commentsEnabled ? 'On' : 'Off'}`,
-    tags: ['callout', 'template', additionalContentType, responseType, commentsEnabled ? 'comments-enabled' : 'comments-disabled'],
+      `Callout Template Description - AC:${framingType}, Response:${responseType}, Com:${commentsEnabled ? 'On' : 'Off'}`,
+    tags: ['callout', 'template', framingType, responseType, commentsEnabled ? 'comments-enabled' : 'comments-disabled'],
 
     // Callout base fields
     calloutTitle: 'Callout Template - Callout Title',
-    calloutTags: ['callout', 'tags', additionalContentType, responseType, commentsEnabled ? 'comments-enabled' : 'comments-disabled'],
-    calloutDescription: `Callout Template Callout Description - AC:${additionalContentType}, Response:${responseType}, Com:${commentsEnabled ? 'On' : 'Off'}`,
+    calloutTags: ['callout', 'tags', framingType, responseType, commentsEnabled ? 'comments-enabled' : 'comments-disabled'],
+    calloutDescription: `Callout Template Callout Description - AC:${framingType}, Response:${responseType}, Com:${commentsEnabled ? 'On' : 'Off'}`,
     calloutReferences: [],
 
     // Additional content: None
-    additionalContent,
+    framing: framing,
 
     // Response options
     commentsEnabled,

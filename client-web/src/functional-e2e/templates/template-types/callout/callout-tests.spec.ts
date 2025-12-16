@@ -12,8 +12,6 @@ import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/O
 import { randomInt } from 'crypto';
 import { createAuthenticatedSessionFixture } from '@src/functional-e2e/fixtures/authenticated-session.fixture';
 import {
-  AdditionalContentType,
-  CalloutTemplateForm,
   createCalloutTemplateData,
 } from '../forms/callout/callout-template-form.models';
 import {
@@ -148,7 +146,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
-      additionalContentType: 'none',
+      framingType: 'none',
       responseType: 'none',
       commentsEnabled: false,
     });

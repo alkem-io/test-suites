@@ -16,16 +16,3 @@ export const selectCollectionNone = async (page: Page): Promise<void> => {
   await noneButton.click();
 };
 
-/**
- * No settings to fill for "None" collection.
- */
-export const fillCollectionNone = async (_page: Page): Promise<void> => {
-  // No-op: nothing to configure
-};
-
-/**
- * No settings to edit for "None" collection.
- */
-export const editCollectionNone = async (_page: Page): Promise<void> => {
-  // No-op: nothing to configure
-};

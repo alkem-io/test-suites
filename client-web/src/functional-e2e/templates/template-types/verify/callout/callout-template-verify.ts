@@ -22,23 +22,23 @@ export const verifyCalloutTemplate = async (
   await expect(page.getByText(templateData.calloutTitle, { exact: false }).first()).toBeVisible();
 
   // Verify additional content based on type
-  switch (templateData.additionalContent.type) {
+  switch (templateData.framing.type) {
     case 'whiteboard':
       // Verify whiteboard canvas is present (check for drawing canvas or text)
       await expect(
-        page.getByText(templateData.additionalContent.textInWhiteboard, { exact: false }).first()
+        page.getByText(templateData.framing.textInWhiteboard, { exact: false }).first()
       ).toBeVisible();
       break;
     case 'memo':
       // Verify memo content is visible
       await expect(
-        page.getByText(templateData.additionalContent.memoContent, { exact: false }).first()
+        page.getByText(templateData.framing.memoContent, { exact: false }).first()
       ).toBeVisible();
       break;
     case 'callToAction':
       // Verify CTA text is visible
       await expect(
-        page.getByText(templateData.additionalContent.ctaText, { exact: false }).first()
+        page.getByText(templateData.framing.ctaText, { exact: false }).first()
       ).toBeVisible();
       break;
     case 'none':

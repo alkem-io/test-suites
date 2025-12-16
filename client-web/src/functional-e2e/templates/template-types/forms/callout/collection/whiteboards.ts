@@ -4,7 +4,7 @@
  */
 
 import { Page, expect } from '@playwright/test';
-import { ResponseWhiteboards } from '../callout-template-form.models';
+import { CalloutTemplateResponseWhiteboards } from '../callout-template-form.models';
 
 /**
  * Selects "Whiteboards" for collection type.
@@ -28,7 +28,7 @@ export const selectCollectionWhiteboards = async (page: Page): Promise<void> => 
  */
 export const fillCollectionWhiteboards = async (
   page: Page,
-  settings: ResponseWhiteboards
+  settings: CalloutTemplateResponseWhiteboards
 ): Promise<void> => {
   // Open collection settings dialog
   await page.getByRole('button', { name: 'Collection settings' }).click();
@@ -92,70 +92,3 @@ export const fillCollectionWhiteboards = async (
   await expect(settingsDialog).not.toBeVisible();
 };
 
-/**
- * Edits collection settings for whiteboards.
- */
-export const editCollectionWhiteboards = async (
-  page: Page,
-  settings: ResponseWhiteboards
-): Promise<void> => {
-  // Open collection settings dialog
-  await page.getByRole('button', { name: 'Collection settings' }).click();
-
-  const settingsDialog = page.getByRole('dialog', { name: 'Collection settings' });
-  await expect(settingsDialog).toBeVisible();
-
-  // Clear and fill default title
-  if (settings.defaultTitle) {
-    const titleField = settingsDialog.getByRole('textbox', { name: 'Title' });
-    await titleField.click();
-    await titleField.press('Control+a');
-    await titleField.fill(settings.defaultTitle);
-  }
-
-  // Edit whiteboard canvas if text is provided
-  if (settings.textInWhiteboard) {
-    // Click Edit button to open Excalidraw editor
-    const editButton = settingsDialog.getByRole('button', { name: 'Edit' });
-    await editButton.click();
-
-    // Wait for the whiteboard editor
-    const canvas = settingsDialog.locator('canvas.excalidraw__canvas');
-    await expect(canvas).toBeVisible();
-
-    // Double-click to select existing text
-    await canvas.dblclick();
-
-    // Clear and type new text
-    const textInput = settingsDialog.getByRole('textbox').last();
-    await textInput.fill(settings.textInWhiteboard);
-
-    // Press Escape to commit text
-    await textInput.press('Escape');
-
-    // Save the whiteboard
-    await settingsDialog.getByRole('button', { name: 'Save' }).first().click();
-  }
-
-  // Configure member permissions
-  const membersCheckbox = settingsDialog.getByRole('checkbox', {
-    name: 'Members can add to the collection',
-  });
-  const membersChecked = await membersCheckbox.isChecked();
-  if (membersChecked !== settings.membersCanAdd) {
-    await membersCheckbox.click();
-  }
-
-  // Configure admin permissions
-  const adminsCheckbox = settingsDialog.getByRole('checkbox', {
-    name: 'Admins can add to the collection',
-  });
-  const adminsChecked = await adminsCheckbox.isChecked();
-  if (adminsChecked !== settings.adminsCanAdd) {
-    await adminsCheckbox.click();
-  }
-
-  // Save and close the settings dialog
-  await settingsDialog.getByRole('button', { name: 'Save' }).click();
-  await expect(settingsDialog).not.toBeVisible();
-};
