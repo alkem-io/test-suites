@@ -71,3 +71,6 @@ web_modules/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# local files
+client-web/.auth/

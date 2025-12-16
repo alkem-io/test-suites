@@ -67,8 +67,10 @@ test.describe('Space/Subspace Settings Access Control', () => {
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
 
     // 2. Access space settings
-    const settingsIcon = page.locator('[data-testid="SettingsOutlinedIcon"]');
-    await expect(settingsIcon).toBeVisible();
+    const settingsIcon = page
+      .locator('[data-testid="SettingsOutlinedIcon"]')
+      .first();
+    await expect(settingsIcon).toBeVisible({ timeout: 5000 });
     await settingsIcon.click();
 
     // 3. Verify navigated to settings page

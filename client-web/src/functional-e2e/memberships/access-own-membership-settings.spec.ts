@@ -76,8 +76,8 @@ test.describe('User Membership Settings', () => {
     // - Space from baseScenario with member role
     // - Space name: baseScenario.space.profile.displayName
     // - "Leave" button available
-    const leaveBtn = page.getByRole('button', { name: 'Leave' });
-    await expect(leaveBtn).toBeVisible();
+    const leaveBtn = page.getByRole('button', { name: 'Leave' }).first();
+    await expect(leaveBtn).toBeVisible({ timeout: 5000 });
     await expect(
       page.getByText(baseScenario.space.about.profile.displayName)
     ).toBeVisible();
