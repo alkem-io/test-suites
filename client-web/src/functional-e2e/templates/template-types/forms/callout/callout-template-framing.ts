@@ -1,10 +1,15 @@
 import { Page, expect } from '@playwright/test';
 import { CalloutTemplateFramingCallToAction, CalloutTemplateFramingMemo, CalloutTemplateFramingWhiteboard } from './callout-template-form.models';
+import { clickOnEditWhiteboardPreview, getWhiteboardDialog, writeTextInWhiteboardDialog } from '../whiteboards/whiteboard-dialog';
 
 
 /**
  * Framing / Additional Content
  */
+const findFramingSection = (page: Page) => {
+  return page.getByRole('heading', { name: 'Additional Content' }).locator('..').locator('..').locator('..').locator('..');
+}
+
 
 /**
  * "None"
@@ -12,8 +17,7 @@ import { CalloutTemplateFramingCallToAction, CalloutTemplateFramingMemo, Callout
 export const selectCalloutTemplateFramingNone = async (
   page: Page
 ): Promise<void> => {
-  const additionalContentBlock = page.getByRole('heading', { name: 'Additional Content' }).locator('..').locator('..').locator('..').locator('..');
-  const noneButton = additionalContentBlock
+  const noneButton = findFramingSection(page)
     .getByRole('button', { name: 'None' });
 
   await noneButton.click();
@@ -23,9 +27,7 @@ export const selectCalloutTemplateFramingNone = async (
  * "Call To Action"
  */
 export const selectCalloutTemplateFramingCallToAction = async (page: Page): Promise<void> => {
-  const ctaButton = page
-    .getByRole('heading', { name: 'Additional Content' })
-    .locator('..')
+  const ctaButton = findFramingSection(page)
     .getByRole('button', { name: 'Call To Action' });
 
   await ctaButton.click();
@@ -48,9 +50,7 @@ export const fillCalloutTemplateFramingCallToAction = async (
  * "Memo"
  */
 export const selectCalloutTemplateFramingMemo = async (page: Page): Promise<void> => {
-  const memoButton = page
-    .getByRole('heading', { name: 'Additional Content' })
-    .locator('..')
+  const memoButton = findFramingSection(page)
     .getByRole('button', { name: 'Memo' });
 
   await memoButton.click();
@@ -60,13 +60,11 @@ export const fillCalloutTemplateFramingMemo = async (
   page: Page,
   content: CalloutTemplateFramingMemo
 ): Promise<void> => {
-  // The memo content appears as a markdown editor after the Additional Content section
-  // Find the markdown editor that appears after selecting Memo
-  const memoSection = page.getByRole('heading', { name: 'Additional Content' }).locator('..');
-  const markdownEditor = memoSection
-    .locator('..')
+  // The memo content is the third markdown editor in the form
+  // (after template description and callout description)
+  const markdownEditor = page
     .getByRole('textbox', { name: 'Markdown editor' })
-    .last();
+    .nth(2);
 
   await markdownEditor.click();
   await markdownEditor.fill(content.memoContent);
@@ -77,9 +75,7 @@ export const fillCalloutTemplateFramingMemo = async (
  * "Whiteboard"
  */
 export const selectCalloutTemplateFramingWhiteboard = async (page: Page): Promise<void> => {
-  const whiteboardButton = page
-    .getByRole('heading', { name: 'Additional Content' })
-    .locator('..')
+  const whiteboardButton = findFramingSection(page)
     .getByRole('button', { name: 'Whiteboard', exact: true });
 
   await whiteboardButton.click();
@@ -89,27 +85,12 @@ export const fillCalloutTemplateFramingWhiteboard = async (
   page: Page,
   content: CalloutTemplateFramingWhiteboard
 ): Promise<void> => {
-  // Click Edit button to open Excalidraw editor
-  const editButton = page.getByRole('button', { name: 'Edit' }).first();
-  await editButton.click();
+  await clickOnEditWhiteboardPreview(page);
 
-  // Wait for the whiteboard editor dialog
-  const editorDialog = page.getByRole('dialog').filter({ hasText: 'Drawing canvas' });
-  await expect(editorDialog).toBeVisible();
+  const editorDialog = await getWhiteboardDialog(page, 'Edit whiteboard');
 
-  // Select text tool
-  await editorDialog.getByRole('radio', { name: /Text — T or/i }).click();
+  await writeTextInWhiteboardDialog(editorDialog, content.textInWhiteboard);
 
-  // Click on canvas to start text entry
-  const canvas = editorDialog.locator('canvas.excalidraw__canvas');
-  await canvas.click();
-
-  // Type the text
-  const textInput = editorDialog.getByRole('textbox');
-  await textInput.fill(content.textInWhiteboard);
-
-  // Press Escape to commit text, then Save
-  await textInput.press('Escape');
   await editorDialog.getByRole('button', { name: 'Save' }).click();
 
   // Wait for dialog to close

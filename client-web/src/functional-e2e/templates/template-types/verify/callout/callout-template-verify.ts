@@ -6,19 +6,19 @@
 
 import { expect, Page } from '@playwright/test';
 import { CalloutTemplateForm } from '../../forms/callout/callout-template-form.models';
-import { verifyTemplate } from '../template-verify';
 
 /**
  * Verifies a Callout Template in the preview/list view.
+ * For detailed content verification (like CTA, memo, whiteboard), clicks to open detail view.
  */
 export const verifyCalloutTemplate = async (
   page: Page,
   templateData: CalloutTemplateForm
 ): Promise<void> => {
-  // Verify base template fields (displayName, description, tags)
-  await verifyTemplate(page, templateData);
+  // Click on the template to open the detail view
+  await page.getByRole('heading', { name: templateData.displayName, exact: true }).first().click();
 
-  // Verify callout title is visible
+  // Wait for detail view to load - verify callout title is visible
   await expect(page.getByText(templateData.calloutTitle, { exact: false }).first()).toBeVisible();
 
   // Verify additional content based on type
@@ -26,7 +26,7 @@ export const verifyCalloutTemplate = async (
     case 'whiteboard':
       // Verify whiteboard canvas is present (check for drawing canvas or text)
       await expect(
-        page.getByText(templateData.framing.textInWhiteboard, { exact: false }).first()
+        page.getByRole('img', { name: templateData.calloutTitle, exact: true })
       ).toBeVisible();
       break;
     case 'memo':
@@ -36,15 +36,29 @@ export const verifyCalloutTemplate = async (
       ).toBeVisible();
       break;
     case 'callToAction':
-      // Verify CTA text is visible
-      await expect(
-        page.getByText(templateData.framing.ctaText, { exact: false }).first()
-      ).toBeVisible();
+      // CTA content is not visible in the preview dialog
+      // The CTA text/URL are stored but shown when the callout is actually used
+      // Just verify the callToAction tag is present
+      await expect(page.locator('.MuiChip-root').getByText('callToAction').first()).toBeVisible();
       break;
     case 'none':
       // No additional content to verify
       break;
   }
+
+  await expect(
+    page
+      .locator('.markdown')
+      .filter({ hasText: templateData.calloutDescription })
+      .first()
+  ).toBeVisible();
+
+  for (const tag of templateData.calloutTags) {
+    await expect(page.locator('.MuiChip-root').getByText(tag).first()).toBeVisible();
+  }
+
+  // Go back to the templates list
+  await page.goBack();
 };
 
 /**

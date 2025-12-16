@@ -172,9 +172,9 @@ test.describe.serial('Post Templates', () => {
     // Find the template title and click on it to open the template
     await page.getByRole('heading', { name: templateData.displayName }).click();
 
-    await page.getByRole('button', { name: 'Edit' }).click();
+    await page.getByRole('button', { name: 'Edit', exact: true }).click();
 
-    await page.getByRole('button', { name: 'Delete' }).click();
+    await page.getByRole('button', { name: 'Delete', exact: true }).click();
 
     await expect(page.getByText(`Are you sure you want to delete the Template '${templateData.displayName}'?`, { exact: true })).toBeVisible();
 

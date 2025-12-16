@@ -180,13 +180,13 @@ export const createCalloutTemplateData = ({
 
   return {
     // Template metadata
-    displayName: `CT Title - AC:${framingType}, Response:${responseType}, Com:${commentsEnabled ? 'On' : 'Off'}`,
+    displayName: `CTtit - AC:${framingType}, Response:${responseType}, Com:${commentsEnabled ? 'On' : 'Off'}`,
     description:
       `Callout Template Description - AC:${framingType}, Response:${responseType}, Com:${commentsEnabled ? 'On' : 'Off'}`,
     tags: ['callout', 'template', framingType, responseType, commentsEnabled ? 'comments-enabled' : 'comments-disabled'],
 
     // Callout base fields
-    calloutTitle: 'Callout Template - Callout Title',
+    calloutTitle: `CTit - AC:${framingType}, Resp:${responseType}, Com:${commentsEnabled ? 'On' : 'Off'}`,
     calloutTags: ['callout', 'tags', framingType, responseType, commentsEnabled ? 'comments-enabled' : 'comments-disabled'],
     calloutDescription: `Callout Template Callout Description - AC:${framingType}, Response:${responseType}, Com:${commentsEnabled ? 'On' : 'Off'}`,
     calloutReferences: [],

@@ -123,7 +123,7 @@ const setCommentsEnabled = async (
   enabled: boolean
 ): Promise<void> => {
   const buttonName = enabled ? 'Comments' : 'No Comments';
-  await page.getByRole('button', { name: buttonName }).click();
+  await page.getByRole('button', { name: buttonName, exact: true }).click();
 };
 
 // ============================================================================
