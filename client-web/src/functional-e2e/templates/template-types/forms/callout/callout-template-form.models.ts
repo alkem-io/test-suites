@@ -5,6 +5,7 @@
  * which have the most complex form structure among template types.
  */
 
+import { randomBytes } from 'crypto';
 import { TemplateForm } from '../template-form.models';
 
 // ============================================================================
@@ -121,16 +122,18 @@ export const createCalloutTemplateData = ({
     commentsEnabled: boolean,
     responseType: CalloutTemplateResponseType,
 }): CalloutTemplateForm => {
+  const hexId = randomBytes(3).toString('hex');
+
   let framing: CalloutTemplateFraming = { type: 'none' };
   switch (framingType) {
     case 'whiteboard':
-      framing = { type: 'whiteboard', textInWhiteboard: 'Whiteboard content in Callout Template' };
+      framing = { type: 'whiteboard', textInWhiteboard: `Whiteboard content in Callout Template - ID: ${hexId}` };
       break;
     case 'memo':
-      framing = { type: 'memo', memoContent: 'Memo content in Callout Template' };
+      framing = { type: 'memo', memoContent: `Memo content in Callout Template - ID: ${hexId}` };
       break;
     case 'callToAction':
-      framing = { type: 'callToAction', ctaText: 'Click Here', ctaUrl: 'https://alkem.io' };
+      framing = { type: 'callToAction', ctaText: `Click Here - ID: ${hexId}`, ctaUrl: 'https://alkem.io' };
       break;
     case 'none':
     default:
@@ -148,8 +151,8 @@ export const createCalloutTemplateData = ({
     case 'whiteboards':
       responseOptions = {
         type: 'whiteboards',
-        defaultTitle: 'Default Whiteboard Title',
-        textInWhiteboard: 'Default Whiteboard Content in whiteboard template',
+        defaultTitle: `Default Whiteboard Title ${hexId}`,
+        textInWhiteboard: `Default Whiteboard Content in whiteboard template - ID: ${hexId}`,
         membersCanAdd: true,
         adminsCanAdd: true,
       };
@@ -157,8 +160,8 @@ export const createCalloutTemplateData = ({
     case 'memos':
       responseOptions = {
         type: 'memos',
-        defaultDescription: 'Default Memo Description',
-        defaultTitle: 'Default Memo Title',
+        defaultDescription: `Default Memo Description ${hexId}`,
+        defaultTitle: `Default Memo Title ${hexId}`,
         membersCanAdd: true,
         adminsCanAdd: true,
       };
@@ -166,8 +169,8 @@ export const createCalloutTemplateData = ({
     case 'posts':
       responseOptions = {
         type: 'posts',
-        defaultDescription: 'Default Post Description',
-        defaultTitle: 'Default Post Title',
+        defaultDescription: `Default Post Description ${hexId}`,
+        defaultTitle: `Default Post Title ${hexId}`,
         enableCommentsOnPosts: true,
         membersCanAdd: true,
         adminsCanAdd: true,
@@ -180,15 +183,15 @@ export const createCalloutTemplateData = ({
 
   return {
     // Template metadata
-    displayName: `CTtit - AC:${framingType}, Response:${responseType}, Com:${commentsEnabled ? 'On' : 'Off'}`,
+    displayName: `CTtit ${hexId} - AC:${framingType}, Response:${responseType}, Com:${commentsEnabled ? 'On' : 'Off'}`,
     description:
-      `Callout Template Description - AC:${framingType}, Response:${responseType}, Com:${commentsEnabled ? 'On' : 'Off'}`,
-    tags: ['callout', 'template', framingType, responseType, commentsEnabled ? 'comments-enabled' : 'comments-disabled'],
+      `Callout Template Description - ID: ${hexId} - AC:${framingType}, Response:${responseType}, Com:${commentsEnabled ? 'On' : 'Off'}`,
+    tags: [hexId, 'callout', 'template', framingType, responseType, commentsEnabled ? 'comments-enabled' : 'comments-disabled'],
 
     // Callout base fields
-    calloutTitle: `CTit - AC:${framingType}, Resp:${responseType}, Com:${commentsEnabled ? 'On' : 'Off'}`,
-    calloutTags: ['callout', 'tags', framingType, responseType, commentsEnabled ? 'comments-enabled' : 'comments-disabled'],
-    calloutDescription: `Callout Template Callout Description - AC:${framingType}, Response:${responseType}, Com:${commentsEnabled ? 'On' : 'Off'}`,
+    calloutTitle: `CTit ${hexId} - AC:${framingType}, Resp:${responseType}, Com:${commentsEnabled ? 'On' : 'Off'}`,
+    calloutTags: [hexId, 'callout', 'tags', framingType, responseType, commentsEnabled ? 'comments-enabled' : 'comments-disabled'],
+    calloutDescription: `Callout Template Callout Description - ID: ${hexId} - AC:${framingType}, Response:${responseType}, Com:${commentsEnabled ? 'On' : 'Off'}`,
     calloutReferences: [],
 
     // Additional content: None

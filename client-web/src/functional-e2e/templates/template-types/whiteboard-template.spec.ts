@@ -4,7 +4,7 @@ import { expect } from '@playwright/test';
 import { TestScenarioConfig, TestScenarioFactory, TestUser, TestUserManager } from '@alkemio/tests-lib';
 import { createAuthenticatedSessionFixture } from '@src/functional-e2e/fixtures/authenticated-session.fixture';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { randomInt } from 'crypto';
+import { randomBytes } from 'crypto';
 import { WhiteboardTemplateForm } from './forms/template-form.models';
 import { fillWhiteboardTemplateForm } from './forms/whiteboard-template-form';
 import { verifyWhiteboardTemplate } from './verify/whiteboard-template-verify';
@@ -106,7 +106,7 @@ test.describe.serial('Whiteboard Templates', () => {
   });
 
   test('1.2 Edit Whiteboard Template', async ({ page }) => {
-    const EditedTag = ' Edited-' + randomInt(1000, 9999);
+    const EditedTag = ' Edited-' + randomBytes(3).toString('hex');
 
     // Find the template title and click on it to open the template
     await page.getByRole('heading', { name: templateData.displayName }).click();

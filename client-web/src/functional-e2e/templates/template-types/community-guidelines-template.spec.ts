@@ -4,7 +4,7 @@ import { expect } from '@playwright/test';
 import { TestScenarioConfig, TestScenarioFactory, TestScenarioSpaceConfig, TestUser, TestUserManager } from '@alkemio/tests-lib';
 import { createAuthenticatedSessionFixture } from '@src/functional-e2e/fixtures/authenticated-session.fixture';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { randomInt, verify } from 'crypto';
+import { randomBytes } from 'crypto';
 import { CommunityGuidelinesTemplateForm } from './forms/template-form.models';
 import { fillCommunityGuidelinesForm } from './forms/community-guidelines-template-form';
 import { verifyCommunityGuidelinesTemplate } from './verify/comunity-guidelines-template-verify';
@@ -113,7 +113,7 @@ test.describe.serial('Community Guidelines Template', () => {
   test('1.2 Edit Community Guidelines Template', async ({
     page,
   }) => {
-    const EditedTag = ' Edited-' + randomInt(1000, 9999);
+    const EditedTag = ' Edited-' + randomBytes(3).toString('hex');
 
     // Find the template title and click on it to open the template
     await page.getByRole('heading', { name: templateData.displayName }).click();

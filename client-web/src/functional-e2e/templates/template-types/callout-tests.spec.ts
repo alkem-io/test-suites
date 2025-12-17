@@ -9,7 +9,6 @@ import {
   TestUserManager,
 } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { randomInt } from 'crypto';
 import { createAuthenticatedSessionFixture } from '@src/functional-e2e/fixtures/authenticated-session.fixture';
 import {
   createCalloutTemplateData,
