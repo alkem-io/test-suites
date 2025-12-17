@@ -71,6 +71,13 @@ export default defineConfig({
         '/support-navigation/support-navigation-additional.spec.ts',
       ],
     },
+    {
+      name: 'Explore platform',
+      testMatch: [
+        '/explore-platform/explore-platform-anonymous-test.spec.ts',
+        '/explore-platform/explore-platform-authenticated.spec.ts',
+      ],
+    },
   ],
   // % or number of the available CPUs
   // workers: '100%',
