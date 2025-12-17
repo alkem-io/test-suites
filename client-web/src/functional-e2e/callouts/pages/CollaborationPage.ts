@@ -87,8 +87,13 @@ export class CollaborationPage {
   }
 
   // Callout details page
+  get calloutDialog() {
+    return this.page.getByRole('dialog');
+  }
+
   get contextualMenuButton() {
-    return this.page.locator('#callout-settings-button').first();
+    // Settings button inside the callout dialog (not the ones on the cards in the page)
+    return this.calloutDialog.getByRole('button', { name: 'settings' });
   }
 
   get editButton() {
@@ -103,21 +108,35 @@ export class CollaborationPage {
     return this.page.getByRole('button', { name: /settings/i });
   }
 
-  // Comments section
-  get commentsSection() {
-    return this.page.locator('[data-testid="comments-section"], .comments');
-  }
-
+  // Comments section - selectors verified via Playwright browser inspection
   get commentInput() {
-    return this.page.getByPlaceholder(/Type your comment here/i);
+    return this.page
+      .getByRole('textbox', { name: 'Type your comment here' })
+      .first();
   }
 
   get postCommentButton() {
-    return this.page.getByRole('button', { name: /post|send|submit/i });
+    return this.page.getByRole('button', { name: 'Send' });
   }
 
-  get commentsList() {
-    return this.page.locator('[data-testid="comment"], .comment-item');
+  get deleteCommentButton() {
+    return this.page.getByRole('button', { name: 'Delete' });
+  }
+
+  get replyButton() {
+    return this.page.getByRole('button', { name: 'Reply' });
+  }
+
+  get addReactionButton() {
+    return this.page.getByRole('button', { name: 'Add reaction' });
+  }
+
+  get insertEmojiButton() {
+    return this.page.getByRole('button', { name: 'Insert Emoji' });
+  }
+
+  get mentionSomeoneButton() {
+    return this.page.getByRole('button', { name: 'Mention someone' });
   }
 
   // Contributions
@@ -260,17 +279,49 @@ export class CollaborationPage {
   }
 
   async addComment(commentText: string) {
-    await this.commentInput.fill(commentText);
+    // Click to focus the input
+    await this.commentInput.click();
+
+    // Use pressSequentially on the element to trigger proper input events
+    await this.commentInput.pressSequentially(commentText);
+
+    // Click the send button
+    await this.postCommentButton.click();
+  }
+
+  async deleteComment(index: number = 0) {
+    await this.deleteCommentButton.nth(index).click();
+  }
+
+  async replyToComment(replyText: string, index: number = 0) {
+    await this.replyButton.nth(index).click();
+    await this.commentInput.click();
+    await this.commentInput.pressSequentially(replyText);
     await this.postCommentButton.click();
   }
 
   async getCommentCount(): Promise<number> {
-    return await this.commentsList.count();
+    // Count Reply buttons as a proxy for comment count (each comment has a Reply button)
+    return await this.replyButton.count();
   }
 
   async isCommentVisible(text: string): Promise<boolean> {
     return await this.page
       .getByText(text)
+      .isVisible({ timeout: 5000 })
+      .catch(() => false);
+  }
+
+  async isDeleteCommentButtonVisible(): Promise<boolean> {
+    return await this.deleteCommentButton
+      .first()
+      .isVisible({ timeout: 5000 })
+      .catch(() => false);
+  }
+
+  async isReplyButtonVisible(): Promise<boolean> {
+    return await this.replyButton
+      .first()
       .isVisible({ timeout: 5000 })
       .catch(() => false);
   }

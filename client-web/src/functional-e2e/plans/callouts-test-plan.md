@@ -1235,66 +1235,67 @@ Based on the comprehensive test plan above, the following scenarios are **P1 pri
 
 **Legend:** ✅ Implemented | ⏸️ Skipped (blocked) | ❌ Not implemented
 
-### **Callout Creation (6 scenarios)**
+### **Callout Creation (5 scenarios)**
 
-| #   | Scenario                                          | Status | Test File |
-| --- | ------------------------------------------------- | ------ | --------- |
-| 1   | **1.1** - Create Post Collection Callout          | ❌     | -         |
-| 2   | **1.2** - Create Whiteboard Callout               | ❌     | -         |
-| 3   | **1.3** - Create Link Collection Callout          | ❌     | -         |
-| 4   | **1.5** - Cannot Create Callout - As Space Member | ❌     | -         |
-| 5   | **1.6** - Create Callout in Subspace              | ❌     | -         |
+| #   | Scenario                                          | Status | Test File                           |
+| --- | ------------------------------------------------- | ------ | ----------------------------------- |
+| 1   | **1.1** - Create Post Collection Callout          | ✅     | `callout-creation.spec.ts`          |
+| 2   | **1.2** - Create Whiteboard Callout               | ✅     | `callout-creation.spec.ts`          |
+| 3   | **1.3** - Create Link Collection Callout          | ✅     | `callout-creation.spec.ts`          |
+| 4   | **1.5** - Cannot Create Callout - As Space Member | ✅     | `callout-creation.spec.ts`          |
+| 5   | **1.6** - Create Callout in Subspace              | ✅     | `callout-subspace-creation.spec.ts` |
 
-### **Callout Viewing (4 scenarios)**
+### **Callout Viewing (3 scenarios)**
 
-| #   | Scenario                                        | Status | Test File |
-| --- | ----------------------------------------------- | ------ | --------- |
-| 6   | **2.1** - View Published Callout - As Member    | ❌     | -         |
-| 7   | **2.2** - Cannot View Draft Callout - As Member | ❌     | -         |
-| 8   | **2.3** - View Draft Callout - As Space Admin   | ❌     | -         |
+| #   | Scenario                                        | Status | Test File                 |
+| --- | ----------------------------------------------- | ------ | ------------------------- |
+| 6   | **2.1** - View Published Callout - As Member    | ✅     | `callout-viewing.spec.ts` |
+| 7   | **2.2** - Cannot View Draft Callout - As Member | ✅     | `callout-viewing.spec.ts` |
+| 8   | **2.3** - View Draft Callout - As Space Admin   | ✅     | `callout-viewing.spec.ts` |
 
-### **Callout Editing (3 scenarios)**
+### **Callout Editing (4 scenarios)**
 
-| #   | Scenario                                         | Status | Test File |
-| --- | ------------------------------------------------ | ------ | --------- |
-| 9   | **3.1** - Edit Callout Details - As Space Admin  | ❌     | -         |
-| 10  | **3.3** - Cannot Edit Callout - As Space Member  | ❌     | -         |
-| 11  | **3.4** - Publish Draft Callout - As Space Admin | ❌     | -         |
+| #   | Scenario                                         | Status | Test File                 |
+| --- | ------------------------------------------------ | ------ | ------------------------- |
+| 9   | **3.1** - Edit Callout Details - As Space Admin  | ✅     | `callout-editing.spec.ts` |
+| 10  | **3.2** - Edit Callout Settings - As Space Admin | ✅     | `callout-editing.spec.ts` |
+| 11  | **3.3** - Cannot Edit Callout - As Space Member  | ✅     | `callout-editing.spec.ts` |
+| 12  | **3.4** - Publish Draft Callout - As Space Admin | ✅     | `callout-editing.spec.ts` |
 
-### **Callout Deletion (3 scenarios)**
+### **Callout Deletion (2 scenarios)**
 
-| #   | Scenario                                          | Status | Test File |
-| --- | ------------------------------------------------- | ------ | --------- |
-| 12  | **4.1** - Delete Callout - As Space Admin         | ❌     | -         |
-| 13  | **4.2** - Cannot Delete Callout - As Space Member | ❌     | -         |
+| #   | Scenario                                          | Status | Test File                  |
+| --- | ------------------------------------------------- | ------ | -------------------------- |
+| 13  | **4.1** - Delete Callout - As Space Admin         | ✅     | `callout-deletion.spec.ts` |
+| 14  | **4.2** - Cannot Delete Callout - As Space Member | ✅     | `callout-deletion.spec.ts` |
 
-### **Comments (5 scenarios)**
+### **Comments (3 scenarios)**
 
-| #   | Scenario                                     | Status | Test File |
-| --- | -------------------------------------------- | ------ | --------- |
-| 14  | **5.1** - Add Comment on Callout - As Member | ❌     | -         |
-| 15  | **5.2** - Add Comment on Callout - As Admin  | ❌     | -         |
-| 16  | **5.5** - View Comments Thread               | ❌     | -         |
+| #   | Scenario                                     | Status | Test File                  |
+| --- | -------------------------------------------- | ------ | -------------------------- |
+| 15  | **5.1** - Add Comment on Callout - As Member | ✅     | `callout-comments.spec.ts` |
+| 16  | **5.2** - Add Comment on Callout - As Admin  | ✅     | `callout-comments.spec.ts` |
+| 17  | **5.5** - View Comments Thread               | ✅     | `callout-comments.spec.ts` |
 
-### **Contributions (3 scenarios)**
+### **Contributions (2 scenarios)**
 
-| #   | Scenario                        | Status | Test File |
-| --- | ------------------------------- | ------ | --------- |
-| 17  | **6.1** - Add Post Contribution | ❌     | -         |
-| 18  | **6.2** - Add Link Contribution | ❌     | -         |
+| #   | Scenario                        | Status | Test File                       |
+| --- | ------------------------------- | ------ | ------------------------------- |
+| 18  | **6.1** - Add Post Contribution | ✅     | `callout-contributions.spec.ts` |
+| 19  | **6.2** - Add Link Contribution | ✅     | `callout-contributions.spec.ts` |
 
-### **Access Control (3 scenarios)**
+### **Access Control (2 scenarios)**
 
-| #   | Scenario                                | Status | Test File |
-| --- | --------------------------------------- | ------ | --------- |
-| 19  | **7.1** - Space Admin - Full Access     | ❌     | -         |
-| 20  | **7.2** - Space Member - Limited Access | ❌     | -         |
+| #   | Scenario                                | Status | Test File                        |
+| --- | --------------------------------------- | ------ | -------------------------------- |
+| 20  | **7.1** - Space Admin - Full Access     | ✅     | `callout-access-control.spec.ts` |
+| 21  | **7.2** - Space Member - Limited Access | ✅     | `callout-access-control.spec.ts` |
 
 ### **Type-Specific (1 scenario)**
 
-| #   | Scenario                                | Status | Test File |
-| --- | --------------------------------------- | ------ | --------- |
-| 21  | **8.1** - Post Collection Full Workflow | ❌     | -         |
+| #   | Scenario                                | Status | Test File                       |
+| --- | --------------------------------------- | ------ | ------------------------------- |
+| 22  | **8.1** - Post Collection Full Workflow | ✅     | `callout-full-workflow.spec.ts` |
 
 ---
 
@@ -1302,15 +1303,29 @@ Based on the comprehensive test plan above, the following scenarios are **P1 pri
 
 | Category               | Total  | ✅ Implemented | ⏸️ Skipped | ❌ Not Implemented |
 | ---------------------- | ------ | -------------- | ---------- | ------------------ |
-| Callout Creation       | 5      | 0              | 0          | 5                  |
-| Callout Viewing        | 3      | 0              | 0          | 3                  |
-| Callout Editing        | 3      | 0              | 0          | 3                  |
-| Callout Deletion       | 2      | 0              | 0          | 2                  |
-| Comments               | 3      | 0              | 0          | 3                  |
-| Contributions          | 2      | 0              | 0          | 2                  |
-| Access Control         | 2      | 0              | 0          | 2                  |
-| Type-Specific          | 1      | 0              | 0          | 1                  |
-| **Total P1 Scenarios** | **21** | **0**          | **0**      | **21**             |
+| Callout Creation       | 5      | 5              | 0          | 0                  |
+| Callout Viewing        | 3      | 3              | 0          | 0                  |
+| Callout Editing        | 4      | 4              | 0          | 0                  |
+| Callout Deletion       | 2      | 2              | 0          | 0                  |
+| Comments               | 3      | 3              | 0          | 0                  |
+| Contributions          | 2      | 2              | 0          | 0                  |
+| Access Control         | 2      | 2              | 0          | 0                  |
+| Type-Specific          | 1      | 1              | 0          | 0                  |
+| **Total P1 Scenarios** | **22** | **22**         | **0**      | **0**              |
+
+**Test Files Location:** `client-web/src/functional-e2e/callouts/`
+
+**Total Test Files:** 8
+
+- `callout-creation.spec.ts` - Tests 1.1, 1.2, 1.3, 1.5
+- `callout-subspace-creation.spec.ts` - Test 1.6
+- `callout-viewing.spec.ts` - Tests 2.1, 2.2, 2.3
+- `callout-editing.spec.ts` - Tests 3.1, 3.2, 3.3, 3.4
+- `callout-deletion.spec.ts` - Tests 4.1, 4.2
+- `callout-comments.spec.ts` - Tests 5.1, 5.2, 5.5
+- `callout-contributions.spec.ts` - Tests 6.1, 6.2
+- `callout-access-control.spec.ts` - Tests 7.1, 7.2
+- `callout-full-workflow.spec.ts` - Test 8.1
 
 ---
 
@@ -1320,70 +1335,70 @@ Based on the comprehensive test plan above, the following scenarios are **P1 pri
 
 ### Category 1: Callout Creation (7 scenarios)
 
-1. **1.1** - Create Post Collection Callout - P1 ❌
-2. **1.2** - Create Whiteboard Callout - P1 ❌
-3. **1.3** - Create Link Collection Callout - P1 ❌
+1. **1.1** - Create Post Collection Callout - P1 ✅ `callout-creation.spec.ts`
+2. **1.2** - Create Whiteboard Callout - P1 ✅ `callout-creation.spec.ts`
+3. **1.3** - Create Link Collection Callout - P1 ✅ `callout-creation.spec.ts`
 4. **1.4** - Create Callout with Template - P2 ❌
-5. **1.5** - Cannot Create Callout - As Space Member - P1 ❌
-6. **1.6** - Create Callout in Subspace - P1 ❌
-7. **1.7** - Cannot Create Callout in Parent Space - P2 ❌
+5. **1.5** - Cannot Create Callout - As Space Member - P1 ✅ `callout-creation.spec.ts`
+6. **1.6** - Create Callout in Subspace - P1 ✅ `callout-subspace-creation.spec.ts`
+7. **1.7** - Cannot Create Callout in Parent Space - P2 ✅ `callout-subspace-creation.spec.ts`
 
 ### Category 2: Callout Viewing and Discovery (6 scenarios)
 
-8. **2.1** - View Published Callout - As Space Member - P1 ❌
-9. **2.2** - Cannot View Draft Callout - As Space Member - P1 ❌
-10. **2.3** - View Draft Callout - As Space Admin - P1 ❌
+8. **2.1** - View Published Callout - As Space Member - P1 ✅ `callout-viewing.spec.ts`
+9. **2.2** - Cannot View Draft Callout - As Space Member - P1 ✅ `callout-viewing.spec.ts`
+10. **2.3** - View Draft Callout - As Space Admin - P1 ✅ `callout-viewing.spec.ts`
 11. **2.4** - View Callout - As Non-Member (Public Space) - P2 ❌
 12. **2.5** - View Callout - Unauthenticated User - P2 ❌
 13. **2.6** - View Callouts List - Multiple Callouts - P2 ❌
 
 ### Category 3: Callout Editing and Updates (5 scenarios)
 
-14. **3.1** - Edit Callout Details - As Space Admin - P1 ❌
-15. **3.2** - Edit Callout Settings - As Space Admin - P1 ❌
-16. **3.3** - Cannot Edit Callout - As Space Member - P1 ❌
-17. **3.4** - Publish Draft Callout - As Space Admin - P1 ❌
+14. **3.1** - Edit Callout Details - As Space Admin - P1 ✅ `callout-editing.spec.ts`
+15. **3.2** - Edit Callout Settings - As Space Admin - P1 ✅ `callout-editing.spec.ts`
+16. **3.3** - Cannot Edit Callout - As Space Member - P1 ✅ `callout-editing.spec.ts`
+17. **3.4** - Publish Draft Callout - As Space Admin - P1 ✅ `callout-editing.spec.ts`
 18. **3.5** - Unpublish Callout (Set to Draft) - P2 ❌
 
 ### Category 4: Callout Deletion (4 scenarios)
 
-19. **4.1** - Delete Callout - As Space Admin - P1 ❌
-20. **4.2** - Cannot Delete Callout - As Space Member - P1 ❌
+19. **4.1** - Delete Callout - As Space Admin - P1 ✅ `callout-deletion.spec.ts`
+20. **4.2** - Cannot Delete Callout - As Space Member - P1 ✅ `callout-deletion.spec.ts`
 21. **4.3** - Delete Callout with Contributions - P2 ❌
 22. **4.4** - Delete Callout in Subspace - P2 ❌
 
 ### Category 5: Comments on Callouts (8 scenarios)
 
-23. **5.1** - Add Comment on Callout - As Space Member - P1 ❌
-24. **5.2** - Add Comment on Callout - As Space Admin - P1 ❌
+23. **5.1** - Add Comment on Callout - As Space Member - P1 ✅ `callout-comments.spec.ts`
+24. **5.2** - Add Comment on Callout - As Space Admin - P1 ✅ `callout-comments.spec.ts`
 25. **5.3** - Cannot Add Comment - Comments Disabled - P2 ❌
-26. **5.4** - Cannot Add Comment - Non-Member (Public Space) - P2 ❌
-27. **5.5** - View Comments Thread - P1 ❌
+26. **5.4** - Cannot Add Comment - Non-Member (Public Space) - P1 ❌
+27. **5.5** - View Comments Thread - P1 ✅ `callout-comments.spec.ts`
 28. **5.6** - Reply to Comment (Thread) - P3 ❌
 29. **5.7** - Delete Own Comment - P2 ❌
 30. **5.8** - Delete Any Comment - As Space Admin - P2 ❌
 
 ### Category 6: Callout Contributions (7 scenarios)
 
-31. **6.1** - Add Post Contribution - As Space Member - P1 ❌
-32. **6.2** - Add Link Contribution - As Space Member - P1 ❌
-33. **6.3** - Add Whiteboard Contribution - P2 ❌
-34. **6.4** - Edit Own Contribution - P2 ❌
+31. **6.1** - Add Post Contribution - As Space Member - P1 ✅ `callout-contributions.spec.ts`
+32. **6.2** - Add Link Contribution - As Space Member - P1 ✅ `callout-contributions.spec.ts`
+33. **6.3** - Add Whiteboard Contribution - P1 ❌
+34. **6.4** - Edit Own Contribution - P1 ❌
 35. **6.5** - Delete Own Contribution - P2 ❌
 36. **6.6** - Cannot Add Contribution - Non-Member - P2 ❌
 37. **6.7** - Admin Deletes Any Contribution - P2 ❌
 
 ### Category 7: Callout Access Control by Role (5 scenarios)
 
-38. **7.1** - Space Admin - Full Access - P1 ❌
-39. **7.2** - Space Member - Limited Access - P1 ❌
+38. **7.1** - Space Admin - Full Access - P1 ✅ `callout-access-control.spec.ts`
+39. **7.2** - Space Member - Limited Access - P1 ✅ `callout-access-control.spec.ts`
 40. **7.3** - Subspace Admin in Parent Space - P2 ❌
 41. **7.4** - Global Admin Override - P2 ❌
 42. **7.5** - Lead Role Permissions - P3 ❌
 
 ### Category 8: Callout Types - Specific Behaviors (4 scenarios)
 
-43. **8.1** - Post Collection - Full Workflow - P1 ❌
+43. **8.1** - Post Collection - Full Workflow - P1 ✅ `callout-full-workflow.spec.ts`
 44. **8.2** - Whiteboard - Collaborative Editing - P2 ❌
 45. **8.3** - Link Collection - URL Validation - P2 ❌
 46. **8.4** - Memo Callout - Rich Text - P3 ❌
@@ -1391,7 +1406,7 @@ Based on the comprehensive test plan above, the following scenarios are **P1 pri
 ### Category 9: Cross-Level Callout Visibility (3 scenarios)
 
 47. **9.1** - View Space Callouts from Subspace - P2 ❌
-48. **9.2** - Private Subspace Callouts - Non-Member Cannot View - P2 ❌
+48. **9.2** - Private Subspace Callouts - Non-Member Cannot View - P1 ❌
 49. **9.3** - Callout Discovery - Search/Filter - P3 ❌
 
 ### Category 10: Error Handling and Edge Cases (5 scenarios)
@@ -1408,29 +1423,29 @@ Based on the comprehensive test plan above, the following scenarios are **P1 pri
 
 | Category                              | Total  | ✅ Implemented | ⏸️ Skipped | ❌ Not Implemented |
 | ------------------------------------- | ------ | -------------- | ---------- | ------------------ |
-| 1. Callout Creation                   | 7      | 0              | 0          | 7                  |
-| 2. Callout Viewing and Discovery      | 6      | 0              | 0          | 6                  |
-| 3. Callout Editing and Updates        | 5      | 0              | 0          | 5                  |
-| 4. Callout Deletion                   | 4      | 0              | 0          | 4                  |
-| 5. Comments on Callouts               | 8      | 0              | 0          | 8                  |
-| 6. Callout Contributions              | 7      | 0              | 0          | 7                  |
-| 7. Callout Access Control by Role     | 5      | 0              | 0          | 5                  |
-| 8. Callout Types - Specific Behaviors | 4      | 0              | 0          | 4                  |
+| 1. Callout Creation                   | 7      | 5              | 0          | 2                  |
+| 2. Callout Viewing and Discovery      | 6      | 3              | 0          | 3                  |
+| 3. Callout Editing and Updates        | 5      | 4              | 0          | 1                  |
+| 4. Callout Deletion                   | 4      | 2              | 0          | 2                  |
+| 5. Comments on Callouts               | 8      | 3              | 0          | 5                  |
+| 6. Callout Contributions              | 7      | 2              | 0          | 5                  |
+| 7. Callout Access Control by Role     | 5      | 2              | 0          | 3                  |
+| 8. Callout Types - Specific Behaviors | 4      | 1              | 0          | 3                  |
 | 9. Cross-Level Callout Visibility     | 3      | 0              | 0          | 3                  |
 | 10. Error Handling and Edge Cases     | 5      | 0              | 0          | 5                  |
-| **Total**                             | **54** | **0**          | **0**      | **54**             |
+| **Total**                             | **54** | **22**         | **0**      | **32**             |
 
 **Test Files Location:** `client-web/src/functional-e2e/callouts/`
 
-**Total Test Files:** 0 (implementation pending)
+**Total Test Files:** 9
 
 ---
 
 **Total Test Scenarios: 54**
 
-- **P1 (Critical)**: 21 scenarios
-- **P2 (Important)**: 25 scenarios
-- **P3 (Nice to have)**: 8 scenarios
+- **P1 (Critical)**: 22 scenarios (22 implemented ✅)
+- **P2 (Important)**: 24 scenarios (0 implemented)
+- **P3 (Nice to have)**: 8 scenarios (0 implemented)
 
 ---
 
