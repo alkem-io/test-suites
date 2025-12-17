@@ -56,9 +56,6 @@ export const verifyCalloutTemplate = async (
   for (const tag of templateData.calloutTags) {
     await expect(page.locator('.MuiChip-root').getByText(tag).first()).toBeVisible();
   }
-
-  // Go back to the templates list
-  await page.goBack();
 };
 
 /**

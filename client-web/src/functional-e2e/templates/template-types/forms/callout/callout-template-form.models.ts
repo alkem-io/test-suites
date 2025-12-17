@@ -99,6 +99,7 @@ export type CalloutTemplateResponseCollection =
  * 4. Response options (commentsEnabled, collection)
  */
 export interface CalloutTemplateForm extends TemplateForm {
+  testId: string;
   // Callout base fields
   calloutTitle: string;
   calloutTags: string[];
@@ -117,10 +118,16 @@ export const createCalloutTemplateData = ({
   framingType,
   commentsEnabled,
   responseType,
+  contributionsEnabledAdmin = true,
+  contributionsEnabledMember = contributionsEnabledAdmin, // if not set, default to same as admin
+  commentsOnContributionsEnabled,
 }: {
     framingType: CalloutTemplateFramingType,
     commentsEnabled: boolean,
     responseType: CalloutTemplateResponseType,
+    contributionsEnabledAdmin?: boolean,
+    contributionsEnabledMember?: boolean,
+    commentsOnContributionsEnabled?: boolean,
 }): CalloutTemplateForm => {
   const hexId = randomBytes(3).toString('hex');
 
@@ -144,54 +151,64 @@ export const createCalloutTemplateData = ({
     case 'linksFiles':
       responseOptions = {
         type: 'linksFiles',
-        membersCanAdd: true,
-        adminsCanAdd: true,
+        membersCanAdd: contributionsEnabledMember,
+        adminsCanAdd: contributionsEnabledAdmin,
       };
       break;
     case 'whiteboards':
       responseOptions = {
         type: 'whiteboards',
-        defaultTitle: `Default Whiteboard Title ${hexId}`,
-        textInWhiteboard: `Default Whiteboard Content in whiteboard template - ID: ${hexId}`,
-        membersCanAdd: true,
-        adminsCanAdd: true,
+        defaultTitle: `Default WB Tit ${hexId}`,
+        textInWhiteboard: `Default WB Content in wbTemplate ${hexId}`,
+        membersCanAdd: contributionsEnabledMember,
+        adminsCanAdd: contributionsEnabledAdmin,
       };
       break;
     case 'memos':
       responseOptions = {
         type: 'memos',
-        defaultDescription: `Default Memo Description ${hexId}`,
-        defaultTitle: `Default Memo Title ${hexId}`,
-        membersCanAdd: true,
-        adminsCanAdd: true,
+        defaultDescription: `Default Memo Desc ${hexId}`,
+        defaultTitle: `Default Memo Tit ${hexId}`,
+        membersCanAdd: contributionsEnabledMember,
+        adminsCanAdd: contributionsEnabledAdmin,
       };
       break;
     case 'posts':
       responseOptions = {
         type: 'posts',
-        defaultDescription: `Default Post Description ${hexId}`,
-        defaultTitle: `Default Post Title ${hexId}`,
-        enableCommentsOnPosts: true,
-        membersCanAdd: true,
-        adminsCanAdd: true,
+        defaultDescription: `Default Post Desc ${hexId}`,
+        defaultTitle: `Default Post Tit ${hexId}`,
+        enableCommentsOnPosts: commentsOnContributionsEnabled ?? true,
+        membersCanAdd: contributionsEnabledMember,
+        adminsCanAdd: contributionsEnabledAdmin,
       };
       break;
     case 'none':
     default:
   }
 
+  const calloutDescription = `
+  Callout Template Description
+  - ID: ${hexId}
+  - AC: ${framingType}
+  - Comments: ${commentsEnabled ? 'Enabled' : 'Disabled'}
+  - Response: ${responseType}` + (responseType !== 'none' ? `
+  - Admins can contribute: ${contributionsEnabledAdmin}
+  - Members can contribute: ${contributionsEnabledMember}
+  - Comments on contributions: ${commentsOnContributionsEnabled}
+  ` : '');
 
   return {
+    testId: hexId,
     // Template metadata
     displayName: `CTtit ${hexId} - AC:${framingType}, Response:${responseType}, Com:${commentsEnabled ? 'On' : 'Off'}`,
-    description:
-      `Callout Template Description - ID: ${hexId} - AC:${framingType}, Response:${responseType}, Com:${commentsEnabled ? 'On' : 'Off'}`,
+    description: calloutDescription,
     tags: [hexId, 'callout', 'template', framingType, responseType, commentsEnabled ? 'comments-enabled' : 'comments-disabled'],
 
     // Callout base fields
     calloutTitle: `CTit ${hexId} - AC:${framingType}, Resp:${responseType}, Com:${commentsEnabled ? 'On' : 'Off'}`,
     calloutTags: [hexId, 'callout', 'tags', framingType, responseType, commentsEnabled ? 'comments-enabled' : 'comments-disabled'],
-    calloutDescription: `Callout Template Callout Description - ID: ${hexId} - AC:${framingType}, Response:${responseType}, Com:${commentsEnabled ? 'On' : 'Off'}`,
+    calloutDescription: `Callout Description ${calloutDescription}`,
     calloutReferences: [],
 
     // Additional content: None

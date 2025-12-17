@@ -11,12 +11,12 @@ import { CalloutTemplateResponseLinksFiles } from '../callout-template-form.mode
  */
 export const selectCollectionLinksFiles = async (page: Page): Promise<void> => {
   // Select Links & Files in Collection section
-  const collectionSection = page
-    .getByRole('heading', { name: 'Collection' })
-    .locator('..');
-  const linksFilesButton = collectionSection.getByRole('button', {
+  // Use the aria-label description to find the button
+  const linksFilesButton = page.getByRole('button', {
     name: 'Links & Files',
-  });
+  }).filter({ has: page.locator('text=Links & Files') });
+
+  await linksFilesButton.scrollIntoViewIfNeeded();
   await linksFilesButton.click();
 };
 
