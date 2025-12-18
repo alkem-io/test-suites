@@ -23,7 +23,7 @@ import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
 } from '@alkemio/client-lib/dist/generated/graphql';
-import { createAuthenticatedSessionFixture } from './fixtures/authenticated-session.fixture';
+import { createAuthenticatedSessionFixture } from '@src/functional-e2e/fixtures/authenticated-session.fixture';
 
 const { test, setupAuthentication, teardownAuthentication } =
   createAuthenticatedSessionFixture({
