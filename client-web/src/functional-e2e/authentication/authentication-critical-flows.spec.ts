@@ -181,7 +181,7 @@ test.describe('Authentication - Phase 1 Critical Flows', () => {
     });
 
     // skipped because it fails on Evgeni's machine (to be investigated)
-    test.skip('4.2 - Logout and re-authentication', async ({ page }) => {
+    test('4.2 - Logout and re-authentication', async ({ page }) => {
       test.setTimeout(30000);
       // 1. Sign in as user (admin@alkem.io)
       await navigateToLoginPageFromMenu(baseUrl, page);
@@ -193,6 +193,12 @@ test.describe('Authentication - Phase 1 Critical Flows', () => {
       // 2. Logout
       await userMenuAvatar(page).click();
       await logoutMenuItem(page).click();
+
+      // Wait for logout to complete by checking for sign-in option
+      const signInOption = page
+        .getByRole('link', { name: /sign up|sign in/i })
+        .or(page.getByRole('button', { name: /sign up|sign in/i }));
+      await expect(signInOption.first()).toBeVisible({ timeout: 5000 });
 
       // 3. Sign in again with same credentials
       await navigateToLoginPageFromMenu(baseUrl, page);
