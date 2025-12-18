@@ -180,7 +180,6 @@ test.describe('Authentication - Phase 1 Critical Flows', () => {
       await expect(signInSignUpLink(page)).toBeVisible();
     });
 
-    // skipped because it fails on Evgeni's machine (to be investigated)
     test('4.2 - Logout and re-authentication', async ({ page }) => {
       test.setTimeout(30000);
       // 1. Sign in as user (admin@alkem.io)
