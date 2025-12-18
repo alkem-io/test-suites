@@ -3,22 +3,18 @@
  * Enables responding with memos (collaborative documents).
  */
 
-import { Page, expect } from '@playwright/test';
+import { Locator, Page, expect } from '@playwright/test';
 import { CalloutTemplateResponseMemos } from '../callout-template-form.models';
 
 /**
  * Selects "Memos" for collection type.
  */
-export const selectCollectionMemos = async (page: Page): Promise<void> => {
+export const selectCollectionMemos = async (dialog: Locator): Promise<void> => {
   // First expand Response Options if collapsed
-  const expandButton = page.getByRole('button', { name: 'Expand' });
-  if (await expandButton.isVisible()) {
-    await expandButton.click();
-  }
+  const memosButton = dialog.getByRole('button', {
+    name: 'Memos',
+  });
 
-  // Select Memos in Collection section
-  const collectionSection = page.getByRole('heading', { name: 'Collection' }).locator('..');
-  const memosButton = collectionSection.getByRole('button', { name: 'Memos' });
   await memosButton.click();
 };
 
@@ -27,10 +23,11 @@ export const selectCollectionMemos = async (page: Page): Promise<void> => {
  */
 export const fillCollectionMemos = async (
   page: Page,
+  dialog: Locator,
   settings: CalloutTemplateResponseMemos
 ): Promise<void> => {
   // Open collection settings dialog
-  await page.getByRole('button', { name: 'Collection settings' }).click();
+  await dialog.getByRole('button', { name: 'Collection settings' }).click();
 
   const settingsDialog = page.getByRole('dialog', { name: 'Collection settings' });
   await expect(settingsDialog).toBeVisible();

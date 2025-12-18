@@ -3,18 +3,18 @@
  * Enables responding with links and file uploads.
  */
 
-import { Page, expect } from '@playwright/test';
+import { Locator, Page, expect } from '@playwright/test';
 import { CalloutTemplateResponseLinksFiles } from '../callout-template-form.models';
 
 /**
  * Selects "Links & Files" for collection type.
  */
-export const selectCollectionLinksFiles = async (page: Page): Promise<void> => {
+export const selectCollectionLinksFiles = async (collectionSection: Locator): Promise<void> => {
   // Select Links & Files in Collection section
   // Use the aria-label description to find the button
-  const linksFilesButton = page.getByRole('button', {
+  const linksFilesButton = collectionSection.getByRole('button', {
     name: 'Links & Files',
-  }).filter({ has: page.locator('text=Links & Files') });
+  });
 
   await linksFilesButton.scrollIntoViewIfNeeded();
   await linksFilesButton.click();
@@ -25,10 +25,11 @@ export const selectCollectionLinksFiles = async (page: Page): Promise<void> => {
  */
 export const fillCollectionLinksFiles = async (
   page: Page,
+  dialog: Locator,
   settings: CalloutTemplateResponseLinksFiles
 ): Promise<void> => {
   // Open collection settings dialog
-  await page.getByRole('button', { name: 'Collection settings' }).click();
+  await dialog.getByRole('button', { name: 'Collection settings' }).click();
 
   const settingsDialog = page.getByRole('dialog', {
     name: 'Collection settings',

@@ -3,22 +3,19 @@
  * Enables responding with posts (rich text entries).
  */
 
-import { Page, expect } from '@playwright/test';
+import { Locator, Page, expect } from '@playwright/test';
 import { CalloutTemplateResponsePosts } from '../callout-template-form.models';
 
 /**
  * Selects "Posts" for collection type.
  */
-export const selectCollectionPosts = async (page: Page): Promise<void> => {
-  // First expand Response Options if collapsed
-  const expandButton = page.getByRole('button', { name: 'Expand' });
-  if (await expandButton.isVisible()) {
-    await expandButton.click();
-  }
-
+export const selectCollectionPosts = async (collectionSection: Locator): Promise<void> => {
   // Select Posts in Collection section
-  const collectionSection = page.getByRole('heading', { name: 'Collection' }).locator('..');
-  const postsButton = collectionSection.getByRole('button', { name: 'Posts' });
+  const postsButton = collectionSection.getByRole('button', {
+    name: 'Posts',
+  });
+
+  await postsButton.scrollIntoViewIfNeeded();
   await postsButton.click();
 };
 
@@ -27,10 +24,11 @@ export const selectCollectionPosts = async (page: Page): Promise<void> => {
  */
 export const fillCollectionPosts = async (
   page: Page,
+  dialog: Locator,
   settings: CalloutTemplateResponsePosts
 ): Promise<void> => {
   // Open collection settings dialog
-  await page.getByRole('button', { name: 'Collection settings' }).click();
+  await dialog.getByRole('button', { name: 'Collection settings' }).click();
 
   const settingsDialog = page.getByRole('dialog', { name: 'Collection settings' });
   await expect(settingsDialog).toBeVisible();

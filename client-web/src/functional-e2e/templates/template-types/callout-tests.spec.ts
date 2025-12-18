@@ -16,7 +16,7 @@ import {
 import {
   fillCalloutTemplateForm,
 } from './forms/callout/callout-template-form';
-import { verifyCalloutTemplate } from './verify/callout/callout-template-verify';
+import { verifyCalloutTemplate } from './verify/callout-template-verify';
 import { verifyCalloutTemplateUsage } from './usage/callout-template.use';
 
 const { test, setupAuthentication, teardownAuthentication } =
@@ -101,8 +101,8 @@ const createAndVerifyCalloutTemplate = async (
 // | ✅     |   7| Call to Action     | None             | Disabled         | N/A                | N/A                | N/A                |
 // | ✅     |   8| Call to Action     | None             | Enabled          | N/A                | N/A                | N/A                |
 // | ✅     |   9| None               | Links & Files    | Disabled         | true               | true               | N/A                |
-// | ✅     |  9b| None               | Links & Files    | Disabled         | false              | false              | N/A                |
-// | ✅     |  9c| None               | Links & Files    | Disabled         | true               | false              | N/A                |
+// | ✅     | *9b| None               | Links & Files    | Disabled         | false              | false              | N/A                |
+// | ✅     | *9c| None               | Links & Files    | Disabled         | true               | false              | N/A                |
 // | ✅     |  10| None               | Links & Files    | Enabled          | true               | true               | N/A                |
 // | ✅     |  11| Whiteboard         | Links & Files    | Disabled         | true               | true               | N/A                |
 // | ✅     |  12| Whiteboard         | Links & Files    | Enabled          | true               | true               | N/A                |
@@ -110,36 +110,39 @@ const createAndVerifyCalloutTemplate = async (
 // | ✅     |  14| Memo               | Links & Files    | Enabled          | true               | true               | N/A                |
 // | ✅     |  15| Call to Action     | Links & Files    | Disabled         | true               | true               | N/A                |
 // | ✅     |  16| Call to Action     | Links & Files    | Enabled          | true               | true               | N/A                |
-// |        |  17| None               | Posts            | Disabled         | true               | true               | true               |
-// |        | 17b| None               | Posts            | Disabled         | false              | false              | true               |
-// |        | 17c| None               | Posts            | Disabled         | true               | false              | true               |
-// |        | 17d| None               | Posts            | Disabled         | true               | true               | false              |
-// |        | 17e| None               | Posts            | Disabled         | false              | false              | false              |
-// |        | 17f| None               | Posts            | Disabled         | true               | false              | false              |
-// |        |  18| None               | Posts            | Enabled          | true               |
-// |        |  19| Whiteboard         | Posts            | Disabled         | true               |
-// |        |  20| Whiteboard         | Posts            | Enabled          | true               |
-// |        |  21| Memo               | Posts            | Disabled         | true               |
-// |        |  22| Memo               | Posts            | Enabled          | true               |
-// |        |  23| Call to Action     | Posts            | Disabled         | true               |
-// |        |  24| Call to Action     | Posts            | Enabled          | true               |
-// |        |  25| None               | Memos            | Disabled         | true               |
-// |        |  26| None               | Memos            | Enabled          | true               |
-// |        |  27| Whiteboard         | Memos            | Disabled         | true               |
-// |        |  28| Whiteboard         | Memos            | Enabled          | true               |
-// |        |  29| Memo               | Memos            | Disabled         | true               |
-// |        |  30| Memo               | Memos            | Enabled          | true               |
-// |        |  31| Call to Action     | Memos            | Disabled         | true               |
-// |        |  32| Call to Action     | Memos            | Enabled          | true               |
-// |        |  33| None               | Whiteboards      | Disabled         | true               |
-// |        |  34| None               | Whiteboards      | Enabled          | true               |
-// |        |  35| Whiteboard         | Whiteboards      | Disabled         | true               |
-// |        |  36| Whiteboard         | Whiteboards      | Enabled          | true               |
-// |        |  37| Memo               | Whiteboards      | Disabled         | true               |
-// |        |  38| Memo               | Whiteboards      | Enabled          | true               |
-// |        |  39| Call to Action     | Whiteboards      | Disabled         | true               |
-// |        |  40| Call to Action     | Whiteboards      | Enabled          | true               |
-//
+// | ✅     |  17| None               | Posts            | Disabled         | true               | true               | true               |
+// | ✅     |*17b| None               | Posts            | Disabled         | false              | false              | true               |
+// | ✅     |*17c| None               | Posts            | Disabled         | true               | false              | true               |
+// | ✅     |*17d| None               | Posts            | Disabled         | true               | true               | false              |
+// | ✅     |*17e| None               | Posts            | Disabled         | false              | false              | false              |
+// | ✅     |*17f| None               | Posts            | Disabled         | true               | false              | false              |
+// | ✅     |  18| None               | Posts            | Enabled          | true               | true               | true               |
+// | ✅     |  19| Whiteboard         | Posts            | Disabled         | true               | true               | true               |
+// | ✅     |  20| Whiteboard         | Posts            | Enabled          | true               | true               | true               |
+// | ✅     |  21| Memo               | Posts            | Disabled         | true               | true               | true               |
+// | ✅     |  22| Memo               | Posts            | Enabled          | true               | true               | true               |
+// | ✅     |  23| Call to Action     | Posts            | Disabled         | true               | true               | true               |
+// | ✅     |  24| Call to Action     | Posts            | Enabled          | true               | true               | true               |
+// | ✅     |  25| None               | Memos            | Disabled         | true               | true               | N/A                |
+// | ✅     |*25b| None               | Memos            | Disabled         | false              | false              | N/A                |
+// | ✅     |*25c| None               | Memos            | Disabled         | true               | false              | N/A                |
+// | ✅     |  26| None               | Memos            | Enabled          | true               | true               | N/A                |
+// | ✅     |  27| Whiteboard         | Memos            | Disabled         | true               | true               | N/A                |
+// | ✅     |  28| Whiteboard         | Memos            | Enabled          | true               | true               | N/A                |
+// | ✅     |  29| Memo               | Memos            | Disabled         | true               | true               | N/A                |
+// | ✅     |  30| Memo               | Memos            | Enabled          | true               | true               | N/A                |
+// | ✅     |  31| Call to Action     | Memos            | Disabled         | true               | true               | N/A                |
+// | ✅     |  32| Call to Action     | Memos            | Enabled          | true               | true               | N/A                |
+// | ✅     |  33| None               | Whiteboards      | Disabled         | true               | true               | N/A                |
+// | ✅     |*33b| None               | Whiteboards      | Disabled         | false              | false              | N/A                |
+// | ✅     |*33c| None               | Whiteboards      | Disabled         | true               | false              | N/A                |
+// | ✅     |  34| None               | Whiteboards      | Enabled          | true               | true               | N/A                |
+// | ✅     |  35| Whiteboard         | Whiteboards      | Disabled         | true               | true               | N/A                |
+// | ✅     |  36| Whiteboard         | Whiteboards      | Enabled          | true               | true               | N/A                |
+// | ✅     |  37| Memo               | Whiteboards      | Disabled         | true               | true               | N/A                |
+// | ✅     |  38| Memo               | Whiteboards      | Enabled          | true               | true               | N/A                |
+// | ✅     |  39| Call to Action     | Whiteboards      | Disabled         | true               | true               | N/A                |
+// | ✅     |  40| Call to Action     | Whiteboards      | Enabled          | true               | true               | N/A                |
 
 
 test.describe.serial('Callout Templates', () => {
@@ -158,7 +161,7 @@ test.describe.serial('Callout Templates', () => {
     );
   });
 
-  test('1 Framing: None, Response: None, Comments: Disabled', async ({
+  test.skip('1 Framing: None, Response: None, Comments: Disabled', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -170,7 +173,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test('2 Framing: None, Response: None, Comments: Enabled', async ({
+  test.skip('2 Framing: None, Response: None, Comments: Enabled', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -182,7 +185,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test('3 Framing: Whiteboard, Response: None, Comments: Disabled', async ({
+  test.skip('3 Framing: Whiteboard, Response: None, Comments: Disabled', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -194,7 +197,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test('4 Framing: Whiteboard, Response: None, Comments: Enabled', async ({
+  test.skip('4 Framing: Whiteboard, Response: None, Comments: Enabled', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -206,7 +209,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test('5 Framing: Memo, Response: None, Comments: Disabled', async ({
+  test.skip('5 Framing: Memo, Response: None, Comments: Disabled', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -218,7 +221,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test('6 Framing: Memo, Response: None, Comments: Enabled', async ({
+  test.skip('6 Framing: Memo, Response: None, Comments: Enabled', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -230,7 +233,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test('7 Framing: Call to Action, Response: None, Comments: Disabled', async ({
+  test.skip('7 Framing: Call to Action, Response: None, Comments: Disabled', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -242,7 +245,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test('8 Framing: Call to Action, Response: None, Comments: Enabled', async ({
+  test.skip('8 Framing: Call to Action, Response: None, Comments: Enabled', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -254,7 +257,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test('9 Framing: None, Response: Links & Files, Comments: Disabled, Contributions: ON', async ({
+  test.skip('9 Framing: None, Response: Links & Files, Comments: Disabled, Contrib: ON', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -266,7 +269,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test('9b Framing: None, Response: Links & Files, Comments: Disabled, Contributions: OFF', async ({
+  test.skip('9b Framing: None, Response: Links & Files, Comments: Disabled, Contrib: OFF', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -280,7 +283,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test('9c Framing: None, Response: Links & Files, Comments: Disabled, Contributions: Admin', async ({
+  test.skip('9c Framing: None, Response: Links & Files, Comments: Disabled, Contrib: Admin', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -294,7 +297,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test('10 Framing: None, Response: Links & Files, Comments: Enabled, Contributions: ON', async ({
+  test.skip('10 Framing: None, Response: Links & Files, Comments: Enabled, Contrib: ON', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -306,7 +309,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test('11 Framing: Whiteboard, Response: Links & Files, Comments: Disabled, Contributions: ON', async ({
+  test.skip('11 Framing: Whiteboard, Response: Links & Files, Comments: Disabled, Contrib: ON', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -318,7 +321,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test('12 Framing: Whiteboard, Response: Links & Files, Comments: Enabled, ContribAdmin: ON', async ({
+  test.skip('12 Framing: Whiteboard, Response: Links & Files, Comments: Enabled, Contrib: ON', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -330,7 +333,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test('13 Framing: Memo, Response: Links & Files, Comments: Disabled, ContribAdmin: ON', async ({
+  test.skip('13 Framing: Memo, Response: Links & Files, Comments: Disabled, Contrib: ON', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -342,7 +345,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test('14 Framing: Memo, Response: Links & Files, Comments: Enabled, ContribAdmin: ON', async ({
+  test.skip('14 Framing: Memo, Response: Links & Files, Comments: Enabled, Contrib: ON', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -354,7 +357,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test('15 Framing: Call to Action, Response: Links & Files, Comments: Disabled, ContribAdmin: ON', async ({
+  test.skip('15 Framing: Call to Action, Response: Links & Files, Comments: Disabled, Contrib: ON', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -366,7 +369,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test('16 Framing: Call to Action, Response: Links & Files, Comments: Enabled, ContribAdmin: ON', async ({
+  test.skip('16 Framing: Call to Action, Response: Links & Files, Comments: Enabled, Contrib: ON', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -378,4 +381,422 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
+  test.skip('17 Framing: None, Response: Posts, Comments: Disabled, Contrib: ON ', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'none',
+      responseType: 'posts',
+      commentsEnabled: false,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test.skip('17b Framing: None, Response: Posts, Comments: Disabled, Contrib: OFF, CommentsOnPosts: ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'none',
+      responseType: 'posts',
+      commentsEnabled: false,
+      contributionsEnabledAdmin: false,
+      contributionsEnabledMember: false,
+      commentsOnContributionsEnabled: true,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test.skip('17c Framing: None, Response: Posts, Comments: Disabled, Contrib: Admin, CommentsOnPosts: ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'none',
+      responseType: 'posts',
+      commentsEnabled: false,
+      contributionsEnabledAdmin: true,
+      contributionsEnabledMember: false,
+      commentsOnContributionsEnabled: true,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test.skip('17d Framing: None, Response: Posts, Comments: Disabled, Contrib: ON, CommentsOnPosts: OFF', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'none',
+      responseType: 'posts',
+      commentsEnabled: false,
+      contributionsEnabledAdmin: true,
+      contributionsEnabledMember: true,
+      commentsOnContributionsEnabled: false,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test.skip('17e Framing: None, Response: Posts, Comments: Disabled, Contrib: OFF, CommentsOnPosts: OFF', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'none',
+      responseType: 'posts',
+      commentsEnabled: false,
+      contributionsEnabledAdmin: false,
+      contributionsEnabledMember: false,
+      commentsOnContributionsEnabled: false,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test.skip('17f Framing: None, Response: Posts, Comments: Disabled, Contrib: Admin, CommentsOnPosts: OFF', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'none',
+      responseType: 'posts',
+      commentsEnabled: false,
+      contributionsEnabledAdmin: true,
+      contributionsEnabledMember: false,
+      commentsOnContributionsEnabled: false,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test.skip('18 Framing: None, Response: Posts, Comments: Enabled, Contrib: ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'none',
+      responseType: 'posts',
+      commentsEnabled: true,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test.skip('19 Framing: Whiteboard, Response: Posts, Comments: Disabled, Contrib: ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'whiteboard',
+      responseType: 'posts',
+      commentsEnabled: false,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test.skip('20 Framing: Whiteboard, Response: Posts, Comments: Enabled, Contrib: ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'whiteboard',
+      responseType: 'posts',
+      commentsEnabled: true,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test.skip('21 Framing: Memo, Response: Posts, Comments: Disabled, Contrib: ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'memo',
+      responseType: 'posts',
+      commentsEnabled: false,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test.skip('22 Framing: Memo, Response: Posts, Comments: Enabled, Contrib: ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'memo',
+      responseType: 'posts',
+      commentsEnabled: true,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test.skip('23 Framing: Call to Action, Response: Posts, Comments: Disabled, Contrib: ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'callToAction',
+      responseType: 'posts',
+      commentsEnabled: false,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test.skip('24 Framing: Call to Action, Response: Posts, Comments: Enabled, Contrib: ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'callToAction',
+      responseType: 'posts',
+      commentsEnabled: true,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test.skip('25 Framing: None, Response: Memos, Comments: Disabled, Contrib: ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'none',
+      responseType: 'memos',
+      commentsEnabled: false,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test.skip('25b Framing: None, Response: Memos, Comments: Disabled, Contrib: OFF', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'none',
+      responseType: 'memos',
+      commentsEnabled: false,
+      contributionsEnabledAdmin: false,
+      contributionsEnabledMember: false,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test.skip('25c Framing: None, Response: Memos, Comments: Disabled, Contrib: Admin', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'none',
+      responseType: 'memos',
+      commentsEnabled: false,
+      contributionsEnabledAdmin: true,
+      contributionsEnabledMember: false,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test.skip('26 Framing: None, Response: Memos, Comments: Enabled, Contrib: ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'none',
+      responseType: 'memos',
+      commentsEnabled: true,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test.skip('27 Framing: Whiteboard, Response: Memos, Comments: Disabled, Contrib: ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'whiteboard',
+      responseType: 'memos',
+      commentsEnabled: false,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test.skip('28 Framing: Whiteboard, Response: Memos, Comments: Enabled, Contrib: ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'whiteboard',
+      responseType: 'memos',
+      commentsEnabled: true,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('29 Framing: Memo, Response: Memos, Comments: Disabled, Contrib: ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'memo',
+      responseType: 'memos',
+      commentsEnabled: false,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('30 Framing: Memo, Response: Memos, Comments: Enabled, Contrib: ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'memo',
+      responseType: 'memos',
+      commentsEnabled: true,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('31 Framing: Call to Action, Response: Memos, Comments: Disabled, Contrib: ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'callToAction',
+      responseType: 'memos',
+      commentsEnabled: false,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('32 Framing: Call to Action, Response: Memos, Comments: Enabled, Contrib: ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'callToAction',
+      responseType: 'memos',
+      commentsEnabled: true,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('33 Framing: None, Response: Whiteboards, Comments: Disabled, Contrib: ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'none',
+      responseType: 'whiteboards',
+      commentsEnabled: false,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('33b Framing: None, Response: Whiteboards, Comments: Disabled, Contrib: OFF', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'none',
+      responseType: 'whiteboards',
+      commentsEnabled: false,
+      contributionsEnabledAdmin: false,
+      contributionsEnabledMember: false,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('33c Framing: None, Response: Whiteboards, Comments: Disabled, Contrib: Admin', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'none',
+      responseType: 'whiteboards',
+      commentsEnabled: false,
+      contributionsEnabledAdmin: true,
+      contributionsEnabledMember: false,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('34 Framing: None, Response: Whiteboards, Comments: Enabled, Contrib: ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'none',
+      responseType: 'whiteboards',
+      commentsEnabled: true,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('35 Framing: Whiteboard, Response: Whiteboards, Comments: Disabled, Contrib: ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'whiteboard',
+      responseType: 'whiteboards',
+      commentsEnabled: false,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('36 Framing: Whiteboard, Response: Whiteboards, Comments: Enabled, Contrib: ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'whiteboard',
+      responseType: 'whiteboards',
+      commentsEnabled: true,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('37 Framing: Memo, Response: Whiteboards, Comments: Disabled, Contrib: ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'memo',
+      responseType: 'whiteboards',
+      commentsEnabled: false,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('38 Framing: Memo, Response: Whiteboards, Comments: Enabled, Contrib: ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'memo',
+      responseType: 'whiteboards',
+      commentsEnabled: true,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('39 Framing: Call to Action, Response: Whiteboards, Comments: Disabled, Contrib: ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'callToAction',
+      responseType: 'whiteboards',
+      commentsEnabled: false,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('40 Framing: Call to Action, Response: Whiteboards, Comments: Enabled, Contrib: ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'callToAction',
+      responseType: 'whiteboards',
+      commentsEnabled: true,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
 });

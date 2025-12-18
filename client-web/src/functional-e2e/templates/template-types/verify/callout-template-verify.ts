@@ -5,7 +5,7 @@
  */
 
 import { expect, Page } from '@playwright/test';
-import { CalloutTemplateForm } from '../../forms/callout/callout-template-form.models';
+import { CalloutTemplateForm } from '../forms/callout/callout-template-form.models';
 
 /**
  * Verifies a Callout Template in the preview/list view.

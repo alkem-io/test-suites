@@ -3,22 +3,18 @@
  * Enables responding with whiteboards (Excalidraw canvases).
  */
 
-import { Page, expect } from '@playwright/test';
+import { Locator, Page, expect } from '@playwright/test';
 import { CalloutTemplateResponseWhiteboards } from '../callout-template-form.models';
 
 /**
  * Selects "Whiteboards" for collection type.
  */
-export const selectCollectionWhiteboards = async (page: Page): Promise<void> => {
+export const selectCollectionWhiteboards = async (dialog: Locator): Promise<void> => {
   // First expand Response Options if collapsed
-  const expandButton = page.getByRole('button', { name: 'Expand' });
-  if (await expandButton.isVisible()) {
-    await expandButton.click();
-  }
+  const whiteboardsButton = dialog.getByRole('button', {
+    name: 'Whiteboards',
+  });
 
-  // Select Whiteboards in Collection section
-  const collectionSection = page.getByRole('heading', { name: 'Collection' }).locator('..');
-  const whiteboardsButton = collectionSection.getByRole('button', { name: 'Whiteboards' });
   await whiteboardsButton.click();
 };
 
@@ -28,10 +24,11 @@ export const selectCollectionWhiteboards = async (page: Page): Promise<void> => 
  */
 export const fillCollectionWhiteboards = async (
   page: Page,
+  dialog: Locator,
   settings: CalloutTemplateResponseWhiteboards
 ): Promise<void> => {
   // Open collection settings dialog
-  await page.getByRole('button', { name: 'Collection settings' }).click();
+  await dialog.getByRole('button', { name: 'Collection settings' }).click();
 
   const settingsDialog = page.getByRole('dialog', { name: 'Collection settings' });
   await expect(settingsDialog).toBeVisible();
@@ -49,7 +46,7 @@ export const fillCollectionWhiteboards = async (
     await editButton.click();
 
     // Wait for the whiteboard editor
-    const canvas = settingsDialog.locator('canvas.excalidraw__canvas');
+    const canvas = page.locator('canvas.excalidraw__canvas').last();
     await expect(canvas).toBeVisible();
 
     // Select text tool

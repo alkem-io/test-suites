@@ -1,6 +1,11 @@
 import { Locator, Page, expect } from "@playwright/test";
 import { CalloutTemplateForm } from "../forms/callout/callout-template-form.models";
-import { verifyCalloutTemplate } from "../verify/callout/callout-template-verify";
+import { verifyCalloutTemplate } from "../verify/callout-template-verify";
+import { verifyCalloutContributionLinks } from "./contributions/callout-template.use.links";
+import { verifyCalloutContributionPosts } from "./contributions/callout-template.use.posts";
+import { verifyContributionSettings } from "./contributions/callout-template.use.contributions";
+import { verifyCalloutContributionMemos } from "./contributions/callout-template.use.memos";
+import { verifyCalloutContributionWhiteboards } from "./contributions/callout-template.use.whiteboards";
 
 
 
@@ -15,8 +20,13 @@ export const verifyCalloutTemplateUsage = async (
   // Click the Add Callout button
   await page.getByRole('button', { name: 'Post' }).first().click();
 
+  // Find the the Add Callout dialog
+  const addPostDialog = page.getByRole('dialog').filter({
+    has: page.getByRole('heading', { name: 'Add Post' }),
+  }).last();
+
   // Click the Find Template button
-  await page.getByRole('button', { name: 'Find Template' }).first().click();
+  await addPostDialog.getByRole('button', { name: 'Find Template' }).first().click();
 
   // Select the template in the list
   await page.getByRole('heading', { name: templateData.displayName, exact: true }).click();
@@ -28,15 +38,10 @@ export const verifyCalloutTemplateUsage = async (
   await verifyCalloutTemplate(page, templateData);
 
   // Click the Use Template button
-  await page.getByRole('button', { name: 'Use' }).first().click();
-
-  // Click the Add Callout button
-  const addPostDialog = page.getByRole('dialog').filter({
-    has: page.getByRole('heading', { name: 'Add Post' }),
-  }).last();
+  await page.getByRole('button', { name: 'Use', exact: true }).click();
 
   // Click the Post button to add the callout
-  await addPostDialog.getByRole('button', { name: 'Post' }).first().click();
+  await addPostDialog.getByRole('button', { name: 'Post', exact: true }).click();
 
   // Wait for the dialog to close
   await addPostDialog.waitFor({ state: 'hidden' });
@@ -44,7 +49,6 @@ export const verifyCalloutTemplateUsage = async (
 
 
   // Verify the callout appears in the feed with correct title and description
-
   const title = await page.getByRole('heading', { name: templateData.calloutTitle, exact: true });
   await title.scrollIntoViewIfNeeded();
   await expect(title).toBeVisible();
@@ -101,8 +105,9 @@ export const verifyCalloutTemplateUsage = async (
 }
 
 
-
-
+/**
+ * Verify the contribution settings dialog in the Callout created using the template
+ */
 const verifyCalloutContributions = async (
   page: Page,
   calloutContainer: Locator,
@@ -113,107 +118,29 @@ const verifyCalloutContributions = async (
   switch (templateData.responseOptions.type) {
     case 'linksFiles': {
       await verifyContributionSettings(page, calloutContainer, templateData);
-
-      // Verify the Links & Files contribution button is present or not based on setting
-      const addContributionButton = calloutContainer.getByRole('button', { name: 'Add' }).first();
-
-      if (templateData.responseOptions.adminsCanAdd) {
-        await expect(addContributionButton).toBeVisible();
-        // Click on Add Link
-        await addContributionButton.click();
-
-        // Verify the Add Links or Documents dialog appears
-        await expect(
-          page.getByText(`Add links or documents to ${templateData.calloutTitle}`, { exact: true })
-        ).toBeVisible();
-
-        // Fill in the URL field
-        await page.getByRole('textbox', { name: 'Title' }).fill(`${templateData.testId} Link test`);
-        await page.getByRole('textbox', { name: 'URL' }).fill(`https://example.com/test-${templateData.testId}`);
-        await page.getByRole('textbox', { name: 'Description' }).fill(`Link test description ${templateData.testId}`);
-
-        // Click on save link
-        await page.getByRole('button', { name: 'Save' }).click();
-
-        // Verify the contribution appears in the callout
-        await expect(
-          calloutContainer.getByRole('link', { name: `${templateData.testId} Link test` }).first()
-        ).toBeVisible();
-      } else {
-        // Contributions are disabled
-        await expect(addContributionButton).not.toBeVisible();
-      }
+      await verifyCalloutContributionLinks(page, calloutContainer, templateData);
       break;
     }
-    case 'posts':
-    case 'memos':
+    case 'posts': {
+      await verifyContributionSettings(page, calloutContainer, templateData);
+      await verifyCalloutContributionPosts(page, calloutContainer, templateData);
+      break;
+    }
+    case 'memos': {
+      await verifyContributionSettings(page, calloutContainer, templateData);
+      await verifyCalloutContributionMemos(page, calloutContainer, templateData);
+      break;
+    }
     case 'whiteboards': {
-      // TODO: Implement verification for other collection types
+      await verifyContributionSettings(page, calloutContainer, templateData);
+      await verifyCalloutContributionWhiteboards(page, calloutContainer, templateData);
       break;
     }
     case 'none':
     default: {
-// No contribution options to verify
+      // No contribution options to verify
       break;
     }
   }
 }
-
-
-const verifyContributionSettings = async (
-  page: Page,
-  calloutContainer: Locator,
-  templateData: CalloutTemplateForm
-): Promise<void> => {
-  // Open the Callout Settings Menu
-  const settingsMenu = calloutContainer.getByLabel('settings', { exact: true })
-  await settingsMenu.click();
-
-  // Open the Callout Settings Dialog
-  await page.getByRole('menuitem', { name: 'Edit' }).click();
-  const calloutDialog = page.getByRole('heading', { name: 'Edit Post' }).locator('..').locator('..').locator('..');
-
-  // Expand the Response Options section
-  const responseOptionsButton = calloutDialog.getByRole('button', { name: 'Expand' });
-  await responseOptionsButton.scrollIntoViewIfNeeded()
-  await responseOptionsButton.click();
-
-  // Open Collection settings Dialog
-  await calloutDialog.getByRole('button', { name: 'Collection settings' }).click();
-
-  const collectionSettingsDialog = page.getByRole('heading', { name: 'Collection settings' }).locator('..').locator('..').locator('..');
-
-  switch (templateData.responseOptions.type) {
-    case 'linksFiles': {
-      // Verify Admins can add contributions setting
-      await expect(
-        await collectionSettingsDialog.getByRole('checkbox', { name: 'Admins can add to the' }).isChecked()
-      ).toBe(templateData.responseOptions.adminsCanAdd);
-
-      // Verify Members can add contributions setting
-      await expect(
-        await collectionSettingsDialog.getByRole('checkbox', { name: 'Members can add to the' }).isChecked()
-      ).toBe(templateData.responseOptions.membersCanAdd);
-    }
-    case 'posts': {
-      //!! PENDING: Verify enableCommentsOnPosts
-    }
-    case 'memos': {
-      //!!
-    }
-    case 'whiteboards': {
-      //!!
-    }
-  }
-
-  // Get back to Callout Edit Dialog
-  await collectionSettingsDialog.getByRole('button', { name: 'Back' }).click();
-  // Confirm
-  await page.getByRole('button', { name: 'Yes, go back' }).click();
-
-  // Cancel the Callout Edit Dialog
-  await calloutDialog.getByRole('button', { name: 'Cancel' }).click();
-}
-
-//!! PENDING: Verify membersCanAdd
 

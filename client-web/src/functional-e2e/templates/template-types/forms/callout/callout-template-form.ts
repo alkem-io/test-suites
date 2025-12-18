@@ -134,25 +134,32 @@ const selectAndFillCollection = async (
   page: Page,
   collection: CalloutTemplateResponseCollection
 ): Promise<void> => {
+  const dialog = page.getByRole('dialog').filter({
+    has: page.getByRole('heading', { name: 'Create new Collaboration Tool Template' }),
+  }).last();
+
+  const collectionSection = dialog.getByRole('heading', { name: 'Collection' })
+    .locator('..').locator('..').locator('..').locator('..');
+
   switch (collection.type) {
     case 'none':
-      await selectCollectionNone(page);
+      await selectCollectionNone(collectionSection);
       break;
     case 'linksFiles':
-      await selectCollectionLinksFiles(page);
-      await fillCollectionLinksFiles(page, collection);
+      await selectCollectionLinksFiles(collectionSection);
+      await fillCollectionLinksFiles(page, dialog, collection);
       break;
     case 'posts':
-      await selectCollectionPosts(page);
-      await fillCollectionPosts(page, collection);
+      await selectCollectionPosts(collectionSection);
+      await fillCollectionPosts(page, dialog, collection);
       break;
     case 'memos':
-      await selectCollectionMemos(page);
-      await fillCollectionMemos(page, collection);
+      await selectCollectionMemos(collectionSection);
+      await fillCollectionMemos(page, dialog, collection);
       break;
     case 'whiteboards':
-      await selectCollectionWhiteboards(page);
-      await fillCollectionWhiteboards(page, collection);
+      await selectCollectionWhiteboards(collectionSection);
+      await fillCollectionWhiteboards(page, dialog, collection);
       break;
   }
 };
