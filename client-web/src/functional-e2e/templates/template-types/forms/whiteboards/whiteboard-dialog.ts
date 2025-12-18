@@ -1,8 +1,7 @@
 import { Locator, Page, expect } from "@playwright/test";
 
-
 export const clickOnEditWhiteboardPreview = async (page: Page): Promise<void> => {
-  const whiteboardContent = await page.getByText('Drawing canvas');
+  const whiteboardContent = await page.getByText('Drawing canvas').last();
   await expect(whiteboardContent).toBeVisible();
   await whiteboardContent.locator('..').locator('..').locator('..')
     .getByRole('button', { name: 'Edit' }).click();

@@ -5,6 +5,7 @@
 
 import { Locator, Page, expect } from '@playwright/test';
 import { CalloutTemplateResponseWhiteboards } from '../callout-template-form.models';
+import { clickOnEditWhiteboardPreview, getWhiteboardDialog, writeTextInWhiteboardDialog } from '../../whiteboards/whiteboard-dialog';
 
 /**
  * Selects "Whiteboards" for collection type.
@@ -41,29 +42,15 @@ export const fillCollectionWhiteboards = async (
 
   // Fill whiteboard canvas if text is provided
   if (settings.textInWhiteboard) {
-    // Click Edit button to open Excalidraw editor
-    const editButton = settingsDialog.getByRole('button', { name: 'Edit' });
-    await editButton.click();
+    await clickOnEditWhiteboardPreview(page);
+
+    const editorDialog = await getWhiteboardDialog(page, 'Edit whiteboard');
 
     // Wait for the whiteboard editor
-    const canvas = page.locator('canvas.excalidraw__canvas').last();
-    await expect(canvas).toBeVisible();
-
-    // Select text tool
-    await settingsDialog.getByRole('radio', { name: /Text — T or/i }).click();
-
-    // Click on canvas to start text entry
-    await canvas.click();
-
-    // Type the text
-    const textInput = settingsDialog.getByRole('textbox').last();
-    await textInput.fill(settings.textInWhiteboard);
-
-    // Press Escape to commit text
-    await textInput.press('Escape');
+    await writeTextInWhiteboardDialog(editorDialog, settings.textInWhiteboard);
 
     // Save the whiteboard
-    await settingsDialog.getByRole('button', { name: 'Save' }).first().click();
+    await editorDialog.getByRole('button', { name: 'Save' }).first().click();
   }
 
   // Configure member permissions

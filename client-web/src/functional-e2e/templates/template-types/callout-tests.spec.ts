@@ -161,7 +161,7 @@ test.describe.serial('Callout Templates', () => {
     );
   });
 
-  test.skip('1 Framing: None, Response: None, Comments: Disabled', async ({
+  test('1 Framing: None, Response: None, Comments: Disabled', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -173,7 +173,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('2 Framing: None, Response: None, Comments: Enabled', async ({
+  test('2 Framing: None, Response: None, Comments: Enabled', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -185,7 +185,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('3 Framing: Whiteboard, Response: None, Comments: Disabled', async ({
+  test('3 Framing: Whiteboard, Response: None, Comments: Disabled', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -197,7 +197,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('4 Framing: Whiteboard, Response: None, Comments: Enabled', async ({
+  test('4 Framing: Whiteboard, Response: None, Comments: Enabled', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -209,7 +209,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('5 Framing: Memo, Response: None, Comments: Disabled', async ({
+  test('5 Framing: Memo, Response: None, Comments: Disabled', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -221,7 +221,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('6 Framing: Memo, Response: None, Comments: Enabled', async ({
+  test('6 Framing: Memo, Response: None, Comments: Enabled', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -233,7 +233,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('7 Framing: Call to Action, Response: None, Comments: Disabled', async ({
+  test('7 Framing: Call to Action, Response: None, Comments: Disabled', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -245,7 +245,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('8 Framing: Call to Action, Response: None, Comments: Enabled', async ({
+  test('8 Framing: Call to Action, Response: None, Comments: Enabled', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -257,7 +257,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('9 Framing: None, Response: Links & Files, Comments: Disabled, Contrib: ON', async ({
+  test('9 Framing: None, Response: Links & Files, Comments: Disabled, Contrib: ON', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -269,7 +269,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('9b Framing: None, Response: Links & Files, Comments: Disabled, Contrib: OFF', async ({
+  test('9b Framing: None, Response: Links & Files, Comments: Disabled, Contrib: OFF', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -283,7 +283,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('9c Framing: None, Response: Links & Files, Comments: Disabled, Contrib: Admin', async ({
+  test('9c Framing: None, Response: Links & Files, Comments: Disabled, Contrib: Admin', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -297,7 +297,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('10 Framing: None, Response: Links & Files, Comments: Enabled, Contrib: ON', async ({
+  test('10 Framing: None, Response: Links & Files, Comments: Enabled, Contrib: ON', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -309,7 +309,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('11 Framing: Whiteboard, Response: Links & Files, Comments: Disabled, Contrib: ON', async ({
+  test('11 Framing: Whiteboard, Response: Links & Files, Comments: Disabled, Contrib: ON', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -321,7 +321,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('12 Framing: Whiteboard, Response: Links & Files, Comments: Enabled, Contrib: ON', async ({
+  test('12 Framing: Whiteboard, Response: Links & Files, Comments: Enabled, Contrib: ON', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -333,7 +333,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('13 Framing: Memo, Response: Links & Files, Comments: Disabled, Contrib: ON', async ({
+  test('13 Framing: Memo, Response: Links & Files, Comments: Disabled, Contrib: ON', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -345,7 +345,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('14 Framing: Memo, Response: Links & Files, Comments: Enabled, Contrib: ON', async ({
+  test('14 Framing: Memo, Response: Links & Files, Comments: Enabled, Contrib: ON', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -357,7 +357,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('15 Framing: Call to Action, Response: Links & Files, Comments: Disabled, Contrib: ON', async ({
+  test('15 Framing: Call to Action, Response: Links & Files, Comments: Disabled, Contrib: ON', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -369,7 +369,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('16 Framing: Call to Action, Response: Links & Files, Comments: Enabled, Contrib: ON', async ({
+  test('16 Framing: Call to Action, Response: Links & Files, Comments: Enabled, Contrib: ON', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -381,7 +381,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('17 Framing: None, Response: Posts, Comments: Disabled, Contrib: ON ', async ({
+  test('17 Framing: None, Response: Posts, Comments: Disabled, Contrib: ON ', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -393,7 +393,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('17b Framing: None, Response: Posts, Comments: Disabled, Contrib: OFF, CommentsOnPosts: ON', async ({
+  test('17b Framing: None, Response: Posts, Comments: Disabled, Contrib: OFF, CommentsOnPosts: ON', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -408,7 +408,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('17c Framing: None, Response: Posts, Comments: Disabled, Contrib: Admin, CommentsOnPosts: ON', async ({
+  test('17c Framing: None, Response: Posts, Comments: Disabled, Contrib: Admin, CommentsOnPosts: ON', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -423,7 +423,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('17d Framing: None, Response: Posts, Comments: Disabled, Contrib: ON, CommentsOnPosts: OFF', async ({
+  test('17d Framing: None, Response: Posts, Comments: Disabled, Contrib: ON, CommentsOnPosts: OFF', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -438,7 +438,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('17e Framing: None, Response: Posts, Comments: Disabled, Contrib: OFF, CommentsOnPosts: OFF', async ({
+  test('17e Framing: None, Response: Posts, Comments: Disabled, Contrib: OFF, CommentsOnPosts: OFF', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -453,7 +453,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('17f Framing: None, Response: Posts, Comments: Disabled, Contrib: Admin, CommentsOnPosts: OFF', async ({
+  test('17f Framing: None, Response: Posts, Comments: Disabled, Contrib: Admin, CommentsOnPosts: OFF', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -468,7 +468,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('18 Framing: None, Response: Posts, Comments: Enabled, Contrib: ON', async ({
+  test('18 Framing: None, Response: Posts, Comments: Enabled, Contrib: ON', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -480,7 +480,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('19 Framing: Whiteboard, Response: Posts, Comments: Disabled, Contrib: ON', async ({
+  test('19 Framing: Whiteboard, Response: Posts, Comments: Disabled, Contrib: ON', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -492,7 +492,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('20 Framing: Whiteboard, Response: Posts, Comments: Enabled, Contrib: ON', async ({
+  test('20 Framing: Whiteboard, Response: Posts, Comments: Enabled, Contrib: ON', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -504,7 +504,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('21 Framing: Memo, Response: Posts, Comments: Disabled, Contrib: ON', async ({
+  test('21 Framing: Memo, Response: Posts, Comments: Disabled, Contrib: ON', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -516,7 +516,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('22 Framing: Memo, Response: Posts, Comments: Enabled, Contrib: ON', async ({
+  test('22 Framing: Memo, Response: Posts, Comments: Enabled, Contrib: ON', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -528,7 +528,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('23 Framing: Call to Action, Response: Posts, Comments: Disabled, Contrib: ON', async ({
+  test('23 Framing: Call to Action, Response: Posts, Comments: Disabled, Contrib: ON', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -540,7 +540,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('24 Framing: Call to Action, Response: Posts, Comments: Enabled, Contrib: ON', async ({
+  test('24 Framing: Call to Action, Response: Posts, Comments: Enabled, Contrib: ON', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -552,7 +552,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('25 Framing: None, Response: Memos, Comments: Disabled, Contrib: ON', async ({
+  test('25 Framing: None, Response: Memos, Comments: Disabled, Contrib: ON', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -564,7 +564,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('25b Framing: None, Response: Memos, Comments: Disabled, Contrib: OFF', async ({
+  test('25b Framing: None, Response: Memos, Comments: Disabled, Contrib: OFF', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -578,7 +578,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('25c Framing: None, Response: Memos, Comments: Disabled, Contrib: Admin', async ({
+  test('25c Framing: None, Response: Memos, Comments: Disabled, Contrib: Admin', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -592,7 +592,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('26 Framing: None, Response: Memos, Comments: Enabled, Contrib: ON', async ({
+  test('26 Framing: None, Response: Memos, Comments: Enabled, Contrib: ON', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -604,7 +604,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('27 Framing: Whiteboard, Response: Memos, Comments: Disabled, Contrib: ON', async ({
+  test('27 Framing: Whiteboard, Response: Memos, Comments: Disabled, Contrib: ON', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
@@ -616,7 +616,7 @@ test.describe.serial('Callout Templates', () => {
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 
-  test.skip('28 Framing: Whiteboard, Response: Memos, Comments: Enabled, Contrib: ON', async ({
+  test('28 Framing: Whiteboard, Response: Memos, Comments: Enabled, Contrib: ON', async ({
     page,
   }) => {
     const templateData = createCalloutTemplateData({
