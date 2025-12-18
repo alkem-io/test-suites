@@ -119,7 +119,10 @@ export class CollaborationPage {
   }
 
   get publishMenuItem() {
-    return this.page.getByRole('menuitem', { name: /publish|unpublish/i });
+    return this.page.getByRole('menuitem', { name: /^(publish)$/i });
+  }
+  get unpublishMenuItem() {
+    return this.page.getByRole('menuitem', { name: /^(unpublish)$/i });
   }
 
   get shareMenuItem() {
@@ -187,9 +190,9 @@ export class CollaborationPage {
   }
 
   get contributionsList() {
-    return this.page.locator(
-      '[data-testid="contribution"], .contribution-item'
-    );
+    // Contributions are rendered as article elements or heading level 3 within the callout dialog
+    // Using heading level 3 as a proxy since each contribution has a title rendered as h3
+    return this.calloutDialog.getByRole('heading', { level: 2 });
   }
 
   // Confirmation dialog
