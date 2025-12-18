@@ -107,7 +107,6 @@ test.describe('Organization CRUD Tests', () => {
       const displayNameField = page.getByRole('textbox', {
         name: /display.*name/i,
       });
-      const nameIdField = page.getByRole('textbox', { name: /name.*id/i });
 
       // Form should have required fields
       if (await displayNameField.isVisible()) {
