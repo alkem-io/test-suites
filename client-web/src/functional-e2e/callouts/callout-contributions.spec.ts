@@ -9,7 +9,7 @@ import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
-import { TestUserManager } from '@alkemio/tests-lib';
+import { delay, TestUserManager } from '@alkemio/tests-lib';
 import { expect } from '@playwright/test';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 import { CollaborationPage } from './pages';
@@ -169,6 +169,65 @@ memberFixture.test.describe.serial('Callout Contributions - Member', () => {
       await collaborationPage.addLinkContribution(linkUrl, linkTitle);
 
       await expect(page.getByText(linkTitle).first()).toBeVisible();
+    }
+  );
+
+  memberFixture.test(
+    '6.4 Edit Own Contribution - As Space Member',
+    async ({ page }) => {
+      memberFixture.test.setTimeout(45_000);
+      const collaborationPage = new CollaborationPage(page, baseUrl);
+      const originalTitle = 'Original Post Title';
+      const originalContent = 'Original content for testing';
+      const editedTitle = `Edited Post ${Date.now()}`;
+      const editedContent = 'This content has been edited';
+
+      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+      await collaborationPage.clickCallout(testPostCalloutName);
+
+      // Add a post contribution
+      await collaborationPage.addPostContribution(
+        originalTitle,
+        originalContent
+      );
+      await expect(page.getByText(originalTitle).first()).toBeVisible();
+
+      // Find and open the contribution card
+      const contributionCard = page
+        .getByRole('heading', { level: 2 })
+        .filter({ hasText: originalTitle })
+        .first();
+      await contributionCard.click();
+
+      // Click edit button (contextual menu)
+      const editButton = page
+        .locator('[data-testid="EditOutlinedIcon"]')
+        .first();
+      await expect(editButton).toBeVisible();
+      await editButton.click();
+
+      await delay(500); // Small delay to allow editor to load
+
+      // Edit the title
+      const titleInput = page.getByLabel(/title/i);
+      await titleInput.clear();
+      await titleInput.fill(editedTitle);
+
+      // Edit the content
+      const contentEditor = page.getByRole('textbox', {
+        name: /markdown editor/i,
+      });
+      await contentEditor.click();
+      await page.keyboard.press('Control+A');
+      await page.keyboard.type(editedContent, { delay: 50 });
+
+      // Save changes
+      await page.getByRole('button', { name: /save/i }).click();
+
+      // Verify edited content is visible
+      await expect(page.getByText(editedTitle).first()).toBeVisible({
+        timeout: 5000,
+      });
     }
   );
 });
