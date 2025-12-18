@@ -19,7 +19,7 @@ export class CollaborationPage {
 
   // Callout creation
   get addCalloutButton() {
-    return this.page.getByRole('button', { name: /post/i }).first();
+    return this.page.getByRole('button', { name: /create|post/i }).first();
   }
 
   get createCalloutButton() {
@@ -58,7 +58,8 @@ export class CollaborationPage {
   }
 
   get descriptionInput() {
-    return this.page.getByLabel(/description/i).first();
+    // TipTap rich text editor - contenteditable div with aria-label
+    return this.page.getByRole('textbox', { name: 'Markdown editor' });
   }
 
   get saveAsDraftButton() {
@@ -66,11 +67,41 @@ export class CollaborationPage {
   }
 
   get saveButton() {
-    return this.page.getByRole('button', { name: /post/i });
+    return this.page.getByRole('button', { name: /create|post|save/i });
   }
 
   get cancelButton() {
     return this.page.getByRole('button', { name: /cancel/i });
+  }
+
+  // Response Options (in create callout dialog)
+  get responseOptionsExpandButton() {
+    return this.page.getByRole('button', { name: 'Expand' });
+  }
+
+  get responseOptionsHeading() {
+    return this.page.getByRole('heading', { name: 'Response Options' });
+  }
+
+  // Collection type options
+  get collectionNoneOption() {
+    return this.page.getByRole('button', { name: 'None' }).last();
+  }
+
+  get collectionLinksFilesOption() {
+    return this.page.getByRole('button', { name: 'Links & Files' });
+  }
+
+  get collectionPostsOption() {
+    return this.page.getByRole('button', { name: 'Posts' });
+  }
+
+  get collectionMemosOption() {
+    return this.page.getByRole('button', { name: 'Memos' });
+  }
+
+  get collectionWhiteboardsOption() {
+    return this.page.getByRole('button', { name: 'Whiteboards' });
   }
 
   // Draft/Published indicators
@@ -142,7 +173,7 @@ export class CollaborationPage {
   // Contributions
   get addContributionButton() {
     return this.page.getByRole('button', {
-      name: /add.*post|add.*link|contribute/i,
+      name: /add|post/i,
     });
   }
 
@@ -211,8 +242,8 @@ export class CollaborationPage {
   async fillCalloutDetails(displayName: string, description?: string) {
     await this.displayNameInput.fill(displayName);
     if (description) {
-      // todo: fix this
-      // await this.descriptionInput.fill(description);
+      // TipTap editor - use fill() which works with contenteditable divs
+      await this.descriptionInput.fill(description);
     }
   }
 
@@ -221,6 +252,33 @@ export class CollaborationPage {
       await this.saveAsDraftButton.click();
     } else {
       await this.saveButton.click();
+    }
+  }
+
+  async expandResponseOptions() {
+    await this.responseOptionsExpandButton.click();
+    await delay(300); // Wait for animation
+  }
+
+  async selectCollectionType(
+    type: 'none' | 'links' | 'posts' | 'memos' | 'whiteboards'
+  ) {
+    switch (type) {
+      case 'links':
+        await this.collectionLinksFilesOption.click();
+        break;
+      case 'posts':
+        await this.collectionPostsOption.click();
+        break;
+      case 'memos':
+        await this.collectionMemosOption.click();
+        break;
+      case 'whiteboards':
+        await this.collectionWhiteboardsOption.click();
+        break;
+      case 'none':
+      default:
+        await this.collectionNoneOption.click();
     }
   }
 
@@ -233,6 +291,28 @@ export class CollaborationPage {
     await this.clickAddCallout();
     await this.selectCalloutType(type);
     await this.fillCalloutDetails(displayName, description);
+    await delay(300); // Small delay to ensure the button is enabled
+    await this.saveCallout(asDraft);
+
+    // Wait for the callout to appear in the list after creation
+    await expect(
+      this.page.getByRole('heading', { name: displayName }).first()
+    ).toBeVisible({ timeout: 10000 });
+  }
+
+  async createCalloutWithContributions(
+    displayName: string,
+    collectionType: 'links' | 'posts' | 'memos' | 'whiteboards',
+    description?: string,
+    asDraft: boolean = false
+  ) {
+    await this.clickAddCallout();
+    await this.fillCalloutDetails(displayName, description);
+
+    // Expand response options and select collection type
+    await this.expandResponseOptions();
+    await this.selectCollectionType(collectionType);
+
     await delay(300); // Small delay to ensure the button is enabled
     await this.saveCallout(asDraft);
 
@@ -372,7 +452,11 @@ export class CollaborationPage {
   async addPostContribution(title: string, content: string) {
     await this.addContributionButton.click();
     await this.page.getByLabel(/title/i).fill(title);
-    await this.page.getByLabel(/content|description/i).fill(content);
+    // await this.page.getByLabel(/content|description/i).fill(content);
+
+    const editor = this.page.getByRole('textbox', { name: /markdown editor/i });
+    await editor.click(); // focus
+    await this.page.keyboard.type(content, { delay: 50 });
     await this.saveButton.click();
   }
 
