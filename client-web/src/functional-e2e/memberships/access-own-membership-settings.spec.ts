@@ -25,7 +25,7 @@ const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let baseScenario: OrganizationWithSpaceModel;
 
 const scenarioConfig: TestScenarioConfig = {
-  name: 'seed-memberships',
+  name: 'memberships',
   space: {
     about: {
       profile: {
@@ -37,7 +37,7 @@ const scenarioConfig: TestScenarioConfig = {
       addTutorialCallouts: false,
     },
     community: {
-      admins: [TestUser.SPACE_ADMIN, TestUser.GLOBAL_ADMIN],
+      admins: [TestUser.SPACE_ADMIN],
       members: [TestUser.SPACE_MEMBER, TestUser.SPACE_ADMIN],
     },
     settings: {
@@ -62,37 +62,43 @@ test.describe('User Membership Settings', () => {
     await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
-  test('Access Own Membership Settings', async ({ page }) => {
-    // 1. Navigate to own membership settings
-    await page.goto(
-      `${baseUrl}/user/${TestUserManager.users.spaceMember.nameId}/settings/membership`
-    );
+  test(
+    'Access Own Membership Settings',
+    {
+      tag: ['@regression'],
+    },
+    async ({ page }) => {
+      // 1. Navigate to own membership settings
+      await page.goto(
+        `${baseUrl}/user/${TestUserManager.users.spaceMember.nameId}/settings/membership`
+      );
 
-    // 2. Verify URL changed to membership settings
-    await expect(page).toHaveURL(/.*\/settings\/membership/);
+      // 2. Verify URL changed to membership settings
+      await expect(page).toHaveURL(/.*\/settings\/membership/);
 
-    // 3. Verify "My memberships" section is visible
-    // Membership cards display:
-    // - Space from baseScenario with member role
-    // - Space name: baseScenario.space.profile.displayName
-    // - "Leave" button available
-    const leaveBtn = page.getByRole('button', { name: 'Leave' }).first();
-    await expect(leaveBtn).toBeVisible({ timeout: 5000 });
-    await expect(
-      page.getByText(baseScenario.space.about.profile.displayName)
-    ).toBeVisible();
+      // 3. Verify "My memberships" section is visible
+      // Membership cards display:
+      // - Space from baseScenario with member role
+      // - Space name: baseScenario.space.profile.displayName
+      // - "Leave" button available
+      const leaveBtn = page.getByRole('button', { name: 'Leave' }).first();
+      await expect(leaveBtn).toBeVisible({ timeout: 5000 });
+      await expect(
+        page.getByText(baseScenario.space.about.profile.displayName)
+      ).toBeVisible();
 
-    // 4. leave community
-    await leaveBtn.click();
-    // confirm leave in modal
-    await page.getByRole('button', { name: 'Leave' }).first().click();
+      // 4. leave community
+      await leaveBtn.click();
+      // confirm leave in modal
+      await page.getByRole('button', { name: 'Leave' }).first().click();
 
-    await page.goto(
-      `${baseUrl}/user/${TestUserManager.users.spaceMember.nameId}/settings/membership`
-    );
+      await page.goto(
+        `${baseUrl}/user/${TestUserManager.users.spaceMember.nameId}/settings/membership`
+      );
 
-    await expect(
-      page.getByText(baseScenario.space.about.profile.displayName)
-    ).not.toBeVisible();
-  });
+      await expect(
+        page.getByText(baseScenario.space.about.profile.displayName)
+      ).not.toBeVisible();
+    }
+  );
 });

@@ -25,7 +25,7 @@ const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let baseScenario: OrganizationWithSpaceModel;
 
 const scenarioConfig: TestScenarioConfig = {
-  name: 'seed-memberships',
+  name: 'memberships',
   space: {
     about: {
       profile: {
@@ -37,7 +37,7 @@ const scenarioConfig: TestScenarioConfig = {
       addTutorialCallouts: false,
     },
     community: {
-      admins: [TestUser.SPACE_ADMIN, TestUser.GLOBAL_ADMIN],
+      admins: [TestUser.SPACE_ADMIN],
       members: [TestUser.SPACE_MEMBER, TestUser.SPACE_ADMIN],
     },
     settings: {
@@ -85,34 +85,43 @@ test.describe('Space/Subspace Settings Access Control', () => {
   });
 
   // same as subspace admin test
-  test('Access Subspace Settings - As Space Admin (Parent)', async ({
-    page,
-  }) => {
-    // 1. Navigate to "Subspace for Membership Tests"
-    await page.goto(
-      `${baseUrl}/${baseScenario.space.nameId}/challenges/${baseScenario.subspace.nameId}`
-    );
+  test(
+    'Access Subspace Settings - As Space Admin (Parent)',
+    {
+      tag: ['@regression'],
+    },
+    async ({ page }) => {
+      // 1. Navigate to "Subspace for Membership Tests"
+      await page.goto(
+        `${baseUrl}/${baseScenario.space.nameId}/challenges/${baseScenario.subspace.nameId}`
+      );
 
-    // 2. Verify subspace page loads
-    await expect(page).toHaveURL(
-      new RegExp(`/${baseScenario.subspace.nameId}`)
-    );
+      // 2. Verify subspace page loads
+      await expect(page).toHaveURL(
+        new RegExp(`/${baseScenario.subspace.nameId}`)
+      );
 
-    // 3. Check if settings icon is visible
-    const settingsIcon = page
-      .getByRole('button', { name: /Settings/i })
-      .first();
+      // 3. Check if settings icon is visible
+      const settingsIcon = page.getByRole('button', {
+        name: 'Settings',
+        exact: true,
+      });
 
-    await settingsIcon.isVisible({ timeout: 5000 });
-    await settingsIcon.click();
+      await settingsIcon.isVisible({ timeout: 5000 });
+      await settingsIcon.click();
 
-    // 4. Verify navigated to subspace settings page
-    await expect(page).toHaveURL(
-      new RegExp(`/${baseScenario.subspace.nameId}/settings`)
-    );
+      // 4. Verify navigated to subspace settings page
+      await expect(page).toHaveURL(
+        new RegExp(`/${baseScenario.subspace.nameId}/settings`)
+      );
 
-    // 5. Verify settings page content is visible
-    await expect(page.getByRole('link', { name: /About/i })).toBeVisible();
-    await expect(page.getByRole('heading', { name: /Details/i })).toBeVisible();
-  });
+      // 5. Verify settings page content is visible
+      await expect(page.getByRole('tab', { name: 'About' })).toBeVisible({
+        timeout: 5000,
+      });
+      await expect(
+        page.getByRole('heading', { name: 'Details' })
+      ).toBeVisible();
+    }
+  );
 });

@@ -25,7 +25,7 @@ const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let baseScenario: OrganizationWithSpaceModel;
 
 const scenarioConfig: TestScenarioConfig = {
-  name: 'seed-memberships',
+  name: 'memberships',
   space: {
     about: {
       profile: {
@@ -38,7 +38,7 @@ const scenarioConfig: TestScenarioConfig = {
       addPostCollectionCallout: true,
     },
     community: {
-      admins: [TestUser.SPACE_ADMIN, TestUser.GLOBAL_ADMIN],
+      admins: [TestUser.SPACE_ADMIN],
       members: [
         TestUser.SPACE_MEMBER,
         TestUser.SPACE_ADMIN,
@@ -119,80 +119,86 @@ test.describe('Security & Permissions', () => {
     await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
-  test('Removed Member Cannot Access Previous Space', async ({ page }) => {
-    // 1. Navigate to the private subsubspace as a member
-    await page.goto(
-      `${baseUrl}/${baseScenario.space.nameId}/challenges/${baseScenario.subspace.nameId}/opportunities/${baseScenario.subsubspace.nameId}`
-    );
+  test(
+    'Removed Member Cannot Access Previous Space',
+    {
+      tag: ['@bug', '@regression'],
+    },
+    async ({ page }) => {
+      // 1. Navigate to the private subsubspace as a member
+      await page.goto(
+        `${baseUrl}/${baseScenario.space.nameId}/challenges/${baseScenario.subspace.nameId}/opportunities/${baseScenario.subsubspace.nameId}`
+      );
 
-    // 2. Verify full access is granted as a member
-    await expect(page).toHaveURL(
-      new RegExp(`/${baseScenario.subsubspace.nameId}`)
-    );
-    await expect(
-      page
-        .getByRole('heading', {
-          name: baseScenario.subsubspace.about.profile.displayName,
-        })
-        .first()
-    ).toBeVisible({ timeout: 5000 });
+      // 2. Verify full access is granted as a member
+      await expect(page).toHaveURL(
+        new RegExp(`/${baseScenario.subsubspace.nameId}`)
+      );
+      await expect(
+        page
+          .getByRole('heading', {
+            name: baseScenario.subsubspace.about.profile.displayName,
+          })
+          .first()
+      ).toBeVisible({ timeout: 5000 });
 
-    // 3. Verify can participate in collaboration (contributors button visible)
-    await expect(
-      page.getByRole('button', { name: /contributors/i })
-    ).toBeVisible();
+      // 3. Verify can participate in collaboration (contributors button visible)
+      await expect(
+        page.getByRole('button', { name: /contributors/i })
+      ).toBeVisible();
 
-    // 4. Navigate to user membership settings
-    await page.goto(
-      `${baseUrl}/user/${TestUserManager.users.subsubspaceMember.nameId}/settings/membership`
-    );
-    await expect(page).toHaveURL(/.*\/settings\/membership/);
+      // 4. Navigate to user membership settings
+      await page.goto(
+        `${baseUrl}/user/${TestUserManager.users.subsubspaceMember.nameId}/settings/membership`
+      );
+      await expect(page).toHaveURL(/.*\/settings\/membership/);
 
-    // 5. Leave the subsubspace community
-    // Find the leave button for the subsubspace
-    const subsubspaceCard = page.getByText(
-      baseScenario.subsubspace.about.profile.displayName
-    );
-    await expect(subsubspaceCard).toBeVisible({ timeout: 5000 });
+      // 5. Leave the subsubspace community
+      // Find the leave button for the subsubspace
+      const subsubspaceCard = page.getByText(
+        baseScenario.subsubspace.about.profile.displayName
+      );
+      await expect(subsubspaceCard).toBeVisible({ timeout: 5000 });
 
-    const leaveBtn = page.getByRole('button', { name: 'Leave' }).first();
-    await expect(leaveBtn).toBeVisible();
-    await leaveBtn.click();
+      const leaveBtn = page.getByRole('button', { name: 'Leave' }).first();
+      await expect(leaveBtn).toBeVisible();
+      await leaveBtn.click();
 
-    // 6. Confirm leaving in the modal dialog
-    await page.getByRole('button', { name: 'Leave' }).first().click();
+      // 6. Confirm leaving in the modal dialog
+      await page.getByRole('button', { name: 'Leave' }).first().click();
 
-    // 7. Wait for the leave action to complete
-    await expect(subsubspaceCard).not.toBeVisible({ timeout: 5000 });
+      // 7. Wait for the leave action to complete
+      await expect(subsubspaceCard).not.toBeVisible({ timeout: 5000 });
 
-    // 8. Navigate back to the private subsubspace
-    await page.goto(
-      `${baseUrl}/${baseScenario.space.nameId}/challenges/${baseScenario.subspace.nameId}/opportunities/${baseScenario.subsubspace.nameId}`
-    );
+      // 8. Navigate back to the private subsubspace
+      await page.goto(
+        `${baseUrl}/${baseScenario.space.nameId}/challenges/${baseScenario.subspace.nameId}/opportunities/${baseScenario.subsubspace.nameId}`
+      );
 
-    // 9. Verify access is now restricted - user can only preview the about section
-    await expect(page).toHaveURL(
-      new RegExp(`/${baseScenario.subsubspace.nameId}`)
-    );
-    await expect(page).toHaveURL(new RegExp('/about'));
+      // 9. Verify access is now restricted - user can only preview the about section
+      await expect(page).toHaveURL(
+        new RegExp(`/${baseScenario.subsubspace.nameId}`)
+      );
+      await expect(page).toHaveURL(new RegExp('/about'));
 
-    // 10. Verify about section is still visible (preview mode)
-    await expect(
-      page
-        .getByRole('heading', {
-          name: baseScenario.subsubspace.about.profile.displayName,
-        })
-        .first()
-    ).toBeVisible({ timeout: 3000 });
+      // 10. Verify about section is still visible (preview mode)
+      await expect(
+        page
+          .getByRole('heading', {
+            name: baseScenario.subsubspace.about.profile.displayName,
+          })
+          .first()
+      ).toBeVisible({ timeout: 3000 });
 
-    // [BUG]? no apply/join button shown
-    // 11. Verify Apply/Join button is now visible (since user is no longer a member)
-    // await expect(
-    //   page.getByRole('button', { name: /Apply|Join|Sign in/i })
-    // ).toBeVisible();
+      // [BUG]? no apply/join button shown
+      // 11. Verify Apply/Join button is now visible (since user is no longer a member)
+      // await expect(
+      //   page.getByRole('button', { name: /Apply|Join|Sign in/i })
+      // ).toBeVisible();
 
-    // 13. Verify privacy indicator is shown (limited preview mode)
-    const privacyIcon = page.locator('[data-testid="LockOutlinedIcon"]');
-    await expect(privacyIcon).toBeVisible();
-  });
+      // 13. Verify privacy indicator is shown (limited preview mode)
+      const privacyIcon = page.locator('[data-testid="LockOutlinedIcon"]');
+      await expect(privacyIcon).toBeVisible();
+    }
+  );
 });

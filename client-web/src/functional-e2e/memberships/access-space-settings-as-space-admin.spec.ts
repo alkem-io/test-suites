@@ -25,7 +25,7 @@ const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let baseScenario: OrganizationWithSpaceModel;
 
 const scenarioConfig: TestScenarioConfig = {
-  name: 'seed-memberships',
+  name: 'memberships',
   space: {
     about: {
       profile: {
@@ -37,7 +37,7 @@ const scenarioConfig: TestScenarioConfig = {
       addTutorialCallouts: false,
     },
     community: {
-      admins: [TestUser.SPACE_ADMIN, TestUser.GLOBAL_ADMIN],
+      admins: [TestUser.SPACE_ADMIN],
       members: [TestUser.SPACE_MEMBER, TestUser.SPACE_ADMIN],
     },
     settings: {
@@ -62,21 +62,27 @@ test.describe('Space/Subspace Settings Access Control', () => {
     await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
-  test('Access Space Settings - As Space Admin', async ({ page }) => {
-    // 1. Navigate to "Membership Test Space"
-    await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
+  test(
+    'Access Space Settings - As Space Admin',
+    {
+      tag: ['@regression'],
+    },
+    async ({ page }) => {
+      // 1. Navigate to "Membership Test Space"
+      await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
 
-    // 2. Access space settings
-    const settingsIcon = page.locator('[data-testid="SettingsOutlinedIcon"]');
-    await expect(settingsIcon).toBeVisible({ timeout: 5000 });
-    await settingsIcon.click();
+      // 2. Access space settings
+      const settingsIcon = page.locator('[data-testid="SettingsOutlinedIcon"]');
+      await expect(settingsIcon).toBeVisible({ timeout: 5000 });
+      await settingsIcon.click();
 
-    // 3. Verify navigated to settings page
-    await expect(page).toHaveURL(
-      new RegExp(`/${baseScenario.space.nameId}/settings`)
-    );
+      // 3. Verify navigated to settings page
+      await expect(page).toHaveURL(
+        new RegExp(`/${baseScenario.space.nameId}/settings`)
+      );
 
-    // 4. Verify settings sections are available
-    await expect(page.getByText(/Layout/i)).toBeVisible();
-  });
+      // 4. Verify settings sections are available
+      await expect(page.getByText(/Layout/i)).toBeVisible();
+    }
+  );
 });

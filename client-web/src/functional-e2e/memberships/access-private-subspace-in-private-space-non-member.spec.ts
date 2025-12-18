@@ -26,7 +26,7 @@ const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let baseScenario: OrganizationWithSpaceModel;
 
 const scenarioConfig: TestScenarioConfig = {
-  name: 'seed-memberships',
+  name: 'memberships',
   space: {
     about: {
       profile: {
@@ -38,7 +38,7 @@ const scenarioConfig: TestScenarioConfig = {
       addTutorialCallouts: false,
     },
     community: {
-      admins: [TestUser.SPACE_ADMIN, TestUser.GLOBAL_ADMIN],
+      admins: [TestUser.SPACE_ADMIN],
       members: [TestUser.SPACE_ADMIN, TestUser.SUBSPACE_MEMBER],
     },
     settings: {
@@ -87,67 +87,74 @@ test.describe('Space/Subspace Settings Access Control', () => {
     await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
-  test('Access Private Subspace in Private Space - As Non-Member', async ({
-    page,
-  }) => {
-    // 1. Attempt to navigate to private subspace within private space
-    await page.goto(
-      `${baseUrl}/${baseScenario.space.nameId}/challenges/${baseScenario.subspace.nameId}`
-    );
+  test(
+    'Access Private Subspace in Private Space - As Non-Member',
+    {
+      tag: ['@regression'],
+    },
+    async ({ page }) => {
+      // 1. Attempt to navigate to private subspace within private space
+      await page.goto(
+        `${baseUrl}/${baseScenario.space.nameId}/challenges/${baseScenario.subspace.nameId}`
+      );
 
-    // 3. Verify modal or message about redirecting to closest parent
-    await expect(page.getByText(/We are redirecting you/i)).toBeVisible();
+      // 3. Verify modal or message about redirecting to closest parent
+      await expect(page.getByText(/We are redirecting you/i)).toBeVisible();
 
-    // 4. Verify option to navigate to parent space (about page)
-    const redirectButton = page.getByRole('button', {
-      name: /Go now/i,
-    });
-    await expect(redirectButton).toBeVisible();
+      // 4. Verify option to navigate to parent space (about page)
+      const redirectButton = page.getByRole('button', {
+        name: /Go now/i,
+      });
+      await expect(redirectButton).toBeVisible();
 
-    // 5. Click redirect button and verify navigation to parent space about
-    await redirectButton.click();
+      // 5. Click redirect button and verify navigation to parent space about
+      await redirectButton.click();
 
-    // 6. Verify redirected to parent space URL
-    await expect(page).toHaveURL(new RegExp(`/${baseScenario.space.nameId}`));
+      // 6. Verify redirected to parent space URL
+      await expect(page).toHaveURL(new RegExp(`/${baseScenario.space.nameId}`));
 
-    // 7. Verify on parent space about/preview page
-    await expect(
-      page
-        .getByRole('heading', {
-          name: baseScenario.space.nameId,
-        })
-        .first()
-    ).toBeVisible({ timeout: 3000 });
+      // 7. Verify on parent space about/preview page
+      await expect(
+        page
+          .getByRole('heading', {
+            name: baseScenario.space.nameId,
+          })
+          .first()
+      ).toBeVisible({ timeout: 3000 });
 
-    const closeIcon = page.locator('[data-testid="CloseIcon"]');
-    await expect(closeIcon).toBeVisible();
-  });
+      const closeIcon = page.locator('[data-testid="CloseIcon"]');
+      await expect(closeIcon).toBeVisible();
+    }
+  );
 
-  test('Access Private Subspace in Private Space - Unauthenticated', async ({
-    page,
-    context,
-  }) => {
-    // 1. Clear authentication by creating new context
-    await context.clearCookies();
+  test(
+    'Access Private Subspace in Private Space - Unauthenticated',
+    {
+      tag: ['@regrerssion'],
+    },
+    async ({ page, context }) => {
+      // 1. Clear authentication by creating new context
+      await context.clearCookies();
 
-    // 2. Attempt to navigate to private subspace as unauthenticated user
-    await page.goto(
-      `${baseUrl}/${baseScenario.space.nameId}/challenges/${baseScenario.subspace.nameId}`
-    );
+      // 2. Attempt to navigate to private subspace as unauthenticated user
+      await page.goto(
+        `${baseUrl}/${baseScenario.space.nameId}/challenges/${baseScenario.subspace.nameId}`
+      );
 
-    // 3. Verify "Access Restricted" page is displayed
-    await expect(page.getByText(/Access Restricted/i)).toBeVisible({
-      timeout: 3000,
-    });
+      // 3. Verify "Access Restricted" page is displayed
+      await expect(page.getByText(/Access Restricted/i)).toBeVisible({
+        timeout: 3000,
+      });
 
-    // 4. Verify "Sign in / Sign up" button is available
-    const signInButton = signInSignUpLink(page);
-    await expect(signInButton).toBeVisible();
+      // 4. Verify "Sign in / Sign up" button is available
+      const signInButton = signInSignUpLink(page);
+      await expect(signInButton).toBeVisible();
 
-    // 5. Verify "Return to dashboard as guest" button is available
-    const guestButton = page.getByRole('link', {
-      name: /Return to Dashboard as guest/i,
-    });
-    await expect(guestButton).toBeVisible();
-  });
+      // 5. Verify "Return to dashboard as guest" button is available
+      const guestButton = page.getByRole('link', {
+        name: /Return to Dashboard as guest/i,
+      });
+      await expect(guestButton).toBeVisible();
+    }
+  );
 });

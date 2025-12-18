@@ -19,7 +19,7 @@ const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let baseScenario: OrganizationWithSpaceModel;
 
 const scenarioConfig: TestScenarioConfig = {
-  name: 'seed-memberships',
+  name: 'memberships',
   space: {
     about: {
       profile: {
@@ -31,14 +31,8 @@ const scenarioConfig: TestScenarioConfig = {
       addTutorialCallouts: false,
     },
     community: {
-      admins: [TestUser.SPACE_ADMIN, TestUser.GLOBAL_ADMIN],
+      admins: [TestUser.SPACE_ADMIN],
       members: [TestUser.SPACE_MEMBER, TestUser.SPACE_ADMIN],
-    },
-    settings: {
-      privacy: { mode: SpacePrivacyMode.Public },
-      membership: {
-        policy: CommunityMembershipPolicy.Applications,
-      },
     },
   },
 };
@@ -54,13 +48,19 @@ test.describe('User Profile Membership Display', () => {
     await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
-  test('View Unauthenticated User Profile', async ({ page }) => {
-    await page.goto(
-      `${baseUrl}/user/${TestUserManager.users.spaceMember.nameId}`
-    );
+  test(
+    'View Unauthenticated User Profile',
+    {
+      tag: ['@regression'],
+    },
+    async ({ page }) => {
+      await page.goto(
+        `${baseUrl}/user/${TestUserManager.users.spaceMember.nameId}`
+      );
 
-    await expect(page.getByText(/Access Restricted/i)).toBeVisible({
-      timeout: 3000,
-    });
-  });
+      await expect(page.getByText(/Access Restricted/i)).toBeVisible({
+        timeout: 3000,
+      });
+    }
+  );
 });

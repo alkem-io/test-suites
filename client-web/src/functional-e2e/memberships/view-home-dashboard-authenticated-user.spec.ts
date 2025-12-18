@@ -25,7 +25,7 @@ const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let baseScenario: OrganizationWithSpaceModel;
 
 const scenarioConfig: TestScenarioConfig = {
-  name: 'seed-memberships',
+  name: 'memberships',
   space: {
     about: {
       profile: {
@@ -37,14 +37,7 @@ const scenarioConfig: TestScenarioConfig = {
       addTutorialCallouts: false,
     },
     community: {
-      admins: [TestUser.SPACE_ADMIN, TestUser.GLOBAL_ADMIN],
-      members: [TestUser.SPACE_MEMBER, TestUser.SPACE_ADMIN],
-    },
-    settings: {
-      privacy: { mode: SpacePrivacyMode.Public },
-      membership: {
-        policy: CommunityMembershipPolicy.Applications,
-      },
+      members: [TestUser.SPACE_MEMBER],
     },
   },
 };
@@ -62,25 +55,31 @@ test.describe('Home Dashboard Membership Display', () => {
     await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
-  test('View Home Dashboard - Authenticated User', async ({ page }) => {
-    // 1. Navigate to home dashboard
-    await page.goto(`${baseUrl}/home`);
+  test(
+    'View Home Dashboard - Authenticated User',
+    {
+      tag: ['@regression'],
+    },
+    async ({ page }) => {
+      // 1. Navigate to home dashboard
+      await page.goto(`${baseUrl}/home`);
 
-    // 2. Verify home dashboard loads successfully
-    await expect(page).toHaveURL(/.*\/home/);
+      // 2. Verify home dashboard loads successfully
+      await expect(page).toHaveURL(/.*\/home/);
 
-    // 3. Verify "My Spaces" or similar section shows user's memberships
-    await expect(page.getByText(/My Spaces|Spaces/i)).toBeVisible();
+      // 3. Verify "My Spaces" or similar section shows user's memberships
+      await expect(page.getByText(/My Spaces|Spaces/i)).toBeVisible();
 
-    // 4. Verify displays card for "Membership Test Space" (member)
-    await expect(
-      page.getByText(baseScenario.space.about.profile.displayName).first()
-    ).toBeVisible({ timeout: 2000 });
+      // 4. Verify displays card for "Membership Test Space" (member)
+      await expect(
+        page.getByText(baseScenario.space.about.profile.displayName).first()
+      ).toBeVisible({ timeout: 2000 });
 
-    // 5. Verify each card shows quick access links
-    const spaceCard = page
-      .locator(`text=${baseScenario.space.about.profile.displayName}`)
-      .first();
-    await expect(spaceCard).toBeVisible();
-  });
+      // 5. Verify each card shows quick access links
+      const spaceCard = page
+        .locator(`text=${baseScenario.space.about.profile.displayName}`)
+        .first();
+      await expect(spaceCard).toBeVisible();
+    }
+  );
 });

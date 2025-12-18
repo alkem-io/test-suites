@@ -25,7 +25,7 @@ const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let baseScenario: OrganizationWithSpaceModel;
 
 const scenarioConfig: TestScenarioConfig = {
-  name: 'seed-memberships',
+  name: 'memberships',
   organization: {
     community: {
       addMembers: true,
@@ -43,7 +43,7 @@ const scenarioConfig: TestScenarioConfig = {
       addTutorialCallouts: false,
     },
     community: {
-      admins: [TestUser.SPACE_ADMIN, TestUser.GLOBAL_ADMIN],
+      admins: [TestUser.SPACE_ADMIN],
       members: [
         TestUser.SPACE_MEMBER,
         TestUser.SPACE_ADMIN,
@@ -76,87 +76,94 @@ test.describe('Organization Profile Access', () => {
     await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
-  test('View Organization Profile - Public (Authenticated Non-Admin)', async ({
-    page,
-  }) => {
-    // 1. Navigate to organization profile
-    await page.goto(
-      `${baseUrl}/organization/${baseScenario.organization.nameId}`
-    );
+  test(
+    'View Organization Profile - Public (Authenticated Non-Admin)',
+    {
+      tag: ['@regression'],
+    },
+    async ({ page }) => {
+      // 1. Navigate to organization profile
+      await page.goto(
+        `${baseUrl}/organization/${baseScenario.organization.nameId}`
+      );
 
-    // 2. Verify organization profile page loads
-    await expect(page).toHaveURL(
-      new RegExp(`/organization/${baseScenario.organization.nameId}`)
-    );
+      // 2. Verify organization profile page loads
+      await expect(page).toHaveURL(
+        new RegExp(`/organization/${baseScenario.organization.nameId}`)
+      );
 
-    // 3. Verify organization name heading is displayed
-    const orgNameHeading = page.getByRole('heading', {
-      level: 1,
-      name: new RegExp(baseScenario.organization.profile.displayName, 'i'),
-    });
-    await expect(orgNameHeading).toBeVisible({ timeout: 2000 });
+      // 3. Verify organization name heading is displayed
+      const orgNameHeading = page.getByRole('heading', {
+        level: 1,
+        name: new RegExp(baseScenario.organization.profile.displayName, 'i'),
+      });
+      await expect(orgNameHeading).toBeVisible({ timeout: 2000 });
 
-    // 4. Verify Bio section is visible
-    await expect(
-      page.getByRole('heading', { name: /Bio/i }).first()
-    ).toBeVisible();
+      // 4. Verify Bio section is visible
+      await expect(
+        page.getByRole('heading', { name: /Bio/i }).first()
+      ).toBeVisible();
 
-    // 5. Verify "Spaces we lead" section is visible
-    await expect(
-      page.getByRole('heading', { name: /Spaces.*/i }).first()
-    ).toBeVisible();
+      // 5. Verify "Spaces we lead" section is visible
+      await expect(
+        page.getByRole('heading', { name: /Spaces.*/i }).first()
+      ).toBeVisible();
 
-    // 6. Verify the space created by this organization is displayed
-    await expect(
-      page.getByText(baseScenario.space.about.profile.displayName)
-    ).toBeVisible({ timeout: 2000 });
+      // 6. Verify the space created by this organization is displayed
+      await expect(
+        page.getByText(baseScenario.space.about.profile.displayName)
+      ).toBeVisible({ timeout: 2000 });
 
-    // 7. Verify Settings icon is NOT visible (non-member should not have admin access)
-    const settingsIcon = page.locator('[data-testid="SettingsOutlinedIcon"]');
-    await expect(settingsIcon).not.toBeVisible();
-  });
+      // 7. Verify Settings icon is NOT visible (non-member should not have admin access)
+      const settingsIcon = page.locator('[data-testid="SettingsOutlinedIcon"]');
+      await expect(settingsIcon).not.toBeVisible();
+    }
+  );
 
-  test('View Organization Profile - Unauthenticated', async ({
-    page,
-    context,
-  }) => {
-    // 1. Clear authentication by clearing storage state
-    await context.clearCookies();
-    await page.evaluate(() => {
-      localStorage.clear();
-      sessionStorage.clear();
-    });
+  test(
+    'View Organization Profile - Unauthenticated',
+    {
+      tag: ['@bug', '@regression'],
+    },
+    async ({ page, context }) => {
+      // 1. Clear authentication by clearing storage state
+      await context.clearCookies();
+      await page.evaluate(() => {
+        localStorage.clear();
+        sessionStorage.clear();
+      });
 
-    // 2. Navigate to organization profile as unauthenticated user
-    await page.goto(
-      `${baseUrl}/organization/${baseScenario.organization.nameId}`
-    );
+      // 2. Navigate to organization profile as unauthenticated user
+      await page.goto(
+        `${baseUrl}/organization/${baseScenario.organization.nameId}`
+      );
 
-    // 3. Verify organization profile page loads (org profiles are public)
-    await expect(page).toHaveURL(
-      new RegExp(`/organization/${baseScenario.organization.nameId}`)
-    );
+      // 3. Verify organization profile page loads (org profiles are public)
+      await expect(page).toHaveURL(
+        new RegExp(`/organization/${baseScenario.organization.nameId}`)
+      );
 
-    // 4. Verify organization name heading is displayed
-    const orgNameHeading = page.getByRole('heading', {
-      level: 1,
-      name: new RegExp(baseScenario.organization.profile.displayName, 'i'),
-    });
-    await expect(orgNameHeading).toBeVisible({ timeout: 2000 });
+      // 4. Verify organization name heading is displayed
+      const orgNameHeading = page.getByRole('heading', {
+        level: 1,
+        name: new RegExp(baseScenario.organization.profile.displayName, 'i'),
+      });
+      await expect(orgNameHeading).toBeVisible({ timeout: 2000 });
 
-    // 5. Verify sections
-    await expect(
-      page.getByRole('heading', { name: /Bio/i }).first()
-    ).toBeVisible();
+      // 5. Verify sections
+      await expect(
+        page.getByRole('heading', { name: /Bio/i }).first()
+      ).toBeVisible();
 
-    await expect(
-      page.getByRole('heading', { name: /Spaces.*/i }).first()
-    ).toBeVisible();
+      await expect(
+        page.getByRole('heading', { name: /Spaces.*/i }).first()
+      ).toBeVisible();
 
-    // [BUG] no spaces available even the public ones
-    // 6. Verify the space created by this organization is displayed
-    // await expect(
-    //   page.getByText(baseScenario.space.about.profile.displayName).first()
-    // ).toBeVisible({ timeout: 2000 });
-  });
+      // [BUG] no spaces available even the public ones
+      // 6. Verify the space created by this organization is displayed
+      // await expect(
+      //   page.getByText(baseScenario.space.about.profile.displayName).first()
+      // ).toBeVisible({ timeout: 2000 });
+    }
+  );
 });

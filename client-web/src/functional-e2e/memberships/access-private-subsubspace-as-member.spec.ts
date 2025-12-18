@@ -25,7 +25,7 @@ const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let baseScenario: OrganizationWithSpaceModel;
 
 const scenarioConfig: TestScenarioConfig = {
-  name: 'seed-memberships',
+  name: 'memberships',
   space: {
     about: {
       profile: {
@@ -38,7 +38,7 @@ const scenarioConfig: TestScenarioConfig = {
       addPostCollectionCallout: true,
     },
     community: {
-      admins: [TestUser.SPACE_ADMIN, TestUser.GLOBAL_ADMIN],
+      admins: [TestUser.SPACE_ADMIN],
       members: [
         TestUser.SPACE_MEMBER,
         TestUser.SPACE_ADMIN,
@@ -119,35 +119,41 @@ test.describe('Space/Subspace Settings Access Control', () => {
     await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
-  test('Access Private Subsubspace - As Member', async ({ page }) => {
-    // 1. Navigate to "Subsubspace for Membership Tests"
-    await page.goto(
-      `${baseUrl}/${baseScenario.space.nameId}/challenges/${baseScenario.subspace.nameId}/opportunities/${baseScenario.subsubspace.nameId}`
-    );
+  test(
+    'Access Private Subsubspace - As Member',
+    {
+      tag: ['@regression'],
+    },
+    async ({ page }) => {
+      // 1. Navigate to "Subsubspace for Membership Tests"
+      await page.goto(
+        `${baseUrl}/${baseScenario.space.nameId}/challenges/${baseScenario.subspace.nameId}/opportunities/${baseScenario.subsubspace.nameId}`
+      );
 
-    // 2. Verify full access to private subsubspace granted
-    await expect(page).toHaveURL(
-      new RegExp(`/${baseScenario.subsubspace.nameId}`)
-    );
+      // 2. Verify full access to private subsubspace granted
+      await expect(page).toHaveURL(
+        new RegExp(`/${baseScenario.subsubspace.nameId}`)
+      );
 
-    // 3. Verify can view all content and discussions
-    await expect(
-      page
-        .getByRole('heading', {
-          name: baseScenario.subsubspace.about.profile.displayName,
-        })
-        .first()
-    ).toBeVisible({ timeout: 3000 });
+      // 3. Verify can view all content and discussions
+      await expect(
+        page
+          .getByRole('heading', {
+            name: baseScenario.subsubspace.about.profile.displayName,
+          })
+          .first()
+      ).toBeVisible({ timeout: 3000 });
 
-    // 4. Verify can participate in collaboration
-    await expect(
-      page.getByRole('button', { name: /contributors/i })
-    ).toBeVisible();
+      // 4. Verify can participate in collaboration
+      await expect(
+        page.getByRole('button', { name: /contributors/i })
+      ).toBeVisible();
 
-    // 5. Verify cannot access settings (not admin)
-    const settingsButton = page.locator(
-      '[data-testid="SettingsOutlinedIcon"], [aria-label*="Settings"]'
-    );
-    await expect(settingsButton).not.toBeVisible();
-  });
+      // 5. Verify cannot access settings (not admin)
+      const settingsButton = page.locator(
+        '[data-testid="SettingsOutlinedIcon"], [aria-label*="Settings"]'
+      );
+      await expect(settingsButton).not.toBeVisible();
+    }
+  );
 });

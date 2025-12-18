@@ -25,7 +25,7 @@ const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let baseScenario: OrganizationWithSpaceModel;
 
 const scenarioConfig: TestScenarioConfig = {
-  name: 'seed-memberships',
+  name: 'memberships',
   organization: {
     community: {
       addMembers: true,
@@ -43,18 +43,7 @@ const scenarioConfig: TestScenarioConfig = {
       addTutorialCallouts: false,
     },
     community: {
-      admins: [TestUser.SPACE_ADMIN, TestUser.GLOBAL_ADMIN],
-      members: [
-        TestUser.SPACE_MEMBER,
-        TestUser.SPACE_ADMIN,
-        TestUser.ORGANIZATION_ADMIN,
-      ],
-    },
-    settings: {
-      privacy: { mode: SpacePrivacyMode.Public },
-      membership: {
-        policy: CommunityMembershipPolicy.Applications,
-      },
+      admins: [TestUser.SPACE_ADMIN],
     },
   },
 };
@@ -75,28 +64,36 @@ test.describe('Organization Account Settings', () => {
     await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
-  test('View Organization Account Settings - As Admin', async ({ page }) => {
-    // 1. Navigate to organization account settings
-    await page.goto(
-      `${baseUrl}/organization/${baseScenario.organization.nameId}/settings/account`
-    );
+  test(
+    'View Organization Account Settings - As Admin',
+    {
+      tag: ['@regression'],
+    },
+    async ({ page }) => {
+      // 1. Navigate to organization account settings
+      await page.goto(
+        `${baseUrl}/organization/${baseScenario.organization.nameId}/settings/account`
+      );
 
-    // 2. Verify URL changed to organization account settings
-    await expect(page).toHaveURL(/.*\/organization\/.*\/settings\/account/);
+      // 2. Verify URL changed to organization account settings
+      await expect(page).toHaveURL(/.*\/organization\/.*\/settings\/account/);
 
-    // 3. Verify resource sections for organization are displayed
-    await expect(page.getByText(/Hosted Spaces/i).first()).toBeVisible();
-    await expect(page.getByText(/Virtual Contributors/i).first()).toBeVisible();
-    await expect(page.getByText(/Template Packs/i).first()).toBeVisible();
-    await expect(page.getByText(/Custom Homepages/i).first()).toBeVisible();
+      // 3. Verify resource sections for organization are displayed
+      await expect(page.getByText(/Hosted Spaces/i).first()).toBeVisible();
+      await expect(
+        page.getByText(/Virtual Contributors/i).first()
+      ).toBeVisible();
+      await expect(page.getByText(/Template Packs/i).first()).toBeVisible();
+      await expect(page.getByText(/Custom Homepages/i).first()).toBeVisible();
 
-    // 4. Verify "Membership Test Space" is listed in Hosted Spaces
-    await expect(
-      page.getByText(baseScenario.space.about.profile.displayName).first()
-    ).toBeVisible({ timeout: 2000 });
+      // 4. Verify "Membership Test Space" is listed in Hosted Spaces
+      await expect(
+        page.getByText(baseScenario.space.about.profile.displayName).first()
+      ).toBeVisible({ timeout: 2000 });
 
-    // 5. Verify shows organization's resource quotas and usage
-    // await expect(page.getByText(/\d+\/\d+/).first()).toBeVisible();
-    await expect(page.getByText(/1\/3/).first()).toBeVisible();
-  });
+      // 5. Verify shows organization's resource quotas and usage
+      // await expect(page.getByText(/\d+\/\d+/).first()).toBeVisible();
+      await expect(page.getByText(/1\/3/).first()).toBeVisible();
+    }
+  );
 });

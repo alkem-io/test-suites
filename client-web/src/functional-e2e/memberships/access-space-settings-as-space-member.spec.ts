@@ -25,7 +25,7 @@ const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let baseScenario: OrganizationWithSpaceModel;
 
 const scenarioConfig: TestScenarioConfig = {
-  name: 'seed-memberships',
+  name: 'memberships',
   space: {
     about: {
       profile: {
@@ -37,7 +37,7 @@ const scenarioConfig: TestScenarioConfig = {
       addTutorialCallouts: false,
     },
     community: {
-      admins: [TestUser.SPACE_ADMIN, TestUser.GLOBAL_ADMIN],
+      admins: [TestUser.SPACE_ADMIN],
       members: [TestUser.SPACE_MEMBER, TestUser.SPACE_ADMIN],
     },
     settings: {
@@ -62,14 +62,20 @@ test.describe('Space/Subspace Settings Access Control', () => {
     await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
-  test('Access Space Settings - As Space Member', async ({ page }) => {
-    // 1. Navigate to "Membership Test Space"
-    await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
+  test(
+    'Access Space Settings - As Space Member',
+    {
+      tag: ['@regression'],
+    },
+    async ({ page }) => {
+      // 1. Navigate to "Membership Test Space"
+      await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
 
-    // 2. Verify settings icon is not visible to member
-    const settingsIcon = page.locator('[data-testid="SettingsOutlinedIcon"]');
-    await expect(settingsIcon).not.toBeVisible();
+      // 2. Verify settings icon is not visible to member
+      const settingsIcon = page.locator('[data-testid="SettingsOutlinedIcon"]');
+      await expect(settingsIcon).not.toBeVisible();
 
-    // todo: not enught
-  });
+      // todo: not enught
+    }
+  );
 });

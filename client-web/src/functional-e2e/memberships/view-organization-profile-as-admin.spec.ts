@@ -25,7 +25,7 @@ const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let baseScenario: OrganizationWithSpaceModel;
 
 const scenarioConfig: TestScenarioConfig = {
-  name: 'seed-memberships',
+  name: 'memberships',
   organization: {
     community: {
       addMembers: true,
@@ -43,18 +43,8 @@ const scenarioConfig: TestScenarioConfig = {
       addTutorialCallouts: false,
     },
     community: {
-      admins: [TestUser.SPACE_ADMIN, TestUser.GLOBAL_ADMIN],
-      members: [
-        TestUser.SPACE_MEMBER,
-        TestUser.SPACE_ADMIN,
-        TestUser.ORGANIZATION_ADMIN,
-      ],
-    },
-    settings: {
-      privacy: { mode: SpacePrivacyMode.Public },
-      membership: {
-        policy: CommunityMembershipPolicy.Applications,
-      },
+      admins: [TestUser.SPACE_ADMIN],
+      members: [TestUser.SPACE_ADMIN, TestUser.ORGANIZATION_ADMIN],
     },
   },
 };
@@ -77,49 +67,55 @@ test.describe('Organization Profile Access', () => {
   });
 
   // same as member test
-  test('View Organization Profile - As Admin', async ({ page }) => {
-    // Navigate to organization profile
-    await page.goto(
-      `${baseUrl}/organization/${baseScenario.organization.nameId}`
-    );
+  test(
+    'View Organization Profile - As Admin',
+    {
+      tag: ['@regression'],
+    },
+    async ({ page }) => {
+      // Navigate to organization profile
+      await page.goto(
+        `${baseUrl}/organization/${baseScenario.organization.nameId}`
+      );
 
-    // Verify organization profile page loads
-    await expect(page).toHaveURL(
-      new RegExp(`/organization/${baseScenario.organization.nameId}`)
-    );
+      // Verify organization profile page loads
+      await expect(page).toHaveURL(
+        new RegExp(`/organization/${baseScenario.organization.nameId}`)
+      );
 
-    // organization name heading
-    const orgNameHeading = page.getByRole('heading', {
-      level: 1,
-      name: new RegExp(baseScenario.organization.profile.displayName, 'i'),
-    });
-    await expect(orgNameHeading).toBeVisible({ timeout: 2000 });
+      // organization name heading
+      const orgNameHeading = page.getByRole('heading', {
+        level: 1,
+        name: new RegExp(baseScenario.organization.profile.displayName, 'i'),
+      });
+      await expect(orgNameHeading).toBeVisible({ timeout: 2000 });
 
-    // Verify can bio and section
-    await expect(
-      page.getByRole('heading', { name: /Bio/i }).first()
-    ).toBeVisible();
+      // Verify can bio and section
+      await expect(
+        page.getByRole('heading', { name: /Bio/i }).first()
+      ).toBeVisible();
 
-    await expect(
-      page.getByRole('heading', { name: /Spaces we lead/i }).first()
-    ).toBeVisible();
+      await expect(
+        page.getByRole('heading', { name: /Spaces we lead/i }).first()
+      ).toBeVisible();
 
-    // Verify the space created by this organization is displayed
-    await expect(
-      page.getByText(baseScenario.space.about.profile.displayName).first()
-    ).toBeVisible({ timeout: 2000 });
+      // Verify the space created by this organization is displayed
+      await expect(
+        page.getByText(baseScenario.space.about.profile.displayName).first()
+      ).toBeVisible({ timeout: 2000 });
 
-    // Verify access to settings tabs
-    const settingsIcon = page.locator('[data-testid="SettingsOutlinedIcon"]');
-    await expect(settingsIcon).toBeVisible({ timeout: 2000 });
+      // Verify access to settings tabs
+      const settingsIcon = page.locator('[data-testid="SettingsOutlinedIcon"]');
+      await expect(settingsIcon).toBeVisible({ timeout: 2000 });
 
-    // Navigate to settings and verify admin capabilities
-    await settingsIcon.click();
-    await expect(page).toHaveURL(
-      new RegExp(`/organization/${baseScenario.organization.nameId}/settings`)
-    );
+      // Navigate to settings and verify admin capabilities
+      await settingsIcon.click();
+      await expect(page).toHaveURL(
+        new RegExp(`/organization/${baseScenario.organization.nameId}/settings`)
+      );
 
-    // Verify settings page content is visible
-    await expect(page.getByText(/Here you can edit.*/i)).toBeVisible();
-  });
+      // Verify settings page content is visible
+      await expect(page.getByText(/Here you can edit.*/i)).toBeVisible();
+    }
+  );
 });

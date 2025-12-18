@@ -25,7 +25,7 @@ const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let baseScenario: OrganizationWithSpaceModel;
 
 const scenarioConfig: TestScenarioConfig = {
-  name: 'seed-memberships',
+  name: 'memberships',
   space: {
     about: {
       profile: {
@@ -37,7 +37,7 @@ const scenarioConfig: TestScenarioConfig = {
       addTutorialCallouts: false,
     },
     community: {
-      admins: [TestUser.SPACE_ADMIN, TestUser.GLOBAL_ADMIN],
+      admins: [TestUser.SPACE_ADMIN],
       members: [TestUser.SPACE_MEMBER, TestUser.SPACE_ADMIN],
     },
     settings: {
@@ -104,41 +104,47 @@ test.describe('Space/Subspace Settings Access Control', () => {
     await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
-  test('Access Private Subsubspace - As Non-Member', async ({ page }) => {
-    // 1. Navigate to "Subsubspace for Membership Tests"
-    // When parent is public and subspace is private, users can still preview the about section
-    await page.goto(
-      `${baseUrl}/${baseScenario.space.nameId}/challenges/${baseScenario.subspace.nameId}/opportunities/${baseScenario.subsubspace.nameId}`
-    );
+  test(
+    'Access Private Subsubspace - As Non-Member',
+    {
+      tag: ['@regression'],
+    },
+    async ({ page }) => {
+      // 1. Navigate to "Subsubspace for Membership Tests"
+      // When parent is public and subspace is private, users can still preview the about section
+      await page.goto(
+        `${baseUrl}/${baseScenario.space.nameId}/challenges/${baseScenario.subspace.nameId}/opportunities/${baseScenario.subsubspace.nameId}`
+      );
 
-    // 2. Verify URL is correct - user can access the page but with limited preview
-    await expect(page).toHaveURL(
-      new RegExp(`/${baseScenario.subsubspace.nameId}`)
-    );
-    await expect(page).toHaveURL(new RegExp('/about'));
+      // 2. Verify URL is correct - user can access the page but with limited preview
+      await expect(page).toHaveURL(
+        new RegExp(`/${baseScenario.subsubspace.nameId}`)
+      );
+      await expect(page).toHaveURL(new RegExp('/about'));
 
-    // 3. Verify about section/dialog is visible with space name
-    await expect(
-      page
-        .getByRole('heading', {
-          name: baseScenario.subsubspace.about.profile.displayName,
-        })
-        .first()
-    ).toBeVisible({ timeout: 3000 });
+      // 3. Verify about section/dialog is visible with space name
+      await expect(
+        page
+          .getByRole('heading', {
+            name: baseScenario.subsubspace.about.profile.displayName,
+          })
+          .first()
+      ).toBeVisible({ timeout: 3000 });
 
-    // 4. Verify either "Apply" button (logged in, applications enabled) or action button is visible
-    // Since user is logged in and applications are enabled, should see Apply or Join button
-    await expect(
-      page.getByRole('button', { name: /Apply|Join|Sign in/i })
-    ).toBeVisible();
+      // 4. Verify either "Apply" button (logged in, applications enabled) or action button is visible
+      // Since user is logged in and applications are enabled, should see Apply or Join button
+      await expect(
+        page.getByRole('button', { name: /Apply|Join|Sign in/i })
+      ).toBeVisible();
 
-    // 5. Verify cannot access full content
-    await expect(
-      page.getByRole('button', { name: /contributors/i })
-    ).not.toBeVisible();
+      // 5. Verify cannot access full content
+      await expect(
+        page.getByRole('button', { name: /contributors/i })
+      ).not.toBeVisible();
 
-    // 6. Verify privacy is indicated - limited preview mode
-    const privacyIcon = page.locator('[data-testid="LockOutlinedIcon"]');
-    await expect(privacyIcon).toBeVisible();
-  });
+      // 6. Verify privacy is indicated - limited preview mode
+      const privacyIcon = page.locator('[data-testid="LockOutlinedIcon"]');
+      await expect(privacyIcon).toBeVisible();
+    }
+  );
 });

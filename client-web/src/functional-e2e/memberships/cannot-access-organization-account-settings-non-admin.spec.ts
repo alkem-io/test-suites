@@ -25,7 +25,7 @@ const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let baseScenario: OrganizationWithSpaceModel;
 
 const scenarioConfig: TestScenarioConfig = {
-  name: 'seed-memberships',
+  name: 'memberships',
   organization: {
     community: {
       addMembers: true,
@@ -43,7 +43,7 @@ const scenarioConfig: TestScenarioConfig = {
       addTutorialCallouts: false,
     },
     community: {
-      admins: [TestUser.SPACE_ADMIN, TestUser.GLOBAL_ADMIN],
+      admins: [TestUser.SPACE_ADMIN],
       members: [TestUser.SPACE_MEMBER, TestUser.SPACE_ADMIN],
     },
     settings: {
@@ -68,29 +68,33 @@ test.describe('Organization Account Settings', () => {
     await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
-  test('Cannot Access Organization Account Settings - Non-Admin', async ({
-    page,
-  }) => {
-    // 1. Attempt to access organization account settings as non-admin
-    await page.goto(
-      `${baseUrl}/organization/${baseScenario.organization.nameId}/settings/account`
-    );
+  test(
+    'Cannot Access Organization Account Settings - Non-Admin',
+    {
+      tag: ['@regression'],
+    },
+    async ({ page }) => {
+      // 1. Attempt to access organization account settings as non-admin
+      await page.goto(
+        `${baseUrl}/organization/${baseScenario.organization.nameId}/settings/account`
+      );
 
-    // 2. Verify modal or message about redirecting to closest parent
-    await expect(page.getByText(/We are redirecting you/i)).toBeVisible();
+      // 2. Verify modal or message about redirecting to closest parent
+      await expect(page.getByText(/We are redirecting you/i)).toBeVisible();
 
-    // 3. Verify option to navigate to parent space (about page)
-    const redirectButton = page.getByRole('button', {
-      name: /Go now/i,
-    });
-    await expect(redirectButton).toBeVisible();
+      // 3. Verify option to navigate to parent space (about page)
+      const redirectButton = page.getByRole('button', {
+        name: /Go now/i,
+      });
+      await expect(redirectButton).toBeVisible();
 
-    // 4. Click redirect button and verify navigation to parent space about
-    await redirectButton.click();
+      // 4. Click redirect button and verify navigation to parent space about
+      await redirectButton.click();
 
-    // 5. Verify redirected to parent space URL
-    await expect(page).toHaveURL(
-      `${baseUrl}/organization/${baseScenario.organization.nameId}`
-    );
-  });
+      // 5. Verify redirected to parent space URL
+      await expect(page).toHaveURL(
+        `${baseUrl}/organization/${baseScenario.organization.nameId}`
+      );
+    }
+  );
 });

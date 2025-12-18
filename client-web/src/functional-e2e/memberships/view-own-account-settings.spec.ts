@@ -25,7 +25,7 @@ const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let baseScenario: OrganizationWithSpaceModel;
 
 const scenarioConfig: TestScenarioConfig = {
-  name: 'seed-memberships',
+  name: 'memberships',
   space: {
     about: {
       profile: {
@@ -37,14 +37,8 @@ const scenarioConfig: TestScenarioConfig = {
       addTutorialCallouts: false,
     },
     community: {
-      admins: [TestUser.SPACE_ADMIN, TestUser.GLOBAL_ADMIN],
+      admins: [TestUser.SPACE_ADMIN],
       members: [TestUser.SPACE_MEMBER, TestUser.SPACE_ADMIN],
-    },
-    settings: {
-      privacy: { mode: SpacePrivacyMode.Public },
-      membership: {
-        policy: CommunityMembershipPolicy.Applications,
-      },
     },
   },
 };
@@ -63,29 +57,37 @@ test.describe('User Account Settings', () => {
   });
 
   // todo: the user should be a host
-  test.skip('View Own Account Settings', async ({ page }) => {
-    // 1. Navigate to own account settings
-    await page.goto(
-      `${baseUrl}/user/${TestUserManager.users.spaceAdmin.nameId}/settings/account`
-    );
+  test.skip(
+    'View Own Account Settings',
+    {
+      tag: ['@coveredin', '@regression'],
+    },
+    async ({ page }) => {
+      // 1. Navigate to own account settings
+      await page.goto(
+        `${baseUrl}/user/${TestUserManager.users.spaceAdmin.nameId}/settings/account`
+      );
 
-    // 2. Verify URL changed to account settings
-    await expect(page).toHaveURL(/.*\/settings\/account/);
+      // 2. Verify URL changed to account settings
+      await expect(page).toHaveURL(/.*\/settings\/account/);
 
-    // 3. Verify information message is displayed
-    await expect(
-      page.getByText(/Here you find all your.*Spaces.*Virtual Contributors/i)
-    ).toBeVisible();
+      // 3. Verify information message is displayed
+      await expect(
+        page.getByText(/Here you find all your.*Spaces.*Virtual Contributors/i)
+      ).toBeVisible();
 
-    // 4. Verify resource sections are displayed
-    await expect(page.getByText(/Hosted Spaces/i).first()).toBeVisible();
-    await expect(page.getByText(/Virtual Contributors/i).first()).toBeVisible();
-    await expect(page.getByText(/Template Packs/i).first()).toBeVisible();
-    await expect(page.getByText(/Custom Homepages/i).first()).toBeVisible();
+      // 4. Verify resource sections are displayed
+      await expect(page.getByText(/Hosted Spaces/i).first()).toBeVisible();
+      await expect(
+        page.getByText(/Virtual Contributors/i).first()
+      ).toBeVisible();
+      await expect(page.getByText(/Template Packs/i).first()).toBeVisible();
+      await expect(page.getByText(/Custom Homepages/i).first()).toBeVisible();
 
-    // 5. Verify hosted space is shown if admin of space
-    await expect(
-      page.getByText(baseScenario.space.about.profile.displayName)
-    ).toBeVisible();
-  });
+      // 5. Verify hosted space is shown if admin of space
+      await expect(
+        page.getByText(baseScenario.space.about.profile.displayName)
+      ).toBeVisible();
+    }
+  );
 });

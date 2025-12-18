@@ -25,7 +25,7 @@ const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let baseScenario: OrganizationWithSpaceModel;
 
 const scenarioConfig: TestScenarioConfig = {
-  name: 'seed-memberships',
+  name: 'memberships',
   space: {
     about: {
       profile: {
@@ -37,14 +37,7 @@ const scenarioConfig: TestScenarioConfig = {
       addTutorialCallouts: false,
     },
     community: {
-      admins: [TestUser.SPACE_ADMIN, TestUser.GLOBAL_ADMIN],
-      members: [TestUser.SPACE_MEMBER, TestUser.SPACE_ADMIN],
-    },
-    settings: {
-      privacy: { mode: SpacePrivacyMode.Public },
-      membership: {
-        policy: CommunityMembershipPolicy.Applications,
-      },
+      members: [TestUser.SPACE_MEMBER],
     },
   },
 };
@@ -62,43 +55,49 @@ test.describe('User Profile Membership Display', () => {
     await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
-  test('View Own User Profile - Public Information', async ({ page }) => {
-    await page.goto(
-      `${baseUrl}/user/${TestUserManager.users.spaceMember.nameId}`
-    );
+  test(
+    'View Own User Profile - Public Information',
+    {
+      tag: ['@regression'],
+    },
+    async ({ page }) => {
+      await page.goto(
+        `${baseUrl}/user/${TestUserManager.users.spaceMember.nameId}`
+      );
 
-    await expect(page).toHaveURL(
-      new RegExp(`/user/${TestUserManager.users.spaceMember.nameId}`)
-    );
+      await expect(page).toHaveURL(
+        new RegExp(`/user/${TestUserManager.users.spaceMember.nameId}`)
+      );
 
-    const userNameHeading = page.getByRole('heading', {
-      level: 1,
-      name: new RegExp(TestUserManager.users.spaceMember.displayName, 'i'),
-    });
-    await expect(userNameHeading).toBeVisible({ timeout: 3000 });
+      const userNameHeading = page.getByRole('heading', {
+        level: 1,
+        name: new RegExp(TestUserManager.users.spaceMember.displayName, 'i'),
+      });
+      await expect(userNameHeading).toBeVisible({ timeout: 3000 });
 
-    await expect(
-      page.getByRole('heading', { name: /Bio/i }).first()
-    ).toBeVisible();
+      await expect(
+        page.getByRole('heading', { name: /Bio/i }).first()
+      ).toBeVisible();
 
-    await expect(
-      page.getByRole('heading', { name: /Spaces.*/i }).first()
-    ).toBeVisible();
+      await expect(
+        page.getByRole('heading', { name: /Spaces.*/i }).first()
+      ).toBeVisible();
 
-    await expect(
-      page.getByText(baseScenario.space.about.profile.displayName).first()
-    ).toBeVisible({ timeout: 2000 });
+      await expect(
+        page.getByText(baseScenario.space.about.profile.displayName).first()
+      ).toBeVisible({ timeout: 2000 });
 
-    const settingsIcon = page.locator('[data-testid="SettingsOutlinedIcon"]');
-    await expect(settingsIcon).toBeVisible();
-    await settingsIcon.click();
+      const settingsIcon = page.locator('[data-testid="SettingsOutlinedIcon"]');
+      await expect(settingsIcon).toBeVisible();
+      await settingsIcon.click();
 
-    await expect(page).toHaveURL(
-      new RegExp(`/user/${TestUserManager.users.spaceMember.nameId}/settings`)
-    );
+      await expect(page).toHaveURL(
+        new RegExp(`/user/${TestUserManager.users.spaceMember.nameId}/settings`)
+      );
 
-    await expect(
-      page.getByText(/Here you can edit your profile details*/i)
-    ).toBeVisible();
-  });
+      await expect(
+        page.getByText(/Here you can edit your profile details*/i)
+      ).toBeVisible();
+    }
+  );
 });

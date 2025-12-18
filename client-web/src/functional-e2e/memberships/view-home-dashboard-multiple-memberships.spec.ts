@@ -25,7 +25,7 @@ const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let baseScenario: OrganizationWithSpaceModel;
 
 const scenarioConfig: TestScenarioConfig = {
-  name: 'seed-memberships',
+  name: 'memberships',
   space: {
     about: {
       profile: {
@@ -37,16 +37,10 @@ const scenarioConfig: TestScenarioConfig = {
       addTutorialCallouts: false,
     },
     community: {
-      admins: [TestUser.SPACE_ADMIN, TestUser.GLOBAL_ADMIN],
-      leads: [TestUser.SPACE_ADMIN],
-      members: [TestUser.SPACE_MEMBER, TestUser.SPACE_ADMIN],
+      admins: [TestUser.SPACE_ADMIN],
+      members: [TestUser.SPACE_ADMIN],
     },
-    settings: {
-      privacy: { mode: SpacePrivacyMode.Public },
-      membership: {
-        policy: CommunityMembershipPolicy.Applications,
-      },
-    },
+
     subspace: {
       about: {
         profile: {
@@ -58,19 +52,8 @@ const scenarioConfig: TestScenarioConfig = {
         addTutorialCallouts: false,
       },
       community: {
-        admins: [TestUser.SUBSPACE_ADMIN],
-        leads: [TestUser.SUBSPACE_ADMIN, TestUser.SPACE_ADMIN],
-        members: [
-          TestUser.SUBSPACE_MEMBER,
-          TestUser.SUBSPACE_ADMIN,
-          TestUser.SPACE_ADMIN,
-        ],
-      },
-      settings: {
-        privacy: { mode: SpacePrivacyMode.Public },
-        membership: {
-          policy: CommunityMembershipPolicy.Applications,
-        },
+        leads: [TestUser.SPACE_ADMIN],
+        members: [TestUser.SPACE_ADMIN],
       },
     },
   },
@@ -89,28 +72,34 @@ test.describe('Home Dashboard Membership Display', () => {
     await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
-  test('View Home Dashboard - Multiple Memberships', async ({ page }) => {
-    // 1. Navigate to home dashboard
-    await page.goto(`${baseUrl}/home`);
+  test(
+    'View Home Dashboard - Multiple Memberships',
+    {
+      tag: ['@regression'],
+    },
+    async ({ page }) => {
+      // 1. Navigate to home dashboard
+      await page.goto(`${baseUrl}/home`);
 
-    // 2. Verify home dashboard loads successfully
-    await expect(page).toHaveURL(/.*\/home/);
+      // 2. Verify home dashboard loads successfully
+      await expect(page).toHaveURL(/.*\/home/);
 
-    // 3. Verify shows memberships at all levels
-    // Space (L0) - with Admin badge
-    await expect(
-      page.getByText(baseScenario.space.about.profile.displayName).first()
-    ).toBeVisible({ timeout: 2000 });
+      // 3. Verify shows memberships at all levels
+      // Space (L0) - with Admin badge
+      await expect(
+        page.getByText(baseScenario.space.about.profile.displayName).first()
+      ).toBeVisible({ timeout: 2000 });
 
-    // 4. Subspace (L1) - with Lead badge
-    await expect(
-      page.getByText(baseScenario.subspace.about.profile.displayName).first()
-    ).toBeVisible({ timeout: 2000 });
+      // 4. Subspace (L1) - with Lead badge
+      await expect(
+        page.getByText(baseScenario.subspace.about.profile.displayName).first()
+      ).toBeVisible({ timeout: 2000 });
 
-    // 5. Verify each membership is clickable to navigate
-    const spaceCard = page
-      .locator(`text=${baseScenario.space.about.profile.displayName}`)
-      .first();
-    await expect(spaceCard).toBeVisible();
-  });
+      // 5. Verify each membership is clickable to navigate
+      const spaceCard = page
+        .locator(`text=${baseScenario.space.about.profile.displayName}`)
+        .first();
+      await expect(spaceCard).toBeVisible();
+    }
+  );
 });
