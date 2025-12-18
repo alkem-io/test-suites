@@ -45,7 +45,16 @@ export class CollaborationPage {
   }
 
   get linkOption() {
-    return this.page.getByRole('button', { name: /cta/i });
+    return this.page.getByRole('button', { name: /Call To Action/i });
+  }
+
+  // CTA (Call To Action) specific fields
+  get ctaLinkTextInput() {
+    return this.page.getByRole('textbox', { name: 'Call To Action' });
+  }
+
+  get ctaUrlInput() {
+    return this.page.getByRole('textbox', { name: 'URL' });
   }
 
   get memoOption() {
@@ -67,7 +76,7 @@ export class CollaborationPage {
   }
 
   get saveButton() {
-    return this.page.getByRole('button', { name: /create|post|save/i });
+    return this.page.getByRole('button', { name: /^(create|post|save)$/i });
   }
 
   get cancelButton() {
@@ -243,7 +252,7 @@ export class CollaborationPage {
     await this.displayNameInput.fill(displayName);
     if (description) {
       // TipTap editor - use fill() which works with contenteditable divs
-      await this.descriptionInput.fill(description);
+      await this.descriptionInput.first().fill(description);
     }
   }
 
@@ -283,14 +292,22 @@ export class CollaborationPage {
   }
 
   async createCallout(
-    type: 'post' | 'whiteboard' | 'link',
+    type: 'post' | 'whiteboard' | 'link' | 'memo',
     displayName: string,
     description?: string,
-    asDraft: boolean = false
+    asDraft: boolean = false,
+    ctaOptions?: { linkText: string; url: string }
   ) {
     await this.clickAddCallout();
     await this.selectCalloutType(type);
     await this.fillCalloutDetails(displayName, description);
+
+    // For CTA (link) callouts, fill the required link text and URL
+    if (type === 'link' && ctaOptions) {
+      await this.ctaLinkTextInput.fill(ctaOptions.linkText);
+      await this.ctaUrlInput.fill(ctaOptions.url);
+    }
+
     await delay(300); // Small delay to ensure the button is enabled
     await this.saveCallout(asDraft);
 
