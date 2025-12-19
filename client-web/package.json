@@ -26,7 +26,8 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:auth-playwright": "playwright test"
+    "test:auth-playwright": "playwright test",
+    "register-users": "tsx ./register-users.ts"
   },
   "dependencies": {
     "@alkemio/client-lib": "^0.32.0",
@@ -37,7 +38,8 @@
     "graphql-type-json": "^0.3.2",
     "graphql-upload": "^17.0.0",
     "graphql-ws": "^5.8.2",
-    "supertest": "^7.0.0"
+    "supertest": "^7.0.0",
+    "tsx": "^4.21.0"
   },
   "devDependencies": {
     "@graphql-codegen/add": "^5.0.3",
