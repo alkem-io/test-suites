@@ -6,9 +6,15 @@ Purpose: Provide a clear, area-based view of authentication testing with explici
 
 ## Test Locations
 
-- `client-web/src/functional-e2e/authentication/authentication-flows.spec.ts` — UI element verification + full flows
-- `client-web/src/functional-e2e/authentication/authentication-critical-flows.spec.ts` — Phase 1 critical flows
-- Page objects: `login-page-objects.ts`, `../identity-flows/*` (registration, sign-in, verify)
+- `client-web/src/functional-e2e/authentication/authentication-page-verification.spec.ts` — Page element verification (independent, parallel-safe)
+- `client-web/src/functional-e2e/authentication/authentication-login.spec.ts` — Login/logout flows, error handling (independent)
+- `client-web/src/functional-e2e/authentication/authentication-registration.spec.ts` — Registration with email verification (independent)
+- `client-web/src/functional-e2e/authentication/authentication-password-recovery.spec.ts` — Password recovery (independent)
+- `client-web/src/functional-e2e/authentication/authentication-cookie-consent.spec.ts` — Cookie consent banner tests (independent)
+- `client-web/src/functional-e2e/authentication/authentication-restricted-access.spec.ts` — Restricted access & redirects (independent)
+- `client-web/src/functional-e2e/authentication/authentication-critical-flows.spec.ts` — **DEPRECATED** (preserved for reference, all tests skipped)
+- `client-web/src/functional-e2e/authentication/authentication-flows.spec.ts` — **DEPRECATED** (preserved for reference, all tests skipped)
+- Page objects: `login-page-objects.ts`, `common-authentication-page-elements.ts`, `../identity-flows/*` (registration, sign-in, verify)
 
 ---
 
