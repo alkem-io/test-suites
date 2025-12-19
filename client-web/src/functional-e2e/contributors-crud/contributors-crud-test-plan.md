@@ -87,6 +87,8 @@
 
 ---
 
+## Updated
+
 ### 1.3 User Account Tab
 
 **Test:** `Verify account tab components and functionality`
@@ -96,17 +98,20 @@
 1. Log in as user
 2. Navigate to user profile → Account tab
 3. Verify account tab components visible:
-   - Email address
-   - Account creation date
-   - Account status
-   - Verification badges (if any)
-   - Connected accounts/integrations
-4. Verify read-only fields display correctly
+   - Hosted Spaces block
+   - Virtual Contributors block
+   - Template Packs block
+   - Custom Homepages block
+4. Verify number of used versus available entities (Spaces, VCs, Templates, Homepages)
 5. Verify editable fields can be modified
 
 **Expected Result:**
 
 - All account information displayed correctly
+  - Hosted Spaces block - 0/0
+  - Virtual Contributors block - 0/0
+  - Template Packs block - 0/0
+  - Custom Homepages block - 0/0
 - Read-only fields cannot be edited
 - Editable fields update successfully
 
@@ -126,14 +131,13 @@
    - List of Spaces user is member of
    - List of Organizations user belongs to
    - Membership roles for each Space/Organization
-   - Membership dates (joined date)
 4. Verify membership cards are clickable (navigate to Space/Org)
 5. Verify role badges display correctly
 
 **Expected Result:**
 
 - All memberships listed correctly
-- Roles displayed accurately
+- Roles displayed accurately - NOTE: roles are not displayed for spaces
 - Navigation to Spaces/Orgs works
 - Membership data is up to date
 
@@ -179,14 +183,8 @@
 2. Navigate to user profile → Settings tab
 3. Verify settings tab components:
    - Privacy settings
-   - Profile visibility options
-   - Language preferences
-   - Timezone settings
-   - Other user preferences
 4. Update settings:
    - Change privacy setting
-   - Update profile visibility
-   - Change language/timezone
 5. Save changes
 6. Verify settings applied
 
@@ -207,30 +205,30 @@
 
 **Steps:**
 
-1. Log in as Organization Admin
+1. Log in as Global Admin
 2. Navigate to organization profile
 3. Note users who are members of the organization
-4. Navigate to organization → Settings
+4. Navigate to Global Administration / Organization
 5. Initiate organization deletion
-6. Confirm deletion (may require password/confirmation)
+6. Confirm deletion
 7. Verify organization deleted successfully
 8. Log out
 9. Log in as user who was organization member (Space Member)
 10. Navigate to user profile → Membership tab
 11. Verify deleted organization no longer appears in memberships list
-12. Log in as different user who was organization member (Space Admin)
+12. Log in as different user who was organization admin (Organization Admin)
 13. Navigate to user profile → Membership tab
 14. Verify deleted organization no longer appears in memberships list
 
 **Expected Result:**
 
-- Organization deleted successfully by Org Admin
+- Organization deleted successfully by Global Admin
 - Organization removed from all users' membership lists
 - Multiple users verified to no longer show organization membership
 - Organization profile no longer accessible
 - Users can still access their profiles normally
 
-**Test Roles:** Org Admin (deleter), Space Member (verifier), Space Admin (verifier)
+**Test Roles:** Global Admin (deleter), Space Member (verifier), Organization Admin (verifier)
 
 ---
 
@@ -775,12 +773,10 @@
 ### Test Suite Organization
 
 1. **Suite 1: User CRUD** (8 tests)
-
    - user-crud.spec.ts
    - Covers registration, profile, tabs, deletion
 
 2. **Suite 2: Organization CRUD** (7 tests)
-
    - organization-crud.spec.ts
    - Covers creation, profile, community, authorization, deletion
 
