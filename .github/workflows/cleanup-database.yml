@@ -1,0 +1,69 @@
+name: Database cleanup
+
+on:
+  workflow_call:
+    inputs:
+      postgres_db:
+        description: Database name to recreate
+        required: false
+        type: string
+        default: alkemio
+
+jobs:
+  cleanup-postgres:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Kubectl
+        uses: azure/setup-kubectl@v4.0.0
+        with:
+          version: "v1.29.6" # Ensure this matches the version used in your cluster
+
+      - name: Set up Kubeconfig for Hetzner k3s
+        run: |
+          set -euo pipefail
+          mkdir -p $HOME/.kube  # Ensure the .kube directory exists
+          echo "${{ secrets.KUBECONFIG_SECRET_HETZNER_TEST }}" > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Port-forward and reset Postgres database
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ inputs.postgres_db }}
+        run: |
+          set -euo pipefail
+
+          # Port-forward to the PostgreSQL service in the background
+          kubectl port-forward svc/postgres 5432:5432 > /tmp/port-forward.log 2>&1 &
+          PORT_FORWARD_PID=$!
+
+          cleanup() {
+            echo "Stopping port-forward (pid=$PORT_FORWARD_PID)"
+            kill "$PORT_FORWARD_PID" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          echo "Waiting for port-forward to become ready..."
+          for i in $(seq 1 30); do
+            if grep -q "Forwarding from" /tmp/port-forward.log; then
+              break
+            fi
+            sleep 1
+          done
+
+          if ! grep -q "Forwarding from" /tmp/port-forward.log; then
+            echo "Port-forward did not become ready"; cat /tmp/port-forward.log; exit 1
+          fi
+
+          # Drop all connections to the target database
+          echo "Terminating active connections to $POSTGRES_DB..."
+          PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -p 5432 -U "$POSTGRES_USER" -d postgres -c \
+            "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$POSTGRES_DB' AND pid <> pg_backend_pid();"
+
+          # Drop and recreate the database
+          echo "Dropping and recreating database $POSTGRES_DB..."
+          PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -p 5432 -U "$POSTGRES_USER" -d postgres -c "DROP DATABASE IF EXISTS \"$POSTGRES_DB\";"
+          PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -p 5432 -U "$POSTGRES_USER" -d postgres -c "CREATE DATABASE \"$POSTGRES_DB\";"
