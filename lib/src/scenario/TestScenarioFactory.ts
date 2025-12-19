@@ -1,4 +1,3 @@
->>>>>>> Stashed changes
 import { OrganizationWithSpaceModel } from "./models/OrganizationWithSpaceModel";
 import { SpaceModel } from "./models/SpaceModel";
 import {
@@ -217,21 +216,21 @@ export class TestScenarioFactory {
       const providerOrgModel: OrganizationModel = useBaseOrg
         ? baseScenario.organization
         : ({
-          id: "",
-          agentId: "",
-          accountId: "",
-          roleSetId: "",
-          verificationId: "",
-          profile: {
             id: "",
-            displayName:
-              config.providerOrganization?.about?.profile?.displayName ||
-              `Pack Provider Org ${uniqueId}`,
-            tagline:
-              config.providerOrganization?.about?.profile?.tagline || "",
-          },
-          nameId: "",
-        } as OrganizationModel);
+            agentId: "",
+            accountId: "",
+            roleSetId: "",
+            verificationId: "",
+            profile: {
+              id: "",
+              displayName:
+                config.providerOrganization?.about?.profile?.displayName ||
+                `Pack Provider Org ${uniqueId}`,
+              tagline:
+                config.providerOrganization?.about?.profile?.tagline || "",
+            },
+            nameId: "",
+          } as OrganizationModel);
 
       if (!useBaseOrg) {
         await this.createOrganization(
@@ -366,20 +365,20 @@ export class TestScenarioFactory {
       const hostOrgModel: OrganizationModel = useBaseOrg
         ? baseScenario.organization
         : ({
-          id: "",
-          agentId: "",
-          accountId: "",
-          roleSetId: "",
-          verificationId: "",
-          profile: {
             id: "",
-            displayName:
-              config.hostOrganization?.about?.profile?.displayName ||
-              `VC Host Org ${uniqueId}`,
-            tagline: config.hostOrganization?.about?.profile?.tagline || "",
-          },
-          nameId: "",
-        } as OrganizationModel);
+            agentId: "",
+            accountId: "",
+            roleSetId: "",
+            verificationId: "",
+            profile: {
+              id: "",
+              displayName:
+                config.hostOrganization?.about?.profile?.displayName ||
+                `VC Host Org ${uniqueId}`,
+              tagline: config.hostOrganization?.about?.profile?.tagline || "",
+            },
+            nameId: "",
+          } as OrganizationModel);
 
       if (!useBaseOrg) {
         await this.createOrganization(
@@ -578,7 +577,7 @@ export class TestScenarioFactory {
       if (
         baseScenario.virtualContributorsHostOrganizationId &&
         baseScenario.virtualContributorsHostOrganizationId !==
-        baseScenario.organization.id
+          baseScenario.organization.id
       ) {
         await deleteOrganization(
           baseScenario.virtualContributorsHostOrganizationId
@@ -589,7 +588,7 @@ export class TestScenarioFactory {
       if (
         baseScenario.innovationPack?.providerOrganizationId &&
         baseScenario.innovationPack.providerOrganizationId !==
-        baseScenario.organization.id
+          baseScenario.organization.id
       ) {
         await deleteOrganization(
           baseScenario.innovationPack.providerOrganizationId
@@ -736,8 +735,8 @@ export class TestScenarioFactory {
       const events = orgConfig.verification.events
         ? orgConfig.verification.events
         : orgConfig.verification.eventName
-          ? [orgConfig.verification.eventName]
-          : ["VERIFICATION_REQUEST", "MANUALLY_VERIFY"];
+        ? [orgConfig.verification.eventName]
+        : ["VERIFICATION_REQUEST", "MANUALLY_VERIFY"];
 
       await applyOrganizationVerificationSequence(model.verificationId, events);
     }
