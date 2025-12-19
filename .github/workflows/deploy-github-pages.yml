@@ -12,7 +12,7 @@ on:
         description: "Folder path within the ref to deploy"
         required: false
         type: string
-        default: .
+        default: gh-pages-root
 
   workflow_dispatch:
     inputs:
@@ -24,7 +24,7 @@ on:
       path:
         description: "Folder path within the ref to deploy"
         required: false
-        default: .
+        default: gh-pages-root
         type: string
 
 jobs:

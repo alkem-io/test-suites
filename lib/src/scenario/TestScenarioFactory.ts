@@ -3,6 +3,10 @@ import { SpaceModel } from "./models/SpaceModel";
 import {
   TestScenarioConfig,
   TestScenarioSpaceConfig,
+  TestScenarioInnovationPackConfig,
+  TestScenarioVirtualContributorsConfig,
+  TestScenarioOrganizationConfig,
+  TestScenarioPlatformDiscussionConfig,
 } from "./config/test-scenario-config";
 import { TestUserManager } from "./TestUserManager";
 import { UserModel } from "./models/UserModel";
@@ -30,8 +34,24 @@ import {
   getSpaceData,
   updateCalloutVisibility,
   updateSpaceSettings,
+  createInnovationPack,
+  createTemplateOnTemplatesSet,
+  triggerOrganizationVerification,
+  updateInnovationPackVisibility,
+  updateVirtualContributorVisibility,
+  deleteVirtualContributor,
+  applyOrganizationVerificationSequence,
+  createPlatformDiscussion,
+  getPlatformForumId,
+  deletePlatformDiscussion,
+  deleteInnovationPack,
 } from "./baseFunctions";
-import { CalloutContributionType } from "@alkemio/client-lib/dist/generated/graphql";
+import {
+  CalloutContributionType,
+  ForumDiscussionCategory,
+} from "@alkemio/client-lib/dist/generated/graphql";
+import { TemplateType } from "@alkemio/client-lib";
+import { SearchVisibility } from "@alkemio/client-lib/dist/generated/graphql";
 
 export class TestScenarioFactory {
   public static async createBaseScenarioEmpty(
@@ -63,7 +83,8 @@ export class TestScenarioFactory {
       await this.populateGlobalRoles();
       await this.createOrganization(
         baseScenario.name,
-        baseScenario.organization
+        baseScenario.organization,
+        scenarioConfig.organization
       );
       baseScenario.scenarioSetupSucceeded = true;
     } catch (e) {
@@ -81,19 +102,45 @@ export class TestScenarioFactory {
   ): Promise<OrganizationWithSpaceModel> {
     const baseScenario: OrganizationWithSpaceModel =
       this.createEmptyBaseScenario();
-    baseScenario.name = scenarioConfig.name;
+
+    const {
+      name,
+      organization,
+      innovationPack,
+      virtualContributors,
+      platformDiscussion,
+      space,
+    } = scenarioConfig;
+    baseScenario.name = name;
 
     try {
       await TestUserManager.populateUserModelMap();
       await this.populateGlobalRoles();
       await this.createOrganization(
         baseScenario.name,
-        baseScenario.organization
+        baseScenario.organization,
+        organization
       );
       baseScenario.scenarioSetupSucceeded = true;
 
       LogManager.getLogger().info("Initial base scenario setup created");
-      if (!scenarioConfig.space) {
+
+      // Optional: create Innovation Pack with templates
+      if (innovationPack) {
+        await this.setupInnovationPack(innovationPack, baseScenario);
+      }
+
+      // Optional: create Virtual Contributors
+      if (virtualContributors) {
+        await this.setupVirtualContributors(virtualContributors, baseScenario);
+      }
+
+      // Optional: create a platform discussion
+      if (platformDiscussion) {
+        await this.setupPlatformDiscussion(platformDiscussion, baseScenario);
+      }
+
+      if (!space) {
         // nothing more to do, return
         return baseScenario;
       }
@@ -102,16 +149,12 @@ export class TestScenarioFactory {
         baseScenario.space,
         baseScenario.organization.accountId,
         baseScenario.name,
-        scenarioConfig.space.collaboration?.addTutorialCallouts ?? true
+        space.collaboration?.addTutorialCallouts ?? true
       );
 
-      await this.populateSpace(
-        scenarioConfig.space,
-        baseScenario.space,
-        baseScenario.name
-      );
+      await this.populateSpace(space, baseScenario.space, baseScenario.name);
 
-      const subspace = scenarioConfig.space.subspace;
+      const subspace = space.subspace;
       if (!subspace) {
         // all done, return
         return baseScenario;
@@ -157,6 +200,305 @@ export class TestScenarioFactory {
     return baseScenario;
   }
 
+  private static async setupInnovationPack(
+    config: TestScenarioInnovationPackConfig,
+    baseScenario: OrganizationWithSpaceModel
+  ): Promise<void> {
+    try {
+      const uniqueId = UniqueIDGenerator.getID();
+      const useBaseOrg = config.useBaseOrganization === true;
+
+      // Create or reuse provider organization for the pack
+      const providerOrgModel: OrganizationModel = useBaseOrg
+        ? baseScenario.organization
+        : ({
+            id: "",
+            agentId: "",
+            accountId: "",
+            roleSetId: "",
+            verificationId: "",
+            profile: {
+              id: "",
+              displayName:
+                config.providerOrganization?.about?.profile?.displayName ||
+                `Pack Provider Org ${uniqueId}`,
+              tagline:
+                config.providerOrganization?.about?.profile?.tagline || "",
+            },
+            nameId: "",
+          } as OrganizationModel);
+
+      if (!useBaseOrg) {
+        await this.createOrganization(
+          providerOrgModel.profile.displayName,
+          providerOrgModel,
+          config.providerOrganization
+        );
+      }
+
+      const packDisplayName =
+        config.pack?.displayName || `Innovation Pack ${uniqueId}`;
+      const packNameId = (
+        config.pack?.nameID || `pack-${uniqueId}`
+      ).toLowerCase();
+
+      const packRes = await createInnovationPack(
+        providerOrgModel.accountId,
+        packDisplayName,
+        packNameId,
+        undefined,
+        { tags: config.pack?.tags }
+      );
+
+      const packId = packRes.data?.createInnovationPack?.id || "";
+      const templatesSetId =
+        packRes.data?.createInnovationPack?.templatesSet?.id || "";
+      const packNameID = packRes.data?.createInnovationPack?.nameID || "";
+
+      baseScenario.innovationPack = {
+        id: packId,
+        nameId: packNameID,
+        templatesSetId: templatesSetId,
+        providerOrganizationId: providerOrgModel.id,
+      };
+
+      if (packId && config.visibility) {
+        const visibilityMap: Record<string, SearchVisibility> = {
+          PUBLIC: SearchVisibility.Public,
+          ACCOUNT: SearchVisibility.Account,
+          HIDDEN: SearchVisibility.Hidden,
+        };
+        const searchVisibility = config.visibility.searchVisibility
+          ? visibilityMap[config.visibility.searchVisibility]
+          : undefined;
+
+        await updateInnovationPackVisibility(packId, {
+          listedInStore: config.visibility.listedInStore,
+          searchVisibility,
+        });
+      }
+
+      if (templatesSetId && config.templates && config.templates.length > 0) {
+        for (const t of config.templates) {
+          const profileDisplayName =
+            t.profileDisplayName || `${t.type} Template ${uniqueId}`;
+
+          // Build template options - include optional fields only if they exist
+          const templateOptions: any = {
+            type: t.type as unknown as TemplateType,
+            profileDisplayName,
+            tags: t.tags,
+          };
+
+          // Add type-specific optional fields if present
+          if ("postDefaultDescription" in t && t.postDefaultDescription) {
+            templateOptions.postDefaultDescription = t.postDefaultDescription;
+          }
+          if ("whiteboardContent" in t && t.whiteboardContent) {
+            templateOptions.whiteboardContent = t.whiteboardContent;
+          }
+          // Add callout-specific fields if present
+          if ("calloutFramingType" in t && t.calloutFramingType) {
+            templateOptions.calloutFramingType = t.calloutFramingType;
+          }
+          if ("calloutResponseTypes" in t && t.calloutResponseTypes) {
+            templateOptions.calloutResponseTypes = t.calloutResponseTypes;
+          }
+          if (
+            "calloutAllowedContributors" in t &&
+            t.calloutAllowedContributors
+          ) {
+            templateOptions.calloutAllowedContributors =
+              t.calloutAllowedContributors;
+          }
+          // Add callout framing-specific content if present
+          if (
+            "calloutWhiteboardFramingContent" in t &&
+            t.calloutWhiteboardFramingContent
+          ) {
+            templateOptions.calloutWhiteboardFramingContent =
+              t.calloutWhiteboardFramingContent;
+          }
+          if (
+            "calloutMemoFramingMarkdown" in t &&
+            t.calloutMemoFramingMarkdown
+          ) {
+            templateOptions.calloutMemoFramingMarkdown =
+              t.calloutMemoFramingMarkdown;
+          }
+          if ("calloutLinkFramingUri" in t && t.calloutLinkFramingUri) {
+            templateOptions.calloutLinkFramingUri = t.calloutLinkFramingUri;
+          }
+          await createTemplateOnTemplatesSet(templatesSetId, templateOptions);
+        }
+      }
+    } catch (e) {
+      LogManager.getLogger().error(
+        `Unable to create innovation pack setup: ${e}`
+      );
+      process.exit(1);
+    }
+  }
+
+  private static async setupVirtualContributors(
+    config: TestScenarioVirtualContributorsConfig,
+    baseScenario: OrganizationWithSpaceModel
+  ): Promise<void> {
+    try {
+      const { createVirtualContributor } = await import("./baseFunctions");
+
+      if (
+        !config.virtualContributors ||
+        config.virtualContributors.length === 0
+      ) {
+        return;
+      }
+
+      const uniqueId = UniqueIDGenerator.getID();
+      const useBaseOrg = config.useBaseOrganization === true;
+
+      // Create or reuse host organization for the VCs
+      const hostOrgModel: OrganizationModel = useBaseOrg
+        ? baseScenario.organization
+        : ({
+            id: "",
+            agentId: "",
+            accountId: "",
+            roleSetId: "",
+            verificationId: "",
+            profile: {
+              id: "",
+              displayName:
+                config.hostOrganization?.about?.profile?.displayName ||
+                `VC Host Org ${uniqueId}`,
+              tagline: config.hostOrganization?.about?.profile?.tagline || "",
+            },
+            nameId: "",
+          } as OrganizationModel);
+
+      if (!useBaseOrg) {
+        await this.createOrganization(
+          hostOrgModel.profile.displayName,
+          hostOrgModel,
+          config.hostOrganization
+        );
+        baseScenario.virtualContributorsHostOrganizationId = hostOrgModel.id;
+      }
+
+      // Create virtual contributors
+      const createdVCs: Array<{
+        id: string;
+        nameId: string;
+        hostOrganizationId: string;
+      }> = [];
+
+      for (const vc of config.virtualContributors) {
+        const result = await createVirtualContributor(
+          hostOrgModel.accountId,
+          vc
+        );
+
+        if (!result.data?.createVirtualContributor) {
+          LogManager.getLogger().warn(
+            `Failed to create virtual contributor: ${JSON.stringify(
+              result.error
+            )}`
+          );
+          continue;
+        }
+
+        const vcData = result.data.createVirtualContributor;
+        createdVCs.push({
+          id: vcData.id,
+          nameId: vc.nameID || "",
+          hostOrganizationId: hostOrgModel.id,
+        });
+
+        if (config.visibility && vcData.id) {
+          const visibilityMap: Record<string, SearchVisibility> = {
+            PUBLIC: SearchVisibility.Public,
+            ACCOUNT: SearchVisibility.Account,
+            HIDDEN: SearchVisibility.Hidden,
+          };
+          const searchVisibility = config.visibility.searchVisibility
+            ? visibilityMap[config.visibility.searchVisibility]
+            : undefined;
+
+          await updateVirtualContributorVisibility(vcData.id, {
+            listedInStore: config.visibility.listedInStore,
+            searchVisibility,
+          });
+        }
+
+        LogManager.getLogger().info(
+          `Created Virtual Contributor: ${vc.nameID || vc.profileDisplayName}`
+        );
+      }
+
+      baseScenario.virtualContributors = createdVCs;
+    } catch (e) {
+      LogManager.getLogger().error(
+        `Unable to create virtual contributors setup: ${e}`
+      );
+      process.exit(1);
+    }
+  }
+
+  private static async setupPlatformDiscussion(
+    config: TestScenarioPlatformDiscussionConfig,
+    baseScenario: OrganizationWithSpaceModel
+  ): Promise<void> {
+    try {
+      let resolvedForumId =
+        config.forumID ||
+        (config.forumIDEnvVarName
+          ? process.env[config.forumIDEnvVarName]
+          : process.env.PLATFORM_DISCUSSION_FORUM_ID);
+
+      if (!resolvedForumId) {
+        resolvedForumId = await getPlatformForumId(config.userRole);
+      }
+
+      if (!resolvedForumId) {
+        LogManager.getLogger().warn(
+          "Skipping platform discussion creation: forum ID not provided, no env fallback, and platform forum lookup failed"
+        );
+        return;
+      }
+
+      const categoryMap: Record<string, ForumDiscussionCategory> = {
+        CHALLENGE_CENTRIC: ForumDiscussionCategory.ChallengeCentric,
+        COMMUNITY_BUILDING: ForumDiscussionCategory.CommunityBuilding,
+        HELP: ForumDiscussionCategory.Help,
+        OTHER: ForumDiscussionCategory.Other,
+        PLATFORM_FUNCTIONALITIES:
+          ForumDiscussionCategory.PlatformFunctionalities,
+        RELEASES: ForumDiscussionCategory.Releases,
+      };
+
+      const discussionRes = await createPlatformDiscussion(
+        resolvedForumId,
+        {
+          title: config.title,
+          description: config.description,
+          category: config.category
+            ? categoryMap[config.category]
+            : ForumDiscussionCategory.PlatformFunctionalities,
+        },
+        config.userRole
+      );
+
+      const discussionId = discussionRes.data?.createDiscussion?.id || "";
+      baseScenario.platformForumId = resolvedForumId;
+      baseScenario.platformDiscussionId = discussionId;
+    } catch (e) {
+      LogManager.getLogger().error(
+        `Unable to create platform discussion setup: ${e}`
+      );
+      process.exit(1);
+    }
+  }
+
   private static async populateGlobalRoles(): Promise<void> {
     await this.checkAndAssignRoleNameToUser(
       TestUserManager.users.globalLicenseAdmin,
@@ -198,6 +540,11 @@ export class TestScenarioFactory {
     baseScenario: OrganizationWithSpaceModel
   ): Promise<void> {
     try {
+      // Delete platform discussion if created
+      if (baseScenario.platformDiscussionId) {
+        await deletePlatformDiscussion(baseScenario.platformDiscussionId);
+      }
+
       if (baseScenario.subsubspace && baseScenario.subsubspace.id.length > 0) {
         await deleteSpace(baseScenario.subsubspace.id);
       }
@@ -206,6 +553,42 @@ export class TestScenarioFactory {
       }
       if (baseScenario.space && baseScenario.space.id.length > 0) {
         await deleteSpace(baseScenario.space.id);
+      }
+
+      // Delete virtual contributors before removing any organizations
+      if (baseScenario.virtualContributors?.length) {
+        for (const vc of baseScenario.virtualContributors) {
+          if (vc.id) {
+            await deleteVirtualContributor(vc.id);
+          }
+        }
+      }
+
+      // Delete innovation pack after spaces are removed, before any org deletions
+      if (baseScenario.innovationPack?.id) {
+        await deleteInnovationPack(baseScenario.innovationPack.id);
+      }
+
+      // Delete VC host organization if it is separate
+      if (
+        baseScenario.virtualContributorsHostOrganizationId &&
+        baseScenario.virtualContributorsHostOrganizationId !==
+          baseScenario.organization.id
+      ) {
+        await deleteOrganization(
+          baseScenario.virtualContributorsHostOrganizationId
+        );
+      }
+
+      // Delete Innovation Pack provider organization if it is separate
+      if (
+        baseScenario.innovationPack?.providerOrganizationId &&
+        baseScenario.innovationPack.providerOrganizationId !==
+          baseScenario.organization.id
+      ) {
+        await deleteOrganization(
+          baseScenario.innovationPack.providerOrganizationId
+        );
       }
       if (
         baseScenario.organization &&
@@ -301,7 +684,8 @@ export class TestScenarioFactory {
 
   private static async createOrganization(
     scenarioName: string,
-    model: OrganizationModel
+    model: OrganizationModel,
+    orgConfig?: TestScenarioOrganizationConfig
   ): Promise<OrganizationModel> {
     const uniqueId = UniqueIDGenerator.getID();
     const truncatedScenarioName = scenarioName.slice(0, 18);
@@ -314,7 +698,13 @@ export class TestScenarioFactory {
     }
     const responseOrg = await createOrganization(
       orgName,
-      orgNameId.toLowerCase().slice(0, 24)
+      orgNameId.toLowerCase().slice(0, 24),
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      { tags: orgConfig?.tags }
     );
 
     if (!responseOrg.data?.createOrganization) {
@@ -336,6 +726,16 @@ export class TestScenarioFactory {
       displayName: orgResponseData.profile.displayName ?? "",
       tagline: orgResponseData.profile.tagline ?? "",
     };
+
+    if (orgConfig?.verification?.setVerified && model.verificationId) {
+      const events = orgConfig.verification.events
+        ? orgConfig.verification.events
+        : orgConfig.verification.eventName
+        ? [orgConfig.verification.eventName]
+        : ["VERIFICATION_REQUEST", "MANUALLY_VERIFY"];
+
+      await applyOrganizationVerificationSequence(model.verificationId, events);
+    }
 
     const licensePlan = await getLicensePlanByName("ACCOUNT_LICENSE_PLUS");
     if (licensePlan && licensePlan.length > 0) {
