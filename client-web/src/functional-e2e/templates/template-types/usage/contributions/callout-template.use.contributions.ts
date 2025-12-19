@@ -120,7 +120,9 @@ export const verifyContributionSettings = async (
   }
 
   // Get back to Callout Edit Dialog
-  await collectionSettingsDialog.getByRole('button', { name: 'Back' }).click();
+  const backButton = collectionSettingsDialog.getByRole('button', { name: 'Back' }).last();
+  await backButton.scrollIntoViewIfNeeded();
+  await backButton.click();
 
   // Confirm if dialog appears (only shows if changes were made)
   const confirmButton = page.getByRole('button', { name: 'Yes, go back' });

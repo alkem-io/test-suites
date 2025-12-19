@@ -6,8 +6,9 @@ import { createAuthenticatedSessionFixture } from '@src/functional-e2e/fixtures/
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { randomBytes } from 'crypto';
 import { WhiteboardTemplateForm } from './forms/template-form.models';
-import { fillWhiteboardTemplateForm } from './forms/whiteboard-template-form';
+import { fillWhiteboardTemplateForm, fillWhiteboardWithWhiteboardTemplate } from './forms/whiteboard-template-form';
 import { verifyWhiteboardTemplate } from './verify/whiteboard-template-verify';
+import { fillTemplateForm } from './forms/template-form';
 
 
 // Create the authenticated fixture with a unique storage state name for this test suite
@@ -143,7 +144,32 @@ test.describe.serial('Whiteboard Templates', () => {
     await verifyWhiteboardTemplate(page, templateData);
   });
 
-  test('1.3 Delete Whiteboard Template', async ({ page }) => {
+  test('1.3 Use whiteboard template in a whiteboard', async ({ page }) => {
+    // Verify all template sections are visible
+    await expect(page.getByRole('heading', { name: 'Whiteboard Templates' })).toBeVisible();
+
+    // Find the container (parent of the parent of the heading) and then the "Create new" button within it
+    const createNewButton = await page.getByRole('heading', { name: 'Whiteboard Templates' }).
+      locator('..').locator('..').locator('..').
+      getByRole('button', { name: 'Create New' });
+    await createNewButton.click();
+
+    // Wait for the Whiteboard Template creation dialog to appear
+    await expect(page.getByRole('heading', { name: 'Create new Whiteboard Template' })).toBeVisible();
+
+    const testTemplate = {
+      displayName: 'Whiteboard Template With template inside',
+      description: 'This is a test, will not be saved.',
+      tags: []
+    }
+    // Fill the form:
+    await fillTemplateForm(page, templateData);
+
+    await fillWhiteboardWithWhiteboardTemplate(page, templateData);
+
+  });
+
+  test('1.4 Delete Whiteboard Template', async ({ page }) => {
     // Find the template title and click on it to open the template
     await page.getByRole('heading', { name: templateData.displayName }).click();
 

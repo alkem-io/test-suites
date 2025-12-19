@@ -31,3 +31,22 @@ export const writeTextInWhiteboardDialog = async (
   await textInput.fill(text);
   await textInput.press('Escape');
 }
+
+export const useTemplateInAWhiteboard = async (
+  page: Page,
+  whiteboardDialog: Locator,
+  templateName: string
+) => {
+  whiteboardDialog.getByRole('button', { name: 'Find Template' }).click();
+
+  await page.getByRole('heading', { name: templateName, exact: true }).click();
+
+  const templateDialog = await page.getByRole('heading', { name: 'Preview — Test Whiteboard' }).locator('..').locator('..').locator('..');
+  await expect(templateDialog.getByRole('heading', { name: templateName, exact: true })).toBeVisible();
+  await templateDialog.getByRole('heading', { name: templateName, exact: true }).click();
+  await templateDialog.getByRole('button', { name: 'Use' }).click();
+
+  await expect(templateDialog).not.toBeVisible();
+
+
+};

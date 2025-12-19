@@ -1,7 +1,7 @@
 import { Page, expect } from '@playwright/test';
 import { fillTemplateForm } from './template-form';
 import { WhiteboardTemplateForm } from './template-form.models';
-import { clickOnEditWhiteboardPreview, getWhiteboardDialog, writeTextInWhiteboardDialog } from './whiteboards/whiteboard-dialog';
+import { clickOnEditWhiteboardPreview, getWhiteboardDialog, useTemplateInAWhiteboard, writeTextInWhiteboardDialog } from './whiteboards/whiteboard-dialog';
 
 const editWhiteboardCanvas = async (
   page: Page,
@@ -22,4 +22,17 @@ export const fillWhiteboardTemplateForm = async (
 ) => {
   await fillTemplateForm(page, templateData);
   await editWhiteboardCanvas(page, templateData.textInWhiteboard);
+};
+
+export const fillWhiteboardWithWhiteboardTemplate = async (
+  page: Page,
+  templateData: WhiteboardTemplateForm,
+) => {
+  await clickOnEditWhiteboardPreview(page);
+
+  const editorDialog = await getWhiteboardDialog(page, 'Edit Whiteboard Template');
+
+  await useTemplateInAWhiteboard(page, editorDialog, templateData.displayName);
+
+  await editorDialog.getByRole('button', { name: 'Save' }).click();
 };
