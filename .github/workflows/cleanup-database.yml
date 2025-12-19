@@ -8,6 +8,13 @@ on:
         required: false
         type: string
         default: alkemio
+  workflow_dispatch:
+    inputs:
+      postgres_db:
+        description: Database name to recreate
+        required: false
+        type: string
+        default: alkemio
 
 jobs:
   cleanup-postgres:
