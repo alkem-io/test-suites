@@ -77,6 +77,9 @@ test.describe('Organization CRUD Tests', () => {
   test('2.1 Global Admin creates organization from administration section', async ({
     page,
   }) => {
+    const testOrgName = `Test Org ${Date.now()}`;
+    const testOrgNameId = `test-org-${Date.now()}`;
+
     // 1. Navigate to Global Administration section
     await page.goto(`${baseUrl}/admin`);
 
@@ -86,42 +89,44 @@ test.describe('Organization CRUD Tests', () => {
     ).toBeVisible();
 
     // 3. Navigate to Organizations management
-    const orgManagement = page.getByRole('link', { name: /organization/i });
-    if (await orgManagement.isVisible()) {
-      await orgManagement.click();
-    }
+    const orgManagement = page.getByRole('tab', { name: 'organizations' });
+    await expect(orgManagement).toBeVisible();
+    await orgManagement.click();
 
-    // 4. Look for "Create Organization" button
-    const createButton = page.getByRole('button', {
-      name: /create.*organization|new.*organization/i,
+    // 4. Click "Create Organization" button
+    const createButton = page.getByRole('link', { name: 'Create' });
+    await expect(createButton).toBeVisible();
+    await createButton.click();
+
+    // 5. Verify organization creation form appears
+    await expect(
+      page.getByRole('textbox', { name: 'Name', exact: true })
+    ).toBeVisible();
+
+    // 6. Fill in organization details
+    const displayNameField = page.getByRole('textbox', {
+      name: 'Name',
+      exact: true,
     });
-    if (await createButton.isVisible()) {
-      await createButton.click();
+    await displayNameField.fill(testOrgName);
 
-      // 5. Verify organization creation form appears
-      await expect(
-        page.getByRole('textbox', { name: /name|display/i }).first()
-      ).toBeVisible();
-
-      // 6. Verify form fields are present
-      const displayNameField = page.getByRole('textbox', {
-        name: /display.*name/i,
-      });
-
-      // Form should have required fields
-      if (await displayNameField.isVisible()) {
-        await expect(displayNameField).toBeVisible();
-      }
-
-      // Cancel to not create duplicate organizations
-      const cancelButton = page.getByRole('button', { name: /cancel/i });
-      if (await cancelButton.isVisible()) {
-        await cancelButton.click();
-      }
+    const nameIdField = page.getByRole('textbox', { name: 'NameID' });
+    if (await nameIdField.isVisible()) {
+      await nameIdField.fill(testOrgNameId);
     }
 
-    // Verify we're on admin page
-    await expect(page).toHaveURL(/\/admin/);
+    // 7. Submit creation form
+    const submitButton = page.getByRole('button', { name: 'Save' });
+    await submitButton.click();
+
+    // 8. Verify organization created successfully
+    // Wait for navigation or success message
+    await page.waitForURL(/\/organization\//, { timeout: 10000 });
+
+    // 9. Verify organization profile is accessible
+    await expect(page.getByRole('heading', { level: 1 })).toContainText(
+      testOrgName
+    );
   });
 
   test('2.2 Organization Admin updates profile and verifies display', async ({

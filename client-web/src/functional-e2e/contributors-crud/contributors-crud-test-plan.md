@@ -271,9 +271,6 @@
 5. Fill in organization details:
    - Display Name
    - NameID
-   - Description/Tagline
-   - Website URL
-   - Legal name
 6. Submit creation form
 7. Verify organization created successfully
 8. Assign Organization Admin user as owner
@@ -333,18 +330,20 @@
 1. Log in as Organization Admin
 2. Navigate to organization profile → Account tab
 3. Verify account tab components:
-   - Organization creation date
-   - Verification status
-   - Account type
-   - Billing information (if applicable)
-   - Organization ID
+   - Hosted Spaces block
+   - Virtual Contributors block
+   - Template Packs block
+   - Custom Homepages block
 4. Verify read-only fields display correctly
 5. Verify editable fields can be modified
 
 **Expected Result:**
 
 - All account information displayed correctly
-- Verification badge visible if verified
+  - Hosted Spaces block - 1/3
+  - Virtual Contributors block - 0/3
+  - Template Packs block - 0/3
+  - Custom Homepages block - 0/1
 - Read-only fields cannot be edited
 - Editable fields update successfully
 
@@ -405,6 +404,7 @@
    - Permission levels/roles
    - Add authorization button
 4. Assign authorization to user:
+   - Add user as member to Organization (use Space Admin)
    - Click "Add Authorization"
    - Search for user (use Space Admin)
    - Select user
@@ -440,10 +440,6 @@
 1. Log in as Organization Admin
 2. Navigate to organization profile → Settings tab
 3. Verify settings tab components:
-   - Privacy settings
-   - Visibility options
-   - Notification preferences
-   - Integration settings
    - Other organization settings
 4. Update 1 organization setting
 5. Save changes
@@ -466,8 +462,8 @@
 
 **Steps:**
 
-1. Log in as Organization Admin
-2. Navigate to organization profile → Settings
+1. Log in as Global Admin
+2. Navigate to Global Adminstration / Organization profile
 3. Note organization members before deletion
 4. Initiate organization deletion
 5. Confirm deletion (may require password/confirmation)
@@ -486,7 +482,7 @@
 - Organization does not appear in organizations list
 - Former members no longer show organization membership
 
-**Test Roles:** Org Admin (deleter), Space Member (former member, verifier)
+**Test Roles:** Global Admin (deleter), Organization Admin (former admin, verifier)
 
 ---
 
