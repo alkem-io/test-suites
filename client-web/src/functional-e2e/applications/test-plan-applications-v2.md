@@ -101,7 +101,7 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
 5. Verify navigation to space settings page
 6. Under the div with `data-testid="space-settings"`, locate and click the "Community" tab
 7. Verify "Pending applications & invitations" section is visible
-8. Verify the submitted application from test 1.2 appears in the list
+8. Verify the submitted application from test 1.1 appears in the list
 
 **Expected Results:**
 

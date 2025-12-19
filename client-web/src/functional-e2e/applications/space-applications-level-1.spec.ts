@@ -79,6 +79,9 @@ test.describe('Level 1 Subspace - Applications', () => {
     nonSpaceMemberPage = await browser.newPage();
     await nonSpaceMemberPage.goto(`${baseUrl}/login`);
     await nonSpaceMemberPage
+      .getByRole('button', { name: 'Accept All Cookies' })
+      .click();
+    await nonSpaceMemberPage
       .getByRole('textbox', { name: 'E-Mail' })
       .fill(`${TestUser.NON_SPACE_MEMBER}@alkem.io`);
     await nonSpaceMemberPage

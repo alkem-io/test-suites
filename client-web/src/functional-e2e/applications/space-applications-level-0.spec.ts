@@ -568,13 +568,13 @@ test.describe('Level 0 Space - Applications', () => {
       await expect(approveButton).toBeVisible();
       await approveButton.click();
 
-      // Verify rejection confirmation dialog (if it appears)
-      // Some implementations may show a confirmation dialog, others may reject immediately
+      // Verify approval confirmation dialog (if it appears)
+      // Some implementations may show a confirmation dialog, others may approve immediately
       const possibleConfirmDialog = adminPage.getByRole('dialog').last();
       const isConfirmDialogVisible = await possibleConfirmDialog.isVisible();
 
       if (isConfirmDialogVisible) {
-        // If a confirmation dialog appears, confirm the rejection
+        // If a confirmation dialog appears, confirm the approval
         const confirmButton = possibleConfirmDialog.getByRole('button', {
           name: /approve/i,
         });
