@@ -70,11 +70,8 @@ test.afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 test('seed', async ({ page }) => {
-  await page.goto(baseUrl);
+  await page.goto(`${baseUrl}/login`);
   await page.getByRole('button', { name: 'Accept All Cookies' }).click();
-  await page.getByTestId('PersonIcon').click();
-  await page.getByRole('menuitem', { name: 'Log In | Sign Up' }).click();
-  await page.waitForURL(/.*login.*/);
   await page
     .getByRole('textbox', { name: 'E-Mail' })
     .fill(`${TestUser.NON_SPACE_MEMBER}@alkem.io`);

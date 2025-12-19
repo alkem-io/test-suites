@@ -1,5 +1,5 @@
-// spec: /Users/vlad/projects/alkem.io/test-suites/test-plan-applications-v2.md
-// seed: client-web/src/functional-e2e/seed-applications.spec.ts
+// spec: client-web/src/functional-e2e/applications/test-plan-applications-v2.md
+// seed: client-web/src/functional-e2e/applications/seed-applications.spec.ts
 
 import { test, expect, Page } from '@playwright/test';
 import {

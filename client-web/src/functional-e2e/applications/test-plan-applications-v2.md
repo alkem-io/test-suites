@@ -43,7 +43,7 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
 
 ## Test Scenarios
 
-**Seed:** `./client-web/src/functional-e2e/seed-applications.spec.ts`
+**Seed:** `./client-web/src/functional-e2e/applications/seed-applications.spec.ts`
 
 **Test Optimization Notes:**
 

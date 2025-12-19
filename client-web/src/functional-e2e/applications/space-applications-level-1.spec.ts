@@ -1,5 +1,5 @@
-// spec: /Users/vlad/projects/alkem.io/test-suites/test-plan-applications-v2.md
-// seed: client-web/src/functional-e2e/seed-applications.spec.ts
+// spec: client-web/src/functional-e2e/applications/test-plan-applications-v2.md
+// seed: client-web/src/functional-e2e/applications/seed-applications.spec.ts
 
 import { test, expect, Page } from '@playwright/test';
 import {
@@ -131,7 +131,7 @@ test.describe('Level 1 Subspace - Applications', () => {
       await subspacesTab.click();
 
       // 4. Verify private Level 1 subspace card is visible with lock icon
-      const subspaceCard = page.locator('a', { hasText: subspaceName });
+      const subspaceCard = page.locator('a', { hasText: subspaceName }).first();
       await expect(subspaceCard).toBeVisible();
 
       const lockIcon = subspaceCard.locator('img').last();
