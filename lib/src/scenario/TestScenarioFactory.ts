@@ -102,7 +102,16 @@ export class TestScenarioFactory {
   ): Promise<OrganizationWithSpaceModel> {
     const baseScenario: OrganizationWithSpaceModel =
       this.createEmptyBaseScenario();
-    baseScenario.name = scenarioConfig.name;
+
+    const {
+      name,
+      organization,
+      innovationPack,
+      virtualContributors,
+      platformDiscussion,
+      space,
+    } = scenarioConfig;
+    baseScenario.name = name;
 
     try {
       await TestUserManager.populateUserModelMap();
@@ -110,37 +119,28 @@ export class TestScenarioFactory {
       await this.createOrganization(
         baseScenario.name,
         baseScenario.organization,
-        scenarioConfig.organization
+        organization
       );
       baseScenario.scenarioSetupSucceeded = true;
 
       LogManager.getLogger().info("Initial base scenario setup created");
 
       // Optional: create Innovation Pack with templates
-      if (scenarioConfig.innovationPack) {
-        await this.setupInnovationPack(
-          scenarioConfig.innovationPack,
-          baseScenario
-        );
+      if (innovationPack) {
+        await this.setupInnovationPack(innovationPack, baseScenario);
       }
 
       // Optional: create Virtual Contributors
-      if (scenarioConfig.virtualContributors) {
-        await this.setupVirtualContributors(
-          scenarioConfig.virtualContributors,
-          baseScenario
-        );
+      if (virtualContributors) {
+        await this.setupVirtualContributors(virtualContributors, baseScenario);
       }
 
       // Optional: create a platform discussion
-      if (scenarioConfig.platformDiscussion) {
-        await this.setupPlatformDiscussion(
-          scenarioConfig.platformDiscussion,
-          baseScenario
-        );
+      if (platformDiscussion) {
+        await this.setupPlatformDiscussion(platformDiscussion, baseScenario);
       }
 
-      if (!scenarioConfig.space) {
+      if (!space) {
         // nothing more to do, return
         return baseScenario;
       }
@@ -149,16 +149,12 @@ export class TestScenarioFactory {
         baseScenario.space,
         baseScenario.organization.accountId,
         baseScenario.name,
-        scenarioConfig.space.collaboration?.addTutorialCallouts ?? true
+        space.collaboration?.addTutorialCallouts ?? true
       );
 
-      await this.populateSpace(
-        scenarioConfig.space,
-        baseScenario.space,
-        baseScenario.name
-      );
+      await this.populateSpace(space, baseScenario.space, baseScenario.name);
 
-      const subspace = scenarioConfig.space.subspace;
+      const subspace = space.subspace;
       if (!subspace) {
         // all done, return
         return baseScenario;
