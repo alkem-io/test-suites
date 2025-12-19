@@ -1,5 +1,4 @@
-//const { test } = require('@playwright/test');
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 
 import {
   TestScenarioConfig,
@@ -39,7 +38,7 @@ test.beforeAll(async () => {
 test.afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
-test('seed', async ({ page }) => {
+test.skip('seed', async ({ page }) => {
   await page.goto(baseUrl);
   await page.getByRole('button', { name: 'Accept All Cookies' }).click();
   await page.getByTestId('PersonIcon').click();

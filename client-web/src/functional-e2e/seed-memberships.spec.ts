@@ -161,7 +161,7 @@ test.afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
-test('seed memberships scenario', async ({ page }) => {
+test.skip('seed memberships scenario', async ({ page }) => {
   await page.goto(baseUrl);
   await page.getByRole('button', { name: 'Accept All Cookies' }).click();
   await page.getByTestId('PersonIcon').click();

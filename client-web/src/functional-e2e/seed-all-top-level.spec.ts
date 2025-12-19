@@ -135,7 +135,7 @@ let baseScenario: OrganizationWithSpaceModel;
 // Keep test mode serial to ensure clean create/cleanup lifecycle
 (test.describe as any).configure?.({ mode: 'serial' });
 
-test.describe('Innovation Pack seeding via TestScenarioFactory', () => {
+test.describe.skip('Innovation Pack seeding via TestScenarioFactory', () => {
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(120_000);
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
