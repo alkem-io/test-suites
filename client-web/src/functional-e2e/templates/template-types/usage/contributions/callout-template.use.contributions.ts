@@ -120,7 +120,8 @@ export const verifyContributionSettings = async (
   }
 
   // Get back to Callout Edit Dialog
-  const backButton = collectionSettingsDialog.getByRole('button', { name: 'Back' }).last();
+
+  await page.getByRole('heading', { name: 'Community guidelines' }).click();  const backButton = collectionSettingsDialog.getByRole('button', { name: 'Back' }).last();
   await backButton.scrollIntoViewIfNeeded();
   await backButton.click();
 

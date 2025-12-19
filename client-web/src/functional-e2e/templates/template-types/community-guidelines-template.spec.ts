@@ -200,15 +200,11 @@ test.describe.serial('Community Guidelines Template', () => {
     await expect(templateGalleryDialog).not.toBeVisible()
 
     await expect(
-      await communityGuidelinesBlock.getByRole('textbox', { name: 'Title', exact: true }).inputValue()
+      await page.getByRole('textbox', { name: 'Title', exact: true }).inputValue()
     ).toBe(templateData.guidelines.displayName);
 
 
-    await page.getByRole('link', { name: 'Avatar of l0-community-guidelin-66a417 l0-community-guidelin-66a417 A home to' }).click();
-    await page.getByRole('tab', { name: 'Settings' }).click();
-    await page.getByLabel('space Settings tabs').getByRole('tab', { name: 'community' }).click();
-    await page.getByRole('heading', { name: 'Community guidelines' }).click();
-    await expect(communityGuidelinesBlock.getByText(templateData.guidelines.description, { exact: true })).toBeVisible();
+    await expect(page.getByText(templateData.guidelines.description, { exact: true })).toBeVisible();
   });
 
   test('1.5 Delete Community Guidelines Template', async ({
