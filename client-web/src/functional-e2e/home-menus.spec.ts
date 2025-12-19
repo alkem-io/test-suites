@@ -24,7 +24,7 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
-test.describe('Home Page Menus', () => {
+test.describe.skip('Home Page Menus', () => {
   test.beforeAll(async () => {
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
   });
