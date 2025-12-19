@@ -47,8 +47,12 @@ export default defineConfig({
     {
       name: 'Authentication',
       testMatch: [
-        '/authentication/authentication-critical-flows.spec.ts',
-        '/authentication/authentication-flows.spec.ts',
+        '/authentication/authentication-page-verification.spec.ts',
+        '/authentication/authentication-login.spec.ts',
+        '/authentication/authentication-registration.spec.ts',
+        '/authentication/authentication-password-recovery.spec.ts',
+        '/authentication/authentication-cookie-consent.spec.ts',
+        '/authentication/authentication-restricted-access.spec.ts',
       ],
     },
     {
@@ -60,9 +64,7 @@ export default defineConfig({
     },
     {
       name: 'Public Space',
-      testMatch: [
-        '/public-space/*.spec.ts',
-      ],
+      testMatch: ['/public-space/*.spec.ts'],
     },
     {
       name: 'Support navigation',
@@ -81,7 +83,7 @@ export default defineConfig({
   ],
   // % or number of the available CPUs
   // workers: '100%',
-  workers: 2,
+  workers: 1,
 
   /*
     Playwright Test runs tests in parallel. In order to achieve that, it runs several worker processes that run at the same time.
@@ -96,10 +98,7 @@ export default defineConfig({
   retries: 2,
 
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: [
-    ['github'],
-    ['html', { open: 'never' }],
-  ],
+  reporter: [['github'], ['html', { open: 'never' }]],
 
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
