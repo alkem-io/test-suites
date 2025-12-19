@@ -25,7 +25,10 @@ test.describe('Authentication - Password Recovery Flows', () => {
   test('user successful password recovery', async ({ page }) => {
     test.setTimeout(60000); // Extended timeout for email-dependent flow
 
-    const newPassword = password; // Reusing same password for test stability
+    // IMPORTANT: We intentionally reuse the same password to ensure test idempotency.
+    // This means the password recovery flow is tested without actually changing the password,
+    // preventing test pollution in subsequent runs.
+    const newPassword = password;
 
     // Navigate to login page
     await navigateToLoginPageFromMenu(baseUrl, page);
@@ -83,7 +86,7 @@ test.describe('Authentication - Password Recovery Flows', () => {
       page.getByRole('link', { name: 'Create my own Space' })
     ).toBeVisible();
 
-    // TODO: After password reset, revert password to initial state
-    // to avoid test pollution in subsequent runs
+    // Note: Password is intentionally reset to the same value (newPassword === password),
+    // so this test is idempotent and does not cause test pollution.
   });
 });

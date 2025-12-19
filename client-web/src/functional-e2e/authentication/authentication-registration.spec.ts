@@ -33,8 +33,16 @@ test.describe('Authentication - Registration Flows', () => {
     await deleteMailSlurperMails();
   });
 
-  // Note: This test creates real users and requires email verification
-  // Consider cleanup after test or use dedicated test accounts
+  /**
+   * Note: This test creates real users with unique emails (test+{uniqueId}@alkem.io)
+   * and requires email verification.
+   *
+   * User cleanup is not implemented because:
+   * 1. Each test run creates a unique user that won't conflict with subsequent runs
+   * 2. The deleteUser API function needs to be added to @alkemio/tests-lib
+   *
+   * Consider implementing cleanup in test.afterEach once deleteUser is available.
+   */
   test('user successful registration with email verification', async ({
     page,
   }) => {
@@ -93,10 +101,9 @@ test.describe('Authentication - Registration Flows', () => {
     // Verify successful login
     await verifyMyDashboardWelcomeElement(page, 'Test');
 
-    // TODO: Cleanup - delete test user after verification
-    // const getUserId = await getUserData(userEmail);
-    // const registeredUserId = getUserId.data?.user.id ?? '';
-    // await deleteUser(registeredUserId);
+    // Note: User cleanup not implemented - each test creates unique user (test+{uniqueId}@alkem.io)
+    // that won't conflict with subsequent runs. To implement cleanup, add deleteUser
+    // function to @alkemio/tests-lib and use it in test.afterEach hook.
   });
 
   // Skipped until bug is fixed: https://app.zenhub.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/gh/alkem-io/client-web/8317
