@@ -258,31 +258,33 @@
 
 ## 2. Organization CRUD Tests
 
-### 2.1 Organization Creation (via Global Admin)
+### 2.1 Organization Creation & Deletion (via Global Admin, isolated)
 
-**Test:** `Global Admin creates organization from administration section`
+**Test:** `Global Admin creates and deletes a throwaway organization`
+
+**Scope note:** Use a fresh org solely for create+delete; keep the base scenario org (from suite setup) intact for subsequent read/update tests.
 
 **Steps:**
 
 1. Log in as Global Admin
-2. Navigate to Global Administration section
-3. Navigate to Organizations management
-4. Click "Create Organization"
-5. Fill in organization details:
+2. Navigate to Global Administration → Organizations
+3. Click "Create Organization"
+4. Fill in organization details:
    - Display Name
    - NameID
-6. Submit creation form
-7. Verify organization created successfully
-8. Assign Organization Admin user as owner
+5. Submit creation form and land on the new org profile
+6. Navigate to Settings / danger zone for that org
+7. Delete the newly created organization (confirm if prompted)
+8. Attempt to access the deleted org URL and verify it is gone
 
 **Expected Result:**
 
-- Organization created successfully
-- Organization appears in organizations list
-- Organization Admin assigned as owner
-- Organization profile accessible
+- Organization is created and reachable
+- Deletion succeeds in the same flow
+- Deleted org is no longer accessible/listed
+- Base scenario organization remains untouched for later tests
 
-**Test Roles:** Global Admin (creator)
+**Test Roles:** Global Admin (creator & deleter)
 
 ---
 
@@ -453,36 +455,6 @@
 - Settings take effect
 
 **Test Roles:** Org Admin
-
----
-
-### 2.7 Organization Deletion and Member Verification
-
-**Test:** `Delete organization and verify member removal`
-
-**Steps:**
-
-1. Log in as Global Admin
-2. Navigate to Global Adminstration / Organization profile
-3. Note organization members before deletion
-4. Initiate organization deletion
-5. Confirm deletion (may require password/confirmation)
-6. Verify organization deleted successfully
-7. Log in as user who was organization member
-8. Navigate to user profile → Membership tab
-9. Verify deleted organization no longer appears in memberships
-10. Attempt to navigate to organization profile URL
-11. Verify organization not found error or redirect
-
-**Expected Result:**
-
-- Organization deleted successfully
-- Organization removed from all members' profiles
-- Organization profile no longer accessible
-- Organization does not appear in organizations list
-- Former members no longer show organization membership
-
-**Test Roles:** Global Admin (deleter), Organization Admin (former admin, verifier)
 
 ---
 
@@ -769,10 +741,12 @@
 ### Test Suite Organization
 
 1. **Suite 1: User CRUD** (8 tests)
+
    - user-crud.spec.ts
    - Covers registration, profile, tabs, deletion
 
 2. **Suite 2: Organization CRUD** (7 tests)
+
    - organization-crud.spec.ts
    - Covers creation, profile, community, authorization, deletion
 

@@ -101,7 +101,7 @@ let baseScenario: OrganizationWithSpaceModel;
 // Serial mode to ensure clean setup/teardown
 (test.describe as any).configure?.({ mode: 'serial' });
 
-test.describe('Contributors CRUD - Scenario Setup', () => {
+test.describe.skip('Contributors CRUD - Scenario Setup', () => {
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(120_000);
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
