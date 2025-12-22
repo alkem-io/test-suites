@@ -11,6 +11,7 @@ import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scen
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestUserManager } from '@alkemio/tests-lib';
 import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
+import { deleteOrganization } from '@alkemio/tests-lib/scenario/baseFunctions';
 import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
@@ -137,7 +138,26 @@ test.describe('Organization CRUD Tests', () => {
       ? submitButton
       : submitLink;
     await expect(submitAction).toBeVisible();
+
+    const createResponsePromise = orgPage.waitForResponse(response => {
+      const body = response.request().postData() || '';
+      return (
+        response.url().includes('graphql') &&
+        /createOrganization/i.test(body || '') &&
+        response.request().method() === 'POST'
+      );
+    });
+
     await submitAction.click();
+
+    const createApiResponse = await createResponsePromise.catch(() => null);
+    const createPayload = createApiResponse
+      ? await createApiResponse.json().catch(() => ({}))
+      : {};
+    const createdOrgId: string | undefined =
+      createPayload?.data?.createOrganization?.id;
+    const createdOrgNameId: string =
+      createPayload?.data?.createOrganization?.nameID || testOrgNameId;
 
     // 8. Verify organization created successfully
     await orgPage.waitForURL(/\/organization\/[\w-]+/, { timeout: 30000 });
@@ -146,57 +166,14 @@ test.describe('Organization CRUD Tests', () => {
       testOrgName
     );
 
-    // 9. Delete the newly created organization (keep base scenario untouched)
-    // Navigate to settings for this new org
-    const settingsIcon = orgPage
-      .locator('[data-testid="SettingsOutlinedIcon"]')
-      .first();
-    if (await settingsIcon.isVisible().catch(() => false)) {
-      await settingsIcon.click();
-      if (orgPage.isClosed()) {
-        orgPage = await ctx.newPage();
-        await orgPage.goto(createdOrgUrl);
-      } else {
-        await orgPage
-          .waitForLoadState('domcontentloaded')
-          .catch(() => undefined);
-        if (!orgPage.url().includes('/settings')) {
-          const settingsTab = orgPage.getByRole('tab', { name: /settings/i });
-          if (await settingsTab.isVisible().catch(() => false)) {
-            await settingsTab.click();
-          }
-        }
-      }
-    } else {
-      const settingsTab = orgPage.getByRole('tab', { name: /settings/i });
-      if (await settingsTab.isVisible().catch(() => false)) {
-        await settingsTab.click();
-      }
-    }
+    // 9. Delete the newly created organization via API (keep base scenario untouched)
+    expect(createdOrgId || createdOrgNameId).toBeTruthy();
 
-    const deleteButton = orgPage.getByRole('button', {
-      name: /delete.*organization|remove.*organization/i,
-    });
-
-    if (await deleteButton.isVisible().catch(() => false)) {
-      await deleteButton.click();
-
-      // Confirm deletion if a dialog appears
-      const confirmDialog = orgPage.getByRole('dialog').first();
-      if (await confirmDialog.isVisible().catch(() => false)) {
-        const confirmInput = confirmDialog.getByRole('textbox').first();
-        if (await confirmInput.isVisible().catch(() => false)) {
-          await confirmInput.fill(testOrgName);
-        }
-
-        const confirmDeleteButton = confirmDialog.getByRole('button', {
-          name: /delete|confirm/i,
-        });
-        if (await confirmDeleteButton.isVisible().catch(() => false)) {
-          await confirmDeleteButton.click();
-        }
-      }
-    }
+    const deleteResult = await deleteOrganization(
+      (createdOrgId as string) || createdOrgNameId,
+      TestUser.GLOBAL_ADMIN
+    );
+    expect(deleteResult.error).toBeUndefined();
 
     // 10. Verify the organization is no longer accessible (best-effort)
     if (orgPage.isClosed()) {
