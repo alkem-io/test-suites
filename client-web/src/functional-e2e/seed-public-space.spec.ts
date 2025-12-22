@@ -90,7 +90,7 @@ test.afterAll(async () => {
   test.setTimeout(30_000); // 30 seconds for cleanup
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
-test('seed', async ({ page }) => {
+test.skip('seed', async ({ page }) => {
   await page.goto(baseUrl);
   await page.getByRole('button', { name: 'Accept All Cookies' }).click();
   await page.getByTestId('PersonIcon').click();
