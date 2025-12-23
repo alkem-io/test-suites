@@ -1066,8 +1066,6 @@ export class TestScenarioFactory {
         calloutWhiteboardDisplayName: "",
         calloutPostId: "",
         calloutPostDisplayName: "",
-        calloutWhiteboardId: "",
-        calloutPostId: "",
         calloutPostCommentsId: "",
       },
       contextId: "",
