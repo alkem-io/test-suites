@@ -1,10 +1,6 @@
 // spec: client-web/src/functional-e2e/plans/callouts-test-plan.md
 // seed: client-web/src/functional-e2e/seed-public-space.spec.ts
 
-import {
-  CommunityMembershipPolicy,
-  SpacePrivacyMode,
-} from '@alkemio/client-lib/dist/generated/graphql';
 import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
@@ -38,12 +34,7 @@ const scenarioConfig: TestScenarioConfig = {
         TestUser.SUBSPACE_MEMBER,
       ],
     },
-    settings: {
-      privacy: { mode: SpacePrivacyMode.Public },
-      membership: {
-        policy: CommunityMembershipPolicy.Applications,
-      },
-    },
+
     subspace: {
       about: {
         profile: {
@@ -58,12 +49,6 @@ const scenarioConfig: TestScenarioConfig = {
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
         members: [TestUser.SUBSPACE_ADMIN, TestUser.SUBSPACE_MEMBER],
-      },
-      settings: {
-        privacy: { mode: SpacePrivacyMode.Public },
-        membership: {
-          policy: CommunityMembershipPolicy.Applications,
-        },
       },
     },
   },
