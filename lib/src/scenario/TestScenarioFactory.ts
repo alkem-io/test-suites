@@ -836,11 +836,12 @@ export class TestScenarioFactory {
     spaceModel: SpaceModel,
     scenarioName: string
   ): Promise<SpaceModel> {
+    const displayName = `${scenarioName} - post`;
     const createPostCallout = await createCalloutOnCalloutsSet(
       spaceModel.collaboration.calloutsSetId,
       {
         framing: {
-          profile: { displayName: `${scenarioName} - post` },
+          profile: { displayName },
         },
         settings: {
           framing: { commentsEnabled: true },
@@ -858,6 +859,7 @@ export class TestScenarioFactory {
     const postCalloutData = createPostCallout.data?.createCalloutOnCalloutsSet;
 
     spaceModel.collaboration.calloutPostId = postCalloutData?.id ?? "";
+    spaceModel.collaboration.calloutPostDisplayName = displayName;
     spaceModel.collaboration.calloutPostCommentsId =
       postCalloutData?.comments?.id ?? "";
 
@@ -868,13 +870,14 @@ export class TestScenarioFactory {
     spaceModel: SpaceModel,
     scenarioName: string
   ): Promise<SpaceModel> {
+    const displayName = `postCollectionCallout-${scenarioName}`;
     const callForPostCalloutData = await createCalloutOnCalloutsSet(
       spaceModel.collaboration.calloutsSetId,
       {
         framing: {
           profile: {
-            displayName: `postCollectionCallout-${scenarioName}`,
-            description: `postCollectionCallout-${scenarioName} - created as part of scenario setup for tests`,
+            displayName,
+            description: `${displayName} - created as part of scenario setup for tests`,
           },
         },
         settings: {
@@ -892,6 +895,7 @@ export class TestScenarioFactory {
 
     spaceModel.collaboration.calloutPostCollectionId =
       callForPostCalloutData?.data?.createCalloutOnCalloutsSet?.id ?? "";
+    spaceModel.collaboration.calloutPostCollectionDisplayName = displayName;
 
     return spaceModel;
   }
@@ -900,12 +904,13 @@ export class TestScenarioFactory {
     spaceModel: SpaceModel,
     scenarioName: string
   ): Promise<SpaceModel> {
+    const displayName = `${scenarioName} - whiteboard callout`;
     const whiteboardCalloutData = await createWhiteboardCalloutOnCalloutsSet(
       spaceModel.collaboration.calloutsSetId,
       {
         framing: {
           profile: {
-            displayName: `${scenarioName} - whiteboard callout`,
+            displayName,
             description: "Whiteboard - initial",
           },
         },
@@ -921,6 +926,7 @@ export class TestScenarioFactory {
 
     spaceModel.collaboration.calloutWhiteboardId =
       whiteboardCalloutData?.data?.createCalloutOnCalloutsSet?.id ?? "";
+    spaceModel.collaboration.calloutWhiteboardDisplayName = displayName;
 
     return spaceModel;
   }
@@ -1055,6 +1061,11 @@ export class TestScenarioFactory {
         id: "",
         calloutsSetId: "",
         calloutPostCollectionId: "",
+        calloutPostCollectionDisplayName: "",
+        calloutWhiteboardId: "",
+        calloutWhiteboardDisplayName: "",
+        calloutPostId: "",
+        calloutPostDisplayName: "",
         calloutWhiteboardId: "",
         calloutPostId: "",
         calloutPostCommentsId: "",

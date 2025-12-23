@@ -343,11 +343,10 @@ export class CollaborationPage {
   }
 
   async getCalloutByName(name: string): Promise<Locator> {
-    return this.page
-      .getByRole('heading', {
-        name: name,
-      })
-      .first();
+    return this.page.getByRole('heading', {
+      name: name,
+      exact: true,
+    });
   }
 
   async clickCallout(name: string) {

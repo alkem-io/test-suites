@@ -1,21 +1,18 @@
 // spec: client-web/src/functional-e2e/plans/callouts-test-plan.md
 // seed: client-web/src/functional-e2e/seed-public-space.spec.ts
 
-import {
-  CommunityMembershipPolicy,
-  SpacePrivacyMode,
-} from '@alkemio/client-lib/dist/generated/graphql';
 import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
-import { TestUserManager } from '@alkemio/tests-lib';
+import { TestUserManager, updateCalloutVisibility } from '@alkemio/tests-lib';
 import { expect } from '@playwright/test';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 import { CollaborationPage } from './pages';
+import { CalloutVisibility } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
-
+let calloutName = '';
 // Scenario config with pre-created callouts for viewing tests
 const scenarioConfig: TestScenarioConfig = {
   name: 'callout-viewing',
@@ -28,23 +25,15 @@ const scenarioConfig: TestScenarioConfig = {
     collaboration: {
       addTutorialCallouts: false,
       addPostCollectionCallout: true, // Pre-create a post collection callout
-      addWhiteboardCallout: true, // Pre-create a whiteboard callout
     },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [TestUser.SPACE_MEMBER, TestUser.SPACE_ADMIN],
     },
-    settings: {
-      privacy: { mode: SpacePrivacyMode.Public },
-      membership: {
-        policy: CommunityMembershipPolicy.Applications,
-      },
-    },
   },
 };
 
 let baseScenario: OrganizationWithSpaceModel;
-const testCalloutName = `Viewing Test Callout ${Date.now()}`;
 
 const adminFixture = createAuthenticatedSessionFixture({
   storageStateName: 'callout-viewing-admin.json',
@@ -64,6 +53,8 @@ adminFixture.test.describe.serial('Callout Viewing', () => {
       browser,
       TestUserManager.users.spaceAdmin.email
     );
+    calloutName =
+      baseScenario.space.collaboration.calloutPostCollectionDisplayName;
   });
 
   adminFixture.test.afterAll(async () => {
@@ -76,22 +67,23 @@ adminFixture.test.describe.serial('Callout Viewing', () => {
     async ({ page }) => {
       adminFixture.test.setTimeout(30_000);
       const collaborationPage = new CollaborationPage(page, baseUrl);
-      const draftCalloutName = `Draft Callout Admin ${Date.now()}`;
 
       await collaborationPage.navigateToSpace(baseScenario.space.nameId);
 
-      await collaborationPage.createCallout(
-        'post',
-        draftCalloutName,
-        'This is a draft callout',
-        true
+      await updateCalloutVisibility(
+        baseScenario.space.collaboration.calloutPostCollectionId,
+        CalloutVisibility.Draft
       );
 
-      const isDraftVisible =
-        await collaborationPage.isCalloutVisible(draftCalloutName);
+      await expect(page.getByRole('tab', { name: 'Home' })).toBeVisible({
+        timeout: 10000,
+      });
+      const isDraftVisible = await collaborationPage.isCalloutVisible(
+        `${calloutName}`
+      );
       expect(isDraftVisible).toBe(true);
 
-      await collaborationPage.clickCallout(draftCalloutName);
+      await collaborationPage.clickCallout(`${calloutName}`);
       await collaborationPage.openContextualMenu();
       await expect(collaborationPage.publishMenuItem).toBeVisible();
     }
@@ -105,18 +97,7 @@ adminFixture.test.describe.serial('Callout Viewing', () => {
 
       await collaborationPage.navigateToSpace(baseScenario.space.nameId);
 
-      await collaborationPage.createCallout(
-        'post',
-        testCalloutName,
-        'A callout for viewing tests',
-        true
-      );
-
-      const isVisible =
-        await collaborationPage.isCalloutVisible(testCalloutName);
-      expect(isVisible).toBe(true);
-
-      await collaborationPage.clickCallout(testCalloutName);
+      await collaborationPage.clickCallout(`${calloutName}`);
 
       await collaborationPage.openContextualMenu();
       await collaborationPage.publishCallout();
@@ -132,6 +113,8 @@ memberFixture.test.describe.serial('Callout Viewing - Member', () => {
     if (!baseScenario) {
       baseScenario =
         await TestScenarioFactory.createBaseScenario(scenarioConfig);
+      calloutName =
+        baseScenario.space.collaboration.calloutPostCollectionDisplayName;
     }
     await memberFixture.setupAuthentication(
       browser,
@@ -152,11 +135,19 @@ memberFixture.test.describe.serial('Callout Viewing - Member', () => {
     async ({ page }) => {
       memberFixture.test.setTimeout(30_000);
       const collaborationPage = new CollaborationPage(page, baseUrl);
+      await updateCalloutVisibility(
+        baseScenario.space.collaboration.calloutPostCollectionId,
+        CalloutVisibility.Published
+      );
 
       await collaborationPage.navigateToSpace(baseScenario.space.nameId);
-
-      expect(collaborationPage.getCalloutByName(testCalloutName)).toBeDefined();
-      await collaborationPage.clickCallout(testCalloutName);
+      await expect(page.getByRole('tab', { name: 'Home' })).toBeVisible({
+        timeout: 10000,
+      });
+      await expect(
+        page.getByRole('heading', { name: `${calloutName}`, exact: true })
+      ).toBeVisible({ timeout: 20000 });
+      await collaborationPage.clickCallout(`${calloutName}`);
 
       await expect(collaborationPage.commentInput).toBeVisible();
     }
@@ -167,12 +158,18 @@ memberFixture.test.describe.serial('Callout Viewing - Member', () => {
     async ({ page }) => {
       memberFixture.test.setTimeout(30_000);
       const collaborationPage = new CollaborationPage(page, baseUrl);
+      await updateCalloutVisibility(
+        baseScenario.space.collaboration.calloutPostCollectionId,
+        CalloutVisibility.Draft
+      );
 
       await collaborationPage.navigateToSpace(baseScenario.space.nameId);
-
-      await collaborationPage.clickCallout(testCalloutName);
-      await collaborationPage.openContextualMenu();
-      await expect(collaborationPage.publishMenuItem).not.toBeVisible();
+      await expect(page.getByRole('tab', { name: 'Home' })).toBeVisible({
+        timeout: 10000,
+      });
+      await expect(
+        page.getByRole('heading', { name: `${calloutName}`, exact: true })
+      ).toBeHidden({ timeout: 5000 });
     }
   );
 });
