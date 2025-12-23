@@ -196,9 +196,13 @@ memberFixture.test.describe.serial('Callout Editing - Member', () => {
       await collaborationPage.navigateToSpace(baseScenario.space.nameId);
 
       expect(
-        collaborationPage.getCalloutByName(currentCalloutName)
+        collaborationPage.getCalloutByName(
+          `${baseScenario.space.collaboration.calloutPostCollectionDisplayName}`
+        )
       ).toBeDefined();
-      await collaborationPage.clickCallout(currentCalloutName);
+      await collaborationPage.clickCallout(
+        `${baseScenario.space.collaboration.calloutPostCollectionDisplayName}`
+      );
 
       const isEditVisible = await collaborationPage.isEditButtonVisible();
       expect(isEditVisible).toBe(false);

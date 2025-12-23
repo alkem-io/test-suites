@@ -111,10 +111,6 @@ memberFixture.test.describe.serial(
   () => {
     memberFixture.test.beforeAll(async ({ browser }) => {
       memberFixture.test.setTimeout(60_000);
-      if (!baseScenario) {
-        baseScenario =
-          await TestScenarioFactory.createBaseScenario(scenarioConfig);
-      }
       await memberFixture.setupAuthentication(
         browser,
         TestUserManager.users.spaceMember.email
@@ -179,10 +175,6 @@ adminModerationFixture.test.describe.serial(
   () => {
     adminModerationFixture.test.beforeAll(async ({ browser }) => {
       adminModerationFixture.test.setTimeout(60_000);
-      if (!baseScenario) {
-        baseScenario =
-          await TestScenarioFactory.createBaseScenario(scenarioConfig);
-      }
       await adminModerationFixture.setupAuthentication(
         browser,
         TestUserManager.users.spaceAdmin.email

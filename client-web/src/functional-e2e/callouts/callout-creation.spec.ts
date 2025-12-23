@@ -31,30 +31,7 @@ const scenarioConfig: TestScenarioConfig = {
     },
     community: {
       admins: [TestUser.SPACE_ADMIN],
-      members: [
-        TestUser.SPACE_MEMBER,
-        TestUser.SPACE_ADMIN,
-        TestUser.SUBSPACE_MEMBER,
-        TestUser.SUBSPACE_ADMIN,
-      ],
-    },
-    settings: {
-      privacy: { mode: SpacePrivacyMode.Public },
-      membership: {
-        policy: CommunityMembershipPolicy.Applications,
-      },
-    },
-    subspace: {
-      community: {
-        admins: [TestUser.SUBSPACE_ADMIN],
-        members: [TestUser.SUBSPACE_MEMBER, TestUser.SUBSPACE_ADMIN],
-      },
-      settings: {
-        privacy: { mode: SpacePrivacyMode.Public },
-        membership: {
-          policy: CommunityMembershipPolicy.Applications,
-        },
-      },
+      members: [TestUser.SPACE_MEMBER, TestUser.SPACE_ADMIN],
     },
   },
 };

@@ -1,10 +1,6 @@
 // spec: client-web/src/functional-e2e/plans/callouts-test-plan.md
 // seed: client-web/src/functional-e2e/seed-public-space.spec.ts
 
-import {
-  CommunityMembershipPolicy,
-  SpacePrivacyMode,
-} from '@alkemio/client-lib/dist/generated/graphql';
 import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
@@ -13,6 +9,7 @@ import { TestUserManager } from '@alkemio/tests-lib';
 import { expect } from '@playwright/test';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 import { CollaborationPage } from './pages';
+import { time } from 'console';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
@@ -33,12 +30,6 @@ const scenarioConfig: TestScenarioConfig = {
       admins: [TestUser.SPACE_ADMIN],
       members: [TestUser.SPACE_MEMBER, TestUser.SPACE_ADMIN],
     },
-    settings: {
-      privacy: { mode: SpacePrivacyMode.Public },
-      membership: {
-        policy: CommunityMembershipPolicy.Applications,
-      },
-    },
   },
 };
 
@@ -55,10 +46,53 @@ const memberFixture = createAuthenticatedSessionFixture({
   cleanupAfterTests: process.env.cleanupAfterTests === 'true',
 });
 
+memberFixture.test.describe.serial('Callout Deletion - Member', () => {
+  memberFixture.test.beforeAll(async ({ browser }) => {
+    memberFixture.test.setTimeout(60_000);
+    baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
+
+    await memberFixture.setupAuthentication(
+      browser,
+      TestUserManager.users.spaceMember.email
+    );
+  });
+
+  memberFixture.test.afterAll(async () => {
+    memberFixture.test.setTimeout(30_000);
+    await memberFixture.teardownAuthentication();
+  });
+
+  memberFixture.test(
+    '4.2 Cannot Delete Callout - As Space Member',
+    async ({ page }) => {
+      memberFixture.test.setTimeout(30_000);
+      const collaborationPage = new CollaborationPage(page, baseUrl);
+
+      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+
+      await expect(
+        page.getByRole('heading', {
+          name: `${baseScenario.space.collaboration.calloutPostCollectionDisplayName}`,
+          exact: true,
+        })
+      ).toBeVisible({ timeout: 5000 });
+      await collaborationPage.clickCallout(
+        baseScenario.space.collaboration.calloutPostCollectionDisplayName
+      );
+
+      await collaborationPage.openContextualMenu();
+      expect(collaborationPage.deleteButton).toBeHidden({ timeout: 4000 });
+    }
+  );
+});
+
 adminFixture.test.describe.serial('Callout Deletion', () => {
   adminFixture.test.beforeAll(async ({ browser }) => {
     adminFixture.test.setTimeout(60_000);
-    baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
+    if (!baseScenario) {
+      baseScenario =
+        await TestScenarioFactory.createBaseScenario(scenarioConfig);
+    }
     await adminFixture.setupAuthentication(
       browser,
       TestUserManager.users.spaceAdmin.email
@@ -68,6 +102,9 @@ adminFixture.test.describe.serial('Callout Deletion', () => {
   adminFixture.test.afterAll(async () => {
     adminFixture.test.setTimeout(30_000);
     await adminFixture.teardownAuthentication();
+    if (baseScenario) {
+      await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+    }
   });
 
   adminFixture.test('4.1 Delete Callout - As Space Admin', async ({ page }) => {
@@ -94,70 +131,15 @@ adminFixture.test.describe.serial('Callout Deletion', () => {
 
     await collaborationPage.deleteButton.click();
     await expect(collaborationPage.confirmDialog).toBeVisible();
-    await collaborationPage.confirmButton.click();
+    await collaborationPage.confirmDeleteButton.click({ timeout: 5000 });
 
     await collaborationPage.navigateToSpace(baseScenario.space.nameId);
 
-    const isDeleted = await collaborationPage.isCalloutVisible(calloutToDelete);
-    expect(isDeleted).toBe(false);
+    await expect(
+      page.getByRole('heading', {
+        name: `${calloutToDelete}`,
+        exact: true,
+      })
+    ).toBeHidden({ timeout: 5000 });
   });
-
-  adminFixture.test(
-    '4.0 Setup: Create Callout for Member Test',
-    async ({ page }) => {
-      adminFixture.test.setTimeout(45_000);
-      const collaborationPage = new CollaborationPage(page, baseUrl);
-
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
-
-      await collaborationPage.createCallout(
-        'post',
-        testCalloutName,
-        'Callout for member deletion access test',
-        true
-      );
-
-      await collaborationPage.clickCallout(testCalloutName);
-      await collaborationPage.openContextualMenu();
-      await collaborationPage.publishCallout();
-    }
-  );
-});
-
-memberFixture.test.describe.serial('Callout Deletion - Member', () => {
-  memberFixture.test.beforeAll(async ({ browser }) => {
-    memberFixture.test.setTimeout(60_000);
-    if (!baseScenario) {
-      baseScenario =
-        await TestScenarioFactory.createBaseScenario(scenarioConfig);
-    }
-    await memberFixture.setupAuthentication(
-      browser,
-      TestUserManager.users.spaceMember.email
-    );
-  });
-
-  memberFixture.test.afterAll(async () => {
-    memberFixture.test.setTimeout(30_000);
-    await memberFixture.teardownAuthentication();
-    if (baseScenario) {
-      await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
-    }
-  });
-
-  memberFixture.test(
-    '4.2 Cannot Delete Callout - As Space Member',
-    async ({ page }) => {
-      memberFixture.test.setTimeout(30_000);
-      const collaborationPage = new CollaborationPage(page, baseUrl);
-
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
-
-      expect(collaborationPage.getCalloutByName(testCalloutName)).toBeDefined();
-      await collaborationPage.clickCallout(testCalloutName);
-
-      await collaborationPage.openContextualMenu();
-      expect(collaborationPage.deleteButton).not.toBeVisible();
-    }
-  );
 });

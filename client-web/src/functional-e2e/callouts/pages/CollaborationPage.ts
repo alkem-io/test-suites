@@ -144,7 +144,7 @@ export class CollaborationPage {
   }
 
   get deleteButton() {
-    return this.page.getByRole('menuitem', { name: /delete/i });
+    return this.page.getByRole('menuitem', { name: 'Delete' });
   }
 
   get settingsButton() {
@@ -184,9 +184,7 @@ export class CollaborationPage {
 
   // Contributions
   get addContributionButton() {
-    return this.page.getByRole('button', {
-      name: /add|post/i,
-    });
+    return this.page.getByRole('button', { name: 'Add', exact: true });
   }
 
   get contributionsList() {
@@ -198,6 +196,10 @@ export class CollaborationPage {
   // Confirmation dialog
   get confirmDialog() {
     return this.page.getByRole('dialog');
+  }
+
+  get confirmDeleteButton() {
+    return this.page.getByRole('button', { name: 'Delete' });
   }
 
   get confirmButton() {
@@ -351,7 +353,7 @@ export class CollaborationPage {
 
   async clickCallout(name: string) {
     const callout = await this.getCalloutByName(name);
-    await callout.click();
+    await callout.click({ timeout: 5000 });
   }
 
   async isCalloutVisible(name: string): Promise<boolean> {
@@ -426,9 +428,9 @@ export class CollaborationPage {
   }
 
   async openContextualMenu() {
-    await this.contextualMenuButton.click();
+    await this.contextualMenuButton.click({ timeout: 5000 });
     // Wait for menu to open
-    await delay(300);
+    // await delay(300);
   }
 
   async editCallout() {
@@ -469,8 +471,8 @@ export class CollaborationPage {
   }
 
   async addPostContribution(title: string, content: string) {
-    await this.addContributionButton.click();
-    await this.page.getByLabel(/title/i).fill(title);
+    await this.addContributionButton.click({ timeout: 5000 });
+    await this.page.getByRole('textbox', { name: 'Title' }).fill(title);
     // await this.page.getByLabel(/content|description/i).fill(content);
 
     const editor = this.page.getByRole('textbox', { name: /markdown editor/i });

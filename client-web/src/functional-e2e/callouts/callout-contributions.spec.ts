@@ -138,11 +138,17 @@ memberFixture.test.describe.serial('Callout Contributions - Member', () => {
       await collaborationPage.navigateToSpace(baseScenario.space.nameId);
 
       expect(
-        collaborationPage.getCalloutByName(testPostCalloutName)
+        collaborationPage.getCalloutByName(
+          baseScenario.space.collaboration.calloutPostCollectionDisplayName
+        )
       ).toBeDefined();
-      await collaborationPage.clickCallout(testPostCalloutName);
-
-      await expect(collaborationPage.addContributionButton).toBeVisible();
+      await collaborationPage.clickCallout(
+        baseScenario.space.collaboration.calloutPostCollectionDisplayName
+      );
+      await delay(500); // Wait for contributions to load
+      await expect(collaborationPage.addContributionButton).toBeVisible({
+        timeout: 5000,
+      });
 
       await collaborationPage.addPostContribution(postTitle, postContent);
 
