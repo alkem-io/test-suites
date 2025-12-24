@@ -1,4 +1,4 @@
-import { ProfileModel } from './ProfileModel';
+import { ProfileModel } from "./ProfileModel";
 
 export type SpaceModel = {
   id: string;
@@ -17,8 +17,15 @@ export type SpaceModel = {
     id: string;
     calloutsSetId: string;
     calloutPostCollectionId: string;
+    calloutPostCollectionDisplayName: string;
+    calloutLinkCollectionId: string;
+    calloutLinkCollectionDisplayName: string;
+    calloutWhiteboardCollectionId: string;
+    calloutWhiteboardCollectionDisplayName: string;
     calloutWhiteboardId: string;
+    calloutWhiteboardDisplayName: string;
     calloutPostId: string;
+    calloutPostDisplayName: string;
     calloutPostCommentsId: string;
   };
   contextId: string;
