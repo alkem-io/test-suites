@@ -435,11 +435,11 @@ export class CollaborationPage {
 
   async editCallout() {
     await this.openContextualMenu();
-    await this.editButton.click();
+    await this.editButton.click({ timeout: 5000 });
   }
 
   async openSettings() {
-    await this.settingsButton.click();
+    await this.settingsButton.click({ timeout: 5000 });
   }
 
   async isEditButtonVisible(): Promise<boolean> {

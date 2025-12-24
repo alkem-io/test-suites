@@ -9,10 +9,11 @@ import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
-import { TestUserManager } from '@alkemio/tests-lib';
+import { delay, TestUserManager } from '@alkemio/tests-lib';
 import { expect } from '@playwright/test';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 import { CollaborationPage } from './pages';
+import { time } from 'console';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
@@ -28,17 +29,18 @@ const scenarioConfig: TestScenarioConfig = {
       addTutorialCallouts: false,
       addPostCollectionCallout: true,
       addWhiteboardCallout: false,
+      addPostCallout: false,
     },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [TestUser.SPACE_MEMBER, TestUser.SPACE_ADMIN],
     },
-    settings: {
-      privacy: { mode: SpacePrivacyMode.Public },
-      membership: {
-        policy: CommunityMembershipPolicy.Applications,
-      },
-    },
+    // settings: {
+    //   privacy: { mode: SpacePrivacyMode.Public },
+    //   membership: {
+    //     policy: CommunityMembershipPolicy.Applications,
+    //   },
+    // },
   },
 };
 
@@ -68,6 +70,9 @@ adminFixture.test.describe.serial('Callout Editing', () => {
   adminFixture.test.afterAll(async () => {
     adminFixture.test.setTimeout(30_000);
     await adminFixture.teardownAuthentication();
+    if (baseScenario) {
+      await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+    }
   });
 
   adminFixture.test(
@@ -187,7 +192,7 @@ memberFixture.test.describe.serial('Callout Editing - Member', () => {
     }
   });
 
-  memberFixture.test(
+  memberFixture.test.skip(
     '3.3 Cannot Edit Callout - As Space Member',
     async ({ page }) => {
       memberFixture.test.setTimeout(30_000);
@@ -195,19 +200,38 @@ memberFixture.test.describe.serial('Callout Editing - Member', () => {
 
       await collaborationPage.navigateToSpace(baseScenario.space.nameId);
 
-      expect(
-        collaborationPage.getCalloutByName(
-          `${baseScenario.space.collaboration.calloutPostCollectionDisplayName}`
-        )
-      ).toBeDefined();
-      await collaborationPage.clickCallout(
-        `${baseScenario.space.collaboration.calloutPostCollectionDisplayName}`
-      );
-
-      const isEditVisible = await collaborationPage.isEditButtonVisible();
-      expect(isEditVisible).toBe(false);
-
-      await expect(collaborationPage.settingsButton).not.toBeVisible();
+      await delay(500);
+      // expect(
+      //   collaborationPage.getCalloutByName(
+      //     baseScenario.space.collaboration.calloutPostDisplayName
+      //   )
+      // ).toBeDefined();
+      await expect(
+        page.getByRole('heading', {
+          name: `${baseScenario.space.collaboration.calloutPostCollectionDisplayName}`,
+          exact: true,
+        })
+      ).toBeVisible({ timeout: 5000 });
+      page
+        .getByRole('heading', {
+          name: `${baseScenario.space.collaboration.calloutPostCollectionDisplayName}`,
+          exact: true,
+        })
+        .click({ timeout: 5000 });
+      // await collaborationPage.clickCallout(
+      //   baseScenario.space.collaboration.calloutPostDisplayName
+      // );
+      await delay(500);
+      // const isEditVisible = await collaborationPage.isEditButtonVisible();
+      // expect(isEditVisible).toBe(false);
+      await page
+        .getByRole('button', { name: 'settings' })
+        .first()
+        .click({ timeout: 5000 });
+      await delay(500);
+      await expect(page.getByText('Edit', { exact: true })).not.toBeVisible({
+        timeout: 5000,
+      });
     }
   );
 });

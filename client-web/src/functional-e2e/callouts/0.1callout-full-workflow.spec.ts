@@ -33,12 +33,6 @@ const scenarioConfig: TestScenarioConfig = {
       admins: [TestUser.SPACE_ADMIN],
       members: [TestUser.SPACE_MEMBER, TestUser.SPACE_ADMIN],
     },
-    settings: {
-      privacy: { mode: SpacePrivacyMode.Public },
-      membership: {
-        policy: CommunityMembershipPolicy.Applications,
-      },
-    },
   },
 };
 
@@ -102,7 +96,9 @@ adminFixture.test.describe.serial('8.1 Post Collection - Full Workflow', () => {
     await collaborationPage.publishCallout();
 
     await collaborationPage.openContextualMenu();
-    await expect(collaborationPage.publishMenuItem).not.toBeVisible();
+    await expect(collaborationPage.publishMenuItem).not.toBeVisible({
+      timeout: 5000,
+    });
   });
 });
 

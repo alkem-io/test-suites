@@ -1,10 +1,6 @@
 // spec: client-web/src/functional-e2e/plans/callouts-test-plan.md
 // seed: client-web/src/functional-e2e/seed-public-space.spec.ts
 
-import {
-  CommunityMembershipPolicy,
-  SpacePrivacyMode,
-} from '@alkemio/client-lib/dist/generated/graphql';
 import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
@@ -27,92 +23,28 @@ const scenarioConfig: TestScenarioConfig = {
     collaboration: {
       addTutorialCallouts: false,
       addPostCollectionCallout: true, // For post contributions
+      addLinkCollectionCallout: true, // For link contributions
       addWhiteboardCallout: false,
+      addWhiteboardCollectionCallout: false,
     },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [TestUser.SPACE_MEMBER, TestUser.SPACE_ADMIN],
     },
-    settings: {
-      privacy: { mode: SpacePrivacyMode.Public },
-      membership: {
-        policy: CommunityMembershipPolicy.Applications,
-      },
-    },
   },
 };
 
 let baseScenario: OrganizationWithSpaceModel;
-const testPostCalloutName = `Post Collection Test ${Date.now()}`;
-const testLinkCalloutName = `Link Collection Test ${Date.now()}`;
 
 const memberFixture = createAuthenticatedSessionFixture({
   storageStateName: 'callout-contributions-member.json',
   cleanupAfterTests: process.env.cleanupAfterTests === 'true',
 });
 
-const adminFixture = createAuthenticatedSessionFixture({
-  storageStateName: 'callout-contributions-admin.json',
-  cleanupAfterTests: process.env.cleanupAfterTests === 'true',
-});
-
-adminFixture.test.describe.serial('Callout Contributions - Setup', () => {
-  adminFixture.test.beforeAll(async ({ browser }) => {
-    adminFixture.test.setTimeout(60_000);
-    baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
-    await adminFixture.setupAuthentication(
-      browser,
-      TestUserManager.users.spaceAdmin.email
-    );
-  });
-
-  adminFixture.test.afterAll(async () => {
-    adminFixture.test.setTimeout(30_000);
-    await adminFixture.teardownAuthentication();
-  });
-
-  adminFixture.test(
-    'Setup: Create Callouts for Contributions',
-    async ({ page }) => {
-      adminFixture.test.setTimeout(45_000);
-      const collaborationPage = new CollaborationPage(page, baseUrl);
-
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
-
-      // Create a callout with Posts collection type enabled
-      await collaborationPage.createCalloutWithContributions(
-        testPostCalloutName,
-        'posts',
-        'A post collection for testing contributions',
-        true
-      );
-      await collaborationPage.clickCallout(testPostCalloutName);
-      await collaborationPage.openContextualMenu();
-      await collaborationPage.publishCallout();
-
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
-
-      // Create a callout with Links collection type enabled
-      await collaborationPage.createCalloutWithContributions(
-        testLinkCalloutName,
-        'links',
-        'A link collection for testing contributions',
-        true
-      );
-      await collaborationPage.clickCallout(testLinkCalloutName);
-      await collaborationPage.openContextualMenu();
-      await collaborationPage.publishCallout();
-    }
-  );
-});
-
 memberFixture.test.describe.serial('Callout Contributions - Member', () => {
   memberFixture.test.beforeAll(async ({ browser }) => {
     memberFixture.test.setTimeout(60_000);
-    if (!baseScenario) {
-      baseScenario =
-        await TestScenarioFactory.createBaseScenario(scenarioConfig);
-    }
+    baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
     await memberFixture.setupAuthentication(
       browser,
       TestUserManager.users.spaceMember.email
@@ -122,9 +54,7 @@ memberFixture.test.describe.serial('Callout Contributions - Member', () => {
   memberFixture.test.afterAll(async () => {
     memberFixture.test.setTimeout(30_000);
     await memberFixture.teardownAuthentication();
-    if (baseScenario) {
-      await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
-    }
+    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
   memberFixture.test(
@@ -166,8 +96,11 @@ memberFixture.test.describe.serial('Callout Contributions - Member', () => {
 
       await collaborationPage.navigateToSpace(baseScenario.space.nameId);
 
-      await collaborationPage.clickCallout(testLinkCalloutName);
-
+      // Use the pre-created link collection callout from scenario
+      await collaborationPage.clickCallout(
+        baseScenario.space.collaboration.calloutLinkCollectionDisplayName
+      );
+      await delay(500); // Wait for contributions to load
       await expect(collaborationPage.addContributionButton.first()).toBeVisible(
         { timeout: 3000 }
       );
@@ -189,9 +122,12 @@ memberFixture.test.describe.serial('Callout Contributions - Member', () => {
       const editedContent = 'This content has been edited';
 
       await collaborationPage.navigateToSpace(baseScenario.space.nameId);
-      await collaborationPage.clickCallout(testPostCalloutName);
+      await collaborationPage.clickCallout(
+        baseScenario.space.collaboration.calloutPostCollectionDisplayName
+      );
 
       // Add a post contribution
+      await delay(500); // Wait for contributions to load
       await collaborationPage.addPostContribution(
         originalTitle,
         originalContent

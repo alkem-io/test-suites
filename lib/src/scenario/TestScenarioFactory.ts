@@ -660,6 +660,12 @@ export class TestScenarioFactory {
       if (spaceCollaborationConfig.addPostCollectionCallout) {
         await this.createPostCollectionCalloutOnSpace(spaceModel, scenarioName);
       }
+      if (spaceCollaborationConfig.addLinkCollectionCallout) {
+        await this.createLinkCollectionCalloutOnSpace(spaceModel, scenarioName);
+      }
+      if (spaceCollaborationConfig.addWhiteboardCollectionCallout) {
+        await this.createWhiteboardCollectionCalloutOnSpace(spaceModel, scenarioName);
+      }
       if (spaceCollaborationConfig.addWhiteboardCallout) {
         await this.createWhiteboardCalloutOnSpace(spaceModel, scenarioName);
       }
@@ -900,6 +906,73 @@ export class TestScenarioFactory {
     return spaceModel;
   }
 
+  private static async createLinkCollectionCalloutOnSpace(
+    spaceModel: SpaceModel,
+    scenarioName: string
+  ): Promise<SpaceModel> {
+    const displayName = `linkCollectionCallout-${scenarioName}`;
+    const linkCollectionCalloutData = await createCalloutOnCalloutsSet(
+      spaceModel.collaboration.calloutsSetId,
+      {
+        framing: {
+          profile: {
+            displayName,
+            description: `${displayName} - created as part of scenario setup for tests`,
+          },
+        },
+        settings: {
+          contribution: {
+            allowedTypes: [CalloutContributionType.Link],
+            canAddContributions: CalloutAllowedContributors.Members,
+            enabled: true,
+            commentsEnabled: true,
+          },
+          visibility: CalloutVisibility.Published,
+        },
+      }
+    );
+
+    spaceModel.collaboration.calloutLinkCollectionId =
+      linkCollectionCalloutData?.data?.createCalloutOnCalloutsSet?.id ?? "";
+    spaceModel.collaboration.calloutLinkCollectionDisplayName = displayName;
+
+    return spaceModel;
+  }
+
+  private static async createWhiteboardCollectionCalloutOnSpace(
+    spaceModel: SpaceModel,
+    scenarioName: string
+  ): Promise<SpaceModel> {
+    const displayName = `whiteboardCollectionCallout-${scenarioName}`;
+    const whiteboardCollectionCalloutData = await createWhiteboardCalloutOnCalloutsSet(
+      spaceModel.collaboration.calloutsSetId,
+      {
+        framing: {
+          profile: {
+            displayName,
+            description: `${displayName} - created as part of scenario setup for tests`,
+          },
+        },
+        settings: {
+          contribution: {
+            allowedTypes: [CalloutContributionType.Whiteboard],
+            canAddContributions: CalloutAllowedContributors.Members,
+            enabled: true,
+            commentsEnabled: true,
+          },
+          visibility: CalloutVisibility.Published,
+        },
+      },
+      TestUser.GLOBAL_ADMIN
+    );
+
+    spaceModel.collaboration.calloutWhiteboardCollectionId =
+      whiteboardCollectionCalloutData?.data?.createCalloutOnCalloutsSet?.id ?? "";
+    spaceModel.collaboration.calloutWhiteboardCollectionDisplayName = displayName;
+
+    return spaceModel;
+  }
+
   private static async createWhiteboardCalloutOnSpace(
     spaceModel: SpaceModel,
     scenarioName: string
@@ -1062,6 +1135,10 @@ export class TestScenarioFactory {
         calloutsSetId: "",
         calloutPostCollectionId: "",
         calloutPostCollectionDisplayName: "",
+        calloutLinkCollectionId: "",
+        calloutLinkCollectionDisplayName: "",
+        calloutWhiteboardCollectionId: "",
+        calloutWhiteboardCollectionDisplayName: "",
         calloutWhiteboardId: "",
         calloutWhiteboardDisplayName: "",
         calloutPostId: "",

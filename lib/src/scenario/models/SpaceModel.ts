@@ -18,6 +18,10 @@ export type SpaceModel = {
     calloutsSetId: string;
     calloutPostCollectionId: string;
     calloutPostCollectionDisplayName: string;
+    calloutLinkCollectionId: string;
+    calloutLinkCollectionDisplayName: string;
+    calloutWhiteboardCollectionId: string;
+    calloutWhiteboardCollectionDisplayName: string;
     calloutWhiteboardId: string;
     calloutWhiteboardDisplayName: string;
     calloutPostId: string;

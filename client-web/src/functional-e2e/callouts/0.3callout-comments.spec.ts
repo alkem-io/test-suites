@@ -26,8 +26,9 @@ const scenarioConfig: TestScenarioConfig = {
     },
     collaboration: {
       addTutorialCallouts: false,
-      addPostCollectionCallout: true, // Pre-create a callout for comments
+      addPostCollectionCallout: false,
       addWhiteboardCallout: false,
+      addPostCallout: true,
     },
     community: {
       admins: [TestUser.SPACE_ADMIN],
@@ -71,27 +72,6 @@ adminFixture.test.describe.serial('Callout Comments', () => {
   });
 
   adminFixture.test(
-    '5.0 Setup: Create and Publish Callout for Comments',
-    async ({ page }) => {
-      adminFixture.test.setTimeout(45_000);
-      const collaborationPage = new CollaborationPage(page, baseUrl);
-
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
-
-      await collaborationPage.createCallout(
-        'post',
-        testCalloutName,
-        'Callout for comments testing',
-        true
-      );
-
-      await collaborationPage.clickCallout(testCalloutName);
-      await collaborationPage.openContextualMenu();
-      await collaborationPage.publishCallout();
-    }
-  );
-
-  adminFixture.test(
     '5.2 Add Comment on Callout - As Space Admin',
     async ({ page }) => {
       adminFixture.test.setTimeout(45_000);
@@ -100,9 +80,13 @@ adminFixture.test.describe.serial('Callout Comments', () => {
 
       await collaborationPage.navigateToSpace(baseScenario.space.nameId);
 
-      await collaborationPage.clickCallout(testCalloutName);
+      await collaborationPage.clickCallout(
+        baseScenario.space.collaboration.calloutPostDisplayName
+      );
 
-      await expect(collaborationPage.commentInput).toBeVisible();
+      await expect(collaborationPage.commentInput).toBeVisible({
+        timeout: 5000,
+      });
 
       await collaborationPage.addComment(adminComment);
 
@@ -144,10 +128,19 @@ memberFixture.test.describe.serial('Callout Comments - Member', () => {
 
       await collaborationPage.navigateToSpace(baseScenario.space.nameId);
 
-      expect(collaborationPage.getCalloutByName(testCalloutName)).toBeDefined();
-      await collaborationPage.clickCallout(testCalloutName);
+      await expect(
+        page.getByRole('heading', {
+          name: baseScenario.space.collaboration.calloutPostDisplayName,
+          exact: true,
+        })
+      ).toBeVisible({ timeout: 5000 });
+      await collaborationPage.clickCallout(
+        baseScenario.space.collaboration.calloutPostDisplayName
+      );
 
-      await expect(collaborationPage.commentInput).toBeVisible();
+      await expect(collaborationPage.commentInput).toBeVisible({
+        timeout: 5000,
+      });
 
       await collaborationPage.addComment(commentText);
 
@@ -164,9 +157,11 @@ memberFixture.test.describe.serial('Callout Comments - Member', () => {
 
     await collaborationPage.navigateToSpace(baseScenario.space.nameId);
 
-    await collaborationPage.clickCallout(testCalloutName);
+    await collaborationPage.clickCallout(
+      baseScenario.space.collaboration.calloutPostDisplayName
+    );
 
-    await expect(collaborationPage.commentInput).toBeVisible();
+    await expect(collaborationPage.commentInput).toBeVisible({ timeout: 5000 });
 
     const commentCount = await collaborationPage.getCommentCount();
     expect(commentCount).toBeGreaterThanOrEqual(1);
