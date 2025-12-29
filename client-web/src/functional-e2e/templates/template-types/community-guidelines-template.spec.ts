@@ -7,7 +7,7 @@ import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/O
 import { randomBytes } from 'crypto';
 import { CommunityGuidelinesTemplateForm } from './forms/template-form.models';
 import { fillCommunityGuidelinesForm } from './forms/community-guidelines-template-form';
-import { verifyCommunityGuidelinesTemplate } from './verify/comunity-guidelines-template-verify';
+import { verifyCommunityGuidelinesTemplate } from './verify/community-guidelines-template-verify';
 
 
 // Create the authenticated fixture with a unique storage state name for this test suite
