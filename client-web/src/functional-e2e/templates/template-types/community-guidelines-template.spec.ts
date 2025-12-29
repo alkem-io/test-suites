@@ -42,6 +42,16 @@ const templateData: CommunityGuidelinesTemplateForm = {
   guidelines: {
     displayName: 'Community Code of Conduct',
     description: 'Be respectful and inclusive. Treat all community members with dignity. Provide constructive feedback. No harassment or discrimination. Follow these guidelines to maintain a positive community environment.',
+    references: [
+      {
+        title: 'Contributor Rules',
+        url: 'https://alkem.io/test',
+      },
+      {
+        title: 'Contributor Participation Policy',
+        url: 'https://alkem.io/test2',
+      },
+    ],
   }
 };
 
@@ -95,7 +105,7 @@ test.describe.serial('Community Guidelines Template', () => {
     await expect(page.getByRole('heading', { name: 'Create new Community Guidelines Template' })).toBeVisible();
 
     // Fill the form:
-    fillCommunityGuidelinesForm(page, templateData);
+    await fillCommunityGuidelinesForm(page, templateData);
 
     // Verify the Create button is enabled
     const createButton = page.getByRole('button', { name: 'Create' });
@@ -126,6 +136,15 @@ test.describe.serial('Community Guidelines Template', () => {
     templateData.tags.push(EditedTag);
     templateData.guidelines.displayName = templateData.guidelines.displayName + EditedTag;
     templateData.guidelines.description = templateData.guidelines.description + EditedTag;
+    // Modify the first reference and add a new one
+    if (templateData.guidelines.references && templateData.guidelines.references.length > 1) {
+      templateData.guidelines.references[0].title = templateData.guidelines.references[0].title + EditedTag;
+      templateData.guidelines.references[0].url = templateData.guidelines.references[0].url + '-edited';
+    }
+    templateData.guidelines.references?.push({
+      title: `New Edited Reference ${EditedTag}`,
+      url: 'https://alkem.io/edited-reference',
+    })
 
 
     // Wait for the edit dialog to appear
@@ -196,7 +215,7 @@ test.describe.serial('Community Guidelines Template', () => {
     await expect(templateGalleryDialog).not.toBeVisible()
 
     await expect(
-      await page.getByRole('textbox', { name: 'Title', exact: true }).inputValue()
+      await page.getByRole('textbox', { name: 'Title', exact: true }).first().inputValue()
     ).toBe(templateData.guidelines.displayName);
 
 

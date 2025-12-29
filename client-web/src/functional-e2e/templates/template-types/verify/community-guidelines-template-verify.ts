@@ -17,4 +17,8 @@ export const verifyCommunityGuidelinesTemplate = async (page: Page, templateData
 
   await expect(page.locator('div').filter({ hasText: templateData.guidelines.displayName }).first()).toBeVisible();
   await expect(page.locator('div').filter({ hasText: templateData.guidelines.description }).first()).toBeVisible();
+
+  for (const reference of templateData.guidelines.references || []) {
+    await expect(page.getByRole('link', { name: reference.url, exact: true }).first()).toBeVisible();
+  }
 }
