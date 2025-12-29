@@ -1,7 +1,7 @@
 // spec: templates/templates-test-plan.md#11
 
 import { expect } from '@playwright/test';
-import { TestScenarioConfig, TestScenarioFactory, TestScenarioSpaceConfig, TestUser, TestUserManager } from '@alkemio/tests-lib';
+import { TestScenarioConfig, TestScenarioFactory, TestUser, TestUserManager } from '@alkemio/tests-lib';
 import { createAuthenticatedSessionFixture } from '@src/functional-e2e/fixtures/authenticated-session.fixture';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { randomBytes } from 'crypto';
@@ -13,7 +13,7 @@ import { verifyCommunityGuidelinesTemplate } from './verify/community-guidelines
 // Create the authenticated fixture with a unique storage state name for this test suite
 const { test, setupAuthentication, teardownAuthentication } =
   createAuthenticatedSessionFixture({
-    storageStateName: 'my-feature-test.json',
+    storageStateName: 'community-guidelines-templates-test.json',
     cleanupAfterTests: process.env.cleanupAfterTests === 'true',
   });
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
@@ -204,7 +204,7 @@ test.describe.serial('Community Guidelines Template', () => {
     await page.getByRole('heading', { name: templateData.displayName, exact: true }).click();
     const templateGalleryDialog = page.getByRole('heading', { name: `Template Library: Community Guidelines Template`, exact: true }).locator('..').locator('..').locator('..');
     const templateDialog = page.getByRole('heading', { name: `Preview — ${templateData.displayName}`, exact: true }).locator('..').locator('..').locator('..');
-    expect(templateDialog).toBeVisible();
+    await expect(templateDialog).toBeVisible();
 
     await verifyCommunityGuidelinesTemplate(page, templateData);
 
@@ -212,11 +212,10 @@ test.describe.serial('Community Guidelines Template', () => {
     await expect(templateDialog).not.toBeVisible();
 
     await expect(templateGalleryDialog).not.toBeVisible();
-    await expect(templateGalleryDialog).not.toBeVisible()
 
     await expect(
-      await page.getByRole('textbox', { name: 'Title', exact: true }).first().inputValue()
-    ).toBe(templateData.guidelines.displayName);
+      page.getByRole('textbox', { name: 'Title', exact: true }).first()
+    ).toHaveValue(templateData.guidelines.displayName);
 
 
     await expect(page.getByText(templateData.guidelines.description, { exact: true })).toBeVisible();

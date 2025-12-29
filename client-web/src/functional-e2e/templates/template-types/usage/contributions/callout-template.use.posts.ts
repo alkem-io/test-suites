@@ -16,7 +16,7 @@ export const verifyCalloutContributionPosts = async (
 
   if (templateData.responseOptions.adminsCanAdd) {
     await expect(addContributionButton).toBeVisible();
-    // Click on Add Link
+    // Click on Add Post
     await addContributionButton.click();
 
     // Find the opened dialog
@@ -24,15 +24,15 @@ export const verifyCalloutContributionPosts = async (
 
     // Verify the Title field is present
     await expect(
-      await dialog.getByRole('textbox', { name: 'Title' }).inputValue()
-    ).toBe(templateData.responseOptions.defaultTitle);
+      dialog.getByRole('textbox', { name: 'Title' })
+    ).toHaveValue(templateData.responseOptions.defaultTitle);
 
     // Verify the defaultDescription is present:
     await expect(
       await dialog.getByText(templateData.responseOptions.defaultDescription, { exact: true })
     ).toBeVisible();
 
-    // Click on save link
+    // Click on save
     await dialog.getByRole('button', { name: 'Create' }).click();
 
     // Verify the url has changed to include the new post

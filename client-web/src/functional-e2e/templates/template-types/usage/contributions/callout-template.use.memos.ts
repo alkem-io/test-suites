@@ -16,7 +16,7 @@ export const verifyCalloutContributionMemos = async (
 
   if (templateData.responseOptions.adminsCanAdd) {
     await expect(addContributionButton).toBeVisible();
-    // Click on Add Link
+    // Click on Add Memo
     await addContributionButton.click();
 
     // Find the opened dialog
@@ -24,10 +24,10 @@ export const verifyCalloutContributionMemos = async (
 
     // Verify the Title field is present
     await expect(
-      await dialog.getByRole('textbox', { name: 'Title' }).inputValue()
-    ).toBe(templateData.responseOptions.defaultTitle);
+      dialog.getByRole('textbox', { name: 'Title' })
+    ).toHaveValue(templateData.responseOptions.defaultTitle);
 
-    // Click on save link
+    // Click on save
     await dialog.getByRole('button', { name: 'Create' }).click();
 
     // Verify the url has changed to include the new memo

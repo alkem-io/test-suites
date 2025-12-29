@@ -1,4 +1,4 @@
-import { Page, expect } from '@playwright/test';
+import { Page } from '@playwright/test';
 import { fillTemplateForm } from './template-form';
 import { WhiteboardTemplateForm } from './template-form.models';
 import { clickOnEditWhiteboardPreview, getWhiteboardDialog, useTemplateInAWhiteboard, writeTextInWhiteboardDialog } from './whiteboards/whiteboard-dialog';

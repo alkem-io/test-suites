@@ -13,7 +13,7 @@ import { verifyPostTemplate } from './verify/post-template-verify';
 // Create the authenticated fixture with a unique storage state name for this test suite
 const { test, setupAuthentication, teardownAuthentication } =
   createAuthenticatedSessionFixture({
-    storageStateName: 'post-template-test.json',
+    storageStateName: 'post-templates-test.json',
     cleanupAfterTests: process.env.cleanupAfterTests === 'true',
   });
 
@@ -92,7 +92,7 @@ test.describe.serial('Post Templates', () => {
     await expect(page.getByRole('heading', { name: 'Create new Post Template' })).toBeVisible();
 
     // Fill the form:
-    fillPostTemplateForm(page, templateData);
+    await fillPostTemplateForm(page, templateData);
 
     // Verify the Create button is enabled
     const createButton = page.getByRole('button', { name: 'Create' });

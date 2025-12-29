@@ -20,6 +20,7 @@ export const writeTextInWhiteboardDialog = async (
   editorDialog: Locator,
   text: string
 ): Promise<void> => {
+  // Click the text tool (represented by "8" in the Excalidraw toolbar)
   await editorDialog
     .locator('div').filter({ hasText: /^8$/ })
     .click();
@@ -37,7 +38,7 @@ export const useTemplateInAWhiteboard = async (
   whiteboardDialog: Locator,
   templateName: string
 ) => {
-  whiteboardDialog.getByRole('button', { name: 'Find Template' }).click();
+  await whiteboardDialog.getByRole('button', { name: 'Find Template' }).click();
 
   await page.getByRole('heading', { name: templateName, exact: true }).click();
 

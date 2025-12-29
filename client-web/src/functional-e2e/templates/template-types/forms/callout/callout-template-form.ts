@@ -5,7 +5,7 @@
  * Combines template metadata, callout fields, additional content, and collection helpers.
  */
 
-import { Page, expect } from '@playwright/test';
+import { Page } from '@playwright/test';
 import { fillTemplateForm } from '../template-form';
 import {
   CalloutTemplateForm,

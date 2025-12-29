@@ -44,7 +44,7 @@ export const verifyContributionSettings = async (
   templateData: CalloutTemplateForm
 ): Promise<void> => {
   // Open the Callout Settings Menu
-  const settingsMenu = calloutContainer.getByLabel('settings', { exact: true })
+  const settingsMenu = calloutContainer.getByLabel('settings', { exact: true });
   await settingsMenu.click();
 
   // Open the Callout Settings Dialog
@@ -53,7 +53,7 @@ export const verifyContributionSettings = async (
 
   // Expand the Response Options section
   const responseOptionsButton = calloutDialog.getByRole('button', { name: 'Expand' });
-  await responseOptionsButton.scrollIntoViewIfNeeded()
+  await responseOptionsButton.scrollIntoViewIfNeeded();
   await responseOptionsButton.click();
 
   // Open Collection settings Dialog
@@ -86,8 +86,8 @@ export const verifyContributionSettings = async (
 
       // Verify the Title:
       await expect(
-        await collectionSettingsDialog.getByRole('textbox', { name: 'Title' }).inputValue()
-      ).toBe(templateData.responseOptions.defaultTitle);
+        collectionSettingsDialog.getByRole('textbox', { name: 'Title' })
+      ).toHaveValue(templateData.responseOptions.defaultTitle);
 
       // Verify the Description:
       await expect(
@@ -98,21 +98,21 @@ export const verifyContributionSettings = async (
     case 'memos': {
       // Verify the Title:
       await expect(
-        await collectionSettingsDialog.getByRole('textbox', { name: 'Title' }).inputValue()
-      ).toBe(templateData.responseOptions.defaultTitle);
+        collectionSettingsDialog.getByRole('textbox', { name: 'Title' })
+      ).toHaveValue(templateData.responseOptions.defaultTitle);
 
       // Verify the Description:
-      //!! WARNING, THIS IS A BUG, UNCOMMENT WHEN FIXED
-      // await expect(
-      //   collectionSettingsDialog.getByText(templateData.responseOptions.defaultDescription, { exact: true })
-      // ).toBeVisible();
+      await expect(
+        collectionSettingsDialog.getByText(templateData.responseOptions.defaultDescription, { exact: true })
+      ).toBeVisible();
       break;
     }
     case 'whiteboards': {
       // Verify the Title:
       await expect(
-        await collectionSettingsDialog.getByRole('textbox', { name: 'Title' }).inputValue()
-      ).toBe(templateData.responseOptions.defaultTitle);
+        collectionSettingsDialog.getByRole('textbox', { name: 'Title' })
+      ).toHaveValue(templateData.responseOptions.defaultTitle);
+      break;
     }
     case 'linksFiles': {
       break;

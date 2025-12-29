@@ -21,7 +21,7 @@ import { verifyCalloutTemplateUsage } from './usage/callout-template.use';
 
 const { test, setupAuthentication, teardownAuthentication } =
   createAuthenticatedSessionFixture({
-    storageStateName: 'callout-none-template-test.json',
+    storageStateName: 'callout-templates-test.json',
     cleanupAfterTests: process.env.cleanupAfterTests === 'true',
   });
 

@@ -27,7 +27,7 @@ export const verifyCalloutContributionLinks = async (
     await dialog.getByRole('textbox', { name: 'URL' }).fill(`https://example.com/test-${templateData.testId}`);
     await dialog.getByRole('textbox', { name: 'Description' }).fill(`Link test description ${templateData.testId}`);
 
-    // Click on save link
+    // Click on save
     await dialog.getByRole('button', { name: 'Save' }).click();
 
     // Verify the contribution appears in the callout

@@ -15,7 +15,7 @@ import { verifyTemplate } from './verify/template-verify';
 // Create the authenticated fixture with a unique storage state name for this test suite
 const { test, setupAuthentication, teardownAuthentication } =
   createAuthenticatedSessionFixture({
-    storageStateName: 'whiteboard-template-test.json',
+    storageStateName: 'whiteboard-templates-test.json',
     cleanupAfterTests: process.env.cleanupAfterTests === 'true',
   });
 
