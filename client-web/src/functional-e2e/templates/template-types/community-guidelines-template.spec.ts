@@ -192,11 +192,7 @@ test.describe.serial('Community Guidelines Template', () => {
     await templateDialog.getByRole('button', { name: 'Use' }).click();
     await expect(templateDialog).not.toBeVisible();
 
-    // Bug: The dialog should not remain visible after using the template, but we'll just close it from here, it's fine
-    await expect(templateGalleryDialog).not.toBeVisible().catch(async () => {
-      // Temporary workaround: Close the dialog manually
-      await templateGalleryDialog.getByRole('button', { name: 'Close' }).click();
-    });
+    await expect(templateGalleryDialog).not.toBeVisible();
     await expect(templateGalleryDialog).not.toBeVisible()
 
     await expect(

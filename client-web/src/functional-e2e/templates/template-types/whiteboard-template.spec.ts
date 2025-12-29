@@ -9,6 +9,7 @@ import { WhiteboardTemplateForm } from './forms/template-form.models';
 import { fillWhiteboardTemplateForm, fillWhiteboardWithWhiteboardTemplate } from './forms/whiteboard-template-form';
 import { verifyWhiteboardTemplate } from './verify/whiteboard-template-verify';
 import { fillTemplateForm } from './forms/template-form';
+import { verifyTemplate } from './verify/template-verify';
 
 
 // Create the authenticated fixture with a unique storage state name for this test suite
@@ -163,10 +164,13 @@ test.describe.serial('Whiteboard Templates', () => {
       tags: []
     }
     // Fill the form:
-    await fillTemplateForm(page, templateData);
+    await fillTemplateForm(page, testTemplate);
 
     await fillWhiteboardWithWhiteboardTemplate(page, templateData);
 
+    await page.getByRole('button', { name: 'Create' }).click();
+
+    await verifyTemplate(page, testTemplate);
   });
 
   test('1.4 Delete Whiteboard Template', async ({ page }) => {
