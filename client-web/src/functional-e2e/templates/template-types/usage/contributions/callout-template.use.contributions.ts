@@ -36,7 +36,9 @@ export const getCreateContributionDialog = async (page: Page, templateData: Call
 
 /**
  * Verify the contribution settings dialog in the Callout created using the template
- * //!! PENDING: Verify membersCanAdd
+ * // TODO:
+ * // PENDING Verify membersCanAdd, at the moment only admins can add or not is tested,
+ * // membersCanAdd test requires us to login with a different user to see if we can add contributions as members or not
  */
 export const verifyContributionSettings = async (
   page: Page,
