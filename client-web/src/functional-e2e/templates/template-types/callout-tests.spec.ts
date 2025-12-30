@@ -144,6 +144,8 @@ const createAndVerifyCalloutTemplate = async (
 // | ✅     |  39| Call to Action     | Whiteboards      | Disabled         | true               | true               | N/A                |
 // | ✅     |  40| Call to Action     | Whiteboards      | Enabled          | true               | true               | N/A                |
 
+// Callout with references test:
+// |        |  41| None               | None             | Disabled         | N/A                | N/A                | N/A                |
 
 test.describe.serial('Callout Templates', () => {
   test.beforeAll(async ({ browser }) => {
@@ -795,6 +797,22 @@ test.describe.serial('Callout Templates', () => {
       framingType: 'callToAction',
       responseType: 'whiteboards',
       commentsEnabled: true,
+    });
+
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('41 Framing: None, Response: None, Comments: Disabled, With References', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'none',
+      responseType: 'none',
+      commentsEnabled: false,
+      calloutReferences: [
+        { title: 'Reference 1', url: 'https://alkem.io/ref1' },
+        { title: 'Reference 2', url: 'https://alkem.io/ref2' },
+      ]
     });
 
     await createAndVerifyCalloutTemplate(page, templateData);

@@ -76,6 +76,22 @@ const fillCalloutBaseFields = async (
       .first();
     await descriptionEditor.fill(templateData.calloutDescription);
   }
+
+  // Fill callout references
+  const numberOfReferences = templateData.calloutReferences?.length ?? 0;
+  const existingReferences = await page.locator('input[name^="framing.profile.references"]').count() / 2;
+
+
+  for (let i = 0; i < numberOfReferences - existingReferences; i++) {
+    await page.getByRole('button', { name: 'Add Reference' }).click();
+  }
+
+  for (let i = 0; i < numberOfReferences; i++) {
+    const reference = templateData.calloutReferences![i];
+    await page.locator(`input[name="framing.profile.references.${i}.name"]`).fill(reference.title);
+    await page.locator(`input[name="framing.profile.references.${i}.uri"]`).fill(reference.url);
+  }
+
 };
 
 // ============================================================================

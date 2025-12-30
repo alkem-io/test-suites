@@ -56,6 +56,12 @@ export const verifyCalloutTemplate = async (
   for (const tag of templateData.calloutTags) {
     await expect(page.locator('.MuiChip-root').getByText(tag).first()).toBeVisible();
   }
+
+  for (const reference of templateData.calloutReferences) {
+    const link = page.getByRole('link', { name: reference.title }).first();
+    await expect(link).toBeVisible();
+    await expect(link).toHaveAttribute('href', reference.url);
+  }
 };
 
 /**

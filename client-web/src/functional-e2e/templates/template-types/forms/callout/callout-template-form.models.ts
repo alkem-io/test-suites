@@ -121,6 +121,7 @@ export const createCalloutTemplateData = ({
   contributionsEnabledAdmin = true,
   contributionsEnabledMember = contributionsEnabledAdmin, // if not set, default to same as admin
   commentsOnContributionsEnabled,
+  calloutReferences = [],
 }: {
     framingType: CalloutTemplateFramingType,
     commentsEnabled: boolean,
@@ -128,6 +129,7 @@ export const createCalloutTemplateData = ({
     contributionsEnabledAdmin?: boolean,
     contributionsEnabledMember?: boolean,
     commentsOnContributionsEnabled?: boolean,
+    calloutReferences?: { title: string; url: string }[],
 }): CalloutTemplateForm => {
   const hexId = randomBytes(3).toString('hex');
 
@@ -209,7 +211,7 @@ export const createCalloutTemplateData = ({
     calloutTitle: `CTit ${hexId} - AC:${framingType}, Resp:${responseType}, Com:${commentsEnabled ? 'On' : 'Off'}`,
     calloutTags: [hexId, 'callout', 'tags', framingType, responseType, commentsEnabled ? 'comments-enabled' : 'comments-disabled'],
     calloutDescription: `Callout Description ${calloutDescription}`,
-    calloutReferences: [],
+    calloutReferences,
 
     // Additional content: None
     framing: framing,

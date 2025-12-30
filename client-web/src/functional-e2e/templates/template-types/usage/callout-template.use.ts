@@ -71,6 +71,16 @@ export const verifyCalloutTemplateUsage = async (
     ).not.toBeVisible();
   }
 
+  for (const tag of templateData.calloutTags) {
+    await expect(calloutContainer.locator('.MuiChip-root').getByText(tag).first()).toBeVisible();
+  }
+
+  for (const reference of templateData.calloutReferences) {
+    const link = calloutContainer.getByRole('link', { name: reference.title }).first();
+    await expect(link).toBeVisible();
+    await expect(link).toHaveAttribute('href', reference.url);
+  }
+
   // Verify Framing:
   switch (templateData.framing.type) {
     case 'whiteboard': {
