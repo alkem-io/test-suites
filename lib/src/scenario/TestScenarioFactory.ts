@@ -660,6 +660,12 @@ export class TestScenarioFactory {
       if (spaceCollaborationConfig.addPostCollectionCallout) {
         await this.createPostCollectionCalloutOnSpace(spaceModel, scenarioName);
       }
+      if (spaceCollaborationConfig.addLinkCollectionCallout) {
+        await this.createLinkCollectionCalloutOnSpace(spaceModel, scenarioName);
+      }
+      if (spaceCollaborationConfig.addWhiteboardCollectionCallout) {
+        await this.createWhiteboardCollectionCalloutOnSpace(spaceModel, scenarioName);
+      }
       if (spaceCollaborationConfig.addWhiteboardCallout) {
         await this.createWhiteboardCalloutOnSpace(spaceModel, scenarioName);
       }
@@ -836,11 +842,12 @@ export class TestScenarioFactory {
     spaceModel: SpaceModel,
     scenarioName: string
   ): Promise<SpaceModel> {
+    const displayName = `${scenarioName} - post`;
     const createPostCallout = await createCalloutOnCalloutsSet(
       spaceModel.collaboration.calloutsSetId,
       {
         framing: {
-          profile: { displayName: `${scenarioName} - post` },
+          profile: { displayName },
         },
         settings: {
           framing: { commentsEnabled: true },
@@ -858,6 +865,7 @@ export class TestScenarioFactory {
     const postCalloutData = createPostCallout.data?.createCalloutOnCalloutsSet;
 
     spaceModel.collaboration.calloutPostId = postCalloutData?.id ?? "";
+    spaceModel.collaboration.calloutPostDisplayName = displayName;
     spaceModel.collaboration.calloutPostCommentsId =
       postCalloutData?.comments?.id ?? "";
 
@@ -868,13 +876,14 @@ export class TestScenarioFactory {
     spaceModel: SpaceModel,
     scenarioName: string
   ): Promise<SpaceModel> {
+    const displayName = `postCollectionCallout-${scenarioName}`;
     const callForPostCalloutData = await createCalloutOnCalloutsSet(
       spaceModel.collaboration.calloutsSetId,
       {
         framing: {
           profile: {
-            displayName: `postCollectionCallout-${scenarioName}`,
-            description: `postCollectionCallout-${scenarioName} - created as part of scenario setup for tests`,
+            displayName,
+            description: `${displayName} - created as part of scenario setup for tests`,
           },
         },
         settings: {
@@ -892,6 +901,74 @@ export class TestScenarioFactory {
 
     spaceModel.collaboration.calloutPostCollectionId =
       callForPostCalloutData?.data?.createCalloutOnCalloutsSet?.id ?? "";
+    spaceModel.collaboration.calloutPostCollectionDisplayName = displayName;
+
+    return spaceModel;
+  }
+
+  private static async createLinkCollectionCalloutOnSpace(
+    spaceModel: SpaceModel,
+    scenarioName: string
+  ): Promise<SpaceModel> {
+    const displayName = `linkCollectionCallout-${scenarioName}`;
+    const linkCollectionCalloutData = await createCalloutOnCalloutsSet(
+      spaceModel.collaboration.calloutsSetId,
+      {
+        framing: {
+          profile: {
+            displayName,
+            description: `${displayName} - created as part of scenario setup for tests`,
+          },
+        },
+        settings: {
+          contribution: {
+            allowedTypes: [CalloutContributionType.Link],
+            canAddContributions: CalloutAllowedContributors.Members,
+            enabled: true,
+            commentsEnabled: true,
+          },
+          visibility: CalloutVisibility.Published,
+        },
+      }
+    );
+
+    spaceModel.collaboration.calloutLinkCollectionId =
+      linkCollectionCalloutData?.data?.createCalloutOnCalloutsSet?.id ?? "";
+    spaceModel.collaboration.calloutLinkCollectionDisplayName = displayName;
+
+    return spaceModel;
+  }
+
+  private static async createWhiteboardCollectionCalloutOnSpace(
+    spaceModel: SpaceModel,
+    scenarioName: string
+  ): Promise<SpaceModel> {
+    const displayName = `whiteboardCollectionCallout-${scenarioName}`;
+    const whiteboardCollectionCalloutData = await createWhiteboardCalloutOnCalloutsSet(
+      spaceModel.collaboration.calloutsSetId,
+      {
+        framing: {
+          profile: {
+            displayName,
+            description: `${displayName} - created as part of scenario setup for tests`,
+          },
+        },
+        settings: {
+          contribution: {
+            allowedTypes: [CalloutContributionType.Whiteboard],
+            canAddContributions: CalloutAllowedContributors.Members,
+            enabled: true,
+            commentsEnabled: true,
+          },
+          visibility: CalloutVisibility.Published,
+        },
+      },
+      TestUser.GLOBAL_ADMIN
+    );
+
+    spaceModel.collaboration.calloutWhiteboardCollectionId =
+      whiteboardCollectionCalloutData?.data?.createCalloutOnCalloutsSet?.id ?? "";
+    spaceModel.collaboration.calloutWhiteboardCollectionDisplayName = displayName;
 
     return spaceModel;
   }
@@ -900,12 +977,13 @@ export class TestScenarioFactory {
     spaceModel: SpaceModel,
     scenarioName: string
   ): Promise<SpaceModel> {
+    const displayName = `${scenarioName} - whiteboard callout`;
     const whiteboardCalloutData = await createWhiteboardCalloutOnCalloutsSet(
       spaceModel.collaboration.calloutsSetId,
       {
         framing: {
           profile: {
-            displayName: `${scenarioName} - whiteboard callout`,
+            displayName,
             description: "Whiteboard - initial",
           },
         },
@@ -921,6 +999,7 @@ export class TestScenarioFactory {
 
     spaceModel.collaboration.calloutWhiteboardId =
       whiteboardCalloutData?.data?.createCalloutOnCalloutsSet?.id ?? "";
+    spaceModel.collaboration.calloutWhiteboardDisplayName = displayName;
 
     return spaceModel;
   }
@@ -1055,8 +1134,15 @@ export class TestScenarioFactory {
         id: "",
         calloutsSetId: "",
         calloutPostCollectionId: "",
+        calloutPostCollectionDisplayName: "",
+        calloutLinkCollectionId: "",
+        calloutLinkCollectionDisplayName: "",
+        calloutWhiteboardCollectionId: "",
+        calloutWhiteboardCollectionDisplayName: "",
         calloutWhiteboardId: "",
+        calloutWhiteboardDisplayName: "",
         calloutPostId: "",
+        calloutPostDisplayName: "",
         calloutPostCommentsId: "",
       },
       contextId: "",

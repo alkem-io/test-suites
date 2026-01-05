@@ -119,29 +119,32 @@ test.describe('Space Lead Profile Access', () => {
   });
 
   test("4.3 Non-Member Can View Lead's Profile Details", async ({ page }) => {
-    test.setTimeout(90_000);
+    test.setTimeout(60_000);
     // Navigate to the public space as non-member (already authenticated)
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
 
     // Navigate to the Community tab
-    await page.getByRole('tab', { name: 'community' }).click();
+    const communityTab = page.getByRole('tab', { name: 'community' });
+    await expect(communityTab).toBeVisible({ timeout: 3000 });
+
+    await communityTab.click();
 
     // Wait for and click on the first user profile link
     const userLink = page.locator('a[href^="/user/"]').first();
 
     // Wait for the user link to be visible
-    await expect(userLink).toBeVisible({ timeout: 60_000 });
+    await expect(userLink).toBeVisible({ timeout: 3000 });
     await userLink.click();
 
     // Wait for profile page to load
-    await page.waitForURL(/.*user.*/, { timeout: 10_000 });
+    await page.waitForURL(/.*user.*/, { timeout: 3000 });
 
     // Verify user profile page loaded
     await expect(page).toHaveURL(/.*\/user\/.*/);
 
     // Verify profile avatar is displayed (MUI Avatar component)
     await expect(page.locator('.MuiAvatar-root img').first()).toBeVisible({
-      timeout: 10_000,
+      timeout: 5_000,
     });
 
     // Verify user's display name or username is visible
