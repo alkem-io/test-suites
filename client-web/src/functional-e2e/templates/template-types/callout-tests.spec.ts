@@ -10,12 +10,8 @@ import {
 } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { createAuthenticatedSessionFixture } from '@src/functional-e2e/fixtures/authenticated-session.fixture';
-import {
-  createCalloutTemplateData,
-} from './forms/callout/callout-template-form.models';
-import {
-  fillCalloutTemplateForm,
-} from './forms/callout/callout-template-form';
+import { createCalloutTemplateData } from './forms/callout/callout-template-form.models';
+import { fillCalloutTemplateForm } from './forms/callout/callout-template-form';
 import { verifyCalloutTemplate } from './verify/callout-template-verify';
 import { verifyCalloutTemplateUsage } from './usage/callout-template.use';
 
@@ -36,10 +32,7 @@ const scenarioConfig: TestScenarioConfig = {
     },
     community: {
       admins: [TestUser.SPACE_ADMIN],
-      members: [
-        TestUser.SPACE_MEMBER,
-        TestUser.SPACE_ADMIN,
-      ],
+      members: [TestUser.SPACE_MEMBER, TestUser.SPACE_ADMIN],
     },
   },
 };
@@ -67,9 +60,14 @@ const createAndVerifyCalloutTemplate = async (
   await fillCalloutTemplateForm(page, templateData);
 
   // Click on CREATE the template
-  const dialog = page.getByRole('dialog').filter({
-    has: page.getByRole('heading', { name: 'Create new Collaboration Tool Template' }),
-  }).last();
+  const dialog = page
+    .getByRole('dialog')
+    .filter({
+      has: page.getByRole('heading', {
+        name: 'Create new Collaboration Tool Template',
+      }),
+    })
+    .last();
 
   await expect(dialog).toBeVisible();
 
@@ -83,9 +81,12 @@ const createAndVerifyCalloutTemplate = async (
   await verifyCalloutTemplate(page, templateData);
 
   // Verify the template works using it:
-  await verifyCalloutTemplateUsage(page, `${baseUrl}/${baseScenario.space.nameId}?tab=4`, templateData);
+  await verifyCalloutTemplateUsage(
+    page,
+    `${baseUrl}/${baseScenario.space.nameId}?tab=4`,
+    templateData
+  );
 };
-
 
 // =========================================================================================================================================
 //   TESTS MATRIX:
@@ -155,6 +156,7 @@ test.describe.serial('Callout Templates', () => {
 
   test.afterAll(async () => {
     await teardownAuthentication();
+    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
   test.beforeEach(async ({ page }) => {
@@ -812,7 +814,7 @@ test.describe.serial('Callout Templates', () => {
       calloutReferences: [
         { title: 'Reference 1', url: 'https://alkem.io/ref1' },
         { title: 'Reference 2', url: 'https://alkem.io/ref2' },
-      ]
+      ],
     });
 
     await createAndVerifyCalloutTemplate(page, templateData);

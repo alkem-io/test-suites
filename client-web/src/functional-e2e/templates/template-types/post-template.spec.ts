@@ -1,14 +1,18 @@
 // spec: templates/templates-test-plan.md#11
 
 import { expect } from '@playwright/test';
-import { TestScenarioConfig, TestScenarioFactory, TestUser, TestUserManager } from '@alkemio/tests-lib';
+import {
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUser,
+  TestUserManager,
+} from '@alkemio/tests-lib';
 import { createAuthenticatedSessionFixture } from '@src/functional-e2e/fixtures/authenticated-session.fixture';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { randomBytes } from 'crypto';
 import { PostTemplateForm } from './forms/template-form.models';
 import { fillPostTemplateForm } from './forms/post-template-form';
 import { verifyPostTemplate } from './verify/post-template-verify';
-
 
 // Create the authenticated fixture with a unique storage state name for this test suite
 const { test, setupAuthentication, teardownAuthentication } =
@@ -28,43 +32,43 @@ const scenarioConfig: TestScenarioConfig = {
     },
     community: {
       admins: [TestUser.SPACE_ADMIN],
-      members: [
-        TestUser.SPACE_MEMBER,
-        TestUser.SPACE_ADMIN,
-      ],
+      members: [TestUser.SPACE_MEMBER, TestUser.SPACE_ADMIN],
     },
   },
 };
 
 const templateData: PostTemplateForm = {
   displayName: 'Test Post Template',
-  description: 'This template streamlines announcement posts with a ready-to-use structure for updates and calls to action.',
+  description:
+    'This template streamlines announcement posts with a ready-to-use structure for updates and calls to action.',
   tags: ['template', 'post'],
-  defaultContent: '# Collaboration Update\n\nKeep stakeholders aligned with the latest milestones, blockers, and next steps.',
+  defaultContent:
+    '# Collaboration Update\n\nKeep stakeholders aligned with the latest milestones, blockers, and next steps.',
 };
 
 test.describe.serial('Post Templates', () => {
   test.beforeAll(async ({ browser, context }) => {
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
     await setupAuthentication(browser, TestUserManager.users.spaceAdmin.email);
-
-
   });
   test.afterAll(async () => {
     // Clean up authentication
     await teardownAuthentication();
+    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${baseUrl}/${baseScenario.space.nameId}/settings/templates`);
+    await page.goto(
+      `${baseUrl}/${baseScenario.space.nameId}/settings/templates`
+    );
 
     // Verify we are on the Templates settings page
-    await expect(page.getByText('Here you can create and edit Templates for this space.')).toBeVisible();
+    await expect(
+      page.getByText('Here you can create and edit Templates for this space.')
+    ).toBeVisible();
   });
 
-  test('1.0 Navigate to templates settings', async ({
-    page,
-  }) => {
+  test('1.0 Navigate to templates settings', async ({ page }) => {
     // Navigate to the root of the space
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
 
@@ -80,16 +84,23 @@ test.describe.serial('Post Templates', () => {
 
   test('1.1 Create Post Template', async ({ page }) => {
     // Verify all template sections are visible
-    await expect(page.getByRole('heading', { name: 'Post Templates' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Post Templates' })
+    ).toBeVisible();
 
     // Find the container (parent of the parent of the heading) and then the "Create new" button within it
-    const createNewButton = await page.getByRole('heading', { name: 'Post Templates' }).
-      locator('..').locator('..').locator('..').
-      getByRole('button', {name: 'Create New'});
+    const createNewButton = await page
+      .getByRole('heading', { name: 'Post Templates' })
+      .locator('..')
+      .locator('..')
+      .locator('..')
+      .getByRole('button', { name: 'Create New' });
     await createNewButton.click();
 
     // Wait for the Post Template creation dialog to appear
-    await expect(page.getByRole('heading', { name: 'Create new Post Template' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Create new Post Template' })
+    ).toBeVisible();
 
     // Fill the form:
     await fillPostTemplateForm(page, templateData);
@@ -102,7 +113,9 @@ test.describe.serial('Post Templates', () => {
     await createButton.click();
 
     // Verify the dialog closes
-    await expect(page.getByRole('heading', { name: 'Create new Post Template' })).not.toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Create new Post Template' })
+    ).not.toBeVisible();
 
     await verifyPostTemplate(page, templateData);
   });
@@ -115,18 +128,17 @@ test.describe.serial('Post Templates', () => {
 
     await page.getByRole('button', { name: 'Edit' }).click();
 
-
     templateData.displayName = templateData.displayName + EditedTag;
     templateData.description = templateData.description + EditedTag;
     templateData.tags.push(EditedTag);
     templateData.defaultContent = templateData.defaultContent + EditedTag;
 
-
     // Wait for the edit dialog to appear
-    await expect(page.getByRole('heading', { name: 'Edit Post Template' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Edit Post Template' })
+    ).toBeVisible();
 
     await fillPostTemplateForm(page, templateData);
-
 
     // Click the Save button to save the changes
     const saveButton = page.getByRole('button', { name: 'Update' });
@@ -134,7 +146,9 @@ test.describe.serial('Post Templates', () => {
     await saveButton.click();
 
     // Verify the dialog closes
-    await expect(page.getByRole('heading', { name: 'Edit Post Template' })).not.toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Edit Post Template' })
+    ).not.toBeVisible();
 
     // Verify the data was updated
     await verifyPostTemplate(page, templateData);
@@ -145,13 +159,12 @@ test.describe.serial('Post Templates', () => {
     await verifyPostTemplate(page, templateData);
   });
 
-  test('1.3 Verify edit and cancel and confirm dialog', async ({
-    page,
-  }) => {
+  test('1.3 Verify edit and cancel and confirm dialog', async ({ page }) => {
     await page.getByRole('heading', { name: templateData.displayName }).click();
 
     const originalContent = templateData.defaultContent;
-    templateData.defaultContent = originalContent + ' This edit will be discarded.';
+    templateData.defaultContent =
+      originalContent + ' This edit will be discarded.';
 
     await page.getByRole('button', { name: 'Edit' }).click();
 
@@ -165,7 +178,6 @@ test.describe.serial('Post Templates', () => {
     templateData.defaultContent = originalContent;
     await page.getByRole('heading', { name: templateData.displayName }).click();
     await verifyPostTemplate(page, templateData);
-
   });
 
   test('1.4 Delete Post Template', async ({ page }) => {
@@ -176,14 +188,25 @@ test.describe.serial('Post Templates', () => {
 
     await page.getByRole('button', { name: 'Delete', exact: true }).click();
 
-    await expect(page.getByText(`Are you sure you want to delete the Template '${templateData.displayName}'?`, { exact: true })).toBeVisible();
+    await expect(
+      page.getByText(
+        `Are you sure you want to delete the Template '${templateData.displayName}'?`,
+        { exact: true }
+      )
+    ).toBeVisible();
 
     await page.getByRole('button', { name: 'Delete' }).click();
 
-    await expect(page.getByRole('heading', { name: 'Warning' })).not.toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Warning' })
+    ).not.toBeVisible();
 
-    await expect(page.getByRole('heading', { name: 'Edit Post Template' })).not.toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Edit Post Template' })
+    ).not.toBeVisible();
 
-    await expect(page.getByRole('heading', { name: templateData.displayName, exact: true })).not.toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: templateData.displayName, exact: true })
+    ).not.toBeVisible();
   });
 });
