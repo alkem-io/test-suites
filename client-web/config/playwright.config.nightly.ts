@@ -94,6 +94,15 @@ export default defineConfig({
         '/callouts/0.9callout-viewing.spec.ts',
       ],
     },
+    {
+      name: 'Templetes',
+      testMatch: [
+        '/templates/callout-tests.spec.ts',
+        '/templates/community-guidance-template.spec.ts',
+        '/templates/post-template.spec.ts',
+        '/templates/whiteboard-template.spec.ts',
+      ],
+    },
   ],
   // % or number of the available CPUs
   // workers: '100%',

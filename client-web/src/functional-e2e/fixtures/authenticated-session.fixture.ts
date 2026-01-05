@@ -66,6 +66,7 @@ export function createAuthenticatedSessionFixture(
       sharedPage = await sharedContext.newPage();
       const loginPage = new LoginPage(sharedPage, baseUrl);
       await loginPage.login(email);
+      await sharedPage.getByRole('button', { name: 'Accept all cookies' }).click();
       await sharedPage.context().storageState({ path: storageStatePath });
     },
     /**
