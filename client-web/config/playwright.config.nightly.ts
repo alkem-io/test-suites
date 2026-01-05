@@ -97,10 +97,17 @@ export default defineConfig({
     {
       name: 'Templetes',
       testMatch: [
-        '/templates/callout-tests.spec.ts',
-        '/templates/community-guidance-template.spec.ts',
-        '/templates/post-template.spec.ts',
-        '/templates/whiteboard-template.spec.ts',
+        '/templates/template-types/callout-tests.spec.ts',
+        '/templates/template-types/community-guidance-template.spec.ts',
+        '/templates/template-types/post-template.spec.ts',
+        '/templates/template-types/whiteboard-template.spec.ts',
+      ],
+    },
+    {
+      name: 'Applications',
+      testMatch: [
+        '/applications/space-applications-level-0.spec.ts',
+        '/applications/space-applications-level-1.spec.ts',
       ],
     },
   ],
