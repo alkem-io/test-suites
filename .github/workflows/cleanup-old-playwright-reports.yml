@@ -7,7 +7,7 @@ name: Cleanup old Playwright report data
 on:
   workflow_dispatch:
   schedule:
-    - cron: "@daily"
+    - cron: "0 0 * * *"
 
 jobs:
   cleanup:
