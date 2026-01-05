@@ -80,6 +80,29 @@ export default defineConfig({
         '/explore-platform/explore-platform-authenticated.spec.ts',
       ],
     },
+    {
+      name: 'Callouts',
+      testMatch: [
+        '/callouts/0.1callout-full-workflow.spec.ts',
+        '/callouts/0.2callout-access-control.spec.ts',
+        '/callouts/0.3callout-comments.spec.ts',
+        '/callouts/0.4callout-contributions.spec.ts',
+        '/callouts/0.5callout-creation.spec.ts',
+        '/callouts/0.6callout-deletion.spec.ts',
+        '/callouts/0.7callout-editing.spec.ts',
+        '/callouts/0.8callout-subspace-creation.spec.ts',
+        '/callouts/0.9callout-viewing.spec.ts',
+      ],
+    },
+    {
+      name: 'Templetes',
+      testMatch: [
+        '/templates/callout-tests.spec.ts',
+        '/templates/community-guidance-template.spec.ts',
+        '/templates/post-template.spec.ts',
+        '/templates/whiteboard-template.spec.ts',
+      ],
+    },
   ],
   // % or number of the available CPUs
   // workers: '100%',

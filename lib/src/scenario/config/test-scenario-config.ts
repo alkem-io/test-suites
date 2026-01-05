@@ -42,6 +42,8 @@ export interface TestScenarioSpaceConfig {
     addTutorialCallouts?: boolean; // Only applicable on L0
     addPostCallout?: boolean;
     addPostCollectionCallout?: boolean;
+    addLinkCollectionCallout?: boolean;
+    addWhiteboardCollectionCallout?: boolean;
     addWhiteboardCallout?: boolean;
   };
   subspace?: TestScenarioSpaceConfig;
