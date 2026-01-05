@@ -1,16 +1,12 @@
 // spec: client-web/src/functional-e2e/plans/callouts-test-plan.md
 // seed: client-web/src/functional-e2e/seed-public-space.spec.ts
 
-import {
-  CommunityMembershipPolicy,
-  SpacePrivacyMode,
-} from '@alkemio/client-lib/dist/generated/graphql';
 import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
 import { delay, TestUserManager } from '@alkemio/tests-lib';
-import { expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 import { CollaborationPage } from './pages';
 
@@ -49,62 +45,76 @@ const memberFixture = createAuthenticatedSessionFixture({
   cleanupAfterTests: process.env.cleanupAfterTests === 'true',
 });
 
-adminFixture.test.describe.serial('8.1 Post Collection - Full Workflow', () => {
-  adminFixture.test.beforeAll(async ({ browser }) => {
-    adminFixture.test.setTimeout(60_000);
+test.describe.serial('Callout Full Workflow', () => {
+  test.beforeAll(async () => {
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
-    await adminFixture.setupAuthentication(
-      browser,
-      TestUserManager.users.spaceAdmin.email
-    );
   });
 
-  adminFixture.test.afterAll(async () => {
-    adminFixture.test.setTimeout(30_000);
-    await adminFixture.teardownAuthentication();
+  test.afterAll(async () => {
+    if (baseScenario) {
+      await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+    }
   });
 
-  adminFixture.test(
-    'Step 1: Admin creates Post Collection callout',
-    async ({ page }) => {
-      adminFixture.test.setTimeout(45_000);
-      const collaborationPage = new CollaborationPage(page, baseUrl);
+  adminFixture.test.describe.serial(
+    'Admin Creates and Publishes Callout',
+    () => {
+      adminFixture.test.beforeAll(async ({ browser }) => {
+        adminFixture.test.setTimeout(60_000);
+        await adminFixture.setupAuthentication(
+          browser,
+          TestUserManager.users.spaceAdmin.email
+        );
+      });
 
-      await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+      adminFixture.test.afterAll(async () => {
+        adminFixture.test.setTimeout(30_000);
+        await adminFixture.teardownAuthentication();
+      });
 
-      await collaborationPage.createCalloutWithContributions(
-        sharedCalloutName,
-        'posts',
-        'A post collection for the full workflow test',
-        true
+      adminFixture.test(
+        'Step 1: Admin creates Post Collection callout',
+        async ({ page }) => {
+          adminFixture.test.setTimeout(45_000);
+          const collaborationPage = new CollaborationPage(page, baseUrl);
+
+          await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+
+          await collaborationPage.createCalloutWithContributions(
+            sharedCalloutName,
+            'posts',
+            'A post collection for the full workflow test',
+            true
+          );
+
+          const isVisible =
+            await collaborationPage.isCalloutVisible(sharedCalloutName);
+          expect(isVisible).toBe(true);
+        }
       );
 
-      const isVisible =
-        await collaborationPage.isCalloutVisible(sharedCalloutName);
-      expect(isVisible).toBe(true);
+      adminFixture.test(
+        'Step 2: Admin publishes the callout',
+        async ({ page }) => {
+          adminFixture.test.setTimeout(30_000);
+          const collaborationPage = new CollaborationPage(page, baseUrl);
+
+          await collaborationPage.navigateToSpace(baseScenario.space.nameId);
+          await collaborationPage.clickCallout(sharedCalloutName);
+
+          await collaborationPage.openContextualMenu();
+          await collaborationPage.publishCallout();
+
+          await collaborationPage.openContextualMenu();
+          await expect(collaborationPage.publishMenuItem).not.toBeVisible({
+            timeout: 5000,
+          });
+        }
+      );
     }
   );
 
-  adminFixture.test('Step 2: Admin publishes the callout', async ({ page }) => {
-    adminFixture.test.setTimeout(30_000);
-    const collaborationPage = new CollaborationPage(page, baseUrl);
-
-    await collaborationPage.navigateToSpace(baseScenario.space.nameId);
-    await collaborationPage.clickCallout(sharedCalloutName);
-
-    await collaborationPage.openContextualMenu();
-    await collaborationPage.publishCallout();
-
-    await collaborationPage.openContextualMenu();
-    await expect(collaborationPage.publishMenuItem).not.toBeVisible({
-      timeout: 5000,
-    });
-  });
-});
-
-memberFixture.test.describe.serial(
-  '8.1 Post Collection - Member Contributions',
-  () => {
+  memberFixture.test.describe.serial('Member Contributions', () => {
     memberFixture.test.beforeAll(async ({ browser }) => {
       memberFixture.test.setTimeout(60_000);
       await memberFixture.setupAuthentication(
@@ -158,17 +168,14 @@ memberFixture.test.describe.serial(
         ).toBeVisible({ timeout: 10000 });
       }
     );
-  }
-);
+  });
 
-const adminModerationFixture = createAuthenticatedSessionFixture({
-  storageStateName: 'callout-workflow-admin-mod.json',
-  cleanupAfterTests: process.env.cleanupAfterTests === 'true',
-});
+  const adminModerationFixture = createAuthenticatedSessionFixture({
+    storageStateName: 'callout-workflow-admin-mod.json',
+    cleanupAfterTests: process.env.cleanupAfterTests === 'true',
+  });
 
-adminModerationFixture.test.describe.serial(
-  '8.1 Post Collection - Admin Moderation',
-  () => {
+  adminModerationFixture.test.describe.serial('Admin Moderation', () => {
     adminModerationFixture.test.beforeAll(async ({ browser }) => {
       adminModerationFixture.test.setTimeout(60_000);
       await adminModerationFixture.setupAuthentication(
@@ -180,9 +187,6 @@ adminModerationFixture.test.describe.serial(
     adminModerationFixture.test.afterAll(async () => {
       adminModerationFixture.test.setTimeout(30_000);
       await adminModerationFixture.teardownAuthentication();
-      if (baseScenario) {
-        await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
-      }
     });
 
     adminModerationFixture.test(
@@ -212,5 +216,5 @@ adminModerationFixture.test.describe.serial(
         await expect(collaborationPage.deleteButton).toBeVisible();
       }
     );
-  }
-);
+  });
+});
