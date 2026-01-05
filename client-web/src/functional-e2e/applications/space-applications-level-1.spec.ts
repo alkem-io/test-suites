@@ -48,18 +48,6 @@ const scenarioConfig: TestScenarioConfig = {
           policy: CommunityMembershipPolicy.Applications,
         },
       },
-      subspace: {
-        community: {
-          admins: [TestUser.SUBSPACE_ADMIN],
-          members: [TestUser.SUBSUBSPACE_ADMIN, TestUser.SUBSUBSPACE_MEMBER],
-        },
-        settings: {
-          privacy: { mode: SpacePrivacyMode.Private },
-          membership: {
-            policy: CommunityMembershipPolicy.Applications,
-          },
-        },
-      },
     },
   },
 };
