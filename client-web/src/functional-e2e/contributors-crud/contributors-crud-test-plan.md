@@ -553,26 +553,27 @@
 
 ### 3.4 Virtual Contributor - Space Interaction Setup
 
-**Test:** `Select Space for VC to start interacting`
+**Test:** `Associate VC to Space and accept invitation`
 
 **Steps:**
 
 1. Log in as Organization Admin
 2. Navigate to VC profile
-3. Navigate to VC Settings
-4. Find "Space Interactions" or "Associated Spaces" section
-5. Select Space from dropdown (use CRUD Test Space from scenario)
-6. Enable VC interaction with Space
-7. Save settings
-8. Verify VC associated with Space
+3. Navigate to VC Settings → Membership tab
+4. Switch to a Space admin-capable user (Space Admin or Global Admin)
+5. Navigate directly to the Space URL created in config (CRUD Test Space)
+6. In that Space, open Contributors (Community) and add/invite the VC created in 3.1
+7. Switch back to Organization Admin
+8. Return to VC Settings → Membership tab
+9. In Pending Invitations, accept the Space invitation for this VC
+10. Verify the Space now appears under Memberships (no longer in Pending Invitations)
 
 **Expected Result:**
 
-- Space selection dropdown displays available spaces
-- Space can be selected
-- Association saves successfully
-- VC appears in Space context
-- VC ready to receive mentions/tags
+- VC can be invited to the Space from the Space page by a Space/Global Admin
+- Pending invitation for that Space appears in VC memberships
+- Accepting the invitation moves the Space to Memberships
+- VC is now associated with the Space and ready for interactions
 
 **Test Roles:** Org Admin
 

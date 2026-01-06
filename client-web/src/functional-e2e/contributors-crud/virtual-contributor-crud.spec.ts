@@ -129,8 +129,14 @@ const openVirtualContributorProfile = async (
       .isVisible({ timeout: 1000 })
       .catch(() => false);
     if (onVcPage && headingVisible) {
-      const headingText = ((await headingLocator.textContent()) || '').toLowerCase();
-      const expectedText = (targetDisplayName || createdVcDisplayName || '').toLowerCase();
+      const headingText = (
+        (await headingLocator.textContent()) || ''
+      ).toLowerCase();
+      const expectedText = (
+        targetDisplayName ||
+        createdVcDisplayName ||
+        ''
+      ).toLowerCase();
       if (!expectedText || headingText.includes(expectedText)) {
         return true;
       }
@@ -143,7 +149,9 @@ const openVirtualContributorProfile = async (
 
     let sectionHeading = null;
     for (const heading of headingCandidates) {
-      const visible = await heading.isVisible({ timeout: 1000 }).catch(() => false);
+      const visible = await heading
+        .isVisible({ timeout: 1000 })
+        .catch(() => false);
       if (visible) {
         sectionHeading = heading;
         break;
@@ -187,7 +195,7 @@ const openVirtualContributorProfile = async (
       if (!linkVisible) continue;
 
       const href = (await candidate.getAttribute('href')) || '';
-      const hrefSlug = href.split('/').filter(Boolean).pop();
+      const hrefSlug = href.split('/').filter(Boolean).pop() || null;
       if (hrefSlug) {
         createdVcNameId = hrefSlug;
       }
@@ -201,8 +209,14 @@ const openVirtualContributorProfile = async (
         .isVisible({ timeout: 15000 })
         .catch(() => false);
       if (nowOnVcPage && postClickVisible) {
-        const headingText = ((await postClickHeading.textContent()) || '').toLowerCase();
-        const expectedText = (targetDisplayName || createdVcDisplayName || '').toLowerCase();
+        const headingText = (
+          (await postClickHeading.textContent()) || ''
+        ).toLowerCase();
+        const expectedText = (
+          targetDisplayName ||
+          createdVcDisplayName ||
+          ''
+        ).toLowerCase();
         if (!expectedText || headingText.includes(expectedText)) {
           return true;
         }
@@ -280,7 +294,9 @@ test.describe('Virtual Contributor CRUD Tests', () => {
     await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
-  test.skip('3.0 Manually go through whole flow - all flows together', async ({ page }) => {
+  test.skip('3.0 Manually go through whole flow - all flows together', async ({
+    page,
+  }) => {
     await page.getByRole('tab', { name: 'account' }).click();
     await page.getByRole('button', { name: 'Add' }).nth(1).click();
     await page.getByRole('textbox', { name: 'Name' }).click();
@@ -302,15 +318,23 @@ test.describe('Virtual Contributor CRUD Tests', () => {
       .getByRole('button', { name: 'Written knowledge in text AI' })
       .click();
 
-        await page.getByRole('button', { name: 'Create' }).click();
+    await page.getByRole('button', { name: 'Create' }).click();
     await page.getByRole('textbox', { name: 'Markdown editor' }).click();
     await page.getByRole('textbox', { name: 'Post title' }).click();
     await page.getByRole('button', { name: 'Continue' }).click();
-    await page.getByRole('button', { name: 'Proceed without membership' }).click();
-    await page.getByRole('button', { name: 'Proceed without membership' }).click();
-    await page.getByRole('link', { name: 'Visit big bang\'s Profile' }).click();
+    await page
+      .getByRole('button', { name: 'Proceed without membership' })
+      .click();
+    await page
+      .getByRole('button', { name: 'Proceed without membership' })
+      .click();
+    await page.getByRole('link', { name: "Visit big bang's Profile" }).click();
     await page.getByRole('button', { name: 'Visit' }).click();
-    await page.getByText('Tip: Create a structured and specific text, for example: Background Alkemio,').click();
+    await page
+      .getByText(
+        'Tip: Create a structured and specific text, for example: Background Alkemio,'
+      )
+      .click();
     await page.getByRole('button', { name: 'Post' }).click();
     await page.getByRole('textbox', { name: 'Title' }).click();
     await page.getByRole('textbox', { name: 'Title' }).fill('new post by VC');
@@ -481,7 +505,9 @@ test.describe('Virtual Contributor CRUD Tests', () => {
     await expect(submitButton).toBeVisible();
     await submitButton.click();
     // Complete post-create flow and land on the VC profile to capture the slug
-    const continueButton = page.getByRole('button', { name: /continue/i }).first();
+    const continueButton = page
+      .getByRole('button', { name: /continue/i })
+      .first();
     if (await continueButton.isVisible().catch(() => false)) {
       await continueButton.click();
     }
@@ -508,7 +534,7 @@ test.describe('Virtual Contributor CRUD Tests', () => {
 
     const urlAfterCreation = new URL(page.url());
     const pathParts = urlAfterCreation.pathname.split('/').filter(Boolean);
-    const lastSegment = pathParts.pop();
+    const lastSegment = pathParts.pop() || null;
     if (lastSegment) {
       createdVcNameId = lastSegment;
       createdVcDisplayName = vcDisplayName;
@@ -526,13 +552,15 @@ test.describe('Virtual Contributor CRUD Tests', () => {
 
       if (onVcPage && headingVisible) {
         await expect(landingHeading).toContainText(vcDisplayName);
-        createdVcNameId = page.url().split('/').filter(Boolean).pop();
+        createdVcNameId = page.url().split('/').filter(Boolean).pop() || null;
         createdVcDisplayName = vcDisplayName;
         return;
       }
 
       // Navigate to organization account tab and click the VC card directly
-      await page.goto(`${baseUrl}/organization/${baseScenario.organization.nameId}`);
+      await page.goto(
+        `${baseUrl}/organization/${baseScenario.organization.nameId}`
+      );
       const accountTabNav = page.getByRole('tab', { name: /account/i });
       if (await accountTabNav.isVisible().catch(() => false)) {
         await accountTabNav.click();
@@ -554,7 +582,7 @@ test.describe('Virtual Contributor CRUD Tests', () => {
       });
       await expect(landingHeading).toBeVisible({ timeout: 15000 });
       await expect(landingHeading).toContainText(vcDisplayName);
-      const hrefSlug = page.url().split('/').filter(Boolean).pop();
+      const hrefSlug = page.url().split('/').filter(Boolean).pop() || null;
       createdVcNameId = hrefSlug || createdVcNameId;
       createdVcDisplayName = vcDisplayName;
     } catch (uiError) {
@@ -599,81 +627,56 @@ test.describe('Virtual Contributor CRUD Tests', () => {
     expect(createdVcNameId).toBeTruthy();
     await openCreatedVirtualContributor(page);
 
-    // 4. Navigate to Knowledge/BoK section
-    const knowledgeTab = page.getByRole('tab', {
-      name: /knowledge|body.*of.*knowledge|bok/i,
-    });
+    // 1. Verify Knowledge section heading is visible
     const knowledgeSectionHeading = page.getByRole('heading', {
       name: /body.*of.*knowledge|knowledge/i,
       level: 2,
     });
-    const knowledgeTarget = (await knowledgeTab.isVisible().catch(() => false))
-      ? knowledgeTab
-      : knowledgeSectionHeading;
-    await expect(knowledgeTarget).toBeVisible({ timeout: 10000 });
-    if (knowledgeTarget === knowledgeTab) {
-      await knowledgeTab.click();
-    }
+    await expect(knowledgeSectionHeading).toBeVisible({ timeout: 10000 });
 
-    // 5. Look for Add Post button; if not visible, open the Body of Knowledge view first
-    let addPostButton = page.getByRole('button', {
-      name: /add.*(post|knowledge)|new.*post|create.*post/i,
+    // 2. Click Visit button to open the Body of Knowledge dialog
+    const visitBoK = page.getByRole('button', { name: /visit/i }).first();
+    await expect(visitBoK).toBeVisible({ timeout: 10000 });
+    await visitBoK.click();
+    await page.waitForLoadState('domcontentloaded');
+
+    // 3. Verify BoK dialog is open (by its title containing "Body Of Knowledge")
+    const bokDialogTitle = page.getByRole('heading', {
+      name: /body.*of.*knowledge/i,
+      level: 2,
     });
+    await expect(bokDialogTitle).toBeVisible({ timeout: 10000 });
 
-    const initialVisible = await addPostButton
-      .isVisible({ timeout: 3000 })
-      .catch(() => false);
+    // 4. Click "Post" button to add text post knowledge
+    const postButton = page.getByRole('button', { name: /^post$/i });
+    await expect(postButton).toBeVisible({ timeout: 5000 });
+    await postButton.click();
 
-    if (!initialVisible) {
-      const visitBoK = page.getByRole('button', { name: /visit/i }).first();
-      if (await visitBoK.isVisible().catch(() => false)) {
-        await visitBoK.click();
-        await page.waitForLoadState('domcontentloaded');
-      }
-      const bokDialog = page.getByRole('dialog', {
-        name: /body.*knowledge/i,
-      });
-      if (await bokDialog.isVisible().catch(() => false)) {
-        const editButton = bokDialog.getByRole('button', { name: /edit/i });
-        if (await editButton.isVisible({ timeout: 4000 }).catch(() => false)) {
-          await editButton.click();
-          // If editing is available but no add button, consider this sufficient
-          addPostButton = bokDialog.getByRole('button', {
-            name: /add.*(post|knowledge)|new.*post|create.*post/i,
-          }).first();
-        }
-      }
-      const candidateCount = await addPostButton.count().catch(() => 0);
-      if (candidateCount === 0) {
-        addPostButton = page.getByRole('button', {
-          name: /add.*(post|knowledge)|new.*post|create.*post/i,
-        }).first();
-      }
-    }
+    // 5. Verify "Add Post" dialog appears
+    const addPostTitle = page.getByRole('heading', { name: /add post/i });
+    await expect(addPostTitle).toBeVisible({ timeout: 5000 });
 
-    const addButtonVisible = await addPostButton
-      .isVisible({ timeout: 2000 })
-      .catch(() => false);
-
-    if (!addButtonVisible) {
-      const bokDialog = page.getByRole('dialog', {
-        name: /body.*knowledge/i,
-      });
-      await expect(bokDialog).toBeVisible({ timeout: 5000 });
-      return;
-    }
-
-    await expect(addPostButton).toBeVisible({ timeout: 15000 });
-    await addPostButton.click();
-
-    // 6. Verify post creation form
+    // 6. Verify Title field is present
     const titleField = page.getByRole('textbox', { name: /title/i });
-    await expect(titleField).toBeVisible();
+    await expect(titleField).toBeVisible({ timeout: 5000 });
 
-    // Cancel post creation
-    const cancelButton = page.getByRole('button', { name: /cancel/i });
-    await expect(cancelButton).toBeVisible();
-    await cancelButton.click();
+    // 7. Close the Add Post dialog using the Close button
+    const closeAddPostButton = page
+      .getByRole('dialog', { name: /add post/i })
+      .getByRole('button', { name: /close/i });
+    await expect(closeAddPostButton).toBeVisible({ timeout: 5000 });
+    await closeAddPostButton.click();
+
+    // 8. Verify Add Post dialog is closed (Title field no longer visible)
+    await expect(addPostTitle).not.toBeVisible({ timeout: 5000 });
+
+    // 9. Close the BoK dialog using Escape key
+    await page.keyboard.press('Escape');
+
+    // 10. Verify we're back on the VC profile
+    const vcProfileHeading = page.getByRole('heading', { level: 1 });
+    await expect(vcProfileHeading).toBeVisible({ timeout: 10000 });
+    await expect(vcProfileHeading).toContainText(createdVcDisplayName || '');
   });
 
   test('3.3 Add document knowledge to Virtual Contributor', async ({
@@ -682,74 +685,74 @@ test.describe('Virtual Contributor CRUD Tests', () => {
     expect(createdVcNameId).toBeTruthy();
     await openCreatedVirtualContributor(page);
 
-    // 4. Navigate to Knowledge section
-    const knowledgeTab = page.getByRole('tab', {
-      name: /knowledge|body.*of.*knowledge|bok/i,
-    });
+    // 1. Verify Knowledge section heading is visible
     const knowledgeSectionHeading = page.getByRole('heading', {
       name: /body.*of.*knowledge|knowledge/i,
       level: 2,
     });
-    const knowledgeTarget = (await knowledgeTab.isVisible().catch(() => false))
-      ? knowledgeTab
-      : knowledgeSectionHeading;
-    await expect(knowledgeTarget).toBeVisible({ timeout: 10000 });
-    if (knowledgeTarget === knowledgeTab) {
-      await knowledgeTab.click();
-    }
+    await expect(knowledgeSectionHeading).toBeVisible({ timeout: 10000 });
 
-    // 5. Look for Add Document button; open BoK view if needed
-    let addDocButton = page.getByRole('button', {
-      name: /add.*(document|doc|file)|upload.*(document|file)/i,
+    // 2. Click Visit button to open the Body of Knowledge dialog
+    const visitBoK = page.getByRole('button', { name: /visit/i }).first();
+    await expect(visitBoK).toBeVisible({ timeout: 10000 });
+    await visitBoK.click();
+    await page.waitForLoadState('domcontentloaded');
+
+    // 3. Verify BoK dialog is open
+    const bokDialogTitle = page.getByRole('heading', {
+      name: /body.*of.*knowledge/i,
+      level: 2,
     });
+    await expect(bokDialogTitle).toBeVisible({ timeout: 10000 });
 
-    const docButtonVisible = await addDocButton
-      .isVisible({ timeout: 3000 })
-      .catch(() => false);
+    // 4. Click "Post" button to open the Add Post form
+    const postButton = page.getByRole('button', { name: /^post$/i });
+    await expect(postButton).toBeVisible({ timeout: 5000 });
+    await postButton.click();
 
-    if (!docButtonVisible) {
-      const visitBoK = page.getByRole('button', { name: /visit/i }).first();
-      if (await visitBoK.isVisible().catch(() => false)) {
-        await visitBoK.click();
-        await page.waitForLoadState('domcontentloaded');
-      }
-      addDocButton = page.getByRole('button', {
-        name: /add.*(document|doc|file)|upload.*(document|file)/i,
-      }).first();
-    }
+    // 5. Verify "Add Post" dialog appears
+    const addPostTitle = page.getByRole('heading', { name: /add post/i });
+    await expect(addPostTitle).toBeVisible({ timeout: 5000 });
 
-    const docVisible = await addDocButton
-      .isVisible({ timeout: 2000 })
-      .catch(() => false);
+    // 6. Verify "Add Reference" button is present (for adding links/documents)
+    const addReferenceButton = page.getByRole('button', {
+      name: /add reference/i,
+    });
+    await expect(addReferenceButton).toBeVisible({ timeout: 5000 });
 
-    if (!docVisible) {
-      const bokDialog = page.getByRole('dialog', {
-        name: /body.*knowledge/i,
-      });
-      await expect(bokDialog).toBeVisible({ timeout: 5000 });
-      return;
-    }
+    // 7. Close the Add Post dialog
+    const closeAddPostButton = page
+      .getByRole('dialog', { name: /add post/i })
+      .getByRole('button', { name: /close/i });
+    await expect(closeAddPostButton).toBeVisible({ timeout: 5000 });
+    await closeAddPostButton.click();
 
-    await expect(addDocButton).toBeVisible({ timeout: 15000 });
-    await addDocButton.click();
+    // 8. Verify Add Post dialog is closed
+    await expect(addPostTitle).not.toBeVisible({ timeout: 5000 });
 
-    // 6. Verify document upload form
-    const titleField = page.getByRole('textbox', { name: /title/i });
-    const fileInput = page.locator('input[type="file"]');
-    await expect(titleField).toBeVisible();
-    await expect(fileInput).toBeVisible();
+    // 9. Close the BoK dialog
+    await page.keyboard.press('Escape');
 
-    // Cancel document upload
-    const cancelButton = page.getByRole('button', { name: /cancel/i });
-    await expect(cancelButton).toBeVisible();
-    await cancelButton.click();
+    // 10. Verify we're back on the VC profile
+    const vcProfileHeading = page.getByRole('heading', { level: 1 });
+    await expect(vcProfileHeading).toBeVisible({ timeout: 10000 });
+    await expect(vcProfileHeading).toContainText(createdVcDisplayName || '');
   });
 
-  test('3.4 Select Space for VC to start interacting', async ({ page }) => {
+  test('3.4 Associate VC to Space and accept invitation', async ({
+    browser,
+  }) => {
     expect(createdVcNameId).toBeTruthy();
+
+    // Start as Org Admin to locate the VC and its settings
+    await teardownAuthentication();
+    await setupAuthentication(
+      browser,
+      TestUserManager.users.organizationAdmin.email
+    );
+    let page = getSharedPage();
     await openCreatedVirtualContributor(page);
 
-    // 3. Navigate to VC Settings
     const settingsTab = page.getByRole('tab', { name: /settings/i });
     const settingsLink = page.getByRole('link', { name: /settings/i }).first();
     const settingsTarget = (await settingsTab.isVisible().catch(() => false))
@@ -759,39 +762,83 @@ test.describe('Virtual Contributor CRUD Tests', () => {
     await settingsTarget.click();
 
     const membershipTab = page.getByRole('tab', { name: /membership/i });
+    await expect(membershipTab).toBeVisible();
+    await membershipTab.click();
 
-    // 4. Look for Space Interactions section
-    const spaceSection = page.getByText(
-      /space.*interaction|associated.*space/i
+    // Switch to Global Admin (has Space admin rights) to invite VC from Space settings
+    await teardownAuthentication();
+    await setupAuthentication(browser, TestUserManager.users.globalAdmin.email);
+    page = getSharedPage();
+
+    await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
+    const spaceHeading = page.getByRole('heading', { level: 1 });
+    await expect(spaceHeading).toBeVisible({ timeout: 15000 });
+
+    // Community/Contributors tab
+    const contributorsTab = page.getByRole('tab', {
+      name: /community|contributors/i,
+    });
+    await expect(contributorsTab).toBeVisible({ timeout: 10000 });
+    await contributorsTab.click();
+
+    const addContributorButton = page
+      .getByRole('button', {
+        name: /add.*virtual contributor|add.*contributor|invite.*contributor/i,
+      })
+      .first();
+    await expect(addContributorButton).toBeVisible({ timeout: 10000 });
+    await addContributorButton.click();
+
+    const searchField = page.getByRole('textbox', {
+      name: /search|name|email|contributor/i,
+    });
+    await expect(searchField).toBeVisible({ timeout: 10000 });
+    await searchField.fill(createdVcDisplayName || createdVcNameId || '');
+
+    const vcOption = page
+      .getByRole('option', {
+        name: new RegExp(createdVcDisplayName || createdVcNameId || '', 'i'),
+      })
+      .first();
+    await expect(vcOption).toBeVisible({ timeout: 10000 });
+    await vcOption.click();
+
+    const inviteButton = page.getByRole('button', {
+      name: /add|invite|send/i,
+    });
+    await expect(inviteButton).toBeVisible({ timeout: 10000 });
+    await inviteButton.click();
+
+    // Switch back to Org Admin to accept invitation in VC settings
+    await teardownAuthentication();
+    await setupAuthentication(
+      browser,
+      TestUserManager.users.organizationAdmin.email
     );
-    await expect(spaceSection).toBeVisible({ timeout: 8000 });
+    page = getSharedPage();
 
-    // 5. Look for space dropdown/selector
-    let spaceSelect = page.getByRole('combobox', {
-      name: /space|subspace|workspace/i,
-    }).first();
+    await openCreatedVirtualContributor(page);
+    const settingsTabReturn = page.getByRole('tab', { name: /settings/i });
+    await expect(settingsTabReturn).toBeVisible({ timeout: 10000 });
+    await settingsTabReturn.click();
 
-    const selectVisible = await spaceSelect
-      .isVisible({ timeout: 4000 })
-      .catch(() => false);
+    const membershipTabReturn = page.getByRole('tab', { name: /membership/i });
+    await expect(membershipTabReturn).toBeVisible({ timeout: 10000 });
+    await membershipTabReturn.click();
 
-    if (!selectVisible && (await membershipTab.isVisible().catch(() => false))) {
-      await membershipTab.click();
-      spaceSelect = page.getByRole('combobox', {
-        name: /space|subspace|workspace/i,
-      }).first();
-    }
+    const pendingSection = page.getByText(/pending invitations/i);
+    await expect(pendingSection).toBeVisible({ timeout: 15000 });
 
-    const finalVisible = await spaceSelect
-      .isVisible({ timeout: 4000 })
-      .catch(() => false);
+    const acceptButton = pendingSection.getByRole('button', {
+      name: /accept/i,
+    });
+    await expect(acceptButton).toBeVisible({ timeout: 10000 });
+    await acceptButton.click();
 
-    if (!finalVisible) {
-      await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-      return;
-    }
-
-    await expect(spaceSelect).toBeVisible({ timeout: 15000 });
+    const membershipEntry = page.getByText(
+      new RegExp(baseScenario.space.nameId, 'i')
+    );
+    await expect(membershipEntry).toBeVisible({ timeout: 15000 });
   });
 
   test('3.5 Tag Virtual Contributor with question in discussion', async ({
@@ -853,7 +900,9 @@ test.describe('Virtual Contributor CRUD Tests', () => {
       return;
     }
 
-    if (await discussionClickable.isVisible({ timeout: 2000 }).catch(() => false)) {
+    if (
+      await discussionClickable.isVisible({ timeout: 2000 }).catch(() => false)
+    ) {
       await discussionClickable.click();
     } else {
       await discussionHeading.click();
@@ -1060,9 +1109,10 @@ test.describe('Virtual Contributor CRUD Tests', () => {
 
     // 4. Delete via API to ensure cleanup when we have a UUID
     const deleteTarget = (createdVcId as string) || (createdVcNameId as string);
-    const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(
-      deleteTarget
-    );
+    const isUuid =
+      /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(
+        deleteTarget
+      );
 
     if (isUuid) {
       const deleteResult = await deleteVirtualContributor(
