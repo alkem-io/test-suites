@@ -35,7 +35,7 @@ export class LoginPage {
     await this.page
       .getByRole('textbox', { name: 'Password' })
       .fill(userPassword);
-    await this.page.getByRole('button', { name: 'Sign in' }).click();
+    await this.page.getByRole('button', { name: 'Sign in', exact: true }).click();
     await this.page.waitForURL(/.*home.*/);
   }
 
