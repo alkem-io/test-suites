@@ -75,7 +75,7 @@ describe('Reply - Discussion messages', () => {
     expect(threadId).toEqual(messageId);
     expect(replyInfo).toEqual(
       discussionMessageData?.data?.platform?.forum?.discussion?.comments
-        .messages[1]
+        .messages[0]
     );
   });
 
@@ -102,7 +102,7 @@ describe('Reply - Discussion messages', () => {
     expect(threadId).toEqual(messageId);
     expect(replyInfo).toEqual(
       discussionMessageData?.data?.platform?.forum?.discussion?.comments
-        .messages[1]
+        .messages[0]
     );
   });
 

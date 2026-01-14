@@ -170,15 +170,23 @@ test.describe('Subspace Navigation for Non-Members', () => {
     // Navigate to the public space as non-member (already authenticated)
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
 
-    const subspaceProfiel = baseScenario.subspace.about.profile;
+    const subspaceProfile = baseScenario.subspace.about.profile;
     const subsubspaceProfile = baseScenario.subsubspace.about.profile;
     await page.getByRole('tab', { name: 'Subspaces' }).click();
-    await expect(page.getByText(subspaceProfiel.displayName)).toBeVisible();
+
+    // Verify subspace card is visible using regex pattern
+    await expect(
+      page.getByRole('link', {
+        name: new RegExp(`Card banner:.*${subspaceProfile.displayName}`),
+      })
+    ).toBeVisible({
+      timeout: 10_000,
+    });
 
     // Click on the subspace card to enter the public subspace
     await page
       .getByRole('link', {
-        name: `Avatar ${subspaceProfiel.displayName}`,
+        name: `Avatar ${subspaceProfile.displayName}`,
       })
       .click();
 
@@ -186,14 +194,14 @@ test.describe('Subspace Navigation for Non-Members', () => {
     // Verify we are in the subspace
     await expect(
       page.getByRole('heading', {
-        name: subspaceProfiel.displayName,
+        name: subspaceProfile.displayName,
         exact: true,
       })
     ).toBeVisible();
 
     await expect(
       page.getByRole('heading', {
-        name: subspaceProfiel.tagline,
+        name: subspaceProfile.tagline,
       })
     ).toBeVisible();
 
