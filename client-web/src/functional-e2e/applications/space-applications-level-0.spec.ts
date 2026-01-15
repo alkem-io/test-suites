@@ -59,7 +59,9 @@ test.describe('Level 0 Space - Applications', () => {
     await nonSpaceMemberPage
       .getByRole('textbox', { name: 'Password' })
       .fill(password);
-    await nonSpaceMemberPage.getByRole('button', { name: 'Sign in' }).click();
+    await nonSpaceMemberPage
+      .getByRole('button', { name: 'Sign in', exact: true })
+      .click();
     await nonSpaceMemberPage.waitForURL(/.*home.*/);
 
     // Sign in as space admin
@@ -75,7 +77,9 @@ test.describe('Level 0 Space - Applications', () => {
     await spaceAdminPage
       .getByRole('textbox', { name: 'Password' })
       .fill(password);
-    await spaceAdminPage.getByRole('button', { name: 'Sign in' }).click();
+    await spaceAdminPage
+      .getByRole('button', { name: 'Sign in', exact: true })
+      .click();
     await spaceAdminPage.waitForURL(/.*home.*/);
   });
 

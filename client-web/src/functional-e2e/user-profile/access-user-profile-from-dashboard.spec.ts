@@ -26,7 +26,7 @@ test.describe('Navigation and Access', () => {
     // Login
     await page.getByRole('textbox', { name: 'E-Mail' }).fill('admin@alkem.io');
     await page.getByRole('textbox', { name: 'Password' }).fill(password);
-    await page.getByRole('button', { name: 'Sign in' }).click();
+    await page.getByRole('button', { name: 'Sign in', exact: true }).click();
 
     // Wait for dashboard
     await page.waitForURL(/.*home.*/);
