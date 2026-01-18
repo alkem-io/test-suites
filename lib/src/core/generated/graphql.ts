@@ -1541,6 +1541,60 @@ export type Conversation = {
   virtualContributor?: Maybe<VirtualContributor>;
 };
 
+/** Event fired when a new conversation is created. Each member receives a personalized event with the other participant resolved via conversation.user or conversation.virtualContributor. */
+export type ConversationCreatedEvent = {
+  /** The conversation that was created. */
+  conversation: Conversation;
+  /** The first message in the conversation. Null when conversation is created without an initial message. */
+  message?: Maybe<Message>;
+};
+
+/** Payload for conversation subscription events. */
+export type ConversationEventSubscriptionResult = {
+  /** Present when eventType is CONVERSATION_CREATED. */
+  conversationCreated?: Maybe<ConversationCreatedEvent>;
+  /** The type of event. Use this to determine which payload field is populated. */
+  eventType: ConversationEventType;
+  /** Present when eventType is MESSAGE_RECEIVED. */
+  messageReceived?: Maybe<ConversationMessageReceivedEvent>;
+  /** Present when eventType is MESSAGE_REMOVED. */
+  messageRemoved?: Maybe<ConversationMessageRemovedEvent>;
+  /** Present when eventType is READ_RECEIPT_UPDATED. */
+  readReceiptUpdated?: Maybe<ConversationReadReceiptUpdatedEvent>;
+};
+
+/** The type of conversation event. */
+export enum ConversationEventType {
+  ConversationCreated = "CONVERSATION_CREATED",
+  MessageReceived = "MESSAGE_RECEIVED",
+  MessageRemoved = "MESSAGE_REMOVED",
+  ReadReceiptUpdated = "READ_RECEIPT_UPDATED",
+}
+
+/** Event fired when a new message is received in a conversation. */
+export type ConversationMessageReceivedEvent = {
+  /** The message that was received. */
+  message: Message;
+  /** The room ID where the message was received. */
+  roomId: Scalars["UUID"]["output"];
+};
+
+/** Event fired when a message is removed from a conversation. */
+export type ConversationMessageRemovedEvent = {
+  /** The ID of the message that was removed. */
+  messageId: Scalars["MessageID"]["output"];
+  /** The room ID where the message was removed. */
+  roomId: Scalars["UUID"]["output"];
+};
+
+/** Event fired when a read receipt is updated in a conversation. */
+export type ConversationReadReceiptUpdatedEvent = {
+  /** The ID of the last read event (message). */
+  lastReadEventId: Scalars["MessageID"]["output"];
+  /** The room ID where the read receipt was updated. */
+  roomId: Scalars["UUID"]["output"];
+};
+
 export type ConversationVcAnswerRelevanceInput = {
   /** The ID of the conversation. */
   conversationID: Scalars["UUID"]["input"];
@@ -3969,7 +4023,7 @@ export type Message = {
   /** The User or Virtual Contributor that created this Message */
   sender?: Maybe<Contributor>;
   /** The message being replied to */
-  threadID?: Maybe<Scalars["String"]["output"]>;
+  threadID?: Maybe<Scalars["MessageID"]["output"]>;
   /** The server timestamp in UTC */
   timestamp: Scalars["Float"]["output"];
 };
@@ -4291,6 +4345,8 @@ export type Mutation = {
   joinRoleSet: RoleSet;
   /** Reset the License with Entitlements on the specified Account. */
   licenseResetOnAccount: Account;
+  /** Marks a message as read for the current user. */
+  markMessageAsReadInRoom: Scalars["Boolean"]["output"];
   /** Mark notifications as read. If no filter is provided, marks all user notifications as read. If filter with types is provided, marks only those notification types as read. */
   markNotificationsAsRead: Scalars["Boolean"]["output"];
   /** Mark notifications as unread. If no filter is provided, marks all user notifications as unread. If filter with types is provided, marks only those notification types as unread. */
@@ -4815,6 +4871,10 @@ export type MutationJoinRoleSetArgs = {
 
 export type MutationLicenseResetOnAccountArgs = {
   resetData: AccountLicenseResetInput;
+};
+
+export type MutationMarkMessageAsReadInRoomArgs = {
+  messageData: RoomMarkMessageReadInput;
 };
 
 export type MutationMarkNotificationsAsReadArgs = {
@@ -6561,16 +6621,28 @@ export type Room = {
   authorization?: Maybe<Authorization>;
   /** The date at which the entity was created. */
   createdDate: Scalars["DateTime"]["output"];
+  /** The display name of the Room. */
+  displayName: Scalars["String"]["output"];
   /** The ID of the entity */
   id: Scalars["UUID"]["output"];
+  /** The last message sent to the Room. Useful for conversation previews. */
+  lastMessage?: Maybe<Message>;
   /** Messages in this Room. */
   messages: Array<Message>;
   /** The number of messages in the Room. */
-  messagesCount: Scalars["Float"]["output"];
+  messagesCount: Scalars["Int"]["output"];
+  /** Simple unread message count for the current user. Use unreadCounts for per-thread breakdown. */
+  unreadCount: Scalars["Int"]["output"];
+  /** Unread message counts for the current user in this Room. */
+  unreadCounts: RoomUnreadCounts;
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
   /** Virtual Contributor Interactions in this Room. */
   vcInteractions: Array<VcInteraction>;
+};
+
+export type RoomUnreadCountsArgs = {
+  threadIds?: InputMaybe<Array<Scalars["MessageID"]["input"]>>;
 };
 
 export type RoomAddReactionToMessageInput = {
@@ -6592,6 +6664,15 @@ export type RoomEventSubscriptionResult = {
   room: Room;
   /** The identifier for the Room on which the event happened. */
   roomID: Scalars["String"]["output"];
+};
+
+export type RoomMarkMessageReadInput = {
+  /** The message id that should be marked as read. */
+  messageID: Scalars["MessageID"]["input"];
+  /** The Room to mark message as read in. */
+  roomID: Scalars["UUID"]["input"];
+  /** The thread id if the message is in a thread. */
+  threadID?: InputMaybe<Scalars["MessageID"]["input"]>;
 };
 
 /** A message event happened in the subscribed room */
@@ -6640,6 +6721,22 @@ export type RoomSendMessageReplyInput = {
   roomID: Scalars["UUID"]["input"];
   /** The message starting the thread being replied to */
   threadID: Scalars["MessageID"]["input"];
+};
+
+/** Unread message count for a specific thread in a Room. */
+export type RoomThreadUnreadCount = {
+  /** The number of unread messages in the thread. */
+  count: Scalars["Int"]["output"];
+  /** The thread ID. */
+  threadId: Scalars["MessageID"]["output"];
+};
+
+/** Unread message counts for a Room. */
+export type RoomUnreadCounts = {
+  /** The total number of unread messages in the Room. */
+  roomUnreadCount: Scalars["Int"]["output"];
+  /** Unread counts per thread, if thread IDs were requested. */
+  threadUnreadCounts?: Maybe<Array<RoomThreadUnreadCount>>;
 };
 
 /** The category in which to search. A category may include a couple of entity types, e.g. "responses" include posts, whiteboard, etc. */
@@ -7096,6 +7193,8 @@ export type Subscription = {
   activityCreated: ActivityCreatedSubscriptionResult;
   /** Receive new Update messages on Communities the currently authenticated User is a member of. */
   calloutPostCreated: CalloutPostCreated;
+  /** Receive conversation events for the authenticated user. Includes new conversations, messages, and read receipts. */
+  conversationEvents: ConversationEventSubscriptionResult;
   /** Receive updates on Discussions */
   forumDiscussionUpdated: Discussion;
   /** New in-app notification received for the currently authenticated user. */
@@ -8488,7 +8587,7 @@ export type UsersWithAuthorizationCredentialInput = {
 
 export type VcInteraction = {
   /** The thread ID (Matrix message ID) where VC is engaged */
-  threadID: Scalars["String"]["output"];
+  threadID: Scalars["MessageID"]["output"];
   /** The actor ID (agent.id) of the Virtual Contributor */
   virtualContributorID: Scalars["String"]["output"];
 };
@@ -9541,6 +9640,33 @@ export type ResolversTypes = {
       >;
     }
   >;
+  ConversationCreatedEvent: ResolverTypeWrapper<
+    Omit<SchemaTypes.ConversationCreatedEvent, "conversation" | "message"> & {
+      conversation: ResolversTypes["Conversation"];
+      message?: SchemaTypes.Maybe<ResolversTypes["Message"]>;
+    }
+  >;
+  ConversationEventSubscriptionResult: ResolverTypeWrapper<
+    Omit<
+      SchemaTypes.ConversationEventSubscriptionResult,
+      "conversationCreated" | "messageReceived"
+    > & {
+      conversationCreated?: SchemaTypes.Maybe<
+        ResolversTypes["ConversationCreatedEvent"]
+      >;
+      messageReceived?: SchemaTypes.Maybe<
+        ResolversTypes["ConversationMessageReceivedEvent"]
+      >;
+    }
+  >;
+  ConversationEventType: SchemaTypes.ConversationEventType;
+  ConversationMessageReceivedEvent: ResolverTypeWrapper<
+    Omit<SchemaTypes.ConversationMessageReceivedEvent, "message"> & {
+      message: ResolversTypes["Message"];
+    }
+  >;
+  ConversationMessageRemovedEvent: ResolverTypeWrapper<SchemaTypes.ConversationMessageRemovedEvent>;
+  ConversationReadReceiptUpdatedEvent: ResolverTypeWrapper<SchemaTypes.ConversationReadReceiptUpdatedEvent>;
   ConversationVcAnswerRelevanceInput: SchemaTypes.ConversationVcAnswerRelevanceInput;
   ConversationVcAskQuestionInput: SchemaTypes.ConversationVcAskQuestionInput;
   ConversationVcResetInput: SchemaTypes.ConversationVcResetInput;
@@ -10383,7 +10509,8 @@ export type ResolversTypes = {
   RolesUserInput: SchemaTypes.RolesUserInput;
   RolesVirtualContributorInput: SchemaTypes.RolesVirtualContributorInput;
   Room: ResolverTypeWrapper<
-    Omit<SchemaTypes.Room, "messages"> & {
+    Omit<SchemaTypes.Room, "lastMessage" | "messages"> & {
+      lastMessage?: SchemaTypes.Maybe<ResolversTypes["Message"]>;
       messages: Array<ResolversTypes["Message"]>;
     }
   >;
@@ -10402,6 +10529,7 @@ export type ResolversTypes = {
       room: ResolversTypes["Room"];
     }
   >;
+  RoomMarkMessageReadInput: SchemaTypes.RoomMarkMessageReadInput;
   RoomMessageEventSubscriptionResult: ResolverTypeWrapper<
     Omit<SchemaTypes.RoomMessageEventSubscriptionResult, "data"> & {
       data: ResolversTypes["Message"];
@@ -10416,6 +10544,8 @@ export type ResolversTypes = {
   RoomRemoveReactionToMessageInput: SchemaTypes.RoomRemoveReactionToMessageInput;
   RoomSendMessageInput: SchemaTypes.RoomSendMessageInput;
   RoomSendMessageReplyInput: SchemaTypes.RoomSendMessageReplyInput;
+  RoomThreadUnreadCount: ResolverTypeWrapper<SchemaTypes.RoomThreadUnreadCount>;
+  RoomUnreadCounts: ResolverTypeWrapper<SchemaTypes.RoomUnreadCounts>;
   SearchCategory: SchemaTypes.SearchCategory;
   SearchCursor: ResolverTypeWrapper<
     SchemaTypes.Scalars["SearchCursor"]["output"]
@@ -11129,6 +11259,30 @@ export type ResolversParentTypes = {
       ResolversParentTypes["VirtualContributor"]
     >;
   };
+  ConversationCreatedEvent: Omit<
+    SchemaTypes.ConversationCreatedEvent,
+    "conversation" | "message"
+  > & {
+    conversation: ResolversParentTypes["Conversation"];
+    message?: SchemaTypes.Maybe<ResolversParentTypes["Message"]>;
+  };
+  ConversationEventSubscriptionResult: Omit<
+    SchemaTypes.ConversationEventSubscriptionResult,
+    "conversationCreated" | "messageReceived"
+  > & {
+    conversationCreated?: SchemaTypes.Maybe<
+      ResolversParentTypes["ConversationCreatedEvent"]
+    >;
+    messageReceived?: SchemaTypes.Maybe<
+      ResolversParentTypes["ConversationMessageReceivedEvent"]
+    >;
+  };
+  ConversationMessageReceivedEvent: Omit<
+    SchemaTypes.ConversationMessageReceivedEvent,
+    "message"
+  > & { message: ResolversParentTypes["Message"] };
+  ConversationMessageRemovedEvent: SchemaTypes.ConversationMessageRemovedEvent;
+  ConversationReadReceiptUpdatedEvent: SchemaTypes.ConversationReadReceiptUpdatedEvent;
   ConversationVcAnswerRelevanceInput: SchemaTypes.ConversationVcAnswerRelevanceInput;
   ConversationVcAskQuestionInput: SchemaTypes.ConversationVcAskQuestionInput;
   ConversationVcResetInput: SchemaTypes.ConversationVcResetInput;
@@ -11858,7 +12012,8 @@ export type ResolversParentTypes = {
   RolesResultSpace: SchemaTypes.RolesResultSpace;
   RolesUserInput: SchemaTypes.RolesUserInput;
   RolesVirtualContributorInput: SchemaTypes.RolesVirtualContributorInput;
-  Room: Omit<SchemaTypes.Room, "messages"> & {
+  Room: Omit<SchemaTypes.Room, "lastMessage" | "messages"> & {
+    lastMessage?: SchemaTypes.Maybe<ResolversParentTypes["Message"]>;
     messages: Array<ResolversParentTypes["Message"]>;
   };
   RoomAddReactionToMessageInput: SchemaTypes.RoomAddReactionToMessageInput;
@@ -11874,6 +12029,7 @@ export type ResolversParentTypes = {
     >;
     room: ResolversParentTypes["Room"];
   };
+  RoomMarkMessageReadInput: SchemaTypes.RoomMarkMessageReadInput;
   RoomMessageEventSubscriptionResult: Omit<
     SchemaTypes.RoomMessageEventSubscriptionResult,
     "data"
@@ -11886,6 +12042,8 @@ export type ResolversParentTypes = {
   RoomRemoveReactionToMessageInput: SchemaTypes.RoomRemoveReactionToMessageInput;
   RoomSendMessageInput: SchemaTypes.RoomSendMessageInput;
   RoomSendMessageReplyInput: SchemaTypes.RoomSendMessageReplyInput;
+  RoomThreadUnreadCount: SchemaTypes.RoomThreadUnreadCount;
+  RoomUnreadCounts: SchemaTypes.RoomUnreadCounts;
   SearchCursor: SchemaTypes.Scalars["SearchCursor"]["output"];
   SearchFilterInput: SchemaTypes.SearchFilterInput;
   SearchInput: SchemaTypes.SearchInput;
@@ -13722,6 +13880,86 @@ export type ConversationResolvers<
     ParentType,
     ContextType
   >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type ConversationCreatedEventResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["ConversationCreatedEvent"] = ResolversParentTypes["ConversationCreatedEvent"]
+> = {
+  conversation?: Resolver<
+    ResolversTypes["Conversation"],
+    ParentType,
+    ContextType
+  >;
+  message?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Message"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type ConversationEventSubscriptionResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["ConversationEventSubscriptionResult"] = ResolversParentTypes["ConversationEventSubscriptionResult"]
+> = {
+  conversationCreated?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["ConversationCreatedEvent"]>,
+    ParentType,
+    ContextType
+  >;
+  eventType?: Resolver<
+    ResolversTypes["ConversationEventType"],
+    ParentType,
+    ContextType
+  >;
+  messageReceived?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["ConversationMessageReceivedEvent"]>,
+    ParentType,
+    ContextType
+  >;
+  messageRemoved?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["ConversationMessageRemovedEvent"]>,
+    ParentType,
+    ContextType
+  >;
+  readReceiptUpdated?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["ConversationReadReceiptUpdatedEvent"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type ConversationMessageReceivedEventResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["ConversationMessageReceivedEvent"] = ResolversParentTypes["ConversationMessageReceivedEvent"]
+> = {
+  message?: Resolver<ResolversTypes["Message"], ParentType, ContextType>;
+  roomId?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type ConversationMessageRemovedEventResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["ConversationMessageRemovedEvent"] = ResolversParentTypes["ConversationMessageRemovedEvent"]
+> = {
+  messageId?: Resolver<ResolversTypes["MessageID"], ParentType, ContextType>;
+  roomId?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type ConversationReadReceiptUpdatedEventResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["ConversationReadReceiptUpdatedEvent"] = ResolversParentTypes["ConversationReadReceiptUpdatedEvent"]
+> = {
+  lastReadEventId?: Resolver<
+    ResolversTypes["MessageID"],
+    ParentType,
+    ContextType
+  >;
+  roomId?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -16256,7 +16494,7 @@ export type MessageResolvers<
     ContextType
   >;
   threadID?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes["String"]>,
+    SchemaTypes.Maybe<ResolversTypes["MessageID"]>,
     ParentType,
     ContextType
   >;
@@ -17124,6 +17362,15 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<SchemaTypes.MutationLicenseResetOnAccountArgs, "resetData">
+  >;
+  markMessageAsReadInRoom?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationMarkMessageAsReadInRoomArgs,
+      "messageData"
+    >
   >;
   markNotificationsAsRead?: Resolver<
     ResolversTypes["Boolean"],
@@ -19380,13 +19627,26 @@ export type RoomResolvers<
     ContextType
   >;
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  lastMessage?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Message"]>,
+    ParentType,
+    ContextType
+  >;
   messages?: Resolver<
     Array<ResolversTypes["Message"]>,
     ParentType,
     ContextType
   >;
-  messagesCount?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  messagesCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  unreadCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  unreadCounts?: Resolver<
+    ResolversTypes["RoomUnreadCounts"],
+    ParentType,
+    ContextType,
+    Partial<SchemaTypes.RoomUnreadCountsArgs>
+  >;
   updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   vcInteractions?: Resolver<
     Array<ResolversTypes["VcInteraction"]>,
@@ -19437,6 +19697,28 @@ export type RoomMessageReactionEventSubscriptionResultResolvers<
     ContextType
   >;
   type?: Resolver<ResolversTypes["MutationType"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type RoomThreadUnreadCountResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["RoomThreadUnreadCount"] = ResolversParentTypes["RoomThreadUnreadCount"]
+> = {
+  count?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  threadId?: Resolver<ResolversTypes["MessageID"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type RoomUnreadCountsResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["RoomUnreadCounts"] = ResolversParentTypes["RoomUnreadCounts"]
+> = {
+  roomUnreadCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  threadUnreadCounts?: Resolver<
+    SchemaTypes.Maybe<Array<ResolversTypes["RoomThreadUnreadCount"]>>,
+    ParentType,
+    ContextType
+  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -19982,6 +20264,12 @@ export type SubscriptionResolvers<
     ParentType,
     ContextType,
     RequireFields<SchemaTypes.SubscriptionCalloutPostCreatedArgs, "calloutID">
+  >;
+  conversationEvents?: SubscriptionResolver<
+    ResolversTypes["ConversationEventSubscriptionResult"],
+    "conversationEvents",
+    ParentType,
+    ContextType
   >;
   forumDiscussionUpdated?: SubscriptionResolver<
     ResolversTypes["Discussion"],
@@ -21001,7 +21289,7 @@ export type VcInteractionResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["VcInteraction"] = ResolversParentTypes["VcInteraction"]
 > = {
-  threadID?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  threadID?: Resolver<ResolversTypes["MessageID"], ParentType, ContextType>;
   virtualContributorID?: Resolver<
     ResolversTypes["String"],
     ParentType,
@@ -21405,6 +21693,11 @@ export type Resolvers<ContextType = any> = {
   ContributorRolePolicy?: ContributorRolePolicyResolvers<ContextType>;
   ContributorRoles?: ContributorRolesResolvers<ContextType>;
   Conversation?: ConversationResolvers<ContextType>;
+  ConversationCreatedEvent?: ConversationCreatedEventResolvers<ContextType>;
+  ConversationEventSubscriptionResult?: ConversationEventSubscriptionResultResolvers<ContextType>;
+  ConversationMessageReceivedEvent?: ConversationMessageReceivedEventResolvers<ContextType>;
+  ConversationMessageRemovedEvent?: ConversationMessageRemovedEventResolvers<ContextType>;
+  ConversationReadReceiptUpdatedEvent?: ConversationReadReceiptUpdatedEventResolvers<ContextType>;
   CreateCalloutContributionData?: CreateCalloutContributionDataResolvers<ContextType>;
   CreateCalloutContributionDefaultsData?: CreateCalloutContributionDefaultsDataResolvers<ContextType>;
   CreateCalloutData?: CreateCalloutDataResolvers<ContextType>;
@@ -21572,6 +21865,8 @@ export type Resolvers<ContextType = any> = {
   RoomEventSubscriptionResult?: RoomEventSubscriptionResultResolvers<ContextType>;
   RoomMessageEventSubscriptionResult?: RoomMessageEventSubscriptionResultResolvers<ContextType>;
   RoomMessageReactionEventSubscriptionResult?: RoomMessageReactionEventSubscriptionResultResolvers<ContextType>;
+  RoomThreadUnreadCount?: RoomThreadUnreadCountResolvers<ContextType>;
+  RoomUnreadCounts?: RoomUnreadCountsResolvers<ContextType>;
   SearchCursor?: GraphQLScalarType;
   SearchResult?: SearchResultResolvers<ContextType>;
   SearchResultCallout?: SearchResultCalloutResolvers<ContextType>;
@@ -24909,7 +25204,7 @@ export type CalloutDetailsFragment = {
           __typename: "Message";
           id: any;
           message: any;
-          threadID?: string | undefined;
+          threadID?: any | undefined;
           reactions: Array<{
             __typename: "Reaction";
             id: any;
@@ -25018,7 +25313,7 @@ export type CalloutDetailsFragment = {
         }>;
         vcInteractions: Array<{
           __typename: "VcInteraction";
-          threadID: string;
+          threadID: any;
           virtualContributorID: string;
         }>;
       }
@@ -25596,7 +25891,7 @@ export type PostDataFragment = {
 
 export type VcInteractionsDetailsFragment = {
   __typename: "VcInteraction";
-  threadID: string;
+  threadID: any;
   virtualContributorID: string;
 };
 
@@ -28426,7 +28721,7 @@ export type CommunityDataFragment = {
         __typename: "Message";
         id: any;
         message: any;
-        threadID?: string | undefined;
+        threadID?: any | undefined;
         reactions: Array<{
           __typename: "Reaction";
           id: any;
@@ -28872,7 +29167,7 @@ export type CommunicationsDiscussionDataFragment = {
       __typename: "Message";
       id: any;
       message: any;
-      threadID?: string | undefined;
+      threadID?: any | undefined;
       reactions: Array<{
         __typename: "Reaction";
         id: any;
@@ -29522,7 +29817,7 @@ export type CommentsWithMessagesFragment = {
     __typename: "Message";
     id: any;
     message: any;
-    threadID?: string | undefined;
+    threadID?: any | undefined;
     reactions: Array<{
       __typename: "Reaction";
       id: any;
@@ -29627,7 +29922,7 @@ export type CommentsWithMessagesFragment = {
   }>;
   vcInteractions: Array<{
     __typename: "VcInteraction";
-    threadID: string;
+    threadID: any;
     virtualContributorID: string;
   }>;
 };
@@ -29636,7 +29931,7 @@ export type MessageDetailsFragment = {
   __typename: "Message";
   id: any;
   message: any;
-  threadID?: string | undefined;
+  threadID?: any | undefined;
   reactions: Array<{
     __typename: "Reaction";
     id: any;
@@ -33163,7 +33458,7 @@ export type SubspaceL1DataFragment = {
             __typename: "Message";
             id: any;
             message: any;
-            threadID?: string | undefined;
+            threadID?: any | undefined;
             reactions: Array<{
               __typename: "Reaction";
               id: any;
@@ -35994,7 +36289,7 @@ export type SubspaceL1DataFragment = {
           __typename: "Message";
           id: any;
           message: any;
-          threadID?: string | undefined;
+          threadID?: any | undefined;
           reactions: Array<{
             __typename: "Reaction";
             id: any;
@@ -38853,7 +39148,7 @@ export type SubspaceL2DataFragment = {
             __typename: "Message";
             id: any;
             message: any;
-            threadID?: string | undefined;
+            threadID?: any | undefined;
             reactions: Array<{
               __typename: "Reaction";
               id: any;
@@ -41684,7 +41979,7 @@ export type SubspaceL2DataFragment = {
           __typename: "Message";
           id: any;
           message: any;
-          threadID?: string | undefined;
+          threadID?: any | undefined;
           reactions: Array<{
             __typename: "Reaction";
             id: any;
@@ -44280,7 +44575,7 @@ export type SpaceDataFragment = {
           __typename: "Message";
           id: any;
           message: any;
-          threadID?: string | undefined;
+          threadID?: any | undefined;
           reactions: Array<{
             __typename: "Reaction";
             id: any;
@@ -47696,7 +47991,7 @@ export type SpaceDataFragment = {
             __typename: "Message";
             id: any;
             message: any;
-            threadID?: string | undefined;
+            threadID?: any | undefined;
             reactions: Array<{
               __typename: "Reaction";
               id: any;
@@ -51140,7 +51435,7 @@ export type SubspaceDataFragment = {
           __typename: "Message";
           id: any;
           message: any;
-          threadID?: string | undefined;
+          threadID?: any | undefined;
           reactions: Array<{
             __typename: "Reaction";
             id: any;
@@ -56997,7 +57292,7 @@ export type CreateCalloutOnCalloutsSetMutation = {
             __typename: "Message";
             id: any;
             message: any;
-            threadID?: string | undefined;
+            threadID?: any | undefined;
             reactions: Array<{
               __typename: "Reaction";
               id: any;
@@ -57106,7 +57401,7 @@ export type CreateCalloutOnCalloutsSetMutation = {
           }>;
           vcInteractions: Array<{
             __typename: "VcInteraction";
-            threadID: string;
+            threadID: any;
             virtualContributorID: string;
           }>;
         }
@@ -57555,7 +57850,7 @@ export type UpdateCalloutMutation = {
             __typename: "Message";
             id: any;
             message: any;
-            threadID?: string | undefined;
+            threadID?: any | undefined;
             reactions: Array<{
               __typename: "Reaction";
               id: any;
@@ -57664,7 +57959,7 @@ export type UpdateCalloutMutation = {
           }>;
           vcInteractions: Array<{
             __typename: "VcInteraction";
-            threadID: string;
+            threadID: any;
             virtualContributorID: string;
           }>;
         }
@@ -58476,7 +58771,7 @@ export type CreateDiscussionMutation = {
         __typename: "Message";
         id: any;
         message: any;
-        threadID?: string | undefined;
+        threadID?: any | undefined;
         reactions: Array<{
           __typename: "Reaction";
           id: any;
@@ -58619,7 +58914,7 @@ export type SendMessageReplyToRoomMutation = {
     __typename: "Message";
     id: any;
     message: any;
-    threadID?: string | undefined;
+    threadID?: any | undefined;
     reactions: Array<{
       __typename: "Reaction";
       id: any;
@@ -58749,7 +59044,7 @@ export type SendMessageToRoomMutation = {
     __typename: "Message";
     id: any;
     message: any;
-    threadID?: string | undefined;
+    threadID?: any | undefined;
     reactions: Array<{
       __typename: "Reaction";
       id: any;
@@ -58877,7 +59172,7 @@ export type UpdateDiscussionMutation = {
         __typename: "Message";
         id: any;
         message: any;
-        threadID?: string | undefined;
+        threadID?: any | undefined;
         reactions: Array<{
           __typename: "Reaction";
           id: any;
@@ -61509,7 +61804,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
             __typename: "Message";
             id: any;
             message: any;
-            threadID?: string | undefined;
+            threadID?: any | undefined;
             reactions: Array<{
               __typename: "Reaction";
               id: any;
@@ -64959,7 +65254,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
               __typename: "Message";
               id: any;
               message: any;
-              threadID?: string | undefined;
+              threadID?: any | undefined;
               reactions: Array<{
                 __typename: "Reaction";
                 id: any;
@@ -68113,7 +68408,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
             __typename: "Message";
             id: any;
             message: any;
-            threadID?: string | undefined;
+            threadID?: any | undefined;
             reactions: Array<{
               __typename: "Reaction";
               id: any;
@@ -71563,7 +71858,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
               __typename: "Message";
               id: any;
               message: any;
-              threadID?: string | undefined;
+              threadID?: any | undefined;
               reactions: Array<{
                 __typename: "Reaction";
                 id: any;
@@ -74735,7 +75030,7 @@ export type UpdateSpaceMutation = {
             __typename: "Message";
             id: any;
             message: any;
-            threadID?: string | undefined;
+            threadID?: any | undefined;
             reactions: Array<{
               __typename: "Reaction";
               id: any;
@@ -78185,7 +78480,7 @@ export type UpdateSpaceMutation = {
               __typename: "Message";
               id: any;
               message: any;
-              threadID?: string | undefined;
+              threadID?: any | undefined;
               reactions: Array<{
                 __typename: "Reaction";
                 id: any;
@@ -81689,7 +81984,7 @@ export type CreateSubspaceMutation = {
               __typename: "Message";
               id: any;
               message: any;
-              threadID?: string | undefined;
+              threadID?: any | undefined;
               reactions: Array<{
                 __typename: "Reaction";
                 id: any;
@@ -84541,7 +84836,7 @@ export type CreateSubspaceMutation = {
             __typename: "Message";
             id: any;
             message: any;
-            threadID?: string | undefined;
+            threadID?: any | undefined;
             reactions: Array<{
               __typename: "Reaction";
               id: any;
@@ -87436,7 +87731,7 @@ export type UpdateSubspaceMutation = {
               __typename: "Message";
               id: any;
               message: any;
-              threadID?: string | undefined;
+              threadID?: any | undefined;
               reactions: Array<{
                 __typename: "Reaction";
                 id: any;
@@ -90288,7 +90583,7 @@ export type UpdateSubspaceMutation = {
             __typename: "Message";
             id: any;
             message: any;
-            threadID?: string | undefined;
+            threadID?: any | undefined;
             reactions: Array<{
               __typename: "Reaction";
               id: any;
@@ -94961,7 +95256,7 @@ export type SpaceCalloutQuery = {
                         __typename: "Message";
                         id: any;
                         message: any;
-                        threadID?: string | undefined;
+                        threadID?: any | undefined;
                         reactions: Array<{
                           __typename: "Reaction";
                           id: any;
@@ -95070,7 +95365,7 @@ export type SpaceCalloutQuery = {
                       }>;
                       vcInteractions: Array<{
                         __typename: "VcInteraction";
-                        threadID: string;
+                        threadID: any;
                         virtualContributorID: string;
                       }>;
                     }
@@ -95520,7 +95815,7 @@ export type CalloutDetailsQuery = {
                   __typename: "Message";
                   id: any;
                   message: any;
-                  threadID?: string | undefined;
+                  threadID?: any | undefined;
                   reactions: Array<{
                     __typename: "Reaction";
                     id: any;
@@ -95629,7 +95924,7 @@ export type CalloutDetailsQuery = {
                 }>;
                 vcInteractions: Array<{
                   __typename: "VcInteraction";
-                  threadID: string;
+                  threadID: any;
                   virtualContributorID: string;
                 }>;
               }
@@ -96365,7 +96660,7 @@ export type GetPlatformDiscussionsDataQuery = {
                 __typename: "Message";
                 id: any;
                 message: any;
-                threadID?: string | undefined;
+                threadID?: any | undefined;
                 reactions: Array<{
                   __typename: "Reaction";
                   id: any;
@@ -96507,7 +96802,7 @@ export type GetPlatformDiscussionsDataByIdQuery = {
                 __typename: "Message";
                 id: any;
                 message: any;
-                threadID?: string | undefined;
+                threadID?: any | undefined;
                 reactions: Array<{
                   __typename: "Reaction";
                   id: any;
@@ -109697,7 +109992,7 @@ export type GetSpaceDataQuery = {
                   __typename: "Message";
                   id: any;
                   message: any;
-                  threadID?: string | undefined;
+                  threadID?: any | undefined;
                   reactions: Array<{
                     __typename: "Reaction";
                     id: any;
@@ -113201,7 +113496,7 @@ export type GetSpaceDataQuery = {
                     __typename: "Message";
                     id: any;
                     message: any;
-                    threadID?: string | undefined;
+                    threadID?: any | undefined;
                     reactions: Array<{
                       __typename: "Reaction";
                       id: any;
@@ -116786,7 +117081,7 @@ export type GetSubspacePageQuery = {
                     __typename: "Message";
                     id: any;
                     message: any;
-                    threadID?: string | undefined;
+                    threadID?: any | undefined;
                     reactions: Array<{
                       __typename: "Reaction";
                       id: any;
@@ -119695,7 +119990,7 @@ export type GetSubspacePageQuery = {
                   __typename: "Message";
                   id: any;
                   message: any;
-                  threadID?: string | undefined;
+                  threadID?: any | undefined;
                   reactions: Array<{
                     __typename: "Reaction";
                     id: any;
@@ -122618,7 +122913,7 @@ export type GetSpaceAboutDetailsQuery = {
                   __typename: "Message";
                   id: any;
                   message: any;
-                  threadID?: string | undefined;
+                  threadID?: any | undefined;
                   reactions: Array<{
                     __typename: "Reaction";
                     id: any;
@@ -125558,7 +125853,7 @@ export type GetSubspacesDataQuery = {
                       __typename: "Message";
                       id: any;
                       message: any;
-                      threadID?: string | undefined;
+                      threadID?: any | undefined;
                       reactions: Array<{
                         __typename: "Reaction";
                         id: any;
@@ -128476,7 +128771,7 @@ export type GetSubspacesDataQuery = {
                     __typename: "Message";
                     id: any;
                     message: any;
-                    threadID?: string | undefined;
+                    threadID?: any | undefined;
                     reactions: Array<{
                       __typename: "Reaction";
                       id: any;

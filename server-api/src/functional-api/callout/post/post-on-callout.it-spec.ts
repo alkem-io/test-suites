@@ -614,6 +614,7 @@ describe('Posts - Messages', () => {
         TestUser.SUBSPACE_ADMIN
       );
       msessageId = messageRes?.data?.sendMessageToRoom.id;
+      await delay(1000);
       const postsData = await getPostData(subspacePostId);
 
       // Assert
@@ -638,6 +639,8 @@ describe('Posts - Messages', () => {
         TestUser.SPACE_MEMBER
       );
       msessageId = messageRes?.data?.sendMessageToRoom.id;
+      await delay(1000);
+
       const postsData = await getPostData(spacePostId);
       console.log('postsData', postsData.data?.lookup.post?.comments);
 
@@ -681,6 +684,8 @@ describe('Posts - Messages', () => {
         );
         console.log('messageRes', messageRes.error);
         msessageId = messageRes?.data?.sendMessageToRoom.id;
+        await delay(1000);
+
         const postsData = await getPostData(spacePostId);
         console.log('postsData', postsData.data?.lookup.post?.comments);
 
