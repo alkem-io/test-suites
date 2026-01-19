@@ -34,7 +34,7 @@ let postNameID = '';
 let postDisplayName = '';
 let postCommentsIdSpace = '';
 let postCommentsIdSubspace = '';
-let msessageId = '';
+//let msessageId = '';
 const spaceCalloutId = '';
 
 let baseScenario: OrganizationWithSpaceModel;
@@ -564,7 +564,8 @@ describe('Posts - Delete', () => {
   });
 });
 
-describe('Posts - Messages', () => {
+describe.only('Posts - Messages', () => {
+  let msessageId: string;
   describe('Send Message - Post created by GA on Space callout', () => {
     beforeAll(async () => {
       const resPostonSpace = await createPostOnCallout(
@@ -598,11 +599,21 @@ describe('Posts - Messages', () => {
     });
 
     afterEach(async () => {
-      await delay(3000);
-      await removeMessageOnRoom(
+      await delay(10000);
+      const a = await removeMessageOnRoom(
         postCommentsIdSpace,
         msessageId,
         TestUser.GLOBAL_ADMIN
+      );
+      console.log('The ROOM ID is:', postCommentsIdSpace);
+      console.log('message removed', a.data?.removeMessageOnRoom);
+      console.log('failed to remove message:', a.error?.errors);
+
+      await delay(1000);
+      const postsData = await getPostData(spacePostId);
+      console.log(
+        'comments after message removed',
+        postsData.data?.lookup.post?.comments
       );
     });
 
@@ -613,10 +624,15 @@ describe('Posts - Messages', () => {
         'test message on subspace post',
         TestUser.SUBSPACE_ADMIN
       );
+      console.log('messageRes', messageRes);
       msessageId = messageRes?.data?.sendMessageToRoom.id;
+      console.log('msessageId', msessageId);
       await delay(1000);
       const postsData = await getPostData(subspacePostId);
-
+      console.log(
+        'test 1 - comments results:',
+        postsData.data?.lookup.post?.comments
+      );
       // Assert
       expect(postsData.data?.lookup.post?.comments).toEqual({
         id: postCommentsIdSubspace,
@@ -642,7 +658,10 @@ describe('Posts - Messages', () => {
       await delay(1000);
 
       const postsData = await getPostData(spacePostId);
-      console.log('postsData', postsData.data?.lookup.post?.comments);
+      console.log(
+        'test 2 - comments results:',
+        postsData.data?.lookup.post?.comments
+      );
 
       // Assert
       expect(postsData.data?.lookup.post?.comments).toEqual({
@@ -667,14 +686,18 @@ describe('Posts - Messages', () => {
       );
       console.log('messageRes', messageRes.error?.errors[0].message);
 
-      // Assert
+      const postsData = await getPostData(spacePostId);
+      console.log(
+        'test 3 (failing authorization) - comments results:',
+        postsData.data?.lookup.post?.comments
+      ); // Assert
       expect(messageRes.error?.errors[0].message).toContain(
         `Authorization: unable to grant 'create-message' privilege: room send message: ${postCommentsIdSpace}`
       );
     });
 
-    // skip until issue with flow 2 tests abve and this makes it fail - comments count is 0  but should be 1
-    describe.skip('Messages - GA Send/Remove flow', () => {
+    // skip  until issue with flow 2 tests abve and this makes it fail - comments count is 0  but should be 1
+    describe('Messages - GA Send/Remove flow', () => {
       test('GA should send comment on post created on space callout from GA', async () => {
         // Act
         const messageRes = await sendMessageToRoom(
@@ -684,10 +707,13 @@ describe('Posts - Messages', () => {
         );
         console.log('messageRes', messageRes.error);
         msessageId = messageRes?.data?.sendMessageToRoom.id;
-        await delay(1000);
+        await delay(2000);
 
         const postsData = await getPostData(spacePostId);
-        console.log('postsData', postsData.data?.lookup.post?.comments);
+        console.log(
+          'test 4 - comments results:',
+          postsData.data?.lookup.post?.comments
+        );
 
         // Assert
         expect(postsData.data?.lookup.post?.comments).toEqual({
