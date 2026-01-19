@@ -87,9 +87,9 @@ beforeAll(async () => {
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
 });
 
-afterAll(async () => {
-  await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
-});
+// afterAll(async () => {
+//   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+// });
 
 beforeEach(async () => {
   postNameID = `post-n-id-${uniqueId}`;
@@ -593,31 +593,31 @@ describe.only('Posts - Messages', () => {
         '';
     });
 
-    afterAll(async () => {
-      await deletePost(spacePostId);
-      await deletePost(subspacePostId);
-    });
+    // afterAll(async () => {
+    //   await deletePost(spacePostId);
+    //   await deletePost(subspacePostId);
+    // });
 
-    afterEach(async () => {
-      await delay(10000);
-      const a = await removeMessageOnRoom(
-        postCommentsIdSpace,
-        msessageId,
-        TestUser.GLOBAL_ADMIN
-      );
-      console.log('The ROOM ID is:', postCommentsIdSpace);
-      console.log('message removed', a.data?.removeMessageOnRoom);
-      console.log('failed to remove message:', a.error?.errors);
+    // afterEach(async () => {
+    //   await delay(10000);
+    //   const a = await removeMessageOnRoom(
+    //     postCommentsIdSpace,
+    //     msessageId,
+    //     TestUser.GLOBAL_ADMIN
+    //   );
+    //   console.log('The ROOM ID is:', postCommentsIdSpace);
+    //   console.log('message removed', a.data?.removeMessageOnRoom);
+    //   console.log('failed to remove message:', a.error?.errors);
 
-      await delay(1000);
-      const postsData = await getPostData(spacePostId);
-      console.log(
-        'comments after message removed',
-        postsData.data?.lookup.post?.comments
-      );
-    });
+    //   await delay(1000);
+    //   const postsData = await getPostData(spacePostId);
+    //   console.log(
+    //     'comments after message removed',
+    //     postsData.data?.lookup.post?.comments
+    //   );
+    // });
 
-    test('ChA should send comment on post created on subspace callout from GA', async () => {
+    test.only('ChA should send comment on post created on subspace callout from GA', async () => {
       // Arrange
       const messageRes = await sendMessageToRoom(
         postCommentsIdSubspace,
@@ -645,6 +645,14 @@ describe.only('Posts - Messages', () => {
           },
         ],
       });
+      const a = await removeMessageOnRoom(
+        postCommentsIdSpace,
+        msessageId,
+        TestUser.SUBSPACE_ADMIN
+      );
+      console.log('The ROOM ID is:', postCommentsIdSpace);
+      console.log('message removed', a.data?.removeMessageOnRoom);
+      console.log('failed to remove message:', a.error?.errors);
     });
 
     test('HM should send comment on post created on space callout from GA', async () => {
