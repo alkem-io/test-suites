@@ -64,18 +64,6 @@ The Alkemio Home Page serves as the central hub for users, providing access to t
 - User is navigated to the Explore Spaces page (`/spaces`).
 - The page title or header confirms "Explore Spaces".
 
-#### 1.5 Verify "Find contributors" Navigation
-
-**Steps:**
-
-1. Open the "Tools Menu".
-2. Click on "Find contributors".
-
-**Expected Results:**
-
-- User is navigated to the Find Contributors page (`/contributors`).
-- The page title or header confirms "Find talent and expertise!".
-
 #### 1.6 Verify "Powered by Alkemio" Link
 
 **Steps:**

@@ -16,6 +16,7 @@ import {
   SpacePrivacyMode,
 } from '@alkemio/client-lib/dist/generated/graphql';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
+import { verifyMyDashboardWelcomeElement } from '../my-dashboard/my-dashboard-page-objects';
 
 const { test, setupAuthentication, teardownAuthentication } =
   createAuthenticatedSessionFixture({
@@ -113,10 +114,8 @@ test.describe('Explore Alkemio Platform - Authenticated User Flow', () => {
     await page.goto(baseUrl);
     await page.waitForURL('**/home');
 
-    // Verify welcome heading with user name
-    await expect(page.getByRole('heading', { level: 1 })).toContainText(
-      'Welcome'
-    );
+    // Verify user is authenticated and on dashboard
+    await verifyMyDashboardWelcomeElement(page);
 
     // [BUG] todo: verify the below expectations as the user has memberships and these are for users without memberships
     // Verify explore section
@@ -245,7 +244,7 @@ test.describe('Explore Alkemio Platform - Authenticated User Flow', () => {
       page.getByRole('menuitem', { name: 'Explore Spaces' })
     ).toBeVisible();
     await expect(
-      page.getByRole('menuitem', { name: 'Find contributors' })
+      page.getByRole('menuitem', { name: 'Documentation' })
     ).toBeVisible();
 
     // Click Explore Spaces
@@ -276,15 +275,8 @@ test.describe('Explore Alkemio Platform - Authenticated User Flow', () => {
   });
 
   test('8. Explore Contributors page', async ({ page }) => {
-    await page.goto(baseUrl);
-    await page.waitForURL('**/home');
-
-    // Open Tools Menu
-    await page.getByRole('button', { name: 'Tools Menu' }).click();
-    await page.waitForTimeout(500); // Wait for menu animation
-
-    // Click Find contributors
-    await page.getByRole('menuitem', { name: 'Find contributors' }).click();
+    await page.goto(`${baseUrl}/contributors`);
+    await page.waitForURL('**/contributors');
 
     // Verify navigation
     await expect(page).toHaveURL(/\/contributors/);
