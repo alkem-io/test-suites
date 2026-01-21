@@ -141,7 +141,9 @@ test.describe('Explore Alkemio Platform - Authenticated User Flow', () => {
 
     // Click on the first public space card
     await page
-      .getByRole('link', { name: /Card banner:/ })
+      .getByRole('link', {
+        name: `${baseScenario.space.about.profile.displayName}`,
+      })
       .first()
       .click();
 

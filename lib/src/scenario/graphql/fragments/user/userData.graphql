@@ -5,7 +5,6 @@ fragment UserData on User {
   lastName
   email
   phone
-  accountUpn
   account {
     ...AccountData
   }

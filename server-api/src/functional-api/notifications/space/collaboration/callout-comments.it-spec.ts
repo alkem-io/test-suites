@@ -110,7 +110,7 @@ const expectedDataSpace2 = async (toAddresses: any[]) => {
 const expectedDataChal = async (toAddresses: any[]) => {
   return expect.arrayContaining([
     expect.objectContaining({
-      subject: `${baseScenario.subspace.about.profile.displayName} - New comment received on your Post \u0026#34;discussion-comments-notification - post\u0026#34; by space, have a look!`,
+      subject: `${baseScenario.subspace.about.profile.displayName} - New comment received on your Post &#34;l1-discussion-comments-notification - post&#34; by space, have a look!`,
       toAddresses,
     }),
   ]);
@@ -119,7 +119,7 @@ const expectedDataChal = async (toAddresses: any[]) => {
 const expectedDataOpp = async (toAddresses: any[]) => {
   return expect.arrayContaining([
     expect.objectContaining({
-      subject: `${baseScenario.subsubspace.about.profile.displayName} - New comment received on your Post \u0026#34;discussion-comments-notification - post\u0026#34; by subsubspace, have a look!`,
+      subject: `${baseScenario.subsubspace.about.profile.displayName} - New comment received on your Post &#34;l2-discussion-comments-notification - post&#34; by subsubspace, have a look!`,
       toAddresses,
     }),
   ]);

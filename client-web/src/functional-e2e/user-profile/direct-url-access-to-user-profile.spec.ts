@@ -16,7 +16,7 @@ test.describe('Navigation and Access', () => {
     await page.waitForURL(/.*login.*/);
     await page.getByRole('textbox', { name: 'E-Mail' }).fill('admin@alkem.io');
     await page.getByRole('textbox', { name: 'Password' }).fill(password);
-    await page.getByRole('button', { name: 'Sign in' }).click();
+    await page.getByRole('button', { name: 'Sign in', exact: true }).click();
     await page.waitForURL(/.*home.*/);
 
     // 1. Navigate directly to /user/admin-alkemio/settings/profile

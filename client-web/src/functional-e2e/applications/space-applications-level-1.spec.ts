@@ -75,7 +75,9 @@ test.describe('Level 1 Subspace - Applications', () => {
     await nonSpaceMemberPage
       .getByRole('textbox', { name: 'Password' })
       .fill(password);
-    await nonSpaceMemberPage.getByRole('button', { name: 'Sign in' }).click();
+    await nonSpaceMemberPage
+      .getByRole('button', { name: 'Sign in', exact: true })
+      .click();
     await nonSpaceMemberPage.waitForURL(/.*home.*/);
 
     // Sign in as subspace admin
@@ -90,7 +92,9 @@ test.describe('Level 1 Subspace - Applications', () => {
     await subspaceAdminPage
       .getByRole('textbox', { name: 'Password' })
       .fill(password);
-    await subspaceAdminPage.getByRole('button', { name: 'Sign in' }).click();
+    await subspaceAdminPage
+      .getByRole('button', { name: 'Sign in', exact: true })
+      .click();
     await subspaceAdminPage.waitForURL(/.*home.*/);
   });
 

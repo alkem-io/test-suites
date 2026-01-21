@@ -112,7 +112,11 @@ test.describe('Explore Alkemio Platform - Anonymous User Flow', () => {
 
     // Verify public spaces are displayed
     await expect(
-      page.getByRole('link', { name: /Card banner:/ }).first()
+      page
+        .getByRole('link', {
+          name: `${baseScenario.space.about.profile.displayName}`,
+        })
+        .first()
     ).toBeVisible();
   });
 
@@ -122,7 +126,9 @@ test.describe('Explore Alkemio Platform - Anonymous User Flow', () => {
 
     // Click on the first public space card
     await page
-      .getByRole('link', { name: /Card banner:/ })
+      .getByRole('link', {
+        name: `${baseScenario.space.about.profile.displayName}`,
+      })
       .first()
       .click();
 

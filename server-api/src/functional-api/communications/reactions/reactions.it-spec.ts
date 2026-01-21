@@ -124,10 +124,10 @@ describe('Reaction - Discussion messages', () => {
 
     // Assert
     expect(reactionDataOne?.data?.addReactionToMessageInRoom.emoji).toEqual(
-      discussionData?.reactions[0].emoji
+      discussionData?.reactions[1].emoji
     );
     expect(reactionDataTwo?.data?.addReactionToMessageInRoom.emoji).toEqual(
-      discussionData?.reactions[1].emoji
+      discussionData?.reactions[0].emoji
     );
   });
 

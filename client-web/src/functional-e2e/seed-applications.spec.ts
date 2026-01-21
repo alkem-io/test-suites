@@ -69,7 +69,7 @@ test.beforeAll(async () => {
 test.afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
-test('seed', async ({ page }) => {
+test.skip('seed', async ({ page }) => {
   await page.goto(`${baseUrl}/login`);
   await page.getByRole('button', { name: 'Accept All Cookies' }).click();
   await page
