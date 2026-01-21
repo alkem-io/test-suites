@@ -14,6 +14,6 @@ test.describe('Test group', () => {
     await navigateToLoginPageFromMenu(baseUrl, page);
     await fillUpSignInPageElements('admin@alkem.io', password, page);
     await pressSignInButtonSignInPage(page);
-    await verifyMyDashboardWelcomeElement(page, 'admin');
+    await verifyMyDashboardWelcomeElement(page);
   });
 });
