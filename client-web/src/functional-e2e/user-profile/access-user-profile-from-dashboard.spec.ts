@@ -1,7 +1,9 @@
 // spec: client-web/src/functional-e2e/user-profile-test-plan.md
 // Test: 1.1 Access User Profile from Dashboard
 
+import { delay } from '@alkemio/tests-lib';
 import { test, expect } from '@playwright/test';
+import { verifyMyDashboardWelcomeElement } from '../my-dashboard/my-dashboard-page-objects';
 
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD!;
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
@@ -15,8 +17,9 @@ test.describe('Navigation and Access', () => {
     await page.getByRole('button', { name: 'Accept All Cookies' }).click();
 
     // 1. Click the user icon in the top navigation bar
+    await delay(300); // inconsistency in passing locally
     await page.getByTestId('PersonIcon').click();
-
+    await delay(300);
     // Click login menu item
     await page.getByRole('menuitem', { name: 'Log In | Sign Up' }).click();
 
@@ -30,7 +33,8 @@ test.describe('Navigation and Access', () => {
 
     // Wait for dashboard
     await page.waitForURL(/.*home.*/);
-    await expect(page.getByText(/Welcome, admin!/i)).toBeVisible();
+
+    await verifyMyDashboardWelcomeElement(page);
 
     // 2. Click "My Account" from the dropdown menu
     await page.getByRole('link', { name: 'My Account' }).click();
