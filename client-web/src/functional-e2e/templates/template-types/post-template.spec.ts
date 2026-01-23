@@ -90,11 +90,8 @@ test.describe.serial('Post Templates', () => {
 
     // Find the container (parent of the parent of the heading) and then the "Create new" button within it
     const createNewButton = await page
-      .getByRole('heading', { name: 'Post Templates' })
-      .locator('..')
-      .locator('..')
-      .locator('..')
-      .getByRole('button', { name: 'Create New' });
+      .getByRole('button', { name: 'Create new' })
+      .nth(3);
     await createNewButton.click();
 
     // Wait for the Post Template creation dialog to appear

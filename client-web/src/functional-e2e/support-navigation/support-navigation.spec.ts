@@ -60,10 +60,12 @@ test.describe('Support Navigation Flow', () => {
     ).toBeVisible();
 
     // 3. Click "Explore Documentation" button
-    await page.getByRole('link', { name: 'Explore Documentation' }).click();
+    await page
+      .getByRole('link', { name: 'Explore Documentation' })
+      .click({ timeout: 700 });
 
     // Wait for the new tab to open and switch to it
-    const newPage = await page.context().waitForEvent('page');
+    const newPage = await page.context().waitForEvent('page', { timeout: 700 });
     await newPage.waitForURL(/.*docs.*/);
 
     // 4. Verify documentation page loads at /docs with "Documentation" heading

@@ -94,11 +94,8 @@ test.describe.serial('Whiteboard Templates', () => {
 
     // Find the container (parent of the parent of the heading) and then the "Create new" button within it
     const createNewButton = await page
-      .getByRole('heading', { name: 'Whiteboard Templates' })
-      .locator('..')
-      .locator('..')
-      .locator('..')
-      .getByRole('button', { name: 'Create New' });
+      .getByRole('button', { name: 'Create new' })
+      .nth(2);
     await createNewButton.click();
 
     // Wait for the Whiteboard Template creation dialog to appear
@@ -171,11 +168,8 @@ test.describe.serial('Whiteboard Templates', () => {
 
     // Find the container (parent of the parent of the heading) and then the "Create new" button within it
     const createNewButton = await page
-      .getByRole('heading', { name: 'Whiteboard Templates' })
-      .locator('..')
-      .locator('..')
-      .locator('..')
-      .getByRole('button', { name: 'Create New' });
+      .getByRole('button', { name: 'Create new' })
+      .nth(2);
     await createNewButton.click();
 
     // Wait for the Whiteboard Template creation dialog to appear

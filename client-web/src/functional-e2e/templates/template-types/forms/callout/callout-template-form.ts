@@ -13,26 +13,26 @@ import {
   CalloutTemplateResponseCollection,
 } from './callout-template-form.models';
 // Collection helpers
-import {
-  selectCollectionNone,
-} from './collection/none';
+import { selectCollectionNone } from './collection/none';
 import {
   selectCollectionLinksFiles,
   fillCollectionLinksFiles,
 } from './collection/links-files';
-import {
-  selectCollectionPosts,
-  fillCollectionPosts,
-} from './collection/posts';
-import {
-  selectCollectionMemos,
-  fillCollectionMemos,
-} from './collection/memos';
+import { selectCollectionPosts, fillCollectionPosts } from './collection/posts';
+import { selectCollectionMemos, fillCollectionMemos } from './collection/memos';
 import {
   selectCollectionWhiteboards,
   fillCollectionWhiteboards,
 } from './collection/whiteboards';
-import { fillCalloutTemplateFramingCallToAction, fillCalloutTemplateFramingMemo, fillCalloutTemplateFramingWhiteboard, selectCalloutTemplateFramingCallToAction, selectCalloutTemplateFramingMemo, selectCalloutTemplateFramingNone, selectCalloutTemplateFramingWhiteboard } from './callout-template-framing';
+import {
+  fillCalloutTemplateFramingCallToAction,
+  fillCalloutTemplateFramingMemo,
+  fillCalloutTemplateFramingWhiteboard,
+  selectCalloutTemplateFramingCallToAction,
+  selectCalloutTemplateFramingMemo,
+  selectCalloutTemplateFramingNone,
+  selectCalloutTemplateFramingWhiteboard,
+} from './callout-template-framing';
 
 // ============================================================================
 // Callout Base Fields
@@ -79,8 +79,9 @@ const fillCalloutBaseFields = async (
 
   // Fill callout references
   const numberOfReferences = templateData.calloutReferences?.length ?? 0;
-  const existingReferences = await page.locator('input[name^="framing.profile.references"]').count() / 2;
-
+  const existingReferences =
+    (await page.locator('input[name^="framing.profile.references"]').count()) /
+    2;
 
   for (let i = 0; i < numberOfReferences - existingReferences; i++) {
     await page.getByRole('button', { name: 'Add Reference' }).click();
@@ -88,10 +89,13 @@ const fillCalloutBaseFields = async (
 
   for (let i = 0; i < numberOfReferences; i++) {
     const reference = templateData.calloutReferences![i];
-    await page.locator(`input[name="framing.profile.references.${i}.name"]`).fill(reference.title);
-    await page.locator(`input[name="framing.profile.references.${i}.uri"]`).fill(reference.url);
+    await page
+      .locator(`input[name="framing.profile.references.${i}.name"]`)
+      .fill(reference.title);
+    await page
+      .locator(`input[name="framing.profile.references.${i}.uri"]`)
+      .fill(reference.url);
   }
-
 };
 
 // ============================================================================
@@ -151,30 +155,34 @@ const selectAndFillCollection = async (
   collection: CalloutTemplateResponseCollection
 ): Promise<void> => {
   const dialog = page.getByRole('dialog').filter({
-    has: page.getByRole('heading', { name: 'Create new Collaboration Tool Template' }),
-  }).last();
-
-  const collectionSection = dialog.getByRole('heading', { name: 'Collection' })
-    .locator('..').locator('..').locator('..').locator('..');
-
+    has: page.getByRole('heading', {
+      name: 'Create new Collaboration Tool Template',
+    }),
+  });
+  // Navigate from 'Collection' heading up to the container that holds both heading and buttons
+  // Structure: generic (e577) > [generic (e578) > heading "Collection"], [generic (e583) > buttons]
+  const collectionSection = dialog
+    .getByRole('heading', { name: 'Collection' })
+    .locator('..')
+    .locator('..');
   switch (collection.type) {
     case 'none':
       await selectCollectionNone(collectionSection);
       break;
     case 'linksFiles':
-      await selectCollectionLinksFiles(collectionSection);
+      await selectCollectionLinksFiles(dialog);
       await fillCollectionLinksFiles(page, dialog, collection);
       break;
     case 'posts':
-      await selectCollectionPosts(collectionSection);
+      await selectCollectionPosts(dialog);
       await fillCollectionPosts(page, dialog, collection);
       break;
     case 'memos':
-      await selectCollectionMemos(collectionSection);
+      await selectCollectionMemos(dialog);
       await fillCollectionMemos(page, dialog, collection);
       break;
     case 'whiteboards':
-      await selectCollectionWhiteboards(collectionSection);
+      await selectCollectionWhiteboards(dialog);
       await fillCollectionWhiteboards(page, dialog, collection);
       break;
   }

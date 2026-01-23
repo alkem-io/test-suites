@@ -8,6 +8,7 @@ import {
 import { convertSpaceL1ToSpaceL0 } from './conversion.request.params';
 import { getSpaceData } from '../space/space.request.params';
 import { inviteForEntryRoleOnRoleSet } from '@functional-api/roleset/invitations/invitation.request.params';
+import { sortArraysInObject } from '@utils/array.matcher';
 import {
   eventOnRoleSetApplication,
   eventOnRoleSetInvitation,
@@ -120,7 +121,9 @@ describe('Promoting of L1 subspace', () => {
       after?.account.host
     );
     expect(before.data?.lookup.space?.settings).toEqual(after?.settings);
-    expect(before.data?.lookup.space?.subspaces).toEqual(after?.subspaces);
+    expect(sortArraysInObject(before.data?.lookup.space?.subspaces)).toEqual(
+      sortArraysInObject(after?.subspaces)
+    );
 
     // // User accepts invitation after subspace L1 has been converted to L0
     const a = await eventOnRoleSetInvitation(

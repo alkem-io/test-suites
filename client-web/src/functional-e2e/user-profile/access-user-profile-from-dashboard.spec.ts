@@ -17,11 +17,11 @@ test.describe('Navigation and Access', () => {
     await page.getByRole('button', { name: 'Accept All Cookies' }).click();
 
     // 1. Click the user icon in the top navigation bar
-    await delay(300); // inconsistency in passing locally
-    await page.getByTestId('PersonIcon').click();
-    await delay(300);
+    await page.getByTestId('PersonIcon').click({ timeout: 500 });
     // Click login menu item
-    await page.getByRole('menuitem', { name: 'Log In | Sign Up' }).click();
+    await page
+      .getByRole('menuitem', { name: 'Log In | Sign Up' })
+      .click({ timeout: 500 });
 
     // Wait for login page
     await page.waitForURL(/.*login.*/);
@@ -29,7 +29,9 @@ test.describe('Navigation and Access', () => {
     // Login
     await page.getByRole('textbox', { name: 'E-Mail' }).fill('admin@alkem.io');
     await page.getByRole('textbox', { name: 'Password' }).fill(password);
-    await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+    await page
+      .getByRole('button', { name: 'Sign in', exact: true })
+      .click({ timeout: 500 });
 
     // Wait for dashboard
     await page.waitForURL(/.*home.*/);
@@ -44,7 +46,9 @@ test.describe('Navigation and Access', () => {
     await expect(page).toHaveURL(/.*\/user\/admin-alkemio\/settings\/account/);
 
     // Verify user settings page loads with account tab active
-    await expect(page.getByRole('tab', { name: 'account' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'account' })).toBeVisible({
+      timeout: 500,
+    });
 
     // Verify page banner displays user's avatar and name
     await expect(
