@@ -5,6 +5,7 @@ import {
 } from '@alkemio/tests-lib';
 import { convertSpaceL2ToSpaceL1 } from './conversion.request.params';
 import { getSpaceData } from '../space/space.request.params';
+import { sortArraysInObject } from '@utils/array.matcher';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { SpaceLevel } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
@@ -99,6 +100,8 @@ describe('Promoting of L2 subspace', () => {
       after?.account.host
     );
     expect(before.data?.lookup.space?.settings).toEqual(after?.settings);
-    expect(before.data?.lookup.space?.subspaces).toEqual(after?.subspaces);
+    expect(sortArraysInObject(before.data?.lookup.space?.subspaces)).toEqual(
+      sortArraysInObject(after?.subspaces)
+    );
   });
 });

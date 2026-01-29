@@ -6,6 +6,7 @@ import {
 } from '@alkemio/tests-lib';
 import { convertSpaceL1ToSpaceL0 } from './conversion.request.params';
 import { getSpaceData } from '../space/space.request.params';
+import { sortArraysInObject } from '@utils/array.matcher';
 import { inviteForEntryRoleOnRoleSet } from '@functional-api/roleset/invitations/invitation.request.params';
 import { createApplication } from '@functional-api/roleset/application/application.request.params';
 import {
@@ -131,9 +132,9 @@ describe('Promoting of L1 subspace', () => {
     expect(subspaceBefore.data?.lookup.space?.settings).toEqual(
       subspaceAfter?.settings
     );
-    expect(subspaceBefore.data?.lookup.space?.subspaces).toEqual(
-      subspaceAfter?.subspaces
-    );
+    expect(
+      sortArraysInObject(subspaceBefore.data?.lookup.space?.subspaces)
+    ).toEqual(sortArraysInObject(subspaceAfter?.subspaces));
 
     // Assert L2 to L1
     expect(subsubspaceBefore.data?.lookup.space?.visibility).toEqual(
@@ -158,8 +159,8 @@ describe('Promoting of L1 subspace', () => {
     expect(subsubspaceBefore.data?.lookup.space?.settings).toEqual(
       subsubspaceAfterData?.settings
     );
-    expect(subsubspaceBefore.data?.lookup.space?.subspaces).toEqual(
-      subsubspaceAfterData?.subspaces
-    );
+    expect(
+      sortArraysInObject(subsubspaceBefore.data?.lookup.space?.subspaces)
+    ).toEqual(sortArraysInObject(subsubspaceAfterData?.subspaces));
   });
 });

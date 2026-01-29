@@ -63,7 +63,7 @@ export const searchResponses = async (
           terms: terms,
           filters: [
             {
-              category: SearchCategory.Responses,
+              category: SearchCategory.Framings,
               size: 3,
               types: [SearchResultType.Post, SearchResultType.Whiteboard],
             },

@@ -10,9 +10,10 @@ import { CalloutTemplateResponseMemos } from '../callout-template-form.models';
  * Selects "Memos" for collection type.
  */
 export const selectCollectionMemos = async (dialog: Locator): Promise<void> => {
-  // First expand Response Options if collapsed
+  // First expand Response Options if collapsed - use exact match to avoid matching chip/tag elements
   const memosButton = dialog.getByRole('button', {
     name: 'Memos',
+    exact: true,
   });
 
   await memosButton.click();
@@ -29,7 +30,9 @@ export const fillCollectionMemos = async (
   // Open collection settings dialog
   await dialog.getByRole('button', { name: 'Collection settings' }).click();
 
-  const settingsDialog = page.getByRole('dialog', { name: 'Collection settings' });
+  const settingsDialog = page.getByRole('dialog', {
+    name: 'Collection settings',
+  });
   await expect(settingsDialog).toBeVisible();
 
   // Fill default title
@@ -40,7 +43,9 @@ export const fillCollectionMemos = async (
 
   // Fill default description
   if (settings.defaultDescription) {
-    const descField = settingsDialog.getByRole('textbox', { name: 'Markdown editor' });
+    const descField = settingsDialog.getByRole('textbox', {
+      name: 'Markdown editor',
+    });
     await descField.fill(settings.defaultDescription);
   }
 
@@ -66,4 +71,3 @@ export const fillCollectionMemos = async (
   await settingsDialog.getByRole('button', { name: 'Save' }).click();
   await expect(settingsDialog).not.toBeVisible();
 };
-

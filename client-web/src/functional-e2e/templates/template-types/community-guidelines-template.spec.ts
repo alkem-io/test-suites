@@ -101,11 +101,8 @@ test.describe.serial('Community Guidelines Template', () => {
 
     // Find the container (parent of the parent of the heading) and then the "Create new" button within it
     const createNewButton = await page
-      .getByRole('heading', { name: 'Community Guidelines' })
-      .locator('..')
-      .locator('..')
-      .locator('..')
-      .getByRole('button', { name: 'Create New' });
+      .getByRole('button', { name: 'Create new' })
+      .nth(4);
     await createNewButton.click();
 
     // Wait for the Community Guidelines Template creation dialog to appear

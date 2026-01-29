@@ -11,8 +11,10 @@ test.describe('Navigation and Access', () => {
     // Seed: Login
     await page.goto(baseUrl);
     await page.getByRole('button', { name: 'Accept All Cookies' }).click();
-    await page.getByTestId('PersonIcon').click();
-    await page.getByRole('menuitem', { name: 'Log In | Sign Up' }).click();
+    await page.getByTestId('PersonIcon').click({ timeout: 500 });
+    await page
+      .getByRole('menuitem', { name: 'Log In | Sign Up' })
+      .click({ timeout: 500 });
     await page.waitForURL(/.*login.*/);
     await page.getByRole('textbox', { name: 'E-Mail' }).fill('admin@alkem.io');
     await page.getByRole('textbox', { name: 'Password' }).fill(password);

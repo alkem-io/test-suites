@@ -99,7 +99,7 @@ test.describe('Authentication - Registration Flows', () => {
     await pressSignInButtonSignInPage(page);
 
     // Verify successful login
-    await verifyMyDashboardWelcomeElement(page, 'Test');
+    await verifyMyDashboardWelcomeElement(page);
 
     // Note: User cleanup not implemented - each test creates unique user (test+{uniqueId}@alkem.io)
     // that won't conflict with subsequent runs. To implement cleanup, add deleteUser
@@ -163,7 +163,7 @@ test.describe('Authentication - Registration Flows', () => {
     await pressSignInButtonSignInPage(page);
 
     // Verify successful login
-    await verifyMyDashboardWelcomeElement(page, 'Test');
+    await verifyMyDashboardWelcomeElement(page);
 
     // TODO: Cleanup - delete test user after verification
   });

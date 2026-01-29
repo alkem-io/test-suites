@@ -9,10 +9,13 @@ import { CalloutTemplateResponsePosts } from '../callout-template-form.models';
 /**
  * Selects "Posts" for collection type.
  */
-export const selectCollectionPosts = async (collectionSection: Locator): Promise<void> => {
-  // Select Posts in Collection section
+export const selectCollectionPosts = async (
+  collectionSection: Locator
+): Promise<void> => {
+  // Select Posts in Collection section - use exact match to avoid matching chip/tag elements
   const postsButton = collectionSection.getByRole('button', {
     name: 'Posts',
+    exact: true,
   });
 
   await postsButton.scrollIntoViewIfNeeded();
@@ -30,7 +33,9 @@ export const fillCollectionPosts = async (
   // Open collection settings dialog
   await dialog.getByRole('button', { name: 'Collection settings' }).click();
 
-  const settingsDialog = page.getByRole('dialog', { name: 'Collection settings' });
+  const settingsDialog = page.getByRole('dialog', {
+    name: 'Collection settings',
+  });
   await expect(settingsDialog).toBeVisible();
 
   // Fill default title
@@ -41,7 +46,9 @@ export const fillCollectionPosts = async (
 
   // Fill default description
   if (settings.defaultDescription) {
-    const descField = settingsDialog.getByRole('textbox', { name: 'Markdown editor' });
+    const descField = settingsDialog.getByRole('textbox', {
+      name: 'Markdown editor',
+    });
     await descField.fill(settings.defaultDescription);
   }
 
@@ -76,4 +83,3 @@ export const fillCollectionPosts = async (
   await settingsDialog.getByRole('button', { name: 'Save' }).click();
   await expect(settingsDialog).not.toBeVisible();
 };
-

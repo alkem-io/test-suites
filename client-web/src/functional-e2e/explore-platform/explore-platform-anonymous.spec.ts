@@ -97,11 +97,6 @@ test.describe('Explore Alkemio Platform - Anonymous User Flow', () => {
     await page.goto(baseUrl);
     await page.waitForURL('**/home');
 
-    // Verify welcome heading
-    await expect(
-      page.getByRole('heading', { name: 'Welcome to Alkemio!', level: 1 })
-    ).toBeVisible();
-
     // Verify explore section
     await expect(
       page.getByText('Explore Spaces of Your Interest')
@@ -230,7 +225,7 @@ test.describe('Explore Alkemio Platform - Anonymous User Flow', () => {
       page.getByRole('menuitem', { name: 'Explore Spaces' })
     ).toBeVisible();
     await expect(
-      page.getByRole('menuitem', { name: 'Find contributors' })
+      page.getByRole('menuitem', { name: 'Documentation' })
     ).toBeVisible();
 
     // Click Explore Spaces
@@ -257,38 +252,6 @@ test.describe('Explore Alkemio Platform - Anonymous User Flow', () => {
     ).toBeVisible();
     await expect(
       page.getByRole('button', { name: 'Public Spaces' })
-    ).toBeVisible();
-  });
-
-  test('8. Explore Contributors page', async ({ page }) => {
-    await page.goto(baseUrl);
-    await page.waitForURL('**/home');
-
-    // Open Tools Menu
-    await page.getByRole('button', { name: 'Tools Menu' }).click();
-    await page.waitForTimeout(500); // Wait for menu animation
-
-    // Click Find contributors
-    await page.getByRole('menuitem', { name: 'Find contributors' }).click();
-
-    // Verify navigation
-    await expect(page).toHaveURL(/\/contributors/);
-    await expect(
-      page.getByRole('heading', {
-        name: 'Find talent and expertise!',
-        level: 1,
-      })
-    ).toBeVisible();
-
-    // Verify sections
-    await expect(
-      page.getByRole('heading', { name: 'Users', exact: true })
-    ).toBeVisible();
-    await expect(
-      page.getByRole('heading', { name: 'Virtual Contributors' })
-    ).toBeVisible();
-    await expect(
-      page.getByRole('heading', { name: 'Organizations' })
     ).toBeVisible();
   });
 

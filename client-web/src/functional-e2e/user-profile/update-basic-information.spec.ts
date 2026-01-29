@@ -1,6 +1,7 @@
 // spec: client-web/src/functional-e2e/user-profile-test-plan.md
 // seed: seed-minimal.spec.js
 
+import { delay } from '@alkemio/tests-lib/utils/delay';
 import { test, expect } from '@playwright/test';
 
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD!;
@@ -14,8 +15,11 @@ test.describe('My Profile Tab - View and Edit', () => {
     // Seed: Login
     await page.goto(baseUrl);
     await page.getByRole('button', { name: 'Accept All Cookies' }).click();
-    await page.getByTestId('PersonIcon').click();
-    await page.getByRole('menuitem', { name: 'Log In | Sign Up' }).click();
+    await delay(1000); // inconsistency in passing locally
+    await page.getByTestId('PersonIcon').click({ timeout: 500 });
+    await page.getByRole('menuitem', { name: 'Log In | Sign Up' }).click({
+      timeout: 500,
+    });
     await page.waitForURL(/.*login.*/);
     await page.getByRole('textbox', { name: 'E-Mail' }).fill('admin@alkem.io');
     await page.getByRole('textbox', { name: 'Password' }).fill(password);

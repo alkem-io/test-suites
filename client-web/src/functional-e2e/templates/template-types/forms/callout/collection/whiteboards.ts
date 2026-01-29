@@ -5,15 +5,22 @@
 
 import { Locator, Page, expect } from '@playwright/test';
 import { CalloutTemplateResponseWhiteboards } from '../callout-template-form.models';
-import { clickOnEditWhiteboardPreview, getWhiteboardDialog, writeTextInWhiteboardDialog } from '../../whiteboards/whiteboard-dialog';
+import {
+  clickOnEditWhiteboardPreview,
+  getWhiteboardDialog,
+  writeTextInWhiteboardDialog,
+} from '../../whiteboards/whiteboard-dialog';
 
 /**
  * Selects "Whiteboards" for collection type.
  */
-export const selectCollectionWhiteboards = async (dialog: Locator): Promise<void> => {
-  // First expand Response Options if collapsed
+export const selectCollectionWhiteboards = async (
+  dialog: Locator
+): Promise<void> => {
+  // First expand Response Options if collapsed - use exact match to avoid matching chip/tag elements
   const whiteboardsButton = dialog.getByRole('button', {
     name: 'Whiteboards',
+    exact: true,
   });
 
   await whiteboardsButton.click();
@@ -31,7 +38,9 @@ export const fillCollectionWhiteboards = async (
   // Open collection settings dialog
   await dialog.getByRole('button', { name: 'Collection settings' }).click();
 
-  const settingsDialog = page.getByRole('dialog', { name: 'Collection settings' });
+  const settingsDialog = page.getByRole('dialog', {
+    name: 'Collection settings',
+  });
   await expect(settingsDialog).toBeVisible();
 
   // Fill default title
@@ -75,4 +84,3 @@ export const fillCollectionWhiteboards = async (
   await settingsDialog.getByRole('button', { name: 'Save' }).click();
   await expect(settingsDialog).not.toBeVisible();
 };
-
