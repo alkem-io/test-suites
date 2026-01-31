@@ -50,9 +50,20 @@ export interface TestScenarioSpaceConfig {
   settings?: {
     privacy?: {
       mode?: SpacePrivacyMode;
+      allowPlatformSupportAsAdmin?: boolean;
     };
     membership?: {
       policy?: CommunityMembershipPolicy;
+      allowSubspaceAdminsToInviteMembers?: boolean;
+      trustedOrganizations?: string[];
+    };
+    collaboration?: {
+      allowMembersToCreateCallouts?: boolean;
+      allowMembersToCreateSubspaces?: boolean;
+      inheritMembershipRights?: boolean;
+      allowEventsFromSubspaces?: boolean;
+      allowMembersToVideoCall?: boolean;
+      allowGuestContributions?: boolean;
     };
   };
 }
