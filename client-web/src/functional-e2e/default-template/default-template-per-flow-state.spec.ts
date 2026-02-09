@@ -148,15 +148,6 @@ const scenarioConfig: TestScenarioConfig = {
         calloutAllowedContributors: 'MEMBERS',
         postDefaultDescription: 'Alternative template content',
       },
-      // {
-      //   type: 'CALLOUT' as any,
-      //   profileDisplayName: 'Callout (Memo Framing, Memo Responses)',
-      //   calloutFramingType: 'MEMO',
-      //   calloutResponseTypes: ['MEMO'],
-      //   calloutAllowedContributors: 'MEMBERS',
-      //   calloutMemoFramingMarkdown:
-      //     '# Guidelines\n\nPlease follow these guidelines:\n- Be respectful\n- Share knowledge\n- Collaborate openly',
-      // },
     ],
   },
 };
@@ -337,9 +328,6 @@ test.describe('Default Template Per Flow State', () => {
       });
 
       // Verify template content
-      // await expect(
-      //   memberPage.getByText('GuidelinesPlease follow these')
-      // ).toBeVisible();
       await expect(
         memberPage.getByRole('button', { name: 'None' })
       ).toBeVisible();

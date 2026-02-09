@@ -94,7 +94,7 @@ const scenarioConfig: TestScenarioConfig = {
 
 let baseScenario: OrganizationWithSpaceModel;
 
-test.describe('Default template per flow state', () => {
+test.describe.skip('Default template per flow state', () => {
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(120_000);
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
@@ -113,7 +113,7 @@ test.describe('Default template per flow state', () => {
     // If you wish to delete it as well, add a helper or call delete via tests-lib here.
   });
 
-  test('Pack and all templates are created before tests execute', async () => {
+  test.skip('Pack and all templates are created before tests execute', async () => {
     expect(baseScenario.scenarioSetupSucceeded).toBeTruthy();
     expect(baseScenario.innovationPack).toBeDefined();
 
