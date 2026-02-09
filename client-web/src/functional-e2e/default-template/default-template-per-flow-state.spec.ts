@@ -272,7 +272,7 @@ test.describe('Default Template Per Flow State', () => {
       const templateCard = page
         .getByText('Default Post Template - Test')
         .first();
-      expect(templateCard).toBeVisible({ timeout: 5000 });
+      await expect(templateCard).toBeVisible({ timeout: 5000 });
       await templateCard.click();
 
       // Apply the chosen template
