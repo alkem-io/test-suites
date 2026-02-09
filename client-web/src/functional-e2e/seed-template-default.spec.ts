@@ -8,6 +8,7 @@ import {
   SpacePrivacyMode,
 } from '@alkemio/client-lib/dist/generated/graphql';
 import { createAuthenticatedSessionFixture } from './fixtures/authenticated-session.fixture';
+import { expect } from '@playwright/test';
 
 const { test, setupAuthentication, teardownAuthentication } =
   createAuthenticatedSessionFixture({

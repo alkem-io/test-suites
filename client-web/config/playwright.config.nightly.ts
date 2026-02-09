@@ -110,6 +110,19 @@ export default defineConfig({
         '/applications/space-applications-level-1.spec.ts',
       ],
     },
+    {
+      name: 'Default Template Per Flow State',
+      testMatch: ['/default-template/default-template-per-flow-state.spec.ts'],
+    },
+    {
+      name: 'User Profile',
+      testMatch: [
+        '/user-profile/access-user-profile-from-dashboard.spec.ts',
+        '/user-profile/direct-url-access-to-user-profile.spec.ts',
+        '/user-profile/update-basic-information.spec.ts',
+        '/user-profile/view-profile-information.spec.ts',
+      ],
+    },
   ],
   // % or number of the available CPUs
   // workers: '100%',

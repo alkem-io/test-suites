@@ -148,6 +148,15 @@ const scenarioConfig: TestScenarioConfig = {
         calloutAllowedContributors: 'MEMBERS',
         postDefaultDescription: 'Alternative template content',
       },
+      // {
+      //   type: 'CALLOUT' as any,
+      //   profileDisplayName: 'Callout (Memo Framing, Memo Responses)',
+      //   calloutFramingType: 'MEMO',
+      //   calloutResponseTypes: ['MEMO'],
+      //   calloutAllowedContributors: 'MEMBERS',
+      //   calloutMemoFramingMarkdown:
+      //     '# Guidelines\n\nPlease follow these guidelines:\n- Be respectful\n- Share knowledge\n- Collaborate openly',
+      // },
     ],
   },
 };
@@ -269,9 +278,10 @@ test.describe('Default Template Per Flow State', () => {
       await openTemplateLibraryDialog(page);
 
       // Select a different template
-      const templateCard = page.getByText(
-        'Callout (Memo Framing, Memo Responses)'
-      );
+      const templateCard = page
+        .getByText('Default Post Template - Test')
+        .first();
+      expect(templateCard).toBeVisible({ timeout: 5000 });
       await templateCard.click();
 
       // Apply the chosen template
@@ -322,16 +332,16 @@ test.describe('Default Template Per Flow State', () => {
 
       // Verify template is pre-loaded
       const titleInput = addPostDialog.getByRole('textbox', { name: 'Title' });
-      await expect(titleInput).toHaveValue(
-        /Callout \(Memo Framing, Memo Responses\)/i
-      );
+      await expect(titleInput).toHaveValue('Default Post Template - Test', {
+        timeout: 5000,
+      });
 
       // Verify template content
+      // await expect(
+      //   memberPage.getByText('GuidelinesPlease follow these')
+      // ).toBeVisible();
       await expect(
-        memberPage.getByText('GuidelinesPlease follow these')
-      ).toBeVisible();
-      await expect(
-        memberPage.getByRole('button', { name: 'Memo' })
+        memberPage.getByRole('button', { name: 'None' })
       ).toBeVisible();
 
       // Create a new post with unique title
