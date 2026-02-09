@@ -76,6 +76,7 @@ export function createAuthenticatedSessionFixture(
           .isVisible({ timeout: 3000 })
           .catch(() => false)
       ) {
+        console.log('Accepting cookies...');
         await acceptCookiesButton.click();
       }
 

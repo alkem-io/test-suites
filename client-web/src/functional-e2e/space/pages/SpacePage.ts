@@ -1,4 +1,5 @@
 import { Page, expect } from '@playwright/test';
+import { acceptCookiesIfVisible } from '@src/functional-e2e/default-template/default-template-per-flow-state.spec';
 
 export class SpacePage {
   constructor(
@@ -53,6 +54,7 @@ export class SpacePage {
   // Methods
   async goto(spaceUrl: string) {
     await this.page.goto(`${this.baseUrl}/${spaceUrl}`);
+    await acceptCookiesIfVisible(this.page);
   }
 
   async waitForSpaceReady(timeout: number = 30000) {
