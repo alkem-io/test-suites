@@ -111,7 +111,7 @@ test.describe('Level 0 Space - Applications', () => {
 
       // 4. Fill in questionnaire fields with test data
       const requiredField = page.getByRole('textbox', {
-        name: 'What makes you want to join?',
+        name: `If you have a specific idea for how you'd like to contribute, please share it below.`,
       });
       await requiredField.fill(
         'I am interested in collaborating on this space'
@@ -213,7 +213,7 @@ test.describe('Level 0 Space - Applications', () => {
 
         // Fill in the required questionnaire fields with test data
         const requiredField = applicantPage.getByRole('textbox', {
-          name: 'What makes you want to join?',
+          name: `If you have a specific idea for how you'd like to contribute, please share it below.`,
         });
         await requiredField.fill(
           'I am interested in collaborating on this space'

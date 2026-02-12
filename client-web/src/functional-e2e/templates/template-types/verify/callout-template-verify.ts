@@ -65,7 +65,15 @@ export const verifyCalloutTemplate = async (
   for (const tag of templateData.calloutTags) {
     const chip = page.locator('.MuiChip-root').getByText(tag);
     const count = await chip.count();
-    await expect(count).toBeGreaterThan(0);
+    if (count === 0) {
+      // Tag may be hidden in a "+N" overflow button — its accessible name
+      // lists the truncated tags (e.g. "posts, comments-disabled")
+      const escapedTag = tag.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+      const overflowBtn = page.getByRole('button', {
+        name: new RegExp(escapedTag),
+      });
+      await expect(await overflowBtn.count()).toBeGreaterThan(0);
+    }
   }
 
   for (const reference of templateData.calloutReferences) {

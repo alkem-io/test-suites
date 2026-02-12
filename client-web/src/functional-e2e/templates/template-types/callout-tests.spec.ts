@@ -14,6 +14,7 @@ import { createCalloutTemplateData } from './forms/callout/callout-template-form
 import { fillCalloutTemplateForm } from './forms/callout/callout-template-form';
 import { verifyCalloutTemplate } from './verify/callout-template-verify';
 import { verifyCalloutTemplateUsage } from './usage/callout-template.use';
+import { acceptCookiesIfVisible } from '@src/functional-e2e/helpers/cookies.helper';
 
 const { test, setupAuthentication, teardownAuthentication } =
   createAuthenticatedSessionFixture({
@@ -159,6 +160,7 @@ test.describe.serial('Callout Templates', () => {
     await page.goto(
       `${baseUrl}/${baseScenario.space.nameId}/settings/templates`
     );
+    await acceptCookiesIfVisible(page);
   });
 
   test('1 Framing: None, Response: None, Comments: Disabled', async ({
