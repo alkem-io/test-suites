@@ -8,6 +8,7 @@ jobs:
     uses: ./.github/workflows/cleanup-database.yml
     with:
       postgres_db: alkemio
+    secrets: inherit
 
   trigger-e2e-tests-travis-ci:
     needs: cleanup-db

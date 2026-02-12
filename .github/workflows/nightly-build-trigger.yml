@@ -9,6 +9,7 @@ jobs:
     uses: ./.github/workflows/cleanup-database.yml
     with:
       postgres_db: alkemio
+    secrets: inherit
 
   trigger:
     needs: cleanup-db
