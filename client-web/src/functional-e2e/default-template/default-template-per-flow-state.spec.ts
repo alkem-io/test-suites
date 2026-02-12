@@ -2,6 +2,7 @@
 // seed: client-web/src/functional-e2e/seed-template-default.spec.ts
 
 import { expect, Page } from '@playwright/test';
+import { acceptCookiesIfVisible } from '@src/functional-e2e/helpers/cookies.helper';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
@@ -19,28 +20,6 @@ const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 // ============================================================================
 // Helper Functions
 // ============================================================================
-
-/**
- * Helper function to accept cookies if the dialog appears.
- * Waits for the banner to disappear after clicking.
- */
-export async function acceptCookiesIfVisible(page: Page): Promise<void> {
-  await page.waitForTimeout(1000);
-  const acceptCookiesButton = page.getByRole('button', {
-    name: /accept all cookies/i,
-  });
-
-  try {
-    if (await acceptCookiesButton.first().isVisible({ timeout: 3000 })) {
-      await acceptCookiesButton.first().click();
-      await acceptCookiesButton
-        .first()
-        .waitFor({ state: 'hidden', timeout: 5000 });
-    }
-  } catch {
-    // Banner not visible or already dismissed
-  }
-}
 
 /**
  * Helper to get the flow state menu button for "Home" section

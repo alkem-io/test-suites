@@ -1,5 +1,5 @@
 import { Page, expect } from '@playwright/test';
-import { acceptCookiesIfVisible } from '@src/functional-e2e/default-template/default-template-per-flow-state.spec';
+import { acceptCookiesIfVisible } from '@src/functional-e2e/helpers/cookies.helper';
 
 export class SpacePage {
   constructor(

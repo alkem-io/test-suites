@@ -80,7 +80,7 @@ test.describe('Support Navigation Flow', () => {
       .click();
 
     // 6. Verify page navigates to /docs/how-to/inviting
-    await expect(newPage).toHaveURL(/.*docs\/how-to\/inviting.*/);
+    await expect(newPage).toHaveURL(`${baseUrl}/docs/en-US/how-to/inviting`);
 
     // [BUG] no embeded arcade iframe in the docs on test env
     // 7. Inside the embedded invite tutorial iframe, click "Get started"
