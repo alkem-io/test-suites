@@ -11,114 +11,13 @@ jobs:
       postgres_db: alkemio
     secrets: inherit
 
-  trigger:
+  deploy-all-services:
     needs: cleanup-db
-    runs-on: ubuntu-latest
-    outputs:
-      run_repo_map: ${{ steps.trigger-workflow.outputs.run_repo_map }}
-    steps:
-      - name: Set Repositories
-        id: set-repos
-        run: |
-          repos=("server" "client-web" "notifications" "whiteboard-collaboration-service" "matrix-adapter" "file-service" "virtual-contributor-ingest-space" "virtual-contributor-engine-generic" "virtual-contributor-engine-expert" "virtual-contributor-engine-openai-assistant")  # List of target repositories
-          echo "repos=${repos[*]}" >> $GITHUB_ENV
-
-      - name: Trigger workflows in target repositories
-        id: trigger-workflow
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT_GITHUB_WORKFLOWS }}
-        run: |
-          run_repo_map=()  # Array to hold repo-run_id pairs
-
-          for repo in ${repos[@]}; do
-            echo "Triggering workflow in repository: $repo"
-
-            # Trigger the workflow
-            response=$(curl -X POST \
-              -H "Accept: application/vnd.github.v3+json" \
-              -H "Authorization: token $GITHUB_TOKEN" \
-              https://api.github.com/repos/alkem-io/$repo/actions/workflows/build-deploy-k8s-test-hetzner.yml/dispatches \
-              -d '{"ref":"develop"}' \
-              -w "%{http_code}" -o response.json)
-
-            if [ "$response" != "204" ]; then
-              echo "Failed to trigger workflow in $repo"; cat response.json; exit 1;
-            fi
-
-            sleep 5  # Allow GitHub time to start the workflow run
-
-            # Get the run_id of the most recent workflow run
-            run_id=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-              "https://api.github.com/repos/alkem-io/$repo/actions/runs?branch=develop&event=workflow_dispatch&per_page=1" | jq -r '.workflow_runs[0].id')
-
-            if [ -z "$run_id" ] || [ "$run_id" == "null" ]; then
-              echo "Failed to retrieve run_id for $repo"
-              exit 1
-            fi
-
-            run_repo_map+=("$repo=$run_id")  # Store repo and run_id as a pair
-          done
-
-          # Join all repo-run_id pairs and export as output
-          echo "run_repo_map=${run_repo_map[*]}" >> $GITHUB_OUTPUT
-
-  wait-for-triggered-workflows:
-    needs: trigger
-    runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{ secrets.PAT_GITHUB_WORKFLOWS }}
-      RUN_REPO_MAP: ${{ needs.trigger.outputs.run_repo_map }}
-    steps:
-      - name: Check statuses of all triggered workflows with timeout
-        id: check-status
-        run: |
-          # Convert RUN_REPO_MAP into an array of pairs
-          run_repo_map=($RUN_REPO_MAP)
-          timeout_seconds=900  # Set timeout limit to 15 minutes (900 seconds)
-
-          for pair in "${run_repo_map[@]}"; do
-            repo="${pair%%=*}"  # Extract repo name
-            run_id="${pair##*=}"  # Extract run_id
-            start_time=$(date +%s)  # Record start time
-
-            echo "Checking status for run_id: $run_id in repository: $repo"
-
-            while :; do
-              # Check if timeout exceeded
-              current_time=$(date +%s)
-              elapsed=$(( current_time - start_time ))
-
-              if (( elapsed > timeout_seconds )); then
-                echo "Timeout exceeded: Workflow $run_id in $repo took longer than 10 minutes."
-                exit 1
-              fi
-
-              # Check the status and conclusion of the run
-              status=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-                "https://api.github.com/repos/alkem-io/$repo/actions/runs/$run_id" | jq -r '.status')
-
-              conclusion=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-                "https://api.github.com/repos/alkem-io/$repo/actions/runs/$run_id" | jq -r '.conclusion')
-
-              echo "Status: $status, Conclusion: $conclusion for run_id: $run_id in repository: $repo"
-
-              if [[ "$status" == "completed" ]]; then
-                if [[ "$conclusion" == "success" ]]; then
-                  echo "Workflow $run_id in $repo completed successfully."
-                  break
-                else
-                  echo "Workflow $run_id in $repo failed with conclusion: $conclusion"
-                  exit 1
-                fi
-              fi
-
-              # Wait and poll again
-              sleep 10
-            done
-          done
+    uses: ./.github/workflows/deploy-all-services.yml
+    secrets: inherit
 
   trigger-e2e-tests-travis-ci:
-    needs: wait-for-triggered-workflows
+    needs: deploy-all-services
     runs-on: ubuntu-latest
     steps:
       - name: Run e2e Tests
