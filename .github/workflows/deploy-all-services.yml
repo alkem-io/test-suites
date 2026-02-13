@@ -63,14 +63,6 @@ on:
         required: false
         type: string
         default: develop
-      vc_ingest_website_branch:
-        required: false
-        type: string
-        default: develop
-      vc_engine_community_branch:
-        required: false
-        type: string
-        default: develop
   workflow_dispatch:
     inputs:
       server_branch:
@@ -148,16 +140,7 @@ on:
         required: false
         type: string
         default: develop
-      vc_ingest_website_branch:
-        description: "Branch for alkemio-virtual-contributor-ingest-website"
-        required: false
-        type: string
-        default: develop
-      vc_engine_community_branch:
-        description: "Branch for alkemio-virtual-contributor-engine-community"
-        required: false
-        type: string
-        default: develop
+
 
 jobs:
   trigger-deployments:
@@ -186,8 +169,6 @@ jobs:
             ["hydra"]="${{ inputs.hydra_branch }}"
             ["virtual-contributor-engine-guidance"]="${{ inputs.vc_engine_guidance_branch }}"
             ["virtual-contributor-engine-libra-flow"]="${{ inputs.vc_engine_libra_flow_branch }}"
-            ["alkemio-virtual-contributor-ingest-website"]="${{ inputs.vc_ingest_website_branch }}"
-            ["alkemio-virtual-contributor-engine-community"]="${{ inputs.vc_engine_community_branch }}"
           )
 
           run_repo_map=()
