@@ -1,6 +1,76 @@
 name: Deploy All Services to Test Environment
 
 on:
+  workflow_call:
+    inputs:
+      server_branch:
+        required: false
+        type: string
+        default: develop
+      client_web_branch:
+        required: false
+        type: string
+        default: develop
+      notifications_branch:
+        required: false
+        type: string
+        default: develop
+      whiteboard_branch:
+        required: false
+        type: string
+        default: develop
+      matrix_adapter_go_branch:
+        required: false
+        type: string
+        default: develop
+      oidc_branch:
+        required: false
+        type: string
+        default: develop
+      file_service_branch:
+        required: false
+        type: string
+        default: develop
+      vc_ingest_branch:
+        required: false
+        type: string
+        default: develop
+      vc_engine_generic_branch:
+        required: false
+        type: string
+        default: develop
+      vc_engine_expert_branch:
+        required: false
+        type: string
+        default: develop
+      vc_engine_openai_branch:
+        required: false
+        type: string
+        default: develop
+      documentations_branch:
+        required: false
+        type: string
+        default: develop
+      hydra_branch:
+        required: false
+        type: string
+        default: develop
+      vc_engine_guidance_branch:
+        required: false
+        type: string
+        default: develop
+      vc_engine_libra_flow_branch:
+        required: false
+        type: string
+        default: develop
+      vc_ingest_website_branch:
+        required: false
+        type: string
+        default: develop
+      vc_engine_community_branch:
+        required: false
+        type: string
+        default: develop
   workflow_dispatch:
     inputs:
       server_branch:
@@ -23,8 +93,13 @@ on:
         required: false
         type: string
         default: develop
-      matrix_adapter_branch:
-        description: "Branch for matrix-adapter"
+      matrix_adapter_go_branch:
+        description: "Branch for matrix-adapter-go"
+        required: false
+        type: string
+        default: develop
+      oidc_branch:
+        description: "Branch for oidc"
         required: false
         type: string
         default: develop
@@ -53,6 +128,36 @@ on:
         required: false
         type: string
         default: develop
+      documentations_branch:
+        description: "Branch for alkemio-documentations"
+        required: false
+        type: string
+        default: develop
+      hydra_branch:
+        description: "Branch for hydra"
+        required: false
+        type: string
+        default: develop
+      vc_engine_guidance_branch:
+        description: "Branch for virtual-contributor-engine-guidance"
+        required: false
+        type: string
+        default: develop
+      vc_engine_libra_flow_branch:
+        description: "Branch for virtual-contributor-engine-libra-flow"
+        required: false
+        type: string
+        default: develop
+      vc_ingest_website_branch:
+        description: "Branch for alkemio-virtual-contributor-ingest-website"
+        required: false
+        type: string
+        default: develop
+      vc_engine_community_branch:
+        description: "Branch for alkemio-virtual-contributor-engine-community"
+        required: false
+        type: string
+        default: develop
 
 jobs:
   trigger-deployments:
@@ -70,12 +175,19 @@ jobs:
             ["client-web"]="${{ inputs.client_web_branch }}"
             ["notifications"]="${{ inputs.notifications_branch }}"
             ["whiteboard-collaboration-service"]="${{ inputs.whiteboard_branch }}"
-            ["matrix-adapter"]="${{ inputs.matrix_adapter_branch }}"
+            ["matrix-adapter-go"]="${{ inputs.matrix_adapter_go_branch }}"
+            ["oidc"]="${{ inputs.oidc_branch }}"
             ["file-service"]="${{ inputs.file_service_branch }}"
             ["virtual-contributor-ingest-space"]="${{ inputs.vc_ingest_branch }}"
             ["virtual-contributor-engine-generic"]="${{ inputs.vc_engine_generic_branch }}"
             ["virtual-contributor-engine-expert"]="${{ inputs.vc_engine_expert_branch }}"
             ["virtual-contributor-engine-openai-assistant"]="${{ inputs.vc_engine_openai_branch }}"
+            ["alkemio-documentations"]="${{ inputs.documentations_branch }}"
+            ["hydra"]="${{ inputs.hydra_branch }}"
+            ["virtual-contributor-engine-guidance"]="${{ inputs.vc_engine_guidance_branch }}"
+            ["virtual-contributor-engine-libra-flow"]="${{ inputs.vc_engine_libra_flow_branch }}"
+            ["alkemio-virtual-contributor-ingest-website"]="${{ inputs.vc_ingest_website_branch }}"
+            ["alkemio-virtual-contributor-engine-community"]="${{ inputs.vc_engine_community_branch }}"
           )
 
           run_repo_map=()
