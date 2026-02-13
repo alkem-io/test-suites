@@ -1,5 +1,5 @@
-import { Page } from "@playwright/test";
-import { TemplateForm } from "./template-form.models";
+import { Page } from '@playwright/test';
+import { TemplateForm } from './template-form.models';
 
 
 export const fillTemplateForm = async (page: Page, templateData: TemplateForm) => {

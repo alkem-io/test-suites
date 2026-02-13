@@ -1,6 +1,6 @@
-import { Locator, Page, expect } from "@playwright/test";
-import { CalloutTemplateForm } from "../../forms/callout/callout-template-form.models";
-import { getCreateContributionDialog } from "./callout-template.use.contributions";
+import { Locator, Page, expect } from '@playwright/test';
+import { CalloutTemplateForm } from '../../forms/callout/callout-template-form.models';
+import { getCreateContributionDialog } from './callout-template.use.contributions';
 
 export const verifyCalloutContributionPosts = async (
   page: Page,
@@ -36,7 +36,7 @@ export const verifyCalloutContributionPosts = async (
     await dialog.getByRole('button', { name: 'Create' }).click();
 
     // Verify the url has changed to include the new post
-    await expect(page).toHaveURL(new RegExp(`/posts/`));
+    await expect(page).toHaveURL(new RegExp('/posts/'));
 
     // Verify the contribution appears in the callout
     await expect(
