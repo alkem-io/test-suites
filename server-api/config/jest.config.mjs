@@ -1,5 +1,8 @@
+import { createRequire } from 'module';
 import { pathsToModuleNameMapper } from 'ts-jest';
-import tsconfig from '../tsconfig.json' assert { type: 'json' };
+
+const require = createRequire(import.meta.url);
+const tsconfig = require('../tsconfig.json');
 
 export default {
   rootDir: '../',

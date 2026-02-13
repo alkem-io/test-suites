@@ -1,0 +1,24 @@
+{
+  "name": "@alkemio/test-suites",
+  "private": true,
+  "description": "Alkemio QA automation monorepo",
+  "license": "EUPL-1.2",
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.2"
+  },
+  "lint-staged": {
+    "server-api/**/*.ts": "eslint --fix",
+    "client-web/**/*.ts": "eslint --fix"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "volta": {
+    "node": "20.9.0"
+  }
+}

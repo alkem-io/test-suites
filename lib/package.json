@@ -15,7 +15,6 @@
     "prebuild": "rimraf dist",
     "build": "tsc --project tsconfig.prod.json",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "nest start",
     "lint": "tsc --noEmit && eslint src/**/*.ts{,x}",
     "lint:prod": "tsc --noEmit && cross-env NODE_ENV=production eslint src/**/*.ts{,x}",
     "lint:fix": "tsc --noEmit && eslint src/**/*.ts{,x} --fix",
@@ -24,7 +23,13 @@
   "dependencies": {
     "@alkemio/client-lib": "^0.36.0",
     "@ory/kratos-client": "^0.11.1",
-    "supertest": "^7.0.0"
+    "dotenv": "^16.0.1",
+    "graphql": "^16.10.0",
+    "graphql-request": "6.0.0",
+    "graphql-tag": "^2.12.6",
+    "graphql-ws": "^5.8.2",
+    "supertest": "^7.0.0",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
@@ -39,34 +44,21 @@
     "@graphql-codegen/typescript-graphql-request": "^6.2.0",
     "@graphql-codegen/typescript-operations": "4.4.0",
     "@graphql-codegen/typescript-resolvers": "4.4.1",
-    "dotenv": "^16.0.1",
+    "cross-env": "^7.0.3",
     "eslint": "^7.31.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-import": "^2.23.4",
     "eslint-plugin-prettier": "^3.4.0",
-    "lint-staged": "^11.1.1",
     "prettier": "^2.3.2",
-    "ts-jest": "^29.2.5",
+    "rimraf": "^6.0.1",
     "ts-node": "^10.9.2",
-    "ts-node-dev": "^2.0.0",
-    "tsconfig-paths": "^4.2.0",
     "typescript": "~5.7.2"
   },
   "_moduleAliases": {
     "@src": "./dist"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
   "engines": {
-    "node": ">=20.0.0",
-    "npm": ">=10"
-  },
-  "volta": {
-    "node": "20.9.0",
-    "npm": "10.0.0"
+    "node": ">=20.0.0"
   },
   "publishConfig": {
     "access": "public",

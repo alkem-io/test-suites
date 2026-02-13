@@ -1,12 +1,15 @@
 # compiled output
 /dist
-/node_modules
 /html-report
 client-web/dist
-client-web/node_modules
 server-api/html-report
 server-api/dist
+
+# dependencies
+node_modules/
+lib/node_modules
 server-api/node_modules
+client-web/node_modules
 
 # Logs
 logs

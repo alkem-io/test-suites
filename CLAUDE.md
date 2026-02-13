@@ -4,46 +4,52 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Alkemio Test Suites — a QA automation monorepo for the Alkemio collaborative innovation platform. Contains three active packages with no root-level package.json; each package is managed independently.
+Alkemio Test Suites — a QA automation monorepo for the Alkemio collaborative innovation platform. Uses **pnpm workspaces** to manage three packages from a single root.
 
 | Package | Path | Framework | Module System | Node Version |
 |---------|------|-----------|---------------|--------------|
 | **@alkemio/tests-lib** | `lib/` | TypeScript library | CommonJS | 20.9.0 (Volta) |
-| **@alkemio/test-suite-server-api** | `server-api/` | Jest | ESM (`"type": "module"`) | 17.9.1 (Volta) |
+| **@alkemio/test-suite-server-api** | `server-api/` | Jest | ESM (`"type": "module"`) | 20.9.0 (Volta) |
 | **@alkemio/test-suite-client-web** | `client-web/` | Playwright + Jest | CommonJS | >=20.9.0 |
 
 `testOld/` is deprecated legacy code — do not add to it.
 
 ## Commands
 
-All commands must be run from within their respective package directory.
+All commands can be run from the repository root using `pnpm --filter`.
+
+### Install all dependencies
+
+```bash
+pnpm install
+```
 
 ### Shared Library (lib/)
 
 ```bash
-npm --prefix lib run build        # Compile TypeScript to dist/
-npm --prefix lib run codegen      # Generate GraphQL types
-npm --prefix lib run lint         # Type check + ESLint
+pnpm --filter @alkemio/tests-lib run build        # Compile TypeScript to dist/
+pnpm --filter @alkemio/tests-lib run codegen      # Generate GraphQL types
+pnpm --filter @alkemio/tests-lib run lint         # Type check + ESLint
 ```
 
 ### Server API Tests (server-api/)
 
 ```bash
 # Full nightly suite (single worker)
-npm --prefix server-api run test:nightly
+pnpm --filter @alkemio/test-suite-server-api run test:nightly
 
 # Domain-specific suites (30+ available — see server-api/package.json scripts)
-npm --prefix server-api run test:communications
-npm --prefix server-api run test:account
-npm --prefix server-api run test:search
-npm --prefix server-api run test:templates
+pnpm --filter @alkemio/test-suite-server-api run test:communications
+pnpm --filter @alkemio/test-suite-server-api run test:account
+pnpm --filter @alkemio/test-suite-server-api run test:search
+pnpm --filter @alkemio/test-suite-server-api run test:templates
 # ... etc.
 
 # Run a single test file
-cd server-api && npx jest --config ./config/jest.config.mjs path/to/file.it-spec.ts
+cd server-api && pnpm exec jest --config ./config/jest.config.mjs path/to/file.it-spec.ts
 
 # Lint
-npm --prefix server-api run lint
+pnpm --filter @alkemio/test-suite-server-api run lint
 ```
 
 Test files use the `.it-spec.ts` suffix. Each domain has its own Jest config in `server-api/config/jest.config.*.mjs`.
@@ -51,14 +57,17 @@ Test files use the `.it-spec.ts` suffix. Each domain has its own Jest config in 
 ### Client Web Tests (client-web/)
 
 ```bash
+# Install Playwright browsers (required after fresh install)
+pnpm --filter @alkemio/test-suite-client-web exec playwright install
+
 # Playwright E2E tests (Chrome only)
-npm --prefix client-web run test:auth-playwright
+pnpm --filter @alkemio/test-suite-client-web run test:auth-playwright
 
 # Jest unit tests
-npm --prefix client-web run test
+pnpm --filter @alkemio/test-suite-client-web run test
 
 # Run a specific Playwright test file
-cd client-web && npx playwright test src/functional-e2e/path/to/file.spec.ts
+cd client-web && pnpm exec playwright test src/functional-e2e/path/to/file.spec.ts
 ```
 
 Test files use the `.spec.ts` suffix.
@@ -67,9 +76,9 @@ Test files use the `.spec.ts` suffix.
 
 Each package has its own codegen config (`codegen.ts`):
 ```bash
-npm --prefix lib run codegen
-npm --prefix server-api run codegen
-npm --prefix client-web run codegen
+pnpm --filter @alkemio/tests-lib run codegen
+pnpm --filter @alkemio/test-suite-server-api run codegen
+pnpm --filter @alkemio/test-suite-client-web run codegen
 ```
 
 ## Environment Setup
@@ -86,9 +95,13 @@ Copy `.env.default` to `.env` in both `server-api/` and `client-web/`. Key varia
 
 ## Architecture
 
+### Workspace Structure
+
+The root `pnpm-workspace.yaml` defines three workspace packages: `lib`, `server-api`, `client-web`. Both `server-api` and `client-web` depend on `@alkemio/tests-lib` via `"workspace:*"`. The root `.npmrc` uses `node-linker=hoisted` for broad compatibility.
+
 ### Test Library (`lib/src/`)
 
-Shared utilities consumed by both test suites via the `@alkemio/tests-lib` path alias (mapped to `../lib/src/index.ts` in each package's tsconfig).
+Shared utilities consumed by both test suites via the `@alkemio/tests-lib` workspace dependency (plus TypeScript path aliases mapped to `../lib/src/index.ts` in each package's tsconfig for compile-time resolution).
 
 Key abstractions:
 - **`scenario/TestScenarioFactory`** — Core factory for creating deterministic test data (orgs, spaces, users, subspaces). Most test suites set up scenarios in `beforeAll` using this.
@@ -123,7 +136,7 @@ Nine test personas with varying roles (see `agents.md`): Host, Facilitator, Comm
 ## Code Style
 
 - **Prettier**: single quotes, trailing commas (es5), 2-space indent, semicolons, arrow parens `avoid`
-- **ESLint**: auto-fix on pre-commit via lint-staged (server-api)
+- **ESLint**: auto-fix on pre-commit via lint-staged (root-level husky)
 - **server-api** uses ESLint 9.x flat config; **client-web** uses legacy `.eslintrc.js`
 
 ## Specification-Driven Development (SDD)
