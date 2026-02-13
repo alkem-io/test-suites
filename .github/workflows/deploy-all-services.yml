@@ -51,10 +51,6 @@ on:
         required: false
         type: string
         default: develop
-      hydra_branch:
-        required: false
-        type: string
-        default: develop
       vc_engine_guidance_branch:
         required: false
         type: string
@@ -125,11 +121,6 @@ on:
         required: false
         type: string
         default: develop
-      hydra_branch:
-        description: "Branch for hydra"
-        required: false
-        type: string
-        default: develop
       vc_engine_guidance_branch:
         description: "Branch for virtual-contributor-engine-guidance"
         required: false
@@ -165,7 +156,6 @@ jobs:
             ["virtual-contributor-engine-expert"]="${{ inputs.vc_engine_expert_branch }}"
             ["virtual-contributor-engine-openai-assistant"]="${{ inputs.vc_engine_openai_branch }}"
             ["alkemio-documentation-deployment"]="${{ inputs.documentation_branch }}"
-            ["hydra"]="${{ inputs.hydra_branch }}"
             ["virtual-contributor-engine-guidance"]="${{ inputs.vc_engine_guidance_branch }}"
             ["virtual-contributor-engine-libra-flow"]="${{ inputs.vc_engine_libra_flow_branch }}"
           )
