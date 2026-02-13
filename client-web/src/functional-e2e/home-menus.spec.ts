@@ -96,14 +96,14 @@ test.describe.skip('Home Page Menus', () => {
     // Verify Profile
     const profileLink = page.getByRole('menuitem', { name: 'My profile' });
     await expect(profileLink).toBeVisible();
-    await expect(profileLink).toHaveAttribute('href', `/user/admin-alkemio`);
+    await expect(profileLink).toHaveAttribute('href', '/user/admin-alkemio');
 
     // Verify Account
     const accountLink = page.getByRole('menuitem', { name: 'My Account' });
     await expect(accountLink).toBeVisible();
     await expect(accountLink).toHaveAttribute(
       'href',
-      `/user/admin-alkemio/settings/account`
+      '/user/admin-alkemio/settings/account'
     );
 
     // Verify Log out
@@ -159,7 +159,7 @@ test.describe.skip('Home Page Menus', () => {
     await expect(myAccountLink).toBeVisible();
     await expect(myAccountLink).toHaveAttribute(
       'href',
-      `/user/admin-alkemio/settings/account`
+      '/user/admin-alkemio/settings/account'
     );
 
     // Verify Create my own Space

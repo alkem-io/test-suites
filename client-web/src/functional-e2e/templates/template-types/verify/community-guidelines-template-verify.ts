@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
-import { Page } from "@playwright/test";
-import { CommunityGuidelinesTemplateForm } from "../forms/template-form.models";
+import { Page } from '@playwright/test';
+import { CommunityGuidelinesTemplateForm } from '../forms/template-form.models';
 import { verifyTemplate } from './template-verify';
 
 export const verifyCommunityGuidelinesTemplate = async (page: Page, templateData: CommunityGuidelinesTemplateForm) => {

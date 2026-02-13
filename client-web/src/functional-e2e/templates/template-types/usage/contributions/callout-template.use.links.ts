@@ -1,6 +1,6 @@
-import { Locator, Page, expect } from "@playwright/test";
-import { CalloutTemplateForm } from "../../forms/callout/callout-template-form.models";
-import { getCreateContributionDialog } from "./callout-template.use.contributions";
+import { Locator, Page, expect } from '@playwright/test';
+import { CalloutTemplateForm } from '../../forms/callout/callout-template-form.models';
+import { getCreateContributionDialog } from './callout-template.use.contributions';
 
 
 export const verifyCalloutContributionLinks = async (

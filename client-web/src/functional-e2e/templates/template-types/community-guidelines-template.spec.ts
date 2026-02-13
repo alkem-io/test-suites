@@ -227,7 +227,7 @@ test.describe.serial('Community Guidelines Template', () => {
       .click();
     const templateGalleryDialog = page
       .getByRole('heading', {
-        name: `Template Library: Community Guidelines Template`,
+        name: 'Template Library: Community Guidelines Template',
         exact: true,
       })
       .locator('..')

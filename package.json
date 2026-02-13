@@ -12,8 +12,8 @@
     "lint-staged": "^15.4.2"
   },
   "lint-staged": {
-    "server-api/**/*.ts": "eslint --fix",
-    "client-web/**/*.ts": "eslint --fix"
+    "server-api/**/*.ts": "pnpm -C server-api exec eslint --fix",
+    "client-web/**/*.ts": "pnpm -C client-web exec eslint --fix"
   },
   "engines": {
     "node": ">=20.9.0"

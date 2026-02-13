@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
-import { Page } from "@playwright/test";
-import { TemplateForm } from "../forms/template-form.models";
+import { Page } from '@playwright/test';
+import { TemplateForm } from '../forms/template-form.models';
 
 export const verifyTemplate = async (page: Page, templateData: TemplateForm) => {
   // Verify the template is displayed in the list
