@@ -158,7 +158,7 @@ jobs:
             ["notifications"]="${{ inputs.notifications_branch }}"
             ["whiteboard-collaboration-service"]="${{ inputs.whiteboard_branch }}"
             ["matrix-adapter-go"]="${{ inputs.matrix_adapter_go_branch }}"
-            ["oidc"]="${{ inputs.oidc_branch }}"
+            ["oidc-service"]="${{ inputs.oidc_branch }}"
             ["file-service"]="${{ inputs.file_service_branch }}"
             ["virtual-contributor-ingest-space"]="${{ inputs.vc_ingest_branch }}"
             ["virtual-contributor-engine-generic"]="${{ inputs.vc_engine_generic_branch }}"
