@@ -121,7 +121,7 @@ on:
         type: string
         default: develop
       documentations_branch:
-        description: "Branch for alkemio-documentations"
+        description: "Branch for alkemio-documentation-deployment"
         required: false
         type: string
         default: develop
@@ -140,7 +140,6 @@ on:
         required: false
         type: string
         default: develop
-
 
 jobs:
   trigger-deployments:
@@ -165,7 +164,7 @@ jobs:
             ["virtual-contributor-engine-generic"]="${{ inputs.vc_engine_generic_branch }}"
             ["virtual-contributor-engine-expert"]="${{ inputs.vc_engine_expert_branch }}"
             ["virtual-contributor-engine-openai-assistant"]="${{ inputs.vc_engine_openai_branch }}"
-            ["alkemio-documentations"]="${{ inputs.documentations_branch }}"
+            ["alkemio-documentation-deployment"]="${{ inputs.documentation_branch }}"
             ["hydra"]="${{ inputs.hydra_branch }}"
             ["virtual-contributor-engine-guidance"]="${{ inputs.vc_engine_guidance_branch }}"
             ["virtual-contributor-engine-libra-flow"]="${{ inputs.vc_engine_libra_flow_branch }}"
