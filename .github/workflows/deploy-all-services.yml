@@ -59,6 +59,10 @@ on:
         required: false
         type: string
         default: develop
+      collaborative_document_service_branch:
+        required: false
+        type: string
+        default: develop
   workflow_dispatch:
     inputs:
       server_branch:
@@ -117,7 +121,7 @@ on:
         type: string
         default: develop
       documentations_branch:
-        description: "Branch for alkemio-documentation-deployment"
+        description: "Branch for documentation"
         required: false
         type: string
         default: develop
@@ -128,6 +132,11 @@ on:
         default: develop
       vc_engine_libra_flow_branch:
         description: "Branch for virtual-contributor-engine-libra-flow"
+        required: false
+        type: string
+        default: develop
+      collaborative_document_service_branch:
+        description: "Branch for collaborative-document-service"
         required: false
         type: string
         default: develop
@@ -155,9 +164,10 @@ jobs:
             ["virtual-contributor-engine-generic"]="${{ inputs.vc_engine_generic_branch }}"
             ["virtual-contributor-engine-expert"]="${{ inputs.vc_engine_expert_branch }}"
             ["virtual-contributor-engine-openai-assistant"]="${{ inputs.vc_engine_openai_branch }}"
-            ["alkemio-documentation-deployment"]="${{ inputs.documentation_branch }}"
+            ["documentation"]="${{ inputs.documentations_branch }}"
             ["virtual-contributor-engine-guidance"]="${{ inputs.vc_engine_guidance_branch }}"
             ["virtual-contributor-engine-libra-flow"]="${{ inputs.vc_engine_libra_flow_branch }}"
+            ["collaborative-document-service"]="${{ inputs.collaborative_document_service_branch }}"
           )
 
           run_repo_map=()
