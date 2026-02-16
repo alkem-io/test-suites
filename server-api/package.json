@@ -64,6 +64,7 @@
     "@alkemio/client-lib": "^0.36.0",
     "@alkemio/tests-lib": "workspace:*",
     "@ory/kratos-client": "^0.11.1",
+    "axios": "1.13.5",
     "graphql": "^16.10.0",
     "ws": "^8.18.0"
   },

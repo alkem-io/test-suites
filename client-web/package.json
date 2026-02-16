@@ -33,6 +33,7 @@
     "@alkemio/client-lib": "^0.32.0",
     "@alkemio/tests-lib": "workspace:*",
     "@ory/kratos-client": "^1.2.1",
+    "axios": "1.13.5",
     "graphql": "^16.6.0",
     "graphql-upload": "^17.0.0",
     "tsx": "^4.21.0"
