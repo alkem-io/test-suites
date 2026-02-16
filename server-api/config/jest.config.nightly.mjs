@@ -10,8 +10,7 @@ export default {
     '/src/functional-api/communications/.*\\.it-spec\\.ts',
     '/src/functional-api/activity-logs/.*\\.it-spec\\.ts',
     '/src/functional-api/journey/.*\\.it-spec\\.ts',
-    // Skipped: graphql-upload@16 incompatible with Node 20 (multipart uploads fail)
-    // '/src/functional-api/storage/.*\\.it-spec\\.ts',
+    '/src/functional-api/storage/.*\\.it-spec\\.ts',
     '/src/functional-api/entitlements/.*\\.it-spec\\.ts',
     '/src/functional-api/template/.*\\.it-spec\\.ts',
   ],

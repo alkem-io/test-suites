@@ -526,6 +526,15 @@ export type ActivityLogInput = {
   types?: InputMaybe<Array<ActivityEventType>>;
 };
 
+export type AddVisualToMediaGalleryInput = {
+  /** The ID of the media gallery. */
+  mediaGalleryID: Scalars["String"]["input"];
+  /** The sort order of the visual within the media gallery. */
+  sortOrder?: InputMaybe<Scalars["Float"]["input"]>;
+  /** The type of visual to add (e.g. MEDIA_GALLERY_IMAGE, MEDIA_GALLERY_VIDEO). */
+  visualType: VisualType;
+};
+
 export type AdminAuthenticationIdBackfillResult = {
   /** Total users examined during the backfill run */
   processed: Scalars["Int"]["output"];
@@ -813,6 +822,7 @@ export enum AuthorizationPolicyType {
   LicensePolicy = "LICENSE_POLICY",
   Licensing = "LICENSING",
   Link = "LINK",
+  MediaGallery = "MEDIA_GALLERY",
   Memo = "MEMO",
   Organization = "ORGANIZATION",
   OrganizationVerification = "ORGANIZATION_VERIFICATION",
@@ -1079,6 +1089,8 @@ export type CalloutFraming = {
   id: Scalars["UUID"]["output"];
   /** The Link for framing the associated Callout. */
   link?: Maybe<Link>;
+  /** The media gallery associated with the callout framing */
+  mediaGallery?: Maybe<MediaGallery>;
   /** The Memo for framing the associated Callout. */
   memo?: Maybe<Memo>;
   /** The Profile for framing the associated Callout. */
@@ -1093,6 +1105,7 @@ export type CalloutFraming = {
 
 export enum CalloutFramingType {
   Link = "LINK",
+  MediaGallery = "MEDIA_GALLERY",
   Memo = "MEMO",
   None = "NONE",
   Whiteboard = "WHITEBOARD",
@@ -2495,6 +2508,13 @@ export type DeleteUserInput = {
 
 export type DeleteVirtualContributorInput = {
   ID: Scalars["UUID"]["input"];
+};
+
+export type DeleteVisualFromMediaGalleryInput = {
+  /** The ID of the media gallery. */
+  mediaGalleryID: Scalars["String"]["input"];
+  /** The ID of the visual to delete. */
+  visualID: Scalars["String"]["input"];
 };
 
 export type DeleteWhiteboardInput = {
@@ -3982,6 +4002,22 @@ export type MeQueryResultsSpaceMembershipsHierarchicalArgs = {
   limit?: InputMaybe<Scalars["Float"]["input"]>;
 };
 
+export type MediaGallery = {
+  /** The authorization rules for the entity */
+  authorization?: Maybe<Authorization>;
+  createdBy?: Maybe<Scalars["String"]["output"]>;
+  /** The date at which the entity was created. */
+  createdDate: Scalars["DateTime"]["output"];
+  /** The ID of the entity */
+  id: Scalars["UUID"]["output"];
+  /** The storage bucket associated with this media gallery. */
+  storageBucket?: Maybe<StorageBucket>;
+  /** The date at which the entity was last updated. */
+  updatedDate: Scalars["DateTime"]["output"];
+  /** The visuals contained in this media gallery. */
+  visuals: Array<Visual>;
+};
+
 export type Memo = {
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
@@ -4070,6 +4106,8 @@ export enum MimeType {
   Doc = "DOC",
   Docx = "DOCX",
   Gif = "GIF",
+  Heic = "HEIC",
+  Heif = "HEIF",
   Jpeg = "JPEG",
   Jpg = "JPG",
   Odp = "ODP",
@@ -4134,6 +4172,8 @@ export type Mutation = {
   addNotificationEmailToBlacklist: Array<Scalars["String"]["output"]>;
   /** Add a reaction to a message from the specified Room. */
   addReactionToMessageInRoom: Reaction;
+  /** Adds a new visual to the specified media gallery. */
+  addVisualToMediaGallery: Visual;
   /** Populate authenticationID for existing users by querying Kratos Admin API */
   adminBackfillAuthenticationIDs: AdminAuthenticationIdBackfillResult;
   /** Ensure all community members are registered for communications. */
@@ -4308,6 +4348,8 @@ export type Mutation = {
   deleteUserGroup: UserGroup;
   /** Deletes the specified VirtualContributor. */
   deleteVirtualContributor: VirtualContributor;
+  /** Deletes a visual from the specified media gallery. */
+  deleteVisualFromMediaGallery: Visual;
   /** Deletes the specified Whiteboard. */
   deleteWhiteboard: Whiteboard;
   /** Trigger an event on the Application. */
@@ -4514,6 +4556,10 @@ export type MutationAddNotificationEmailToBlacklistArgs = {
 
 export type MutationAddReactionToMessageInRoomArgs = {
   reactionData: RoomAddReactionToMessageInput;
+};
+
+export type MutationAddVisualToMediaGalleryArgs = {
+  addData: AddVisualToMediaGalleryInput;
 };
 
 export type MutationAdminCommunicationEnsureAccessToCommunicationsArgs = {
@@ -4814,6 +4860,10 @@ export type MutationDeleteUserGroupArgs = {
 
 export type MutationDeleteVirtualContributorArgs = {
   deleteData: DeleteVirtualContributorInput;
+};
+
+export type MutationDeleteVisualFromMediaGalleryArgs = {
+  deleteData: DeleteVisualFromMediaGalleryInput;
 };
 
 export type MutationDeleteWhiteboardArgs = {
@@ -8823,6 +8873,7 @@ export type Visual = {
   /** Minimum width resolution. */
   minWidth: Scalars["Float"]["output"];
   name: VisualType;
+  sortOrder?: Maybe<Scalars["Float"]["output"]>;
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
   uri: Scalars["String"]["output"];
@@ -8848,6 +8899,8 @@ export enum VisualType {
   Banner = "BANNER",
   BannerWide = "BANNER_WIDE",
   Card = "CARD",
+  MediaGalleryImage = "MEDIA_GALLERY_IMAGE",
+  MediaGalleryVideo = "MEDIA_GALLERY_VIDEO",
   WhiteboardPreview = "WHITEBOARD_PREVIEW",
 }
 
@@ -9503,6 +9556,7 @@ export type ResolversTypes = {
     }
   >;
   ActivityLogInput: SchemaTypes.ActivityLogInput;
+  AddVisualToMediaGalleryInput: SchemaTypes.AddVisualToMediaGalleryInput;
   AdminAuthenticationIDBackfillResult: ResolverTypeWrapper<SchemaTypes.AdminAuthenticationIdBackfillResult>;
   Agent: ResolverTypeWrapper<SchemaTypes.Agent>;
   AgentType: SchemaTypes.AgentType;
@@ -9601,9 +9655,10 @@ export type ResolversTypes = {
   CalloutFraming: ResolverTypeWrapper<
     Omit<
       SchemaTypes.CalloutFraming,
-      "link" | "memo" | "profile" | "whiteboard"
+      "link" | "mediaGallery" | "memo" | "profile" | "whiteboard"
     > & {
       link?: SchemaTypes.Maybe<ResolversTypes["Link"]>;
+      mediaGallery?: SchemaTypes.Maybe<ResolversTypes["MediaGallery"]>;
       memo?: SchemaTypes.Maybe<ResolversTypes["Memo"]>;
       profile: ResolversTypes["Profile"];
       whiteboard?: SchemaTypes.Maybe<ResolversTypes["Whiteboard"]>;
@@ -9863,6 +9918,7 @@ export type ResolversTypes = {
   DeleteUserGroupInput: SchemaTypes.DeleteUserGroupInput;
   DeleteUserInput: SchemaTypes.DeleteUserInput;
   DeleteVirtualContributorInput: SchemaTypes.DeleteVirtualContributorInput;
+  DeleteVisualFromMediaGalleryInput: SchemaTypes.DeleteVisualFromMediaGalleryInput;
   DeleteWhiteboardInput: SchemaTypes.DeleteWhiteboardInput;
   Discussion: ResolverTypeWrapper<
     Omit<SchemaTypes.Discussion, "comments" | "profile"> & {
@@ -10285,6 +10341,11 @@ export type ResolversTypes = {
         ResolversTypes["CommunityMembershipResult"]
       >;
       user?: SchemaTypes.Maybe<ResolversTypes["User"]>;
+    }
+  >;
+  MediaGallery: ResolverTypeWrapper<
+    Omit<SchemaTypes.MediaGallery, "storageBucket"> & {
+      storageBucket?: SchemaTypes.Maybe<ResolversTypes["StorageBucket"]>;
     }
   >;
   Memo: ResolverTypeWrapper<
@@ -11204,6 +11265,7 @@ export type ResolversParentTypes = {
     updates: ResolversParentTypes["Room"];
   };
   ActivityLogInput: SchemaTypes.ActivityLogInput;
+  AddVisualToMediaGalleryInput: SchemaTypes.AddVisualToMediaGalleryInput;
   AdminAuthenticationIDBackfillResult: SchemaTypes.AdminAuthenticationIdBackfillResult;
   Agent: SchemaTypes.Agent;
   AiPersona: SchemaTypes.AiPersona;
@@ -11277,9 +11339,10 @@ export type ResolversParentTypes = {
   CalloutContributionsCountOutput: SchemaTypes.CalloutContributionsCountOutput;
   CalloutFraming: Omit<
     SchemaTypes.CalloutFraming,
-    "link" | "memo" | "profile" | "whiteboard"
+    "link" | "mediaGallery" | "memo" | "profile" | "whiteboard"
   > & {
     link?: SchemaTypes.Maybe<ResolversParentTypes["Link"]>;
+    mediaGallery?: SchemaTypes.Maybe<ResolversParentTypes["MediaGallery"]>;
     memo?: SchemaTypes.Maybe<ResolversParentTypes["Memo"]>;
     profile: ResolversParentTypes["Profile"];
     whiteboard?: SchemaTypes.Maybe<ResolversParentTypes["Whiteboard"]>;
@@ -11506,6 +11569,7 @@ export type ResolversParentTypes = {
   DeleteUserGroupInput: SchemaTypes.DeleteUserGroupInput;
   DeleteUserInput: SchemaTypes.DeleteUserInput;
   DeleteVirtualContributorInput: SchemaTypes.DeleteVirtualContributorInput;
+  DeleteVisualFromMediaGalleryInput: SchemaTypes.DeleteVisualFromMediaGalleryInput;
   DeleteWhiteboardInput: SchemaTypes.DeleteWhiteboardInput;
   Discussion: Omit<SchemaTypes.Discussion, "comments" | "profile"> & {
     comments: ResolversParentTypes["Room"];
@@ -11870,6 +11934,9 @@ export type ResolversParentTypes = {
       ResolversParentTypes["CommunityMembershipResult"]
     >;
     user?: SchemaTypes.Maybe<ResolversParentTypes["User"]>;
+  };
+  MediaGallery: Omit<SchemaTypes.MediaGallery, "storageBucket"> & {
+    storageBucket?: SchemaTypes.Maybe<ResolversParentTypes["StorageBucket"]>;
   };
   Memo: Omit<SchemaTypes.Memo, "createdBy" | "profile"> & {
     createdBy?: SchemaTypes.Maybe<ResolversParentTypes["User"]>;
@@ -13511,6 +13578,11 @@ export type CalloutFramingResolvers<
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   link?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Link"]>,
+    ParentType,
+    ContextType
+  >;
+  mediaGallery?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["MediaGallery"]>,
     ParentType,
     ContextType
   >;
@@ -16604,6 +16676,32 @@ export type MeQueryResultsResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type MediaGalleryResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["MediaGallery"] = ResolversParentTypes["MediaGallery"]
+> = {
+  authorization?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
+    ParentType,
+    ContextType
+  >;
+  createdBy?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
+  createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  storageBucket?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["StorageBucket"]>,
+    ParentType,
+    ContextType
+  >;
+  updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  visuals?: Resolver<Array<ResolversTypes["Visual"]>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type MemoResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["Memo"] = ResolversParentTypes["Memo"]
@@ -16817,6 +16915,12 @@ export type MutationResolvers<
       SchemaTypes.MutationAddReactionToMessageInRoomArgs,
       "reactionData"
     >
+  >;
+  addVisualToMediaGallery?: Resolver<
+    ResolversTypes["Visual"],
+    ParentType,
+    ContextType,
+    RequireFields<SchemaTypes.MutationAddVisualToMediaGalleryArgs, "addData">
   >;
   adminBackfillAuthenticationIDs?: Resolver<
     ResolversTypes["AdminAuthenticationIDBackfillResult"],
@@ -17433,6 +17537,15 @@ export type MutationResolvers<
     ContextType,
     RequireFields<
       SchemaTypes.MutationDeleteVirtualContributorArgs,
+      "deleteData"
+    >
+  >;
+  deleteVisualFromMediaGallery?: Resolver<
+    ResolversTypes["Visual"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationDeleteVisualFromMediaGalleryArgs,
       "deleteData"
     >
   >;
@@ -21740,6 +21853,11 @@ export type VisualResolvers<
   minHeight?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   minWidth?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   name?: Resolver<ResolversTypes["VisualType"], ParentType, ContextType>;
+  sortOrder?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Float"]>,
+    ParentType,
+    ContextType
+  >;
   updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   uri?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -22010,6 +22128,7 @@ export type Resolvers<ContextType = any> = {
   Markdown?: GraphQLScalarType;
   MeConversationsResult?: MeConversationsResultResolvers<ContextType>;
   MeQueryResults?: MeQueryResultsResolvers<ContextType>;
+  MediaGallery?: MediaGalleryResolvers<ContextType>;
   Memo?: MemoResolvers<ContextType>;
   Message?: MessageResolvers<ContextType>;
   MessageDetails?: MessageDetailsResolvers<ContextType>;
