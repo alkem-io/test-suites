@@ -62,14 +62,10 @@
   },
   "dependencies": {
     "@alkemio/client-lib": "^0.36.0",
+    "@alkemio/tests-lib": "workspace:*",
     "@ory/kratos-client": "^0.11.1",
-    "axios": "^1.7.9",
-    "cross-env": "^7.0.3",
-    "fs": "^0.0.1-security",
+    "axios": "1.13.5",
     "graphql": "^16.10.0",
-    "graphql-type-json": "^0.3.2",
-    "graphql-ws": "^5.8.2",
-    "winston": "^3.17.0",
     "ws": "^8.18.0"
   },
   "devDependencies": {
@@ -77,50 +73,26 @@
     "@graphql-codegen/add": "^5.0.3",
     "@graphql-codegen/cli": "^5.0.3",
     "@graphql-codegen/import-types-preset": "^3.0.0",
-    "@graphql-codegen/typed-document-node": "^5.0.12",
     "@graphql-codegen/typescript": "4.1.2",
     "@graphql-codegen/typescript-graphql-request": "^6.2.0",
     "@graphql-codegen/typescript-operations": "4.4.0",
     "@graphql-codegen/typescript-resolvers": "4.4.1",
-    "@types/cache-manager": "^4.0.6",
     "@types/jest": "^29.5.14",
-    "@types/js-yaml": "^4.0.9",
-    "@types/module-alias": "^2.0.0",
     "@types/node": "^20.13.1",
-    "@types/supertest": "^6.0.2",
-    "@typescript-eslint/eslint-plugin": "8.18.1",
-    "@typescript-eslint/parser": "8.18.1",
-    "coveralls": "^3.1.0",
-    "dotenv": "^16.0.0",
+    "cross-env": "^7.0.3",
     "eslint": "^8.57.0",
     "globals": "^15.14.0",
     "graphql-request": "6.0.0",
-    "husky": "^9.1.7",
-    "jest-extended": "^6.0.0",
     "jest-html-reporters": "^3.1.7",
-    "lint-staged": "^15.4.2",
     "prettier": "^3.4.2",
     "rimraf": "^6.0.1",
-    "supertest": "^7.0.0",
     "ts-jest": "^29.2.5",
     "tsconfig-paths": "^4.2.0",
     "tsx": "^4.19.4",
     "typescript": "~5.7.3",
     "typescript-eslint": "^8.21.0"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "lint-staged": {
-    "*.ts": "eslint --fix"
-  },
   "engines": {
-    "node": ">=17.9.1",
-    "npm": ">=10"
-  },
-  "volta": {
-    "node": "17.9.1"
+    "node": ">=20.9.0"
   }
 }

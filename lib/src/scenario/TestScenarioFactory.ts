@@ -617,13 +617,39 @@ export class TestScenarioFactory {
     if (spaceConfig.settings) {
       if (spaceConfig.settings.privacy) {
         await updateSpaceSettings(spaceModel.id, {
-          privacy: { mode: spaceConfig.settings.privacy.mode },
+          privacy: {
+            mode: spaceConfig.settings.privacy.mode,
+            allowPlatformSupportAsAdmin:
+              spaceConfig.settings.privacy.allowPlatformSupportAsAdmin,
+          },
         });
       }
       if (spaceConfig.settings.membership) {
         await updateSpaceSettings(spaceModel.id, {
           membership: {
             policy: spaceConfig.settings.membership.policy,
+            allowSubspaceAdminsToInviteMembers:
+              spaceConfig.settings.membership.allowSubspaceAdminsToInviteMembers,
+            trustedOrganizations:
+              spaceConfig.settings.membership.trustedOrganizations,
+          },
+        });
+      }
+      if (spaceConfig.settings.collaboration) {
+        await updateSpaceSettings(spaceModel.id, {
+          collaboration: {
+            allowMembersToCreateCallouts:
+              spaceConfig.settings.collaboration.allowMembersToCreateCallouts,
+            allowMembersToCreateSubspaces:
+              spaceConfig.settings.collaboration.allowMembersToCreateSubspaces,
+            inheritMembershipRights:
+              spaceConfig.settings.collaboration.inheritMembershipRights,
+            allowEventsFromSubspaces:
+              spaceConfig.settings.collaboration.allowEventsFromSubspaces,
+            allowMembersToVideoCall:
+              spaceConfig.settings.collaboration.allowMembersToVideoCall,
+            allowGuestContributions:
+              spaceConfig.settings.collaboration.allowGuestContributions,
           },
         });
       }
@@ -753,6 +779,11 @@ export class TestScenarioFactory {
       const adminUser = TestUserManager.users.globalAdmin;
       if (adminUser && adminUser.accountId) {
         await assignLicensePlanToAccount(adminUser.accountId, licensePlanId);
+      }
+
+      const spaceAdmin = TestUserManager.users.spaceAdmin;
+      if (spaceAdmin && spaceAdmin.accountId) {
+        await assignLicensePlanToAccount(spaceAdmin.accountId, licensePlanId);
       }
     }
 

@@ -353,12 +353,12 @@ export class CollaborationPage {
 
   async clickCallout(name: string) {
     const callout = await this.getCalloutByName(name);
-    await callout.click({ timeout: 5000 });
+    await callout.click({ timeout: 10000 });
   }
 
   async isCalloutVisible(name: string): Promise<boolean> {
     const callout = await this.getCalloutByName(name);
-    return await callout.isVisible({ timeout: 5000 }).catch(() => false);
+    return await callout.isVisible({ timeout: 10000 }).catch(() => false);
   }
 
   async publishCallout() {

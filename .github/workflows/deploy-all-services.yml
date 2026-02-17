@@ -1,0 +1,256 @@
+name: Deploy All Services to Test Environment
+
+on:
+  workflow_call:
+    inputs:
+      server_branch:
+        required: false
+        type: string
+        default: develop
+      client_web_branch:
+        required: false
+        type: string
+        default: develop
+      notifications_branch:
+        required: false
+        type: string
+        default: develop
+      whiteboard_branch:
+        required: false
+        type: string
+        default: develop
+      matrix_adapter_go_branch:
+        required: false
+        type: string
+        default: develop
+      oidc_branch:
+        required: false
+        type: string
+        default: develop
+      file_service_branch:
+        required: false
+        type: string
+        default: develop
+      vc_ingest_branch:
+        required: false
+        type: string
+        default: develop
+      vc_engine_generic_branch:
+        required: false
+        type: string
+        default: develop
+      vc_engine_expert_branch:
+        required: false
+        type: string
+        default: develop
+      vc_engine_openai_branch:
+        required: false
+        type: string
+        default: develop
+      documentations_branch:
+        required: false
+        type: string
+        default: develop
+      vc_engine_guidance_branch:
+        required: false
+        type: string
+        default: develop
+      vc_engine_libra_flow_branch:
+        required: false
+        type: string
+        default: develop
+      collaborative_document_service_branch:
+        required: false
+        type: string
+        default: develop
+  workflow_dispatch:
+    inputs:
+      server_branch:
+        description: "Branch for server"
+        required: false
+        type: string
+        default: develop
+      client_web_branch:
+        description: "Branch for client-web"
+        required: false
+        type: string
+        default: develop
+      notifications_branch:
+        description: "Branch for notifications"
+        required: false
+        type: string
+        default: develop
+      whiteboard_branch:
+        description: "Branch for whiteboard-collaboration-service"
+        required: false
+        type: string
+        default: develop
+      matrix_adapter_go_branch:
+        description: "Branch for matrix-adapter-go"
+        required: false
+        type: string
+        default: develop
+      oidc_branch:
+        description: "Branch for oidc"
+        required: false
+        type: string
+        default: develop
+      file_service_branch:
+        description: "Branch for file-service"
+        required: false
+        type: string
+        default: develop
+      vc_ingest_branch:
+        description: "Branch for virtual-contributor-ingest-space"
+        required: false
+        type: string
+        default: develop
+      vc_engine_generic_branch:
+        description: "Branch for virtual-contributor-engine-generic"
+        required: false
+        type: string
+        default: develop
+      vc_engine_expert_branch:
+        description: "Branch for virtual-contributor-engine-expert"
+        required: false
+        type: string
+        default: develop
+      vc_engine_openai_branch:
+        description: "Branch for virtual-contributor-engine-openai-assistant"
+        required: false
+        type: string
+        default: develop
+      documentations_branch:
+        description: "Branch for documentation"
+        required: false
+        type: string
+        default: develop
+      vc_engine_guidance_branch:
+        description: "Branch for virtual-contributor-engine-guidance"
+        required: false
+        type: string
+        default: develop
+      vc_engine_libra_flow_branch:
+        description: "Branch for virtual-contributor-engine-libra-flow"
+        required: false
+        type: string
+        default: develop
+      collaborative_document_service_branch:
+        description: "Branch for collaborative-document-service"
+        required: false
+        type: string
+        default: develop
+
+jobs:
+  trigger-deployments:
+    runs-on: ubuntu-latest
+    outputs:
+      run_repo_map: ${{ steps.trigger-workflow.outputs.run_repo_map }}
+    steps:
+      - name: Trigger workflows in target repositories
+        id: trigger-workflow
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_GITHUB_WORKFLOWS }}
+        run: |
+          declare -A repo_branches=(
+            ["server"]="${{ inputs.server_branch }}"
+            ["client-web"]="${{ inputs.client_web_branch }}"
+            ["notifications"]="${{ inputs.notifications_branch }}"
+            ["whiteboard-collaboration-service"]="${{ inputs.whiteboard_branch }}"
+            ["matrix-adapter-go"]="${{ inputs.matrix_adapter_go_branch }}"
+            ["oidc-service"]="${{ inputs.oidc_branch }}"
+            ["file-service"]="${{ inputs.file_service_branch }}"
+            ["virtual-contributor-ingest-space"]="${{ inputs.vc_ingest_branch }}"
+            ["virtual-contributor-engine-generic"]="${{ inputs.vc_engine_generic_branch }}"
+            ["virtual-contributor-engine-expert"]="${{ inputs.vc_engine_expert_branch }}"
+            ["virtual-contributor-engine-openai-assistant"]="${{ inputs.vc_engine_openai_branch }}"
+            ["documentation"]="${{ inputs.documentations_branch }}"
+            ["virtual-contributor-engine-guidance"]="${{ inputs.vc_engine_guidance_branch }}"
+            ["virtual-contributor-engine-libra-flow"]="${{ inputs.vc_engine_libra_flow_branch }}"
+            ["collaborative-document-service"]="${{ inputs.collaborative_document_service_branch }}"
+          )
+
+          run_repo_map=()
+
+          for repo in "${!repo_branches[@]}"; do
+            branch="${repo_branches[$repo]}"
+            echo "Triggering workflow in repository: $repo (branch: $branch)"
+
+            response=$(curl -X POST \
+              -H "Accept: application/vnd.github.v3+json" \
+              -H "Authorization: token $GITHUB_TOKEN" \
+              https://api.github.com/repos/alkem-io/$repo/actions/workflows/build-deploy-k8s-test-hetzner.yml/dispatches \
+              -d "{\"ref\":\"$branch\"}" \
+              -w "%{http_code}" -o response.json)
+
+            if [ "$response" != "204" ]; then
+              echo "Failed to trigger workflow in $repo"; cat response.json; exit 1;
+            fi
+
+            sleep 5
+
+            run_id=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+              "https://api.github.com/repos/alkem-io/$repo/actions/runs?branch=$branch&event=workflow_dispatch&per_page=1" | jq -r '.workflow_runs[0].id')
+
+            if [ -z "$run_id" ] || [ "$run_id" == "null" ]; then
+              echo "Failed to retrieve run_id for $repo"
+              exit 1
+            fi
+
+            run_repo_map+=("$repo=$run_id")
+          done
+
+          echo "run_repo_map=${run_repo_map[*]}" >> $GITHUB_OUTPUT
+
+  wait-for-deployments:
+    needs: trigger-deployments
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.PAT_GITHUB_WORKFLOWS }}
+      RUN_REPO_MAP: ${{ needs.trigger-deployments.outputs.run_repo_map }}
+    steps:
+      - name: Wait for all deployments to complete
+        run: |
+          run_repo_map=($RUN_REPO_MAP)
+          timeout_seconds=900
+
+          for pair in "${run_repo_map[@]}"; do
+            repo="${pair%%=*}"
+            run_id="${pair##*=}"
+            start_time=$(date +%s)
+
+            echo "Waiting for deployment: $repo (run_id: $run_id)"
+
+            while :; do
+              current_time=$(date +%s)
+              elapsed=$(( current_time - start_time ))
+
+              if (( elapsed > timeout_seconds )); then
+                echo "Timeout exceeded: Workflow $run_id in $repo took longer than 15 minutes."
+                exit 1
+              fi
+
+              status=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+                "https://api.github.com/repos/alkem-io/$repo/actions/runs/$run_id" | jq -r '.status')
+
+              conclusion=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+                "https://api.github.com/repos/alkem-io/$repo/actions/runs/$run_id" | jq -r '.conclusion')
+
+              echo "  Status: $status, Conclusion: $conclusion"
+
+              if [[ "$status" == "completed" ]]; then
+                if [[ "$conclusion" == "success" ]]; then
+                  echo "✓ $repo deployed successfully"
+                  break
+                else
+                  echo "✗ $repo failed with conclusion: $conclusion"
+                  exit 1
+                fi
+              fi
+
+              sleep 10
+            done
+          done
+
+          echo ""
+          echo "All services deployed successfully!"

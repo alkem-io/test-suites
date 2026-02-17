@@ -15,6 +15,7 @@ import {
 } from '@alkemio/tests-lib';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import { verifyMyDashboardWelcomeElement } from '../my-dashboard/my-dashboard-page-objects';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
@@ -59,10 +60,12 @@ test.describe('Support Navigation Flow', () => {
     ).toBeVisible();
 
     // 3. Click "Explore Documentation" button
-    await page.getByRole('link', { name: 'Explore Documentation' }).click();
+    await page
+      .getByRole('link', { name: 'Explore Documentation' })
+      .click({ timeout: 700 });
 
     // Wait for the new tab to open and switch to it
-    const newPage = await page.context().waitForEvent('page');
+    const newPage = await page.context().waitForEvent('page', { timeout: 700 });
     await newPage.waitForURL(/.*docs.*/);
 
     // 4. Verify documentation page loads at /docs with "Documentation" heading
@@ -77,7 +80,7 @@ test.describe('Support Navigation Flow', () => {
       .click();
 
     // 6. Verify page navigates to /docs/how-to/inviting
-    await expect(newPage).toHaveURL(/.*docs\/how-to\/inviting.*/);
+    await expect(newPage).toHaveURL(`${baseUrl}/docs/en-US/how-to/inviting`);
 
     // [BUG] no embeded arcade iframe in the docs on test env
     // 7. Inside the embedded invite tutorial iframe, click "Get started"
@@ -89,9 +92,7 @@ test.describe('Support Navigation Flow', () => {
     await page.bringToFront();
     await page.goto(`${baseUrl}/home`);
 
-    // 9. Verify return to dashboard with welcome message
-    await expect(page.getByRole('heading', { level: 1 })).toContainText(
-      'Welcome'
-    );
+    // 9. Verify return to dashboard
+    await verifyMyDashboardWelcomeElement(page);
   });
 });

@@ -43,7 +43,7 @@ restoreDatabase() {
   cd $SNAPSHOT_SERVER_DIR
 
 # Run migrations
-npm run migration:run
+pnpm run migration:run
 
   echo migration finished
 whoami
@@ -55,7 +55,7 @@ cd $PROJECT_ROOT_DIR
 # Run tests
 for testFile in ./test/functional-api/integration/organization/organization.it-spec.ts*
 do
-  npm run-script test:integration $testFile
+  pnpm run test:integration $testFile
 done
 
 cd $SCRIPT_DIR

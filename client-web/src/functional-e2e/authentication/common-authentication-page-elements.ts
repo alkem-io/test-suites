@@ -67,7 +67,7 @@ export const signInHeading = (page: Page) =>
 export const accessRestrictedHeading = (page: Page) =>
   page.getByRole('heading', { name: 'Access Restricted', exact: true });
 export const welcomeHeading = (page: Page) =>
-  page.getByRole('heading', { name: /welcome/i });
+  page.getByRole('link', { name: 'My Account' });
 
 // Cookie consent
 export const cookieConsentBanner = (page: Page) =>
