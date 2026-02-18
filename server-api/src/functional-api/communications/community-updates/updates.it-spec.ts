@@ -1,5 +1,5 @@
 import {
-  getSpaceData,
+  getSpaceCommunication,
   updateSpaceSettings,
 } from '@functional-api/journey/space/space.request.params';
 import {
@@ -79,7 +79,7 @@ describe('Communities', () => {
     });
     test('community updates - PRIVATE space - read access - sender / reader (member) / reader (not member)', async () => {
       // Act
-      const spaceDataSender = await getSpaceData(
+      const spaceDataSender = await getSpaceCommunication(
         baseScenario.space.id,
         TestUser.GLOBAL_ADMIN
       );
@@ -87,7 +87,7 @@ describe('Communities', () => {
         spaceDataSender?.data?.lookup?.space?.community?.communication?.updates
           .messages ?? [];
 
-      const spaceDataReaderMember = await getSpaceData(
+      const spaceDataReaderMember = await getSpaceCommunication(
         baseScenario.space.id,
         TestUser.SPACE_MEMBER
       );
@@ -96,7 +96,8 @@ describe('Communities', () => {
         spaceDataReaderMember?.data?.lookup?.space?.community?.communication
           ?.updates.messages ?? [];
       await delay(100);
-      const nonSpaceDataReader = await getSpaceData(
+
+      const nonSpaceDataReader = await getSpaceCommunication(
         baseScenario.space.id,
         TestUser.NON_SPACE_MEMBER
       );
@@ -121,9 +122,13 @@ describe('Communities', () => {
       );
 
       await delay(600);
-      expect(nonSpaceDataReader.error?.errors[0].message).toContain(
+      // expect the non space member to not have access to the community
+      const error = nonSpaceDataReader.error?.errors[0];
+      expect((error?.path as string[]).join('.')).toEqual('lookup.space.community');
+      expect(error?.message).toContain(
         "Authorization: unable to grant 'read' privilege: authorize data loader result user"
       );
+      expect(nonSpaceDataReader.data).toBeUndefined();
     });
 
     test('community updates - NOT PRIVATE space - read access - sender / reader (member) / reader (not member)', async () => {
@@ -132,7 +137,7 @@ describe('Communities', () => {
       });
 
       // Act
-      const spaceDataSender = await getSpaceData(
+      const spaceDataSender = await getSpaceCommunication(
         baseScenario.space.id,
         TestUser.GLOBAL_ADMIN
       );
@@ -140,7 +145,7 @@ describe('Communities', () => {
         spaceDataSender?.data?.lookup?.space?.community?.communication?.updates
           .messages ?? [];
 
-      const spaceDataReaderMember = await getSpaceData(
+      const spaceDataReaderMember = await getSpaceCommunication(
         baseScenario.space.id,
         TestUser.SPACE_MEMBER
       );
@@ -148,7 +153,7 @@ describe('Communities', () => {
         spaceDataReaderMember?.data?.lookup?.space?.community?.communication
           ?.updates.messages ?? [];
 
-      const spaceDataReaderNotMemberIn = await getSpaceData(
+      const spaceDataReaderNotMemberIn = await getSpaceCommunication(
         baseScenario.space.id,
         TestUser.NON_SPACE_MEMBER
       );
@@ -194,7 +199,7 @@ describe('Communities', () => {
       baseScenario.space.communication.messageId =
         res?.data?.sendMessageToRoom.id;
 
-      const spaceDataSender = await getSpaceData(baseScenario.space.id);
+      const spaceDataSender = await getSpaceCommunication(baseScenario.space.id);
       const retrievedMessage =
         spaceDataSender?.data?.lookup?.space?.community?.communication?.updates
           .messages ?? [];
@@ -231,7 +236,7 @@ describe('Communities', () => {
 
       await delay(600);
 
-      const spaceDataSender = await getSpaceData(baseScenario.space.id);
+      const spaceDataSender = await getSpaceCommunication(baseScenario.space.id);
       const retrievedMessage =
         spaceDataSender?.data?.lookup?.space?.community?.communication?.updates
           .messages;

@@ -96,6 +96,24 @@ export const getSpaceData = async (
   return graphqlErrorWrapper(callback, role);
 };
 
+export const getSpaceCommunication = async (
+  spaceId = spaceNameId,
+  role = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.GetSpaceCommunication(
+      {
+        spaceId,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, role);
+};
+
 export const getSpacesData = async (role = TestUser.GLOBAL_ADMIN) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>

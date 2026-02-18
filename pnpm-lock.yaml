@@ -29,9 +29,6 @@ importers:
       axios:
         specifier: 1.13.5
         version: 1.13.5
-      cross-env:
-        specifier: ^7.0.3
-        version: 7.0.3
       graphql:
         specifier: ^16.6.0
         version: 16.12.0
@@ -75,6 +72,9 @@ importers:
       '@typescript-eslint/parser':
         specifier: 8.18.1
         version: 8.18.1(eslint@9.39.2(jiti@2.6.1))(typescript@5.7.3)
+      cross-env:
+        specifier: ^7.0.3
+        version: 7.0.3
       dotenv:
         specifier: ^16.0.0
         version: 16.6.1
@@ -211,9 +211,6 @@ importers:
       axios:
         specifier: 1.13.5
         version: 1.13.5
-      cross-env:
-        specifier: ^7.0.3
-        version: 7.0.3
       graphql:
         specifier: ^16.10.0
         version: 16.12.0
@@ -251,6 +248,9 @@ importers:
       '@types/node':
         specifier: ^20.13.1
         version: 20.19.33
+      cross-env:
+        specifier: ^7.0.3
+        version: 7.0.3
       eslint:
         specifier: ^8.57.0
         version: 8.57.1
