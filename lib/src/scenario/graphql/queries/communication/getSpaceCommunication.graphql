@@ -1,0 +1,20 @@
+query GetSpaceCommunication($spaceId: UUID!) {
+  lookup {
+    space(ID: $spaceId) {
+      id
+      community {
+        communication {
+          updates {
+            messages {
+              id
+              message
+              sender {
+                id
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -88955,6 +88955,35 @@ export type GetPlatformForumDataQuery = {
   };
 };
 
+export type GetSpaceCommunicationQueryVariables = Exact<{
+  spaceId: Scalars["UUID"]["input"];
+}>;
+
+export type GetSpaceCommunicationQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          community: {
+            communication: {
+              updates: {
+                messages: Array<{
+                  id: any;
+                  message: any;
+                  sender?:
+                    | { id: string }
+                    | { id: string }
+                    | { id: string }
+                    | undefined;
+                }>;
+              };
+            };
+          };
+        }
+      | undefined;
+  };
+};
+
 export type GetSpaceAvailableMembersQueryVariables = Exact<{
   spaceId: Scalars["UUID"]["input"];
 }>;

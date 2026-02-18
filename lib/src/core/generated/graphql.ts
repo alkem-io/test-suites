@@ -97292,6 +97292,35 @@ export type GetPlatformForumDataQuery = {
   };
 };
 
+export type GetSpaceCommunicationQueryVariables = SchemaTypes.Exact<{
+  spaceId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type GetSpaceCommunicationQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          community: {
+            communication: {
+              updates: {
+                messages: Array<{
+                  id: any;
+                  message: any;
+                  sender?:
+                    | { id: string }
+                    | { id: string }
+                    | { id: string }
+                    | undefined;
+                }>;
+              };
+            };
+          };
+        }
+      | undefined;
+  };
+};
+
 export type GetSpaceAvailableMembersQueryVariables = SchemaTypes.Exact<{
   spaceId: SchemaTypes.Scalars["UUID"]["input"];
 }>;
@@ -134459,6 +134488,28 @@ export const GetPlatformForumDataDocument = gql`
     }
   }
 `;
+export const GetSpaceCommunicationDocument = gql`
+  query GetSpaceCommunication($spaceId: UUID!) {
+    lookup {
+      space(ID: $spaceId) {
+        id
+        community {
+          communication {
+            updates {
+              messages {
+                id
+                message
+                sender {
+                  id
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
 export const GetSpaceAvailableMembersDocument = gql`
   query GetSpaceAvailableMembers($spaceId: UUID!) {
     lookup {
@@ -135830,6 +135881,9 @@ const GetPlatformDiscussionsDataByIdDocumentString = print(
   GetPlatformDiscussionsDataByIdDocument
 );
 const GetPlatformForumDataDocumentString = print(GetPlatformForumDataDocument);
+const GetSpaceCommunicationDocumentString = print(
+  GetSpaceCommunicationDocument
+);
 const GetSpaceAvailableMembersDocumentString = print(
   GetSpaceAvailableMembersDocument
 );
@@ -138335,6 +138389,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetPlatformForumData",
+        "query",
+        variables
+      );
+    },
+    GetSpaceCommunication(
+      variables: SchemaTypes.GetSpaceCommunicationQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.GetSpaceCommunicationQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.GetSpaceCommunicationQuery>(
+            GetSpaceCommunicationDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "GetSpaceCommunication",
         "query",
         variables
       );
