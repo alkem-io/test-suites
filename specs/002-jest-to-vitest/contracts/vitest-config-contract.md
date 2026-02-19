@@ -25,9 +25,7 @@ export default defineConfig({
     testTimeout: 1_800_000, // 30 minutes
 
     // Setup chain
-    setupFiles: ['./src/setupTests.ts'],
-    // Note: Vitest uses setupFiles for both pre-framework and post-framework.
-    // The vitest.setup.ts will be loaded via setupFiles as well.
+    setupFiles: ['./src/setupTests.ts', './src/vitest.setup.ts'],
     globalSetup: './src/globalTestsSetup.ts',
 
     // Reporting
@@ -74,8 +72,7 @@ Each domain project follows this structure:
 | `documents` | `src/functional-api/integration/documents/**/*.it-spec.ts` | jest.config.documents.mjs |
 | `entitlements` | `src/functional-api/entitlements/**/*.it-spec.ts` | jest.config.entitlements.mjs |
 | `innovation-hub` | `src/functional-api/innovation-hub/**/*.it-spec.ts` | jest.config.innovation-hub.mjs |
-| `innovation-pack` | `src/functional-api/innovation-pack/**/*.it-spec.ts` | jest.config.innovation-pack.mjs |
-| `innovationPacks` | `src/functional-api/innovation-pack/**/*.it-spec.ts` | jest.config.innovationPacks.mjs |
+| `innovation` | `src/functional-api/innovation-pack/**/*.it-spec.ts` | jest.config.innovationPacks.mjs (note: jest.config.innovation-pack.mjs was an unused orphan) |
 | `integration` | `src/functional-api/integration/**/*.it-spec.ts` | jest.config.integration.mjs |
 | `journey` | `src/functional-api/journey/**/*.it-spec.ts` | jest.config.journey.mjs |
 | `lifecycle` | `src/functional-api/templates/innovation-flow/**/*.it-spec.ts` | jest.config.lifecycle.mjs |
@@ -112,7 +109,7 @@ Each domain project follows this structure:
       'src/functional-api/journey/**/*.it-spec.ts',
       'src/functional-api/storage/**/*.it-spec.ts',
       'src/functional-api/entitlements/**/*.it-spec.ts',
-      'src/functional-api/template/**/*.it-spec.ts',
+      'src/functional-api/templates/**/*.it-spec.ts',
     ],
   },
 }
