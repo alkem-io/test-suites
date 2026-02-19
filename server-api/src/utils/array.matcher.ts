@@ -1,13 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/prefer-namespace-keyword */
-/* eslint-disable @typescript-eslint/no-namespace */
-import { expect } from '@jest/globals';
+import { expect } from 'vitest';
 
-declare global {
-  namespace jest {
-    interface Matchers<R> {
-      toContainObject(argument: any): R;
-    }
+import 'vitest';
+declare module 'vitest' {
+  interface Matchers<T = any> {
+    toContainObject(argument: any): T;
   }
 }
 

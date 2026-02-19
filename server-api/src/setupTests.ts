@@ -1,7 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-require-imports */
+import WebSocket from 'ws';
 
 // define websocket as a global, because it will fail with ReferenceError: WebSocket is not defined
-(global as any).WebSocket = require('ws');
-
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(globalThis as any).WebSocket = WebSocket;
