@@ -23,9 +23,9 @@ All paths are relative to `server-api/` unless explicitly noted otherwise. The m
 
 **Purpose**: Install Vitest and remove Jest dependencies
 
-- [ ] T001 Add Vitest devDependencies to `server-api/package.json`: add `vitest` (latest), `vite-tsconfig-paths` (latest), `@vitest/ui` (latest). Use `pnpm add -D vitest vite-tsconfig-paths @vitest/ui --filter @alkemio/test-suite-server-api`
-- [ ] T002 Remove Jest devDependencies from `server-api/package.json`: remove `@types/jest`, `ts-jest`, `jest-html-reporters`, `tsconfig-paths`. Use `pnpm remove @types/jest ts-jest jest-html-reporters tsconfig-paths --filter @alkemio/test-suite-server-api`
-- [ ] T003 Run `pnpm install` from repo root to update the lockfile and verify no resolution errors
+- [x] T001 Add Vitest devDependencies to `server-api/package.json`: add `vitest` (latest), `vite-tsconfig-paths` (latest), `@vitest/ui` (latest). Use `pnpm add -D vitest vite-tsconfig-paths @vitest/ui --filter @alkemio/test-suite-server-api`
+- [x] T002 Remove Jest devDependencies from `server-api/package.json`: remove `@types/jest`, `ts-jest`, `jest-html-reporters`, `tsconfig-paths`. Use `pnpm remove @types/jest ts-jest jest-html-reporters tsconfig-paths --filter @alkemio/test-suite-server-api`
+- [x] T003 Run `pnpm install` from repo root to update the lockfile and verify no resolution errors
 
 ---
 
@@ -35,8 +35,8 @@ All paths are relative to `server-api/` unless explicitly noted otherwise. The m
 
 **CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Update `server-api/tsconfig.json`: change `"types": ["node", "jest"]` to `"types": ["node", "vitest/globals"]` on line 21. This enables TypeScript to recognize Vitest global types (`describe`, `it`, `expect`, `beforeAll`, etc.)
-- [ ] T005 Create `server-api/vitest.config.ts` with the complete Vitest configuration. Must include: `vite-tsconfig-paths` plugin, `environment: 'node'`, `globals: true`, `testTimeout: 1_800_000`, `globalSetup: './src/globalTestsSetup.ts'`, `setupFiles: ['./src/setupTests.ts', './src/vitest.setup.ts']`, `reporters: ['default', 'html']`, `outputFile: { html: './html-report/report.html' }`, `include: ['src/**/*.it-spec.ts']`, and the complete `projects` array with all 30 named domain projects plus the nightly composite project. Refer to `specs/002-jest-to-vitest/contracts/vitest-config-contract.md` for the full project definitions table and nightly include patterns
+- [x] T004 Update `server-api/tsconfig.json`: change `"types": ["node", "jest"]` to `"types": ["node"]` and add `/// <reference types="vitest/globals" />` in `vitest-extend.d.ts` (custom typeRoots prevented direct types array resolution). This enables TypeScript to recognize Vitest global types (`describe`, `it`, `expect`, `beforeAll`, etc.)
+- [x] T005 Create `server-api/vitest.config.ts` with the complete Vitest configuration. Must include: `vite-tsconfig-paths` plugin, `environment: 'node'`, `globals: true`, `testTimeout: 1_800_000`, `globalSetup: './src/globalTestsSetup.ts'`, `setupFiles: ['./src/setupTests.ts', './src/vitest.setup.ts']`, `reporters: ['default', 'html']`, `outputFile: { html: './html-report/report.html' }`, `include: ['src/**/*.it-spec.ts']`, and the complete `projects` array with all 30 named domain projects plus the nightly composite project. Refer to `specs/002-jest-to-vitest/contracts/vitest-config-contract.md` for the full project definitions table and nightly include patterns
 
 **Checkpoint**: Vitest installed, configured, and TypeScript types aligned
 
@@ -52,11 +52,11 @@ All paths are relative to `server-api/` unless explicitly noted otherwise. The m
 
 ### Implementation for User Story 3
 
-- [ ] T006 [US3] Migrate `server-api/src/globalTestsSetup.ts`: Remove line 4 `require('tsconfig-paths/register')` (no longer needed — `vite-tsconfig-paths` handles alias resolution). Convert `module.exports = async () => {` (line 16) to `export default async function setup() {`. Keep all user registration logic (lines 17-41) completely unchanged. Remove the `require` eslint-disable comment on line 1. Refer to `specs/002-jest-to-vitest/contracts/setup-files-contract.md` for the exact before/after contract
-- [ ] T007 [P] [US3] Migrate `server-api/src/setupTests.ts`: Replace `(global as any).WebSocket = require('ws')` (line 5) with ESM import: add `import WebSocket from 'ws'` at the top, then `(globalThis as any).WebSocket = WebSocket`. Remove the eslint-disable comments for `@typescript-eslint/no-explicit-any` and `@typescript-eslint/no-require-imports` (lines 1-2) since they're no longer needed
-- [ ] T008 [P] [US3] Rename `server-api/src/jest.setup.ts` to `server-api/src/vitest.setup.ts`. The file contents remain unchanged — `expect.getState().testPath` works in Vitest v3+ `beforeAll` hooks (confirmed in research.md section 2). The `vitest.config.ts` already references `./src/vitest.setup.ts` in `setupFiles`
-- [ ] T009 [P] [US3] Migrate `server-api/src/utils/array.matcher.ts`: Replace `import { expect } from '@jest/globals'` (line 4) with `import { expect } from 'vitest'`. Replace the Jest namespace declaration (lines 6-12) with Vitest module augmentation: change `declare global { namespace jest { interface Matchers<R> { toContainObject(argument: any): R; } } }` to `import 'vitest'; declare module 'vitest' { interface Matchers<T = any> { toContainObject(argument: any): T; } }`. The `expect.extend()` implementation (lines 14-39) and utility functions `sortArraysInObject` and `expectEqualIgnoringArrayOrder` (lines 46-85) remain completely unchanged
-- [ ] T010 [P] [US3] Rename `server-api/src/types/jest-extend.d.ts` to `server-api/src/types/vitest-extend.d.ts` and update contents: Replace `declare global { namespace jest { interface Matchers<R> { toContainObject(argument: any): R; } } }` with `import 'vitest'; declare module 'vitest' { interface Matchers<T = any> { toContainObject(argument: any): T; } }`. Keep the `export {}` at the end
+- [x] T006 [US3] Migrate `server-api/src/globalTestsSetup.ts`: Remove line 4 `require('tsconfig-paths/register')` (no longer needed — `vite-tsconfig-paths` handles alias resolution). Convert `module.exports = async () => {` (line 16) to `export default async function setup() {`. Keep all user registration logic (lines 17-41) completely unchanged. Remove the `require` eslint-disable comment on line 1. Refer to `specs/002-jest-to-vitest/contracts/setup-files-contract.md` for the exact before/after contract
+- [x] T007 [P] [US3] Migrate `server-api/src/setupTests.ts`: Replace `(global as any).WebSocket = require('ws')` (line 5) with ESM import: add `import WebSocket from 'ws'` at the top, then `(globalThis as any).WebSocket = WebSocket`. Remove the eslint-disable comments for `@typescript-eslint/no-explicit-any` and `@typescript-eslint/no-require-imports` (lines 1-2) since they're no longer needed
+- [x] T008 [P] [US3] Rename `server-api/src/jest.setup.ts` to `server-api/src/vitest.setup.ts`. The file contents remain unchanged — `expect.getState().testPath` works in Vitest v3+ `beforeAll` hooks (confirmed in research.md section 2). The `vitest.config.ts` already references `./src/vitest.setup.ts` in `setupFiles`
+- [x] T009 [P] [US3] Migrate `server-api/src/utils/array.matcher.ts`: Replace `import { expect } from '@jest/globals'` (line 4) with `import { expect } from 'vitest'`. Replace the Jest namespace declaration (lines 6-12) with Vitest module augmentation: change `declare global { namespace jest { interface Matchers<R> { toContainObject(argument: any): R; } } }` to `import 'vitest'; declare module 'vitest' { interface Matchers<T = any> { toContainObject(argument: any): T; } }`. The `expect.extend()` implementation (lines 14-39) and utility functions `sortArraysInObject` and `expectEqualIgnoringArrayOrder` (lines 46-85) remain completely unchanged
+- [x] T010 [P] [US3] Rename `server-api/src/types/jest-extend.d.ts` to `server-api/src/types/vitest-extend.d.ts` and update contents: Replace `declare global { namespace jest { interface Matchers<R> { toContainObject(argument: any): R; } } }` with `import 'vitest'; declare module 'vitest' { interface Matchers<T = any> { toContainObject(argument: any): T; } }`. Keep the `export {}` at the end
 
 **Checkpoint**: All setup files use ESM syntax, custom matcher uses Vitest imports. Ready for test execution.
 
@@ -70,8 +70,8 @@ All paths are relative to `server-api/` unless explicitly noted otherwise. The m
 
 ### Implementation for User Story 1
 
-- [ ] T011 [US1] Update the base `test` script in `server-api/package.json`: change `"test": "jest"` to `"test": "vitest run"`. Also update `"test:watch": "jest --watch"` to `"test:watch": "vitest"` (Vitest runs in watch mode by default without `run`)
-- [ ] T012 [US1] Verify TypeScript compilation succeeds: run `cd server-api && pnpm exec tsc --noEmit`. Fix any type errors caused by the Jest→Vitest type migration. Common issues: missing `vitest/globals` types, stale `.tsbuildinfo` cache (delete `server-api/.tsbuildinfo` if needed)
+- [x] T011 [US1] Update the base `test` script in `server-api/package.json`: change `"test": "jest"` to `"test": "vitest run"`. Also update `"test:watch": "jest --watch"` to `"test:watch": "vitest"` (Vitest runs in watch mode by default without `run`)
+- [x] T012 [US1] Verify TypeScript compilation succeeds: run `cd server-api && pnpm exec tsc --noEmit`. Fix any type errors caused by the Jest→Vitest type migration. Common issues: missing `vitest/globals` types, stale `.tsbuildinfo` cache (delete `server-api/.tsbuildinfo` if needed)
 - [ ] T012a [US1] Run the full test suite to validate all tests pass: execute `cd server-api && pnpm exec vitest run` and confirm all 92 test files pass. Compare results against the pre-migration Jest baseline. This validates SC-001. If any tests fail, investigate setup file issues (Phase 3) or config issues (Phase 2) before proceeding
 
 **Checkpoint**: `vitest run` executes tests successfully. TypeScript compiles without errors. This is the MVP — all tests run under Vitest.
@@ -86,7 +86,7 @@ All paths are relative to `server-api/` unless explicitly noted otherwise. The m
 
 ### Implementation for User Story 2
 
-- [ ] T013 [US2] Rewrite all test scripts in `server-api/package.json` to use Vitest CLI. Apply these transformations for each script: replace `jest --config ./config/jest.config.<x>.mjs` with `vitest run --project <name>`, replace `--forceExit` with `--forceExit`, replace `--runInBand` with `--fileParallelism=false`, keep `--maxWorkers=N` as-is (Vitest supports the same flag). Update `test:debug` to `node --inspect-brk node_modules/vitest/vitest.mjs run --fileParallelism=false`. Refer to `specs/002-jest-to-vitest/contracts/vitest-config-contract.md` Flag Mapping table for the complete mapping. The full script list (30+ entries) is in `server-api/package.json` lines 29-61
+- [x] T013 [US2] Rewrite all test scripts in `server-api/package.json` to use Vitest CLI. Apply these transformations for each script: replace `jest --config ./config/jest.config.<x>.mjs` with `vitest run --project <name>`, replace `--forceExit` with `--forceExit`, replace `--runInBand` with `--fileParallelism=false`, keep `--maxWorkers=N` as-is (Vitest supports the same flag). Update `test:debug` to `node --inspect-brk node_modules/vitest/vitest.mjs run --fileParallelism=false`. Refer to `specs/002-jest-to-vitest/contracts/vitest-config-contract.md` Flag Mapping table for the complete mapping. The full script list (30+ entries) is in `server-api/package.json` lines 29-61
 - [ ] T014 [US2] Verify domain script invocations by spot-checking: run `pnpm --filter @alkemio/test-suite-server-api run test:account` and confirm only account tests are selected. Run `pnpm --filter @alkemio/test-suite-server-api run test:nightly --dry-run` (or check Vitest output) and confirm it picks up the correct multi-domain file list
 - [ ] T014a [US2] Run the complete nightly suite to validate SC-003: execute `pnpm --filter @alkemio/test-suite-server-api run test:nightly` and confirm all domain tests execute with a single worker and results match the pre-migration Jest nightly baseline
 
@@ -116,8 +116,8 @@ All paths are relative to `server-api/` unless explicitly noted otherwise. The m
 
 ### Implementation for User Story 4
 
-- [ ] T016 [US4] Verify lib/ builds with no changes: run `pnpm --filter @alkemio/tests-lib run build` from repo root and confirm success. This validates that the `@alkemio/tests-lib` workspace dependency still resolves correctly after Jest removal
-- [ ] T017 [US4] Verify scope isolation: run `git diff --name-only` and confirm that no files under `lib/` or `client-web/` appear in the output. Only `server-api/` files should be modified
+- [x] T016 [US4] Verify lib/ builds with no changes: run `pnpm --filter @alkemio/tests-lib run build` from repo root and confirm success. This validates that the `@alkemio/tests-lib` workspace dependency still resolves correctly after Jest removal
+- [x] T017 [US4] Verify scope isolation: run `git diff --name-only` and confirm that no files under `lib/` or `client-web/` appear in the output. Only `server-api/` files should be modified
 
 **Checkpoint**: Migration is fully isolated to server-api/. Other packages are unaffected.
 
@@ -127,9 +127,9 @@ All paths are relative to `server-api/` unless explicitly noted otherwise. The m
 
 **Purpose**: Remove legacy Jest artifacts and clean up
 
-- [ ] T018 Delete all 31 Jest configuration files from `server-api/config/`: remove `jest.config.mjs`, `jest.config.account.mjs`, `jest.config.activity-logs.mjs`, `jest.config.callouts.mjs`, `jest.config.communication.mjs`, `jest.config.configuration.mjs`, `jest.config.contributor-management.mjs`, `jest.config.documents.mjs`, `jest.config.entitlements.mjs`, `jest.config.innovation-hub.mjs`, `jest.config.innovation-pack.mjs`, `jest.config.innovationPacks.mjs`, `jest.config.integration.mjs`, `jest.config.journey.mjs`, `jest.config.lifecycle.mjs`, `jest.config.lookup.mjs`, `jest.config.nightly.mjs`, `jest.config.notifications.mjs`, `jest.config.notifications-callouts.mjs`, `jest.config.notifications-community.mjs`, `jest.config.notifications-messaging.mjs`, `jest.config.organization.mjs`, `jest.config.pagination.mjs`, `jest.config.platform.mjs`, `jest.config.preferences.jms`, `jest.config.roleset.mjs`, `jest.config.roleset-parallel.mjs`, `jest.config.search.mjs`, `jest.config.storage.mjs`, `jest.config.subscriptions.mjs`, `jest.config.templates.mjs`. Use: `rm server-api/config/jest.config.*`
-- [ ] T019 Clean up ESLint config in `server-api/eslint.config.js`: remove the commented-out Jest rules on lines 12-13 (`// 'jest/no-focused-tests': 'warn'` and `// 'jest/no-identical-title': 'error'`)
-- [ ] T020 Final cleanup: run `pnpm install` from repo root to ensure lockfile is clean. Verify there are no remaining references to `jest` in `server-api/` source files by searching for `@jest/globals`, `ts-jest`, `jest-html-reporters` across `server-api/src/` and `server-api/package.json`
+- [x] T018 Delete all 31 Jest configuration files from `server-api/config/`: remove `jest.config.mjs`, `jest.config.account.mjs`, `jest.config.activity-logs.mjs`, `jest.config.callouts.mjs`, `jest.config.communication.mjs`, `jest.config.configuration.mjs`, `jest.config.contributor-management.mjs`, `jest.config.documents.mjs`, `jest.config.entitlements.mjs`, `jest.config.innovation-hub.mjs`, `jest.config.innovation-pack.mjs`, `jest.config.innovationPacks.mjs`, `jest.config.integration.mjs`, `jest.config.journey.mjs`, `jest.config.lifecycle.mjs`, `jest.config.lookup.mjs`, `jest.config.nightly.mjs`, `jest.config.notifications.mjs`, `jest.config.notifications-callouts.mjs`, `jest.config.notifications-community.mjs`, `jest.config.notifications-messaging.mjs`, `jest.config.organization.mjs`, `jest.config.pagination.mjs`, `jest.config.platform.mjs`, `jest.config.preferences.jms`, `jest.config.roleset.mjs`, `jest.config.roleset-parallel.mjs`, `jest.config.search.mjs`, `jest.config.storage.mjs`, `jest.config.subscriptions.mjs`, `jest.config.templates.mjs`. Use: `rm server-api/config/jest.config.*`
+- [x] T019 Clean up ESLint config in `server-api/eslint.config.js`: remove the commented-out Jest rules on lines 12-13 (`// 'jest/no-focused-tests': 'warn'` and `// 'jest/no-identical-title': 'error'`)
+- [x] T020 Final cleanup: run `pnpm install` from repo root to ensure lockfile is clean. Verify there are no remaining references to `jest` in `server-api/` source files by searching for `@jest/globals`, `ts-jest`, `jest-html-reporters` across `server-api/src/` and `server-api/package.json`
 
 ---
 
