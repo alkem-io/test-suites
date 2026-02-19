@@ -142,3 +142,9 @@ Nine test personas with varying roles (see `agents.md`): Host, Facilitator, Comm
 ## Specification-Driven Development (SDD)
 
 This repo follows SDD via the `.specify/` framework. New features must start with specification artifacts under `specs/NNN-feature-slug/` following the canonical workflow: constitution → specify → clarify → plan → checklist → tasks → analyze → implement. See `.specify/memory/constitution.md` for governance principles and quality gates.
+
+## Active Technologies
+- TypeScript ~5.7.3, Node.js 20.9.0 (Volta) + Vitest (new), vite-tsconfig-paths (new), @vitest/ui (new) (002-jest-to-vitest)
+
+## Recent Changes
+- 002-jest-to-vitest: Added TypeScript ~5.7.3, Node.js 20.9.0 (Volta) + Vitest (new), vite-tsconfig-paths (new), @vitest/ui (new)
