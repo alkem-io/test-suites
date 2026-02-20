@@ -2,6 +2,7 @@
 
 **Purpose**: Validate that all migration touchpoints are fully, clearly, and consistently specified across spec, plan, contracts, and tasks — for use during PR review
 **Created**: 2026-02-19
+**Updated**: 2026-02-20 (reflects implementation status)
 **Feature**: [spec.md](../spec.md)
 **Audience**: Reviewer (PR review)
 **Depth**: Standard
@@ -83,6 +84,41 @@
   - **Resolution**: Task coverage verified: T001-T003 (FR-001 deps), T004-T005 (FR-002 config), T006 (FR-003/FR-004 setup), T007 (FR-005 WebSocket), T008 (FR-004 setup), T009-T010 (FR-016 matcher), T011 (FR-006 run command), T013 (FR-007 concurrency, FR-008 domain scripts), T015 (FR-010 HTML reports), T016 (FR-012 lib isolation), T017 (FR-011 scope). FR-009 (named projects) covered by T005. FR-013/FR-014/FR-015 (zero test changes, globals, setup chain) are structural requirements validated by T012a.
 - [x] CHK028 - Are all 7 success criteria (SC-001 through SC-007) mapped to validation steps? Plan §Phase 6 covers some but not all explicitly. [Traceability, Spec §Success Criteria vs Plan §Phase 6]
   - **Resolution**: SC-001 (all tests pass) → T012a. SC-002 (zero test file changes) → T017 (git diff). SC-003 (domain scripts) → T014/T014a. SC-004 (TypeScript compiles) → T012. SC-005 (HTML reports) → T015. SC-006 (lib builds) → T016. SC-007 (scope isolation) → T017.
+
+## Implementation Status (2026-02-20)
+
+### Completed Tasks (by Phase)
+
+| Phase | Tasks | Status |
+|---|---|---|
+| Phase 1: Setup (Dependencies) | T001, T002, T003 | Complete |
+| Phase 2: Foundational | T004, T005 | Complete |
+| Phase 3: US3 (Setup Files) | T006, T007, T008, T009, T010 | Complete |
+| Phase 4: US1 (Test Execution) | T011, T012 | Complete (T012a pending) |
+| Phase 5: US2 (Domain Scripts) | T013 | Complete (T014, T014a pending) |
+| Phase 6: US5 (HTML Reporting) | — | T015 pending |
+| Phase 7: US4 (Scope Isolation) | T016, T017 | Complete |
+| Phase 8: Polish & Cleanup | T018, T019, T020 | Complete |
+
+### Pending Validation Tasks
+
+- [ ] **T012a**: Run full test suite (`vitest run`) and verify all tests pass (SC-001)
+- [ ] **T014**: Spot-check 2-3 domain scripts (e.g., `test:account`, `test:search`)
+- [ ] **T014a**: Run complete nightly suite and validate results match Jest baseline (SC-003)
+- [ ] **T015**: Verify HTML report generation (SC-006)
+
+### Implementation Deviations
+
+The following deviations from the original spec were made — all improvements:
+
+| Original Spec | Actual Implementation | Rationale |
+|---|---|---|
+| `testTimeout: 1_800_000` | `testTimeout: 60_000` + `hookTimeout: 120_000` | Granular timeouts prevent 30-min hangs on single API calls |
+| `"types": ["node", "vitest/globals"]` | `"types": ["node"]` + `/// <reference>` in typeRoots | Custom `typeRoots` prevented direct `types` array approach |
+| `outputFile: './html-report/report.html'` | `outputFile: './html-report/report_${timestamp}.html'` | Preserves report history across runs |
+| 30 projects including `roleset-parallel` | 27 projects (orphan excluded) | CHK007: `roleset-parallel` was unused orphan |
+| No `project()` helper | `project()` with `globalSetup: []` | Prevents duplicate user registration per project |
+| No `test:nightly:ui` script | Added `test:nightly:ui` | Interactive UI for debugging nightly suite |
 
 ## Notes
 

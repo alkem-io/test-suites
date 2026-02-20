@@ -1,6 +1,7 @@
 # Research: Jest-to-Vitest Migration for server-api
 
 **Date**: 2026-02-19
+**Updated**: 2026-02-20 (reflects actual implementation decisions)
 **Feature**: 002-jest-to-vitest
 
 ## 1. globalSetup — CommonJS to ESM
@@ -92,9 +93,11 @@ projects: [
 
 ## 7. Global Test Functions
 
-**Decision**: Use `globals: true` in Vitest config + `"types": ["vitest/globals"]` in tsconfig.json.
+**Decision**: Use `globals: true` in Vitest config + `/// <reference types="vitest/globals" />` in `vitest-extend.d.ts` (resolved via `typeRoots`).
 
 **Rationale**: All 92 test files use implicit global test functions (`describe`, `it`, `expect`, `beforeAll`, `afterAll`). With `globals: true`, Vitest makes these available without imports, matching Jest's default behavior. This means zero changes needed in test files.
+
+**Implementation note**: The original plan specified `"types": ["node", "vitest/globals"]` in tsconfig.json, but the project uses a custom `typeRoots` configuration (`./node_modules/@types`, `../node_modules/@types`, `./src/types`). Adding `"vitest/globals"` to the `types` array would conflict with `typeRoots`. Instead, the `/// <reference types="vitest/globals" />` directive in `src/types/vitest-extend.d.ts` provides the same type resolution through the existing `typeRoots` mechanism.
 
 ## 8. Custom Matcher Migration
 

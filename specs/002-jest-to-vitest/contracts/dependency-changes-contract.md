@@ -1,6 +1,7 @@
 # Configuration Contract: Dependency Changes
 
 **Date**: 2026-02-19
+**Updated**: 2026-02-20 (reflects resolved versions and actual tsconfig approach)
 **Feature**: 002-jest-to-vitest
 
 ## Purpose
@@ -20,9 +21,9 @@ Defines the exact dependency additions and removals for `server-api/package.json
 
 | Package | Version | Reason |
 |---|---|---|
-| `vitest` | latest | Test runner (replaces jest) |
-| `vite-tsconfig-paths` | latest | Resolves TypeScript path aliases from tsconfig.json |
-| `@vitest/ui` | latest | Required for the built-in `html` reporter |
+| `vitest` | ^4.0.18 | Test runner (replaces jest) |
+| `vite-tsconfig-paths` | ^6.1.1 | Resolves TypeScript path aliases from tsconfig.json |
+| `@vitest/ui` | ^4.0.18 | Required for the built-in `html` reporter and `test:nightly:ui` script |
 
 ## Keep Unchanged
 
@@ -39,12 +40,17 @@ Defines the exact dependency additions and removals for `server-api/package.json
 "types": ["node", "jest"]
 
 // After:
-"types": ["node", "vitest/globals"]
+"types": ["node"]
 ```
+
+**Note**: The original plan specified `"types": ["node", "vitest/globals"]`, but the actual implementation uses `"types": ["node"]` only. Vitest global types are resolved via the existing `typeRoots` mechanism:
+- `tsconfig.json` has `"typeRoots": ["./node_modules/@types", "../node_modules/@types", "./src/types"]`
+- `src/types/vitest-extend.d.ts` contains `/// <reference types="vitest/globals" />`
+- This approach works correctly with the custom `typeRoots` configuration and avoids conflicts
 
 ## Validation
 
 1. `pnpm install` succeeds without errors
 2. No `jest` or `@jest` packages appear in `node_modules` under server-api's dependency tree
 3. `vitest --version` resolves from within server-api
-4. TypeScript compilation (`tsc --noEmit`) succeeds with `vitest/globals` types
+4. TypeScript compilation (`tsc --noEmit`) succeeds with Vitest global types (resolved via typeRoots)

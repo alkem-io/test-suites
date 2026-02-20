@@ -1,6 +1,7 @@
 # Configuration Contract: vitest.config.ts
 
 **Date**: 2026-02-19
+**Updated**: 2026-02-20 (reflects actual implementation)
 **Feature**: 002-jest-to-vitest
 
 ## Purpose
@@ -14,6 +15,23 @@ This contract defines the structure and expected behavior of the Vitest configur
 import { defineConfig } from 'vitest/config';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
+/**
+ * Helper to define a named project. Each project:
+ * - Inherits root config (plugins, environment, globals, timeout, setupFiles, reporters)
+ * - Overrides globalSetup to [] so it only runs once from the root project
+ */
+const project = (name: string, include: string[]) => ({
+  extends: true as const,
+  test: {
+    name,
+    include,
+    globalSetup: [] as string[],
+  },
+});
+
+// Timestamped HTML report filename (prevents overwriting previous runs)
+const timestamp = /* YYYY-MM-DD-HH-MM-SS format */;
+
 export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
@@ -21,8 +39,9 @@ export default defineConfig({
     environment: 'node',
     globals: true,
 
-    // Timeouts
-    testTimeout: 1_800_000, // 30 minutes
+    // Timeouts (granular: per-test vs per-hook)
+    testTimeout: 60_000,   // 60s per individual test (generous for API calls)
+    hookTimeout: 120_000,  // 120s per hook (beforeAll creates multiple entities)
 
     // Setup chain
     setupFiles: ['./src/setupTests.ts', './src/vitest.setup.ts'],
@@ -31,19 +50,28 @@ export default defineConfig({
     // Reporting
     reporters: ['default', 'html'],
     outputFile: {
-      html: './html-report/report.html',
+      html: `./html-report/report_${timestamp}.html`,
     },
 
-    // Default include pattern (used when no --project specified)
-    include: ['src/**/*.it-spec.ts'],
-
-    // Domain-specific projects
+    // Domain-specific projects (no root include — projects define their own)
     projects: [
       // See Project Definitions below
     ],
   },
 });
 ```
+
+### Design Decision: Timeout Granularity
+
+The original spec called for `testTimeout: 1_800_000` (30 minutes). The implementation uses a more granular approach:
+- `testTimeout: 60_000` — each individual `it()` block gets 60s, generous for single API calls
+- `hookTimeout: 120_000` — `beforeAll` hooks that create multiple test entities via API get 120s
+
+This prevents a single stuck API call from blocking for 30 minutes while still giving hooks enough headroom.
+
+### Design Decision: globalSetup Deduplication
+
+The `project()` helper function sets `globalSetup: []` for each named project. Without this, Vitest would re-run `globalTestsSetup.ts` (user registration) for every project in the `projects` array. Only the root config triggers global setup.
 
 ## Contract: Project Definitions
 
@@ -86,7 +114,7 @@ Each domain project follows this structure:
 | `platform` | `src/functional-api/platform/**/*.it-spec.ts` | jest.config.platform.mjs |
 | `preferences` | `src/functional-api/preferences/**/*.it-spec.ts` | jest.config.preferences.jms |
 | `roleset` | `src/functional-api/roleset/**/*.it-spec.ts` | jest.config.roleset.mjs |
-| `roleset-parallel` | `src/functional-api/roleset/**/*.it-spec.ts` | jest.config.roleset-parallel.mjs |
+| ~~`roleset-parallel`~~ | ~~`src/functional-api/roleset/**/*.it-spec.ts`~~ | ~~jest.config.roleset-parallel.mjs~~ (orphan — removed, see CHK007) |
 | `search` | `src/functional-api/search/**/*.it-spec.ts` | jest.config.search.mjs |
 | `storage` | `src/functional-api/storage/**/*.it-spec.ts` | jest.config.storage.mjs |
 | `subscriptions` | `src/functional-api/subscriptions/**/*.it-spec.ts` | jest.config.subscriptions.mjs |
@@ -134,12 +162,20 @@ vitest run --project <name> [--maxWorkers=N] [--fileParallelism=false] [--forceE
 | `--verbose` | (default behavior) |
 | `--watch` | `vitest` (watch is default, `vitest run` for single run) |
 
+### Additional Script: test:nightly:ui
+
+```json
+"test:nightly:ui": "vitest --project nightly --maxWorkers=1 --ui"
+```
+
+This script was added during implementation to enable interactive debugging of the nightly suite via Vitest's built-in UI. It runs in watch mode (no `run` flag) with the UI dashboard.
+
 ## Validation Criteria
 
 1. `vitest run --project account` executes only `src/functional-api/account/**/*.it-spec.ts`
 2. `vitest run --project nightly --maxWorkers=1` runs the nightly suite serially
-3. HTML report is generated at `./html-report/report.html`
+3. HTML report is generated at `./html-report/report_<timestamp>.html`
 4. Path aliases (`@generated/*`, `@utils/*`, etc.) resolve correctly
-5. Global setup registers test users before any tests execute
+5. Global setup registers test users before any tests execute (once, not per-project)
 6. WebSocket polyfill is active during all test files
 7. Custom `toContainObject` matcher works in all test files

@@ -1,6 +1,7 @@
 # Data Model: Jest-to-Vitest Migration
 
 **Date**: 2026-02-19
+**Updated**: 2026-02-20 (reflects actual implementation)
 **Feature**: 002-jest-to-vitest
 
 ## Overview
@@ -20,14 +21,13 @@ This migration does not introduce new data entities or modify the application da
 | `plugins` | Plugin[] | Vite plugins — `vite-tsconfig-paths` for alias resolution |
 | `test.environment` | string | `'node'` — server-side integration tests |
 | `test.globals` | boolean | `true` — expose describe/it/expect globally |
-| `test.testTimeout` | number | `1_800_000` (30 minutes) |
-| `test.setupFiles` | string[] | Pre-framework setup (WebSocket polyfill) |
-| `test.setupFiles` | string[] | Post-framework setup (logging, custom matchers) |
-| `test.globalSetup` | string | User registration in Kratos/Alkemio |
+| `test.testTimeout` | number | `60_000` (60 seconds per individual test) |
+| `test.hookTimeout` | number | `120_000` (120 seconds per hook — beforeAll creates entities) |
+| `test.setupFiles` | string[] | `['./src/setupTests.ts', './src/vitest.setup.ts']` — WebSocket polyfill + logging/matchers |
+| `test.globalSetup` | string | `'./src/globalTestsSetup.ts'` — User registration in Kratos/Alkemio |
 | `test.reporters` | Reporter[] | `['default', 'html']` |
-| `test.outputFile` | object | `{ html: './html-report/report.html' }` |
-| `test.include` | string[] | Default: `['src/**/*.it-spec.ts']` |
-| `test.projects` | ProjectConfig[] | 30+ named domain projects |
+| `test.outputFile` | object | `{ html: './html-report/report_${timestamp}.html' }` (timestamped) |
+| `test.projects` | ProjectConfig[] | 27 named domain projects + nightly composite |
 
 ### 2. Project Definition (within projects array)
 

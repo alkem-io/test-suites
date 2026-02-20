@@ -1,6 +1,7 @@
 # Quickstart: Jest-to-Vitest Migration for server-api
 
 **Date**: 2026-02-19
+**Updated**: 2026-02-20 (reflects actual implementation)
 **Feature**: 002-jest-to-vitest
 
 ## Prerequisites
@@ -25,10 +26,11 @@ Create `server-api/vitest.config.ts` with:
 - `vite-tsconfig-paths` plugin for path alias resolution
 - `globals: true` for implicit test globals
 - `environment: 'node'`
-- `testTimeout: 1_800_000`
+- `testTimeout: 60_000` + `hookTimeout: 120_000` (granular timeouts)
 - Setup file chain: `globalSetup`, `setupFiles`
-- `projects` array with 30+ named domain projects
-- HTML reporter configuration
+- `project()` helper with `globalSetup: []` override per project
+- `projects` array with 27 named domain projects + nightly composite
+- HTML reporter with timestamped output
 
 ### Step 3: Migrate setup files
 
@@ -50,8 +52,10 @@ Rename `src/types/jest-extend.d.ts` → `src/types/vitest-extend.d.ts`:
 ### Step 6: Update tsconfig.json
 
 ```json
-"types": ["node", "vitest/globals"]
+"types": ["node"]
 ```
+
+Vitest global types are provided via `/// <reference types="vitest/globals" />` in `src/types/vitest-extend.d.ts`, resolved through the existing `typeRoots` configuration.
 
 ### Step 7: Update package.json scripts
 

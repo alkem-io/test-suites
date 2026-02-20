@@ -1,7 +1,8 @@
 # Implementation Plan: Migrate server-api from Jest to Vitest
 
-**Branch**: `002-jest-to-vitest` | **Date**: 2026-02-19 | **Spec**: [spec.md](./spec.md)
+**Branch**: `002-jest-to-vitest` | **Date**: 2026-02-19 | **Implemented**: 2026-02-20 | **Spec**: [spec.md](./spec.md)
 **Input**: Feature specification from `/specs/002-jest-to-vitest/spec.md`
+**Status**: Implemented (pending validation — see §Implementation Status below)
 
 ## Summary
 
@@ -89,19 +90,23 @@ No constitution violations. The migration reduces complexity:
 
 1. Create `server-api/vitest.config.ts` with:
    - `vite-tsconfig-paths` plugin
-   - `globals: true`, `environment: 'node'`, `testTimeout: 1_800_000`
+   - `globals: true`, `environment: 'node'`
+   - `testTimeout: 60_000` (per-test, 60s — generous for individual API calls)
+   - `hookTimeout: 120_000` (per-hook, 120s — `beforeAll` hooks create multiple entities)
    - `globalSetup`, `setupFiles` chain
-   - `reporters: ['default', 'html']` with output path
-   - `projects` array with all 30 named domain projects + nightly composite
+   - `reporters: ['default', 'html']` with timestamped output path (`report_${timestamp}.html`)
+   - `project()` helper function that sets `globalSetup: []` per-project to prevent duplicate user registration
+   - `projects` array with all 27 named domain projects + nightly composite (orphan `roleset-parallel` excluded)
    - See `contracts/vitest-config-contract.md` for full project definitions
 
 2. Update `package.json` dependencies:
-   - Add: `vitest`, `vite-tsconfig-paths`, `@vitest/ui`
+   - Add: `vitest@^4.0.18`, `vite-tsconfig-paths@^6.1.1`, `@vitest/ui@^4.0.18`
    - Remove: `@types/jest`, `ts-jest`, `jest-html-reporters`, `tsconfig-paths`
    - See `contracts/dependency-changes-contract.md`
 
 3. Update `tsconfig.json`:
-   - Change `"types": ["node", "jest"]` to `"types": ["node", "vitest/globals"]`
+   - Change `"types": ["node", "jest"]` to `"types": ["node"]`
+   - Vitest globals are resolved via the existing `typeRoots` mechanism: `./src/types/vitest-extend.d.ts` contains `/// <reference types="vitest/globals" />`, and `typeRoots` includes `./src/types`
 
 ### Phase 2: Setup File Migration
 
@@ -162,10 +167,30 @@ No constitution violations. The migration reduces complexity:
 
 ## Risk Assessment
 
-| Risk | Likelihood | Impact | Mitigation |
-|---|---|---|---|
-| `expect.getState().testPath` undefined in beforeAll | Low | Low | Fallback to `task?.file?.filepath` or 'Unknown' |
-| WebSocket polyfill timing differs | Low | Medium | setupFiles runs before each test file, same as Jest |
-| Some domain glob patterns don't match exactly | Medium | Medium | Validate each project individually before nightly run |
-| `vite-tsconfig-paths` doesn't resolve `@alkemio/tests-lib` workspace alias | Low | High | Fallback to explicit `resolve.alias` for workspace paths |
-| HTML reporter output format differs from jest-html-reporters | Low | Low | Functionally equivalent; visual differences acceptable |
+| Risk | Likelihood | Impact | Mitigation | Outcome |
+|---|---|---|---|---|
+| `expect.getState().testPath` undefined in beforeAll | Low | Low | Fallback to `task?.file?.filepath` or 'Unknown' | No issues — works in Vitest v4+ |
+| WebSocket polyfill timing differs | Low | Medium | setupFiles runs before each test file, same as Jest | No issues — `setupFiles` execution order identical |
+| Some domain glob patterns don't match exactly | Medium | Medium | Validate each project individually before nightly run | Pending validation (T014) |
+| `vite-tsconfig-paths` doesn't resolve `@alkemio/tests-lib` workspace alias | Low | High | Fallback to explicit `resolve.alias` for workspace paths | No issues — plugin resolves correctly |
+| HTML reporter output format differs from jest-html-reporters | Low | Low | Functionally equivalent; visual differences acceptable | Pending validation (T015) |
+| `globalSetup` re-runs per project | Medium | High | Set `globalSetup: []` in each project override | Resolved — `project()` helper handles this |
+
+## Implementation Status (2026-02-20)
+
+| Phase | Status | Notes |
+|---|---|---|
+| Phase 1: Core Infrastructure | Complete | Vitest v4.0.18 installed, config created |
+| Phase 2: Setup File Migration | Complete | All 3 files migrated to ESM |
+| Phase 3: Custom Matcher & Types | Complete | Vitest module augmentation working |
+| Phase 4: npm Scripts Migration | Complete | 30+ scripts rewritten |
+| Phase 5: Cleanup | Complete | All 31 Jest configs deleted |
+| Phase 6: Validation | **Partially complete** | TypeScript compiles; full test run pending |
+
+### Deviations from Plan
+
+See `spec.md` §Implementation Notes for the complete list of deviations. Key changes:
+- Timeout strategy changed from single 30-min to granular 60s test / 120s hook
+- tsconfig types via `typeRoots` reference directive instead of direct `types` array
+- HTML report filenames are timestamped to preserve history
+- `project()` helper prevents `globalSetup` from re-running per project

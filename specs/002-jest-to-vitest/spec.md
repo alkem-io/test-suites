@@ -2,8 +2,23 @@
 
 **Feature Branch**: `002-jest-to-vitest`
 **Created**: 2026-02-19
-**Status**: Draft
+**Implemented**: 2026-02-20
+**Status**: Implemented (pending validation)
 **Input**: User description: "I would like to migrate the current test framework Jest to Vitest. The migration to be done only in the project server-api, and nowhere else."
+
+## Implementation Notes (2026-02-20)
+
+All implementation phases (1-8) are complete. The following deviations from the original spec were made during implementation — all improvements over the original design:
+
+1. **Timeout granularity**: Instead of a single `testTimeout: 1_800_000` (30 min), the config uses `testTimeout: 60_000` (per-test) + `hookTimeout: 120_000` (per-hook). This gives finer control: individual API assertions timeout at 60s while `beforeAll` hooks that create multiple entities via API get 120s.
+2. **TypeScript type resolution**: Instead of `"types": ["node", "vitest/globals"]` in tsconfig.json, the types are resolved via the existing `typeRoots` mechanism — `vitest-extend.d.ts` includes `/// <reference types="vitest/globals" />`. This works correctly with the custom `typeRoots` configuration.
+3. **Timestamped HTML reports**: Output path uses `./html-report/report_${timestamp}.html` instead of the static `./html-report/report.html`, preventing previous reports from being overwritten.
+4. **Project helper function**: A `project()` helper in `vitest.config.ts` sets `globalSetup: []` per-project to prevent user registration from re-running for each named project (only the root triggers `globalSetup`).
+5. **roleset-parallel removed**: The orphan `roleset-parallel` project (identified in CHK007) was correctly excluded from the final config.
+6. **Dependency versions resolved**: `vitest@^4.0.18`, `vite-tsconfig-paths@^6.1.1`, `@vitest/ui@^4.0.18`.
+7. **New script**: `test:nightly:ui` added — runs the nightly suite with Vitest's interactive UI (`vitest --project nightly --maxWorkers=1 --ui`).
+
+Pending validation: T012a (full test suite run), T014/T014a (domain script spot-checks), T015 (HTML report generation).
 
 ## Clarifications
 

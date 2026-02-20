@@ -1,6 +1,7 @@
 # Configuration Contract: Setup Files
 
 **Date**: 2026-02-19
+**Updated**: 2026-02-20 (reflects actual implementation)
 **Feature**: 002-jest-to-vitest
 
 ## Purpose
@@ -120,9 +121,20 @@ export {};
 
 **After (Vitest)**:
 ```typescript
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/// <reference types="vitest/globals" />
+
 import 'vitest';
-declare module 'vitest' { interface Matchers<T = any> { toContainObject(argument: any): T; } }
+declare module 'vitest' {
+  interface Matchers<T = any> {
+    toContainObject(argument: any): T;
+  }
+}
+
 export {};
 ```
 
-**Changes**: Replace Jest namespace with Vitest module augmentation.
+**Changes**:
+- Replace Jest namespace with Vitest module augmentation
+- Add `/// <reference types="vitest/globals" />` — this is the mechanism that provides global Vitest types (`describe`, `it`, `expect`, etc.) via the `typeRoots` configuration in `tsconfig.json`, since the types array uses `["node"]` only (not `["node", "vitest/globals"]`)
+- Retain `eslint-disable` for `@typescript-eslint/no-explicit-any` (needed for the `any` type parameter)
