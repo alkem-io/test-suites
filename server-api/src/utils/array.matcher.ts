@@ -1,15 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/prefer-namespace-keyword */
-/* eslint-disable @typescript-eslint/no-namespace */
-import { expect } from '@jest/globals';
+import { expect } from 'vitest';
 
-declare global {
-  namespace jest {
-    interface Matchers<R> {
-      toContainObject(argument: any): R;
-    }
-  }
-}
+// Type augmentation for toContainObject is in src/types/vitest-extend.d.ts
 
 expect.extend({
   toContainObject(received, argument) {
