@@ -13,8 +13,8 @@ import {
 } from '@functional-api/roleset/roles-request.params';
 import { eventOnRoleSetApplication } from '../roleset-events.request.params';
 import {
+  createUser,
   delay,
-  registerInAlkemioOrFail,
   TestScenarioConfig,
   TestScenarioFactory,
   TestUser,
@@ -292,7 +292,14 @@ describe('Application', () => {
 
     // Assert
     expect(countAppAfterCreateDelete).toEqual(countAppBeforeCreateDelete);
-    await registerInAlkemioOrFail('qa', 'user', 'qa.user@alkem.io');
+
+    // Immediately re-register, will be a new user - do not want a failing test to leave QA user not registered
+    await createUser({
+      firstName: 'qa',
+      lastName: 'user',
+      profileData: { displayName: 'qa user' },
+      email: 'qa.user@alkem.io',
+    });
   });
 });
 
