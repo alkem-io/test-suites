@@ -50,10 +50,9 @@ export default defineConfig({
     hookTimeout: 120_000, // beforeAll hooks create multiple entities via API, so they need more headroom
     globalSetup: './src/globalTestsSetup.ts',
     setupFiles: ['./src/setupTests.ts'],
-    reporters: ['html', 'json'],
+    reporters: ['html'],
     outputFile: {
       html: `./html-report/report_${timestamp}.html`,
-      json: `./html-report/report_${timestamp}.json`,
     },
     projects: [
       project('account', [
