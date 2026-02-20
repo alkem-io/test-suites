@@ -10,6 +10,13 @@ import {
 } from '@alkemio/tests-lib';
 
 export default async function setup() {
+  // Guard against duplicate invocations when Vitest projects inherit
+  // globalSetup from root config via extends: true (array merge semantics).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if ((globalThis as any).__alkemioGlobalSetupDone) return;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (globalThis as any).__alkemioGlobalSetupDone = true;
+
   LogManager.getLogger().info(
     `\nLaunching tests using configuration: ${stringifyConfig(testConfiguration)}`
   );

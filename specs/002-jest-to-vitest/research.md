@@ -28,14 +28,12 @@
 
 ## 3. Path Alias Resolution
 
-**Decision**: Use the `vite-tsconfig-paths` plugin. This completely replaces `pathsToModuleNameMapper` from ts-jest.
+**Decision**: Use `resolve.alias` in `vitest.config.ts` with explicit mappings. This replaces `pathsToModuleNameMapper` from ts-jest.
 
-**Rationale**: Vitest does not automatically read tsconfig.json path aliases. The `vite-tsconfig-paths` plugin reads paths directly from the existing tsconfig.json, maintaining a single source of truth. No manual `resolve.alias` configuration needed.
-
-**Installation**: `pnpm add -D vite-tsconfig-paths`
+**Rationale**: Vitest does not automatically read tsconfig.json path aliases. Explicit `resolve.alias` entries in vitest.config.ts provide direct, predictable resolution with no additional dependencies. The `vite-tsconfig-paths` plugin was initially considered but removed in favor of explicit aliases to reduce the dependency footprint.
 
 **Alternatives considered**:
-- Manual `resolve.alias` in vitest.config.ts: Rejected — duplicates information already in tsconfig.json, increases maintenance burden
+- `vite-tsconfig-paths` plugin: Initially planned, but removed — adds a dependency for something easily configured with 6 alias entries
 - `tsconfig-paths`: Rejected — only works for Node.js require/import at runtime, not in Vite's transform pipeline
 
 ## 4. HTML Test Reporting
@@ -144,6 +142,15 @@ declare module 'vitest' { interface Matchers<T = any> { toContainObject(argument
 
 Note: `--forceExit` is supported in Vitest and maps directly.
 
+## 11. Test Timeout Strategy
+
+**Decision**: Retain the 30-minute (1,800,000 ms) timeout from the Jest baseline for both `testTimeout` and `hookTimeout`.
+
+**Rationale**: The server-api tests are integration tests that make sequential API calls against a live Alkemio server. Individual tests and `beforeAll` hooks both create and manipulate entities via HTTP, which can be slow under load or in CI environments. The original Jest config used a single 30-minute timeout. An earlier implementation attempted to split this into `testTimeout: 60_000` + `hookTimeout: 120_000` for finer granularity, but this deviated from FR-008 (configurable 1,800,000 ms timeout) and risked premature failures in CI. The conservative 30-minute timeout preserves the existing safety margin.
+
+**Alternatives considered**:
+- `testTimeout: 60_000` + `hookTimeout: 120_000`: Rejected — too tight for integration tests under CI load; violates FR-008 baseline requirement
+
 ## Dependency Changes Summary
 
 ### Remove from devDependencies:
@@ -153,9 +160,8 @@ Note: `--forceExit` is supported in Vitest and maps directly.
 - `tsconfig-paths` (^4.2.0) — no longer needed, replaced by vite-tsconfig-paths
 
 ### Add to devDependencies:
-- `vitest` (latest)
-- `vite-tsconfig-paths` (latest)
-- `@vitest/ui` (latest, for HTML reporter)
+- `vitest` (^4.0.18)
+- `@vitest/ui` (^4.0.18, for HTML reporter)
 
 ### Keep unchanged:
 - All production dependencies

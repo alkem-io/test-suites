@@ -10,12 +10,12 @@
 
 All implementation phases (1-8) are complete. The following deviations from the original spec were made during implementation — all improvements over the original design:
 
-1. **Timeout granularity**: Instead of a single `testTimeout: 1_800_000` (30 min), the config uses `testTimeout: 60_000` (per-test) + `hookTimeout: 120_000` (per-hook). This gives finer control: individual API assertions timeout at 60s while `beforeAll` hooks that create multiple entities via API get 120s.
+1. **Timeout preserved**: Both `testTimeout` and `hookTimeout` are set to `1_800_000` (30 min), matching the original Jest baseline per FR-008. Integration tests make sequential API calls against a live server and need this headroom, especially under CI load.
 2. **TypeScript type resolution**: Instead of `"types": ["node", "vitest/globals"]` in tsconfig.json, the types are resolved via the existing `typeRoots` mechanism — `vitest-extend.d.ts` includes `/// <reference types="vitest/globals" />`. This works correctly with the custom `typeRoots` configuration.
 3. **Timestamped HTML reports**: Output path uses `./html-report/report_${timestamp}.html` instead of the static `./html-report/report.html`, preventing previous reports from being overwritten.
 4. **Project helper function**: A `project()` helper in `vitest.config.ts` sets `globalSetup: []` per-project to prevent user registration from re-running for each named project (only the root triggers `globalSetup`).
 5. **roleset-parallel removed**: The orphan `roleset-parallel` project (identified in CHK007) was correctly excluded from the final config.
-6. **Dependency versions resolved**: `vitest@^4.0.18`, `vite-tsconfig-paths@^6.1.1`, `@vitest/ui@^4.0.18`.
+6. **Dependency versions resolved**: `vitest@^4.0.18`, `@vitest/ui@^4.0.18`. Path aliases resolved via `resolve.alias` (no `vite-tsconfig-paths` dependency needed).
 7. **New script**: `test:nightly:ui` added — runs the nightly suite with Vitest's interactive UI (`vitest --project nightly --maxWorkers=1 --ui`).
 
 Pending validation: T012a (full test suite run), T014/T014a (domain script spot-checks), T015 (HTML report generation).

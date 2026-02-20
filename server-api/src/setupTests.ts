@@ -7,7 +7,12 @@ import './utils/array.matcher';
 (globalThis as any).WebSocket = WebSocket;
 
 beforeAll(() => {
-  // This will run before any test is executed in the suite
-  const testFileName = expect.getState().testPath || 'Unknown Test Suite';
+  // In Vitest setupFiles, expect.getState().testPath may not be populated
+  // before tests are collected. Use the worker's filepath as a reliable fallback.
+  const testFileName =
+    expect.getState()?.testPath ??
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (globalThis as any).__vitest_worker__?.filepath ??
+    'Unknown Test Suite';
   LogManager.getLogger().info(`Starting test suite: ${testFileName}`);
 });

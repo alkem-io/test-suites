@@ -9,7 +9,7 @@ Alkemio Test Suites — a QA automation monorepo for the Alkemio collaborative i
 | Package | Path | Framework | Module System | Node Version |
 |---------|------|-----------|---------------|--------------|
 | **@alkemio/tests-lib** | `lib/` | TypeScript library | CommonJS | 20.9.0 (Volta) |
-| **@alkemio/test-suite-server-api** | `server-api/` | Jest | ESM (`"type": "module"`) | 20.9.0 (Volta) |
+| **@alkemio/test-suite-server-api** | `server-api/` | Vitest | ESM (`"type": "module"`) | 20.9.0 (Volta) |
 | **@alkemio/test-suite-client-web** | `client-web/` | Playwright + Jest | CommonJS | >=20.9.0 |
 
 `testOld/` is deprecated legacy code — do not add to it.
@@ -38,7 +38,7 @@ pnpm --filter @alkemio/tests-lib run lint         # Type check + ESLint
 # Full nightly suite (single worker)
 pnpm --filter @alkemio/test-suite-server-api run test:nightly
 
-# Domain-specific suites (30+ available — see server-api/package.json scripts)
+# Domain-specific suites (27+ available — see server-api/package.json scripts)
 pnpm --filter @alkemio/test-suite-server-api run test:communications
 pnpm --filter @alkemio/test-suite-server-api run test:account
 pnpm --filter @alkemio/test-suite-server-api run test:search
@@ -46,13 +46,13 @@ pnpm --filter @alkemio/test-suite-server-api run test:templates
 # ... etc.
 
 # Run a single test file
-cd server-api && pnpm exec jest --config ./config/jest.config.mjs path/to/file.it-spec.ts
+cd server-api && pnpm exec vitest run path/to/file.it-spec.ts
 
 # Lint
 pnpm --filter @alkemio/test-suite-server-api run lint
 ```
 
-Test files use the `.it-spec.ts` suffix. Each domain has its own Jest config in `server-api/config/jest.config.*.mjs`.
+Test files use the `.it-spec.ts` suffix. All domain projects are defined in a single `server-api/vitest.config.ts`.
 
 ### Client Web Tests (client-web/)
 
@@ -113,11 +113,11 @@ Key abstractions:
 
 ### Server API Tests (`server-api/src/functional-api/`)
 
-Jest integration tests organized by domain: `communications/`, `search/`, `account/`, `callout/`, `templates/`, `documents/`, `preferences/`, `roleset/`, `subscriptions/`, `innovation/`, etc.
+Vitest integration tests organized by domain: `communications/`, `search/`, `account/`, `callout/`, `templates/`, `documents/`, `preferences/`, `roleset/`, `subscriptions/`, `innovation/`, etc.
 
-Path aliases: `@generated/*`, `@utils/*`, `@functional-api/*`, `@src/*`, `@common/*`.
+Path aliases: `@generated/*`, `@utils/*`, `@functional-api/*`, `@src/*`, `@common/*` — resolved via `resolve.alias` in `vitest.config.ts`.
 
-Global setup: `globalTestsSetup.ts` → `setupTests.ts` (WebSocket polyfill) → `jest.setup.ts` (jest-extended).
+Global setup: `globalTestsSetup.ts` (user registration) → `setupTests.ts` (WebSocket polyfill + custom matchers).
 
 Test timeout is 30 minutes (1,800,000 ms) for long-running integration tests.
 
@@ -144,7 +144,7 @@ Nine test personas with varying roles (see `agents.md`): Host, Facilitator, Comm
 This repo follows SDD via the `.specify/` framework. New features must start with specification artifacts under `specs/NNN-feature-slug/` following the canonical workflow: constitution → specify → clarify → plan → checklist → tasks → analyze → implement. See `.specify/memory/constitution.md` for governance principles and quality gates.
 
 ## Active Technologies
-- TypeScript ~5.7.3, Node.js 20.9.0 (Volta) + Vitest (new), vite-tsconfig-paths (new), @vitest/ui (new) (002-jest-to-vitest)
+- TypeScript ~5.7.3, Node.js 20.9.0 (Volta) + Vitest ^4.0.18, @vitest/ui ^4.0.18 (002-jest-to-vitest)
 
 ## Recent Changes
-- 002-jest-to-vitest: Added TypeScript ~5.7.3, Node.js 20.9.0 (Volta) + Vitest (new), vite-tsconfig-paths (new), @vitest/ui (new)
+- 002-jest-to-vitest: Migrated server-api from Jest to Vitest. Added Vitest ^4.0.18, @vitest/ui ^4.0.18. Path aliases resolved via `resolve.alias` in vitest.config.ts.

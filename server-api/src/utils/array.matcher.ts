@@ -1,12 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { expect } from 'vitest';
 
-import 'vitest';
-declare module 'vitest' {
-  interface Matchers<T = any> {
-    toContainObject(argument: any): T;
-  }
-}
+// Type augmentation for toContainObject is in src/types/vitest-extend.d.ts
 
 expect.extend({
   toContainObject(received, argument) {
