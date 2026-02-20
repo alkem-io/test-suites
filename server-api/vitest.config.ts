@@ -1,5 +1,9 @@
 import { defineConfig } from 'vitest/config';
-import tsconfigPaths from 'vite-tsconfig-paths';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const resolve = (...segments: string[]) => path.resolve(__dirname, ...segments);
 
 /**
  * Helper to define a named project. Each project:
@@ -26,17 +30,30 @@ const timestamp = [
 ].join('-');
 
 export default defineConfig({
-  plugins: [tsconfigPaths()],
+  resolve: {
+    alias: {
+      '@generated': resolve('src/core/generated'),
+      '@utils': resolve('src/utils'),
+      '@common': resolve('src/common'),
+      '@functional-api': resolve('src/functional-api'),
+      '@src': resolve('src'),
+      '@alkemio/tests-lib': resolve('../lib/src'),
+    },
+  },
   test: {
     environment: 'node',
     globals: true,
+    pool: 'threads',
+
+    isolate: false,
     testTimeout: 60_000, // generous for individual API-based tests
     hookTimeout: 120_000, // beforeAll hooks create multiple entities via API, so they need more headroom
     globalSetup: './src/globalTestsSetup.ts',
-    setupFiles: ['./src/setupTests.ts', './src/vitest.setup.ts'],
-    reporters: ['default', 'html'],
+    setupFiles: ['./src/setupTests.ts'],
+    reporters: ['html', 'json'],
     outputFile: {
       html: `./html-report/report_${timestamp}.html`,
+      json: `./html-report/report_${timestamp}.json`,
     },
     projects: [
       project('account', [
