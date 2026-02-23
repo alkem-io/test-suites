@@ -19,7 +19,7 @@ import {
 import { deleteUser } from '../../contributor-management/user/user.request.params';
 import { eventOnRoleSetInvitation } from '../roleset-events.request.params';
 import {
-  registerInAlkemioOrFail,
+  createUser,
   sorted__create_read_readAbout_update_delete_grant_createSubspace_readLicense,
   sorted_read_readAbout,
   TestScenarioConfig,
@@ -303,7 +303,12 @@ describe('Invitations', () => {
       invitationsDataCommunity?.data?.lookup?.roleSet?.invitations
     ).toEqual([]);
     // Immediately re-register, will be a new user - do not want a failing test to leave QA user not registered
-    await registerInAlkemioOrFail('beta', 'tester', 'beta.tester@alkem.io');
+    await createUser({
+      firstName: 'beta',
+      lastName: 'tester',
+      profileData: { displayName: 'beta tester' },
+      email: 'beta.tester@alkem.io',
+    });
   });
 });
 

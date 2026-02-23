@@ -13,6 +13,7 @@ import {
 } from '../../journey/space/space.request.params';
 import {
   createSubspace,
+  createUser,
   TestScenarioConfig,
   TestScenarioFactory,
   TestUser,
@@ -152,6 +153,12 @@ describe('Virtual Contributor', () => {
     expect(response.error?.errors[0].message).toContain(
       'Unable to delete User: account contains one or more resources'
     );
+    await createUser({
+      firstName: 'beta',
+      lastName: 'tester',
+      profileData: { displayName: 'beta tester' },
+      email: 'beta.tester@alkem.io',
+    });
   });
 
   test('should return invitations after virtual contributor is removed', async () => {
