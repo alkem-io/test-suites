@@ -17,7 +17,8 @@ import {
 } from './forms/whiteboard-template-form';
 import { verifyWhiteboardTemplate } from './verify/whiteboard-template-verify';
 import { fillTemplateForm } from './forms/template-form';
-import { verifyTemplate } from './verify/template-verify';
+import { verifyOpenedTemplate } from './verify/verify-opened-template';
+import { openWhiteboardTemplate } from './verify/open-template';
 
 // Create the authenticated fixture with a unique storage state name for this test suite
 const { test, setupAuthentication, teardownAuthentication } =
@@ -152,12 +153,11 @@ test.describe.serial('Whiteboard Templates', () => {
     ).not.toBeVisible();
 
     // Verify the data was updated
-    await verifyWhiteboardTemplate(page, templateData);
+    await verifyOpenedTemplate(page, templateData);
 
     // Reload the page to ensure changes persist
     await page.reload();
-
-    await verifyWhiteboardTemplate(page, templateData);
+    await verifyOpenedTemplate(page, templateData);
   });
 
   test('1.3 Use whiteboard template in a whiteboard', async ({ page }) => {
@@ -188,8 +188,8 @@ test.describe.serial('Whiteboard Templates', () => {
     await fillWhiteboardWithWhiteboardTemplate(page, templateData);
 
     await page.getByRole('button', { name: 'Create' }).click();
-
-    await verifyTemplate(page, testTemplate);
+    await openWhiteboardTemplate(page, testTemplate);
+    await verifyOpenedTemplate(page, testTemplate);
   });
 
   test('1.4 Delete Whiteboard Template', async ({ page }) => {
