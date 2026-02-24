@@ -1,24 +1,12 @@
 import { expect } from '@playwright/test';
 import { Page } from '@playwright/test';
 import { TemplateForm } from '../forms/template-form.models';
-import { time } from 'console';
 
-export const verifyTemplate = async (
+export const verifyOpenedTemplate = async (
   page: Page,
   templateData: TemplateForm
 ) => {
   // Verify the template is displayed in the list
-
-  const card = await page.getByRole('link', { name: 'Contribute' });
-
-  await card.click({ timeout: 5000 });
-
-  await expect(
-    page.getByRole('heading', { name: templateData.displayName, exact: true })
-  ).toBeVisible();
-
-  // Verify the template description is visible somewhere in the dialog
-
   await expect(page.locator('#preview-template-dialog')).toHaveText(
     `Preview — ${templateData.displayName}`
   );

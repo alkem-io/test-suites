@@ -13,6 +13,7 @@ import { randomBytes } from 'crypto';
 import { PostTemplateForm } from './forms/template-form.models';
 import { fillPostTemplateForm } from './forms/post-template-form';
 import { verifyPostTemplate } from './verify/post-template-verify';
+import { verifyOpenedTemplate } from './verify/verify-opened-template';
 
 // Create the authenticated fixture with a unique storage state name for this test suite
 const { test, setupAuthentication, teardownAuthentication } =
@@ -148,12 +149,11 @@ test.describe.serial('Post Templates', () => {
     ).not.toBeVisible();
 
     // Verify the data was updated
-    await verifyPostTemplate(page, templateData);
+    await verifyOpenedTemplate(page, templateData);
 
     // Reload the page to ensure changes persist
     await page.reload();
-
-    await verifyPostTemplate(page, templateData);
+    await verifyOpenedTemplate(page, templateData);
   });
 
   test('1.3 Verify edit and cancel and confirm dialog', async ({ page }) => {
@@ -174,7 +174,7 @@ test.describe.serial('Post Templates', () => {
     // Verify we are back on the template view page with original data
     templateData.defaultContent = originalContent;
     await page.getByRole('heading', { name: templateData.displayName }).click();
-    await verifyPostTemplate(page, templateData);
+    await verifyOpenedTemplate(page, templateData);
   });
 
   test('1.4 Delete Post Template', async ({ page }) => {
