@@ -14,9 +14,6 @@ fragment OrganizationData on Organization {
   actor {
     id
   }
-  # groups {
-  #   ...GroupData
-  # }
   roleSet {
     usersInRole(role: ASSOCIATE) {
       ...MemberData

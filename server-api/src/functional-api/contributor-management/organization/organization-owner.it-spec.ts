@@ -57,7 +57,7 @@ afterEach(async () => {
 });
 
 describe('Organization Owner', () => {
-  test.only('should create organization owner', async () => {
+  test('should create organization owner', async () => {
     // Act
 
     const res = await assignRoleToUser(
@@ -65,7 +65,6 @@ describe('Organization Owner', () => {
       organizationRoleSetId,
       RoleName.Owner
     );
-    console.log('assign role to user response', res.error, res.data);
 
     // Assert
     expect(res?.data?.assignRoleToUser?.credentials).toContainObject(
@@ -153,7 +152,7 @@ describe('Organization Owner', () => {
 
     // Assert
     expect(res?.error?.errors[0].message).toContain(
-      `Min limit of users reached for role 'owner': 1, cannot remove user from role on RoleSet: ${organizationRoleSetId}, type: organization`
+      "Min limit of users reached for role 'owner': 1, cannot remove user."
     );
   });
 
@@ -179,8 +178,7 @@ describe('Organization Owner', () => {
       RoleName.Owner
     );
     const credentialsCount =
-      firstAssignmentResponse?.data?.assignRoleToUser?.credentials?.length ||
-      -999;
+      firstAssignmentResponse?.data?.assignRoleToUser?.credentials?.length ?? 0;
 
     // Act
     const secondAssignmentResponse = await assignRoleToUser(
@@ -189,8 +187,8 @@ describe('Organization Owner', () => {
       RoleName.Owner
     );
     const updatedCredentialsCount =
-      secondAssignmentResponse?.data?.assignRoleToUser?.credentials?.length ||
-      -999;
+      secondAssignmentResponse?.data?.assignRoleToUser?.credentials?.length ??
+      0;
 
     // Assert
     expect(updatedCredentialsCount).toEqual(credentialsCount);

@@ -105,7 +105,6 @@ describe('User roles', () => {
     const spacesData = res?.data?.rolesUser.spaces;
     const orgData = res?.data?.rolesUser.organizations;
 
-    console.log('getUserRoleSpacesVisibility response', res.error, res.data);
     // Assert
     expect(spacesData).toEqual(
       expect.arrayContaining([

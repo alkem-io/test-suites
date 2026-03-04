@@ -390,19 +390,19 @@ export const getSpacesFilteredByVisibilityNoAccess = async (
 };
 
 export const getUserRoleSpacesVisibility = async (
-  userID: string,
+  actorID: string,
   visibility: SpaceVisibility,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
-  if (userID.length !== 36) {
-    throw new Error(`Invalid user ID: ${userID}`);
+  if (actorID.length !== 36) {
+    throw new Error(`Invalid actor ID: ${actorID}`);
   }
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
     graphqlClient.GetUserRoles(
       {
         rolesData: {
-          actorID: userID,
+          actorID,
           filter: { visibilities: [visibility] },
         },
       },

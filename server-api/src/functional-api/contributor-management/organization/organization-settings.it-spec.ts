@@ -34,12 +34,11 @@ beforeAll(async () => {
     website: domain,
   });
 
-  const a = await assignRoleToUser(
+  await assignRoleToUser(
     TestUserManager.users.spaceMember.id,
     baseScenario.organization.roleSetId,
     RoleName.Admin
   );
-  console.log('assign role to user response', a.error, a.data);
 });
 
 afterAll(async () => {
@@ -67,11 +66,7 @@ describe('Organization settings', () => {
           },
           userRole
         );
-        console.log(
-          'update organization settings response',
-          res.error,
-          res.data
-        );
+
         // Assert
         expect(
           res?.data?.updateOrganizationSettings.settings.membership

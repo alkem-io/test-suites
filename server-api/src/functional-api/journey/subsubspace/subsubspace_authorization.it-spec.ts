@@ -187,7 +187,7 @@ describe('Subsubspace Admin', () => {
 
     // Act
     const res = await removeRoleFromUserExtendedData(
-      TestUserManager.users.subsubspaceMember.email,
+      TestUserManager.users.subspaceMember.id,
       subsubspaceRoleSetId,
       RoleName.Admin,
       TestUser.SUBSPACE_MEMBER

@@ -44708,13 +44708,11 @@ export type ApplyForEntryRoleMutation = {
   };
 };
 
-export type DeleteUserApplicationMutationVariables = SchemaTypes.Exact<{
+export type DeleteApplicationMutationVariables = SchemaTypes.Exact<{
   deleteData: SchemaTypes.DeleteApplicationInput;
 }>;
 
-export type DeleteUserApplicationMutation = {
-  deleteApplication: { id: string };
-};
+export type DeleteApplicationMutation = { deleteApplication: { id: string } };
 
 export type DeletePlatformInvitationMutationVariables = SchemaTypes.Exact<{
   invitationId: SchemaTypes.Scalars["UUID"]["input"];
@@ -97093,8 +97091,8 @@ export const ApplyForEntryRoleDocument = gql`
   }
   ${ApplicationDataFragmentDoc}
 `;
-export const DeleteUserApplicationDocument = gql`
-  mutation deleteUserApplication($deleteData: DeleteApplicationInput!) {
+export const DeleteApplicationDocument = gql`
+  mutation deleteApplication($deleteData: DeleteApplicationInput!) {
     deleteApplication(deleteData: $deleteData) {
       id
     }
@@ -99712,9 +99710,7 @@ const AssignRoleToUserExtendedDataDocumentString = print(
   AssignRoleToUserExtendedDataDocument
 );
 const ApplyForEntryRoleDocumentString = print(ApplyForEntryRoleDocument);
-const DeleteUserApplicationDocumentString = print(
-  DeleteUserApplicationDocument
-);
+const DeleteApplicationDocumentString = print(DeleteApplicationDocument);
 const DeletePlatformInvitationDocumentString = print(
   DeletePlatformInvitationDocument
 );
@@ -100177,11 +100173,11 @@ export function getSdk(
         variables
       );
     },
-    deleteUserApplication(
-      variables: SchemaTypes.DeleteUserApplicationMutationVariables,
+    deleteApplication(
+      variables: SchemaTypes.DeleteApplicationMutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders
     ): Promise<{
-      data: SchemaTypes.DeleteUserApplicationMutation;
+      data: SchemaTypes.DeleteApplicationMutation;
       errors?: GraphQLError[];
       extensions?: any;
       headers: Headers;
@@ -100189,12 +100185,12 @@ export function getSdk(
     }> {
       return withWrapper(
         (wrappedRequestHeaders) =>
-          client.rawRequest<SchemaTypes.DeleteUserApplicationMutation>(
-            DeleteUserApplicationDocumentString,
+          client.rawRequest<SchemaTypes.DeleteApplicationMutation>(
+            DeleteApplicationDocumentString,
             variables,
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
-        "deleteUserApplication",
+        "deleteApplication",
         "mutation",
         variables
       );

@@ -57,7 +57,6 @@ describe('Delete user', () => {
 
     // Act
     const res = await deleteUser(userId);
-    console.log('delete user response', res.error, res.data);
 
     // Assert
     expect(res.error?.errors[0].message).toContain(

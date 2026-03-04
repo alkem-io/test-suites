@@ -40684,13 +40684,11 @@ export type ApplyForEntryRoleMutation = {
   };
 };
 
-export type DeleteUserApplicationMutationVariables = Exact<{
+export type DeleteApplicationMutationVariables = Exact<{
   deleteData: DeleteApplicationInput;
 }>;
 
-export type DeleteUserApplicationMutation = {
-  deleteApplication: { id: string };
-};
+export type DeleteApplicationMutation = { deleteApplication: { id: string } };
 
 export type DeletePlatformInvitationMutationVariables = Exact<{
   invitationId: Scalars["UUID"]["input"];

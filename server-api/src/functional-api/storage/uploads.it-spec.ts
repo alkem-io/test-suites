@@ -56,7 +56,8 @@ async function getReferenceUri(orgId: string): Promise<string> {
 
 async function getVisualUri(orgId: string): Promise<string> {
   const orgData = await getOrgVisualUri(orgId);
-  const visualUri = orgData?.data?.organization?.profile?.visuals[0]?.uri ?? '';
+  const visualUri =
+    orgData?.data?.organization?.profile?.visuals?.[0]?.uri ?? '';
   return visualUri;
 }
 

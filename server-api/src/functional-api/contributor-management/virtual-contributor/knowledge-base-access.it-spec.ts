@@ -283,7 +283,7 @@ describe('Virtual Contributor ACCESS - All Public - Visibility Public / BoK / Pu
         );
         const data =
           res.data?.lookup?.virtualContributor?.knowledgeBase?.profile
-            .storageBucket.authorization?.myPrivileges;
+            ?.storageBucket?.authorization?.myPrivileges;
 
         expect(data?.sort()).toEqual(privileges);
       }
@@ -428,7 +428,7 @@ describe('Virtual Contributor Access - All Private - Visibility Private / BoK / 
         );
         const data =
           res.data?.lookup?.virtualContributor?.knowledgeBase?.profile
-            .storageBucket.authorization?.myPrivileges;
+            ?.storageBucket?.authorization?.myPrivileges;
 
         expect(data?.sort()).toEqual(privileges);
       }
@@ -573,7 +573,7 @@ describe('Virtual Contributor Access - All Private - Visibility Private / BoK / 
         );
         const data =
           res.data?.lookup?.virtualContributor?.knowledgeBase?.profile
-            .storageBucket.authorization?.myPrivileges;
+            ?.storageBucket?.authorization?.myPrivileges;
 
         expect(data?.sort()).toEqual(privileges);
       }
@@ -715,7 +715,7 @@ describe('Virtual Contributor Access - All Private - Visibility Public / BoK / P
         );
         const data =
           res.data?.lookup?.virtualContributor?.knowledgeBase?.profile
-            .storageBucket.authorization?.myPrivileges;
+            ?.storageBucket?.authorization?.myPrivileges;
 
         expect(data?.sort()).toEqual(privileges);
       }
