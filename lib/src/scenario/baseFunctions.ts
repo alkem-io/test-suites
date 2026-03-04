@@ -66,7 +66,7 @@ export const assignRoleToUser = async (
     graphqlClient.assignRoleToUser(
       {
         roleData: {
-          contributorID: userID,
+          actorID: userID,
           roleSetID,
           role,
         },
@@ -290,7 +290,7 @@ export const createWhiteboardCalloutOnCalloutsSet = async (
 };
 
 export const assignPlatformRole = async (
-  contributorID: string,
+  actorID: string,
   roleName: RoleName,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -298,7 +298,7 @@ export const assignPlatformRole = async (
   const callback = (authToken: string | undefined) =>
     graphqlClient.assignPlatformRoleToUser(
       {
-        roleData: { contributorID, role: roleName },
+        roleData: { actorID, role: roleName },
       },
       {
         authorization: `Bearer ${authToken}`,

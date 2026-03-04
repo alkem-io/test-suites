@@ -10,7 +10,11 @@ fragment InvitationData on Invitation {
     ...UserDataLight
   }
   contributor {
-    ...UserDataLight
+    id
+    profile {
+      id
+      displayName
+    }
   }
   authorization {
     myPrivileges

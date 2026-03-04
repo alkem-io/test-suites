@@ -56,7 +56,7 @@ async function getReferenceUri(orgId: string): Promise<string> {
 
 async function getVisualUri(orgId: string): Promise<string> {
   const orgData = await getOrgVisualUri(orgId);
-  const visualUri = orgData?.data?.organization.profile.visuals[0].uri ?? '';
+  const visualUri = orgData?.data?.organization?.profile?.visuals[0]?.uri ?? '';
   return visualUri;
 }
 
@@ -382,8 +382,13 @@ describe('Upload visual tests', () => {
     expect(res?.errors).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          message:
-            "Upload image has a width resolution of '1299' which is not in the allowed range of 190 - 410 pixels!",
+          message: 'Upload on visual failed!',
+          extensions: expect.objectContaining({
+            details: expect.objectContaining({
+              message:
+                "Upload image has a width resolution of '1299' which is not in the allowed range of 190 - 410 pixels!",
+            }),
+          }),
         }),
       ])
     );

@@ -17,8 +17,6 @@ import {
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
 
-const uniqueId = UniqueIDGenerator.getID();
-
 let userName = '';
 let userId: string;
 let userData;
@@ -31,9 +29,13 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  userName = `testuser${uniqueId}`;
+  const testUniqueId = UniqueIDGenerator.getID();
+  userName = `testuser${testUniqueId}`;
 
-  const response = await createUser({ nameID: userName });
+  const response = await createUser({
+    nameID: userName,
+    email: 'testEmail' + testUniqueId + '@alkemio.io',
+  });
   userId = response?.data?.createUser?.id ?? '';
 });
 afterEach(async () => {
@@ -55,6 +57,7 @@ describe('Delete user', () => {
 
     // Act
     const res = await deleteUser(userId);
+    console.log('delete user response', res.error, res.data);
 
     // Assert
     expect(res.error?.errors[0].message).toContain(

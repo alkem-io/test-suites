@@ -312,3 +312,25 @@ export const deleteCallout = async (
 
   return graphqlErrorWrapper(callback, userRole);
 };
+
+export const transferCallout = async (
+  calloutID: string,
+  targetCalloutsSetID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.transferCallout(
+      {
+        transferData: {
+          calloutID,
+          targetCalloutsSetID,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};

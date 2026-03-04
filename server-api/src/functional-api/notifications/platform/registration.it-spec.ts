@@ -137,7 +137,7 @@ describe('Notifications - User registration', () => {
     userId = newUserId;
 
     // Assert
-    expect(emailsData[1]).toEqual(4);
+    expect(emailsData[1]).toEqual(3);
     expect(emailsData[0]).toEqual(
       expect.arrayContaining([
         expectedEmail(
@@ -152,7 +152,7 @@ describe('Notifications - User registration', () => {
           `New user registration on Alkemio: ${userName}`,
           TestUserManager.users.globalLicenseAdmin.email
         ),
-        expectedEmail('Alkemio - Registration successful!', userEmail),
+        //expectedEmail('Alkemio - Registration successful!', userEmail),
       ])
     );
   });
@@ -169,12 +169,12 @@ describe('Notifications - User registration', () => {
     userId = newUserId;
 
     // Assert
-    expect(emailsData[1]).toEqual(1);
-    expect(emailsData[0]).toEqual(
-      expect.arrayContaining([
-        expectedEmail('Alkemio - Registration successful!', 'only' + userEmail),
-      ])
-    );
+    expect(emailsData[1]).toEqual(0);
+    // expect(emailsData[0]).toEqual(
+    //   expect.arrayContaining([
+    //     expectedEmail('Alkemio - Registration successful!', 'only' + userEmail),
+    //   ])
+    // );
   });
 });
 

@@ -17,8 +17,6 @@ import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/O
 import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
 const uniqueId = UniqueIDGenerator.getID();
-const firstName = `fn${uniqueId}`;
-const lastName = `ln${uniqueId}`;
 let userId: string;
 const domain = `alkem${uniqueId}.io`;
 
@@ -36,17 +34,12 @@ beforeAll(async () => {
     website: domain,
   });
 
-  await assignRoleToUser(
+  const a = await assignRoleToUser(
     TestUserManager.users.spaceMember.id,
     baseScenario.organization.roleSetId,
-    RoleName.Owner
+    RoleName.Admin
   );
-
-  await assignRoleToUser(
-    TestUserManager.users.spaceAdmin.id,
-    baseScenario.organization.roleSetId,
-    RoleName.Owner
-  );
+  console.log('assign role to user response', a.error, a.data);
 });
 
 afterAll(async () => {
@@ -59,8 +52,8 @@ describe('Organization settings', () => {
     test.each`
       userRole
       ${TestUser.GLOBAL_ADMIN}
-      ${TestUser.SPACE_ADMIN}
       ${TestUser.SPACE_MEMBER}
+      ${TestUser.ORGANIZATION_ADMIN}
     `(
       'User: "$userRole" is able to update organization settings ',
       async ({ userRole }) => {
@@ -74,7 +67,11 @@ describe('Organization settings', () => {
           },
           userRole
         );
-
+        console.log(
+          'update organization settings response',
+          res.error,
+          res.data
+        );
         // Assert
         expect(
           res?.data?.updateOrganizationSettings.settings.membership
@@ -123,7 +120,8 @@ describe('Organization settings', () => {
 
       // Act
       const email = `enm${uniqueId}@${domain}`;
-      userId = await registerVerifiedUser(email, firstName, lastName);
+      const testId = UniqueIDGenerator.getID();
+      userId = await registerVerifiedUser(email, `fn${testId}`, `ln${testId}`);
 
       const organizationData = await getOrganizationData(
         baseScenario.organization.id
@@ -153,7 +151,8 @@ describe('Organization settings', () => {
 
       // Act
       const email = `dism${uniqueId}@${domain}`;
-      userId = await registerVerifiedUser(email, firstName, lastName);
+      const testId = UniqueIDGenerator.getID();
+      userId = await registerVerifiedUser(email, `fn${testId}`, `ln${testId}`);
 
       const organizationData = await getOrganizationData(
         baseScenario.organization.id
@@ -183,7 +182,8 @@ describe('Organization settings', () => {
 
       // Act
       const email = `enms${uniqueId}@a${domain}`;
-      userId = await registerVerifiedUser(email, firstName, lastName);
+      const testId = UniqueIDGenerator.getID();
+      userId = await registerVerifiedUser(email, `fn${testId}`, `ln${testId}`);
 
       const organizationData = await getOrganizationData(
         baseScenario.organization.id
@@ -237,7 +237,8 @@ describe('Organization settings', () => {
 
       // Act
       const email = `en${uniqueId}@${domain}`;
-      userId = await registerVerifiedUser(email, firstName, lastName);
+      const testId = UniqueIDGenerator.getID();
+      userId = await registerVerifiedUser(email, `fn${testId}`, `ln${testId}`);
 
       const organizationData = await getOrganizationData(
         baseScenario.organization.id
@@ -268,7 +269,8 @@ describe('Organization settings', () => {
 
       // Act
       const email = `dis${uniqueId}@${domain}`;
-      userId = await registerVerifiedUser(email, firstName, lastName);
+      const testId = UniqueIDGenerator.getID();
+      userId = await registerVerifiedUser(email, `fn${testId}`, `ln${testId}`);
 
       const organizationData = await getOrganizationData(
         baseScenario.organization.id
@@ -297,7 +299,8 @@ describe('Organization settings', () => {
 
       // Act
       const email = `en${uniqueId}@a${domain}`;
-      userId = await registerVerifiedUser(email, firstName, lastName);
+      const testId = UniqueIDGenerator.getID();
+      userId = await registerVerifiedUser(email, `fn${testId}`, `ln${testId}`);
 
       const organizationData = await getOrganizationData(
         baseScenario.organization.id

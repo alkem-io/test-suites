@@ -6,14 +6,16 @@ import {
   meQuery,
 } from './application.request.params';
 import { updateSpaceSettings } from '../../journey/space/space.request.params';
-import { deleteUser } from '../../contributor-management/user/user.request.params';
+import {
+  deleteUser,
+  reregisterUser,
+} from '../../contributor-management/user/user.request.params';
 import {
   assignRoleToUser,
   removeRoleFromUser,
 } from '@functional-api/roleset/roles-request.params';
 import { eventOnRoleSetApplication } from '../roleset-events.request.params';
 import {
-  createUser,
   delay,
   TestScenarioConfig,
   TestScenarioFactory,
@@ -167,7 +169,7 @@ describe('Application', () => {
 
     // Assert
     expect(applicationDataTwo.error?.errors[0].message).toContain(
-      `Application not possible: An open application (ID: ${applicationId}) already exists for contributor ${TestUserManager.users.qaUser.id} on RoleSet: ${baseScenario.space.community.roleSetId}.`
+      'Application not possible: An open application already exists for actor'
     );
   });
 
@@ -293,13 +295,8 @@ describe('Application', () => {
     // Assert
     expect(countAppAfterCreateDelete).toEqual(countAppBeforeCreateDelete);
 
-    // Immediately re-register, will be a new user - do not want a failing test to leave QA user not registered
-    await createUser({
-      firstName: 'qa',
-      lastName: 'user',
-      profileData: { displayName: 'qa user' },
-      email: 'qa.user@alkem.io',
-    });
+    // Fully re-register the user so subsequent tests work
+    await reregisterUser('qa.user@alkem.io', 'qa', 'user');
   });
 });
 

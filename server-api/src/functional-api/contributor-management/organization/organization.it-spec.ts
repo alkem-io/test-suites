@@ -52,7 +52,7 @@ describe('Organization', () => {
         website,
         contactEmail
       );
-
+      console.log('create organization response', res.error, res.data);
       const data = res.data?.createOrganization;
       const testOrgId = data?.id ?? '';
 

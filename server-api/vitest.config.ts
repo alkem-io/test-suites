@@ -55,15 +55,11 @@ export default defineConfig({
       html: `./html-report/report_${timestamp}.html`,
     },
     projects: [
-      project('account', [
-        'src/functional-api/account/**/*.it-spec.ts',
-      ]),
+      project('account', ['src/functional-api/account/**/*.it-spec.ts']),
       project('activity-logs', [
         'src/functional-api/activity-logs/**/*.it-spec.ts',
       ]),
-      project('callouts', [
-        'src/functional-api/callout/**/*.it-spec.ts',
-      ]),
+      project('callouts', ['src/functional-api/callout/**/*.it-spec.ts']),
       project('communication', [
         'src/functional-api/communications/**/*.it-spec.ts',
       ]),
@@ -88,15 +84,11 @@ export default defineConfig({
       project('integration', [
         'src/functional-api/integration/**/*.it-spec.ts',
       ]),
-      project('journey', [
-        'src/functional-api/journey/**/*.it-spec.ts',
-      ]),
+      project('journey', ['src/functional-api/journey/**/*.it-spec.ts']),
       project('lifecycle', [
         'src/functional-api/templates/innovation-flow/**/*.it-spec.ts',
       ]),
-      project('lookup', [
-        'src/functional-api/lookup/**/*.it-spec.ts',
-      ]),
+      project('lookup', ['src/functional-api/lookup/**/*.it-spec.ts']),
       project('notifications', [
         'src/functional-api/notifications/**/*.it-spec.ts',
       ]),
@@ -112,29 +104,20 @@ export default defineConfig({
       project('organization', [
         'src/functional-api/contributor-management/organization/**/*.it-spec.ts',
       ]),
-      project('pagination', [
-        'src/functional-api/pagination/**/*.it-spec.ts',
-      ]),
-      project('platform', [
-        'src/functional-api/platform/**/*.it-spec.ts',
-      ]),
+      project('pagination', ['src/functional-api/pagination/**/*.it-spec.ts']),
+      project('platform', ['src/functional-api/platform/**/*.it-spec.ts']),
       project('preferences', [
         'src/functional-api/preferences/**/*.it-spec.ts',
       ]),
-      project('roleset', [
-        'src/functional-api/roleset/**/*.it-spec.ts',
-      ]),
-      project('search', [
-        'src/functional-api/search/**/*.it-spec.ts',
-      ]),
-      project('storage', [
-        'src/functional-api/storage/**/*.it-spec.ts',
-      ]),
+      project('roleset', ['src/functional-api/roleset/**/*.it-spec.ts']),
+      project('search', ['src/functional-api/search/**/*.it-spec.ts']),
+      project('storage', ['src/functional-api/storage/**/*.it-spec.ts']),
       project('subscriptions', [
         'src/functional-api/subscriptions/**/*.it-spec.ts',
       ]),
-      project('templates', [
-        'src/functional-api/templates/**/*.it-spec.ts',
+      project('templates', ['src/functional-api/templates/**/*.it-spec.ts']),
+      project('graphql-guard', [
+        'src/functional-api/graphql-guard/**/*.it-spec.ts',
       ]),
       project('nightly', [
         'src/functional-api/account/**/*.it-spec.ts',

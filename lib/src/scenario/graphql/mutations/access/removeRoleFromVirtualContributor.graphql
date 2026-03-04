@@ -6,7 +6,7 @@ mutation RemoveRoleFromVirtualContributor(
     roleData: {
       roleSetID: $roleSetId
       role: MEMBER
-      contributorID: $virtualContributorId
+      actorID: $virtualContributorId
     }
   ) {
     id

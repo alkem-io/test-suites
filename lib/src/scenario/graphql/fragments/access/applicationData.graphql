@@ -10,7 +10,11 @@ fragment ApplicationData on Application {
     id
   }
   contributor {
-    ...UserDataLight
+    id
+    profile {
+      id
+      displayName
+    }
   }
   authorization {
     myPrivileges

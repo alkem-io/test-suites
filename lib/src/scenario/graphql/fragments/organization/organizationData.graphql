@@ -11,12 +11,12 @@ fragment OrganizationData on Organization {
   account {
     ...AccountData
   }
-  agent {
+  actor {
     id
   }
-  groups {
-    ...GroupData
-  }
+  # groups {
+  #   ...GroupData
+  # }
   roleSet {
     usersInRole(role: ASSOCIATE) {
       ...MemberData

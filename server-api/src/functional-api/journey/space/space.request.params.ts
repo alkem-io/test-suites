@@ -402,7 +402,7 @@ export const getUserRoleSpacesVisibility = async (
     graphqlClient.GetUserRoles(
       {
         rolesData: {
-          userID,
+          actorID: userID,
           filter: { visibilities: [visibility] },
         },
       },
