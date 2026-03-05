@@ -9,7 +9,7 @@ fragment ApplicationData on Application {
   questions {
     id
   }
-  contributor {
+  actor {
     id
     profile {
       id

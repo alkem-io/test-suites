@@ -4,7 +4,7 @@ import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 
 export const inviteForEntryRoleOnRoleSet = async (
   roleSetId: string,
-  invitedContributorIds: string[],
+  invitedActorIds: string[],
   invitedUserEmails: string[],
   welcomeMessage: string,
   extraRoles: RoleName[],
@@ -15,7 +15,7 @@ export const inviteForEntryRoleOnRoleSet = async (
     graphqlClient.InviteForEntryRoleOnRoleSet(
       {
         roleSetId,
-        invitedContributorIds,
+        invitedActorIds,
         invitedUserEmails,
         welcomeMessage,
         extraRoles,

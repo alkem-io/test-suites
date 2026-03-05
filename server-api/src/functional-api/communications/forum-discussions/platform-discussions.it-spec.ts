@@ -35,6 +35,14 @@ beforeAll(async () => {
   await TestScenarioFactory.createBaseScenarioEmpty(scenarioConfig);
   const res = await getPlatformForumData();
   platformDiscussionId = res?.data?.platform.forum.id ?? '';
+
+  // Clean up any leftover discussions from previous test runs
+  // to avoid "displayName is already taken" conflicts
+  const existingDiscs = await getPlatformDiscussionsData();
+  const discussions = existingDiscs?.data?.platform.forum.discussions ?? [];
+  for (const disc of discussions) {
+    await deleteDiscussion(disc.id);
+  }
 });
 
 describe('Platform discussions - CRUD operations', () => {

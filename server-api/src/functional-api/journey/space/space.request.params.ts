@@ -1,12 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  SpaceVisibility,
   SpacePrivacyMode,
   CommunityMembershipPolicy,
 } from '@alkemio/client-lib';
 import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
-import { CreateSpaceOnAccountInput } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import {
+  CreateSpaceOnAccountInput,
+  SpaceVisibility,
+} from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 const uniqueId = UniqueIDGenerator.getID();
 

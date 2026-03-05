@@ -450,7 +450,9 @@ export type ActivityLogEntryCalloutWhiteboardCreated = ActivityLogEntry & {
 };
 
 export type ActivityLogEntryMemberJoined = ActivityLogEntry & {
-  /** The type of the Contributor that joined the Community. */
+  /** The Actor that joined the Community. */
+  actor: Actor;
+  /** The type of the Actor that joined the Community. */
   actorType: ActorType;
   /** Indicates if this Activity happened on a child Collaboration. Child results can be included via the "includeChild" parameter. */
   child: Scalars["Boolean"]["output"];
@@ -458,8 +460,6 @@ export type ActivityLogEntryMemberJoined = ActivityLogEntry & {
   collaborationID: Scalars["UUID"]["output"];
   /** The community that was joined. */
   community: Community;
-  /** The Contributor that joined the Community. */
-  contributor: Actor;
   /** The timestamp for the Activity. */
   createdDate: Scalars["DateTime"]["output"];
   /** The text details for this Activity. */
@@ -591,7 +591,7 @@ export type ActorRoles = {
   id: Scalars["UUID"]["output"];
   /** The invitations for the specified user; only accessible for platform admins */
   invitations: Array<CommunityInvitationForRoleResult>;
-  /** Details of the roles the contributor has in Organizations */
+  /** Details of the roles the actor has in Organizations */
   organizations: Array<RolesResultOrganization>;
   /** Details of Spaces the User or Organization is a member of, with child memberships - if Space is accessible for the current user. */
   spaces: Array<RolesResultSpace>;
@@ -675,10 +675,10 @@ export type AiServerAiPersonaArgs = {
 };
 
 export type Application = {
+  /** The Actor for this Application. */
+  actor: Actor;
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
-  /** The User for this Application. */
-  contributor: Actor;
   /** The date at which the entity was created. */
   createdDate: Scalars["DateTime"]["output"];
   /** The ID of the entity */
@@ -1060,7 +1060,7 @@ export type CalloutContributionsArgs = {
   shuffle?: InputMaybe<Scalars["Boolean"]["input"]>;
 };
 
-export enum CalloutAllowedContributors {
+export enum CalloutAllowedActors {
   Admins = "ADMINS",
   Members = "MEMBERS",
   None = "NONE",
@@ -1177,7 +1177,7 @@ export type CalloutSettingsContribution = {
   /** The allowed contribution types for this callout. */
   allowedTypes: Array<CalloutContributionType>;
   /** Indicate who can add more contributions to the callout. */
-  canAddContributions: CalloutAllowedContributors;
+  canAddContributions: CalloutAllowedActors;
   /** Can comment to contributions callout. */
   commentsEnabled: Scalars["Boolean"]["output"];
   /** Can add contributions to the Callout. Allowed Contribution types is going to be readOnly, so this field can be used to enable or disable the contribution temporarily instead of setting allowedTypes to None. */
@@ -1768,7 +1768,7 @@ export type CreateCalloutSettingsContributionData = {
   /** Allowed Contribution types. */
   allowedTypes?: Maybe<Array<CalloutContributionType>>;
   /** Indicate who can add more contributions to the callout. */
-  canAddContributions?: Maybe<CalloutAllowedContributors>;
+  canAddContributions?: Maybe<CalloutAllowedActors>;
   /** Can comment to contributions callout. */
   commentsEnabled?: Maybe<Scalars["Boolean"]["output"]>;
   /** Can add contributions to the Callout. Allowed Contribution types is going to be readOnly, so this field can be used to enable or disable the contribution temporarily instead of setting allowedTypes to None. */
@@ -1779,7 +1779,7 @@ export type CreateCalloutSettingsContributionInput = {
   /** Allowed Contribution types. */
   allowedTypes?: InputMaybe<Array<CalloutContributionType>>;
   /** Indicate who can add more contributions to the callout. */
-  canAddContributions?: InputMaybe<CalloutAllowedContributors>;
+  canAddContributions?: InputMaybe<CalloutAllowedActors>;
   /** Can comment to contributions callout. */
   commentsEnabled?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** Can add contributions to the Callout. Allowed Contribution types is going to be readOnly, so this field can be used to enable or disable the contribution temporarily instead of setting allowedTypes to None. */
@@ -2738,12 +2738,12 @@ export type ISearchCategoryResult = {
 };
 
 export type ISearchResults = {
+  /** The search results for actors (Users, Organizations). */
+  actorResults: ISearchCategoryResult;
   /** The search results for Callouts. */
   calloutResults: ISearchCategoryResult;
   /** The search results for contributions (Posts, Whiteboards, Memos). */
   contributionResults: ISearchCategoryResult;
-  /** The search results for contributors (Users, Organizations). */
-  contributorResults: ISearchCategoryResult;
   /** The search results callout framings (Whiteboards, Memos as additional content). */
   framingResults: ISearchCategoryResult;
   /** The search results for Spaces / Subspaces. */
@@ -2772,7 +2772,7 @@ export type InAppNotification = {
   state: NotificationEventInAppState;
   /** The triggered date of the notification event. */
   triggeredAt: Scalars["DateTime"]["output"];
-  /** The Contributor who triggered the notification. */
+  /** The Actor who triggered the notification. */
   triggeredBy?: Maybe<Actor>;
   /** The type of the notification event. */
   type: NotificationEvent;
@@ -3148,19 +3148,19 @@ export type InputCreatorQueryResultsWhiteboardArgs = {
 };
 
 export type Invitation = {
+  /** The Actor who is invited. */
+  actor: Actor;
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
-  /** The Actor who is invited. */
-  contributor: Actor;
   /** The User who triggered the invitation. */
   createdBy?: Maybe<User>;
   /** The date at which the entity was created. */
   createdDate: Scalars["DateTime"]["output"];
-  /** Additional roles to assign to the Contributor, in addition to the entry Role. */
+  /** Additional roles to assign to the Actor, in addition to the entry Role. */
   extraRoles: Array<RoleName>;
   /** The ID of the entity */
   id: Scalars["UUID"]["output"];
-  /** Whether to also add the invited contributor to the parent community. */
+  /** Whether to also add the invited actor to the parent community. */
   invitedToParent: Scalars["Boolean"]["output"];
   /** Is this lifecycle in a final state (done). */
   isFinalized: Scalars["Boolean"]["output"];
@@ -3182,8 +3182,8 @@ export type InvitationEventInput = {
 export type InviteForEntryRoleOnRoleSetInput = {
   /** Additional roles to assign in addition to the entry Role. */
   extraRoles: Array<RoleName>;
-  /** The identifiers for the contributors being invited. */
-  invitedContributorIDs: Array<Scalars["UUID"]["input"]>;
+  /** The identifiers for the actors being invited. */
+  invitedActorIDs: Array<Scalars["UUID"]["input"]>;
   invitedUserEmails: Array<Scalars["String"]["input"]>;
   roleSetID: Scalars["UUID"]["input"];
   /** The welcome message to send */
@@ -4209,7 +4209,7 @@ export type Mutation = {
   assignLicensePlanToSpace: Space;
   /** Assigns a User to a role on the Platform. */
   assignPlatformRoleToUser: User;
-  /** Assigns a Contributor (User, Organization, or Virtual Contributor) to a role in the specified RoleSet. */
+  /** Assigns an Actor (User, Organization, or Virtual Contributor) to a role in the specified RoleSet. */
   assignRole: Actor;
   /** Assigns an Organization a Role in the specified Community. */
   assignRoleToOrganization: Organization;
@@ -4383,7 +4383,7 @@ export type Mutation = {
   removePlatformRoleFromUser: User;
   /** Remove a reaction on a message from the specified Room. */
   removeReactionToMessageInRoom: Scalars["Boolean"]["output"];
-  /** Removes a Contributor (User, Organization, or Virtual Contributor) from a role in the specified RoleSet. */
+  /** Removes an Actor (User, Organization, or Virtual Contributor) from a role in the specified RoleSet. */
   removeRole: Actor;
   /** Removes an Organization from a Role in the specified Community. */
   removeRoleFromOrganization: Organization;
@@ -5752,7 +5752,7 @@ export type PlatformInvitation = {
   platformRole?: Maybe<RoleName>;
   /** Whether a new user profile has been created. */
   profileCreated: Scalars["Boolean"]["output"];
-  /** Additional roles to assign to the Contributor, in addition to the entry Role. */
+  /** Additional roles to assign to the Actor, in addition to the entry Role. */
   roleSetExtraRoles: Array<RoleName>;
   /** Whether to also add the invited user to the parent community. */
   roleSetInvitedToParent: Scalars["Boolean"]["output"];
@@ -6620,7 +6620,7 @@ export type RolesResult = {
   id: Scalars["String"]["output"];
   /** Name Identifier of the entity */
   nameID: Scalars["NameID"]["output"];
-  /** The roles held by the contributor */
+  /** The roles held by the actor */
   roles: Array<Scalars["String"]["output"]>;
 };
 
@@ -6633,7 +6633,7 @@ export type RolesResultCommunity = {
   level: SpaceLevel;
   /** Name Identifier of the entity */
   nameID: Scalars["NameID"]["output"];
-  /** The roles held by the contributor */
+  /** The roles held by the actor */
   roles: Array<Scalars["String"]["output"]>;
 };
 
@@ -6646,7 +6646,7 @@ export type RolesResultOrganization = {
   nameID: Scalars["NameID"]["output"];
   /** The Organization ID. */
   organizationID: Scalars["String"]["output"];
-  /** The roles held by the contributor */
+  /** The roles held by the actor */
   roles: Array<Scalars["String"]["output"]>;
   /** Details of the Groups in the Organizations the user is a member of */
   userGroups: Array<RolesResult>;
@@ -6661,7 +6661,7 @@ export type RolesResultSpace = {
   level: SpaceLevel;
   /** Name Identifier of the entity */
   nameID: Scalars["NameID"]["output"];
-  /** The roles held by the contributor */
+  /** The roles held by the actor */
   roles: Array<Scalars["String"]["output"]>;
   /** The Space ID */
   spaceID: Scalars["String"]["output"];
@@ -7182,6 +7182,7 @@ export enum SpaceVisibility {
   Active = "ACTIVE",
   Archived = "ARCHIVED",
   Demo = "DEMO",
+  Inactive = "INACTIVE",
 }
 
 export type StorageAggregator = {
@@ -7715,7 +7716,7 @@ export type UpdateCalloutPublishInfoInput = {
 
 export type UpdateCalloutSettingsContributionInput = {
   /** Indicate who can add more contributions to the callout. */
-  canAddContributions?: InputMaybe<CalloutAllowedContributors>;
+  canAddContributions?: InputMaybe<CalloutAllowedActors>;
   /** Can comment to contributions callout. */
   commentsEnabled?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** Can add contributions to the Callout. Allowed Contribution types is going to be readOnly, so this field can be used to enable or disable the contribution temporarily instead of setting allowedTypes to None. */
@@ -9191,10 +9192,10 @@ export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> =
         })
       | (Omit<
           SchemaTypes.ActivityLogEntryMemberJoined,
-          "community" | "contributor" | "space" | "triggeredBy"
+          "actor" | "community" | "space" | "triggeredBy"
         > & {
+          actor: _RefType["Actor"];
           community: _RefType["Community"];
-          contributor: _RefType["Actor"];
           space?: SchemaTypes.Maybe<_RefType["Space"]>;
           triggeredBy: _RefType["User"];
         })
@@ -9592,10 +9593,10 @@ export type ResolversTypes = {
   ActivityLogEntryMemberJoined: ResolverTypeWrapper<
     Omit<
       SchemaTypes.ActivityLogEntryMemberJoined,
-      "community" | "contributor" | "space" | "triggeredBy"
+      "actor" | "community" | "space" | "triggeredBy"
     > & {
+      actor: ResolversTypes["Actor"];
       community: ResolversTypes["Community"];
-      contributor: ResolversTypes["Actor"];
       space?: SchemaTypes.Maybe<ResolversTypes["Space"]>;
       triggeredBy: ResolversTypes["User"];
     }
@@ -9635,9 +9636,7 @@ export type ResolversTypes = {
   AiPersonaEngine: SchemaTypes.AiPersonaEngine;
   AiServer: ResolverTypeWrapper<SchemaTypes.AiServer>;
   Application: ResolverTypeWrapper<
-    Omit<SchemaTypes.Application, "contributor"> & {
-      contributor: ResolversTypes["Actor"];
-    }
+    Omit<SchemaTypes.Application, "actor"> & { actor: ResolversTypes["Actor"] }
   >;
   ApplicationEventInput: SchemaTypes.ApplicationEventInput;
   ApplyForEntryRoleOnRoleSetInput: SchemaTypes.ApplyForEntryRoleOnRoleSetInput;
@@ -9687,7 +9686,7 @@ export type ResolversTypes = {
       publishedBy?: SchemaTypes.Maybe<ResolversTypes["User"]>;
     }
   >;
-  CalloutAllowedContributors: SchemaTypes.CalloutAllowedContributors;
+  CalloutAllowedActors: SchemaTypes.CalloutAllowedActors;
   CalloutContribution: ResolverTypeWrapper<
     Omit<SchemaTypes.CalloutContribution, "createdBy"> & {
       createdBy?: SchemaTypes.Maybe<ResolversTypes["User"]>;
@@ -9967,15 +9966,15 @@ export type ResolversTypes = {
   ISearchResults: ResolverTypeWrapper<
     Omit<
       SchemaTypes.ISearchResults,
+      | "actorResults"
       | "calloutResults"
       | "contributionResults"
-      | "contributorResults"
       | "framingResults"
       | "spaceResults"
     > & {
+      actorResults: ResolversTypes["ISearchCategoryResult"];
       calloutResults: ResolversTypes["ISearchCategoryResult"];
       contributionResults: ResolversTypes["ISearchCategoryResult"];
-      contributorResults: ResolversTypes["ISearchCategoryResult"];
       framingResults: ResolversTypes["ISearchCategoryResult"];
       spaceResults: ResolversTypes["ISearchCategoryResult"];
     }
@@ -10149,8 +10148,8 @@ export type ResolversTypes = {
   InputCreatorQueryResults: ResolverTypeWrapper<SchemaTypes.InputCreatorQueryResults>;
   Int: ResolverTypeWrapper<SchemaTypes.Scalars["Int"]["output"]>;
   Invitation: ResolverTypeWrapper<
-    Omit<SchemaTypes.Invitation, "contributor" | "createdBy"> & {
-      contributor: ResolversTypes["Actor"];
+    Omit<SchemaTypes.Invitation, "actor" | "createdBy"> & {
+      actor: ResolversTypes["Actor"];
       createdBy?: SchemaTypes.Maybe<ResolversTypes["User"]>;
     }
   >;
@@ -11094,10 +11093,10 @@ export type ResolversParentTypes = {
   };
   ActivityLogEntryMemberJoined: Omit<
     SchemaTypes.ActivityLogEntryMemberJoined,
-    "community" | "contributor" | "space" | "triggeredBy"
+    "actor" | "community" | "space" | "triggeredBy"
   > & {
+    actor: ResolversParentTypes["Actor"];
     community: ResolversParentTypes["Community"];
-    contributor: ResolversParentTypes["Actor"];
     space?: SchemaTypes.Maybe<ResolversParentTypes["Space"]>;
     triggeredBy: ResolversParentTypes["User"];
   };
@@ -11128,8 +11127,8 @@ export type ResolversParentTypes = {
   AddVisualToMediaGalleryInput: SchemaTypes.AddVisualToMediaGalleryInput;
   AiPersona: SchemaTypes.AiPersona;
   AiServer: SchemaTypes.AiServer;
-  Application: Omit<SchemaTypes.Application, "contributor"> & {
-    contributor: ResolversParentTypes["Actor"];
+  Application: Omit<SchemaTypes.Application, "actor"> & {
+    actor: ResolversParentTypes["Actor"];
   };
   ApplicationEventInput: SchemaTypes.ApplicationEventInput;
   ApplyForEntryRoleOnRoleSetInput: SchemaTypes.ApplyForEntryRoleOnRoleSetInput;
@@ -11401,15 +11400,15 @@ export type ResolversParentTypes = {
   };
   ISearchResults: Omit<
     SchemaTypes.ISearchResults,
+    | "actorResults"
     | "calloutResults"
     | "contributionResults"
-    | "contributorResults"
     | "framingResults"
     | "spaceResults"
   > & {
+    actorResults: ResolversParentTypes["ISearchCategoryResult"];
     calloutResults: ResolversParentTypes["ISearchCategoryResult"];
     contributionResults: ResolversParentTypes["ISearchCategoryResult"];
-    contributorResults: ResolversParentTypes["ISearchCategoryResult"];
     framingResults: ResolversParentTypes["ISearchCategoryResult"];
     spaceResults: ResolversParentTypes["ISearchCategoryResult"];
   };
@@ -11548,8 +11547,8 @@ export type ResolversParentTypes = {
   InnovationPacksInput: SchemaTypes.InnovationPacksInput;
   InputCreatorQueryResults: SchemaTypes.InputCreatorQueryResults;
   Int: SchemaTypes.Scalars["Int"]["output"];
-  Invitation: Omit<SchemaTypes.Invitation, "contributor" | "createdBy"> & {
-    contributor: ResolversParentTypes["Actor"];
+  Invitation: Omit<SchemaTypes.Invitation, "actor" | "createdBy"> & {
+    actor: ResolversParentTypes["Actor"];
     createdBy?: SchemaTypes.Maybe<ResolversParentTypes["User"]>;
   };
   InvitationEventInput: SchemaTypes.InvitationEventInput;
@@ -12689,11 +12688,11 @@ export type ActivityLogEntryMemberJoinedResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["ActivityLogEntryMemberJoined"] = ResolversParentTypes["ActivityLogEntryMemberJoined"]
 > = {
+  actor?: Resolver<ResolversTypes["Actor"], ParentType, ContextType>;
   actorType?: Resolver<ResolversTypes["ActorType"], ParentType, ContextType>;
   child?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   collaborationID?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   community?: Resolver<ResolversTypes["Community"], ParentType, ContextType>;
-  contributor?: Resolver<ResolversTypes["Actor"], ParentType, ContextType>;
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   description?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
@@ -12933,12 +12932,12 @@ export type ApplicationResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["Application"] = ResolversParentTypes["Application"]
 > = {
+  actor?: Resolver<ResolversTypes["Actor"], ParentType, ContextType>;
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
     ParentType,
     ContextType
   >;
-  contributor?: Resolver<ResolversTypes["Actor"], ParentType, ContextType>;
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   isFinalized?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
@@ -13383,7 +13382,7 @@ export type CalloutSettingsContributionResolvers<
     ContextType
   >;
   canAddContributions?: Resolver<
-    ResolversTypes["CalloutAllowedContributors"],
+    ResolversTypes["CalloutAllowedActors"],
     ParentType,
     ContextType
   >;
@@ -14011,7 +14010,7 @@ export type CreateCalloutSettingsContributionDataResolvers<
     ContextType
   >;
   canAddContributions?: Resolver<
-    SchemaTypes.Maybe<ResolversTypes["CalloutAllowedContributors"]>,
+    SchemaTypes.Maybe<ResolversTypes["CalloutAllowedActors"]>,
     ParentType,
     ContextType
   >;
@@ -14666,17 +14665,17 @@ export type ISearchResultsResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["ISearchResults"] = ResolversParentTypes["ISearchResults"]
 > = {
+  actorResults?: Resolver<
+    ResolversTypes["ISearchCategoryResult"],
+    ParentType,
+    ContextType
+  >;
   calloutResults?: Resolver<
     ResolversTypes["ISearchCategoryResult"],
     ParentType,
     ContextType
   >;
   contributionResults?: Resolver<
-    ResolversTypes["ISearchCategoryResult"],
-    ParentType,
-    ContextType
-  >;
-  contributorResults?: Resolver<
     ResolversTypes["ISearchCategoryResult"],
     ParentType,
     ContextType
@@ -15318,12 +15317,12 @@ export type InvitationResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["Invitation"] = ResolversParentTypes["Invitation"]
 > = {
+  actor?: Resolver<ResolversTypes["Actor"], ParentType, ContextType>;
   authorization?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Authorization"]>,
     ParentType,
     ContextType
   >;
-  contributor?: Resolver<ResolversTypes["Actor"], ParentType, ContextType>;
   createdBy?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["User"]>,
     ParentType,
@@ -22035,7 +22034,7 @@ export type ApplicationDataFragment = {
   isFinalized: boolean;
   lifecycle: { id: string };
   questions: Array<{ id: string }>;
-  contributor: {
+  actor: {
     id: string;
     profile?: { id: string; displayName: string } | undefined;
   };
@@ -22067,7 +22066,7 @@ export type InvitationDataFragment = {
           | undefined;
       }
     | undefined;
-  contributor: {
+  actor: {
     id: string;
     profile?: { id: string; displayName: string } | undefined;
   };
@@ -23836,7 +23835,7 @@ export type CalloutDataFragment = {
     framing: { commentsEnabled: boolean };
     contribution: {
       enabled: boolean;
-      canAddContributions: SchemaTypes.CalloutAllowedContributors;
+      canAddContributions: SchemaTypes.CalloutAllowedActors;
       commentsEnabled: boolean;
     };
   };
@@ -24306,7 +24305,7 @@ export type CalloutDetailsFragment = {
       __typename: "CalloutSettingsContribution";
       enabled: boolean;
       allowedTypes: Array<SchemaTypes.CalloutContributionType>;
-      canAddContributions: SchemaTypes.CalloutAllowedContributors;
+      canAddContributions: SchemaTypes.CalloutAllowedActors;
       commentsEnabled: boolean;
     };
     framing: { __typename: "CalloutSettingsFraming"; commentsEnabled: boolean };
@@ -24362,7 +24361,7 @@ export type CalloutSettingsFullFragment = {
     __typename: "CalloutSettingsContribution";
     enabled: boolean;
     allowedTypes: Array<SchemaTypes.CalloutContributionType>;
-    canAddContributions: SchemaTypes.CalloutAllowedContributors;
+    canAddContributions: SchemaTypes.CalloutAllowedActors;
     commentsEnabled: boolean;
   };
   framing: { __typename: "CalloutSettingsFraming"; commentsEnabled: boolean };
@@ -25576,7 +25575,7 @@ export type CollaborationDataFragment = {
         framing: { commentsEnabled: boolean };
         contribution: {
           enabled: boolean;
-          canAddContributions: SchemaTypes.CalloutAllowedContributors;
+          canAddContributions: SchemaTypes.CalloutAllowedActors;
           commentsEnabled: boolean;
         };
       };
@@ -25817,7 +25816,7 @@ export type CommunityDataFragment = {
       isFinalized: boolean;
       lifecycle: { id: string };
       questions: Array<{ id: string }>;
-      contributor: {
+      actor: {
         id: string;
         profile?: { id: string; displayName: string } | undefined;
       };
@@ -28663,7 +28662,7 @@ export type SubspaceL1DataFragment = {
             framing: { commentsEnabled: boolean };
             contribution: {
               enabled: boolean;
-              canAddContributions: SchemaTypes.CalloutAllowedContributors;
+              canAddContributions: SchemaTypes.CalloutAllowedActors;
               commentsEnabled: boolean;
             };
           };
@@ -28921,7 +28920,7 @@ export type SubspaceL1DataFragment = {
           isFinalized: boolean;
           lifecycle: { id: string };
           questions: Array<{ id: string }>;
-          contributor: {
+          actor: {
             id: string;
             profile?: { id: string; displayName: string } | undefined;
           };
@@ -30527,7 +30526,7 @@ export type SubspaceL1DataFragment = {
           framing: { commentsEnabled: boolean };
           contribution: {
             enabled: boolean;
-            canAddContributions: SchemaTypes.CalloutAllowedContributors;
+            canAddContributions: SchemaTypes.CalloutAllowedActors;
             commentsEnabled: boolean;
           };
         };
@@ -30777,7 +30776,7 @@ export type SubspaceL1DataFragment = {
         isFinalized: boolean;
         lifecycle: { id: string };
         questions: Array<{ id: string }>;
-        contributor: {
+        actor: {
           id: string;
           profile?: { id: string; displayName: string } | undefined;
         };
@@ -32390,7 +32389,7 @@ export type SubspaceL2DataFragment = {
             framing: { commentsEnabled: boolean };
             contribution: {
               enabled: boolean;
-              canAddContributions: SchemaTypes.CalloutAllowedContributors;
+              canAddContributions: SchemaTypes.CalloutAllowedActors;
               commentsEnabled: boolean;
             };
           };
@@ -32648,7 +32647,7 @@ export type SubspaceL2DataFragment = {
           isFinalized: boolean;
           lifecycle: { id: string };
           questions: Array<{ id: string }>;
-          contributor: {
+          actor: {
             id: string;
             profile?: { id: string; displayName: string } | undefined;
           };
@@ -34254,7 +34253,7 @@ export type SubspaceL2DataFragment = {
           framing: { commentsEnabled: boolean };
           contribution: {
             enabled: boolean;
-            canAddContributions: SchemaTypes.CalloutAllowedContributors;
+            canAddContributions: SchemaTypes.CalloutAllowedActors;
             commentsEnabled: boolean;
           };
         };
@@ -34504,7 +34503,7 @@ export type SubspaceL2DataFragment = {
         isFinalized: boolean;
         lifecycle: { id: string };
         questions: Array<{ id: string }>;
-        contributor: {
+        actor: {
           id: string;
           profile?: { id: string; displayName: string } | undefined;
         };
@@ -35962,7 +35961,7 @@ export type SpaceDataFragment = {
         isFinalized: boolean;
         lifecycle: { id: string };
         questions: Array<{ id: string }>;
-        contributor: {
+        actor: {
           id: string;
           profile?: { id: string; displayName: string } | undefined;
         };
@@ -37486,7 +37485,7 @@ export type SpaceDataFragment = {
           framing: { commentsEnabled: boolean };
           contribution: {
             enabled: boolean;
-            canAddContributions: SchemaTypes.CalloutAllowedContributors;
+            canAddContributions: SchemaTypes.CalloutAllowedActors;
             commentsEnabled: boolean;
           };
         };
@@ -38132,7 +38131,7 @@ export type SpaceDataFragment = {
             framing: { commentsEnabled: boolean };
             contribution: {
               enabled: boolean;
-              canAddContributions: SchemaTypes.CalloutAllowedContributors;
+              canAddContributions: SchemaTypes.CalloutAllowedActors;
               commentsEnabled: boolean;
             };
           };
@@ -38390,7 +38389,7 @@ export type SpaceDataFragment = {
           isFinalized: boolean;
           lifecycle: { id: string };
           questions: Array<{ id: string }>;
-          contributor: {
+          actor: {
             id: string;
             profile?: { id: string; displayName: string } | undefined;
           };
@@ -40609,7 +40608,7 @@ export type SubspaceDataFragment = {
           framing: { commentsEnabled: boolean };
           contribution: {
             enabled: boolean;
-            canAddContributions: SchemaTypes.CalloutAllowedContributors;
+            canAddContributions: SchemaTypes.CalloutAllowedActors;
             commentsEnabled: boolean;
           };
         };
@@ -40859,7 +40858,7 @@ export type SubspaceDataFragment = {
         isFinalized: boolean;
         lifecycle: { id: string };
         questions: Array<{ id: string }>;
-        contributor: {
+        actor: {
           id: string;
           profile?: { id: string; displayName: string } | undefined;
         };
@@ -44698,7 +44697,7 @@ export type ApplyForEntryRoleMutation = {
     isFinalized: boolean;
     lifecycle: { id: string };
     questions: Array<{ id: string }>;
-    contributor: {
+    actor: {
       id: string;
       profile?: { id: string; displayName: string } | undefined;
     };
@@ -44740,7 +44739,7 @@ export type EventOnApplicationMutation = {
     isFinalized: boolean;
     lifecycle: { id: string };
     questions: Array<{ id: string }>;
-    contributor: {
+    actor: {
       id: string;
       profile?: { id: string; displayName: string } | undefined;
     };
@@ -44778,7 +44777,7 @@ export type InvitationStateEventMutation = {
             | undefined;
         }
       | undefined;
-    contributor: {
+    actor: {
       id: string;
       profile?: { id: string; displayName: string } | undefined;
     };
@@ -44790,7 +44789,7 @@ export type InvitationStateEventMutation = {
 
 export type InviteForEntryRoleOnRoleSetMutationVariables = SchemaTypes.Exact<{
   roleSetId: SchemaTypes.Scalars["UUID"]["input"];
-  invitedContributorIds:
+  invitedActorIds:
     | Array<SchemaTypes.Scalars["UUID"]["input"]>
     | SchemaTypes.Scalars["UUID"]["input"];
   invitedUserEmails:
@@ -44811,7 +44810,7 @@ export type InviteForEntryRoleOnRoleSetMutation = {
           __typename: "Invitation";
           id: string;
           state: string;
-          contributor: {
+          actor: {
             __typename: "Actor";
             id: string;
             profile?:
@@ -46312,7 +46311,7 @@ export type CreateCalloutOnCalloutsSetMutation = {
         __typename: "CalloutSettingsContribution";
         enabled: boolean;
         allowedTypes: Array<SchemaTypes.CalloutContributionType>;
-        canAddContributions: SchemaTypes.CalloutAllowedContributors;
+        canAddContributions: SchemaTypes.CalloutAllowedActors;
         commentsEnabled: boolean;
       };
       framing: {
@@ -46818,7 +46817,7 @@ export type UpdateCalloutMutation = {
         __typename: "CalloutSettingsContribution";
         enabled: boolean;
         allowedTypes: Array<SchemaTypes.CalloutContributionType>;
-        canAddContributions: SchemaTypes.CalloutAllowedContributors;
+        canAddContributions: SchemaTypes.CalloutAllowedActors;
         commentsEnabled: boolean;
       };
       framing: {
@@ -47281,7 +47280,7 @@ export type UpdateCalloutVisibilityMutation = {
       framing: { commentsEnabled: boolean };
       contribution: {
         enabled: boolean;
-        canAddContributions: SchemaTypes.CalloutAllowedContributors;
+        canAddContributions: SchemaTypes.CalloutAllowedActors;
         commentsEnabled: boolean;
       };
     };
@@ -48351,7 +48350,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
           isFinalized: boolean;
           lifecycle: { id: string };
           questions: Array<{ id: string }>;
-          contributor: {
+          actor: {
             id: string;
             profile?: { id: string; displayName: string } | undefined;
           };
@@ -49879,7 +49878,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
             framing: { commentsEnabled: boolean };
             contribution: {
               enabled: boolean;
-              canAddContributions: SchemaTypes.CalloutAllowedContributors;
+              canAddContributions: SchemaTypes.CalloutAllowedActors;
               commentsEnabled: boolean;
             };
           };
@@ -50543,7 +50542,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
               framing: { commentsEnabled: boolean };
               contribution: {
                 enabled: boolean;
-                canAddContributions: SchemaTypes.CalloutAllowedContributors;
+                canAddContributions: SchemaTypes.CalloutAllowedActors;
                 commentsEnabled: boolean;
               };
             };
@@ -50805,7 +50804,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
             isFinalized: boolean;
             lifecycle: { id: string };
             questions: Array<{ id: string }>;
-            contributor: {
+            actor: {
               id: string;
               profile?: { id: string; displayName: string } | undefined;
             };
@@ -52841,7 +52840,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
           isFinalized: boolean;
           lifecycle: { id: string };
           questions: Array<{ id: string }>;
-          contributor: {
+          actor: {
             id: string;
             profile?: { id: string; displayName: string } | undefined;
           };
@@ -54369,7 +54368,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
             framing: { commentsEnabled: boolean };
             contribution: {
               enabled: boolean;
-              canAddContributions: SchemaTypes.CalloutAllowedContributors;
+              canAddContributions: SchemaTypes.CalloutAllowedActors;
               commentsEnabled: boolean;
             };
           };
@@ -55033,7 +55032,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
               framing: { commentsEnabled: boolean };
               contribution: {
                 enabled: boolean;
-                canAddContributions: SchemaTypes.CalloutAllowedContributors;
+                canAddContributions: SchemaTypes.CalloutAllowedActors;
                 commentsEnabled: boolean;
               };
             };
@@ -55295,7 +55294,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
             isFinalized: boolean;
             lifecycle: { id: string };
             questions: Array<{ id: string }>;
-            contributor: {
+            actor: {
               id: string;
               profile?: { id: string; displayName: string } | undefined;
             };
@@ -57349,7 +57348,7 @@ export type UpdateSpaceMutation = {
           isFinalized: boolean;
           lifecycle: { id: string };
           questions: Array<{ id: string }>;
-          contributor: {
+          actor: {
             id: string;
             profile?: { id: string; displayName: string } | undefined;
           };
@@ -58877,7 +58876,7 @@ export type UpdateSpaceMutation = {
             framing: { commentsEnabled: boolean };
             contribution: {
               enabled: boolean;
-              canAddContributions: SchemaTypes.CalloutAllowedContributors;
+              canAddContributions: SchemaTypes.CalloutAllowedActors;
               commentsEnabled: boolean;
             };
           };
@@ -59541,7 +59540,7 @@ export type UpdateSpaceMutation = {
               framing: { commentsEnabled: boolean };
               contribution: {
                 enabled: boolean;
-                canAddContributions: SchemaTypes.CalloutAllowedContributors;
+                canAddContributions: SchemaTypes.CalloutAllowedActors;
                 commentsEnabled: boolean;
               };
             };
@@ -59803,7 +59802,7 @@ export type UpdateSpaceMutation = {
             isFinalized: boolean;
             lifecycle: { id: string };
             questions: Array<{ id: string }>;
-            contributor: {
+            actor: {
               id: string;
               profile?: { id: string; displayName: string } | undefined;
             };
@@ -62067,7 +62066,7 @@ export type CreateSubspaceMutation = {
               framing: { commentsEnabled: boolean };
               contribution: {
                 enabled: boolean;
-                canAddContributions: SchemaTypes.CalloutAllowedContributors;
+                canAddContributions: SchemaTypes.CalloutAllowedActors;
                 commentsEnabled: boolean;
               };
             };
@@ -62329,7 +62328,7 @@ export type CreateSubspaceMutation = {
             isFinalized: boolean;
             lifecycle: { id: string };
             questions: Array<{ id: string }>;
-            contributor: {
+            actor: {
               id: string;
               profile?: { id: string; displayName: string } | undefined;
             };
@@ -63957,7 +63956,7 @@ export type CreateSubspaceMutation = {
             framing: { commentsEnabled: boolean };
             contribution: {
               enabled: boolean;
-              canAddContributions: SchemaTypes.CalloutAllowedContributors;
+              canAddContributions: SchemaTypes.CalloutAllowedActors;
               commentsEnabled: boolean;
             };
           };
@@ -64215,7 +64214,7 @@ export type CreateSubspaceMutation = {
           isFinalized: boolean;
           lifecycle: { id: string };
           questions: Array<{ id: string }>;
-          contributor: {
+          actor: {
             id: string;
             profile?: { id: string; displayName: string } | undefined;
           };
@@ -65852,7 +65851,7 @@ export type UpdateSubspaceMutation = {
               framing: { commentsEnabled: boolean };
               contribution: {
                 enabled: boolean;
-                canAddContributions: SchemaTypes.CalloutAllowedContributors;
+                canAddContributions: SchemaTypes.CalloutAllowedActors;
                 commentsEnabled: boolean;
               };
             };
@@ -66114,7 +66113,7 @@ export type UpdateSubspaceMutation = {
             isFinalized: boolean;
             lifecycle: { id: string };
             questions: Array<{ id: string }>;
-            contributor: {
+            actor: {
               id: string;
               profile?: { id: string; displayName: string } | undefined;
             };
@@ -67742,7 +67741,7 @@ export type UpdateSubspaceMutation = {
             framing: { commentsEnabled: boolean };
             contribution: {
               enabled: boolean;
-              canAddContributions: SchemaTypes.CalloutAllowedContributors;
+              canAddContributions: SchemaTypes.CalloutAllowedActors;
               commentsEnabled: boolean;
             };
           };
@@ -68000,7 +67999,7 @@ export type UpdateSubspaceMutation = {
           isFinalized: boolean;
           lifecycle: { id: string };
           questions: Array<{ id: string }>;
-          contributor: {
+          actor: {
             id: string;
             profile?: { id: string; displayName: string } | undefined;
           };
@@ -71365,7 +71364,7 @@ export type RoleSetApplicationsInvitationsQuery = {
             isFinalized: boolean;
             lifecycle: { id: string };
             questions: Array<{ id: string }>;
-            contributor: {
+            actor: {
               id: string;
               profile?: { id: string; displayName: string } | undefined;
             };
@@ -71400,7 +71399,7 @@ export type RoleSetApplicationsInvitationsQuery = {
                     | undefined;
                 }
               | undefined;
-            contributor: {
+            actor: {
               id: string;
               profile?: { id: string; displayName: string } | undefined;
             };
@@ -71617,7 +71616,7 @@ export type GetSpaceInvitationsQuery = {
                         | undefined;
                     }
                   | undefined;
-                contributor: {
+                actor: {
                   id: string;
                   profile?: { id: string; displayName: string } | undefined;
                 };
@@ -72266,7 +72265,7 @@ export type SpaceCalloutQuery = {
                     __typename: "CalloutSettingsContribution";
                     enabled: boolean;
                     allowedTypes: Array<SchemaTypes.CalloutContributionType>;
-                    canAddContributions: SchemaTypes.CalloutAllowedContributors;
+                    canAddContributions: SchemaTypes.CalloutAllowedActors;
                     commentsEnabled: boolean;
                   };
                   framing: {
@@ -72773,7 +72772,7 @@ export type CalloutDetailsQuery = {
               __typename: "CalloutSettingsContribution";
               enabled: boolean;
               allowedTypes: Array<SchemaTypes.CalloutContributionType>;
-              canAddContributions: SchemaTypes.CalloutAllowedContributors;
+              canAddContributions: SchemaTypes.CalloutAllowedActors;
               commentsEnabled: boolean;
             };
             framing: {
@@ -79429,7 +79428,7 @@ export type SearchQuery = {
         | { type: SchemaTypes.SearchResultType }
       >;
     };
-    contributorResults: {
+    actorResults: {
       results: Array<
         | { type: SchemaTypes.SearchResultType }
         | { type: SchemaTypes.SearchResultType }
@@ -79908,7 +79907,7 @@ export type GetSpaceDataQuery = {
                 isFinalized: boolean;
                 lifecycle: { id: string };
                 questions: Array<{ id: string }>;
-                contributor: {
+                actor: {
                   id: string;
                   profile?: { id: string; displayName: string } | undefined;
                 };
@@ -81469,7 +81468,7 @@ export type GetSpaceDataQuery = {
                   framing: { commentsEnabled: boolean };
                   contribution: {
                     enabled: boolean;
-                    canAddContributions: SchemaTypes.CalloutAllowedContributors;
+                    canAddContributions: SchemaTypes.CalloutAllowedActors;
                     commentsEnabled: boolean;
                   };
                 };
@@ -82142,7 +82141,7 @@ export type GetSpaceDataQuery = {
                     framing: { commentsEnabled: boolean };
                     contribution: {
                       enabled: boolean;
-                      canAddContributions: SchemaTypes.CalloutAllowedContributors;
+                      canAddContributions: SchemaTypes.CalloutAllowedActors;
                       commentsEnabled: boolean;
                     };
                   };
@@ -82416,7 +82415,7 @@ export type GetSpaceDataQuery = {
                   isFinalized: boolean;
                   lifecycle: { id: string };
                   questions: Array<{ id: string }>;
-                  contributor: {
+                  actor: {
                     id: string;
                     profile?: { id: string; displayName: string } | undefined;
                   };
@@ -84731,7 +84730,7 @@ export type GetSubspacePageQuery = {
                     framing: { commentsEnabled: boolean };
                     contribution: {
                       enabled: boolean;
-                      canAddContributions: SchemaTypes.CalloutAllowedContributors;
+                      canAddContributions: SchemaTypes.CalloutAllowedActors;
                       commentsEnabled: boolean;
                     };
                   };
@@ -85005,7 +85004,7 @@ export type GetSubspacePageQuery = {
                   isFinalized: boolean;
                   lifecycle: { id: string };
                   questions: Array<{ id: string }>;
-                  contributor: {
+                  actor: {
                     id: string;
                     profile?: { id: string; displayName: string } | undefined;
                   };
@@ -86650,7 +86649,7 @@ export type GetSubspacePageQuery = {
                   framing: { commentsEnabled: boolean };
                   contribution: {
                     enabled: boolean;
-                    canAddContributions: SchemaTypes.CalloutAllowedContributors;
+                    canAddContributions: SchemaTypes.CalloutAllowedActors;
                     commentsEnabled: boolean;
                   };
                 };
@@ -86918,7 +86917,7 @@ export type GetSubspacePageQuery = {
                 isFinalized: boolean;
                 lifecycle: { id: string };
                 questions: Array<{ id: string }>;
-                contributor: {
+                actor: {
                   id: string;
                   profile?: { id: string; displayName: string } | undefined;
                 };
@@ -88577,7 +88576,7 @@ export type GetSpaceAboutDetailsQuery = {
                   framing: { commentsEnabled: boolean };
                   contribution: {
                     enabled: boolean;
-                    canAddContributions: SchemaTypes.CalloutAllowedContributors;
+                    canAddContributions: SchemaTypes.CalloutAllowedActors;
                     commentsEnabled: boolean;
                   };
                 };
@@ -88845,7 +88844,7 @@ export type GetSpaceAboutDetailsQuery = {
                 isFinalized: boolean;
                 lifecycle: { id: string };
                 questions: Array<{ id: string }>;
-                contributor: {
+                actor: {
                   id: string;
                   profile?: { id: string; displayName: string } | undefined;
                 };
@@ -90515,7 +90514,7 @@ export type GetSubspacesDataQuery = {
                       framing: { commentsEnabled: boolean };
                       contribution: {
                         enabled: boolean;
-                        canAddContributions: SchemaTypes.CalloutAllowedContributors;
+                        canAddContributions: SchemaTypes.CalloutAllowedActors;
                         commentsEnabled: boolean;
                       };
                     };
@@ -90789,7 +90788,7 @@ export type GetSubspacesDataQuery = {
                     isFinalized: boolean;
                     lifecycle: { id: string };
                     questions: Array<{ id: string }>;
-                    contributor: {
+                    actor: {
                       id: string;
                       profile?: { id: string; displayName: string } | undefined;
                     };
@@ -92437,7 +92436,7 @@ export type GetSubspacesDataQuery = {
                     framing: { commentsEnabled: boolean };
                     contribution: {
                       enabled: boolean;
-                      canAddContributions: SchemaTypes.CalloutAllowedContributors;
+                      canAddContributions: SchemaTypes.CalloutAllowedActors;
                       commentsEnabled: boolean;
                     };
                   };
@@ -92711,7 +92710,7 @@ export type GetSubspacesDataQuery = {
                   isFinalized: boolean;
                   lifecycle: { id: string };
                   questions: Array<{ id: string }>;
-                  contributor: {
+                  actor: {
                     id: string;
                     profile?: { id: string; displayName: string } | undefined;
                   };
@@ -93878,7 +93877,7 @@ export type GetSubspaceApplicationsQuery = {
                 isFinalized: boolean;
                 lifecycle: { id: string };
                 questions: Array<{ id: string }>;
-                contributor: {
+                actor: {
                   id: string;
                   profile?: { id: string; displayName: string } | undefined;
                 };
@@ -93936,7 +93935,7 @@ export type GetSpaceApplicationsQuery = {
                 isFinalized: boolean;
                 lifecycle: { id: string };
                 questions: Array<{ id: string }>;
-                contributor: {
+                actor: {
                   id: string;
                   profile?: { id: string; displayName: string } | undefined;
                 };
@@ -94665,7 +94664,7 @@ export type MeQueryQuery = {
         isFinalized: boolean;
         lifecycle: { id: string };
         questions: Array<{ id: string }>;
-        contributor: {
+        actor: {
           id: string;
           profile?: { id: string; displayName: string } | undefined;
         };
@@ -94703,7 +94702,7 @@ export type MeQueryQuery = {
                 | undefined;
             }
           | undefined;
-        contributor: {
+        actor: {
           id: string;
           profile?: { id: string; displayName: string } | undefined;
         };
@@ -95202,7 +95201,7 @@ export const InvitationDataFragmentDoc = gql`
     createdBy {
       ...UserDataLight
     }
-    contributor {
+    actor {
       id
       profile {
         id
@@ -96176,7 +96175,7 @@ export const ApplicationDataFragmentDoc = gql`
     questions {
       id
     }
-    contributor {
+    actor {
       id
       profile {
         id
@@ -97131,14 +97130,14 @@ export const InvitationStateEventDocument = gql`
 export const InviteForEntryRoleOnRoleSetDocument = gql`
   mutation InviteForEntryRoleOnRoleSet(
     $roleSetId: UUID!
-    $invitedContributorIds: [UUID!]!
+    $invitedActorIds: [UUID!]!
     $invitedUserEmails: [String!]!
     $welcomeMessage: String
     $extraRoles: [RoleName!]!
   ) {
     inviteForEntryRoleOnRoleSet(
       invitationData: {
-        invitedContributorIDs: $invitedContributorIds
+        invitedActorIDs: $invitedActorIds
         invitedUserEmails: $invitedUserEmails
         roleSetID: $roleSetId
         welcomeMessage: $welcomeMessage
@@ -97149,7 +97148,7 @@ export const InviteForEntryRoleOnRoleSetDocument = gql`
       invitation {
         id
         state
-        contributor {
+        actor {
           id
           profile {
             id
@@ -99074,7 +99073,7 @@ export const SearchDocument = gql`
           ...SearchResultCallout
         }
       }
-      contributorResults {
+      actorResults {
         results {
           type
           ...SearchResultUser

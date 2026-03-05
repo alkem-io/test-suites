@@ -13,7 +13,7 @@ import { UserModel } from "./models/UserModel";
 import { OrganizationModel } from "./models/OrganizationModel";
 import { LogManager } from "./LogManager";
 import {
-  CalloutAllowedContributors,
+  CalloutAllowedActors,
   CalloutVisibility,
   RoleName,
 } from "../core/generated/alkemio-schema";
@@ -888,7 +888,7 @@ export class TestScenarioFactory {
           framing: { commentsEnabled: true },
           contribution: {
             allowedTypes: [CalloutContributionType.Link],
-            canAddContributions: CalloutAllowedContributors.Members,
+            canAddContributions: CalloutAllowedActors.Members,
             enabled: true,
             commentsEnabled: true,
           },
@@ -925,7 +925,7 @@ export class TestScenarioFactory {
           //framing: { commentsEnabled: true },
           contribution: {
             allowedTypes: [CalloutContributionType.Post],
-            canAddContributions: CalloutAllowedContributors.Members,
+            canAddContributions: CalloutAllowedActors.Members,
             enabled: true,
             commentsEnabled: true,
           },
@@ -958,7 +958,7 @@ export class TestScenarioFactory {
         settings: {
           contribution: {
             allowedTypes: [CalloutContributionType.Link],
-            canAddContributions: CalloutAllowedContributors.Members,
+            canAddContributions: CalloutAllowedActors.Members,
             enabled: true,
             commentsEnabled: true,
           },
@@ -992,7 +992,7 @@ export class TestScenarioFactory {
           settings: {
             contribution: {
               allowedTypes: [CalloutContributionType.Whiteboard],
-              canAddContributions: CalloutAllowedContributors.Members,
+              canAddContributions: CalloutAllowedActors.Members,
               enabled: true,
               commentsEnabled: true,
             },
