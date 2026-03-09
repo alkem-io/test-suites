@@ -18,7 +18,7 @@ import { sendMessageToRoom } from '@functional-api/communications/communication.
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import {
-  CalloutAllowedContributors,
+  CalloutAllowedActors,
   CalloutFramingType,
   CalloutVisibility,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
@@ -209,7 +209,7 @@ describe('Callout - Close State - User Privileges Posts', () => {
           },
           contribution: {
             enabled: true,
-            canAddContributions: CalloutAllowedContributors.Admins,
+            canAddContributions: CalloutAllowedActors.Admins,
             commentsEnabled: true,
           },
         },
@@ -369,7 +369,7 @@ describe.skip('Callout - Close State - User Privileges Discussions', () => {
           },
           contribution: {
             enabled: true,
-            canAddContributions: CalloutAllowedContributors.Admins,
+            canAddContributions: CalloutAllowedActors.Admins,
             commentsEnabled: true,
           },
         },

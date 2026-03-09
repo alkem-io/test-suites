@@ -9,8 +9,12 @@ fragment InvitationData on Invitation {
   createdBy {
     ...UserDataLight
   }
-  contributor {
-    ...UserDataLight
+  actor {
+    id
+    profile {
+      id
+      displayName
+    }
   }
   authorization {
     myPrivileges

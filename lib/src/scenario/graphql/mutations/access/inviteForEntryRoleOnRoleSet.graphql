@@ -1,13 +1,13 @@
 mutation InviteForEntryRoleOnRoleSet(
   $roleSetId: UUID!
-  $invitedContributorIds: [UUID!]!
+  $invitedActorIds: [UUID!]!
   $invitedUserEmails: [String!]!
   $welcomeMessage: String
   $extraRoles: [RoleName!]!
 ) {
   inviteForEntryRoleOnRoleSet(
     invitationData: {
-      invitedContributorIDs: $invitedContributorIds
+      invitedActorIDs: $invitedActorIds
       invitedUserEmails: $invitedUserEmails
       roleSetID: $roleSetId
       welcomeMessage: $welcomeMessage
@@ -18,7 +18,7 @@ mutation InviteForEntryRoleOnRoleSet(
     invitation {
       id
       state
-      contributor {
+      actor {
         id
         profile {
           id

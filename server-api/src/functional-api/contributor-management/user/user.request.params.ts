@@ -3,12 +3,12 @@ import {
   registerInAlkemioOrFail,
   registerInKratosOrFail,
   TestUser,
+  TestUserManager,
   UniqueIDGenerator,
   verifyInKratosOrFail,
 } from '@alkemio/tests-lib';
 import { UpdateUserSettingsEntityInput } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
-//import { getGraphqlClient } from '@src/_utils/graphqlClient';
 
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -21,6 +21,33 @@ export const registerVerifiedUser = async (
   await verifyInKratosOrFail(email);
   const userId = await registerInAlkemioOrFail(firstName, lastName, email);
   return userId;
+};
+
+/**
+ * Re-registers an already-deleted test user (Kratos + verify + Alkemio),
+ * then refreshes the cached TestUserManager model so subsequent tests work.
+ */
+export const reregisterUser = async (
+  email: string,
+  firstName: string,
+  lastName: string
+) => {
+  await registerVerifiedUser(email, firstName, lastName);
+  await TestUserManager.refreshUserModel(email);
+};
+
+/**
+ * Deletes a test user and fully re-registers them (Kratos + verify + Alkemio),
+ * then refreshes the cached TestUserManager model so subsequent tests work.
+ */
+export const deleteAndReregisterUser = async (
+  userId: string,
+  email: string,
+  firstName: string,
+  lastName: string
+) => {
+  await deleteUser(userId);
+  await reregisterUser(email, firstName, lastName);
 };
 
 export const getDefaultUserData = () => {
@@ -103,7 +130,7 @@ export const deleteUser = async (
       {
         deleteData: {
           ID: userId,
-          deleteIdentity: false,
+          deleteIdentity: true,
         },
       },
       {

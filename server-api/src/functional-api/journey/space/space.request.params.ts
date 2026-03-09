@@ -1,12 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  SpaceVisibility,
   SpacePrivacyMode,
   CommunityMembershipPolicy,
 } from '@alkemio/client-lib';
 import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
-import { CreateSpaceOnAccountInput } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import {
+  CreateSpaceOnAccountInput,
+  SpaceVisibility,
+} from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -390,19 +392,19 @@ export const getSpacesFilteredByVisibilityNoAccess = async (
 };
 
 export const getUserRoleSpacesVisibility = async (
-  userID: string,
+  actorID: string,
   visibility: SpaceVisibility,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
-  if (userID.length !== 36) {
-    throw new Error(`Invalid user ID: ${userID}`);
+  if (actorID.length !== 36) {
+    throw new Error(`Invalid actor ID: ${actorID}`);
   }
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
     graphqlClient.GetUserRoles(
       {
         rolesData: {
-          userID,
+          actorID,
           filter: { visibilities: [visibility] },
         },
       },

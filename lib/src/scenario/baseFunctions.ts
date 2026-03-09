@@ -9,6 +9,7 @@ import {
   CreateSpaceOnAccountInput,
   RoleName,
   TagsetReservedName,
+  CalloutAllowedActors,
 } from "../core/generated/alkemio-schema";
 import { graphqlErrorWrapper } from "../utils/graphql.wrapper";
 import { getGraphqlClient } from "../utils/graphqlClient";
@@ -19,7 +20,6 @@ import {
   TemplateType,
   SpaceLevel,
   CalloutFramingType,
-  CalloutAllowedContributors,
   VirtualContributorBodyOfKnowledgeType,
   VirtualContributorDataAccessMode,
   VirtualContributorInteractionMode,
@@ -66,7 +66,7 @@ export const assignRoleToUser = async (
     graphqlClient.assignRoleToUser(
       {
         roleData: {
-          contributorID: userID,
+          actorID: userID,
           roleSetID,
           role,
         },
@@ -149,7 +149,7 @@ export const defaultCallout = {
     contribution: {
       enabled: true,
       allowedTypes: [CalloutContributionType.Post],
-      canAddContributions: CalloutAllowedContributors.Members,
+      canAddContributions: CalloutAllowedActors.Members,
       commentsEnabled: true,
     },
     framing: { commentsEnabled: true },
@@ -172,7 +172,7 @@ export const defaultWhiteboard = {
     contribution: {
       enabled: true,
       allowedTypes: [CalloutContributionType.Whiteboard],
-      canAddContributions: CalloutAllowedContributors.Members,
+      canAddContributions: CalloutAllowedActors.Members,
       commentsEnabled: true,
     },
     framing: { commentsEnabled: true },
@@ -199,7 +199,7 @@ export const createCalloutOnCalloutsSet = async (
       contribution?: {
         enabled?: boolean;
         allowedTypes?: CalloutContributionType[];
-        canAddContributions?: CalloutAllowedContributors;
+        canAddContributions?: CalloutAllowedActors;
         commentsEnabled?: boolean;
       };
       framing?: { commentsEnabled: boolean };
@@ -251,7 +251,7 @@ export const createWhiteboardCalloutOnCalloutsSet = async (
       contribution?: {
         enabled?: true;
         allowedTypes?: CalloutContributionType[];
-        canAddContributions?: CalloutAllowedContributors;
+        canAddContributions?: CalloutAllowedActors;
         commentsEnabled?: true;
       };
       framing?: { commentsEnabled: true };
@@ -290,7 +290,7 @@ export const createWhiteboardCalloutOnCalloutsSet = async (
 };
 
 export const assignPlatformRole = async (
-  contributorID: string,
+  actorID: string,
   roleName: RoleName,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -298,7 +298,7 @@ export const assignPlatformRole = async (
   const callback = (authToken: string | undefined) =>
     graphqlClient.assignPlatformRoleToUser(
       {
-        roleData: { contributorID, role: roleName },
+        roleData: { actorID, role: roleName },
       },
       {
         authorization: `Bearer ${authToken}`,
@@ -734,11 +734,11 @@ export const createTemplateOnTemplatesSet = async (
     LINK: CalloutContributionType.Link,
   };
 
-  // Map string literals to CalloutAllowedContributors enum
-  const allowedContributorsMap: Record<string, CalloutAllowedContributors> = {
-    MEMBERS: CalloutAllowedContributors.Members,
-    ADMINS: CalloutAllowedContributors.Admins,
-    NONE: CalloutAllowedContributors.None,
+  // Map string literals to CalloutAllowedActors enum
+  const allowedContributorsMap: Record<string, CalloutAllowedActors> = {
+    MEMBERS: CalloutAllowedActors.Members,
+    ADMINS: CalloutAllowedActors.Admins,
+    NONE: CalloutAllowedActors.None,
   };
 
   // Minimal defaults for Space template settings

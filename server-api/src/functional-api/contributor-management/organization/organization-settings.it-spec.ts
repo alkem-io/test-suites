@@ -17,8 +17,6 @@ import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/O
 import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
 const uniqueId = UniqueIDGenerator.getID();
-const firstName = `fn${uniqueId}`;
-const lastName = `ln${uniqueId}`;
 let userId: string;
 const domain = `alkem${uniqueId}.io`;
 
@@ -39,13 +37,7 @@ beforeAll(async () => {
   await assignRoleToUser(
     TestUserManager.users.spaceMember.id,
     baseScenario.organization.roleSetId,
-    RoleName.Owner
-  );
-
-  await assignRoleToUser(
-    TestUserManager.users.spaceAdmin.id,
-    baseScenario.organization.roleSetId,
-    RoleName.Owner
+    RoleName.Admin
   );
 });
 
@@ -59,8 +51,8 @@ describe('Organization settings', () => {
     test.each`
       userRole
       ${TestUser.GLOBAL_ADMIN}
-      ${TestUser.SPACE_ADMIN}
       ${TestUser.SPACE_MEMBER}
+      ${TestUser.ORGANIZATION_ADMIN}
     `(
       'User: "$userRole" is able to update organization settings ',
       async ({ userRole }) => {
@@ -123,7 +115,8 @@ describe('Organization settings', () => {
 
       // Act
       const email = `enm${uniqueId}@${domain}`;
-      userId = await registerVerifiedUser(email, firstName, lastName);
+      const testId = UniqueIDGenerator.getID();
+      userId = await registerVerifiedUser(email, `fn${testId}`, `ln${testId}`);
 
       const organizationData = await getOrganizationData(
         baseScenario.organization.id
@@ -153,7 +146,8 @@ describe('Organization settings', () => {
 
       // Act
       const email = `dism${uniqueId}@${domain}`;
-      userId = await registerVerifiedUser(email, firstName, lastName);
+      const testId = UniqueIDGenerator.getID();
+      userId = await registerVerifiedUser(email, `fn${testId}`, `ln${testId}`);
 
       const organizationData = await getOrganizationData(
         baseScenario.organization.id
@@ -183,7 +177,8 @@ describe('Organization settings', () => {
 
       // Act
       const email = `enms${uniqueId}@a${domain}`;
-      userId = await registerVerifiedUser(email, firstName, lastName);
+      const testId = UniqueIDGenerator.getID();
+      userId = await registerVerifiedUser(email, `fn${testId}`, `ln${testId}`);
 
       const organizationData = await getOrganizationData(
         baseScenario.organization.id
@@ -237,7 +232,8 @@ describe('Organization settings', () => {
 
       // Act
       const email = `en${uniqueId}@${domain}`;
-      userId = await registerVerifiedUser(email, firstName, lastName);
+      const testId = UniqueIDGenerator.getID();
+      userId = await registerVerifiedUser(email, `fn${testId}`, `ln${testId}`);
 
       const organizationData = await getOrganizationData(
         baseScenario.organization.id
@@ -268,7 +264,8 @@ describe('Organization settings', () => {
 
       // Act
       const email = `dis${uniqueId}@${domain}`;
-      userId = await registerVerifiedUser(email, firstName, lastName);
+      const testId = UniqueIDGenerator.getID();
+      userId = await registerVerifiedUser(email, `fn${testId}`, `ln${testId}`);
 
       const organizationData = await getOrganizationData(
         baseScenario.organization.id
@@ -297,7 +294,8 @@ describe('Organization settings', () => {
 
       // Act
       const email = `en${uniqueId}@a${domain}`;
-      userId = await registerVerifiedUser(email, firstName, lastName);
+      const testId = UniqueIDGenerator.getID();
+      userId = await registerVerifiedUser(email, `fn${testId}`, `ln${testId}`);
 
       const organizationData = await getOrganizationData(
         baseScenario.organization.id

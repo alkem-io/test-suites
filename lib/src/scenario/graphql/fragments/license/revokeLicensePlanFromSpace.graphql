@@ -12,7 +12,7 @@ mutation RevokeLicensePlanFromSpace($planData: RevokeLicensePlanFromSpace!) {
     subspaces {
       id
     }
-    agent {
+    actor {
       id
     }
   }
