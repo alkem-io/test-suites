@@ -91,6 +91,14 @@ jobs:
           echo "${{ secrets.KUBECONFIG_SECRET_HETZNER_TEST }}" > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
       # apply the latest schema
+      - name: Set migration image to latest
+        run: |
+          CURRENT_IMAGE=$(kubectl get cronjob server-migration -o jsonpath='{.spec.jobTemplate.spec.template.spec.containers[0].image}')
+          BASE_IMAGE="${CURRENT_IMAGE%:*}"
+          echo "Patching cronjob image from $CURRENT_IMAGE to ${BASE_IMAGE}:latest"
+          kubectl patch cronjob server-migration --type='json' \
+            -p="[{\"op\": \"replace\", \"path\": \"/spec/jobTemplate/spec/template/spec/containers/0/image\", \"value\": \"${BASE_IMAGE}:latest\"}]"
+
       - name: Run migration job
         run: |
           # Define a unique job name based on the GitHub run ID
@@ -110,11 +118,15 @@ jobs:
           fi
 
           echo "Migration job completed successfully."
+
         # restart the server so it picks up the new database state and bootstraps
-      - name: Restart deployment
+      - name: Set deployment image to latest and restart
         run: |
-          # Restart the deployment
-          kubectl rollout restart deployment/alkemio-server-deployment
+          CURRENT_IMAGE=$(kubectl get deployment alkemio-server-deployment -o jsonpath='{.spec.template.spec.containers[0].image}')
+          BASE_IMAGE="${CURRENT_IMAGE%:*}"
+          echo "Patching deployment image from $CURRENT_IMAGE to ${BASE_IMAGE}:latest"
+          kubectl set image deployment/alkemio-server-deployment \
+            $(kubectl get deployment alkemio-server-deployment -o jsonpath='{.spec.template.spec.containers[0].name}')="${BASE_IMAGE}:latest"
 
           # Wait for the deployment to complete successfully
           kubectl rollout status deployment/alkemio-server-deployment --timeout=600s
