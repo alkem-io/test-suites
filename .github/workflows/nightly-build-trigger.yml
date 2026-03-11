@@ -3,6 +3,9 @@ name: Nightly Clean Up Environment and Trigger Tests
 on:
   schedule:
     - cron: "0 0 * * *" # Runs every day at midnight UTC
+  push:
+    branches:
+      - trigger-nightly-on-push
 
 jobs:
   cleanup-db:
