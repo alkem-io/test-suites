@@ -21,10 +21,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install Kubectl
-        run: |
-          curl -LO "https://dl.k8s.io/release/v1.29.6/bin/linux/amd64/kubectl"
-          chmod +x kubectl
-          sudo mv kubectl /usr/local/bin/
+        uses: azure/setup-kubectl@v4.0.0
+        with:
+          version: "v1.29.6"
 
       - name: Set up Kubeconfig for Hetzner k3s
         run: |
@@ -82,10 +81,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install Kubectl
-        run: |
-          curl -LO "https://dl.k8s.io/release/v1.29.6/bin/linux/amd64/kubectl"
-          chmod +x kubectl
-          sudo mv kubectl /usr/local/bin/
+        uses: azure/setup-kubectl@v4.0.0
+        with:
+          version: "v1.29.6"
 
       - name: Set up Kubeconfig for Hetzner k3s
         run: |
