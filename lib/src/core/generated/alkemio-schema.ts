@@ -700,6 +700,13 @@ export type ApplyForEntryRoleOnRoleSetInput = {
   roleSetID: Scalars["UUID"]["input"];
 };
 
+export type AssignConversationMemberInput = {
+  /** The ID of the conversation to add a member to. */
+  conversationID: Scalars["UUID"]["input"];
+  /** The ID of the member (user or VC) to add. */
+  memberID: Scalars["UUID"]["input"];
+};
+
 export type AssignLicensePlanToAccount = {
   /** The ID of the Account to assign the LicensePlan to. */
   accountID: Scalars["UUID"]["input"];
@@ -1352,11 +1359,6 @@ export type CommunicationAdminUpdateRoomStateInput = {
   roomID: Scalars["String"]["input"];
 };
 
-export enum CommunicationConversationType {
-  UserUser = "USER_USER",
-  UserVc = "USER_VC",
-}
-
 export type CommunicationSendMessageToCommunityLeadsInput = {
   /** The Community the message is being sent to */
   communityId: Scalars["UUID"]["input"];
@@ -1541,17 +1543,13 @@ export type Conversation = {
   createdDate: Scalars["DateTime"]["output"];
   /** The ID of the entity */
   id: Scalars["UUID"]["output"];
+  /** All members of this Conversation, returned as actors with their types. */
+  members: Array<Actor>;
   messaging: Messaging;
   /** The room for this Conversation. */
   room?: Maybe<Room>;
-  /** The type of this Conversation (USER_USER or USER_VC), inferred from member agent types. */
-  type: CommunicationConversationType;
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
-  /** The other user participating in this Conversation (excludes the current user). */
-  user?: Maybe<User>;
-  /** The virtual contributor participating in this Conversation (only for USER_AGENT conversations). */
-  virtualContributor?: Maybe<VirtualContributor>;
 };
 
 /** Event fired when a new conversation is created. Each member receives a personalized event with the other participant resolved via conversation.user or conversation.virtualContributor. */
@@ -1562,12 +1560,32 @@ export type ConversationCreatedEvent = {
   message?: Maybe<Message>;
 };
 
+/** The type of conversation to create. Maps to room type: DIRECT → DM room, GROUP → group room. */
+export enum ConversationCreationType {
+  Direct = "DIRECT",
+  Group = "GROUP",
+}
+
+/** Event fired when a conversation is deleted. All members are notified. */
+export type ConversationDeletedEvent = {
+  /** The ID of the deleted conversation. UUID only — conversation no longer exists. */
+  conversationID: Scalars["UUID"]["output"];
+};
+
 /** Payload for conversation subscription events. */
 export type ConversationEventSubscriptionResult = {
   /** Present when eventType is CONVERSATION_CREATED. */
   conversationCreated?: Maybe<ConversationCreatedEvent>;
+  /** Present when eventType is CONVERSATION_DELETED. */
+  conversationDeleted?: Maybe<ConversationDeletedEvent>;
+  /** Present when eventType is CONVERSATION_UPDATED. */
+  conversationUpdated?: Maybe<ConversationUpdatedEvent>;
   /** The type of event. Use this to determine which payload field is populated. */
   eventType: ConversationEventType;
+  /** Present when eventType is MEMBER_ADDED. */
+  memberAdded?: Maybe<ConversationMemberAddedEvent>;
+  /** Present when eventType is MEMBER_REMOVED. */
+  memberRemoved?: Maybe<ConversationMemberRemovedEvent>;
   /** Present when eventType is MESSAGE_RECEIVED. */
   messageReceived?: Maybe<ConversationMessageReceivedEvent>;
   /** Present when eventType is MESSAGE_REMOVED. */
@@ -1579,10 +1597,30 @@ export type ConversationEventSubscriptionResult = {
 /** The type of conversation event. */
 export enum ConversationEventType {
   ConversationCreated = "CONVERSATION_CREATED",
+  ConversationDeleted = "CONVERSATION_DELETED",
+  ConversationUpdated = "CONVERSATION_UPDATED",
+  MemberAdded = "MEMBER_ADDED",
+  MemberRemoved = "MEMBER_REMOVED",
   MessageReceived = "MESSAGE_RECEIVED",
   MessageRemoved = "MESSAGE_REMOVED",
   ReadReceiptUpdated = "READ_RECEIPT_UPDATED",
 }
+
+/** Event fired when a member is added to a group conversation. */
+export type ConversationMemberAddedEvent = {
+  /** The actor that was added as a member. */
+  addedMember: Actor;
+  /** The conversation the member was added to. */
+  conversation: Conversation;
+};
+
+/** Event fired when a member is removed from or leaves a group conversation. */
+export type ConversationMemberRemovedEvent = {
+  /** The conversation the member was removed from. */
+  conversation: Conversation;
+  /** The ID of the removed member. UUID only — removed member may not be resolvable after removal. */
+  removedMemberID: Scalars["UUID"]["output"];
+};
 
 /** Event fired when a new message is received in a conversation. */
 export type ConversationMessageReceivedEvent = {
@@ -1606,6 +1644,12 @@ export type ConversationReadReceiptUpdatedEvent = {
   lastReadEventId: Scalars["MessageID"]["output"];
   /** The room ID where the read receipt was updated. */
   roomId: Scalars["UUID"]["output"];
+};
+
+/** Event fired when a conversation is updated (displayName, avatarUrl). */
+export type ConversationUpdatedEvent = {
+  /** The conversation that was updated. */
+  conversation: Conversation;
 };
 
 export type ConversationVcResetInput = {
@@ -1873,9 +1917,14 @@ export type CreateContributionOnCalloutInput = {
 };
 
 export type CreateConversationInput = {
-  userID: Scalars["UUID"]["input"];
-  virtualContributorID?: InputMaybe<Scalars["UUID"]["input"]>;
-  wellKnownVirtualContributor?: InputMaybe<VirtualContributorWellKnown>;
+  /** Optional avatar URL for GROUP conversations. Ignored for DIRECT conversations. Accepts mxc:// or https:// URLs. */
+  avatarUrl?: InputMaybe<Scalars["String"]["input"]>;
+  /** Optional display name for GROUP conversations. Ignored for DIRECT conversations (Synapse uses the other member name automatically). */
+  displayName?: InputMaybe<Scalars["String"]["input"]>;
+  /** IDs of members to add. For DIRECT: exactly 1 ID. For GROUP: 1+ IDs. Creator is auto-included. */
+  memberIDs: Array<Scalars["UUID"]["input"]>;
+  /** The type of conversation to create: DIRECT for 1-on-1, GROUP for multi-party. */
+  type: ConversationCreationType;
 };
 
 export type CreateInnovationFlowData = {
@@ -3235,6 +3284,11 @@ export type LatestReleaseDiscussion = {
   nameID: Scalars["String"]["output"];
 };
 
+export type LeaveConversationInput = {
+  /** The ID of the conversation to leave. */
+  conversationID: Scalars["UUID"]["input"];
+};
+
 export type Library = {
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
@@ -3928,16 +3982,8 @@ export type LookupQueryResultsWhiteboardArgs = {
 };
 
 export type MeConversationsResult = {
-  /** Conversations between users. */
-  users: Array<Conversation>;
-  /** Get a conversation with a well-known virtual contributor for the current user. */
-  virtualContributor?: Maybe<Conversation>;
-  /** Conversations between users and virtual contributors. */
-  virtualContributors: Array<Conversation>;
-};
-
-export type MeConversationsResultVirtualContributorArgs = {
-  wellKnown: VirtualContributorWellKnown;
+  /** All conversations (direct and group) for the current authenticated user. Client handles categorization by room type and member actor types. */
+  conversations: Array<Conversation>;
 };
 
 export type MeQueryResults = {
@@ -4205,6 +4251,8 @@ export type Mutation = {
   aiServerUpdateAiPersona: AiPersona;
   /** Apply to join the specified RoleSet in the entry Role. */
   applyForEntryRoleOnRoleSet: Application;
+  /** Assign a member to a group conversation. Returns true when the RPC is sent. Actual membership change arrives via MEMBER_ADDED subscription event. */
+  assignConversationMember: Scalars["Boolean"]["output"];
   /** Assign the specified LicensePlan to an Account. */
   assignLicensePlanToAccount: Account;
   /** Assign the specified LicensePlan to a Space. */
@@ -4249,7 +4297,7 @@ export type Mutation = {
   createCalloutOnCalloutsSet: Callout;
   /** Create a new Contribution on the Callout. */
   createContributionOnCallout: CalloutContribution;
-  /** Create a new Conversation on the Messaging. */
+  /** Create a new Conversation. Use type DIRECT for 1-on-1, GROUP for multi-party. */
   createConversation: Conversation;
   /** Creates a new Discussion as part of this Forum. */
   createDiscussion: Discussion;
@@ -4297,7 +4345,7 @@ export type Mutation = {
   deleteCallout: Callout;
   /** Deletes a contribution. */
   deleteContribution: CalloutContribution;
-  /** Deletes a Conversation. The Matrix room is only deleted if no reciprocal conversation exists. */
+  /** Deletes a Conversation. All members are notified via CONVERSATION_DELETED event. */
   deleteConversation: Conversation;
   /** Deletes the specified Discussion. */
   deleteDiscussion: Discussion;
@@ -4357,6 +4405,8 @@ export type Mutation = {
   inviteForEntryRoleOnRoleSet: Array<RoleSetInvitationResult>;
   /** Join the specified RoleSet using the entry Role, without going through an approval process. */
   joinRoleSet: RoleSet;
+  /** Leave a group conversation. Returns true when the RPC is sent. Actual membership change arrives via MEMBER_REMOVED subscription event. */
+  leaveConversation: Scalars["Boolean"]["output"];
   /** Reset the License with Entitlements on the specified Account. */
   licenseResetOnAccount: Account;
   /** Marks a message as read for the current user. */
@@ -4373,6 +4423,8 @@ export type Mutation = {
   refreshVirtualContributorBodyOfKnowledge: Scalars["Boolean"]["output"];
   /** Empties the CommunityGuidelines. */
   removeCommunityGuidelinesContent: CommunityGuidelines;
+  /** Remove a member from a group conversation. Returns true when the RPC is sent. Actual membership change arrives via MEMBER_REMOVED subscription event. */
+  removeConversationMember: Scalars["Boolean"]["output"];
   /** Remove the default callout template from an InnovationFlowState. */
   removeDefaultCalloutTemplateOnInnovationFlowState: InnovationFlowState;
   /** Removes an Iframe Allowed URL from the Platform Settings */
@@ -4455,6 +4507,8 @@ export type Mutation = {
   updateCommunityGuidelines: CommunityGuidelines;
   /** Update the sortOrder field of the Contributions of s Callout. */
   updateContributionsSortOrder: Array<CalloutContribution>;
+  /** Update a group conversation (display name, avatar). Returns true when the RPC is sent. Actual changes arrive via CONVERSATION_UPDATED subscription event. */
+  updateConversation: Scalars["Boolean"]["output"];
   /** Updates the specified Discussion. */
   updateDiscussion: Discussion;
   /** Updates the specified Document. */
@@ -4613,6 +4667,10 @@ export type MutationAiServerUpdateAiPersonaArgs = {
 
 export type MutationApplyForEntryRoleOnRoleSetArgs = {
   applicationData: ApplyForEntryRoleOnRoleSetInput;
+};
+
+export type MutationAssignConversationMemberArgs = {
+  memberData: AssignConversationMemberInput;
 };
 
 export type MutationAssignLicensePlanToAccountArgs = {
@@ -4905,6 +4963,10 @@ export type MutationJoinRoleSetArgs = {
   joinData: JoinAsEntryRoleOnRoleSetInput;
 };
 
+export type MutationLeaveConversationArgs = {
+  leaveData: LeaveConversationInput;
+};
+
 export type MutationLicenseResetOnAccountArgs = {
   resetData: AccountLicenseResetInput;
 };
@@ -4931,6 +4993,10 @@ export type MutationRefreshVirtualContributorBodyOfKnowledgeArgs = {
 
 export type MutationRemoveCommunityGuidelinesContentArgs = {
   communityGuidelinesData: RemoveCommunityGuidelinesContentInput;
+};
+
+export type MutationRemoveConversationMemberArgs = {
+  memberData: RemoveConversationMemberInput;
 };
 
 export type MutationRemoveDefaultCalloutTemplateOnInnovationFlowStateArgs = {
@@ -5093,6 +5159,10 @@ export type MutationUpdateCommunityGuidelinesArgs = {
 
 export type MutationUpdateContributionsSortOrderArgs = {
   sortOrderData: UpdateContributionCalloutsSortOrderInput;
+};
+
+export type MutationUpdateConversationArgs = {
+  updateData: UpdateConversationInput;
 };
 
 export type MutationUpdateDiscussionArgs = {
@@ -6375,6 +6445,13 @@ export type RemoveCommunityGuidelinesContentInput = {
   communityGuidelinesID: Scalars["UUID"]["input"];
 };
 
+export type RemoveConversationMemberInput = {
+  /** The ID of the conversation to remove a member from. */
+  conversationID: Scalars["UUID"]["input"];
+  /** The ID of the member (user or VC) to remove. */
+  memberID: Scalars["UUID"]["input"];
+};
+
 export type RemoveDefaultCalloutTemplateOnInnovationFlowStateInput = {
   flowStateID: Scalars["UUID"]["input"];
 };
@@ -6686,6 +6763,8 @@ export type RolesResultSpace = {
 export type Room = {
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
+  /** The avatar URL of the Room (mxc:// or https://). Fetched from Matrix. */
+  avatarUrl?: Maybe<Scalars["String"]["output"]>;
   /** The date at which the entity was created. */
   createdDate: Scalars["DateTime"]["output"];
   /** The display name of the Room. */
@@ -6698,6 +6777,8 @@ export type Room = {
   messages: Array<Message>;
   /** The number of messages in the Room. */
   messagesCount: Scalars["Int"]["output"];
+  /** The type of room (e.g., post, callout, conversation_direct, conversation_group). */
+  type: RoomType;
   /** Simple unread message count for the current user. Use unreadCounts for per-thread breakdown. */
   unreadCount: Scalars["Int"]["output"];
   /** Unread message counts for the current user in this Room. */
@@ -6797,6 +6878,18 @@ export type RoomThreadUnreadCount = {
   /** The thread ID. */
   threadId: Scalars["MessageID"]["output"];
 };
+
+/** The type of room. */
+export enum RoomType {
+  CalendarEvent = "CALENDAR_EVENT",
+  Callout = "CALLOUT",
+  Conversation = "CONVERSATION",
+  ConversationDirect = "CONVERSATION_DIRECT",
+  ConversationGroup = "CONVERSATION_GROUP",
+  DiscussionForum = "DISCUSSION_FORUM",
+  Post = "POST",
+  Updates = "UPDATES",
+}
 
 /** Unread message counts for a Room. */
 export type RoomUnreadCounts = {
@@ -7805,6 +7898,15 @@ export type UpdateContributionCalloutsSortOrderInput = {
   calloutID: Scalars["UUID"]["input"];
   /** The IDs of the contributions to update the sort order on */
   contributionIDs: Array<Scalars["UUID"]["input"]>;
+};
+
+export type UpdateConversationInput = {
+  /** Avatar URL for the conversation. Accepts mxc:// or https:// URLs. Pass empty string to remove. */
+  avatarUrl?: InputMaybe<Scalars["String"]["input"]>;
+  /** The ID of the conversation to update. */
+  conversationID: Scalars["UUID"]["input"];
+  /** New display name for the conversation. Only GROUP conversations support custom names. */
+  displayName?: InputMaybe<Scalars["String"]["input"]>;
 };
 
 export type UpdateDiscussionInput = {
@@ -9603,6 +9705,7 @@ export type ResolversTypes = {
   >;
   ApplicationEventInput: ApplicationEventInput;
   ApplyForEntryRoleOnRoleSetInput: ApplyForEntryRoleOnRoleSetInput;
+  AssignConversationMemberInput: AssignConversationMemberInput;
   AssignLicensePlanToAccount: AssignLicensePlanToAccount;
   AssignLicensePlanToSpace: AssignLicensePlanToSpace;
   AssignPlatformRoleInput: AssignPlatformRoleInput;
@@ -9686,7 +9789,6 @@ export type ResolversTypes = {
   CommunicationAdminRoomMembershipResult: ResolverTypeWrapper<CommunicationAdminRoomMembershipResult>;
   CommunicationAdminRoomResult: ResolverTypeWrapper<CommunicationAdminRoomResult>;
   CommunicationAdminUpdateRoomStateInput: CommunicationAdminUpdateRoomStateInput;
-  CommunicationConversationType: CommunicationConversationType;
   CommunicationSendMessageToCommunityLeadsInput: CommunicationSendMessageToCommunityLeadsInput;
   CommunicationSendMessageToOrganizationInput: CommunicationSendMessageToOrganizationInput;
   CommunicationSendMessageToUsersInput: CommunicationSendMessageToUsersInput;
@@ -9735,22 +9837,49 @@ export type ResolversTypes = {
   ContentUpdatePolicy: ContentUpdatePolicy;
   ContributionsFilterInput: ContributionsFilterInput;
   Conversation: ResolverTypeWrapper<
-    Omit<Conversation, "user"> & { user?: Maybe<ResolversTypes["User"]> }
+    Omit<Conversation, "members"> & { members: Array<ResolversTypes["Actor"]> }
   >;
   ConversationCreatedEvent: ResolverTypeWrapper<
     Omit<ConversationCreatedEvent, "conversation"> & {
       conversation: ResolversTypes["Conversation"];
     }
   >;
+  ConversationCreationType: ConversationCreationType;
+  ConversationDeletedEvent: ResolverTypeWrapper<ConversationDeletedEvent>;
   ConversationEventSubscriptionResult: ResolverTypeWrapper<
-    Omit<ConversationEventSubscriptionResult, "conversationCreated"> & {
+    Omit<
+      ConversationEventSubscriptionResult,
+      | "conversationCreated"
+      | "conversationUpdated"
+      | "memberAdded"
+      | "memberRemoved"
+    > & {
       conversationCreated?: Maybe<ResolversTypes["ConversationCreatedEvent"]>;
+      conversationUpdated?: Maybe<ResolversTypes["ConversationUpdatedEvent"]>;
+      memberAdded?: Maybe<ResolversTypes["ConversationMemberAddedEvent"]>;
+      memberRemoved?: Maybe<ResolversTypes["ConversationMemberRemovedEvent"]>;
     }
   >;
   ConversationEventType: ConversationEventType;
+  ConversationMemberAddedEvent: ResolverTypeWrapper<
+    Omit<ConversationMemberAddedEvent, "addedMember" | "conversation"> & {
+      addedMember: ResolversTypes["Actor"];
+      conversation: ResolversTypes["Conversation"];
+    }
+  >;
+  ConversationMemberRemovedEvent: ResolverTypeWrapper<
+    Omit<ConversationMemberRemovedEvent, "conversation"> & {
+      conversation: ResolversTypes["Conversation"];
+    }
+  >;
   ConversationMessageReceivedEvent: ResolverTypeWrapper<ConversationMessageReceivedEvent>;
   ConversationMessageRemovedEvent: ResolverTypeWrapper<ConversationMessageRemovedEvent>;
   ConversationReadReceiptUpdatedEvent: ResolverTypeWrapper<ConversationReadReceiptUpdatedEvent>;
+  ConversationUpdatedEvent: ResolverTypeWrapper<
+    Omit<ConversationUpdatedEvent, "conversation"> & {
+      conversation: ResolversTypes["Conversation"];
+    }
+  >;
   ConversationVcResetInput: ConversationVcResetInput;
   ConversionVcSpaceToVcKnowledgeBaseInput: ConversionVcSpaceToVcKnowledgeBaseInput;
   ConvertSpaceL1ToSpaceL0Input: ConvertSpaceL1ToSpaceL0Input;
@@ -10085,6 +10214,7 @@ export type ResolversTypes = {
   >;
   KratosIdentity: ResolverTypeWrapper<KratosIdentity>;
   LatestReleaseDiscussion: ResolverTypeWrapper<LatestReleaseDiscussion>;
+  LeaveConversationInput: LeaveConversationInput;
   Library: ResolverTypeWrapper<
     Omit<Library, "innovationHubs" | "innovationPacks" | "templates"> & {
       innovationHubs: Array<ResolversTypes["InnovationHub"]>;
@@ -10174,13 +10304,8 @@ export type ResolversTypes = {
   >;
   Markdown: ResolverTypeWrapper<Scalars["Markdown"]["output"]>;
   MeConversationsResult: ResolverTypeWrapper<
-    Omit<
-      MeConversationsResult,
-      "users" | "virtualContributor" | "virtualContributors"
-    > & {
-      users: Array<ResolversTypes["Conversation"]>;
-      virtualContributor?: Maybe<ResolversTypes["Conversation"]>;
-      virtualContributors: Array<ResolversTypes["Conversation"]>;
+    Omit<MeConversationsResult, "conversations"> & {
+      conversations: Array<ResolversTypes["Conversation"]>;
     }
   >;
   MeQueryResults: ResolverTypeWrapper<
@@ -10429,6 +10554,7 @@ export type ResolversTypes = {
   >;
   RelayPaginatedSpacePageInfo: ResolverTypeWrapper<RelayPaginatedSpacePageInfo>;
   RemoveCommunityGuidelinesContentInput: RemoveCommunityGuidelinesContentInput;
+  RemoveConversationMemberInput: RemoveConversationMemberInput;
   RemoveDefaultCalloutTemplateOnInnovationFlowStateInput: RemoveDefaultCalloutTemplateOnInnovationFlowStateInput;
   RemovePlatformRoleInput: RemovePlatformRoleInput;
   RemoveRoleOnRoleSetInput: RemoveRoleOnRoleSetInput;
@@ -10479,6 +10605,7 @@ export type ResolversTypes = {
   RoomSendMessageInput: RoomSendMessageInput;
   RoomSendMessageReplyInput: RoomSendMessageReplyInput;
   RoomThreadUnreadCount: ResolverTypeWrapper<RoomThreadUnreadCount>;
+  RoomType: RoomType;
   RoomUnreadCounts: ResolverTypeWrapper<RoomUnreadCounts>;
   SearchCategory: SearchCategory;
   SearchCursor: ResolverTypeWrapper<Scalars["SearchCursor"]["output"]>;
@@ -10685,6 +10812,7 @@ export type ResolversTypes = {
   UpdateCollaborationFromSpaceTemplateInput: UpdateCollaborationFromSpaceTemplateInput;
   UpdateCommunityGuidelinesEntityInput: UpdateCommunityGuidelinesEntityInput;
   UpdateContributionCalloutsSortOrderInput: UpdateContributionCalloutsSortOrderInput;
+  UpdateConversationInput: UpdateConversationInput;
   UpdateDiscussionInput: UpdateDiscussionInput;
   UpdateDocumentInput: UpdateDocumentInput;
   UpdateFormInput: UpdateFormInput;
@@ -11005,6 +11133,7 @@ export type ResolversParentTypes = {
   };
   ApplicationEventInput: ApplicationEventInput;
   ApplyForEntryRoleOnRoleSetInput: ApplyForEntryRoleOnRoleSetInput;
+  AssignConversationMemberInput: AssignConversationMemberInput;
   AssignLicensePlanToAccount: AssignLicensePlanToAccount;
   AssignLicensePlanToSpace: AssignLicensePlanToSpace;
   AssignPlatformRoleInput: AssignPlatformRoleInput;
@@ -11103,23 +11232,48 @@ export type ResolversParentTypes = {
     authentication: ResolversParentTypes["AuthenticationConfig"];
   };
   ContributionsFilterInput: ContributionsFilterInput;
-  Conversation: Omit<Conversation, "user"> & {
-    user?: Maybe<ResolversParentTypes["User"]>;
+  Conversation: Omit<Conversation, "members"> & {
+    members: Array<ResolversParentTypes["Actor"]>;
   };
   ConversationCreatedEvent: Omit<ConversationCreatedEvent, "conversation"> & {
     conversation: ResolversParentTypes["Conversation"];
   };
+  ConversationDeletedEvent: ConversationDeletedEvent;
   ConversationEventSubscriptionResult: Omit<
     ConversationEventSubscriptionResult,
-    "conversationCreated"
+    | "conversationCreated"
+    | "conversationUpdated"
+    | "memberAdded"
+    | "memberRemoved"
   > & {
     conversationCreated?: Maybe<
       ResolversParentTypes["ConversationCreatedEvent"]
     >;
+    conversationUpdated?: Maybe<
+      ResolversParentTypes["ConversationUpdatedEvent"]
+    >;
+    memberAdded?: Maybe<ResolversParentTypes["ConversationMemberAddedEvent"]>;
+    memberRemoved?: Maybe<
+      ResolversParentTypes["ConversationMemberRemovedEvent"]
+    >;
   };
+  ConversationMemberAddedEvent: Omit<
+    ConversationMemberAddedEvent,
+    "addedMember" | "conversation"
+  > & {
+    addedMember: ResolversParentTypes["Actor"];
+    conversation: ResolversParentTypes["Conversation"];
+  };
+  ConversationMemberRemovedEvent: Omit<
+    ConversationMemberRemovedEvent,
+    "conversation"
+  > & { conversation: ResolversParentTypes["Conversation"] };
   ConversationMessageReceivedEvent: ConversationMessageReceivedEvent;
   ConversationMessageRemovedEvent: ConversationMessageRemovedEvent;
   ConversationReadReceiptUpdatedEvent: ConversationReadReceiptUpdatedEvent;
+  ConversationUpdatedEvent: Omit<ConversationUpdatedEvent, "conversation"> & {
+    conversation: ResolversParentTypes["Conversation"];
+  };
   ConversationVcResetInput: ConversationVcResetInput;
   ConversionVcSpaceToVcKnowledgeBaseInput: ConversionVcSpaceToVcKnowledgeBaseInput;
   ConvertSpaceL1ToSpaceL0Input: ConvertSpaceL1ToSpaceL0Input;
@@ -11415,6 +11569,7 @@ export type ResolversParentTypes = {
   };
   KratosIdentity: KratosIdentity;
   LatestReleaseDiscussion: LatestReleaseDiscussion;
+  LeaveConversationInput: LeaveConversationInput;
   Library: Omit<Library, "innovationHubs" | "innovationPacks" | "templates"> & {
     innovationHubs: Array<ResolversParentTypes["InnovationHub"]>;
     innovationPacks: Array<ResolversParentTypes["InnovationPack"]>;
@@ -11488,13 +11643,8 @@ export type ResolversParentTypes = {
     user?: Maybe<ResolversParentTypes["User"]>;
   };
   Markdown: Scalars["Markdown"]["output"];
-  MeConversationsResult: Omit<
-    MeConversationsResult,
-    "users" | "virtualContributor" | "virtualContributors"
-  > & {
-    users: Array<ResolversParentTypes["Conversation"]>;
-    virtualContributor?: Maybe<ResolversParentTypes["Conversation"]>;
-    virtualContributors: Array<ResolversParentTypes["Conversation"]>;
+  MeConversationsResult: Omit<MeConversationsResult, "conversations"> & {
+    conversations: Array<ResolversParentTypes["Conversation"]>;
   };
   MeQueryResults: Omit<
     MeQueryResults,
@@ -11706,6 +11856,7 @@ export type ResolversParentTypes = {
   };
   RelayPaginatedSpacePageInfo: RelayPaginatedSpacePageInfo;
   RemoveCommunityGuidelinesContentInput: RemoveCommunityGuidelinesContentInput;
+  RemoveConversationMemberInput: RemoveConversationMemberInput;
   RemoveDefaultCalloutTemplateOnInnovationFlowStateInput: RemoveDefaultCalloutTemplateOnInnovationFlowStateInput;
   RemovePlatformRoleInput: RemovePlatformRoleInput;
   RemoveRoleOnRoleSetInput: RemoveRoleOnRoleSetInput;
@@ -11932,6 +12083,7 @@ export type ResolversParentTypes = {
   UpdateCollaborationFromSpaceTemplateInput: UpdateCollaborationFromSpaceTemplateInput;
   UpdateCommunityGuidelinesEntityInput: UpdateCommunityGuidelinesEntityInput;
   UpdateContributionCalloutsSortOrderInput: UpdateContributionCalloutsSortOrderInput;
+  UpdateConversationInput: UpdateConversationInput;
   UpdateDiscussionInput: UpdateDiscussionInput;
   UpdateDocumentInput: UpdateDocumentInput;
   UpdateFormInput: UpdateFormInput;
@@ -13463,20 +13615,10 @@ export type ConversationResolvers<
   >;
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  members?: Resolver<Array<ResolversTypes["Actor"]>, ParentType, ContextType>;
   messaging?: Resolver<ResolversTypes["Messaging"], ParentType, ContextType>;
   room?: Resolver<Maybe<ResolversTypes["Room"]>, ParentType, ContextType>;
-  type?: Resolver<
-    ResolversTypes["CommunicationConversationType"],
-    ParentType,
-    ContextType
-  >;
   updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
-  user?: Resolver<Maybe<ResolversTypes["User"]>, ParentType, ContextType>;
-  virtualContributor?: Resolver<
-    Maybe<ResolversTypes["VirtualContributor"]>,
-    ParentType,
-    ContextType
-  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -13493,6 +13635,14 @@ export type ConversationCreatedEventResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type ConversationDeletedEventResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["ConversationDeletedEvent"] = ResolversParentTypes["ConversationDeletedEvent"]
+> = {
+  conversationID?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type ConversationEventSubscriptionResultResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["ConversationEventSubscriptionResult"] = ResolversParentTypes["ConversationEventSubscriptionResult"]
@@ -13502,8 +13652,28 @@ export type ConversationEventSubscriptionResultResolvers<
     ParentType,
     ContextType
   >;
+  conversationDeleted?: Resolver<
+    Maybe<ResolversTypes["ConversationDeletedEvent"]>,
+    ParentType,
+    ContextType
+  >;
+  conversationUpdated?: Resolver<
+    Maybe<ResolversTypes["ConversationUpdatedEvent"]>,
+    ParentType,
+    ContextType
+  >;
   eventType?: Resolver<
     ResolversTypes["ConversationEventType"],
+    ParentType,
+    ContextType
+  >;
+  memberAdded?: Resolver<
+    Maybe<ResolversTypes["ConversationMemberAddedEvent"]>,
+    ParentType,
+    ContextType
+  >;
+  memberRemoved?: Resolver<
+    Maybe<ResolversTypes["ConversationMemberRemovedEvent"]>,
     ParentType,
     ContextType
   >;
@@ -13522,6 +13692,32 @@ export type ConversationEventSubscriptionResultResolvers<
     ParentType,
     ContextType
   >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type ConversationMemberAddedEventResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["ConversationMemberAddedEvent"] = ResolversParentTypes["ConversationMemberAddedEvent"]
+> = {
+  addedMember?: Resolver<ResolversTypes["Actor"], ParentType, ContextType>;
+  conversation?: Resolver<
+    ResolversTypes["Conversation"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type ConversationMemberRemovedEventResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["ConversationMemberRemovedEvent"] = ResolversParentTypes["ConversationMemberRemovedEvent"]
+> = {
+  conversation?: Resolver<
+    ResolversTypes["Conversation"],
+    ParentType,
+    ContextType
+  >;
+  removedMemberID?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -13553,6 +13749,18 @@ export type ConversationReadReceiptUpdatedEventResolvers<
     ContextType
   >;
   roomId?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type ConversationUpdatedEventResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["ConversationUpdatedEvent"] = ResolversParentTypes["ConversationUpdatedEvent"]
+> = {
+  conversation?: Resolver<
+    ResolversTypes["Conversation"],
+    ParentType,
+    ContextType
+  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -15759,18 +15967,7 @@ export type MeConversationsResultResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["MeConversationsResult"] = ResolversParentTypes["MeConversationsResult"]
 > = {
-  users?: Resolver<
-    Array<ResolversTypes["Conversation"]>,
-    ParentType,
-    ContextType
-  >;
-  virtualContributor?: Resolver<
-    Maybe<ResolversTypes["Conversation"]>,
-    ParentType,
-    ContextType,
-    RequireFields<MeConversationsResultVirtualContributorArgs, "wellKnown">
-  >;
-  virtualContributors?: Resolver<
+  conversations?: Resolver<
     Array<ResolversTypes["Conversation"]>,
     ParentType,
     ContextType
@@ -16203,6 +16400,12 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationApplyForEntryRoleOnRoleSetArgs, "applicationData">
+  >;
+  assignConversationMember?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationAssignConversationMemberArgs, "memberData">
   >;
   assignLicensePlanToAccount?: Resolver<
     ResolversTypes["Account"],
@@ -16680,6 +16883,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationJoinRoleSetArgs, "joinData">
   >;
+  leaveConversation?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationLeaveConversationArgs, "leaveData">
+  >;
   licenseResetOnAccount?: Resolver<
     ResolversTypes["Account"],
     ParentType,
@@ -16732,6 +16941,12 @@ export type MutationResolvers<
       MutationRemoveCommunityGuidelinesContentArgs,
       "communityGuidelinesData"
     >
+  >;
+  removeConversationMember?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationRemoveConversationMemberArgs, "memberData">
   >;
   removeDefaultCalloutTemplateOnInnovationFlowState?: Resolver<
     ResolversTypes["InnovationFlowState"],
@@ -17004,6 +17219,12 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationUpdateContributionsSortOrderArgs, "sortOrderData">
+  >;
+  updateConversation?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationUpdateConversationArgs, "updateData">
   >;
   updateDiscussion?: Resolver<
     ResolversTypes["Discussion"],
@@ -18813,6 +19034,11 @@ export type RoomResolvers<
     ParentType,
     ContextType
   >;
+  avatarUrl?: Resolver<
+    Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
@@ -18827,6 +19053,7 @@ export type RoomResolvers<
     ContextType
   >;
   messagesCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  type?: Resolver<ResolversTypes["RoomType"], ParentType, ContextType>;
   unreadCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   unreadCounts?: Resolver<
     ResolversTypes["RoomUnreadCounts"],
@@ -20861,10 +21088,14 @@ export type Resolvers<ContextType = any> = {
   Config?: ConfigResolvers<ContextType>;
   Conversation?: ConversationResolvers<ContextType>;
   ConversationCreatedEvent?: ConversationCreatedEventResolvers<ContextType>;
+  ConversationDeletedEvent?: ConversationDeletedEventResolvers<ContextType>;
   ConversationEventSubscriptionResult?: ConversationEventSubscriptionResultResolvers<ContextType>;
+  ConversationMemberAddedEvent?: ConversationMemberAddedEventResolvers<ContextType>;
+  ConversationMemberRemovedEvent?: ConversationMemberRemovedEventResolvers<ContextType>;
   ConversationMessageReceivedEvent?: ConversationMessageReceivedEventResolvers<ContextType>;
   ConversationMessageRemovedEvent?: ConversationMessageRemovedEventResolvers<ContextType>;
   ConversationReadReceiptUpdatedEvent?: ConversationReadReceiptUpdatedEventResolvers<ContextType>;
+  ConversationUpdatedEvent?: ConversationUpdatedEventResolvers<ContextType>;
   CreateCalloutContributionData?: CreateCalloutContributionDataResolvers<ContextType>;
   CreateCalloutContributionDefaultsData?: CreateCalloutContributionDefaultsDataResolvers<ContextType>;
   CreateCalloutData?: CreateCalloutDataResolvers<ContextType>;
@@ -26205,6 +26436,7 @@ export type ReferenceDetailsFragment = {
 export type ReferenceDataFragment = { id: string; name: string; uri: string };
 
 export type SettingsDataFragment = {
+  sortMode: SpaceSortMode;
   privacy: { mode: SpacePrivacyMode; allowPlatformSupportAsAdmin: boolean };
   membership: {
     allowSubspaceAdminsToInviteMembers: boolean;
@@ -26218,15 +26450,18 @@ export type SettingsDataFragment = {
     allowEventsFromSubspaces: boolean;
     allowMembersToVideoCall: boolean;
   };
-  sortMode: SpaceSortMode;
 };
 
 export type SubspaceL1DataFragment = {
   id: string;
   nameID: string;
+  pinned: boolean;
+  sortOrder: number;
   subspaces: Array<{
     id: string;
     nameID: string;
+    pinned: boolean;
+    sortOrder: number;
     about: {
       id: string;
       why?: any | undefined;
@@ -29495,9 +29730,13 @@ export type SubspaceL1DataFragment = {
 export type SubspaceL2DataFragment = {
   id: string;
   nameID: string;
+  pinned: boolean;
+  sortOrder: number;
   subspaces: Array<{
     id: string;
     nameID: string;
+    pinned: boolean;
+    sortOrder: number;
     about: {
       id: string;
       why?: any | undefined;
@@ -34517,6 +34756,8 @@ export type SpaceDataFragment = {
   subspaces: Array<{
     id: string;
     nameID: string;
+    pinned: boolean;
+    sortOrder: number;
     about: {
       id: string;
       why?: any | undefined;
@@ -36171,6 +36412,7 @@ export type SpaceDataFragment = {
     };
   }>;
   settings: {
+    sortMode: SpaceSortMode;
     privacy: { mode: SpacePrivacyMode; allowPlatformSupportAsAdmin: boolean };
     membership: {
       allowSubspaceAdminsToInviteMembers: boolean;
@@ -43319,6 +43561,32 @@ export type AddReactionToMessageInRoomMutation = {
   };
 };
 
+export type CreateConversationMutationVariables = Exact<{
+  conversationData: CreateConversationInput;
+}>;
+
+export type CreateConversationMutation = {
+  createConversation: {
+    id: string;
+    createdDate: Date;
+    members: Array<{
+      id: string;
+      nameID: string;
+      type: ActorType;
+      profile?: { id: string; displayName: string } | undefined;
+    }>;
+    room?:
+      | {
+          id: string;
+          displayName: string;
+          avatarUrl?: string | undefined;
+          type: RoomType;
+          messagesCount: number;
+        }
+      | undefined;
+  };
+};
+
 export type CreateDiscussionMutationVariables = Exact<{
   createData: ForumCreateDiscussionInput;
 }>;
@@ -43397,6 +43665,20 @@ export type DeleteDiscussionMutationVariables = Exact<{
 }>;
 
 export type DeleteDiscussionMutation = { deleteDiscussion: { id: string } };
+
+export type LeaveConversationMutationVariables = Exact<{
+  leaveData: LeaveConversationInput;
+}>;
+
+export type LeaveConversationMutation = { leaveConversation: boolean };
+
+export type RemoveConversationMemberMutationVariables = Exact<{
+  memberData: RemoveConversationMemberInput;
+}>;
+
+export type RemoveConversationMemberMutation = {
+  removeConversationMember: boolean;
+};
 
 export type RemoveMessageOnRoomMutationVariables = Exact<{
   messageData: RoomRemoveMessageInput;
@@ -43553,6 +43835,12 @@ export type SendMessageToUsersMutationVariables = Exact<{
 }>;
 
 export type SendMessageToUsersMutation = { sendMessageToUsers: boolean };
+
+export type UpdateConversationMutationVariables = Exact<{
+  updateData: UpdateConversationInput;
+}>;
+
+export type UpdateConversationMutation = { updateConversation: boolean };
 
 export type UpdateDiscussionMutationVariables = Exact<{
   updateData: UpdateDiscussionInput;
@@ -45452,6 +45740,8 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
     subspaces: Array<{
       id: string;
       nameID: string;
+      pinned: boolean;
+      sortOrder: number;
       about: {
         id: string;
         why?: any | undefined;
@@ -47180,6 +47470,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
       };
     }>;
     settings: {
+      sortMode: SpaceSortMode;
       privacy: { mode: SpacePrivacyMode; allowPlatformSupportAsAdmin: boolean };
       membership: {
         allowSubspaceAdminsToInviteMembers: boolean;
@@ -49525,6 +49816,8 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
     subspaces: Array<{
       id: string;
       nameID: string;
+      pinned: boolean;
+      sortOrder: number;
       about: {
         id: string;
         why?: any | undefined;
@@ -51253,6 +51546,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
       };
     }>;
     settings: {
+      sortMode: SpaceSortMode;
       privacy: { mode: SpacePrivacyMode; allowPlatformSupportAsAdmin: boolean };
       membership: {
         allowSubspaceAdminsToInviteMembers: boolean;
@@ -53616,6 +53910,8 @@ export type UpdateSpaceMutation = {
     subspaces: Array<{
       id: string;
       nameID: string;
+      pinned: boolean;
+      sortOrder: number;
       about: {
         id: string;
         why?: any | undefined;
@@ -55344,6 +55640,7 @@ export type UpdateSpaceMutation = {
       };
     }>;
     settings: {
+      sortMode: SpaceSortMode;
       privacy: { mode: SpacePrivacyMode; allowPlatformSupportAsAdmin: boolean };
       membership: {
         allowSubspaceAdminsToInviteMembers: boolean;
@@ -55945,9 +56242,13 @@ export type CreateSubspaceMutation = {
   createSubspace: {
     id: string;
     nameID: string;
+    pinned: boolean;
+    sortOrder: number;
     subspaces: Array<{
       id: string;
       nameID: string;
+      pinned: boolean;
+      sortOrder: number;
       about: {
         id: string;
         why?: any | undefined;
@@ -59338,9 +59639,13 @@ export type UpdateSubspaceMutation = {
   updateSpace: {
     id: string;
     nameID: string;
+    pinned: boolean;
+    sortOrder: number;
     subspaces: Array<{
       id: string;
       nameID: string;
+      pinned: boolean;
+      sortOrder: number;
       about: {
         id: string;
         why?: any | undefined;
@@ -62723,6 +63028,26 @@ export type UpdateSubspaceMutation = {
   };
 };
 
+export type UpdateSubspacePinnedMutationVariables = Exact<{
+  pinnedData: UpdateSubspacePinnedInput;
+}>;
+
+export type UpdateSubspacePinnedMutation = {
+  updateSubspacePinned: { id: string; pinned: boolean; sortOrder: number };
+};
+
+export type UpdateSubspacesSortOrderMutationVariables = Exact<{
+  sortOrderData: UpdateSubspacesSortOrderInput;
+}>;
+
+export type UpdateSubspacesSortOrderMutation = {
+  updateSubspacesSortOrder: Array<{
+    id: string;
+    pinned: boolean;
+    sortOrder: number;
+  }>;
+};
+
 export type CreateLicensePlanMutationVariables = Exact<{
   LicensePlan: CreateLicensePlanOnLicensingFrameworkInput;
 }>;
@@ -63398,6 +63723,7 @@ export type UpdateSpaceSettingsMutation = {
   updateSpaceSettings: {
     id: string;
     settings: {
+      sortMode: SpaceSortMode;
       privacy: { mode: SpacePrivacyMode; allowPlatformSupportAsAdmin: boolean };
       membership: {
         allowSubspaceAdminsToInviteMembers: boolean;
@@ -63411,29 +63737,8 @@ export type UpdateSpaceSettingsMutation = {
         allowEventsFromSubspaces: boolean;
         allowMembersToVideoCall: boolean;
       };
-      sortMode: SpaceSortMode;
     };
   };
-};
-
-export type UpdateSubspacePinnedMutationVariables = Exact<{
-  pinnedData: UpdateSubspacePinnedInput;
-}>;
-
-export type UpdateSubspacePinnedMutation = {
-  updateSubspacePinned: { id: string; pinned: boolean; sortOrder: number };
-};
-
-export type UpdateSubspacesSortOrderMutationVariables = Exact<{
-  sortOrderData: UpdateSubspacesSortOrderInput;
-}>;
-
-export type UpdateSubspacesSortOrderMutation = {
-  updateSubspacesSortOrder: Array<{
-    id: string;
-    pinned: boolean;
-    sortOrder: number;
-  }>;
 };
 
 export type CreateSpaceMutationVariables = Exact<{
@@ -66843,6 +67148,35 @@ export type WhiteboardCalloutStorageConfigQuery = {
           };
         }
       | undefined;
+  };
+};
+
+export type GetMeConversationsQueryVariables = Exact<{ [key: string]: never }>;
+
+export type GetMeConversationsQuery = {
+  me: {
+    conversations: {
+      conversations: Array<{
+        id: string;
+        createdDate: Date;
+        members: Array<{
+          id: string;
+          nameID: string;
+          type: ActorType;
+          profile?: { id: string; displayName: string } | undefined;
+        }>;
+        room?:
+          | {
+              id: string;
+              displayName: string;
+              avatarUrl?: string | undefined;
+              type: RoomType;
+              messagesCount: number;
+              lastMessage?: { id: any; message: any } | undefined;
+            }
+          | undefined;
+      }>;
+    };
   };
 };
 
@@ -74525,6 +74859,8 @@ export type GetSpaceDataQuery = {
           subspaces: Array<{
             id: string;
             nameID: string;
+            pinned: boolean;
+            sortOrder: number;
             about: {
               id: string;
               why?: any | undefined;
@@ -76402,6 +76738,7 @@ export type GetSpaceDataQuery = {
             };
           }>;
           settings: {
+            sortMode: SpaceSortMode;
             privacy: {
               mode: SpacePrivacyMode;
               allowPlatformSupportAsAdmin: boolean;
@@ -77039,9 +77376,13 @@ export type GetSubspacePageQuery = {
       | {
           id: string;
           nameID: string;
+          pinned: boolean;
+          sortOrder: number;
           subspaces: Array<{
             id: string;
             nameID: string;
+            pinned: boolean;
+            sortOrder: number;
             about: {
               id: string;
               why?: any | undefined;
@@ -80761,6 +81102,8 @@ export type GetSpaceAboutDetailsQuery = {
       | {
           id: string;
           nameID: string;
+          pinned: boolean;
+          sortOrder: number;
           about: {
             id: string;
             why?: any | undefined;
@@ -82606,9 +82949,13 @@ export type GetSubspacesDataQuery = {
           subspaces: Array<{
             id: string;
             nameID: string;
+            pinned: boolean;
+            sortOrder: number;
             subspaces: Array<{
               id: string;
               nameID: string;
+              pinned: boolean;
+              sortOrder: number;
               about: {
                 id: string;
                 why?: any | undefined;

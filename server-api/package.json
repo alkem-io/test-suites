@@ -34,6 +34,7 @@
     "test:nightly:ui": "vitest --project nightly --maxWorkers=1 --ui",
     "test:search:ui": "vitest --project search --maxWorkers=6 --ui",
     "test:communications": "vitest run --project communication --forceExit --fileParallelism=false",
+    "test:conversations": "vitest run --project conversations --fileParallelism=false",
     "test:notifications:ui": "vitest --project notifications --maxWorkers=1 --ui",
     "test:notifications:callouts": "vitest --project notifications-callouts --forceExit --fileParallelism=false",
     "test:notifications:messaging": "vitest run --project notifications-messaging --forceExit --fileParallelism=false",
