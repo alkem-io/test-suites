@@ -976,12 +976,18 @@ export type CalendarEvent = {
   durationDays?: Maybe<Scalars["Float"]["output"]>;
   /** The length of the event in minutes. */
   durationMinutes: Scalars["Float"]["output"];
+  /** Google Calendar add-event URL for this CalendarEvent. */
+  googleCalendarUrl?: Maybe<Scalars["String"]["output"]>;
+  /** ICS download URL for this CalendarEvent. */
+  icsDownloadUrl?: Maybe<Scalars["String"]["output"]>;
   /** The ID of the entity */
   id: Scalars["UUID"]["output"];
   /** Flag to indicate if this event is for multiple days. */
   multipleDays: Scalars["Boolean"]["output"];
   /** A name identifier of the entity, unique within a given scope. */
   nameID: Scalars["NameID"]["output"];
+  /** Outlook Calendar add-event URL for this CalendarEvent. */
+  outlookCalendarUrl?: Maybe<Scalars["String"]["output"]>;
   /** The Profile for this Post. */
   profile: Profile;
   /** The start time for this CalendarEvent. */
@@ -2131,6 +2137,8 @@ export type CreateSpaceSettingsInput = {
   collaboration?: InputMaybe<CreateSpaceSettingsCollaborationInput>;
   membership?: InputMaybe<CreateSpaceSettingsMembershipInput>;
   privacy?: InputMaybe<CreateSpaceSettingsPrivacyInput>;
+  /** The sort mode for subspaces: Alphabetical or Custom. */
+  sortMode?: InputMaybe<SpaceSortMode>;
 };
 
 export type CreateSpaceSettingsMembershipInput = {
@@ -4491,6 +4499,8 @@ export type Mutation = {
   updateSpacePlatformSettings: Space;
   /** Updates one of the Setting on a Space */
   updateSpaceSettings: Space;
+  /** Updates the pinned state of a Subspace within the specified Space. Returns the updated Subspace. */
+  updateSubspacePinned: Space;
   /** Update the sortOrder field of the supplied Subspaces to increase as per the order that they are provided in. */
   updateSubspacesSortOrder: Array<Space>;
   /** Updates the specified Tagset. */
@@ -5171,6 +5181,10 @@ export type MutationUpdateSpacePlatformSettingsArgs = {
 
 export type MutationUpdateSpaceSettingsArgs = {
   settingsData: UpdateSpaceSettingsInput;
+};
+
+export type MutationUpdateSubspacePinnedArgs = {
+  pinnedData: UpdateSubspacePinnedInput;
 };
 
 export type MutationUpdateSubspacesSortOrderArgs = {
@@ -6301,12 +6315,16 @@ export type RelayPaginatedSpace = ActorFull & {
   license: License;
   /** A name identifier of the entity, unique within a given scope. */
   nameID: Scalars["NameID"]["output"];
+  /** Whether this Space is pinned in its parent Space. */
+  pinned: Scalars["Boolean"]["output"];
   /** The calculated platform access for this Space. */
   platformAccess: PlatformRolesAccess;
   /** The profile for this Actor. */
   profile?: Maybe<Profile>;
   /** The settings for this Space. */
   settings: SpaceSettings;
+  /** The sort mode for subspaces of this Space: Alphabetical or Custom. Accessible without READ privilege. */
+  sortMode: SpaceSortMode;
   /** The sorting order for this Space within its parent. */
   sortOrder: Scalars["Int"]["output"];
   /** The StorageAggregator in use by this Space */
@@ -7018,12 +7036,16 @@ export type Space = ActorFull & {
   license: License;
   /** A name identifier of the entity, unique within a given scope. */
   nameID: Scalars["NameID"]["output"];
+  /** Whether this Space is pinned in its parent Space. */
+  pinned: Scalars["Boolean"]["output"];
   /** The calculated platform access for this Space. */
   platformAccess: PlatformRolesAccess;
   /** The profile for this Actor. */
   profile?: Maybe<Profile>;
   /** The settings for this Space. */
   settings: SpaceSettings;
+  /** The sort mode for subspaces of this Space: Alphabetical or Custom. Accessible without READ privilege. */
+  sortMode: SpaceSortMode;
   /** The sorting order for this Space within its parent. */
   sortOrder: Scalars["Int"]["output"];
   /** The StorageAggregator in use by this Space */
@@ -7132,6 +7154,8 @@ export type SpaceSettings = {
   membership: SpaceSettingsMembership;
   /** The privacy settings for this Space */
   privacy: SpaceSettingsPrivacy;
+  /** The sort mode for subspaces of this Space: Alphabetical or Custom. */
+  sortMode: SpaceSortMode;
 };
 
 export type SpaceSettingsCollaboration = {
@@ -7164,6 +7188,11 @@ export type SpaceSettingsPrivacy = {
   /** The privacy mode for this Space */
   mode: SpacePrivacyMode;
 };
+
+export enum SpaceSortMode {
+  Alphabetical = "ALPHABETICAL",
+  Custom = "CUSTOM",
+}
 
 export type SpaceSubscription = {
   /** The expiry date of this subscription, null if it does never expire. */
@@ -8073,6 +8102,8 @@ export type UpdateSpaceSettingsEntityInput = {
   collaboration?: InputMaybe<UpdateSpaceSettingsCollaborationInput>;
   membership?: InputMaybe<UpdateSpaceSettingsMembershipInput>;
   privacy?: InputMaybe<UpdateSpaceSettingsPrivacyInput>;
+  /** The sort mode for subspaces: Alphabetical or Custom. */
+  sortMode?: InputMaybe<SpaceSortMode>;
 };
 
 export type UpdateSpaceSettingsInput = {
@@ -8095,6 +8126,15 @@ export type UpdateSpaceSettingsPrivacyInput = {
   /** Flag to control if Platform Support has admin rights. */
   allowPlatformSupportAsAdmin?: InputMaybe<Scalars["Boolean"]["input"]>;
   mode?: InputMaybe<SpacePrivacyMode>;
+};
+
+export type UpdateSubspacePinnedInput = {
+  /** Whether the subspace should be pinned (true) or unpinned (false). */
+  pinned: Scalars["Boolean"]["input"];
+  /** The ID of the parent Space containing the subspace. */
+  spaceID: Scalars["UUID"]["input"];
+  /** The ID of the subspace to pin or unpin. */
+  subspaceID: Scalars["UUID"]["input"];
 };
 
 export type UpdateSubspacesSortOrderInput = {
@@ -10532,6 +10572,7 @@ export type ResolversTypes = {
   SpaceSettingsCollaboration: ResolverTypeWrapper<SpaceSettingsCollaboration>;
   SpaceSettingsMembership: ResolverTypeWrapper<SpaceSettingsMembership>;
   SpaceSettingsPrivacy: ResolverTypeWrapper<SpaceSettingsPrivacy>;
+  SpaceSortMode: SpaceSortMode;
   SpaceSubscription: ResolverTypeWrapper<SpaceSubscription>;
   SpaceVisibility: SpaceVisibility;
   StorageAggregator: ResolverTypeWrapper<
@@ -10682,6 +10723,7 @@ export type ResolversTypes = {
   UpdateSpaceSettingsInput: UpdateSpaceSettingsInput;
   UpdateSpaceSettingsMembershipInput: UpdateSpaceSettingsMembershipInput;
   UpdateSpaceSettingsPrivacyInput: UpdateSpaceSettingsPrivacyInput;
+  UpdateSubspacePinnedInput: UpdateSubspacePinnedInput;
   UpdateSubspacesSortOrderInput: UpdateSubspacesSortOrderInput;
   UpdateTagsetInput: UpdateTagsetInput;
   UpdateTemplateContentSpaceInput: UpdateTemplateContentSpaceInput;
@@ -11928,6 +11970,7 @@ export type ResolversParentTypes = {
   UpdateSpaceSettingsInput: UpdateSpaceSettingsInput;
   UpdateSpaceSettingsMembershipInput: UpdateSpaceSettingsMembershipInput;
   UpdateSpaceSettingsPrivacyInput: UpdateSpaceSettingsPrivacyInput;
+  UpdateSubspacePinnedInput: UpdateSubspacePinnedInput;
   UpdateSubspacesSortOrderInput: UpdateSubspacesSortOrderInput;
   UpdateTagsetInput: UpdateTagsetInput;
   UpdateTemplateContentSpaceInput: UpdateTemplateContentSpaceInput;
@@ -12814,9 +12857,24 @@ export type CalendarEventResolvers<
     ContextType
   >;
   durationMinutes?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  googleCalendarUrl?: Resolver<
+    Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
+  icsDownloadUrl?: Resolver<
+    Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   multipleDays?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   nameID?: Resolver<ResolversTypes["NameID"], ParentType, ContextType>;
+  outlookCalendarUrl?: Resolver<
+    Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
   profile?: Resolver<ResolversTypes["Profile"], ParentType, ContextType>;
   startDate?: Resolver<
     Maybe<ResolversTypes["DateTime"]>,
@@ -17088,6 +17146,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationUpdateSpaceSettingsArgs, "settingsData">
   >;
+  updateSubspacePinned?: Resolver<
+    ResolversTypes["Space"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationUpdateSubspacePinnedArgs, "pinnedData">
+  >;
   updateSubspacesSortOrder?: Resolver<
     Array<ResolversTypes["Space"]>,
     ParentType,
@@ -18397,6 +18461,7 @@ export type RelayPaginatedSpaceResolvers<
   >;
   license?: Resolver<ResolversTypes["License"], ParentType, ContextType>;
   nameID?: Resolver<ResolversTypes["NameID"], ParentType, ContextType>;
+  pinned?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   platformAccess?: Resolver<
     ResolversTypes["PlatformRolesAccess"],
     ParentType,
@@ -18404,6 +18469,7 @@ export type RelayPaginatedSpaceResolvers<
   >;
   profile?: Resolver<Maybe<ResolversTypes["Profile"]>, ParentType, ContextType>;
   settings?: Resolver<ResolversTypes["SpaceSettings"], ParentType, ContextType>;
+  sortMode?: Resolver<ResolversTypes["SpaceSortMode"], ParentType, ContextType>;
   sortOrder?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   storageAggregator?: Resolver<
     ResolversTypes["StorageAggregator"],
@@ -19027,6 +19093,7 @@ export type SpaceResolvers<
   >;
   license?: Resolver<ResolversTypes["License"], ParentType, ContextType>;
   nameID?: Resolver<ResolversTypes["NameID"], ParentType, ContextType>;
+  pinned?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   platformAccess?: Resolver<
     ResolversTypes["PlatformRolesAccess"],
     ParentType,
@@ -19034,6 +19101,7 @@ export type SpaceResolvers<
   >;
   profile?: Resolver<Maybe<ResolversTypes["Profile"]>, ParentType, ContextType>;
   settings?: Resolver<ResolversTypes["SpaceSettings"], ParentType, ContextType>;
+  sortMode?: Resolver<ResolversTypes["SpaceSortMode"], ParentType, ContextType>;
   sortOrder?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   storageAggregator?: Resolver<
     ResolversTypes["StorageAggregator"],
@@ -19171,6 +19239,7 @@ export type SpaceSettingsResolvers<
     ParentType,
     ContextType
   >;
+  sortMode?: Resolver<ResolversTypes["SpaceSortMode"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -26149,6 +26218,7 @@ export type SettingsDataFragment = {
     allowEventsFromSubspaces: boolean;
     allowMembersToVideoCall: boolean;
   };
+  sortMode: SpaceSortMode;
 };
 
 export type SubspaceL1DataFragment = {
@@ -36676,6 +36746,8 @@ export type SpaceDataFragment = {
 export type SubspaceDataFragment = {
   id: string;
   nameID: string;
+  pinned: boolean;
+  sortOrder: number;
   about: {
     id: string;
     why?: any | undefined;
@@ -63339,8 +63411,29 @@ export type UpdateSpaceSettingsMutation = {
         allowEventsFromSubspaces: boolean;
         allowMembersToVideoCall: boolean;
       };
+      sortMode: SpaceSortMode;
     };
   };
+};
+
+export type UpdateSubspacePinnedMutationVariables = Exact<{
+  pinnedData: UpdateSubspacePinnedInput;
+}>;
+
+export type UpdateSubspacePinnedMutation = {
+  updateSubspacePinned: { id: string; pinned: boolean; sortOrder: number };
+};
+
+export type UpdateSubspacesSortOrderMutationVariables = Exact<{
+  sortOrderData: UpdateSubspacesSortOrderInput;
+}>;
+
+export type UpdateSubspacesSortOrderMutation = {
+  updateSubspacesSortOrder: Array<{
+    id: string;
+    pinned: boolean;
+    sortOrder: number;
+  }>;
 };
 
 export type CreateSpaceMutationVariables = Exact<{

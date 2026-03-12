@@ -94,3 +94,49 @@ export const subspaceVariablesData = (
 
   return variables;
 };
+
+export const updateSubspacePinned = async (
+  spaceID: string,
+  subspaceID: string,
+  pinned: boolean,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.UpdateSubspacePinned(
+      {
+        pinnedData: {
+          spaceID,
+          subspaceID,
+          pinned,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const updateSubspacesSortOrder = async (
+  spaceID: string,
+  subspaceIDs: string[],
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.UpdateSubspacesSortOrder(
+      {
+        sortOrderData: {
+          spaceID,
+          subspaceIDs,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
