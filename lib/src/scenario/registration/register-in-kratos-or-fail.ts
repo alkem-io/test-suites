@@ -2,13 +2,10 @@ import { Configuration, IdentityApi, FrontendApi } from '@ory/kratos-client';
 import { testConfiguration } from '../../config/test.configuration';
 
 /***
- * Registration Flow on v0.8.0-alpha3
- * 1. AJAX call to request a registration flow
- * 2. AJAX call submit the data need for the registration flow in the body
- * and flowId in the URL params
- * 3. After a successful registration you will receive a session_token in the response
- * 4. If an error occurred after submit, a 'messages' field
- * will be attached to the body of the flow in the response with the errors
+ * Registration Flow (two-step, Kratos v1.3.x)
+ * 1. Create a native registration flow
+ * 2. Submit traits via the "profile" method (step 1)
+ * 3. Submit password via the "password" method (step 2), re-including traits
  *
  * Exception can be thrown on
  * <ul>
@@ -16,7 +13,7 @@ import { testConfiguration } from '../../config/test.configuration';
  *  <li>Some other error</li>
  * </ul>
  *
- * @see https://www.ory.sh/docs/kratos/self-service/flows/user-registration#registration-for-api-clients-and-clients-without-browsers
+ * @see https://www.ory.sh/docs/kratos/self-service/flows/user-registration
  */
 export const registerInKratosOrFail = async (
   firstName: string,
@@ -36,24 +33,36 @@ export const registerInKratosOrFail = async (
     frontend: new FrontendApi(kratosConfig),
   };
 
+  const traits = {
+    email: email,
+    accepted_terms: true,
+    name: {
+      first: firstName,
+      last: lastName,
+    },
+  };
+
   // get registration flow
   const {
     data: { id: flowId },
   } = await ory.frontend.createNativeRegistrationFlow();
-  // complete the flow
+
+  // step 1: submit profile traits
+  await ory.frontend.updateRegistrationFlow({
+    flow: flowId,
+    updateRegistrationFlowBody: {
+      method: 'profile',
+      traits,
+    },
+  });
+
+  // step 2: submit password (traits must be re-included)
   await ory.frontend.updateRegistrationFlow({
     flow: flowId,
     updateRegistrationFlowBody: {
       method: 'password',
       password: testConfiguration.identities.admin.password,
-      traits: {
-        email: email,
-        accepted_terms: true,
-        name: {
-          first: firstName,
-          last: lastName,
-        },
-      },
+      traits,
     },
   });
 };
