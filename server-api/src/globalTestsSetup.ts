@@ -1,7 +1,6 @@
 import { UiText } from '@ory/kratos-client';
 import {
   LogManager,
-  registerInAlkemioOrFail,
   registerInKratosOrFail,
   stringifyConfig,
   testConfiguration,
@@ -10,6 +9,8 @@ import {
 } from '@alkemio/tests-lib';
 
 export default async function setup() {
+  console.log('[globalSetup] Starting global test setup...');
+
   // Guard against duplicate invocations when Vitest projects inherit
   // globalSetup from root config via extends: true (array merge semantics).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -74,17 +75,4 @@ export const userRegisterFlow = async (userName: string) => {
 
   await verifyInKratosOrFail(email);
   LogManager.getLogger().info(`User ${email} verified`);
-  try {
-    await registerInAlkemioOrFail(firstName, lastName, email);
-    LogManager.getLogger().info(`User ${email} registered in Alkemio`);
-  } catch (e) {
-    const err = e as Error;
-    if (err.message.indexOf('already registered') > -1) {
-      LogManager.getLogger().warn(
-        `User ${email} already registered in Alkemio`
-      );
-    } else {
-      throw new Error(err.message);
-    }
-  }
 };
