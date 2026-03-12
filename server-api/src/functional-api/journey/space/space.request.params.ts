@@ -7,6 +7,7 @@ import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
 import {
   CreateSpaceOnAccountInput,
+  SpaceSortMode,
   SpaceVisibility,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
@@ -233,6 +234,7 @@ export const updateSpaceSettings = async (
       allowMembersToVideoCall?: boolean;
       allowGuestContributions?: boolean;
     };
+    sortMode?: SpaceSortMode;
   },
 
   userRole: TestUser = TestUser.GLOBAL_ADMIN
@@ -276,6 +278,9 @@ export const updateSpaceSettings = async (
               allowGuestContributions:
                 settings?.collaboration?.allowGuestContributions ?? false,
             },
+            ...(settings?.sortMode !== undefined && {
+              sortMode: settings.sortMode,
+            }),
           }, // Add an empty object for the settings property
         },
       },
