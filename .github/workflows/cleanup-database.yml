@@ -35,11 +35,10 @@ jobs:
       - name: Install PostgreSQL client
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
 
-      - name: Port-forward and reset Postgres database
+      - name: Port-forward and reset all Postgres databases
         env:
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_DB: ${{ inputs.postgres_db }}
         run: |
           set -euo pipefail
 
@@ -65,15 +64,22 @@ jobs:
             echo "Port-forward did not become ready"; cat /tmp/port-forward.log; exit 1
           fi
 
-          # Drop all connections to the target database
-          echo "Terminating active connections to $POSTGRES_DB..."
-          PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -p 5432 -U "$POSTGRES_USER" -d postgres -c \
-            "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$POSTGRES_DB' AND pid <> pg_backend_pid();"
+          # Discover all non-system databases
+          echo "Discovering user databases..."
+          DBS=$(PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -p 5432 -U "$POSTGRES_USER" -d postgres -t -A -c \
+            "SELECT datname FROM pg_database WHERE datistemplate = false AND datname != 'postgres';")
 
-          # Drop and recreate the database
-          echo "Dropping and recreating database $POSTGRES_DB..."
-          PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -p 5432 -U "$POSTGRES_USER" -d postgres -c "DROP DATABASE IF EXISTS \"$POSTGRES_DB\";"
-          PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -p 5432 -U "$POSTGRES_USER" -d postgres -c "CREATE DATABASE \"$POSTGRES_DB\";"
+          echo "Databases to reset: $DBS"
+
+          for DB in $DBS; do
+            echo "Terminating active connections to $DB..."
+            PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -p 5432 -U "$POSTGRES_USER" -d postgres -c \
+              "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$DB' AND pid <> pg_backend_pid();"
+
+            echo "Dropping and recreating database $DB..."
+            PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -p 5432 -U "$POSTGRES_USER" -d postgres -c "DROP DATABASE IF EXISTS \"$DB\";"
+            PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -p 5432 -U "$POSTGRES_USER" -d postgres -c "CREATE DATABASE \"$DB\";"
+          done
 
 
   run-migration-and-boostrap:
@@ -90,6 +96,83 @@ jobs:
           mkdir -p $HOME/.kube  # Ensure the .kube directory exists
           echo "${{ secrets.KUBECONFIG_SECRET_HETZNER_TEST }}" > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
+      # run Kratos migration on the fresh database, then restart the deployment
+      - name: Migrate and restart Kratos
+        run: |
+          KRATOS_MIGRATION_JOB="kratos-migration-job-${{ github.run_id }}"
+          KRATOS_IMAGE=$(kubectl get deployment kratos -o jsonpath='{.spec.template.spec.containers[0].image}')
+          echo "Using Kratos image: $KRATOS_IMAGE"
+
+          kubectl apply -f - <<EOF
+          apiVersion: batch/v1
+          kind: Job
+          metadata:
+            name: $KRATOS_MIGRATION_JOB
+          spec:
+            ttlSecondsAfterFinished: 120
+            template:
+              spec:
+                restartPolicy: Never
+                containers:
+                  - name: kratos-migrate
+                    image: $KRATOS_IMAGE
+                    command: ["kratos"]
+                    args: ["migrate", "sql", "-e", "--yes"]
+                    env:
+                      - name: DSN
+                        valueFrom:
+                          secretKeyRef:
+                            name: kratos
+                            key: dsn
+          EOF
+
+          kubectl wait --for=condition=complete job/$KRATOS_MIGRATION_JOB --timeout=600s
+
+          kubectl rollout restart deployment/kratos
+          kubectl rollout status deployment/kratos --timeout=600s
+
+      # run Hydra migration on the fresh database, then restart the deployment
+      - name: Migrate and restart Hydra
+        run: |
+          HYDRA_MIGRATION_JOB="hydra-migration-job-${{ github.run_id }}"
+          HYDRA_IMAGE=$(kubectl get deployment hydra -o jsonpath='{.spec.template.spec.containers[0].image}')
+          echo "Using Hydra image: $HYDRA_IMAGE"
+
+          kubectl apply -f - <<EOF
+          apiVersion: batch/v1
+          kind: Job
+          metadata:
+            name: $HYDRA_MIGRATION_JOB
+          spec:
+            ttlSecondsAfterFinished: 120
+            template:
+              spec:
+                restartPolicy: Never
+                containers:
+                  - name: hydra-migrate
+                    image: $HYDRA_IMAGE
+                    command: ["hydra"]
+                    args: ["migrate", "sql", "-e", "--yes"]
+                    env:
+                      - name: POSTGRES_USER
+                        valueFrom:
+                          configMapKeyRef:
+                            name: alkemio-config
+                            key: POSTGRES_USER
+                      - name: POSTGRES_PASSWORD
+                        valueFrom:
+                          configMapKeyRef:
+                            name: alkemio-config
+                            key: POSTGRES_PASSWORD
+                      - name: DSN
+                        value: "postgres://\$(POSTGRES_USER):\$(POSTGRES_PASSWORD)@postgres:5432/hydra?sslmode=disable"
+          EOF
+
+          kubectl wait --for=condition=complete job/$HYDRA_MIGRATION_JOB --timeout=600s
+
+          kubectl rollout restart deployment/hydra
+          kubectl rollout status deployment/hydra --timeout=600s
+
       # apply the latest schema
       - name: Run migration job
         run: |
