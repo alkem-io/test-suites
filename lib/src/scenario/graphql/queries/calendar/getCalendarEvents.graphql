@@ -1,0 +1,38 @@
+query GetCalendarEvents($spaceId: UUID!) {
+  lookup {
+    space(ID: $spaceId) {
+      collaboration {
+        timeline {
+          calendar {
+            id
+            events {
+              id
+              profile {
+                displayName
+                description
+                url
+                location {
+                  city
+                  country
+                }
+              }
+              type
+              wholeDay
+              multipleDays
+              startDate
+              durationMinutes
+              durationDays
+              googleCalendarUrl
+              outlookCalendarUrl
+              icsDownloadUrl
+              createdBy {
+                id
+                nameID
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

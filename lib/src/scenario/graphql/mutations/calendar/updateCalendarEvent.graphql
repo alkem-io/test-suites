@@ -1,0 +1,24 @@
+mutation UpdateCalendarEvent($eventData: UpdateCalendarEventInput!) {
+  updateCalendarEvent(eventData: $eventData) {
+    id
+    nameID
+    profile {
+      displayName
+      description
+      url
+      location {
+        city
+        country
+      }
+    }
+    type
+    wholeDay
+    multipleDays
+    startDate
+    durationMinutes
+    durationDays
+    googleCalendarUrl
+    outlookCalendarUrl
+    icsDownloadUrl
+  }
+}

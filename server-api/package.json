@@ -57,6 +57,7 @@
     "test:innovation": "vitest run --project innovation --forceExit --maxWorkers=1",
     "test:documents": "vitest run --project documents --forceExit --maxWorkers=1",
     "test:configuration": "vitest run --project configuration --forceExit --maxWorkers=1",
+    "test:calendar": "vitest run --project calendar --fileParallelism=false",
     "test:graphql-guard:ui": "vitest --project graphql-guard --maxWorkers=1 --ui",
     "innovation-pack-with-templates": "tsx ./src/functional-api/innovation-pack/innovation-pack-with-templates.ts",
     "validate-scenario-setup": "tsx ./src/scripts/validate-scenario-setup.ts"
