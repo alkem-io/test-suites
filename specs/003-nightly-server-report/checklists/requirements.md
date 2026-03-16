@@ -31,6 +31,7 @@
 
 ## Notes
 
-- All items pass validation. Spec is ready for `/speckit.clarify` or `/speckit.plan`.
+- All items pass validation. Spec is ready for `/speckit.plan`.
 - The spec references specific workflow filenames (`nightly-client-tests.yml`, `deploy-github-pages.yml`) and path conventions (`vitest/`, `playwright/`) — these are existing infrastructure references, not implementation prescriptions.
+- FR-005 and FR-006 updated to explicitly describe the two-job workflow structure (test + deploy) and the exact `deploy-github-pages.yml` invocation pattern with `ref: gh-pages` / `path: gh-pages-root`, matching the "Nightly Playwright" reference workflow.
 - The feature scope is well-bounded: one new workflow file, report organization, index generation, and reuse of existing deployment.

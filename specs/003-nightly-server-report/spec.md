@@ -48,8 +48,8 @@ As a DevOps maintainer, I want the server-API nightly workflow to follow the sam
 
 **Acceptance Scenarios**:
 
-1. **Given** the new workflow exists, **When** compared to `nightly-client-tests.yml`, **Then** it follows the same pattern: checkout gh-pages history, run tests, organize report, add metadata, generate index, commit to gh-pages, deploy via reusable workflow.
-2. **Given** the workflow runs, **When** it deploys reports, **Then** it uses the existing `deploy-github-pages.yml` reusable workflow and publishes alongside (not replacing) the Playwright reports.
+1. **Given** the new workflow exists, **When** compared to `nightly-client-tests.yml` ("Nightly Playwright"), **Then** it follows the same two-job pattern: a `test` job (checkout gh-pages history, run tests, organize report, add metadata, generate index, commit to gh-pages) followed by a `deploy` job that calls `deploy-github-pages.yml` ("Deploy GitHub Pages (from branch)") with `ref: gh-pages` and `path: gh-pages-root`.
+2. **Given** the workflow runs, **When** it deploys reports, **Then** the `deploy` job runs unconditionally and publishes alongside (not replacing) the Playwright reports.
 
 ---
 
@@ -68,8 +68,8 @@ As a DevOps maintainer, I want the server-API nightly workflow to follow the sam
 - **FR-002**: The system MUST publish the Vitest HTML report to GitHub Pages under the path `vitest/<date>/<run_id>/`, keeping it separate from existing Playwright reports under `playwright/`.
 - **FR-003**: The system MUST preserve report history across runs by checking out the existing `gh-pages` branch content before adding new reports (incremental accumulation).
 - **FR-004**: The system MUST generate a summary index page at `vitest/index.html` listing all historical runs grouped by date (newest first) with status indicators, commit SHA, and branch name.
-- **FR-005**: The system MUST reuse the existing `deploy-github-pages.yml` reusable workflow for GitHub Pages deployment.
-- **FR-006**: The system MUST continue to publish reports even when tests fail (test failures must not block report publication).
+- **FR-005**: The system MUST use a two-job workflow structure: a `test` job that runs tests and commits reports to `gh-pages`, followed by a separate `deploy` job that invokes the existing `deploy-github-pages.yml` ("Deploy GitHub Pages (from branch)") reusable workflow with `ref: gh-pages` and `path: gh-pages-root` — mirroring the exact pattern used in the "Nightly Playwright" workflow.
+- **FR-006**: The `deploy` job MUST run unconditionally (regardless of test outcome) so that reports are published even when tests fail.
 - **FR-007**: The system MUST store metadata for each run (run ID, date, branch, commit, test outcome) alongside the report.
 - **FR-008**: The system MUST support manual triggering via `workflow_dispatch` (same as client-web workflow).
 - **FR-009**: The system MUST generate or update a top-level `index.html` on the GitHub Pages site that links to both the Playwright and Vitest report index pages.
