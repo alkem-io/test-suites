@@ -38,15 +38,20 @@ jobs:
       - name: Scale down services that hold database connections
         run: |
           set -euo pipefail
-          echo "Scaling down services to release database connections..."
+          echo "Scaling down services that hold database connections..."
+          kubectl scale deployment/alkemio-server-deployment --replicas=0
+          kubectl scale deployment/alkemio-matrix-adapter-deployment --replicas=0
+          kubectl scale deployment/synapse-deployment --replicas=0
           kubectl scale deployment/kratos --replicas=0
           kubectl scale statefulset/kratos-courier --replicas=0
           kubectl scale deployment/hydra --replicas=0
-          kubectl scale deployment/alkemio-server-deployment --replicas=0
+
+          kubectl rollout status deployment/alkemio-server-deployment --timeout=120s
+          kubectl rollout status deployment/alkemio-matrix-adapter-deployment --timeout=120s
+          kubectl rollout status deployment/synapse-deployment --timeout=120s
           kubectl rollout status deployment/kratos --timeout=120s
           kubectl rollout status statefulset/kratos-courier --timeout=120s
           kubectl rollout status deployment/hydra --timeout=120s
-          kubectl rollout status deployment/alkemio-server-deployment --timeout=120s
           echo "All services scaled down."
 
       - name: Port-forward and reset all Postgres databases
@@ -188,6 +193,19 @@ jobs:
           # Scale back up (was scaled to 0 during DB cleanup)
           kubectl scale deployment/hydra --replicas=1
           kubectl rollout status deployment/hydra --timeout=600s
+
+      # Scale up dependencies before server migration: Synapse + matrix adapter
+      - name: Start Synapse and supporting services
+        run: |
+          kubectl scale deployment/synapse-deployment --replicas=1
+          kubectl rollout status deployment/synapse-deployment --timeout=600s
+
+          kubectl scale deployment/alkemio-matrix-adapter-deployment --replicas=1
+          kubectl scale deployment/alkemio-notifications-deployment --replicas=1
+          kubectl scale deployment/alkemio-file-service-deployment --replicas=1
+          kubectl rollout status deployment/alkemio-matrix-adapter-deployment --timeout=600s
+          kubectl rollout status deployment/alkemio-notifications-deployment --timeout=600s
+          kubectl rollout status deployment/alkemio-file-service-deployment --timeout=600s
 
       # apply the latest schema
       - name: Run migration job
