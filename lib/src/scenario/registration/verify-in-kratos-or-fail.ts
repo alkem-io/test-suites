@@ -1,4 +1,4 @@
-import request from 'supertest';
+import axios from 'axios';
 import { Configuration, IdentityApi, FrontendApi } from '@ory/kratos-client';
 import { testConfiguration } from '../../config/test.configuration';
 import { delay } from '../../utils/delay';
@@ -78,12 +78,16 @@ export const verifyInKratosOrFail = async (email: string) => {
 /**
  * GET the verification link URL to complete verification.
  * Kratos link verification is triggered by visiting the URL.
+ * Uses axios instead of supertest since it handles external HTTPS + redirects.
  */
 const verifyAccount = async (verificationLink: string): Promise<boolean> =>
-  request(verificationLink)
-    .get('')
-    .set('Accept', 'application/json')
-    .then(x => x.status === 200 || x.status === 303 || x.status === 302);
+  axios
+    .get(verificationLink, {
+      maxRedirects: 5,
+      validateStatus: () => true,
+      timeout: 30000,
+    })
+    .then(res => res.status === 200 || res.status === 303 || res.status === 302);
 
 /**
  * Fetch verification email for a specific user from mail slurper
@@ -112,10 +116,10 @@ const getVerificationLink = async (email: string): Promise<string> =>
     })
     .then(body => {
       if (!body) return '';
-      const urlRegex = /(((https?:\/\/)|(https:\/\/)|(www\.))[^\s]+)/g;
-      const cleanText = body.replace(/<.*?>/gm, '');
-      const url = cleanText.match(urlRegex)?.[0]?.toString() ?? '';
-      return url.replace('&amp;', '&');
+      // Extract href URLs from <a> tags and find the verification link
+      const hrefs = [...body.matchAll(/href="(https?:\/\/[^"]+)"/gi)]
+        .map(m => m[1].replace(/&amp;/g, '&'));
+      return hrefs.find(u => u.includes('/self-service/verification')) ?? '';
     })
     .catch(x => {
       throw new Error((x as Error)?.message);

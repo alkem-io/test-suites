@@ -53,7 +53,7 @@ const getUserName = (userName: string): [string, string] => {
 export const userRegisterFlow = async (userName: string) => {
   const [firstName, lastName] = getUserName(userName);
   const email = `${userName}@alkem.io`;
-  let needsVerification = true;
+  const needsVerification = true;
 
   try {
     await registerInKratosOrFail(firstName, lastName, email);
@@ -79,8 +79,7 @@ export const userRegisterFlow = async (userName: string) => {
     );
 
     if (userExists) {
-      console.error(`[registration] ${email} already exists — skipping`);
-      needsVerification = false;
+      console.error(`[registration] ${email} already exists`);
     } else {
       const errorMessage = errorMessages.map(x => x.text).join('\n');
       throw new Error(errorMessage);
