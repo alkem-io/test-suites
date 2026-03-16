@@ -57,7 +57,13 @@ export const userRegisterFlow = async (userName: string) => {
     LogManager.getLogger().info(`User ${email} registered in Kratos`);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
-    // Guard against network errors where response body is absent
+    // Log the full response body for debugging Kratos errors
+    if (e.response?.data) {
+      LogManager.getLogger().warn(
+        `Kratos response for ${email}: ${JSON.stringify(e.response.data, null, 2)}`
+      );
+    }
+
     const errorMessages = e.response?.data?.ui?.messages as
       | UiText[]
       | undefined;
