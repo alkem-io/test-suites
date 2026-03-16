@@ -24,12 +24,10 @@ export default async function setup() {
 
   if (!testConfiguration.registerUsers) return;
 
-  // get all user names to register
-  // exclude GLOBAL_ADMIN as he already is created and verified
-  // and it's used to create the the users
-  const userNames = Object.values(TestUser).filter(
-    x => x !== TestUser.GLOBAL_ADMIN
-  );
+  // Register all users including GLOBAL_ADMIN (which may not exist after a
+  // full DB wipe). The catch block below handles "user already exists" (4000007)
+  // gracefully, so re-registering an existing admin is safe.
+  const userNames = Object.values(TestUser);
   // running register flows in parallel brings 3x less waiting times
   // NOTE: may require limit on amount of flows run in parallel
 
@@ -59,12 +57,20 @@ export const userRegisterFlow = async (userName: string) => {
     LogManager.getLogger().info(`User ${email} registered in Kratos`);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const errorMessages = e.response?.data.ui.messages as UiText[];
-    const errorMessage =
-      errorMessages.map(x => x.text).join('\n') ?? 'Unknown error';
-    const userExists =
-      errorMessages.filter((x: { id: number }) => x.id === 4000007).length > 0;
+    // Guard against network errors where response body is absent
+    const errorMessages = e.response?.data?.ui?.messages as
+      | UiText[]
+      | undefined;
+    if (!errorMessages?.length) {
+      throw new Error(
+        `Registration failed for ${email}: ${e.message ?? e}`
+      );
+    }
+
+    const errorMessage = errorMessages.map(x => x.text).join('\n');
+    const userExists = errorMessages.some(
+      (x: { id: number }) => x.id === 4000007
+    );
 
     if (userExists) {
       LogManager.getLogger().warn(`User ${email} already registered in Kratos`);
