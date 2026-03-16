@@ -85,10 +85,9 @@ jobs:
 
           for DB in $DBS; do
             echo "Dropping and recreating database $DB..."
-            # Terminate any remaining connections (e.g. from cron jobs)
-            PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -p 5432 -U "$POSTGRES_USER" -d postgres -c \
-              "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$DB' AND pid <> pg_backend_pid();" || true
-            PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -p 5432 -U "$POSTGRES_USER" -d postgres -c "DROP DATABASE IF EXISTS \"$DB\";"
+            # WITH (FORCE) atomically terminates remaining connections and drops
+            # the database in one step (PostgreSQL 13+)
+            PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -p 5432 -U "$POSTGRES_USER" -d postgres -c "DROP DATABASE IF EXISTS \"$DB\" WITH (FORCE);"
             PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -p 5432 -U "$POSTGRES_USER" -d postgres -c "CREATE DATABASE \"$DB\";"
           done
 
