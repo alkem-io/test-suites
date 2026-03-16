@@ -6,6 +6,7 @@ import {
   ConversationCreationType,
   ActorType,
   RoomType,
+  delay,
 } from '@alkemio/tests-lib';
 import {
   createConversation,
@@ -15,6 +16,29 @@ import {
   getMeConversations,
 } from './conversation.request.params';
 import { sendMessageToRoom } from '../communication.params';
+
+/**
+ * Fire-and-forget mutations dispatch to Matrix and return immediately.
+ * State changes arrive asynchronously via inbound Matrix events.
+ * This helper waits for a condition to become true, polling at intervals.
+ */
+const waitForCondition = async (
+  check: () => Promise<boolean>,
+  { timeout = 15_000, interval = 1_500 } = {}
+): Promise<void> => {
+  const start = Date.now();
+  while (Date.now() - start < timeout) {
+    if (await check()) return;
+    await delay(interval);
+  }
+  // Final check — let it throw if still failing
+  const result = await check();
+  if (!result) {
+    throw new Error(
+      `Condition not met within ${timeout}ms (eventual consistency timeout)`
+    );
+  }
+};
 
 const scenarioConfig: TestScenarioNoPreCreationConfig = {
   name: 'conversations',
@@ -375,45 +399,111 @@ describe('Update Conversation', () => {
   });
 
   test('should update displayName of a GROUP conversation', async () => {
+    // Arrange
+    const newDisplayName = 'Updated Group Name';
+
     // Act
     const res = await updateConversation(
       groupConversationId,
-      { displayName: 'Updated Group Name' },
+      { displayName: newDisplayName },
       TestUser.GLOBAL_ADMIN
     );
 
-    // Assert
+    // Assert — mutation returns true
     expect(res?.data?.updateConversation).toBe(true);
+
+    // Assert — query confirms the change persisted (eventual consistency)
+    await waitForCondition(async () => {
+      const meRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
+      const conv = (
+        meRes?.data?.me.conversations.conversations ?? []
+      ).find(c => c.id === groupConversationId);
+      return conv?.room?.displayName === newDisplayName;
+    });
+
+    const meRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
+    const conv = (
+      meRes?.data?.me.conversations.conversations ?? []
+    ).find(c => c.id === groupConversationId);
+    expect(conv).toBeDefined();
+    expect(conv?.room?.displayName).toBe(newDisplayName);
   });
 
   test('should update avatarUrl of a GROUP conversation', async () => {
+    // Arrange
+    const newAvatarUrl = 'https://example.com/new-avatar.png';
+
     // Act
     const res = await updateConversation(
       groupConversationId,
-      { avatarUrl: 'https://example.com/new-avatar.png' },
+      { avatarUrl: newAvatarUrl },
       TestUser.GLOBAL_ADMIN
     );
 
-    // Assert
+    // Assert — mutation returns true
     expect(res?.data?.updateConversation).toBe(true);
+
+    // Assert — query confirms the change persisted (eventual consistency)
+    await waitForCondition(async () => {
+      const meRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
+      const conv = (
+        meRes?.data?.me.conversations.conversations ?? []
+      ).find(c => c.id === groupConversationId);
+      return conv?.room?.avatarUrl === newAvatarUrl;
+    });
+
+    const meRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
+    const conv = (
+      meRes?.data?.me.conversations.conversations ?? []
+    ).find(c => c.id === groupConversationId);
+    expect(conv).toBeDefined();
+    expect(conv?.room?.avatarUrl).toBe(newAvatarUrl);
   });
 
   test('should update both displayName and avatarUrl', async () => {
+    // Arrange
+    const newDisplayName = 'Both Updated';
+    const newAvatarUrl = 'https://example.com/both-avatar.png';
+
     // Act
     const res = await updateConversation(
       groupConversationId,
-      {
-        displayName: 'Both Updated',
-        avatarUrl: 'https://example.com/both-avatar.png',
-      },
+      { displayName: newDisplayName, avatarUrl: newAvatarUrl },
       TestUser.GLOBAL_ADMIN
     );
 
-    // Assert
+    // Assert — mutation returns true
     expect(res?.data?.updateConversation).toBe(true);
+
+    // Assert — query confirms both changes persisted (eventual consistency)
+    await waitForCondition(async () => {
+      const meRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
+      const conv = (
+        meRes?.data?.me.conversations.conversations ?? []
+      ).find(c => c.id === groupConversationId);
+      return (
+        conv?.room?.displayName === newDisplayName &&
+        conv?.room?.avatarUrl === newAvatarUrl
+      );
+    });
+
+    const meRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
+    const conv = (
+      meRes?.data?.me.conversations.conversations ?? []
+    ).find(c => c.id === groupConversationId);
+    expect(conv).toBeDefined();
+    expect(conv?.room?.displayName).toBe(newDisplayName);
+    expect(conv?.room?.avatarUrl).toBe(newAvatarUrl);
   });
 
   test('should fail to update conversation by non-member', async () => {
+    // Arrange — capture current state
+    const beforeRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
+    const beforeConv = (
+      beforeRes?.data?.me.conversations.conversations ?? []
+    ).find(c => c.id === groupConversationId);
+    const originalName = beforeConv?.room?.displayName;
+
     // Act
     const res = await updateConversation(
       groupConversationId,
@@ -421,8 +511,15 @@ describe('Update Conversation', () => {
       TestUser.NON_SPACE_MEMBER
     );
 
-    // Assert
+    // Assert — mutation returns error
     expect(res?.error?.errors?.length).toBeGreaterThan(0);
+
+    // Assert — query confirms the name was NOT changed
+    const afterRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
+    const afterConv = (
+      afterRes?.data?.me.conversations.conversations ?? []
+    ).find(c => c.id === groupConversationId);
+    expect(afterConv?.room?.displayName).toBe(originalName);
   });
 });
 
@@ -432,6 +529,7 @@ describe('Leave Conversation', () => {
     const memberActorId =
       TestUserManager.users.globalAdmin.agentId;
     const creatorUser = TestUser.SPACE_MEMBER;
+    const creatorActorId = TestUserManager.users.spaceMember.agentId;
     const res = await createConversation(
       [memberActorId],
       ConversationCreationType.Group,
@@ -447,8 +545,44 @@ describe('Leave Conversation', () => {
       creatorUser
     );
 
-    // Assert
+    // Assert — mutation returns true
     expect(leaveRes?.data?.leaveConversation).toBe(true);
+
+    // Assert — conversation no longer appears in the leaving user's list
+    // (eventual consistency: membership change arrives via Matrix event)
+    await waitForCondition(async () => {
+      const meRes = await getMeConversations(creatorUser);
+      const conversations =
+        meRes?.data?.me.conversations.conversations ?? [];
+      return !conversations.some(c => c.id === conversationId);
+    });
+
+    const meRes = await getMeConversations(creatorUser);
+    const conversations =
+      meRes?.data?.me.conversations.conversations ?? [];
+    const conv = conversations.find(c => c.id === conversationId);
+    expect(conv).toBeUndefined();
+
+    // Assert — remaining member still sees the conversation without the leaving user
+    await waitForCondition(async () => {
+      const otherRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
+      const otherConv = (
+        otherRes?.data?.me.conversations.conversations ?? []
+      ).find(c => c.id === conversationId);
+      const memberIds = otherConv?.members?.map(m => m.id) ?? [];
+      return !memberIds.includes(creatorActorId);
+    });
+
+    const otherRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
+    const otherConversations =
+      otherRes?.data?.me.conversations.conversations ?? [];
+    const otherConv = otherConversations.find(
+      c => c.id === conversationId
+    );
+    expect(otherConv).toBeDefined();
+    const remainingMemberIds =
+      otherConv?.members?.map(m => m.id) ?? [];
+    expect(remainingMemberIds).not.toContain(creatorActorId);
   });
 
   test('should fail to leave a conversation that does not exist', async () => {
@@ -490,6 +624,14 @@ describe('Remove Conversation Member', () => {
   });
 
   test('should remove a member from a GROUP conversation', async () => {
+    // Arrange — verify member is present before removal
+    const meResBefore = await getMeConversations(TestUser.GLOBAL_ADMIN);
+    const convBefore = (
+      meResBefore?.data?.me.conversations.conversations ?? []
+    ).find(c => c.id === groupConversationId);
+    const membersBefore = convBefore?.members?.map(m => m.id) ?? [];
+    expect(membersBefore).toContain(memberToRemoveActorId());
+
     // Act
     const res = await removeConversationMember(
       groupConversationId,
@@ -497,8 +639,26 @@ describe('Remove Conversation Member', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    // Assert
+    // Assert — mutation returns true
     expect(res?.data?.removeConversationMember).toBe(true);
+
+    // Assert — member no longer in conversation
+    // (eventual consistency: membership change arrives via Matrix event)
+    await waitForCondition(async () => {
+      const meRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
+      const conv = (
+        meRes?.data?.me.conversations.conversations ?? []
+      ).find(c => c.id === groupConversationId);
+      const memberIds = conv?.members?.map(m => m.id) ?? [];
+      return !memberIds.includes(memberToRemoveActorId());
+    });
+
+    const meResAfter = await getMeConversations(TestUser.GLOBAL_ADMIN);
+    const convAfter = (
+      meResAfter?.data?.me.conversations.conversations ?? []
+    ).find(c => c.id === groupConversationId);
+    const membersAfter = convAfter?.members?.map(m => m.id) ?? [];
+    expect(membersAfter).not.toContain(memberToRemoveActorId());
   });
 
   test('should fail to remove member from non-existent conversation', async () => {
@@ -531,8 +691,16 @@ describe('Remove Conversation Member', () => {
       TestUser.NON_SPACE_MEMBER
     );
 
-    // Assert
+    // Assert — mutation returns error
     expect(removeRes?.error?.errors?.length).toBeGreaterThan(0);
+
+    // Assert — member is still in the conversation
+    const meRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
+    const conv = (
+      meRes?.data?.me.conversations.conversations ?? []
+    ).find(c => c.id === convId);
+    const memberIds = conv?.members?.map(m => m.id) ?? [];
+    expect(memberIds).toContain(member);
 
     // Cleanup
     if (convId) {
