@@ -49,16 +49,18 @@ export const verifyInKratosOrFail = async (email: string) => {
     flow: flowId,
     updateVerificationFlowBody: {
       email,
-      method: 'code',
+      method: 'link',
     },
   });
 
   const verifyMessages = messages ?? [];
-  const isCodeSent = !!verifyMessages.find(
-    x => x.text.indexOf('verification code has been sent') > -1
+  const isLinkSent = !!verifyMessages.find(
+    x =>
+      x.text.indexOf('verification link has been sent') > -1 ||
+      x.text.indexOf('verification code has been sent') > -1
   );
 
-  if (!isCodeSent) {
+  if (!isLinkSent) {
     const expireMsg = verifyMessages.find(x => x.text.indexOf('flow expired'));
 
     if (expireMsg) {
@@ -66,7 +68,7 @@ export const verifyInKratosOrFail = async (email: string) => {
     }
 
     const messages = verifyMessages.map(x => x.text).join('\n');
-    throw new Error(`Code is not sent for user '${email}: ${messages}'`);
+    throw new Error(`Verification not sent for user '${email}: ${messages}'`);
   }
 
   // wait for the email to be sent
@@ -85,12 +87,12 @@ export const verifyInKratosOrFail = async (email: string) => {
 };
 
 const verifyAccount = async (
-  verificationCode: string,
+  verificationLink: string,
   email: string
 ): Promise<boolean> =>
-  request(verificationCode)
+  request(verificationLink)
     .post('')
-    .send({ email, method: 'code' })
+    .send({ email, method: 'link' })
     .set('Accept', 'application/json')
     // i'm pretty sure it has to be 200 for API clients
     .then(x => x.status === 200);

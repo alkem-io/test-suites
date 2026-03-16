@@ -44,47 +44,59 @@ export default async function setup() {
 }
 
 const getUserName = (userName: string): [string, string] => {
-  const [first, last] = userName.split('.');
+  const parts = userName.split('.');
+  const first = parts[0];
+  const last = parts.length > 1 ? parts[1] : first;
   return [first, last];
 };
 
 export const userRegisterFlow = async (userName: string) => {
   const [firstName, lastName] = getUserName(userName);
   const email = `${userName}@alkem.io`;
+  let needsVerification = true;
+
   try {
     await registerInKratosOrFail(firstName, lastName, email);
-
-    LogManager.getLogger().info(`User ${email} registered in Kratos`);
+    console.error(`[registration] ${email} registered`);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
-    // Log the full response body for debugging Kratos errors
-    if (e.response?.data) {
-      LogManager.getLogger().warn(
-        `Kratos response for ${email}: ${JSON.stringify(e.response.data, null, 2)}`
-      );
-    }
-
     const errorMessages = e.response?.data?.ui?.messages as
       | UiText[]
       | undefined;
     if (!errorMessages?.length) {
+      // Log the full response for debugging non-UI errors
+      console.error(
+        `[registration] ${email} failed — status: ${e.response?.status}, ` +
+        `body: ${JSON.stringify(e.response?.data ?? 'no response body')}`
+      );
       throw new Error(
         `Registration failed for ${email}: ${e.message ?? e}`
       );
     }
 
-    const errorMessage = errorMessages.map(x => x.text).join('\n');
     const userExists = errorMessages.some(
       (x: { id: number }) => x.id === 4000007
     );
 
     if (userExists) {
-      LogManager.getLogger().warn(`User ${email} already registered in Kratos`);
+      console.error(`[registration] ${email} already exists — skipping`);
+      needsVerification = false;
     } else {
+      const errorMessage = errorMessages.map(x => x.text).join('\n');
       throw new Error(errorMessage);
     }
   }
 
-  await verifyInKratosOrFail(email);
-  LogManager.getLogger().info(`User ${email} verified`);
+  if (needsVerification) {
+    try {
+      await verifyInKratosOrFail(email);
+      console.error(`[verification] ${email} verified`);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      console.error(
+        `[verification] ${email} failed — ${e.message ?? e}`
+      );
+      throw e;
+    }
+  }
 };
