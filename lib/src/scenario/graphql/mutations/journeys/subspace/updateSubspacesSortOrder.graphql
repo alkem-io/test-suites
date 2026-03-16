@@ -1,0 +1,7 @@
+mutation UpdateSubspacesSortOrder($sortOrderData: UpdateSubspacesSortOrderInput!) {
+  updateSubspacesSortOrder(sortOrderData: $sortOrderData) {
+    id
+    pinned
+    sortOrder
+  }
+}
