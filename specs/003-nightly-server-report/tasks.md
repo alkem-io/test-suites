@@ -17,7 +17,7 @@
 
 **Purpose**: Create the workflow file skeleton with trigger and job structure
 
-- [ ] T001 Create workflow file `.github/workflows/nightly-server-tests.yml` with `name: Nightly Server API`, `on: workflow_dispatch` trigger, and two empty jobs: `test` (runs-on: `arc-runner-set`, permissions: `contents: write`) and `deploy` (with `if: ${{ always() }}`, `needs: test`, `uses: ./.github/workflows/deploy-github-pages.yml`, inputs `ref: gh-pages`, `path: gh-pages-root`)
+- [x] T001 Create workflow file `.github/workflows/nightly-server-tests.yml` with `name: Nightly Server API`, `on: workflow_dispatch` trigger, and two empty jobs: `test` (runs-on: `arc-runner-set`, permissions: `contents: write`) and `deploy` (with `if: ${{ always() }}`, `needs: test`, `uses: ./.github/workflows/deploy-github-pages.yml`, inputs `ref: gh-pages`, `path: gh-pages-root`)
 
 ---
 
@@ -25,11 +25,11 @@
 
 **Purpose**: Add environment setup steps to the `test` job that all subsequent steps depend on
 
-- [ ] T002 Add source checkout step to `test` job using `actions/checkout@v5` in `.github/workflows/nightly-server-tests.yml`
-- [ ] T003 Add gh-pages history checkout step with `continue-on-error: true` using `actions/checkout@v5` with `ref: gh-pages`, `path: out`, `fetch-depth: 1` in `.github/workflows/nightly-server-tests.yml`
-- [ ] T004 Add pnpm setup (`pnpm/action-setup@v4`) and Node.js setup (`actions/setup-node@v6` with `node-version: 20.19.6`) steps in `.github/workflows/nightly-server-tests.yml`
-- [ ] T005 Add `pnpm install --frozen-lockfile` step in `.github/workflows/nightly-server-tests.yml`
-- [ ] T006 Add run folder variables step that sets `RUN_DATE` (from `date +'%Y-%m-%d'`) and `RUN_ID` (from `${{ github.run_id }}`) as `GITHUB_ENV` vars in `.github/workflows/nightly-server-tests.yml`
+- [x] T002 Add source checkout step to `test` job using `actions/checkout@v5` in `.github/workflows/nightly-server-tests.yml`
+- [x] T003 Add gh-pages history checkout step with `continue-on-error: true` using `actions/checkout@v5` with `ref: gh-pages`, `path: out`, `fetch-depth: 1` in `.github/workflows/nightly-server-tests.yml`
+- [x] T004 Add pnpm setup (`pnpm/action-setup@v4`) and Node.js setup (`actions/setup-node@v6` with `node-version: 20.19.6`) steps in `.github/workflows/nightly-server-tests.yml`
+- [x] T005 Add `pnpm install --frozen-lockfile` step in `.github/workflows/nightly-server-tests.yml`
+- [x] T006 Add run folder variables step that sets `RUN_DATE` (from `date +'%Y-%m-%d'`) and `RUN_ID` (from `${{ github.run_id }}`) as `GITHUB_ENV` vars in `.github/workflows/nightly-server-tests.yml`
 
 **Checkpoint**: Workflow skeleton with environment setup complete — can be triggered manually to verify steps pass
 
@@ -43,12 +43,12 @@
 
 ### Implementation for User Story 1
 
-- [ ] T007 [US1] Add test execution step with `id: vitest`, `continue-on-error: true`, env vars (`ALKEMIO_SERVER`, `ALKEMIO_SERVER_URL`, `ALKEMIO_BASE_URL`, `KRATOS_ENDPOINT`, `AUTH_TEST_HARNESS_PASSWORD`, `MAIL_SLURPER_ENDPOINT`, `ALKEMIO_SERVER_WS`, `ALKEMIO_SERVER_REST`) mapped from `${{ vars.* }}` / `${{ secrets.* }}`, running `pnpm --filter @alkemio/test-suite-server-api run test:nightly` in `.github/workflows/nightly-server-tests.yml`
-- [ ] T008 [US1] Add outcome capture step (`if: ${{ always() }}`) that sets `VITEST_OUTCOME=${{ steps.vitest.outcome }}` in `GITHUB_ENV` in `.github/workflows/nightly-server-tests.yml`
-- [ ] T009 [US1] Add report organization step that creates `out/gh-pages-root/vitest/$RUN_DATE/$RUN_ID/` and copies `server-api/html-report/*` into it in `.github/workflows/nightly-server-tests.yml`
-- [ ] T010 [US1] Add metadata generation step that writes `runinfo.txt` (run ID, date, branch, commit, vitest outcome), `status.txt` ("passed"/"failed"), `commit.txt` (full SHA), and `branch.txt` (branch name) to the report directory in `.github/workflows/nightly-server-tests.yml`
-- [ ] T011 [US1] Add gh-pages commit step (`if: ${{ always() }}`) that initializes git repo in `out/` if needed, configures `github-actions[bot]` user, adds all files, commits with message `"Update Vitest report: ${RUN_DATE}/${RUN_ID}"`, and pushes to `gh-pages` — mirroring the pattern from `nightly-client-tests.yml` lines 174-196 in `.github/workflows/nightly-server-tests.yml`
-- [ ] T012 [US1] Add final step that fails the job if vitest tests failed (`if: ${{ steps.vitest.outcome == 'failure' }}`, `run: exit 1`) in `.github/workflows/nightly-server-tests.yml`
+- [x] T007 [US1] Add test execution step with `id: vitest`, `continue-on-error: true`, env vars (`ALKEMIO_SERVER`, `ALKEMIO_SERVER_URL`, `ALKEMIO_BASE_URL`, `KRATOS_ENDPOINT`, `AUTH_TEST_HARNESS_PASSWORD`, `MAIL_SLURPER_ENDPOINT`, `ALKEMIO_SERVER_WS`, `ALKEMIO_SERVER_REST`) mapped from `${{ vars.* }}` / `${{ secrets.* }}`, running `pnpm --filter @alkemio/test-suite-server-api run test:nightly` in `.github/workflows/nightly-server-tests.yml`
+- [x] T008 [US1] Add outcome capture step (`if: ${{ always() }}`) that sets `VITEST_OUTCOME=${{ steps.vitest.outcome }}` in `GITHUB_ENV` in `.github/workflows/nightly-server-tests.yml`
+- [x] T009 [US1] Add report organization step that creates `out/gh-pages-root/vitest/$RUN_DATE/$RUN_ID/` and copies `server-api/html-report/*` into it in `.github/workflows/nightly-server-tests.yml`
+- [x] T010 [US1] Add metadata generation step that writes `runinfo.txt` (run ID, date, branch, commit, vitest outcome), `status.txt` ("passed"/"failed"), `commit.txt` (full SHA), and `branch.txt` (branch name) to the report directory in `.github/workflows/nightly-server-tests.yml`
+- [x] T011 [US1] Add gh-pages commit step (`if: ${{ always() }}`) that initializes git repo in `out/` if needed, configures `github-actions[bot]` user, adds all files, commits with message `"Update Vitest report: ${RUN_DATE}/${RUN_ID}"`, and pushes to `gh-pages` — mirroring the pattern from `nightly-client-tests.yml` lines 174-196 in `.github/workflows/nightly-server-tests.yml`
+- [x] T012 [US1] Add final step that fails the job if vitest tests failed (`if: ${{ steps.vitest.outcome == 'failure' }}`, `run: exit 1`) in `.github/workflows/nightly-server-tests.yml`
 
 **Checkpoint**: Workflow publishes a Vitest HTML report to GitHub Pages. MVP is functional.
 
@@ -62,8 +62,8 @@
 
 ### Implementation for User Story 2
 
-- [ ] T013 [US2] Add Vitest summary index generation step that creates `out/gh-pages-root/vitest/index.html` — iterating over all `vitest/<date>/<run_id>/` directories to build an HTML page with runs grouped by date (newest first), showing status icon, link to report, short commit SHA, and branch name. Include "Back to main index" link to `../`. Mirror the HTML/CSS structure from `nightly-client-tests.yml` lines 101-171 in `.github/workflows/nightly-server-tests.yml`
-- [ ] T014 [US2] Add top-level index generation step that creates/updates `out/gh-pages-root/index.html` linking to both `playwright/index.html` ("Playwright nightly results") and `vitest/index.html` ("Vitest nightly results") with matching CSS styling in `.github/workflows/nightly-server-tests.yml`
+- [x] T013 [US2] Add Vitest summary index generation step that creates `out/gh-pages-root/vitest/index.html` — iterating over all `vitest/<date>/<run_id>/` directories to build an HTML page with runs grouped by date (newest first), showing status icon, link to report, short commit SHA, and branch name. Include "Back to main index" link to `../`. Mirror the HTML/CSS structure from `nightly-client-tests.yml` lines 101-171 in `.github/workflows/nightly-server-tests.yml`
+- [x] T014 [US2] Add top-level index generation step that creates/updates `out/gh-pages-root/index.html` linking to both `playwright/index.html` ("Playwright nightly results") and `vitest/index.html` ("Vitest nightly results") with matching CSS styling in `.github/workflows/nightly-server-tests.yml`
 
 **Checkpoint**: Historical index page works. Both Playwright and Vitest indexes are navigable from the top-level page.
 
@@ -77,7 +77,7 @@
 
 ### Implementation for User Story 3
 
-- [ ] T015 [US3] Review and validate the complete workflow file `.github/workflows/nightly-server-tests.yml` against `nightly-client-tests.yml` for structural consistency: verify two-job pattern (test + deploy), step ordering (checkout → gh-pages checkout → pnpm → node → install → tests → capture outcome → organize report → metadata → index → commit → fail-on-error), deploy job with `if: always()` and `needs: test`, and `uses: ./.github/workflows/deploy-github-pages.yml` with correct inputs. Fix any deviations.
+- [x] T015 [US3] Review and validate the complete workflow file `.github/workflows/nightly-server-tests.yml` against `nightly-client-tests.yml` for structural consistency: verify two-job pattern (test + deploy), step ordering (checkout → gh-pages checkout → pnpm → node → install → tests → capture outcome → organize report → metadata → index → commit → fail-on-error), deploy job with `if: always()` and `needs: test`, and `uses: ./.github/workflows/deploy-github-pages.yml` with correct inputs. Fix any deviations.
 
 **Checkpoint**: Workflow is structurally consistent with the client-web pattern.
 
@@ -85,8 +85,8 @@
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T016 Validate the complete workflow by dry-reading all steps in `.github/workflows/nightly-server-tests.yml` for YAML syntax correctness, proper indentation, correct env var references, and no hardcoded secrets
-- [ ] T017 Verify the workflow coexists with Playwright reports by confirming all Vitest paths use `vitest/` prefix (not `playwright/`) and that the gh-pages commit does not remove existing `playwright/` content in `.github/workflows/nightly-server-tests.yml`
+- [x] T016 Validate the complete workflow by dry-reading all steps in `.github/workflows/nightly-server-tests.yml` for YAML syntax correctness, proper indentation, correct env var references, and no hardcoded secrets
+- [x] T017 Verify the workflow coexists with Playwright reports by confirming all Vitest paths use `vitest/` prefix (not `playwright/`) and that the gh-pages commit does not remove existing `playwright/` content in `.github/workflows/nightly-server-tests.yml`
 
 ---
 
