@@ -28,6 +28,13 @@ mkdir -p out
 mkdir -p "$REPORT_DIR"
 cp -r "$REPORT_SOURCE"/* "$REPORT_DIR/"
 
+# If the report has no index.html (e.g. Vitest uses report_<timestamp>.html),
+# copy the report file as index.html so the directory URL works.
+if [ ! -f "$REPORT_DIR/index.html" ]; then
+  REPORT_HTML=$(find "$REPORT_DIR" -maxdepth 1 -name "*.html" | head -1)
+  [ -n "$REPORT_HTML" ] && cp "$REPORT_HTML" "$REPORT_DIR/index.html"
+fi
+
 # ── Run metadata ─────────────────────────────────────────────────────────────
 cat > "$REPORT_DIR/runinfo.txt" <<EOF
 Run ID: $RUN_ID
