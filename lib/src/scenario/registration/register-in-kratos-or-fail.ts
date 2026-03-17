@@ -2,28 +2,23 @@ import { Configuration, IdentityApi, FrontendApi } from '@ory/kratos-client';
 import { testConfiguration } from '../../config/test.configuration';
 
 /***
- * Registration Flow on v0.8.0-alpha3
- * 1. AJAX call to request a registration flow
- * 2. AJAX call submit the data need for the registration flow in the body
- * and flowId in the URL params
- * 3. After a successful registration you will receive a session_token in the response
- * 4. If an error occurred after submit, a 'messages' field
- * will be attached to the body of the flow in the response with the errors
+ * Registration Flow — single-step password registration.
+ * Creates a native registration flow, then submits traits + password
+ * in one call using the "password" method.
  *
  * Exception can be thrown on
  * <ul>
- *  <li>User already exists</li>
+ *  <li>User already exists (error ID 4000007)</li>
  *  <li>Some other error</li>
  * </ul>
  *
- * @see https://www.ory.sh/docs/kratos/self-service/flows/user-registration#registration-for-api-clients-and-clients-without-browsers
+ * @see https://www.ory.sh/docs/kratos/self-service/flows/user-registration
  */
 export const registerInKratosOrFail = async (
   firstName: string,
   lastName: string,
   email: string
 ) => {
-
   const kratosConfig = new Configuration({
     basePath: testConfiguration.endPoints.kratos.public,
     baseOptions: {
@@ -36,24 +31,27 @@ export const registerInKratosOrFail = async (
     frontend: new FrontendApi(kratosConfig),
   };
 
-  // get registration flow
+  const traits = {
+    email: email,
+    accepted_terms: true,
+    name: {
+      first: firstName,
+      last: lastName,
+    },
+  };
+
+  // create registration flow
   const {
     data: { id: flowId },
   } = await ory.frontend.createNativeRegistrationFlow();
-  // complete the flow
+
+  // submit traits + password in a single step
   await ory.frontend.updateRegistrationFlow({
     flow: flowId,
     updateRegistrationFlowBody: {
       method: 'password',
       password: testConfiguration.identities.admin.password,
-      traits: {
-        email: email,
-        accepted_terms: true,
-        name: {
-          first: firstName,
-          last: lastName,
-        },
-      },
+      traits,
     },
   });
 };
