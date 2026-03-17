@@ -352,24 +352,16 @@ describe('Create Conversation', () => {
       const memberActorId =
         TestUserManager.users.spaceMember.agentId;
 
-      // Act
+      // Act — no userRole passed, so request is unauthenticated
       const res = await createConversation(
         [memberActorId],
-        ConversationCreationType.Direct
+        ConversationCreationType.Direct,
+        undefined,
+        undefined
       );
 
-      // Assert — should either fail or succeed as global admin (default)
-      // This test uses the default TestUser.GLOBAL_ADMIN, verifying the helper works
-      expect(
-        res?.data?.createConversation || res?.error
-      ).toBeDefined();
-
-      if (res?.data?.createConversation?.id) {
-        conversationsToCleanup.push({
-          id: res.data.createConversation.id,
-          user: TestUser.GLOBAL_ADMIN,
-        });
-      }
+      // Assert
+      expect(res?.error?.errors?.length).toBeGreaterThan(0);
     });
   });
 });

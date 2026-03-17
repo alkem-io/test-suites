@@ -12,7 +12,7 @@ export const createConversation = async (
     displayName?: string;
     avatarUrl?: string;
   },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole?: TestUser
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
