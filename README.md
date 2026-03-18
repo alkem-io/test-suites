@@ -110,3 +110,9 @@ pnpm exec playwright test src/functional-e2e/path/to/file.spec.ts
 cd client-web
 pnpm exec playwright test --ui
 ```
+
+# Known issues
+
+### e2e tests
+
+- space tests might fail if you have pinned space (with redirect);
