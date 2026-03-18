@@ -42,6 +42,13 @@ export default async function setup() {
       );
     }
   }
+
+  // Return a teardown function so Vitest can ensure a clean exit.
+  // The GraphQL client is stateless HTTP and WebSocket subscriptions are
+  // terminated in per-file afterAll hooks, so no global cleanup is needed.
+  return () => {
+    LogManager.getLogger().info('Global teardown complete');
+  };
 }
 
 const getUserName = (userName: string): [string, string] => {
