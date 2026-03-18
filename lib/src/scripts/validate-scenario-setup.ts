@@ -27,9 +27,10 @@ const main = async () => {
   for (const username of userNames) {
     try {
       await userRegisterFlow(username);
-    } catch (error) {
+    } catch (error: any) {
       LogManager.getLogger().error(
-        `Unable to register user ${username}: ${error}`
+        `Unable to register user ${username}: ${error}`,
+        error?.stack
       );
     }
   }
