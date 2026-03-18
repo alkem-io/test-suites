@@ -1,15 +1,19 @@
 import { Page, expect } from '@playwright/test';
-import { CalloutTemplateFramingCallToAction, CalloutTemplateFramingMemo, CalloutTemplateFramingWhiteboard } from './callout-template-form.models';
-import { clickOnEditWhiteboardPreview, getWhiteboardDialog, writeTextInWhiteboardDialog } from '../whiteboards/whiteboard-dialog';
-
+import {
+  CalloutTemplateFramingCallToAction,
+  CalloutTemplateFramingMemo,
+  CalloutTemplateFramingWhiteboard,
+} from './callout-template-form.models';
+import {
+  clickOnEditWhiteboardPreview,
+  getWhiteboardDialog,
+  writeTextInWhiteboardDialog,
+} from '../whiteboards/whiteboard-dialog';
 
 /**
- * Framing / Additional Content
+ * Helper to scope locators to the template dialog.
  */
-const findFramingSection = (page: Page) => {
-  return page.getByRole('heading', { name: 'Additional Content' }).locator('..').locator('..').locator('..').locator('..');
-}
-
+const getDialog = (page: Page) => page.getByRole('dialog');
 
 /**
  * "None"
@@ -17,19 +21,25 @@ const findFramingSection = (page: Page) => {
 export const selectCalloutTemplateFramingNone = async (
   page: Page
 ): Promise<void> => {
-  const noneButton = findFramingSection(page)
-    .getByRole('button', { name: 'None' });
-
+  const noneButton = getDialog(page).getByRole('button', {
+    name: 'None',
+    exact: true,
+  });
+  await noneButton.scrollIntoViewIfNeeded();
   await noneButton.click();
 };
 
 /**
  * "Call To Action"
  */
-export const selectCalloutTemplateFramingCallToAction = async (page: Page): Promise<void> => {
-  const ctaButton = findFramingSection(page)
-    .getByRole('button', { name: 'Call To Action' });
-
+export const selectCalloutTemplateFramingCallToAction = async (
+  page: Page
+): Promise<void> => {
+  const ctaButton = getDialog(page).getByRole('button', {
+    name: 'Call To Action',
+    exact: true,
+  });
+  await ctaButton.scrollIntoViewIfNeeded();
   await ctaButton.click();
 };
 
@@ -38,7 +48,10 @@ export const fillCalloutTemplateFramingCallToAction = async (
   content: CalloutTemplateFramingCallToAction
 ): Promise<void> => {
   // Fill CTA text field
-  const ctaTextField = page.getByRole('textbox', { name: 'Call To Action', exact: true });
+  const ctaTextField = page.getByRole('textbox', {
+    name: 'Call To Action',
+    exact: true,
+  });
   await ctaTextField.fill(content.ctaText);
 
   // Fill URL field
@@ -49,10 +62,14 @@ export const fillCalloutTemplateFramingCallToAction = async (
 /**
  * "Memo"
  */
-export const selectCalloutTemplateFramingMemo = async (page: Page): Promise<void> => {
-  const memoButton = findFramingSection(page)
-    .getByRole('button', { name: 'Memo' });
-
+export const selectCalloutTemplateFramingMemo = async (
+  page: Page
+): Promise<void> => {
+  const memoButton = getDialog(page).getByRole('button', {
+    name: 'Memo',
+    exact: true,
+  });
+  await memoButton.scrollIntoViewIfNeeded();
   await memoButton.click();
 };
 
@@ -70,14 +87,17 @@ export const fillCalloutTemplateFramingMemo = async (
   await markdownEditor.fill(content.memoContent);
 };
 
-
 /**
  * "Whiteboard"
  */
-export const selectCalloutTemplateFramingWhiteboard = async (page: Page): Promise<void> => {
-  const whiteboardButton = findFramingSection(page)
-    .getByRole('button', { name: 'Whiteboard', exact: true });
-
+export const selectCalloutTemplateFramingWhiteboard = async (
+  page: Page
+): Promise<void> => {
+  const whiteboardButton = getDialog(page).getByRole('button', {
+    name: 'Whiteboard',
+    exact: true,
+  });
+  await whiteboardButton.scrollIntoViewIfNeeded();
   await whiteboardButton.click();
 };
 
@@ -96,4 +116,3 @@ export const fillCalloutTemplateFramingWhiteboard = async (
   // Wait for dialog to close
   await expect(editorDialog).not.toBeVisible();
 };
-

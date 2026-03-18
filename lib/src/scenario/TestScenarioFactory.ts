@@ -13,7 +13,7 @@ import { UserModel } from "./models/UserModel";
 import { OrganizationModel } from "./models/OrganizationModel";
 import { LogManager } from "./LogManager";
 import {
-  CalloutAllowedContributors,
+  CalloutAllowedActors,
   CalloutVisibility,
   RoleName,
 } from "../core/generated/alkemio-schema";
@@ -617,13 +617,40 @@ export class TestScenarioFactory {
     if (spaceConfig.settings) {
       if (spaceConfig.settings.privacy) {
         await updateSpaceSettings(spaceModel.id, {
-          privacy: { mode: spaceConfig.settings.privacy.mode },
+          privacy: {
+            mode: spaceConfig.settings.privacy.mode,
+            allowPlatformSupportAsAdmin:
+              spaceConfig.settings.privacy.allowPlatformSupportAsAdmin,
+          },
         });
       }
       if (spaceConfig.settings.membership) {
         await updateSpaceSettings(spaceModel.id, {
           membership: {
             policy: spaceConfig.settings.membership.policy,
+            allowSubspaceAdminsToInviteMembers:
+              spaceConfig.settings.membership
+                .allowSubspaceAdminsToInviteMembers,
+            trustedOrganizations:
+              spaceConfig.settings.membership.trustedOrganizations,
+          },
+        });
+      }
+      if (spaceConfig.settings.collaboration) {
+        await updateSpaceSettings(spaceModel.id, {
+          collaboration: {
+            allowMembersToCreateCallouts:
+              spaceConfig.settings.collaboration.allowMembersToCreateCallouts,
+            allowMembersToCreateSubspaces:
+              spaceConfig.settings.collaboration.allowMembersToCreateSubspaces,
+            inheritMembershipRights:
+              spaceConfig.settings.collaboration.inheritMembershipRights,
+            allowEventsFromSubspaces:
+              spaceConfig.settings.collaboration.allowEventsFromSubspaces,
+            allowMembersToVideoCall:
+              spaceConfig.settings.collaboration.allowMembersToVideoCall,
+            allowGuestContributions:
+              spaceConfig.settings.collaboration.allowGuestContributions,
           },
         });
       }
@@ -664,7 +691,10 @@ export class TestScenarioFactory {
         await this.createLinkCollectionCalloutOnSpace(spaceModel, scenarioName);
       }
       if (spaceCollaborationConfig.addWhiteboardCollectionCallout) {
-        await this.createWhiteboardCollectionCalloutOnSpace(spaceModel, scenarioName);
+        await this.createWhiteboardCollectionCalloutOnSpace(
+          spaceModel,
+          scenarioName
+        );
       }
       if (spaceCollaborationConfig.addWhiteboardCallout) {
         await this.createWhiteboardCalloutOnSpace(spaceModel, scenarioName);
@@ -724,13 +754,13 @@ export class TestScenarioFactory {
     model.id = orgResponseData.id ?? "";
     model.nameId = orgResponseData.nameID ?? "";
     model.roleSetId = orgResponseData.roleSet.id ?? "";
-    model.agentId = orgResponseData.agent.id ?? "";
+    model.agentId = orgResponseData.actor?.id ?? "";
     model.accountId = orgResponseData.account?.id ?? "";
     model.verificationId = orgResponseData.verification.id ?? "";
     model.profile = {
-      id: orgResponseData.profile.id ?? "",
-      displayName: orgResponseData.profile.displayName ?? "",
-      tagline: orgResponseData.profile.tagline ?? "",
+      id: orgResponseData.profile?.id ?? "",
+      displayName: orgResponseData.profile?.displayName ?? "",
+      tagline: orgResponseData.profile?.tagline ?? "",
     };
 
     if (orgConfig?.verification?.setVerified && model.verificationId) {
@@ -858,7 +888,7 @@ export class TestScenarioFactory {
           framing: { commentsEnabled: true },
           contribution: {
             allowedTypes: [CalloutContributionType.Link],
-            canAddContributions: CalloutAllowedContributors.Members,
+            canAddContributions: CalloutAllowedActors.Members,
             enabled: true,
             commentsEnabled: true,
           },
@@ -895,7 +925,7 @@ export class TestScenarioFactory {
           //framing: { commentsEnabled: true },
           contribution: {
             allowedTypes: [CalloutContributionType.Post],
-            canAddContributions: CalloutAllowedContributors.Members,
+            canAddContributions: CalloutAllowedActors.Members,
             enabled: true,
             commentsEnabled: true,
           },
@@ -928,7 +958,7 @@ export class TestScenarioFactory {
         settings: {
           contribution: {
             allowedTypes: [CalloutContributionType.Link],
-            canAddContributions: CalloutAllowedContributors.Members,
+            canAddContributions: CalloutAllowedActors.Members,
             enabled: true,
             commentsEnabled: true,
           },
@@ -949,31 +979,34 @@ export class TestScenarioFactory {
     scenarioName: string
   ): Promise<SpaceModel> {
     const displayName = `whiteboardCollectionCallout-${scenarioName}`;
-    const whiteboardCollectionCalloutData = await createWhiteboardCalloutOnCalloutsSet(
-      spaceModel.collaboration.calloutsSetId,
-      {
-        framing: {
-          profile: {
-            displayName,
-            description: `${displayName} - created as part of scenario setup for tests`,
+    const whiteboardCollectionCalloutData =
+      await createWhiteboardCalloutOnCalloutsSet(
+        spaceModel.collaboration.calloutsSetId,
+        {
+          framing: {
+            profile: {
+              displayName,
+              description: `${displayName} - created as part of scenario setup for tests`,
+            },
+          },
+          settings: {
+            contribution: {
+              allowedTypes: [CalloutContributionType.Whiteboard],
+              canAddContributions: CalloutAllowedActors.Members,
+              enabled: true,
+              commentsEnabled: true,
+            },
+            visibility: CalloutVisibility.Published,
           },
         },
-        settings: {
-          contribution: {
-            allowedTypes: [CalloutContributionType.Whiteboard],
-            canAddContributions: CalloutAllowedContributors.Members,
-            enabled: true,
-            commentsEnabled: true,
-          },
-          visibility: CalloutVisibility.Published,
-        },
-      },
-      TestUser.GLOBAL_ADMIN
-    );
+        TestUser.GLOBAL_ADMIN
+      );
 
     spaceModel.collaboration.calloutWhiteboardCollectionId =
-      whiteboardCollectionCalloutData?.data?.createCalloutOnCalloutsSet?.id ?? "";
-    spaceModel.collaboration.calloutWhiteboardCollectionDisplayName = displayName;
+      whiteboardCollectionCalloutData?.data?.createCalloutOnCalloutsSet?.id ??
+      "";
+    spaceModel.collaboration.calloutWhiteboardCollectionDisplayName =
+      displayName;
 
     return spaceModel;
   }

@@ -1,6 +1,4 @@
-mutation RemoveRoleFromOrganization(
-  $roleData: RemoveRoleOnRoleSetFromOrganizationInput!
-) {
+mutation RemoveRoleFromOrganization($roleData: RemoveRoleOnRoleSetInput!) {
   removeRoleFromOrganization(roleData: $roleData) {
     ...OrganizationData
   }

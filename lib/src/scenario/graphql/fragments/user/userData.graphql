@@ -5,12 +5,16 @@ fragment UserData on User {
   lastName
   email
   phone
-  accountUpn
   account {
     ...AccountData
   }
-  agent {
+  actor {
     ...AgentData
+  }
+  credentials {
+    id
+    resourceID
+    type
   }
   profile {
     ...ProfileDataUser

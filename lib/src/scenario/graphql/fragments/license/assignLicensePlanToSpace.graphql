@@ -13,7 +13,7 @@ mutation AssignLicensePlanToSpace($planData: AssignLicensePlanToSpace!) {
     subspaces {
       id
     }
-    agent {
+    actor {
       id
     }
   }

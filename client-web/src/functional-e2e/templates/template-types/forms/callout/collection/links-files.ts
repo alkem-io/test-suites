@@ -5,19 +5,22 @@
 
 import { Locator, Page, expect } from '@playwright/test';
 import { CalloutTemplateResponseLinksFiles } from '../callout-template-form.models';
+import { time } from 'console';
 
 /**
  * Selects "Links & Files" for collection type.
  */
-export const selectCollectionLinksFiles = async (collectionSection: Locator): Promise<void> => {
-  // Select Links & Files in Collection section
-  // Use the aria-label description to find the button
-  const linksFilesButton = collectionSection.getByRole('button', {
-    name: 'Links & Files',
-  });
+export const selectCollectionLinksFiles = async (
+  dialog: Locator
+): Promise<void> => {
+  // Select Links & Files button in Collection section
+  // Target the button inside the container with accessible name "Enable responding with links & files"
+  const linksFilesButton = dialog
+    .getByLabel('Enable responding with links & files')
+    .getByRole('button');
 
-  await linksFilesButton.scrollIntoViewIfNeeded();
-  await linksFilesButton.click();
+  await linksFilesButton.scrollIntoViewIfNeeded({ timeout: 5000 });
+  await linksFilesButton.click({ timeout: 1000 });
 };
 
 /**
@@ -58,4 +61,3 @@ export const fillCollectionLinksFiles = async (
   await settingsDialog.getByRole('button', { name: 'Save' }).click();
   await expect(settingsDialog).not.toBeVisible();
 };
-

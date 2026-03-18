@@ -73,45 +73,19 @@ let receivers = '';
 let baseScenario: OrganizationWithSpaceModel;
 const scenarioConfig: TestScenarioConfig = {
   name: 'user-to-user-messages',
-  space: {
-    community: {
-      admins: [TestUser.SPACE_ADMIN],
-      members: [
-        TestUser.SPACE_MEMBER,
-        TestUser.SPACE_ADMIN,
-        TestUser.SUBSPACE_MEMBER,
-        TestUser.SUBSPACE_ADMIN,
-        TestUser.SUBSUBSPACE_MEMBER,
-        TestUser.SUBSUBSPACE_ADMIN,
-      ],
-    },
-  },
 };
 
 beforeAll(async () => {
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
 
-  const a = await assignRoleToUser(
-    TestUserManager.users.spaceAdmin.id,
-    baseScenario.organization.roleSetId,
-    RoleName.Associate
-  );
-  console.log(a.error);
-
-  const b = await assignRoleToUser(
-    TestUserManager.users.spaceAdmin.id,
-    baseScenario.organization.roleSetId,
-    RoleName.Admin
-  );
-  console.log(b.error);
   await assignRoleToUser(
-    TestUserManager.users.spaceMember.id,
+    TestUserManager.users.spaceAdmin.id,
     baseScenario.organization.roleSetId,
     RoleName.Associate
   );
 
   await assignRoleToUser(
-    TestUserManager.users.spaceMember.id,
+    TestUserManager.users.spaceAdmin.id,
     baseScenario.organization.roleSetId,
     RoleName.Admin
   );
@@ -157,7 +131,7 @@ describe('Notifications - user to organization messages', () => {
         }),
         expect.objectContaining({
           subject: receivers,
-          toAddresses: [TestUserManager.users.spaceMember.email],
+          toAddresses: [TestUserManager.users.organizationAdmin.email],
         }),
         expect.objectContaining({
           subject: receivers,
@@ -189,7 +163,7 @@ describe('Notifications - user to organization messages', () => {
       expect.arrayContaining([
         expect.objectContaining({
           subject: receivers,
-          toAddresses: [TestUserManager.users.spaceMember.email],
+          toAddresses: [TestUserManager.users.organizationAdmin.email],
         }),
         expect.objectContaining({
           subject: receivers,
@@ -235,7 +209,7 @@ describe('Notifications - user to organization messages', () => {
         }),
         expect.objectContaining({
           subject: receivers,
-          toAddresses: [TestUserManager.users.spaceMember.email],
+          toAddresses: [TestUserManager.users.organizationAdmin.email],
         }),
         expect.objectContaining({
           subject: receivers,

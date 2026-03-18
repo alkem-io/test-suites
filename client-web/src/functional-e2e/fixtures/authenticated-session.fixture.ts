@@ -66,7 +66,20 @@ export function createAuthenticatedSessionFixture(
       sharedPage = await sharedContext.newPage();
       const loginPage = new LoginPage(sharedPage, baseUrl);
       await loginPage.login(email);
-      await sharedPage.getByRole('button', { name: 'Accept all cookies' }).click();
+
+      // Accept cookies if the dialog appears (it may not always show)
+      const acceptCookiesButton = sharedPage.getByRole('button', {
+        name: 'Accept all cookies',
+      });
+      if (
+        await acceptCookiesButton
+          .isVisible({ timeout: 3000 })
+          .catch(() => false)
+      ) {
+        console.log('Accepting cookies...');
+        await acceptCookiesButton.click();
+      }
+
       await sharedPage.context().storageState({ path: storageStatePath });
     },
     /**

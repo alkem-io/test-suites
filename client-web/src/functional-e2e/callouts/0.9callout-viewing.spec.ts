@@ -78,10 +78,14 @@ adminFixture.test.describe.serial('Callout Viewing', () => {
       await expect(page.getByRole('tab', { name: 'Home' })).toBeVisible({
         timeout: 10000,
       });
-      const isDraftVisible = await collaborationPage.isCalloutVisible(
-        `${calloutName}`
-      );
-      expect(isDraftVisible).toBe(true);
+      await expect(
+        page.getByRole('heading', {
+          name: `${calloutName}`,
+          exact: true,
+        })
+      ).toBeVisible({
+        timeout: 10000,
+      });
 
       await collaborationPage.clickCallout(`${calloutName}`);
       await collaborationPage.openContextualMenu();

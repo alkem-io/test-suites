@@ -1,4 +1,4 @@
-query GetUserRoles($rolesData: RolesUserInput!) {
+query GetUserRoles($rolesData: RolesActorInput!) {
   rolesUser(rolesData: $rolesData) {
     spaces {
       nameID

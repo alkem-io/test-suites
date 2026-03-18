@@ -1,5 +1,5 @@
 query GetRolesOrganization($organizationID: UUID!) {
-  rolesOrganization(rolesData: { organizationID: $organizationID }) {
+  rolesOrganization(rolesData: { actorID: $organizationID }) {
     spaces {
       id
       nameID

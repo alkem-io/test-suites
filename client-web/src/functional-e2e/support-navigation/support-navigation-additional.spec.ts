@@ -10,6 +10,7 @@
 import { expect } from '@playwright/test';
 import { TestUserManager } from '@alkemio/tests-lib';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
+import { verifyMyDashboardWelcomeElement } from '../my-dashboard/my-dashboard-page-objects';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
@@ -52,9 +53,7 @@ test.describe('Support Navigation Additional Tests', () => {
       await page.getByRole('button', { name: 'Close' }).click();
 
       // 4-5. Verify dialog closes and dashboard is still visible
-      await expect(page.getByRole('heading', { level: 1 })).toContainText(
-        'Welcome'
-      );
+      await verifyMyDashboardWelcomeElement(page);
     });
   });
 
@@ -90,10 +89,8 @@ test.describe('Support Navigation Additional Tests', () => {
       // 3. Click "My Dashboard" link
       await page.getByRole('link', { name: 'My Dashboard' }).click();
 
-      // 4. Verify return to dashboard with welcome message
-      await expect(page.getByRole('heading', { level: 1 })).toContainText(
-        'Welcome'
-      );
+      // 4. Verify return to dashboard
+      await verifyMyDashboardWelcomeElement(page);
     });
   });
 });

@@ -4,7 +4,6 @@ mutation createInnovationPack($data: CreateInnovationPackOnAccountInput!) {
     nameID
     provider {
       id
-      nameID
     }
     templatesSet {
       id

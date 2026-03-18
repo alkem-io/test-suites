@@ -1,4 +1,4 @@
-import { Locator, Page, expect } from "@playwright/test";
+import { Locator, Page, expect } from '@playwright/test';
 
 export const clickOnEditWhiteboardPreview = async (page: Page): Promise<void> => {
   const whiteboardContent = await page.getByText('Drawing canvas').last();

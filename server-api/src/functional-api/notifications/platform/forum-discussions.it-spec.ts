@@ -228,6 +228,7 @@ describe('Notifications - forum discussions', () => {
       TestUserManager.users.subspaceMember.id,
       TestUserManager.users.subsubspaceAdmin.id,
       TestUserManager.users.subsubspaceMember.id,
+      TestUserManager.users.organizationAdmin.id,
     ]);
   });
 

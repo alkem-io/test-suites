@@ -18,7 +18,7 @@ sh common.sh create-snapshot.config
 
 # Perform initial test run, to generate the default users
 cd $PROJECT_ROOT_DIR
-npm run-script test:orphaned ./test/non-functional/orphaned-data/query.it-spec.ts
+pnpm run test:orphaned ./test/non-functional/orphaned-data/query.it-spec.ts
 
 
 # Create snapshot of the data before performing the creation/deletion of entities
@@ -27,7 +27,7 @@ sh get_data_snapshot.sh file1.txt create-snapshot.config
 
 # Run test
 cd $PROJECT_ROOT_DIR
-npm run-script test:orphaned ./test/non-functional/orphaned-data/organization/organization-delete.it-spec.ts
+pnpm run test:orphaned ./test/non-functional/orphaned-data/organization/organization-delete.it-spec.ts
 
 # Create snapshot of the data after performing the creation/deletion of entities
 cd $SCRIPT_DIR
@@ -39,5 +39,5 @@ sort file2.txt >file2.txt.sorted
 diff file1.txt file2.txt | grep ">" | sed 's/^> //g' > diff_file_experiment
 
 # Stop server
-npm run stop-process
+pnpm run stop-process
 echo service stopped

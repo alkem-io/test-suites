@@ -1,5 +1,5 @@
-import { Locator, Page, expect } from "@playwright/test";
-import { CalloutTemplateForm } from "../../forms/callout/callout-template-form.models";
+import { Locator, Page, expect } from '@playwright/test';
+import { CalloutTemplateForm } from '../../forms/callout/callout-template-form.models';
 
 export const getCreateContributionDialog = async (page: Page, templateData: CalloutTemplateForm): Promise<Locator> => {
   let dialogTitle = '';

@@ -14,6 +14,7 @@ import { createCalloutTemplateData } from './forms/callout/callout-template-form
 import { fillCalloutTemplateForm } from './forms/callout/callout-template-form';
 import { verifyCalloutTemplate } from './verify/callout-template-verify';
 import { verifyCalloutTemplateUsage } from './usage/callout-template.use';
+import { acceptCookiesIfVisible } from '@src/functional-e2e/helpers/cookies.helper';
 
 const { test, setupAuthentication, teardownAuthentication } =
   createAuthenticatedSessionFixture({
@@ -41,39 +42,35 @@ const createAndVerifyCalloutTemplate = async (
   page: Page,
   templateData: ReturnType<typeof createCalloutTemplateData>
 ) => {
+  // Wait for the templates page to be fully loaded
+  await page
+    .getByRole('heading', { name: /Collaboration Tool Templates/ })
+    .waitFor({ state: 'visible' });
+
   // Click Create new in Collaboration Tool Templates section
+  // The sections are: Space Templates (0), Collaboration Tool Templates (1), Whiteboard (2), Post (3), Community Guidelines (4)
   const createNewButton = page
-    .getByRole('heading', { name: 'Collaboration Tool Templates' })
-    .locator('..')
-    .locator('..')
-    .locator('..')
-    .getByRole('button', { name: 'Create new' });
+    .getByRole('button', { name: 'Create new' })
+    .nth(1);
 
   await createNewButton.click();
-  await expect(
-    page.getByRole('heading', {
+
+  // Wait for the dialog to appear
+  const dialog = page.getByRole('dialog').filter({
+    has: page.getByRole('heading', {
       name: 'Create new Collaboration Tool Template',
-    })
-  ).toBeVisible();
+    }),
+  });
+  await expect(dialog).toBeVisible();
 
   // Fill the form
   await fillCalloutTemplateForm(page, templateData);
 
   // Click on CREATE the template
-  const dialog = page
-    .getByRole('dialog')
-    .filter({
-      has: page.getByRole('heading', {
-        name: 'Create new Collaboration Tool Template',
-      }),
-    })
-    .last();
-
-  await expect(dialog).toBeVisible();
-
   const createButton = dialog.getByRole('button', { name: 'Create' });
   await expect(createButton).toBeEnabled();
   await createButton.click();
+
   // Verify dialog closes
   await expect(dialog).not.toBeVisible();
 
@@ -163,6 +160,7 @@ test.describe.serial('Callout Templates', () => {
     await page.goto(
       `${baseUrl}/${baseScenario.space.nameId}/settings/templates`
     );
+    await acceptCookiesIfVisible(page);
   });
 
   test('1 Framing: None, Response: None, Comments: Disabled', async ({

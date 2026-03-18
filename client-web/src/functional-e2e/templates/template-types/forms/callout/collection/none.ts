@@ -7,12 +7,8 @@ import { Locator } from '@playwright/test';
 
 /**
  * Selects "None" for collection type.
+ * Note: "None" is selected by default, so this is a no-op.
  */
-export const selectCollectionNone = async (dialog: Locator): Promise<void> => {
-  // Select None in Collection section
-  const noneButton = dialog
-    .getByLabel('No collection')
-    .getByRole('button', { name: 'None' });
-  await noneButton.click();
+export const selectCollectionNone = async (_dialog: Locator): Promise<void> => {
+  // "None" is selected by default in the Collection section - no action needed
 };
-

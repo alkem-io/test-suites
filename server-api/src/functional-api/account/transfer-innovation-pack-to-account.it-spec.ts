@@ -72,7 +72,6 @@ describe('Transfer innovation pack to Account', () => {
       TestUserManager.users.qaUser.accountId,
       TestUser.QA_USER
     );
-
     // Assert
     expect(targetAccountData.data?.lookup.account?.innovationPacks).toEqual(
       expect.arrayContaining([

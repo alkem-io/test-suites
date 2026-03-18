@@ -1,7 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// This is critical to be able to use TypeScript aliases in Jest tests
-require('tsconfig-paths/register');
 import { UiText } from '@ory/kratos-client';
 import {
   LogManager,
@@ -13,7 +9,14 @@ import {
   verifyInKratosOrFail,
 } from '@alkemio/tests-lib';
 
-module.exports = async () => {
+export default async function setup() {
+  // Guard against duplicate invocations when Vitest projects inherit
+  // globalSetup from root config via extends: true (array merge semantics).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if ((globalThis as any).__alkemioGlobalSetupDone) return;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (globalThis as any).__alkemioGlobalSetupDone = true;
+
   LogManager.getLogger().info(
     `\nLaunching tests using configuration: ${stringifyConfig(testConfiguration)}`
   );
@@ -39,7 +42,14 @@ module.exports = async () => {
       );
     }
   }
-};
+
+  // Return a teardown function so Vitest can ensure a clean exit.
+  // The GraphQL client is stateless HTTP and WebSocket subscriptions are
+  // terminated in per-file afterAll hooks, so no global cleanup is needed.
+  return () => {
+    LogManager.getLogger().info('Global teardown complete');
+  };
+}
 
 const getUserName = (userName: string): [string, string] => {
   const [first, last] = userName.split('.');
@@ -53,8 +63,10 @@ export const userRegisterFlow = async (userName: string) => {
     await registerInKratosOrFail(firstName, lastName, email);
 
     LogManager.getLogger().info(`User ${email} registered in Kratos`);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
-    const errorMessages = (e as any).response?.data.ui.messages as UiText[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const errorMessages = e.response?.data.ui.messages as UiText[];
     const errorMessage =
       errorMessages.map(x => x.text).join('\n') ?? 'Unknown error';
     const userExists =

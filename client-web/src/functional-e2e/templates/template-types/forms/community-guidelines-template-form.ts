@@ -1,5 +1,5 @@
-import { Page } from "@playwright/test";
-import { CommunityGuidelinesTemplateForm } from "./template-form.models";
+import { Page } from '@playwright/test';
+import { CommunityGuidelinesTemplateForm } from './template-form.models';
 import { fillTemplateForm } from './template-form';
 
 

@@ -18,8 +18,8 @@
     "skipLibCheck": true,
     "outDir": "./dist",
     "baseUrl": "./",
-    "types": ["node", "jest"],
-    "typeRoots": ["./node_modules/@types", "./src/types"],
+    "types": ["node"],
+    "typeRoots": ["./node_modules/@types", "../node_modules/@types", "./src/types"],
     "incremental": true,
     "tsBuildInfoFile": ".tsbuildinfo",
     "paths": {

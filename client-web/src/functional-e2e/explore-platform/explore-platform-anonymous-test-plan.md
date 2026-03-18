@@ -19,7 +19,7 @@ This test plan covers the complete exploration journey for an anonymous (non-log
 
 **Expected Results:**
 
-- Page displays "Welcome to Alkemio!" heading
+- Page displays "Explore Spaces of Your Interest" heading
 - "Explore Spaces of Your Interest" section is visible
 - Public space cards are displayed
 - "Sign up" link is visible in the footer/main area
@@ -124,24 +124,6 @@ This test plan covers the complete exploration journey for an anonymous (non-log
 - Navigates to selected space
 - Space page loads with all standard tabs
 - Anonymous user sees membership prompts
-
----
-
-### 8. Explore Contributors Page
-
-**Steps:**
-
-1. Click on "Tools Menu" button
-2. Click "Find contributors"
-
-**Expected Results:**
-
-- Navigates to `/contributors`
-- "Find talent and expertise!" heading is displayed
-- Description about searching for people and organizations
-- Sections visible: "Users", "Virtual Contributors", "Organizations"
-- "Please log in to see all contributing users" message for Users section
-- "Sign in" and "Sign up" buttons available
 
 ---
 
@@ -253,7 +235,7 @@ This test plan covers the complete exploration journey for an anonymous (non-log
 **Expected Results:**
 
 - Navigates to `/sign_up`
-- "Welcome to Alkemio!" message
+- "Explore Spaces of Your Interest" message
 - "Sign up" heading (level 1)
 - "Have an account? Sign in" link
 - Terms of Use and Privacy Policy acceptance checkbox

@@ -26,29 +26,17 @@ jobs:
           path: out
           fetch-depth: 1
 
+      - uses: pnpm/action-setup@v4
+
       - uses: actions/setup-node@v6
         with:
           node-version: 20.19.6
 
-      - name: Install lib dependencies
-        run: |
-          cd lib
-          npm ci
-
-      - name: Install server-api dependencies
-        run: |
-          cd server-api
-          npm ci
-
-      - name: Install client-web dependencies
-        run: |
-          cd client-web
-          npm ci
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Install Playwright Browsers
-        run: |
-          cd client-web
-          npx playwright install --with-deps
+        run: pnpm --filter @alkemio/test-suite-client-web exec playwright install --with-deps
 
       - name: Set run folder variables
         run: |
@@ -63,9 +51,7 @@ jobs:
           KRATOS_ENDPOINT: ${{ vars.KRATOS_ENDPOINT }}
           MAIL_SLURPER_ENDPOINT: ${{ vars.MAIL_SLURPER_ENDPOINT }}
           AUTH_TEST_HARNESS_PASSWORD: ${{ secrets.AUTH_TEST_HARNESS_PASSWORD }}
-        run: |
-          cd client-web
-          npm run register-users
+        run: pnpm --filter @alkemio/test-suite-client-web run register-users
 
       - name: Run Playwright tests
         id: playwright
@@ -78,11 +64,8 @@ jobs:
           ALKEMIO_SERVER_WS: ${{ vars.ALKEMIO_SERVER_WS }}
           KRATOS_ENDPOINT: ${{ vars.KRATOS_ENDPOINT }}
           MAIL_SLURPER_ENDPOINT: ${{ vars.MAIL_SLURPER_ENDPOINT }}
-          NPM_CONFIG_ENGINE_STRICT: ${{ vars.NPM_CONFIG_ENGINE_STRICT }}
           AUTH_TEST_HARNESS_PASSWORD: ${{ secrets.AUTH_TEST_HARNESS_PASSWORD }}
-        run: |
-          cd client-web
-          npx playwright test --config=config/playwright.config.nightly.ts
+        run: pnpm --filter @alkemio/test-suite-client-web exec playwright test --config=config/playwright.config.nightly.ts
 
       - name: Capture Playwright outcome
         if: ${{ always() }}

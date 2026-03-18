@@ -1,0 +1,4 @@
+packages:
+  - lib
+  - server-api
+  - client-web

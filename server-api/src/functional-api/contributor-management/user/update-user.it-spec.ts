@@ -25,7 +25,6 @@ import {
   updateUser,
 } from './user.request.params';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
-const uniqueId = UniqueIDGenerator.getID();
 
 let userName = '';
 let userFirstName = '';
@@ -46,6 +45,7 @@ beforeAll(async () => {
 
 describe('Update user', () => {
   beforeEach(async () => {
+    const uniqueId = UniqueIDGenerator.getID();
     userName = `test-user${uniqueId}`;
     userFirstName = `userFirstName${uniqueId}`;
     userLastName = `userLastName${uniqueId}`;
@@ -56,6 +56,7 @@ describe('Update user', () => {
     const responseCreateUser = await createUser({
       firstName: userFirstName,
       lastName: userLastName,
+      nameID: userName,
       email: userEmail,
       phone: userPhone,
     });

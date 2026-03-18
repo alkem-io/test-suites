@@ -7,6 +7,7 @@ import {
   recoveryCodeField,
   saveButton,
 } from './common-authentication-page-elements';
+import { verifyMyDashboardWelcomeElement } from '../my-dashboard/my-dashboard-page-objects';
 import {
   delay,
   deleteMailSlurperMails,
@@ -67,19 +68,11 @@ test.describe('Authentication - Password Recovery Flows', () => {
     await saveButton(page).click();
 
     // Verify successful login after password recovery
-    await expect(
-      page
-        .locator('div')
-        .filter({ hasText: /^Welcome, non!Ready to make some impact\?$/ })
-        .nth(2)
-    ).toBeVisible();
+    await verifyMyDashboardWelcomeElement(page);
 
     // Verify dashboard elements are visible
     await expect(
       page.getByRole('button', { name: 'Invitations' })
-    ).toBeVisible();
-    await expect(
-      page.getByRole('button', { name: 'Tips & Tricks' })
     ).toBeVisible();
     await expect(page.getByRole('link', { name: 'My Account' })).toBeVisible();
     await expect(

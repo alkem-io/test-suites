@@ -12,7 +12,8 @@ import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/O
 import { randomBytes } from 'crypto';
 import { CommunityGuidelinesTemplateForm } from './forms/template-form.models';
 import { fillCommunityGuidelinesForm } from './forms/community-guidelines-template-form';
-import { verifyCommunityGuidelinesTemplate } from './verify/community-guidelines-template-verify';
+import { verifyOpenedTemplate } from './verify/verify-opened-template';
+import { openTemplate } from './verify/open-template';
 
 // Create the authenticated fixture with a unique storage state name for this test suite
 const { test, setupAuthentication, teardownAuthentication } =
@@ -101,11 +102,8 @@ test.describe.serial('Community Guidelines Template', () => {
 
     // Find the container (parent of the parent of the heading) and then the "Create new" button within it
     const createNewButton = await page
-      .getByRole('heading', { name: 'Community Guidelines' })
-      .locator('..')
-      .locator('..')
-      .locator('..')
-      .getByRole('button', { name: 'Create New' });
+      .getByRole('button', { name: 'Create new' })
+      .nth(4);
     await createNewButton.click();
 
     // Wait for the Community Guidelines Template creation dialog to appear
@@ -132,7 +130,8 @@ test.describe.serial('Community Guidelines Template', () => {
       })
     ).not.toBeVisible();
 
-    await verifyCommunityGuidelinesTemplate(page, templateData);
+    await openTemplate(page, templateData);
+    await verifyOpenedTemplate(page, templateData);
   });
 
   test('1.2 Edit Community Guidelines Template', async ({ page }) => {
@@ -183,12 +182,12 @@ test.describe.serial('Community Guidelines Template', () => {
     ).not.toBeVisible();
 
     // Verify the data was updated
-    await verifyCommunityGuidelinesTemplate(page, templateData);
+    await verifyOpenedTemplate(page, templateData);
 
     // Reload the page to ensure changes persist
     await page.reload();
 
-    await verifyCommunityGuidelinesTemplate(page, templateData);
+    await verifyOpenedTemplate(page, templateData);
   });
 
   test('1.3 Verify edit and cancel and confirm dialog', async ({ page }) => {
@@ -209,7 +208,7 @@ test.describe.serial('Community Guidelines Template', () => {
     // Verify we are back on the template view page with original data
     templateData.guidelines.description = originalDescription;
     await page.getByRole('heading', { name: templateData.displayName }).click();
-    await verifyCommunityGuidelinesTemplate(page, templateData);
+    await verifyOpenedTemplate(page, templateData);
   });
 
   test('1.4 Use Community Guidelines Template', async ({ page }) => {
@@ -230,7 +229,7 @@ test.describe.serial('Community Guidelines Template', () => {
       .click();
     const templateGalleryDialog = page
       .getByRole('heading', {
-        name: `Template Library: Community Guidelines Template`,
+        name: 'Template Library: Community Guidelines Template',
         exact: true,
       })
       .locator('..')
@@ -246,7 +245,7 @@ test.describe.serial('Community Guidelines Template', () => {
       .locator('..');
     await expect(templateDialog).toBeVisible();
 
-    await verifyCommunityGuidelinesTemplate(page, templateData);
+    await verifyOpenedTemplate(page, templateData);
 
     await templateDialog.getByRole('button', { name: 'Use' }).click();
     await expect(templateDialog).not.toBeVisible();
