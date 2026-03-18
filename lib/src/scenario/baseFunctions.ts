@@ -1,6 +1,4 @@
 import {
-  CalloutState,
-  //CalloutType,
   CalloutVisibility,
   CommunityMembershipPolicy,
   CreateOrganizationInput,
@@ -8,16 +6,29 @@ import {
 } from "@alkemio/client-lib";
 import { TestUser } from "../common/enums/test.user";
 import {
-  CalloutAllowedContributors,
-  CalloutFramingType,
   CreateSpaceOnAccountInput,
   RoleName,
   TagsetReservedName,
+  CalloutAllowedActors,
 } from "../core/generated/alkemio-schema";
 import { graphqlErrorWrapper } from "../utils/graphql.wrapper";
 import { getGraphqlClient } from "../utils/graphqlClient";
 import { UniqueIDGenerator } from "../utils/uniqueId";
-import { CalloutContributionType } from "@alkemio/client-lib/dist/generated/graphql";
+import { LogManager } from "./LogManager";
+import {
+  CalloutContributionType,
+  TemplateType,
+  SpaceLevel,
+  CalloutFramingType,
+  VirtualContributorBodyOfKnowledgeType,
+  VirtualContributorDataAccessMode,
+  VirtualContributorInteractionMode,
+  AiPersonaEngine,
+  SearchVisibility,
+  ForumDiscussionCategory,
+} from "@alkemio/client-lib/dist/generated/graphql";
+import { GraphQLClient } from "graphql-request";
+import { testConfiguration } from "../config/test.configuration";
 const getUniqueId = () => UniqueIDGenerator.getID();
 
 export const updateCalloutVisibility = async (
@@ -55,7 +66,7 @@ export const assignRoleToUser = async (
     graphqlClient.assignRoleToUser(
       {
         roleData: {
-          contributorID: userID,
+          actorID: userID,
           roleSetID,
           role,
         },
@@ -138,7 +149,7 @@ export const defaultCallout = {
     contribution: {
       enabled: true,
       allowedTypes: [CalloutContributionType.Post],
-      canAddContributions: CalloutAllowedContributors.Members,
+      canAddContributions: CalloutAllowedActors.Members,
       commentsEnabled: true,
     },
     framing: { commentsEnabled: true },
@@ -161,7 +172,7 @@ export const defaultWhiteboard = {
     contribution: {
       enabled: true,
       allowedTypes: [CalloutContributionType.Whiteboard],
-      canAddContributions: CalloutAllowedContributors.Members,
+      canAddContributions: CalloutAllowedActors.Members,
       commentsEnabled: true,
     },
     framing: { commentsEnabled: true },
@@ -188,7 +199,7 @@ export const createCalloutOnCalloutsSet = async (
       contribution?: {
         enabled?: boolean;
         allowedTypes?: CalloutContributionType[];
-        canAddContributions?: CalloutAllowedContributors;
+        canAddContributions?: CalloutAllowedActors;
         commentsEnabled?: boolean;
       };
       framing?: { commentsEnabled: boolean };
@@ -240,7 +251,7 @@ export const createWhiteboardCalloutOnCalloutsSet = async (
       contribution?: {
         enabled?: true;
         allowedTypes?: CalloutContributionType[];
-        canAddContributions?: CalloutAllowedContributors;
+        canAddContributions?: CalloutAllowedActors;
         commentsEnabled?: true;
       };
       framing?: { commentsEnabled: true };
@@ -279,7 +290,7 @@ export const createWhiteboardCalloutOnCalloutsSet = async (
 };
 
 export const assignPlatformRole = async (
-  contributorID: string,
+  actorID: string,
   roleName: RoleName,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -287,7 +298,7 @@ export const assignPlatformRole = async (
   const callback = (authToken: string | undefined) =>
     graphqlClient.assignPlatformRoleToUser(
       {
-        roleData: { contributorID, role: roleName },
+        roleData: { actorID, role: roleName },
       },
       {
         authorization: `Bearer ${authToken}`,
@@ -304,9 +315,14 @@ export const createOrganization = async (
   domain?: string,
   website?: string,
   contactEmail?: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  options?: { tags?: string[] }
 ) => {
   const graphqlClient = getGraphqlClient();
+  const defaultTag = "organization.admin@alkem.io";
+  const tags = options?.tags
+    ? Array.from(new Set([defaultTag, ...options.tags]))
+    : [defaultTag];
   const organizationData: CreateOrganizationInput = {
     nameID,
     legalEntityName,
@@ -315,6 +331,7 @@ export const createOrganization = async (
     contactEmail,
     profileData: {
       displayName: organizationName,
+      tags,
       referencesData: [
         {
           description: "test ref",
@@ -361,7 +378,8 @@ export const createSubspace = async (
   subspaceName: string,
   subspaceNameId: string,
   parentId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  tagline?: string
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -370,7 +388,8 @@ export const createSubspace = async (
         subspaceData: subspaceVariablesData(
           subspaceName,
           subspaceNameId,
-          parentId
+          parentId,
+          tagline
         ),
       },
       {
@@ -384,7 +403,8 @@ export const createSubspace = async (
 export const subspaceVariablesData = (
   displayName: string,
   nameId: string,
-  spaceId: string
+  spaceId: string,
+  tagline?: string
 ) => {
   const variables = {
     nameID: nameId,
@@ -392,7 +412,7 @@ export const subspaceVariablesData = (
     about: {
       profileData: {
         displayName,
-        tagline: "test tagline" + getUniqueId(),
+        tagline: tagline ?? "test tagline" + getUniqueId(),
         description: "test description" + getUniqueId(),
         referencesData: [
           {
@@ -506,6 +526,8 @@ export const updateSpaceSettings = async (
       allowMembersToCreateSubspaces?: boolean;
       inheritMembershipRights?: boolean;
       allowEventsFromSubspaces?: boolean;
+      allowMembersToVideoCall?: boolean;
+      allowGuestContributions?: boolean;
     };
   },
 
@@ -543,6 +565,10 @@ export const updateSpaceSettings = async (
                 settings?.collaboration?.inheritMembershipRights ?? true,
               allowEventsFromSubspaces:
                 settings?.collaboration?.allowEventsFromSubspaces || true,
+              allowMembersToVideoCall:
+                settings?.collaboration?.allowMembersToVideoCall ?? true,
+              allowGuestContributions:
+                settings?.collaboration?.allowGuestContributions ?? false,
             },
           },
         },
@@ -593,4 +619,614 @@ export const deleteSpace = async (
     );
 
   return graphqlErrorWrapper(callback, userRole);
+};
+
+export const getLicensePlans = async (
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.GetPlatformLicensePlans(
+      {},
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const getLicensePlanByName = async (licenseCredential: string) => {
+  const response = await getLicensePlans();
+  const allLicensePlans =
+    response.data?.platform.licensingFramework.plans ?? [];
+  const filteredLicensePlan = allLicensePlans.filter(
+    (plan: { licenseCredential: string; id: string }) =>
+      plan.licenseCredential.includes(licenseCredential) ||
+      plan.id === licenseCredential
+  );
+  const licensePlan = filteredLicensePlan;
+
+  return licensePlan;
+};
+
+export const assignLicensePlanToAccount = async (
+  accountId: string,
+  licensePlanId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const res = await getLicensePlans();
+  const licensingId = res.data?.platform.licensingFramework.id ?? "";
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.AssignLicensePlanToAccount(
+      {
+        accountId: accountId,
+        licensePlanId: licensePlanId,
+        licensingId: licensingId,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+// ---------------- Innovation Pack & Templates helpers ----------------
+
+export const createInnovationPack = async (
+  accountID: string,
+  displayName: string,
+  nameID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  options?: { tags?: string[] }
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.createInnovationPack(
+      {
+        data: {
+          accountID,
+          profileData: { displayName },
+          tags: options?.tags,
+          nameID,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const createTemplateOnTemplatesSet = async (
+  templatesSetId: string,
+  options: {
+    type: TemplateType;
+    profileDisplayName: string;
+    tags?: string[];
+    postDefaultDescription?: string;
+    whiteboardContent?: string;
+    // Callout-specific options
+    calloutFramingType?: "NONE" | "WHITEBOARD" | "MEMO" | "LINK";
+    calloutResponseTypes?: Array<"POST" | "WHITEBOARD" | "MEMO" | "LINK">;
+    calloutAllowedContributors?: "MEMBERS" | "ADMINS" | "NONE";
+  },
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+
+  // Map string literals to CalloutFramingType enum
+  const framingTypeMap: Record<string, CalloutFramingType> = {
+    NONE: CalloutFramingType.None,
+    WHITEBOARD: CalloutFramingType.Whiteboard,
+    MEMO: CalloutFramingType.Memo,
+    LINK: CalloutFramingType.Link,
+  };
+
+  // Map string literals to CalloutContributionType enum
+  const contributionTypeMap: Record<string, CalloutContributionType> = {
+    POST: CalloutContributionType.Post,
+    WHITEBOARD: CalloutContributionType.Whiteboard,
+    MEMO: CalloutContributionType.Memo,
+    LINK: CalloutContributionType.Link,
+  };
+
+  // Map string literals to CalloutAllowedActors enum
+  const allowedContributorsMap: Record<string, CalloutAllowedActors> = {
+    MEMBERS: CalloutAllowedActors.Members,
+    ADMINS: CalloutAllowedActors.Admins,
+    NONE: CalloutAllowedActors.None,
+  };
+
+  // Minimal defaults for Space template settings
+  const spaceDefaults = {
+    about: {
+      profileData: {
+        displayName: options.profileDisplayName,
+      },
+    },
+    collaborationData: {
+      calloutsSetData: {},
+    },
+    level: SpaceLevel.L0,
+    settings: {
+      membership: {
+        allowSubspaceAdminsToInviteMembers: true,
+        policy: CommunityMembershipPolicy.Open,
+        trustedOrganizations: [],
+      },
+      collaboration: {
+        allowMembersToCreateCallouts: false,
+        allowMembersToCreateSubspaces: false,
+        inheritMembershipRights: true,
+        allowEventsFromSubspaces: true,
+        allowMembersToVideoCall: true,
+        allowGuestContributions: false,
+      },
+    },
+  };
+
+  // Build callout data if type is Callout
+  let calloutDataValue: any = undefined;
+  if (options.type === TemplateType.Callout) {
+    const framingType = options.calloutFramingType || "NONE";
+    const responseTypes = options.calloutResponseTypes || ["POST"];
+    const allowedContributors = options.calloutAllowedContributors || "MEMBERS";
+
+    // Get the actual enum values
+    const framingEnumValue = framingTypeMap[framingType];
+    const allowedContributorsEnumValue =
+      allowedContributorsMap[allowedContributors];
+
+    // Map response types to actual enum values
+    const allowedTypes: CalloutContributionType[] = [];
+    for (const rt of responseTypes) {
+      const enumValue = contributionTypeMap[rt];
+      if (enumValue) {
+        allowedTypes.push(enumValue);
+      }
+    }
+
+    LogManager.getLogger().info(
+      `Creating callout template: "${
+        options.profileDisplayName
+      }" - framing: ${framingType} (${framingEnumValue}), responseTypes: [${responseTypes.join(
+        ", "
+      )}], contributors: ${allowedContributors} (${allowedContributorsEnumValue})`
+    );
+
+    // Build framing data with optional whiteboard/memo/link based on type
+    const framingData: any = {
+      profile: { displayName: options.profileDisplayName },
+      type: framingEnumValue,
+    };
+
+    // Add type-specific framing data if needed
+    if (framingType === "WHITEBOARD") {
+      framingData.whiteboard = {
+        content:
+          (options as any).calloutWhiteboardFramingContent ||
+          '{"type":"excalidraw","version":2,"source":"https://excalidraw.com","elements":[],"appState":{"gridSize":null,"viewBackgroundColor":"#ffffff"}}',
+      };
+    } else if (framingType === "MEMO") {
+      framingData.memo = {
+        profile: { displayName: options.profileDisplayName },
+        markdown: (options as any).calloutMemoFramingMarkdown || "",
+      };
+    } else if (framingType === "LINK") {
+      framingData.link = {
+        profile: { displayName: options.profileDisplayName },
+        uri: (options as any).calloutLinkFramingUri || "",
+      };
+    }
+
+    // NOTE: The allowedTypes field is correctly set in settings.contribution.allowedTypes
+    // If the server is not respecting this field and defaults to Post, there may be a
+    // server-side issue. The client code here is correct and sends the proper values.
+    calloutDataValue = {
+      framing: framingData,
+      settings: {
+        visibility: CalloutVisibility.Published,
+        contribution: {
+          enabled: true,
+          allowedTypes:
+            allowedTypes.length > 0
+              ? allowedTypes
+              : [CalloutContributionType.Post],
+          canAddContributions: allowedContributorsEnumValue,
+          commentsEnabled: true,
+        },
+        framing: { commentsEnabled: true },
+      },
+      contributionDefaults: {
+        postDescription: "Please describe the knowledge that is relevant.",
+        whiteboardContent:
+          '{"type":"excalidraw","version":2,"source":"https://excalidraw.com","elements":[],"appState":{"gridSize":null,"viewBackgroundColor":"#ffffff"}}',
+      },
+    };
+  }
+
+  const templateInput = {
+    templatesSetId,
+    profileData: {
+      displayName: options.profileDisplayName,
+    },
+    tags: options.tags,
+    type: options.type,
+    postDefaultDescription:
+      options.type === TemplateType.Post
+        ? options.postDefaultDescription ||
+          defaultPostTemplate.postTemplate.defaultDescription
+        : undefined,
+    whiteboard:
+      options.type === TemplateType.Whiteboard
+        ? {
+            content:
+              options.whiteboardContent ||
+              '{"type":"excalidraw","version":2,"source":"https://excalidraw.com","elements":[],"appState":{"gridSize":null,"viewBackgroundColor":"#ffffff"}}',
+          }
+        : undefined,
+    contentSpaceData:
+      options.type === TemplateType.Space ? spaceDefaults : undefined,
+    calloutData: calloutDataValue,
+    communityGuidelinesData:
+      options.type === TemplateType.CommunityGuidelines
+        ? { profile: { displayName: options.profileDisplayName } }
+        : undefined,
+  };
+
+  // Log the full template input for callout types to debug response type issues
+  if (options.type === TemplateType.Callout) {
+    LogManager.getLogger().info(
+      `Full calloutData being sent to CreateTemplate: ${JSON.stringify(
+        calloutDataValue,
+        null,
+        2
+      )}`
+    );
+    LogManager.getLogger().info(
+      `Full templateInput being sent: ${JSON.stringify(templateInput, null, 2)}`
+    );
+  }
+
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.CreateTemplate(templateInput, {
+      authorization: `Bearer ${authToken}`,
+    });
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+// --- Virtual Contributor Functions ---
+
+export const createVirtualContributor = async (
+  accountID: string,
+  options: {
+    profileDisplayName: string;
+    profileDescription?: string;
+    nameID?: string;
+    aiPersona?: {
+      engine?:
+        | "OPENAI_ASSISTANT"
+        | "GENERIC_OPENAI"
+        | "EXPERT"
+        | "COMMUNITY_MANAGER"
+        | "GUIDANCE"
+        | "LIBRA_FLOW";
+      prompt?: string[];
+      externalConfig?: Record<string, unknown>;
+    };
+    bodyOfKnowledgeType?:
+      | "NONE"
+      | "WEBSITE"
+      | "ALKEMIO_KNOWLEDGE_BASE"
+      | "ALKEMIO_SPACE"
+      | "OTHER";
+    bodyOfKnowledgeDescription?: string;
+    bodyOfKnowledgeID?: string;
+    dataAccessMode?: "NONE" | "SPACE_PROFILE" | "SPACE_PROFILE_AND_CONTENTS";
+    interactionModes?: "DISCUSSION_TAGGING"[];
+    knowledgeBaseProfile?: {
+      displayName?: string;
+      description?: string;
+    };
+  },
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+
+  // Build interaction modes enum
+  const interactionModesMap: Record<string, VirtualContributorInteractionMode> =
+    {
+      DISCUSSION_TAGGING: VirtualContributorInteractionMode.DiscussionTagging,
+    };
+
+  // Build data access mode enum
+  const dataAccessModeMap: Record<string, VirtualContributorDataAccessMode> = {
+    NONE: VirtualContributorDataAccessMode.None,
+    SPACE_PROFILE: VirtualContributorDataAccessMode.SpaceProfile,
+    SPACE_PROFILE_AND_CONTENTS:
+      VirtualContributorDataAccessMode.SpaceProfileAndContents,
+  };
+
+  // Build body of knowledge type enum
+  const bodyOfKnowledgeTypeMap: Record<
+    string,
+    VirtualContributorBodyOfKnowledgeType
+  > = {
+    NONE: VirtualContributorBodyOfKnowledgeType.None,
+    WEBSITE: VirtualContributorBodyOfKnowledgeType.Website,
+    ALKEMIO_KNOWLEDGE_BASE:
+      VirtualContributorBodyOfKnowledgeType.AlkemioKnowledgeBase,
+    ALKEMIO_SPACE: VirtualContributorBodyOfKnowledgeType.AlkemioSpace,
+    OTHER: VirtualContributorBodyOfKnowledgeType.Other,
+  };
+
+  // Build AI persona engine enum
+  const aiEngineMap: Record<string, AiPersonaEngine> = {
+    OPENAI_ASSISTANT: AiPersonaEngine.OpenaiAssistant,
+    GENERIC_OPENAI: AiPersonaEngine.GenericOpenai,
+    EXPERT: AiPersonaEngine.Expert,
+    COMMUNITY_MANAGER: AiPersonaEngine.CommunityManager,
+    GUIDANCE: AiPersonaEngine.Guidance,
+    LIBRA_FLOW: AiPersonaEngine.LibraFlow,
+  };
+
+  const aiPersona: any = {
+    engine: options.aiPersona?.engine
+      ? aiEngineMap[options.aiPersona.engine]
+      : undefined,
+    prompt: options.aiPersona?.prompt || [],
+    externalConfig: options.aiPersona?.externalConfig,
+  };
+
+  let interactionModes: VirtualContributorInteractionMode[] = [];
+  if (options.interactionModes && options.interactionModes.length > 0) {
+    for (const mode of options.interactionModes) {
+      const enumValue = interactionModesMap[mode];
+      if (enumValue) {
+        interactionModes.push(enumValue);
+      }
+    }
+  }
+
+  const knowledgeBaseData = options.knowledgeBaseProfile
+    ? {
+        profile: {
+          displayName:
+            options.knowledgeBaseProfile.displayName ||
+            options.profileDisplayName,
+          description: options.knowledgeBaseProfile.description || "",
+        },
+      }
+    : undefined;
+
+  LogManager.getLogger().info(
+    `Creating virtual contributor: "${options.profileDisplayName}" - engine: ${
+      options.aiPersona?.engine || "none"
+    }, BoK type: ${options.bodyOfKnowledgeType || "NONE"}`
+  );
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.CreateVirtualContributorOnAccount(
+      {
+        virtualContributorData: {
+          accountID,
+          profileData: {
+            displayName: options.profileDisplayName,
+            description: options.profileDescription || "",
+          },
+          nameID: options.nameID,
+          aiPersona,
+          bodyOfKnowledgeType: options.bodyOfKnowledgeType
+            ? bodyOfKnowledgeTypeMap[options.bodyOfKnowledgeType]
+            : undefined,
+          bodyOfKnowledgeDescription: options.bodyOfKnowledgeDescription,
+          bodyOfKnowledgeID: options.bodyOfKnowledgeID,
+          dataAccessMode: options.dataAccessMode
+            ? dataAccessModeMap[options.dataAccessMode]
+            : undefined,
+          interactionModes:
+            interactionModes.length > 0 ? interactionModes : undefined,
+          knowledgeBaseData,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const deleteVirtualContributor = async (
+  virtualContributorId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.DeleteVirtualContributorOnAccount(
+      {
+        virtualContributorData: {
+          ID: virtualContributorId,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const createPlatformDiscussion = async (
+  forumID: string,
+  options?: {
+    title?: string;
+    description?: string;
+    category?: ForumDiscussionCategory;
+  },
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.CreateDiscussion(
+      {
+        createData: {
+          forumID,
+          profile: {
+            displayName: options?.title || "Discussion",
+            description: options?.description,
+          },
+          category:
+            options?.category ||
+            ForumDiscussionCategory.PlatformFunctionalities,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const deletePlatformDiscussion = async (
+  discussionId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.DeleteDiscussion(
+      {
+        deleteData: { ID: discussionId },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const getPlatformForumId = async (
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+): Promise<string> => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.GetPlatformForumData(
+      {},
+      authToken ? { authorization: `Bearer ${authToken}` } : undefined
+    );
+
+  const res = await graphqlErrorWrapper(callback, userRole);
+  return res.data?.platform?.forum?.id ?? "";
+};
+
+export const deleteInnovationPack = async (
+  innovationPackId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.deleteInnovationPack(
+      {
+        innovationPackId,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const updateVirtualContributorVisibility = async (
+  ID: string,
+  visibility: { searchVisibility?: SearchVisibility; listedInStore?: boolean },
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.UpdateVirtualContributor(
+      {
+        virtualContributorData: {
+          ID,
+          searchVisibility: visibility.searchVisibility,
+          listedInStore: visibility.listedInStore,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const updateInnovationPackVisibility = async (
+  ID: string,
+  visibility: { searchVisibility?: SearchVisibility; listedInStore?: boolean },
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = new GraphQLClient(
+    testConfiguration.endPoints.graphql.private
+  );
+  const mutation = `
+    mutation UpdateInnovationPack($data: UpdateInnovationPackInput!) {
+      updateInnovationPack(innovationPackData: $data) { id }
+    }
+  `;
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.rawRequest(
+      mutation,
+      {
+        data: {
+          ID,
+          listedInStore: visibility.listedInStore,
+          searchVisibility: visibility.searchVisibility,
+        },
+      },
+      authToken ? { authorization: `Bearer ${authToken}` } : undefined
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const triggerOrganizationVerification = async (
+  organizationVerificationID: string,
+  eventName = "MANUALLY_VERIFY",
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.eventOnOrganizationVerification(
+      {
+        eventData: {
+          organizationVerificationID,
+          eventName,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const applyOrganizationVerificationSequence = async (
+  organizationVerificationID: string,
+  events: string[],
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  for (const eventName of events) {
+    await triggerOrganizationVerification(
+      organizationVerificationID,
+      eventName,
+      userRole
+    );
+  }
 };

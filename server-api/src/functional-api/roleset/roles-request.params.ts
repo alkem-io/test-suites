@@ -32,7 +32,7 @@ export const assignRoleToUser = async (
     graphqlClient.assignRoleToUser(
       {
         roleData: {
-          contributorID: userID,
+          actorID: userID,
           roleSetID,
           role,
         },
@@ -56,7 +56,7 @@ export const assignRoleToUserExtendedData = async (
     graphqlClient.AssignRoleToUserExtendedData(
       {
         roleData: {
-          contributorID: userID,
+          actorID: userID,
           roleSetID,
           role,
         },
@@ -80,7 +80,7 @@ export const removeRoleFromUser = async (
     graphqlClient.removeRoleFromUser(
       {
         roleData: {
-          contributorID: userID,
+          actorID: userID,
           roleSetID,
           role,
         },
@@ -104,7 +104,7 @@ export const removeRoleFromUserExtendedData = async (
     graphqlClient.RemoveRoleFromUserExtendedData(
       {
         roleData: {
-          contributorID: userID,
+          actorID: userID,
           roleSetID,
           role,
         },
@@ -128,7 +128,7 @@ export const assignRoleToOrganization = async (
     graphqlClient.AssignRoleToOrganization(
       {
         roleData: {
-          contributorID: organizationID,
+          actorID: organizationID,
           roleSetID,
           role,
         },
@@ -152,7 +152,7 @@ export const assignRoleToOrganization4 = async (
       {
         roleData: {
           roleSetID,
-          contributorID: organizationID,
+          actorID: organizationID,
           role: RoleName.Member,
         },
       },
@@ -175,7 +175,7 @@ export const removeRoleFromOrganization = async (
     graphqlClient.RemoveRoleFromOrganization(
       {
         roleData: {
-          contributorID: organizationID,
+          actorID: organizationID,
           roleSetID,
           role,
         },
@@ -219,7 +219,7 @@ export const assignOrganizationAsCommunityLead = async (
       {
         roleData: {
           roleSetID,
-          contributorID: organizationID,
+          actorID: organizationID,
           role: RoleName.Lead,
         },
       },

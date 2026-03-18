@@ -14,6 +14,7 @@ import { createPostOnCallout } from '@functional-api/callout/post/post.request.p
 import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
 import { sendMessageToRoom } from '@functional-api/communications/communication.params';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import { notif } from '../notification.helpers';
 
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -35,28 +36,13 @@ const mentionedUser = (userDisplayName: string, userNameId: string) => {
 const mentionNotificationSettings = {
   notification: {
     user: {
-      commentReply: false,
-      mentioned: true,
-      messageReceived: true,
-      copyOfMessageSent: true,
+      commentReply: notif(false),
+      mentioned: notif(true),
+      messageReceived: notif(true),
       membership: {
-        spaceCommunityApplicationSubmitted: false,
-        spaceCommunityInvitationReceived: false,
-        spaceCommunityJoined: false,
+        spaceCommunityInvitationReceived: notif(false),
+        spaceCommunityJoined: notif(false),
       },
-    },
-    space: {
-      admin: {
-        communityApplicationReceived: false,
-        communityNewMember: false,
-        collaborationCalloutContributionCreated: false,
-        communicationMessageReceived: false,
-      },
-      collaborationCalloutPublished: false,
-      communicationUpdates: false,
-      collaborationCalloutPostContributionComment: false,
-      collaborationCalloutContributionCreated: false,
-      collaborationCalloutComment: false,
     },
   },
 };
@@ -64,28 +50,13 @@ const mentionNotificationSettings = {
 const disabledMentionNotificationSettings = {
   notification: {
     user: {
-      commentReply: false,
-      mentioned: false,
-      messageReceived: false,
-      copyOfMessageSent: false,
+      commentReply: notif(false),
+      mentioned: notif(false),
+      messageReceived: notif(false),
       membership: {
-        spaceCommunityApplicationSubmitted: false,
-        spaceCommunityInvitationReceived: false,
-        spaceCommunityJoined: false,
+        spaceCommunityInvitationReceived: notif(false),
+        spaceCommunityJoined: notif(false),
       },
-    },
-    space: {
-      admin: {
-        communityApplicationReceived: false,
-        communityNewMember: false,
-        collaborationCalloutContributionCreated: false,
-        communicationMessageReceived: false,
-      },
-      collaborationCalloutPublished: false,
-      communicationUpdates: false,
-      collaborationCalloutPostContributionComment: false,
-      collaborationCalloutContributionCreated: false,
-      collaborationCalloutComment: false,
     },
   },
 };
@@ -106,33 +77,6 @@ const disableMentionNotifications = async (userIds: string[]) => {
   );
 };
 
-// const disableOtherNotifications = async (userIds: string[]) => {
-//   const disabledSettings = {
-//     notification: {
-//       space: {
-//         communityApplicationReceived: false,
-//         communityApplicationSubmitted: false,
-//         collaborationCalloutPublished: false,
-//         communicationUpdatesAdmin: false,
-//         communicationUpdates: false,
-//         communityNewMember: false,
-//         communityNewMemberAdmin: false,
-//         collaborationPostCommentCreated: false,
-//         collaborationPostCreated: false,
-//         collaborationPostCreatedAdmin: false,
-//         collaborationWhiteboardCreated: false,
-//         collaborationDiscussionCreated: false,
-//         collaborationDiscussionCreatedAdmin: false,
-//         collaborationDiscussionCommentCreated: false,
-//       },
-//     },
-//   };
-
-//   await Promise.all(
-//     userIds.map(userId => updateUserSettings(userId, disabledSettings))
-//   );
-// };
-
 let baseScenario: OrganizationWithSpaceModel;
 const scenarioConfig: TestScenarioConfig = {
   name: 'messaging-mention-user',
@@ -141,6 +85,7 @@ const scenarioConfig: TestScenarioConfig = {
       addPostCallout: true,
       addPostCollectionCallout: true,
       addWhiteboardCallout: false,
+      addTutorialCallouts: false,
     },
     community: {
       admins: [TestUser.SPACE_ADMIN],
@@ -158,6 +103,7 @@ const scenarioConfig: TestScenarioConfig = {
         addPostCallout: true,
         addPostCollectionCallout: true,
         addWhiteboardCallout: false,
+        addTutorialCallouts: false,
       },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
@@ -173,6 +119,7 @@ const scenarioConfig: TestScenarioConfig = {
           addPostCallout: true,
           addPostCollectionCallout: true,
           addWhiteboardCallout: false,
+          addTutorialCallouts: false,
         },
         community: {
           admins: [TestUser.SUBSUBSPACE_ADMIN],
@@ -202,7 +149,7 @@ beforeAll(async () => {
 
   // Enable mention notifications and disable other notifications that might interfere
   await enableMentionNotifications(allRelevantUsers);
-  //await disableOtherNotifications(allRelevantUsers);
+  //console.log(a.failures);
 });
 
 afterAll(async () => {

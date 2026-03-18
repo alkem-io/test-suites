@@ -7,7 +7,6 @@ mutation TransferInnovationPackToAccount(
     listedInStore
     provider {
       id
-      nameID
     }
     searchVisibility
   }

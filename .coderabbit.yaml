@@ -1,0 +1,28 @@
+language: en
+early_access: false
+reviews:
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  path_filters:
+    - "**/*"
+    - "!**/.github/workflows/*"
+    - "!**/.specify/**"
+    - "!**/.github/prompts/*" # Exclude Prompt files
+  path_instructions:
+    - path: "**/*"
+      instructions: |
+        This repository follows Specification-Driven Development using GitHub's Spec Kit.
+        - Anchor feedback to the approved spec/plan and surface scope gaps instead of re-scoping features.
+        - Consult `.specify/` artifacts for context but avoid leaving comments there or in `prompts/`.
+        - Integration coverage is expected against the alkem-io/server GraphQL API; call out risky changes lacking tests.
+        - UI automation belongs in `client-web/`; UI automation covers smoke tests, accessibility, and core user journeys.
+    - path: "server-api/src/**"
+      instructions: |
+        Treat these as integration tests hitting alkem-io/server; check GraphQL contract fidelity, isolated fixtures, and clean teardown.
+    - path: "client-web/**"
+      instructions: |
+        Highlight accessibility or journey regressions.
+chat:
+  auto_reply: true

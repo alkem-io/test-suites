@@ -34,7 +34,8 @@ beforeEach(() => {
 
 describe('Create User', () => {
   afterEach(async () => {
-    await deleteUser(userId);
+    const a = await deleteUser(userId);
+    console.log('delete user response', a.error, a.data);
   });
 
   test('should create a user', async () => {
@@ -42,11 +43,11 @@ describe('Create User', () => {
     const response = await createUser({
       profileData: { displayName: userName },
     });
-
+    console.log('create user response', response.error, response.data);
     userId = response?.data?.createUser.id ?? '';
 
     // Assert
-    expect(response?.data?.createUser?.profile.displayName).toEqual(userName);
+    expect(response?.data?.createUser?.profile?.displayName).toEqual(userName);
     expect(response?.data?.createUser?.authorization?.credentialRules).not.toBe(
       ''
     );
@@ -54,14 +55,18 @@ describe('Create User', () => {
 
   test('should throw error - same user is created twice', async () => {
     // Arrange
+    const email = 'testEmail' + uniqueId + '@alkemio.io';
+
     const response = await createUser({
       nameID: userName,
+      email: email,
     });
     userId = response?.data?.createUser.id ?? '';
 
     // Act
     const responseSecondTime = await createUser({
       nameID: userName,
+      email: email,
     });
 
     // Assert

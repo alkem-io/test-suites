@@ -11,32 +11,31 @@ import { delay } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
 import { sendMessageToRoom } from '@functional-api/communications/communication.params';
+import { notif } from '../../notification.helpers';
 
 // Notification settings for discussion comment events
 const discussionCommentNotificationSettings = {
   notification: {
     space: {
       admin: {
-        communityApplicationReceived: false,
-        communityNewMember: false,
-        collaborationCalloutContributionCreated: false,
-        communicationMessageReceived: false,
+        communityApplicationReceived: notif(false),
+        communityNewMember: notif(false),
+        collaborationCalloutContributionCreated: notif(false),
+        communicationMessageReceived: notif(false),
       },
-      collaborationCalloutPublished: false,
-      communicationUpdates: false,
-      collaborationCalloutPostContributionComment: false,
-      collaborationCalloutContributionCreated: false,
-      collaborationCalloutComment: true,
+      collaborationCalloutPublished: notif(false),
+      communicationUpdates: notif(false),
+      collaborationCalloutPostContributionComment: notif(false),
+      collaborationCalloutContributionCreated: notif(false),
+      collaborationCalloutComment: notif(true),
     },
     user: {
-      commentReply: true,
-      mentioned: false,
-      messageReceived: true,
-      copyOfMessageSent: false,
+      commentReply: notif(true),
+      mentioned: notif(false),
+      messageReceived: notif(true),
       membership: {
-        spaceCommunityApplicationSubmitted: false,
-        spaceCommunityInvitationReceived: false,
-        spaceCommunityJoined: false,
+        spaceCommunityInvitationReceived: notif(false),
+        spaceCommunityJoined: notif(false),
       },
     },
   },
@@ -46,26 +45,24 @@ const disabledDiscussionCommentNotificationSettings = {
   notification: {
     space: {
       admin: {
-        communityApplicationReceived: false,
-        communityNewMember: false,
-        collaborationCalloutContributionCreated: false,
-        communicationMessageReceived: false,
+        communityApplicationReceived: notif(false),
+        communityNewMember: notif(false),
+        collaborationCalloutContributionCreated: notif(false),
+        communicationMessageReceived: notif(false),
       },
-      collaborationCalloutPublished: false,
-      communicationUpdates: false,
-      collaborationCalloutPostContributionComment: false,
-      collaborationCalloutContributionCreated: false,
-      collaborationCalloutComment: false,
+      collaborationCalloutPublished: notif(false),
+      communicationUpdates: notif(false),
+      collaborationCalloutPostContributionComment: notif(false),
+      collaborationCalloutContributionCreated: notif(false),
+      collaborationCalloutComment: notif(false),
     },
     user: {
-      commentReply: false,
-      mentioned: false,
-      messageReceived: false,
-      copyOfMessageSent: false,
+      commentReply: notif(false),
+      mentioned: notif(false),
+      messageReceived: notif(false),
       membership: {
-        spaceCommunityApplicationSubmitted: false,
-        spaceCommunityInvitationReceived: false,
-        spaceCommunityJoined: false,
+        spaceCommunityInvitationReceived: notif(false),
+        spaceCommunityJoined: notif(false),
       },
     },
   },
@@ -73,11 +70,12 @@ const disabledDiscussionCommentNotificationSettings = {
 
 // Helper function to enable discussion comment notifications for specific users
 const enableDiscussionCommentNotifications = async (userIds: string[]) => {
-  await Promise.all(
+  const a = await Promise.all(
     userIds.map(userId =>
       updateUserSettings(userId, discussionCommentNotificationSettings)
     )
   );
+  console.log(a);
 };
 
 // Helper function to disable discussion comment notifications for specific users
@@ -112,7 +110,7 @@ const expectedDataSpace2 = async (toAddresses: any[]) => {
 const expectedDataChal = async (toAddresses: any[]) => {
   return expect.arrayContaining([
     expect.objectContaining({
-      subject: `${baseScenario.subspace.about.profile.displayName} - New comment received on your Post \u0026#34;discussion-comments-notification - post\u0026#34; by space, have a look!`,
+      subject: `${baseScenario.subspace.about.profile.displayName} - New comment received on your Post &#34;l1-discussion-comments-notification - post&#34; by space, have a look!`,
       toAddresses,
     }),
   ]);
@@ -121,7 +119,7 @@ const expectedDataChal = async (toAddresses: any[]) => {
 const expectedDataOpp = async (toAddresses: any[]) => {
   return expect.arrayContaining([
     expect.objectContaining({
-      subject: `${baseScenario.subsubspace.about.profile.displayName} - New comment received on your Post \u0026#34;discussion-comments-notification - post\u0026#34; by subsubspace, have a look!`,
+      subject: `${baseScenario.subsubspace.about.profile.displayName} - New comment received on your Post &#34;l2-discussion-comments-notification - post&#34; by subsubspace, have a look!`,
       toAddresses,
     }),
   ]);

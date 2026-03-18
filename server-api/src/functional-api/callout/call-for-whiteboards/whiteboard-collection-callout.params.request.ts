@@ -51,6 +51,7 @@ export const createWhiteboardOnCallout = async (
       {
         contributionData: {
           calloutID,
+          type: CalloutContributionType.Whiteboard,
           whiteboard: {
             content:
               '{"type":"excalidraw","version":2,"source":"https://excalidraw.com","elements":[],"appState":{"gridSize":null,"viewBackgroundColor":"#ffffff"}}',

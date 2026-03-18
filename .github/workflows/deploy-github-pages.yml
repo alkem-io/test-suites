@@ -1,0 +1,59 @@
+name: Deploy GitHub Pages (from branch)
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: "Git ref to deploy (e.g. gh-pages)"
+        required: false
+        type: string
+        default: gh-pages
+      path:
+        description: "Folder path within the ref to deploy"
+        required: false
+        type: string
+        default: gh-pages-root
+
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref to deploy (e.g. gh-pages)"
+        required: false
+        default: gh-pages
+        type: string
+      path:
+        description: "Folder path within the ref to deploy"
+        required: false
+        default: gh-pages-root
+        type: string
+
+jobs:
+  deploy:
+    runs-on: arc-runner-set
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+
+    steps:
+      - name: Checkout site content
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 1
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact for GitHub Pages
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: ${{ inputs.path }}
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4.0.5

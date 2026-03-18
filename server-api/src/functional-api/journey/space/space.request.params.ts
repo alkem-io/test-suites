@@ -1,12 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  SpaceVisibility,
   SpacePrivacyMode,
   CommunityMembershipPolicy,
 } from '@alkemio/client-lib';
 import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
-import { CreateSpaceOnAccountInput } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import {
+  CreateSpaceOnAccountInput,
+  SpaceSortMode,
+  SpaceVisibility,
+} from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -85,6 +88,24 @@ export const getSpaceData = async (
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
     graphqlClient.GetSpaceData(
+      {
+        spaceId,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, role);
+};
+
+export const getSpaceCommunication = async (
+  spaceId = spaceNameId,
+  role = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.GetSpaceCommunication(
       {
         spaceId,
       },
@@ -210,9 +231,10 @@ export const updateSpaceSettings = async (
       allowMembersToCreateSubspaces?: boolean;
       inheritMembershipRights?: boolean;
       allowEventsFromSubspaces?: boolean;
+      allowMembersToVideoCall?: boolean;
+      allowGuestContributions?: boolean;
     };
-    //},
-    // },
+    sortMode?: SpaceSortMode;
   },
 
   userRole: TestUser = TestUser.GLOBAL_ADMIN
@@ -251,7 +273,14 @@ export const updateSpaceSettings = async (
                 settings?.collaboration?.inheritMembershipRights ?? true,
               allowEventsFromSubspaces:
                 settings?.collaboration?.allowEventsFromSubspaces || true,
+              allowMembersToVideoCall:
+                settings?.collaboration?.allowMembersToVideoCall ?? true,
+              allowGuestContributions:
+                settings?.collaboration?.allowGuestContributions ?? false,
             },
+            ...(settings?.sortMode !== undefined && {
+              sortMode: settings.sortMode,
+            }),
           }, // Add an empty object for the settings property
         },
       },
@@ -368,19 +397,19 @@ export const getSpacesFilteredByVisibilityNoAccess = async (
 };
 
 export const getUserRoleSpacesVisibility = async (
-  userID: string,
+  actorID: string,
   visibility: SpaceVisibility,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
-  if (userID.length !== 36) {
-    throw new Error(`Invalid user ID: ${userID}`);
+  if (actorID.length !== 36) {
+    throw new Error(`Invalid actor ID: ${actorID}`);
   }
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
     graphqlClient.GetUserRoles(
       {
         rolesData: {
-          userID,
+          actorID,
           filter: { visibilities: [visibility] },
         },
       },

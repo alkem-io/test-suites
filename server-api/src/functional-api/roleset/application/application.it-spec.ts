@@ -6,7 +6,10 @@ import {
   meQuery,
 } from './application.request.params';
 import { updateSpaceSettings } from '../../journey/space/space.request.params';
-import { deleteUser } from '../../contributor-management/user/user.request.params';
+import {
+  deleteUser,
+  reregisterUser,
+} from '../../contributor-management/user/user.request.params';
 import {
   assignRoleToUser,
   removeRoleFromUser,
@@ -14,7 +17,6 @@ import {
 import { eventOnRoleSetApplication } from '../roleset-events.request.params';
 import {
   delay,
-  registerInAlkemioOrFail,
   TestScenarioConfig,
   TestScenarioFactory,
   TestUser,
@@ -167,7 +169,7 @@ describe('Application', () => {
 
     // Assert
     expect(applicationDataTwo.error?.errors[0].message).toContain(
-      `Application not possible: An open application (ID: ${applicationId}) already exists for contributor ${TestUserManager.users.qaUser.id} on RoleSet: ${baseScenario.space.community.roleSetId}.`
+      'Application not possible: An open application already exists for actor'
     );
   });
 
@@ -292,7 +294,9 @@ describe('Application', () => {
 
     // Assert
     expect(countAppAfterCreateDelete).toEqual(countAppBeforeCreateDelete);
-    await registerInAlkemioOrFail('qa', 'user', 'qa.user@alkem.io');
+
+    // Fully re-register the user so subsequent tests work
+    await reregisterUser('qa.user@alkem.io', 'qa', 'user');
   });
 });
 

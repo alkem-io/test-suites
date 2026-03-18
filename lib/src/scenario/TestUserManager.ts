@@ -83,7 +83,25 @@ export class TestUserManager {
       // ),
       nonSpaceMember: TestUserManager.getUserModelByEmail("non.space@alkem.io"),
       betaTester: TestUserManager.getUserModelByEmail("beta.tester@alkem.io"),
+      organizationAdmin: TestUserManager.getUserModelByEmail(
+        "organization.admin@alkem.io"
+      ),
     };
+  }
+
+  /**
+   * Refreshes the cached UserModel for a given email by re-fetching
+   * the auth token and user data from the API.
+   * Use after deleting and re-registering a test user.
+   */
+  public static async refreshUserModel(email: string): Promise<UserModel> {
+    const userModel = this.userModelMapEmail.get(email);
+    if (!userModel) {
+      throw new Error(`UserModel with email ${email} not found`);
+    }
+    userModel.authToken = await getUserToken(email);
+    await this.populateUserModelFromApi(userModel);
+    return userModel;
   }
 
   public static getUserModelByEmail(userEmail: string): UserModel {
@@ -108,11 +126,11 @@ export class TestUserManager {
   ): Promise<void> {
     const userData = await this.getUserData(userModel.authToken);
     const userInfo = userData?.data?.me.user;
-    userModel.displayName = userInfo?.profile.displayName || "";
+    userModel.displayName = userInfo?.profile?.displayName || "";
     userModel.id = userInfo?.id || "";
-    userModel.profileId = userInfo?.profile.id || "";
+    userModel.profileId = userInfo?.profile?.id || "";
     userModel.nameId = userInfo?.nameID || "";
-    userModel.agentId = userInfo?.agent.id || "";
+    userModel.agentId = userInfo?.actor?.id || "";
     userModel.accountId = userInfo?.account?.id || "";
 
     const RoleNames = userData?.data?.platform?.roleSet.myRoles || [];

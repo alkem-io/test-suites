@@ -29,7 +29,7 @@ export const deleteApplication = async (
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.deleteUserApplication(
+    graphqlClient.deleteApplication(
       {
         deleteData: {
           ID: applicationId,

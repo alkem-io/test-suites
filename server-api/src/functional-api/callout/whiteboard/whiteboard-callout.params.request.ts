@@ -1,7 +1,7 @@
 import { getGraphqlClient } from '@alkemio/tests-lib/utils/graphqlClient';
 import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import {
-  CalloutAllowedContributors,
+  CalloutAllowedActors,
   CalloutFramingType,
   CalloutVisibility,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
@@ -42,7 +42,7 @@ export const createWhiteboardCallout = async (
             contribution: {
               enabled: true,
               allowedTypes: [],
-              canAddContributions: CalloutAllowedContributors.Admins,
+              canAddContributions: CalloutAllowedActors.Admins,
               commentsEnabled: true,
             },
           },

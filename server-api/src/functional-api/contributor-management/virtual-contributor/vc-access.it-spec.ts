@@ -225,7 +225,7 @@ describe('Virtual Contributor ACCESS - All Public - Visibility Public / BoK / Pu
       async ({ userRole, privileges }) => {
         const res = await queryVCStorageConfig(vcSpaceBasedId, userRole);
         const data =
-          res.data?.lookup?.virtualContributor?.profile.storageBucket
+          res.data?.lookup?.virtualContributor?.profile?.storageBucket
             .authorization?.myPrivileges;
 
         expect(data?.sort()).toEqual(privileges);
@@ -245,7 +245,7 @@ describe('Virtual Contributor ACCESS - All Public - Visibility Public / BoK / Pu
       async ({ userRole, privileges }) => {
         const res = await queryVCStorageConfig(vcKnowledgeBasedId, userRole);
         const data =
-          res.data?.lookup?.virtualContributor?.profile.storageBucket
+          res.data?.lookup?.virtualContributor?.profile?.storageBucket
             .authorization?.myPrivileges;
 
         expect(data?.sort()).toEqual(privileges);
@@ -319,7 +319,7 @@ describe('Virtual Contributor Access - All Private - Visibility Private / BoK / 
       async ({ userRole, privileges }) => {
         const res = await queryVCStorageConfig(vcSpaceBasedId, userRole);
         const data =
-          res.data?.lookup?.virtualContributor?.profile.storageBucket
+          res.data?.lookup?.virtualContributor?.profile?.storageBucket
             .authorization?.myPrivileges;
 
         expect(data?.sort()).toEqual(privileges);
@@ -339,7 +339,7 @@ describe('Virtual Contributor Access - All Private - Visibility Private / BoK / 
       async ({ userRole, privileges }) => {
         const res = await queryVCStorageConfig(vcKnowledgeBasedId, userRole);
         const data =
-          res.data?.lookup?.virtualContributor?.profile.storageBucket
+          res.data?.lookup?.virtualContributor?.profile?.storageBucket
             .authorization?.myPrivileges;
 
         expect(data?.sort()).toEqual(privileges);
@@ -413,7 +413,7 @@ describe('Virtual Contributor Access - All Private - Visibility Private / BoK / 
       async ({ userRole, privileges }) => {
         const res = await queryVCStorageConfig(vcSpaceBasedId, userRole);
         const data =
-          res.data?.lookup?.virtualContributor?.profile.storageBucket
+          res.data?.lookup?.virtualContributor?.profile?.storageBucket
             .authorization?.myPrivileges;
 
         expect(data?.sort()).toEqual(privileges);
@@ -433,7 +433,7 @@ describe('Virtual Contributor Access - All Private - Visibility Private / BoK / 
       async ({ userRole, privileges }) => {
         const res = await queryVCStorageConfig(vcKnowledgeBasedId, userRole);
         const data =
-          res.data?.lookup?.virtualContributor?.profile.storageBucket
+          res.data?.lookup?.virtualContributor?.profile?.storageBucket
             .authorization?.myPrivileges;
 
         expect(data?.sort()).toEqual(privileges);
@@ -504,7 +504,7 @@ describe('Virtual Contributor Access - All Private - Visibility Public / BoK / P
       async ({ userRole, privileges }) => {
         const res = await queryVCStorageConfig(vcSpaceBasedId, userRole);
         const data =
-          res.data?.lookup?.virtualContributor?.profile.storageBucket
+          res.data?.lookup?.virtualContributor?.profile?.storageBucket
             .authorization?.myPrivileges;
 
         expect(data?.sort()).toEqual(privileges);
@@ -524,7 +524,7 @@ describe('Virtual Contributor Access - All Private - Visibility Public / BoK / P
       async ({ userRole, privileges }) => {
         const res = await queryVCStorageConfig(vcKnowledgeBasedId, userRole);
         const data =
-          res.data?.lookup?.virtualContributor?.profile.storageBucket
+          res.data?.lookup?.virtualContributor?.profile?.storageBucket
             .authorization?.myPrivileges;
 
         expect(data?.sort()).toEqual(privileges);

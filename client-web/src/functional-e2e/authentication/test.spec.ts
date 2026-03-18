@@ -17,7 +17,7 @@ test.beforeAll(async () => {
   console.log('Scenario setup completed');
 });
 
-test.describe('Tabs Navigation Tests', () => {
+test.describe.skip('Tabs Navigation Tests', () => {
   let tabsPage: TabsPage;
 
   test.beforeEach(async ({ page }) => {

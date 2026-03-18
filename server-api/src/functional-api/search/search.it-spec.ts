@@ -198,8 +198,8 @@ describe('Search', () => {
       const result = responseSearchData.data?.search;
 
       // Assert
-      expect(result?.contributorResults.results).toHaveLength(2);
-      expect(result?.contributorResults.results).toContainObject({
+      expect(result?.actorResults.results).toHaveLength(2);
+      expect(result?.actorResults.results).toContainObject({
         type: 'USER',
         user: {
           id: TestUserManager.users.qaUser.id,
@@ -209,7 +209,7 @@ describe('Search', () => {
         },
       });
 
-      expect(result?.contributorResults.results).toContainObject({
+      expect(result?.actorResults.results).toContainObject({
         type: 'ORGANIZATION',
         organization: {
           id: `${organizationIdTest}`,
@@ -343,7 +343,7 @@ describe('Search', () => {
   test('should search with all filters applied', async () => {
     // Act
     const responseSearchData = await searchContributors(termAll);
-    const result = responseSearchData.data?.search.contributorResults.results;
+    const result = responseSearchData.data?.search.actorResults.results;
 
     // Assert
     expect(result).toHaveLength(2);
@@ -371,7 +371,7 @@ describe('Search', () => {
   test('should search by full user name', async () => {
     // Act
     const responseSearchData = await searchContributors(termFullUserName);
-    const result = responseSearchData.data?.search.contributorResults.results;
+    const result = responseSearchData.data?.search.actorResults.results;
 
     // Assert
     expect(result).toHaveLength(2);
@@ -400,7 +400,7 @@ describe('Search', () => {
     // Act
     const responseContributior = await searchContributors(termWord);
     const resultContrbutor =
-      responseContributior.data?.search.contributorResults.results;
+      responseContributior.data?.search.actorResults.results;
     const responseSearchData = await searchSpaces(termWord);
     const resultJourney = responseSearchData.data?.search.spaceResults.results;
 
@@ -456,7 +456,7 @@ describe('Search', () => {
     // Act
     const responseContributior = await searchContributors(termLocation);
     const resultContrbutor =
-      responseContributior.data?.search.contributorResults.results;
+      responseContributior.data?.search.actorResults.results;
     const responseSearchData = await searchSpaces(termLocation);
     const journeyResults = responseSearchData.data?.search.spaceResults.results;
 
@@ -519,7 +519,7 @@ describe('Search', () => {
 
     // Assert
     expect(
-      responseContributior.data?.search.contributorResults.results
+      responseContributior.data?.search.actorResults.results
     ).toHaveLength(3);
 
     expect(responseJourney.data?.search.spaceResults.results).toHaveLength(0);
@@ -529,7 +529,7 @@ describe('Search', () => {
     // Act
     const responseContributior = await searchContributors(termUserOnly);
     const resultContrbutor =
-      responseContributior.data?.search.contributorResults.results;
+      responseContributior.data?.search.actorResults.results;
 
     // Assert
     expect(resultContrbutor).toHaveLength(3);
@@ -586,7 +586,7 @@ describe('Search', () => {
 
       // Assert
       expect(
-        responseSearchData.data?.search.contributorResults.results
+        responseSearchData.data?.search.actorResults.results
       ).toEqual([]);
     });
   });

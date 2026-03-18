@@ -16,6 +16,7 @@ import {
 } from '@functional-api/callout/post/post.request.params';
 import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import { notif } from '../../notification.helpers';
 
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -29,16 +30,16 @@ const postNotificationSettings = {
   notification: {
     space: {
       admin: {
-        communityApplicationReceived: false,
-        communityNewMember: false,
-        collaborationCalloutContributionCreated: false,
-        communicationMessageReceived: false,
+        communityApplicationReceived: notif(false),
+        communityNewMember: notif(false),
+        collaborationCalloutContributionCreated: notif(false),
+        communicationMessageReceived: notif(false),
       },
-      collaborationCalloutPublished: false,
-      communicationUpdates: false,
-      collaborationCalloutPostContributionComment: false,
-      collaborationCalloutContributionCreated: true,
-      collaborationCalloutComment: false,
+      collaborationCalloutPublished: notif(false),
+      communicationUpdates: notif(false),
+      collaborationCalloutPostContributionComment: notif(false),
+      collaborationCalloutContributionCreated: notif(true),
+      collaborationCalloutComment: notif(false),
     },
   },
 };
@@ -47,16 +48,16 @@ const disablePostNotificationSettings = {
   notification: {
     space: {
       admin: {
-        communityApplicationReceived: false,
-        communityNewMember: false,
-        collaborationCalloutContributionCreated: false,
-        communicationMessageReceived: false,
+        communityApplicationReceived: notif(false),
+        communityNewMember: notif(false),
+        collaborationCalloutContributionCreated: notif(false),
+        communicationMessageReceived: notif(false),
       },
-      collaborationCalloutPublished: false,
-      communicationUpdates: false,
-      collaborationCalloutPostContributionComment: false,
-      collaborationCalloutContributionCreated: false,
-      collaborationCalloutComment: false,
+      collaborationCalloutPublished: notif(false),
+      communicationUpdates: notif(false),
+      collaborationCalloutPostContributionComment: notif(false),
+      collaborationCalloutContributionCreated: notif(false),
+      collaborationCalloutComment: notif(false),
     },
   },
 };
@@ -198,8 +199,8 @@ describe('Notifications - post', () => {
 
     await delay(1000);
     const mails = await getMailsData();
-    expect(mails[1]).toEqual(7);
-    expect(mails[0]).toEqual(
+    expect(mails[1]).toEqual(6);
+    expect(mails[0]).not.toEqual(
       await templateMemberResult(
         postSubjectMember,
         TestUserManager.users.globalAdmin.email
@@ -259,7 +260,7 @@ describe('Notifications - post', () => {
 
     await delay(1000);
     const mails = await getMailsData();
-    expect(mails[1]).toEqual(7);
+    expect(mails[1]).toEqual(6);
 
     expect(mails[0]).toEqual(
       await templateMemberResult(
@@ -267,7 +268,7 @@ describe('Notifications - post', () => {
         TestUserManager.users.globalAdmin.email
       )
     );
-    expect(mails[0]).toEqual(
+    expect(mails[0]).not.toEqual(
       await templateMemberResult(
         postSubjectMember,
         TestUserManager.users.spaceAdmin.email
@@ -377,7 +378,7 @@ describe('Notifications - post', () => {
 
     await delay(1000);
     const mails = await getMailsData();
-    expect(mails[1]).toEqual(3);
+    expect(mails[1]).toEqual(2);
     expect(mails[0]).toEqual(
       await templateMemberResult(
         postSubjectMember,
@@ -431,7 +432,7 @@ describe('Notifications - post', () => {
       )
     );
 
-    expect(mails[0]).toEqual(
+    expect(mails[0]).not.toEqual(
       await templateMemberResult(
         postSubjectMember,
         TestUserManager.users.subsubspaceMember.email

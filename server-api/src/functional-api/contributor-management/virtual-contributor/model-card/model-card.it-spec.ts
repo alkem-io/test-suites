@@ -79,8 +79,7 @@ describe('Virtual Contributor Model Card', () => {
 
     // Query the VC data to get AI Persona ID
     const vcDataQuery = await queryVCData(vcId, TestUser.GLOBAL_ADMIN);
-    const aiPersonaId =
-      vcDataQuery?.data?.lookup.virtualContributor?.aiPersona.id;
+    const aiPersonaId = vcDataQuery?.data?.lookup.virtualContributor?.id;
     expect(aiPersonaId).toBeDefined();
 
     // Query model card data

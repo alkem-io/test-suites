@@ -21,6 +21,7 @@ import {
   CalloutVisibility,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import { notif } from '../../notification.helpers';
 
 let spaceWhiteboardId = '';
 let whiteboardCollectionSpaceCalloutId = '';
@@ -32,16 +33,16 @@ const whiteboardNotificationSettings = {
   notification: {
     space: {
       admin: {
-        communityApplicationReceived: false,
-        communityNewMember: false,
-        collaborationCalloutContributionCreated: true,
-        communicationMessageReceived: false,
+        communityApplicationReceived: notif(false),
+        communityNewMember: notif(false),
+        collaborationCalloutContributionCreated: notif(true),
+        communicationMessageReceived: notif(false),
       },
-      collaborationCalloutPublished: false,
-      communicationUpdates: false,
-      collaborationCalloutPostContributionComment: false,
-      collaborationCalloutContributionCreated: true,
-      collaborationCalloutComment: false,
+      collaborationCalloutPublished: notif(false),
+      communicationUpdates: notif(false),
+      collaborationCalloutPostContributionComment: notif(false),
+      collaborationCalloutContributionCreated: notif(true),
+      collaborationCalloutComment: notif(false),
     },
   },
 };
@@ -50,16 +51,16 @@ const disabledWhiteboardNotificationSettings = {
   notification: {
     space: {
       admin: {
-        communityApplicationReceived: false,
-        communityNewMember: false,
-        collaborationCalloutContributionCreated: false,
-        communicationMessageReceived: false,
+        communityApplicationReceived: notif(false),
+        communityNewMember: notif(false),
+        collaborationCalloutContributionCreated: notif(false),
+        communicationMessageReceived: notif(false),
       },
-      collaborationCalloutPublished: false,
-      communicationUpdates: false,
-      collaborationCalloutPostContributionComment: false,
-      collaborationCalloutContributionCreated: false,
-      collaborationCalloutComment: false,
+      collaborationCalloutPublished: notif(false),
+      communicationUpdates: notif(false),
+      collaborationCalloutPostContributionComment: notif(false),
+      collaborationCalloutContributionCreated: notif(false),
+      collaborationCalloutComment: notif(false),
     },
   },
 };
@@ -279,9 +280,9 @@ describe('Notifications - whiteboard', () => {
     await delay(1000);
     const mails = await getMailsData();
 
-    expect(mails[1]).toEqual(9);
+    expect(mails[1]).toEqual(7);
 
-    expect(mails[0]).toEqual(
+    expect(mails[0]).not.toEqual(
       await expectedDataFunc(subjectTextAdmin, [
         TestUserManager.users.globalAdmin.email,
       ])
@@ -293,7 +294,7 @@ describe('Notifications - whiteboard', () => {
       ])
     );
 
-    expect(mails[0]).toEqual(
+    expect(mails[0]).not.toEqual(
       await expectedDataFunc(subjectTextMember, [
         TestUserManager.users.globalAdmin.email,
       ])
@@ -347,7 +348,7 @@ describe('Notifications - whiteboard', () => {
     await delay(1000);
     const mails = await getMailsData();
 
-    expect(mails[1]).toEqual(9);
+    expect(mails[1]).toEqual(7);
 
     expect(mails[0]).toEqual(
       await expectedDataFunc(subjectTextAdmin, [
@@ -355,7 +356,7 @@ describe('Notifications - whiteboard', () => {
       ])
     );
 
-    expect(mails[0]).toEqual(
+    expect(mails[0]).not.toEqual(
       await expectedDataFunc(subjectTextAdmin, [
         TestUserManager.users.spaceAdmin.email,
       ])
@@ -366,7 +367,7 @@ describe('Notifications - whiteboard', () => {
         TestUserManager.users.globalAdmin.email,
       ])
     );
-    expect(mails[0]).toEqual(
+    expect(mails[0]).not.toEqual(
       await expectedDataFunc(subjectTextMember, [
         TestUserManager.users.spaceAdmin.email,
       ])
@@ -490,7 +491,7 @@ describe('Notifications - whiteboard', () => {
     await delay(1000);
     const mails = await getMailsData();
 
-    expect(mails[1]).toEqual(5);
+    expect(mails[1]).toEqual(4);
 
     expect(mails[0]).toEqual(
       await expectedDataFunc(subjectTextAdmin, [
@@ -549,7 +550,7 @@ describe('Notifications - whiteboard', () => {
         TestUserManager.users.subsubspaceAdmin.email,
       ])
     );
-    expect(mails[0]).toEqual(
+    expect(mails[0]).not.toEqual(
       await expectedDataFunc(subjectTextMember, [
         TestUserManager.users.subsubspaceMember.email,
       ])

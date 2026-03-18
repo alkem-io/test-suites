@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { CalloutContributionType } from '@alkemio/client-lib';
 import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 
@@ -24,6 +25,7 @@ export const createPostOnCallout = async (
       {
         contributionData: {
           calloutID,
+          type: CalloutContributionType.Post,
           post: {
             nameID,
             profileData,

@@ -3,10 +3,14 @@ dist
 node_modules
 html-report
 client-web/dist
-client-web/node_modules
 server-api/html-report
 server-api/dist
+
+# dependencies
+node_modules/
+lib/node_modules
 server-api/node_modules
+client-web/node_modules
 
 # Logs
 logs
@@ -44,6 +48,7 @@ lerna-debug.log*
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+!.vscode/mcp.json
 
 # dotenv environment variables file
 .env
@@ -70,3 +75,9 @@ web_modules/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# local files
+client-web/.auth/
+
+# Claude Code
+.claude/

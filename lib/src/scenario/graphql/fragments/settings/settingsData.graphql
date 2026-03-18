@@ -13,5 +13,7 @@ fragment SettingsData on SpaceSettings {
     allowMembersToCreateSubspaces
     inheritMembershipRights
     allowEventsFromSubspaces
+    allowMembersToVideoCall
   }
+  sortMode
 }

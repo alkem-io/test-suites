@@ -1,0 +1,234 @@
+name: Database cleanup
+
+on:
+  workflow_call:
+    inputs:
+      postgres_db:
+        description: Database name to recreate
+        required: false
+        type: string
+        default: alkemio
+  workflow_dispatch:
+    inputs:
+      postgres_db:
+        description: Database name to recreate
+        required: false
+        type: string
+        default: alkemio
+
+jobs:
+  cleanup-db:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Kubectl
+        uses: azure/setup-kubectl@v4.0.0
+        with:
+          version: "v1.29.6"
+
+      - name: Set up Kubeconfig for Hetzner k3s
+        run: |
+          set -euo pipefail
+          mkdir -p $HOME/.kube  # Ensure the .kube directory exists
+          echo "${{ secrets.KUBECONFIG_SECRET_HETZNER_TEST }}" > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Scale down services that hold database connections
+        run: |
+          set -euo pipefail
+          echo "Scaling down services that hold database connections..."
+          kubectl scale deployment/alkemio-server-deployment --replicas=0
+          kubectl scale deployment/alkemio-matrix-adapter-deployment --replicas=0
+          kubectl scale deployment/synapse-deployment --replicas=0
+          kubectl scale deployment/kratos --replicas=0
+          kubectl scale statefulset/kratos-courier --replicas=0
+          kubectl scale deployment/hydra --replicas=0
+
+          kubectl rollout status deployment/alkemio-server-deployment --timeout=120s
+          kubectl rollout status deployment/alkemio-matrix-adapter-deployment --timeout=120s
+          kubectl rollout status deployment/synapse-deployment --timeout=120s
+          kubectl rollout status deployment/kratos --timeout=120s
+          kubectl rollout status statefulset/kratos-courier --timeout=120s
+          kubectl rollout status deployment/hydra --timeout=120s
+          echo "All services scaled down."
+
+      - name: Port-forward and reset all Postgres databases
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        run: |
+          set -euo pipefail
+
+          # Port-forward to the PostgreSQL service in the background
+          kubectl port-forward svc/postgres 5432:5432 > /tmp/port-forward.log 2>&1 &
+          PORT_FORWARD_PID=$!
+
+          cleanup() {
+            echo "Stopping port-forward (pid=$PORT_FORWARD_PID)"
+            kill "$PORT_FORWARD_PID" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          echo "Waiting for port-forward to become ready..."
+          for i in $(seq 1 30); do
+            if grep -q "Forwarding from" /tmp/port-forward.log; then
+              break
+            fi
+            sleep 1
+          done
+
+          if ! grep -q "Forwarding from" /tmp/port-forward.log; then
+            echo "Port-forward did not become ready"; cat /tmp/port-forward.log; exit 1
+          fi
+
+          # Discover all non-system databases
+          echo "Discovering user databases..."
+          DBS=$(PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -p 5432 -U "$POSTGRES_USER" -d postgres -t -A -c \
+            "SELECT datname FROM pg_database WHERE datistemplate = false AND datname != 'postgres';")
+
+          echo "Databases to reset: $DBS"
+
+          for DB in $DBS; do
+            echo "Dropping and recreating database $DB..."
+            # WITH (FORCE) atomically terminates remaining connections and drops
+            # the database in one step (PostgreSQL 13+)
+            PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -p 5432 -U "$POSTGRES_USER" -d postgres -c "DROP DATABASE IF EXISTS \"$DB\" WITH (FORCE);"
+            PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -p 5432 -U "$POSTGRES_USER" -d postgres -c "CREATE DATABASE \"$DB\";"
+          done
+
+
+  run-migration-and-boostrap:
+    needs: cleanup-db
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Kubectl
+        uses: azure/setup-kubectl@v4.0.0
+        with:
+          version: "v1.29.6"
+
+      - name: Set up Kubeconfig for Hetzner k3s
+        run: |
+          mkdir -p $HOME/.kube  # Ensure the .kube directory exists
+          echo "${{ secrets.KUBECONFIG_SECRET_HETZNER_TEST }}" > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+      # run Kratos migration on the fresh database, then restart the deployment
+      - name: Migrate and restart Kratos
+        run: |
+          KRATOS_MIGRATION_JOB="kratos-migration-job-${{ github.run_id }}"
+          KRATOS_IMAGE=$(kubectl get deployment kratos -o jsonpath='{.spec.template.spec.containers[0].image}')
+          echo "Using Kratos image: $KRATOS_IMAGE"
+
+          kubectl apply -f - <<EOF
+          apiVersion: batch/v1
+          kind: Job
+          metadata:
+            name: $KRATOS_MIGRATION_JOB
+          spec:
+            ttlSecondsAfterFinished: 120
+            template:
+              spec:
+                restartPolicy: Never
+                containers:
+                  - name: kratos-migrate
+                    image: $KRATOS_IMAGE
+                    command: ["kratos"]
+                    args: ["migrate", "sql", "-e", "--yes"]
+                    env:
+                      - name: DSN
+                        valueFrom:
+                          secretKeyRef:
+                            name: kratos
+                            key: dsn
+          EOF
+
+          kubectl wait --for=condition=complete job/$KRATOS_MIGRATION_JOB --timeout=600s
+
+          # Scale back up (was scaled to 0 during DB cleanup)
+          kubectl scale deployment/kratos --replicas=1
+          kubectl scale statefulset/kratos-courier --replicas=1
+          kubectl rollout status deployment/kratos --timeout=600s
+          kubectl rollout status statefulset/kratos-courier --timeout=600s
+
+      # run Hydra migration on the fresh database, then restart the deployment
+      - name: Migrate and restart Hydra
+        run: |
+          HYDRA_MIGRATION_JOB="hydra-migration-job-${{ github.run_id }}"
+          HYDRA_IMAGE=$(kubectl get deployment hydra -o jsonpath='{.spec.template.spec.containers[0].image}')
+          echo "Using Hydra image: $HYDRA_IMAGE"
+
+          kubectl apply -f - <<EOF
+          apiVersion: batch/v1
+          kind: Job
+          metadata:
+            name: $HYDRA_MIGRATION_JOB
+          spec:
+            ttlSecondsAfterFinished: 120
+            template:
+              spec:
+                restartPolicy: Never
+                containers:
+                  - name: hydra-migrate
+                    image: $HYDRA_IMAGE
+                    command: ["hydra"]
+                    args: ["migrate", "sql", "-e", "--yes"]
+                    env:
+                      - name: POSTGRES_USER
+                        valueFrom:
+                          configMapKeyRef:
+                            name: alkemio-config
+                            key: POSTGRES_USER
+                      - name: POSTGRES_PASSWORD
+                        valueFrom:
+                          configMapKeyRef:
+                            name: alkemio-config
+                            key: POSTGRES_PASSWORD
+                      - name: DSN
+                        value: "postgres://\$(POSTGRES_USER):\$(POSTGRES_PASSWORD)@postgres:5432/hydra?sslmode=disable"
+          EOF
+
+          kubectl wait --for=condition=complete job/$HYDRA_MIGRATION_JOB --timeout=600s
+
+          # Scale back up (was scaled to 0 during DB cleanup)
+          kubectl scale deployment/hydra --replicas=1
+          kubectl rollout status deployment/hydra --timeout=600s
+
+      # Scale up dependencies before server migration: Synapse + matrix adapter
+      - name: Start Synapse and supporting services
+        run: |
+          kubectl scale deployment/synapse-deployment --replicas=1
+          kubectl rollout status deployment/synapse-deployment --timeout=600s
+
+          kubectl scale deployment/alkemio-matrix-adapter-deployment --replicas=1
+          kubectl scale deployment/alkemio-notifications-deployment --replicas=1
+          kubectl scale deployment/alkemio-file-service-deployment --replicas=1
+          kubectl rollout status deployment/alkemio-matrix-adapter-deployment --timeout=600s
+          kubectl rollout status deployment/alkemio-notifications-deployment --timeout=600s
+          kubectl rollout status deployment/alkemio-file-service-deployment --timeout=600s
+
+      # apply the latest schema
+      - name: Run migration job
+        run: |
+          # Define a unique job name based on the GitHub run ID
+          MIGRATION_JOB_NAME="server-migration-job-${{ github.run_id }}"
+
+          # Create the job from the cronjob
+          kubectl create job --from=cronjob/server-migration $MIGRATION_JOB_NAME
+
+          # Wait for the migration job to complete
+          kubectl wait --for=condition=complete job/$MIGRATION_JOB_NAME --timeout=600s
+
+          # Check job status and fail the step if the job didn't succeed
+          MIGRATION_JOB_STATUS=$(kubectl get job $MIGRATION_JOB_NAME -o jsonpath='{.status.succeeded}')
+          if [ "$MIGRATION_JOB_STATUS" != "1" ]; then
+            echo "Migration job failed!"
+            exit 1
+          fi
+
+          echo "Migration job completed successfully."
+        # Scale server back up so it picks up the new database state and bootstraps
+      - name: Start server deployment
+        run: |
+          kubectl scale deployment/alkemio-server-deployment --replicas=1
+          kubectl rollout status deployment/alkemio-server-deployment --timeout=600s

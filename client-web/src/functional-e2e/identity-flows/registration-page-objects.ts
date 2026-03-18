@@ -2,22 +2,46 @@ import { Page, expect } from '@playwright/test';
 import {
   emailField,
   firstNameField,
+  githubButton,
   lastNameField,
+  linkedinButton,
+  microsoftButton,
+  nextButton,
   passwordField,
+  signInLink,
   signUpButton,
 } from '../authentication/common-authentication-page-elements';
 
 // Registration Page Object
 
 export const verifyRegistrationPageElements = async (page: Page) => {
+  // Heading
   await expect(page.getByRole('heading', { name: 'Sign up' })).toBeVisible();
+
+  // Form fields
   await expect(page.locator('input[type="email"]')).toBeVisible();
   await expect(page.getByLabel('First Name')).toBeVisible();
   await expect(page.getByLabel('Last Name')).toBeVisible();
 
-  await expect(page.getByRole('button', { name: 'Next' })).toBeVisible();
-  // Note: The social login buttons might not be present in the new design
-  // Removing the LinkedIn and Microsoft button checks for now
+  // Next button should be visible but initially disabled (until all fields filled)
+  await expect(nextButton(page)).toBeVisible();
+  await expect(nextButton(page)).toBeDisabled();
+
+  // Third-party sign-in options (if available)
+  if ((await githubButton(page).count()) > 0) {
+    await expect(githubButton(page)).toBeVisible();
+  }
+  if ((await microsoftButton(page).count()) > 0) {
+    await expect(microsoftButton(page)).toBeVisible();
+  }
+  if ((await linkedinButton(page).count()) > 0) {
+    await expect(linkedinButton(page)).toBeVisible();
+  }
+
+  // Link to sign in (if user already has account)
+  if ((await signInLink(page).count()) > 0) {
+    await expect(signInLink(page)).toBeVisible();
+  }
 };
 
 export const fillUpSignUpPageElements = async (

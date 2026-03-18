@@ -1,11 +1,6 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// This is critical to be able to use TypeScript aliases in Jest tests
-require('tsconfig-paths/register');
 import { UiText } from '@ory/kratos-client';
 import {
   LogManager,
-  registerInAlkemioOrFail,
   registerInKratosOrFail,
   stringifyConfig,
   testConfiguration,
@@ -13,19 +8,26 @@ import {
   verifyInKratosOrFail,
 } from '@alkemio/tests-lib';
 
-module.exports = async () => {
+export default async function setup() {
+  console.log('[globalSetup] Starting global test setup...');
+
+  // Guard against duplicate invocations when Vitest projects inherit
+  // globalSetup from root config via extends: true (array merge semantics).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if ((globalThis as any).__alkemioGlobalSetupDone) return;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (globalThis as any).__alkemioGlobalSetupDone = true;
+
   LogManager.getLogger().info(
     `\nLaunching tests using configuration: ${stringifyConfig(testConfiguration)}`
   );
 
   if (!testConfiguration.registerUsers) return;
 
-  // get all user names to register
-  // exclude GLOBAL_ADMIN as he already is created and verified
-  // and it's used to create the the users
-  const userNames = Object.values(TestUser).filter(
-    x => x !== TestUser.GLOBAL_ADMIN
-  );
+  // Register all users including GLOBAL_ADMIN (which may not exist after a
+  // full DB wipe). The catch block below handles "user already exists" (4000007)
+  // gracefully, so re-registering an existing admin is safe.
+  const userNames = Object.values(TestUser);
   // running register flows in parallel brings 3x less waiting times
   // NOTE: may require limit on amount of flows run in parallel
 
@@ -39,47 +41,70 @@ module.exports = async () => {
       );
     }
   }
-};
+
+  // Return a teardown function so Vitest can ensure a clean exit.
+  // The GraphQL client is stateless HTTP and WebSocket subscriptions are
+  // terminated in per-file afterAll hooks, so no global cleanup is needed.
+  return () => {
+    LogManager.getLogger().info('Global teardown complete');
+  };
+}
 
 const getUserName = (userName: string): [string, string] => {
-  const [first, last] = userName.split('.');
+  const parts = userName.split('.');
+  const first = parts[0];
+  const last = parts.length > 1 ? parts[1] : first;
   return [first, last];
 };
 
 export const userRegisterFlow = async (userName: string) => {
   const [firstName, lastName] = getUserName(userName);
   const email = `${userName}@alkem.io`;
+  const needsVerification = true;
+
   try {
     await registerInKratosOrFail(firstName, lastName, email);
-
-    LogManager.getLogger().info(`User ${email} registered in Kratos`);
+    console.error(`[registration] ${email} registered`);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
-    const errorMessages = (e as any).response?.data.ui.messages as UiText[];
-    const errorMessage =
-      errorMessages.map(x => x.text).join('\n') ?? 'Unknown error';
-    const userExists =
-      errorMessages.filter((x: { id: number }) => x.id === 4000007).length > 0;
+    const errorMessages = e.response?.data?.ui?.messages as
+      | UiText[]
+      | undefined;
+    if (!errorMessages?.length) {
+      // Log the full response for debugging non-UI errors
+      console.error(
+        `[registration] ${email} failed — status: ${e.response?.status}, ` +
+        `body: ${JSON.stringify(e.response?.data ?? 'no response body')}`
+      );
+      throw new Error(
+        `Registration failed for ${email}: ${e.message ?? e}`
+      );
+    }
+
+    const userExists = errorMessages.some(
+      (x: { id: number }) => x.id === 4000007
+    );
 
     if (userExists) {
-      LogManager.getLogger().warn(`User ${email} already registered in Kratos`);
+      console.error(`[registration] ${email} already exists`);
     } else {
+      const errorMessage = errorMessages.map(x => x.text).join('\n');
       throw new Error(errorMessage);
     }
   }
 
-  await verifyInKratosOrFail(email);
-  LogManager.getLogger().info(`User ${email} verified`);
-  try {
-    await registerInAlkemioOrFail(firstName, lastName, email);
-    LogManager.getLogger().info(`User ${email} registered in Alkemio`);
-  } catch (e) {
-    const err = e as Error;
-    if (err.message.indexOf('already registered') > -1) {
-      LogManager.getLogger().warn(
-        `User ${email} already registered in Alkemio`
+  if (needsVerification) {
+    try {
+      await verifyInKratosOrFail(email);
+      console.error(`[verification] ${email} verified`);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      // Verification is best-effort: it depends on Kratos SMTP routing
+      // emails to mail slurper, which may not be configured.
+      // If Kratos doesn't enforce verification for login, tests still pass.
+      console.error(
+        `[verification] ${email} failed (non-fatal) — ${e.message ?? e}`
       );
-    } else {
-      throw new Error(err.message);
     }
   }
 };

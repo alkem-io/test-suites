@@ -29,7 +29,7 @@ import {
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
 const uniqueId = UniqueIDGenerator.getID();
-const isTravis = process.env.TRAVIS === 'true';
+const isCI = !!process.env.CI;
 
 let refId = '';
 let visualId = '';
@@ -56,7 +56,8 @@ async function getReferenceUri(orgId: string): Promise<string> {
 
 async function getVisualUri(orgId: string): Promise<string> {
   const orgData = await getOrgVisualUri(orgId);
-  const visualUri = orgData?.data?.organization.profile.visuals[0].uri ?? '';
+  const visualUri =
+    orgData?.data?.organization?.profile?.visuals?.[0]?.uri ?? '';
   return visualUri;
 }
 
@@ -182,7 +183,7 @@ describe('Upload document', () => {
     );
   });
 
-  if (!isTravis) {
+  if (!isCI) {
     test('read uploaded file', async () => {
       const res = await uploadFileOnRef(
         path.join(__dirname, 'files-to-upload', 'image.png'),
@@ -382,13 +383,18 @@ describe('Upload visual tests', () => {
     expect(res?.errors).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          message:
-            "Upload image has a width resolution of '1299' which is not in the allowed range of 190 - 410 pixels!",
+          message: 'Upload on visual failed!',
+          extensions: expect.objectContaining({
+            details: expect.objectContaining({
+              message:
+                "Upload image has a width resolution of '1299' which is not in the allowed range of 190 - 410 pixels!",
+            }),
+          }),
         }),
       ])
     );
   });
-  if (!isTravis) {
+  if (!isCI) {
     test('read uploaded visual', async () => {
       const res = await uploadImageOnVisual(
         path.join(__dirname, 'files-to-upload', '190-410.jpg'),
@@ -440,7 +446,7 @@ describe('Upload visual to innovation space', () => {
       baseScenario.organization.accountId
     );
     const innovationHubInfo = innovationHubData?.data?.createInnovationHub;
-    innovationHubVisualId = innovationHubInfo?.profile.visuals[0].id ?? '';
+    innovationHubVisualId = innovationHubInfo?.profile.visuals[0]?.id ?? '';
     innovationHubId = innovationHubInfo?.id ?? '';
   });
 

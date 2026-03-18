@@ -1,5 +1,0 @@
-mutation createUserNewRegistration {
-  createUserNewRegistration {
-    ...UserData
-  }
-}
