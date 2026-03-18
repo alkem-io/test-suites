@@ -71,7 +71,7 @@ afterAll(async () => {
 });
 
 describe('Promoting of L1 subspace', () => {
-  test.only('Conversion Subspace L1 to Space L0 with application and invitation to the subspace', async () => {
+  test('Conversion Subspace L1 to Space L0 with application and invitation to the subspace', async () => {
     // Arrange
     const invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.subspace.community.roleSetId,

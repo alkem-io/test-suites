@@ -8,14 +8,13 @@ const resolve = (...segments: string[]) => path.resolve(__dirname, ...segments);
 /**
  * Helper to define a named project. Each project:
  * - Inherits root config (plugins, environment, globals, timeout, setupFiles, reporters)
- * - Overrides globalSetup to [] so it only runs once from the root project
+ * - Inherits globalSetup from root; the setup file guards against duplicate invocations
  */
 const project = (name: string, include: string[]) => ({
   extends: true as const,
   test: {
     name,
     include,
-    globalSetup: [] as string[],
   },
 });
 
@@ -40,7 +39,7 @@ export default defineConfig({
     hookTimeout: 120_000, // beforeAll hooks create multiple entities via API, so they need more headroom
     globalSetup: './src/globalTestsSetup.ts',
     setupFiles: ['./src/setupTests.ts'],
-    reporters: ['html'],
+    reporters: ['default', 'html'],
     outputFile: {
       html: './html-report/index.html',
     },

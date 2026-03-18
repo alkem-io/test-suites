@@ -67,133 +67,17 @@ jobs:
           AUTH_TEST_HARNESS_PASSWORD: ${{ secrets.AUTH_TEST_HARNESS_PASSWORD }}
         run: pnpm --filter @alkemio/test-suite-client-web exec playwright test --config=config/playwright.config.nightly.ts
 
-      - name: Capture Playwright outcome
-        if: ${{ always() }}
-        run: |
-          echo "PLAYWRIGHT_OUTCOME=${{ steps.playwright.outcome }}" >> $GITHUB_ENV
-
-      - name: Organize report for GitHub Pages
-        run: |
-          # Ensure output directory exists even if gh-pages checkout failed or branch doesn't exist yet.
-          mkdir -p out
-          TARGET="gh-pages-root/playwright/$RUN_DATE/$RUN_ID"
-          mkdir -p "out/$TARGET"
-          cp -r client-web/playwright-report/* "out/$TARGET/"
-
-      - name: Add run metadata
-        run: |
-          REPORT_DIR="out/gh-pages-root/playwright/$RUN_DATE/$RUN_ID"
-          echo "Run ID: $RUN_ID" > "$REPORT_DIR/runinfo.txt"
-          echo "Date: $RUN_DATE" >> "$REPORT_DIR/runinfo.txt"
-          echo "Branch: $GITHUB_REF" >> "$REPORT_DIR/runinfo.txt"
-          echo "Commit: $GITHUB_SHA" >> "$REPORT_DIR/runinfo.txt"
-          echo "Playwright outcome: ${PLAYWRIGHT_OUTCOME:-unknown}" >> "$REPORT_DIR/runinfo.txt"
-
-          echo "$GITHUB_SHA" > "$REPORT_DIR/commit.txt"
-          echo "${GITHUB_REF_NAME:-unknown}" > "$REPORT_DIR/branch.txt"
-
-          if [ "${PLAYWRIGHT_OUTCOME:-}" = "success" ]; then
-            echo "passed" > "$REPORT_DIR/status.txt"
-          else
-            echo "failed" > "$REPORT_DIR/status.txt"
-          fi
-
-      - name: Generate summary index.html
-        run: |
-          mkdir -p out/gh-pages-root/playwright
-          INDEX="out/gh-pages-root/playwright/index.html"
-          cat > $INDEX << 'EOF'
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1" />
-              <title>Playwright Nightly Reports</title>
-              <style>
-                body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin: 24px; line-height: 1.4; }
-                h1 { margin: 0 0 12px 0; }
-                h2 { margin: 20px 0 8px 0; }
-                ul { margin: 0 0 12px 0; }
-              </style>
-            </head>
-            <body>
-              <h1>Playwright nightly results</h1>
-              <p><a href="../">Back to main index</a></p>
-          EOF
-
-          # Render by date with runs underneath (newest-first)
-          if [ -d "out/gh-pages-root/playwright" ]; then
-            for dateDir in $(ls -1 out/gh-pages-root/playwright | sort -r); do
-              [ "$dateDir" = "index.html" ] && continue
-              [ -d "out/gh-pages-root/playwright/$dateDir" ] || continue
-              echo "<h2>$dateDir</h2>" >> $INDEX
-              echo "<ul>" >> $INDEX
-
-              for runDir in $(ls -1 "out/gh-pages-root/playwright/$dateDir" | sort -r); do
-                [ -d "out/gh-pages-root/playwright/$dateDir/$runDir" ] || continue
-                statusFile="out/gh-pages-root/playwright/$dateDir/$runDir/status.txt"
-                commitFile="out/gh-pages-root/playwright/$dateDir/$runDir/commit.txt"
-                branchFile="out/gh-pages-root/playwright/$dateDir/$runDir/branch.txt"
-                status="unknown"
-                if [ -f "$statusFile" ]; then
-                  status=$(tr -d '\n\r' < "$statusFile")
-                fi
-
-                shaShort="unknown"
-                if [ -f "$commitFile" ]; then
-                  shaShort=$(tr -d '\n\r' < "$commitFile" | cut -c1-7)
-                fi
-
-                branchName="unknown"
-                if [ -f "$branchFile" ]; then
-                  branchName=$(tr -d '\n\r' < "$branchFile")
-                fi
-
-                icon="❔"
-                if [ "$status" = "passed" ]; then
-                  icon="✅"
-                elif [ "$status" = "failed" ]; then
-                  icon="❌"
-                fi
-
-                echo "  <li>$icon <a href=\"$dateDir/$runDir/\">test $runDir ($shaShort - $branchName)</a></li>" >> $INDEX
-              done
-
-              echo "</ul>" >> $INDEX
-            done
-          else
-            echo "<p>No reports yet.</p>" >> $INDEX
-          fi
-
-          cat >> $INDEX << 'EOF'
-            </body>
-          </html>
-          EOF
-
-      # Persist the accumulated report history so next runs can append and re-index.
-      - name: Commit updated reports to gh-pages branch
+      - name: Publish report to GitHub Pages
         if: ${{ always() }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
-          set -euo pipefail
-          cd out
-
-          if [ ! -d .git ]; then
-            git init
-            git checkout -b gh-pages
-            git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          else
-            git checkout gh-pages || git checkout -b gh-pages
-          fi
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          git add -A
-          git commit -m "Update Playwright report: ${RUN_DATE}/${RUN_ID}" || echo "No changes to commit"
-          git push origin gh-pages
+          bash scripts/publish-report.sh \
+            "playwright" \
+            "Playwright" \
+            "client-web/playwright-report" \
+            "${{ steps.playwright.outcome }}"
 
       - name: Fail job if Playwright tests failed
         if: ${{ steps.playwright.outcome == 'failure' }}
