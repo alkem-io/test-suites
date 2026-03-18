@@ -19,16 +19,6 @@ const project = (name: string, include: string[]) => ({
   },
 });
 
-const now = new Date();
-const timestamp = [
-  now.getFullYear(),
-  String(now.getMonth() + 1).padStart(2, '0'),
-  String(now.getDate()).padStart(2, '0'),
-  String(now.getHours()).padStart(2, '0'),
-  String(now.getMinutes()).padStart(2, '0'),
-  String(now.getSeconds()).padStart(2, '0'),
-].join('-');
-
 export default defineConfig({
   resolve: {
     alias: {
@@ -52,7 +42,7 @@ export default defineConfig({
     setupFiles: ['./src/setupTests.ts'],
     reporters: ['html'],
     outputFile: {
-      html: `./html-report/report_${timestamp}.html`,
+      html: './html-report/index.html',
     },
     projects: [
       project('account', ['src/functional-api/account/**/*.it-spec.ts']),
