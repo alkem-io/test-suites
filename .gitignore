@@ -79,4 +79,4 @@ web_modules/
 client-web/.auth/
 
 # local files
-client-web/.auth/
+.auth/
