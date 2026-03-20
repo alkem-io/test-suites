@@ -29,7 +29,7 @@ import {
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
 const uniqueId = UniqueIDGenerator.getID();
-const isTravis = process.env.TRAVIS === 'true';
+const isCI = !!process.env.CI;
 
 let refId = '';
 let visualId = '';
@@ -183,7 +183,7 @@ describe('Upload document', () => {
     );
   });
 
-  if (!isTravis) {
+  if (!isCI) {
     test('read uploaded file', async () => {
       const res = await uploadFileOnRef(
         path.join(__dirname, 'files-to-upload', 'image.png'),
@@ -394,7 +394,7 @@ describe('Upload visual tests', () => {
       ])
     );
   });
-  if (!isTravis) {
+  if (!isCI) {
     test('read uploaded visual', async () => {
       const res = await uploadImageOnVisual(
         path.join(__dirname, 'files-to-upload', '190-410.jpg'),
