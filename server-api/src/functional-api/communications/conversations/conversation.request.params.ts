@@ -99,6 +99,48 @@ export const removeConversationMember = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
+export const deleteConversation = async (
+  conversationID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.DeleteConversation(
+      {
+        deleteData: {
+          ID: conversationID,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const assignConversationMember = async (
+  conversationID: string,
+  memberID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.AssignConversationMember(
+      {
+        memberData: {
+          conversationID,
+          memberID,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
 export const getMeConversations = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {

@@ -43561,6 +43561,14 @@ export type AddReactionToMessageInRoomMutation = {
   };
 };
 
+export type AssignConversationMemberMutationVariables = Exact<{
+  memberData: AssignConversationMemberInput;
+}>;
+
+export type AssignConversationMemberMutation = {
+  assignConversationMember: boolean;
+};
+
 export type CreateConversationMutationVariables = Exact<{
   conversationData: CreateConversationInput;
 }>;
@@ -43659,6 +43667,12 @@ export type CreateDiscussionMutation = {
       | undefined;
   };
 };
+
+export type DeleteConversationMutationVariables = Exact<{
+  deleteData: DeleteConversationInput;
+}>;
+
+export type DeleteConversationMutation = { deleteConversation: { id: string } };
 
 export type DeleteDiscussionMutationVariables = Exact<{
   deleteData: DeleteDiscussionInput;
@@ -87994,6 +88008,90 @@ export type VirtualContributorStorageConfigQuery = {
                 };
               }
             | undefined;
+        }
+      | undefined;
+  };
+};
+
+export type ConversationEventsSubscriptionVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type ConversationEventsSubscription = {
+  conversationEvents: {
+    eventType: ConversationEventType;
+    conversationCreated?:
+      | {
+          conversation: {
+            id: string;
+            members: Array<{
+              id: string;
+              type: ActorType;
+              profile?: { id: string; displayName: string } | undefined;
+            }>;
+            room?:
+              | {
+                  id: string;
+                  displayName: string;
+                  avatarUrl?: string | undefined;
+                  type: RoomType;
+                }
+              | undefined;
+          };
+          message?: { id: any; message: any } | undefined;
+        }
+      | undefined;
+    conversationDeleted?: { conversationID: string } | undefined;
+    conversationUpdated?:
+      | {
+          conversation: {
+            id: string;
+            members: Array<{ id: string; type: ActorType }>;
+            room?:
+              | {
+                  id: string;
+                  displayName: string;
+                  avatarUrl?: string | undefined;
+                  type: RoomType;
+                }
+              | undefined;
+          };
+        }
+      | undefined;
+    memberAdded?:
+      | {
+          conversation: {
+            id: string;
+            members: Array<{
+              id: string;
+              type: ActorType;
+              profile?: { id: string; displayName: string } | undefined;
+            }>;
+          };
+          addedMember: {
+            id: string;
+            type: ActorType;
+            profile?: { id: string; displayName: string } | undefined;
+          };
+        }
+      | undefined;
+    memberRemoved?:
+      | {
+          removedMemberID: string;
+          conversation: {
+            id: string;
+            members: Array<{ id: string; type: ActorType }>;
+          };
+        }
+      | undefined;
+    messageReceived?:
+      | {
+          roomId: string;
+          message: {
+            id: any;
+            message: any;
+            sender?: { id: string } | undefined;
+          };
         }
       | undefined;
   };

@@ -47914,6 +47914,14 @@ export type AddReactionToMessageInRoomMutation = {
   };
 };
 
+export type AssignConversationMemberMutationVariables = SchemaTypes.Exact<{
+  memberData: SchemaTypes.AssignConversationMemberInput;
+}>;
+
+export type AssignConversationMemberMutation = {
+  assignConversationMember: boolean;
+};
+
 export type CreateConversationMutationVariables = SchemaTypes.Exact<{
   conversationData: SchemaTypes.CreateConversationInput;
 }>;
@@ -48012,6 +48020,12 @@ export type CreateDiscussionMutation = {
       | undefined;
   };
 };
+
+export type DeleteConversationMutationVariables = SchemaTypes.Exact<{
+  deleteData: SchemaTypes.DeleteConversationInput;
+}>;
+
+export type DeleteConversationMutation = { deleteConversation: { id: string } };
 
 export type DeleteDiscussionMutationVariables = SchemaTypes.Exact<{
   deleteData: SchemaTypes.DeleteDiscussionInput;
@@ -95622,6 +95636,90 @@ export type VirtualContributorStorageConfigQuery = {
   };
 };
 
+export type ConversationEventsSubscriptionVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type ConversationEventsSubscription = {
+  conversationEvents: {
+    eventType: SchemaTypes.ConversationEventType;
+    conversationCreated?:
+      | {
+          conversation: {
+            id: string;
+            members: Array<{
+              id: string;
+              type: SchemaTypes.ActorType;
+              profile?: { id: string; displayName: string } | undefined;
+            }>;
+            room?:
+              | {
+                  id: string;
+                  displayName: string;
+                  avatarUrl?: string | undefined;
+                  type: SchemaTypes.RoomType;
+                }
+              | undefined;
+          };
+          message?: { id: any; message: any } | undefined;
+        }
+      | undefined;
+    conversationDeleted?: { conversationID: string } | undefined;
+    conversationUpdated?:
+      | {
+          conversation: {
+            id: string;
+            members: Array<{ id: string; type: SchemaTypes.ActorType }>;
+            room?:
+              | {
+                  id: string;
+                  displayName: string;
+                  avatarUrl?: string | undefined;
+                  type: SchemaTypes.RoomType;
+                }
+              | undefined;
+          };
+        }
+      | undefined;
+    memberAdded?:
+      | {
+          conversation: {
+            id: string;
+            members: Array<{
+              id: string;
+              type: SchemaTypes.ActorType;
+              profile?: { id: string; displayName: string } | undefined;
+            }>;
+          };
+          addedMember: {
+            id: string;
+            type: SchemaTypes.ActorType;
+            profile?: { id: string; displayName: string } | undefined;
+          };
+        }
+      | undefined;
+    memberRemoved?:
+      | {
+          removedMemberID: string;
+          conversation: {
+            id: string;
+            members: Array<{ id: string; type: SchemaTypes.ActorType }>;
+          };
+        }
+      | undefined;
+    messageReceived?:
+      | {
+          roomId: string;
+          message: {
+            id: any;
+            message: any;
+            sender?: { id: string } | undefined;
+          };
+        }
+      | undefined;
+  };
+};
+
 export const UserDataLightFragmentDoc = gql`
   fragment UserDataLight on User {
     id
@@ -97811,6 +97909,13 @@ export const AddReactionToMessageInRoomDocument = gql`
     }
   }
 `;
+export const AssignConversationMemberDocument = gql`
+  mutation AssignConversationMember(
+    $memberData: AssignConversationMemberInput!
+  ) {
+    assignConversationMember(memberData: $memberData)
+  }
+`;
 export const CreateConversationDocument = gql`
   mutation CreateConversation($conversationData: CreateConversationInput!) {
     createConversation(conversationData: $conversationData) {
@@ -97842,6 +97947,13 @@ export const CreateDiscussionDocument = gql`
     }
   }
   ${CommunicationsDiscussionDataFragmentDoc}
+`;
+export const DeleteConversationDocument = gql`
+  mutation DeleteConversation($deleteData: DeleteConversationInput!) {
+    deleteConversation(deleteData: $deleteData) {
+      id
+    }
+  }
 `;
 export const DeleteDiscussionDocument = gql`
   mutation DeleteDiscussion($deleteData: DeleteDiscussionInput!) {
@@ -100220,6 +100332,95 @@ export const VirtualContributorStorageConfigDocument = gql`
   }
   ${ProfileStorageConfigFragmentDoc}
 `;
+export const ConversationEventsDocument = gql`
+  subscription ConversationEvents {
+    conversationEvents {
+      eventType
+      conversationCreated {
+        conversation {
+          id
+          members {
+            id
+            type
+            profile {
+              id
+              displayName
+            }
+          }
+          room {
+            id
+            displayName
+            avatarUrl
+            type
+          }
+        }
+        message {
+          id
+          message
+        }
+      }
+      conversationDeleted {
+        conversationID
+      }
+      conversationUpdated {
+        conversation {
+          id
+          members {
+            id
+            type
+          }
+          room {
+            id
+            displayName
+            avatarUrl
+            type
+          }
+        }
+      }
+      memberAdded {
+        conversation {
+          id
+          members {
+            id
+            type
+            profile {
+              id
+              displayName
+            }
+          }
+        }
+        addedMember {
+          id
+          type
+          profile {
+            id
+            displayName
+          }
+        }
+      }
+      memberRemoved {
+        conversation {
+          id
+          members {
+            id
+            type
+          }
+        }
+        removedMemberID
+      }
+      messageReceived {
+        roomId
+        message {
+          id
+          message
+          sender {
+            id
+          }
+        }
+      }
+    }
+  }
+`;
 
 export type SdkFunctionWrapper = <T>(
   action: (requestHeaders?: Record<string, string>) => Promise<T>,
@@ -100304,8 +100505,12 @@ const TransferCalloutDocumentString = print(TransferCalloutDocument);
 const AddReactionToMessageInRoomDocumentString = print(
   AddReactionToMessageInRoomDocument
 );
+const AssignConversationMemberDocumentString = print(
+  AssignConversationMemberDocument
+);
 const CreateConversationDocumentString = print(CreateConversationDocument);
 const CreateDiscussionDocumentString = print(CreateDiscussionDocument);
+const DeleteConversationDocumentString = print(DeleteConversationDocument);
 const DeleteDiscussionDocumentString = print(DeleteDiscussionDocument);
 const LeaveConversationDocumentString = print(LeaveConversationDocument);
 const RemoveConversationMemberDocumentString = print(
@@ -100547,6 +100752,7 @@ const VirtualContributorKnowledgeStorageConfigDocumentString = print(
 const VirtualContributorStorageConfigDocumentString = print(
   VirtualContributorStorageConfigDocument
 );
+const ConversationEventsDocumentString = print(ConversationEventsDocument);
 export function getSdk(
   client: GraphQLClient,
   withWrapper: SdkFunctionWrapper = defaultWrapper
@@ -101256,6 +101462,28 @@ export function getSdk(
         variables
       );
     },
+    AssignConversationMember(
+      variables: SchemaTypes.AssignConversationMemberMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AssignConversationMemberMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AssignConversationMemberMutation>(
+            AssignConversationMemberDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "AssignConversationMember",
+        "mutation",
+        variables
+      );
+    },
     CreateConversation(
       variables: SchemaTypes.CreateConversationMutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -101296,6 +101524,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "CreateDiscussion",
+        "mutation",
+        variables
+      );
+    },
+    DeleteConversation(
+      variables: SchemaTypes.DeleteConversationMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.DeleteConversationMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.DeleteConversationMutation>(
+            DeleteConversationDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "DeleteConversation",
         "mutation",
         variables
       );
@@ -104179,6 +104429,28 @@ export function getSdk(
           ),
         "VirtualContributorStorageConfig",
         "query",
+        variables
+      );
+    },
+    ConversationEvents(
+      variables?: SchemaTypes.ConversationEventsSubscriptionVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ConversationEventsSubscription;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ConversationEventsSubscription>(
+            ConversationEventsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ConversationEvents",
+        "subscription",
         variables
       );
     },
