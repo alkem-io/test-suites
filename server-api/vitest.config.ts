@@ -52,6 +52,9 @@ export default defineConfig({
       project('communication', [
         'src/functional-api/communications/**/*.it-spec.ts',
       ]),
+      project('conversations', [
+        'src/functional-api/communications/conversations/**/*.it-spec.ts',
+      ]),
       project('configuration', [
         'src/functional-api/configuration/**/*.it-spec.ts',
       ]),
