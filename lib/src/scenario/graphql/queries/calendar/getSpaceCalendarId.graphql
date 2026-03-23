@@ -1,0 +1,13 @@
+query GetSpaceCalendarId($spaceId: UUID!) {
+  lookup {
+    space(ID: $spaceId) {
+      collaboration {
+        timeline {
+          calendar {
+            id
+          }
+        }
+      }
+    }
+  }
+}

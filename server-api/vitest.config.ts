@@ -108,6 +108,7 @@ export default defineConfig({
         'src/functional-api/subscriptions/**/*.it-spec.ts',
       ]),
       project('templates', ['src/functional-api/templates/**/*.it-spec.ts']),
+      project('calendar', ['src/functional-api/calendar/**/*.it-spec.ts']),
       project('graphql-guard', [
         'src/functional-api/graphql-guard/**/*.it-spec.ts',
       ]),
@@ -122,6 +123,7 @@ export default defineConfig({
         'src/functional-api/storage/**/*.it-spec.ts',
         'src/functional-api/entitlements/**/*.it-spec.ts',
         'src/functional-api/templates/**/*.it-spec.ts',
+        'src/functional-api/calendar/**/*.it-spec.ts',
       ]),
     ],
   },
