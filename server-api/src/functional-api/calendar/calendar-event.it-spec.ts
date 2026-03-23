@@ -43,19 +43,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
-describe('Calendar Events - CRUD', () => {
-  let timedEventId: string;
-  let wholeDayEventId: string;
-
-  afterAll(async () => {
-    if (timedEventId) {
-      await deleteCalendarEvent(timedEventId);
-    }
-    if (wholeDayEventId) {
-      await deleteCalendarEvent(wholeDayEventId);
-    }
-  });
-
+describe('Calendar Events - Create', () => {
   test('should create a timed calendar event', async () => {
     const res = await createCalendarEventOnCalendar(calendarId, {
       displayName: `Timed Event ${uniqueId}`,
@@ -79,7 +67,7 @@ describe('Calendar Events - CRUD', () => {
     expect(event?.durationMinutes).toBe(120);
     expect(event?.type).toBe(CalendarEventType.Event);
 
-    timedEventId = event!.id;
+    await deleteCalendarEvent(event!.id);
   });
 
   test('should create a whole-day calendar event', async () => {
@@ -94,19 +82,12 @@ describe('Calendar Events - CRUD', () => {
       type: CalendarEventType.Event,
     });
 
-    if (res.error) {
-      console.error(
-        'Whole-day event creation error:',
-        JSON.stringify(res.error, null, 2)
-      );
-    }
-
     const event = res.data?.createEventOnCalendar;
     expect(event).toBeDefined();
     expect(event?.id).toBeDefined();
     expect(event?.wholeDay).toBe(true);
 
-    wholeDayEventId = event!.id;
+    await deleteCalendarEvent(event!.id);
   });
 
   test('should create a multi-day calendar event', async () => {
@@ -121,13 +102,6 @@ describe('Calendar Events - CRUD', () => {
       type: CalendarEventType.Training,
     });
 
-    if (res.error) {
-      console.error(
-        'Multi-day event creation error:',
-        JSON.stringify(res.error, null, 2)
-      );
-    }
-
     const event = res.data?.createEventOnCalendar;
     expect(event).toBeDefined();
     expect(event?.multipleDays).toBe(true);
@@ -136,28 +110,45 @@ describe('Calendar Events - CRUD', () => {
 
     await deleteCalendarEvent(event!.id);
   });
+});
+
+describe('Calendar Events - Query, Update, Delete', () => {
+  let timedEventId: string;
+
+  beforeAll(async () => {
+    const res = await createCalendarEventOnCalendar(calendarId, {
+      displayName: `CRUD Timed Event ${uniqueId}`,
+      description: 'A timed test event',
+      startDate: '2026-04-15T14:00:00.000Z',
+      durationMinutes: 120,
+      multipleDays: false,
+      wholeDay: false,
+      type: CalendarEventType.Event,
+      location: {
+        city: 'Amsterdam',
+        country: 'Netherlands',
+      },
+    });
+    const event = res.data?.createEventOnCalendar;
+    expect(event?.id).toBeDefined();
+    timedEventId = event!.id;
+  });
+
+  afterAll(async () => {
+    if (timedEventId) await deleteCalendarEvent(timedEventId);
+  });
 
   test('should query calendar events for a space', async () => {
-    expect(timedEventId).toBeDefined();
-
     const res = await getCalendarEvents(baseScenario.space.id);
 
-    if (res.error) {
-      console.error(
-        'Query calendar events error:',
-        JSON.stringify(res.error, null, 2)
-      );
-    }
-
-    const calendar =
-      res.data?.lookup?.space?.collaboration?.timeline?.calendar;
+    const calendar = res.data?.lookup?.space?.collaboration?.timeline?.calendar;
     expect(calendar).toBeDefined();
     expect(calendar?.events).toBeDefined();
     expect(calendar!.events.length).toBeGreaterThanOrEqual(1);
 
     const timedEvent = calendar!.events.find(e => e.id === timedEventId);
     expect(timedEvent).toBeDefined();
-    expect(timedEvent?.profile.displayName).toContain('Timed Event');
+    expect(timedEvent?.profile.displayName).toContain('CRUD Timed Event');
   });
 
   test('should query a single calendar event by ID', async () => {
@@ -165,7 +156,7 @@ describe('Calendar Events - CRUD', () => {
     const event = res.data?.lookup?.calendarEvent;
     expect(event).toBeDefined();
     expect(event?.id).toBe(timedEventId);
-    expect(event?.profile.displayName).toContain('Timed Event');
+    expect(event?.profile.displayName).toContain('CRUD Timed Event');
   });
 
   test('should update a calendar event', async () => {
@@ -184,9 +175,7 @@ describe('Calendar Events - CRUD', () => {
 
     const event = res.data?.updateCalendarEvent;
     expect(event).toBeDefined();
-    expect(event?.profile.displayName).toBe(
-      `Updated Timed Event ${uniqueId}`
-    );
+    expect(event?.profile.displayName).toBe(`Updated Timed Event ${uniqueId}`);
     expect(event?.durationMinutes).toBe(60);
   });
 
@@ -229,7 +218,9 @@ describe('Calendar Events - Add to Calendar URLs', () => {
         country: 'Netherlands',
       },
     });
-    timedEventId = timedRes.data?.createEventOnCalendar?.id ?? '';
+    const timedEvent = timedRes.data?.createEventOnCalendar;
+    expect(timedEvent?.id).toBeDefined();
+    timedEventId = timedEvent!.id;
 
     const wholeDayRes = await createCalendarEventOnCalendar(calendarId, {
       displayName: `URL Whole Day ${uniqueId}`,
@@ -241,7 +232,9 @@ describe('Calendar Events - Add to Calendar URLs', () => {
       wholeDay: true,
       type: CalendarEventType.Event,
     });
-    wholeDayEventId = wholeDayRes.data?.createEventOnCalendar?.id ?? '';
+    const wholeDayEvent = wholeDayRes.data?.createEventOnCalendar;
+    expect(wholeDayEvent?.id).toBeDefined();
+    wholeDayEventId = wholeDayEvent!.id;
   });
 
   afterAll(async () => {
@@ -282,10 +275,6 @@ describe('Calendar Events - Add to Calendar URLs', () => {
   });
 
   test('should return calendar URLs for a whole-day event', async () => {
-    if (!wholeDayEventId) {
-      console.warn('Skipping: whole-day event was not created');
-      return;
-    }
     const res = await getCalendarEventById(wholeDayEventId);
     const event = res.data?.lookup?.calendarEvent;
 
@@ -323,7 +312,9 @@ describe('Calendar Events - ICS Download', () => {
         country: 'Germany',
       },
     });
-    eventId = res.data?.createEventOnCalendar?.id ?? '';
+    const event = res.data?.createEventOnCalendar;
+    expect(event?.id).toBeDefined();
+    eventId = event!.id;
 
     const wholeDayRes = await createCalendarEventOnCalendar(calendarId, {
       displayName: `ICS Whole Day ${uniqueId}`,
@@ -334,7 +325,9 @@ describe('Calendar Events - ICS Download', () => {
       multipleDays: false,
       wholeDay: true,
     });
-    wholeDayEventId = wholeDayRes.data?.createEventOnCalendar?.id ?? '';
+    const wholeDayEvent = wholeDayRes.data?.createEventOnCalendar;
+    expect(wholeDayEvent?.id).toBeDefined();
+    wholeDayEventId = wholeDayEvent!.id;
   });
 
   afterAll(async () => {
@@ -376,7 +369,9 @@ describe('Calendar Events - Authorization', () => {
       multipleDays: false,
       wholeDay: false,
     });
-    eventId = res.data?.createEventOnCalendar?.id ?? '';
+    const event = res.data?.createEventOnCalendar;
+    expect(event?.id).toBeDefined();
+    eventId = event!.id;
   });
 
   afterAll(async () => {
@@ -393,7 +388,7 @@ describe('Calendar Events - Authorization', () => {
         multipleDays: false,
         wholeDay: false,
       },
-      TestUser.GLOBAL_ADMIN
+      TestUser.SPACE_ADMIN
     );
     const event = res.data?.createEventOnCalendar;
     expect(event).toBeDefined();
@@ -419,24 +414,12 @@ describe('Calendar Events - Authorization', () => {
   });
 
   // ICS REST endpoint uses cookie/session auth (RestGuard), not Bearer tokens.
-  // Both unauthenticated and Bearer-token requests get a 302 redirect.
-  // TODO: Add session cookie auth tests once test framework supports it.
-  // Spec note (User Story 3): unauthenticated users should be able to
-  // download .ics files — this is not yet validated due to auth limitations.
-  test('should redirect unauthenticated ICS download to login', async () => {
-    const response = await downloadIcsFile(eventId);
-
-    expect(response.status).toBe(302);
-    expect(response.redirectUrl).toBeDefined();
-    expect(response.redirectUrl).toContain('/login');
-  });
-
-  test('should redirect Bearer-token ICS download (session auth required)', async () => {
-    const response = await downloadIcsFile(eventId, TestUser.GLOBAL_ADMIN);
-
-    expect(response.status).toBe(302);
-    expect(response.redirectUrl).toBeDefined();
-  });
+  // Both unauthenticated and Bearer-token requests currently get a 302 redirect.
+  // Per spec (User Story 3): unauthenticated users should be able to download
+  // .ics files. These tests are blocked until the test framework supports
+  // Kratos session cookie auth or the endpoint allows anonymous access.
+  test.todo('should allow unauthenticated ICS download (spec: User Story 3)');
+  test.todo('should allow authenticated ICS download with session cookie');
 });
 
 describe('Calendar Events - Event Types', () => {

@@ -1,5 +1,6 @@
 import { readFileSync } from 'fs';
-import { resolve } from 'path';
+import { dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
 import { TestUser, testConfiguration, TestUserManager } from '@alkemio/tests-lib';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import { CalendarEventType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
@@ -84,6 +85,8 @@ interface GetCalendarEventByIdResponse {
 
 // --- Load .graphql files from lib ---
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 const libGraphqlPath = resolve(__dirname, '../../../../lib/src/scenario/graphql');
 
 const loadQuery = (relativePath: string) =>
@@ -214,7 +217,11 @@ export const updateCalendarEvent = async (
     nameID: options.nameID,
   };
 
-  if (options.displayName || options.description || options.location) {
+  if (
+    options.displayName !== undefined ||
+    options.description !== undefined ||
+    options.location !== undefined
+  ) {
     eventData.profileData = {
       displayName: options.displayName,
       description: options.description,
