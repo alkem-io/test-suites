@@ -189,9 +189,10 @@ export class TestScenarioFactory {
         baseScenario.subsubspace,
         "l2-" + baseScenario.name
       );
-    } catch (e) {
+    } catch (e: any) {
       LogManager.getLogger().error(
-        `Unable to create core scenario setup: ${e}`
+        `Unable to create core scenario setup: ${e}`,
+        e?.stack
       );
       process.exit(1); // Exit the Jest process with an error code.
       //throw new Error(`Unable to create core scenario setup: ${e}`);

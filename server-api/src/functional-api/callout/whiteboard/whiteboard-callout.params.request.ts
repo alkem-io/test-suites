@@ -1,4 +1,5 @@
-import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
+import { getGraphqlClient } from '@alkemio/tests-lib/utils/graphqlClient';
+import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import {
   CalloutAllowedActors,
   CalloutFramingType,
@@ -26,7 +27,7 @@ export const createWhiteboardCallout = async (
             },
             whiteboard: {
               content:
-                '{"type":"excalidraw","version":2,"source":"https://excalidraw.com","elements":[],"appState":{"gridSize":null,"viewBackgroundColor":"#ffffff"}}',
+                '{"type":"excalidraw","version":2,"source":"https://excalidraw.com","elements":[],"appState":{"gridSize":null,"viewBackgroundColor":"#ffffff"},"files":{}}',
               profile: {
                 displayName: 'whiteboard',
               },

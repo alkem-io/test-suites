@@ -8,26 +8,15 @@ const resolve = (...segments: string[]) => path.resolve(__dirname, ...segments);
 /**
  * Helper to define a named project. Each project:
  * - Inherits root config (plugins, environment, globals, timeout, setupFiles, reporters)
- * - Overrides globalSetup to [] so it only runs once from the root project
+ * - Inherits globalSetup from root; the setup file guards against duplicate invocations
  */
 const project = (name: string, include: string[]) => ({
   extends: true as const,
   test: {
     name,
     include,
-    globalSetup: [] as string[],
   },
 });
-
-const now = new Date();
-const timestamp = [
-  now.getFullYear(),
-  String(now.getMonth() + 1).padStart(2, '0'),
-  String(now.getDate()).padStart(2, '0'),
-  String(now.getHours()).padStart(2, '0'),
-  String(now.getMinutes()).padStart(2, '0'),
-  String(now.getSeconds()).padStart(2, '0'),
-].join('-');
 
 export default defineConfig({
   resolve: {
@@ -50,9 +39,9 @@ export default defineConfig({
     hookTimeout: 120_000, // beforeAll hooks create multiple entities via API, so they need more headroom
     globalSetup: './src/globalTestsSetup.ts',
     setupFiles: ['./src/setupTests.ts'],
-    reporters: ['html'],
+    reporters: ['default', 'html'],
     outputFile: {
-      html: `./html-report/report_${timestamp}.html`,
+      html: './html-report/index.html',
     },
     projects: [
       project('account', ['src/functional-api/account/**/*.it-spec.ts']),
@@ -62,6 +51,9 @@ export default defineConfig({
       project('callouts', ['src/functional-api/callout/**/*.it-spec.ts']),
       project('communication', [
         'src/functional-api/communications/**/*.it-spec.ts',
+      ]),
+      project('conversations', [
+        'src/functional-api/communications/conversations/**/*.it-spec.ts',
       ]),
       project('configuration', [
         'src/functional-api/configuration/**/*.it-spec.ts',

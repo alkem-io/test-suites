@@ -1,0 +1,23 @@
+{
+  "name": "excalidraw-loadtest",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "tsx stress-test.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.5",
+    "typescript": "^5.8.3"
+  },
+  "private": true,
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "nodeplotlib": "^1.1.2",
+    "socket.io-client": "^4.8.1",
+    "tsx": "^4.20.3"
+  }
+}

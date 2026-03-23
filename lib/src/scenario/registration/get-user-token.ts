@@ -22,10 +22,11 @@ export const getUserToken = async (userEmail: string) => {
   const alkemioClient = new AlkemioClient(alkemioClientConfig);
   try {
     await alkemioClient.enableAuthentication();
-  } catch (e) {
+  } catch (e: any) {
     LogManager.getLogger().error(
       (e as Error).message,
-      `>> identifier: ${userEmail}`
+      `>> identifier: ${userEmail}`,
+      e?.stack
     );
     throw new Error(
       `Unable to retrieve access token for user ${userEmail}: ${e}`

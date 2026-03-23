@@ -1,28 +1,17 @@
-import request from 'supertest';
+import axios from 'axios';
 import { Configuration, IdentityApi, FrontendApi } from '@ory/kratos-client';
 import { testConfiguration } from '../../config/test.configuration';
 import { delay } from '../../utils/delay';
 import { getMails } from '../../utils/mailslurper.rest.requests';
 
-
 /***
- * Verification flow on v0.8.0-alpha3
- * 1. AJAX call to request a verification flow
- * 2. AJAX call submit the data need for the verification flow in the body
- * and flowId in the URL params
- * 3. After a successful claim for a verification Code
- * a message field is attached to the body of the flow, stating
- * that an email is sent to the provided email address
- * 4. GET request on the verification Code in the email verifies the account
- * and the response is 303 (i'm pretty sure it has to be 200 for API clients)
+ * Verification flow (link method)
+ * 1. Create a native verification flow
+ * 2. Submit email with method "link" — Kratos sends a verification link
+ * 3. Fetch the verification email from mail slurper
+ * 4. Extract the verification URL and GET it to complete verification
  *
- * Exception can be thrown on
- * <ul>
- *  <li>Verification Code expired</li>
- *  <li>Some other error</li>
- * </ul>
- *
- * @see https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation#verification-for-client-side-ajax-browser-clients
+ * @see https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation
  */
 export const verifyInKratosOrFail = async (email: string) => {
   const kratosConfig = new Configuration({
@@ -49,71 +38,88 @@ export const verifyInKratosOrFail = async (email: string) => {
     flow: flowId,
     updateVerificationFlowBody: {
       email,
-      method: 'code',
+      method: 'link',
     },
   });
 
   const verifyMessages = messages ?? [];
-  const isCodeSent = !!verifyMessages.find(
-    x => x.text.indexOf('verification code has been sent') > -1
+  const isLinkSent = !!verifyMessages.find(
+    x =>
+      x.text.indexOf('verification link has been sent') > -1 ||
+      x.text.indexOf('verification code has been sent') > -1
   );
 
-  if (!isCodeSent) {
+  if (!isLinkSent) {
     const expireMsg = verifyMessages.find(x => x.text.indexOf('flow expired'));
 
     if (expireMsg) {
       throw new Error(expireMsg.text);
     }
 
-    const messages = verifyMessages.map(x => x.text).join('\n');
-    throw new Error(`Code is not sent for user '${email}: ${messages}'`);
+    const msgs = verifyMessages.map(x => x.text).join('\n');
+    throw new Error(`Verification not sent for user '${email}': ${msgs}`);
   }
 
-  // wait for the email to be sent
+  // wait for the email to arrive
   await delay(1100);
-  const verificationCode = await getVerificationCode();
+  const verificationLink = await getVerificationLink(email);
 
-  if (!verificationCode) {
-    throw new Error(`Unable to fetch verification Code for user '${email}'`);
+  if (!verificationLink) {
+    throw new Error(`Unable to fetch verification link for user '${email}'`);
   }
 
-  const isVerified = await verifyAccount(verificationCode, email);
+  const isVerified = await verifyAccount(verificationLink);
 
   if (!isVerified) {
-    throw new Error(`Unable to verify user from Code for user '${email}'`);
+    throw new Error(`Unable to verify user '${email}' via link`);
   }
 };
 
-const verifyAccount = async (
-  verificationCode: string,
-  email: string
-): Promise<boolean> =>
-  request(verificationCode)
-    .post('')
-    .send({ email, method: 'code' })
-    .set('Accept', 'application/json')
-    // i'm pretty sure it has to be 200 for API clients
-    .then(x => x.status === 200);
+/**
+ * GET the verification link URL to complete verification.
+ * Kratos link verification is triggered by visiting the URL.
+ * Uses axios instead of supertest since it handles external HTTPS + redirects.
+ */
+const verifyAccount = async (verificationLink: string): Promise<boolean> =>
+  axios
+    .get(verificationLink, {
+      maxRedirects: 5,
+      validateStatus: () => true,
+      timeout: 30000,
+    })
+    .then(res => res.status === 200 || res.status === 303 || res.status === 302);
 
-const getVerificationCode = async () =>
+/**
+ * Fetch verification email for a specific user from mail slurper
+ * and extract the verification link URL.
+ */
+const getVerificationLink = async (email: string): Promise<string> =>
   getMails()
-    .then(
-      x =>
-        x.body.mailItems
-          .filter(
-            (x: { subject: string }) =>
-              x.subject === '[Alkemio] Please verify your email address!'
-          )
-
-          .map((x: { body: string }) => x.body)[0]
-    )
-
     .then(x => {
-      const urlRegex = /(((https?:\/\/)|(https:\/\/)|(www\.))[^\s]+)/g;
-      const cleanText = x.replace(/<.*?>/gm, '');
+      const verificationEmail = x.body.mailItems
+        .filter(
+          (item: { subject: string; toAddresses: string[] }) =>
+            item.subject === '[Alkemio] Please verify your email address!' &&
+            item.toAddresses?.some(
+              (addr: string) => addr.toLowerCase() === email.toLowerCase()
+            )
+        )
+        .sort(
+          (a: { dateSent: string }, b: { dateSent: string }) =>
+            new Date(b.dateSent).getTime() - new Date(a.dateSent).getTime()
+        )[0];
 
-      const url = cleanText.match(urlRegex)?.[0]?.toString() ?? '';
-      return url.replace('&amp;', '&');
+      if (!verificationEmail) {
+        return '';
+      }
+      return verificationEmail.body as string;
+    })
+    .then(body => {
+      if (!body) return '';
+      // Extract href URLs from <a> tags and find the verification link
+      const hrefs = [...body.matchAll(/href="(https?:\/\/[^"]+)"/gi)]
+        .map(m => m[1].replace(/&amp;/g, '&'));
+      return hrefs.find(u => u.includes('/self-service/verification')) ?? '';
     })
     .catch(x => {
       throw new Error((x as Error)?.message);
