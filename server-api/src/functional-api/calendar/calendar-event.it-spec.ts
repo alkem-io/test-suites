@@ -26,6 +26,10 @@ const scenarioConfig: TestScenarioConfig = {
     collaboration: {
       addTutorialCallouts: false,
     },
+    community: {
+      admins: [TestUser.SPACE_ADMIN],
+      members: [TestUser.SPACE_ADMIN],
+    },
   },
 };
 
