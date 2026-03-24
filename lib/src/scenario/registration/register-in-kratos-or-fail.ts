@@ -46,7 +46,7 @@ export const registerInKratosOrFail = async (
   } = await ory.frontend.createNativeRegistrationFlow();
 
   // submit traits + password in a single step
-  await ory.frontend.updateRegistrationFlow({
+  const result = await ory.frontend.updateRegistrationFlow({
     flow: flowId,
     updateRegistrationFlowBody: {
       method: 'password',
@@ -54,4 +54,14 @@ export const registerInKratosOrFail = async (
       traits,
     },
   });
+
+  // Kratos auto-creates a verification flow after registration.
+  // Return its ID so callers can verify without creating a duplicate flow.
+  const continueWith = result.data.continue_with ?? [];
+  const verificationAction = continueWith.find(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (x: any) => x.action === 'show_verification_ui'
+  );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return { verificationFlowId: (verificationAction as any)?.flow?.id as string | undefined };
 };

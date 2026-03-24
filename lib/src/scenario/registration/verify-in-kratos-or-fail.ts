@@ -1,19 +1,27 @@
-import axios from 'axios';
 import { Configuration, IdentityApi, FrontendApi } from '@ory/kratos-client';
 import { testConfiguration } from '../../config/test.configuration';
 import { delay } from '../../utils/delay';
 import { getMails } from '../../utils/mailslurper.rest.requests';
 
 /***
- * Verification flow (link method)
+ * Verification flow (code method)
  * 1. Create a native verification flow
- * 2. Submit email with method "link" — Kratos sends a verification link
+ * 2. Submit email with method "code" — Kratos sends a verification code via email
  * 3. Fetch the verification email from mail slurper
- * 4. Extract the verification URL and GET it to complete verification
+ * 4. Extract the code and submit it back to complete verification
  *
  * @see https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation
  */
-export const verifyInKratosOrFail = async (email: string) => {
+/**
+ * @param email - user email to verify
+ * @param existingFlowId - optional flow ID from registration's `continue_with`.
+ *   When provided, skips creating a new flow and triggering a new email —
+ *   uses the code Kratos already sent during registration.
+ */
+export const verifyInKratosOrFail = async (
+  email: string,
+  existingFlowId?: string
+) => {
   const kratosConfig = new Configuration({
     basePath: testConfiguration.endPoints.kratos.public,
     baseOptions: {
@@ -26,74 +34,87 @@ export const verifyInKratosOrFail = async (email: string) => {
     frontend: new FrontendApi(kratosConfig),
   };
 
-  const {
-    data: { id: flowId },
-  } = await ory.frontend.createNativeVerificationFlow();
+  let flowId: string;
 
-  const {
-    data: {
-      ui: { messages },
-    },
-  } = await ory.frontend.updateVerificationFlow({
+  if (existingFlowId) {
+    // Reuse the verification flow that Kratos auto-created during registration.
+    // The verification email was already sent — no need to trigger another one.
+    flowId = existingFlowId;
+  } else {
+    // No flow from registration (e.g. user already existed).
+    // Create a new verification flow and trigger a verification email.
+    const {
+      data: { id: newFlowId },
+    } = await ory.frontend.createNativeVerificationFlow();
+    flowId = newFlowId;
+
+    const {
+      data: {
+        ui: { messages },
+      },
+    } = await ory.frontend.updateVerificationFlow({
+      flow: flowId,
+      updateVerificationFlowBody: {
+        email,
+        method: 'code',
+      },
+    });
+
+    const verifyMessages = messages ?? [];
+    const isCodeSent = !!verifyMessages.find(
+      x =>
+        x.text.indexOf('verification code has been sent') > -1 ||
+        x.text.indexOf('verification link has been sent') > -1
+    );
+
+    if (!isCodeSent) {
+      const expireMsg = verifyMessages.find(
+        x => x.text.indexOf('flow expired')
+      );
+
+      if (expireMsg) {
+        throw new Error(expireMsg.text);
+      }
+
+      const msgs = verifyMessages.map(x => x.text).join('\n');
+      throw new Error(`Verification not sent for user '${email}': ${msgs}`);
+    }
+  }
+
+  // Fetch the verification code from mail slurper
+  await delay(1100);
+  const verificationCode = await getVerificationCode(email);
+
+  if (!verificationCode) {
+    throw new Error(
+      `Unable to fetch verification code for user '${email}'`
+    );
+  }
+
+  // Submit the code to complete verification
+  const submitResult = await ory.frontend.updateVerificationFlow({
     flow: flowId,
     updateVerificationFlowBody: {
-      email,
-      method: 'link',
+      code: verificationCode,
+      method: 'code',
     },
   });
 
-  const verifyMessages = messages ?? [];
-  const isLinkSent = !!verifyMessages.find(
-    x =>
-      x.text.indexOf('verification link has been sent') > -1 ||
-      x.text.indexOf('verification code has been sent') > -1
-  );
-
-  if (!isLinkSent) {
-    const expireMsg = verifyMessages.find(x => x.text.indexOf('flow expired'));
-
-    if (expireMsg) {
-      throw new Error(expireMsg.text);
-    }
-
-    const msgs = verifyMessages.map(x => x.text).join('\n');
-    throw new Error(`Verification not sent for user '${email}': ${msgs}`);
-  }
-
-  // wait for the email to arrive
-  await delay(1100);
-  const verificationLink = await getVerificationLink(email);
-
-  if (!verificationLink) {
-    throw new Error(`Unable to fetch verification link for user '${email}'`);
-  }
-
-  const isVerified = await verifyAccount(verificationLink);
-
-  if (!isVerified) {
-    throw new Error(`Unable to verify user '${email}' via link`);
+  if (submitResult.data.state !== 'passed_challenge') {
+    const errorMsgs = (submitResult.data.ui.messages ?? [])
+      .map(x => x.text)
+      .join('\n');
+    throw new Error(
+      `Verification code rejected for user '${email}': ${errorMsgs}`
+    );
   }
 };
 
 /**
- * GET the verification link URL to complete verification.
- * Kratos link verification is triggered by visiting the URL.
- * Uses axios instead of supertest since it handles external HTTPS + redirects.
- */
-const verifyAccount = async (verificationLink: string): Promise<boolean> =>
-  axios
-    .get(verificationLink, {
-      maxRedirects: 5,
-      validateStatus: () => true,
-      timeout: 30000,
-    })
-    .then(res => res.status === 200 || res.status === 303 || res.status === 302);
-
-/**
  * Fetch verification email for a specific user from mail slurper
- * and extract the verification link URL.
+ * and extract the 6-digit verification code.
  */
-const getVerificationLink = async (email: string): Promise<string> =>
+const getVerificationCode = async (email: string): Promise<string> =>
   getMails()
     .then(x => {
       const verificationEmail = x.body.mailItems
@@ -116,10 +137,9 @@ const getVerificationLink = async (email: string): Promise<string> =>
     })
     .then(body => {
       if (!body) return '';
-      // Extract href URLs from <a> tags and find the verification link
-      const hrefs = [...body.matchAll(/href="(https?:\/\/[^"]+)"/gi)]
-        .map(m => m[1].replace(/&amp;/g, '&'));
-      return hrefs.find(u => u.includes('/self-service/verification')) ?? '';
+      // Extract 6-digit verification code from the email body
+      const codeMatch = body.match(/\b(\d{6})\b/);
+      return codeMatch ? codeMatch[1] : '';
     })
     .catch(x => {
       throw new Error((x as Error)?.message);
