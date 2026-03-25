@@ -1,10 +1,10 @@
 import { Locator, Page, expect } from '@playwright/test';
 
 export const clickOnEditWhiteboardPreview = async (page: Page): Promise<void> => {
-  const whiteboardContent = await page.getByText('Drawing canvas').last();
+  const whiteboardContent = page.getByText('Drawing canvas').last();
   await expect(whiteboardContent).toBeVisible();
   await whiteboardContent.locator('..').locator('..').locator('..')
-    .getByRole('button', { name: 'Edit' }).click();
+    .getByRole('button', { name: 'Edit', exact: true }).click();
 }
 
 export const getWhiteboardDialog = async (page: Page, title: string) => {
@@ -42,12 +42,19 @@ export const useTemplateInAWhiteboard = async (
 
   await page.getByRole('heading', { name: templateName, exact: true }).click();
 
-  const templateDialog = await page.getByRole('heading', { name: 'Preview — Test Whiteboard' }).locator('..').locator('..').locator('..');
+  // Wait for the template preview dialog and find it via the dialog role
+  const previewHeading = page.getByRole('heading', { name: 'Preview —', exact: false });
+  await expect(previewHeading.first()).toBeVisible();
+
+  const templateDialog = page
+    .getByRole('dialog')
+    .filter({ has: previewHeading })
+    .last();
   await expect(templateDialog.getByRole('heading', { name: templateName, exact: true })).toBeVisible();
   await templateDialog.getByRole('heading', { name: templateName, exact: true }).click();
   await templateDialog.getByRole('button', { name: 'Use' }).click();
 
-  await expect(templateDialog).not.toBeVisible();
+  await expect(previewHeading).not.toBeVisible();
 
 
 };
