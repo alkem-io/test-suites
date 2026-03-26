@@ -17,8 +17,8 @@ export const registerVerifiedUser = async (
   firstName: string,
   lastName: string
 ) => {
-  await registerInKratosOrFail(firstName, lastName, email);
-  await verifyInKratosOrFail(email);
+  const { verificationFlowId } = await registerInKratosOrFail(firstName, lastName, email);
+  await verifyInKratosOrFail(email, verificationFlowId);
   const userId = await registerInAlkemioOrFail(firstName, lastName, email);
   return userId;
 };

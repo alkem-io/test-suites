@@ -51,8 +51,10 @@ const getUserName = (userName: string): [string, string] => {
 const userRegisterFlow = async (userName: string) => {
   const [firstName, lastName] = getUserName(userName);
   const email = `${userName}@alkem.io`;
+  let verificationFlowId: string | undefined;
   try {
-    await registerInKratosOrFail(firstName, lastName, email);
+    const result = await registerInKratosOrFail(firstName, lastName, email);
+    verificationFlowId = result.verificationFlowId;
 
     LogManager.getLogger().info(`User ${email} registered in Kratos`);
   } catch (e: any) {
@@ -69,7 +71,7 @@ const userRegisterFlow = async (userName: string) => {
     }
   }
 
-  await verifyInKratosOrFail(email);
+  await verifyInKratosOrFail(email, verificationFlowId);
   LogManager.getLogger().info(`User ${email} verified`);
   try {
     await registerInAlkemioOrFail(firstName, lastName, email);

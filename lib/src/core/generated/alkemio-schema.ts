@@ -608,6 +608,11 @@ export enum ActorType {
   VirtualContributor = "VIRTUAL_CONTRIBUTOR",
 }
 
+export type AddPollOptionInput = {
+  pollID: Scalars["UUID"]["input"];
+  text: Scalars["String"]["input"];
+};
+
 export type AddVisualToMediaGalleryInput = {
   /** The ID of the media gallery. */
   mediaGalleryID: Scalars["String"]["input"];
@@ -870,6 +875,7 @@ export enum AuthorizationPolicyType {
   Organization = "ORGANIZATION",
   OrganizationVerification = "ORGANIZATION_VERIFICATION",
   Platform = "PLATFORM",
+  Poll = "POLL",
   Post = "POST",
   Profile = "PROFILE",
   Reference = "REFERENCE",
@@ -1129,6 +1135,11 @@ export type CalloutContributionsCountOutput = {
   whiteboard: Scalars["Float"]["output"];
 };
 
+export enum CalloutDescriptionDisplayMode {
+  Collapsed = "COLLAPSED",
+  Expanded = "EXPANDED",
+}
+
 export type CalloutFraming = {
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
@@ -1142,6 +1153,8 @@ export type CalloutFraming = {
   mediaGallery?: Maybe<MediaGallery>;
   /** The Memo for framing the associated Callout. */
   memo?: Maybe<Memo>;
+  /** The Poll attached to this Callout Framing, if any. Present when framing.type = POLL. */
+  poll?: Maybe<Poll>;
   /** The Profile for framing the associated Callout. */
   profile: Profile;
   /** The type of the Callout Framing, the additional content attached to this callout */
@@ -1157,6 +1170,7 @@ export enum CalloutFramingType {
   MediaGallery = "MEDIA_GALLERY",
   Memo = "MEMO",
   None = "NONE",
+  Poll = "POLL",
   Whiteboard = "WHITEBOARD",
 }
 
@@ -1238,6 +1252,13 @@ export enum CalloutsSetType {
   Collaboration = "COLLABORATION",
   KnowledgeBase = "KNOWLEDGE_BASE",
 }
+
+export type CastPollVoteInput = {
+  /** The ID of the Poll to vote on. */
+  pollID: Scalars["UUID"]["input"];
+  /** The complete set of selected PollOption IDs. When updating an existing vote, the entire selection set must be provided. Count must be ≥ poll.minResponses and ≤ poll.maxResponses. All IDs must belong to the specified poll. */
+  selectedOptionIDs: Array<Scalars["UUID"]["input"]>;
+};
 
 export type Classification = {
   /** The authorization rules for the entity */
@@ -1547,12 +1568,12 @@ export type Conversation = {
   members: Array<Actor>;
   messaging: Messaging;
   /** The room for this Conversation. */
-  room?: Maybe<Room>;
+  room: Room;
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
 };
 
-/** Event fired when a new conversation is created. Each member receives a personalized event with the other participant resolved via conversation.user or conversation.virtualContributor. */
+/** Event fired when a new conversation is created. All members receive the event with the full conversation and its members list. */
 export type ConversationCreatedEvent = {
   /** The conversation that was created. */
   conversation: Conversation;
@@ -1760,6 +1781,8 @@ export type CreateCalloutData = {
 export type CreateCalloutFramingData = {
   link?: Maybe<CreateLinkData>;
   memo?: Maybe<CreateMemoData>;
+  /** Poll definition to attach to this Callout Framing. Required when type = POLL. Ignored for all other framing types. */
+  poll?: Maybe<CreatePollData>;
   profile: CreateProfileData;
   tags?: Maybe<Array<Scalars["String"]["output"]>>;
   /** The type of additional content attached to the framing of the callout. Defaults to None. */
@@ -1770,6 +1793,8 @@ export type CreateCalloutFramingData = {
 export type CreateCalloutFramingInput = {
   link?: InputMaybe<CreateLinkInput>;
   memo?: InputMaybe<CreateMemoInput>;
+  /** Poll definition to attach to this Callout Framing. Required when type = POLL. Ignored for all other framing types. */
+  poll?: InputMaybe<CreatePollInput>;
   profile: CreateProfileInput;
   tags?: InputMaybe<Array<Scalars["String"]["input"]>>;
   /** The type of additional content attached to the framing of the callout. Defaults to None. */
@@ -2087,6 +2112,24 @@ export type CreateOrganizationInput = {
   website?: InputMaybe<Scalars["String"]["input"]>;
 };
 
+export type CreatePollData = {
+  /** Initial options for the poll. Minimum 2 options required. Options appear in the order provided. */
+  options: Array<Scalars["String"]["output"]>;
+  /** Poll configuration settings (all immutable after creation). Optional; uses defaults for any unspecified settings. */
+  settings?: Maybe<PollSettingsData>;
+  /** Poll title. Optional. Maximum length 512 characters. Becomes an empty string if not provided. */
+  title?: Maybe<Scalars["String"]["output"]>;
+};
+
+export type CreatePollInput = {
+  /** Initial options for the poll. Minimum 2 options required. Options appear in the order provided. */
+  options: Array<Scalars["String"]["input"]>;
+  /** Poll configuration settings (all immutable after creation). Optional; uses defaults for any unspecified settings. */
+  settings?: InputMaybe<PollSettingsInput>;
+  /** Poll title. Optional. Maximum length 512 characters. Becomes an empty string if not provided. */
+  title?: InputMaybe<Scalars["String"]["input"]>;
+};
+
 export type CreatePostData = {
   tags?: Maybe<Array<Scalars["String"]["output"]>>;
 };
@@ -2184,10 +2227,17 @@ export type CreateSpaceSettingsCollaborationInput = {
 
 export type CreateSpaceSettingsInput = {
   collaboration?: InputMaybe<CreateSpaceSettingsCollaborationInput>;
+  /** The layout settings for this Space. */
+  layout?: InputMaybe<CreateSpaceSettingsLayoutInput>;
   membership?: InputMaybe<CreateSpaceSettingsMembershipInput>;
   privacy?: InputMaybe<CreateSpaceSettingsPrivacyInput>;
   /** The sort mode for subspaces: Alphabetical or Custom. */
   sortMode?: InputMaybe<SpaceSortMode>;
+};
+
+export type CreateSpaceSettingsLayoutInput = {
+  /** The default display mode for callout descriptions. */
+  calloutDescriptionDisplayMode: CalloutDescriptionDisplayMode;
 };
 
 export type CreateSpaceSettingsMembershipInput = {
@@ -2940,6 +2990,20 @@ export type InAppNotificationPayloadSpaceCollaborationCalloutPostComment =
     /** The details of the message. */
     messageDetails?: Maybe<MessageDetails>;
     /** The Space where the comment was made. */
+    space: Space;
+    /** The payload type. */
+    type: NotificationEventPayload;
+  };
+
+export type InAppNotificationPayloadSpaceCollaborationPoll =
+  InAppNotificationPayload & {
+    /** The Callout that contains the poll. */
+    callout: Callout;
+    /** The Poll this notification relates to. */
+    poll: Poll;
+    /** The ID of the Poll this notification relates to. */
+    pollID: Scalars["UUID"]["output"];
+    /** Where the callout is located. */
     space: Space;
     /** The payload type. */
     type: NotificationEventPayload;
@@ -4207,6 +4271,8 @@ export type Mutation = {
   addIframeAllowedURL: Array<Scalars["String"]["output"]>;
   /** Adds a full email address to the platform notification blacklist */
   addNotificationEmailToBlacklist: Array<Scalars["String"]["output"]>;
+  /** Add a new option to a Poll. Requires UPDATE privilege, or CONTRIBUTE privilege when the poll setting allowContributorsAddOptions is enabled. The new option is appended with the next available sort order. */
+  addPollOption: Poll;
   /** Add a reaction to a message from the specified Room. */
   addReactionToMessageInRoom: Reaction;
   /** Adds a new visual to the specified media gallery. */
@@ -4283,6 +4349,8 @@ export type Mutation = {
   authorizationPolicyResetOnUser: User;
   /** Reset the specified Authorization Policy to global admin privileges */
   authorizationPolicyResetToGlobalAdminsAccess: Authorization;
+  /** Cast or update a vote on a Poll. Requires CONTRIBUTE privilege on the Poll (space member). If the calling user has already voted, their vote is REPLACED ENTIRELY with the new selection set. */
+  castPollVote: Poll;
   /** Deletes collections nameID-... */
   cleanupCollections: MigrateEmbeddings;
   /** Move an L1 Space up in the hierarchy, to be a L0 Space. */
@@ -4405,7 +4473,7 @@ export type Mutation = {
   inviteForEntryRoleOnRoleSet: Array<RoleSetInvitationResult>;
   /** Join the specified RoleSet using the entry Role, without going through an approval process. */
   joinRoleSet: RoleSet;
-  /** Leave a group conversation. Returns true when the RPC is sent. Actual membership change arrives via MEMBER_REMOVED subscription event. */
+  /** Leave a group conversation. Returns true when the RPC is sent. Actual membership change arrives via MEMBER_REMOVED subscription event. If the last member leaves, the conversation is auto-deleted and a CONVERSATION_DELETED event follows. */
   leaveConversation: Scalars["Boolean"]["output"];
   /** Reset the License with Entitlements on the specified Account. */
   licenseResetOnAccount: Account;
@@ -4435,6 +4503,10 @@ export type Mutation = {
   removeNotificationEmailFromBlacklist: Array<Scalars["String"]["output"]>;
   /** Removes a User from a Role on the Platform. */
   removePlatformRoleFromUser: User;
+  /** Remove an option from a Poll. Requires UPDATE privilege. Poll must retain at least 2 options. Votes that selected this option are deleted and affected voters are notified. */
+  removePollOption: Poll;
+  /** Remove the current user vote from a Poll. Requires CONTRIBUTE privilege on the Poll. If the user has not voted, returns a validation error. */
+  removePollVote: Poll;
   /** Remove a reaction on a message from the specified Room. */
   removeReactionToMessageInRoom: Scalars["Boolean"]["output"];
   /** Removes an Actor (User, Organization, or Virtual Contributor) from a role in the specified RoleSet. */
@@ -4447,6 +4519,8 @@ export type Mutation = {
   removeRoleFromVirtualContributor: VirtualContributor;
   /** Removes the specified User from specified user group */
   removeUserFromGroup: UserGroup;
+  /** Reorder Poll options. Requires UPDATE privilege. The provided list must contain exactly the same option IDs as the current poll options. */
+  reorderPollOptions: Poll;
   /** Resets the interaction with the VC by recreating the room. */
   resetConversationVc: Conversation;
   /** Reset all license plans on Accounts */
@@ -4507,7 +4581,7 @@ export type Mutation = {
   updateCommunityGuidelines: CommunityGuidelines;
   /** Update the sortOrder field of the Contributions of s Callout. */
   updateContributionsSortOrder: Array<CalloutContribution>;
-  /** Update a group conversation (display name, avatar). Returns true when the RPC is sent. Actual changes arrive via CONVERSATION_UPDATED subscription event. */
+  /** Update a group conversation (display name, avatar). Returns true when the RPC is sent. Actual changes arrive via CONVERSATION_UPDATED subscription events. When both fields are provided, clients may receive separate update events for each. */
   updateConversation: Scalars["Boolean"]["output"];
   /** Updates the specified Discussion. */
   updateDiscussion: Discussion;
@@ -4541,6 +4615,10 @@ export type Mutation = {
   updateOrganizationSettings: Organization;
   /** Updates one of the Setting on the Platform */
   updatePlatformSettings: PlatformSettings;
+  /** Update the text of an existing Poll option. Requires UPDATE privilege. Votes that selected this option are deleted and affected voters are notified. */
+  updatePollOption: Poll;
+  /** Change the status of a Poll (OPEN ↔ CLOSED). Requires UPDATE privilege on the parent Callout. When a poll is CLOSED, all state-mutating operations are rejected. Idempotent: setting to current status succeeds without error. */
+  updatePollStatus: Poll;
   /** Updates the specified Post. */
   updatePost: Post;
   /** Updates the specified Profile. */
@@ -4603,6 +4681,10 @@ export type MutationAddIframeAllowedUrlArgs = {
 
 export type MutationAddNotificationEmailToBlacklistArgs = {
   input: NotificationEmailAddressInput;
+};
+
+export type MutationAddPollOptionArgs = {
+  optionData: AddPollOptionInput;
 };
 
 export type MutationAddReactionToMessageInRoomArgs = {
@@ -4719,6 +4801,10 @@ export type MutationAuthorizationPolicyResetOnUserArgs = {
 
 export type MutationAuthorizationPolicyResetToGlobalAdminsAccessArgs = {
   authorizationID: Scalars["String"]["input"];
+};
+
+export type MutationCastPollVoteArgs = {
+  voteData: CastPollVoteInput;
 };
 
 export type MutationConvertSpaceL1ToSpaceL0Args = {
@@ -5019,6 +5105,14 @@ export type MutationRemovePlatformRoleFromUserArgs = {
   roleData: RemovePlatformRoleInput;
 };
 
+export type MutationRemovePollOptionArgs = {
+  optionData: RemovePollOptionInput;
+};
+
+export type MutationRemovePollVoteArgs = {
+  voteData: RemovePollVoteInput;
+};
+
 export type MutationRemoveReactionToMessageInRoomArgs = {
   reactionData: RoomRemoveReactionToMessageInput;
 };
@@ -5041,6 +5135,10 @@ export type MutationRemoveRoleFromVirtualContributorArgs = {
 
 export type MutationRemoveUserFromGroupArgs = {
   membershipData: RemoveUserGroupMemberInput;
+};
+
+export type MutationReorderPollOptionsArgs = {
+  optionData: ReorderPollOptionsInput;
 };
 
 export type MutationResetConversationVcArgs = {
@@ -5229,6 +5327,14 @@ export type MutationUpdatePlatformSettingsArgs = {
   settingsData: UpdatePlatformSettingsInput;
 };
 
+export type MutationUpdatePollOptionArgs = {
+  optionData: UpdatePollOptionInput;
+};
+
+export type MutationUpdatePollStatusArgs = {
+  statusData: UpdatePollStatusInput;
+};
+
 export type MutationUpdatePostArgs = {
   postData: UpdatePostInput;
 };
@@ -5386,6 +5492,10 @@ export enum NotificationEvent {
   SpaceCollaborationCalloutContribution = "SPACE_COLLABORATION_CALLOUT_CONTRIBUTION",
   SpaceCollaborationCalloutPostContributionComment = "SPACE_COLLABORATION_CALLOUT_POST_CONTRIBUTION_COMMENT",
   SpaceCollaborationCalloutPublished = "SPACE_COLLABORATION_CALLOUT_PUBLISHED",
+  SpaceCollaborationPollModifiedOnPollIVotedOn = "SPACE_COLLABORATION_POLL_MODIFIED_ON_POLL_I_VOTED_ON",
+  SpaceCollaborationPollVoteAffectedByOptionChange = "SPACE_COLLABORATION_POLL_VOTE_AFFECTED_BY_OPTION_CHANGE",
+  SpaceCollaborationPollVoteCastOnOwnPoll = "SPACE_COLLABORATION_POLL_VOTE_CAST_ON_OWN_POLL",
+  SpaceCollaborationPollVoteCastOnPollIVotedOn = "SPACE_COLLABORATION_POLL_VOTE_CAST_ON_POLL_I_VOTED_ON",
   SpaceCommunicationUpdate = "SPACE_COMMUNICATION_UPDATE",
   SpaceCommunityCalendarEventComment = "SPACE_COMMUNITY_CALENDAR_EVENT_COMMENT",
   SpaceCommunityCalendarEventCreated = "SPACE_COMMUNITY_CALENDAR_EVENT_CREATED",
@@ -5427,6 +5537,7 @@ export enum NotificationEventPayload {
   SpaceCollaborationCallout = "SPACE_COLLABORATION_CALLOUT",
   SpaceCollaborationCalloutComment = "SPACE_COLLABORATION_CALLOUT_COMMENT",
   SpaceCollaborationCalloutPostComment = "SPACE_COLLABORATION_CALLOUT_POST_COMMENT",
+  SpaceCollaborationPoll = "SPACE_COLLABORATION_POLL",
   SpaceCommunicationMessageDirect = "SPACE_COMMUNICATION_MESSAGE_DIRECT",
   SpaceCommunicationUpdate = "SPACE_COMMUNICATION_UPDATE",
   SpaceCommunityActor = "SPACE_COMMUNITY_ACTOR",
@@ -5914,6 +6025,147 @@ export type PlatformWellKnownVirtualContributors = {
   mappings: Array<PlatformWellKnownVirtualContributorMapping>;
 };
 
+export type Poll = {
+  /** The authorization rules for the entity */
+  authorization?: Maybe<Authorization>;
+  /** Whether the current user can see detailed results (visibility gate passed). */
+  canSeeDetailedResults: Scalars["Boolean"]["output"];
+  /** The date at which the entity was created. */
+  createdDate: Scalars["DateTime"]["output"];
+  /** [Future] Date/time after which the poll automatically closes. Always null in this iteration. */
+  deadline?: Maybe<Scalars["DateTime"]["output"]>;
+  /** The ID of the entity */
+  id: Scalars["UUID"]["output"];
+  /** The current user's vote on this poll, or null if the current user has not voted. */
+  myVote?: Maybe<PollVote>;
+  /** The selectable options for this poll, always ordered by sortOrder ascending. */
+  options: Array<PollOption>;
+  /** Configuration settings for this poll (immutable after creation). */
+  settings: PollSettings;
+  /** Current lifecycle status of this poll. Always OPEN in this iteration; CLOSED reserved for future use. */
+  status: PollStatus;
+  /** Poll title. */
+  title: Scalars["String"]["output"];
+  /** Total number of votes cast on this poll. Null when resultsVisibility = HIDDEN and the current user has not voted. */
+  totalVotes?: Maybe<Scalars["Int"]["output"]>;
+  /** The date at which the entity was last updated. */
+  updatedDate: Scalars["DateTime"]["output"];
+};
+
+/** The type of event that occurred on a poll. */
+export enum PollEventType {
+  PollOptionsChanged = "POLL_OPTIONS_CHANGED",
+  PollStatusChanged = "POLL_STATUS_CHANGED",
+  PollVoteUpdated = "POLL_VOTE_UPDATED",
+}
+
+export type PollOption = {
+  createdDate: Scalars["DateTime"]["output"];
+  id: Scalars["UUID"]["output"];
+  /** Position of this option in the creation order (used for tie-breaking in results). */
+  sortOrder: Scalars["Int"]["output"];
+  text: Scalars["String"]["output"];
+  updatedDate: Scalars["DateTime"]["output"];
+  /** Number of votes this option has received. Null when results are hidden or resultsDetail = PERCENTAGE. */
+  voteCount?: Maybe<Scalars["Int"]["output"]>;
+  /** Percentage of total votes this option has received (0–100). Null when results are hidden or resultsDetail = COUNT. Null when totalVotes = 0. */
+  votePercentage?: Maybe<Scalars["Float"]["output"]>;
+  /** List of space members who voted for this option. Null when results are hidden or resultsDetail is not FULL. */
+  voters?: Maybe<Array<User>>;
+};
+
+export type PollOptionsChangedSubscriptionResult = {
+  /** The updated Poll. Fields are filtered per subscriber's visibility context. */
+  poll: Poll;
+  /** The type of poll event. */
+  pollEventType: PollEventType;
+};
+
+/** Controls the level of detail shown in poll results. */
+export enum PollResultsDetail {
+  /** Vote count per option; no voter identities. */
+  Count = "COUNT",
+  /** Counts and voter list per option — fully transparent (default). */
+  Full = "FULL",
+  /** Only percentage per option; no vote counts or voter identities. */
+  Percentage = "PERCENTAGE",
+}
+
+/** Controls when poll results become visible to voters. */
+export enum PollResultsVisibility {
+  /** Results hidden until the viewer has cast their own vote. */
+  Hidden = "HIDDEN",
+  /** Only the total vote count is shown before voting; details (depending on PollResultsDetail) become available after voting. */
+  TotalOnly = "TOTAL_ONLY",
+  /** Full results always visible regardless of whether the viewer has voted (default). */
+  Visible = "VISIBLE",
+}
+
+export type PollSettings = {
+  /** Whether users with CONTRIBUTE privilege can add new options to the poll. Immutable after poll creation. Default: false. */
+  allowContributorsAddOptions: Scalars["Boolean"]["output"];
+  /** Maximum number of options a voter may select (0 = unlimited). Immutable after poll creation. */
+  maxResponses: Scalars["Int"]["output"];
+  /** Minimum number of options a voter must select (≥ 1). Immutable after poll creation. */
+  minResponses: Scalars["Int"]["output"];
+  /** Controls how much detail is shown in results. Immutable after poll creation. */
+  resultsDetail: PollResultsDetail;
+  /** Controls when results become visible to voters. Immutable after poll creation. */
+  resultsVisibility: PollResultsVisibility;
+};
+
+export type PollSettingsData = {
+  /** Whether voters can add new options to the poll. Defaults to false. */
+  allowContributorsAddOptions?: Maybe<Scalars["Boolean"]["output"]>;
+  /** Maximum selections allowed. Defaults to 1. Set to 0 for unlimited. */
+  maxResponses?: Maybe<Scalars["Int"]["output"]>;
+  /** Minimum selections required. Defaults to 1. */
+  minResponses?: Maybe<Scalars["Int"]["output"]>;
+  /** How much detail is shown. Defaults to FULL. */
+  resultsDetail?: Maybe<PollResultsDetail>;
+  /** When results become visible. Defaults to VISIBLE. */
+  resultsVisibility?: Maybe<PollResultsVisibility>;
+};
+
+export type PollSettingsInput = {
+  /** Whether voters can add new options to the poll. Defaults to false. */
+  allowContributorsAddOptions?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Maximum selections allowed. Defaults to 1. Set to 0 for unlimited. */
+  maxResponses?: InputMaybe<Scalars["Int"]["input"]>;
+  /** Minimum selections required. Defaults to 1. */
+  minResponses?: InputMaybe<Scalars["Int"]["input"]>;
+  /** How much detail is shown. Defaults to FULL. */
+  resultsDetail?: InputMaybe<PollResultsDetail>;
+  /** When results become visible. Defaults to VISIBLE. */
+  resultsVisibility?: InputMaybe<PollResultsVisibility>;
+};
+
+/** Lifecycle status of a Poll. OPEN allows voting and option management; CLOSED prevents all state-mutating operations. */
+export enum PollStatus {
+  Closed = "CLOSED",
+  Open = "OPEN",
+}
+
+export type PollVote = {
+  /** ID of the user who cast this vote. */
+  createdBy: Scalars["UUID"]["output"];
+  /** The date at which the entity was created. */
+  createdDate: Scalars["DateTime"]["output"];
+  /** The ID of the entity */
+  id: Scalars["UUID"]["output"];
+  /** The options selected in this vote. */
+  selectedOptions: Array<PollOption>;
+  /** The date at which the entity was last updated. */
+  updatedDate: Scalars["DateTime"]["output"];
+};
+
+export type PollVoteUpdatedSubscriptionResult = {
+  /** The updated Poll. Fields are filtered per subscriber's visibility context. */
+  poll: Poll;
+  /** The type of poll event. */
+  pollEventType: PollEventType;
+};
+
 export type Post = {
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
@@ -6377,6 +6629,8 @@ export type RelayPaginatedSpace = ActorFull & {
   credentials?: Maybe<Array<Credential>>;
   /** The ID of the Actor */
   id: Scalars["UUID"]["output"];
+  /** The layout settings for this Space. Accessible without READ privilege. */
+  layout: SpaceSettingsLayout;
   /** The level of this Space, representing the number of Spaces above this one. */
   level: SpaceLevel;
   /** The ID of the level zero space for this tree. */
@@ -6461,6 +6715,16 @@ export type RemovePlatformRoleInput = {
   role: RoleName;
 };
 
+export type RemovePollOptionInput = {
+  optionID: Scalars["UUID"]["input"];
+  pollID: Scalars["UUID"]["input"];
+};
+
+export type RemovePollVoteInput = {
+  /** The ID of the Poll from which to remove the current user vote. */
+  pollID: Scalars["UUID"]["input"];
+};
+
 export type RemoveRoleOnRoleSetInput = {
   actorID: Scalars["UUID"]["input"];
   role: RoleName;
@@ -6470,6 +6734,11 @@ export type RemoveRoleOnRoleSetInput = {
 export type RemoveUserGroupMemberInput = {
   groupID: Scalars["UUID"]["input"];
   userID: Scalars["UUID"]["input"];
+};
+
+export type ReorderPollOptionsInput = {
+  optionIDs: Array<Scalars["UUID"]["input"]>;
+  pollID: Scalars["UUID"]["input"];
 };
 
 export type RevokeAuthorizationCredentialInput = {
@@ -7121,6 +7390,8 @@ export type Space = ActorFull & {
   credentials?: Maybe<Array<Credential>>;
   /** The ID of the Actor */
   id: Scalars["UUID"]["output"];
+  /** The layout settings for this Space. Accessible without READ privilege. */
+  layout: SpaceSettingsLayout;
   /** The level of this Space, representing the number of Spaces above this one. */
   level: SpaceLevel;
   /** The ID of the level zero space for this tree. */
@@ -7243,6 +7514,8 @@ export enum SpacePrivacyMode {
 export type SpaceSettings = {
   /** The collaboration settings for this Space. */
   collaboration: SpaceSettingsCollaboration;
+  /** The layout settings for this Space. */
+  layout: SpaceSettingsLayout;
   /** The membership settings for this Space. */
   membership: SpaceSettingsMembership;
   /** The privacy settings for this Space */
@@ -7264,6 +7537,11 @@ export type SpaceSettingsCollaboration = {
   allowMembersToVideoCall: Scalars["Boolean"]["output"];
   /** Flag to control if ability to contribute is inherited from parent Space. */
   inheritMembershipRights: Scalars["Boolean"]["output"];
+};
+
+export type SpaceSettingsLayout = {
+  /** The default display mode for callout descriptions in this Space. */
+  calloutDescriptionDisplayMode: CalloutDescriptionDisplayMode;
 };
 
 export type SpaceSettingsMembership = {
@@ -7417,7 +7695,7 @@ export type Subscription = {
   activityCreated: ActivityCreatedSubscriptionResult;
   /** Receive new Update messages on Communities the currently authenticated User is a member of. */
   calloutPostCreated: CalloutPostCreated;
-  /** Receive conversation events for the authenticated user. Includes new conversations, messages, and read receipts. */
+  /** Receive conversation events for the authenticated user. Includes conversation lifecycle (created, updated, deleted), messages (received, removed), membership changes (member added, removed), and read receipts. */
   conversationEvents: ConversationEventSubscriptionResult;
   /** Receive updates on Discussions */
   forumDiscussionUpdated: Discussion;
@@ -7425,6 +7703,10 @@ export type Subscription = {
   inAppNotificationReceived: InAppNotification;
   /** Counter of unread in-app notifications for the currently authenticated user. */
   notificationsUnreadCount: Scalars["Int"]["output"];
+  /** Subscribe to option changes on a specific Poll. Fires when options are added, removed, updated, or reordered. Always delivered regardless of resultsVisibility. */
+  pollOptionsChanged: PollOptionsChangedSubscriptionResult;
+  /** Subscribe to vote updates on a specific Poll. Fires when votes are cast or updated. When resultsVisibility = HIDDEN and the subscriber has not voted, events are suppressed. */
+  pollVoteUpdated: PollVoteUpdatedSubscriptionResult;
   /** Receive Room event */
   roomEvents: RoomEventSubscriptionResult;
   /** Receive new Subspaces created on the Space. */
@@ -7443,6 +7725,14 @@ export type SubscriptionCalloutPostCreatedArgs = {
 
 export type SubscriptionForumDiscussionUpdatedArgs = {
   forumID: Scalars["UUID"]["input"];
+};
+
+export type SubscriptionPollOptionsChangedArgs = {
+  pollID: Scalars["UUID"]["input"];
+};
+
+export type SubscriptionPollVoteUpdatedArgs = {
+  pollID: Scalars["UUID"]["input"];
 };
 
 export type SubscriptionRoomEventsArgs = {
@@ -7811,6 +8101,8 @@ export type UpdateCalloutFramingInput = {
   link?: InputMaybe<UpdateLinkInput>;
   /** The new markdown content for the Memo. */
   memoContent?: InputMaybe<Scalars["Markdown"]["input"]>;
+  /** Updates for the Poll attached to this Framing. Only applies when type = POLL. */
+  poll?: InputMaybe<UpdatePollInput>;
   /** The Profile of the Template. */
   profile?: InputMaybe<UpdateProfileInput>;
   /** The type of additional content attached to the framing of the callout. */
@@ -8125,6 +8417,24 @@ export type UpdatePlatformSettingsIntegrationInput = {
   notificationEmailBlacklist?: InputMaybe<Array<Scalars["String"]["input"]>>;
 };
 
+export type UpdatePollInput = {
+  /** Updated title for the Poll (max 512 chars). This is the only mutable property once a poll is created; options are managed via separate mutations. */
+  title?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+export type UpdatePollOptionInput = {
+  optionID: Scalars["UUID"]["input"];
+  pollID: Scalars["UUID"]["input"];
+  text: Scalars["String"]["input"];
+};
+
+export type UpdatePollStatusInput = {
+  /** The ID of the Poll to update. */
+  pollID: Scalars["UUID"]["input"];
+  /** The new status for the poll. */
+  status: PollStatus;
+};
+
 export type UpdatePostInput = {
   ID: Scalars["UUID"]["input"];
   /** A display identifier, unique within the containing scope. Note: updating the nameID will affect URL on the client. */
@@ -8202,6 +8512,8 @@ export type UpdateSpaceSettingsCollaborationInput = {
 
 export type UpdateSpaceSettingsEntityInput = {
   collaboration?: InputMaybe<UpdateSpaceSettingsCollaborationInput>;
+  /** The layout settings for this Space. */
+  layout?: InputMaybe<UpdateSpaceSettingsLayoutInput>;
   membership?: InputMaybe<UpdateSpaceSettingsMembershipInput>;
   privacy?: InputMaybe<UpdateSpaceSettingsPrivacyInput>;
   /** The sort mode for subspaces: Alphabetical or Custom. */
@@ -8213,6 +8525,11 @@ export type UpdateSpaceSettingsInput = {
   settings: UpdateSpaceSettingsEntityInput;
   /** The identifier for the Space whose settings are to be updated. */
   spaceID: Scalars["String"]["input"];
+};
+
+export type UpdateSpaceSettingsLayoutInput = {
+  /** The default display mode for callout descriptions. */
+  calloutDescriptionDisplayMode: CalloutDescriptionDisplayMode;
 };
 
 export type UpdateSpaceSettingsMembershipInput = {
@@ -8404,6 +8721,14 @@ export type UpdateUserSettingsNotificationSpaceInput = {
   collaborationCalloutPostContributionComment?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification when a callout is published */
   collaborationCalloutPublished?: InputMaybe<NotificationSettingInput>;
+  /** Receive a notification when a poll you voted on is modified */
+  collaborationPollModifiedOnPollIVotedOn?: InputMaybe<NotificationSettingInput>;
+  /** Receive a notification when a poll option you voted for is changed or removed */
+  collaborationPollVoteAffectedByOptionChange?: InputMaybe<NotificationSettingInput>;
+  /** Receive a notification when a vote is cast on a poll you created */
+  collaborationPollVoteCastOnOwnPoll?: InputMaybe<NotificationSettingInput>;
+  /** Receive a notification when another user votes on a poll you already voted on */
+  collaborationPollVoteCastOnPollIVotedOn?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification for community updates */
   communicationUpdates?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification when a calendar event is created */
@@ -8802,6 +9127,14 @@ export type UserSettingsNotificationSpace = {
   collaborationCalloutPostContributionComment: UserSettingsNotificationChannels;
   /** Receive a notification when a callout is published */
   collaborationCalloutPublished: UserSettingsNotificationChannels;
+  /** Receive a notification when a poll you voted on is modified */
+  collaborationPollModifiedOnPollIVotedOn: UserSettingsNotificationChannels;
+  /** Receive a notification when a poll option you voted for is changed or removed */
+  collaborationPollVoteAffectedByOptionChange: UserSettingsNotificationChannels;
+  /** Receive a notification when a vote is cast on a poll you created */
+  collaborationPollVoteCastOnOwnPoll: UserSettingsNotificationChannels;
+  /** Receive a notification when another user votes on a poll you already voted on */
+  collaborationPollVoteCastOnPollIVotedOn: UserSettingsNotificationChannels;
   /** Receive a notification for community updates */
   communicationUpdates: UserSettingsNotificationChannels;
   /** Receive a notification when a calendar event is created */
@@ -9489,6 +9822,9 @@ export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> =
           InAppNotificationPayloadSpaceCollaborationCalloutPostComment,
           "space"
         > & { space: _RefType["Space"] })
+      | (Omit<InAppNotificationPayloadSpaceCollaborationPoll, "space"> & {
+          space: _RefType["Space"];
+        })
       | (Omit<
           InAppNotificationPayloadSpaceCommunicationMessageDirect,
           "space"
@@ -9696,6 +10032,7 @@ export type ResolversTypes = {
   ActorRolePolicy: ResolverTypeWrapper<ActorRolePolicy>;
   ActorRoles: ResolverTypeWrapper<ActorRoles>;
   ActorType: ActorType;
+  AddPollOptionInput: AddPollOptionInput;
   AddVisualToMediaGalleryInput: AddVisualToMediaGalleryInput;
   AiPersona: ResolverTypeWrapper<AiPersona>;
   AiPersonaEngine: AiPersonaEngine;
@@ -9761,6 +10098,7 @@ export type ResolversTypes = {
   CalloutContributionDefaults: ResolverTypeWrapper<CalloutContributionDefaults>;
   CalloutContributionType: CalloutContributionType;
   CalloutContributionsCountOutput: ResolverTypeWrapper<CalloutContributionsCountOutput>;
+  CalloutDescriptionDisplayMode: CalloutDescriptionDisplayMode;
   CalloutFraming: ResolverTypeWrapper<
     Omit<CalloutFraming, "profile"> & { profile: ResolversTypes["Profile"] }
   >;
@@ -9772,6 +10110,7 @@ export type ResolversTypes = {
   CalloutVisibility: CalloutVisibility;
   CalloutsSet: ResolverTypeWrapper<CalloutsSet>;
   CalloutsSetType: CalloutsSetType;
+  CastPollVoteInput: CastPollVoteInput;
   Classification: ResolverTypeWrapper<Classification>;
   Collaboration: ResolverTypeWrapper<
     Omit<Collaboration, "innovationFlow" | "timeline"> & {
@@ -9932,6 +10271,8 @@ export type ResolversTypes = {
   CreateMemoInput: CreateMemoInput;
   CreateNVPInput: CreateNvpInput;
   CreateOrganizationInput: CreateOrganizationInput;
+  CreatePollData: ResolverTypeWrapper<CreatePollData>;
+  CreatePollInput: CreatePollInput;
   CreatePostData: ResolverTypeWrapper<CreatePostData>;
   CreatePostInput: CreatePostInput;
   CreateProfileData: ResolverTypeWrapper<CreateProfileData>;
@@ -9943,6 +10284,7 @@ export type ResolversTypes = {
   CreateSpaceOnAccountInput: CreateSpaceOnAccountInput;
   CreateSpaceSettingsCollaborationInput: CreateSpaceSettingsCollaborationInput;
   CreateSpaceSettingsInput: CreateSpaceSettingsInput;
+  CreateSpaceSettingsLayoutInput: CreateSpaceSettingsLayoutInput;
   CreateSpaceSettingsMembershipInput: CreateSpaceSettingsMembershipInput;
   CreateSpaceSettingsPrivacyInput: CreateSpaceSettingsPrivacyInput;
   CreateStateOnInnovationFlowInput: CreateStateOnInnovationFlowInput;
@@ -10103,6 +10445,11 @@ export type ResolversTypes = {
       InAppNotificationPayloadSpaceCollaborationCalloutPostComment,
       "space"
     > & { space: ResolversTypes["Space"] }
+  >;
+  InAppNotificationPayloadSpaceCollaborationPoll: ResolverTypeWrapper<
+    Omit<InAppNotificationPayloadSpaceCollaborationPoll, "space"> & {
+      space: ResolversTypes["Space"];
+    }
   >;
   InAppNotificationPayloadSpaceCommunicationMessageDirect: ResolverTypeWrapper<
     Omit<InAppNotificationPayloadSpaceCommunicationMessageDirect, "space"> & {
@@ -10485,6 +10832,22 @@ export type ResolversTypes = {
   PlatformSettings: ResolverTypeWrapper<PlatformSettings>;
   PlatformWellKnownVirtualContributorMapping: ResolverTypeWrapper<PlatformWellKnownVirtualContributorMapping>;
   PlatformWellKnownVirtualContributors: ResolverTypeWrapper<PlatformWellKnownVirtualContributors>;
+  Poll: ResolverTypeWrapper<Poll>;
+  PollEventType: PollEventType;
+  PollOption: ResolverTypeWrapper<
+    Omit<PollOption, "voters"> & {
+      voters?: Maybe<Array<ResolversTypes["User"]>>;
+    }
+  >;
+  PollOptionsChangedSubscriptionResult: ResolverTypeWrapper<PollOptionsChangedSubscriptionResult>;
+  PollResultsDetail: PollResultsDetail;
+  PollResultsVisibility: PollResultsVisibility;
+  PollSettings: ResolverTypeWrapper<PollSettings>;
+  PollSettingsData: ResolverTypeWrapper<PollSettingsData>;
+  PollSettingsInput: PollSettingsInput;
+  PollStatus: PollStatus;
+  PollVote: ResolverTypeWrapper<PollVote>;
+  PollVoteUpdatedSubscriptionResult: ResolverTypeWrapper<PollVoteUpdatedSubscriptionResult>;
   Post: ResolverTypeWrapper<
     Omit<Post, "createdBy" | "profile"> & {
       createdBy?: Maybe<ResolversTypes["User"]>;
@@ -10557,8 +10920,11 @@ export type ResolversTypes = {
   RemoveConversationMemberInput: RemoveConversationMemberInput;
   RemoveDefaultCalloutTemplateOnInnovationFlowStateInput: RemoveDefaultCalloutTemplateOnInnovationFlowStateInput;
   RemovePlatformRoleInput: RemovePlatformRoleInput;
+  RemovePollOptionInput: RemovePollOptionInput;
+  RemovePollVoteInput: RemovePollVoteInput;
   RemoveRoleOnRoleSetInput: RemoveRoleOnRoleSetInput;
   RemoveUserGroupMemberInput: RemoveUserGroupMemberInput;
+  ReorderPollOptionsInput: ReorderPollOptionsInput;
   RevokeAuthorizationCredentialInput: RevokeAuthorizationCredentialInput;
   RevokeLicensePlanFromAccount: RevokeLicensePlanFromAccount;
   RevokeLicensePlanFromSpace: RevokeLicensePlanFromSpace;
@@ -10697,6 +11063,7 @@ export type ResolversTypes = {
   SpacePrivacyMode: SpacePrivacyMode;
   SpaceSettings: ResolverTypeWrapper<SpaceSettings>;
   SpaceSettingsCollaboration: ResolverTypeWrapper<SpaceSettingsCollaboration>;
+  SpaceSettingsLayout: ResolverTypeWrapper<SpaceSettingsLayout>;
   SpaceSettingsMembership: ResolverTypeWrapper<SpaceSettingsMembership>;
   SpaceSettingsPrivacy: ResolverTypeWrapper<SpaceSettingsPrivacy>;
   SpaceSortMode: SpaceSortMode;
@@ -10839,6 +11206,9 @@ export type ResolversTypes = {
   UpdateOrganizationSettingsPrivacyInput: UpdateOrganizationSettingsPrivacyInput;
   UpdatePlatformSettingsInput: UpdatePlatformSettingsInput;
   UpdatePlatformSettingsIntegrationInput: UpdatePlatformSettingsIntegrationInput;
+  UpdatePollInput: UpdatePollInput;
+  UpdatePollOptionInput: UpdatePollOptionInput;
+  UpdatePollStatusInput: UpdatePollStatusInput;
   UpdatePostInput: UpdatePostInput;
   UpdateProfileDirectInput: UpdateProfileDirectInput;
   UpdateProfileInput: UpdateProfileInput;
@@ -10849,6 +11219,7 @@ export type ResolversTypes = {
   UpdateSpaceSettingsCollaborationInput: UpdateSpaceSettingsCollaborationInput;
   UpdateSpaceSettingsEntityInput: UpdateSpaceSettingsEntityInput;
   UpdateSpaceSettingsInput: UpdateSpaceSettingsInput;
+  UpdateSpaceSettingsLayoutInput: UpdateSpaceSettingsLayoutInput;
   UpdateSpaceSettingsMembershipInput: UpdateSpaceSettingsMembershipInput;
   UpdateSpaceSettingsPrivacyInput: UpdateSpaceSettingsPrivacyInput;
   UpdateSubspacePinnedInput: UpdateSubspacePinnedInput;
@@ -11125,6 +11496,7 @@ export type ResolversParentTypes = {
   ActorFull: ResolversInterfaceTypes<ResolversParentTypes>["ActorFull"];
   ActorRolePolicy: ActorRolePolicy;
   ActorRoles: ActorRoles;
+  AddPollOptionInput: AddPollOptionInput;
   AddVisualToMediaGalleryInput: AddVisualToMediaGalleryInput;
   AiPersona: AiPersona;
   AiServer: AiServer;
@@ -11176,6 +11548,7 @@ export type ResolversParentTypes = {
   CalloutSettingsContribution: CalloutSettingsContribution;
   CalloutSettingsFraming: CalloutSettingsFraming;
   CalloutsSet: CalloutsSet;
+  CastPollVoteInput: CastPollVoteInput;
   Classification: Classification;
   Collaboration: Omit<Collaboration, "innovationFlow" | "timeline"> & {
     innovationFlow: ResolversParentTypes["InnovationFlow"];
@@ -11326,6 +11699,8 @@ export type ResolversParentTypes = {
   CreateMemoInput: CreateMemoInput;
   CreateNVPInput: CreateNvpInput;
   CreateOrganizationInput: CreateOrganizationInput;
+  CreatePollData: CreatePollData;
+  CreatePollInput: CreatePollInput;
   CreatePostData: CreatePostData;
   CreatePostInput: CreatePostInput;
   CreateProfileData: CreateProfileData;
@@ -11337,6 +11712,7 @@ export type ResolversParentTypes = {
   CreateSpaceOnAccountInput: CreateSpaceOnAccountInput;
   CreateSpaceSettingsCollaborationInput: CreateSpaceSettingsCollaborationInput;
   CreateSpaceSettingsInput: CreateSpaceSettingsInput;
+  CreateSpaceSettingsLayoutInput: CreateSpaceSettingsLayoutInput;
   CreateSpaceSettingsMembershipInput: CreateSpaceSettingsMembershipInput;
   CreateSpaceSettingsPrivacyInput: CreateSpaceSettingsPrivacyInput;
   CreateStateOnInnovationFlowInput: CreateStateOnInnovationFlowInput;
@@ -11473,6 +11849,10 @@ export type ResolversParentTypes = {
   > & { space: ResolversParentTypes["Space"] };
   InAppNotificationPayloadSpaceCollaborationCalloutPostComment: Omit<
     InAppNotificationPayloadSpaceCollaborationCalloutPostComment,
+    "space"
+  > & { space: ResolversParentTypes["Space"] };
+  InAppNotificationPayloadSpaceCollaborationPoll: Omit<
+    InAppNotificationPayloadSpaceCollaborationPoll,
     "space"
   > & { space: ResolversParentTypes["Space"] };
   InAppNotificationPayloadSpaceCommunicationMessageDirect: Omit<
@@ -11796,6 +12176,16 @@ export type ResolversParentTypes = {
   PlatformSettings: PlatformSettings;
   PlatformWellKnownVirtualContributorMapping: PlatformWellKnownVirtualContributorMapping;
   PlatformWellKnownVirtualContributors: PlatformWellKnownVirtualContributors;
+  Poll: Poll;
+  PollOption: Omit<PollOption, "voters"> & {
+    voters?: Maybe<Array<ResolversParentTypes["User"]>>;
+  };
+  PollOptionsChangedSubscriptionResult: PollOptionsChangedSubscriptionResult;
+  PollSettings: PollSettings;
+  PollSettingsData: PollSettingsData;
+  PollSettingsInput: PollSettingsInput;
+  PollVote: PollVote;
+  PollVoteUpdatedSubscriptionResult: PollVoteUpdatedSubscriptionResult;
   Post: Omit<Post, "createdBy" | "profile"> & {
     createdBy?: Maybe<ResolversParentTypes["User"]>;
     profile: ResolversParentTypes["Profile"];
@@ -11859,8 +12249,11 @@ export type ResolversParentTypes = {
   RemoveConversationMemberInput: RemoveConversationMemberInput;
   RemoveDefaultCalloutTemplateOnInnovationFlowStateInput: RemoveDefaultCalloutTemplateOnInnovationFlowStateInput;
   RemovePlatformRoleInput: RemovePlatformRoleInput;
+  RemovePollOptionInput: RemovePollOptionInput;
+  RemovePollVoteInput: RemovePollVoteInput;
   RemoveRoleOnRoleSetInput: RemoveRoleOnRoleSetInput;
   RemoveUserGroupMemberInput: RemoveUserGroupMemberInput;
+  ReorderPollOptionsInput: ReorderPollOptionsInput;
   RevokeAuthorizationCredentialInput: RevokeAuthorizationCredentialInput;
   RevokeLicensePlanFromAccount: RevokeLicensePlanFromAccount;
   RevokeLicensePlanFromSpace: RevokeLicensePlanFromSpace;
@@ -11980,6 +12373,7 @@ export type ResolversParentTypes = {
   };
   SpaceSettings: SpaceSettings;
   SpaceSettingsCollaboration: SpaceSettingsCollaboration;
+  SpaceSettingsLayout: SpaceSettingsLayout;
   SpaceSettingsMembership: SpaceSettingsMembership;
   SpaceSettingsPrivacy: SpaceSettingsPrivacy;
   SpaceSubscription: SpaceSubscription;
@@ -12110,6 +12504,9 @@ export type ResolversParentTypes = {
   UpdateOrganizationSettingsPrivacyInput: UpdateOrganizationSettingsPrivacyInput;
   UpdatePlatformSettingsInput: UpdatePlatformSettingsInput;
   UpdatePlatformSettingsIntegrationInput: UpdatePlatformSettingsIntegrationInput;
+  UpdatePollInput: UpdatePollInput;
+  UpdatePollOptionInput: UpdatePollOptionInput;
+  UpdatePollStatusInput: UpdatePollStatusInput;
   UpdatePostInput: UpdatePostInput;
   UpdateProfileDirectInput: UpdateProfileDirectInput;
   UpdateProfileInput: UpdateProfileInput;
@@ -12120,6 +12517,7 @@ export type ResolversParentTypes = {
   UpdateSpaceSettingsCollaborationInput: UpdateSpaceSettingsCollaborationInput;
   UpdateSpaceSettingsEntityInput: UpdateSpaceSettingsEntityInput;
   UpdateSpaceSettingsInput: UpdateSpaceSettingsInput;
+  UpdateSpaceSettingsLayoutInput: UpdateSpaceSettingsLayoutInput;
   UpdateSpaceSettingsMembershipInput: UpdateSpaceSettingsMembershipInput;
   UpdateSpaceSettingsPrivacyInput: UpdateSpaceSettingsPrivacyInput;
   UpdateSubspacePinnedInput: UpdateSubspacePinnedInput;
@@ -13187,6 +13585,7 @@ export type CalloutFramingResolvers<
     ContextType
   >;
   memo?: Resolver<Maybe<ResolversTypes["Memo"]>, ParentType, ContextType>;
+  poll?: Resolver<Maybe<ResolversTypes["Poll"]>, ParentType, ContextType>;
   profile?: Resolver<ResolversTypes["Profile"], ParentType, ContextType>;
   type?: Resolver<
     ResolversTypes["CalloutFramingType"],
@@ -13617,7 +14016,7 @@ export type ConversationResolvers<
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   members?: Resolver<Array<ResolversTypes["Actor"]>, ParentType, ContextType>;
   messaging?: Resolver<ResolversTypes["Messaging"], ParentType, ContextType>;
-  room?: Resolver<Maybe<ResolversTypes["Room"]>, ParentType, ContextType>;
+  room?: Resolver<ResolversTypes["Room"], ParentType, ContextType>;
   updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -13872,6 +14271,11 @@ export type CreateCalloutFramingDataResolvers<
     ParentType,
     ContextType
   >;
+  poll?: Resolver<
+    Maybe<ResolversTypes["CreatePollData"]>,
+    ParentType,
+    ContextType
+  >;
   profile?: Resolver<
     ResolversTypes["CreateProfileData"],
     ParentType,
@@ -14109,6 +14513,20 @@ export type CreateMemoDataResolvers<
     ParentType,
     ContextType
   >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CreatePollDataResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CreatePollData"] = ResolversParentTypes["CreatePollData"]
+> = {
+  options?: Resolver<Array<ResolversTypes["String"]>, ParentType, ContextType>;
+  settings?: Resolver<
+    Maybe<ResolversTypes["PollSettingsData"]>,
+    ParentType,
+    ContextType
+  >;
+  title?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -14565,6 +14983,7 @@ export type InAppNotificationPayloadResolvers<
     | "InAppNotificationPayloadSpaceCollaborationCallout"
     | "InAppNotificationPayloadSpaceCollaborationCalloutComment"
     | "InAppNotificationPayloadSpaceCollaborationCalloutPostComment"
+    | "InAppNotificationPayloadSpaceCollaborationPoll"
     | "InAppNotificationPayloadSpaceCommunicationMessageDirect"
     | "InAppNotificationPayloadSpaceCommunicationUpdate"
     | "InAppNotificationPayloadSpaceCommunityActor"
@@ -14754,6 +15173,22 @@ export type InAppNotificationPayloadSpaceCollaborationCalloutPostCommentResolver
     ParentType,
     ContextType
   >;
+  space?: Resolver<ResolversTypes["Space"], ParentType, ContextType>;
+  type?: Resolver<
+    ResolversTypes["NotificationEventPayload"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type InAppNotificationPayloadSpaceCollaborationPollResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCollaborationPoll"] = ResolversParentTypes["InAppNotificationPayloadSpaceCollaborationPoll"]
+> = {
+  callout?: Resolver<ResolversTypes["Callout"], ParentType, ContextType>;
+  poll?: Resolver<ResolversTypes["Poll"], ParentType, ContextType>;
+  pollID?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   space?: Resolver<ResolversTypes["Space"], ParentType, ContextType>;
   type?: Resolver<
     ResolversTypes["NotificationEventPayload"],
@@ -16251,6 +16686,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationAddNotificationEmailToBlacklistArgs, "input">
   >;
+  addPollOption?: Resolver<
+    ResolversTypes["Poll"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationAddPollOptionArgs, "optionData">
+  >;
   addReactionToMessageInRoom?: Resolver<
     ResolversTypes["Reaction"],
     ParentType,
@@ -16505,6 +16946,12 @@ export type MutationResolvers<
       MutationAuthorizationPolicyResetToGlobalAdminsAccessArgs,
       "authorizationID"
     >
+  >;
+  castPollVote?: Resolver<
+    ResolversTypes["Poll"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationCastPollVoteArgs, "voteData">
   >;
   cleanupCollections?: Resolver<
     ResolversTypes["MigrateEmbeddings"],
@@ -16981,6 +17428,18 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationRemovePlatformRoleFromUserArgs, "roleData">
   >;
+  removePollOption?: Resolver<
+    ResolversTypes["Poll"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationRemovePollOptionArgs, "optionData">
+  >;
+  removePollVote?: Resolver<
+    ResolversTypes["Poll"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationRemovePollVoteArgs, "voteData">
+  >;
   removeReactionToMessageInRoom?: Resolver<
     ResolversTypes["Boolean"],
     ParentType,
@@ -17016,6 +17475,12 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationRemoveUserFromGroupArgs, "membershipData">
+  >;
+  reorderPollOptions?: Resolver<
+    ResolversTypes["Poll"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationReorderPollOptionsArgs, "optionData">
   >;
   resetConversationVc?: Resolver<
     ResolversTypes["Conversation"],
@@ -17330,6 +17795,18 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationUpdatePlatformSettingsArgs, "settingsData">
+  >;
+  updatePollOption?: Resolver<
+    ResolversTypes["Poll"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationUpdatePollOptionArgs, "optionData">
+  >;
+  updatePollStatus?: Resolver<
+    ResolversTypes["Poll"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationUpdatePollStatusArgs, "statusData">
   >;
   updatePost?: Resolver<
     ResolversTypes["Post"],
@@ -18128,6 +18605,162 @@ export type PlatformWellKnownVirtualContributorsResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type PollResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["Poll"] = ResolversParentTypes["Poll"]
+> = {
+  authorization?: Resolver<
+    Maybe<ResolversTypes["Authorization"]>,
+    ParentType,
+    ContextType
+  >;
+  canSeeDetailedResults?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
+  createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  deadline?: Resolver<
+    Maybe<ResolversTypes["DateTime"]>,
+    ParentType,
+    ContextType
+  >;
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  myVote?: Resolver<Maybe<ResolversTypes["PollVote"]>, ParentType, ContextType>;
+  options?: Resolver<
+    Array<ResolversTypes["PollOption"]>,
+    ParentType,
+    ContextType
+  >;
+  settings?: Resolver<ResolversTypes["PollSettings"], ParentType, ContextType>;
+  status?: Resolver<ResolversTypes["PollStatus"], ParentType, ContextType>;
+  title?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  totalVotes?: Resolver<Maybe<ResolversTypes["Int"]>, ParentType, ContextType>;
+  updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type PollOptionResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["PollOption"] = ResolversParentTypes["PollOption"]
+> = {
+  createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  sortOrder?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  text?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  voteCount?: Resolver<Maybe<ResolversTypes["Int"]>, ParentType, ContextType>;
+  votePercentage?: Resolver<
+    Maybe<ResolversTypes["Float"]>,
+    ParentType,
+    ContextType
+  >;
+  voters?: Resolver<
+    Maybe<Array<ResolversTypes["User"]>>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type PollOptionsChangedSubscriptionResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["PollOptionsChangedSubscriptionResult"] = ResolversParentTypes["PollOptionsChangedSubscriptionResult"]
+> = {
+  poll?: Resolver<ResolversTypes["Poll"], ParentType, ContextType>;
+  pollEventType?: Resolver<
+    ResolversTypes["PollEventType"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type PollSettingsResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["PollSettings"] = ResolversParentTypes["PollSettings"]
+> = {
+  allowContributorsAddOptions?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
+  maxResponses?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  minResponses?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  resultsDetail?: Resolver<
+    ResolversTypes["PollResultsDetail"],
+    ParentType,
+    ContextType
+  >;
+  resultsVisibility?: Resolver<
+    ResolversTypes["PollResultsVisibility"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type PollSettingsDataResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["PollSettingsData"] = ResolversParentTypes["PollSettingsData"]
+> = {
+  allowContributorsAddOptions?: Resolver<
+    Maybe<ResolversTypes["Boolean"]>,
+    ParentType,
+    ContextType
+  >;
+  maxResponses?: Resolver<
+    Maybe<ResolversTypes["Int"]>,
+    ParentType,
+    ContextType
+  >;
+  minResponses?: Resolver<
+    Maybe<ResolversTypes["Int"]>,
+    ParentType,
+    ContextType
+  >;
+  resultsDetail?: Resolver<
+    Maybe<ResolversTypes["PollResultsDetail"]>,
+    ParentType,
+    ContextType
+  >;
+  resultsVisibility?: Resolver<
+    Maybe<ResolversTypes["PollResultsVisibility"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type PollVoteResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["PollVote"] = ResolversParentTypes["PollVote"]
+> = {
+  createdBy?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  selectedOptions?: Resolver<
+    Array<ResolversTypes["PollOption"]>,
+    ParentType,
+    ContextType
+  >;
+  updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type PollVoteUpdatedSubscriptionResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["PollVoteUpdatedSubscriptionResult"] = ResolversParentTypes["PollVoteUpdatedSubscriptionResult"]
+> = {
+  poll?: Resolver<ResolversTypes["Poll"], ParentType, ContextType>;
+  pollEventType?: Resolver<
+    ResolversTypes["PollEventType"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type PostResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["Post"] = ResolversParentTypes["Post"]
@@ -18674,6 +19307,11 @@ export type RelayPaginatedSpaceResolvers<
     ContextType
   >;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  layout?: Resolver<
+    ResolversTypes["SpaceSettingsLayout"],
+    ParentType,
+    ContextType
+  >;
   level?: Resolver<ResolversTypes["SpaceLevel"], ParentType, ContextType>;
   levelZeroSpaceID?: Resolver<
     ResolversTypes["String"],
@@ -19312,6 +19950,11 @@ export type SpaceResolvers<
     ContextType
   >;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  layout?: Resolver<
+    ResolversTypes["SpaceSettingsLayout"],
+    ParentType,
+    ContextType
+  >;
   level?: Resolver<ResolversTypes["SpaceLevel"], ParentType, ContextType>;
   levelZeroSpaceID?: Resolver<
     ResolversTypes["String"],
@@ -19456,6 +20099,11 @@ export type SpaceSettingsResolvers<
     ParentType,
     ContextType
   >;
+  layout?: Resolver<
+    ResolversTypes["SpaceSettingsLayout"],
+    ParentType,
+    ContextType
+  >;
   membership?: Resolver<
     ResolversTypes["SpaceSettingsMembership"],
     ParentType,
@@ -19501,6 +20149,18 @@ export type SpaceSettingsCollaborationResolvers<
   >;
   inheritMembershipRights?: Resolver<
     ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type SpaceSettingsLayoutResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["SpaceSettingsLayout"] = ResolversParentTypes["SpaceSettingsLayout"]
+> = {
+  calloutDescriptionDisplayMode?: Resolver<
+    ResolversTypes["CalloutDescriptionDisplayMode"],
     ParentType,
     ContextType
   >;
@@ -19724,6 +20384,20 @@ export type SubscriptionResolvers<
     "notificationsUnreadCount",
     ParentType,
     ContextType
+  >;
+  pollOptionsChanged?: SubscriptionResolver<
+    ResolversTypes["PollOptionsChangedSubscriptionResult"],
+    "pollOptionsChanged",
+    ParentType,
+    ContextType,
+    RequireFields<SubscriptionPollOptionsChangedArgs, "pollID">
+  >;
+  pollVoteUpdated?: SubscriptionResolver<
+    ResolversTypes["PollVoteUpdatedSubscriptionResult"],
+    "pollVoteUpdated",
+    ParentType,
+    ContextType,
+    RequireFields<SubscriptionPollVoteUpdatedArgs, "pollID">
   >;
   roomEvents?: SubscriptionResolver<
     ResolversTypes["RoomEventSubscriptionResult"],
@@ -20563,6 +21237,26 @@ export type UserSettingsNotificationSpaceResolvers<
     ParentType,
     ContextType
   >;
+  collaborationPollModifiedOnPollIVotedOn?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  collaborationPollVoteAffectedByOptionChange?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  collaborationPollVoteCastOnOwnPoll?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  collaborationPollVoteCastOnPollIVotedOn?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
   communicationUpdates?: Resolver<
     ResolversTypes["UserSettingsNotificationChannels"],
     ParentType,
@@ -21113,6 +21807,7 @@ export type Resolvers<ContextType = any> = {
   CreateLinkData?: CreateLinkDataResolvers<ContextType>;
   CreateLocationData?: CreateLocationDataResolvers<ContextType>;
   CreateMemoData?: CreateMemoDataResolvers<ContextType>;
+  CreatePollData?: CreatePollDataResolvers<ContextType>;
   CreatePostData?: CreatePostDataResolvers<ContextType>;
   CreateProfileData?: CreateProfileDataResolvers<ContextType>;
   CreateReferenceData?: CreateReferenceDataResolvers<ContextType>;
@@ -21150,6 +21845,7 @@ export type Resolvers<ContextType = any> = {
   InAppNotificationPayloadSpaceCollaborationCallout?: InAppNotificationPayloadSpaceCollaborationCalloutResolvers<ContextType>;
   InAppNotificationPayloadSpaceCollaborationCalloutComment?: InAppNotificationPayloadSpaceCollaborationCalloutCommentResolvers<ContextType>;
   InAppNotificationPayloadSpaceCollaborationCalloutPostComment?: InAppNotificationPayloadSpaceCollaborationCalloutPostCommentResolvers<ContextType>;
+  InAppNotificationPayloadSpaceCollaborationPoll?: InAppNotificationPayloadSpaceCollaborationPollResolvers<ContextType>;
   InAppNotificationPayloadSpaceCommunicationMessageDirect?: InAppNotificationPayloadSpaceCommunicationMessageDirectResolvers<ContextType>;
   InAppNotificationPayloadSpaceCommunicationUpdate?: InAppNotificationPayloadSpaceCommunicationUpdateResolvers<ContextType>;
   InAppNotificationPayloadSpaceCommunityActor?: InAppNotificationPayloadSpaceCommunityActorResolvers<ContextType>;
@@ -21232,6 +21928,13 @@ export type Resolvers<ContextType = any> = {
   PlatformSettings?: PlatformSettingsResolvers<ContextType>;
   PlatformWellKnownVirtualContributorMapping?: PlatformWellKnownVirtualContributorMappingResolvers<ContextType>;
   PlatformWellKnownVirtualContributors?: PlatformWellKnownVirtualContributorsResolvers<ContextType>;
+  Poll?: PollResolvers<ContextType>;
+  PollOption?: PollOptionResolvers<ContextType>;
+  PollOptionsChangedSubscriptionResult?: PollOptionsChangedSubscriptionResultResolvers<ContextType>;
+  PollSettings?: PollSettingsResolvers<ContextType>;
+  PollSettingsData?: PollSettingsDataResolvers<ContextType>;
+  PollVote?: PollVoteResolvers<ContextType>;
+  PollVoteUpdatedSubscriptionResult?: PollVoteUpdatedSubscriptionResultResolvers<ContextType>;
   Post?: PostResolvers<ContextType>;
   Profile?: ProfileResolvers<ContextType>;
   PromptGraph?: PromptGraphResolvers<ContextType>;
@@ -21282,6 +21985,7 @@ export type Resolvers<ContextType = any> = {
   SpacePendingMembershipInfo?: SpacePendingMembershipInfoResolvers<ContextType>;
   SpaceSettings?: SpaceSettingsResolvers<ContextType>;
   SpaceSettingsCollaboration?: SpaceSettingsCollaborationResolvers<ContextType>;
+  SpaceSettingsLayout?: SpaceSettingsLayoutResolvers<ContextType>;
   SpaceSettingsMembership?: SpaceSettingsMembershipResolvers<ContextType>;
   SpaceSettingsPrivacy?: SpaceSettingsPrivacyResolvers<ContextType>;
   SpaceSubscription?: SpaceSubscriptionResolvers<ContextType>;
@@ -22739,6 +23443,7 @@ export type CalloutDataFragment = {
     };
     whiteboard?:
       | {
+          id: string;
           nameID: string;
           profile: {
             id: string;
@@ -24237,6 +24942,7 @@ export type CollaborationDataFragment = {
         };
         whiteboard?:
           | {
+              id: string;
               nameID: string;
               profile: {
                 id: string;
@@ -26884,6 +27590,7 @@ export type SubspaceL1DataFragment = {
             };
             whiteboard?:
               | {
+                  id: string;
                   nameID: string;
                   profile: {
                     id: string;
@@ -28521,6 +29228,7 @@ export type SubspaceL1DataFragment = {
           };
           whiteboard?:
             | {
+                id: string;
                 nameID: string;
                 profile: {
                   id: string;
@@ -30159,6 +30867,7 @@ export type SubspaceL2DataFragment = {
             };
             whiteboard?:
               | {
+                  id: string;
                   nameID: string;
                   profile: {
                     id: string;
@@ -31796,6 +32505,7 @@ export type SubspaceL2DataFragment = {
           };
           whiteboard?:
             | {
+                id: string;
                 nameID: string;
                 profile: {
                   id: string;
@@ -34600,6 +35310,7 @@ export type SpaceDataFragment = {
           };
           whiteboard?:
             | {
+                id: string;
                 nameID: string;
                 profile: {
                   id: string;
@@ -35180,6 +35891,7 @@ export type SpaceDataFragment = {
             };
             whiteboard?:
               | {
+                  id: string;
                   nameID: string;
                   profile: {
                     id: string;
@@ -37396,6 +38108,7 @@ export type SubspaceDataFragment = {
           };
           whiteboard?:
             | {
+                id: string;
                 nameID: string;
                 profile: {
                   id: string;
@@ -42008,6 +42721,70 @@ export type TransferVirtualContributorToAccountMutation = {
   };
 };
 
+export type CreateCalendarEventOnCalendarMutationVariables = Exact<{
+  eventData: CreateCalendarEventOnCalendarInput;
+}>;
+
+export type CreateCalendarEventOnCalendarMutation = {
+  createEventOnCalendar: {
+    id: string;
+    nameID: string;
+    type: CalendarEventType;
+    wholeDay: boolean;
+    multipleDays: boolean;
+    startDate?: Date | undefined;
+    durationMinutes: number;
+    durationDays?: number | undefined;
+    googleCalendarUrl?: string | undefined;
+    outlookCalendarUrl?: string | undefined;
+    icsDownloadUrl?: string | undefined;
+    profile: {
+      displayName: string;
+      description?: any | undefined;
+      url: string;
+      location?:
+        | { city?: string | undefined; country?: string | undefined }
+        | undefined;
+    };
+  };
+};
+
+export type DeleteCalendarEventMutationVariables = Exact<{
+  deleteData: DeleteCalendarEventInput;
+}>;
+
+export type DeleteCalendarEventMutation = {
+  deleteCalendarEvent: { id: string };
+};
+
+export type UpdateCalendarEventMutationVariables = Exact<{
+  eventData: UpdateCalendarEventInput;
+}>;
+
+export type UpdateCalendarEventMutation = {
+  updateCalendarEvent: {
+    id: string;
+    nameID: string;
+    type: CalendarEventType;
+    wholeDay: boolean;
+    multipleDays: boolean;
+    startDate?: Date | undefined;
+    durationMinutes: number;
+    durationDays?: number | undefined;
+    googleCalendarUrl?: string | undefined;
+    outlookCalendarUrl?: string | undefined;
+    icsDownloadUrl?: string | undefined;
+    profile: {
+      displayName: string;
+      description?: any | undefined;
+      url: string;
+      location?:
+        | { city?: string | undefined; country?: string | undefined }
+        | undefined;
+    };
+  };
+};
+
 export type CreateCalloutOnCalloutsSetMutationVariables = Exact<{
   calloutData: CreateCalloutOnCalloutsSetInput;
 }>;
@@ -43219,6 +43996,7 @@ export type UpdateCalloutVisibilityMutation = {
       };
       whiteboard?:
         | {
+            id: string;
             nameID: string;
             profile: {
               id: string;
@@ -43583,15 +44361,13 @@ export type CreateConversationMutation = {
       type: ActorType;
       profile?: { id: string; displayName: string } | undefined;
     }>;
-    room?:
-      | {
-          id: string;
-          displayName: string;
-          avatarUrl?: string | undefined;
-          type: RoomType;
-          messagesCount: number;
-        }
-      | undefined;
+    room: {
+      id: string;
+      displayName: string;
+      avatarUrl?: string | undefined;
+      type: RoomType;
+      messagesCount: number;
+    };
   };
 };
 
@@ -45596,6 +46372,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
             };
             whiteboard?:
               | {
+                  id: string;
                   nameID: string;
                   profile: {
                     id: string;
@@ -46186,6 +46963,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
               };
               whiteboard?:
                 | {
+                    id: string;
                     nameID: string;
                     profile: {
                       id: string;
@@ -49672,6 +50450,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
             };
             whiteboard?:
               | {
+                  id: string;
                   nameID: string;
                   profile: {
                     id: string;
@@ -50262,6 +51041,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
               };
               whiteboard?:
                 | {
+                    id: string;
                     nameID: string;
                     profile: {
                       id: string;
@@ -53766,6 +54546,7 @@ export type UpdateSpaceMutation = {
             };
             whiteboard?:
               | {
+                  id: string;
                   nameID: string;
                   profile: {
                     id: string;
@@ -54356,6 +55137,7 @@ export type UpdateSpaceMutation = {
               };
               whiteboard?:
                 | {
+                    id: string;
                     nameID: string;
                     profile: {
                       id: string;
@@ -56693,6 +57475,7 @@ export type CreateSubspaceMutation = {
               };
               whiteboard?:
                 | {
+                    id: string;
                     nameID: string;
                     profile: {
                       id: string;
@@ -58412,6 +59195,7 @@ export type CreateSubspaceMutation = {
             };
             whiteboard?:
               | {
+                  id: string;
                   nameID: string;
                   profile: {
                     id: string;
@@ -60090,6 +60874,7 @@ export type UpdateSubspaceMutation = {
               };
               whiteboard?:
                 | {
+                    id: string;
                     nameID: string;
                     profile: {
                       id: string;
@@ -61809,6 +62594,7 @@ export type UpdateSubspaceMutation = {
             };
             whiteboard?:
               | {
+                  id: string;
                   nameID: string;
                   profile: {
                     id: string;
@@ -65503,6 +66289,94 @@ export type GetActivityLogOnCollaborationQuery = {
   >;
 };
 
+export type GetCalendarEventByIdQueryVariables = Exact<{
+  eventId: Scalars["UUID"]["input"];
+}>;
+
+export type GetCalendarEventByIdQuery = {
+  lookup: {
+    calendarEvent?:
+      | {
+          id: string;
+          type: CalendarEventType;
+          wholeDay: boolean;
+          multipleDays: boolean;
+          startDate?: Date | undefined;
+          durationMinutes: number;
+          durationDays?: number | undefined;
+          googleCalendarUrl?: string | undefined;
+          outlookCalendarUrl?: string | undefined;
+          icsDownloadUrl?: string | undefined;
+          profile: {
+            displayName: string;
+            description?: any | undefined;
+            url: string;
+            location?:
+              | { city?: string | undefined; country?: string | undefined }
+              | undefined;
+          };
+          createdBy?: { id: string; nameID: string } | undefined;
+        }
+      | undefined;
+  };
+};
+
+export type GetCalendarEventsQueryVariables = Exact<{
+  spaceId: Scalars["UUID"]["input"];
+}>;
+
+export type GetCalendarEventsQuery = {
+  lookup: {
+    space?:
+      | {
+          collaboration: {
+            timeline: {
+              calendar: {
+                id: string;
+                events: Array<{
+                  id: string;
+                  type: CalendarEventType;
+                  wholeDay: boolean;
+                  multipleDays: boolean;
+                  startDate?: Date | undefined;
+                  durationMinutes: number;
+                  durationDays?: number | undefined;
+                  googleCalendarUrl?: string | undefined;
+                  outlookCalendarUrl?: string | undefined;
+                  icsDownloadUrl?: string | undefined;
+                  profile: {
+                    displayName: string;
+                    description?: any | undefined;
+                    url: string;
+                    location?:
+                      | {
+                          city?: string | undefined;
+                          country?: string | undefined;
+                        }
+                      | undefined;
+                  };
+                  createdBy?: { id: string; nameID: string } | undefined;
+                }>;
+              };
+            };
+          };
+        }
+      | undefined;
+  };
+};
+
+export type GetSpaceCalendarIdQueryVariables = Exact<{
+  spaceId: Scalars["UUID"]["input"];
+}>;
+
+export type GetSpaceCalendarIdQuery = {
+  lookup: {
+    space?:
+      | { collaboration: { timeline: { calendar: { id: string } } } }
+      | undefined;
+  };
+};
+
 export type SpaceCalloutQueryVariables = Exact<{
   spaceNameId: Scalars["UUID"]["input"];
   calloutId: Scalars["UUID"]["input"];
@@ -67179,16 +68053,14 @@ export type GetMeConversationsQuery = {
           type: ActorType;
           profile?: { id: string; displayName: string } | undefined;
         }>;
-        room?:
-          | {
-              id: string;
-              displayName: string;
-              avatarUrl?: string | undefined;
-              type: RoomType;
-              messagesCount: number;
-              lastMessage?: { id: any; message: any } | undefined;
-            }
-          | undefined;
+        room: {
+          id: string;
+          displayName: string;
+          avatarUrl?: string | undefined;
+          type: RoomType;
+          messagesCount: number;
+          lastMessage?: { id: any; message: any } | undefined;
+        };
       }>;
     };
   };
@@ -74696,6 +75568,7 @@ export type GetSpaceDataQuery = {
                   };
                   whiteboard?:
                     | {
+                        id: string;
                         nameID: string;
                         profile: {
                           id: string;
@@ -75336,6 +76209,7 @@ export type GetSpaceDataQuery = {
                     };
                     whiteboard?:
                       | {
+                          id: string;
                           nameID: string;
                           profile: {
                             id: string;
@@ -77858,6 +78732,7 @@ export type GetSubspacePageQuery = {
                     };
                     whiteboard?:
                       | {
+                          id: string;
                           nameID: string;
                           profile: {
                             id: string;
@@ -79726,6 +80601,7 @@ export type GetSubspacePageQuery = {
                   };
                   whiteboard?:
                     | {
+                        id: string;
                         nameID: string;
                         profile: {
                           id: string;
@@ -81571,6 +82447,7 @@ export type GetSpaceAboutDetailsQuery = {
                   };
                   whiteboard?:
                     | {
+                        id: string;
                         nameID: string;
                         profile: {
                           id: string;
@@ -83438,6 +84315,7 @@ export type GetSubspacesDataQuery = {
                       };
                       whiteboard?:
                         | {
+                            id: string;
                             nameID: string;
                             profile: {
                               id: string;
@@ -85322,6 +86200,7 @@ export type GetSubspacesDataQuery = {
                     };
                     whiteboard?:
                       | {
+                          id: string;
                           nameID: string;
                           profile: {
                             id: string;
@@ -88029,14 +88908,12 @@ export type ConversationEventsSubscription = {
               type: ActorType;
               profile?: { id: string; displayName: string } | undefined;
             }>;
-            room?:
-              | {
-                  id: string;
-                  displayName: string;
-                  avatarUrl?: string | undefined;
-                  type: RoomType;
-                }
-              | undefined;
+            room: {
+              id: string;
+              displayName: string;
+              avatarUrl?: string | undefined;
+              type: RoomType;
+            };
           };
           message?: { id: any; message: any } | undefined;
         }
@@ -88047,14 +88924,12 @@ export type ConversationEventsSubscription = {
           conversation: {
             id: string;
             members: Array<{ id: string; type: ActorType }>;
-            room?:
-              | {
-                  id: string;
-                  displayName: string;
-                  avatarUrl?: string | undefined;
-                  type: RoomType;
-                }
-              | undefined;
+            room: {
+              id: string;
+              displayName: string;
+              avatarUrl?: string | undefined;
+              type: RoomType;
+            };
           };
         }
       | undefined;
@@ -88094,5 +88969,7 @@ export type ConversationEventsSubscription = {
           };
         }
       | undefined;
+    messageRemoved?: { roomId: string; messageId: any } | undefined;
+    readReceiptUpdated?: { roomId: string; lastReadEventId: any } | undefined;
   };
 };

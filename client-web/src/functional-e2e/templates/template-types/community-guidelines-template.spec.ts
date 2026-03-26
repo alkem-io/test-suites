@@ -227,30 +227,30 @@ test.describe.serial('Community Guidelines Template', () => {
     await page
       .getByRole('heading', { name: templateData.displayName, exact: true })
       .click();
-    const templateGalleryDialog = page
-      .getByRole('heading', {
-        name: 'Template Library: Community Guidelines Template',
-        exact: true,
-      })
-      .locator('..')
-      .locator('..')
-      .locator('..');
-    const templateDialog = page
-      .getByRole('heading', {
-        name: `Preview — ${templateData.displayName}`,
-        exact: true,
-      })
-      .locator('..')
-      .locator('..')
-      .locator('..');
-    await expect(templateDialog).toBeVisible();
+
+    // Wait for the template preview dialog to appear
+    const templatePreviewHeading = page.getByRole('heading', {
+      name: `Preview — ${templateData.displayName}`,
+      exact: true,
+    });
+    await expect(templatePreviewHeading).toBeVisible();
 
     await verifyOpenedTemplate(page, templateData);
 
+    // Click "Use" — the button is in the dialog containing the preview
+    const templateDialog = page
+      .getByRole('dialog')
+      .filter({ has: templatePreviewHeading });
     await templateDialog.getByRole('button', { name: 'Use' }).click();
-    await expect(templateDialog).not.toBeVisible();
+    await expect(templatePreviewHeading).not.toBeVisible();
 
-    await expect(templateGalleryDialog).not.toBeVisible();
+    // Verify the template library dialog also closed
+    await expect(
+      page.getByRole('heading', {
+        name: 'Template Library: Community Guidelines Template',
+        exact: true,
+      })
+    ).not.toBeVisible();
 
     await expect(
       page.getByRole('textbox', { name: 'Title', exact: true }).first()

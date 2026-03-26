@@ -22,14 +22,17 @@ const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 // ============================================================================
 
 /**
- * Helper to get the flow state menu button for "Home" section
+ * Helper to get the flow state menu button for "Home" section.
+ * The Home label and MoreVert button are siblings inside a MuiPaper card
+ * with role="button" and aria-roledescription="sortable".
  */
 function getFlowStateMenuButton(page: Page) {
-  return page
+  const homeCard = page
     .getByRole('main')
-    .getByText('Skip to next blockHome🔍 A')
-    .getByRole('button')
-    .nth(1);
+    .locator('.MuiPaper-root[aria-roledescription="sortable"]')
+    .filter({ hasText: 'Home' })
+    .first();
+  return homeCard.locator('button[aria-haspopup="true"]');
 }
 
 /**
@@ -51,7 +54,8 @@ function getTemplateLibraryDialog(page: Page) {
  */
 async function openTemplateLibraryDialog(page: Page): Promise<void> {
   const flowStateMenu = getFlowStateMenuButton(page);
-  await flowStateMenu.click();
+  await expect(flowStateMenu).toBeVisible({ timeout: 10000 });
+  await flowStateMenu.click({ force: true });
 
   const menuItem = getDefaultTemplateMenuItem(page);
   await expect(menuItem).toBeVisible({ timeout: 5000 });
@@ -162,18 +166,20 @@ test.describe('Default Template Per Flow State', () => {
       await spaceSettingsPage.layoutTab.click();
       await page.waitForLoadState('networkidle');
 
-      // Verify Home flow state is visible
+      // Verify Home flow state card is visible
       const homeFlowState = page
         .getByRole('main')
-        .locator('div')
-        .filter({ hasText: /^Home$/ })
+        .locator('.MuiPaper-root')
+        .filter({ hasText: 'Home' })
         .first();
       await expect(homeFlowState).toBeVisible({ timeout: 5000 });
 
       // Open flow state menu
+      // The button inherits aria-disabled from the DnD sortable parent card,
+      // but is still functionally clickable — use force to bypass the disabled check
       const flowStateMenu = getFlowStateMenuButton(page);
       await expect(flowStateMenu).toBeVisible({ timeout: 10000 });
-      await flowStateMenu.click();
+      await flowStateMenu.click({ force: true });
 
       // Verify "Set Default Post Template" option is visible
       const defaultTemplateOption = getDefaultTemplateMenuItem(page);

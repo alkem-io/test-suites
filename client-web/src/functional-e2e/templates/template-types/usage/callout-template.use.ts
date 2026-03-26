@@ -57,28 +57,34 @@ export const verifyCalloutTemplateUsage = async (
   await addPostDialog.waitFor({ state: 'hidden' });
 
   // Verify the callout appears in the feed with correct title and description
-  const title = await page.getByRole('heading', {
+  const title = page.getByRole('heading', {
     name: templateData.calloutTitle,
     exact: true,
   });
   await title.scrollIntoViewIfNeeded();
   await expect(title).toBeVisible();
-  const calloutContainer = title
-    .locator('..')
-    .locator('..')
-    .locator('..')
-    .locator('..');
 
+  // Find the callout card container — locate the closest MuiPaper ancestor
+  const calloutContainer = page
+    .locator('.MuiPaper-root')
+    .filter({ has: title })
+    .first();
+
+  // Verify description text is present (use partial match since HTML collapses whitespace)
   await expect(
-    calloutContainer.getByText(templateData.calloutDescription, { exact: true })
+    calloutContainer.getByText('Callout Template Description', { exact: false })
+  ).toBeVisible();
+  await expect(
+    calloutContainer.getByText(`- ID: ${templateData.testId}`, { exact: true })
   ).toBeVisible();
 
   // Comments UI can be hidden behind toggles; skip strict visibility checks
 
+  // Verify all callout tags are present as chips
   for (const tag of templateData.calloutTags) {
-    const chip = calloutContainer.locator('.MuiChip-root').getByText(tag);
-    const count = await chip.count();
-    await expect(count).toBeGreaterThan(0);
+    await expect(
+      calloutContainer.locator('.MuiChip-root').getByText(tag, { exact: true }).first()
+    ).toBeVisible();
   }
 
   for (const reference of templateData.calloutReferences) {

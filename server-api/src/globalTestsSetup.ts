@@ -61,9 +61,11 @@ export const userRegisterFlow = async (userName: string) => {
   const [firstName, lastName] = getUserName(userName);
   const email = `${userName}@alkem.io`;
   const needsVerification = true;
+  let verificationFlowId: string | undefined;
 
   try {
-    await registerInKratosOrFail(firstName, lastName, email);
+    const result = await registerInKratosOrFail(firstName, lastName, email);
+    verificationFlowId = result.verificationFlowId;
     console.error(`[registration] ${email} registered`);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
@@ -95,7 +97,7 @@ export const userRegisterFlow = async (userName: string) => {
 
   if (needsVerification) {
     try {
-      await verifyInKratosOrFail(email);
+      await verifyInKratosOrFail(email, verificationFlowId);
       console.error(`[verification] ${email} verified`);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
