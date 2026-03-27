@@ -32,7 +32,7 @@ export default defineConfig({
     trace: 'on-first-retry',
     headless: process.env.UI_HEADLESS !== 'false',
   },
-  timeout: 30000,
+  timeout: (process.env.ALKEMIO_BASE_URL || '').includes('localhost') ? 30000 : 60000,
 
   expect: {
     timeout: 10 * 500,

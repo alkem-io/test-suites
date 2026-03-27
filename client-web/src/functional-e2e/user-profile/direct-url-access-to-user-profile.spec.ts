@@ -22,9 +22,7 @@ test.describe('Navigation and Access', () => {
     await page.waitForURL(/.*home.*/);
 
     // 1. Navigate directly to /user/admin-alkemio/settings/profile
-    await page.goto(
-      'http://localhost:3000/user/admin-alkemio/settings/profile'
-    );
+    await page.goto(`${baseUrl}/user/admin-alkemio/settings/profile`);
 
     // Verify "My profile" tab is active
     await expect(page.getByRole('tab', { name: 'My profile' })).toBeVisible();

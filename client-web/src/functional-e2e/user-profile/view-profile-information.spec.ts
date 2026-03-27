@@ -20,9 +20,7 @@ test.describe('My Profile Tab - View and Edit', () => {
     await page.waitForURL(/.*home.*/);
 
     // Navigate to My profile tab
-    await page.goto(
-      'http://localhost:3000/user/admin-alkemio/settings/profile'
-    );
+    await page.goto(`${baseUrl}/user/admin-alkemio/settings/profile`);
 
     // 1. Verify profile avatar is displayed
     await expect(page.getByRole('img', { name: 'Not yet set' })).toBeVisible();

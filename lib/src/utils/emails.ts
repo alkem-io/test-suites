@@ -59,12 +59,60 @@ export const getRecoveryCode = async (): Promise<
   return [recoveryCode, lastEmailBody, emailsCount];
 };
 
-// export async function getMail(mailsData: string) {
-//   await delay(500);
-//   const getEmailsData = await getEmails();
-//   const urlFromEmail = getEmailsData[0];
-//   if (urlFromEmail === undefined) {
-//     throw new Error("Url from email is missing!");
-//   }
-//   return new Promise((resolve) => setTimeout(resolve, mailsData));
-// }
+/**
+ * Extracts a recovery link from the recovery email.
+ * Searches all emails for one with a recovery-related subject,
+ * then extracts the self-service/recovery URL from it.
+ */
+export const getRecoveryLink = async (): Promise<string | undefined> => {
+  const response = await getMails();
+  const items = response.body.mailItems as Array<{ subject: string; body: string }>;
+  const recoveryEmail = items.find(
+    (item) => item.subject.toLowerCase().includes("recover")
+  );
+  if (!recoveryEmail) return undefined;
+  return extractKratosLink(recoveryEmail.body, "self-service/recovery");
+};
+
+/**
+ * Extracts a verification link from the verification email.
+ * Searches all emails for one with a verification-related subject,
+ * then extracts the self-service/verification URL from it.
+ */
+export const getVerificationLink = async (): Promise<string | undefined> => {
+  const response = await getMails();
+  const items = response.body.mailItems as Array<{ subject: string; body: string }>;
+  const verificationEmail = items.find(
+    (item) => item.subject.toLowerCase().includes("verify")
+  );
+  if (!verificationEmail) return undefined;
+  return extractKratosLink(verificationEmail.body, "self-service/verification");
+};
+
+/**
+ * Extracts a Kratos self-service link from an email body.
+ * First checks href attributes (links may only exist in HTML tags),
+ * then falls back to plain text matching.
+ * Decodes HTML entities (e.g. &amp; → &) in the extracted URL.
+ */
+function extractKratosLink(
+  emailBody: string,
+  pathFragment: string
+): string | undefined {
+  // Try href attributes first — the link is often only in <a href="...">
+  const hrefRegex = new RegExp(
+    `href=["']([^"']*${pathFragment.replace("/", "\\/")}[^"']*)["']`
+  );
+  const hrefMatch = emailBody.match(hrefRegex);
+  if (hrefMatch) {
+    return hrefMatch[1].replace(/&amp;/g, "&");
+  }
+
+  // Fall back to plain text
+  const cleanText = emailBody.replace(/<.*?>/gm, "");
+  const textRegex = new RegExp(
+    `https?:\\/\\/[^\\s"<]*${pathFragment.replace("/", "\\/")}[^\\s"<]*`
+  );
+  const textMatch = cleanText.match(textRegex);
+  return textMatch ? textMatch[0].replace(/&amp;/g, "&") : undefined;
+}

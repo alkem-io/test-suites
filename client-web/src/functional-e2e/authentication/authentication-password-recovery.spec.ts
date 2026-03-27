@@ -12,10 +12,12 @@ import {
   delay,
   deleteMailSlurperMails,
   getRecoveryCode,
+  getRecoveryLink,
 } from '@alkemio/tests-lib';
 
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
+const isLocalEnv = baseUrl.includes('localhost');
 
 test.describe('Authentication - Password Recovery Flows', () => {
   test.beforeEach(async ({ context }) => {
@@ -42,18 +44,34 @@ test.describe('Authentication - Password Recovery Flows', () => {
     await emailField(page).fill('non.space@alkem.io');
     await continueButton(page).click();
 
-    // Wait for email and get recovery code
-    await delay(1500);
-    const getEmailsData = await getRecoveryCode();
-    const recoveryCodeFromEmail = getEmailsData[0];
-    if (recoveryCodeFromEmail === undefined) {
-      throw new Error('Recovery code from email is missing!');
-    }
+    // Wait for recovery email to arrive
+    await delay(3000);
 
-    // Enter recovery code
-    await recoveryCodeField(page).click();
-    await recoveryCodeField(page).fill(recoveryCodeFromEmail);
-    await continueButton(page).click();
+    if (isLocalEnv) {
+      // Code recovery flow (local): extract 6-digit code and enter it
+      const getEmailsData = await getRecoveryCode();
+      const recoveryCodeFromEmail = getEmailsData[0];
+      if (recoveryCodeFromEmail === undefined) {
+        throw new Error('Recovery code from email is missing!');
+      }
+
+      await recoveryCodeField(page).click();
+      await recoveryCodeField(page).fill(recoveryCodeFromEmail);
+      await continueButton(page).click();
+    } else {
+      // Link recovery flow (remote): poll for recovery link
+      let recoveryLink: string | undefined;
+      for (let attempt = 0; attempt < 10; attempt++) {
+        recoveryLink = await getRecoveryLink();
+        if (recoveryLink) break;
+        await delay(2000);
+      }
+      if (recoveryLink === undefined) {
+        throw new Error('Recovery link from email is missing!');
+      }
+
+      await page.goto(recoveryLink);
+    }
 
     // Set new password
     await passwordField(page).click();
@@ -62,7 +80,7 @@ test.describe('Authentication - Password Recovery Flows', () => {
     // Verify we're on User Settings page
     await expect(
       page.getByRole('heading', { name: 'User Settings' })
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 10000 });
 
     // Save the new password
     await saveButton(page).click();
