@@ -53,9 +53,7 @@ test.describe('My Profile Tab - View and Edit', () => {
   test.afterEach(async ({ page }) => {
     // Cleanup: Revert changes to original values if they were modified
     if (originalFirstName && originalLastName) {
-      await page.goto(
-        'http://localhost:3000/user/admin-alkemio/settings/profile'
-      );
+      await page.goto(`${baseUrl}/user/admin-alkemio/settings/profile`);
       await page
         .getByRole('textbox', { name: 'First Name' })
         .fill(originalFirstName);

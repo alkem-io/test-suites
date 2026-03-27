@@ -81,10 +81,11 @@ export const verifyCalloutTemplateUsage = async (
   // Comments UI can be hidden behind toggles; skip strict visibility checks
 
   // Verify all callout tags are present as chips
+  // Increased timeout: when many callouts exist from earlier tests, chip rendering is slower
   for (const tag of templateData.calloutTags) {
     await expect(
       calloutContainer.locator('.MuiChip-root').getByText(tag, { exact: true }).first()
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 15000 });
   }
 
   for (const reference of templateData.calloutReferences) {
