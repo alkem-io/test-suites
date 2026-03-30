@@ -1,28 +1,12 @@
 import axios from 'axios';
-import { Configuration, IdentityApi, FrontendApi } from '@ory/kratos-client';
+import { Configuration, FrontendApi } from '@ory/kratos-client';
 import { testConfiguration } from '../../config/test.configuration';
 import { delay } from '../../utils/delay';
 import { getMails } from '../../utils/mailslurper.rest.requests';
 
-/**
- * Determines the verification method based on the Kratos endpoint.
- * Local environments use "code", remote environments use "link".
- */
-const getVerificationMethod = (): 'code' | 'link' => {
-  const kratosUrl = testConfiguration.endPoints.kratos.public;
-  return kratosUrl.includes('localhost') ? 'code' : 'link';
-};
-
 /***
- * Verification flow (code or link method, depending on environment)
+ * Verification flow (link method)
  *
- * Code method (local):
- * 1. Create a native verification flow
- * 2. Submit email with method "code" — Kratos sends a verification code via email
- * 3. Fetch the verification email from mail slurper
- * 4. Extract the code and submit it back to complete verification
- *
- * Link method (remote):
  * 1. Create a native verification flow
  * 2. Submit email with method "link" — Kratos sends a verification link via email
  * 3. Fetch the verification email from mail slurper
@@ -34,13 +18,12 @@ const getVerificationMethod = (): 'code' | 'link' => {
  * @param email - user email to verify
  * @param existingFlowId - optional flow ID from registration's `continue_with`.
  *   When provided, skips creating a new flow and triggering a new email —
- *   uses the code/link Kratos already sent during registration.
+ *   uses the link Kratos already sent during registration.
  */
 export const verifyInKratosOrFail = async (
   email: string,
   existingFlowId?: string
 ) => {
-  const method = getVerificationMethod();
   const kratosConfig = new Configuration({
     basePath: testConfiguration.endPoints.kratos.public,
     baseOptions: {
@@ -48,10 +31,7 @@ export const verifyInKratosOrFail = async (
       timeout: 30000, // 30 seconds
     },
   });
-  const ory = {
-    identity: new IdentityApi(kratosConfig),
-    frontend: new FrontendApi(kratosConfig),
-  };
+  const ory = new FrontendApi(kratosConfig);
 
   let flowId: string;
 
@@ -64,26 +44,24 @@ export const verifyInKratosOrFail = async (
     // Create a new verification flow and trigger a verification email.
     const {
       data: { id: newFlowId },
-    } = await ory.frontend.createNativeVerificationFlow();
+    } = await ory.createNativeVerificationFlow();
     flowId = newFlowId;
 
     const {
       data: {
         ui: { messages },
       },
-    } = await ory.frontend.updateVerificationFlow({
+    } = await ory.updateVerificationFlow({
       flow: flowId,
       updateVerificationFlowBody: {
         email,
-        method,
+        method: 'link',
       },
     });
 
     const verifyMessages = messages ?? [];
     const isSent = !!verifyMessages.find(
-      x =>
-        x.text.indexOf('verification code has been sent') > -1 ||
-        x.text.indexOf('verification link has been sent') > -1
+      x => x.text.indexOf('verification link has been sent') > -1
     );
 
     if (!isSent) {
@@ -103,53 +81,6 @@ export const verifyInKratosOrFail = async (
   // Fetch the verification email from mail slurper
   await delay(1100);
 
-  if (method === 'code') {
-    await completeVerificationWithCode(ory, flowId, email);
-  } else {
-    await completeVerificationWithLink(email);
-  }
-};
-
-/**
- * Complete verification using the "code" method (local environments).
- * Extracts a 6-digit code from the email and submits it to Kratos.
- */
-const completeVerificationWithCode = async (
-  ory: { frontend: FrontendApi },
-  flowId: string,
-  email: string
-) => {
-  const verificationCode = await getVerificationCode(email);
-
-  if (!verificationCode) {
-    throw new Error(
-      `Unable to fetch verification code for user '${email}'`
-    );
-  }
-
-  const submitResult = await ory.frontend.updateVerificationFlow({
-    flow: flowId,
-    updateVerificationFlowBody: {
-      code: verificationCode,
-      method: 'code',
-    },
-  });
-
-  if (submitResult.data.state !== 'passed_challenge') {
-    const errorMsgs = (submitResult.data.ui.messages ?? [])
-      .map(x => x.text)
-      .join('\n');
-    throw new Error(
-      `Verification code rejected for user '${email}': ${errorMsgs}`
-    );
-  }
-};
-
-/**
- * Complete verification using the "link" method (remote environments).
- * Extracts the verification link from the email and follows it via HTTP GET.
- */
-const completeVerificationWithLink = async (email: string) => {
   const verificationLink = await getVerificationLink(email);
 
   if (!verificationLink) {
@@ -175,17 +106,6 @@ const completeVerificationWithLink = async (email: string) => {
 
 /**
  * Fetch verification email for a specific user from mail slurper
- * and extract the 6-digit verification code.
- */
-const getVerificationCode = async (email: string): Promise<string> =>
-  getVerificationEmailBody(email).then(body => {
-    if (!body) return '';
-    const codeMatch = body.match(/\b(\d{6})\b/);
-    return codeMatch ? codeMatch[1] : '';
-  });
-
-/**
- * Fetch verification email for a specific user from mail slurper
  * and extract the verification link URL.
  */
 const getVerificationLink = async (email: string): Promise<string> =>
@@ -195,7 +115,7 @@ const getVerificationLink = async (email: string): Promise<string> =>
     const linkMatch = body.match(
       /https?:\/\/[^\s"<]+self-service\/verification[^\s"<]*/
     );
-    return linkMatch ? linkMatch[0] : '';
+    return linkMatch ? linkMatch[0].replace(/&amp;/g, '&') : '';
   });
 
 /**
