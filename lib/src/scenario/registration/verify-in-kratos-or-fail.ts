@@ -115,7 +115,7 @@ const getVerificationLink = async (email: string): Promise<string> =>
     const linkMatch = body.match(
       /https?:\/\/[^\s"<]+self-service\/verification[^\s"<]*/
     );
-    return linkMatch ? linkMatch[0] : '';
+    return linkMatch ? linkMatch[0].replace(/&amp;/g, '&') : '';
   });
 
 /**
