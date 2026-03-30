@@ -40,6 +40,7 @@ dotenv.config({ path: path.resolve(__dirname, '../', '.env') });
 const testDirectory = '../src/functional-e2e';
 
 export default defineConfig({
+  globalSetup: './global-setup.ts',
   testDir: testDirectory,
 
   /* Configure projects for major browsers */

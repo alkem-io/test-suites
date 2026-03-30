@@ -44,15 +44,6 @@ jobs:
           echo "RUN_DATE=$DATE" >> $GITHUB_ENV
           echo "RUN_ID=${{ github.run_id }}" >> $GITHUB_ENV
 
-      - name: Register users
-        env:
-          ALKEMIO_SERVER: ${{ vars.ALKEMIO_SERVER }}
-          ALKEMIO_SERVER_URL: ${{ vars.ALKEMIO_SERVER_URL }}
-          KRATOS_ENDPOINT: ${{ vars.KRATOS_ENDPOINT }}
-          MAIL_SLURPER_ENDPOINT: ${{ vars.MAIL_SLURPER_ENDPOINT }}
-          AUTH_TEST_HARNESS_PASSWORD: ${{ secrets.AUTH_TEST_HARNESS_PASSWORD }}
-        run: pnpm --filter @alkemio/test-suite-client-web run register-users
-
       - name: Run Playwright tests
         id: playwright
         continue-on-error: true
@@ -65,7 +56,7 @@ jobs:
           KRATOS_ENDPOINT: ${{ vars.KRATOS_ENDPOINT }}
           MAIL_SLURPER_ENDPOINT: ${{ vars.MAIL_SLURPER_ENDPOINT }}
           AUTH_TEST_HARNESS_PASSWORD: ${{ secrets.AUTH_TEST_HARNESS_PASSWORD }}
-        run: pnpm --filter @alkemio/test-suite-client-web exec playwright test --config=config/playwright.config.nightly.ts
+        run: pnpm --filter @alkemio/test-suite-client-web run test:nightly
 
       - name: Publish report to GitHub Pages
         if: ${{ always() }}

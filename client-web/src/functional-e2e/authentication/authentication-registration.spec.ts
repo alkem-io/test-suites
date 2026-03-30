@@ -14,20 +14,17 @@ import {
 } from '../identity-flows/signin-page-objects';
 import { verifyMyDashboardWelcomeElement } from '../my-dashboard/my-dashboard-page-objects';
 import {
-  continueButton,
   nextButton,
 } from './common-authentication-page-elements';
 import {
   delay,
   deleteMailSlurperMails,
-  getEmails,
   getVerificationLink,
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
 
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
-const isLocalEnv = baseUrl.includes('localhost');
 
 test.describe('Authentication - Registration Flows', () => {
   test.beforeEach(async ({ context }) => {
@@ -75,44 +72,24 @@ test.describe('Authentication - Registration Flows', () => {
     // Wait for verification email to arrive
     await delay(3000);
 
-    if (isLocalEnv) {
-      // Code verification flow (local): navigate to URL from email, enter code
-      const getEmailsData = await getEmails();
-      const urlFromEmail = getEmailsData[0];
-      if (urlFromEmail === undefined) {
-        throw new Error('Verification URL from email is missing!');
-      }
+    // Link verification flow: poll for verification link
+    let verificationLink: string | undefined;
+    for (let attempt = 0; attempt < 10; attempt++) {
+      verificationLink = await getVerificationLink();
+      if (verificationLink) break;
+      await delay(2000);
+    }
+    if (verificationLink === undefined) {
+      throw new Error('Verification link from email is missing!');
+    }
 
-      await page.goto(urlFromEmail);
-      await expect(page.getByText('An email containing a')).toBeVisible();
-      await page.getByLabel('Verification code *').click();
-      await continueButton(page).click();
-
-      await expect(page.getByText('You successfully verified')).toBeVisible();
-      await expect(
-        page.getByRole('link', { name: 'Continue' })
-      ).toBeVisible();
-      await page.getByRole('link', { name: 'Continue' }).click();
-    } else {
-      // Link verification flow (remote): poll for verification link
-      let verificationLink: string | undefined;
-      for (let attempt = 0; attempt < 10; attempt++) {
-        verificationLink = await getVerificationLink();
-        if (verificationLink) break;
-        await delay(2000);
-      }
-      if (verificationLink === undefined) {
-        throw new Error('Verification link from email is missing!');
-      }
-
-      await page.goto(verificationLink);
-      await expect(page.getByText('You successfully verified')).toBeVisible({
-        timeout: 10000,
-      });
-      const continueLink = page.getByRole('link', { name: 'Continue' });
-      if (await continueLink.isVisible({ timeout: 5000 }).catch(() => false)) {
-        await continueLink.click();
-      }
+    await page.goto(verificationLink);
+    await expect(page.getByText('You successfully verified')).toBeVisible({
+      timeout: 10000,
+    });
+    const continueLink = page.getByRole('link', { name: 'Continue' });
+    if (await continueLink.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await continueLink.click();
     }
 
     await expect(
@@ -161,44 +138,24 @@ test.describe('Authentication - Registration Flows', () => {
     // Wait for verification email to arrive
     await delay(3000);
 
-    if (isLocalEnv) {
-      // Code verification flow (local): navigate to URL from email, enter code
-      const getEmailsData = await getEmails();
-      const urlFromEmail = getEmailsData[0];
-      if (urlFromEmail === undefined) {
-        throw new Error('Verification URL from email is missing!');
-      }
+    // Link verification flow: poll for verification link
+    let verificationLink: string | undefined;
+    for (let attempt = 0; attempt < 10; attempt++) {
+      verificationLink = await getVerificationLink();
+      if (verificationLink) break;
+      await delay(2000);
+    }
+    if (verificationLink === undefined) {
+      throw new Error('Verification link from email is missing!');
+    }
 
-      await page.goto(urlFromEmail);
-      await expect(page.getByText('An email containing a')).toBeVisible();
-      await page.getByLabel('Verification code *').click();
-      await continueButton(page).click();
-
-      await expect(page.getByText('You successfully verified')).toBeVisible();
-      await expect(
-        page.getByRole('link', { name: 'Continue' })
-      ).toBeVisible();
-      await page.getByRole('link', { name: 'Continue' }).click();
-    } else {
-      // Link verification flow (remote): poll for verification link
-      let verificationLink: string | undefined;
-      for (let attempt = 0; attempt < 10; attempt++) {
-        verificationLink = await getVerificationLink();
-        if (verificationLink) break;
-        await delay(2000);
-      }
-      if (verificationLink === undefined) {
-        throw new Error('Verification link from email is missing!');
-      }
-
-      await page.goto(verificationLink);
-      await expect(page.getByText('You successfully verified')).toBeVisible({
-        timeout: 10000,
-      });
-      const continueLink = page.getByRole('link', { name: 'Continue' });
-      if (await continueLink.isVisible({ timeout: 5000 }).catch(() => false)) {
-        await continueLink.click();
-      }
+    await page.goto(verificationLink);
+    await expect(page.getByText('You successfully verified')).toBeVisible({
+      timeout: 10000,
+    });
+    const continueLink = page.getByRole('link', { name: 'Continue' });
+    if (await continueLink.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await continueLink.click();
     }
 
     await expect(
