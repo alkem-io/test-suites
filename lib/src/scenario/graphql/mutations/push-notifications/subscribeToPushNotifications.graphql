@@ -1,0 +1,11 @@
+mutation SubscribeToPushNotifications(
+  $subscriptionData: SubscribeToPushNotificationsInput!
+) {
+  subscribeToPushNotifications(subscriptionData: $subscriptionData) {
+    id
+    createdDate
+    status
+    userAgent
+    lastActiveDate
+  }
+}

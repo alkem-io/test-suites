@@ -14,21 +14,25 @@ fragment userSettingsFragment on UserSettings {
         userProfileRemoved {
           email
           inApp
+          push
           __typename
         }
         userProfileCreated {
           email
           inApp
+          push
           __typename
         }
         spaceCreated {
           email
           inApp
+          push
           __typename
         }
         userGlobalRoleChanged {
           email
           inApp
+          push
           __typename
         }
         __typename
@@ -36,11 +40,13 @@ fragment userSettingsFragment on UserSettings {
       forumDiscussionComment {
         email
         inApp
+        push
         __typename
       }
       forumDiscussionCreated {
         email
         inApp
+        push
         __typename
       }
       __typename
@@ -49,11 +55,13 @@ fragment userSettingsFragment on UserSettings {
       adminMentioned {
         email
         inApp
+        push
         __typename
       }
       adminMessageReceived {
         email
         inApp
+        push
         __typename
       }
       __typename
@@ -63,21 +71,25 @@ fragment userSettingsFragment on UserSettings {
         communityApplicationReceived {
           email
           inApp
+          push
           __typename
         }
         collaborationCalloutContributionCreated {
           email
           inApp
+          push
           __typename
         }
         communityNewMember {
           email
           inApp
+          push
           __typename
         }
         communicationMessageReceived {
           email
           inApp
+          push
           __typename
         }
         __typename
@@ -85,26 +97,61 @@ fragment userSettingsFragment on UserSettings {
       collaborationCalloutContributionCreated {
         email
         inApp
+        push
         __typename
       }
       communicationUpdates {
         email
         inApp
+        push
         __typename
       }
       collaborationCalloutPublished {
         email
         inApp
+        push
         __typename
       }
       collaborationCalloutComment {
         email
         inApp
+        push
         __typename
       }
       collaborationCalloutPostContributionComment {
         email
         inApp
+        push
+        __typename
+      }
+      communityCalendarEvents {
+        email
+        inApp
+        push
+        __typename
+      }
+      collaborationPollVoteCastOnOwnPoll {
+        email
+        inApp
+        push
+        __typename
+      }
+      collaborationPollVoteCastOnPollIVotedOn {
+        email
+        inApp
+        push
+        __typename
+      }
+      collaborationPollModifiedOnPollIVotedOn {
+        email
+        inApp
+        push
+        __typename
+      }
+      collaborationPollVoteAffectedByOptionChange {
+        email
+        inApp
+        push
         __typename
       }
       __typename
@@ -114,11 +161,13 @@ fragment userSettingsFragment on UserSettings {
         spaceCommunityInvitationReceived {
           email
           inApp
+          push
           __typename
         }
         spaceCommunityJoined {
           email
           inApp
+          push
           __typename
         }
         # spaceCommunityApplicationSubmitted {
@@ -131,16 +180,19 @@ fragment userSettingsFragment on UserSettings {
       mentioned {
         email
         inApp
+        push
         __typename
       }
       commentReply {
         email
         inApp
+        push
         __typename
       }
       messageReceived {
         email
         inApp
+        push
         __typename
       }
       # copyOfMessageSent {
@@ -154,6 +206,7 @@ fragment userSettingsFragment on UserSettings {
       adminSpaceCommunityInvitation {
         email
         inApp
+        push
         __typename
       }
       __typename

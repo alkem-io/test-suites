@@ -109,6 +109,9 @@ export default defineConfig({
       ]),
       project('templates', ['src/functional-api/templates/**/*.it-spec.ts']),
       project('calendar', ['src/functional-api/calendar/**/*.it-spec.ts']),
+      project('push-notifications', [
+        'src/functional-api/push-notifications/**/*.it-spec.ts',
+      ]),
       project('graphql-guard', [
         'src/functional-api/graphql-guard/**/*.it-spec.ts',
       ]),
@@ -124,6 +127,7 @@ export default defineConfig({
         'src/functional-api/entitlements/**/*.it-spec.ts',
         'src/functional-api/templates/**/*.it-spec.ts',
         'src/functional-api/calendar/**/*.it-spec.ts',
+        'src/functional-api/push-notifications/**/*.it-spec.ts',
       ]),
     ],
   },
