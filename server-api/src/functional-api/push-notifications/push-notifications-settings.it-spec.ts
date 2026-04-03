@@ -4,16 +4,18 @@ import {
   TestScenarioNoPreCreationConfig,
   TestUserManager,
 } from '@alkemio/tests-lib';
-import { updateUserSettingsWithPush } from './push-notifications.request.params';
-import { notifWithPush, notifPush } from '../notifications/notification.helpers';
+import { updateUserSettingsWithPush } from '@functional-api/push-notifications/push-notifications.request.params';
+import { notifWithPush, notifPush } from '@functional-api/notifications/notification.helpers';
 
 const scenarioConfig: TestScenarioNoPreCreationConfig = {
   name: 'push-notification-settings',
 };
 
 // Accessor for the notification settings from the raw GraphQL response
-const getSettings = (res: any) =>
-  res.body.data?.updateUserSettings?.settings?.notification;
+const getSettings = (res: any) => {
+  expect(res.body.errors ?? []).toHaveLength(0);
+  return res.body.data?.updateUserSettings?.settings?.notification;
+};
 
 beforeAll(async () => {
   await TestScenarioFactory.createBaseScenarioEmpty(scenarioConfig);
