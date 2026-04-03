@@ -200,11 +200,20 @@ describe('Push Subscriptions - VAPID Key Security', () => {
 
   test('should not expose VAPID private key in public key query', async () => {
     const res = await getVapidPublicKey(TestUser.GLOBAL_ADMIN);
-    const responseStr = JSON.stringify(res);
 
-    // Response should not contain any field named "privateKey" or "secret"
-    expect(responseStr.toLowerCase()).not.toContain('privatekey');
-    expect(responseStr.toLowerCase()).not.toContain('vapidprivate');
+    // Verify query succeeded with no errors
+    expect(res.body.errors ?? []).toHaveLength(0);
+    expect(res.body.data?.vapidPublicKey).toBeDefined();
+
+    // Verify the response data contains only the expected field
+    const dataKeys = Object.keys(res.body.data);
+    expect(dataKeys).toEqual(['vapidPublicKey']);
+
+    // Additionally check that the full response body doesn't leak private key material
+    const responseStr = JSON.stringify(res.body).toLowerCase();
+    expect(responseStr).not.toContain('privatekey');
+    expect(responseStr).not.toContain('vapidprivate');
+    expect(responseStr).not.toContain('secret');
   });
 });
 
@@ -222,7 +231,10 @@ describe('Push Subscriptions - Authorization Edge Cases', () => {
       sub.auth,
       TestUser.GLOBAL_ADMIN
     );
-    const realId = createRes.body.data?.subscribeToPushNotifications.id;
+    const createData = createRes.body.data?.subscribeToPushNotifications;
+    expect(createData).toBeDefined();
+    expect(createData.id).toBeDefined();
+    const realId = createData.id;
     pendingCleanup.push({ id: realId, user: TestUser.GLOBAL_ADMIN });
 
     // Try to unsubscribe as different user
@@ -255,16 +267,27 @@ describe('Push Subscriptions - Authorization Edge Cases', () => {
       TestUser.GLOBAL_ADMIN,
       'Leak Test Browser'
     );
+    expect(createRes.body.errors ?? []).toHaveLength(0);
     const subId = createRes.body.data?.subscribeToPushNotifications.id;
+    expect(subId).toBeDefined();
     pendingCleanup.push({ id: subId, user: TestUser.GLOBAL_ADMIN });
 
     const listRes = await getMyPushSubscriptions(TestUser.GLOBAL_ADMIN);
     const found = listRes.body.data?.myPushSubscriptions.find(
-      (s: any) => s.userAgent === 'Leak Test Browser'
+      (s: any) => s.id === subId
     );
 
     expect(found).toBeDefined();
-    // The response should NOT contain the raw crypto keys or full endpoint
+    expect(found.userAgent).toEqual('Leak Test Browser');
+
+    // Verify returned fields are limited to safe metadata only
+    const fieldNames = Object.keys(found);
+    expect(fieldNames).not.toContain('endpoint');
+    expect(fieldNames).not.toContain('p256dh');
+    expect(fieldNames).not.toContain('auth');
+    expect(fieldNames).not.toContain('keys');
+
+    // Also check values don't leak through other fields
     const responseStr = JSON.stringify(found);
     expect(responseStr).not.toContain(sub.p256dh);
     expect(responseStr).not.toContain(sub.auth);

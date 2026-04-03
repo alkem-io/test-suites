@@ -343,12 +343,13 @@ describe('Push Subscriptions - Subscription fields', () => {
 
     const listRes = await getMyPushSubscriptions(TestUser.GLOBAL_ADMIN);
     const found = listRes.body.data?.myPushSubscriptions.find(
-      (s: any) => s.userAgent === 'Safari/17 on iOS'
+      (s: any) => s.id === subId
     );
 
     expect(found).toBeDefined();
-    expect(found.id).toBeDefined();
+    expect(found.id).toEqual(subId);
     expect(found.createdDate).toBeDefined();
     expect(found.status).toEqual('ACTIVE');
+    expect(found.userAgent).toEqual('Safari/17 on iOS');
   });
 });

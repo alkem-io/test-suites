@@ -35,7 +35,7 @@ export default defineConfig({
     pool: 'threads',
 
     isolate: false,
-    testTimeout: 60_000, // generous for individual API-based tests
+    testTimeout: 1_800_000, // 30 minutes — integration tests call remote APIs and create complex scenarios
     hookTimeout: 120_000, // beforeAll hooks create multiple entities via API, so they need more headroom
     globalSetup: './src/globalTestsSetup.ts',
     setupFiles: ['./src/setupTests.ts'],

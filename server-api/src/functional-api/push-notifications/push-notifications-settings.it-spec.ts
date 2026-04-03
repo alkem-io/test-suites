@@ -5,7 +5,10 @@ import {
   TestUserManager,
 } from '@alkemio/tests-lib';
 import { updateUserSettingsWithPush } from '@functional-api/push-notifications/push-notifications.request.params';
-import { notifWithPush, notifPush } from '@functional-api/notifications/notification.helpers';
+import {
+  notifWithPush,
+  notifPush,
+} from '@functional-api/notifications/notification.helpers';
 
 const scenarioConfig: TestScenarioNoPreCreationConfig = {
   name: 'push-notification-settings',
