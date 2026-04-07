@@ -35,7 +35,7 @@ export default defineConfig({
     pool: 'threads',
 
     isolate: false,
-    testTimeout: 60_000, // generous for individual API-based tests
+    testTimeout: 1_800_000, // 30 minutes — integration tests call remote APIs and create complex scenarios
     hookTimeout: 120_000, // beforeAll hooks create multiple entities via API, so they need more headroom
     globalSetup: './src/globalTestsSetup.ts',
     setupFiles: ['./src/setupTests.ts'],
@@ -109,6 +109,9 @@ export default defineConfig({
       ]),
       project('templates', ['src/functional-api/templates/**/*.it-spec.ts']),
       project('calendar', ['src/functional-api/calendar/**/*.it-spec.ts']),
+      project('push-notifications', [
+        'src/functional-api/push-notifications/**/*.it-spec.ts',
+      ]),
       project('graphql-guard', [
         'src/functional-api/graphql-guard/**/*.it-spec.ts',
       ]),
@@ -124,6 +127,7 @@ export default defineConfig({
         'src/functional-api/entitlements/**/*.it-spec.ts',
         'src/functional-api/templates/**/*.it-spec.ts',
         'src/functional-api/calendar/**/*.it-spec.ts',
+        'src/functional-api/push-notifications/**/*.it-spec.ts',
       ]),
     ],
   },
