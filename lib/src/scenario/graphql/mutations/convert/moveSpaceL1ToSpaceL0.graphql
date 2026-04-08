@@ -1,0 +1,7 @@
+mutation MoveSpaceL1ToSpaceL0(
+  $moveData: MoveSpaceL1ToSpaceL0Input!
+) {
+  moveSpaceL1ToSpaceL0(moveData: $moveData) {
+    ...SpaceData
+  }
+}
