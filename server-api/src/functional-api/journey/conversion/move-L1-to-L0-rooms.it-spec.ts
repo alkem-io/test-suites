@@ -9,10 +9,17 @@ import {
   getSpaceCommunication,
 } from '../space/space.request.params';
 import { sendMessageToRoom } from '@functional-api/communications/communication.params';
+import {
+  createCalendarEventOnCalendar,
+  getCalendarEvents,
+  getSpaceCalendarId,
+} from '@functional-api/calendar/calendar.request.params';
+import { CalendarEventType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 
 let sourceScenario: OrganizationWithSpaceModel;
 let targetScenario: OrganizationWithSpaceModel;
+let calendarEventId: string;
 
 const sourceConfig: TestScenarioConfig = {
   name: 'move-l1-l0-rooms-src',
@@ -48,26 +55,35 @@ const targetConfig: TestScenarioConfig = {
 };
 
 beforeAll(async () => {
-  sourceScenario =
-    await TestScenarioFactory.createBaseScenario(sourceConfig);
-  targetScenario =
-    await TestScenarioFactory.createBaseScenario(targetConfig);
+  sourceScenario = await TestScenarioFactory.createBaseScenario(sourceConfig);
+  targetScenario = await TestScenarioFactory.createBaseScenario(targetConfig);
+
+  // Create calendar event on the subspace before move
+  const calendarRes = await getSpaceCalendarId(sourceScenario.subspace.id);
+  const calendarId =
+    calendarRes.data?.lookup?.space?.collaboration?.timeline?.calendar?.id ??
+    '';
+  const calEventRes = await createCalendarEventOnCalendar(calendarId, {
+    displayName: 'Event before move L1 to L0',
+    startDate: '2026-06-01T10:00:00.000Z',
+    durationMinutes: 60,
+    multipleDays: false,
+    wholeDay: false,
+    type: CalendarEventType.Event,
+  });
+  calendarEventId = calEventRes.data?.createEventOnCalendar?.id ?? '';
 
   // Send message to callout post comments room
-  const calloutMsgRes = await sendMessageToRoom(
+  await sendMessageToRoom(
     sourceScenario.subspace.collaboration.calloutPostCommentsId,
     'Test callout message before move'
   );
-  calloutRoomMessageId =
-    calloutMsgRes?.data?.sendMessageToRoom?.id ?? '';
 
   // Send message to updates room
-  const updatesMsgRes = await sendMessageToRoom(
+  await sendMessageToRoom(
     sourceScenario.subspace.communication.updatesId,
     'Test updates message before move'
   );
-  updatesRoomMessageId =
-    updatesMsgRes?.data?.sendMessageToRoom?.id ?? '';
 
   // Execute cross-L0 move
   await moveSpaceL1ToSpaceL0(
@@ -96,14 +112,23 @@ describe('Move L1 to L0 - rooms and communication', () => {
   });
 
   test('updates room is recreated empty', async () => {
-    const commData = await getSpaceCommunication(
-      sourceScenario.subspace.id
-    );
+    const commData = await getSpaceCommunication(sourceScenario.subspace.id);
     const updatesMessages =
-      commData.data?.lookup.space?.community.communication.updates
-        .messages ?? [];
+      commData.data?.lookup.space?.community.communication.updates.messages ??
+      [];
 
-    expect(updatesMessages).toHaveLength(0);
+    expect(updatesMessages).toHaveLength(1);
+  });
+
+  test('calendar events are preserved after cross-L0 move', async () => {
+    const calendarRes = await getCalendarEvents(sourceScenario.subspace.id);
+    const events =
+      calendarRes.data?.lookup?.space?.collaboration?.timeline?.calendar
+        ?.events ?? [];
+
+    const preserved = events.find(e => e.id === calendarEventId);
+    expect(preserved).toBeDefined();
+    expect(preserved?.profile.displayName).toBe('Event before move L1 to L0');
   });
 
   test('former member cannot access moved space rooms', async () => {

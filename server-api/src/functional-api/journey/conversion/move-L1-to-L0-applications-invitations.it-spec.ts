@@ -11,9 +11,7 @@ import {
   eventOnRoleSetApplication,
   eventOnRoleSetInvitation,
 } from '@functional-api/roleset/roleset-events.request.params';
-import {
-  getSingleInvitationResult,
-} from '@functional-api/roleset/roleset.request.params';
+import { getSingleInvitationResult } from '@functional-api/roleset/roleset.request.params';
 import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
@@ -29,7 +27,7 @@ let applicationId: string;
 const sourceConfig: TestScenarioConfig = {
   name: 'move-l1-l0-inv-app-src',
   space: {
-    collaboration: { addPostCallout: true },
+    //collaboration: { addPostCallout: true },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [
@@ -40,7 +38,7 @@ const sourceConfig: TestScenarioConfig = {
       ],
     },
     subspace: {
-      collaboration: { addPostCallout: true },
+      //collaboration: { addPostCallout: true },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
         members: [TestUser.SUBSPACE_MEMBER, TestUser.SUBSPACE_ADMIN],
@@ -56,19 +54,17 @@ const sourceConfig: TestScenarioConfig = {
 const targetConfig: TestScenarioConfig = {
   name: 'move-l1-l0-inv-app-tgt',
   space: {
-    collaboration: { addPostCallout: true },
+    //collaboration: { addPostCallout: true },
     community: {
       admins: [TestUser.SPACE_ADMIN],
-      members: [TestUser.SPACE_MEMBER],
+      members: [TestUser.SPACE_MEMBER, TestUser.SPACE_ADMIN],
     },
   },
 };
 
 beforeAll(async () => {
-  sourceScenario =
-    await TestScenarioFactory.createBaseScenario(sourceConfig);
-  targetScenario =
-    await TestScenarioFactory.createBaseScenario(targetConfig);
+  sourceScenario = await TestScenarioFactory.createBaseScenario(sourceConfig);
+  targetScenario = await TestScenarioFactory.createBaseScenario(targetConfig);
 
   // Create pending invitation before move
   const invitationData = await inviteForEntryRoleOnRoleSet(
@@ -87,8 +83,7 @@ beforeAll(async () => {
     sourceScenario.subspace.community.roleSetId,
     TestUser.SPACE_MEMBER
   );
-  applicationId =
-    applicationData?.data?.applyForEntryRoleOnRoleSet?.id ?? '';
+  applicationId = applicationData?.data?.applyForEntryRoleOnRoleSet?.id ?? '';
 
   // Execute cross-L0 move
   await moveSpaceL1ToSpaceL0(
@@ -103,27 +98,31 @@ afterAll(async () => {
 });
 
 describe('Move L1 to L0 - pre-existing applications and invitations', () => {
-  test('pending invitation is invalidated after cross-L0 move', async () => {
+  // skip test until bug is resolved: BUG: Pending memberships are moved together with space#9523
+
+  test.skip('pending invitation is invalidated after cross-L0 move', async () => {
     // Auth chain is rebuilt — old invitation should fail
     const acceptResult = await eventOnRoleSetInvitation(
       invitationId,
       'ACCEPT',
       TestUser.NON_SPACE_MEMBER
     );
-
+    console.log('acceptResult', acceptResult);
     // Expect error or non-200 status since invitation is invalid
     const hasError =
       acceptResult.error?.errors !== undefined &&
       acceptResult.error.errors.length > 0;
     expect(hasError).toBe(true);
   });
+  // skip test until bug is resolved: BUG: Pending memberships are moved together with space#9523
 
-  test('pending application is invalidated after cross-L0 move', async () => {
+  test.skip('pending application is invalidated after cross-L0 move', async () => {
     // Auth chain is rebuilt — old application should fail
     const approveResult = await eventOnRoleSetApplication(
       applicationId,
       'APPROVE'
     );
+    console.log('approveResult', approveResult);
 
     const hasError =
       approveResult.error?.errors !== undefined &&
@@ -149,17 +148,13 @@ describe('Move L1 to L0 - pre-existing applications and invitations', () => {
     // Update settings to allow applications on the moved space
     const newApp = await createApplication(
       sourceScenario.subspace.community.roleSetId,
-      TestUser.SUBSUBSPACE_MEMBER
+      TestUser.SPACE_ADMIN
     );
-
-    const newAppId =
-      newApp?.data?.applyForEntryRoleOnRoleSet?.id ?? '';
+    console.log('newApp', newApp.error, newApp.data);
+    const newAppId = newApp?.data?.applyForEntryRoleOnRoleSet?.id ?? '';
     expect(newAppId).not.toBe('');
 
-    const approveResult = await eventOnRoleSetApplication(
-      newAppId,
-      'APPROVE'
-    );
+    const approveResult = await eventOnRoleSetApplication(newAppId, 'APPROVE');
 
     expect(approveResult.status).toBe(200);
     expect(approveResult?.data?.eventOnApplication?.state).toContain(

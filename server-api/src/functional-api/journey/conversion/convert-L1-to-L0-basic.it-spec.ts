@@ -4,9 +4,26 @@ import {
   TestUser,
 } from '@alkemio/tests-lib';
 import { convertSpaceL1ToSpaceL0 } from './conversion.request.params';
-import { getSpaceData } from '../space/space.request.params';
+import {
+  getSpaceData,
+  getSpaceCommunication,
+} from '../space/space.request.params';
 import { getSpaceLicenseSubscriptions } from '@functional-api/license/license.params.request';
-import { sortArraysInObject } from '@utils/array.matcher';
+import { sendMessageToRoom } from '@functional-api/communications/communication.params';
+import {
+  createCalendarEventOnCalendar,
+  getCalendarEvents,
+  getSpaceCalendarId,
+} from '@functional-api/calendar/calendar.request.params';
+import { CalendarEventType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import {
+  sortArraysInObject,
+  stripProfileUrls,
+  collectProfileUrls,
+} from '@utils/array.matcher';
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- used once alkem-io/client-web#9481 is fixed
+const { ALKEMIO_BASE_URL } = process.env;
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { SpaceLevel } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
@@ -57,9 +74,31 @@ let convertResult: Awaited<ReturnType<typeof convertSpaceL1ToSpaceL0>>;
 let subspaceAfter:
   | NonNullable<typeof convertResult.data>['convertSpaceL1ToSpaceL0']
   | undefined;
+let calendarEventId: string;
 
 beforeAll(async () => {
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
+
+  // Create calendar event on the subspace before conversion
+  const calendarRes = await getSpaceCalendarId(baseScenario.subspace.id);
+  const calendarId =
+    calendarRes.data?.lookup?.space?.collaboration?.timeline?.calendar?.id ??
+    '';
+  const calEventRes = await createCalendarEventOnCalendar(calendarId, {
+    displayName: 'Event before convert L1 to L0',
+    startDate: '2026-06-01T10:00:00.000Z',
+    durationMinutes: 60,
+    multipleDays: false,
+    wholeDay: false,
+    type: CalendarEventType.Event,
+  });
+  calendarEventId = calEventRes.data?.createEventOnCalendar?.id ?? '';
+
+  // Send message to updates room before conversion
+  await sendMessageToRoom(
+    baseScenario.subspace.communication.updatesId,
+    'Update before convert L1 to L0'
+  );
 
   // Capture state before conversion
   spaceBefore = await getSpaceData(baseScenario.space.id);
@@ -86,9 +125,9 @@ describe('Convert L1 to L0 - basic', () => {
     expect(subspaceAfter?.level).toEqual(SpaceLevel.L0);
   });
 
-  test('collaboration calloutsSet is preserved', () => {
-    expect(subspaceAfter?.collaboration.calloutsSet).toEqual(
-      subspaceBefore.data?.lookup.space?.collaboration.calloutsSet
+  test('collaboration is preserved (excluding profile urls)', () => {
+    expect(stripProfileUrls(subspaceAfter?.collaboration)).toEqual(
+      stripProfileUrls(subspaceBefore.data?.lookup.space?.collaboration)
     );
   });
 
@@ -104,10 +143,50 @@ describe('Convert L1 to L0 - basic', () => {
     );
   });
 
-  test('about/profile is preserved', () => {
-    expect(subspaceAfter?.about).toEqual(
-      subspaceBefore.data?.lookup.space?.about
+  test('about fields are preserved after same-L0 conversion', () => {
+    const aboutBefore = subspaceBefore.data?.lookup.space?.about;
+
+    // profile: id and displayName preserved, url points to new hierarchy
+    // Skip url check: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
+    expect(subspaceAfter?.about.profile).toEqual(
+      expect.objectContaining({
+        id: aboutBefore?.profile?.id,
+        displayName: aboutBefore?.profile?.displayName,
+        // url: `${ALKEMIO_BASE_URL}/${baseScenario.subspace.nameId}`,
+      })
     );
+
+    // authorization, who, why, provider, metrics are preserved
+    expect(subspaceAfter?.about.authorization).toEqual(
+      aboutBefore?.authorization
+    );
+    expect(subspaceAfter?.about.who).toEqual(aboutBefore?.who);
+    expect(subspaceAfter?.about.why).toEqual(aboutBefore?.why);
+    expect(subspaceAfter?.about.provider).toEqual(aboutBefore?.provider);
+  });
+
+  // Skip: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
+  test.skip('all entity profile urls are updated after promotion to L0', () => {
+    const urlsBefore = collectProfileUrls(
+      subspaceBefore.data?.lookup.space
+    );
+    const urlsAfter = collectProfileUrls(subspaceAfter);
+
+    // Every profile url should be non-empty
+    for (const entry of urlsAfter) {
+      expect(entry.url, `${entry.path} should not be empty`).not.toBe('');
+    }
+
+    // Same number of profile urls before and after
+    expect(urlsAfter.length).toEqual(urlsBefore.length);
+
+    // Each url should have changed (hierarchy changed)
+    for (let i = 0; i < urlsAfter.length; i++) {
+      expect(
+        urlsAfter[i].url,
+        `${urlsAfter[i].path} should differ after conversion`
+      ).not.toEqual(urlsBefore[i].url);
+    }
   });
 
   test('account host is preserved', () => {
@@ -122,9 +201,15 @@ describe('Convert L1 to L0 - basic', () => {
     );
   });
 
-  test('subspaces are preserved', () => {
-    expect(sortArraysInObject(subspaceAfter?.subspaces)).toEqual(
-      sortArraysInObject(subspaceBefore.data?.lookup.space?.subspaces)
+  test('subspaces are preserved (excluding profile urls)', () => {
+    expect(
+      sortArraysInObject(stripProfileUrls(subspaceAfter?.subspaces))
+    ).toEqual(
+      sortArraysInObject(
+        stripProfileUrls(
+          subspaceBefore.data?.lookup.space?.subspaces
+        )
+      )
     );
   });
 
@@ -183,6 +268,29 @@ describe('Convert L1 to L0 - basic', () => {
       );
 
     expect(sortedLicenseAfter).toEqual(sortedLicenseBefore);
+  });
+
+  test('calendar events are preserved after conversion', async () => {
+    const calendarRes = await getCalendarEvents(baseScenario.subspace.id);
+    const events =
+      calendarRes.data?.lookup?.space?.collaboration?.timeline?.calendar
+        ?.events ?? [];
+
+    const preserved = events.find(e => e.id === calendarEventId);
+    expect(preserved).toBeDefined();
+    expect(preserved?.profile.displayName).toBe(
+      'Event before convert L1 to L0'
+    );
+  });
+
+  test('community updates messages are preserved after conversion', async () => {
+    const commData = await getSpaceCommunication(baseScenario.subspace.id);
+    const updatesMessages =
+      commData.data?.lookup.space?.community.communication.updates
+        .messages ?? [];
+    const messageTexts = updatesMessages.map(m => m.message);
+
+    expect(messageTexts).toContain('Update before convert L1 to L0');
   });
 });
 

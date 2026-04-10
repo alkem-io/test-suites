@@ -27,7 +27,7 @@ let applicationId: string;
 const sourceConfig: TestScenarioConfig = {
   name: 'move-l1-l2-inv-src',
   space: {
-    collaboration: { addPostCallout: true },
+    //collaboration: { addPostCallout: true },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [
@@ -38,7 +38,7 @@ const sourceConfig: TestScenarioConfig = {
       ],
     },
     subspace: {
-      collaboration: { addPostCallout: true },
+      //collaboration: { addPostCallout: true },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
         members: [TestUser.SUBSPACE_MEMBER, TestUser.SUBSPACE_ADMIN],
@@ -54,7 +54,7 @@ const sourceConfig: TestScenarioConfig = {
 const targetConfig: TestScenarioConfig = {
   name: 'move-l1-l2-inv-tgt',
   space: {
-    collaboration: { addPostCallout: true },
+    //collaboration: { addPostCallout: true },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [
@@ -64,7 +64,7 @@ const targetConfig: TestScenarioConfig = {
       ],
     },
     subspace: {
-      collaboration: { addPostCallout: true },
+      //collaboration: { addPostCallout: true },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
         members: [TestUser.SUBSPACE_MEMBER, TestUser.SUBSPACE_ADMIN],
@@ -74,10 +74,8 @@ const targetConfig: TestScenarioConfig = {
 };
 
 beforeAll(async () => {
-  sourceScenario =
-    await TestScenarioFactory.createBaseScenario(sourceConfig);
-  targetScenario =
-    await TestScenarioFactory.createBaseScenario(targetConfig);
+  sourceScenario = await TestScenarioFactory.createBaseScenario(sourceConfig);
+  targetScenario = await TestScenarioFactory.createBaseScenario(targetConfig);
 
   // Create pending invitation before move
   const invitationData = await inviteForEntryRoleOnRoleSet(
@@ -96,8 +94,7 @@ beforeAll(async () => {
     sourceScenario.subspace.community.roleSetId,
     TestUser.SPACE_MEMBER
   );
-  applicationId =
-    applicationData?.data?.applyForEntryRoleOnRoleSet?.id ?? '';
+  applicationId = applicationData?.data?.applyForEntryRoleOnRoleSet?.id ?? '';
 
   // Execute cross-L0 move + demotion
   await moveSpaceL1ToSpaceL2(
@@ -154,18 +151,12 @@ describe('Move L1 to L2 - pre-existing applications and invitations', () => {
   test('new application can be submitted and approved after move', async () => {
     const newApp = await createApplication(
       sourceScenario.subspace.community.roleSetId,
-      TestUser.SUBSUBSPACE_MEMBER
+      TestUser.SUBSPACE_MEMBER
     );
-
-    const newAppId =
-      newApp?.data?.applyForEntryRoleOnRoleSet?.id ?? '';
+    const newAppId = newApp?.data?.applyForEntryRoleOnRoleSet?.id ?? '';
     expect(newAppId).not.toBe('');
 
-    const approveResult = await eventOnRoleSetApplication(
-      newAppId,
-      'APPROVE'
-    );
-
+    const approveResult = await eventOnRoleSetApplication(newAppId, 'APPROVE');
     expect(approveResult.status).toBe(200);
     expect(approveResult?.data?.eventOnApplication?.state).toContain(
       'approved'

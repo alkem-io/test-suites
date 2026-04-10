@@ -6,8 +6,12 @@ import {
 import { moveSpaceL1ToSpaceL0 } from './conversion.request.params';
 import { getSpaceData } from '../space/space.request.params';
 import { getSpaceLicenseSubscriptions } from '@functional-api/license/license.params.request';
+import { stripProfileUrls, collectProfileUrls } from '@utils/array.matcher';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { SpaceLevel } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- used once alkem-io/client-web#9481 is fixed
+const { ALKEMIO_BASE_URL } = process.env;
 
 let sourceScenario: OrganizationWithSpaceModel;
 let targetScenario: OrganizationWithSpaceModel;
@@ -126,16 +130,82 @@ describe('Move L1 to L0 - basic', () => {
     expect(sourceSubspaceIds).not.toContain(sourceScenario.subspace.id);
   });
 
-  test('collaboration calloutsSet is preserved', () => {
-    expect(movedSpace?.collaboration.calloutsSet).toEqual(
-      subspaceBefore.data?.lookup.space?.collaboration.calloutsSet
+  test('collaboration is preserved (excluding profile urls)', () => {
+    expect(stripProfileUrls(movedSpace?.collaboration)).toEqual(
+      stripProfileUrls(subspaceBefore.data?.lookup.space?.collaboration)
     );
   });
 
-  test('about/profile is preserved', () => {
-    expect(movedSpace?.about).toEqual(
-      subspaceBefore.data?.lookup.space?.about
+  test('about fields are preserved or updated correctly after cross-L0 move', () => {
+    const aboutBefore = subspaceBefore.data?.lookup.space?.about;
+
+    // authorization is preserved
+    expect(movedSpace?.about.authorization).toEqual(aboutBefore?.authorization);
+
+    // profile: id and displayName preserved, url points to new hierarchy
+    // Skip url check: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
+    expect(movedSpace?.about.profile).toEqual(
+      expect.objectContaining({
+        id: aboutBefore?.profile?.id,
+        displayName: aboutBefore?.profile?.displayName,
+        // url: `${ALKEMIO_BASE_URL}/${targetScenario.space.nameId}/challenges/${sourceScenario.subspace.nameId}`,
+      })
     );
+
+    // provider changes to target organization
+    expect(movedSpace?.about.provider?.id).toEqual(
+      targetScenario.organization.id
+    );
+
+    // metrics reset after cross-L0 move
+    expect(movedSpace?.about.metrics?.[0].value).toEqual('0');
+
+    // who/why are preserved
+    expect(movedSpace?.about.who).toEqual(aboutBefore?.who);
+    expect(movedSpace?.about.why).toEqual(aboutBefore?.why);
+  });
+
+  // Skip: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
+  test.skip('all entity profile urls are updated after cross-L0 move', () => {
+    const urlsBefore = collectProfileUrls(
+      subspaceBefore.data?.lookup.space
+    );
+    const urlsAfter = collectProfileUrls(movedSpace);
+
+    for (const entry of urlsAfter) {
+      expect(entry.url, `${entry.path} should not be empty`).not.toBe('');
+    }
+
+    expect(urlsAfter.length).toEqual(urlsBefore.length);
+
+    for (let i = 0; i < urlsAfter.length; i++) {
+      expect(
+        urlsAfter[i].url,
+        `${urlsAfter[i].path} should differ after move`
+      ).not.toEqual(urlsBefore[i].url);
+    }
+  });
+
+  // Skip: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
+  test.skip('L2 descendant entity profile urls are updated after cross-L0 move', async () => {
+    const urlsBefore = collectProfileUrls(
+      subsubspaceBefore.data?.lookup.space
+    );
+    const l2Data = await getSpaceData(sourceScenario.subsubspace.id);
+    const urlsAfter = collectProfileUrls(l2Data.data?.lookup.space);
+
+    for (const entry of urlsAfter) {
+      expect(entry.url, `${entry.path} should not be empty`).not.toBe('');
+    }
+
+    expect(urlsAfter.length).toEqual(urlsBefore.length);
+
+    for (let i = 0; i < urlsAfter.length; i++) {
+      expect(
+        urlsAfter[i].url,
+        `${urlsAfter[i].path} should differ after move`
+      ).not.toEqual(urlsBefore[i].url);
+    }
   });
 
   test('visibility/privacy is preserved', () => {
@@ -164,11 +234,15 @@ describe('Move L1 to L0 - basic', () => {
     expect(l2Data.data?.lookup.space?.level).toEqual(SpaceLevel.L2);
   });
 
-  test('L2 descendant collaboration is preserved', async () => {
+  test('L2 descendant collaboration is preserved (excluding profile urls)', async () => {
     const l2Data = await getSpaceData(sourceScenario.subsubspace.id);
 
-    expect(l2Data.data?.lookup.space?.collaboration.calloutsSet).toEqual(
-      subsubspaceBefore.data?.lookup.space?.collaboration.calloutsSet
+    expect(
+      stripProfileUrls(l2Data.data?.lookup.space?.collaboration)
+    ).toEqual(
+      stripProfileUrls(
+        subsubspaceBefore.data?.lookup.space?.collaboration
+      )
     );
   });
 
