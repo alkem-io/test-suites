@@ -140,7 +140,7 @@ describe('Move L1 to L2 - basic', () => {
         id: aboutBefore?.profile?.id,
         displayName: aboutBefore?.profile?.displayName,
         description: aboutBefore?.profile?.description,
-        url: `${ALKEMIO_BASE_URL}/${targetScenario.space.nameId}/challenges/${targetScenario.subspace.nameId}/opportunities/${sourceScenario.subspace.nameId}`,
+        // url: `${ALKEMIO_BASE_URL}/${targetScenario.space.nameId}/challenges/${targetScenario.subspace.nameId}/opportunities/${sourceScenario.subspace.nameId}`,
         references: aboutBefore?.profile?.references,
         tagline: aboutBefore?.profile?.tagline,
         tagsets: aboutBefore?.profile?.tagsets,

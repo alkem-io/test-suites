@@ -29,26 +29,15 @@ let baseScenario: OrganizationWithSpaceModel;
 const scenarioConfig: TestScenarioConfig = {
   name: 'convert-l1-to-l0-inv-app',
   space: {
-    // collaboration: {
-    //   addPostCallout: true,
-    //   addPostCollectionCallout: true,
-    //   addWhiteboardCallout: true,
-    // },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [
         TestUser.SPACE_MEMBER,
         TestUser.SPACE_ADMIN,
-        //  TestUser.SUBSPACE_MEMBER,
         TestUser.SUBSPACE_ADMIN,
       ],
     },
     subspace: {
-      // collaboration: {
-      //   addPostCallout: true,
-      //   addPostCollectionCallout: true,
-      //   addWhiteboardCallout: true,
-      // },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
         members: [TestUser.SUBSPACE_ADMIN],
@@ -123,7 +112,6 @@ describe('Convert L1 to L0 - applications and invitations', () => {
       'ACCEPT',
       TestUser.NON_SPACE_MEMBER
     );
-    console.log('acceptResult', acceptResult.error);
     expect(acceptResult.status).toBe(200);
 
     const spaceDataAfterAccept = await getSpaceData(

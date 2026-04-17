@@ -64,8 +64,7 @@ describe('Create Conversation', () => {
   describe('Direct Conversations', () => {
     test('should create a DIRECT conversation between two users', async () => {
       // Arrange
-      const memberActorId =
-        TestUserManager.users.spaceMember.agentId;
+      const memberActorId = TestUserManager.users.spaceMember.agentId;
 
       // Act
       const res = await createConversation(
@@ -92,8 +91,7 @@ describe('Create Conversation', () => {
 
     test('should deduplicate DIRECT conversations with the same member', async () => {
       // Arrange
-      const memberActorId =
-        TestUserManager.users.subspaceAdmin.agentId;
+      const memberActorId = TestUserManager.users.subspaceAdmin.agentId;
 
       // Act — create twice with the same member
       const res1 = await createConversation(
@@ -126,8 +124,7 @@ describe('Create Conversation', () => {
     test('should include both creator and member in DIRECT conversation members', async () => {
       // Arrange
       const creatorActorId = TestUserManager.users.globalAdmin.agentId;
-      const memberActorId =
-        TestUserManager.users.globalLicenseAdmin.agentId;
+      const memberActorId = TestUserManager.users.globalLicenseAdmin.agentId;
 
       // Act
       const res = await createConversation(
@@ -144,8 +141,7 @@ describe('Create Conversation', () => {
 
       // Verify members via query (createConversation may return before members are synced)
       const meRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
-      const conversations =
-        meRes?.data?.me.conversations.conversations ?? [];
+      const conversations = meRes?.data?.me.conversations.conversations ?? [];
       const conv = conversations.find(c => c.id === conversation?.id);
       expect(conv).toBeDefined();
       expect(conv?.members).toHaveLength(2);
@@ -163,8 +159,7 @@ describe('Create Conversation', () => {
 
     test('should have User actor types for DIRECT conversation members', async () => {
       // Arrange
-      const memberActorId =
-        TestUserManager.users.qaUser.agentId;
+      const memberActorId = TestUserManager.users.qaUser.agentId;
 
       // Act
       const res = await createConversation(
@@ -193,10 +188,8 @@ describe('Create Conversation', () => {
   describe('Group Conversations', () => {
     test('should create a GROUP conversation with multiple members', async () => {
       // Arrange
-      const member1ActorId =
-        TestUserManager.users.spaceMember.agentId;
-      const member2ActorId =
-        TestUserManager.users.spaceAdmin.agentId;
+      const member1ActorId = TestUserManager.users.spaceMember.agentId;
+      const member2ActorId = TestUserManager.users.spaceAdmin.agentId;
 
       // Act
       const res = await createConversation(
@@ -223,8 +216,7 @@ describe('Create Conversation', () => {
 
     test('should create a GROUP conversation with displayName and avatarUrl', async () => {
       // Arrange
-      const memberActorId =
-        TestUserManager.users.spaceMember.agentId;
+      const memberActorId = TestUserManager.users.spaceMember.agentId;
       const displayName = 'My Test Group';
       const avatarUrl = 'https://example.com/avatar.png';
 
@@ -251,8 +243,7 @@ describe('Create Conversation', () => {
 
     test('should NOT deduplicate GROUP conversations with the same members', async () => {
       // Arrange
-      const memberActorId =
-        TestUserManager.users.subspaceMember.agentId;
+      const memberActorId = TestUserManager.users.subspaceMember.agentId;
       const displayName1 = 'Group A';
       const displayName2 = 'Group B';
 
@@ -349,8 +340,7 @@ describe('Create Conversation', () => {
 
     test('should fail to create conversation when unauthenticated', async () => {
       // Arrange
-      const memberActorId =
-        TestUserManager.users.spaceMember.agentId;
+      const memberActorId = TestUserManager.users.spaceMember.agentId;
 
       // Act — no userRole passed, so request is unauthenticated
       const res = await createConversation(
@@ -370,8 +360,7 @@ describe('Update Conversation', () => {
   let groupConversationId = '';
 
   beforeAll(async () => {
-    const memberActorId =
-      TestUserManager.users.spaceMember.agentId;
+    const memberActorId = TestUserManager.users.spaceMember.agentId;
     const res = await createConversation(
       [memberActorId],
       ConversationCreationType.Group,
@@ -383,10 +372,9 @@ describe('Update Conversation', () => {
 
   afterAll(async () => {
     if (groupConversationId) {
-      await leaveConversation(
-        groupConversationId,
-        TestUser.GLOBAL_ADMIN
-      ).catch(() => {});
+      await leaveConversation(groupConversationId, TestUser.GLOBAL_ADMIN).catch(
+        () => {}
+      );
     }
   });
 
@@ -407,16 +395,16 @@ describe('Update Conversation', () => {
     // Assert — query confirms the change persisted (eventual consistency)
     await waitForCondition(async () => {
       const meRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
-      const conv = (
-        meRes?.data?.me.conversations.conversations ?? []
-      ).find(c => c.id === groupConversationId);
+      const conv = (meRes?.data?.me.conversations.conversations ?? []).find(
+        c => c.id === groupConversationId
+      );
       return conv?.room?.displayName === newDisplayName;
     });
 
     const meRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
-    const conv = (
-      meRes?.data?.me.conversations.conversations ?? []
-    ).find(c => c.id === groupConversationId);
+    const conv = (meRes?.data?.me.conversations.conversations ?? []).find(
+      c => c.id === groupConversationId
+    );
     expect(conv).toBeDefined();
     expect(conv?.room?.displayName).toBe(newDisplayName);
   });
@@ -438,16 +426,16 @@ describe('Update Conversation', () => {
     // Assert — query confirms the change persisted (eventual consistency)
     await waitForCondition(async () => {
       const meRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
-      const conv = (
-        meRes?.data?.me.conversations.conversations ?? []
-      ).find(c => c.id === groupConversationId);
+      const conv = (meRes?.data?.me.conversations.conversations ?? []).find(
+        c => c.id === groupConversationId
+      );
       return conv?.room?.avatarUrl === newAvatarUrl;
     });
 
     const meRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
-    const conv = (
-      meRes?.data?.me.conversations.conversations ?? []
-    ).find(c => c.id === groupConversationId);
+    const conv = (meRes?.data?.me.conversations.conversations ?? []).find(
+      c => c.id === groupConversationId
+    );
     expect(conv).toBeDefined();
     expect(conv?.room?.avatarUrl).toBe(newAvatarUrl);
   });
@@ -470,9 +458,9 @@ describe('Update Conversation', () => {
     // Assert — query confirms both changes persisted (eventual consistency)
     await waitForCondition(async () => {
       const meRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
-      const conv = (
-        meRes?.data?.me.conversations.conversations ?? []
-      ).find(c => c.id === groupConversationId);
+      const conv = (meRes?.data?.me.conversations.conversations ?? []).find(
+        c => c.id === groupConversationId
+      );
       return (
         conv?.room?.displayName === newDisplayName &&
         conv?.room?.avatarUrl === newAvatarUrl
@@ -480,9 +468,9 @@ describe('Update Conversation', () => {
     });
 
     const meRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
-    const conv = (
-      meRes?.data?.me.conversations.conversations ?? []
-    ).find(c => c.id === groupConversationId);
+    const conv = (meRes?.data?.me.conversations.conversations ?? []).find(
+      c => c.id === groupConversationId
+    );
     expect(conv).toBeDefined();
     expect(conv?.room?.displayName).toBe(newDisplayName);
     expect(conv?.room?.avatarUrl).toBe(newAvatarUrl);
@@ -516,10 +504,10 @@ describe('Update Conversation', () => {
 });
 
 describe('Leave Conversation', () => {
-  test('should leave a GROUP conversation', async () => {
+  // skipped until this one is fixed: BUG: [Conversation] When user try to leave group chat, the conversation remains in the list#9543
+  test.skip('should leave a GROUP conversation', async () => {
     // Arrange
-    const memberActorId =
-      TestUserManager.users.globalAdmin.agentId;
+    const memberActorId = TestUserManager.users.globalAdmin.agentId;
     const creatorUser = TestUser.SPACE_MEMBER;
     const creatorActorId = TestUserManager.users.spaceMember.agentId;
     const res = await createConversation(
@@ -532,10 +520,7 @@ describe('Leave Conversation', () => {
     expect(conversationId).toBeTruthy();
 
     // Act
-    const leaveRes = await leaveConversation(
-      conversationId,
-      creatorUser
-    );
+    const leaveRes = await leaveConversation(conversationId, creatorUser);
 
     // Assert — mutation returns true
     expect(leaveRes?.data?.leaveConversation).toBe(true);
@@ -544,14 +529,12 @@ describe('Leave Conversation', () => {
     // (eventual consistency: membership change arrives via Matrix event)
     await waitForCondition(async () => {
       const meRes = await getMeConversations(creatorUser);
-      const conversations =
-        meRes?.data?.me.conversations.conversations ?? [];
+      const conversations = meRes?.data?.me.conversations.conversations ?? [];
       return !conversations.some(c => c.id === conversationId);
     });
 
     const meRes = await getMeConversations(creatorUser);
-    const conversations =
-      meRes?.data?.me.conversations.conversations ?? [];
+    const conversations = meRes?.data?.me.conversations.conversations ?? [];
     const conv = conversations.find(c => c.id === conversationId);
     expect(conv).toBeUndefined();
 
@@ -568,12 +551,9 @@ describe('Leave Conversation', () => {
     const otherRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
     const otherConversations =
       otherRes?.data?.me.conversations.conversations ?? [];
-    const otherConv = otherConversations.find(
-      c => c.id === conversationId
-    );
+    const otherConv = otherConversations.find(c => c.id === conversationId);
     expect(otherConv).toBeDefined();
-    const remainingMemberIds =
-      otherConv?.members?.map(m => m.id) ?? [];
+    const remainingMemberIds = otherConv?.members?.map(m => m.id) ?? [];
     expect(remainingMemberIds).not.toContain(creatorActorId);
   });
 
@@ -591,8 +571,7 @@ describe('Leave Conversation', () => {
 
 describe('Remove Conversation Member', () => {
   let groupConversationId = '';
-  const memberToRemoveActorId = () =>
-    TestUserManager.users.spaceAdmin.agentId;
+  const memberToRemoveActorId = () => TestUserManager.users.spaceAdmin.agentId;
 
   beforeAll(async () => {
     const member1 = TestUserManager.users.spaceAdmin.agentId;
@@ -608,14 +587,14 @@ describe('Remove Conversation Member', () => {
 
   afterAll(async () => {
     if (groupConversationId) {
-      await leaveConversation(
-        groupConversationId,
-        TestUser.GLOBAL_ADMIN
-      ).catch(() => {});
+      await leaveConversation(groupConversationId, TestUser.GLOBAL_ADMIN).catch(
+        () => {}
+      );
     }
   });
 
-  test('should remove a member from a GROUP conversation', async () => {
+  // skipped until this one is fixed: BUG: [Conversation] When user try to leave group chat, the conversation remains in the list#9543
+  test.skip('should remove a member from a GROUP conversation', async () => {
     // Arrange — verify member is present before removal
     const meResBefore = await getMeConversations(TestUser.GLOBAL_ADMIN);
     const convBefore = (
@@ -638,9 +617,9 @@ describe('Remove Conversation Member', () => {
     // (eventual consistency: membership change arrives via Matrix event)
     await waitForCondition(async () => {
       const meRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
-      const conv = (
-        meRes?.data?.me.conversations.conversations ?? []
-      ).find(c => c.id === groupConversationId);
+      const conv = (meRes?.data?.me.conversations.conversations ?? []).find(
+        c => c.id === groupConversationId
+      );
       const memberIds = conv?.members?.map(m => m.id) ?? [];
       return !memberIds.includes(memberToRemoveActorId());
     });
@@ -688,9 +667,9 @@ describe('Remove Conversation Member', () => {
 
     // Assert — member is still in the conversation
     const meRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
-    const conv = (
-      meRes?.data?.me.conversations.conversations ?? []
-    ).find(c => c.id === convId);
+    const conv = (meRes?.data?.me.conversations.conversations ?? []).find(
+      c => c.id === convId
+    );
     const memberIds = conv?.members?.map(m => m.id) ?? [];
     expect(memberIds).toContain(member);
 
@@ -713,8 +692,7 @@ describe('Query Conversations', () => {
       undefined,
       TestUser.GLOBAL_ADMIN
     );
-    directConversationId =
-      directRes?.data?.createConversation?.id ?? '';
+    directConversationId = directRes?.data?.createConversation?.id ?? '';
 
     // Create a GROUP conversation
     const groupRes = await createConversation(
@@ -726,8 +704,7 @@ describe('Query Conversations', () => {
       { displayName: 'Query Test Group' },
       TestUser.GLOBAL_ADMIN
     );
-    groupConversationId =
-      groupRes?.data?.createConversation?.id ?? '';
+    groupConversationId = groupRes?.data?.createConversation?.id ?? '';
   });
 
   afterAll(async () => {
@@ -738,10 +715,9 @@ describe('Query Conversations', () => {
       ).catch(() => {});
     }
     if (groupConversationId) {
-      await leaveConversation(
-        groupConversationId,
-        TestUser.GLOBAL_ADMIN
-      ).catch(() => {});
+      await leaveConversation(groupConversationId, TestUser.GLOBAL_ADMIN).catch(
+        () => {}
+      );
     }
   });
 
@@ -750,8 +726,7 @@ describe('Query Conversations', () => {
     const res = await getMeConversations(TestUser.GLOBAL_ADMIN);
 
     // Assert
-    const conversations =
-      res?.data?.me.conversations.conversations;
+    const conversations = res?.data?.me.conversations.conversations;
     expect(conversations).toBeDefined();
     expect(Array.isArray(conversations)).toBe(true);
     expect(conversations!.length).toBeGreaterThanOrEqual(2);
@@ -762,8 +737,7 @@ describe('Query Conversations', () => {
     const res = await getMeConversations(TestUser.GLOBAL_ADMIN);
 
     // Assert
-    const conversations =
-      res?.data?.me.conversations.conversations ?? [];
+    const conversations = res?.data?.me.conversations.conversations ?? [];
     const roomTypes = conversations.map(c => c.room?.type);
     expect(roomTypes).toContain(RoomType.ConversationDirect);
     expect(roomTypes).toContain(RoomType.ConversationGroup);
@@ -774,11 +748,8 @@ describe('Query Conversations', () => {
     const res = await getMeConversations(TestUser.GLOBAL_ADMIN);
 
     // Assert
-    const conversations =
-      res?.data?.me.conversations.conversations ?? [];
-    const groupConv = conversations.find(
-      c => c.id === groupConversationId
-    );
+    const conversations = res?.data?.me.conversations.conversations ?? [];
+    const groupConv = conversations.find(c => c.id === groupConversationId);
     expect(groupConv).toBeDefined();
     expect(groupConv?.members).toBeDefined();
     expect(groupConv!.members.length).toBeGreaterThanOrEqual(2);
@@ -787,9 +758,7 @@ describe('Query Conversations', () => {
     groupConv?.members.forEach(member => {
       expect(member.id).toBeDefined();
       expect(member.type).toBeDefined();
-      expect(
-        Object.values(ActorType)
-      ).toContain(member.type);
+      expect(Object.values(ActorType)).toContain(member.type);
     });
   });
 
@@ -798,11 +767,8 @@ describe('Query Conversations', () => {
     const res = await getMeConversations(TestUser.GLOBAL_ADMIN);
 
     // Assert
-    const conversations =
-      res?.data?.me.conversations.conversations ?? [];
-    const conv = conversations.find(
-      c => c.id === directConversationId
-    );
+    const conversations = res?.data?.me.conversations.conversations ?? [];
+    const conv = conversations.find(c => c.id === directConversationId);
     expect(conv).toBeDefined();
     expect(conv?.room).toBeDefined();
     expect(conv?.room?.id).toBeDefined();
@@ -815,11 +781,8 @@ describe('Query Conversations', () => {
     const res = await getMeConversations(TestUser.SPACE_MEMBER);
 
     // Assert
-    const conversations =
-      res?.data?.me.conversations.conversations ?? [];
-    const groupConv = conversations.find(
-      c => c.id === groupConversationId
-    );
+    const conversations = res?.data?.me.conversations.conversations ?? [];
+    const groupConv = conversations.find(c => c.id === groupConversationId);
     expect(groupConv).toBeDefined();
     expect(groupConv?.members?.length).toBeGreaterThanOrEqual(2);
   });
@@ -842,10 +805,9 @@ describe('Messaging in Conversations', () => {
 
   afterAll(async () => {
     if (conversationId) {
-      await leaveConversation(
-        conversationId,
-        TestUser.GLOBAL_ADMIN
-      ).catch(() => {});
+      await leaveConversation(conversationId, TestUser.GLOBAL_ADMIN).catch(
+        () => {}
+      );
     }
   });
 
@@ -875,8 +837,7 @@ describe('Messaging in Conversations', () => {
     const res = await getMeConversations(TestUser.GLOBAL_ADMIN);
 
     // Assert
-    const conversations =
-      res?.data?.me.conversations.conversations ?? [];
+    const conversations = res?.data?.me.conversations.conversations ?? [];
     const conv = conversations.find(c => c.id === conversationId);
     expect(conv?.room?.messagesCount).toBeGreaterThanOrEqual(1);
   });

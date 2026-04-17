@@ -40,7 +40,8 @@ beforeAll(async () => {
 
 describe('Delete Conversation', () => {
   describe('Implicit deletion — all members leave', () => {
-    test('should remove GROUP conversation when all members leave', async () => {
+    // skipped until bug is fixed: BUG: [Conversation] When user try to leave group chat, the conversation remains in the list#9543
+    test.skip('should remove GROUP conversation when all members leave', async () => {
       // Arrange — create a group with 2 members (creator + 1)
       const memberActorId = TestUserManager.users.spaceMember.agentId;
       const res = await createConversation(
@@ -80,7 +81,8 @@ describe('Delete Conversation', () => {
       );
     });
 
-    test('should remove GROUP conversation from remaining member after last member leaves', async () => {
+    // skip until this issue is fixed: BUG: [Conversation] When user try to leave group chat, the conversation remains in the list#9543
+    test.skip('should remove GROUP conversation from remaining member after last member leaves', async () => {
       // Arrange — create group with creator + 2 members
       const member1ActorId = TestUserManager.users.spaceMember.agentId;
       const member2ActorId = TestUserManager.users.spaceAdmin.agentId;

@@ -158,10 +158,11 @@ describe('Same-L0 vs Cross-L0 demotion comparison', () => {
       });
 
       // Send messages to updates room before move
-      await sendMessageToRoom(
+      const msgRes = await sendMessageToRoom(
         roomSource.subspace.communication.updatesId,
         'Update before cross-L0 move'
       );
+      expect(msgRes?.data?.sendMessageToRoom?.id).toBeDefined();
 
       await moveSpaceL1ToSpaceL2(
         roomSource.subspace.id,
@@ -174,7 +175,7 @@ describe('Same-L0 vs Cross-L0 demotion comparison', () => {
       await TestScenarioFactory.cleanUpBaseScenario(roomTarget);
     });
 
-    test('cross-L0: updates room is recreated empty', async () => {
+    test('cross-L0: updates room messages are preserved after move', async () => {
       const commData = await getSpaceCommunication(roomSource.subspace.id);
       const updatesMessages =
         commData.data?.lookup.space?.community.communication.updates.messages ??

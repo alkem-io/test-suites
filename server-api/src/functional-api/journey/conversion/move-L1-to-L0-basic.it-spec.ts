@@ -158,7 +158,7 @@ describe('Move L1 to L0 - basic', () => {
     );
 
     // metrics reset after cross-L0 move
-    expect(movedSpace?.about.metrics?.[0].value).toEqual('0');
+    expect(movedSpace?.about.metrics?.[0]?.value).toEqual('0');
 
     // who/why are preserved
     expect(movedSpace?.about.who).toEqual(aboutBefore?.who);
@@ -167,9 +167,7 @@ describe('Move L1 to L0 - basic', () => {
 
   // Skip: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
   test.skip('all entity profile urls are updated after cross-L0 move', () => {
-    const urlsBefore = collectProfileUrls(
-      subspaceBefore.data?.lookup.space
-    );
+    const urlsBefore = collectProfileUrls(subspaceBefore.data?.lookup.space);
     const urlsAfter = collectProfileUrls(movedSpace);
 
     for (const entry of urlsAfter) {
@@ -188,9 +186,7 @@ describe('Move L1 to L0 - basic', () => {
 
   // Skip: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
   test.skip('L2 descendant entity profile urls are updated after cross-L0 move', async () => {
-    const urlsBefore = collectProfileUrls(
-      subsubspaceBefore.data?.lookup.space
-    );
+    const urlsBefore = collectProfileUrls(subsubspaceBefore.data?.lookup.space);
     const l2Data = await getSpaceData(sourceScenario.subsubspace.id);
     const urlsAfter = collectProfileUrls(l2Data.data?.lookup.space);
 
@@ -237,12 +233,8 @@ describe('Move L1 to L0 - basic', () => {
   test('L2 descendant collaboration is preserved (excluding profile urls)', async () => {
     const l2Data = await getSpaceData(sourceScenario.subsubspace.id);
 
-    expect(
-      stripProfileUrls(l2Data.data?.lookup.space?.collaboration)
-    ).toEqual(
-      stripProfileUrls(
-        subsubspaceBefore.data?.lookup.space?.collaboration
-      )
+    expect(stripProfileUrls(l2Data.data?.lookup.space?.collaboration)).toEqual(
+      stripProfileUrls(subsubspaceBefore.data?.lookup.space?.collaboration)
     );
   });
 
@@ -264,11 +256,13 @@ describe('Move L1 to L0 - basic', () => {
     );
 
     const sortedTarget =
-      targetLicense.data?.lookup.space?.subscriptions
-        ?.sort((a, b) => a.name.localeCompare(b.name)) ?? [];
+      targetLicense.data?.lookup.space?.subscriptions?.sort((a, b) =>
+        a.name.localeCompare(b.name)
+      ) ?? [];
     const sortedMoved =
-      movedLicense.data?.lookup.space?.subscriptions
-        ?.sort((a, b) => a.name.localeCompare(b.name)) ?? [];
+      movedLicense.data?.lookup.space?.subscriptions?.sort((a, b) =>
+        a.name.localeCompare(b.name)
+      ) ?? [];
 
     expect(sortedMoved).toEqual(sortedTarget);
   });

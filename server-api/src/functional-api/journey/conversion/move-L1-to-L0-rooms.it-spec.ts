@@ -111,7 +111,7 @@ describe('Move L1 to L0 - rooms and communication', () => {
     expect(messageTexts).toContain('Test callout message before move');
   });
 
-  test('updates room is recreated empty', async () => {
+  test('updates room messages are preserved after cross-L0 move', async () => {
     const commData = await getSpaceCommunication(sourceScenario.subspace.id);
     const updatesMessages =
       commData.data?.lookup.space?.community.communication.updates.messages ??

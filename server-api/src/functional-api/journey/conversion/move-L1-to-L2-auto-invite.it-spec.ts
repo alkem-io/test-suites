@@ -1,11 +1,11 @@
 import {
+  delay,
   TestScenarioConfig,
   TestScenarioFactory,
   TestUser,
 } from '@alkemio/tests-lib';
 import { moveSpaceL1ToSpaceL2 } from './conversion.request.params';
-import { getSpaceData } from '../space/space.request.params';
-import { getRoleSetMembersList } from '@functional-api/roleset/roleset.request.params';
+import { getCommunityApplicationsInvitations } from '@functional-api/roleset/roleset.request.params';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 
 let sourceScenario: OrganizationWithSpaceModel;
@@ -14,7 +14,6 @@ let targetScenario: OrganizationWithSpaceModel;
 const sourceConfig: TestScenarioConfig = {
   name: 'move-l1-l2-inv-auto-src',
   space: {
-    collaboration: { addPostCallout: true },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [
@@ -25,7 +24,6 @@ const sourceConfig: TestScenarioConfig = {
       ],
     },
     subspace: {
-      collaboration: { addPostCallout: true },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
         members: [TestUser.SUBSPACE_MEMBER, TestUser.SUBSPACE_ADMIN],
@@ -37,29 +35,27 @@ const sourceConfig: TestScenarioConfig = {
 const targetConfig: TestScenarioConfig = {
   name: 'move-l1-l2-inv-auto-tgt',
   space: {
-    collaboration: { addPostCallout: true },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [
         TestUser.SPACE_MEMBER,
-        TestUser.SUBSPACE_MEMBER, // overlap with source L1
+        TestUser.SPACE_ADMIN,
+        TestUser.SUBSPACE_MEMBER,
+        TestUser.SUBSPACE_ADMIN,
       ],
     },
     subspace: {
-      collaboration: { addPostCallout: true },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
-        members: [TestUser.SUBSPACE_MEMBER],
+        members: [TestUser.SUBSPACE_MEMBER, TestUser.SUBSPACE_ADMIN],
       },
     },
   },
 };
 
 beforeAll(async () => {
-  sourceScenario =
-    await TestScenarioFactory.createBaseScenario(sourceConfig);
-  targetScenario =
-    await TestScenarioFactory.createBaseScenario(targetConfig);
+  sourceScenario = await TestScenarioFactory.createBaseScenario(sourceConfig);
+  targetScenario = await TestScenarioFactory.createBaseScenario(targetConfig);
 });
 
 afterAll(async () => {
@@ -68,21 +64,22 @@ afterAll(async () => {
 });
 
 describe('Move L1 to L2 - auto-invite disabled', () => {
-  test('no invitations created when autoInvite is not set', async () => {
+  test('no invitations created when autoInvite is false', async () => {
     const res = await moveSpaceL1ToSpaceL2(
       sourceScenario.subspace.id,
-      targetScenario.subspace.id
+      targetScenario.subspace.id,
+      { autoInvite: false }
     );
-
     expect(res.data?.moveSpaceL1ToSpaceL2).toBeDefined();
 
-    const roleSetData = await getRoleSetMembersList(
+    await delay(2000);
+
+    // Query the moved space's roleSet for invitations
+    const roleSetData = await getCommunityApplicationsInvitations(
       sourceScenario.subspace.community.roleSetId
     );
-    const members =
-      roleSetData.data?.lookup.roleSet?.memberUsers ?? [];
 
-    expect(members).toHaveLength(0);
+    expect(roleSetData.data?.lookup.roleSet?.invitations).toHaveLength(0);
   });
 });
 
@@ -105,9 +102,12 @@ describe('Move L1 to L2 - auto-invite enabled', () => {
       targetScenario2.subspace.id,
       {
         autoInvite: true,
-        invitationMessage: 'Your space has been moved and demoted. Please rejoin.',
+        invitationMessage:
+          'Your space has been moved and demoted. Please rejoin.',
       }
     );
+
+    await delay(5000);
   });
 
   afterAll(async () => {
@@ -116,12 +116,11 @@ describe('Move L1 to L2 - auto-invite enabled', () => {
   });
 
   test('auto-invite creates invitations for overlapping members', async () => {
-    const spaceData = await getSpaceData(sourceScenario2.subspace.id);
-    expect(spaceData.data?.lookup.space).toBeDefined();
-  });
+    // Query the moved space's roleSet for invitations
+    const roleSetData = await getCommunityApplicationsInvitations(
+      sourceScenario2.subspace.community.roleSetId
+    );
 
-  test('auto-invite with custom message is sent', async () => {
-    const spaceData = await getSpaceData(sourceScenario2.subspace.id);
-    expect(spaceData.data?.lookup.space).toBeDefined();
+    expect(roleSetData.data?.lookup.roleSet?.invitations).toHaveLength(3);
   });
 });

@@ -75,8 +75,10 @@ describe('Move L1 to L0 - authorization', () => {
     const privileges =
       movedSpaceData.data?.lookup.space?.authorization?.myPrivileges ?? [];
 
-    // Global admin should still have full privileges
-    expect(privileges.length).toBeGreaterThan(0);
+    // Global admin should retain full CRUD privileges after move
+    expect(privileges).toEqual(
+      expect.arrayContaining(['CREATE', 'READ', 'UPDATE', 'DELETE'])
+    );
   });
 });
 

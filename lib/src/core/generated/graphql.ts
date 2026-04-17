@@ -110,6 +110,14 @@ export type Account = ActorFull & {
   virtualContributors: Array<VirtualContributor>;
 };
 
+export type AccountInnovationHubsArgs = {
+  searchVisibility?: InputMaybe<Array<SearchVisibility>>;
+};
+
+export type AccountInnovationPacksArgs = {
+  searchVisibility?: InputMaybe<Array<SearchVisibility>>;
+};
+
 export type AccountAuthorizationResetInput = {
   /** The identifier of the Account whose Authorization Policy should be reset. */
   accountID: Scalars["UUID"]["input"];
@@ -4311,6 +4319,8 @@ export type Mutation = {
   adminCommunicationMigrateOrphanedConversations: CommunicationAdminMigrateRoomsResult;
   /** Remove an orphaned room from messaging platform. */
   adminCommunicationRemoveOrphanedRoom: Scalars["Boolean"]["output"];
+  /** Synchronize all Alkemio spaces into the Matrix space hierarchy. Idempotent — safe to call multiple times. */
+  adminCommunicationSyncSpaceHierarchy: Scalars["Boolean"]["output"];
   /** Allow updating the state flags of a particular rule. */
   adminCommunicationUpdateRoomState: Scalars["Boolean"]["output"];
   /** Delete a Kratos identity by ID. */
@@ -5910,6 +5920,8 @@ export type PlatformAdminIdentityQueryResultsIdentitiesArgs = {
 };
 
 export type PlatformAdminQueryResults = {
+  /** Retrieve all Accounts on the Platform. This is only available to Platform Admins. */
+  accounts: Array<Account>;
   /** Lookup Communication related information. */
   communication: PlatformAdminCommunicationQueryResults;
   /** Lookup Identity related information. */
@@ -6447,8 +6459,6 @@ export enum PushSubscriptionStatus {
 }
 
 export type Query = {
-  /** The Accounts on this platform; If accessed through an Innovation Hub will return ONLY the Accounts defined in it. */
-  accounts: Array<Account>;
   /** Activity events related to the current user. */
   activityFeed: ActivityFeed;
   /** Activity events related to the current user grouped by Activity type and resource. */
@@ -11052,8 +11062,13 @@ export type ResolversTypes = {
   PlatformAdminQueryResults: ResolverTypeWrapper<
     Omit<
       SchemaTypes.PlatformAdminQueryResults,
-      "innovationHubs" | "innovationPacks" | "organizations" | "spaces"
+      | "accounts"
+      | "innovationHubs"
+      | "innovationPacks"
+      | "organizations"
+      | "spaces"
     > & {
+      accounts: Array<ResolversTypes["Account"]>;
       innovationHubs: Array<ResolversTypes["InnovationHub"]>;
       innovationPacks: Array<ResolversTypes["InnovationPack"]>;
       organizations: ResolversTypes["PaginatedOrganization"];
@@ -12486,8 +12501,13 @@ export type ResolversParentTypes = {
   PlatformAdminIdentityQueryResults: SchemaTypes.PlatformAdminIdentityQueryResults;
   PlatformAdminQueryResults: Omit<
     SchemaTypes.PlatformAdminQueryResults,
-    "innovationHubs" | "innovationPacks" | "organizations" | "spaces"
+    | "accounts"
+    | "innovationHubs"
+    | "innovationPacks"
+    | "organizations"
+    | "spaces"
   > & {
+    accounts: Array<ResolversParentTypes["Account"]>;
     innovationHubs: Array<ResolversParentTypes["InnovationHub"]>;
     innovationPacks: Array<ResolversParentTypes["InnovationPack"]>;
     organizations: ResolversParentTypes["PaginatedOrganization"];
@@ -13033,12 +13053,14 @@ export type AccountResolvers<
   innovationHubs?: Resolver<
     Array<ResolversTypes["InnovationHub"]>,
     ParentType,
-    ContextType
+    ContextType,
+    Partial<SchemaTypes.AccountInnovationHubsArgs>
   >;
   innovationPacks?: Resolver<
     Array<ResolversTypes["InnovationPack"]>,
     ParentType,
-    ContextType
+    ContextType,
+    Partial<SchemaTypes.AccountInnovationPacksArgs>
   >;
   license?: Resolver<ResolversTypes["License"], ParentType, ContextType>;
   nameID?: Resolver<ResolversTypes["NameID"], ParentType, ContextType>;
@@ -17414,6 +17436,11 @@ export type MutationResolvers<
       "orphanedRoomData"
     >
   >;
+  adminCommunicationSyncSpaceHierarchy?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
   adminCommunicationUpdateRoomState?: Resolver<
     ResolversTypes["Boolean"],
     ParentType,
@@ -19342,6 +19369,11 @@ export type PlatformAdminQueryResultsResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["PlatformAdminQueryResults"] = ResolversParentTypes["PlatformAdminQueryResults"]
 > = {
+  accounts?: Resolver<
+    Array<ResolversTypes["Account"]>,
+    ParentType,
+    ContextType
+  >;
   communication?: Resolver<
     ResolversTypes["PlatformAdminCommunicationQueryResults"],
     ParentType,
@@ -20099,11 +20131,6 @@ export type QueryResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["Query"] = ResolversParentTypes["Query"]
 > = {
-  accounts?: Resolver<
-    Array<ResolversTypes["Account"]>,
-    ParentType,
-    ContextType
-  >;
   activityFeed?: Resolver<
     ResolversTypes["ActivityFeed"],
     ParentType,
@@ -85098,6 +85125,128 @@ export type GetSpaceCommunicationQuery = {
   };
 };
 
+export type CommunityApplicationsInvitationsQueryVariables = SchemaTypes.Exact<{
+  roleSetId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type CommunityApplicationsInvitationsQuery = {
+  lookup: {
+    __typename: "LookupQueryResults";
+    roleSet?:
+      | {
+          __typename: "RoleSet";
+          id: string;
+          authorization?:
+            | {
+                __typename: "Authorization";
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+          applications: Array<{
+            __typename: "Application";
+            id: string;
+            createdDate: Date;
+            updatedDate: Date;
+            state: string;
+            nextEvents: Array<string>;
+            actor: {
+              __typename: "Actor";
+              id: string;
+              type: SchemaTypes.ActorType;
+              profile?:
+                | {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                  }
+                | undefined;
+            };
+          }>;
+          invitations: Array<{
+            __typename: "Invitation";
+            id: string;
+            createdDate: Date;
+            updatedDate: Date;
+            state: string;
+            nextEvents: Array<string>;
+            actor: {
+              __typename: "Actor";
+              id: string;
+              type: SchemaTypes.ActorType;
+              profile?:
+                | {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                  }
+                | undefined;
+            };
+          }>;
+          platformInvitations: Array<{
+            __typename: "PlatformInvitation";
+            id: string;
+            createdDate: Date;
+            email: string;
+          }>;
+        }
+      | undefined;
+  };
+};
+
+export type AdminCommunityApplicationFragment = {
+  __typename: "Application";
+  id: string;
+  createdDate: Date;
+  updatedDate: Date;
+  state: string;
+  nextEvents: Array<string>;
+  actor: {
+    __typename: "Actor";
+    id: string;
+    type: SchemaTypes.ActorType;
+    profile?:
+      | { __typename: "Profile"; id: string; displayName: string; url: string }
+      | undefined;
+  };
+};
+
+export type AdminCommunityCandidateMemberFragment = {
+  __typename: "Actor";
+  id: string;
+  type: SchemaTypes.ActorType;
+  profile?:
+    | { __typename: "Profile"; id: string; displayName: string; url: string }
+    | undefined;
+};
+
+export type AdminCommunityInvitationFragment = {
+  __typename: "Invitation";
+  id: string;
+  createdDate: Date;
+  updatedDate: Date;
+  state: string;
+  nextEvents: Array<string>;
+  actor: {
+    __typename: "Actor";
+    id: string;
+    type: SchemaTypes.ActorType;
+    profile?:
+      | { __typename: "Profile"; id: string; displayName: string; url: string }
+      | undefined;
+  };
+};
+
+export type AdminPlatformInvitationCommunityFragment = {
+  __typename: "PlatformInvitation";
+  id: string;
+  createdDate: Date;
+  email: string;
+};
+
 export type GetSpaceAvailableMembersQueryVariables = SchemaTypes.Exact<{
   spaceId: SchemaTypes.Scalars["UUID"]["input"];
 }>;
@@ -108680,6 +108829,57 @@ export const CalloutFragmentDoc = gql`
     }
   }
 `;
+export const AdminCommunityCandidateMemberFragmentDoc = gql`
+  fragment AdminCommunityCandidateMember on Actor {
+    id
+    type
+    profile {
+      id
+      displayName
+      url
+      __typename
+    }
+    __typename
+  }
+`;
+export const AdminCommunityApplicationFragmentDoc = gql`
+  fragment AdminCommunityApplication on Application {
+    id
+    createdDate
+    updatedDate
+    state
+    nextEvents
+    actor {
+      ...AdminCommunityCandidateMember
+      __typename
+    }
+    __typename
+  }
+  ${AdminCommunityCandidateMemberFragmentDoc}
+`;
+export const AdminCommunityInvitationFragmentDoc = gql`
+  fragment AdminCommunityInvitation on Invitation {
+    id
+    createdDate
+    updatedDate
+    state
+    nextEvents
+    actor {
+      ...AdminCommunityCandidateMember
+      __typename
+    }
+    __typename
+  }
+  ${AdminCommunityCandidateMemberFragmentDoc}
+`;
+export const AdminPlatformInvitationCommunityFragmentDoc = gql`
+  fragment AdminPlatformInvitationCommunity on PlatformInvitation {
+    id
+    createdDate
+    email
+    __typename
+  }
+`;
 export const PendingMembershipsJourneyProfileFragmentDoc = gql`
   fragment PendingMembershipsJourneyProfile on Profile {
     id
@@ -110669,6 +110869,36 @@ export const GetSpaceCommunicationDocument = gql`
     }
   }
 `;
+export const CommunityApplicationsInvitationsDocument = gql`
+  query CommunityApplicationsInvitations($roleSetId: UUID!) {
+    lookup {
+      roleSet(ID: $roleSetId) {
+        id
+        authorization {
+          myPrivileges
+          __typename
+        }
+        applications {
+          ...AdminCommunityApplication
+          __typename
+        }
+        invitations {
+          ...AdminCommunityInvitation
+          __typename
+        }
+        platformInvitations {
+          ...AdminPlatformInvitationCommunity
+          __typename
+        }
+        __typename
+      }
+      __typename
+    }
+  }
+  ${AdminCommunityApplicationFragmentDoc}
+  ${AdminCommunityInvitationFragmentDoc}
+  ${AdminPlatformInvitationCommunityFragmentDoc}
+`;
 export const GetSpaceAvailableMembersDocument = gql`
   query GetSpaceAvailableMembers($spaceId: UUID!) {
     lookup {
@@ -112181,6 +112411,9 @@ const GetPlatformDiscussionsDataByIdDocumentString = print(
 const GetPlatformForumDataDocumentString = print(GetPlatformForumDataDocument);
 const GetSpaceCommunicationDocumentString = print(
   GetSpaceCommunicationDocument
+);
+const CommunityApplicationsInvitationsDocumentString = print(
+  CommunityApplicationsInvitationsDocument
 );
 const GetSpaceAvailableMembersDocumentString = print(
   GetSpaceAvailableMembersDocument
@@ -115108,6 +115341,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetSpaceCommunication",
+        "query",
+        variables
+      );
+    },
+    CommunityApplicationsInvitations(
+      variables: SchemaTypes.CommunityApplicationsInvitationsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.CommunityApplicationsInvitationsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.CommunityApplicationsInvitationsQuery>(
+            CommunityApplicationsInvitationsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "CommunityApplicationsInvitations",
         "query",
         variables
       );

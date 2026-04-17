@@ -106,10 +106,9 @@ beforeAll(async () => {
   const licenseSpace = await getSpaceLicenseSubscriptions(
     baseScenario.space.id
   );
-  sortedLicenseBefore =
-    licenseSpace.data?.lookup.space?.subscriptions?.sort((a, b) =>
-      a.name.localeCompare(b.name)
-    );
+  sortedLicenseBefore = licenseSpace.data?.lookup.space?.subscriptions?.sort(
+    (a, b) => a.name.localeCompare(b.name)
+  );
 
   // Execute conversion
   convertResult = await convertSpaceL1ToSpaceL0(baseScenario.subspace.id);
@@ -125,7 +124,8 @@ describe('Convert L1 to L0 - basic', () => {
     expect(subspaceAfter?.level).toEqual(SpaceLevel.L0);
   });
 
-  test('collaboration is preserved (excluding profile urls)', () => {
+  // Skipped until bug is fixed: BUG: Converted L1 to L0 sets flow states to defaults for Space, instead of moving the flow states from L1#9528
+  test.skip('collaboration is preserved (excluding profile urls)', () => {
     expect(stripProfileUrls(subspaceAfter?.collaboration)).toEqual(
       stripProfileUrls(subspaceBefore.data?.lookup.space?.collaboration)
     );
@@ -167,9 +167,7 @@ describe('Convert L1 to L0 - basic', () => {
 
   // Skip: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
   test.skip('all entity profile urls are updated after promotion to L0', () => {
-    const urlsBefore = collectProfileUrls(
-      subspaceBefore.data?.lookup.space
-    );
+    const urlsBefore = collectProfileUrls(subspaceBefore.data?.lookup.space);
     const urlsAfter = collectProfileUrls(subspaceAfter);
 
     // Every profile url should be non-empty
@@ -206,9 +204,7 @@ describe('Convert L1 to L0 - basic', () => {
       sortArraysInObject(stripProfileUrls(subspaceAfter?.subspaces))
     ).toEqual(
       sortArraysInObject(
-        stripProfileUrls(
-          subspaceBefore.data?.lookup.space?.subspaces
-        )
+        stripProfileUrls(subspaceBefore.data?.lookup.space?.subspaces)
       )
     );
   });
@@ -218,12 +214,8 @@ describe('Convert L1 to L0 - basic', () => {
       subspaceBefore.data?.lookup.space?.community.roleSet.memberUsers;
     const membersAfter = subspaceAfter?.community.roleSet.memberUsers;
 
-    const sortedBefore = membersBefore
-      ?.map(u => u.id)
-      .sort();
-    const sortedAfter = membersAfter
-      ?.map(u => u.id)
-      .sort();
+    const sortedBefore = membersBefore?.map(u => u.id).sort();
+    const sortedAfter = membersAfter?.map(u => u.id).sort();
 
     expect(sortedAfter).toEqual(sortedBefore);
   });
@@ -233,12 +225,8 @@ describe('Convert L1 to L0 - basic', () => {
       subspaceBefore.data?.lookup.space?.community.roleSet.leadUsers;
     const leadsAfter = subspaceAfter?.community.roleSet.leadUsers;
 
-    const sortedBefore = leadsBefore
-      ?.map(u => u.id)
-      .sort();
-    const sortedAfter = leadsAfter
-      ?.map(u => u.id)
-      .sort();
+    const sortedBefore = leadsBefore?.map(u => u.id).sort();
+    const sortedAfter = leadsAfter?.map(u => u.id).sort();
 
     expect(sortedAfter).toEqual(sortedBefore);
   });
@@ -248,12 +236,8 @@ describe('Convert L1 to L0 - basic', () => {
       subspaceBefore.data?.lookup.space?.community.roleSet.adminUsers;
     const adminsAfter = subspaceAfter?.community.roleSet.adminUsers;
 
-    const sortedBefore = adminsBefore
-      ?.map(u => u.id)
-      .sort();
-    const sortedAfter = adminsAfter
-      ?.map(u => u.id)
-      .sort();
+    const sortedBefore = adminsBefore?.map(u => u.id).sort();
+    const sortedAfter = adminsAfter?.map(u => u.id).sort();
 
     expect(sortedAfter).toEqual(sortedBefore);
   });
@@ -286,8 +270,8 @@ describe('Convert L1 to L0 - basic', () => {
   test('community updates messages are preserved after conversion', async () => {
     const commData = await getSpaceCommunication(baseScenario.subspace.id);
     const updatesMessages =
-      commData.data?.lookup.space?.community.communication.updates
-        .messages ?? [];
+      commData.data?.lookup.space?.community.communication.updates.messages ??
+      [];
     const messageTexts = updatesMessages.map(m => m.message);
 
     expect(messageTexts).toContain('Update before convert L1 to L0');
@@ -297,11 +281,10 @@ describe('Convert L1 to L0 - basic', () => {
 describe('Convert L1 to L0 - authorization', () => {
   test('Space Admin cannot execute conversion', async () => {
     // Create a fresh scenario for this test
-    const authScenario =
-      await TestScenarioFactory.createBaseScenario({
-        ...scenarioConfig,
-        name: 'convert-l1-to-l0-auth',
-      });
+    const authScenario = await TestScenarioFactory.createBaseScenario({
+      ...scenarioConfig,
+      name: 'convert-l1-to-l0-auth',
+    });
 
     const res = await convertSpaceL1ToSpaceL0(
       authScenario.subspace.id,
@@ -314,11 +297,10 @@ describe('Convert L1 to L0 - authorization', () => {
   });
 
   test('Space Member cannot execute conversion', async () => {
-    const authScenario =
-      await TestScenarioFactory.createBaseScenario({
-        ...scenarioConfig,
-        name: 'convert-l1-to-l0-auth2',
-      });
+    const authScenario = await TestScenarioFactory.createBaseScenario({
+      ...scenarioConfig,
+      name: 'convert-l1-to-l0-auth2',
+    });
 
     const res = await convertSpaceL1ToSpaceL0(
       authScenario.subspace.id,

@@ -104,6 +104,14 @@ export type Account = ActorFull & {
   virtualContributors: Array<VirtualContributor>;
 };
 
+export type AccountInnovationHubsArgs = {
+  searchVisibility?: InputMaybe<Array<SearchVisibility>>;
+};
+
+export type AccountInnovationPacksArgs = {
+  searchVisibility?: InputMaybe<Array<SearchVisibility>>;
+};
+
 export type AccountAuthorizationResetInput = {
   /** The identifier of the Account whose Authorization Policy should be reset. */
   accountID: Scalars["UUID"]["input"];
@@ -4305,6 +4313,8 @@ export type Mutation = {
   adminCommunicationMigrateOrphanedConversations: CommunicationAdminMigrateRoomsResult;
   /** Remove an orphaned room from messaging platform. */
   adminCommunicationRemoveOrphanedRoom: Scalars["Boolean"]["output"];
+  /** Synchronize all Alkemio spaces into the Matrix space hierarchy. Idempotent — safe to call multiple times. */
+  adminCommunicationSyncSpaceHierarchy: Scalars["Boolean"]["output"];
   /** Allow updating the state flags of a particular rule. */
   adminCommunicationUpdateRoomState: Scalars["Boolean"]["output"];
   /** Delete a Kratos identity by ID. */
@@ -5904,6 +5914,8 @@ export type PlatformAdminIdentityQueryResultsIdentitiesArgs = {
 };
 
 export type PlatformAdminQueryResults = {
+  /** Retrieve all Accounts on the Platform. This is only available to Platform Admins. */
+  accounts: Array<Account>;
   /** Lookup Communication related information. */
   communication: PlatformAdminCommunicationQueryResults;
   /** Lookup Identity related information. */
@@ -6441,8 +6453,6 @@ export enum PushSubscriptionStatus {
 }
 
 export type Query = {
-  /** The Accounts on this platform; If accessed through an Innovation Hub will return ONLY the Accounts defined in it. */
-  accounts: Array<Account>;
   /** Activity events related to the current user. */
   activityFeed: ActivityFeed;
   /** Activity events related to the current user grouped by Activity type and resource. */
@@ -10913,8 +10923,13 @@ export type ResolversTypes = {
   PlatformAdminQueryResults: ResolverTypeWrapper<
     Omit<
       PlatformAdminQueryResults,
-      "innovationHubs" | "innovationPacks" | "organizations" | "spaces"
+      | "accounts"
+      | "innovationHubs"
+      | "innovationPacks"
+      | "organizations"
+      | "spaces"
     > & {
+      accounts: Array<ResolversTypes["Account"]>;
       innovationHubs: Array<ResolversTypes["InnovationHub"]>;
       innovationPacks: Array<ResolversTypes["InnovationPack"]>;
       organizations: ResolversTypes["PaginatedOrganization"];
@@ -12268,8 +12283,13 @@ export type ResolversParentTypes = {
   PlatformAdminIdentityQueryResults: PlatformAdminIdentityQueryResults;
   PlatformAdminQueryResults: Omit<
     PlatformAdminQueryResults,
-    "innovationHubs" | "innovationPacks" | "organizations" | "spaces"
+    | "accounts"
+    | "innovationHubs"
+    | "innovationPacks"
+    | "organizations"
+    | "spaces"
   > & {
+    accounts: Array<ResolversParentTypes["Account"]>;
     innovationHubs: Array<ResolversParentTypes["InnovationHub"]>;
     innovationPacks: Array<ResolversParentTypes["InnovationPack"]>;
     organizations: ResolversParentTypes["PaginatedOrganization"];
@@ -12792,12 +12812,14 @@ export type AccountResolvers<
   innovationHubs?: Resolver<
     Array<ResolversTypes["InnovationHub"]>,
     ParentType,
-    ContextType
+    ContextType,
+    Partial<AccountInnovationHubsArgs>
   >;
   innovationPacks?: Resolver<
     Array<ResolversTypes["InnovationPack"]>,
     ParentType,
-    ContextType
+    ContextType,
+    Partial<AccountInnovationPacksArgs>
   >;
   license?: Resolver<ResolversTypes["License"], ParentType, ContextType>;
   nameID?: Resolver<ResolversTypes["NameID"], ParentType, ContextType>;
@@ -16839,6 +16861,11 @@ export type MutationResolvers<
       "orphanedRoomData"
     >
   >;
+  adminCommunicationSyncSpaceHierarchy?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
   adminCommunicationUpdateRoomState?: Resolver<
     ResolversTypes["Boolean"],
     ParentType,
@@ -18544,6 +18571,11 @@ export type PlatformAdminQueryResultsResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["PlatformAdminQueryResults"] = ResolversParentTypes["PlatformAdminQueryResults"]
 > = {
+  accounts?: Resolver<
+    Array<ResolversTypes["Account"]>,
+    ParentType,
+    ContextType
+  >;
   communication?: Resolver<
     ResolversTypes["PlatformAdminCommunicationQueryResults"],
     ParentType,
@@ -19213,11 +19245,6 @@ export type QueryResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["Query"] = ResolversParentTypes["Query"]
 > = {
-  accounts?: Resolver<
-    Array<ResolversTypes["Account"]>,
-    ParentType,
-    ContextType
-  >;
   activityFeed?: Resolver<
     ResolversTypes["ActivityFeed"],
     ParentType,
@@ -77501,6 +77528,126 @@ export type GetSpaceCommunicationQuery = {
         }
       | undefined;
   };
+};
+
+export type CommunityApplicationsInvitationsQueryVariables = Exact<{
+  roleSetId: Scalars["UUID"]["input"];
+}>;
+
+export type CommunityApplicationsInvitationsQuery = {
+  lookup: {
+    __typename: "LookupQueryResults";
+    roleSet?:
+      | {
+          __typename: "RoleSet";
+          id: string;
+          authorization?:
+            | {
+                __typename: "Authorization";
+                myPrivileges?: Array<AuthorizationPrivilege> | undefined;
+              }
+            | undefined;
+          applications: Array<{
+            __typename: "Application";
+            id: string;
+            createdDate: Date;
+            updatedDate: Date;
+            state: string;
+            nextEvents: Array<string>;
+            actor: {
+              __typename: "Actor";
+              id: string;
+              type: ActorType;
+              profile?:
+                | {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                  }
+                | undefined;
+            };
+          }>;
+          invitations: Array<{
+            __typename: "Invitation";
+            id: string;
+            createdDate: Date;
+            updatedDate: Date;
+            state: string;
+            nextEvents: Array<string>;
+            actor: {
+              __typename: "Actor";
+              id: string;
+              type: ActorType;
+              profile?:
+                | {
+                    __typename: "Profile";
+                    id: string;
+                    displayName: string;
+                    url: string;
+                  }
+                | undefined;
+            };
+          }>;
+          platformInvitations: Array<{
+            __typename: "PlatformInvitation";
+            id: string;
+            createdDate: Date;
+            email: string;
+          }>;
+        }
+      | undefined;
+  };
+};
+
+export type AdminCommunityApplicationFragment = {
+  __typename: "Application";
+  id: string;
+  createdDate: Date;
+  updatedDate: Date;
+  state: string;
+  nextEvents: Array<string>;
+  actor: {
+    __typename: "Actor";
+    id: string;
+    type: ActorType;
+    profile?:
+      | { __typename: "Profile"; id: string; displayName: string; url: string }
+      | undefined;
+  };
+};
+
+export type AdminCommunityCandidateMemberFragment = {
+  __typename: "Actor";
+  id: string;
+  type: ActorType;
+  profile?:
+    | { __typename: "Profile"; id: string; displayName: string; url: string }
+    | undefined;
+};
+
+export type AdminCommunityInvitationFragment = {
+  __typename: "Invitation";
+  id: string;
+  createdDate: Date;
+  updatedDate: Date;
+  state: string;
+  nextEvents: Array<string>;
+  actor: {
+    __typename: "Actor";
+    id: string;
+    type: ActorType;
+    profile?:
+      | { __typename: "Profile"; id: string; displayName: string; url: string }
+      | undefined;
+  };
+};
+
+export type AdminPlatformInvitationCommunityFragment = {
+  __typename: "PlatformInvitation";
+  id: string;
+  createdDate: Date;
+  email: string;
 };
 
 export type GetSpaceAvailableMembersQueryVariables = Exact<{

@@ -27,7 +27,6 @@ let applicationId: string;
 const sourceConfig: TestScenarioConfig = {
   name: 'move-l1-l0-inv-app-src',
   space: {
-    //collaboration: { addPostCallout: true },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [
@@ -38,7 +37,6 @@ const sourceConfig: TestScenarioConfig = {
       ],
     },
     subspace: {
-      //collaboration: { addPostCallout: true },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
         members: [TestUser.SUBSPACE_MEMBER, TestUser.SUBSPACE_ADMIN],
@@ -54,7 +52,6 @@ const sourceConfig: TestScenarioConfig = {
 const targetConfig: TestScenarioConfig = {
   name: 'move-l1-l0-inv-app-tgt',
   space: {
-    //collaboration: { addPostCallout: true },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [TestUser.SPACE_MEMBER, TestUser.SPACE_ADMIN],
@@ -77,6 +74,7 @@ beforeAll(async () => {
   );
   const invitationResult = getSingleInvitationResult(invitationData);
   invitationId = invitationResult?.invitation?.id ?? '';
+  expect(invitationId).not.toBe('');
 
   // Create pending application before move
   const applicationData = await createApplication(
@@ -84,6 +82,7 @@ beforeAll(async () => {
     TestUser.SPACE_MEMBER
   );
   applicationId = applicationData?.data?.applyForEntryRoleOnRoleSet?.id ?? '';
+  expect(applicationId).not.toBe('');
 
   // Execute cross-L0 move
   await moveSpaceL1ToSpaceL0(

@@ -63,6 +63,24 @@ export const getRoleSetMembersList = async (
   return graphqlErrorWrapper(callback, role);
 };
 
+export const getCommunityApplicationsInvitations = async (
+  roleSetId: string,
+  role = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.CommunityApplicationsInvitations(
+      {
+        roleSetId,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, role);
+};
+
 export const getRoleSetUsersInMemberRole = async (
   roleSetId: string
 ): Promise<Array<{ id: string; nameId: string }>> => {

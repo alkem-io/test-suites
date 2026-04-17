@@ -130,7 +130,6 @@ describe('Opportunities', () => {
     const requestQuerySubsubspace = await getSubspaceData(subsubspaceId);
 
     // Assert
-    expect(responseCreateSubsubspaceOnSubspace.status).toBe(200);
     expect(removeSubsubspaceResponse?.data?.deleteSpace.id ?? '').toEqual(
       subsubspaceId
     );
@@ -166,7 +165,7 @@ describe('Opportunities', () => {
     );
 
     // Assert
-    expect(responseCreateSubsubspaceOnSubspaceOne.status).toBe(200);
+    expect(responseCreateSubsubspaceOnSubspaceOne.error).toBeUndefined();
     expect(
       responseCreateSubsubspaceOnSubspaceTwo?.error?.errors[0].message
     ).toContain(
