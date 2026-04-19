@@ -2,6 +2,7 @@ fragment ProfileData on Profile {
   id
   displayName
   description
+  url
   references {
     authorization {
       myPrivileges

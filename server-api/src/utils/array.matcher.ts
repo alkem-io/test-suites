@@ -75,3 +75,73 @@ export function sortArraysInObject<T>(obj: T): T {
 export function expectEqualIgnoringArrayOrder<T>(actual: T, expected: T): void {
   expect(sortArraysInObject(actual)).toEqual(sortArraysInObject(expected));
 }
+
+/**
+ * Recursively strips `url` from every object nested under a `profile` key.
+ * All entities with a profile (spaces, callouts, posts, whiteboards,
+ * innovation flows, calendar events, etc.) have a `profile.url` that is
+ * derived from the hierarchy and changes on move/convert operations.
+ * Use this when comparing data before and after such operations.
+ */
+export function stripProfileUrls<T>(obj: T): T {
+  if (obj === null || obj === undefined) return obj;
+
+  if (Array.isArray(obj)) {
+    return obj.map(item => stripProfileUrls(item)) as T;
+  }
+
+  if (typeof obj === 'object') {
+    const result: any = {};
+    for (const [key, value] of Object.entries(obj as Record<string, any>)) {
+      if (key === 'profile' && value && typeof value === 'object') {
+        // Strip url from profile objects, recurse the rest
+        result[key] = Object.fromEntries(
+          Object.entries(value)
+            .filter(([k]) => k !== 'url')
+            .map(([k, v]) => [k, stripProfileUrls(v)])
+        );
+      } else {
+        result[key] = stripProfileUrls(value);
+      }
+    }
+    return result as T;
+  }
+
+  return obj;
+}
+
+/**
+ * Collects all `profile.url` values found anywhere in the object tree.
+ * Returns an array of `{ path, url }` entries for assertion.
+ */
+export function collectProfileUrls(
+  obj: unknown,
+  path = ''
+): Array<{ path: string; url: string }> {
+  const urls: Array<{ path: string; url: string }> = [];
+  if (obj === null || obj === undefined) return urls;
+
+  if (Array.isArray(obj)) {
+    obj.forEach((item, i) => {
+      urls.push(...collectProfileUrls(item, `${path}[${i}]`));
+    });
+    return urls;
+  }
+
+  if (typeof obj === 'object') {
+    for (const [key, value] of Object.entries(obj as Record<string, any>)) {
+      const currentPath = path ? `${path}.${key}` : key;
+      if (
+        key === 'profile' &&
+        value &&
+        typeof value === 'object' &&
+        typeof value.url === 'string'
+      ) {
+        urls.push({ path: `${currentPath}.url`, url: value.url });
+      }
+      urls.push(...collectProfileUrls(value, currentPath));
+    }
+  }
+
+  return urls;
+}

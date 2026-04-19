@@ -104,7 +104,7 @@ describe('Subspace sorting and pinning', () => {
       );
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.error).toBeUndefined();
       expect(response.data?.updateSubspacePinned.id).toEqual(subspaceAId);
       expect(response.data?.updateSubspacePinned.pinned).toBe(true);
     });
@@ -121,7 +121,7 @@ describe('Subspace sorting and pinning', () => {
       );
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.error).toBeUndefined();
       expect(response.data?.updateSubspacePinned.pinned).toBe(false);
     });
 
@@ -137,7 +137,7 @@ describe('Subspace sorting and pinning', () => {
       );
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.error).toBeUndefined();
       expect(response.data?.updateSubspacePinned.pinned).toBe(true);
     });
 
@@ -150,7 +150,7 @@ describe('Subspace sorting and pinning', () => {
       );
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.error).toBeUndefined();
       expect(response.data?.updateSubspacePinned.pinned).toBe(false);
     });
 
@@ -227,7 +227,7 @@ describe('Subspace sorting and pinning', () => {
       );
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.error).toBeUndefined();
       expect(response.data?.updateSubspacePinned.pinned).toBe(true);
     });
 
@@ -241,7 +241,7 @@ describe('Subspace sorting and pinning', () => {
       );
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.error).toBeUndefined();
       expect(response.data?.updateSubspacePinned.pinned).toBe(true);
     });
 
@@ -296,7 +296,7 @@ describe('Subspace sorting and pinning', () => {
       });
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.error).toBeUndefined();
 
       const spaceData = await getSpaceData(baseScenario.space.id);
       const settings = spaceData.data?.lookup?.space?.settings as any;
@@ -349,7 +349,7 @@ describe('Subspace sorting and pinning', () => {
       );
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.error).toBeUndefined();
       const sortedSubspaces =
         response.data?.updateSubspacesSortOrder ?? [];
       expect(sortedSubspaces).toHaveLength(3);
@@ -400,7 +400,7 @@ describe('Subspace sorting and pinning', () => {
       );
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.error).toBeUndefined();
     });
 
     test('should not allow space member to update sort order', async () => {
@@ -435,7 +435,7 @@ describe('Subspace sorting and pinning', () => {
       newSubspaceId = response.data?.createSubspace.id ?? '';
 
       // Assert
-      expect(response.status).toBe(200);
+      expect(response.error).toBeUndefined();
 
       const subspacesResponse = await getSubspacesData(baseScenario.space.id);
       const subspaces =
