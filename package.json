@@ -6,7 +6,10 @@
   "packageManager": "pnpm@9.15.0",
   "scripts": {
     "prepare": "husky",
-    "test:nightly:web": "pnpm --filter @alkemio/test-suite-client-web exec playwright test --config=config/playwright.config.nightly.ts"
+    "test:nightly:web": "pnpm --filter @alkemio/test-suite-client-web exec playwright test --config=config/playwright.config.nightly.ts",
+    "test-plans:validate": "pnpm --filter @alkemio/test-plans run validate",
+    "test-plans:scan": "pnpm --filter @alkemio/test-plans run scan",
+    "test-plans:build": "pnpm --filter @alkemio/test-plans run build"
   },
   "devDependencies": {
     "husky": "^9.1.7",
@@ -14,7 +17,8 @@
   },
   "lint-staged": {
     "server-api/**/*.ts": "pnpm -C server-api exec eslint --fix",
-    "client-web/**/*.ts": "pnpm -C client-web exec eslint --fix"
+    "client-web/**/*.ts": "pnpm -C client-web exec eslint --fix",
+    "test-plans/**/*.ts": "pnpm -C test-plans exec eslint --fix"
   },
   "engines": {
     "node": ">=20.9.0"

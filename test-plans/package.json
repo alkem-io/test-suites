@@ -1,0 +1,51 @@
+{
+  "name": "@alkemio/test-plans",
+  "version": "0.1.0",
+  "description": "QA test-plan management: feature libraries, release plans, and a static dashboard published to GitHub Pages.",
+  "author": "Alkemio Holding",
+  "private": true,
+  "license": "EUPL-1.2",
+  "type": "module",
+  "bin": {
+    "test-plans": "./dist/cli.js"
+  },
+  "main": "./dist/cli.js",
+  "scripts": {
+    "build": "tsx src/cli.ts build",
+    "compile": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "validate": "tsx src/cli.ts validate",
+    "scan": "tsx src/cli.ts scan",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit && eslint \"src/**/*.ts\" \"test/**/*.ts\"",
+    "lint:fix": "tsc --noEmit && eslint \"src/**/*.ts\" \"test/**/*.ts\" --fix"
+  },
+  "dependencies": {
+    "@octokit/plugin-throttling": "^9.3.2",
+    "@octokit/rest": "^21.0.2",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "ejs": "^3.1.10",
+    "glob": "^11.0.0",
+    "gray-matter": "^4.0.3",
+    "markdown-it": "^14.1.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.18.0",
+    "@types/ejs": "^3.1.5",
+    "@types/markdown-it": "^14.1.2",
+    "@types/node": "^20.13.1",
+    "@vitest/ui": "^4.0.18",
+    "eslint": "^8.57.0",
+    "globals": "^15.14.0",
+    "rimraf": "^6.0.1",
+    "tsx": "^4.19.4",
+    "typescript": "~5.7.3",
+    "typescript-eslint": "^8.21.0",
+    "vitest": "^4.0.18"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  }
+}

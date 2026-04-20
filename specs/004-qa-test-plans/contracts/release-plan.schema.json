@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://alkem.io/schemas/test-plans/release-plan.json",
+  "title": "Release Plan (top-level YAML front-matter of a test-plans/content/releases/<release>.md file)",
+  "description": "Structured metadata for a release test plan. The markdown body below the front-matter contains the '## In-scope cases' and '## Outcomes' sections, which are parsed separately by the CLI.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["release"],
+  "properties": {
+    "release": {
+      "type": "string",
+      "pattern": "^R[1-9][0-9]*(\\.[1-9][0-9]*)?$",
+      "description": "Release identifier: 'R<N>' for weekly releases (e.g. 'R31'), 'R<N>.<patch>' for hotfixes/patches (e.g. 'R31.1'). Used verbatim as the subdirectory/file name in the dashboard."
+    },
+    "target_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Target ship date, ISO 8601 YYYY-MM-DD. Optional; used by the landing page for ordering."
+    },
+    "description": {
+      "type": "string",
+      "description": "Free-form summary of the release's testing scope; rendered at the top of the per-release view."
+    }
+  }
+}

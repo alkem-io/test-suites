@@ -39,9 +39,12 @@ export default defineConfig({
     hookTimeout: 120_000, // beforeAll hooks create multiple entities via API, so they need more headroom
     globalSetup: './src/globalTestsSetup.ts',
     setupFiles: ['./src/setupTests.ts'],
-    reporters: ['default', 'html'],
+    reporters: ['default', 'html', 'json'],
     outputFile: {
       html: './html-report/index.html',
+      // Consumed by @alkemio/test-plans write/run-summary.ts to feed the
+      // QA dashboard with per-case automated outcomes (spec 004, T040).
+      json: './test-results/nightly.json',
     },
     projects: [
       project('account', ['src/functional-api/account/**/*.it-spec.ts']),

@@ -1,0 +1,97 @@
+<section class="feature-view">
+  <h2><%= library.feature %></h2>
+  <p class="muted">Slug: <code><%= library.slug %></code> · <%= library.cases.length %> case(s)</p>
+
+  <% if (library.cases.length === 0) { %>
+    <p class="empty-state">No test cases defined for this feature yet.</p>
+  <% } else { %>
+    <section class="metric-tiles" aria-label="Summary">
+      <div class="metric-tile"><span class="metric-num"><%= counts.total %></span><span class="metric-label">Total</span></div>
+      <div class="metric-tile"><span class="metric-num"><%= counts.ready %></span><span class="metric-label">Ready</span></div>
+      <div class="metric-tile"><span class="metric-num"><%= counts.draft %></span><span class="metric-label">Draft</span></div>
+      <div class="metric-tile"><span class="metric-num"><%= counts.retired %></span><span class="metric-label">Retired</span></div>
+      <div class="metric-tile"><span class="metric-num"><%= counts.automationRequired %></span><span class="metric-label">Automation required</span></div>
+    </section>
+
+    <table class="data">
+      <thead>
+        <tr>
+          <th scope="col">ID</th>
+          <th scope="col">Title</th>
+          <th scope="col">State</th>
+          <th scope="col">Priority</th>
+          <th scope="col">Type</th>
+          <th scope="col">Automation</th>
+          <th scope="col">Covered by</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% for (const c of library.cases) { %>
+          <tr>
+            <td><a href="#<%= c.id %>"><%= c.id %></a></td>
+            <td><%= c.title %></td>
+            <td><span class="chip chip-state chip-state-<%= c.state.toLowerCase() %>"><%= c.state %></span></td>
+            <td><span class="chip chip-priority"><%= c.priority %></span></td>
+            <td><%= c.type %></td>
+            <td><span class="chip chip-automation chip-automation-<%= c.automation %>"><%= c.automation %></span></td>
+            <td><%= c.coveredBy.length %> file(s)</td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+
+    <h3>Case details</h3>
+    <% for (const c of library.cases) { %>
+      <details id="<%= c.id %>" class="case-detail">
+        <summary><strong><%= c.id %></strong> — <%= c.title %></summary>
+        <dl class="case-meta">
+          <dt>State</dt><dd><span class="chip chip-state chip-state-<%= c.state.toLowerCase() %>"><%= c.state %></span></dd>
+          <dt>Priority</dt><dd><span class="chip chip-priority"><%= c.priority %></span></dd>
+          <dt>Type</dt><dd><%= c.type %></dd>
+          <dt>Automation</dt><dd><span class="chip chip-automation chip-automation-<%= c.automation %>"><%= c.automation %></span></dd>
+          <% if (c.owner) { %><dt>Owner</dt><dd><%= c.owner %></dd><% } %>
+          <% if (c.coveredBy.length > 0) { %>
+            <dt>Covered by</dt>
+            <dd>
+              <ul class="covered-by">
+                <% for (const file of c.coveredBy) { %>
+                  <li><code><%= file %></code></li>
+                <% } %>
+              </ul>
+            </dd>
+          <% } %>
+          <% if (c.links.stories && c.links.stories.length > 0) { %>
+            <dt>Stories</dt>
+            <dd class="link-list">
+              <% for (const ref of c.links.stories) { %>
+                <%- renderLinkChip(ref) %>
+              <% } %>
+            </dd>
+          <% } %>
+          <% if (c.links.bugs && c.links.bugs.length > 0) { %>
+            <dt>Bugs</dt>
+            <dd class="link-list">
+              <% for (const ref of c.links.bugs) { %>
+                <%- renderLinkChip(ref) %>
+              <% } %>
+            </dd>
+          <% } %>
+          <% if (c.links.prs && c.links.prs.length > 0) { %>
+            <dt>PRs</dt>
+            <dd class="link-list">
+              <% for (const ref of c.links.prs) { %>
+                <%- renderLinkChip(ref) %>
+              <% } %>
+            </dd>
+          <% } %>
+        </dl>
+        <div class="case-narrative">
+          <h4>Steps</h4>
+          <div class="case-steps"><%- mdRender(c.steps) %></div>
+          <h4>Expected</h4>
+          <div class="case-expected"><%- mdRender(c.expected) %></div>
+        </div>
+      </details>
+    <% } %>
+  <% } %>
+</section>

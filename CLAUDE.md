@@ -147,6 +147,7 @@ This repo follows SDD via the `.specify/` framework. New features must start wit
 - TypeScript ~5.7.3, Node.js 20.9.0 (Volta) + Vitest ^4.0.18, @vitest/ui ^4.0.18 (002-jest-to-vitest)
 - YAML (GitHub Actions workflow), Bash (shell steps) + Vitest HTML reporter (already configured), `deploy-github-pages.yml` reusable workflow, `pnpm/action-setup@v4`, `actions/setup-node@v6`, `actions/checkout@v5` (003-nightly-server-report)
 - `gh-pages` branch under `gh-pages-root/vitest/` directory (003-nightly-server-report)
+- TypeScript ~5.7.3, Node.js 20.9.0 (Volta) — consistent with the rest of the repo. (004-qa-test-plans)
 
 ## Recent Changes
 - 002-jest-to-vitest: Migrated server-api from Jest to Vitest. Added Vitest ^4.0.18, @vitest/ui ^4.0.18. Path aliases resolved via `resolve.alias` in vitest.config.ts.

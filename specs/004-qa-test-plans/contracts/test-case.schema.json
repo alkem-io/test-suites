@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://alkem.io/schemas/test-plans/test-case.json",
+  "title": "Test Case (per-section fenced YAML inside a feature library markdown file)",
+  "description": "Structured metadata for a single test case, parsed from a fenced ```yaml block immediately following a '## TC-XXXX — <title>' heading in a test-plans/content/features/**.md file.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["priority", "type", "state", "automation"],
+  "properties": {
+    "priority": {
+      "type": "string",
+      "enum": ["P1", "P2", "P3"],
+      "description": "Business priority of the scenario."
+    },
+    "type": {
+      "type": "string",
+      "enum": ["functional", "integration", "e2e", "other"],
+      "description": "Category of the test."
+    },
+    "state": {
+      "type": "string",
+      "enum": ["Draft", "Ready", "Retired"],
+      "description": "Lifecycle state of the case definition. Does NOT reflect execution outcome or automation status — those are derived."
+    },
+    "automation": {
+      "type": "string",
+      "enum": ["required", "optional"],
+      "description": "If 'required', absence of a covering automated test is flagged as a coverage defect on the dashboard."
+    },
+    "owner": {
+      "type": "string",
+      "description": "GitHub handle or team alias responsible for this case."
+    },
+    "links": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Structured cross-repo links, grouped by semantic type. Each string MUST be of the form 'org/repo#N'.",
+      "properties": {
+        "stories": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/crossRepoRef" }
+        },
+        "bugs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/crossRepoRef" }
+        },
+        "prs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/crossRepoRef" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "crossRepoRef": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+#[1-9][0-9]*$",
+      "description": "Standard GitHub shorthand for a cross-repo issue or PR, e.g. 'alkem-io/server#4567'."
+    }
+  }
+}

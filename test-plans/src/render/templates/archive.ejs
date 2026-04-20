@@ -1,0 +1,39 @@
+<section class="archive">
+  <h2>All release plans</h2>
+  <% if (entries.length === 0) { %>
+    <p class="empty-state">No release plans yet.</p>
+  <% } else { %>
+    <p class="muted"><%= entries.length %> release(s), most recent first. Patches appear immediately under their parent release.</p>
+    <table class="data">
+      <thead>
+        <tr>
+          <th scope="col">Release</th>
+          <th scope="col">Target date</th>
+          <th scope="col">Total</th>
+          <th scope="col">% Automated</th>
+          <th scope="col">% Passed</th>
+          <th scope="col">Failed</th>
+          <th scope="col">Blocked</th>
+          <th scope="col">Not run</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% for (const entry of entries) { %>
+          <tr class="<%= entry.isPatch ? 'patch-row' : 'main-row' %>">
+            <td>
+              <% if (entry.isPatch) { %>&nbsp;&nbsp;↳ <% } %>
+              <a href="<%= basePrefix %>releases/<%= entry.plan.release %>.html"><%= entry.plan.release %></a>
+            </td>
+            <td><%= entry.plan.targetDate || '—' %></td>
+            <td><%= entry.metrics.total %></td>
+            <td><%= entry.metrics.percentAutomated.toFixed(0) %>%</td>
+            <td><%= entry.metrics.percentPassed.toFixed(0) %>%</td>
+            <td><%= entry.metrics.failed %></td>
+            <td><%= entry.metrics.blocked %></td>
+            <td><%= entry.metrics.notRun %></td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  <% } %>
+</section>

@@ -1,5 +1,3 @@
-* text=auto eol=lf
-
 # Bot-owned test-plan run summaries (on gh-pages only, but flagged here so
 # that any incidental inclusion is treated as generated content, not hand-
 # authored — spec 004, T058).

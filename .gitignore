@@ -5,6 +5,10 @@ html-report
 client-web/dist
 server-api/html-report
 server-api/dist
+test-plans/dist
+test-plans/html-report
+test-plans/test-results/
+test-plans/.tsbuildinfo
 
 # dependencies
 node_modules/

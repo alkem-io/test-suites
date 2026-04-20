@@ -1,0 +1,98 @@
+<section class="release-view">
+  <h2>Release <%= plan.release %></h2>
+  <% if (plan.targetDate) { %>
+    <p class="muted">Target date: <%= plan.targetDate %></p>
+  <% } %>
+  <% if (plan.description) { %>
+    <p><%= plan.description %></p>
+  <% } %>
+
+  <% if (metrics.total === 0) { %>
+    <p class="empty-state">No test cases in scope for this release.</p>
+  <% } else { %>
+    <p class="muted filter-hint">
+      Tip: click any metric tile below to filter the case table to that subset. Click it again to clear.
+    </p>
+    <section class="metric-tiles" aria-label="Release summary">
+      <div class="metric-tile"><span class="metric-num"><%= metrics.total %></span><span class="metric-label">Total</span></div>
+      <div class="metric-tile"><span class="metric-num"><%= metrics.percentAutomated.toFixed(0) %>%</span><span class="metric-label">% Automated</span></div>
+      <div class="metric-tile"><span class="metric-num"><%= metrics.percentPassed.toFixed(0) %>%</span><span class="metric-label">% Passed</span></div>
+      <div class="metric-tile" data-filter-kind="outcome" data-filter-value="passed"><span class="metric-num"><%= metrics.passed %></span><span class="metric-label">Passed</span></div>
+      <div class="metric-tile" data-filter-kind="outcome" data-filter-value="failed"><span class="metric-num"><%= metrics.failed %></span><span class="metric-label">Failed</span></div>
+      <div class="metric-tile" data-filter-kind="outcome" data-filter-value="blocked"><span class="metric-num"><%= metrics.blocked %></span><span class="metric-label">Blocked</span></div>
+      <div class="metric-tile" data-filter-kind="outcome" data-filter-value="not-run"><span class="metric-num"><%= metrics.notRun %></span><span class="metric-label">Not run</span></div>
+      <div class="metric-tile" data-filter-kind="automation" data-filter-value="automated"><span class="metric-num"><%= metrics.automated %></span><span class="metric-label">Automated</span></div>
+      <div class="metric-tile" data-filter-kind="automation" data-filter-value="manual"><span class="metric-num"><%= metrics.total - metrics.automated %></span><span class="metric-label">Manual only</span></div>
+    </section>
+    <p id="filter-status" class="filter-status" aria-live="polite"></p>
+
+    <section class="breakdown">
+      <h3>By priority</h3>
+      <ul class="inline-list">
+        <% for (const p of ['P1','P2','P3']) { %>
+          <li><span class="chip chip-priority"><%= p %></span> <%= metrics.byPriority[p] %></li>
+        <% } %>
+      </ul>
+      <h3>By type</h3>
+      <ul class="inline-list">
+        <% for (const t of ['functional','integration','e2e','other']) { %>
+          <li><code><%= t %></code> <%= metrics.byType[t] %></li>
+        <% } %>
+      </ul>
+    </section>
+
+    <h3>In-scope cases</h3>
+    <table class="data cases">
+      <thead>
+        <tr>
+          <th scope="col">ID</th>
+          <th scope="col">Title</th>
+          <th scope="col">Feature</th>
+          <th scope="col">Priority</th>
+          <th scope="col">Type</th>
+          <th scope="col">Automation</th>
+          <th scope="col">Outcome</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% for (const c of casesInScope) { %>
+          <% const outcome = c.latestOutcomes[plan.release]; %>
+          <% const outcomeKind = outcome ? outcome.outcome : 'not-run'; %>
+          <% const outcomeSourceKind = outcome ? outcome.source.kind : ''; %>
+          <% const automationKind = c.coveredBy.length > 0 ? 'automated' : 'manual'; %>
+          <tr data-outcome="<%= outcomeKind %>" data-automation="<%= automationKind %>">
+            <td><%= c.id %></td>
+            <td><%= c.title %></td>
+            <td><%= c.feature %></td>
+            <td><span class="chip chip-priority"><%= c.priority %></span></td>
+            <td><%= c.type %></td>
+            <td>
+              <% if (c.coveredBy.length > 0) { %>
+                <%= c.coveredBy.length %> file(s)
+              <% } else { %>
+                <span class="muted">manual</span>
+              <% } %>
+            </td>
+            <td>
+              <span class="chip chip-outcome chip-outcome-<%= outcomeKind %>"><%= outcomeKind %></span>
+              <% if (outcome && outcomeSourceKind === 'manual') { %>
+                <small class="muted">(manual)</small>
+              <% } else if (outcome && outcomeSourceKind === 'automated') { %>
+                <small class="muted">(auto)</small>
+              <% } %>
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+
+    <% if (stolenLinks && stolenLinks.length > 0) { %>
+      <h3>Linked issues and PRs (in-scope cases)</h3>
+      <p class="link-list">
+        <% for (const ref of stolenLinks) { %>
+          <%- renderLinkChip(ref) %>
+        <% } %>
+      </p>
+    <% } %>
+  <% } %>
+</section>

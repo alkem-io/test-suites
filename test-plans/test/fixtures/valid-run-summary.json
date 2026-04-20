@@ -1,0 +1,36 @@
+{
+  "date": "2026-04-17",
+  "suite": "server-api",
+  "runs": [
+    {
+      "runId": "1234567",
+      "startedAt": "2026-04-17T02:00:00Z",
+      "completedAt": "2026-04-17T02:28:17Z",
+      "commit": "abc1234",
+      "branch": "develop",
+      "tests": [
+        {
+          "file": "server-api/src/functional-api/fixture/tagged-automation.it-spec.ts",
+          "status": "passed",
+          "durationMs": 41231
+        },
+        {
+          "file": "server-api/src/functional-api/fixture/orphan-automation.it-spec.ts",
+          "status": "passed",
+          "durationMs": 12000
+        },
+        {
+          "file": "server-api/src/functional-api/fixture/failing-automation.it-spec.ts",
+          "status": "failed",
+          "durationMs": 8000,
+          "failures": [
+            {
+              "name": "failing scenario",
+              "message": "expected 200 but got 500"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

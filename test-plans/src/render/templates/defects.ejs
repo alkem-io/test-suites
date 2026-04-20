@@ -1,0 +1,38 @@
+<section class="defects-view">
+  <h2>Coverage defects</h2>
+
+  <% if (defects.length === 0) { %>
+    <p class="empty-state">No coverage defects — all tracked cases are covered by automation and all references resolve.</p>
+  <% } else { %>
+    <p class="muted">
+      <%= defects.length %> defect(s) across <%= groupOrder.length %> kind(s).
+      <a href="<%= basePrefix %>defects.csv" download>Download CSV</a>
+    </p>
+
+    <% for (const kind of groupOrder) { %>
+      <% const rows = grouped[kind] || []; %>
+      <% if (rows.length === 0) continue; %>
+      <section class="defect-group" id="<%= kind %>">
+        <h3><%= kind %> <span class="muted">(<%= rows.length %>)</span></h3>
+        <table class="data">
+          <thead>
+            <tr>
+              <th scope="col">Where</th>
+              <th scope="col">Case</th>
+              <th scope="col">Detail</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% for (const d of rows) { %>
+              <tr>
+                <td><code><%= d.where %></code></td>
+                <td><%= d.caseId ? d.caseId : '—' %></td>
+                <td><%= d.detail %></td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </section>
+    <% } %>
+  <% } %>
+</section>
