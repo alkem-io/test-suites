@@ -31,6 +31,10 @@ on:
         required: false
         type: string
         default: develop
+      auth_eval_branch:
+        required: false
+        type: string
+        default: develop
       vc_ingest_branch:
         required: false
         type: string
@@ -100,6 +104,11 @@ on:
         required: false
         type: string
         default: develop
+      auth_eval_branch:
+        description: "Branch for auth-eval-service"
+        required: false
+        type: string
+        default: develop
       vc_ingest_branch:
         description: "Branch for virtual-contributor-ingest-space"
         required: false
@@ -160,6 +169,7 @@ jobs:
             ["matrix-adapter-go"]="${{ inputs.matrix_adapter_go_branch }}"
             ["oidc-service"]="${{ inputs.oidc_branch }}"
             ["file-service-go"]="${{ inputs.file_service_branch }}"
+            ["auth-eval-service"]="${{ inputs.auth_eval_branch }}"
             ["virtual-contributor-ingest-space"]="${{ inputs.vc_ingest_branch }}"
             ["virtual-contributor-engine-generic"]="${{ inputs.vc_engine_generic_branch }}"
             ["virtual-contributor-engine-expert"]="${{ inputs.vc_engine_expert_branch }}"
