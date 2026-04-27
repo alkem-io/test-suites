@@ -169,7 +169,7 @@ jobs:
             ["matrix-adapter-go"]="${{ inputs.matrix_adapter_go_branch }}"
             ["oidc-service"]="${{ inputs.oidc_branch }}"
             ["file-service-go"]="${{ inputs.file_service_branch }}"
-            ["auth-eval-service"]="${{ inputs.auth_eval_branch }}"
+            ["authorization-evaluation-service"]="${{ inputs.auth_eval_branch }}"
             ["virtual-contributor-ingest-space"]="${{ inputs.vc_ingest_branch }}"
             ["virtual-contributor-engine-generic"]="${{ inputs.vc_engine_generic_branch }}"
             ["virtual-contributor-engine-expert"]="${{ inputs.vc_engine_expert_branch }}"
