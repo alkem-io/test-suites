@@ -62,6 +62,7 @@ afterAll(async () => {
   await deleteSpace(spaceId, TestUser.GLOBAL_ADMIN);
 });
 
+/** @testCase TC-0501 */
 describe('Functional tests - licenses updates', () => {
   describe('Space licenses', () => {
     test('Add License Plus to space', async () => {

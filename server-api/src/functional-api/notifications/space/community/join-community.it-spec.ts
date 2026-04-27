@@ -182,6 +182,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+/** @testCase TC-0603 */
 describe('Notifications - member join community', () => {
   beforeAll(async () => {
     // Disable notifications admin user notifications (if they exist)

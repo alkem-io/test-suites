@@ -32,6 +32,7 @@ afterEach(async () => {
   pendingCleanup.length = 0;
 });
 
+/** @testCase TC-0706, TC-0707 */
 describe('Push Subscriptions - Input Validation', () => {
   // Related: https://github.com/alkem-io/server/pull/5884
   // CodeRabbit flagged missing @MaxLength on p256dh (~87 chars) and auth (~22 chars)

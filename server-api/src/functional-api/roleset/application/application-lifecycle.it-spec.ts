@@ -37,6 +37,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+/** @testCase TC-0404 */
 describe('Lifecycle', () => {
   describe('Update application entity state - positive path - REJECT', () => {
     beforeAll(async () => {

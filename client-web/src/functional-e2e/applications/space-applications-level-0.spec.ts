@@ -35,6 +35,7 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
+/** @testCase TC-2000, TC-2001, TC-2002, TC-2003 */
 test.describe('Level 0 Space - Applications', () => {
   let globalBaseScenario: OrganizationWithSpaceModel;
   let baseScenario: OrganizationWithSpaceModel;

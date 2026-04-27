@@ -11,7 +11,10 @@
 export type Priority = 'P1' | 'P2' | 'P3';
 export type TestType = 'functional' | 'integration' | 'e2e' | 'other';
 export type LifecycleState = 'Draft' | 'Ready' | 'Retired';
-export type AutomationRequirement = 'required' | 'optional';
+/** Intent declaration: "should this case be covered by automation?" Separate
+ * from the derived "is it actually automated?" status, which is computed
+ * from the `@testCase` tags in the test code. */
+export type ShouldAutomate = 'yes' | 'no';
 export type OutcomeKind = 'passed' | 'failed' | 'blocked' | 'not-run';
 export type TestSuite = 'server-api' | 'client-web';
 export type CodeConstruct = 'describe' | 'it' | 'test';
@@ -48,7 +51,7 @@ export interface CaseMetadata {
   priority: Priority;
   type: TestType;
   state: LifecycleState;
-  automation: AutomationRequirement;
+  should_automate: ShouldAutomate;
   owner?: string;
   links?: CrossRepoLinks;
 }
@@ -65,12 +68,16 @@ export interface TestCase {
   priority: Priority;
   type: TestType;
   state: LifecycleState;
-  automation: AutomationRequirement;
+  /** Authoring-time policy: "should this case be covered by automation?" */
+  shouldAutomate: ShouldAutomate;
   owner?: string;
   links: CrossRepoLinks;
   steps: string;
   expected: string;
+  /** Derived: repo-relative file paths of tagged test files covering this case. */
   coveredBy: string[];
+  /** Derived: total `test()` / `it()` calls across every file in `coveredBy`. */
+  automatedTestCount: number;
   latestOutcomes: Record<string, Outcome>;
 }
 
@@ -118,13 +125,28 @@ export type OutcomeSource =
   | { kind: 'automated'; runId: string; file: string }
   | { kind: 'manual'; by: string };
 
+export interface OutcomeVariant {
+  /** Repo-relative path to the automation test file that produced this variant result. */
+  file: string;
+  status: OutcomeKind;
+  /** Nightly run that produced this variant. */
+  runId?: string;
+  completedAt?: string;
+}
+
 export interface Outcome {
   caseId: string;
   release: string;
+  /** Aggregated worst-severity status across `variants` (failed > blocked > not-run > passed). */
   outcome: OutcomeKind;
   executedAt: string;
   source: OutcomeSource;
   evidence?: string;
+  /**
+   * Per-covering-test breakdown. Present for automated outcomes that have ≥1
+   * covering test file. Absent for manual outcomes (they have no variants).
+   */
+  variants?: OutcomeVariant[];
 }
 
 // ---------------------------------------------------------------------------

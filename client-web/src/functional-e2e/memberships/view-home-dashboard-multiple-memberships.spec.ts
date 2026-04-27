@@ -59,6 +59,7 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
+/** @testCase TC-1914 */
 test.describe('Home Dashboard Membership Display', () => {
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(60_000);

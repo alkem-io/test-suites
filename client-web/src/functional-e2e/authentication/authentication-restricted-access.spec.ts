@@ -16,6 +16,7 @@ import {
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD ?? '';
 const baseUrl = process.env.ALKEMIO_BASE_URL ?? 'http://localhost:3000';
 
+/** @testCase TC-1607, TC-1608 */
 test.describe('Authentication - Restricted Access', () => {
   test('unauthenticated user accessing admin area sees restricted page', async ({
     context,

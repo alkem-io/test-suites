@@ -2,6 +2,8 @@ import type {
   CodeTag,
   FeatureLibrary,
   Outcome,
+  OutcomeKind,
+  OutcomeVariant,
   ReleaseMetrics,
   ReleasePlan,
   RunSummary,
@@ -25,6 +27,7 @@ export function joinOutcomes(
   releasePlans: ReleasePlan[],
   runSummaries: RunSummary[],
   codeTags: CodeTag[],
+  testCountByFile: Map<string, number> = new Map(),
 ): void {
   const caseById = new Map<string, TestCase>();
   for (const lib of libraries) {
@@ -32,6 +35,7 @@ export function joinOutcomes(
       caseById.set(c.id, c);
       // Reset derived fields so a re-run is idempotent.
       c.coveredBy = [];
+      c.automatedTestCount = 0;
       c.latestOutcomes = {};
     }
   }
@@ -47,7 +51,15 @@ export function joinOutcomes(
     }
   }
 
-  // 2. Build a per-case → latest automated outcome map.
+  // Populate per-case automated test count from the static scan.
+  for (const c of caseById.values()) {
+    c.automatedTestCount = c.coveredBy.reduce(
+      (sum, file) => sum + (testCountByFile.get(file) ?? 0),
+      0,
+    );
+  }
+
+  // 2. Build a per-case → aggregated-automated-outcome map (with variants).
   const latestAutomated = computeLatestAutomatedOutcomes(caseById, runSummaries);
 
   // 3. For each (case, release) pair: pick manual outcome > automated > nothing.
@@ -62,39 +74,84 @@ export function joinOutcomes(
       }
       const auto = latestAutomated.get(caseId);
       if (auto) {
-        // Scope the automated outcome to this release.
         c.latestOutcomes[plan.release] = { ...auto, release: plan.release };
       }
     }
   }
 }
 
+/**
+ * For every case, collect the most recent per-covering-file automated result
+ * across all run summaries. Aggregates to a single "worst-severity" outcome
+ * and retains the full per-file breakdown in `variants` so the dashboard can
+ * surface "2/3 passed" next to the aggregate chip.
+ */
 function computeLatestAutomatedOutcomes(
   caseById: Map<string, TestCase>,
   runSummaries: RunSummary[],
 ): Map<string, Outcome> {
-  const latest = new Map<string, Outcome>();
+  // case → file → latest-per-file status
+  const perCasePerFile = new Map<string, Map<string, { status: OutcomeKind; runId: string; completedAt: string }>>();
+
   for (const summary of runSummaries) {
     for (const run of summary.runs) {
       for (const t of run.tests) {
         const coveredCaseIds = findCasesCoveredByFile(caseById, t.file);
+        const status = testStatusToOutcome(t);
         for (const caseId of coveredCaseIds) {
-          const candidate: Outcome = {
-            caseId,
-            release: '', // filled in by joinOutcomes when applied to a release
-            outcome: testStatusToOutcome(t),
-            executedAt: run.completedAt,
-            source: { kind: 'automated', runId: run.runId, file: t.file },
-          };
-          const current = latest.get(caseId);
-          if (!current || current.executedAt < candidate.executedAt) {
-            latest.set(caseId, candidate);
+          let inner = perCasePerFile.get(caseId);
+          if (!inner) {
+            inner = new Map();
+            perCasePerFile.set(caseId, inner);
+          }
+          const existing = inner.get(t.file);
+          if (!existing || existing.completedAt < run.completedAt) {
+            inner.set(t.file, { status, runId: run.runId, completedAt: run.completedAt });
           }
         }
       }
     }
   }
-  return latest;
+
+  const out = new Map<string, Outcome>();
+  for (const [caseId, fileMap] of perCasePerFile) {
+    const variants: OutcomeVariant[] = [];
+    let latestCompletedAt = '';
+    let latestRunId = '';
+    let latestFile = '';
+    for (const [file, v] of fileMap) {
+      variants.push({ file, status: v.status, runId: v.runId, completedAt: v.completedAt });
+      if (v.completedAt > latestCompletedAt) {
+        latestCompletedAt = v.completedAt;
+        latestRunId = v.runId;
+        latestFile = file;
+      }
+    }
+    // Stable display order: failed first, then blocked, not-run, passed.
+    const sevRank: Record<OutcomeKind, number> = { failed: 0, blocked: 1, 'not-run': 2, passed: 3 };
+    variants.sort((a, b) => sevRank[a.status] - sevRank[b.status] || a.file.localeCompare(b.file));
+    out.set(caseId, {
+      caseId,
+      release: '',
+      outcome: aggregateOutcome(variants),
+      executedAt: latestCompletedAt,
+      source: { kind: 'automated', runId: latestRunId, file: latestFile },
+      variants,
+    });
+  }
+  return out;
+}
+
+/** Worst-severity rule: any failed → failed; any blocked → blocked; any
+ * not-run → not-run (conservative — a skipped test cannot count as "passed");
+ * only all-passed → passed. */
+function aggregateOutcome(variants: OutcomeVariant[]): OutcomeKind {
+  if (variants.length === 0) return 'not-run';
+  const statuses = new Set(variants.map(v => v.status));
+  if (statuses.has('failed')) return 'failed';
+  if (statuses.has('blocked')) return 'blocked';
+  if (statuses.has('not-run')) return 'not-run';
+  return 'passed';
 }
 
 function findCasesCoveredByFile(caseById: Map<string, TestCase>, file: string): string[] {

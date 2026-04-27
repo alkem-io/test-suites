@@ -145,6 +145,7 @@ const createAndVerifyCalloutTemplate = async (
 // Callout with references test:
 // |        |  41| None               | None             | Disabled         | N/A                | N/A                | N/A                |
 
+/** @testCase TC-2440 */
 test.describe.serial('Callout Templates', () => {
   test.beforeAll(async ({ browser }) => {
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);

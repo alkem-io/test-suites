@@ -30,7 +30,7 @@ describe('render/dashboard — renderFeatureView', () => {
     // Case metadata and chips rendered
     expect(html).toMatch(/chip-priority[^>]*>P1/);
     expect(html).toMatch(/chip-state-ready[^>]*>Ready/);
-    expect(html).toMatch(/chip-automation-required[^>]*>required/);
+    expect(html).toMatch(/chip-automation-yes[^>]*>yes/);
 
     // Steps rendered via markdown-it (ordered list)
     expect(html).toContain('<ol>');

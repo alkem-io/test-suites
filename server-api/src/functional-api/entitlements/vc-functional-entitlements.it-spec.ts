@@ -50,6 +50,7 @@ const scenarioConfig: TestScenarioNoPreCreationConfig = {
   name: 'vc-functional-entitlements',
 };
 
+/** @testCase TC-0502 */
 describe('Functional tests - VC', () => {
   afterEach(async () => {
     const spaceData = await getAccountMainEntities(

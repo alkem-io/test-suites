@@ -76,6 +76,32 @@ describe('parse/release-plan', () => {
     expect(() => parseReleasePlanString(src, '/virtual/bad.md')).toThrow(/release/i);
   });
 
+  it('accepts `*` and `+` bullet markers (Obsidian / Prettier round-trip)', () => {
+    const src = [
+      '---',
+      'release: R99',
+      '---',
+      '',
+      '## In-scope cases',
+      '',
+      '* TC-1001',
+      '+ TC-1002',
+      '- TC-1003',
+      '',
+      '## Outcomes',
+      '',
+      '### TC-1001 — passed',
+      '* executed: 2026-04-20',
+      '* by: tester',
+      '* evidence: smoke',
+      '',
+    ].join('\n');
+    const plan = parseReleasePlanString(src, '/virtual/R99.md');
+    expect(plan.inScope).toEqual(['TC-1001', 'TC-1002', 'TC-1003']);
+    expect(plan.manualOutcomes['TC-1001']?.outcome).toBe('passed');
+    expect(plan.manualOutcomes['TC-1001']?.executedAt).toBe('2026-04-20');
+  });
+
   it('preserves outcome order across multiple cases', () => {
     const src = [
       '---',

@@ -83,6 +83,7 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
+/** @testCase TC-1101 */
 describe('Update space platform settings', () => {
   beforeAll(async () => {
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);

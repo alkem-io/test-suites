@@ -135,6 +135,7 @@ afterAll(async () => {
 
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
+/** @testCase TC-1001 */
 describe('Post comments subscription', () => {
   describe('Space comments subscription ', () => {
     beforeAll(async () => {

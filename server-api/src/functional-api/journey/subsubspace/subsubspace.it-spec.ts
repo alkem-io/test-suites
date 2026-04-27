@@ -47,6 +47,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+/** @testCase TC-1204 */
 describe('Opportunities', () => {
   afterEach(async () => {
     await deleteSpace(subsubspaceId);

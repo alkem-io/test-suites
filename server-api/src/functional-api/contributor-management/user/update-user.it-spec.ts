@@ -43,6 +43,7 @@ beforeAll(async () => {
   await TestScenarioFactory.createBaseScenarioEmpty(scenarioConfig);
 });
 
+/** @testCase TC-1500 */
 describe('Update user', () => {
   beforeEach(async () => {
     const uniqueId = UniqueIDGenerator.getID();

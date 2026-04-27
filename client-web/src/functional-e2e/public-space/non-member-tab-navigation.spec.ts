@@ -48,6 +48,7 @@ let baseScenario: OrganizationWithSpaceModel;
 
 test.describe.configure({ mode: 'serial' });
 
+/** @testCase TC-2102, TC-2103 */
 test.describe('Space Tab Navigation for Non-Members', () => {
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(60_000);

@@ -59,6 +59,7 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
+/** @testCase TC-1918 */
 test.describe('Organization Profile Access', () => {
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(60_000);

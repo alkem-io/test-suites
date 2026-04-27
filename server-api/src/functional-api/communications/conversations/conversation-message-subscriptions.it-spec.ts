@@ -46,6 +46,7 @@ beforeAll(async () => {
   await TestScenarioFactory.createBaseScenarioEmpty(scenarioConfig);
 });
 
+/** @testCase TC-0105 */
 describe('Conversation Message Subscriptions', () => {
   describe('MESSAGE_RECEIVED event', () => {
     let subscription: SubscriptionClient;

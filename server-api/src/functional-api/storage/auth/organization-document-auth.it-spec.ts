@@ -51,6 +51,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+/** @testCase TC-0904 */
 describe('Organization - documents', () => {
   describe('Access to Organization Profile visual', () => {
     afterAll(async () => {

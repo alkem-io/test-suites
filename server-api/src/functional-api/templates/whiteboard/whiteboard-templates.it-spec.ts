@@ -46,6 +46,7 @@ afterAll(async () => {
 
 beforeEach(async () => {});
 
+/** @testCase TC-0804 */
 describe('WHITEBOARD templates - CRUD', () => {
   afterEach(async () => {
     await deleteTemplate(templateId);

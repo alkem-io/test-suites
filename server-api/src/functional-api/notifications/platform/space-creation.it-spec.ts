@@ -115,6 +115,7 @@ beforeAll(async () => {
   spaceNameId = `testspace${uniqueId}`;
 });
 
+/** @testCase TC-0602 */
 describe('Notifications - Space creation', () => {
   beforeAll(async () => {
     // Set up space creation notification settings for all admin users

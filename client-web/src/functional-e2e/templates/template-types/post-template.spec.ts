@@ -47,6 +47,7 @@ const templateData: PostTemplateForm = {
     '# Collaboration Update\n\nKeep stakeholders aligned with the latest milestones, blockers, and next steps.',
 };
 
+/** @testCase TC-2400, TC-2410 */
 test.describe.serial('Post Templates', () => {
   test.beforeAll(async ({ browser, context }) => {
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);

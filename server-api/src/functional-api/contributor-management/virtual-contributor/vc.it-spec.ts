@@ -137,6 +137,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+/** @testCase TC-1503 */
 describe('Virtual Contributor', () => {
   afterEach(async () => {
     await removeVirtualContributorFromRoleSet(

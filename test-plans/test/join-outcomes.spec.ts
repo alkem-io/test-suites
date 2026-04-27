@@ -24,11 +24,12 @@ function baseCase(id: string, overrides: Partial<TestCase> = {}): TestCase {
     priority: 'P1',
     type: 'functional',
     state: 'Ready',
-    automation: 'required',
+    shouldAutomate: 'yes',
     links: {},
     steps: '',
     expected: '',
     coveredBy: [],
+    automatedTestCount: 0,
     latestOutcomes: {},
     ...overrides,
   };
@@ -176,6 +177,78 @@ describe('join/outcomes', () => {
 
     // The outcome MUST remain byte-for-byte unchanged
     expect(JSON.stringify(c1.latestOutcomes['R31'])).toBe(originalSerialized);
+  });
+
+  it('(f) aggregates multiple covering tests into variants with worst-severity outcome', () => {
+    const c1 = baseCase('TC-1001');
+    const libs = [library([c1])];
+    const plans = [plan('R31', ['TC-1001'], {})];
+    const tags = [
+      tag('a.it-spec.ts', ['TC-1001']),
+      tag('b.it-spec.ts', ['TC-1001']),
+      tag('c.it-spec.ts', ['TC-1001']),
+    ];
+    // 2 passed, 1 failed — should aggregate to failed, 3 variants, 2 passed count
+    const runs: RunSummary[] = [{
+      date: '2026-04-17',
+      suite: 'server-api',
+      runs: [{
+        runId: '42',
+        startedAt: '2026-04-17T02:00:00Z',
+        completedAt: '2026-04-17T02:30:00Z',
+        commit: 'abc1234',
+        branch: 'develop',
+        tests: [
+          { file: 'a.it-spec.ts', status: 'passed' },
+          { file: 'b.it-spec.ts', status: 'passed' },
+          { file: 'c.it-spec.ts', status: 'failed' },
+        ],
+      }],
+    }];
+    joinOutcomes(libs, plans, runs, tags);
+    const o = c1.latestOutcomes['R31'];
+    expect(o?.outcome).toBe('failed');
+    expect(o?.variants).toHaveLength(3);
+    const passed = o!.variants!.filter(v => v.status === 'passed').length;
+    expect(passed).toBe(2);
+    // Variants sort: failed first, then passed, by severity
+    expect(o!.variants![0].status).toBe('failed');
+  });
+
+  it('(g) all-passed variants aggregate to passed', () => {
+    const c1 = baseCase('TC-1001');
+    const libs = [library([c1])];
+    const plans = [plan('R31', ['TC-1001'], {})];
+    const tags = [
+      tag('a.it-spec.ts', ['TC-1001']),
+      tag('b.it-spec.ts', ['TC-1001']),
+    ];
+    const runs = [runSummaryFile('a.it-spec.ts', 'passed'), runSummaryFile('b.it-spec.ts', 'passed', '2026-04-17T03:00:00Z')];
+    joinOutcomes(libs, plans, runs, tags);
+    const o = c1.latestOutcomes['R31'];
+    expect(o?.outcome).toBe('passed');
+    expect(o?.variants).toHaveLength(2);
+    expect(o!.variants!.every(v => v.status === 'passed')).toBe(true);
+  });
+
+  it('(h) manual outcome has no variants (covers variants-not-applicable path)', () => {
+    const c1 = baseCase('TC-1001');
+    const libs = [library([c1])];
+    const plans = [plan('R31', ['TC-1001'], {
+      'TC-1001': {
+        caseId: 'TC-1001',
+        release: 'R31',
+        outcome: 'blocked',
+        executedAt: '2026-04-20',
+        source: { kind: 'manual', by: 't' },
+      },
+    })];
+    const tags = [tag('a.it-spec.ts', ['TC-1001'])];
+    const runs = [runSummaryFile('a.it-spec.ts', 'passed')];
+    joinOutcomes(libs, plans, runs, tags);
+    const o = c1.latestOutcomes['R31'];
+    expect(o?.outcome).toBe('blocked');
+    expect(o?.variants).toBeUndefined();
   });
 
   it('uses the real fixture run summary end-to-end', async () => {

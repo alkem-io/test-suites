@@ -95,6 +95,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+/** @testCase TC-1003 */
 describe('GraphQL Guard - Nested Query Data Integrity', () => {
   describe('Deep space hierarchy query (space -> subspace -> subsubspace)', () => {
     test('GetSpaceData returns complete nested hierarchy for global admin', async () => {

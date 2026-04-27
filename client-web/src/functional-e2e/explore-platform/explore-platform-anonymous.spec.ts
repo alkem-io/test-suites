@@ -81,6 +81,7 @@ const scenarioConfig: TestScenarioConfig = {
 // Serial mode to ensure clean setup/teardown
 test.describe.configure({ mode: 'serial' });
 
+/** @testCase TC-1800, TC-1801, TC-1802, TC-1803, TC-1805, TC-1806, TC-1807 */
 test.describe('Explore Alkemio Platform - Anonymous User Flow', () => {
   test.beforeAll(async () => {
     test.setTimeout(120_000);

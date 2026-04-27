@@ -90,6 +90,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+/** @testCase TC-0903 */
 describe('Public Space - visual on profile', () => {
   describe('Access to Space Profile visual', () => {
     afterAll(async () => {

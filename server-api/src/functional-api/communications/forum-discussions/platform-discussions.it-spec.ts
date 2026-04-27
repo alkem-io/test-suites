@@ -45,6 +45,7 @@ beforeAll(async () => {
   }
 });
 
+/** @testCase TC-0107 */
 describe('Platform discussions - CRUD operations', () => {
   afterEach(async () => {
     await deleteDiscussion(discussionId);

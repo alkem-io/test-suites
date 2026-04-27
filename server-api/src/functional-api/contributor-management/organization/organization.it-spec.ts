@@ -41,6 +41,7 @@ beforeAll(async () => {
 });
 afterAll(async () => await deleteOrganization(orgId));
 
+/** @testCase TC-1501 */
 describe('Organization', () => {
   describe('create', () => {
     test('should create', async () => {

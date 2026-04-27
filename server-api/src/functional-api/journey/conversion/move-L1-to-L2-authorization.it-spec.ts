@@ -97,6 +97,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(targetScenario);
 });
 
+/** @testCase TC-1303, TC-1305 */
 describe('Move L1 to L2 - authorization', () => {
   test('Platform Admin (GLOBAL_ADMIN) can execute move', async () => {
     const res = await moveSpaceL1ToSpaceL2(

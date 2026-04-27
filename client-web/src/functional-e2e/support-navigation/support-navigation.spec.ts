@@ -44,6 +44,7 @@ test.afterAll(async () => {
   await teardownAuthentication();
 });
 
+/** @testCase TC-1712 */
 test.describe('Support Navigation Flow', () => {
   test('Complete Support Journey - Dashboard to Documentation to Inviting Tutorial and Back', async ({
     page,

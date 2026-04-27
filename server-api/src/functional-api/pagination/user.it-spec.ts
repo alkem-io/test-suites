@@ -3,6 +3,7 @@ import { paginatedUser } from './pagination.request.params';
 
 // In order the tests to work, the state of the DB must be clean
 
+/** @testCase TC-1006 */
 describe('Pagination - user', () => {
   test('query filtered user and verify data', async () => {
     // Act

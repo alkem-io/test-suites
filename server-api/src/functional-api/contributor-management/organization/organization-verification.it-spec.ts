@@ -43,6 +43,7 @@ afterAll(async () => {
   await deleteOrganization(organizationId);
 });
 
+/** @testCase TC-1502 */
 describe('Organization verification status', () => {
   afterAll(async () => {
     await deleteOrganization(organizationId);

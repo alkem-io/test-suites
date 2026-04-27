@@ -10,13 +10,13 @@ slug: journey-conversion
   platform's Space hierarchy and are high-risk.
 -->
 
-## TC-1300 — A Space host can move an L1 Subspace to L0 (promoting it to a Space)
+## TC-1300 — Convert L1 Subspace to L0 (promoting it to a Space)
 
 ```yaml
 priority: P1
 type: integration
 state: Ready
-automation: required
+should_automate: yes
 owner: ev.dimitrovv
 links:
   stories: [alkem-io/product#1301]
@@ -25,22 +25,22 @@ links:
 ### Steps
 
 1. Create an L1 Subspace with members, callouts, and posts.
-2. Execute the L1→L0 move.
+2. Execute the L1→L0 conversion.
 3. Query the resulting L0 Space and the original parent Space.
 
 ### Expected
 
 - The former L1 is now an L0 with its content intact.
 - It is removed from the former parent's subspace list.
-- Members and their roles are preserved across the move.
+- Members and their roles are preserved across after conversion.
 
-## TC-1301 — Moving L1 to L0 preserves community membership and role assignments
+## TC-1301 — Moving L1 to another L0 doesn't preserve community membership and role assignments
 
 ```yaml
 priority: P1
 type: integration
 state: Ready
-automation: required
+should_automate: yes
 owner: ev.dimitrovv
 links:
   bugs: [alkem-io/server#4702]
@@ -53,16 +53,17 @@ links:
 
 ### Expected
 
-- All roles survive the move with the same assignment.
+- All roles are removed.
+- Host of the moved subspace becomes the new L0 space host.
 - No member receives a transient "removed" notification during the move.
 
-## TC-1302 — L1→L0 move auto-invite behavior is honored per release configuration
+## TC-1302 — L1→L0 move auto-invite
 
 ```yaml
 priority: P2
 type: integration
 state: Ready
-automation: required
+should_automate: yes
 owner: ev.dimitrovv
 ```
 
@@ -73,7 +74,7 @@ owner: ev.dimitrovv
 
 ### Expected
 
-- Disabled: pending invitations are cleared or marked stale.
+- Disabled: pending invitations are cleared.
 - Enabled: invitations are re-scoped to the new L0.
 
 ## TC-1303 — L1→L2 move relocates a Subspace under another parent Subspace
@@ -82,7 +83,7 @@ owner: ev.dimitrovv
 priority: P1
 type: integration
 state: Ready
-automation: required
+should_automate: yes
 owner: ev.dimitrovv
 ```
 
@@ -94,7 +95,8 @@ owner: ev.dimitrovv
 ### Expected
 
 - The former L1 is now an L2 under the target parent.
-- Roles are reconciled against the new parent's role model (e.g. admin at L1 becomes co-admin at L2).
+- Roles are not moved.
+- Callouts remain as they were before the move.
 
 ## TC-1304 — L2→L1 conversion demotes an L2 to an independent L1
 
@@ -102,7 +104,7 @@ owner: ev.dimitrovv
 priority: P2
 type: integration
 state: Ready
-automation: required
+should_automate: yes
 owner: ev.dimitrovv
 ```
 
@@ -123,7 +125,7 @@ owner: ev.dimitrovv
 priority: P1
 type: integration
 state: Ready
-automation: required
+should_automate: yes
 owner: ev.dimitrovv
 ```
 
@@ -143,7 +145,7 @@ owner: ev.dimitrovv
 priority: P2
 type: integration
 state: Ready
-automation: required
+should_automate: yes
 owner: ev.dimitrovv
 ```
 
@@ -164,7 +166,7 @@ owner: ev.dimitrovv
 priority: P3
 type: integration
 state: Ready
-automation: required
+should_automate: yes
 owner: ev.dimitrovv
 ```
 

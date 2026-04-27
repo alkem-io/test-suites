@@ -12,11 +12,12 @@ function baseCase(id: string, overrides: Partial<TestCase> = {}): TestCase {
     priority: 'P1',
     type: 'integration',
     state: 'Ready',
-    automation: 'required',
+    shouldAutomate: 'yes',
     links: {},
     steps: '1. do',
     expected: '- ok',
     coveredBy: [],
+    automatedTestCount: 0,
     latestOutcomes: {},
     ...overrides,
   };

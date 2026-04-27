@@ -102,6 +102,7 @@ afterAll(async () => {
   await deleteOrganization(orgId);
 });
 
+/** @testCase TC-0504 */
 describe('Get Organization Account Authorization and License privileges ', () => {
   test('No licenses assigned', async () => {
     // Arrange

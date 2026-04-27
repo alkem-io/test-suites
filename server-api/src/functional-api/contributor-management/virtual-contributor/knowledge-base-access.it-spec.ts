@@ -169,6 +169,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+/** @testCase TC-1504 */
 describe('Virtual Contributor ACCESS - All Public - Visibility Public / BoK / Public', () => {
   beforeAll(async () => {
     await updateVirtualContributor(vcSpaceBasedId, SearchVisibility.Public);

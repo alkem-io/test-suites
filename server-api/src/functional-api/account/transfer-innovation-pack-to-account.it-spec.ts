@@ -48,6 +48,7 @@ afterAll(async () => {
   await deleteOrganization(orgId);
 });
 
+/** @testCase TC-0503 */
 describe('Transfer innovation pack to Account', () => {
   afterEach(async () => {
     await deleteInnovationPack(innovationPackId);

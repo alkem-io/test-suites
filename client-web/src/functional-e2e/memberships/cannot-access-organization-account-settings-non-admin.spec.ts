@@ -55,6 +55,7 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
+/** @testCase TC-1912 */
 test.describe('Organization Account Settings', () => {
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(60_000);

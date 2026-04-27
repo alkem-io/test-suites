@@ -15,7 +15,9 @@ const validateFrontMatter: ValidateFunction<ReleasePlanFrontMatter> = ajv.compil
 
 const IN_SCOPE_HEADING_RE = /^## In-scope cases\s*$/m;
 const OUTCOMES_HEADING_RE = /^## Outcomes\s*$/m;
-const CASE_ID_BULLET_RE = /^- (TC-\d+)\s*$/gm;
+// Accept `-`, `*`, or `+` bullet markers — Obsidian (and Prettier, etc.)
+// may normalize bullet lists to any of these depending on user settings.
+const CASE_ID_BULLET_RE = /^[-*+]\s+(TC-\d+)\s*$/gm;
 const OUTCOME_HEADING_RE = /^### (TC-\d+)\s+—\s+(passed|failed|blocked|not-run)\s*$/gm;
 
 const VALID_OUTCOMES: OutcomeKind[] = ['passed', 'failed', 'blocked', 'not-run'];
@@ -119,7 +121,8 @@ function parseOutcomeMetadata(
   filePath: string,
 ): { executed: string; by: string; evidence?: string } {
   const fields: Record<string, string> = {};
-  const bulletRe = /^-\s+(\w+):\s*(.+?)\s*$/gm;
+  // Accept `-`, `*`, or `+` bullet markers (same reason as above).
+  const bulletRe = /^[-*+]\s+(\w+):\s*(.+?)\s*$/gm;
   for (const m of section.matchAll(bulletRe)) {
     fields[m[1]] = m[2];
   }

@@ -66,6 +66,7 @@ afterEach(async () => {
   await deleteUser(userId);
 });
 
+/** @testCase TC-0401 */
 describe('Invitations', () => {
   beforeEach(async () => {
     emailExternalUser = `external${uniqueId}@alkem.io`;

@@ -32,6 +32,7 @@ beforeAll(async () => {
   await TestScenarioFactory.createBaseScenarioEmpty(scenarioConfig);
 });
 
+/** @testCase TC-1100, TC-1102, TC-1103 */
 describe('Space entity', () => {
   beforeAll(async () => {
     const responseOrg = await createOrganization(organizationName, hostNameId);

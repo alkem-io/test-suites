@@ -5,7 +5,7 @@
   "description": "Structured metadata for a single test case, parsed from a fenced ```yaml block immediately following a '## TC-XXXX — <title>' heading in a test-plans/content/features/**.md file.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["priority", "type", "state", "automation"],
+  "required": ["priority", "type", "state", "should_automate"],
   "properties": {
     "priority": {
       "type": "string",
@@ -22,10 +22,10 @@
       "enum": ["Draft", "Ready", "Retired"],
       "description": "Lifecycle state of the case definition. Does NOT reflect execution outcome or automation status — those are derived."
     },
-    "automation": {
+    "should_automate": {
       "type": "string",
-      "enum": ["required", "optional"],
-      "description": "If 'required', absence of a covering automated test is flagged as a coverage defect on the dashboard."
+      "enum": ["yes", "no"],
+      "description": "Authoring-time policy: should this case be covered by automation? If 'yes' and no `@testCase` tag covers it, the dashboard surfaces a `missing-required-automation` defect. The derived 'is-actually-automated' status is computed from tag presence, not this field."
     },
     "owner": {
       "type": "string",

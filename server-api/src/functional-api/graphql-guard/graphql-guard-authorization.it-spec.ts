@@ -91,6 +91,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+/** @testCase TC-1004 */
 describe('GraphQL Guard - Synchronous Authorization', () => {
   describe('Space-level authorization privileges', () => {
     test.each`

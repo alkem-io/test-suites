@@ -9,7 +9,7 @@ slug: fixture-feature
 priority: P1
 type: integration
 state: Ready
-automation: required
+should_automate: yes
 owner: qa-fixture
 links:
   stories: [alkem-io/product#1234]
@@ -33,7 +33,7 @@ links:
 priority: P2
 type: functional
 state: Draft
-automation: optional
+should_automate: no
 ```
 
 ### Steps

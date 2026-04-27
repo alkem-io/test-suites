@@ -81,6 +81,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+/** @testCase TC-1203, TC-1204 */
 describe('Subsubspace Admin', () => {
   test('should create subsubspace admin', async () => {
     // Act

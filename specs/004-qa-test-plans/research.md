@@ -139,7 +139,7 @@ slug: communications
 priority: P1
 type: integration
 state: Ready
-automation: required
+should_automate: yes
 links:
   stories: [alkem-io/product#1234]
   bugs:    [alkem-io/server#4567]

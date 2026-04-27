@@ -60,6 +60,7 @@ afterAll(async () => {
   }
 });
 
+/** @testCase TC-0100, TC-0101, TC-0102, TC-0103, TC-0104 */
 describe('Create Conversation', () => {
   describe('Direct Conversations', () => {
     test('should create a DIRECT conversation between two users', async () => {

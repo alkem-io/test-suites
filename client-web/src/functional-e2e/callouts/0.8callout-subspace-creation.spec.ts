@@ -62,6 +62,7 @@ const subspaceAdminFixture = createAuthenticatedSessionFixture({
   cleanupAfterTests: process.env.cleanupAfterTests === 'true',
 });
 
+/** @testCase TC-2205 */
 subspaceAdminFixture.test.describe.serial(
   'Callout Creation in Subspace',
   () => {

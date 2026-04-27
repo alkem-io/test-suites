@@ -56,6 +56,7 @@ afterAll(async () => {
 
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
+/** @testCase TC-1000 */
 describe('Create subspace subscription', () => {
   beforeAll(async () => {
     subscription1 = new SubscriptionClient();

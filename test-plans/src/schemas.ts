@@ -10,12 +10,12 @@ export const CASE_METADATA_SCHEMA = {
   title: 'Test Case (per-section fenced YAML)',
   type: 'object',
   additionalProperties: false,
-  required: ['priority', 'type', 'state', 'automation'],
+  required: ['priority', 'type', 'state', 'should_automate'],
   properties: {
     priority: { type: 'string', enum: ['P1', 'P2', 'P3'] },
     type: { type: 'string', enum: ['functional', 'integration', 'e2e', 'other'] },
     state: { type: 'string', enum: ['Draft', 'Ready', 'Retired'] },
-    automation: { type: 'string', enum: ['required', 'optional'] },
+    should_automate: { type: 'string', enum: ['yes', 'no'] },
     owner: { type: 'string' },
     links: {
       type: 'object',

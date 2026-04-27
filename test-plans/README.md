@@ -18,6 +18,8 @@ This package implements spec [`004-qa-test-plans`](../specs/004-qa-test-plans/sp
 
 All three surfaces are human-owned and version-controlled. The bot-owned run-summary JSON (automated outcomes) lives on the `gh-pages` branch and is never committed back to `develop`.
 
+**Prefer a rich editor over raw markdown?** The `content/` directory is a valid Obsidian vault. See [OBSIDIAN.md](./OBSIDIAN.md) for the recommended settings and plugin picks. Everything else — the CLI, the dashboard, the workflow — keeps working unchanged.
+
 ## Commands
 
 From the repo root:

@@ -8,6 +8,7 @@ import { verifyMyDashboardWelcomeElement } from '../my-dashboard/my-dashboard-pa
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD!;
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
+/** @testCase TC-1950 */
 test.describe('Navigation and Access', () => {
   test('1.1 Access User Profile from Dashboard', async ({ page }) => {
     // Navigate to home page

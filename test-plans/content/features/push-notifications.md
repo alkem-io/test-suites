@@ -16,7 +16,7 @@ slug: push-notifications
 priority: P1
 type: integration
 state: Ready
-automation: required
+should_automate: yes
 owner: ev.dimitrovv
 links:
   stories: [alkem-io/server#5884, alkem-io/client-web#9433]
@@ -39,7 +39,7 @@ links:
 priority: P1
 type: integration
 state: Ready
-automation: required
+should_automate: yes
 owner: ev.dimitrovv
 links:
   stories: [alkem-io/server#5884]
@@ -63,7 +63,7 @@ links:
 priority: P1
 type: integration
 state: Ready
-automation: required
+should_automate: yes
 owner: ev.dimitrovv
 ```
 
@@ -85,7 +85,7 @@ owner: ev.dimitrovv
 priority: P1
 type: integration
 state: Ready
-automation: required
+should_automate: yes
 owner: ev.dimitrovv
 ```
 
@@ -107,7 +107,7 @@ owner: ev.dimitrovv
 priority: P2
 type: integration
 state: Ready
-automation: required
+should_automate: yes
 owner: ev.dimitrovv
 ```
 
@@ -128,7 +128,7 @@ owner: ev.dimitrovv
 priority: P2
 type: integration
 state: Ready
-automation: required
+should_automate: yes
 owner: ev.dimitrovv
 ```
 
@@ -148,7 +148,7 @@ owner: ev.dimitrovv
 priority: P3
 type: integration
 state: Ready
-automation: required
+should_automate: yes
 owner: ev.dimitrovv
 ```
 
@@ -168,7 +168,7 @@ owner: ev.dimitrovv
 priority: P2
 type: integration
 state: Ready
-automation: required
+should_automate: yes
 owner: ev.dimitrovv
 ```
 

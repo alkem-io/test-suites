@@ -113,6 +113,7 @@ beforeEach(async () => {
   postNameID = `post-name-id-${uniqueId}`;
 });
 
+/** @testCase TC-0204 */
 describe('Callouts - Close State', () => {
   afterEach(async () => {
     await deleteCallout(calloutId);

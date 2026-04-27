@@ -20,6 +20,7 @@ const { test, setupAuthentication, teardownAuthentication } =
     cleanupAfterTests: process.env.cleanupAfterTests === 'true',
   });
 
+/** @testCase TC-1710, TC-1711 */
 test.describe('Support Navigation Additional Tests', () => {
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(60_000);

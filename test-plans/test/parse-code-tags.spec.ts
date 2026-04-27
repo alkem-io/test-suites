@@ -47,6 +47,24 @@ describe('parse/code-tags — scanString', () => {
     expect(tags[0].construct).toBe('describe');
   });
 
+  it('(e-fixture) tag attaches to a test-runner call dispatched through a custom fixture', () => {
+    const src = [
+      '// @testCase TC-7777',
+      'adminFixture.test.describe.serial(\'Suite A\', () => {});',
+      '',
+      '// @testCase TC-7778',
+      'memberFixture.test(\'a direct test\', () => {});',
+      '',
+      '// @testCase TC-7779',
+      'something.test.beforeAll(() => {});', // hook — MUST NOT be matched
+    ].join('\n');
+    const tags = scanString(src, 'virtual.ts');
+    // Expect exactly 2 tags matched (the two real tests), not 3
+    expect(tags.map(t => t.caseIds[0])).toEqual(['TC-7777', 'TC-7778']);
+    expect(tags[0].construct).toBe('describe');
+    expect(tags[1].construct).toBe('test');
+  });
+
   it('(e) tag attaches to an `it.only` / `describe.skip` variant', () => {
     const src = [
       '// @testCase TC-0001',

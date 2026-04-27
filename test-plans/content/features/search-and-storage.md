@@ -15,7 +15,7 @@ slug: search-and-storage
 priority: P1
 type: integration
 state: Ready
-automation: required
+should_automate: yes
 owner: ev.dimitrovv
 ```
 
@@ -36,7 +36,7 @@ owner: ev.dimitrovv
 priority: P1
 type: integration
 state: Ready
-automation: required
+should_automate: yes
 owner: ev.dimitrovv
 ```
 
@@ -56,7 +56,7 @@ owner: ev.dimitrovv
 priority: P1
 type: integration
 state: Ready
-automation: required
+should_automate: yes
 owner: ev.dimitrovv
 ```
 
@@ -77,7 +77,7 @@ owner: ev.dimitrovv
 priority: P1
 type: integration
 state: Ready
-automation: required
+should_automate: yes
 owner: ev.dimitrovv
 ```
 
@@ -99,7 +99,7 @@ owner: ev.dimitrovv
 priority: P2
 type: integration
 state: Ready
-automation: required
+should_automate: yes
 owner: ev.dimitrovv
 ```
 

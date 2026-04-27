@@ -181,6 +181,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+/** @testCase TC-0603 */
 describe('Notifications - invitations', () => {
   beforeAll(async () => {
     // Disable notifications for global support admin

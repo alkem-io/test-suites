@@ -53,6 +53,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+/** @testCase TC-1202 */
 describe('Subspace sorting and pinning', () => {
   let subspaceAId = '';
   let subspaceBId = '';

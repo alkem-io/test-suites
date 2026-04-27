@@ -370,8 +370,8 @@ table.data tbody tr.patch-row td:first-child {
   color: var(--priority-fg);
 }
 
-.chip-automation-required { background: #fce7f3; color: #9f1239; }
-.chip-automation-optional { background: var(--muted-bg); color: var(--muted-fg); }
+.chip-automation-yes { background: #fce7f3; color: #9f1239; }
+.chip-automation-no  { background: var(--muted-bg); color: var(--muted-fg); }
 
 /* -------------------------------------------------------------------------
    Cross-repo link chip
@@ -500,6 +500,55 @@ table.data tbody tr.patch-row td:first-child {
   padding: 0.25em 0.75em;
   border-radius: 6px;
   font-size: 0.88rem;
+}
+
+/* -------------------------------------------------------------------------
+   Variant breakdown — "N/M" badge and per-variant disclosure
+   ------------------------------------------------------------------------- */
+
+.variant-count {
+  display: inline-block;
+  margin-left: 0.35rem;
+  padding: 0.05em 0.45em;
+  border-radius: 4px;
+  background: var(--bg-alt);
+  color: var(--fg-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: ui-monospace, monospace;
+}
+
+.variant-details {
+  margin-top: 0.35rem;
+  font-size: 0.82rem;
+}
+
+.variant-details summary {
+  cursor: pointer;
+  color: var(--accent-600);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.1rem 0;
+}
+
+.variant-details .variants {
+  list-style: none;
+  padding: 0.35rem 0 0;
+  margin: 0;
+}
+
+.variant-details .variants li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.15rem 0;
+}
+
+.variant-details .variants code {
+  color: var(--fg-muted);
+  background: transparent;
+  font-size: 0.78rem;
 }
 
 /* Defect groups */

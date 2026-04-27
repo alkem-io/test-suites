@@ -91,6 +91,7 @@ let baseScenario: OrganizationWithSpaceModel;
 
 test.describe.configure({ mode: 'serial' });
 
+/** @testCase TC-2105, TC-2106, TC-2107 */
 test.describe('Subspace Navigation for Non-Members', () => {
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(60_000);

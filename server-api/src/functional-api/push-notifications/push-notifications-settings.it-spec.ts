@@ -24,6 +24,7 @@ beforeAll(async () => {
   await TestScenarioFactory.createBaseScenarioEmpty(scenarioConfig);
 });
 
+/** @testCase TC-0705 */
 describe('Push Notification Settings - All 28 events', () => {
   describe('Platform notification settings', () => {
     test('should update push setting for platform.forumDiscussionCreated', async () => {

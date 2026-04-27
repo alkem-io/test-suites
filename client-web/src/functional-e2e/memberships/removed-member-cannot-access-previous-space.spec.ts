@@ -103,6 +103,7 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
+/** @testCase TC-1906 */
 test.describe('Security & Permissions', () => {
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(60_000);

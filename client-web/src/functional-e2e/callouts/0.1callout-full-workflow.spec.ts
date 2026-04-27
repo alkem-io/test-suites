@@ -45,6 +45,7 @@ const memberFixture = createAuthenticatedSessionFixture({
   cleanupAfterTests: process.env.cleanupAfterTests === 'true',
 });
 
+/** @testCase TC-2200 */
 test.describe.serial('Callout Full Workflow', () => {
   test.beforeAll(async () => {
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);

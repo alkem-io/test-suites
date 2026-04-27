@@ -60,6 +60,8 @@
           <% const outcomeKind = outcome ? outcome.outcome : 'not-run'; %>
           <% const outcomeSourceKind = outcome ? outcome.source.kind : ''; %>
           <% const automationKind = c.coveredBy.length > 0 ? 'automated' : 'manual'; %>
+          <% const variants = outcome && outcome.variants ? outcome.variants : []; %>
+          <% const passedCount = variants.filter(v => v.status === 'passed').length; %>
           <tr data-outcome="<%= outcomeKind %>" data-automation="<%= automationKind %>">
             <td><%= c.id %></td>
             <td><%= c.title %></td>
@@ -67,18 +69,37 @@
             <td><span class="chip chip-priority"><%= c.priority %></span></td>
             <td><%= c.type %></td>
             <td>
-              <% if (c.coveredBy.length > 0) { %>
-                <%= c.coveredBy.length %> file(s)
+              <% if (c.automatedTestCount > 0) { %>
+                <strong><%= c.automatedTestCount %></strong> test<%= c.automatedTestCount === 1 ? '' : 's' %>
+                <small class="muted">(<%= c.coveredBy.length %> file<%= c.coveredBy.length === 1 ? '' : 's' %>)</small>
+              <% } else if (c.shouldAutomate === 'yes') { %>
+                <span class="muted">— <small>should be automated</small></span>
               <% } else { %>
                 <span class="muted">manual</span>
               <% } %>
             </td>
             <td>
               <span class="chip chip-outcome chip-outcome-<%= outcomeKind %>"><%= outcomeKind %></span>
+              <% if (variants.length > 1) { %>
+                <small class="variant-count" title="<%= passedCount %> of <%= variants.length %> automated variants passed"><%= passedCount %>/<%= variants.length %></small>
+              <% } %>
               <% if (outcome && outcomeSourceKind === 'manual') { %>
                 <small class="muted">(manual)</small>
               <% } else if (outcome && outcomeSourceKind === 'automated') { %>
                 <small class="muted">(auto)</small>
+              <% } %>
+              <% if (variants.length > 1) { %>
+                <details class="variant-details">
+                  <summary class="muted">per-variant</summary>
+                  <ul class="variants">
+                    <% for (const v of variants) { %>
+                      <li>
+                        <span class="chip chip-outcome chip-outcome-<%= v.status %>"><%= v.status %></span>
+                        <code><%= v.file %></code>
+                      </li>
+                    <% } %>
+                  </ul>
+                </details>
               <% } %>
             </td>
           </tr>

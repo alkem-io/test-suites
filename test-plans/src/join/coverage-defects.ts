@@ -19,7 +19,7 @@ export interface CoverageDefectInput {
  *   1. orphan-automation — a test file exists but has no @testCase tag.
  *   2. unknown-case-ref — a tag references a case ID that is not in any
  *      feature library.
- *   3. missing-required-automation — a case marked `automation: required`
+ *   3. missing-required-automation — a case that declared should_automate: yes
  *      and not retired has no covering automated test.
  *   4. stale-release-ref — a release plan references a case that is
  *      retired or no longer defined anywhere.
@@ -61,16 +61,17 @@ export function computeCoverageDefects(input: CoverageDefectInput): CoverageDefe
     }
   }
 
-  // 3. missing-required-automation — required cases with no covering tag.
+  // 3. missing-required-automation — cases that declared should_automate: yes
+  //    but have no covering tag.
   for (const lib of libraries) {
     for (const c of lib.cases) {
-      if (c.automation !== 'required') continue;
+      if (c.shouldAutomate !== 'yes') continue;
       if (c.state === 'Retired') continue;
       if (coveredIds.has(c.id)) continue;
       defects.push({
         kind: 'missing-required-automation',
         where: c.file,
-        detail: `case ${c.id} is marked automation: required but no tagged test covers it`,
+        detail: `case ${c.id} declares should_automate: yes but no tagged test covers it`,
         caseId: c.id,
       });
     }

@@ -32,6 +32,7 @@ beforeEach(() => {
   userName = `testuser${uniqueId}`;
 });
 
+/** @testCase TC-1500 */
 describe('Create User', () => {
   afterEach(async () => {
     const a = await deleteUser(userId);

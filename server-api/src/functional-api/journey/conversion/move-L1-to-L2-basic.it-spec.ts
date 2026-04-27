@@ -100,6 +100,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(targetScenario);
 });
 
+/** @testCase TC-1303 */
 describe('Move L1 to L2 - basic', () => {
   test('space level is demoted to L2', () => {
     expect(movedSpace?.level).toEqual(SpaceLevel.L2);

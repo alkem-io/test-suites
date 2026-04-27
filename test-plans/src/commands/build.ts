@@ -32,7 +32,7 @@ export async function buildCommand(flags: GlobalFlags): Promise<number> {
   const runSummaries: RunSummary[] = flags.pullRuns ? await loadRunSummaries(flags.runsDir) : [];
   const scan = await scanCodeTags(resolveScanPatterns(), { relativeTo: findRepoRoot() });
 
-  joinOutcomes(libraries, releasePlans, runSummaries, scan.tags);
+  joinOutcomes(libraries, releasePlans, runSummaries, scan.tags, scan.testCountByFile);
 
   const allLinks = gatherAllLinks(libraries);
   const enriched = await enrichLinks(allLinks, {

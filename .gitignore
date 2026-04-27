@@ -85,3 +85,13 @@ client-web/.auth/
 
 # Claude Code
 .claude/
+
+# Obsidian per-user vault settings (the content directory IS a vault —
+# settings, workspace, plugin data are all personal and should not be
+# shared through git. See test-plans/README.md for recommended settings).
+**/.obsidian/
+**/.trash/
+**/*.base
+
+# Per-package generated test results (Vitest JSON reporter, etc.)
+**/test-results/

@@ -79,6 +79,7 @@ beforeEach(async () => {
   calloutDisplayName = `callout-d-name-${uniqueId}`;
 });
 
+/** @testCase TC-0200, TC-0201 */
 describe('Callouts - CRUD', () => {
   describe('', () => {
     afterEach(async () => {

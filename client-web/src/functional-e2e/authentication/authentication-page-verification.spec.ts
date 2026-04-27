@@ -20,6 +20,7 @@ import { UniqueIDGenerator } from '@alkemio/tests-lib';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
+/** @testCase TC-1600 */
 test.describe('Authentication - Page Element Verification', () => {
   test.beforeEach(async ({ context }) => {
     await context.clearCookies();

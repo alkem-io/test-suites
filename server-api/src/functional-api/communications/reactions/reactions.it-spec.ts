@@ -30,6 +30,7 @@ beforeAll(async () => {
   platformDiscussionId = res?.data?.platform.forum.id ?? '';
 });
 
+/** @testCase TC-0108 */
 describe('Reaction - Discussion messages', () => {
   beforeAll(async () => {
     const res = await createDiscussion(

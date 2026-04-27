@@ -23,7 +23,7 @@ Each feature has a single markdown file under `test-plans/content/features/`. To
    priority: P2
    type: integration
    state: Draft
-   automation: required
+   should_automate: yes
    owner: ev.dimitrovv
    links:
      stories: [alkem-io/product#1234]
@@ -161,7 +161,7 @@ The `--pull-runs` flag fetches the latest `runs/<suite>/<date>.json` from the `g
 - Your `@testCase TC-####` points to an ID that does not exist in any feature library. Check for typos, or add the case to the appropriate feature library.
 
 **"Missing required automation" defects**
-- Your case is marked `automation: required` but no test has a matching `@testCase` tag. Either add the automation or change the case to `automation: optional`.
+- Your case declares `should_automate: yes` but no test has a matching `@testCase` tag. Either add the automation or change the case to `should_automate: no` (i.e. declare it manual-only).
 
 **"Stale release reference" defects**
 - A release plan includes a case ID that has been retired or deleted. Either remove it from the release plan's `In-scope cases` or restore the case in its feature library.

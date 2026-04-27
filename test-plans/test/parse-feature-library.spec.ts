@@ -36,7 +36,7 @@ describe('parse/feature-library', () => {
     expect(tc9001!.priority).toBe('P1');
     expect(tc9001!.type).toBe('integration');
     expect(tc9001!.state).toBe('Ready');
-    expect(tc9001!.automation).toBe('required');
+    expect(tc9001!.shouldAutomate).toBe('yes');
     expect(tc9001!.owner).toBe('qa-fixture');
     expect(tc9001!.links.bugs).toEqual(['alkem-io/server#4567']);
     expect(tc9001!.links.stories).toEqual(['alkem-io/product#1234']);
@@ -65,7 +65,7 @@ describe('parse/feature-library', () => {
         'priority: P1',
         'type: functional',
         'state: Ready',
-        'automation: optional',
+        'should_automate: no',
         '```',
         '### Steps',
         '1. x',
@@ -77,7 +77,7 @@ describe('parse/feature-library', () => {
         'priority: P1',
         'type: functional',
         'state: Ready',
-        'automation: optional',
+        'should_automate: no',
         '```',
         '### Steps',
         '1. x',
@@ -101,7 +101,7 @@ describe('parse/feature-library', () => {
       'priority: XX',
       'type: functional',
       'state: Ready',
-      'automation: optional',
+      'should_automate: no',
       '```',
       '### Steps',
       '1. x',

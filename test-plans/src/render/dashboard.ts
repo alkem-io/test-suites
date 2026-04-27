@@ -92,7 +92,7 @@ function computeFeatureCounts(library: FeatureLibrary): FeatureViewCounts {
     if (c.state === 'Ready') counts.ready++;
     else if (c.state === 'Draft') counts.draft++;
     else if (c.state === 'Retired') counts.retired++;
-    if (c.automation === 'required') counts.automationRequired++;
+    if (c.shouldAutomate === 'yes') counts.automationRequired++;
   }
   return counts;
 }

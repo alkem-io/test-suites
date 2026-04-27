@@ -48,6 +48,7 @@ let baseScenario: OrganizationWithSpaceModel;
 
 test.describe.configure({ mode: 'serial' });
 
+/** @testCase TC-2104 */
 test.describe('Space Lead Profile Access', () => {
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(60_000);

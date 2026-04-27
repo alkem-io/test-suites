@@ -65,6 +65,7 @@ let baseScenario: OrganizationWithSpaceModel;
 
 test.describe.configure({ mode: 'serial' });
 
+/** @testCase TC-2110, TC-2111, TC-2112 */
 test.describe('Edge Cases and Error Handling', () => {
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(60_000);

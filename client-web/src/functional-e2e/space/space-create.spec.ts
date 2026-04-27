@@ -28,6 +28,7 @@ const scenarioConfig: TestScenarioNoPreCreationConfig = {
   name: 'space-create',
 };
 
+/** @testCase TC-2300, TC-2302, TC-2303, TC-2304, TC-2305, TC-2306 */
 test.describe('CREATE Space Operations', () => {
   test.beforeAll(async ({ browser }) => {
     await TestScenarioFactory.createBaseScenarioEmpty(scenarioConfig);

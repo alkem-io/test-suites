@@ -149,6 +149,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+/** @testCase TC-0600 */
 describe('Notifications - post', () => {
   let postNameID = '';
 

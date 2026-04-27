@@ -47,6 +47,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+/** @testCase TC-0300, TC-0301, TC-0302, TC-0303, TC-0304, TC-0305 */
 describe('Calendar Events - Create', () => {
   test('should create a timed calendar event', async () => {
     const res = await createCalendarEventOnCalendar(calendarId, {

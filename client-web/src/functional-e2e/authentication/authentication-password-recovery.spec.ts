@@ -19,6 +19,7 @@ const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const isLocalEnv = baseUrl.includes('localhost');
 
+/** @testCase TC-1603 */
 test.describe('Authentication - Password Recovery Flows', () => {
   test.beforeEach(async ({ context }) => {
     await context.clearCookies();

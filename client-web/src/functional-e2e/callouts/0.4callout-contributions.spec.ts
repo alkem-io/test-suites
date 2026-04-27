@@ -41,6 +41,7 @@ const memberFixture = createAuthenticatedSessionFixture({
   cleanupAfterTests: process.env.cleanupAfterTests === 'true',
 });
 
+/** @testCase TC-2212 */
 memberFixture.test.describe.serial('Callout Contributions - Member', () => {
   memberFixture.test.beforeAll(async ({ browser }) => {
     memberFixture.test.setTimeout(60_000);

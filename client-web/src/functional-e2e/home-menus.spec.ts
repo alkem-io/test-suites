@@ -24,6 +24,7 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
+/** @testCase TC-1700, TC-1701, TC-1702 */
 test.describe.skip('Home Page Menus', () => {
   test.beforeAll(async () => {
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);

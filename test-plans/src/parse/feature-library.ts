@@ -84,12 +84,13 @@ export function parseFeatureLibraryString(content: string, filePath: string): Fe
       priority: metadata.priority,
       type: metadata.type,
       state: metadata.state,
-      automation: metadata.automation,
+      shouldAutomate: metadata.should_automate,
       owner: metadata.owner,
       links: metadata.links ?? {},
       steps,
       expected,
       coveredBy: [],
+      automatedTestCount: 0,
       latestOutcomes: {},
     });
   }

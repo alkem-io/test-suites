@@ -73,6 +73,7 @@ afterAll(async () => {
   await deleteVirtualContributorOnAccount(vcId).catch();
   await deleteSpace(vcSpaceId).catch();
 });
+/** @testCase TC-1505 */
 describe('Virtual Contributor Model Card', () => {
   it('should create a virtual contributor with a model card', async () => {
     expect(vcId).toBeDefined();

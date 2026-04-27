@@ -158,6 +158,7 @@ afterEach(async () => {
   await deleteCallout(calloutId);
 });
 
+/** @testCase TC-0600 */
 describe('Notifications - post', () => {
   beforeEach(async () => {
     await deleteMailSlurperMails();

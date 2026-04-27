@@ -10,7 +10,7 @@
       <div class="metric-tile"><span class="metric-num"><%= counts.ready %></span><span class="metric-label">Ready</span></div>
       <div class="metric-tile"><span class="metric-num"><%= counts.draft %></span><span class="metric-label">Draft</span></div>
       <div class="metric-tile"><span class="metric-num"><%= counts.retired %></span><span class="metric-label">Retired</span></div>
-      <div class="metric-tile"><span class="metric-num"><%= counts.automationRequired %></span><span class="metric-label">Automation required</span></div>
+      <div class="metric-tile"><span class="metric-num"><%= counts.automationRequired %></span><span class="metric-label">Should-automate: yes</span></div>
     </section>
 
     <table class="data">
@@ -21,7 +21,7 @@
           <th scope="col">State</th>
           <th scope="col">Priority</th>
           <th scope="col">Type</th>
-          <th scope="col">Automation</th>
+          <th scope="col">Should-automate</th>
           <th scope="col">Covered by</th>
         </tr>
       </thead>
@@ -33,8 +33,15 @@
             <td><span class="chip chip-state chip-state-<%= c.state.toLowerCase() %>"><%= c.state %></span></td>
             <td><span class="chip chip-priority"><%= c.priority %></span></td>
             <td><%= c.type %></td>
-            <td><span class="chip chip-automation chip-automation-<%= c.automation %>"><%= c.automation %></span></td>
-            <td><%= c.coveredBy.length %> file(s)</td>
+            <td><span class="chip chip-automation chip-automation-<%= c.shouldAutomate %>">should-automate: <%= c.shouldAutomate %></span></td>
+            <td>
+              <% if (c.automatedTestCount > 0) { %>
+                <strong><%= c.automatedTestCount %></strong> test<%= c.automatedTestCount === 1 ? '' : 's' %>
+                <small class="muted">(<%= c.coveredBy.length %> file<%= c.coveredBy.length === 1 ? '' : 's' %>)</small>
+              <% } else { %>
+                <span class="muted">—</span>
+              <% } %>
+            </td>
           </tr>
         <% } %>
       </tbody>
@@ -48,7 +55,10 @@
           <dt>State</dt><dd><span class="chip chip-state chip-state-<%= c.state.toLowerCase() %>"><%= c.state %></span></dd>
           <dt>Priority</dt><dd><span class="chip chip-priority"><%= c.priority %></span></dd>
           <dt>Type</dt><dd><%= c.type %></dd>
-          <dt>Automation</dt><dd><span class="chip chip-automation chip-automation-<%= c.automation %>"><%= c.automation %></span></dd>
+          <dt>Should-automate</dt><dd><span class="chip chip-automation chip-automation-<%= c.shouldAutomate %>"><%= c.shouldAutomate %></span></dd>
+          <% if (c.automatedTestCount > 0) { %>
+            <dt>Automated tests</dt><dd><strong><%= c.automatedTestCount %></strong> in <%= c.coveredBy.length %> file(s)</dd>
+          <% } %>
           <% if (c.owner) { %><dt>Owner</dt><dd><%= c.owner %></dd><% } %>
           <% if (c.coveredBy.length > 0) { %>
             <dt>Covered by</dt>

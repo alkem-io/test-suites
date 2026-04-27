@@ -166,6 +166,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+/** @testCase TC-0603 */
 describe('Notifications - applications', () => {
   beforeAll(async () => {
     // Disable notifications for admin users (if they exist)

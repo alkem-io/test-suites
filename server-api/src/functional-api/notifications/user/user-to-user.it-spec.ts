@@ -90,6 +90,7 @@ beforeAll(async () => {
   ];
 });
 
+/** @testCase TC-0605 */
 describe('Notifications - user to user messages', () => {
   beforeAll(async () => {
     for (const user of usersList) {

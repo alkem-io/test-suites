@@ -155,6 +155,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
+/** @testCase TC-0606 */
 describe('Notifications - Mention User', () => {
   beforeEach(async () => {
     await deleteMailSlurperMails();

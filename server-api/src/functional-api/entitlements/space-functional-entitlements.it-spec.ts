@@ -51,6 +51,7 @@ const scenarioConfig: TestScenarioNoPreCreationConfig = {
   name: 'space-functional-entitlements',
 };
 
+/** @testCase TC-0500 */
 describe('Functional tests - Space', () => {
   describe('VC Campaign user space creation', () => {
     beforeAll(async () => {

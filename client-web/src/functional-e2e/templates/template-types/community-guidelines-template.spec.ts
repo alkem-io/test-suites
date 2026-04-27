@@ -59,6 +59,7 @@ const templateData: CommunityGuidelinesTemplateForm = {
   },
 };
 
+/** @testCase TC-2400, TC-2430 */
 test.describe.serial('Community Guidelines Template', () => {
   test.beforeAll(async ({ browser, context }) => {
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);

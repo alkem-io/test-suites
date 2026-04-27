@@ -67,6 +67,7 @@ afterAll(async () => {
 
 // In order the tests to work, the state of the DB must be clean
 
+/** @testCase TC-1006 */
 describe('Pagination - organization', () => {
   test('query filtered organization and verify data', async () => {
     // Act

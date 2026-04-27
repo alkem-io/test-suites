@@ -15,7 +15,7 @@ slug: roleset
 priority: P1
 type: integration
 state: Ready
-automation: required
+should_automate: yes
 owner: ev.dimitrovv
 links:
   stories: [alkem-io/product#1520]
@@ -38,7 +38,7 @@ links:
 priority: P1
 type: integration
 state: Ready
-automation: required
+should_automate: yes
 owner: ev.dimitrovv
 ```
 
@@ -59,7 +59,7 @@ owner: ev.dimitrovv
 priority: P1
 type: integration
 state: Ready
-automation: required
+should_automate: yes
 owner: ev.dimitrovv
 ```
 
@@ -79,7 +79,7 @@ owner: ev.dimitrovv
 priority: P2
 type: integration
 state: Ready
-automation: required
+should_automate: yes
 owner: ev.dimitrovv
 ```
 
@@ -99,7 +99,7 @@ owner: ev.dimitrovv
 priority: P2
 type: integration
 state: Ready
-automation: required
+should_automate: yes
 owner: ev.dimitrovv
 ```
 
@@ -120,7 +120,7 @@ owner: ev.dimitrovv
 priority: P3
 type: integration
 state: Ready
-automation: required
+should_automate: yes
 owner: ev.dimitrovv
 ```
 

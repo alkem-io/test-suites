@@ -96,6 +96,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(targetScenario);
 });
 
+/** @testCase TC-1302 */
 describe('Move L1 to L0 - pre-existing applications and invitations', () => {
   // skip test until bug is resolved: BUG: Pending memberships are moved together with space#9523
 

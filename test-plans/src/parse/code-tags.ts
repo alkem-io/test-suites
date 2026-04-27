@@ -18,11 +18,34 @@ export interface ScanResult {
   tags: CodeTag[];
   /** Source files that contain at least one describe/it/test call but NO @testCase tag. */
   orphanFiles: string[];
+  /**
+   * Per-file count of `it()` / `test()` calls (excluding `describe()` and hooks).
+   * Used by the join layer to compute per-case automated-test counts for the
+   * dashboard. Files that don't appear in this map have zero tests.
+   */
+  testCountByFile: Map<string, number>;
 }
 
 const TAG_RE = /@testCase\s+((?:TC-\d+(?:\s*,\s*|\s+))*TC-\d+)/;
-const CALL_RE = /^\s*(?:describe|it|test)(?:\.\w+)?\s*\(/;
-const CONSTRUCT_RE = /^\s*(describe|it|test)\b/;
+// Match lines that invoke a test runner entry point:
+//   describe(...)    it(...)    test(...)
+//   test.describe(...)   test.only(...)   test.describe.serial(...)
+//   myFixture.test.describe(...)    x.y.z.test(...)
+// but NOT hooks like test.beforeAll / test.afterEach and NOT arbitrary
+// identifiers that happen to contain `test` as a substring.
+const CALL_RE = /^\s*(?:[A-Za-z_$][\w$]*\.)*(describe|it|test)(?:\.(?:only|skip|fixme|fail|serial|parallel|concurrent|configure))?\s*\(/;
+const CONSTRUCT_RE = /^\s*(?:[A-Za-z_$][\w$]*\.)*(describe|it|test)\b/;
+// Matches an actual test declaration (it / test), NOT describe or hooks.
+// Used to count how many individual assertions a case's covering files run.
+// Note: counts entire file regardless of which describe the @testCase tag
+// attaches to; a file with multiple tags on different describes will appear
+// over-represented. In practice most files carry a single top-level tag.
+const TEST_CALL_ANY_RE = /^\s*(?:[A-Za-z_$][\w$]*\.)*(it|test)(?:\.(?:only|skip|fixme|fail|concurrent))?\s*\(/gm;
+
+export function countTestsInContent(content: string): number {
+  const matches = content.match(TEST_CALL_ANY_RE);
+  return matches ? matches.length : 0;
+}
 
 /** Max lines the parser will look forward from a tag to find its attached call. */
 const CALL_SEARCH_WINDOW = 20;
@@ -59,6 +82,7 @@ export async function scanCodeTags(
   const files = await expandPatterns(patterns);
   const tags: CodeTag[] = [];
   const orphanFiles: string[] = [];
+  const testCountByFile = new Map<string, number>();
   const normalize = (file: string): string =>
     options.relativeTo ? path.relative(options.relativeTo, file).replace(/\\/g, '/') : file;
   for (const file of files) {
@@ -70,8 +94,9 @@ export async function scanCodeTags(
     if (fileTags.length === 0 && fileLooksLikeTestSource(content)) {
       orphanFiles.push(normalizedPath);
     }
+    testCountByFile.set(normalizedPath, countTestsInContent(content));
   }
-  return { tags, orphanFiles };
+  return { tags, orphanFiles, testCountByFile };
 }
 
 async function expandPatterns(patterns: string[]): Promise<string[]> {

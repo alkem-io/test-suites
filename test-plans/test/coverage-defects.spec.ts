@@ -11,11 +11,12 @@ function baseCase(id: string, overrides: Partial<TestCase> = {}): TestCase {
     priority: 'P1',
     type: 'functional',
     state: 'Ready',
-    automation: 'optional',
+    shouldAutomate: 'no',
     links: {},
     steps: '',
     expected: '',
     coveredBy: [],
+    automatedTestCount: 0,
     latestOutcomes: {},
     ...overrides,
   };
@@ -58,7 +59,7 @@ describe('join/coverage-defects', () => {
   });
 
   it('detects missing-required-automation for Ready+required cases with no covering tag', () => {
-    const c = baseCase('TC-1', { automation: 'required' });
+    const c = baseCase('TC-1', { shouldAutomate: 'yes' });
     const defects = computeCoverageDefects({
       libraries: [library([c])],
       releasePlans: [],
@@ -69,7 +70,7 @@ describe('join/coverage-defects', () => {
   });
 
   it('does NOT flag retired cases as missing-required-automation', () => {
-    const c = baseCase('TC-1', { automation: 'required', state: 'Retired' });
+    const c = baseCase('TC-1', { shouldAutomate: 'yes', state: 'Retired' });
     const defects = computeCoverageDefects({
       libraries: [library([c])],
       releasePlans: [],
@@ -106,7 +107,7 @@ describe('join/coverage-defects', () => {
   });
 
   it('returns an empty array when there are no defects', () => {
-    const covered = baseCase('TC-1', { automation: 'required' });
+    const covered = baseCase('TC-1', { shouldAutomate: 'yes' });
     const defects = computeCoverageDefects({
       libraries: [library([covered])],
       releasePlans: [plan('R31', ['TC-1'])],
@@ -117,7 +118,7 @@ describe('join/coverage-defects', () => {
   });
 
   it('aggregates all four defect kinds in one pass', () => {
-    const required = baseCase('TC-1', { automation: 'required' });
+    const required = baseCase('TC-1', { shouldAutomate: 'yes' });
     const retired = baseCase('TC-2', { state: 'Retired' });
     const defects = computeCoverageDefects({
       libraries: [library([required, retired])],

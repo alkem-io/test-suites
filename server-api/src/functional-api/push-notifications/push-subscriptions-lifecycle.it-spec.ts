@@ -32,6 +32,7 @@ afterEach(async () => {
   pendingCleanup.length = 0;
 });
 
+/** @testCase TC-0700, TC-0701, TC-0702, TC-0703, TC-0704 */
 describe('Push Subscriptions - VAPID Public Key', () => {
   test('should return a VAPID public key for authenticated user', async () => {
     const res = await getVapidPublicKey(TestUser.GLOBAL_ADMIN);

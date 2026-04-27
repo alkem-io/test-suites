@@ -97,6 +97,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+/** @testCase TC-0605 */
 describe('Notifications - user to organization messages', () => {
   beforeAll(async () => {
     // Enable organization message notifications for the organization admins

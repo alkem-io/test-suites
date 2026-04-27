@@ -108,6 +108,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(targetScenario);
 });
 
+/** @testCase TC-1303 */
 describe('Move L1 to L2 - pre-existing applications and invitations', () => {
   test('pending invitation is invalidated after cross-L0 move', async () => {
     const acceptResult = await eventOnRoleSetInvitation(
