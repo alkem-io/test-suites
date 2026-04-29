@@ -844,6 +844,7 @@ describe('Public Space - Private Subspace - visual on profile', () => {
       ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute} | ${200}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute} | ${200}
       ${TestUser.SPACE_MEMBER}     | ${undefined}                                          | ${403}
+      ${TestUser.SUBSPACE_ADMIN}   | ${sorted__create_read_update_delete_grant_contribute} | ${200}
       ${TestUser.SUBSPACE_MEMBER}  | ${['CONTRIBUTE', 'READ']}                             | ${200}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space subspace visual for post of call for post  callout (storageBucket) document',
