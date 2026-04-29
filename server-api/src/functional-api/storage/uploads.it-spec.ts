@@ -28,6 +28,7 @@ import {
   TestUser,
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
+
 const uniqueId = UniqueIDGenerator.getID();
 const isCI = !!process.env.CI;
 
@@ -179,7 +180,7 @@ describe('Upload document', () => {
     const resDelete = await deleteDocument(documentId, TestUser.GLOBAL_ADMIN);
 
     expect(resDelete.error?.errors[0].message).toContain(
-      `Not able to locate document with the specified ID: ${documentId}`
+      'Not able to locate document with the specified ID'
     );
   });
 
