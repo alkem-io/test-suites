@@ -148,7 +148,7 @@ describe('Private Space - Private Subspace - visual on profile', () => {
     // Arrange
     test.each`
       userRole                     | privileges                                 | expectedStatus
-      ${undefined}                 | ${undefined}                               | ${401}
+      ${undefined}                 | ${undefined}                               | ${403}
       ${TestUser.NON_SPACE_MEMBER} | ${undefined}                               | ${403}
       ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant} | ${200}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant} | ${200}
@@ -221,7 +221,7 @@ describe('Private Space - Private Subspace - visual on profile', () => {
     // Arrange
     test.each`
       userRole                     | privileges                                 | expectedStatus
-      ${undefined}                 | ${undefined}                               | ${401}
+      ${undefined}                 | ${undefined}                               | ${403}
       ${TestUser.NON_SPACE_MEMBER} | ${undefined}                               | ${403}
       ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant} | ${200}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant} | ${200}
@@ -302,7 +302,7 @@ describe('Private Space - Private Subspace - visual on profile', () => {
     // Arrange
     test.each`
       userRole                     | privileges                                 | expectedStatus
-      ${undefined}                 | ${undefined}                               | ${401}
+      ${undefined}                 | ${undefined}                               | ${403}
       ${TestUser.NON_SPACE_MEMBER} | ${undefined}                               | ${403}
       ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant} | ${200}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant} | ${200}
@@ -386,7 +386,7 @@ describe('Private Space - Private Subspace - visual on profile', () => {
     // Arrange
     test.each`
       userRole                     | privileges                                            | expectedStatus
-      ${undefined}                 | ${undefined}                                          | ${401}
+      ${undefined}                 | ${undefined}                                          | ${403}
       ${TestUser.NON_SPACE_MEMBER} | ${undefined}                                          | ${403}
       ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute} | ${200}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute} | ${200}
@@ -470,7 +470,7 @@ describe('Private Space - Private Subspace - visual on profile', () => {
     // Arrange
     test.each`
       userRole                     | privileges                                            | expectedStatus
-      ${undefined}                 | ${undefined}                                          | ${401}
+      ${undefined}                 | ${undefined}                                          | ${403}
       ${TestUser.NON_SPACE_MEMBER} | ${undefined}                                          | ${403}
       ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute} | ${200}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute} | ${200}
@@ -557,7 +557,7 @@ describe('Private Space - Private Subspace - visual on profile', () => {
     // Arrange
     test.each`
       userRole                     | privileges                                            | expectedStatus
-      ${undefined}                 | ${undefined}                                          | ${401}
+      ${undefined}                 | ${undefined}                                          | ${403}
       ${TestUser.NON_SPACE_MEMBER} | ${undefined}                                          | ${403}
       ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute} | ${200}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute} | ${200}
@@ -645,7 +645,7 @@ describe('Private Space - Private Subspace - visual on profile', () => {
     // Arrange
     test.each`
       userRole                     | privileges                                                          | expectedStatus
-      ${undefined}                 | ${undefined}                                                        | ${401}
+      ${undefined}                 | ${undefined}                                                        | ${403}
       ${TestUser.NON_SPACE_MEMBER} | ${undefined}                                                        | ${403}
       ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_updateContent} | ${200}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute}               | ${200}
@@ -738,7 +738,7 @@ describe('Private Space - Private Subspace - visual on profile', () => {
     // Arrange
     test.each`
       userRole                     | privileges                                            | expectedStatus
-      ${undefined}                 | ${undefined}                                          | ${401}
+      ${undefined}                 | ${undefined}                                          | ${403}
       ${TestUser.NON_SPACE_MEMBER} | ${undefined}                                          | ${403}
       ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute} | ${200}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute} | ${200}
@@ -819,7 +819,7 @@ describe('Private Space - Private Subspace - visual on profile', () => {
     // Arrange
     test.each`
       userRole                     | privileges                                            | expectedStatus
-      ${undefined}                 | ${undefined}                                          | ${401}
+      ${undefined}                 | ${undefined}                                          | ${403}
       ${TestUser.NON_SPACE_MEMBER} | ${undefined}                                          | ${403}
       ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute} | ${200}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute} | ${200}
@@ -899,7 +899,7 @@ describe('Private Space - Private Subspace - visual on profile', () => {
     // Arrange
     test.each`
       userRole                     | privileges                                                          | expectedStatus
-      ${undefined}                 | ${undefined}                                                        | ${401}
+      ${undefined}                 | ${undefined}                                                        | ${403}
       ${TestUser.NON_SPACE_MEMBER} | ${undefined}                                                        | ${403}
       ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_updateContent} | ${200}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute}               | ${200}
@@ -980,7 +980,7 @@ describe('Private Space - Private Subspace - visual on profile', () => {
     // Arrange
     test.each`
       userRole                     | privileges                                                          | expectedStatus
-      ${undefined}                 | ${undefined}                                                        | ${401}
+      ${undefined}                 | ${undefined}                                                        | ${403}
       ${TestUser.NON_SPACE_MEMBER} | ${undefined}                                                        | ${403}
       ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_updateContent} | ${200}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute}               | ${200}

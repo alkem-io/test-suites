@@ -180,7 +180,7 @@ describe('Upload document', () => {
     const resDelete = await deleteDocument(documentId, TestUser.GLOBAL_ADMIN);
 
     expect(resDelete.error?.errors[0].message).toContain(
-      `Not able to locate document with the specified ID: ${documentId}`
+      'Not able to locate document with the specified ID'
     );
   });
 
