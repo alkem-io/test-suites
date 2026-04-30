@@ -30,6 +30,7 @@ const scenarioConfig: TestScenarioNoPreCreationConfig = {
   name: 'org-space-create',
 };
 
+/** @testCase TC-2301, TC-2302, TC-2303, TC-2304, TC-2305, TC-2306 */
 test.describe('CREATE Space Operations (Organization Account)', () => {
   test.beforeAll(async ({ browser }) => {
     baseScenario =

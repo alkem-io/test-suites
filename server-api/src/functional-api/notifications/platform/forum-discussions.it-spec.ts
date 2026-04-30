@@ -209,6 +209,7 @@ afterAll(async () => {
   // All cleanup is handled by helper functions in each test
 });
 
+/** @testCase TC-0604 */
 describe('Notifications - forum discussions', () => {
   beforeAll(async () => {
     // Enable forum discussion created notifications for all relevant users

@@ -50,6 +50,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+/** @testCase TC-0107 */
 describe('Communities', () => {
   describe('Community updates - read access', () => {
     beforeAll(async () => {

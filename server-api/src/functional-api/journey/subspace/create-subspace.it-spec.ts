@@ -58,6 +58,7 @@ afterEach(async () => {
   await deleteSpace(subspaceId);
 });
 
+/** @testCase TC-1200 */
 describe('Create subspace', () => {
   test('should create a successfull subspace', async () => {
     // Act

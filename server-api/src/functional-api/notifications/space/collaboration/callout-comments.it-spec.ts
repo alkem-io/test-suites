@@ -198,6 +198,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+/** @testCase TC-0600 */
 describe('Notifications - callout comments', () => {
   beforeEach(async () => {
     await deleteMailSlurperMails();

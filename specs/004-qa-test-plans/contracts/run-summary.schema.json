@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://alkem.io/schemas/test-plans/run-summary.json",
+  "title": "Run Summary (bot-owned JSON persisted on gh-pages at runs/<suite>/<date>.json)",
+  "description": "Append-only-per-date record of automated test outcomes from the canonical nightly runs. The sync CLI reads these files to join per-case outcomes into the dashboard.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["date", "suite", "runs"],
+  "properties": {
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "ISO 8601 date (YYYY-MM-DD); matches the file name."
+    },
+    "suite": {
+      "type": "string",
+      "enum": ["server-api", "client-web"],
+      "description": "Which test suite produced these outcomes."
+    },
+    "runs": {
+      "type": "array",
+      "description": "One entry per CI run that produced outcomes on this date.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["runId", "startedAt", "completedAt", "commit", "branch", "tests"],
+        "properties": {
+          "runId":       { "type": "string", "description": "github.run_id" },
+          "startedAt":   { "type": "string", "format": "date-time" },
+          "completedAt": { "type": "string", "format": "date-time" },
+          "commit":      { "type": "string", "pattern": "^[0-9a-f]{7,40}$" },
+          "branch":      { "type": "string" },
+          "tests": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["file", "status"],
+              "properties": {
+                "file":       { "type": "string", "description": "Repo-relative path to the test file." },
+                "status":     { "type": "string", "enum": ["passed", "failed", "skipped"] },
+                "durationMs": { "type": "integer", "minimum": 0 },
+                "failures": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["name", "message"],
+                    "properties": {
+                      "name":    { "type": "string" },
+                      "message": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

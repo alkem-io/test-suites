@@ -38,6 +38,7 @@ beforeAll(async () => {
   await TestScenarioFactory.createBaseScenarioEmpty(scenarioConfig);
 });
 
+/** @testCase TC-0106 */
 describe('Delete Conversation', () => {
   describe('Implicit deletion — all members leave', () => {
     // skipped until bug is fixed: BUG: [Conversation] When user try to leave group chat, the conversation remains in the list#9543

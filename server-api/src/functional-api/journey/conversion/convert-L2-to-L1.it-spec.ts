@@ -162,6 +162,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+/** @testCase TC-1304 */
 describe('Convert L2 to L1', () => {
   describe('basic properties after promotion', () => {
     test('level is promoted to L1', () => {

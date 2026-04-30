@@ -5,6 +5,10 @@ html-report
 client-web/dist
 server-api/html-report
 server-api/dist
+test-plans/dist
+test-plans/html-report
+test-plans/test-results/
+test-plans/.tsbuildinfo
 
 # dependencies
 node_modules/
@@ -81,3 +85,13 @@ client-web/.auth/
 
 # Claude Code
 .claude/
+
+# Obsidian per-user vault settings (the content directory IS a vault —
+# settings, workspace, plugin data are all personal and should not be
+# shared through git. See test-plans/README.md for recommended settings).
+**/.obsidian/
+**/.trash/
+**/*.base
+
+# Per-package generated test results (Vitest JSON reporter, etc.)
+**/test-results/

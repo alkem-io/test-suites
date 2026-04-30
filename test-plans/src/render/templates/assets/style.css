@@ -1,0 +1,575 @@
+/* Alkemio QA test plans — MVP stylesheet.
+   Clean tables, status chips, a colored header bar, and colored metric tiles.
+   Single hand-written stylesheet, no framework — see spec 004 plan.md. */
+
+:root {
+  /* Palette */
+  --fg: #1f2328;
+  --fg-muted: #57606a;
+  --fg-invert: #ffffff;
+  --bg: #ffffff;
+  --bg-alt: #f6f8fa;
+  --bg-tint: #f0f4ff;
+  --border: #d0d7de;
+  --border-strong: #afb8c1;
+
+  --accent-500: #5b2ecb;
+  --accent-600: #4f23b6;
+  --accent-700: #3e1b96;
+
+  --teal-500: #0d9488;
+  --teal-100: #ccfbf1;
+
+  --blue-500: #2f7de4;
+  --blue-100: #dbeafe;
+
+  --ok-bg:   #d1fae5;
+  --ok-fg:   #065f46;
+  --ok-accent: #10b981;
+
+  --fail-bg: #fee2e2;
+  --fail-fg: #991b1b;
+  --fail-accent: #ef4444;
+
+  --warn-bg: #fef3c7;
+  --warn-fg: #854d0e;
+  --warn-accent: #f59e0b;
+
+  --muted-bg: #eaeef2;
+  --muted-fg: #4b5563;
+
+  --priority-bg: #dbeafe;
+  --priority-fg: #1d4ed8;
+
+  --pink-500: #ec4899;
+  --violet-500: #8b5cf6;
+
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--fg);
+  background: var(--bg);
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.9em;
+  background: var(--bg-alt);
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+  color: var(--accent-700);
+}
+
+a {
+  color: var(--accent-600);
+  text-decoration: none;
+  font-weight: 500;
+}
+a:hover { text-decoration: underline; }
+
+.muted { color: var(--fg-muted); }
+
+/* -------------------------------------------------------------------------
+   Site header — clean white bar with logo + wordmark + text nav.
+   Color lives in the metric tiles and chips, not in the header.
+   ------------------------------------------------------------------------- */
+
+.site-header {
+  padding: 0.85rem 2rem;
+  background: var(--bg);
+  color: var(--fg);
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border);
+}
+
+.site-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: var(--fg);
+  font-weight: 600;
+  text-decoration: none;
+}
+.site-brand:hover { text-decoration: none; }
+
+.site-logo {
+  display: block;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+}
+
+.site-title {
+  font-size: 1.05rem;
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--fg);
+}
+
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.site-nav a {
+  padding: 0.35rem 0.1rem;
+  margin: 0 0.85rem 0 0;
+  font-size: 0.9rem;
+  color: var(--fg-muted);
+  background: transparent;
+  border-radius: 0;
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.site-nav a:hover {
+  color: var(--accent-600);
+  border-bottom-color: var(--accent-500);
+  text-decoration: none;
+  background: transparent;
+}
+
+.site-main {
+  padding: 1.75rem 2rem;
+  max-width: 1200px;
+}
+
+.site-footer {
+  padding: 1rem 2rem;
+  border-top: 1px solid var(--border);
+  color: var(--fg-muted);
+  background: var(--bg-alt);
+}
+.site-footer a { color: var(--accent-600); }
+
+/* -------------------------------------------------------------------------
+   Headings
+   ------------------------------------------------------------------------- */
+
+h2 {
+  color: var(--accent-700);
+  margin: 0.5rem 0 0.75rem;
+  font-size: 1.5rem;
+}
+h3 {
+  color: var(--fg);
+  margin: 1.5rem 0 0.5rem;
+  font-size: 1.1rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 2px solid var(--accent-500);
+  display: inline-block;
+}
+
+/* -------------------------------------------------------------------------
+   Empty state
+   ------------------------------------------------------------------------- */
+
+.empty-state {
+  padding: 2rem;
+  background: var(--bg-tint);
+  border: 1px dashed var(--accent-500);
+  border-radius: 8px;
+  text-align: center;
+  color: var(--accent-700);
+  font-size: 1rem;
+}
+
+/* -------------------------------------------------------------------------
+   Metric tiles — colored left-border accent per tile purpose
+   ------------------------------------------------------------------------- */
+
+.metric-tiles {
+  display: flex;
+  gap: 0.75rem;
+  margin: 1rem 0 1.75rem;
+  flex-wrap: wrap;
+}
+
+.metric-tile {
+  min-width: 120px;
+  padding: 0.85rem 1rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent-500);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, outline-color 0.12s ease;
+  outline: 2px solid transparent;
+}
+.metric-tile:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Filter-toggle tiles (only those with data-filter-kind) */
+.metric-tile[data-filter-kind] {
+  cursor: pointer;
+  position: relative;
+}
+.metric-tile[data-filter-kind]::after {
+  content: "";
+  position: absolute;
+  right: 0.6rem;
+  top: 0.6rem;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--border);
+  opacity: 0.5;
+}
+.metric-tile[data-filter-kind]:hover::after {
+  background: var(--accent-500);
+  opacity: 1;
+}
+
+.metric-tile.filter-active {
+  outline: 2px solid var(--accent-500);
+  background: var(--bg-tint);
+}
+.metric-tile.filter-active::after {
+  background: var(--accent-500);
+  opacity: 1;
+  box-shadow: 0 0 0 2px rgba(91, 46, 203, 0.2);
+}
+
+.filter-hint {
+  font-size: 0.85rem;
+  margin: 0.25rem 0 0.5rem;
+}
+
+.filter-status {
+  font-size: 0.85rem;
+  color: var(--accent-600);
+  font-weight: 500;
+  margin: 0.25rem 0 1rem;
+  min-height: 1.25em; /* reserve space so layout doesn't jump */
+}
+
+/* Rotate through accent colors so the tiles aren't all the same stripe. */
+.metric-tiles .metric-tile:nth-child(5n+1) { border-left-color: var(--accent-500); }
+.metric-tiles .metric-tile:nth-child(5n+2) { border-left-color: var(--teal-500); }
+.metric-tiles .metric-tile:nth-child(5n+3) { border-left-color: var(--ok-accent); }
+.metric-tiles .metric-tile:nth-child(5n+4) { border-left-color: var(--warn-accent); }
+.metric-tiles .metric-tile:nth-child(5n+5) { border-left-color: var(--blue-500); }
+
+.metric-num {
+  font-size: 1.65rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--fg);
+}
+.metric-label {
+  font-size: 0.78rem;
+  color: var(--fg-muted);
+  margin-top: 0.3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 500;
+}
+
+/* -------------------------------------------------------------------------
+   Data tables
+   ------------------------------------------------------------------------- */
+
+table.data {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.75rem 0 1.75rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+table.data th,
+table.data td {
+  padding: 0.6rem 0.85rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+table.data thead th {
+  background: linear-gradient(180deg, #f6f8fa, #eceef1);
+  font-weight: 600;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fg-muted);
+  border-bottom: 2px solid var(--border-strong);
+}
+
+table.data tbody tr:nth-child(even) {
+  background: var(--bg-alt);
+}
+table.data tbody tr:hover {
+  background: var(--bg-tint);
+}
+
+table.data tbody tr:last-child td { border-bottom: none; }
+
+table.data tbody tr.patch-row td:first-child {
+  color: var(--fg-muted);
+  font-style: italic;
+}
+
+/* -------------------------------------------------------------------------
+   Chips (status / priority / automation / outcome)
+   ------------------------------------------------------------------------- */
+
+.chip {
+  display: inline-block;
+  padding: 0.15em 0.65em;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.5;
+  background: var(--muted-bg);
+  color: var(--muted-fg);
+  letter-spacing: 0.01em;
+}
+
+/* Lifecycle state */
+.chip-state-ready     { background: var(--ok-bg);    color: var(--ok-fg); }
+.chip-state-draft     { background: var(--warn-bg);  color: var(--warn-fg); }
+.chip-state-retired   { background: var(--muted-bg); color: var(--muted-fg); }
+
+/* Outcome — brighter than state for at-a-glance status */
+.chip-outcome-passed  {
+  background: var(--ok-bg);
+  color: var(--ok-fg);
+  box-shadow: inset 0 0 0 1px var(--ok-accent);
+}
+.chip-outcome-failed  {
+  background: var(--fail-bg);
+  color: var(--fail-fg);
+  box-shadow: inset 0 0 0 1px var(--fail-accent);
+}
+.chip-outcome-blocked {
+  background: var(--warn-bg);
+  color: var(--warn-fg);
+  box-shadow: inset 0 0 0 1px var(--warn-accent);
+}
+.chip-outcome-not-run { background: var(--muted-bg); color: var(--muted-fg); }
+
+.chip-priority {
+  background: var(--priority-bg);
+  color: var(--priority-fg);
+}
+
+.chip-automation-yes { background: #fce7f3; color: #9f1239; }
+.chip-automation-no  { background: var(--muted-bg); color: var(--muted-fg); }
+
+/* -------------------------------------------------------------------------
+   Cross-repo link chip
+   ------------------------------------------------------------------------- */
+
+.link-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4em;
+  padding: 0.2em 0.65em;
+  border-radius: 999px;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  font-size: 0.82rem;
+  margin-right: 0.3rem;
+  margin-bottom: 0.3rem;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.link-chip:hover {
+  background: var(--bg-tint);
+  border-color: var(--accent-500);
+  text-decoration: none;
+}
+
+.link-chip .ref {
+  font-family: ui-monospace, monospace;
+  font-size: 0.78rem;
+  color: var(--accent-700);
+  font-weight: 600;
+}
+.link-chip .title { color: var(--fg); font-weight: 400; }
+.link-chip .state {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 0.05em 0.4em;
+  border-radius: 3px;
+}
+.link-chip .state-open   { background: var(--ok-bg);    color: var(--ok-fg); }
+.link-chip .state-closed { background: #ede9fe;         color: #6d28d9; }
+
+/* -------------------------------------------------------------------------
+   Case detail disclosure
+   ------------------------------------------------------------------------- */
+
+.case-detail {
+  margin: 0.85rem 0;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent-500);
+  border-radius: 8px;
+  padding: 0 1.1rem;
+  background: var(--bg);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.case-detail:hover {
+  border-left-color: var(--pink-500);
+  box-shadow: 0 2px 6px rgba(91, 46, 203, 0.08);
+}
+
+.case-detail summary {
+  padding: 0.85rem 0;
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--fg);
+}
+.case-detail[open] summary {
+  border-bottom: 1px dashed var(--border);
+  margin-bottom: 0.75rem;
+}
+.case-detail summary strong {
+  color: var(--accent-700);
+  font-family: ui-monospace, monospace;
+  font-size: 0.95rem;
+}
+
+.case-meta {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.4rem 1.25rem;
+  margin: 0.5rem 0 1rem;
+}
+
+.case-meta dt {
+  font-weight: 600;
+  color: var(--fg-muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.case-meta dd {
+  margin: 0;
+}
+
+.case-meta .covered-by { margin: 0; padding-left: 1rem; }
+
+.case-narrative h4 {
+  margin: 1rem 0 0.25rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent-600);
+  font-weight: 600;
+}
+
+.case-narrative ol,
+.case-narrative ul {
+  margin: 0.25rem 0 0.9rem 1.4rem;
+}
+
+/* -------------------------------------------------------------------------
+   Misc — inline list for priority/type breakdowns
+   ------------------------------------------------------------------------- */
+
+.inline-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.25rem 0 0.9rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.inline-list li {
+  background: var(--bg-alt);
+  padding: 0.25em 0.75em;
+  border-radius: 6px;
+  font-size: 0.88rem;
+}
+
+/* -------------------------------------------------------------------------
+   Variant breakdown — "N/M" badge and per-variant disclosure
+   ------------------------------------------------------------------------- */
+
+.variant-count {
+  display: inline-block;
+  margin-left: 0.35rem;
+  padding: 0.05em 0.45em;
+  border-radius: 4px;
+  background: var(--bg-alt);
+  color: var(--fg-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: ui-monospace, monospace;
+}
+
+.variant-details {
+  margin-top: 0.35rem;
+  font-size: 0.82rem;
+}
+
+.variant-details summary {
+  cursor: pointer;
+  color: var(--accent-600);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.1rem 0;
+}
+
+.variant-details .variants {
+  list-style: none;
+  padding: 0.35rem 0 0;
+  margin: 0;
+}
+
+.variant-details .variants li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.15rem 0;
+}
+
+.variant-details .variants code {
+  color: var(--fg-muted);
+  background: transparent;
+  font-size: 0.78rem;
+}
+
+/* Defect groups */
+
+.defect-group {
+  margin: 1.5rem 0;
+}
+.defect-group h3::before {
+  content: "▸ ";
+  color: var(--accent-500);
+}
+
+/* -------------------------------------------------------------------------
+   Responsive: stack things reasonably on narrow screens
+   ------------------------------------------------------------------------- */
+
+@media (max-width: 700px) {
+  .site-header { padding: 1rem 1rem; gap: 0.75rem; }
+  .site-main   { padding: 1rem 1rem; }
+  .metric-tile { min-width: 90px; }
+  .metric-num  { font-size: 1.4rem; }
+  table.data th,
+  table.data td { padding: 0.4rem 0.5rem; font-size: 0.85rem; }
+}

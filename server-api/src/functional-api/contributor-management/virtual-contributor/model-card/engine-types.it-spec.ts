@@ -167,6 +167,7 @@ afterAll(async () => {
   await deleteVirtualContributorOnAccount(guidanceVcId).catch();
   await deleteSpace(vcSpaceId).catch();
 });
+/** @testCase TC-1505 */
 describe('Virtual Contributor Engine Types Model Card', () => {
   test('should create virtual contributors with different engine types', async () => {
     // Verify all VCs were created successfully

@@ -42,6 +42,7 @@ afterEach(async () => {
   await deleteUser(userId);
 });
 
+/** @testCase TC-1500 */
 describe('Delete user', () => {
   test('should delete created user', async () => {
     // Act

@@ -119,6 +119,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+/** @testCase TC-1300, TC-1304 */
 describe('Convert L1 to L0 - basic', () => {
   test('space level is promoted to L0', () => {
     expect(subspaceAfter?.level).toEqual(SpaceLevel.L0);

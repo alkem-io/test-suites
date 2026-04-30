@@ -157,6 +157,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+/** @testCase TC-0607 */
 describe('Notifications - send messages to Private space hosts', () => {
   describe('Notifications - hosts (COMMUNICATION_MESSAGE pref: enabled)', () => {
     beforeAll(async () => {

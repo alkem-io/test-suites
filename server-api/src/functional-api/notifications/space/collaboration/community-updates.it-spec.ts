@@ -142,6 +142,7 @@ afterAll(async () => {
 });
 
 // Skip tests due to bug: #193
+/** @testCase TC-0601 */
 describe('Notifications - updates', () => {
   beforeAll(async () => {
     // Disable community updates notifications for global support admin

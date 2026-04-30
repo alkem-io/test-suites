@@ -52,6 +52,7 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
+/** @testCase TC-2010, TC-2011, TC-2012 */
 test.describe('Level 1 Subspace - Applications', () => {
   let globalBaseScenario: OrganizationWithSpaceModel;
   let baseScenario: OrganizationWithSpaceModel;

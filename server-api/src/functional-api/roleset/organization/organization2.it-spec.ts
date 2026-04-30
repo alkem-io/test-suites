@@ -66,6 +66,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+/** @testCase TC-0403 */
 describe('Organization role', () => {
   test('Organization role - assignment to 1 Organization, Space, Subspace, Subsubspace', async () => {
     // Act

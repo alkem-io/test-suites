@@ -190,6 +190,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+/** @testCase TC-0900 */
 describe('Search', () => {
   describe('Search types', () => {
     test('should search CONTRIBUTOR data', async () => {

@@ -6,6 +6,7 @@ import { test, expect } from '@playwright/test';
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD!;
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
+/** @testCase TC-1951 */
 test.describe('Navigation and Access', () => {
   test('Direct URL Access to User Profile', async ({ page }) => {
     // Seed: Login

@@ -49,6 +49,7 @@ let baseScenario: OrganizationWithSpaceModel;
 
 test.describe.configure({ mode: 'serial' });
 
+/** @testCase TC-2108, TC-2109 */
 test.describe('Whiteboard Access for Non-Members', () => {
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(120_000);

@@ -88,6 +88,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+/** @testCase TC-0901, TC-0902 */
 describe('Upload document', () => {
   beforeAll(async () => {
     const createRef = await createReferenceOnProfile(

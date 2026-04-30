@@ -46,6 +46,7 @@ const scenarioConfig: TestScenarioNoPreCreationConfig = {
   name: 'innovation-pack-functional-entitlements',
 };
 
+/** @testCase TC-0503 */
 describe('Functional tests - Innovation Pack', () => {
   afterEach(async () => {
     const accountData = await getAccountMainEntities(

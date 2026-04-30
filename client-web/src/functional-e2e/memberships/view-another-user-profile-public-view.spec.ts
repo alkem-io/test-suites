@@ -53,6 +53,7 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
+/** @testCase TC-1916 */
 test.describe('User Profile Membership Display', () => {
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(60_000);

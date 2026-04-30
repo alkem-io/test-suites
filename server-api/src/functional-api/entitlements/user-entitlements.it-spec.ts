@@ -67,6 +67,7 @@ beforeAll(async () => {
   await TestScenarioFactory.createBaseScenarioEmpty(scenarioConfig);
 });
 
+/** @testCase TC-0504 */
 describe('Get User Account Authorization and License privileges ', () => {
   test('No licenses assigned', async () => {
     // Arrange

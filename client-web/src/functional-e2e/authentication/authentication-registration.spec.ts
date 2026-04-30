@@ -26,6 +26,7 @@ import {
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
+/** @testCase TC-1604 */
 test.describe('Authentication - Registration Flows', () => {
   test.beforeEach(async ({ context }) => {
     await context.clearCookies();

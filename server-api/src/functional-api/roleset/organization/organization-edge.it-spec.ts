@@ -40,6 +40,7 @@ afterAll(async () => {
   await deleteOrganization(newOrgId);
 });
 
+/** @testCase TC-0403 */
 describe('Assign / Remove organization to community', () => {
   describe('Assign organizations', () => {
     beforeAll(async () => {

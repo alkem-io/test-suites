@@ -57,6 +57,7 @@ const memberFixture = createAuthenticatedSessionFixture({
   cleanupAfterTests: process.env.cleanupAfterTests === 'true',
 });
 
+/** @testCase TC-2206 */
 adminFixture.test.describe.serial('Callout Editing', () => {
   adminFixture.test.beforeAll(async ({ browser }) => {
     adminFixture.test.setTimeout(60_000);

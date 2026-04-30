@@ -56,6 +56,7 @@ afterEach(async () => {
   await deleteOrganization(organizationId);
 });
 
+/** @testCase TC-1501 */
 describe('Organization Owner', () => {
   test('should create organization owner', async () => {
     // Act

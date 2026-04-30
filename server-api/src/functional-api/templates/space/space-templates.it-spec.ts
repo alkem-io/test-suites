@@ -62,6 +62,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+/** @testCase TC-0800 */
 describe('Subspace templates - CRUD', () => {
   afterEach(async () => {
     await deleteTemplate(templateId);

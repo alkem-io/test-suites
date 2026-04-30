@@ -34,6 +34,7 @@ beforeAll(async () => {
   await TestScenarioFactory.createBaseScenarioEmpty(scenarioConfig);
 });
 
+/** @testCase TC-0902 */
 describe('User - documents', () => {
   describe('Access to User Profile visual', () => {
     afterAll(async () => {

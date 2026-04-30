@@ -81,6 +81,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+/** @testCase TC-1304 */
 describe('Convert L1 to L0 - applications and invitations', () => {
   let convertedSpace:
     | NonNullable<

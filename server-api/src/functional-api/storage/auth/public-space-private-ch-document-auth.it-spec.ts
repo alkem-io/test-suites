@@ -131,6 +131,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+/** @testCase TC-0903 */
 describe('Public Space - Private Subspace - visual on profile', () => {
   describe('Access to Space Profile visual', () => {
     afterAll(async () => {

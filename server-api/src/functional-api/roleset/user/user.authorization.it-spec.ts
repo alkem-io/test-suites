@@ -85,6 +85,7 @@ afterAll(async () => {
   );
 });
 
+/** @testCase TC-0405 */
 describe('Verify ROLESET_ENTRY_ROLE_ASSIGN privilege', () => {
   describe('DDT role privilege to assign member to space', () => {
     // to the user 'NON_SPACE_MEMBER'is assigned the role 'PlatformBetaTester' to verify the privileges of beta tester not admin of the space

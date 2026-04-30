@@ -47,6 +47,7 @@ afterEach(async () => {
   await deleteSpace(subspaceId);
 });
 
+/** @testCase TC-1201 */
 describe('Flows subspace', () => {
   // ToDo - update test - failing when run in parallel with other suites
   test.skip('should not result unassigned users to a subspace', async () => {

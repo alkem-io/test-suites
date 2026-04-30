@@ -60,6 +60,7 @@ beforeAll(async () => {
   await TestScenarioFactory.createBaseScenarioEmpty(scenarioConfig);
 });
 
+/** @testCase TC-0105 */
 describe('Conversation Event Subscriptions', () => {
   describe('MEMBER_ADDED event', () => {
     let subscription: SubscriptionClient;

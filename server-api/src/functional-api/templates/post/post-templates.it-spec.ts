@@ -82,6 +82,7 @@ beforeEach(async () => {
   postDisplayName = `post-d-name-${uniqueId}`;
 });
 
+/** @testCase TC-0801, TC-0802, TC-0803 */
 describe('Post templates - CRUD', () => {
   const typeFromSpacetemplate = 'testType';
   afterEach(async () => {

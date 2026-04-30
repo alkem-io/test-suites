@@ -38,6 +38,7 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
+/** @testCase TC-2100, TC-2101 */
 test.describe('Public Space Discovery and Access', () => {
   test.beforeAll(async () => {
     test.setTimeout(30_000);

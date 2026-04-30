@@ -60,6 +60,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+/** @testCase TC-1002 */
 describe('GraphQL Guard - Public/Private Space Access', () => {
   describe('Public space access', () => {
     beforeAll(async () => {

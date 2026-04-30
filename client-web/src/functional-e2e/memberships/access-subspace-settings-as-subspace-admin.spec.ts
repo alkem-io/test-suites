@@ -74,6 +74,7 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
+/** @testCase TC-1903 */
 test.describe('Space/Subspace Settings Access Control', () => {
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(60_000);

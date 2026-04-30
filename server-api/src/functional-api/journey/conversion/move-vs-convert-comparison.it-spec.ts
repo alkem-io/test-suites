@@ -75,6 +75,7 @@ const targetConfig: TestScenarioConfig = {
   },
 };
 
+/** @testCase TC-1304 */
 describe('Same-L0 vs Cross-L0 demotion comparison', () => {
   describe('Cross-L0 moveSpaceL1ToSpaceL2 removes admins', () => {
     let crossL0Source: OrganizationWithSpaceModel;

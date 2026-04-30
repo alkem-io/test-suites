@@ -1,0 +1,133 @@
+name: Test plans — sync & publish dashboard
+
+# Triggers:
+#   1. After a nightly test workflow completes — picks up the fresh run JSON.
+#   2. On push to `develop` when test-plans content, code, or schemas change —
+#      re-renders the dashboard without waiting for the next nightly.
+#   3. Manual dispatch.
+on:
+  workflow_run:
+    workflows:
+      - "Nightly Server API"
+      - "Nightly Playwright"
+    types:
+      - completed
+  push:
+    branches:
+      - develop
+    paths:
+      - 'test-plans/**'
+      - 'specs/004-qa-test-plans/contracts/**'
+      - '.github/workflows/test-plans-sync.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: arc-runner-set
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout develop
+        uses: actions/checkout@v5
+
+      # Pull the existing GitHub Pages site so we can re-use previous run JSON
+      # and detect "no net change" for idempotent publishing.
+      - name: Checkout existing gh-pages content
+        continue-on-error: true
+        uses: actions/checkout@v5
+        with:
+          ref: gh-pages
+          path: out
+          fetch-depth: 1
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20.19.6
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Content correctness gate — if content is invalid, fail before we try to
+      # render a broken dashboard. Unknown case references / schema violations
+      # are exit-1 defects per spec 004 FR-019.
+      - name: Validate test-plans content
+        run: pnpm --filter @alkemio/test-plans run validate
+
+      # Pick up nightly JSON artifacts produced by the triggering workflow,
+      # and ingest them into the bot-owned gh-pages runs/ tree so the dashboard
+      # sees the freshest automated outcomes.
+      - name: Download nightly test JSON artifacts
+        if: ${{ github.event_name == 'workflow_run' }}
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: nightly-artifacts
+
+      - name: Ingest server-api run summary
+        if: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.name == 'Nightly Server API' }}
+        continue-on-error: true
+        run: |
+          INPUT=$(find nightly-artifacts -name 'nightly.json' -path '*server-api*' | head -1)
+          if [ -z "$INPUT" ]; then
+            echo "[test-plans] no server-api nightly.json artifact found; skipping ingest"
+            exit 0
+          fi
+          pnpm --filter @alkemio/test-plans exec tsx src/cli.ts ingest-runs \
+            --runs-dir out/gh-pages-root/test-plans/runs \
+            --input "$INPUT" \
+            --suite server-api \
+            --date "$(date -u +%F)" \
+            --run-id "${{ github.event.workflow_run.id }}" \
+            --commit "${{ github.event.workflow_run.head_sha }}" \
+            --branch "${{ github.event.workflow_run.head_branch }}" \
+            --completed-at "${{ github.event.workflow_run.updated_at }}"
+
+      - name: Render dashboard
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p out/gh-pages-root/test-plans
+          pnpm --filter @alkemio/test-plans exec tsx src/cli.ts build \
+            --pull-runs \
+            --runs-dir out/gh-pages-root/test-plans/runs \
+            --out-dir out/gh-pages-root/test-plans \
+            --generated-at "${{ github.sha }}"
+
+      - name: Commit to gh-pages (skip if no net change)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          cd out
+          if [ ! -d .git ]; then
+            git init
+            git checkout -b gh-pages
+            git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          else
+            git checkout gh-pages || git checkout -b gh-pages
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A gh-pages-root/test-plans
+          # Idempotency guard (spec 004 SC-006): if the staged diff is empty,
+          # skip the commit + push entirely. Two consecutive runs on the same
+          # commit must produce ZERO pushes.
+          if git diff --cached --quiet; then
+            echo "[test-plans] no net change to dashboard; skipping commit + push"
+            exit 0
+          fi
+          git commit -m "test-plans: sync dashboard for ${{ github.sha }} (run ${{ github.run_id }})"
+          git push origin gh-pages
+
+  deploy:
+    needs: build
+    if: ${{ success() }}
+    uses: ./.github/workflows/deploy-github-pages.yml
+    with:
+      ref: gh-pages
+      path: gh-pages-root

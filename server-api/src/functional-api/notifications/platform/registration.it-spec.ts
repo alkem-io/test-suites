@@ -114,6 +114,7 @@ beforeAll(async () => {
   userEmail = `${uniqueId}@test.com`;
 });
 
+/** @testCase TC-0602 */
 describe('Notifications - User registration', () => {
   beforeAll(async () => {
     // Set up notification settings for all admin users

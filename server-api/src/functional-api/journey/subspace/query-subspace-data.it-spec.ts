@@ -74,6 +74,7 @@ beforeEach(async () => {
   subspaceId = responseCreateSubspace.data?.createSubspace.id ?? '';
 });
 
+/** @testCase TC-1200 */
 describe('Query Subspace data', () => {
   test('should query community through subspace', async () => {
     // Act

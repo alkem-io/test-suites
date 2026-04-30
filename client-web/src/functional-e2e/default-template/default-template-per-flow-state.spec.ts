@@ -140,6 +140,7 @@ let baseScenario: OrganizationWithSpaceModel;
 // Serial mode for clean lifecycle
 (test.describe as any).configure?.({ mode: 'serial' });
 
+/** @testCase TC-2500, TC-2501, TC-2502, TC-2503, TC-2504 */
 test.describe('Default Template Per Flow State', () => {
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(120_000);

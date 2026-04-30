@@ -13,6 +13,7 @@ import {
 import { createWhiteboardTemplate } from '@functional-api/templates/whiteboard/whiteboard-templates.request.params';
 import { authorizationPolicyResetOnPlatform } from '@functional-api/platform/authorization-platform-mutation';
 
+/** @testCase TC-0503 */
 describe('Organization', () => {
   const organizationName = 'Organization with many whiteboardes' + uniqueId;
   const hostNameId = 'org-whiteboardes' + uniqueId;

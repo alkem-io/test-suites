@@ -28,6 +28,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+/** @testCase TC-0403 */
 describe('Assign / Remove organization to community', () => {
   describe('Assign organization', () => {
     afterAll(async () => {

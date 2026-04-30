@@ -66,6 +66,7 @@ beforeEach(async () => {
   postDisplayName = `post-d-name-${uniqueId}`;
 });
 
+/** @testCase TC-1400, TC-1401, TC-1402 */
 describe('Activity logs - Space', () => {
   afterEach(async () => {
     await deleteCallout(calloutId);

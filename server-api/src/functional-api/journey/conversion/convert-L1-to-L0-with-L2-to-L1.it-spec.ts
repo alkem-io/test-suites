@@ -191,6 +191,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+/** @testCase TC-1304 */
 describe('Convert L1 to L0 with cascading L2 to L1', () => {
   describe('parent L1 promoted to L0', () => {
     test('level is L0', () => {

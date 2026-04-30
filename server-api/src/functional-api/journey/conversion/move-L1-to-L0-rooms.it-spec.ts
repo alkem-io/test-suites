@@ -97,6 +97,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(targetScenario);
 });
 
+/** @testCase TC-1306 */
 describe('Move L1 to L0 - rooms and communication', () => {
   test('callout discussion room messages are preserved', async () => {
     const spaceData = await getSpaceData(sourceScenario.subspace.id);

@@ -80,6 +80,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+/** @testCase TC-0401 */
 describe('Invitations', () => {
   afterEach(async () => {
     await removeRoleFromUser(

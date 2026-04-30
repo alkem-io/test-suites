@@ -6,6 +6,7 @@ import {
 
 const baseUrl = process.env.ALKEMIO_BASE_URL ?? 'http://localhost:3000';
 
+/** @testCase TC-1606 */
 test.describe('Authentication - Cookie Consent', () => {
   test.beforeEach(async ({ context }) => {
     await context.clearCookies();

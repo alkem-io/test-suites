@@ -78,6 +78,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(targetScenario);
 });
 
+/** @testCase TC-1301, TC-1303 */
 describe('Move L1 to L2 - community roles cleared', () => {
   test('all members are removed', async () => {
     const members = await getRoleSetUsersInMemberRole(

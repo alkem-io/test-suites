@@ -151,6 +151,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
+/** @testCase TC-0607 */
 describe('Notifications - send messages to Private Space, Public Subspace Community Leads', () => {
   beforeEach(async () => {
     await deleteMailSlurperMails();

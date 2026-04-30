@@ -1,6 +1,7 @@
 import {} from '@functional-api/contributor-management/user/user.request.params';
 import { fullConfiguration } from './configuration.request.params';
 
+/** @testCase TC-1005 */
 describe('Platform configuration', () => {
   describe('Platform configuration can be loaded and defaults are OK', () => {
     // Arrange

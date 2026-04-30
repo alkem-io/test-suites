@@ -45,6 +45,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+/** @testCase TC-1501 */
 describe('Organization settings', () => {
   describe('DDT user WITH privileges to update organization settings', () => {
     // Arrange

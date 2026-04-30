@@ -96,6 +96,7 @@ beforeEach(async () => {
   postDisplayName = `post-d-name-${uniqueId}`;
 });
 
+/** @testCase TC-0202, TC-0203, TC-0205 */
 describe('Posts - Create', () => {
   afterEach(async () => {
     await deletePost(spacePostId);

@@ -63,6 +63,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(targetScenario);
 });
 
+/** @testCase TC-1302, TC-1303 */
 describe('Move L1 to L2 - auto-invite disabled', () => {
   test('no invitations created when autoInvite is false', async () => {
     const res = await moveSpaceL1ToSpaceL2(

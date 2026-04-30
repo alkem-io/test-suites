@@ -28,6 +28,7 @@ const scenarioConfig: TestScenarioConfig = {
   name: 'memberships',
 };
 
+/** @testCase TC-1910 */
 test.describe('User Account Settings', () => {
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(60_000);

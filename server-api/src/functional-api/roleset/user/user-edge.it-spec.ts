@@ -50,6 +50,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+/** @testCase TC-0402 */
 describe('Assign / Remove users to community', () => {
   describe('Assign users', () => {
     beforeAll(async () => {
