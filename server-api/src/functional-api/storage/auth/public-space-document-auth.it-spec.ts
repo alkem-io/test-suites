@@ -1,4 +1,5 @@
 import {
+  getAuthDocument,
   readPrivilege,
   sorted__create_read_update_delete_grant,
   sorted__create_read_update_delete_grant_contribute,
@@ -115,15 +116,15 @@ describe('Public Space - visual on profile', () => {
 
     // Arrange
     test.each`
-      userRole                     | privileges
-      ${undefined}                 | ${readPrivilege}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant}
-      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant}
-      ${TestUser.NON_SPACE_MEMBER} | ${readPrivilege}
-      ${TestUser.SPACE_MEMBER}     | ${readPrivilege}
+      userRole                     | privileges                                 | expectedStatus
+      ${undefined}                 | ${readPrivilege}                           | ${200}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant} | ${200}
+      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant} | ${200}
+      ${TestUser.NON_SPACE_MEMBER} | ${readPrivilege}                           | ${200}
+      ${TestUser.SPACE_MEMBER}     | ${readPrivilege}                           | ${200}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space profile visual document',
-      async ({ userRole, privileges }) => {
+      async ({ userRole, privileges, expectedStatus }) => {
         const res = await getProfileDocuments(
           baseScenario.space.about.profile.id,
           userRole
@@ -132,6 +133,9 @@ describe('Public Space - visual on profile', () => {
         const dataAuthorization = data?.authorization;
 
         expect(dataAuthorization?.myPrivileges?.sort()).toEqual(privileges);
+
+        const restResponse = await getAuthDocument(documentId, userRole);
+        expect(restResponse.status).toEqual(expectedStatus);
       }
     );
 
@@ -181,15 +185,15 @@ describe('Public Space - visual on profile', () => {
 
     // Arrange
     test.each`
-      userRole                     | privileges
-      ${undefined}                 | ${readPrivilege}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant}
-      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant}
-      ${TestUser.NON_SPACE_MEMBER} | ${readPrivilege}
-      ${TestUser.SPACE_MEMBER}     | ${readPrivilege}
+      userRole                     | privileges                                 | expectedStatus
+      ${undefined}                 | ${readPrivilege}                           | ${200}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant} | ${200}
+      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant} | ${200}
+      ${TestUser.NON_SPACE_MEMBER} | ${readPrivilege}                           | ${200}
+      ${TestUser.SPACE_MEMBER}     | ${readPrivilege}                           | ${200}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space profile reference document',
-      async ({ userRole, privileges }) => {
+      async ({ userRole, privileges, expectedStatus }) => {
         const res = await getProfileDocuments(
           baseScenario.space.about.profile.id,
           userRole
@@ -199,6 +203,9 @@ describe('Public Space - visual on profile', () => {
         const dataAuthorization = data?.authorization;
 
         expect(dataAuthorization?.myPrivileges?.sort()).toEqual(privileges);
+
+        const restResponse = await getAuthDocument(documentId, userRole);
+        expect(restResponse.status).toEqual(expectedStatus);
       }
     );
 
@@ -254,15 +261,15 @@ describe('Public Space - visual on profile', () => {
 
     // Arrange
     test.each`
-      userRole                     | privileges
-      ${undefined}                 | ${readPrivilege}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant}
-      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant}
-      ${TestUser.NON_SPACE_MEMBER} | ${readPrivilege}
-      ${TestUser.SPACE_MEMBER}     | ${readPrivilege}
+      userRole                     | privileges                                 | expectedStatus
+      ${undefined}                 | ${readPrivilege}                           | ${200}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant} | ${200}
+      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant} | ${200}
+      ${TestUser.NON_SPACE_MEMBER} | ${readPrivilege}                           | ${200}
+      ${TestUser.SPACE_MEMBER}     | ${readPrivilege}                           | ${200}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space about (storageBucket) document',
-      async ({ userRole, privileges }) => {
+      async ({ userRole, privileges, expectedStatus }) => {
         const res = await getProfileDocuments(
           baseScenario.space.about.profile.id,
           userRole
@@ -272,6 +279,9 @@ describe('Public Space - visual on profile', () => {
         const dataAuthorization = data?.authorization;
 
         expect(dataAuthorization?.myPrivileges?.sort()).toEqual(privileges);
+
+        const restResponse = await getAuthDocument(documentId, userRole);
+        expect(restResponse.status).toEqual(expectedStatus);
       }
     );
 
@@ -331,15 +341,15 @@ describe('Public Space - visual on profile', () => {
 
     // Arrange
     test.each`
-      userRole                     | privileges
-      ${undefined}                 | ${['READ']}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute}
-      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute}
-      ${TestUser.NON_SPACE_MEMBER} | ${['READ']}
-      ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'READ']}
+      userRole                     | privileges                                            | expectedStatus
+      ${undefined}                 | ${['READ']}                                           | ${200}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute} | ${200}
+      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute} | ${200}
+      ${TestUser.NON_SPACE_MEMBER} | ${['READ']}                                           | ${200}
+      ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'READ']}                             | ${200}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space link collection callout (storageBucket) document',
-      async ({ userRole, privileges }) => {
+      async ({ userRole, privileges, expectedStatus }) => {
         const res = await calloutLinkContributionStorageConfig(
           calloutId,
           userRole
@@ -349,6 +359,9 @@ describe('Public Space - visual on profile', () => {
         )?.link?.profile.storageBucket.documents[0].authorization;
 
         expect(data?.myPrivileges?.sort()).toEqual(privileges);
+
+        const restResponse = await getAuthDocument(documentId, userRole);
+        expect(restResponse.status).toEqual(expectedStatus);
       }
     );
 
@@ -408,15 +421,15 @@ describe('Public Space - visual on profile', () => {
 
     // Arrange
     test.each`
-      userRole                     | privileges
-      ${undefined}                 | ${['READ']}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute}
-      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute}
-      ${TestUser.NON_SPACE_MEMBER} | ${['READ']}
-      ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'READ']}
+      userRole                     | privileges                                            | expectedStatus
+      ${undefined}                 | ${['READ']}                                           | ${200}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute} | ${200}
+      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute} | ${200}
+      ${TestUser.NON_SPACE_MEMBER} | ${['READ']}                                           | ${200}
+      ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'READ']}                             | ${200}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space visual for post of call for post  callout (storageBucket) document',
-      async ({ userRole, privileges }) => {
+      async ({ userRole, privileges, expectedStatus }) => {
         const res = await calloutPostCardStorageConfig(calloutId, userRole);
 
         const data =
@@ -424,6 +437,9 @@ describe('Public Space - visual on profile', () => {
             .storageBucket.documents[0].authorization;
 
         expect(data?.myPrivileges?.sort()).toEqual(privileges);
+
+        const restResponse = await getAuthDocument(documentId, userRole);
+        expect(restResponse.status).toEqual(expectedStatus);
       }
     );
 
@@ -488,21 +504,24 @@ describe('Public Space - visual on profile', () => {
 
     // Arrange
     test.each`
-      userRole                     | privileges
-      ${undefined}                 | ${['READ']}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute}
-      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute}
-      ${TestUser.NON_SPACE_MEMBER} | ${['READ']}
-      ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'READ']}
+      userRole                     | privileges                                            | expectedStatus
+      ${undefined}                 | ${['READ']}                                           | ${200}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute} | ${200}
+      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute} | ${200}
+      ${TestUser.NON_SPACE_MEMBER} | ${['READ']}                                           | ${200}
+      ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'READ']}                             | ${200}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space visual for post of call for post  callout (storageBucket) document',
-      async ({ userRole, privileges }) => {
+      async ({ userRole, privileges, expectedStatus }) => {
         const res = await calloutPostCardStorageConfig(calloutId, userRole);
         const data =
           res.data?.lookup.callout?.contributions?.[0].post?.profile
             .storageBucket?.documents[0].authorization;
 
         expect(data?.myPrivileges?.sort()).toEqual(privileges);
+
+        const restResponse = await getAuthDocument(documentId, userRole);
+        expect(restResponse.status).toEqual(expectedStatus);
       }
     );
 
@@ -569,15 +588,15 @@ describe('Public Space - visual on profile', () => {
 
     // Arrange
     test.each`
-      userRole                     | privileges
-      ${undefined}                 | ${['READ']}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_updateContent}
-      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute}
-      ${TestUser.NON_SPACE_MEMBER} | ${['READ']}
-      ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'READ']}
+      userRole                     | privileges                                                          | expectedStatus
+      ${undefined}                 | ${['READ']}                                                         | ${200}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_updateContent} | ${200}
+      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute}               | ${200}
+      ${TestUser.NON_SPACE_MEMBER} | ${['READ']}                                                         | ${200}
+      ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'READ']}                                           | ${200}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space visual for whiteboard of call for whiteboards callout (storageBucket) document',
-      async ({ userRole, privileges }) => {
+      async ({ userRole, privileges, expectedStatus }) => {
         const res = await calloutWhiteboardStorageConfig(
           whiteboardCardId,
           calloutId,
@@ -589,6 +608,9 @@ describe('Public Space - visual on profile', () => {
             .storageBucket.documents[0].authorization;
 
         expect(data?.myPrivileges?.sort()).toEqual(privileges);
+
+        const restResponse = await getAuthDocument(documentId, userRole);
+        expect(restResponse.status).toEqual(expectedStatus);
       }
     );
 
@@ -655,15 +677,15 @@ describe('Public Space - visual on profile', () => {
 
     // Arrange
     test.each`
-      userRole                     | privileges
-      ${undefined}                 | ${['READ']}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute}
-      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute}
-      ${TestUser.NON_SPACE_MEMBER} | ${['READ']}
-      ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'READ']}
+      userRole                     | privileges                                            | expectedStatus
+      ${undefined}                 | ${['READ']}                                           | ${200}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute} | ${200}
+      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute} | ${200}
+      ${TestUser.NON_SPACE_MEMBER} | ${['READ']}                                           | ${200}
+      ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'READ']}                             | ${200}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space visual for post of call for post  callout (storageBucket) document',
-      async ({ userRole, privileges }) => {
+      async ({ userRole, privileges, expectedStatus }) => {
         const res = await calloutStorageConfig(calloutId, userRole);
 
         const data =
@@ -671,6 +693,9 @@ describe('Public Space - visual on profile', () => {
             .authorization;
 
         expect(data?.myPrivileges?.sort()).toEqual(privileges);
+
+        const restResponse = await getAuthDocument(documentId, userRole);
+        expect(restResponse.status).toEqual(expectedStatus);
       }
     );
 
@@ -729,21 +754,24 @@ describe('Public Space - visual on profile', () => {
 
     // Arrange
     test.each`
-      userRole                     | privileges
-      ${undefined}                 | ${['READ']}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute}
-      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute}
-      ${TestUser.NON_SPACE_MEMBER} | ${['READ']}
-      ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'READ']}
+      userRole                     | privileges                                            | expectedStatus
+      ${undefined}                 | ${['READ']}                                           | ${200}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute} | ${200}
+      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute} | ${200}
+      ${TestUser.NON_SPACE_MEMBER} | ${['READ']}                                           | ${200}
+      ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'READ']}                             | ${200}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space visual for post of call for post  callout (storageBucket) document',
-      async ({ userRole, privileges }) => {
+      async ({ userRole, privileges, expectedStatus }) => {
         const res = await calloutStorageConfig(calloutId, userRole);
         const data =
           res.data?.lookup.callout?.framing.profile.storageBucket.documents[0]
             .authorization;
 
         expect(data?.myPrivileges?.sort()).toEqual(privileges);
+
+        const restResponse = await getAuthDocument(documentId, userRole);
+        expect(restResponse.status).toEqual(expectedStatus);
       }
     );
 
@@ -802,21 +830,24 @@ describe('Public Space - visual on profile', () => {
 
     // Arrange
     test.each`
-      userRole                     | privileges
-      ${undefined}                 | ${['READ']}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_updateContent}
-      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute}
-      ${TestUser.NON_SPACE_MEMBER} | ${['READ']}
-      ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'READ']}
+      userRole                     | privileges                                                          | expectedStatus
+      ${undefined}                 | ${['READ']}                                                         | ${200}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_updateContent} | ${200}
+      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute}               | ${200}
+      ${TestUser.NON_SPACE_MEMBER} | ${['READ']}                                                         | ${200}
+      ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'READ']}                                           | ${200}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space visual for whiteboard callout (storageBucket) document',
-      async ({ userRole, privileges }) => {
+      async ({ userRole, privileges, expectedStatus }) => {
         const res = await whiteboardCalloutStorageConfig(calloutId, userRole);
         const data =
           res.data?.lookup.callout?.framing.whiteboard?.profile.storageBucket
             .documents[0].authorization;
 
         expect(data?.myPrivileges?.sort()).toEqual(privileges);
+
+        const restResponse = await getAuthDocument(documentId, userRole);
+        expect(restResponse.status).toEqual(expectedStatus);
       }
     );
 
@@ -876,21 +907,24 @@ describe('Public Space - visual on profile', () => {
 
     // Arrange
     test.each`
-      userRole                     | privileges
-      ${undefined}                 | ${['READ']}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_updateContent}
-      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute}
-      ${TestUser.NON_SPACE_MEMBER} | ${['READ']}
-      ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'READ']}
+      userRole                     | privileges                                                          | expectedStatus
+      ${undefined}                 | ${['READ']}                                                         | ${200}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_updateContent} | ${200}
+      ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute}               | ${200}
+      ${TestUser.NON_SPACE_MEMBER} | ${['READ']}                                                         | ${200}
+      ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'READ']}                                           | ${200}
     `(
       'User: "$userRole" has this privileges: "$privileges" to space visual for whiteboardRt callout (storageBucket) document',
-      async ({ userRole, privileges }) => {
+      async ({ userRole, privileges, expectedStatus }) => {
         const res = await whiteboardCalloutStorageConfig(calloutId, userRole);
         const data =
           res.data?.lookup.callout?.framing.whiteboard?.profile.storageBucket
             .documents[0].authorization;
 
         expect(data?.myPrivileges?.sort()).toEqual(privileges);
+
+        const restResponse = await getAuthDocument(documentId, userRole);
+        expect(restResponse.status).toEqual(expectedStatus);
       }
     );
 
