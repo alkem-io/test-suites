@@ -25,6 +25,24 @@ export const createConfigUsingEnvVars = (): AlkemioTestConfig => {
         public: process.env.KRATOS_ENDPOINT ?? 'http://localhost:4434',
         private: process.env.KRATOS_PRIVATE_API_URL ?? 'http://localhost:4434',
       },
+      oidc: {
+        hydraPublic:
+          process.env.HYDRA_PUBLIC_URL ?? 'http://localhost:3000',
+        hydraAdmin:
+          process.env.HYDRA_ADMIN_URL ?? 'http://localhost:3000/hydra/admin',
+        kratosAdmin:
+          process.env.KRATOS_ADMIN_URL ?? 'http://localhost:3000/ory/kratos/admin',
+        clientId:
+          process.env.OIDC_TEST_CLIENT_ID ?? 'alkemio-test-harness',
+        redirectUri:
+          process.env.OIDC_TEST_REDIRECT_URI ??
+          'http://localhost:3000/api/auth/oidc/test-callback',
+        scopes:
+          process.env.OIDC_TEST_SCOPES ??
+          'openid profile email offline_access alkemio',
+        audience:
+          process.env.OIDC_TEST_AUDIENCE ?? 'alkemio-test-harness',
+      },
     },
     identities: {
       admin: {

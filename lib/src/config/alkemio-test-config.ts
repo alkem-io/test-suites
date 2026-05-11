@@ -12,6 +12,15 @@ export interface AlkemioTestConfig {
       public: string;
       private: string;
     };
+    oidc: {
+      hydraPublic: string;
+      hydraAdmin: string;
+      kratosAdmin: string;
+      clientId: string;
+      redirectUri: string;
+      scopes: string;
+      audience: string;
+    };
   };
   identities: {
     admin: {

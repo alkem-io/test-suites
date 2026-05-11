@@ -108,6 +108,9 @@ importers:
       '@ory/kratos-client':
         specifier: ^1.3.8
         version: 1.3.8
+      axios:
+        specifier: 1.13.5
+        version: 1.13.5
       dotenv:
         specifier: ^16.0.1
         version: 16.6.1

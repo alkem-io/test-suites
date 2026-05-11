@@ -1,37 +1,20 @@
-import { AlkemioClient } from "@alkemio/client-lib";
-import { LogManager } from "../LogManager";
-import { testConfiguration } from "../../config/test.configuration";
+import { LogManager } from '../LogManager';
+import { testConfiguration } from '../../config/test.configuration';
+import { getBearerViaOidc } from '../../auth/oidc/get-bearer-via-oidc';
 
-export const getUserToken = async (userEmail: string) => {
-  const server = testConfiguration.endPoints.graphql.private;
-
-  if (!server) {
-    throw new Error("server url not provided");
-  }
-
-  const alkemioClientConfig = {
-    apiEndpointPrivateGraphql: server,
-    authInfo: {
-      credentials: {
-        email: userEmail,
-        password: testConfiguration.identities.admin.password,
-      },
-    },
-  };
-
-  const alkemioClient = new AlkemioClient(alkemioClientConfig);
+export const getUserToken = async (userEmail: string): Promise<string> => {
+  const password = testConfiguration.identities.admin.password;
   try {
-    await alkemioClient.enableAuthentication();
-  } catch (e: any) {
+    return await getBearerViaOidc(userEmail, password);
+  } catch (e: unknown) {
+    const err = e as Error;
     LogManager.getLogger().error(
-      (e as Error).message,
+      err.message,
       `>> identifier: ${userEmail}`,
-      e?.stack
+      err.stack
     );
     throw new Error(
-      `Unable to retrieve access token for user ${userEmail}: ${e}`
+      `Unable to retrieve OIDC access token for user ${userEmail}: ${err.message}`
     );
   }
-
-  return alkemioClient.apiToken;
 };

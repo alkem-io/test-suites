@@ -79,5 +79,9 @@ web_modules/
 # local files
 client-web/.auth/
 
+# OIDC bearer cache (refresh tokens, access tokens)
+.auth-cache/
+**/.auth-cache/
+
 # Claude Code
 .claude/
