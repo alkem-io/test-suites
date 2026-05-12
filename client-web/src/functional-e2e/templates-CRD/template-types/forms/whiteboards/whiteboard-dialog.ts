@@ -1,37 +1,71 @@
 import { Locator, Page, expect } from '@playwright/test';
 
-export const clickOnEditWhiteboardPreview = async (page: Page): Promise<void> => {
-  const whiteboardContent = page.getByText('Drawing canvas').last();
-  await expect(whiteboardContent).toBeVisible();
-  await whiteboardContent.locator('..').locator('..').locator('..')
-    .getByRole('button', { name: 'Edit', exact: true }).click();
-}
+/**
+ * Opens the whiteboard (Excalidraw) editor from a template create/edit dialog.
+ * The button is "Start drawing" when the template has no drawing yet,
+ * or "Edit drawing" once a drawing exists.
+ */
+export const openWhiteboardEditor = async (page: Page): Promise<void> => {
+  const startDrawing = page.getByRole('button', { name: 'Start drawing' });
+  if (await startDrawing.isVisible().catch(() => false)) {
+    await startDrawing.click();
+  } else {
+    await page.getByRole('button', { name: 'Edit drawing' }).click();
+  }
+};
 
-export const getWhiteboardDialog = async (page: Page, title: string) => {
-  const dialog = await page.getByRole('dialog').filter({
-    has: page.getByRole('heading', { name: title }),
-  }).last();
+/**
+ * Returns the whiteboard editor dialog (the one hosting the Excalidraw canvas).
+ */
+export const getWhiteboardEditorDialog = async (page: Page): Promise<Locator> => {
+  const dialog = page
+    .getByRole('dialog')
+    .filter({ has: page.getByText('Drawing canvas') })
+    .last();
   await expect(dialog).toBeVisible();
 
   return dialog;
-}
+};
 
+/**
+ * Writes a text element on the whiteboard canvas.
+ * Does NOT commit/close the editor - the caller is expected to click the
+ * editor's "Save" button afterwards (pressing Escape triggers a
+ * "discard unsaved changes" confirmation dialog).
+ */
 export const writeTextInWhiteboardDialog = async (
   editorDialog: Locator,
   text: string
 ): Promise<void> => {
-  // Click the text tool (represented by "8" in the Excalidraw toolbar)
+  // Select the Text tool in the Excalidraw toolbar. The toolbar buttons are
+  // <label title="Text — T or 8"> wrappers around a visually-hidden radio
+  // input - clicking the input does nothing, so target the label by title.
+  await editorDialog.getByTitle(/^Text —/).click();
+
+  // Click on the canvas to place the text cursor
   await editorDialog
-    .locator('div').filter({ hasText: /^8$/ })
+    .locator('canvas.excalidraw__canvas.interactive')
+    .first()
     .click();
 
-  const canvas = await editorDialog.locator('canvas.excalidraw__canvas.interactive').first();
-  await canvas.click();
-
+  // Type the text into the inline editor
   const textInput = editorDialog.getByRole('textbox');
   await textInput.fill(text);
-  await textInput.press('Escape');
-}
+};
+
+/**
+ * @deprecated Use {@link openWhiteboardEditor} instead.
+ */
+export const clickOnEditWhiteboardPreview = openWhiteboardEditor;
+
+/**
+ * @deprecated Use {@link getWhiteboardEditorDialog} instead. The `title`
+ * argument is ignored - the editor dialog is identified by its canvas.
+ */
+export const getWhiteboardDialog = async (
+  page: Page,
+  _title?: string
+): Promise<Locator> => getWhiteboardEditorDialog(page);
 
 export const useTemplateInAWhiteboard = async (
   page: Page,
@@ -40,21 +74,16 @@ export const useTemplateInAWhiteboard = async (
 ) => {
   await whiteboardDialog.getByRole('button', { name: 'Find Template' }).click();
 
-  await page.getByRole('heading', { name: templateName, exact: true }).click();
+  // The "Use a template" picker lists templates as list items, each showing the
+  // template name and a "Use this template" button.
+  const pickerDialog = page.getByRole('dialog', { name: 'Use a template' });
+  await expect(pickerDialog).toBeVisible();
 
-  // Wait for the template preview dialog and find it via the dialog role
-  const previewHeading = page.getByRole('heading', { name: 'Preview —', exact: false });
-  await expect(previewHeading.first()).toBeVisible();
+  const item = pickerDialog
+    .getByRole('listitem')
+    .filter({ hasText: templateName });
+  await expect(item).toBeVisible();
+  await item.getByRole('button', { name: 'Use this template' }).click();
 
-  const templateDialog = page
-    .getByRole('dialog')
-    .filter({ has: previewHeading })
-    .last();
-  await expect(templateDialog.getByRole('heading', { name: templateName, exact: true })).toBeVisible();
-  await templateDialog.getByRole('heading', { name: templateName, exact: true }).click();
-  await templateDialog.getByRole('button', { name: 'Use' }).click();
-
-  await expect(previewHeading).not.toBeVisible();
-
-
+  await expect(pickerDialog).not.toBeVisible();
 };

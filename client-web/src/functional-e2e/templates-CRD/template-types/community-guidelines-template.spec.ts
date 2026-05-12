@@ -67,7 +67,7 @@ test.describe.serial('Community Guidelines Template', () => {
   test.afterAll(async () => {
     // Clean up authentication
     await teardownAuthentication();
-    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+    // await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
   test.beforeEach(async ({ page }) => {
     await page.goto(

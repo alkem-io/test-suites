@@ -1,37 +1,42 @@
-import { expect } from '@playwright/test';
-import { Page } from '@playwright/test';
+import { expect, Page } from '@playwright/test';
 import { TemplateForm } from '../forms/template-form.models';
-import { time } from 'console';
+import {
+  getTemplatePreviewDialog,
+  verifyOpenedTemplate,
+} from './verify-opened-template';
 
-export const verifyTemplate = async (
-  page: Page,
-  templateData: TemplateForm
-) => {
-  // Verify the template is displayed in the list
+/**
+ * Verifies a template appears in the templates list with the expected name,
+ * description and tags, then opens its preview dialog and checks the name and
+ * description there too. Leaves the preview dialog closed.
+ */
+export const verifyTemplate = async (page: Page, templateData: TemplateForm) => {
+  // The template card carries a "Preview: <name>" button
+  const previewButton = page.getByRole('button', {
+    name: `Preview: ${templateData.displayName}`,
+    exact: true,
+  });
+  await expect(previewButton).toBeVisible();
 
-  const card = await page.getByRole('link', { name: 'Contribute' });
+  // Locate the template card (innermost list item containing the preview button)
+  const templateCard = page
+    .getByRole('listitem')
+    .filter({ has: previewButton })
+    .last();
 
-  await card.click({ timeout: 5000 });
-
+  // Description and the first couple of tags are shown on the card
   await expect(
-    page.getByRole('heading', { name: templateData.displayName, exact: true })
+    templateCard.getByText(templateData.description, { exact: true })
   ).toBeVisible();
-
-  // Verify the template description is visible somewhere in the dialog
-
-  await expect(page.locator('#preview-template-dialog')).toHaveText(
-    `Preview — ${templateData.displayName}`
-  );
-
-  await expect(
-    page.getByRole('heading', { name: templateData.displayName, exact: true })
-  ).toHaveText(templateData.displayName);
-
-  // Verify at least a couple of tags
-  const firstTwoTags = templateData.tags.slice(0, 2);
-  for (const tag of firstTwoTags) {
-    await expect(
-      page.locator('.MuiChip-root').getByText(tag).first()
-    ).toBeVisible();
+  for (const tag of templateData.tags.slice(0, 2)) {
+    await expect(templateCard.getByText(tag, { exact: true }).first()).toBeVisible();
   }
+
+  // Open the preview dialog and verify name + description there
+  await previewButton.click();
+  await verifyOpenedTemplate(page, templateData);
+
+  const dialog = getTemplatePreviewDialog(page);
+  await dialog.getByRole('button', { name: 'Close' }).click();
+  await expect(dialog).not.toBeVisible();
 };

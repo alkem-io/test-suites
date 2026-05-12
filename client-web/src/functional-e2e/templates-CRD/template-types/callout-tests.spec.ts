@@ -153,7 +153,7 @@ test.describe.serial('Callout Templates', () => {
 
   test.afterAll(async () => {
     await teardownAuthentication();
-    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+    // await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
   test.beforeEach(async ({ page }) => {

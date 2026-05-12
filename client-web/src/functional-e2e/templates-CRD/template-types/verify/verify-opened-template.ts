@@ -1,25 +1,31 @@
-import { expect } from '@playwright/test';
-import { Page } from '@playwright/test';
+import { expect, Page } from '@playwright/test';
 import { TemplateForm } from '../forms/template-form.models';
 
+/**
+ * Returns the template preview dialog (the one with the "Edit template" button).
+ */
+export const getTemplatePreviewDialog = (page: Page) =>
+  page
+    .getByRole('dialog')
+    .filter({ has: page.getByRole('button', { name: 'Edit template' }) });
+
+/**
+ * Verifies the currently open template preview dialog shows the expected
+ * template name and description.
+ */
 export const verifyOpenedTemplate = async (
   page: Page,
   templateData: TemplateForm
 ) => {
-  // Verify the template is displayed in the list
-  await expect(page.locator('#preview-template-dialog')).toHaveText(
-    `Preview — ${templateData.displayName}`
-  );
+  const dialog = getTemplatePreviewDialog(page);
+  await expect(dialog).toBeVisible();
+
+  // The dialog heading combines the template name with the section name
+  await expect(
+    dialog.getByRole('heading', { name: templateData.displayName })
+  ).toBeVisible();
 
   await expect(
-    page.getByRole('heading', { name: templateData.displayName, exact: true })
-  ).toHaveText(templateData.displayName);
-
-  // Verify at least a couple of tags
-  const firstTwoTags = templateData.tags.slice(0, 2);
-  for (const tag of firstTwoTags) {
-    await expect(
-      page.locator('.MuiChip-root').getByText(tag).first()
-    ).toBeVisible();
-  }
+    dialog.getByText(templateData.description, { exact: true })
+  ).toBeVisible();
 };
