@@ -1,14 +1,14 @@
 import { expect, Page } from '@playwright/test';
 import { TemplateForm } from '../forms/template-form.models';
-import {
-  getTemplatePreviewDialog,
-  verifyOpenedTemplate,
-} from './verify-opened-template';
+import { verifyOpenedTemplate } from './verify-opened-template';
 
 /**
  * Verifies a template appears in the templates list with the expected name,
  * description and tags, then opens its preview dialog and checks the name and
- * description there too. Leaves the preview dialog closed.
+ * description there too.
+ *
+ * Leaves the preview dialog OPEN so type-specific verifiers can check
+ * additional fields. Callers should close it (e.g. via `closeTemplatePreview`).
  */
 export const verifyTemplate = async (page: Page, templateData: TemplateForm) => {
   // The template card carries a "Preview: <name>" button
@@ -35,8 +35,4 @@ export const verifyTemplate = async (page: Page, templateData: TemplateForm) => 
   // Open the preview dialog and verify name + description there
   await previewButton.click();
   await verifyOpenedTemplate(page, templateData);
-
-  const dialog = getTemplatePreviewDialog(page);
-  await dialog.getByRole('button', { name: 'Close' }).click();
-  await expect(dialog).not.toBeVisible();
 };

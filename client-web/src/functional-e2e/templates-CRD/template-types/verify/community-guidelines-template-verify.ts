@@ -1,24 +1,33 @@
-import { expect } from '@playwright/test';
-import { Page } from '@playwright/test';
+import { expect, Page } from '@playwright/test';
 import { CommunityGuidelinesTemplateForm } from '../forms/template-form.models';
 import { verifyTemplate } from './template-verify';
+import {
+  closeTemplatePreview,
+  getTemplatePreviewDialog,
+} from './verify-opened-template';
 
-export const verifyCommunityGuidelinesTemplate = async (page: Page, templateData: CommunityGuidelinesTemplateForm) => {
+export const verifyCommunityGuidelinesTemplate = async (
+  page: Page,
+  templateData: CommunityGuidelinesTemplateForm
+) => {
   await verifyTemplate(page, templateData);
 
-  // Verify the edited template is displayed with updated title
-  await expect(page.getByRole('heading', { name: `Preview — ${templateData.displayName}`, exact: true })).toBeVisible();
+  const dialog = getTemplatePreviewDialog(page);
 
-  // Verify the new edited tag is visible
-  await expect(page.locator('.MuiChip-root').filter({ hasText: templateData.tags[templateData.tags.length - 1]}).first()).toBeVisible();
+  // Guidelines title and content
+  await expect(
+    dialog.getByText(templateData.guidelines.displayName, { exact: true })
+  ).toBeVisible();
+  await expect(
+    dialog.getByText(templateData.guidelines.description, { exact: true })
+  ).toBeVisible();
 
-  // Verify the edited description is visible
-  await expect(page.locator('.markdown').filter({ hasText: templateData.description }).first()).toBeVisible();
-
-  await expect(page.locator('div').filter({ hasText: templateData.guidelines.displayName }).first()).toBeVisible();
-  await expect(page.locator('div').filter({ hasText: templateData.guidelines.description }).first()).toBeVisible();
-
-  for (const reference of templateData.guidelines.references || []) {
-    await expect(page.getByRole('link', { name: reference.url, exact: true }).first()).toBeVisible();
+  // References are shown as links
+  for (const reference of templateData.guidelines.references ?? []) {
+    await expect(
+      dialog.getByRole('link', { name: reference.title }).first()
+    ).toBeVisible();
   }
-}
+
+  await closeTemplatePreview(page);
+};

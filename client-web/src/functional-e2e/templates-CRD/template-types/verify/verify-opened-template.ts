@@ -10,6 +10,15 @@ export const getTemplatePreviewDialog = (page: Page) =>
     .filter({ has: page.getByRole('button', { name: 'Edit template' }) });
 
 /**
+ * Closes the template preview dialog (if open).
+ */
+export const closeTemplatePreview = async (page: Page) => {
+  const dialog = getTemplatePreviewDialog(page);
+  await dialog.getByRole('button', { name: 'Close' }).click();
+  await expect(dialog).not.toBeVisible();
+};
+
+/**
  * Verifies the currently open template preview dialog shows the expected
  * template name and description.
  */

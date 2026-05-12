@@ -13,7 +13,6 @@ import { randomBytes } from 'crypto';
 import { PostTemplateForm } from './forms/template-form.models';
 import { fillPostTemplateForm } from './forms/post-template-form';
 import { verifyPostTemplate } from './verify/post-template-verify';
-import { verifyOpenedTemplate } from './verify/verify-opened-template';
 
 // Create the authenticated fixture with a unique storage state name for this test suite
 const { test, setupAuthentication, teardownAuthentication } =
@@ -44,7 +43,7 @@ const templateData: PostTemplateForm = {
     'This template streamlines announcement posts with a ready-to-use structure for updates and calls to action.',
   tags: ['template', 'post'],
   defaultContent:
-    '# Collaboration Update\n\nKeep stakeholders aligned with the latest milestones, blockers, and next steps.',
+    'Collaboration Update - Keep stakeholders aligned with the latest milestones, blockers, and next steps.',
 };
 
 test.describe.serial('Post Templates', () => {
@@ -55,7 +54,7 @@ test.describe.serial('Post Templates', () => {
   test.afterAll(async () => {
     // Clean up authentication
     await teardownAuthentication();
-   // await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+    // await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
   test.beforeEach(async ({ page }) => {
@@ -63,9 +62,15 @@ test.describe.serial('Post Templates', () => {
       `${baseUrl}/${baseScenario.space.nameId}/settings/templates`
     );
 
+    // Enable CRD feature flag and reload so the redesigned Templates page renders
+    await page.evaluate(() => {
+      localStorage.setItem('alkemio-crd-enabled', 'true');
+    });
+    await page.reload();
+
     // Verify we are on the Templates settings page
     await expect(
-      page.getByText('Here you can create and edit Templates for this space.')
+      page.getByRole('textbox', { name: 'Search templates…' })
     ).toBeVisible();
   });
 
@@ -73,8 +78,14 @@ test.describe.serial('Post Templates', () => {
     // Navigate to the root of the space
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
 
-    // Click Settings tab to access space settings
-    await page.getByRole('tab', { name: 'Settings' }).click();
+    // Enable CRD feature flag
+    await page.evaluate(() => {
+      localStorage.setItem('alkemio-crd-enabled', 'true');
+    });
+    await page.reload();
+
+    // Open space settings (now a link in the space banner, not a space tab)
+    await page.getByRole('link', { name: 'Settings' }).click();
 
     // Click Templates tab to access template management
     await page.getByRole('tab', { name: 'Templates' }).click();
@@ -84,35 +95,34 @@ test.describe.serial('Post Templates', () => {
   });
 
   test('1.1 Create Post Template', async ({ page }) => {
-    // Verify all template sections are visible
+    // Verify the Post templates section is visible
     await expect(
-      page.getByRole('heading', { name: 'Post Templates' })
+      page.getByRole('button', { name: /^Post templates/ })
     ).toBeVisible();
 
-    // Find the container (parent of the parent of the heading) and then the "Create new" button within it
-    const createNewButton = await page
-      .getByRole('button', { name: 'Create new' })
-      .nth(3);
-    await createNewButton.click();
+    // Open the "Add new" menu for the Post templates section (4th section)
+    await page.getByRole('button', { name: 'Add new' }).nth(3).click();
+    await page.getByRole('menuitem', { name: 'Create new' }).click();
 
     // Wait for the Post Template creation dialog to appear
+    const dialog = page.getByRole('dialog', { name: 'Create post template' });
     await expect(
-      page.getByRole('heading', { name: 'Create new Post Template' })
+      dialog.getByRole('heading', { name: 'Create post template' })
     ).toBeVisible();
 
     // Fill the form:
     await fillPostTemplateForm(page, templateData);
 
-    // Verify the Create button is enabled
-    const createButton = page.getByRole('button', { name: 'Create' });
-    await expect(createButton).toBeEnabled();
+    // Verify the Save button is enabled
+    const saveButton = dialog.getByRole('button', { name: 'Save' });
+    await expect(saveButton).toBeEnabled();
 
-    // Click the Create button to save the Post Template
-    await createButton.click();
+    // Click the Save button to save the Post Template
+    await saveButton.click();
 
     // Verify the dialog closes
     await expect(
-      page.getByRole('heading', { name: 'Create new Post Template' })
+      page.getByRole('heading', { name: 'Create post template' })
     ).not.toBeVisible();
 
     await verifyPostTemplate(page, templateData);
@@ -121,10 +131,14 @@ test.describe.serial('Post Templates', () => {
   test('1.2 Edit Post Template', async ({ page }) => {
     const EditedTag = ' Edited-' + randomBytes(3).toString('hex');
 
-    // Find the template title and click on it to open the template
-    await page.getByRole('heading', { name: templateData.displayName }).click();
-
-    await page.getByRole('button', { name: 'Edit' }).click();
+    // Open the template's preview dialog, then start editing
+    await page
+      .getByRole('button', {
+        name: `Preview: ${templateData.displayName}`,
+        exact: true,
+      })
+      .click();
+    await page.getByRole('button', { name: 'Edit template' }).click();
 
     templateData.displayName = templateData.displayName + EditedTag;
     templateData.description = templateData.description + EditedTag;
@@ -132,78 +146,56 @@ test.describe.serial('Post Templates', () => {
     templateData.defaultContent = templateData.defaultContent + EditedTag;
 
     // Wait for the edit dialog to appear
+    const dialog = page.getByRole('dialog', { name: 'Edit post template' });
     await expect(
-      page.getByRole('heading', { name: 'Edit Post Template' })
+      dialog.getByRole('heading', { name: 'Edit post template' })
     ).toBeVisible();
 
     await fillPostTemplateForm(page, templateData);
 
     // Click the Save button to save the changes
-    const saveButton = page.getByRole('button', { name: 'Update' });
+    const saveButton = dialog.getByRole('button', { name: 'Save' });
     await expect(saveButton).toBeEnabled();
     await saveButton.click();
 
     // Verify the dialog closes
     await expect(
-      page.getByRole('heading', { name: 'Edit Post Template' })
+      page.getByRole('heading', { name: 'Edit post template' })
     ).not.toBeVisible();
 
     // Verify the data was updated
-    await verifyOpenedTemplate(page, templateData);
+    await verifyPostTemplate(page, templateData);
 
     // Reload the page to ensure changes persist
     await page.reload();
-    await verifyOpenedTemplate(page, templateData);
+    await verifyPostTemplate(page, templateData);
   });
 
   test('1.3 Verify edit and cancel and confirm dialog', async ({ page }) => {
-    await page.getByRole('heading', { name: templateData.displayName }).click();
-
     const originalContent = templateData.defaultContent;
     templateData.defaultContent =
       originalContent + ' This edit will be discarded.';
 
-    await page.getByRole('button', { name: 'Edit' }).click();
+    await page
+      .getByRole('button', {
+        name: `Preview: ${templateData.displayName}`,
+        exact: true,
+      })
+      .click();
+    await page.getByRole('button', { name: 'Edit template' }).click();
 
     await fillPostTemplateForm(page, templateData);
 
-    // Close and discard changes to test the discard confirmation dialog
-    await page.getByRole('button', { name: 'Close' }).click();
-    await page.getByRole('button', { name: 'Yes, Discard' }).click();
+    // Cancel and discard the changes (Cancel triggers the "Discard changes?" dialog)
+    await page.getByRole('button', { name: 'Cancel' }).click();
+    await page.getByRole('button', { name: 'Discard' }).click();
 
-    // Verify we are back on the template view page with original data
+    // Restore expectations and verify the template was not modified
     templateData.defaultContent = originalContent;
-    await page.getByRole('heading', { name: templateData.displayName }).click();
-    await verifyOpenedTemplate(page, templateData);
+    await verifyPostTemplate(page, templateData);
   });
 
   // test('1.4 Delete Post Template', async ({ page }) => {
-  //   // Find the template title and click on it to open the template
-  //   await page.getByRole('heading', { name: templateData.displayName }).click();
-
-  //   await page.getByRole('button', { name: 'Edit', exact: true }).click();
-
-  //   await page.getByRole('button', { name: 'Delete', exact: true }).click();
-
-  //   await expect(
-  //     page.getByText(
-  //       `Are you sure you want to delete the Template '${templateData.displayName}'?`,
-  //       { exact: true }
-  //     )
-  //   ).toBeVisible();
-
-  //   await page.getByRole('button', { name: 'Delete' }).click();
-
-  //   await expect(
-  //     page.getByRole('heading', { name: 'Warning' })
-  //   ).not.toBeVisible();
-
-  //   await expect(
-  //     page.getByRole('heading', { name: 'Edit Post Template' })
-  //   ).not.toBeVisible();
-
-  //   await expect(
-  //     page.getByRole('heading', { name: templateData.displayName, exact: true })
-  //   ).not.toBeVisible();
+  //   // Delete flow not yet implemented for the redesigned Templates UI.
   // });
 });

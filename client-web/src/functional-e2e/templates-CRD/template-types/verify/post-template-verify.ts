@@ -1,6 +1,10 @@
 import { expect, Page } from '@playwright/test';
 import { PostTemplateForm } from '../forms/template-form.models';
 import { verifyTemplate } from './template-verify';
+import {
+  closeTemplatePreview,
+  getTemplatePreviewDialog,
+} from './verify-opened-template';
 
 export const verifyPostTemplate = async (
   page: Page,
@@ -8,10 +12,12 @@ export const verifyPostTemplate = async (
 ) => {
   await verifyTemplate(page, templateData);
 
+  // The preview dialog shows the "Default description" content
+  const dialog = getTemplatePreviewDialog(page);
+  await expect(dialog.getByText('Default description')).toBeVisible();
   await expect(
-    page
-      .locator('.markdown')
-      .filter({ hasText: templateData.defaultContent })
-      .first()
+    dialog.getByText(templateData.defaultContent, { exact: true })
   ).toBeVisible();
+
+  await closeTemplatePreview(page);
 };

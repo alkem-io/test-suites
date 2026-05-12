@@ -1,6 +1,7 @@
 import { Page } from '@playwright/test';
 import { WhiteboardTemplateForm } from '../forms/template-form.models';
 import { verifyTemplate } from './template-verify';
+import { closeTemplatePreview } from './verify-opened-template';
 
 export const verifyWhiteboardTemplate = async (
   page: Page,
@@ -8,6 +9,8 @@ export const verifyWhiteboardTemplate = async (
 ) => {
   await verifyTemplate(page, templateData);
 
-  // TODO: Verify whiteboard content
-  // There's no straightforward way to verify the whiteboard content as it is rendered on a canvas. Leave this for now.
+  // TODO: Verify whiteboard content - it is rendered on a canvas, so there is
+  // no straightforward way to assert on it. Leave this for now.
+
+  await closeTemplatePreview(page);
 };
