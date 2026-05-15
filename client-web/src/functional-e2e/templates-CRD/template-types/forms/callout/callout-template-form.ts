@@ -1,219 +1,118 @@
 /**
- * Callout Template Form Orchestrator
+ * Callout (Collaboration tool) Template Form Orchestrator
  *
- * Main entry point for filling and editing Callout Template forms.
- * Combines template metadata, callout fields, additional content, and collection helpers.
+ * Fills the redesigned "Create / Edit collaboration-tool template" dialog.
+ *
+ * New dialog structure (CRD UI):
+ *  - Template name / Description / Tags (handled by fillTemplateForm)
+ *  - Title                                  -> callout title
+ *  - "Write something..." rich-text editor  -> callout description
+ *  - "Add to post" radiogroup               -> framing (Whiteboard / Memo / Call to Action / ...)
+ *  - "Responses" radiogroup                 -> collection (Links & Files / Posts / Memos / Whiteboards)
+ *      + inline "Members can add" / "Admins can add" / "Enable comments" switches
+ *      + "Set Default Response" button -> "<Type> defaults" sub-dialog (default title + description / whiteboard)
+ *  - "Tags" textbox (comma-separated)       -> callout tags
+ *  - "Allow comments" switch                -> callout comments enabled
+ *  - References ("Add another reference")    -> callout references
+ *  - Cancel / Save
  */
 
-import { Page } from '@playwright/test';
+import { Locator, Page } from '@playwright/test';
 import { fillTemplateForm } from '../template-form';
-import {
-  CalloutTemplateForm,
-  CalloutTemplateFraming,
-  CalloutTemplateResponseCollection,
-} from './callout-template-form.models';
-// Collection helpers
-import { selectCollectionNone } from './collection/none';
-import {
-  selectCollectionLinksFiles,
-  fillCollectionLinksFiles,
-} from './collection/links-files';
-import { selectCollectionPosts, fillCollectionPosts } from './collection/posts';
-import { selectCollectionMemos, fillCollectionMemos } from './collection/memos';
-import {
-  selectCollectionWhiteboards,
-  fillCollectionWhiteboards,
-} from './collection/whiteboards';
-import {
-  fillCalloutTemplateFramingCallToAction,
-  fillCalloutTemplateFramingMemo,
-  fillCalloutTemplateFramingWhiteboard,
-  selectCalloutTemplateFramingCallToAction,
-  selectCalloutTemplateFramingMemo,
-  selectCalloutTemplateFramingNone,
-  selectCalloutTemplateFramingWhiteboard,
-} from './callout-template-framing';
+import { CalloutTemplateForm } from './callout-template-form.models';
+import { selectAndFillCalloutTemplateFraming } from './callout-template-framing';
+import { selectAndFillCalloutCollection } from './collection';
 
-// ============================================================================
-// Callout Base Fields
-// ============================================================================
+/** Returns the create/edit collaboration-tool template dialog. */
+export const getCalloutTemplateDialog = (page: Page): Locator =>
+  page
+    .getByRole('dialog')
+    .filter({
+      has: page.getByRole('heading', { name: /collaboration-tool template$/ }),
+    });
 
-/**
- * Fills the callout-specific base fields (title, tags, description).
- * These appear in the "Collaboration Tool Template" section of the form.
- */
+/** Sets a switch element to the desired checked state. */
+export const setSwitch = async (
+  switchLocator: Locator,
+  desired: boolean
+): Promise<void> => {
+  if ((await switchLocator.isChecked()) !== desired) {
+    await switchLocator.click();
+  }
+};
+
 const fillCalloutBaseFields = async (
   page: Page,
+  dialog: Locator,
   templateData: CalloutTemplateForm
 ): Promise<void> => {
-  // Fill callout title (required) - use exact: true to distinguish from Template title
-  const titleField = page.getByRole('textbox', { name: 'Title', exact: true });
-  await titleField.fill(templateData.calloutTitle);
+  // Callout title
+  await dialog.getByRole('textbox', { name: 'Title' }).fill(templateData.calloutTitle);
 
-  // Fill callout tags
+  // Callout description (rich-text editor)
+  if (templateData.calloutDescription) {
+    await dialog
+      .getByRole('textbox', { name: 'Write something...' })
+      .fill(templateData.calloutDescription);
+  }
+
+  // Callout tags - one chip per Enter. Both the template and callout tag
+  // inputs expose accessible name "Add a tag and press Enter"; the callout's
+  // is the second in DOM order.
   if (templateData.calloutTags.length > 0) {
-    const tagsCombobox = page
-      .getByRole('heading', { name: 'Collaboration Tool Template' })
-      .locator('..')
-      .locator('..')
-      .getByRole('combobox')
-      .first();
-
+    const calloutTagsInput = dialog
+      .getByRole('textbox', { name: 'Add a tag and press Enter' })
+      .nth(1);
     for (const tag of templateData.calloutTags) {
-      await tagsCombobox.fill(tag);
-      await tagsCombobox.press('Enter');
+      await calloutTagsInput.fill(tag);
+      await calloutTagsInput.press('Enter');
     }
   }
 
-  // Fill callout description
-  if (templateData.calloutDescription) {
-    // The callout description is the second markdown editor in the form
-    const descriptionEditor = page
-      .getByRole('heading', { name: 'Collaboration Tool Template' })
-      .locator('..')
-      .locator('..')
-      .getByRole('textbox', { name: 'Markdown editor' })
-      .first();
-    await descriptionEditor.fill(templateData.calloutDescription);
-  }
+  // Callout comments toggle
+  await setSwitch(
+    dialog.getByRole('switch', { name: 'Allow comments' }),
+    templateData.commentsEnabled
+  );
 
-  // Fill callout references
-  const numberOfReferences = templateData.calloutReferences?.length ?? 0;
-  const existingReferences =
-    (await page.locator('input[name^="framing.profile.references"]').count()) /
-    2;
-
-  for (let i = 0; i < numberOfReferences - existingReferences; i++) {
-    await page.getByRole('button', { name: 'Add Reference' }).click();
-  }
-
-  for (let i = 0; i < numberOfReferences; i++) {
-    const reference = templateData.calloutReferences![i];
-    await page
-      .locator(`input[name="framing.profile.references.${i}.name"]`)
-      .fill(reference.title);
-    await page
-      .locator(`input[name="framing.profile.references.${i}.uri"]`)
-      .fill(reference.url);
+  // Callout references
+  const references = templateData.calloutReferences ?? [];
+  if (references.length > 0) {
+    const referenceRows = dialog
+      .getByRole('listitem')
+      .filter({ has: dialog.getByRole('button', { name: 'Remove reference' }) });
+    const existing = await referenceRows.count();
+    for (let i = existing; i < references.length; i++) {
+      await dialog
+        .getByRole('button', { name: 'Add another reference' })
+        .click();
+    }
+    for (let i = 0; i < references.length; i++) {
+      const row = referenceRows.nth(i);
+      await row.getByRole('textbox', { name: 'Name' }).fill(references[i].title);
+      await row.getByRole('textbox', { name: 'URL' }).fill(references[i].url);
+    }
   }
 };
-
-// ============================================================================
-// Additional Content Dispatcher
-// ============================================================================
-
-const selectAndFillAdditionalContent = async (
-  page: Page,
-  content: CalloutTemplateFraming
-): Promise<void> => {
-  switch (content.type) {
-    case 'none':
-      await selectCalloutTemplateFramingNone(page);
-      break;
-    case 'whiteboard':
-      await selectCalloutTemplateFramingWhiteboard(page);
-      await fillCalloutTemplateFramingWhiteboard(page, content);
-      break;
-    case 'memo':
-      await selectCalloutTemplateFramingMemo(page);
-      await fillCalloutTemplateFramingMemo(page, content);
-      break;
-    case 'callToAction':
-      await selectCalloutTemplateFramingCallToAction(page);
-      await fillCalloutTemplateFramingCallToAction(page, content);
-      break;
-  }
-};
-
-// ============================================================================
-// Expand Response Options
-// ============================================================================
-
-const expandResponseOptions = async (page: Page): Promise<void> => {
-  // Expand Response Options if collapsed
-  await page.getByRole('button', { name: 'Expand' }).click();
-};
-
-// ============================================================================
-// Comments Toggle
-// ============================================================================
-
-const setCommentsEnabled = async (
-  page: Page,
-  enabled: boolean
-): Promise<void> => {
-  const buttonName = enabled ? 'Comments' : 'No Comments';
-  await page.getByRole('button', { name: buttonName, exact: true }).click();
-};
-
-// ============================================================================
-// Collection Dispatcher
-// ============================================================================
-
-const selectAndFillCollection = async (
-  page: Page,
-  collection: CalloutTemplateResponseCollection
-): Promise<void> => {
-  const dialog = page.getByRole('dialog').filter({
-    has: page.getByRole('heading', {
-      name: 'Create new Collaboration Tool Template',
-    }),
-  });
-  // Navigate from 'Collection' heading up to the container that holds both heading and buttons
-  // Structure: generic (e577) > [generic (e578) > heading "Collection"], [generic (e583) > buttons]
-  const collectionSection = dialog
-    .getByRole('heading', { name: 'Collection' })
-    .locator('..')
-    .locator('..');
-  switch (collection.type) {
-    case 'none':
-      await selectCollectionNone(collectionSection);
-      break;
-    case 'linksFiles':
-      await selectCollectionLinksFiles(dialog);
-      await fillCollectionLinksFiles(page, dialog, collection);
-      break;
-    case 'posts':
-      await selectCollectionPosts(dialog);
-      await fillCollectionPosts(page, dialog, collection);
-      break;
-    case 'memos':
-      await selectCollectionMemos(dialog);
-      await fillCollectionMemos(page, dialog, collection);
-      break;
-    case 'whiteboards':
-      await selectCollectionWhiteboards(dialog);
-      await fillCollectionWhiteboards(page, dialog, collection);
-      break;
-  }
-};
-
-// ============================================================================
-// Main Form Functions
-// ============================================================================
 
 /**
- * Fills a new Callout Template form with all fields.
+ * Fills a Callout (collaboration tool) Template form with all fields.
  */
 export const fillCalloutTemplateForm = async (
   page: Page,
   templateData: CalloutTemplateForm
 ): Promise<void> => {
-  // 1. Fill template metadata (displayName, description, tags)
-  await fillTemplateForm(page, templateData);
+  const dialog = getCalloutTemplateDialog(page);
 
-  // 2. Fill callout base fields (title, calloutTags, calloutDescription)
-  await fillCalloutBaseFields(page, templateData);
+  // 1. Template metadata (displayName, description, tags)
+  await fillTemplateForm(dialog, templateData);
 
-  // 3. Select and fill additional content
-  await selectAndFillAdditionalContent(page, templateData.framing);
+  // 2. Callout base fields (title, description, tags, comments, references)
+  await fillCalloutBaseFields(page, dialog, templateData);
 
-  // 4. Expand Response Options
-  await expandResponseOptions(page);
+  // 3. Framing ("Add to post" radiogroup)
+  await selectAndFillCalloutTemplateFraming(page, dialog, templateData.framing);
 
-  // 5. Set comments enabled/disabled
-  await setCommentsEnabled(page, templateData.commentsEnabled);
-
-  // 5. Select and fill collection
-  await selectAndFillCollection(page, templateData.responseOptions);
+  // 4. Response collection ("Responses" radiogroup + inline settings)
+  await selectAndFillCalloutCollection(page, dialog, templateData.responseOptions);
 };

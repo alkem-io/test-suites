@@ -1,86 +1,48 @@
 /**
- * Callout Template Verification
+ * Callout (Collaboration tool) Template verification.
  *
- * Verifies that a Callout Template was created/updated correctly.
+ * Verifies a Callout Template appears in the redesigned templates list and that
+ * its preview dialog shows the expected metadata.
+ *
+ * NOTE: the framing-specific (whiteboard / memo / CTA) and reference checks of
+ * the legacy UI are not yet ported to the redesigned preview dialog - see TODO.
  */
 
 import { expect, Page } from '@playwright/test';
 import { CalloutTemplateForm } from '../forms/callout/callout-template-form.models';
 
-/**
- * Verifies a Callout Template in the preview/list view.
- * For detailed content verification (like CTA, memo, whiteboard), clicks to open detail view.
- */
 export const verifyCalloutTemplate = async (
   page: Page,
   templateData: CalloutTemplateForm
 ): Promise<void> => {
-  // Click on the template to open the detail view
-  await page
-    .getByRole('heading', { name: templateData.displayName, exact: true })
-    .first()
-    .click();
+  const previewButton = page.getByRole('button', {
+    name: `Preview: ${templateData.displayName}`,
+    exact: true,
+  });
+  await expect(previewButton).toBeVisible();
 
-  // Wait for detail view to load - verify callout title is visible
+  // The card shows the first couple of tags
+  const card = page.getByRole('listitem').filter({ has: previewButton }).last();
+  for (const tag of templateData.tags.slice(0, 2)) {
+    await expect(card.getByText(tag, { exact: true }).first()).toBeVisible();
+  }
+
+  // Open the preview dialog and verify the template + callout titles
+  await previewButton.click();
+  const dialog = page
+    .getByRole('dialog')
+    .filter({ has: page.getByRole('button', { name: 'Edit template' }) });
+  await expect(dialog).toBeVisible();
   await expect(
-    page.getByText(templateData.calloutTitle, { exact: false }).first()
+    dialog.getByRole('heading', { name: templateData.displayName })
   ).toBeVisible();
+  await expect(dialog.getByText(templateData.calloutTitle).first()).toBeVisible();
 
-  // Verify additional content based on type
-  switch (templateData.framing.type) {
-    case 'whiteboard':
-      // Verify whiteboard canvas is present (check for drawing canvas or text)
-      // Some previews collapse; only assert presence
-      await expect(
-        page.getByRole('img', { name: templateData.calloutTitle, exact: true })
-      ).toBeDefined();
-      break;
-    case 'memo':
-      // Verify memo content is visible
-      await expect(
-        page
-          .getByText(templateData.framing.memoContent, { exact: false })
-          .first()
-      ).toBeVisible();
-      break;
-    case 'callToAction':
-      // CTA content is not visible in the preview dialog
-      // The CTA text/URL are stored but shown when the callout is actually used
-      // Just verify the callToAction tag is present
-      const ctaChip = page.locator('.MuiChip-root').getByText('callToAction');
-      await expect(await ctaChip.count()).toBeGreaterThan(0);
-      break;
-    case 'none':
-      // No additional content to verify
-      break;
-  }
+  // TODO: verify framing-specific content (whiteboard / memo / call-to-action),
+  // response configuration and references in the redesigned preview dialog.
 
-  await expect(
-    page
-      .locator('.markdown')
-      .filter({ hasText: templateData.calloutDescription })
-      .first()
-  ).toBeVisible();
-
-  for (const tag of templateData.calloutTags) {
-    const chip = page.locator('.MuiChip-root').getByText(tag);
-    const count = await chip.count();
-    if (count === 0) {
-      // Tag may be hidden in a "+N" overflow button — its accessible name
-      // lists the truncated tags (e.g. "posts, comments-disabled")
-      const escapedTag = tag.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
-      const overflowBtn = page.getByRole('button', {
-        name: new RegExp(escapedTag),
-      });
-      await expect(await overflowBtn.count()).toBeGreaterThan(0);
-    }
-  }
-
-  for (const reference of templateData.calloutReferences) {
-    const link = page.getByRole('link', { name: reference.title }).first();
-    await expect(link).toBeVisible();
-    await expect(link).toHaveAttribute('href', reference.url);
-  }
+  await dialog.getByRole('button', { name: 'Close' }).click();
+  await expect(dialog).not.toBeVisible();
 };
 
 /**

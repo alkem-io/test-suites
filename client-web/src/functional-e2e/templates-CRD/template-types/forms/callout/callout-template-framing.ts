@@ -1,118 +1,70 @@
-import { Page, expect } from '@playwright/test';
+/**
+ * Callout template framing ("Add to post") helpers.
+ *
+ * In the redesigned dialog, framing is chosen from the "Add to post"
+ * radiogroup (Whiteboard / Memo / Document / Call to Action / Media Gallery /
+ * Poll). When a radio is selected, type-specific inputs appear below it.
+ */
+
+import { Locator, Page, expect } from '@playwright/test';
+import { CalloutTemplateFraming } from './callout-template-form.models';
 import {
-  CalloutTemplateFramingCallToAction,
-  CalloutTemplateFramingMemo,
-  CalloutTemplateFramingWhiteboard,
-} from './callout-template-form.models';
-import {
-  clickOnEditWhiteboardPreview,
-  getWhiteboardDialog,
+  getWhiteboardEditorDialog,
   writeTextInWhiteboardDialog,
 } from '../whiteboards/whiteboard-dialog';
 
-/**
- * Helper to scope locators to the template dialog.
- */
-const getDialog = (page: Page) => page.getByRole('dialog');
+const framingRadio = (dialog: Locator, name: string): Locator =>
+  dialog
+    .getByRole('radiogroup', { name: 'Add to post' })
+    .getByRole('radio', { name, exact: true });
 
-/**
- * "None"
- */
-export const selectCalloutTemplateFramingNone = async (
-  page: Page
-): Promise<void> => {
-  const noneButton = getDialog(page).getByRole('button', {
-    name: 'None',
-    exact: true,
-  });
-  await noneButton.scrollIntoViewIfNeeded();
-  await noneButton.click();
-};
-
-/**
- * "Call To Action"
- */
-export const selectCalloutTemplateFramingCallToAction = async (
-  page: Page
-): Promise<void> => {
-  const ctaButton = getDialog(page).getByRole('button', {
-    name: 'Call To Action',
-    exact: true,
-  });
-  await ctaButton.scrollIntoViewIfNeeded();
-  await ctaButton.click();
-};
-
-export const fillCalloutTemplateFramingCallToAction = async (
+export const selectAndFillCalloutTemplateFraming = async (
   page: Page,
-  content: CalloutTemplateFramingCallToAction
+  dialog: Locator,
+  framing: CalloutTemplateFraming
 ): Promise<void> => {
-  // Fill CTA text field
-  const ctaTextField = page.getByRole('textbox', {
-    name: 'Call To Action',
-    exact: true,
-  });
-  await ctaTextField.fill(content.ctaText);
+  switch (framing.type) {
+    case 'none':
+      // No "Add to post" option selected.
+      return;
 
-  // Fill URL field
-  const urlField = page.getByRole('textbox', { name: 'URL', exact: true });
-  await urlField.fill(content.ctaUrl);
-};
+    case 'whiteboard': {
+      await framingRadio(dialog, 'Whiteboard').click();
+      // After selecting Whiteboard framing, two "Edit" buttons appear in the
+      // framing section: an icon-only one (preview thumbnail) and a labeled
+      // one (drawing). The labeled one - last in DOM order - opens the editor.
+      await dialog
+        .getByRole('button', { name: 'Edit', exact: true })
+        .last()
+        .click();
+      const editorDialog = await getWhiteboardEditorDialog(page);
+      await writeTextInWhiteboardDialog(editorDialog, framing.textInWhiteboard);
+      await editorDialog.getByRole('button', { name: 'Save' }).click();
+      await expect(editorDialog).not.toBeVisible();
+      return;
+    }
 
-/**
- * "Memo"
- */
-export const selectCalloutTemplateFramingMemo = async (
-  page: Page
-): Promise<void> => {
-  const memoButton = getDialog(page).getByRole('button', {
-    name: 'Memo',
-    exact: true,
-  });
-  await memoButton.scrollIntoViewIfNeeded();
-  await memoButton.click();
-};
+    case 'memo': {
+      await framingRadio(dialog, 'Memo').click();
+      // Selecting Memo reveals a dedicated rich-text editor with accessible
+      // name "Write your memo…". DO NOT use "Write something..." - that's the
+      // callout description and writing there would overwrite it.
+      await dialog
+        .getByRole('textbox', { name: 'Write your memo…' })
+        .fill(framing.memoContent);
+      return;
+    }
 
-export const fillCalloutTemplateFramingMemo = async (
-  page: Page,
-  content: CalloutTemplateFramingMemo
-): Promise<void> => {
-  // The memo content is the third markdown editor in the form
-  // (after template description and callout description)
-  const markdownEditor = page
-    .getByRole('textbox', { name: 'Markdown editor' })
-    .nth(2);
-
-  await markdownEditor.click();
-  await markdownEditor.fill(content.memoContent);
-};
-
-/**
- * "Whiteboard"
- */
-export const selectCalloutTemplateFramingWhiteboard = async (
-  page: Page
-): Promise<void> => {
-  const whiteboardButton = getDialog(page).getByRole('button', {
-    name: 'Whiteboard',
-    exact: true,
-  });
-  await whiteboardButton.scrollIntoViewIfNeeded();
-  await whiteboardButton.click();
-};
-
-export const fillCalloutTemplateFramingWhiteboard = async (
-  page: Page,
-  content: CalloutTemplateFramingWhiteboard
-): Promise<void> => {
-  await clickOnEditWhiteboardPreview(page);
-
-  const editorDialog = await getWhiteboardDialog(page, 'Edit whiteboard');
-
-  await writeTextInWhiteboardDialog(editorDialog, content.textInWhiteboard);
-
-  await editorDialog.getByRole('button', { name: 'Save' }).click();
-
-  // Wait for dialog to close
-  await expect(editorDialog).not.toBeVisible();
+    case 'callToAction': {
+      await framingRadio(dialog, 'Call to Action').click();
+      // Selecting "Call to Action" reveals two inputs labelled "URL" and
+      // "Display Name". Target them by their stable IDs - reference rows also
+      // expose a "URL" textbox, which would collide with role+name lookup.
+      await dialog.locator('#link-framing-url').fill(framing.ctaUrl);
+      await dialog
+        .locator('#link-framing-display-name')
+        .fill(framing.ctaText);
+      return;
+    }
+  }
 };

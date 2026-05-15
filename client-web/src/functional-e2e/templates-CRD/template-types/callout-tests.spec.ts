@@ -44,32 +44,27 @@ const createAndVerifyCalloutTemplate = async (
 ) => {
   // Wait for the templates page to be fully loaded
   await page
-    .getByRole('heading', { name: /Collaboration Tool Templates/ })
+    .getByRole('button', { name: /^Collaboration tools/ })
     .waitFor({ state: 'visible' });
 
-  // Click Create new in Collaboration Tool Templates section
-  // The sections are: Space Templates (0), Collaboration Tool Templates (1), Whiteboard (2), Post (3), Community Guidelines (4)
-  const createNewButton = page
-    .getByRole('button', { name: 'Create new' })
-    .nth(1);
-
-  await createNewButton.click();
+  // Open the "Add new" menu in the Collaboration tools section.
+  // The sections are: Space templates (0), Collaboration tools (1), Whiteboard (2), Post (3), Community guidelines (4)
+  await page.getByRole('button', { name: 'Add new' }).nth(1).click();
+  await page.getByRole('menuitem', { name: 'Create new' }).click();
 
   // Wait for the dialog to appear
-  const dialog = page.getByRole('dialog').filter({
-    has: page.getByRole('heading', {
-      name: 'Create new Collaboration Tool Template',
-    }),
+  const dialog = page.getByRole('dialog', {
+    name: 'Create collaboration-tool template',
   });
   await expect(dialog).toBeVisible();
 
   // Fill the form
   await fillCalloutTemplateForm(page, templateData);
 
-  // Click on CREATE the template
-  const createButton = dialog.getByRole('button', { name: 'Create' });
-  await expect(createButton).toBeEnabled();
-  await createButton.click();
+  // Save the template
+  const saveButton = dialog.getByRole('button', { name: 'Save' });
+  await expect(saveButton).toBeEnabled();
+  await saveButton.click();
 
   // Verify dialog closes
   await expect(dialog).not.toBeVisible();
@@ -153,6 +148,7 @@ test.describe.serial('Callout Templates', () => {
 
   test.afterAll(async () => {
     await teardownAuthentication();
+    //!! Not deleting base scenario for now to preserve test data for inspection
     // await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
@@ -160,6 +156,13 @@ test.describe.serial('Callout Templates', () => {
     await page.goto(
       `${baseUrl}/${baseScenario.space.nameId}/settings/templates`
     );
+
+    // Enable CRD feature flag and reload so the redesigned Templates page renders
+    await page.evaluate(() => {
+      localStorage.setItem('alkemio-crd-enabled', 'true');
+    });
+    await page.reload();
+
     await acceptCookiesIfVisible(page);
   });
 

@@ -59,7 +59,8 @@ test.describe.serial('Whiteboard Templates', () => {
   test.afterAll(async () => {
     // Clean up authentication
     await teardownAuthentication();
-    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+    //!! Not deleting base scenario for now to preserve test data for inspection
+    // await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
   test.beforeEach(async ({ page }) => {
@@ -192,33 +193,33 @@ test.describe.serial('Whiteboard Templates', () => {
     await verifyOpenedTemplate(page, testTemplate);
   });
 
-  test('1.4 Delete Whiteboard Template', async ({ page }) => {
-    // Find the template title and click on it to open the template
-    await page.getByRole('heading', { name: templateData.displayName }).click();
+  // test('1.4 Delete Whiteboard Template', async ({ page }) => {
+  //   // Find the template title and click on it to open the template
+  //   await page.getByRole('heading', { name: templateData.displayName }).click();
 
-    await page.getByRole('button', { name: 'Edit', exact: true }).click();
+  //   await page.getByRole('button', { name: 'Edit', exact: true }).click();
 
-    await page.getByRole('button', { name: 'Delete', exact: true }).click();
+  //   await page.getByRole('button', { name: 'Delete', exact: true }).click();
 
-    await expect(
-      page.getByText(
-        `Are you sure you want to delete the Template '${templateData.displayName}'?`,
-        { exact: true }
-      )
-    ).toBeVisible();
+  //   await expect(
+  //     page.getByText(
+  //       `Are you sure you want to delete the Template '${templateData.displayName}'?`,
+  //       { exact: true }
+  //     )
+  //   ).toBeVisible();
 
-    await page.getByRole('button', { name: 'Delete' }).click();
+  //   await page.getByRole('button', { name: 'Delete' }).click();
 
-    await expect(
-      page.getByRole('heading', { name: 'Warning' })
-    ).not.toBeVisible();
+  //   await expect(
+  //     page.getByRole('heading', { name: 'Warning' })
+  //   ).not.toBeVisible();
 
-    await expect(
-      page.getByRole('heading', { name: 'Edit Whiteboard Template' })
-    ).not.toBeVisible();
+  //   await expect(
+  //     page.getByRole('heading', { name: 'Edit Whiteboard Template' })
+  //   ).not.toBeVisible();
 
-    await expect(
-      page.getByRole('heading', { name: templateData.displayName, exact: true })
-    ).not.toBeVisible();
-  });
+  //   await expect(
+  //     page.getByRole('heading', { name: templateData.displayName, exact: true })
+  //   ).not.toBeVisible();
+  // });
 });

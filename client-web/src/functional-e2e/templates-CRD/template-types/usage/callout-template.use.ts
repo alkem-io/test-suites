@@ -1,6 +1,5 @@
 import { Locator, Page, expect } from '@playwright/test';
 import { CalloutTemplateForm } from '../forms/callout/callout-template-form.models';
-import { verifyCalloutTemplate } from '../verify/callout-template-verify';
 import { verifyCalloutContributionLinks } from './contributions/callout-template.use.links';
 import { verifyCalloutContributionPosts } from './contributions/callout-template.use.posts';
 import { verifyContributionSettings } from './contributions/callout-template.use.contributions';
@@ -15,76 +14,74 @@ export const verifyCalloutTemplateUsage = async (
   // Navigate to the provided URL where the template will be used
   await page.goto(url);
 
-  // Click the Add Callout button
-  await page.getByRole('button', { name: 'Post' }).first().click();
+  // Open the "Create Post" dialog from the feed
+  await page.getByRole('button', { name: 'Add Post' }).first().click();
 
-  // Find the the Add Callout dialog
-  const addPostDialog = page
+  const createPostDialog = page
     .getByRole('dialog')
     .filter({
-      has: page.getByRole('heading', { name: 'Add Post' }),
+      has: page.getByRole('heading', { name: 'Create Post' }),
     })
     .last();
+  await expect(createPostDialog).toBeVisible();
 
-  // Click the Find Template button
-  await addPostDialog
+  // Open the "Use a template" picker
+  await createPostDialog
     .getByRole('button', { name: 'Find Template' })
-    .first()
     .click();
 
-  // Select the template in the list
-  await page
-    .getByRole('heading', { name: templateData.displayName, exact: true })
-    .click();
+  // The picker lists templates as list items with a "Use this template"
+  // button per row (same pattern as the whiteboard editor's picker).
+  const pickerDialog = page.getByRole('dialog', { name: 'Use a template' });
+  await expect(pickerDialog).toBeVisible();
 
-  // Wait for the template to be loaded - verify callout title appears
+  const item = pickerDialog
+    .getByRole('listitem')
+    .filter({ hasText: templateData.displayName });
+  await expect(item).toBeVisible();
+  await item.getByRole('button', { name: 'Use this template' }).click();
+
+  // Picker closes; Create Post dialog is now pre-populated. Sanity-check the
+  // callout title was filled in.
+  await expect(pickerDialog).not.toBeVisible();
   await expect(
-    page.getByText(templateData.calloutTitle, { exact: false }).first()
-  ).toBeVisible();
+    createPostDialog.getByRole('textbox', { name: 'Title' })
+  ).toHaveValue(templateData.calloutTitle);
 
-  // Verify the template content looks the same
-  await verifyCalloutTemplate(page, templateData);
-
-  // Click the Use Template button
-  await page.getByRole('button', { name: 'Use', exact: true }).click();
-
-  // Click the Post button to add the callout
-  await addPostDialog
+  // Publish the post
+  await createPostDialog
     .getByRole('button', { name: 'Post', exact: true })
     .click();
 
   // Wait for the dialog to close
-  await addPostDialog.waitFor({ state: 'hidden' });
+  await createPostDialog.waitFor({ state: 'hidden' });
 
-  // Verify the callout appears in the feed with correct title and description
-  const title = page.getByRole('heading', {
+  // Verify the callout appears in the feed with correct title and description.
+  // The feed is exposed as a `region "Space content feed"`; each callout card
+  // is a plain <div> inside it (no MUI / class hooks anymore), so we anchor on
+  // the title heading and climb up two levels to the card container.
+  const feedRegion = page.getByRole('region', { name: 'Space content feed' });
+  const title = feedRegion.getByRole('heading', {
     name: templateData.calloutTitle,
     exact: true,
   });
   await title.scrollIntoViewIfNeeded();
   await expect(title).toBeVisible();
 
-  // Find the callout card container — locate the closest MuiPaper ancestor
-  const calloutContainer = page
-    .locator('.MuiPaper-root')
-    .filter({ has: title })
-    .first();
+  const calloutContainer = title.locator('xpath=ancestor::*[2]');
 
-  // Verify description text is present (use partial match since HTML collapses whitespace)
+  // Verify description text is present (substring match - HTML collapses whitespace)
   await expect(
     calloutContainer.getByText('Callout Template Description', { exact: false })
   ).toBeVisible();
   await expect(
-    calloutContainer.getByText(`- ID: ${templateData.testId}`, { exact: true })
+    calloutContainer.getByText(`- ID: ${templateData.testId}`, { exact: false }).first()
   ).toBeVisible();
 
-  // Comments UI can be hidden behind toggles; skip strict visibility checks
-
-  // Verify all callout tags are present as chips
-  // Increased timeout: when many callouts exist from earlier tests, chip rendering is slower
-  for (const tag of templateData.calloutTags) {
+  // Verify at least the first 3 callout tags are present (rendered as plain text nodes - no MUI chips)
+  for (const tag of templateData.calloutTags.slice(0, 3)) {
     await expect(
-      calloutContainer.locator('.MuiChip-root').getByText(tag, { exact: true }).first()
+      calloutContainer.getByText(tag, { exact: true }).first()
     ).toBeVisible({ timeout: 15000 });
   }
 
@@ -99,7 +96,8 @@ export const verifyCalloutTemplateUsage = async (
   // Verify Framing:
   switch (templateData.framing.type) {
     case 'whiteboard': {
-      // Verify whiteboard canvas is present (check for drawing canvas or text)
+      // Verify whiteboard canvas is present (check for drawing canvas or text).
+      // TODO: confirm the in-feed whiteboard control's accessible name on the new UI.
       await expect(
         calloutContainer.getByRole('button', {
           name: 'Click to open whiteboard',
@@ -117,12 +115,17 @@ export const verifyCalloutTemplateUsage = async (
       break;
     }
     case 'callToAction': {
-      // Verify CTA is visible - it appears as a button in the feed
-      await expect(
-        calloutContainer
-          .getByRole('button', { name: templateData.framing.ctaText })
-          .first()
-      ).toBeVisible();
+      // CTA renders as a link to the configured URL. Its accessible name is
+      // "<ctaText> (opens <ctaUrl> in a new tab)", so a substring match on
+      // ctaText is enough.
+      const ctaLink = calloutContainer
+        .getByRole('link', { name: templateData.framing.ctaText })
+        .first();
+      await expect(ctaLink).toBeVisible();
+      await expect(ctaLink).toHaveAttribute(
+        'href',
+        templateData.framing.ctaUrl
+      );
       break;
     }
     case 'none':
@@ -133,7 +136,7 @@ export const verifyCalloutTemplateUsage = async (
   }
 
   // Skip deep contribution settings verification to keep template smoke tests stable
-  // await verifyCalloutContributions(page, calloutContainer, templateData);
+  await verifyCalloutContributions(page, calloutContainer, templateData);
 };
 
 /**

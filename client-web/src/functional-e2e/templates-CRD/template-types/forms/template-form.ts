@@ -14,15 +14,19 @@ export const fillTemplateForm = async (
     .getByRole('textbox', { name: 'Template name' })
     .fill(templateData.displayName);
 
-  // Fill in the template description
+  // Fill in the template description. The Description textbox is targeted by
+  // its placeholder because reference rows (used by community-guidelines and
+  // callout templates) also expose a textbox with accessible name "Description".
   await scope
-    .getByRole('textbox', { name: 'Description' })
+    .getByPlaceholder('What is this template for?')
     .fill(templateData.description);
 
-  // Fill the tags - type each tag and press Enter
-  const tagsInput = scope.getByRole('textbox', {
-    name: 'Add a tag and press Enter',
-  });
+  // Fill the tags - type each tag and press Enter. Use `.first()` because the
+  // callout create/edit dialog has a second "Add a tag and press Enter" textbox
+  // for the callout's own tags; the template-level one is always first in DOM.
+  const tagsInput = scope
+    .getByRole('textbox', { name: 'Add a tag and press Enter' })
+    .first();
   for (const tag of templateData.tags) {
     await tagsInput.fill(tag);
     await tagsInput.press('Enter');

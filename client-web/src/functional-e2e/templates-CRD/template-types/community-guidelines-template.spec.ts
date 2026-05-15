@@ -40,7 +40,7 @@ const templateData: CommunityGuidelinesTemplateForm = {
   displayName: 'Test Community Guidelines Template',
   description:
     'This is a test template for community guidelines. It defines the expected behavior and conduct within the community.',
-  tags: ['template', 'CG'],
+  tags: ['template', 'cg'],
   guidelines: {
     displayName: 'Community Code of Conduct',
     description:
@@ -66,6 +66,7 @@ test.describe.serial('Community Guidelines Template', () => {
   test.afterAll(async () => {
     // Clean up authentication
     await teardownAuthentication();
+    //!! Not deleting base scenario for now to preserve test data for inspection
     // await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
   test.beforeEach(async ({ page }) => {
