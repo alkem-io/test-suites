@@ -12,7 +12,6 @@ import { Locator, Page, expect } from '@playwright/test';
 import { CalloutTemplateResponseCollection } from '../callout-template-form.models';
 import {
   getWhiteboardEditorDialog,
-  openWhiteboardEditor,
   writeTextInWhiteboardDialog,
 } from '../../whiteboards/whiteboard-dialog';
 
@@ -94,7 +93,8 @@ export const selectAndFillCalloutCollection = async (
       await defaultsDialog
         .getByRole('textbox', { name: 'Default title' })
         .fill(collection.defaultTitle);
-      // TODO: verify the memo default-content editor's accessible name.
+      // Memos defaults dialog reuses the same rich-text editor as Posts -
+      // confirmed against the live CRD UI (May 2026).
       await defaultsDialog
         .getByRole('textbox', {
           name: 'Guidance shown when a member starts a new contribution',
@@ -112,8 +112,16 @@ export const selectAndFillCalloutCollection = async (
       await defaultsDialog
         .getByRole('textbox', { name: 'Default title' })
         .fill(collection.defaultTitle);
-      // The default whiteboard is edited via an embedded Excalidraw canvas.
-      await openWhiteboardEditor(page);
+      // The "Default whiteboard" section has two Edit buttons (icon-only
+      // thumbnail and labeled). The labeled one - last in DOM order - opens
+      // the Excalidraw editor. (NB: `openWhiteboardEditor` from
+      // whiteboard-dialog.ts looks for `Start drawing` / `Edit drawing`
+      // which only exist in the standalone whiteboard-template form, not
+      // here.)
+      await defaultsDialog
+        .getByRole('button', { name: 'Edit', exact: true })
+        .last()
+        .click();
       const editorDialog = await getWhiteboardEditorDialog(page);
       await writeTextInWhiteboardDialog(editorDialog, collection.textInWhiteboard);
       await editorDialog.getByRole('button', { name: 'Save' }).click();

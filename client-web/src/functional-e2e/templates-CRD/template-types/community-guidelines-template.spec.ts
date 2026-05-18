@@ -228,9 +228,51 @@ test.describe.serial('Community Guidelines Template', () => {
     await verifyCommunityGuidelinesTemplate(page, templateData);
   });
 
-  // TODO: test '1.4 Use Community Guidelines Template' needs to be rewritten
-  // for the redesigned community settings UI (the "Community guidelines" block
-  // and its template-library picker). Skipped for now.
+  test('1.4 Use Community Guidelines Template', async ({ page }) => {
+    // Navigate to the redesigned community settings page (no longer a sub-tab
+    // of the space - it's reachable directly via /settings/community).
+    await page.goto(
+      `${baseUrl}/${baseScenario.space.nameId}/settings/community`
+    );
+
+    // The "Community Guidelines" block is collapsed by default. The trigger is
+    // a button whose accessible name combines the heading + helper paragraph.
+    const guidelinesSection = page.getByRole('button', {
+      name: /^Community Guidelines/,
+    });
+    await guidelinesSection.click();
+
+    // Open the picker. If the block already had data (e.g. a previous run
+    // applied a template), an alertdialog asks to confirm overwriting it.
+    await page.getByRole('button', { name: 'Use a template' }).click();
+    const replaceAlert = page.getByRole('alertdialog', {
+      name: 'Replace the current guidelines?',
+    });
+    if (await replaceAlert.isVisible({ timeout: 500 }).catch(() => false)) {
+      await replaceAlert.getByRole('button', { name: 'Replace' }).click();
+    }
+
+    // "Use a template" picker dialog - identical shape to the callout-template
+    // picker: list of listitems, each with a "Use this template" button.
+    const pickerDialog = page.getByRole('dialog', { name: 'Use a template' });
+    await expect(pickerDialog).toBeVisible();
+
+    const item = pickerDialog
+      .getByRole('listitem')
+      .filter({ hasText: templateData.displayName });
+    await expect(item).toBeVisible();
+    await item.getByRole('button', { name: 'Use this template' }).click();
+    await expect(pickerDialog).not.toBeVisible();
+
+    // The picker fills in the guidelines block inline. Verify the title input
+    // and rich-text body were populated from the template.
+    await expect(
+      page.getByRole('textbox', { name: 'Title' })
+    ).toHaveValue(templateData.guidelines.displayName);
+    await expect(
+      page.getByText(templateData.guidelines.description, { exact: true })
+    ).toBeVisible();
+  });
 
   // test('1.5 Delete Community Guidelines Template', async ({ page }) => {
   //   // Delete flow not yet implemented for the redesigned Templates UI.

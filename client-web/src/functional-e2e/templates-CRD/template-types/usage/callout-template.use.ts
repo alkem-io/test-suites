@@ -96,13 +96,13 @@ export const verifyCalloutTemplateUsage = async (
   // Verify Framing:
   switch (templateData.framing.type) {
     case 'whiteboard': {
-      // Verify whiteboard canvas is present (check for drawing canvas or text).
-      // TODO: confirm the in-feed whiteboard control's accessible name on the new UI.
+      // The in-feed whiteboard control is a button labelled "Open Whiteboard"
+      // (validated against the live CRD UI on 2026-05-18). Always visible -
+      // unlike the legacy MUI overlay-on-hover. There's also a "Open Whiteboard"
+      // affordance on the standalone whiteboard editor, hence `.first()`.
       await expect(
-        calloutContainer.getByRole('button', {
-          name: 'Click to open whiteboard',
-        })
-      ).toBeDefined(); // Don't use toBeVisible because it's only visible on hover
+        calloutContainer.getByRole('button', { name: 'Open Whiteboard' }).first()
+      ).toBeVisible();
       break;
     }
     case 'memo': {
@@ -135,7 +135,6 @@ export const verifyCalloutTemplateUsage = async (
     }
   }
 
-  // Skip deep contribution settings verification to keep template smoke tests stable
   await verifyCalloutContributions(page, calloutContainer, templateData);
 };
 

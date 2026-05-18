@@ -57,9 +57,13 @@ export const selectAndFillCalloutTemplateFraming = async (
 
     case 'callToAction': {
       await framingRadio(dialog, 'Call to Action').click();
-      // Selecting "Call to Action" reveals two inputs labelled "URL" and
-      // "Display Name". Target them by their stable IDs - reference rows also
-      // expose a "URL" textbox, which would collide with role+name lookup.
+      // Selecting "Call to Action" reveals two inputs - validated against the
+      // live CRD UI:
+      //   #link-framing-url           <input type="url"> labelled "URL"
+      //   #link-framing-display-name  <input type="text"> labelled "Display Name"
+      // Stable IDs are used rather than getByLabel('URL') because reference
+      // rows also expose a "URL" textbox, which would collide with role+name
+      // / label lookups when both CTA framing and references are present.
       await dialog.locator('#link-framing-url').fill(framing.ctaUrl);
       await dialog
         .locator('#link-framing-display-name')

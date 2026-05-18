@@ -5,9 +5,13 @@ import { CalloutTemplateForm } from '../../forms/callout/callout-template-form.m
  * Returns the dialog used to add a single contribution (link / post / memo /
  * whiteboard) to a callout from the space feed.
  *
- * NOTE: only linksFiles is confirmed against the redesigned UI. Other
- * contribution-creation dialog titles are TODO and will need to be updated when
- * those response variants are exercised.
+ * Confirmation status against the live CRD UI (2026-05-18):
+ *  - linksFiles: VALIDATED. Dialog heading is "Add links or attach documents".
+ *  - posts / memos / whiteboards: NOT YET validated - the discovery session
+ *    only had linksFiles- and none-response callouts placed in the feed. The
+ *    titles below are best-effort guesses based on the create-post/memo/
+ *    whiteboard naming convention used elsewhere in the new UI. Update once
+ *    a posts/memos/whiteboards-response callout is placed in the test scenario.
  */
 export const getCreateContributionDialog = async (
   page: Page,
@@ -20,18 +24,20 @@ export const getCreateContributionDialog = async (
       break;
     }
     case 'posts': {
-      // TODO: confirm the redesigned dialog title for posts.
-      dialogTitle = `Submit your answer to ${templateData.calloutTitle}`;
+      // Speculative: the in-feed "Add post" button likely opens a `Create post`
+      // dialog (lowercase, matching the create-template "Create collaboration-
+      // tool template" pattern).
+      dialogTitle = 'Create post';
       break;
     }
     case 'memos': {
-      // TODO: confirm the redesigned dialog title for memos.
-      dialogTitle = 'Create new memo';
+      // Speculative.
+      dialogTitle = 'Create memo';
       break;
     }
     case 'whiteboards': {
-      // TODO: confirm the redesigned dialog title for whiteboards.
-      dialogTitle = 'Create new whiteboard';
+      // Speculative.
+      dialogTitle = 'Create whiteboard';
       break;
     }
     default: {
@@ -121,19 +127,27 @@ export const verifyContributionSettings = async (
     });
   }
 
-  // Posts have an extra "Enable comments" switch (comments-on-contributions).
-  if (templateData.responseOptions.type === 'posts') {
-    const commentsSwitch = editDialog.getByRole('switch', {
-      name: 'Enable comments',
-    });
-    await expect(commentsSwitch).toBeAttached();
-    await expect(commentsSwitch).toBeChecked({
-      checked: templateData.responseOptions.enableCommentsOnPosts,
-    });
-  }
+  // NOTE: the in-feed Edit Post dialog does NOT expose the "Enable comments"
+  // switch (for Posts response) nor a "Set Default Response" button - those
+  // controls are only present in the template-create dialog. See
+  // ../../../CLIENT_BUGS.md entry "In-feed Edit Post dialog hides Posts-response
+  // defaults" for details. The defaultTitle / defaultDescription /
+  // textInWhiteboard / enableCommentsOnPosts values are verified at template
+  // creation time (verifyCalloutTemplate).
 
-  // TODO: for posts / memos / whiteboards, open "Set Default Response" and
-  // verify defaultTitle / defaultDescription / textInWhiteboard.
+  // The callout-level "Allow comments" switch lives behind a "More options"
+  // expander in the in-feed Edit Post dialog. Expand it before asserting.
+  const moreOptions = editDialog.getByRole('button', { name: 'More options' });
+  if (await moreOptions.isVisible().catch(() => false)) {
+    await moreOptions.click();
+  }
+  const allowCommentsSwitch = editDialog.getByRole('switch', {
+    name: 'Allow comments',
+  });
+  await expect(allowCommentsSwitch).toBeAttached();
+  await expect(allowCommentsSwitch).toBeChecked({
+    checked: templateData.commentsEnabled,
+  });
 
   // Close the edit dialog without saving. If Cancel triggers a "Discard
   // your changes?" alertdialog (e.g. because the dialog auto-normalised some

@@ -75,21 +75,21 @@ const fillCalloutBaseFields = async (
     templateData.commentsEnabled
   );
 
-  // Callout references
+  // Callout references. Reference rows are plain <div> blocks (not <li>) - each
+  // exposes a "Remove reference" button plus Title / URL / Description inputs.
+  // Anchor on the Remove button and walk up two levels to get the row container.
   const references = templateData.calloutReferences ?? [];
   if (references.length > 0) {
-    const referenceRows = dialog
-      .getByRole('listitem')
-      .filter({ has: dialog.getByRole('button', { name: 'Remove reference' }) });
-    const existing = await referenceRows.count();
+    const removeButtons = dialog.getByRole('button', { name: 'Remove reference' });
+    const existing = await removeButtons.count();
     for (let i = existing; i < references.length; i++) {
       await dialog
         .getByRole('button', { name: 'Add another reference' })
         .click();
     }
     for (let i = 0; i < references.length; i++) {
-      const row = referenceRows.nth(i);
-      await row.getByRole('textbox', { name: 'Name' }).fill(references[i].title);
+      const row = removeButtons.nth(i).locator('..').locator('..');
+      await row.getByRole('textbox', { name: 'Title' }).fill(references[i].title);
       await row.getByRole('textbox', { name: 'URL' }).fill(references[i].url);
     }
   }

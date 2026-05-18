@@ -43,7 +43,7 @@ const templateData: PostTemplateForm = {
     'This template streamlines announcement posts with a ready-to-use structure for updates and calls to action.',
   tags: ['template', 'post'],
   defaultContent:
-    'Collaboration Update - Keep stakeholders aligned with the latest milestones, blockers, and next steps.',
+    '# Collaboration Update\n\nKeep stakeholders aligned with the latest milestones, blockers, and next steps.',
 };
 
 test.describe.serial('Post Templates', () => {
