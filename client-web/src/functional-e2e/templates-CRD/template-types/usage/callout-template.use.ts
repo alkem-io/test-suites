@@ -78,10 +78,16 @@ export const verifyCalloutTemplateUsage = async (
     calloutContainer.getByText(`- ID: ${templateData.testId}`, { exact: false }).first()
   ).toBeVisible();
 
-  // Verify at least the first 3 callout tags are present (rendered as plain text nodes - no MUI chips)
+  // Verify at least the first 3 callout tags are present. Tag chips render
+  // twice for the responsive-overflow layout: a `visibility: hidden`
+  // measuring copy first in DOM order, then the visible chip. `.first()`
+  // alone would pin the hidden duplicate, so filter to visible matches.
   for (const tag of templateData.calloutTags.slice(0, 3)) {
     await expect(
-      calloutContainer.getByText(tag, { exact: true }).first()
+      calloutContainer
+        .getByText(tag, { exact: true })
+        .filter({ visible: true })
+        .first()
     ).toBeVisible({ timeout: 15000 });
   }
 

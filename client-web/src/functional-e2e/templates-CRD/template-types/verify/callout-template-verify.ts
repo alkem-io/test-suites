@@ -36,10 +36,16 @@ export const verifyCalloutTemplate = async (
   });
   await expect(previewButton).toBeVisible();
 
-  // The card shows the first couple of (template-level) tags
-  const card = page.getByRole('listitem').filter({ has: previewButton }).last();
+  // The card shows the first couple of (template-level) tags. Each tag chip
+  // is rendered twice: an absolute-positioned invisible "measuring" copy
+  // (used by the responsive overflow logic) appears first in DOM order, then
+  // the actual visible chip. Filter to visible matches so we don't pin the
+  // hidden duplicate.
+  const card = page.locator('li').filter({ has: previewButton }).last();
   for (const tag of templateData.tags.slice(0, 2)) {
-    await expect(card.getByText(tag, { exact: true }).first()).toBeVisible();
+    await expect(
+      card.getByText(tag, { exact: true }).filter({ visible: true }).first()
+    ).toBeVisible();
   }
 
   // Open the preview dialog

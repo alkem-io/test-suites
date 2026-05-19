@@ -140,6 +140,48 @@ const createAndVerifyCalloutTemplate = async (
 // Callout with references test:
 // |        |  41| None               | None             | Disabled         | N/A                | N/A                | N/A                |
 
+// =========================================================================================================================================
+//   POLL FRAMING TESTS (Additional Content = Poll)
+// =========================================================================================================================================
+// Focus: every combination of the four poll-specific settings exposed in the
+// in-form "Poll Settings" sub-dialog (button "Settings" inside the Poll editor).
+//
+// The four settings (booleans) under test:
+//   • Multi-vote  → switch "Allow multiple responses"            (default OFF)
+//   • AddOptions  → switch "Allow contributors to add options"   (default OFF)
+//   • HideResults → switch "Hide results until user votes"       (default OFF)
+//   • ShowVoters  → switch "Show voter avatars"                  (default ON)
+//                   (ShowVoters=OFF == anonymous vote / no who-voted-what)
+//
+// Held constant (orthogonal coverage already lives in tests 1–40):
+//   • Response Options = None
+//   • Comments Enabled = Disabled
+//
+// The number of poll options varies per test (2 / 3 / 4 / 5 / 10) — covered for
+// breadth, NOT a primary axis. Each test just creates the configured number
+// of options with placeholder labels.
+//
+// 2^4 = 16 combinations → tests 42–57.
+//
+// | Status | No  | # Opts | Multi-vote | AddOptions | HideResults | ShowVoters | Notes                                            |
+// |--------|-----|--------|------------|------------|-------------|------------|--------------------------------------------------|
+// | ⬜     | 42  |   2    | OFF        | OFF        | OFF         | OFF        | minimal poll, anonymous                          |
+// | ⬜     | 43  |   3    | OFF        | OFF        | OFF         | ON         | UI defaults (ShowVoters=ON)                      |
+// | ⬜     | 44  |   3    | OFF        | OFF        | ON          | OFF        | hidden-until-vote + anonymous                    |
+// | ⬜     | 45  |   4    | OFF        | OFF        | ON          | ON         | hidden-until-vote, voters visible                |
+// | ⬜     | 46  |   3    | OFF        | ON         | OFF         | OFF        | crowdsourced options, anonymous                  |
+// | ⬜     | 47  |   3    | OFF        | ON         | OFF         | ON         | crowdsourced options, voters visible             |
+// | ⬜     | 48  |   4    | OFF        | ON         | ON          | OFF        | crowdsourced + hidden + anonymous                |
+// | ⬜     | 49  |   3    | OFF        | ON         | ON          | ON         | crowdsourced + hidden, voters visible            |
+// | ⬜     | 50  |   3    | ON         | OFF        | OFF         | OFF        | multi-vote, anonymous                            |
+// | ⬜     | 51  |   2    | ON         | OFF        | OFF         | ON         | multi-vote, voters visible                       |
+// | ⬜     | 52  |   4    | ON         | OFF        | ON          | OFF        | multi-vote + hidden + anonymous                  |
+// | ⬜     | 53  |   3    | ON         | OFF        | ON          | ON         | multi-vote + hidden, voters visible              |
+// | ⬜     | 54  |   5    | ON         | ON         | OFF         | OFF        | multi-vote + crowdsourced, anonymous             |
+// | ⬜     | 55  |   3    | ON         | ON         | OFF         | ON         | multi-vote + crowdsourced, voters visible        |
+// | ⬜     | 56  |  10    | ON         | ON         | ON          | OFF        | all-on, anonymous, max option count              |
+// | ⬜     | 57  |   3    | ON         | ON         | ON          | ON         | all four settings ON                             |
+
 test.describe.serial('Callout Templates', () => {
   test.beforeAll(async ({ browser }) => {
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);

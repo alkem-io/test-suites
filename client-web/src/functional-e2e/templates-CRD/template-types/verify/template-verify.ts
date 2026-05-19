@@ -24,12 +24,17 @@ export const verifyTemplate = async (page: Page, templateData: TemplateForm) => 
     .filter({ has: previewButton })
     .last();
 
-  // Description and the first couple of tags are shown on the card
+  // Description and the first couple of tags are shown on the card. Each tag
+  // chip is rendered twice (invisible measuring copy first in DOM order,
+  // visible chip second) for the responsive-overflow layout, so filter to the
+  // visible match to avoid pinning the hidden duplicate.
   await expect(
     templateCard.getByText(templateData.description, { exact: true })
   ).toBeVisible();
   for (const tag of templateData.tags.slice(0, 2)) {
-    await expect(templateCard.getByText(tag, { exact: true }).first()).toBeVisible();
+    await expect(
+      templateCard.getByText(tag, { exact: true }).filter({ visible: true }).first()
+    ).toBeVisible();
   }
 
   // Open the preview dialog and verify name + description there
