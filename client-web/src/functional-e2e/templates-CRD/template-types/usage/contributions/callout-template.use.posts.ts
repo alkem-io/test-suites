@@ -109,10 +109,10 @@ export const verifyCalloutContributionPosts = async (
       .first()
   ).toBeVisible();
 
-  // Comments-on-contributions indicator: when enabled the post-detail dialog
-  // renders a `heading "Discussion"` (with comment count + comment input).
-  // When disabled, that section is omitted. (The legacy `button "Comments"`
-  // selector is gone — `Discussion` is the new structural anchor.)
+  // Comments-on-contributions indicator. The `Discussion` heading is only
+  // visible when comments are enabled or when there are already comments on
+  // the post. Since this is a freshly created post with no prior comments,
+  // the heading visibility directly reflects the `enableCommentsOnPosts` flag.
   const discussionHeading = postDetail.getByRole('heading', {
     name: 'Discussion',
   });

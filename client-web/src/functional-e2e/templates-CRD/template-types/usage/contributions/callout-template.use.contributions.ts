@@ -24,20 +24,15 @@ export const getCreateContributionDialog = async (
       break;
     }
     case 'posts': {
-      // Speculative: the in-feed "Add post" button likely opens a `Create post`
-      // dialog (lowercase, matching the create-template "Create collaboration-
-      // tool template" pattern).
       dialogTitle = 'Create post';
       break;
     }
     case 'memos': {
-      // Speculative.
-      dialogTitle = 'Create memo';
+      dialogTitle = 'Create new memo';
       break;
     }
     case 'whiteboards': {
-      // Speculative.
-      dialogTitle = 'Create whiteboard';
+      dialogTitle = 'Create new whiteboard';
       break;
     }
     default: {
@@ -127,13 +122,18 @@ export const verifyContributionSettings = async (
     });
   }
 
-  // NOTE: the in-feed Edit Post dialog does NOT expose the "Enable comments"
-  // switch (for Posts response) nor a "Set Default Response" button - those
-  // controls are only present in the template-create dialog. See
-  // ../../../CLIENT_BUGS.md entry "In-feed Edit Post dialog hides Posts-response
-  // defaults" for details. The defaultTitle / defaultDescription /
-  // textInWhiteboard / enableCommentsOnPosts values are verified at template
-  // creation time (verifyCalloutTemplate).
+  // The Enable-comments-on-contributions switch IS exposed in the in-feed Edit
+  // Post dialog for posts responses (validated 2026-05-19 — the earlier audit
+  // had tested against a linksFiles callout where this switch doesn't apply).
+  if (templateData.responseOptions.type === 'posts') {
+    const enableCommentsSwitch = editDialog.getByRole('switch', {
+      name: 'Enable comments',
+    });
+    await expect(enableCommentsSwitch).toBeAttached();
+    await expect(enableCommentsSwitch).toBeChecked({
+      checked: templateData.responseOptions.enableCommentsOnPosts,
+    });
+  }
 
   // The callout-level "Allow comments" switch lives behind a "More options"
   // expander in the in-feed Edit Post dialog. Expand it before asserting.
@@ -148,6 +148,59 @@ export const verifyContributionSettings = async (
   await expect(allowCommentsSwitch).toBeChecked({
     checked: templateData.commentsEnabled,
   });
+
+  // For posts/memos/whiteboards: verify the saved defaultTitle / default body
+  // by opening "Set Default Response". This is a round-trip of what the
+  // template-creation flow filled. Dialog name pattern:
+  //   posts       -> "Posts defaults"
+  //   memos       -> "Memos defaults"
+  //   whiteboards -> "Whiteboards defaults"
+  // Posts/Memos share the same shape (Default title + rich-text body); the
+  // Whiteboards defaults dialog replaces the rich-text body with a "Default
+  // whiteboard" preview section (two Edit buttons - icon-only + labelled,
+  // same pattern as framing whiteboard).
+  if (
+    templateData.responseOptions.type === 'posts' ||
+    templateData.responseOptions.type === 'memos' ||
+    templateData.responseOptions.type === 'whiteboards'
+  ) {
+    await editDialog
+      .getByRole('button', { name: 'Set Default Response' })
+      .click();
+    const defaultsDialog = page.getByRole('dialog', { name: /defaults$/ });
+    await expect(defaultsDialog).toBeVisible();
+
+    await expect(
+      defaultsDialog.getByRole('textbox', { name: 'Default title' })
+    ).toHaveValue(templateData.responseOptions.defaultTitle);
+
+    if (
+      templateData.responseOptions.type === 'posts' ||
+      templateData.responseOptions.type === 'memos'
+    ) {
+      await expect(
+        defaultsDialog.getByText(
+          templateData.responseOptions.defaultDescription,
+          { exact: false }
+        )
+      ).toBeVisible();
+    } else {
+      // Whiteboards defaults: the canvas content can't easily be asserted on,
+      // but the "Default whiteboard" section + its labelled "Edit" button only
+      // mount when a default whiteboard is saved on the response.
+      await expect(
+        defaultsDialog.getByText('Default whiteboard', { exact: true })
+      ).toBeVisible();
+      await expect(
+        defaultsDialog
+          .getByRole('button', { name: 'Edit', exact: true })
+          .last()
+      ).toBeVisible();
+    }
+
+    await defaultsDialog.getByRole('button', { name: 'Cancel' }).click();
+    await expect(defaultsDialog).not.toBeVisible();
+  }
 
   // Close the edit dialog without saving. If Cancel triggers a "Discard
   // your changes?" alertdialog (e.g. because the dialog auto-normalised some
