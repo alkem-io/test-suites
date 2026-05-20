@@ -3,15 +3,9 @@ import { CalloutTemplateForm } from '../../forms/callout/callout-template-form.m
 
 /**
  * Returns the dialog used to add a single contribution (link / post / memo /
- * whiteboard) to a callout from the space feed.
- *
- * Confirmation status against the live CRD UI (2026-05-18):
- *  - linksFiles: VALIDATED. Dialog heading is "Add links or attach documents".
- *  - posts / memos / whiteboards: NOT YET validated - the discovery session
- *    only had linksFiles- and none-response callouts placed in the feed. The
- *    titles below are best-effort guesses based on the create-post/memo/
- *    whiteboard naming convention used elsewhere in the new UI. Update once
- *    a posts/memos/whiteboards-response callout is placed in the test scenario.
+ * whiteboard) to a callout from the space feed. Dialog headings validated
+ * against the live CRD UI (linksFiles 2026-05-18, posts/memos/whiteboards
+ * 2026-05-20).
  */
 export const getCreateContributionDialog = async (
   page: Page,
@@ -57,7 +51,7 @@ export const getCreateContributionDialog = async (
  * switches (no separate "Collection settings" sub-dialog). For posts/memos/
  * whiteboards, default-title / default-description / default-whiteboard live
  * inside a `<Type> defaults` sub-dialog reached via "Set Default Response" -
- * those aren't verified here yet (see TODO).
+ * these are round-tripped below.
  */
 export const verifyContributionSettings = async (
   page: Page,
