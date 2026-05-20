@@ -193,7 +193,6 @@ const createAndVerifyCalloutTemplate = async (
 test.describe.serial('Callout Templates', () => {
   test.beforeAll(async ({ browser }) => {
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
-    baseScenario.space.nameId = 'callout-none-templ-a63025';
     await setupAuthentication(browser, TestUserManager.users.spaceAdmin.email);
   });
 
