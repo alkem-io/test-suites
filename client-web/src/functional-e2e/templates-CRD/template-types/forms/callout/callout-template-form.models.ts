@@ -145,6 +145,7 @@ export interface CalloutTemplateForm extends TemplateForm {
 }
 
 export const createCalloutTemplateData = ({
+  testNumber,
   framingType,
   commentsEnabled,
   responseType,
@@ -158,6 +159,7 @@ export const createCalloutTemplateData = ({
   pollHideResults = false,
   pollShowVoters = true,
 }: {
+    testNumber: string,
     framingType: CalloutTemplateFramingType,
     commentsEnabled: boolean,
     responseType: CalloutTemplateResponseType,
@@ -246,7 +248,18 @@ export const createCalloutTemplateData = ({
     default:
   }
 
+  const pollDescription = framingType === 'poll' ?
+  ` poll:${pollMultiVote ? 'Multivote ' : 'Singlevote '}
+        ${pollAllowAddOptions ? 'AddOptionsAllowed ' : 'NoAddOptions '}
+        ${pollHideResults ? 'HideResults ' : 'ViewResults '}
+        ${pollShowVoters ? 'ShowVoters' : 'HideVoters'}` : '';
+
+  const pollDescriptionShort = framingType === 'poll' ?
+    ` poll:${pollMultiVote ? 'M' : 'S'}${pollAllowAddOptions ? 'A' : 'N'}${pollHideResults ? 'H' : 'V'}${pollShowVoters ? 'V' : 'A'}` :
+    '';
+
   const calloutDescription = `
+  Test: ${testNumber}
   Callout Template Description
   - ID: ${hexId}
   - AC: ${framingType}
@@ -255,18 +268,20 @@ export const createCalloutTemplateData = ({
   - Admins can contribute: ${contributionsEnabledAdmin}
   - Members can contribute: ${contributionsEnabledMember}
   - Comments on contributions: ${commentsOnContributionsEnabled}
+  ${pollDescription}
   ` : '');
+
 
   return {
     testId: hexId,
     // Template metadata
-    displayName: `CTtit ${hexId} - AC:${framingType}, Response:${responseType}, Com:${commentsEnabled ? 'On' : 'Off'}`,
+    displayName: `${testNumber}. CTtit ${hexId} F:${framingType}, R:${responseType}, Com:${commentsEnabled ? 'On' : 'Off'}${pollDescriptionShort}`,
     description: calloutDescription,
-    tags: [hexId, 'callout', 'template', framingType, responseType, commentsEnabled ? 'comments-enabled' : 'comments-disabled'],
+    tags: [hexId, 'callout', 'template', framingType, responseType, commentsEnabled ? 'comm-on' : 'comm-off'],
 
     // Callout base fields
-    calloutTitle: `CTit ${hexId} - AC:${framingType}, Resp:${responseType}, Com:${commentsEnabled ? 'On' : 'Off'}`,
-    calloutTags: [hexId, 'callout', 'tags', framingType, responseType, commentsEnabled ? 'comments-enabled' : 'comments-disabled'],
+    calloutTitle: `CTit ${hexId} F:${framingType}, R:${responseType}, Com:${commentsEnabled ? 'On' : 'Off'}`,
+    calloutTags: [hexId, 'callout', 'tags', framingType, responseType, commentsEnabled ? 'comm-on' : 'comm-off'],
     calloutDescription: `Callout Description ${calloutDescription}`,
     calloutReferences,
 

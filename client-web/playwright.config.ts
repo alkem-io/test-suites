@@ -32,9 +32,8 @@ export default defineConfig({
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
     headless: process.env.UI_HEADLESS !== 'false',
-    // Temporary: slow down actions for local debugging (ms between each step)
   },
-  timeout: (process.env.ALKEMIO_BASE_URL || '').includes('localhost') ? 120000 : 60000,
+  timeout: (process.env.ALKEMIO_BASE_URL || '').includes('localhost') ? 30000 : 60000,
 
   expect: {
     timeout: 10 * 500,

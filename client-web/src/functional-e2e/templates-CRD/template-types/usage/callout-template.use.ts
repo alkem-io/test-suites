@@ -135,27 +135,63 @@ export const verifyCalloutTemplateUsage = async (
       break;
     }
     case 'poll': {
-      // In-feed poll structure (validated against live CRD UI on 2026-05-19):
-      //   <radiogroup aria-label="<question>">
-      //     <radio aria-label="<option> (<voteCount>)"/> × N
-      //   </radiogroup>
-      // The question text is also rendered as a plain text node above the
-      // radiogroup, but the radiogroup's accessible name uniquely identifies
-      // the poll. Vote count starts at 0 on a freshly-created callout.
-      const pollGroup = calloutContainer.getByRole('radiogroup', {
-        name: templateData.framing.question,
-      });
-      await expect(pollGroup).toBeVisible();
-      for (const option of templateData.framing.options) {
+      // In-feed poll (validated against the live CRD UI on 2026-05-20). Each
+      // option is a `<button role="radio|checkbox">` with NO accessible name -
+      // the option label is a sibling text node - so options are matched by
+      // their visible label text, not by control name. The radiogroup, when
+      // present, is named "Poll" (not the question), so we don't anchor on it.
+      const { settings, options } = templateData.framing;
+
+      for (const option of options) {
         await expect(
-          pollGroup.getByRole('radio', { name: `${option}` })
+          calloutContainer.getByText(option, { exact: false }).first()
         ).toBeVisible();
       }
-      // Poll-settings flags (multi-vote / anonymity / hide-results /
-      // add-options) are not directly observable on the in-feed card without
-      // voting — they take effect after a user interacts. Coverage of those
-      // behaviours belongs in a separate, vote-driven test (out of scope
-      // here: the template round-trip is what we're asserting).
+
+      // All four Poll Settings flags are observable on this freshly-created
+      // (zero-vote) callout - no need to cast a vote:
+
+      // 1) Allow multiple responses -> options render as checkboxes (multi)
+      //    instead of radios (single). Assert the configured control is used
+      //    and the other is absent.
+      const optionRole = settings.allowMultipleResponses ? 'checkbox' : 'radio';
+      const wrongRole = settings.allowMultipleResponses ? 'radio' : 'checkbox';
+      await expect(calloutContainer.getByRole(optionRole).first()).toBeVisible();
+      await expect(calloutContainer.getByRole(wrongRole)).toHaveCount(0);
+
+      // 2) Allow contributors to add options -> an "Add your own option..."
+      //    button is rendered on the card.
+      const addOption = calloutContainer.getByRole('button', {
+        name: /Add your own option/,
+      });
+      if (settings.allowContributorsToAddOptions && options.length < 10) {
+        await expect(addOption).toBeVisible();
+      } else {
+        await expect(addOption).toHaveCount(0);
+      }
+
+      // 3) Show voter avatars OFF -> the poll is anonymous and renders an
+      //    "Anonymous poll" label. ON -> no such label (voter avatars shown
+      //    once votes exist instead).
+      const anonymousLabel = calloutContainer.getByText('Anonymous poll', {
+        exact: true,
+      });
+      if (settings.showVoterAvatars) {
+        await expect(anonymousLabel).toHaveCount(0);
+      } else {
+        await expect(anonymousLabel).toBeVisible();
+      }
+
+      // 4) Hide results until user votes -> before the viewer votes, per-option
+      //    vote tallies "(n)" are hidden. With the setting OFF the "(0)" counts
+      //    are shown immediately; with it ON nothing is shown until a vote is
+      //    cast (this callout has no votes yet).
+      const voteTallies = calloutContainer.getByText(/\(\d+\)/);
+      if (settings.hideResultsUntilUserVotes) {
+        await expect(voteTallies).toHaveCount(0);
+      } else {
+        await expect(voteTallies.first()).toBeVisible();
+      }
       break;
     }
     case 'none':

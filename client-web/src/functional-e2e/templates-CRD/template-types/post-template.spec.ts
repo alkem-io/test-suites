@@ -189,7 +189,7 @@ test.describe.serial('Post Templates', () => {
 
     // Cancel and discard the changes (Cancel triggers the "Discard changes?" dialog)
     await page.getByRole('button', { name: 'Cancel' }).click();
-    await page.getByRole('button', { name: 'Discard' }).click();
+    await page.getByRole('button', { name: 'Yes, Close' }).click();
 
     // Restore expectations and verify the template was not modified
     templateData.defaultContent = originalContent;

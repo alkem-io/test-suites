@@ -131,6 +131,85 @@ export const verifyCalloutTemplate = async (
 };
 
 /**
+ * Verifies the four in-form "Poll Settings" flags persisted on a saved
+ * poll-framing template.
+ *
+ * These flags are NOT surfaced by the preview dialog or the in-feed callout
+ * (the in-feed poll only reveals them once a user actually votes), so the only
+ * template-level place to read them back is the Edit dialog's "Poll Settings"
+ * sub-dialog. This re-opens Edit, opens that sub-dialog, asserts each switch,
+ * then cancels without saving. No-op for non-poll framing.
+ *
+ * Validated against the live CRD UI (2026-05-20): editing a saved poll template
+ * repopulates the Question + options and exposes the same icon-only "Settings"
+ * button as the create flow; the sub-dialog switches reflect the saved state.
+ */
+export const verifyPollSettings = async (
+  page: Page,
+  templateData: CalloutTemplateForm
+): Promise<void> => {
+  const framing = templateData.framing;
+  if (framing.type !== 'poll') return;
+  const { settings } = framing;
+
+  // Open the template's preview, then its Edit dialog.
+  await page
+    .getByRole('button', {
+      name: `Preview: ${templateData.displayName}`,
+      exact: true,
+    })
+    .click();
+  const preview = page
+    .getByRole('dialog')
+    .filter({ has: page.getByRole('button', { name: 'Edit template' }) });
+  await preview.getByRole('button', { name: 'Edit template' }).click();
+
+  const editDialog = page.getByRole('dialog', {
+    name: 'Edit collaboration-tool template',
+  });
+  await expect(editDialog).toBeVisible();
+
+  // Poll framing is pre-selected on a poll template; open the Poll Settings
+  // sub-dialog. The button is icon-only (accessible name "Settings") - scope to
+  // the dialog so it can't collide with the space banner's "Settings" link.
+  await editDialog
+    .getByRole('button', { name: 'Settings', exact: true })
+    .click();
+  const settingsDialog = page.getByRole('dialog', { name: 'Poll Settings' });
+  await expect(settingsDialog).toBeVisible();
+
+  await expect(
+    settingsDialog.getByRole('switch', { name: 'Allow multiple responses' })
+  ).toBeChecked({ checked: settings.allowMultipleResponses });
+  await expect(
+    settingsDialog.getByRole('switch', {
+      name: 'Allow contributors to add options',
+    })
+  ).toBeChecked({ checked: settings.allowContributorsToAddOptions });
+  await expect(
+    settingsDialog.getByRole('switch', {
+      name: 'Hide results until user votes',
+    })
+  ).toBeChecked({ checked: settings.hideResultsUntilUserVotes });
+  await expect(
+    settingsDialog.getByRole('switch', { name: 'Show voter avatars' })
+  ).toBeChecked({ checked: settings.showVoterAvatars });
+
+  // The Poll Settings dialog auto-applies (no Save button); Escape closes it.
+  await page.keyboard.press('Escape');
+  await expect(settingsDialog).not.toBeVisible();
+
+  // Close the Edit dialog without saving. No changes were made, but Cancel can
+  // still raise a discard confirmation - dismiss it if it appears.
+  await editDialog.getByRole('button', { name: 'Cancel' }).click();
+  const discardAlert = page.getByRole('alertdialog');
+  if (await discardAlert.isVisible({ timeout: 500 }).catch(() => false)) {
+    await discardAlert.getByRole('button', { name: 'Discard' }).click();
+  }
+  await expect(editDialog).not.toBeVisible();
+};
+
+/**
  * Verifies that a Callout Template card is visible in the templates list.
  */
 export const verifyCalloutTemplateInList = async (
