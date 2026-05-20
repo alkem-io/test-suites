@@ -134,6 +134,30 @@ export const verifyCalloutTemplateUsage = async (
       );
       break;
     }
+    case 'poll': {
+      // In-feed poll structure (validated against live CRD UI on 2026-05-19):
+      //   <radiogroup aria-label="<question>">
+      //     <radio aria-label="<option> (<voteCount>)"/> × N
+      //   </radiogroup>
+      // The question text is also rendered as a plain text node above the
+      // radiogroup, but the radiogroup's accessible name uniquely identifies
+      // the poll. Vote count starts at 0 on a freshly-created callout.
+      const pollGroup = calloutContainer.getByRole('radiogroup', {
+        name: templateData.framing.question,
+      });
+      await expect(pollGroup).toBeVisible();
+      for (const option of templateData.framing.options) {
+        await expect(
+          pollGroup.getByRole('radio', { name: `${option}` })
+        ).toBeVisible();
+      }
+      // Poll-settings flags (multi-vote / anonymity / hide-results /
+      // add-options) are not directly observable on the in-feed card without
+      // voting — they take effect after a user interacts. Coverage of those
+      // behaviours belongs in a separate, vote-driven test (out of scope
+      // here: the template round-trip is what we're asserting).
+      break;
+    }
     case 'none':
     default: {
       // No framing content to verify

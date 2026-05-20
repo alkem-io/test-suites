@@ -70,5 +70,69 @@ export const selectAndFillCalloutTemplateFraming = async (
         .fill(framing.ctaText);
       return;
     }
+
+    case 'poll': {
+      await framingRadio(dialog, 'Poll').click();
+
+      // Question (single line)
+      await dialog
+        .getByRole('textbox', { name: 'Question' })
+        .fill(framing.question);
+
+      // The Poll editor seeds two `textbox "Option N"` inputs. To support more,
+      // click "Add Option" until the count matches options.length; fewer than 2
+      // is not supported by the UI (minimum two seeded slots).
+      const desiredOptions = Math.max(2, framing.options.length);
+      for (let i = 2; i < desiredOptions; i++) {
+        await dialog.getByRole('button', { name: 'Add Option' }).click();
+      }
+      for (let i = 0; i < framing.options.length; i++) {
+        await dialog
+          .getByRole('textbox', { name: `Option ${i + 1}`, exact: true })
+          .fill(framing.options[i]);
+      }
+
+      // Open the "Poll Settings" sub-dialog. The poll editor's "Settings"
+      // button is the only `button "Settings"` inside the template dialog
+      // (the space banner's "Settings" is a `link`, different role).
+      await dialog.getByRole('button', { name: 'Settings', exact: true }).click();
+      const settingsDialog = page.getByRole('dialog', { name: 'Poll Settings' });
+      await expect(settingsDialog).toBeVisible();
+
+      await setPollSwitch(
+        settingsDialog.getByRole('switch', { name: 'Allow multiple responses' }),
+        framing.settings.allowMultipleResponses
+      );
+      await setPollSwitch(
+        settingsDialog.getByRole('switch', {
+          name: 'Allow contributors to add options',
+        }),
+        framing.settings.allowContributorsToAddOptions
+      );
+      await setPollSwitch(
+        settingsDialog.getByRole('switch', {
+          name: 'Hide results until user votes',
+        }),
+        framing.settings.hideResultsUntilUserVotes
+      );
+      await setPollSwitch(
+        settingsDialog.getByRole('switch', { name: 'Show voter avatars' }),
+        framing.settings.showVoterAvatars
+      );
+
+      // The Poll Settings dialog has no Save button — toggles auto-apply and
+      // Escape closes it cleanly (no discard prompt). Validated against the
+      // live CRD UI on 2026-05-19.
+      await page.keyboard.press('Escape');
+      await expect(settingsDialog).not.toBeVisible();
+      return;
+    }
+  }
+};
+
+/** Local switch setter — kept private so the framing helper is self-contained. */
+const setPollSwitch = async (sw: Locator, desired: boolean): Promise<void> => {
+  if ((await sw.isChecked()) !== desired) {
+    await sw.click();
   }
 };

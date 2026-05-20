@@ -862,4 +862,267 @@ test.describe.serial('Callout Templates', () => {
 
     await createAndVerifyCalloutTemplate(page, templateData);
   });
+
+  // ============================================================
+  //  POLL FRAMING TESTS (42–57)
+  //  All combinations of the 4 in-form Poll Settings flags.
+  //  Response = none, Comments = Disabled held constant.
+  //  Option count varies (2/3/4/5/10) — secondary axis.
+  // ============================================================
+
+  test('42 Poll (2 opts), Multi:OFF, AddOpts:OFF, HideResults:OFF, ShowVoters:OFF', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'poll',
+      responseType: 'none',
+      commentsEnabled: false,
+      pollOptionCount: 2,
+      pollMultiVote: false,
+      pollAllowAddOptions: false,
+      pollHideResults: false,
+      pollShowVoters: false,
+    });
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('43 Poll (3 opts), Multi:OFF, AddOpts:OFF, HideResults:OFF, ShowVoters:ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'poll',
+      responseType: 'none',
+      commentsEnabled: false,
+      pollOptionCount: 3,
+      pollMultiVote: false,
+      pollAllowAddOptions: false,
+      pollHideResults: false,
+      pollShowVoters: true,
+    });
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('44 Poll (3 opts), Multi:OFF, AddOpts:OFF, HideResults:ON, ShowVoters:OFF', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'poll',
+      responseType: 'none',
+      commentsEnabled: false,
+      pollOptionCount: 3,
+      pollMultiVote: false,
+      pollAllowAddOptions: false,
+      pollHideResults: true,
+      pollShowVoters: false,
+    });
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('45 Poll (4 opts), Multi:OFF, AddOpts:OFF, HideResults:ON, ShowVoters:ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'poll',
+      responseType: 'none',
+      commentsEnabled: false,
+      pollOptionCount: 4,
+      pollMultiVote: false,
+      pollAllowAddOptions: false,
+      pollHideResults: true,
+      pollShowVoters: true,
+    });
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('46 Poll (3 opts), Multi:OFF, AddOpts:ON, HideResults:OFF, ShowVoters:OFF', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'poll',
+      responseType: 'none',
+      commentsEnabled: false,
+      pollOptionCount: 3,
+      pollMultiVote: false,
+      pollAllowAddOptions: true,
+      pollHideResults: false,
+      pollShowVoters: false,
+    });
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('47 Poll (3 opts), Multi:OFF, AddOpts:ON, HideResults:OFF, ShowVoters:ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'poll',
+      responseType: 'none',
+      commentsEnabled: false,
+      pollOptionCount: 3,
+      pollMultiVote: false,
+      pollAllowAddOptions: true,
+      pollHideResults: false,
+      pollShowVoters: true,
+    });
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('48 Poll (4 opts), Multi:OFF, AddOpts:ON, HideResults:ON, ShowVoters:OFF', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'poll',
+      responseType: 'none',
+      commentsEnabled: false,
+      pollOptionCount: 4,
+      pollMultiVote: false,
+      pollAllowAddOptions: true,
+      pollHideResults: true,
+      pollShowVoters: false,
+    });
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('49 Poll (3 opts), Multi:OFF, AddOpts:ON, HideResults:ON, ShowVoters:ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'poll',
+      responseType: 'none',
+      commentsEnabled: false,
+      pollOptionCount: 3,
+      pollMultiVote: false,
+      pollAllowAddOptions: true,
+      pollHideResults: true,
+      pollShowVoters: true,
+    });
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('50 Poll (3 opts), Multi:ON, AddOpts:OFF, HideResults:OFF, ShowVoters:OFF', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'poll',
+      responseType: 'none',
+      commentsEnabled: false,
+      pollOptionCount: 3,
+      pollMultiVote: true,
+      pollAllowAddOptions: false,
+      pollHideResults: false,
+      pollShowVoters: false,
+    });
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('51 Poll (2 opts), Multi:ON, AddOpts:OFF, HideResults:OFF, ShowVoters:ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'poll',
+      responseType: 'none',
+      commentsEnabled: false,
+      pollOptionCount: 2,
+      pollMultiVote: true,
+      pollAllowAddOptions: false,
+      pollHideResults: false,
+      pollShowVoters: true,
+    });
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('52 Poll (4 opts), Multi:ON, AddOpts:OFF, HideResults:ON, ShowVoters:OFF', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'poll',
+      responseType: 'none',
+      commentsEnabled: false,
+      pollOptionCount: 4,
+      pollMultiVote: true,
+      pollAllowAddOptions: false,
+      pollHideResults: true,
+      pollShowVoters: false,
+    });
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('53 Poll (3 opts), Multi:ON, AddOpts:OFF, HideResults:ON, ShowVoters:ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'poll',
+      responseType: 'none',
+      commentsEnabled: false,
+      pollOptionCount: 3,
+      pollMultiVote: true,
+      pollAllowAddOptions: false,
+      pollHideResults: true,
+      pollShowVoters: true,
+    });
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('54 Poll (5 opts), Multi:ON, AddOpts:ON, HideResults:OFF, ShowVoters:OFF', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'poll',
+      responseType: 'none',
+      commentsEnabled: false,
+      pollOptionCount: 5,
+      pollMultiVote: true,
+      pollAllowAddOptions: true,
+      pollHideResults: false,
+      pollShowVoters: false,
+    });
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('55 Poll (3 opts), Multi:ON, AddOpts:ON, HideResults:OFF, ShowVoters:ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'poll',
+      responseType: 'none',
+      commentsEnabled: false,
+      pollOptionCount: 3,
+      pollMultiVote: true,
+      pollAllowAddOptions: true,
+      pollHideResults: false,
+      pollShowVoters: true,
+    });
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('56 Poll (10 opts), Multi:ON, AddOpts:ON, HideResults:ON, ShowVoters:OFF', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'poll',
+      responseType: 'none',
+      commentsEnabled: false,
+      pollOptionCount: 10,
+      pollMultiVote: true,
+      pollAllowAddOptions: true,
+      pollHideResults: true,
+      pollShowVoters: false,
+    });
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('57 Poll (3 opts), Multi:ON, AddOpts:ON, HideResults:ON, ShowVoters:ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      framingType: 'poll',
+      responseType: 'none',
+      commentsEnabled: false,
+      pollOptionCount: 3,
+      pollMultiVote: true,
+      pollAllowAddOptions: true,
+      pollHideResults: true,
+      pollShowVoters: true,
+    });
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
 });

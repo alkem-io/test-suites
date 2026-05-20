@@ -12,7 +12,12 @@ import { TemplateForm } from '../template-form.models';
 // Framing Types
 // ============================================================================
 
-export type CalloutTemplateFramingType = 'none' | 'whiteboard' | 'memo' | 'callToAction';
+export type CalloutTemplateFramingType =
+  | 'none'
+  | 'whiteboard'
+  | 'memo'
+  | 'callToAction'
+  | 'poll';
 
 export interface CalloutTemplateFramingNone {
   type: 'none';
@@ -34,11 +39,36 @@ export interface CalloutTemplateFramingCallToAction {
   ctaUrl: string;
 }
 
+/**
+ * Poll framing. The four `settings` flags mirror the in-form "Poll Settings"
+ * sub-dialog toggles (live UI as of 2026-05-19):
+ *  - allowMultipleResponses        — voters may pick more than one option
+ *  - allowContributorsToAddOptions — voters can append their own options
+ *  - hideResultsUntilUserVotes     — tally hidden until the viewer has voted
+ *  - showVoterAvatars              — voters are identifiable (false = anonymous)
+ *
+ * UI defaults (when the Poll radio is just selected, before opening Settings):
+ *   allowMultipleResponses=false, allowContributorsToAddOptions=false,
+ *   hideResultsUntilUserVotes=false, showVoterAvatars=true.
+ */
+export interface CalloutTemplateFramingPoll {
+  type: 'poll';
+  question: string;
+  options: string[];
+  settings: {
+    allowMultipleResponses: boolean;
+    allowContributorsToAddOptions: boolean;
+    hideResultsUntilUserVotes: boolean;
+    showVoterAvatars: boolean;
+  };
+}
+
 export type CalloutTemplateFraming =
   | CalloutTemplateFramingNone
   | CalloutTemplateFramingWhiteboard
   | CalloutTemplateFramingMemo
-  | CalloutTemplateFramingCallToAction;
+  | CalloutTemplateFramingCallToAction
+  | CalloutTemplateFramingPoll;
 
 // ============================================================================
 // Response Types
@@ -122,6 +152,11 @@ export const createCalloutTemplateData = ({
   contributionsEnabledMember = contributionsEnabledAdmin, // if not set, default to same as admin
   commentsOnContributionsEnabled,
   calloutReferences = [],
+  pollOptionCount = 3,
+  pollMultiVote = false,
+  pollAllowAddOptions = false,
+  pollHideResults = false,
+  pollShowVoters = true,
 }: {
     framingType: CalloutTemplateFramingType,
     commentsEnabled: boolean,
@@ -130,6 +165,12 @@ export const createCalloutTemplateData = ({
     contributionsEnabledMember?: boolean,
     commentsOnContributionsEnabled?: boolean,
     calloutReferences?: { title: string; url: string }[],
+    // Poll-specific args (only meaningful when framingType === 'poll').
+    pollOptionCount?: number,
+    pollMultiVote?: boolean,
+    pollAllowAddOptions?: boolean,
+    pollHideResults?: boolean,
+    pollShowVoters?: boolean,
 }): CalloutTemplateForm => {
   const hexId = randomBytes(3).toString('hex');
 
@@ -143,6 +184,22 @@ export const createCalloutTemplateData = ({
       break;
     case 'callToAction':
       framing = { type: 'callToAction', ctaText: `Click Here - ID: ${hexId}`, ctaUrl: 'https://alkem.io' };
+      break;
+    case 'poll':
+      framing = {
+        type: 'poll',
+        question: `Poll Question ${hexId}?`,
+        options: Array.from(
+          { length: Math.max(2, pollOptionCount) },
+          (_, i) => `Option ${i + 1} - ${hexId}`
+        ),
+        settings: {
+          allowMultipleResponses: pollMultiVote,
+          allowContributorsToAddOptions: pollAllowAddOptions,
+          hideResultsUntilUserVotes: pollHideResults,
+          showVoterAvatars: pollShowVoters,
+        },
+      };
       break;
     case 'none':
     default:

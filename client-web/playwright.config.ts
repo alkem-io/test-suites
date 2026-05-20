@@ -33,9 +33,6 @@ export default defineConfig({
     trace: 'on-first-retry',
     headless: process.env.UI_HEADLESS !== 'false',
     // Temporary: slow down actions for local debugging (ms between each step)
-    launchOptions: {
-      slowMo: 500,
-    },
   },
   timeout: (process.env.ALKEMIO_BASE_URL || '').includes('localhost') ? 120000 : 60000,
 
@@ -77,7 +74,7 @@ export default defineConfig({
     // },
     {
       name: 'Google Chrome',
-      use: { ...devices['Desktop Chrome'], channel: 'chrome' },
+      use: { ...devices['Desktop Chrome'], channel: 'chrome', viewport: { width: 1920, height: 1080 } },
     },
   ],
 

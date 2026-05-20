@@ -102,6 +102,25 @@ export const verifyCalloutTemplate = async (
       );
       break;
     }
+    case 'poll': {
+      // Poll preview renders:
+      //   <paragraph>Question: <question></paragraph>
+      //   <list><listitem>option 1</listitem>…</list>
+      // The 4 poll settings (multi-vote, anonymity, hide-results,
+      // add-options) are admin metadata and NOT shown in the preview, so
+      // verify is limited to the question + the option list.
+      await expect(
+        dialog.getByText(`Question: ${templateData.framing.question}`, {
+          exact: true,
+        })
+      ).toBeVisible();
+      for (const option of templateData.framing.options) {
+        await expect(
+          dialog.getByRole('listitem').filter({ hasText: option })
+        ).toBeVisible();
+      }
+      break;
+    }
     case 'none':
     default:
       break;
