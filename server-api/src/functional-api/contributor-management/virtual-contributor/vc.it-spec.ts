@@ -153,12 +153,21 @@ describe('Virtual Contributor', () => {
     expect(response.error?.errors[0].message).toContain(
       'Unable to delete User: account contains one or more resources'
     );
-    await createUser({
-      firstName: 'beta',
-      lastName: 'tester',
-      profileData: { displayName: 'beta tester' },
-      email: 'beta.tester@alkem.io',
-    });
+
+    // Recreate ONLY if the assert above failed-soft and the delete somehow
+    // went through. Recreating unconditionally would orphan the Kratos
+    // identity (whose metadata_public.alkemio_actor_id still points at the
+    // deleted row) and break every subsequent run's getUserToken/me lookup
+    // for beta.tester. The shared seed user must not be mutated by tests.
+    const userStillExists = !!response.error?.errors?.[0];
+    if (!userStillExists) {
+      await createUser({
+        firstName: 'beta',
+        lastName: 'tester',
+        profileData: { displayName: 'beta tester' },
+        email: 'beta.tester@alkem.io',
+      });
+    }
   });
 
   test('should return invitations after virtual contributor is removed', async () => {

@@ -91,7 +91,7 @@ export class TestScenarioFactory {
       LogManager.getLogger().error(
         `Unable to create organization scenario setup: ${e}`
       );
-      process.exit(1);
+      throw e;
     }
 
     return baseScenario;
@@ -194,8 +194,7 @@ export class TestScenarioFactory {
         `Unable to create core scenario setup: ${e}`,
         e?.stack
       );
-      process.exit(1); // Exit the Jest process with an error code.
-      //throw new Error(`Unable to create core scenario setup: ${e}`);
+      throw e;
     }
 
     return baseScenario;
@@ -337,7 +336,7 @@ export class TestScenarioFactory {
       LogManager.getLogger().error(
         `Unable to create innovation pack setup: ${e}`
       );
-      process.exit(1);
+      throw e;
     }
   }
 
@@ -441,7 +440,7 @@ export class TestScenarioFactory {
       LogManager.getLogger().error(
         `Unable to create virtual contributors setup: ${e}`
       );
-      process.exit(1);
+      throw e;
     }
   }
 
@@ -496,7 +495,7 @@ export class TestScenarioFactory {
       LogManager.getLogger().error(
         `Unable to create platform discussion setup: ${e}`
       );
-      process.exit(1);
+      throw e;
     }
   }
 
@@ -525,13 +524,9 @@ export class TestScenarioFactory {
     if (!alreadyHasRole) {
       if (userModel.id.length === 0) {
         // Missing user ID, cannot assign role
-        LogManager.getLogger().error(
-          `User ID is missing for ${userModel.type}, cannot assign role ${role}`
-        );
-        throw new Error(
-          process.exit(1) // Exit the Jest process with an error code.
-          //`User ID is missing for ${userModel.type}, cannot assign role ${role}`
-        );
+        const msg = `User ID is missing for ${userModel.type} (${userModel.email}), cannot assign role ${role}. Likely Kratos identity ↔ Alkemio User actor_id drift; reconcile seed users.`;
+        LogManager.getLogger().error(msg);
+        throw new Error(msg);
       }
       await assignPlatformRole(userModel.id, role);
     }
@@ -598,13 +593,9 @@ export class TestScenarioFactory {
         await deleteOrganization(baseScenario.organization.id);
       }
     } catch (e) {
-      LogManager.getLogger().error(
-        `Unable to tear down core scenario setup for '${baseScenario.name}: ${e}`
-      );
-      throw new Error(
-        process.exit(1) // Exit the Jest process with an error code.
-        //`Unable to tear down core scenario setup for '${baseScenario.name}: ${e}`
-      );
+      const msg = `Unable to tear down core scenario setup for '${baseScenario?.name ?? '<unset>'}': ${e}`;
+      LogManager.getLogger().error(msg);
+      throw new Error(msg);
     }
   }
 
