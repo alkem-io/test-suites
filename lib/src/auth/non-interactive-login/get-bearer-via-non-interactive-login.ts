@@ -1,5 +1,5 @@
 import { createHash } from 'crypto';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import axios, { AxiosError } from 'axios';
 import { testConfiguration } from '../../config/test.configuration';
@@ -59,6 +59,23 @@ const writeCache = (email: string, token: CachedNonInteractiveLoginToken): void 
   const path = cachePath(email);
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, JSON.stringify(token, null, 2), { mode: 0o600 });
+};
+
+/**
+ * Drop the cached bearer for `email` so the next `getBearerViaNonInteractiveLogin`
+ * call forces a fresh server mint. Used to recover from
+ * Kratos-identity ↔ Alkemio-User actor_id drift, where a cached token still
+ * carries an `alkemio_actor_id` that no longer resolves on the server.
+ */
+export const clearCachedNonInteractiveLoginToken = (email: string): void => {
+  const path = cachePath(email);
+  if (existsSync(path)) {
+    try {
+      unlinkSync(path);
+    } catch {
+      // Best-effort — caller retries either way.
+    }
+  }
 };
 
 export const getBearerViaNonInteractiveLogin = async (

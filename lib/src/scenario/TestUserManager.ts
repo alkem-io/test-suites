@@ -3,6 +3,7 @@ import { TestUserModels } from "./models/TestUserModels";
 import { getUserToken } from "./registration/get-user-token";
 import { TestUser } from "../common/enums/test.user";
 import { getGraphqlClient } from "../utils/graphqlClient";
+import { clearCachedNonInteractiveLoginToken } from "../auth/non-interactive-login/get-bearer-via-non-interactive-login";
 
 export class TestUserManager {
   private static userModelMapEmail: Map<string, UserModel>;
@@ -25,6 +26,26 @@ export class TestUserManager {
 
       // Populate the user model with details from the api
       await this.populateUserModelFromApi(userModel);
+
+      // Defensive: if `me.user.id` returns empty, the cached bearer is most
+      // likely stale (its `alkemio_actor_id` claim points at a User row that
+      // no longer exists — typical after a DB reset or a half-completed
+      // lazy-create). Drop the cached token, force a fresh mint (which
+      // lazy-creates the Alkemio User via IdentityResolveService), and refetch.
+      // Surfacing the failure here is far more diagnosable than the later
+      // `Likely Kratos identity ↔ Alkemio User actor_id drift` throw inside
+      // TestScenarioFactory.populateGlobalRoles.
+      if (userModel.id.length === 0) {
+        clearCachedNonInteractiveLoginToken(userModel.email);
+        userModel.authToken = await getUserToken(userModel.email);
+        await this.populateUserModelFromApi(userModel);
+        if (userModel.id.length === 0) {
+          throw new Error(
+            `TestUserManager.populateUserModelMap: me.user.id still empty for ${userModel.email} after cache reset + remint. ` +
+              `Kratos identity ↔ Alkemio User drift unresolved — check that the server's non-interactive-login + identity-resolve services are wired and reachable.`
+          );
+        }
+      }
 
       this.userModelMapEmail.set(userModel.email, userModel);
       this.userModelMapType.set(userModel.type, userModel);
