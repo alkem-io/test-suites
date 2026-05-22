@@ -1,11 +1,28 @@
 import { Client, createClient, SubscribePayload } from 'graphql-ws';
 import { GraphQLError } from 'graphql';
+import { WebSocket as WsWebSocket, ClientOptions } from 'ws';
 import { buildConnectionParams } from './build-connection-params';
 import { testConfiguration } from '../../config/test.configuration';
 import { TestUser } from '../../common/enums/test.user';
 
 type SubscriptionCleanUpFn = () => void;
 export type SubscriptionMessage = Record<string, unknown> | null | undefined;
+
+/**
+ * Build a WebSocket subclass that injects auth headers on the upgrade request.
+ * graphql-ws calls `new WebSocket(url, protocols)` (no headers slot), so we
+ * forward through the `ws` package's extended (url, protocols, options)
+ * constructor to attach the bearer where the server actually reads it.
+ */
+const createAuthedWebSocketImpl = (
+  headers: Record<string, string>
+): typeof WebSocket => {
+  return class extends WsWebSocket {
+    constructor(address: string | URL, protocols?: string | string[]) {
+      super(address, protocols, { headers } as ClientOptions);
+    }
+  } as unknown as typeof WebSocket;
+};
 
 export class SubscriptionClient {
   private client: Client | undefined;
@@ -15,26 +32,31 @@ export class SubscriptionClient {
   private _terminateFn: SubscriptionCleanUpFn | undefined;
 
   /**
-   * Lazy function to subscribes to an url provided by SERVER_URL_WS variable through the Websocket protocol with a payload and a user.
-   * @param payload Payload to send on subscription
-   * @param user The user with whom the subscription will be made. This user is used for authorization
-   * over the resource you are going to subscribe to so make sure this user has the sufficient privileges.
-   * @return A promise which is resolved after the _connected_ state event is received.
-   * This ensures messages are received as expected and in timely manner
+   * Subscribe to a GraphQL operation over Websocket.
+   * @param payload Subscription payload (query, variables, operationName).
+   * @param user The user whose auth token authorises the subscription.
+   * @return A promise resolved once the `connected` event fires, so callers
+   * can rely on messages being received promptly after subscribe().
    */
-  public subscribe(payload: SubscribePayload, user: TestUser): Promise<void> {
+  public async subscribe(
+    payload: SubscribePayload,
+    user: TestUser
+  ): Promise<void> {
+    const upgradeHeaders = await buildConnectionParams(user);
+
     return new Promise<void>((res, rej) => {
       this.client = createClient({
         url: testConfiguration.endPoints.ws,
-        webSocketImpl: WebSocket,
-        connectionParams: async () => await buildConnectionParams(user),
+        webSocketImpl: createAuthedWebSocketImpl(upgradeHeaders),
       });
 
       this._terminateFn = this.client.subscribe(payload, {
         next: data => {
           if (data.errors?.length) {
             this.terminate();
-            this.errors.push(...data?.errors?.map(e => new GraphQLError(e.message)) ?? []);
+            this.errors.push(
+              ...(data?.errors?.map(e => new GraphQLError(e.message)) ?? [])
+            );
             return;
           }
 
