@@ -21,7 +21,7 @@ pnpm --filter @alkemio/test-suite-client-web exec playwright install
 
 Copy `client-web/.env.default` → `client-web/.env` and set at least:
 
-```
+```bash
 ALKEMIO_BASE_URL=<url of the CRD-enabled client>
 AUTH_TEST_HARNESS_PASSWORD=<test user password>
 MAIL_SLURPER_ENDPOINT=<mailslurper url>

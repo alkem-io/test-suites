@@ -32,7 +32,7 @@ Status legend: `confirm` = verify works on CRD as-is; `replace` = expected to ch
 
 | Helper | Current locator | Target CRD strategy | Likely action |
 |---|---|---|---|
-| `emailField` | `getByLabel('E-Mail *')` | `getByRole('textbox', { name: /e-?mail/i })` | replace (drop ` *`) |
+| `emailField` | `getByLabel('E-Mail *')` | `getByRole('textbox', { name: /e-?mail/i })` | replace (drop `" *"`) |
 | `passwordField` | `getByLabel('Password *')` | `getByLabel('Password')` / role+name | replace |
 | `firstNameField` | `getByLabel('First Name *')` | `getByLabel('First Name')` | replace |
 | `lastNameField` | `getByLabel('Last Name *')` | `getByLabel('Last Name')` | replace |
@@ -46,8 +46,8 @@ Status legend: `confirm` = verify works on CRD as-is; `replace` = expected to ch
 | `githubButton` | `locator('button[value="github"]')` | `getByRole('button', { name: /github/i })` | replace |
 | `microsoftButton` | `locator('button[value="microsoft"]')` | `getByRole('button', { name: /connect with microsoft/i })` | replace |
 | `linkedinButton` | `locator('button[value="linkedin"]')` | `getByRole('button', { name: /connect with linkedin/i })` | replace |
-| `signInLink` / `signUpLink` | `getByRole('link', { name: /sign in|sign up/i })` | confirm | confirm |
-| `privacyLink` / `termsLink` | `getByRole('link', { name: /privacy|terms/i })` | confirm | confirm |
+| `signInLink` / `signUpLink` | `getByRole('link', { name: /sign in\|sign up/i })` | confirm | confirm |
+| `privacyLink` / `termsLink` | `getByRole('link', { name: /privacy\|terms/i })` | confirm | confirm |
 | `forgotPasswordLink` | `getByRole('link', { name: /forgot password/i })` | confirm | confirm |
 | `signInSignUpLink` / `returnToDashboardLink` | restricted-page links (shell) | confirm | confirm (shell, likely unchanged) |
 | `logoutMenuItem` / `userMenuAvatar` | app-shell menu | confirm | confirm (post-auth shell) |
@@ -71,7 +71,7 @@ Status legend: `confirm` = verify works on CRD as-is; `replace` = expected to ch
 | Step | Current locator | Action |
 |---|---|---|
 | open menu | `getByTestId('PersonIcon')` | confirm (app shell) |
-| menu item | `getByRole('menuitem', { name: 'Log In | Sign Up' })` | confirm |
+| menu item | `getByRole('menuitem', { name: 'Log In \| Sign Up' })` | confirm |
 | email | `getByRole('textbox', { name: 'E-Mail' })` | unify with `emailField` strategy |
 | password | `getByRole('textbox', { name: 'Password' })` | unify with `passwordField` |
 | submit | `getByRole('button', { name: 'Sign in', exact: true })` | confirm |
@@ -81,7 +81,7 @@ Status legend: `confirm` = verify works on CRD as-is; `replace` = expected to ch
 
 | Suite | Inline locator |
 |---|---|
-| `authentication-login.spec.ts` | error regex `/email address or password.*invalid/i`; logout sign-in option `name: /sign up|sign in/i` |
+| `authentication-login.spec.ts` | error regex `/email address or password.*invalid/i`; logout sign-in option `name: /sign up\|sign in/i` |
 | `authentication-registration.spec.ts` | verification-pending copy; `link 'Continue'`; heading `'Sign in'`; `text 'You successfully verified'` |
 | `authentication-password-recovery.spec.ts` | `link 'Forgot password?'`; heading `'User Settings'`; dashboard `Invitations` / `My Account` / `Create my own Space` |
 | `authentication-page-verification.spec.ts` | delegates to identity-flows verifiers (no direct auth locators beyond shared) |

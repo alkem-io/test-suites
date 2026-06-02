@@ -25,7 +25,7 @@ This document resolves the open questions from the Technical Context and records
 
 | Current locator | Risk under CRD | Planned strategy |
 |---|---|---|
-| `getByLabel('E-Mail *')`, `getByLabel('Password *')`, `getByLabel('First Name *')`, `getByLabel('Recovery code *')` | The ` *` suffix is a MUI required-field convention; CRD persistent labels likely omit it | Confirm CRD label text; switch to `getByRole('textbox', { name: /e-?mail/i })` / `getByLabel('Email')` style, no asterisk |
+| `getByLabel('E-Mail *')`, `getByLabel('Password *')`, `getByLabel('First Name *')`, `getByLabel('Recovery code *')` | The `" *"` suffix is a MUI required-field convention; CRD persistent labels likely omit it | Confirm CRD label text; switch to `getByRole('textbox', { name: /e-?mail/i })` / `getByLabel('Email')` style, no asterisk |
 | `page.locator('button[value="github"]')` (and `microsoft`, `linkedin`) | Relies on Kratos form `value` attribute; CRD wraps providers with accessible labels (`Connect with LinkedIn`) per the `-fixed` variant | `getByRole('button', { name: /connect with linkedin/i })`, ordered as backend advertises (spec FR-010) |
 | `page.locator('input[type="checkbox"]')` (terms) | Generic; may match other checkboxes in CRD shell | `getByRole('checkbox', { name: /terms/i })` or scoped within the sign-up card |
 | `cookieConsentBanner` exact long sentence | Shell-level; copy may differ slightly | Confirm copy; prefer `getByRole('button', { name: /accept all cookies/i })` as the anchor |
