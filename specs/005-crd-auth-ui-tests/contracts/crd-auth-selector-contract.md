@@ -65,10 +65,19 @@ For a UI-test feature there is no API contract. The analogous "contract" is the 
 
 ## Gap Log (FR-008 / SC-007)
 
-> Record each `GAP` here as it is found. Empty at planning time.
+> Findings from the implementation pass (2026-06-01). These are not selector
+> gaps (the CRD screens expose good accessible names/roles throughout) but
+> behavior/dependency findings surfaced while aligning the suite.
 
-| # | Screen / element | Why no stable hook | Proposed follow-up | Interim selector used |
+| # | Screen / element | Finding | Proposed follow-up | Status in suite |
 |---|---|---|---|---|
-| _(none yet)_ | | | | |
+| 1 | Restricted-access → sign-in | `returnUrl` no longer honored: CRD redirects to `/home` instead of the originally requested page after signing in from the restricted prompt | Confirm with client-web whether returnUrl preservation is intended; if a regression, file upstream | Test re-asserts authenticated `/home`, annotated in `authentication-restricted-access.spec.ts` |
+| 2 | Password recovery | Runs end-to-end via the **link** flow (test env). Two sub-findings: (a) the local **code** flow depends on `@alkemio/tests-lib` `getRecoveryCode`, which has a pre-existing bug (`lib/src/utils/emails.ts:53` returns an out-of-scope `const`) — lib is out of scope for feature 005; (b) CRD set-password rejects reusing the current password, so the old reuse-same-password idempotency no longer works | (a) Fix `getRecoveryCode` in a lib-scoped change to enable the local code branch; (b) handled in-test | Active: sets temp password then restores shared default in a `finally`; local code branch ready |
+| 3 | Post-login shell | One-time "A fresh new Alkemio is here" dialog overlays the shell after sign-in. The suite opts **into** the new design ("Take me to the new design"), so the authenticated shell is the new CRD design: user menu = avatar/name button at end of header banner; logout = "Log out" (was "Sign out"); authenticated restricted page (`/restricted`) = "Go to Home" button (was "Return to Dashboard" link) | None needed (handled by `dismissNewLookDialog` + updated post-login selectors); informational | Handled in helpers + `common-authentication-page-elements.ts` |
+
+**Selector-hook assessment:** No `GAP` rows. Every CRD auth screen inspected
+(sign-in, sign-up, registration, recovery, verify, restricted) exposes stable
+accessible names/roles or persistent labels sufficient for the suite — no
+position-based or copy-fragile fallback was required.
 
 **Reporting rule**: At verification, report the total count of `GAP` rows. A non-empty gap log does not block the alignment, but each gap must be visible and have a proposed follow-up — no gap may be hidden behind a position-based or copy-fragile selector.

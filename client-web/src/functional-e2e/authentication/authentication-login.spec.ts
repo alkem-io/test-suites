@@ -92,7 +92,10 @@ test.describe('Authentication - Login Flows', () => {
   });
 
   test('user can logout and re-authenticate', async ({ page }) => {
-    test.setTimeout(30000);
+    // Two full sign-in cycles plus a logout, each sign-in now waiting for the
+    // post-login redirect and dismissing the CRD "new look" dialog — needs more
+    // than the single-login budget.
+    test.setTimeout(60000);
 
     // First sign in
     await navigateToLoginPageFromMenu(baseUrl, page);
