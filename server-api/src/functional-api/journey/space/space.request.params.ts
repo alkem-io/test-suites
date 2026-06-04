@@ -258,7 +258,7 @@ export const updateSpaceSettings = async (
             },
             membership: {
               allowSubspaceAdminsToInviteMembers:
-                settings?.membership?.allowSubspaceAdminsToInviteMembers ||
+                settings?.membership?.allowSubspaceAdminsToInviteMembers ??
                 true,
               policy:
                 settings?.membership?.policy || CommunityMembershipPolicy.Open,
