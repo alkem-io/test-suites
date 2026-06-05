@@ -28,8 +28,9 @@ export class LoginPage {
   ) {
     await this.goto();
     await this.acceptCookies();
-    await this.page.getByTestId('PersonIcon').click();
-    await this.page.getByRole('menuitem', { name: 'Log In | Sign Up' }).click();
+    // CRD header exposes a direct "Log in" link (the old PersonIcon avatar menu
+    // no longer exists).
+    await this.page.getByRole('link', { name: 'Log in', exact: true }).click();
     await this.page.waitForURL(/.*login.*/);
     await this.page.getByRole('textbox', { name: 'E-Mail' }).fill(email);
     await this.page
@@ -37,6 +38,15 @@ export class LoginPage {
       .fill(userPassword);
     await this.page.getByRole('button', { name: 'Sign in', exact: true }).click();
     await this.page.waitForURL(/.*home.*/);
+    // Handle the one-time "A fresh new Alkemio is here" dialog that overlays the
+    // shell after sign-in, opting into the new CRD design for consistency with
+    // the rest of the authentication suite.
+    const switchToNewDesign = this.page.getByRole('button', {
+      name: /take me to the new design/i,
+    });
+    if (await switchToNewDesign.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await switchToNewDesign.click().catch(() => {});
+    }
   }
 
   // async isLoggedIn(): Promise<boolean> {

@@ -51,6 +51,7 @@ const scenarioConfig: TestScenarioConfig = {
         TestUser.SUBSUBSPACE_ADMIN,
       ],
     },
+    settings: { membership: { allowSubspaceAdminsToInviteMembers: true } },
   },
 };
 

@@ -6,7 +6,6 @@ import {
 import {
   fillUpSignUpPageElements,
   fillUpSignUpPasswordElements,
-  pressSignUpButtonRegistrationPage,
 } from '../identity-flows/registration-page-objects';
 import {
   fillUpSignInPageElements,
@@ -27,6 +26,11 @@ const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
 test.describe('Authentication - Registration Flows', () => {
+  // Run serially: these flows share the MailSlurper inbox (each beforeEach
+  // clears it and each test polls it for a verification email), so they are not
+  // parallel-safe within the file.
+  test.describe.configure({ mode: 'serial' });
+
   test.beforeEach(async ({ context }) => {
     await context.clearCookies();
     await deleteMailSlurperMails();
@@ -61,8 +65,10 @@ test.describe('Authentication - Registration Flows', () => {
     await fillUpSignUpPasswordElements(password, page);
     await nextButton(page).click();
 
-    // Verify we reached the verification step
-    await expect(page.getByText('Sign up')).toBeVisible();
+    // Verify we reached the verification step (CRD "Verify your email" screen)
+    await expect(
+      page.getByRole('heading', { name: 'Verify your email' })
+    ).toBeVisible();
     await expect(
       page.getByText(
         'The last step is to verify your email address. Please check your inbox for an email with instructions.'
@@ -108,8 +114,9 @@ test.describe('Authentication - Registration Flows', () => {
     // function to @alkemio/tests-lib and use it in test.afterEach hook.
   });
 
-  // Skipped until bug is fixed: https://app.zenhub.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/gh/alkem-io/client-web/8317
-  test.skip('user registration with accept terms first then fill form', async ({
+  // Previously skipped for client-web bug #8317; re-enabled against the CRD
+  // registration flow (accept terms + fill form on the same step, then password).
+  test('user registration with accept terms first then fill form', async ({
     page,
   }) => {
     test.setTimeout(60000);
@@ -126,13 +133,13 @@ test.describe('Authentication - Registration Flows', () => {
       'Alkemio'
     );
 
-    // Set password
+    // Set password and advance (CRD password step uses the "Next" button)
     await fillUpSignUpPasswordElements(password, page);
-    await pressSignUpButtonRegistrationPage(page);
+    await nextButton(page).click();
 
-    // Verify registration pending email verification
+    // Verify we reached the CRD "Verify your email" step
     await expect(
-      page.getByRole('link', { name: '…or continue to the platform' })
+      page.getByRole('heading', { name: 'Verify your email' })
     ).toBeVisible();
 
     // Wait for verification email to arrive
