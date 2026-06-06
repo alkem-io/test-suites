@@ -265,9 +265,12 @@ test.describe.serial('Community Guidelines Template', () => {
     await expect(pickerDialog).not.toBeVisible();
 
     // The picker fills in the guidelines block inline. Verify the title input
-    // and rich-text body were populated from the template.
+    // and rich-text body were populated from the template. Target the main
+    // title field by its placeholder - the reference rows also expose a "Title"
+    // textbox (placeholder "Reference title"), so the role+name match alone is
+    // ambiguous once the template's references are applied.
     await expect(
-      page.getByRole('textbox', { name: 'Title' })
+      page.getByPlaceholder('Name your community guidelines')
     ).toHaveValue(templateData.guidelines.displayName);
     await expect(
       page.getByText(templateData.guidelines.description, { exact: true })

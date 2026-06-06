@@ -19,21 +19,24 @@ export const fillCommunityGuidelinesForm = async (
     .getByRole('textbox', { name: 'Write the guidelines for this community…' })
     .fill(templateData.guidelines.description);
 
-  // References - each row has Name / URL / Description textboxes and a
+  // References - each row has Title / URL / Description textboxes and a
   // "Remove reference" button. Add as many rows as needed, then fill them.
+  // The rows render as plain containers (no list/listitem roles), so we count
+  // the per-row "Remove reference" buttons and address the Title/URL textboxes
+  // positionally. `exact: true` keeps the "Title" match from also picking up
+  // the "Guidelines title" field above.
   const references = templateData.guidelines.references ?? [];
-  const referenceRows = page
-    .getByRole('listitem')
-    .filter({ has: page.getByRole('button', { name: 'Remove reference' }) });
-
-  const existingReferences = await referenceRows.count();
+  const existingReferences = await page
+    .getByRole('button', { name: 'Remove reference' })
+    .count();
   for (let i = existingReferences; i < references.length; i++) {
-    await page.getByRole('button', { name: 'Add reference' }).click();
+    await page.getByRole('button', { name: 'Add another reference' }).click();
   }
 
+  const titleBoxes = page.getByRole('textbox', { name: 'Title', exact: true });
+  const urlBoxes = page.getByRole('textbox', { name: 'URL', exact: true });
   for (let i = 0; i < references.length; i++) {
-    const row = referenceRows.nth(i);
-    await row.getByRole('textbox', { name: 'Name' }).fill(references[i].title);
-    await row.getByRole('textbox', { name: 'URL' }).fill(references[i].url);
+    await titleBoxes.nth(i).fill(references[i].title);
+    await urlBoxes.nth(i).fill(references[i].url);
   }
 };

@@ -9,8 +9,8 @@ import { getWhiteboardEditorDialog } from '../../forms/whiteboards/whiteboard-di
  * CRD UI (2026-05-20).
  *
  * Steps:
- *  1. In-feed `Add Response` button (exact). For whiteboards the affordance is
- *     the generic `Add Response`, not `Add whiteboard`.
+ *  1. In-feed `Add whiteboard` button (exact) — the type-specific affordance,
+ *     matching the `Add post` / `Add memo` pattern of the other collections.
  *  2. `Create new whiteboard` dialog opens with `defaultTitle` pre-filled in
  *     the `Whiteboard title` textbox (Cancel / Create).
  *  3. Clicking `Create` closes the create dialog AND auto-opens the new
@@ -52,7 +52,7 @@ export const verifyCalloutContributionWhiteboards = async (
   const editedTitle = `${defaultTitle}-Edited${templateData.testId}`;
 
   const addContributionButton = calloutContainer.getByRole('button', {
-    name: 'Add Response',
+    name: 'Add whiteboard',
     exact: true,
   });
 
