@@ -79,9 +79,11 @@ export const useTemplateInAWhiteboard = async (
   const pickerDialog = page.getByRole('dialog', { name: 'Use a template' });
   await expect(pickerDialog).toBeVisible();
 
+  // Match on an exact-text element rather than `hasText` (substring), so
+  // "Template A" can't accidentally select "Template A Extended".
   const item = pickerDialog
     .getByRole('listitem')
-    .filter({ hasText: templateName });
+    .filter({ has: page.getByText(templateName, { exact: true }) });
   await expect(item).toBeVisible();
   await item.getByRole('button', { name: 'Use this template' }).click();
 
