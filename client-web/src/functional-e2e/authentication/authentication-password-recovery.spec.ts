@@ -4,7 +4,6 @@ import {
   continueButton,
   dismissNewLookDialog,
   passwordField,
-  recoveryCodeField,
   recoveryEmailField,
   saveButton,
 } from './common-authentication-page-elements';
@@ -12,19 +11,17 @@ import { verifyMyDashboardWelcomeElement } from '../my-dashboard/my-dashboard-pa
 import {
   delay,
   deleteMailSlurperMails,
-  getRecoveryCode,
   getRecoveryLink,
 } from '@alkemio/tests-lib';
 
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
-const isLocalEnv = baseUrl.includes('localhost');
 
 /**
  * Drives the recovery flow from the CRD recovery screen (already navigated to)
- * through to a saved new password. Handles both environment variants:
- * - Local (isLocalEnv): the 6-digit code flow via getRecoveryCode.
- * - Remote/test env: the recovery-link flow via getRecoveryLink.
+ * through to a saved new password. Both local and remote Kratos send a recovery
+ * LINK (no 6-digit code), so this polls MailSlurper for the recovery link and
+ * navigates to it to reach the "Set new password" screen.
  *
  * NOTE: the CRD/Kratos "set new password" screen rejects a new password equal to
  * the current one ("The new password must be different from the old password"),
@@ -45,31 +42,18 @@ const submitRecoveryAndSetPassword = async (
   // Wait for the recovery email to arrive.
   await delay(3000);
 
-  if (isLocalEnv) {
-    // Code recovery flow (local): extract the 6-digit code and enter it.
-    const getEmailsData = await getRecoveryCode();
-    const recoveryCodeFromEmail = getEmailsData[0];
-    if (recoveryCodeFromEmail === undefined) {
-      throw new Error('Recovery code from email is missing!');
-    }
-
-    await recoveryCodeField(page).click();
-    await recoveryCodeField(page).fill(recoveryCodeFromEmail);
-    await continueButton(page).click();
-  } else {
-    // Link recovery flow (remote/test env): poll for the recovery link.
-    let recoveryLink: string | undefined;
-    for (let attempt = 0; attempt < 10; attempt++) {
-      recoveryLink = await getRecoveryLink();
-      if (recoveryLink) break;
-      await delay(2000);
-    }
-    if (recoveryLink === undefined) {
-      throw new Error('Recovery link from email is missing!');
-    }
-
-    await page.goto(recoveryLink);
+  // Poll for the recovery link and navigate to it.
+  let recoveryLink: string | undefined;
+  for (let attempt = 0; attempt < 10; attempt++) {
+    recoveryLink = await getRecoveryLink();
+    if (recoveryLink) break;
+    await delay(2000);
   }
+  if (recoveryLink === undefined) {
+    throw new Error('Recovery link from email is missing!');
+  }
+
+  await page.goto(recoveryLink);
 
   // CRD "Set new password" screen.
   await expect(
@@ -86,9 +70,9 @@ test.describe('Authentication - Password Recovery Flows', () => {
     await deleteMailSlurperMails();
   });
 
-  // Runs end-to-end on environments exposing the recovery LINK flow (e.g. the
-  // test env, isLocalEnv === false). The local code-flow branch is kept ready
-  // and will run once the @alkemio/tests-lib `getRecoveryCode` bug is fixed.
+  // Runs end-to-end against the CRD recovery LINK flow, which both local and
+  // remote Kratos use (the recovery email carries a self-service/recovery link,
+  // not a 6-digit code).
   //
   // Idempotency: the CRD set-password screen rejects reusing the current
   // password, so the test sets a distinct temporary password, verifies the
