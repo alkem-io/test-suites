@@ -95,16 +95,14 @@ test.describe('Authentication - Restricted Access', () => {
     await expect(welcomeHeading(page)).toBeVisible({ timeout: 5000 });
   });
 
-  // BEHAVIOR CHANGE (CRD migration): signing in from the restricted-access
-  // prompt no longer returns the user to the originally requested restricted
-  // page. The CRD flow now redirects through /login/success to /home (the
-  // returnUrl back to /admin/spaces is not honored). This is a product
-  // redirect-behavior change surfaced during the CRD auth test alignment
-  // (see specs/005-crd-auth-ui-tests gap log) — pending confirmation from the
-  // client-web team on whether returnUrl preservation is intended here.
-  // The scenario therefore asserts that sign-in succeeds and lands the user on
-  // an authenticated home, rather than back on the restricted page.
-  test('sign in after restricted page attempt lands on authenticated home', async ({
+  // Signing in from the restricted-access prompt preserves the returnUrl: the
+  // CRD flow returns the now-authenticated user to the originally requested
+  // restricted page (/admin/spaces). Because the regular user lacks access,
+  // that page renders the authenticated "Access Restricted" variant (with a
+  // "Go to Home" button) rather than the unauthenticated one (with the
+  // "Sign in / Sign up" link). Assert the user is signed in (header avatar) and
+  // is back on that restricted page.
+  test('sign in after restricted page attempt returns to restricted page authenticated', async ({
     context,
     page,
   }) => {
@@ -120,8 +118,10 @@ test.describe('Authentication - Restricted Access', () => {
     await fillUpSignInPageElements('non.space@alkem.io', password, page);
     await pressSignInButtonSignInPage(page);
 
-    // CRD redirects to authenticated home (not back to the restricted page).
-    await page.waitForURL(/home/i, { timeout: 12000 });
-    await expect(userMenuAvatar(page)).toBeVisible({ timeout: 8000 });
+    // The user is signed in (header avatar present) and the returnUrl brings
+    // them back to the restricted page, now showing the authenticated variant.
+    await expect(userMenuAvatar(page)).toBeVisible({ timeout: 12000 });
+    await expect(accessRestrictedHeading(page)).toBeVisible({ timeout: 8000 });
+    await expect(goToHomeButton(page)).toBeVisible();
   });
 });

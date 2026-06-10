@@ -40,17 +40,14 @@ export const getRecoveryCode = async (): Promise<
 
   function detectRecoveryCode(text: string): string | undefined {
     const cleanText = text.replace(/<.*?>/gm, "");
-    text = cleanText;
-    const match = text.match(/\b\d{6}\b/);
+    const match = cleanText.match(/\b\d{6}\b/);
 
     if (match) {
-      const recoveryCode: string = match[0];
-      return recoveryCode;
-    } else {
-      console.error("Recovery code not found.");
+      return match[0];
     }
 
-    return recoveryCode;
+    console.error("Recovery code not found.");
+    return undefined;
   }
 
   const recoveryCode = detectRecoveryCode(lastEmailBody);

@@ -68,9 +68,15 @@ test.describe.serial('Whiteboard Templates', () => {
       `${baseUrl}/${baseScenario.space.nameId}/settings/templates`
     );
 
+    // Enable CRD feature flag and reload so the redesigned Templates page renders
+    await page.evaluate(() => {
+      localStorage.setItem('alkemio-crd-enabled', 'true');
+    });
+    await page.reload();
+
     // Verify we are on the Templates settings page
     await expect(
-      page.getByText('Here you can create and edit Templates for this space.')
+      page.getByRole('textbox', { name: 'Search templates…' })
     ).toBeVisible();
   });
 
@@ -78,8 +84,14 @@ test.describe.serial('Whiteboard Templates', () => {
     // Navigate to the root of the space
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
 
-    // Click Settings tab to access space settings
-    await page.getByRole('tab', { name: 'Settings' }).click();
+    // Enable CRD feature flag
+    await page.evaluate(() => {
+      localStorage.setItem('alkemio-crd-enabled', 'true');
+    });
+    await page.reload();
+
+    // Open space settings (now a link in the space banner, not a space tab)
+    await page.getByRole('link', { name: 'Settings' }).click();
 
     // Click Templates tab to access template management
     await page.getByRole('tab', { name: 'Templates' }).click();
@@ -89,35 +101,36 @@ test.describe.serial('Whiteboard Templates', () => {
   });
 
   test('1.1 Create Whiteboard Template', async ({ page }) => {
-    // Verify all template sections are visible
+    // Verify the Whiteboard templates section is visible
     await expect(
-      page.getByRole('heading', { name: 'Whiteboard Templates' })
+      page.getByRole('button', { name: /^Whiteboard templates/ })
     ).toBeVisible();
 
-    // Find the container (parent of the parent of the heading) and then the "Create new" button within it
-    const createNewButton = await page
-      .getByRole('button', { name: 'Create new' })
-      .nth(2);
-    await createNewButton.click();
+    // Open the "Add new" menu for the Whiteboard templates section (3rd section)
+    await page.getByRole('button', { name: 'Add new' }).nth(2).click();
+    await page.getByRole('menuitem', { name: 'Create new' }).click();
 
     // Wait for the Whiteboard Template creation dialog to appear
+    const dialog = page.getByRole('dialog', {
+      name: 'Create whiteboard template',
+    });
     await expect(
-      page.getByRole('heading', { name: 'Create new Whiteboard Template' })
+      dialog.getByRole('heading', { name: 'Create whiteboard template' })
     ).toBeVisible();
 
     // Fill the form:
     await fillWhiteboardTemplateForm(page, templateData);
 
-    // Verify the Create button is enabled
-    const createButton = page.getByRole('button', { name: 'Create' });
-    await expect(createButton).toBeEnabled();
+    // Verify the Save button is enabled
+    const saveButton = dialog.getByRole('button', { name: 'Save' });
+    await expect(saveButton).toBeEnabled();
 
-    // Click the Create button to save the Whiteboard Template
-    await createButton.click();
+    // Click the Save button to save the Whiteboard Template
+    await saveButton.click();
 
     // Verify the dialog closes
     await expect(
-      page.getByRole('heading', { name: 'Create new Whiteboard Template' })
+      page.getByRole('heading', { name: 'Create whiteboard template' })
     ).not.toBeVisible();
 
     await verifyWhiteboardTemplate(page, templateData);
@@ -126,10 +139,14 @@ test.describe.serial('Whiteboard Templates', () => {
   test('1.2 Edit Whiteboard Template', async ({ page }) => {
     const EditedTag = ' Edited-' + randomBytes(3).toString('hex');
 
-    // Find the template title and click on it to open the template
-    await page.getByRole('heading', { name: templateData.displayName }).click();
-
-    await page.getByRole('button', { name: 'Edit' }).click();
+    // Open the template's preview dialog, then start editing
+    await page
+      .getByRole('button', {
+        name: `Preview: ${templateData.displayName}`,
+        exact: true,
+      })
+      .click();
+    await page.getByRole('button', { name: 'Edit template' }).click();
 
     templateData.displayName = templateData.displayName + EditedTag;
     templateData.description = templateData.description + EditedTag;
@@ -137,45 +154,47 @@ test.describe.serial('Whiteboard Templates', () => {
     templateData.textInWhiteboard = templateData.textInWhiteboard + EditedTag;
 
     // Wait for the edit dialog to appear
+    const dialog = page.getByRole('dialog', { name: 'Edit whiteboard template' });
     await expect(
-      page.getByRole('heading', { name: 'Edit Whiteboard Template' })
+      dialog.getByRole('heading', { name: 'Edit whiteboard template' })
     ).toBeVisible();
 
     await fillWhiteboardTemplateForm(page, templateData);
 
     // Click the Save button to save the changes
-    const saveButton = page.getByRole('button', { name: 'Update' });
+    const saveButton = dialog.getByRole('button', { name: 'Save' });
     await expect(saveButton).toBeEnabled();
     await saveButton.click();
 
     // Verify the dialog closes
     await expect(
-      page.getByRole('heading', { name: 'Edit Whiteboard Template' })
+      page.getByRole('heading', { name: 'Edit whiteboard template' })
     ).not.toBeVisible();
 
-    // Verify the data was updated
-    await verifyOpenedTemplate(page, templateData);
+    // Verify the data was updated (re-opens and closes the preview dialog)
+    await verifyWhiteboardTemplate(page, templateData);
 
     // Reload the page to ensure changes persist
     await page.reload();
-    await verifyOpenedTemplate(page, templateData);
+    await verifyWhiteboardTemplate(page, templateData);
   });
 
   test('1.3 Use whiteboard template in a whiteboard', async ({ page }) => {
-    // Verify all template sections are visible
+    // Verify the Whiteboard templates section is visible
     await expect(
-      page.getByRole('heading', { name: 'Whiteboard Templates' })
+      page.getByRole('button', { name: /^Whiteboard templates/ })
     ).toBeVisible();
 
-    // Find the container (parent of the parent of the heading) and then the "Create new" button within it
-    const createNewButton = await page
-      .getByRole('button', { name: 'Create new' })
-      .nth(2);
-    await createNewButton.click();
+    // Open the "Add new" menu for the Whiteboard templates section (3rd section)
+    await page.getByRole('button', { name: 'Add new' }).nth(2).click();
+    await page.getByRole('menuitem', { name: 'Create new' }).click();
 
     // Wait for the Whiteboard Template creation dialog to appear
+    const dialog = page.getByRole('dialog', {
+      name: 'Create whiteboard template',
+    });
     await expect(
-      page.getByRole('heading', { name: 'Create new Whiteboard Template' })
+      dialog.getByRole('heading', { name: 'Create whiteboard template' })
     ).toBeVisible();
 
     const testTemplate = {
@@ -188,7 +207,11 @@ test.describe.serial('Whiteboard Templates', () => {
 
     await fillWhiteboardWithWhiteboardTemplate(page, templateData);
 
-    await page.getByRole('button', { name: 'Create' }).click();
+    await dialog.getByRole('button', { name: 'Save' }).click();
+    await expect(
+      page.getByRole('heading', { name: 'Create whiteboard template' })
+    ).not.toBeVisible();
+
     await openWhiteboardTemplate(page, testTemplate);
     await verifyOpenedTemplate(page, testTemplate);
   });
