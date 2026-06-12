@@ -12,8 +12,7 @@ import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/O
 import { randomBytes } from 'crypto';
 import { CommunityGuidelinesTemplateForm } from './forms/template-form.models';
 import { fillCommunityGuidelinesForm } from './forms/community-guidelines-template-form';
-import { verifyOpenedTemplate } from './verify/verify-opened-template';
-import { openTemplate } from './verify/open-template';
+import { verifyCommunityGuidelinesTemplate } from './verify/community-guidelines-template-verify';
 
 // Create the authenticated fixture with a unique storage state name for this test suite
 const { test, setupAuthentication, teardownAuthentication } =
@@ -41,7 +40,7 @@ const templateData: CommunityGuidelinesTemplateForm = {
   displayName: 'Test Community Guidelines Template',
   description:
     'This is a test template for community guidelines. It defines the expected behavior and conduct within the community.',
-  tags: ['template', 'CG'],
+  tags: ['template', 'cg'],
   guidelines: {
     displayName: 'Community Code of Conduct',
     description:
@@ -75,9 +74,15 @@ test.describe.serial('Community Guidelines Template', () => {
       `${baseUrl}/${baseScenario.space.nameId}/settings/templates`
     );
 
+    // Enable CRD feature flag and reload so the redesigned Templates page renders
+    await page.evaluate(() => {
+      localStorage.setItem('alkemio-crd-enabled', 'true');
+    });
+    await page.reload();
+
     // Verify we are on the Templates settings page
     await expect(
-      page.getByText('Here you can create and edit Templates for this space.')
+      page.getByRole('textbox', { name: 'Search templates…' })
     ).toBeVisible();
   });
 
@@ -85,8 +90,14 @@ test.describe.serial('Community Guidelines Template', () => {
     // Navigate to the root of the space
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
 
-    // Click Settings tab to access space settings
-    await page.getByRole('tab', { name: 'Settings' }).click();
+    // Enable CRD feature flag
+    await page.evaluate(() => {
+      localStorage.setItem('alkemio-crd-enabled', 'true');
+    });
+    await page.reload();
+
+    // Open space settings (now a link in the space banner, not a space tab)
+    await page.getByRole('link', { name: 'Settings' }).click();
 
     // Click Templates tab to access template management
     await page.getByRole('tab', { name: 'Templates' }).click();
@@ -96,52 +107,52 @@ test.describe.serial('Community Guidelines Template', () => {
   });
 
   test('1.1 Create Community Guidelines Template', async ({ page }) => {
-    // Verify all template sections are visible
+    // Verify the Community guidelines templates section is visible
     await expect(
-      page.getByRole('heading', { name: 'Community Guidelines Templates' })
+      page.getByRole('button', { name: /^Community guidelines templates/ })
     ).toBeVisible();
 
-    // Find the container (parent of the parent of the heading) and then the "Create new" button within it
-    const createNewButton = await page
-      .getByRole('button', { name: 'Create new' })
-      .nth(4);
-    await createNewButton.click();
+    // Open the "Add new" menu for the Community guidelines section (5th section)
+    await page.getByRole('button', { name: 'Add new' }).nth(4).click();
+    await page.getByRole('menuitem', { name: 'Create new' }).click();
 
     // Wait for the Community Guidelines Template creation dialog to appear
+    const dialog = page.getByRole('dialog', {
+      name: 'Create community-guidelines template',
+    });
     await expect(
-      page.getByRole('heading', {
-        name: 'Create new Community Guidelines Template',
-      })
+      dialog.getByRole('heading', { name: 'Create community-guidelines template' })
     ).toBeVisible();
 
     // Fill the form:
     await fillCommunityGuidelinesForm(page, templateData);
 
-    // Verify the Create button is enabled
-    const createButton = page.getByRole('button', { name: 'Create' });
-    await expect(createButton).toBeEnabled();
+    // Verify the Save button is enabled
+    const saveButton = dialog.getByRole('button', { name: 'Save' });
+    await expect(saveButton).toBeEnabled();
 
-    // Click the Create button to save the Community Guidelines Template
-    await createButton.click();
+    // Click the Save button to save the Community Guidelines Template
+    await saveButton.click();
 
     // Verify the dialog closes
     await expect(
-      page.getByRole('heading', {
-        name: 'Create new Community Guidelines Template',
-      })
+      page.getByRole('heading', { name: 'Create community-guidelines template' })
     ).not.toBeVisible();
 
-    await openTemplate(page, templateData);
-    await verifyOpenedTemplate(page, templateData);
+    await verifyCommunityGuidelinesTemplate(page, templateData);
   });
 
   test('1.2 Edit Community Guidelines Template', async ({ page }) => {
     const EditedTag = ' Edited-' + randomBytes(3).toString('hex');
 
-    // Find the template title and click on it to open the template
-    await page.getByRole('heading', { name: templateData.displayName }).click();
-
-    await page.getByRole('button', { name: 'Edit' }).click();
+    // Open the template's preview dialog, then start editing
+    await page
+      .getByRole('button', {
+        name: `Preview: ${templateData.displayName}`,
+        exact: true,
+      })
+      .click();
+    await page.getByRole('button', { name: 'Edit template' }).click();
 
     templateData.displayName = templateData.displayName + EditedTag;
     templateData.description = templateData.description + EditedTag;
@@ -166,129 +177,107 @@ test.describe.serial('Community Guidelines Template', () => {
     });
 
     // Wait for the edit dialog to appear
+    const dialog = page.getByRole('dialog', {
+      name: 'Edit community-guidelines template',
+    });
     await expect(
-      page.getByRole('heading', { name: 'Edit Community Guidelines Template' })
+      dialog.getByRole('heading', { name: 'Edit community-guidelines template' })
     ).toBeVisible();
 
     await fillCommunityGuidelinesForm(page, templateData);
 
     // Click the Save button to save the changes
-    const saveButton = page.getByRole('button', { name: 'Update' });
+    const saveButton = dialog.getByRole('button', { name: 'Save' });
     await expect(saveButton).toBeEnabled();
     await saveButton.click();
 
     // Verify the dialog closes
     await expect(
-      page.getByRole('heading', { name: 'Edit Community Guidelines Template' })
+      page.getByRole('heading', { name: 'Edit community-guidelines template' })
     ).not.toBeVisible();
 
     // Verify the data was updated
-    await verifyOpenedTemplate(page, templateData);
+    await verifyCommunityGuidelinesTemplate(page, templateData);
 
     // Reload the page to ensure changes persist
     await page.reload();
-
-    await verifyOpenedTemplate(page, templateData);
+    await verifyCommunityGuidelinesTemplate(page, templateData);
   });
 
   test('1.3 Verify edit and cancel and confirm dialog', async ({ page }) => {
-    await page.getByRole('heading', { name: templateData.displayName }).click();
-
     const originalDescription = templateData.guidelines.description;
     templateData.guidelines.description =
       originalDescription + ' This edit will be discarded.';
 
-    await page.getByRole('button', { name: 'Edit' }).click();
+    await page
+      .getByRole('button', {
+        name: `Preview: ${templateData.displayName}`,
+        exact: true,
+      })
+      .click();
+    await page.getByRole('button', { name: 'Edit template' }).click();
 
     await fillCommunityGuidelinesForm(page, templateData);
 
-    // Close and discard changes to test the discard confirmation dialog
-    await page.getByRole('button', { name: 'Close' }).click();
-    await page.getByRole('button', { name: 'Yes, Discard' }).click();
+    // Cancel and discard the changes (Cancel triggers the "Discard changes?" dialog)
+    await page.getByRole('button', { name: 'Cancel' }).click();
+    await page.getByRole('button', { name: 'Yes, Close' }).click();
 
-    // Verify we are back on the template view page with original data
+    // Restore expectations and verify the template was not modified
     templateData.guidelines.description = originalDescription;
-    await page.getByRole('heading', { name: templateData.displayName }).click();
-    await verifyOpenedTemplate(page, templateData);
+    await verifyCommunityGuidelinesTemplate(page, templateData);
   });
 
   test('1.4 Use Community Guidelines Template', async ({ page }) => {
+    // Navigate to the redesigned community settings page (no longer a sub-tab
+    // of the space - it's reachable directly via /settings/community).
     await page.goto(
       `${baseUrl}/${baseScenario.space.nameId}/settings/community`
     );
-    const communityGuidelinesBlock = page
-      .locator('div')
-      .filter({ hasText: /^Community guidelines$/ })
-      .locator('..');
-    await communityGuidelinesBlock
-      .getByRole('button', { name: 'Expand' })
-      .click();
-    await page.getByRole('button', { name: 'Library' }).click();
 
-    await page
-      .getByRole('heading', { name: templateData.displayName, exact: true })
-      .click();
-
-    // Wait for the template preview dialog to appear
-    const templatePreviewHeading = page.getByRole('heading', {
-      name: `Preview — ${templateData.displayName}`,
-      exact: true,
+    // The "Community Guidelines" block is collapsed by default. The trigger is
+    // a button whose accessible name combines the heading + helper paragraph.
+    const guidelinesSection = page.getByRole('button', {
+      name: /^Community Guidelines/,
     });
-    await expect(templatePreviewHeading).toBeVisible();
+    await guidelinesSection.click();
 
-    await verifyOpenedTemplate(page, templateData);
+    // Open the picker. If the block already had data (e.g. a previous run
+    // applied a template), an alertdialog asks to confirm overwriting it.
+    await page.getByRole('button', { name: 'Use a template' }).click();
+    const replaceAlert = page.getByRole('alertdialog', {
+      name: 'Replace the current guidelines?',
+    });
+    if (await replaceAlert.isVisible({ timeout: 500 }).catch(() => false)) {
+      await replaceAlert.getByRole('button', { name: 'Replace' }).click();
+    }
 
-    // Click "Use" — the button is in the dialog containing the preview
-    const templateDialog = page
-      .getByRole('dialog')
-      .filter({ has: templatePreviewHeading });
-    await templateDialog.getByRole('button', { name: 'Use' }).click();
-    await expect(templatePreviewHeading).not.toBeVisible();
+    // "Use a template" picker dialog - identical shape to the callout-template
+    // picker: list of listitems, each with a "Use this template" button.
+    const pickerDialog = page.getByRole('dialog', { name: 'Use a template' });
+    await expect(pickerDialog).toBeVisible();
 
-    // Verify the template library dialog also closed
+    const item = pickerDialog
+      .getByRole('listitem')
+      .filter({ hasText: templateData.displayName });
+    await expect(item).toBeVisible();
+    await item.getByRole('button', { name: 'Use this template' }).click();
+    await expect(pickerDialog).not.toBeVisible();
+
+    // The picker fills in the guidelines block inline. Verify the title input
+    // and rich-text body were populated from the template. Target the main
+    // title field by its placeholder - the reference rows also expose a "Title"
+    // textbox (placeholder "Reference title"), so the role+name match alone is
+    // ambiguous once the template's references are applied.
     await expect(
-      page.getByRole('heading', {
-        name: 'Template Library: Community Guidelines Template',
-        exact: true,
-      })
-    ).not.toBeVisible();
-
-    await expect(
-      page.getByRole('textbox', { name: 'Title', exact: true }).first()
+      page.getByPlaceholder('Name your community guidelines')
     ).toHaveValue(templateData.guidelines.displayName);
-
     await expect(
       page.getByText(templateData.guidelines.description, { exact: true })
     ).toBeVisible();
   });
 
   // test('1.5 Delete Community Guidelines Template', async ({ page }) => {
-  //   // Find the template title and click on it to open the template
-  //   await page.getByRole('heading', { name: templateData.displayName }).click();
-
-  //   await page.getByRole('button', { name: 'Edit', exact: true }).click();
-
-  //   await page.getByRole('button', { name: 'Delete', exact: true }).click();
-
-  //   await expect(
-  //     page.getByText(
-  //       `Are you sure you want to delete the Template '${templateData.displayName}'?`,
-  //       { exact: true }
-  //     )
-  //   ).toBeVisible();
-
-  //   await page.getByRole('button', { name: 'Delete' }).click();
-
-  //   await expect(
-  //     page.getByRole('heading', { name: 'Warning' })
-  //   ).not.toBeVisible();
-
-  //   await expect(
-  //     page.getByRole('heading', { name: 'Edit Community Guidelines Template' })
-  //   ).not.toBeVisible();
-
-  //   await expect(
-  //     page.getByRole('heading', { name: templateData.displayName, exact: true })
-  //   ).not.toBeVisible();
+  //   // Delete flow not yet implemented for the redesigned Templates UI.
   // });
 });

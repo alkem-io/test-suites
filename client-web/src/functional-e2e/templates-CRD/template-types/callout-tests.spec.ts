@@ -12,7 +12,10 @@ import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/O
 import { createAuthenticatedSessionFixture } from '@src/functional-e2e/fixtures/authenticated-session.fixture';
 import { createCalloutTemplateData } from './forms/callout/callout-template-form.models';
 import { fillCalloutTemplateForm } from './forms/callout/callout-template-form';
-import { verifyCalloutTemplate } from './verify/callout-template-verify';
+import {
+  verifyCalloutTemplate,
+  verifyPollSettings,
+} from './verify/callout-template-verify';
 import { verifyCalloutTemplateUsage } from './usage/callout-template.use';
 import { acceptCookiesIfVisible } from '@src/functional-e2e/helpers/cookies.helper';
 
@@ -44,38 +47,38 @@ const createAndVerifyCalloutTemplate = async (
 ) => {
   // Wait for the templates page to be fully loaded
   await page
-    .getByRole('heading', { name: /Collaboration Tool Templates/ })
+    .getByRole('button', { name: /^Collaboration tools/ })
     .waitFor({ state: 'visible' });
 
-  // Click Create new in Collaboration Tool Templates section
-  // The sections are: Space Templates (0), Collaboration Tool Templates (1), Whiteboard (2), Post (3), Community Guidelines (4)
-  const createNewButton = page
-    .getByRole('button', { name: 'Create new' })
-    .nth(1);
-
-  await createNewButton.click();
+  // Open the "Add new" menu in the Collaboration tools section.
+  // The sections are: Space templates (0), Collaboration tools (1), Whiteboard (2), Post (3), Community guidelines (4)
+  await page.getByRole('button', { name: 'Add new' }).nth(1).click();
+  await page.getByRole('menuitem', { name: 'Create new' }).click();
 
   // Wait for the dialog to appear
-  const dialog = page.getByRole('dialog').filter({
-    has: page.getByRole('heading', {
-      name: 'Create new Collaboration Tool Template',
-    }),
+  const dialog = page.getByRole('dialog', {
+    name: 'Create collaboration-tool template',
   });
   await expect(dialog).toBeVisible();
 
   // Fill the form
   await fillCalloutTemplateForm(page, templateData);
 
-  // Click on CREATE the template
-  const createButton = dialog.getByRole('button', { name: 'Create' });
-  await expect(createButton).toBeEnabled();
-  await createButton.click();
+  // Save the template
+  const saveButton = dialog.getByRole('button', { name: 'Save' });
+  await expect(saveButton).toBeEnabled();
+  await saveButton.click();
 
   // Verify dialog closes
   await expect(dialog).not.toBeVisible();
 
   // Verify template was created
   await verifyCalloutTemplate(page, templateData);
+
+  // Poll framing: confirm the 4 Poll Settings flags persisted (round-tripped
+  // through the Edit dialog - the only template-level place they're readable).
+  // No-op for non-poll framing.
+  await verifyPollSettings(page, templateData);
 
   // Verify the template works using it:
   await verifyCalloutTemplateUsage(
@@ -145,6 +148,48 @@ const createAndVerifyCalloutTemplate = async (
 // Callout with references test:
 // |        |  41| None               | None             | Disabled         | N/A                | N/A                | N/A                |
 
+// =========================================================================================================================================
+//   POLL FRAMING TESTS (Additional Content = Poll)
+// =========================================================================================================================================
+// Focus: every combination of the four poll-specific settings exposed in the
+// in-form "Poll Settings" sub-dialog (button "Settings" inside the Poll editor).
+//
+// The four settings (booleans) under test:
+//   • Multi-vote  → switch "Allow multiple responses"            (default OFF)
+//   • AddOptions  → switch "Allow contributors to add options"   (default OFF)
+//   • HideResults → switch "Hide results until user votes"       (default OFF)
+//   • ShowVoters  → switch "Show voter avatars"                  (default ON)
+//                   (ShowVoters=OFF == anonymous vote / no who-voted-what)
+//
+// Held constant (orthogonal coverage already lives in tests 1–40):
+//   • Response Options = None
+//   • Comments Enabled = Disabled
+//
+// The number of poll options varies per test (2 / 3 / 4 / 5 / 10) — covered for
+// breadth, NOT a primary axis. Each test just creates the configured number
+// of options with placeholder labels.
+//
+// 2^4 = 16 combinations → tests 42–57.
+//
+// | No  | # Opts | Multi-vote | AddOptions | HideResults | ShowVoters | Notes                                            |
+// |-----|--------|------------|------------|-------------|------------|--------------------------------------------------|
+// | 42  |   2    | OFF        | OFF        | OFF         | OFF        | minimal poll, anonymous                          |
+// | 43  |   3    | OFF        | OFF        | OFF         | ON         | UI defaults (ShowVoters=ON)                      |
+// | 44  |   3    | OFF        | OFF        | ON          | OFF        | hidden-until-vote + anonymous                    |
+// | 45  |   4    | OFF        | OFF        | ON          | ON         | hidden-until-vote, voters visible                |
+// | 46  |   3    | OFF        | ON         | OFF         | OFF        | crowdsourced options, anonymous                  |
+// | 47  |   3    | OFF        | ON         | OFF         | ON         | crowdsourced options, voters visible             |
+// | 48  |   4    | OFF        | ON         | ON          | OFF        | crowdsourced + hidden + anonymous                |
+// | 49  |   3    | OFF        | ON         | ON          | ON         | crowdsourced + hidden, voters visible            |
+// | 50  |   3    | ON         | OFF        | OFF         | OFF        | multi-vote, anonymous                            |
+// | 51  |   2    | ON         | OFF        | OFF         | ON         | multi-vote, voters visible                       |
+// | 52  |   4    | ON         | OFF        | ON          | OFF        | multi-vote + hidden + anonymous                  |
+// | 53  |   3    | ON         | OFF        | ON          | ON         | multi-vote + hidden, voters visible              |
+// | 54  |   5    | ON         | ON         | OFF         | OFF        | multi-vote + crowdsourced, anonymous             |
+// | 55  |   3    | ON         | ON         | OFF         | ON         | multi-vote + crowdsourced, voters visible        |
+// | 56  |  10    | ON         | ON         | ON          | OFF        | all-on, anonymous, max option count              |
+// | 57  |   3    | ON         | ON         | ON          | ON         | all four settings ON                             |
+
 test.describe.serial('Callout Templates', () => {
   test.beforeAll(async ({ browser }) => {
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
@@ -161,6 +206,13 @@ test.describe.serial('Callout Templates', () => {
     await page.goto(
       `${baseUrl}/${baseScenario.space.nameId}/settings/templates`
     );
+
+    // Enable CRD feature flag and reload so the redesigned Templates page renders
+    await page.evaluate(() => {
+      localStorage.setItem('alkemio-crd-enabled', 'true');
+    });
+    await page.reload();
+
     await acceptCookiesIfVisible(page);
   });
 
@@ -168,6 +220,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '1',
       framingType: 'none',
       responseType: 'none',
       commentsEnabled: false,
@@ -180,6 +233,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '2',
       framingType: 'none',
       responseType: 'none',
       commentsEnabled: true,
@@ -192,6 +246,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '3',
       framingType: 'whiteboard',
       responseType: 'none',
       commentsEnabled: false,
@@ -204,6 +259,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '4',
       framingType: 'whiteboard',
       responseType: 'none',
       commentsEnabled: true,
@@ -216,6 +272,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '5',
       framingType: 'memo',
       responseType: 'none',
       commentsEnabled: false,
@@ -228,6 +285,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '6',
       framingType: 'memo',
       responseType: 'none',
       commentsEnabled: true,
@@ -240,6 +298,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '7',
       framingType: 'callToAction',
       responseType: 'none',
       commentsEnabled: false,
@@ -252,6 +311,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '8',
       framingType: 'callToAction',
       responseType: 'none',
       commentsEnabled: true,
@@ -264,6 +324,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '9',
       framingType: 'none',
       responseType: 'linksFiles',
       commentsEnabled: false,
@@ -276,6 +337,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '9b',
       framingType: 'none',
       responseType: 'linksFiles',
       commentsEnabled: false,
@@ -290,6 +352,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '9c',
       framingType: 'none',
       responseType: 'linksFiles',
       commentsEnabled: false,
@@ -304,6 +367,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '10',
       framingType: 'none',
       responseType: 'linksFiles',
       commentsEnabled: true,
@@ -316,6 +380,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '11',
       framingType: 'whiteboard',
       responseType: 'linksFiles',
       commentsEnabled: false,
@@ -328,6 +393,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '12',
       framingType: 'whiteboard',
       responseType: 'linksFiles',
       commentsEnabled: true,
@@ -340,6 +406,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '13',
       framingType: 'memo',
       responseType: 'linksFiles',
       commentsEnabled: false,
@@ -352,6 +419,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '14',
       framingType: 'memo',
       responseType: 'linksFiles',
       commentsEnabled: true,
@@ -364,6 +432,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '15',
       framingType: 'callToAction',
       responseType: 'linksFiles',
       commentsEnabled: false,
@@ -376,6 +445,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '16',
       framingType: 'callToAction',
       responseType: 'linksFiles',
       commentsEnabled: true,
@@ -388,6 +458,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '17',
       framingType: 'none',
       responseType: 'posts',
       commentsEnabled: false,
@@ -400,6 +471,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '17b',
       framingType: 'none',
       responseType: 'posts',
       commentsEnabled: false,
@@ -415,6 +487,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '17c',
       framingType: 'none',
       responseType: 'posts',
       commentsEnabled: false,
@@ -430,6 +503,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '17d',
       framingType: 'none',
       responseType: 'posts',
       commentsEnabled: false,
@@ -445,6 +519,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '17e',
       framingType: 'none',
       responseType: 'posts',
       commentsEnabled: false,
@@ -460,6 +535,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '17f',
       framingType: 'none',
       responseType: 'posts',
       commentsEnabled: false,
@@ -475,6 +551,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '18',
       framingType: 'none',
       responseType: 'posts',
       commentsEnabled: true,
@@ -487,6 +564,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '19',
       framingType: 'whiteboard',
       responseType: 'posts',
       commentsEnabled: false,
@@ -499,6 +577,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '20',
       framingType: 'whiteboard',
       responseType: 'posts',
       commentsEnabled: true,
@@ -511,6 +590,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '21',
       framingType: 'memo',
       responseType: 'posts',
       commentsEnabled: false,
@@ -523,6 +603,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '22',
       framingType: 'memo',
       responseType: 'posts',
       commentsEnabled: true,
@@ -535,6 +616,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '23',
       framingType: 'callToAction',
       responseType: 'posts',
       commentsEnabled: false,
@@ -547,6 +629,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '24',
       framingType: 'callToAction',
       responseType: 'posts',
       commentsEnabled: true,
@@ -559,6 +642,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '25',
       framingType: 'none',
       responseType: 'memos',
       commentsEnabled: false,
@@ -571,6 +655,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '25b',
       framingType: 'none',
       responseType: 'memos',
       commentsEnabled: false,
@@ -585,6 +670,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '25c',
       framingType: 'none',
       responseType: 'memos',
       commentsEnabled: false,
@@ -599,6 +685,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '26',
       framingType: 'none',
       responseType: 'memos',
       commentsEnabled: true,
@@ -611,6 +698,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '27',
       framingType: 'whiteboard',
       responseType: 'memos',
       commentsEnabled: false,
@@ -623,6 +711,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '28',
       framingType: 'whiteboard',
       responseType: 'memos',
       commentsEnabled: true,
@@ -635,6 +724,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '29',
       framingType: 'memo',
       responseType: 'memos',
       commentsEnabled: false,
@@ -647,6 +737,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '30',
       framingType: 'memo',
       responseType: 'memos',
       commentsEnabled: true,
@@ -659,6 +750,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '31',
       framingType: 'callToAction',
       responseType: 'memos',
       commentsEnabled: false,
@@ -671,6 +763,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '32',
       framingType: 'callToAction',
       responseType: 'memos',
       commentsEnabled: true,
@@ -683,6 +776,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '33',
       framingType: 'none',
       responseType: 'whiteboards',
       commentsEnabled: false,
@@ -695,6 +789,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '33b',
       framingType: 'none',
       responseType: 'whiteboards',
       commentsEnabled: false,
@@ -709,6 +804,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '33c',
       framingType: 'none',
       responseType: 'whiteboards',
       commentsEnabled: false,
@@ -723,6 +819,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '34',
       framingType: 'none',
       responseType: 'whiteboards',
       commentsEnabled: true,
@@ -735,6 +832,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '35',
       framingType: 'whiteboard',
       responseType: 'whiteboards',
       commentsEnabled: false,
@@ -747,6 +845,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '36',
       framingType: 'whiteboard',
       responseType: 'whiteboards',
       commentsEnabled: true,
@@ -759,6 +858,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '37',
       framingType: 'memo',
       responseType: 'whiteboards',
       commentsEnabled: false,
@@ -771,6 +871,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '38',
       framingType: 'memo',
       responseType: 'whiteboards',
       commentsEnabled: true,
@@ -783,6 +884,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '39',
       framingType: 'callToAction',
       responseType: 'whiteboards',
       commentsEnabled: false,
@@ -795,6 +897,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '40',
       framingType: 'callToAction',
       responseType: 'whiteboards',
       commentsEnabled: true,
@@ -807,6 +910,7 @@ test.describe.serial('Callout Templates', () => {
     page,
   }) => {
     const templateData = createCalloutTemplateData({
+      testNumber: '41',
       framingType: 'none',
       responseType: 'none',
       commentsEnabled: false,
@@ -816,6 +920,285 @@ test.describe.serial('Callout Templates', () => {
       ],
     });
 
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  // ============================================================
+  //  POLL FRAMING TESTS (42–57)
+  //  All combinations of the 4 in-form Poll Settings flags.
+  //  Response = none, Comments = Disabled held constant.
+  //  Option count varies (2/3/4/5/10) — secondary axis.
+  // ============================================================
+
+  test('42 Poll (2 opts), Multi:OFF, AddOpts:OFF, HideResults:OFF, ShowVoters:OFF', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      testNumber: '42',
+      framingType: 'poll',
+      responseType: 'none',
+      commentsEnabled: false,
+      pollOptionCount: 2,
+      pollMultiVote: false,
+      pollAllowAddOptions: false,
+      pollHideResults: false,
+      pollShowVoters: false,
+    });
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('43 Poll (3 opts), Multi:OFF, AddOpts:OFF, HideResults:OFF, ShowVoters:ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      testNumber: '43',
+      framingType: 'poll',
+      responseType: 'none',
+      commentsEnabled: false,
+      pollOptionCount: 3,
+      pollMultiVote: false,
+      pollAllowAddOptions: false,
+      pollHideResults: false,
+      pollShowVoters: true,
+    });
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('44 Poll (3 opts), Multi:OFF, AddOpts:OFF, HideResults:ON, ShowVoters:OFF', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      testNumber: '44',
+      framingType: 'poll',
+      responseType: 'none',
+      commentsEnabled: false,
+      pollOptionCount: 3,
+      pollMultiVote: false,
+      pollAllowAddOptions: false,
+      pollHideResults: true,
+      pollShowVoters: false,
+    });
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('45 Poll (4 opts), Multi:OFF, AddOpts:OFF, HideResults:ON, ShowVoters:ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      testNumber: '45',
+      framingType: 'poll',
+      responseType: 'none',
+      commentsEnabled: false,
+      pollOptionCount: 4,
+      pollMultiVote: false,
+      pollAllowAddOptions: false,
+      pollHideResults: true,
+      pollShowVoters: true,
+    });
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('46 Poll (3 opts), Multi:OFF, AddOpts:ON, HideResults:OFF, ShowVoters:OFF', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      testNumber: '46',
+      framingType: 'poll',
+      responseType: 'none',
+      commentsEnabled: false,
+      pollOptionCount: 3,
+      pollMultiVote: false,
+      pollAllowAddOptions: true,
+      pollHideResults: false,
+      pollShowVoters: false,
+    });
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('47 Poll (3 opts), Multi:OFF, AddOpts:ON, HideResults:OFF, ShowVoters:ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      testNumber: '47',
+      framingType: 'poll',
+      responseType: 'none',
+      commentsEnabled: false,
+      pollOptionCount: 3,
+      pollMultiVote: false,
+      pollAllowAddOptions: true,
+      pollHideResults: false,
+      pollShowVoters: true,
+    });
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('48 Poll (4 opts), Multi:OFF, AddOpts:ON, HideResults:ON, ShowVoters:OFF', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      testNumber: '48',
+      framingType: 'poll',
+      responseType: 'none',
+      commentsEnabled: false,
+      pollOptionCount: 4,
+      pollMultiVote: false,
+      pollAllowAddOptions: true,
+      pollHideResults: true,
+      pollShowVoters: false,
+    });
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('49 Poll (3 opts), Multi:OFF, AddOpts:ON, HideResults:ON, ShowVoters:ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      testNumber: '49',
+      framingType: 'poll',
+      responseType: 'none',
+      commentsEnabled: false,
+      pollOptionCount: 3,
+      pollMultiVote: false,
+      pollAllowAddOptions: true,
+      pollHideResults: true,
+      pollShowVoters: true,
+    });
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('50 Poll (3 opts), Multi:ON, AddOpts:OFF, HideResults:OFF, ShowVoters:OFF', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      testNumber: '50',
+      framingType: 'poll',
+      responseType: 'none',
+      commentsEnabled: false,
+      pollOptionCount: 3,
+      pollMultiVote: true,
+      pollAllowAddOptions: false,
+      pollHideResults: false,
+      pollShowVoters: false,
+    });
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('51 Poll (2 opts), Multi:ON, AddOpts:OFF, HideResults:OFF, ShowVoters:ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      testNumber: '51',
+      framingType: 'poll',
+      responseType: 'none',
+      commentsEnabled: false,
+      pollOptionCount: 2,
+      pollMultiVote: true,
+      pollAllowAddOptions: false,
+      pollHideResults: false,
+      pollShowVoters: true,
+    });
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('52 Poll (4 opts), Multi:ON, AddOpts:OFF, HideResults:ON, ShowVoters:OFF', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      testNumber: '52',
+      framingType: 'poll',
+      responseType: 'none',
+      commentsEnabled: false,
+      pollOptionCount: 4,
+      pollMultiVote: true,
+      pollAllowAddOptions: false,
+      pollHideResults: true,
+      pollShowVoters: false,
+    });
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('53 Poll (3 opts), Multi:ON, AddOpts:OFF, HideResults:ON, ShowVoters:ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      testNumber: '53',
+      framingType: 'poll',
+      responseType: 'none',
+      commentsEnabled: false,
+      pollOptionCount: 3,
+      pollMultiVote: true,
+      pollAllowAddOptions: false,
+      pollHideResults: true,
+      pollShowVoters: true,
+    });
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('54 Poll (5 opts), Multi:ON, AddOpts:ON, HideResults:OFF, ShowVoters:OFF', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      testNumber: '54',
+      framingType: 'poll',
+      responseType: 'none',
+      commentsEnabled: false,
+      pollOptionCount: 5,
+      pollMultiVote: true,
+      pollAllowAddOptions: true,
+      pollHideResults: false,
+      pollShowVoters: false,
+    });
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('55 Poll (3 opts), Multi:ON, AddOpts:ON, HideResults:OFF, ShowVoters:ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      testNumber: '55',
+      framingType: 'poll',
+      responseType: 'none',
+      commentsEnabled: false,
+      pollOptionCount: 3,
+      pollMultiVote: true,
+      pollAllowAddOptions: true,
+      pollHideResults: false,
+      pollShowVoters: true,
+    });
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('56 Poll (10 opts), Multi:ON, AddOpts:ON, HideResults:ON, ShowVoters:OFF', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      testNumber: '56',
+      framingType: 'poll',
+      responseType: 'none',
+      commentsEnabled: false,
+      pollOptionCount: 10,
+      pollMultiVote: true,
+      pollAllowAddOptions: true,
+      pollHideResults: true,
+      pollShowVoters: false,
+    });
+    await createAndVerifyCalloutTemplate(page, templateData);
+  });
+
+  test('57 Poll (3 opts), Multi:ON, AddOpts:ON, HideResults:ON, ShowVoters:ON', async ({
+    page,
+  }) => {
+    const templateData = createCalloutTemplateData({
+      testNumber: '57',
+      framingType: 'poll',
+      responseType: 'none',
+      commentsEnabled: false,
+      pollOptionCount: 3,
+      pollMultiVote: true,
+      pollAllowAddOptions: true,
+      pollHideResults: true,
+      pollShowVoters: true,
+    });
     await createAndVerifyCalloutTemplate(page, templateData);
   });
 });
