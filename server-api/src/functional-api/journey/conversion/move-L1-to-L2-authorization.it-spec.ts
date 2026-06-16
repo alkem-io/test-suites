@@ -219,7 +219,7 @@ describe('Move L1 to L2 - validation errors', () => {
       valSourceScenario.subspace.id, // source L1
       valSourceWithL2.subspace.id // target L1 in different L0
     );
-
+    console.log('Move response for same-L0 target:', res);
     expect(res.error?.errors?.length).toBeGreaterThan(0);
   });
 

@@ -132,8 +132,7 @@ describe('Same-L0 vs Cross-L0 demotion comparison', () => {
       );
     });
 
-    // Skip: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
-    test.skip('cross-L0: profile url is updated after move', async () => {
+    test('cross-L0: profile url is updated after move', async () => {
       const movedData = await getSpaceData(crossL0Source.subspace.id);
       const urlAfter = movedData.data?.lookup.space?.about.profile.url ?? '';
 

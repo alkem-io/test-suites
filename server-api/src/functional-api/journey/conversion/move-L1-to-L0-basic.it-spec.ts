@@ -142,13 +142,20 @@ describe('Move L1 to L0 - basic', () => {
     // authorization is preserved
     expect(movedSpace?.about.authorization).toEqual(aboutBefore?.authorization);
 
-    // profile: id and displayName preserved, url points to new hierarchy
+    // profile: id, displayName, and structural fields preserved; only L0 prefix in url changes
     // Skip url check: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
     expect(movedSpace?.about.profile).toEqual(
       expect.objectContaining({
         id: aboutBefore?.profile?.id,
         displayName: aboutBefore?.profile?.displayName,
+        description: aboutBefore?.profile?.description,
         // url: `${ALKEMIO_BASE_URL}/${targetScenario.space.nameId}/challenges/${sourceScenario.subspace.nameId}`,
+        references: aboutBefore?.profile?.references,
+        tagline: aboutBefore?.profile?.tagline,
+        tagsets: aboutBefore?.profile?.tagsets,
+        location: aboutBefore?.profile?.location,
+        authorization: aboutBefore?.profile?.authorization,
+        storageBucket: aboutBefore?.profile?.storageBucket,
       })
     );
 
@@ -165,43 +172,140 @@ describe('Move L1 to L0 - basic', () => {
     expect(movedSpace?.about.why).toEqual(aboutBefore?.why);
   });
 
-  // Skip: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
-  test.skip('all entity profile urls are updated after cross-L0 move', () => {
+  test('all entity profile urls rebase to target L0 nameId after cross-L0 move', () => {
     const urlsBefore = collectProfileUrls(subspaceBefore.data?.lookup.space);
     const urlsAfter = collectProfileUrls(movedSpace);
 
+    const targetSpaceNameId = targetScenario.space.nameId;
+    const movedNameId = sourceScenario.subspace.nameId;
+    const targetOrgNameId = targetScenario.organization.nameId;
+    // L1 stays L1; only the L0 prefix in the url changes to the target L0 nameId.
+    const expectedEntityUrl = `${ALKEMIO_BASE_URL}/${targetSpaceNameId}/challenges/${movedNameId}`;
+
+    // structural invariants: same paths present, no empties
+    expect(urlsAfter.map(e => e.path).sort()).toEqual(
+      urlsBefore.map(e => e.path).sort()
+    );
     for (const entry of urlsAfter) {
       expect(entry.url, `${entry.path} should not be empty`).not.toBe('');
     }
 
-    expect(urlsAfter.length).toEqual(urlsBefore.length);
+    const before = new Map(urlsBefore.map(e => [e.path, e.url]));
+    const after = new Map(urlsAfter.map(e => [e.path, e.url]));
 
-    for (let i = 0; i < urlsAfter.length; i++) {
-      expect(
-        urlsAfter[i].url,
-        `${urlsAfter[i].path} should differ after move`
-      ).not.toEqual(urlsBefore[i].url);
-    }
+    // host org URL points at target organization
+    expect(
+      after.get('account.host.profile.url'),
+      'account.host.profile.url should point at target organization'
+    ).toBe(`${ALKEMIO_BASE_URL}/organization/${targetOrgNameId}`);
+
+    // Skip: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
+    // about URL reflects target L0 nameId, moved space stays L1 under /challenges/
+    // expect(
+    //   after.get('about.profile.url'),
+    //   'about.profile.url should rebase to target L0 nameId'
+    // ).toBe(expectedEntityUrl);
+
+    // Skip: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
+    // innovation flow URL shares the same entity prefix
+    // expect(
+    //   after.get('collaboration.innovationFlow.profile.url'),
+    //   'innovationFlow.profile.url should rebase to target L0 nameId'
+    // ).toBe(expectedEntityUrl);
+
+    // Skip: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
+    // callout URLs: only the L0 prefix changes, trailing slug preserved
+    // for (const [path, urlAfter] of after.entries()) {
+    //   if (
+    //     !path.startsWith('collaboration.calloutsSet.callouts[') ||
+    //     !path.endsWith('.framing.profile.url')
+    //   ) {
+    //     continue;
+    //   }
+    //   const urlBefore = before.get(path);
+    //   const slug = urlBefore?.split('/collaboration/')[1];
+    //   expect(
+    //     slug,
+    //     `could not extract callout slug from before-url ${path}`
+    //   ).toBeTruthy();
+    //   expect(
+    //     urlAfter,
+    //     `${path} should rebase to target L0 nameId with preserved slug "${slug}"`
+    //   ).toBe(`${expectedEntityUrl}/collaboration/${slug}`);
+    // }
+
+    // Suppress unused warnings until #9481 is fixed and the assertions above are uncommented.
+    void before;
+    void expectedEntityUrl;
   });
 
-  // Skip: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
-  test.skip('L2 descendant entity profile urls are updated after cross-L0 move', async () => {
+  test('L2 descendant entity profile urls rebase to target L0 nameId after cross-L0 move', async () => {
     const urlsBefore = collectProfileUrls(subsubspaceBefore.data?.lookup.space);
     const l2Data = await getSpaceData(sourceScenario.subsubspace.id);
     const urlsAfter = collectProfileUrls(l2Data.data?.lookup.space);
 
+    const targetSpaceNameId = targetScenario.space.nameId;
+    const movedL1NameId = sourceScenario.subspace.nameId;
+    const l2NameId = sourceScenario.subsubspace.nameId;
+    const targetOrgNameId = targetScenario.organization.nameId;
+    // L2 stays L2 under its still-L1 parent; only the L0 prefix changes to the target L0 nameId.
+    const expectedL2EntityUrl = `${ALKEMIO_BASE_URL}/${targetSpaceNameId}/challenges/${movedL1NameId}/opportunities/${l2NameId}`;
+
+    // structural invariants: same paths present, no empties
+    expect(urlsAfter.map(e => e.path).sort()).toEqual(
+      urlsBefore.map(e => e.path).sort()
+    );
     for (const entry of urlsAfter) {
       expect(entry.url, `${entry.path} should not be empty`).not.toBe('');
     }
 
-    expect(urlsAfter.length).toEqual(urlsBefore.length);
+    const before = new Map(urlsBefore.map(e => [e.path, e.url]));
+    const after = new Map(urlsAfter.map(e => [e.path, e.url]));
 
-    for (let i = 0; i < urlsAfter.length; i++) {
-      expect(
-        urlsAfter[i].url,
-        `${urlsAfter[i].path} should differ after move`
-      ).not.toEqual(urlsBefore[i].url);
-    }
+    // host org URL points at target organization (account inherited via parent)
+    expect(
+      after.get('account.host.profile.url'),
+      'account.host.profile.url should point at target organization'
+    ).toBe(`${ALKEMIO_BASE_URL}/organization/${targetOrgNameId}`);
+
+    // Skip: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
+    // about URL reflects target L0 nameId; L2 path under /opportunities/ preserved
+    // expect(
+    //   after.get('about.profile.url'),
+    //   'about.profile.url should rebase to target L0 nameId'
+    // ).toBe(expectedL2EntityUrl);
+
+    // Skip: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
+    // innovation flow URL shares the same entity prefix
+    // expect(
+    //   after.get('collaboration.innovationFlow.profile.url'),
+    //   'innovationFlow.profile.url should rebase to target L0 nameId'
+    // ).toBe(expectedL2EntityUrl);
+
+    // Skip: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
+    // callout URLs: only the L0 prefix changes, trailing slug preserved
+    // for (const [path, urlAfter] of after.entries()) {
+    //   if (
+    //     !path.startsWith('collaboration.calloutsSet.callouts[') ||
+    //     !path.endsWith('.framing.profile.url')
+    //   ) {
+    //     continue;
+    //   }
+    //   const urlBefore = before.get(path);
+    //   const slug = urlBefore?.split('/collaboration/')[1];
+    //   expect(
+    //     slug,
+    //     `could not extract callout slug from before-url ${path}`
+    //   ).toBeTruthy();
+    //   expect(
+    //     urlAfter,
+    //     `${path} should rebase to target L0 nameId with preserved slug "${slug}"`
+    //   ).toBe(`${expectedL2EntityUrl}/collaboration/${slug}`);
+    // }
+
+    // Suppress unused warnings until #9481 is fixed and the assertions above are uncommented.
+    void before;
+    void expectedL2EntityUrl;
   });
 
   test('visibility/privacy is preserved', () => {

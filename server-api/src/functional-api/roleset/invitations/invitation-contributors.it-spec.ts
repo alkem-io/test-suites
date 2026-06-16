@@ -454,14 +454,8 @@ describe('Invitations-flows', () => {
     );
   });
 
-  test('should throw error, when sending invitation to a member', async () => {
+  test('should return ALREADY_MEMBER result, when sending invitation to a member', async () => {
     // Arrange
-    await assignRoleToUser(
-      TestUserManager.users.nonSpaceMember.id,
-      baseScenario.space.community.roleSetId,
-      RoleName.Member
-    );
-
     await assignRoleToUser(
       TestUserManager.users.nonSpaceMember.id,
       baseScenario.space.community.roleSetId,
@@ -478,11 +472,13 @@ describe('Invitations-flows', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    // Assert
-    expect(invitationData?.error?.errors?.[0]?.message).toBeDefined();
-    expect(invitationData?.error?.errors?.[0]?.message).toContain(
-      `Invitation not possible: Actor ${TestUserManager.users.nonSpaceMember.id} is already a member of the RoleSet: ${baseScenario.space.community.roleSetId}.`
+    // Assert — inviting an existing member no longer throws; it returns a
+    // result with type ALREADY_MEMBER_OF_ROLE_SET and no invitation
+    const result = getSingleInvitationResult(invitationData);
+    expect(result?.type).toEqual(
+      RoleSetInvitationResultType.AlreadyMemberOfRoleSet
     );
+    expect(result?.invitation).toBeFalsy();
   });
 
   test('should fail to send invitation, when user has active application', async () => {
@@ -507,12 +503,16 @@ describe('Invitations-flows', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    // Assert
-    expect(invitationData?.error?.errors?.[0]?.message).toBeDefined();
-    expect(invitationData?.error?.errors?.[0]?.message).toContain(
-      `Invitation not possible: An open application already exists for actor ${TestUserManager.users.nonSpaceMember.id} on RoleSet: ${baseScenario.space.community.roleSetId}.`
-    );
+    // Assert — invite is blocked by the open application; it now returns a
+    // result with type ALREADY_HAS_OPEN_APPLICATION instead of throwing.
+    // Clean up the application first so a failed assertion can't leak it into
+    // subsequent tests.
+    const result = getSingleInvitationResult(invitationData);
     await deleteApplication(applicationId);
+    expect(result?.type).toEqual(
+      RoleSetInvitationResultType.AlreadyHasOpenApplication
+    );
+    expect(result?.invitation).toBeFalsy();
   });
 
   test('User with received invitation, cannot apply to the community', async () => {

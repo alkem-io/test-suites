@@ -10,7 +10,6 @@ import { stripProfileUrls, collectProfileUrls } from '@utils/array.matcher';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { SpaceLevel } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- used once alkem-io/client-web#9481 is fixed
 const { ALKEMIO_BASE_URL } = process.env;
 
 let sourceScenario: OrganizationWithSpaceModel;
@@ -92,13 +91,14 @@ beforeAll(async () => {
     sourceScenario.subspace.id,
     targetScenario.subspace.id
   );
+  console.log('Move response:', res.error);
   movedSpace = res.data?.moveSpaceL1ToSpaceL2;
 });
 
-afterAll(async () => {
-  await TestScenarioFactory.cleanUpBaseScenario(sourceScenario);
-  await TestScenarioFactory.cleanUpBaseScenario(targetScenario);
-});
+// afterAll(async () => {
+//   await TestScenarioFactory.cleanUpBaseScenario(sourceScenario);
+//   await TestScenarioFactory.cleanUpBaseScenario(targetScenario);
+// });
 
 describe('Move L1 to L2 - basic', () => {
   test('space level is demoted to L2', () => {
@@ -134,7 +134,6 @@ describe('Move L1 to L2 - basic', () => {
     expect(movedSpace?.about.authorization).toEqual(aboutBefore?.authorization);
 
     // profile: id and displayName preserved, url points to new hierarchy
-    // Skip: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
     expect(movedSpace?.about.profile).toEqual(
       expect.objectContaining({
         id: aboutBefore?.profile?.id,
@@ -163,22 +162,64 @@ describe('Move L1 to L2 - basic', () => {
     expect(movedSpace?.about.why).toEqual(aboutBefore?.why);
   });
 
-  // Skip: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
-  test.skip('all entity profile urls are updated after cross-L0 move to L2', () => {
+  // InnovationFlowDataFragmentDoc.profile.url - doesn't get updated to the new subsubspace url
+  test('all entity profile urls reflect the new L2 hierarchy after cross-L0 move', () => {
     const urlsBefore = collectProfileUrls(subspaceBefore.data?.lookup.space);
     const urlsAfter = collectProfileUrls(movedSpace);
 
+    const targetSpaceNameId = targetScenario.space.nameId;
+    const targetParentNameId = targetScenario.subspace.nameId;
+    const movedNameId = sourceScenario.subspace.nameId;
+    const targetOrgNameId = targetScenario.organization.nameId;
+    const expectedEntityUrl = `${ALKEMIO_BASE_URL}/${targetSpaceNameId}/challenges/${targetParentNameId}/opportunities/${movedNameId}`;
+
+    // structural invariants: same paths present, no empties
+    expect(urlsAfter.map(e => e.path).sort()).toEqual(
+      urlsBefore.map(e => e.path).sort()
+    );
     for (const entry of urlsAfter) {
       expect(entry.url, `${entry.path} should not be empty`).not.toBe('');
     }
 
-    expect(urlsAfter.length).toEqual(urlsBefore.length);
+    const before = new Map(urlsBefore.map(e => [e.path, e.url]));
+    const after = new Map(urlsAfter.map(e => [e.path, e.url]));
 
-    for (let i = 0; i < urlsAfter.length; i++) {
+    // host org URL points at target organization
+    expect(
+      after.get('account.host.profile.url'),
+      'account.host.profile.url should point at target organization'
+    ).toBe(`${ALKEMIO_BASE_URL}/organization/${targetOrgNameId}`);
+
+    // about URL reflects new L0 → L1 (challenge) → L2 (opportunity) hierarchy
+    expect(
+      after.get('about.profile.url'),
+      'about.profile.url should reflect new L2 hierarchy'
+    ).toBe(expectedEntityUrl);
+
+    // innovation flow URL shares the same entity prefix
+    expect(
+      after.get('collaboration.innovationFlow.profile.url'),
+      'innovationFlow.profile.url should reflect new L2 hierarchy'
+    ).toBe(expectedEntityUrl);
+
+    // callout URLs: prefix updated, trailing slug preserved
+    for (const [path, urlAfter] of after.entries()) {
+      if (
+        !path.startsWith('collaboration.calloutsSet.callouts[') ||
+        !path.endsWith('.framing.profile.url')
+      ) {
+        continue;
+      }
+      const urlBefore = before.get(path);
+      const slug = urlBefore?.split('/collaboration/')[1];
       expect(
-        urlsAfter[i].url,
-        `${urlsAfter[i].path} should differ after move`
-      ).not.toEqual(urlsBefore[i].url);
+        slug,
+        `could not extract callout slug from before-url ${path}`
+      ).toBeTruthy();
+      expect(
+        urlAfter,
+        `${path} should reflect new hierarchy with preserved slug "${slug}"`
+      ).toBe(`${expectedEntityUrl}/collaboration/${slug}`);
     }
   });
 

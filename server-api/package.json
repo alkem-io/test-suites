@@ -32,7 +32,7 @@
     "test:debug": "vitest run --inspect-brk --fileParallelism=false",
     "test:nightly": "vitest run --project nightly --fileParallelism=false",
     "test:nightly:ui": "vitest --project nightly --fileParallelism=false --ui",
-    "test:search:ui": "vitest --project search --poolOptions.threads.maxThreads=6 --ui",
+    "test:search:ui": "vitest --project search --fileParallelism=false --ui",
     "test:communications": "vitest run --project communication --fileParallelism=false",
     "test:notifications:ui": "vitest --project notifications --fileParallelism=false --ui",
     "test:notifications:callouts": "vitest run --project notifications-callouts --fileParallelism=false",

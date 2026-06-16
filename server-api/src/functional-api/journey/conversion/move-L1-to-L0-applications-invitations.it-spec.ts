@@ -97,9 +97,7 @@ afterAll(async () => {
 });
 
 describe('Move L1 to L0 - pre-existing applications and invitations', () => {
-  // skip test until bug is resolved: BUG: Pending memberships are moved together with space#9523
-
-  test.skip('pending invitation is invalidated after cross-L0 move', async () => {
+  test('pending invitation is invalidated after cross-L0 move', async () => {
     // Auth chain is rebuilt — old invitation should fail
     const acceptResult = await eventOnRoleSetInvitation(
       invitationId,
@@ -113,9 +111,8 @@ describe('Move L1 to L0 - pre-existing applications and invitations', () => {
       acceptResult.error.errors.length > 0;
     expect(hasError).toBe(true);
   });
-  // skip test until bug is resolved: BUG: Pending memberships are moved together with space#9523
 
-  test.skip('pending application is invalidated after cross-L0 move', async () => {
+  test('pending application is invalidated after cross-L0 move', async () => {
     // Auth chain is rebuilt — old application should fail
     const approveResult = await eventOnRoleSetApplication(
       applicationId,
