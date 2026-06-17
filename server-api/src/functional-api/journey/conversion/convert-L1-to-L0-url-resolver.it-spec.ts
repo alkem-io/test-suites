@@ -44,12 +44,17 @@ let oldL1Url: string;
 // URL of the same space after promotion to a root L0 (e.g. http://localhost:3000/<l1nameId>)
 let newL0Url: string;
 let promotedSpaceId: string;
+let oldUrlStateBeforeConversion: UrlResolverResultState | undefined;
 
 beforeAll(async () => {
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
 
   const before = await getSpaceData(baseScenario.subspace.id);
   oldL1Url = before.data?.lookup.space?.about.profile.url ?? '';
+  // Capture that the L1 URL really resolved before conversion, so the post-conversion
+  // NotFound assertion proves invalidation rather than passing on a bad/empty URL.
+  const beforeResolve = await urlResolver(oldL1Url);
+  oldUrlStateBeforeConversion = beforeResolve.data?.urlResolver.state;
 
   const res = await convertSpaceL1ToSpaceL0(baseScenario.subspace.id);
   promotedSpaceId = res.data?.convertSpaceL1ToSpaceL0?.id ?? '';
@@ -64,6 +69,13 @@ afterAll(async () => {
 // source path: the new L0 path resolves to the promoted space and the old L1 path no longer
 // resolves. Verified against alkem-io/server#5290 and alkem-io/client-web#9481.
 describe('Convert L1 to L0 - URL resolution cache', () => {
+  test('the L1 url resolves before conversion (precondition)', () => {
+    expect(oldL1Url).not.toBe('');
+    expect(oldUrlStateBeforeConversion).toEqual(
+      UrlResolverResultState.Resolved
+    );
+  });
+
   test('the new L0 url resolves to the promoted space', async () => {
     const res = await urlResolver(newL0Url);
 

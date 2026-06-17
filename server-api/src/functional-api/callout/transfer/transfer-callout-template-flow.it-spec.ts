@@ -142,7 +142,7 @@ afterAll(async () => {
 describe('Transfer callout into a template-changed destination flow', () => {
   test('the destination flow was replaced with the custom template states (precondition)', () => {
     expect(destStatesAfterTemplate).toEqual(
-      expect.arrayContaining([CUSTOM_STATES[0]])
+      expect.arrayContaining(CUSTOM_STATES)
     );
   });
 

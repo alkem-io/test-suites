@@ -73,6 +73,7 @@ beforeAll(async () => {
   );
   const states =
     flow.data?.lookup.space?.collaboration.innovationFlow.states ?? [];
+  expect(states.length).toBeGreaterThan(0);
   await updateInnovationFlowState(states[0].id, RENAMED_FIRST_STATE);
 
   const flowAfter = await getInnovationFlowStatesWithIds(
