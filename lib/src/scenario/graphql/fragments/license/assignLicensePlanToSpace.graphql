@@ -13,8 +13,5 @@ mutation AssignLicensePlanToSpace($planData: AssignLicensePlanToSpace!) {
     subspaces {
       id
     }
-    actor {
-      id
-    }
   }
 }

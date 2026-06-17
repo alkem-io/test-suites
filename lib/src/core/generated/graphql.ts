@@ -29445,7 +29445,6 @@ export type AssignLicensePlanToSpaceMutation = {
       name: SchemaTypes.LicensingCredentialBasedCredentialType;
     }>;
     subspaces: Array<{ id: string }>;
-    actor: { id: string };
   };
 };
 
@@ -50214,6 +50213,18 @@ export type TransferCalloutMutation = {
     nameID: string;
     isTemplate: boolean;
     settings: { visibility: SchemaTypes.CalloutVisibility };
+  };
+};
+
+export type UpdateCollaborationFromSpaceTemplateMutationVariables =
+  SchemaTypes.Exact<{
+    updateData: SchemaTypes.UpdateCollaborationFromSpaceTemplateInput;
+  }>;
+
+export type UpdateCollaborationFromSpaceTemplateMutation = {
+  updateCollaborationFromSpaceTemplate: {
+    id: string;
+    innovationFlow: { id: string; states: Array<{ displayName: string }> };
   };
 };
 
@@ -81077,6 +81088,14 @@ export type UpdateInnovationFlowCurrentStateMutation = {
   };
 };
 
+export type UpdateInnovationFlowStateMutationVariables = SchemaTypes.Exact<{
+  stateData: SchemaTypes.UpdateInnovationFlowStateInput;
+}>;
+
+export type UpdateInnovationFlowStateMutation = {
+  updateInnovationFlowState: { id: string; displayName: string };
+};
+
 export type CreateOrganizationMutationVariables = SchemaTypes.Exact<{
   organizationData: SchemaTypes.CreateOrganizationInput;
 }>;
@@ -90338,6 +90357,25 @@ export type OrganizationEntitlementsQueryQuery = {
               }>;
             };
           }>;
+        }
+      | undefined;
+  };
+};
+
+export type GetInnovationFlowStatesWithIdsQueryVariables = SchemaTypes.Exact<{
+  spaceId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type GetInnovationFlowStatesWithIdsQuery = {
+  lookup: {
+    space?:
+      | {
+          collaboration: {
+            innovationFlow: {
+              id: string;
+              states: Array<{ id: string; displayName: string }>;
+            };
+          };
         }
       | undefined;
   };
@@ -106418,6 +106456,20 @@ export type GetWhiteboardTemplatesCountByTemplateSetIdQuery = {
   lookup: { templatesSet?: { whiteboardTemplatesCount: number } | undefined };
 };
 
+export type UrlResolverQueryVariables = SchemaTypes.Exact<{
+  url: SchemaTypes.Scalars["String"]["input"];
+}>;
+
+export type UrlResolverQuery = {
+  urlResolver: {
+    state: SchemaTypes.UrlResolverResultState;
+    type: SchemaTypes.UrlType;
+    space?:
+      | { id: string; level: SchemaTypes.SpaceLevel; levelZeroSpaceID: string }
+      | undefined;
+  };
+};
+
 export type GetSubspaceApplicationsQueryVariables = SchemaTypes.Exact<{
   subspaceId: SchemaTypes.Scalars["UUID"]["input"];
 }>;
@@ -109870,9 +109922,6 @@ export const AssignLicensePlanToSpaceDocument = gql`
       subspaces {
         id
       }
-      actor {
-        id
-      }
     }
   }
 `;
@@ -110266,6 +110315,21 @@ export const TransferCalloutDocument = gql`
     }
   }
 `;
+export const UpdateCollaborationFromSpaceTemplateDocument = gql`
+  mutation UpdateCollaborationFromSpaceTemplate(
+    $updateData: UpdateCollaborationFromSpaceTemplateInput!
+  ) {
+    updateCollaborationFromSpaceTemplate(updateData: $updateData) {
+      id
+      innovationFlow {
+        id
+        states {
+          displayName
+        }
+      }
+    }
+  }
+`;
 export const AddReactionToMessageInRoomDocument = gql`
   mutation AddReactionToMessageInRoom(
     $reactionData: RoomAddReactionToMessageInput!
@@ -110578,6 +110642,16 @@ export const UpdateInnovationFlowCurrentStateDocument = gql`
         __typename
       }
       __typename
+    }
+  }
+`;
+export const UpdateInnovationFlowStateDocument = gql`
+  mutation UpdateInnovationFlowState(
+    $stateData: UpdateInnovationFlowStateInput!
+  ) {
+    updateInnovationFlowState(stateData: $stateData) {
+      id
+      displayName
     }
   }
 `;
@@ -111992,6 +112066,23 @@ export const OrganizationEntitlementsQueryDocument = gql`
     }
   }
 `;
+export const GetInnovationFlowStatesWithIdsDocument = gql`
+  query GetInnovationFlowStatesWithIds($spaceId: UUID!) {
+    lookup {
+      space(ID: $spaceId) {
+        collaboration {
+          innovationFlow {
+            id
+            states {
+              id
+              displayName
+            }
+          }
+        }
+      }
+    }
+  }
+`;
 export const GetSpaceLicenseSubscriptionsDocument = gql`
   query GetSpaceLicenseSubscriptions($ID: UUID!) {
     lookup {
@@ -112433,6 +112524,19 @@ export const GetWhiteboardTemplatesCountByTemplateSetIdDocument = gql`
     lookup {
       templatesSet(ID: $templateSetId) {
         whiteboardTemplatesCount
+      }
+    }
+  }
+`;
+export const UrlResolverDocument = gql`
+  query UrlResolver($url: String!) {
+    urlResolver(url: $url) {
+      state
+      type
+      space {
+        id
+        level
+        levelZeroSpaceID
       }
     }
   }
@@ -113056,6 +113160,9 @@ const CreateContributionOnCalloutDocumentString = print(
   CreateContributionOnCalloutDocument
 );
 const TransferCalloutDocumentString = print(TransferCalloutDocument);
+const UpdateCollaborationFromSpaceTemplateDocumentString = print(
+  UpdateCollaborationFromSpaceTemplateDocument
+);
 const AddReactionToMessageInRoomDocumentString = print(
   AddReactionToMessageInRoomDocument
 );
@@ -113114,6 +113221,9 @@ const EventOnOrganizationVerificationDocumentString = print(
 );
 const UpdateInnovationFlowCurrentStateDocumentString = print(
   UpdateInnovationFlowCurrentStateDocument
+);
+const UpdateInnovationFlowStateDocumentString = print(
+  UpdateInnovationFlowStateDocument
 );
 const CreateOrganizationDocumentString = print(CreateOrganizationDocument);
 const DeleteOrganizationDocumentString = print(DeleteOrganizationDocument);
@@ -113253,6 +113363,9 @@ const MyEntitlementsQueryDocumentString = print(MyEntitlementsQueryDocument);
 const OrganizationEntitlementsQueryDocumentString = print(
   OrganizationEntitlementsQueryDocument
 );
+const GetInnovationFlowStatesWithIdsDocumentString = print(
+  GetInnovationFlowStatesWithIdsDocument
+);
 const GetSpaceLicenseSubscriptionsDocumentString = print(
   GetSpaceLicenseSubscriptionsDocument
 );
@@ -113293,6 +113406,7 @@ const GetTemplateByIdDocumentString = print(GetTemplateByIdDocument);
 const GetWhiteboardTemplatesCountByTemplateSetIdDocumentString = print(
   GetWhiteboardTemplatesCountByTemplateSetIdDocument
 );
+const UrlResolverDocumentString = print(UrlResolverDocument);
 const GetSubspaceApplicationsDocumentString = print(
   GetSubspaceApplicationsDocument
 );
@@ -114076,6 +114190,28 @@ export function getSdk(
         variables
       );
     },
+    UpdateCollaborationFromSpaceTemplate(
+      variables: SchemaTypes.UpdateCollaborationFromSpaceTemplateMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateCollaborationFromSpaceTemplateMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateCollaborationFromSpaceTemplateMutation>(
+            UpdateCollaborationFromSpaceTemplateDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "UpdateCollaborationFromSpaceTemplate",
+        "mutation",
+        variables
+      );
+    },
     AddReactionToMessageInRoom(
       variables: SchemaTypes.AddReactionToMessageInRoomMutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -114842,6 +114978,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "updateInnovationFlowCurrentState",
+        "mutation",
+        variables
+      );
+    },
+    UpdateInnovationFlowState(
+      variables: SchemaTypes.UpdateInnovationFlowStateMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateInnovationFlowStateMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateInnovationFlowStateMutation>(
+            UpdateInnovationFlowStateDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "UpdateInnovationFlowState",
         "mutation",
         variables
       );
@@ -116386,6 +116544,28 @@ export function getSdk(
         variables
       );
     },
+    GetInnovationFlowStatesWithIds(
+      variables: SchemaTypes.GetInnovationFlowStatesWithIdsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.GetInnovationFlowStatesWithIdsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.GetInnovationFlowStatesWithIdsQuery>(
+            GetInnovationFlowStatesWithIdsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "GetInnovationFlowStatesWithIds",
+        "query",
+        variables
+      );
+    },
     GetSpaceLicenseSubscriptions(
       variables: SchemaTypes.GetSpaceLicenseSubscriptionsQueryVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -116954,6 +117134,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetWhiteboardTemplatesCountByTemplateSetId",
+        "query",
+        variables
+      );
+    },
+    UrlResolver(
+      variables: SchemaTypes.UrlResolverQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UrlResolverQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UrlResolverQuery>(
+            UrlResolverDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "UrlResolver",
         "query",
         variables
       );

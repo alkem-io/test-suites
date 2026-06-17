@@ -94,3 +94,24 @@ export const updateSpaceTemplate = async (
     );
   return graphqlErrorWrapper(callback, userRole);
 };
+
+export const updateCollaborationFromSpaceTemplate = async (
+  collaborationID: string,
+  spaceTemplateID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.UpdateCollaborationFromSpaceTemplate(
+      {
+        updateData: {
+          collaborationID,
+          spaceTemplateID,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};

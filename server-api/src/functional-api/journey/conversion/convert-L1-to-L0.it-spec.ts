@@ -1,23 +1,27 @@
+/**
+ * Convert L1 to L0 — pending invitations & applications (alkem-io/server#6019)
+ *
+ * Scenarios:
+ * - A pending invitation is no longer available on the community roleSet after L1 -> L0 conversion.
+ * - A pending application is no longer available on the community roleSet after L1 -> L0 conversion.
+ */
 import {
-  sorted_read_readAbout,
   TestScenarioConfig,
   TestScenarioFactory,
   TestUser,
   TestUserManager,
 } from '@alkemio/tests-lib';
 import { convertSpaceL1ToSpaceL0 } from './conversion.request.params';
-import { getSpaceData } from '../space/space.request.params';
 import { inviteForEntryRoleOnRoleSet } from '@functional-api/roleset/invitations/invitation.request.params';
-import {
-  eventOnRoleSetApplication,
-  eventOnRoleSetInvitation,
-} from '@functional-api/roleset/roleset-events.request.params';
 import { createApplication } from '@functional-api/roleset/application/application.request.params';
 import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
 } from '@alkemio/client-lib';
-import { getSingleInvitationResult } from '@functional-api/roleset/roleset.request.params';
+import {
+  getSingleInvitationResult,
+  getCommunityApplicationsInvitations,
+} from '@functional-api/roleset/roleset.request.params';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import {
   RoleName,
@@ -105,43 +109,28 @@ describe('Convert L1 to L0 - applications and invitations', () => {
     expect(convertedSpace?.settings).toBeDefined();
   });
 
-  // Skip test due to this bug: BUG: Accept invitation fails, when user invited to private converted L1 to L0 subspace try to accept it #5069
-  test.skip('pending invitation can be accepted after conversion', async () => {
-    const acceptResult = await eventOnRoleSetInvitation(
-      invitationId,
-      'ACCEPT',
-      TestUser.NON_SPACE_MEMBER
-    );
-    expect(acceptResult.status).toBe(200);
-
-    const spaceDataAfterAccept = await getSpaceData(
-      baseScenario.subspace.id,
-      TestUser.NON_SPACE_MEMBER
+  // alkem-io/server#6019 — pending invitations must be removed on L1->L0 conversion
+  // so recipients cannot accept a stale invite (the broken flow from alkem-io/server#5069).
+  test('pending invitation is no longer available after conversion', async () => {
+    const result = await getCommunityApplicationsInvitations(
+      baseScenario.subspace.community.roleSetId
     );
 
-    expect(
-      spaceDataAfterAccept?.data?.lookup?.space?.authorization?.myPrivileges
-    ).toEqual(expect.arrayContaining(sorted_read_readAbout));
+    const invitationIds =
+      result.data?.lookup.roleSet?.invitations.map(i => i.id) ?? [];
+
+    expect(invitationIds).not.toContain(invitationId);
   });
 
-  test('pending application can be approved after conversion', async () => {
-    const approveResult = await eventOnRoleSetApplication(
-      applicationId,
-      'APPROVE'
+  // alkem-io/server#6019 — pending applications must be removed on L1->L0 conversion.
+  test('pending application is no longer available after conversion', async () => {
+    const result = await getCommunityApplicationsInvitations(
+      baseScenario.subspace.community.roleSetId
     );
 
-    expect(approveResult.status).toBe(200);
-    expect(approveResult?.data?.eventOnApplication?.state).toContain(
-      'approved'
-    );
+    const applicationIds =
+      result.data?.lookup.roleSet?.applications.map(a => a.id) ?? [];
 
-    const spaceDataAfterApproval = await getSpaceData(
-      baseScenario.subspace.id,
-      TestUser.SPACE_MEMBER
-    );
-
-    expect(
-      spaceDataAfterApproval?.data?.lookup?.space?.authorization?.myPrivileges
-    ).toEqual(expect.arrayContaining(sorted_read_readAbout));
+    expect(applicationIds).not.toContain(applicationId);
   });
 });

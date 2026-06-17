@@ -1,0 +1,13 @@
+mutation UpdateCollaborationFromSpaceTemplate(
+  $updateData: UpdateCollaborationFromSpaceTemplateInput!
+) {
+  updateCollaborationFromSpaceTemplate(updateData: $updateData) {
+    id
+    innovationFlow {
+      id
+      states {
+        displayName
+      }
+    }
+  }
+}

@@ -27531,7 +27531,6 @@ export type AssignLicensePlanToSpaceMutation = {
       name: LicensingCredentialBasedCredentialType;
     }>;
     subspaces: Array<{ id: string }>;
-    actor: { id: string };
   };
 };
 
@@ -45804,6 +45803,17 @@ export type TransferCalloutMutation = {
     nameID: string;
     isTemplate: boolean;
     settings: { visibility: CalloutVisibility };
+  };
+};
+
+export type UpdateCollaborationFromSpaceTemplateMutationVariables = Exact<{
+  updateData: UpdateCollaborationFromSpaceTemplateInput;
+}>;
+
+export type UpdateCollaborationFromSpaceTemplateMutation = {
+  updateCollaborationFromSpaceTemplate: {
+    id: string;
+    innovationFlow: { id: string; states: Array<{ displayName: string }> };
   };
 };
 
@@ -73769,6 +73779,14 @@ export type UpdateInnovationFlowCurrentStateMutation = {
   };
 };
 
+export type UpdateInnovationFlowStateMutationVariables = Exact<{
+  stateData: UpdateInnovationFlowStateInput;
+}>;
+
+export type UpdateInnovationFlowStateMutation = {
+  updateInnovationFlowState: { id: string; displayName: string };
+};
+
 export type CreateOrganizationMutationVariables = Exact<{
   organizationData: CreateOrganizationInput;
 }>;
@@ -82585,6 +82603,25 @@ export type OrganizationEntitlementsQueryQuery = {
               }>;
             };
           }>;
+        }
+      | undefined;
+  };
+};
+
+export type GetInnovationFlowStatesWithIdsQueryVariables = Exact<{
+  spaceId: Scalars["UUID"]["input"];
+}>;
+
+export type GetInnovationFlowStatesWithIdsQuery = {
+  lookup: {
+    space?:
+      | {
+          collaboration: {
+            innovationFlow: {
+              id: string;
+              states: Array<{ id: string; displayName: string }>;
+            };
+          };
         }
       | undefined;
   };
@@ -98000,6 +98037,20 @@ export type GetWhiteboardTemplatesCountByTemplateSetIdQueryVariables = Exact<{
 
 export type GetWhiteboardTemplatesCountByTemplateSetIdQuery = {
   lookup: { templatesSet?: { whiteboardTemplatesCount: number } | undefined };
+};
+
+export type UrlResolverQueryVariables = Exact<{
+  url: Scalars["String"]["input"];
+}>;
+
+export type UrlResolverQuery = {
+  urlResolver: {
+    state: UrlResolverResultState;
+    type: UrlType;
+    space?:
+      | { id: string; level: SpaceLevel; levelZeroSpaceID: string }
+      | undefined;
+  };
 };
 
 export type GetSubspaceApplicationsQueryVariables = Exact<{

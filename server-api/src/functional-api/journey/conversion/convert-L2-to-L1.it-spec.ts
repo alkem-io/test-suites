@@ -1,3 +1,13 @@
+/**
+ * Convert L2 to L1 (alkem-io/server#6019)
+ *
+ * Scenarios:
+ * - Basic properties preserved after promotion: level, collaboration, innovation flow states,
+ *   visibility, about, account host, settings, community members/admins, subspaces.
+ * - Calendar events and community updates messages are preserved after conversion.
+ * - A pending invitation is no longer available on the community roleSet after promotion.
+ * - A pending application is no longer available on the community roleSet after promotion.
+ */
 import {
   TestScenarioConfig,
   TestScenarioFactory,
