@@ -198,8 +198,7 @@ test.describe.serial('Callout Templates', () => {
 
   test.afterAll(async () => {
     await teardownAuthentication();
-    //!! Not deleting base scenario for now to preserve test data for inspection
-    // await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
   test.beforeEach(async ({ page }) => {

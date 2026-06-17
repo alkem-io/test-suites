@@ -59,8 +59,7 @@ test.describe.serial('Whiteboard Templates', () => {
   test.afterAll(async () => {
     // Clean up authentication
     await teardownAuthentication();
-    //!! Not deleting base scenario for now to preserve test data for inspection
-    // await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
 
   test.beforeEach(async ({ page }) => {

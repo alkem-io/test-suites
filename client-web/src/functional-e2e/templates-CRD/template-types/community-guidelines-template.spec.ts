@@ -66,8 +66,7 @@ test.describe.serial('Community Guidelines Template', () => {
   test.afterAll(async () => {
     // Clean up authentication
     await teardownAuthentication();
-    //!! Not deleting base scenario for now to preserve test data for inspection
-    // await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   });
   test.beforeEach(async ({ page }) => {
     await page.goto(
@@ -253,7 +252,7 @@ test.describe.serial('Community Guidelines Template', () => {
     }
 
     // "Use a template" picker dialog - identical shape to the callout-template
-    // picker: list of listitems, each with a "Use this template" button.
+    // picker: list of listitems, each with a "Use template" button.
     const pickerDialog = page.getByRole('dialog', { name: 'Use a template' });
     await expect(pickerDialog).toBeVisible();
 
@@ -261,7 +260,7 @@ test.describe.serial('Community Guidelines Template', () => {
       .getByRole('listitem')
       .filter({ hasText: templateData.displayName });
     await expect(item).toBeVisible();
-    await item.getByRole('button', { name: 'Use this template' }).click();
+    await item.getByRole('button', { name: 'Use template', exact: true }).click();
     await expect(pickerDialog).not.toBeVisible();
 
     // The picker fills in the guidelines block inline. Verify the title input

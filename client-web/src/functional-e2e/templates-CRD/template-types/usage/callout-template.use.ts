@@ -30,8 +30,8 @@ export const verifyCalloutTemplateUsage = async (
     .getByRole('button', { name: 'Find Template' })
     .click();
 
-  // The picker lists templates as list items with a "Use this template"
-  // button per row (same pattern as the whiteboard editor's picker).
+  // The picker lists templates as list items with a "Use template" button per
+  // row (same pattern as the whiteboard editor's picker).
   const pickerDialog = page.getByRole('dialog', { name: 'Use a template' });
   await expect(pickerDialog).toBeVisible();
 
@@ -39,7 +39,7 @@ export const verifyCalloutTemplateUsage = async (
     .getByRole('listitem')
     .filter({ hasText: templateData.displayName });
   await expect(item).toBeVisible();
-  await item.getByRole('button', { name: 'Use this template' }).click();
+  await item.getByRole('button', { name: 'Use template', exact: true }).click();
 
   // Picker closes; Create Post dialog is now pre-populated. Sanity-check the
   // callout title was filled in.
