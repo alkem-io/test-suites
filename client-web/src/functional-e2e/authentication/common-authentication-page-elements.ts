@@ -90,8 +90,10 @@ export const welcomeHeading = (page: Page) =>
 
 // Cookie consent
 export const cookieConsentBanner = (page: Page) =>
+  // Match a stable prefix only — the trailing copy varies by locale spelling
+  // ("analyze" vs "analyse" site usage).
   page.getByText(
-    'By clicking "Accept All Cookies", you agree to the storing of cookies on your device to enhance site navigation and analyze site usage.'
+    /By clicking "Accept All Cookies", you agree to the storing of cookies/
   );
 export const acceptAllCookiesButton = (page: Page) =>
   page.getByRole('button', { name: 'Accept All Cookies', exact: true });
