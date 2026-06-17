@@ -1,0 +1,11 @@
+query UrlResolver($url: String!) {
+  urlResolver(url: $url) {
+    state
+    type
+    space {
+      id
+      level
+      levelZeroSpaceID
+    }
+  }
+}

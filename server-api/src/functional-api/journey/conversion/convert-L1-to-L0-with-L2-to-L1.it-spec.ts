@@ -1,3 +1,10 @@
+/**
+ * Convert L1 to L0 with cascading L2 to L1 (alkem-io/server#6019)
+ *
+ * Scenarios (in addition to basic-properties / calendar / updates preservation):
+ * - A pending invitation on the promoted L1 is no longer available after cascade conversion.
+ * - A pending application on the promoted L1 is no longer available after cascade conversion.
+ */
 import {
   TestScenarioConfig,
   TestScenarioFactory,
@@ -27,10 +34,9 @@ const { ALKEMIO_BASE_URL } = process.env;
 import { inviteForEntryRoleOnRoleSet } from '@functional-api/roleset/invitations/invitation.request.params';
 import { createApplication } from '@functional-api/roleset/application/application.request.params';
 import {
-  eventOnRoleSetApplication,
-  eventOnRoleSetInvitation,
-} from '@functional-api/roleset/roleset-events.request.params';
-import { getSingleInvitationResult } from '@functional-api/roleset/roleset.request.params';
+  getSingleInvitationResult,
+  getCommunityApplicationsInvitations,
+} from '@functional-api/roleset/roleset.request.params';
 import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
@@ -413,27 +419,29 @@ describe('Convert L1 to L0 with cascading L2 to L1', () => {
   });
 
   describe('pending invitations and applications after cascade', () => {
-    // Skip test due to this bug: BUG: Accept invitation fails, when user invited to private converted L1 to L0 subspace try to accept it #5069
-    test.skip('pending invitation on L1 can be accepted after conversion', async () => {
-      const acceptResult = await eventOnRoleSetInvitation(
-        invitationId,
-        'ACCEPT',
-        TestUser.NON_SPACE_MEMBER
+    // alkem-io/server#6019 — pending invitations on the L1 must be removed when it
+    // is promoted to L0, so recipients cannot accept a stale invite (alkem-io/server#5069).
+    test('pending invitation on L1 is no longer available after conversion', async () => {
+      const result = await getCommunityApplicationsInvitations(
+        baseScenario.subspace.community.roleSetId
       );
 
-      expect(acceptResult.status).toBe(200);
+      const invitationIds =
+        result.data?.lookup.roleSet?.invitations.map(i => i.id) ?? [];
+
+      expect(invitationIds).not.toContain(invitationId);
     });
 
-    test('pending application on L1 can be approved after conversion', async () => {
-      const approveResult = await eventOnRoleSetApplication(
-        applicationId,
-        'APPROVE'
+    // alkem-io/server#6019 — pending applications on the L1 must be removed on promotion to L0.
+    test('pending application on L1 is no longer available after conversion', async () => {
+      const result = await getCommunityApplicationsInvitations(
+        baseScenario.subspace.community.roleSetId
       );
 
-      expect(approveResult.status).toBe(200);
-      expect(approveResult?.data?.eventOnApplication?.state).toContain(
-        'approved'
-      );
+      const applicationIds =
+        result.data?.lookup.roleSet?.applications.map(a => a.id) ?? [];
+
+      expect(applicationIds).not.toContain(applicationId);
     });
   });
 });

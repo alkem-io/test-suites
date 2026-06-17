@@ -1,3 +1,13 @@
+/**
+ * Convert L2 to L1 (alkem-io/server#6019)
+ *
+ * Scenarios:
+ * - Basic properties preserved after promotion: level, collaboration, innovation flow states,
+ *   visibility, about, account host, settings, community members/admins, subspaces.
+ * - Calendar events and community updates messages are preserved after conversion.
+ * - A pending invitation is no longer available on the community roleSet after promotion.
+ * - A pending application is no longer available on the community roleSet after promotion.
+ */
 import {
   TestScenarioConfig,
   TestScenarioFactory,
@@ -27,10 +37,9 @@ const { ALKEMIO_BASE_URL } = process.env;
 import { inviteForEntryRoleOnRoleSet } from '@functional-api/roleset/invitations/invitation.request.params';
 import { createApplication } from '@functional-api/roleset/application/application.request.params';
 import {
-  eventOnRoleSetApplication,
-  eventOnRoleSetInvitation,
-} from '@functional-api/roleset/roleset-events.request.params';
-import { getSingleInvitationResult } from '@functional-api/roleset/roleset.request.params';
+  getSingleInvitationResult,
+  getCommunityApplicationsInvitations,
+} from '@functional-api/roleset/roleset.request.params';
 import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
@@ -313,26 +322,40 @@ describe('Convert L2 to L1', () => {
   });
 
   describe('pending invitations and applications after promotion', () => {
-    test('pending invitation can be accepted after promotion', async () => {
-      const acceptResult = await eventOnRoleSetInvitation(
-        invitationId,
-        'ACCEPT',
-        TestUser.NON_SPACE_MEMBER
+    test('pending invitation is no longer available on the community roleSet', async () => {
+      const result = await getCommunityApplicationsInvitations(
+        baseScenario.subsubspace.community.roleSetId
       );
 
-      expect(acceptResult.status).toBe(200);
+      const invitationIds =
+        result.data?.lookup.roleSet?.invitations.map(i => i.id) ?? [];
+
+      console.log(
+        'invitations after promotion:',
+        JSON.stringify(invitationIds, null, 2),
+        'invitationId:',
+        invitationId
+      );
+
+      expect(invitationIds).not.toContain(invitationId);
     });
 
-    test('pending application can be approved after promotion', async () => {
-      const approveResult = await eventOnRoleSetApplication(
-        applicationId,
-        'APPROVE'
+    test('pending application is no longer available on the community roleSet', async () => {
+      const result = await getCommunityApplicationsInvitations(
+        baseScenario.subsubspace.community.roleSetId
       );
 
-      expect(approveResult.status).toBe(200);
-      expect(approveResult?.data?.eventOnApplication?.state).toContain(
-        'approved'
+      const applicationIds =
+        result.data?.lookup.roleSet?.applications.map(a => a.id) ?? [];
+
+      console.log(
+        'applications after promotion:',
+        JSON.stringify(applicationIds, null, 2),
+        'applicationId:',
+        applicationId
       );
+
+      expect(applicationIds).not.toContain(applicationId);
     });
   });
 });

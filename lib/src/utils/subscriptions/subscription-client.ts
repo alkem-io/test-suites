@@ -22,12 +22,40 @@ export class SubscriptionClient {
    * @return A promise which is resolved after the _connected_ state event is received.
    * This ensures messages are received as expected and in timely manner
    */
-  public subscribe(payload: SubscribePayload, user: TestUser): Promise<void> {
+  public async subscribe(
+    payload: SubscribePayload,
+    user: TestUser
+  ): Promise<void> {
+    // Server FR-023: subscription auth is resolved at the WebSocket HTTP upgrade
+    // ONLY — `connectionParams` are deliberately ignored for credentials. So the
+    // Bearer token must travel as an `Authorization` header on the upgrade
+    // request, not inside connectionParams. The `ws` impl forwards constructor
+    // `options.headers` onto the upgrade request, so we subclass it to inject
+    // them. connectionParams are still sent (used server-side for non-auth
+    // telemetry only).
+    const connectionParams = await buildConnectionParams(user);
+    const authHeader = (connectionParams as { headers?: { authorization?: string } })
+      ?.headers?.authorization;
+    const BaseWebSocket = WebSocket as unknown as new (
+      address: string,
+      protocols?: string | string[],
+      options?: { headers?: Record<string, string> }
+    ) => unknown;
+    class AuthenticatedWebSocket extends (BaseWebSocket as any) {
+      constructor(address: string, protocols?: string | string[]) {
+        super(
+          address,
+          protocols,
+          authHeader ? { headers: { authorization: authHeader } } : undefined
+        );
+      }
+    }
+
     return new Promise<void>((res, rej) => {
       this.client = createClient({
         url: testConfiguration.endPoints.ws,
-        webSocketImpl: WebSocket,
-        connectionParams: async () => await buildConnectionParams(user),
+        webSocketImpl: AuthenticatedWebSocket,
+        connectionParams: async () => connectionParams,
       });
 
       this._terminateFn = this.client.subscribe(payload, {

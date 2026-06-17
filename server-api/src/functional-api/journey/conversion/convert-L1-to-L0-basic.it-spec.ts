@@ -1,3 +1,18 @@
+/**
+ * Convert L1 to L0 — basic properties, profile URLs (alkem-io/server#6020) and
+ * license (alkem-io/server#6022)
+ *
+ * Scenarios:
+ * - Basic properties preserved/updated: level, innovation flow states, visibility, about,
+ *   account host, settings, subspaces, community roleSet members/leads/admins.
+ * - Calendar events and community updates are preserved after conversion.
+ * - Profile URLs (#6020): about URL points to the promoted L0 root; account host org URL is
+ *   unchanged; innovationFlow URL points to the promoted L0 root (skipped — client-web#9481).
+ * - License (#6022): parent L0 seeded with Plus; promoted L0 has a Free license and does NOT
+ *   inherit the parent's Plus license.
+ * - Collaboration preserved excluding profile URLs (skipped — client-web#9528).
+ * - Authorization: Space Admin / Space Member cannot execute the conversion.
+ */
 import {
   TestScenarioConfig,
   TestScenarioFactory,
@@ -8,21 +23,23 @@ import {
   getSpaceData,
   getSpaceCommunication,
 } from '../space/space.request.params';
-import { getSpaceLicenseSubscriptions } from '@functional-api/license/license.params.request';
+import {
+  getSpaceLicenseSubscriptions,
+  getLicensePlanByName,
+  assignLicensePlanToSpace,
+} from '@functional-api/license/license.params.request';
 import { sendMessageToRoom } from '@functional-api/communications/communication.params';
 import {
   createCalendarEventOnCalendar,
   getCalendarEvents,
   getSpaceCalendarId,
 } from '@functional-api/calendar/calendar.request.params';
-import { CalendarEventType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import {
-  sortArraysInObject,
-  stripProfileUrls,
-  collectProfileUrls,
-} from '@utils/array.matcher';
+  CalendarEventType,
+  LicensingCredentialBasedCredentialType,
+} from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { sortArraysInObject, stripProfileUrls } from '@utils/array.matcher';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- used once alkem-io/client-web#9481 is fixed
 const { ALKEMIO_BASE_URL } = process.env;
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { SpaceLevel } from '@alkemio/tests-lib/core/generated/alkemio-schema';
@@ -69,7 +86,7 @@ const scenarioConfig: TestScenarioConfig = {
 
 let subspaceBefore: Awaited<ReturnType<typeof getSpaceData>>;
 let spaceBefore: Awaited<ReturnType<typeof getSpaceData>>;
-let sortedLicenseBefore: unknown;
+let parentSubscriptionsBefore: LicensingCredentialBasedCredentialType[];
 let convertResult: Awaited<ReturnType<typeof convertSpaceL1ToSpaceL0>>;
 let subspaceAfter:
   | NonNullable<typeof convertResult.data>['convertSpaceL1ToSpaceL0']
@@ -100,15 +117,22 @@ beforeAll(async () => {
     'Update before convert L1 to L0'
   );
 
-  // Capture state before conversion
+  // alkem-io/server#6022 — seed the parent L0 with a non-Free (Plus) license so we can prove
+  // the L1 promoted out of it receives a fresh Free license instead of inheriting the Plus.
+  const plusPlan = await getLicensePlanByName('SPACE_LICENSE_PLUS');
+  const plusPlanId = plusPlan[0]?.id ?? '';
+  await assignLicensePlanToSpace(baseScenario.space.id, plusPlanId);
+
+  // Capture state before conversion. License subscriptions are only exposed on L0 spaces,
+  // so the Plus license is read from the parent L0 (the space the L1 is promoted out of).
   spaceBefore = await getSpaceData(baseScenario.space.id);
   subspaceBefore = await getSpaceData(baseScenario.subspace.id);
-  const licenseSpace = await getSpaceLicenseSubscriptions(
+  const parentLicenseBefore = await getSpaceLicenseSubscriptions(
     baseScenario.space.id
   );
-  sortedLicenseBefore = licenseSpace.data?.lookup.space?.subscriptions?.sort(
-    (a, b) => a.name.localeCompare(b.name)
-  );
+  parentSubscriptionsBefore =
+    parentLicenseBefore.data?.lookup.space?.subscriptions.map(s => s.name) ??
+    [];
 
   // Execute conversion
   convertResult = await convertSpaceL1ToSpaceL0(baseScenario.subspace.id);
@@ -165,26 +189,26 @@ describe('Convert L1 to L0 - basic', () => {
     expect(subspaceAfter?.about.provider).toEqual(aboutBefore?.provider);
   });
 
-  // Skip: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
-  test.skip('all entity profile urls are updated after promotion to L0', () => {
-    const urlsBefore = collectProfileUrls(subspaceBefore.data?.lookup.space);
-    const urlsAfter = collectProfileUrls(subspaceAfter);
+  // A promoted L0 is a root space, so its own entity url is `${BASE_URL}/<nameId>`.
+  const promotedSpaceUrl = () =>
+    `${ALKEMIO_BASE_URL}/${baseScenario.subspace.nameId}`;
 
-    // Every profile url should be non-empty
-    for (const entry of urlsAfter) {
-      expect(entry.url, `${entry.path} should not be empty`).not.toBe('');
-    }
+  test('about profile url points to the promoted L0 root after promotion', () => {
+    expect(subspaceAfter?.about.profile.url).toEqual(promotedSpaceUrl());
+  });
 
-    // Same number of profile urls before and after
-    expect(urlsAfter.length).toEqual(urlsBefore.length);
+  test('account host org url points to the host organization after promotion', () => {
+    expect(subspaceAfter?.account.host?.profile?.url).toEqual(
+      `${ALKEMIO_BASE_URL}/organization/${baseScenario.organization.nameId}`
+    );
+  });
 
-    // Each url should have changed (hierarchy changed)
-    for (let i = 0; i < urlsAfter.length; i++) {
-      expect(
-        urlsAfter[i].url,
-        `${urlsAfter[i].path} should differ after conversion`
-      ).not.toEqual(urlsBefore[i].url);
-    }
+  // alkem-io/client-web#9481 — innovationFlow url is not rebased: it still points to the
+  // old L1 path (.../challenges/<l1nameid>) instead of the promoted L0 root. Unskip when fixed.
+  test.skip('innovationFlow profile url points to the promoted L0 root after promotion', () => {
+    expect(subspaceAfter?.collaboration.innovationFlow.profile.url).toEqual(
+      promotedSpaceUrl()
+    );
   });
 
   test('account host is preserved', () => {
@@ -242,16 +266,31 @@ describe('Convert L1 to L0 - basic', () => {
     expect(sortedAfter).toEqual(sortedBefore);
   });
 
-  test('license subscriptions are preserved', async () => {
+  // alkem-io/server#6022 — sanity: the parent L0 carried a Plus license before conversion,
+  // so the no-inheritance assertion below is meaningful (not trivially passing).
+  test('parent L0 carried a Plus license before conversion', () => {
+    expect(parentSubscriptionsBefore).toContain(
+      LicensingCredentialBasedCredentialType.SpaceLicensePlus
+    );
+  });
+
+  // alkem-io/server#6022 — a space promoted from L1 to L0 must receive its own fresh Free
+  // license and must NOT inherit the Plus license of the parent L0 it was promoted out of.
+  test('promoted L0 has a Free license and does not inherit the parent Plus license', async () => {
     const licenseAfterConversion = await getSpaceLicenseSubscriptions(
       baseScenario.subspace.id
     );
-    const sortedLicenseAfter =
-      licenseAfterConversion.data?.lookup.space?.subscriptions.sort((a, b) =>
-        a.name.localeCompare(b.name)
-      );
+    const subscriptionNames =
+      licenseAfterConversion.data?.lookup.space?.subscriptions.map(
+        s => s.name
+      ) ?? [];
 
-    expect(sortedLicenseAfter).toEqual(sortedLicenseBefore);
+    expect(subscriptionNames).toContain(
+      LicensingCredentialBasedCredentialType.SpaceLicenseFree
+    );
+    expect(subscriptionNames).not.toContain(
+      LicensingCredentialBasedCredentialType.SpaceLicensePlus
+    );
   });
 
   test('calendar events are preserved after conversion', async () => {

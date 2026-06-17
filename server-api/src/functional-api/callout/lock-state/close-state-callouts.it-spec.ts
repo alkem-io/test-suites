@@ -317,13 +317,13 @@ describe('Callout - Close State - User Privileges Posts', () => {
       test.each`
         userRole                       | message                                                                                    | entity
         ${TestUser.SPACE_ADMIN}        | ${'"data":{"createContributionOnCallout"'}                                                 | ${'space'}
-        ${TestUser.SPACE_MEMBER}       | ${'"Only admins are allowed to contribute to Callout with id'}                             | ${'space'}
+        ${TestUser.SPACE_MEMBER}       | ${'Only admins are allowed to contribute to this Callout'}                                 | ${'space'}
         ${TestUser.NON_SPACE_MEMBER}   | ${"Authorization: unable to grant 'contribute' privilege: create contribution on callout"} | ${'space'}
         ${TestUser.SUBSPACE_ADMIN}     | ${'"data":{"createContributionOnCallout"'}                                                 | ${'subspace'}
-        ${TestUser.SUBSPACE_MEMBER}    | ${'"Only admins are allowed to contribute to Callout with id'}                             | ${'subspace'}
+        ${TestUser.SUBSPACE_MEMBER}    | ${'Only admins are allowed to contribute to this Callout'}                                 | ${'subspace'}
         ${TestUser.NON_SPACE_MEMBER}   | ${"Authorization: unable to grant 'contribute' privilege: create contribution on callout"} | ${'subspace'}
         ${TestUser.SUBSUBSPACE_ADMIN}  | ${'"data":{"createContributionOnCallout"'}                                                 | ${'subsubspace'}
-        ${TestUser.SUBSUBSPACE_MEMBER} | ${'"Only admins are allowed to contribute to Callout with id'}                             | ${'subsubspace'}
+        ${TestUser.SUBSUBSPACE_MEMBER} | ${'Only admins are allowed to contribute to this Callout'}                                 | ${'subsubspace'}
         ${TestUser.NON_SPACE_MEMBER}   | ${"Authorization: unable to grant 'contribute' privilege: create contribution on callout"} | ${'subsubspace'}
       `(
         'User: "$userRole" get error when create post to closed "$entity" callout',
