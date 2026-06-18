@@ -57,9 +57,14 @@ test.describe.serial('Whiteboard Templates', () => {
     await setupAuthentication(browser, TestUserManager.users.spaceAdmin.email);
   });
   test.afterAll(async () => {
-    // Clean up authentication
-    await teardownAuthentication();
-    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+    try {
+      // Clean up authentication
+      await teardownAuthentication();
+    } finally {
+      if (baseScenario) {
+        await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+      }
+    }
   });
 
   test.beforeEach(async ({ page }) => {

@@ -90,11 +90,9 @@ export const welcomeHeading = (page: Page) =>
 
 // Cookie consent
 export const cookieConsentBanner = (page: Page) =>
-  // Match a stable prefix only — the trailing copy varies by locale spelling
-  // ("analyze" vs "analyse" site usage).
-  page.getByText(
-    /By clicking "Accept All Cookies", you agree to the storing of cookies/
-  );
+  // Anchor to a stable interaction hook (the accept button) rather than the
+  // consent prose, which varies by locale spelling ("analyze" vs "analyse").
+  page.getByRole('button', { name: /accept all cookies/i });
 export const acceptAllCookiesButton = (page: Page) =>
   page.getByRole('button', { name: 'Accept All Cookies', exact: true });
 export const cookieSettingsButton = (page: Page) =>
