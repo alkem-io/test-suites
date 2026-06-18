@@ -12,6 +12,7 @@ import {
   signInHeading,
   userMenuAvatar,
   logoutMenuItem,
+  logInHeaderLink,
 } from './common-authentication-page-elements';
 
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
@@ -84,11 +85,10 @@ test.describe('Authentication - Login Flows', () => {
     await userMenuAvatar(page).click();
     await logoutMenuItem(page).click();
 
-    // Verify redirect to landing page by checking for sign-in option
-    const signInOption = page
-      .getByRole('link', { name: /sign up|sign in/i })
-      .or(page.getByRole('button', { name: /sign up|sign in/i }));
-    await expect(signInOption.first()).toBeVisible({ timeout: 5000 });
+    // Verify redirect to the logged-out landing page: the CRD header shows the
+    // "Log in" link. The SPA header can be slow to re-render it right after a
+    // client-side logout, so allow a generous timeout.
+    await expect(logInHeaderLink(page)).toBeVisible({ timeout: 15000 });
   });
 
   test('user can logout and re-authenticate', async ({ page }) => {
@@ -107,11 +107,8 @@ test.describe('Authentication - Login Flows', () => {
     await userMenuAvatar(page).click();
     await logoutMenuItem(page).click();
 
-    // Wait for logout to complete
-    const signInOption = page
-      .getByRole('link', { name: /sign up|sign in/i })
-      .or(page.getByRole('button', { name: /sign up|sign in/i }));
-    await expect(signInOption.first()).toBeVisible({ timeout: 5000 });
+    // Wait for logout to complete: the CRD header "Log in" link reappears.
+    await expect(logInHeaderLink(page)).toBeVisible({ timeout: 15000 });
 
     // Sign in again with same credentials
     await navigateToLoginPageFromMenu(baseUrl, page);

@@ -75,7 +75,7 @@ export const useTemplateInAWhiteboard = async (
   await whiteboardDialog.getByRole('button', { name: 'Find Template' }).click();
 
   // The "Use a template" picker lists templates as list items, each showing the
-  // template name and a "Use this template" button.
+  // template name and a "Use template" button.
   const pickerDialog = page.getByRole('dialog', { name: 'Use a template' });
   await expect(pickerDialog).toBeVisible();
 
@@ -85,7 +85,7 @@ export const useTemplateInAWhiteboard = async (
     .getByRole('listitem')
     .filter({ has: page.getByText(templateName, { exact: true }) });
   await expect(item).toBeVisible();
-  await item.getByRole('button', { name: 'Use this template' }).click();
+  await item.getByRole('button', { name: 'Use template', exact: true }).click();
 
   await expect(pickerDialog).not.toBeVisible();
 };
