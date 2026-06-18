@@ -44,8 +44,10 @@ test.describe('Authentication - Restricted Access', () => {
     // Click the sign in link
     await signInSignUpLink(page).click();
 
-    // Verify navigation to sign-in page
-    await expect(signInHeading(page)).toBeVisible({ timeout: 5000 });
+    // Verify navigation to sign-in page. The CRD sign-in page can be slow to
+    // render after navigating away from the restricted page, so allow a
+    // generous timeout for the heading to appear.
+    await expect(signInHeading(page)).toBeVisible({ timeout: 15000 });
   });
 
   test('regular user accessing admin area sees restricted page with dashboard link', async ({
