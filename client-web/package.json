@@ -29,7 +29,12 @@
     "axios": "1.13.5",
     "graphql": "^16.6.0",
     "graphql-upload": "^17.0.0",
-    "tsx": "^4.21.0"
+    "lib0": "^0.2.117",
+    "tsx": "^4.21.0",
+    "ws": "^8.18.0",
+    "y-protocols": "^1.0.6",
+    "y-websocket": "^3.0.0",
+    "yjs": "^13.6.27"
   },
   "devDependencies": {
     "@graphql-codegen/add": "^5.0.3",
@@ -41,6 +46,7 @@
     "@graphql-codegen/typescript-resolvers": "4.4.1",
     "@playwright/test": "^1.57.0",
     "@types/node": "^20.13.1",
+    "@types/ws": "^8.5.10",
     "@typescript-eslint/eslint-plugin": "8.18.1",
     "@typescript-eslint/parser": "8.18.1",
     "cross-env": "^7.0.3",
