@@ -124,6 +124,18 @@ export default defineConfig({
         '/user-profile/view-profile-information.spec.ts',
       ],
     },
+    {
+      // Unified collaboration service-level e2e (epic 003-unify-collab-yjs,
+      // SC-009 / WS-F): two raw y-websocket clients per document asserting CRDT
+      // convergence, per-property merge (whiteboard) and awareness. Heavier than
+      // the 30s default (OIDC login + two WS clients + cold reload), so each spec
+      // raises its own per-test timeout via test.describe.configure.
+      name: 'Collaboration',
+      testMatch: [
+        '/collab/memo-collaboration.spec.ts',
+        '/collab/whiteboard-collaboration.spec.ts',
+      ],
+    },
   ],
   // % or number of the available CPUs
   // workers: '100%',
