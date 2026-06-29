@@ -26,7 +26,9 @@ export class SpacePage {
   }
 
   get settingsTab() {
-    return this.page.getByRole('tab', { name: 'Settings' });
+    // CRD exposes space settings via a "Settings" link in the space banner,
+    // not a navigation tab.
+    return this.page.getByRole('link', { name: 'Settings' });
   }
 
   // Success dialog
@@ -58,7 +60,17 @@ export class SpacePage {
   }
 
   async waitForSpaceReady(timeout: number = 30000) {
-    await expect(this.successDialogText).toBeVisible({ timeout });
+    // CRD no longer shows a "Your Space is Ready" success modal after creating
+    // a Space; it routes straight to the new Space. Treat the success dialog as
+    // optional and fall back to the Space landing (the level-1 Space heading).
+    const ready = await this.successDialogText
+      .isVisible({ timeout: 5000 })
+      .catch(() => false);
+    if (!ready) {
+      await expect(
+        this.page.getByRole('heading', { level: 1 }).first()
+      ).toBeVisible({ timeout });
+    }
   }
 
   async clickGetStarted() {
@@ -68,8 +80,12 @@ export class SpacePage {
   }
 
   async dismissSuccessDialog() {
-    await this.clickGetStarted();
-    await expect(this.successDialog).toBeHidden();
+    // The success dialog is optional in CRD; only dismiss it if present.
+    const getStarted = this.page.getByRole('button', { name: /get started/i });
+    if (await getStarted.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await getStarted.click();
+      await expect(this.successDialog).toBeHidden();
+    }
   }
 
   async navigateToSettings() {

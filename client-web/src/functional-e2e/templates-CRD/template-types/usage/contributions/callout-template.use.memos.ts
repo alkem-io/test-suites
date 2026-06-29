@@ -125,21 +125,24 @@ export const verifyCalloutContributionMemos = async (
   // 6. The card preview on the callout now reflects both edits. The edited
   // title is no longer the original `defaultTitle`; the body snippet retains
   // the original `defaultDescription` and now also includes `bodyEdition`.
-  // Each of those strings shows up as its own <p> inside the card button, so
-  // match with `exact: true` to avoid colliding with the edited title (which
-  // contains `bodyEdition` as a substring after the "-Edited" rename). Scroll
-  // the card into view first - on long feeds it can render below the fold
-  // after the modal closes.
+  //
+  // The CRD body excerpt is rendered non-deterministically between two
+  // layouts (this is the source of the historical flakiness):
+  //   (a) a single flattened <p> concatenating the two lines with no
+  //       separator, edit-first, e.g. "Editedbcfe70Default Memo Desc bcfe70";
+  //   (b) two separate <p> elements, original-order, e.g.
+  //       "Default Memo Desc 09145a" then "Edited09145a".
+  // Asserting on an individual <p> (or with exact: true) is therefore brittle.
+  // Instead assert against the card button as a whole: in BOTH layouts its
+  // text contains the original description and the appended edit as
+  // substrings. Scroll the card into view first - on long feeds it can render
+  // below the fold after the modal closes.
   const editedCard = calloutContainer
     .getByRole('button')
     .filter({ hasText: editedTitle })
     .first();
   await editedCard.scrollIntoViewIfNeeded();
   await expect(editedCard).toBeVisible();
-  await expect(
-    editedCard.getByText(defaultDescription, { exact: true })
-  ).toBeVisible();
-  await expect(
-    editedCard.getByText(bodyEdition, { exact: true })
-  ).toBeVisible();
+  await expect(editedCard).toContainText(defaultDescription);
+  await expect(editedCard).toContainText(bodyEdition);
 };

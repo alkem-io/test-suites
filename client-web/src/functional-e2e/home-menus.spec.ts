@@ -34,14 +34,22 @@ test.describe.skip('Home Page Menus', () => {
   });
 
   test.beforeEach(async ({ page }) => {
+    // CRD header uses a direct "Log in" link (not the MUI PersonIcon menu).
+    // NOTE: this describe block remains test.skip — selectors migrated only.
     await page.goto(baseUrl);
-    await page.getByRole('button', { name: 'Accept All Cookies' }).click();
-    await page.getByTestId('PersonIcon').click();
-    await page.getByRole('menuitem', { name: 'Log In | Sign Up' }).click();
+    const cookieButton = page.getByRole('button', {
+      name: 'Accept All Cookies',
+    });
+    if (await cookieButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await cookieButton.click();
+    }
+    const loginLink = page.getByRole('link', { name: 'Log in', exact: true });
+    await loginLink.waitFor({ state: 'visible', timeout: 30_000 });
+    await loginLink.click();
     await page.waitForURL(/.*login.*/);
     await page.getByRole('textbox', { name: 'E-Mail' }).fill('admin@alkem.io');
     await page.getByRole('textbox', { name: 'Password' }).fill(password);
-    await page.getByRole('button', { name: 'Sign in' }).click();
+    await page.getByRole('button', { name: 'Sign in', exact: true }).click();
     await page.waitForURL(`${baseUrl}/home`);
   });
 

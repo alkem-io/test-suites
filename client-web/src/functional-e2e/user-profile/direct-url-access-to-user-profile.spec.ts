@@ -8,36 +8,46 @@ const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
 test.describe('Navigation and Access', () => {
   test('Direct URL Access to User Profile', async ({ page }) => {
-    // Seed: Login
+    // Seed: Login (CRD header uses a direct "Log in" link)
     await page.goto(baseUrl);
-    await page.getByRole('button', { name: 'Accept All Cookies' }).click();
-    await page.getByTestId('PersonIcon').click({ timeout: 500 });
-    await page
-      .getByRole('menuitem', { name: 'Log In | Sign Up' })
-      .click({ timeout: 500 });
+    const cookieButton = page.getByRole('button', {
+      name: 'Accept All Cookies',
+    });
+    if (await cookieButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await cookieButton.click();
+    }
+    const loginLink = page.getByRole('link', { name: 'Log in', exact: true });
+    await loginLink.waitFor({ state: 'visible', timeout: 30_000 });
+    await loginLink.click();
     await page.waitForURL(/.*login.*/);
     await page.getByRole('textbox', { name: 'E-Mail' }).fill('admin@alkem.io');
     await page.getByRole('textbox', { name: 'Password' }).fill(password);
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
     await page.waitForURL(/.*home.*/);
+    const switchToNewDesign = page.getByRole('button', {
+      name: /take me to the new design/i,
+    });
+    if (
+      await switchToNewDesign.isVisible({ timeout: 5000 }).catch(() => false)
+    ) {
+      await switchToNewDesign.click().catch(() => {});
+    }
 
     // 1. Navigate directly to /user/admin-alkemio/settings/profile
     await page.goto(`${baseUrl}/user/admin-alkemio/settings/profile`);
 
-    // Verify "My profile" tab is active
-    await expect(page.getByRole('tab', { name: 'My profile' })).toBeVisible();
+    // Verify the "Profile" tab is active (CRD renames "My profile").
+    await expect(page.getByRole('tab', { name: 'Profile' })).toBeVisible();
 
-    // Verify First Name textbox is visible
+    // CRD renders the name fields as inline-edit buttons (popover editors)
+    // instead of textboxes, and removes the bottom "Save" button (each field
+    // auto-saves via its popover).
     await expect(
-      page.getByRole('textbox', { name: 'First Name' })
+      page.getByRole('button', { name: 'First Name' })
     ).toBeVisible();
 
-    // Verify Last name textbox is visible
     await expect(
-      page.getByRole('textbox', { name: 'Last name' })
+      page.getByRole('button', { name: 'Last Name' })
     ).toBeVisible();
-
-    // Verify Save button is visible
-    await expect(page.getByRole('button', { name: 'Save' })).toBeVisible();
   });
 });

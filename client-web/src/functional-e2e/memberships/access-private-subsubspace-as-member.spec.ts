@@ -144,16 +144,18 @@ test.describe('Space/Subspace Settings Access Control', () => {
           .first()
       ).toBeVisible({ timeout: 3000 });
 
-      // 4. Verify can participate in collaboration
+      // 4. Verify full member access to the space content/community
+      // CRD: members can open the "Community" view (replaces the legacy
+      // "contributors" affordance), confirming non-preview access.
       await expect(
-        page.getByRole('button', { name: /contributors/i })
-      ).toBeVisible();
+        page.getByRole('button', { name: 'Community', exact: true }).first()
+      ).toBeVisible({ timeout: 5000 });
 
       // 5. Verify cannot access settings (not admin)
-      const settingsButton = page.locator(
-        '[data-testid="SettingsOutlinedIcon"], [aria-label*="Settings"]'
-      );
-      await expect(settingsButton).not.toBeVisible();
+      // CRD: the space-settings entry is a banner link named "Settings"; a
+      // non-admin member must not see it.
+      const settingsLink = page.getByRole('link', { name: 'Settings' });
+      await expect(settingsLink).not.toBeVisible();
     }
   );
 });

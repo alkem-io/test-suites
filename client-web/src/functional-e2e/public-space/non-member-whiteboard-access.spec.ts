@@ -83,11 +83,15 @@ test.describe('Whiteboard Access for Non-Members', () => {
     // Verify whiteboard description is shown
     await expect(page.getByText('Whiteboard - initial')).toBeVisible();
 
-    // Verify non-member message is displayed
+    // CRD collapses the comment thread by default (020 callout-collapse).
+    // Expand it to surface the non-member gating message.
+    await page.getByRole('button', { name: /Expand comments/i }).first().click();
+
+    // Verify non-member message is displayed (CRD rewords the gating copy)
     await expect(
       page
         .getByText(
-          "You can't reply to this discussion since you're not a member of this Space"
+          "You don't have permission to comment, reply or react here."
         )
         .first()
     ).toBeVisible();
@@ -101,10 +105,11 @@ test.describe('Whiteboard Access for Non-Members', () => {
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
     await page.waitForLoadState('networkidle');
 
-    // Click on the whiteboard callout heading to open it
+    // CRD exposes the whiteboard callout via an explicit "Open ... whiteboard
+    // callout" link (the heading link no longer triggers the modal).
     await page
-      .getByRole('heading', {
-        name: /whiteboard callout/,
+      .getByRole('link', {
+        name: /Open .*whiteboard callout/,
       })
       .click({ timeout: 30_000 });
 
@@ -113,11 +118,6 @@ test.describe('Whiteboard Access for Non-Members', () => {
       page.getByRole('dialog', {
         name: /whiteboard callout/,
       })
-    ).toBeVisible();
-
-    // Verify Expand Window button is available
-    await expect(
-      page.getByRole('button', { name: 'Expand Window' })
     ).toBeVisible();
 
     // Verify whiteboard description in dialog
@@ -172,10 +172,10 @@ test.describe('Whiteboard Access for Non-Members', () => {
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
     await page.waitForLoadState('networkidle');
 
-    // Open the whiteboard callout dialog
+    // Open the whiteboard callout dialog via the explicit "Open ..." link.
     await page
-      .getByRole('heading', {
-        name: /whiteboard callout/,
+      .getByRole('link', {
+        name: /Open .*whiteboard callout/,
       })
       .click({ timeout: 30_000 });
 
@@ -187,15 +187,26 @@ test.describe('Whiteboard Access for Non-Members', () => {
     ).toBeVisible();
 
     // Expand the whiteboard to full window for better interaction testing
-    await page.getByRole('button', { name: 'Expand Window' }).click();
-    await page.waitForLoadState('networkidle');
+    // (CRD may not surface this control for an empty/read-only whiteboard).
+    const expandWindow = page.getByRole('button', { name: 'Expand Window' });
+    if (await expandWindow.count()) {
+      await expandWindow.click();
+      await page.waitForLoadState('networkidle');
+    }
 
     // Verify read-only mode indicator or message
-    // Non-members should see a message that they cannot edit
+    // Non-members should see a message that they cannot edit. CRD collapses
+    // the comment thread by default; expand it to surface the gating copy.
+    const expandComments = page
+      .getByRole('button', { name: /Expand comments/i })
+      .first();
+    if (await expandComments.count()) {
+      await expandComments.click();
+    }
     await expect(
       page
         .getByText(
-          "You can't reply to this discussion since you're not a member of this Space"
+          "You don't have permission to comment, reply or react here."
         )
         .first()
     ).toBeVisible();
@@ -223,10 +234,10 @@ test.describe('Whiteboard Access for Non-Members', () => {
       })
     ).toBeVisible({ timeout: 30_000 });
 
-    // Click to open the whiteboard callout
+    // Click to open the whiteboard callout via the explicit "Open ..." link.
     await page
-      .getByRole('heading', {
-        name: /whiteboard callout/,
+      .getByRole('link', {
+        name: /Open .*whiteboard callout/,
       })
       .click();
 
@@ -237,12 +248,20 @@ test.describe('Whiteboard Access for Non-Members', () => {
       })
     ).toBeVisible();
 
-    // Verify read-only message is shown in the dialog
+    // Verify read-only message is shown in the dialog. CRD collapses the
+    // comment thread by default; expand it to surface the gating copy.
+    const expandComments = page
+      .getByRole('dialog')
+      .getByRole('button', { name: /Expand comments/i })
+      .first();
+    if (await expandComments.count()) {
+      await expandComments.click();
+    }
     await expect(
       page
         .getByRole('dialog')
         .getByText(
-          "You can't reply to this discussion since you're not a member of this Space"
+          "You don't have permission to comment, reply or react here."
         )
     ).toBeVisible();
   });

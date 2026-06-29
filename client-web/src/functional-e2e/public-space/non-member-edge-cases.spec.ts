@@ -93,22 +93,31 @@ test.describe('Edge Cases and Error Handling', () => {
       page.getByRole('heading', { name: '👋 Welcome to your space!' })
     ).toBeVisible();
 
-    // Verify non-member message is shown
+    // CRD collapses the comment thread by default (020 callout-collapse).
+    // Expand it to surface the non-member gating message.
+    await page.getByRole('button', { name: /Expand comments/i }).click();
+
+    // Verify non-member message is shown (CRD rewords the gating copy)
     await expect(
       page.getByText(
-        "You can't reply to this discussion since you're not a member of this Space"
+        "You don't have permission to comment, reply or react here."
       )
     ).toBeVisible();
 
     // Verify navigation remains functional - click through tabs
     await page.getByRole('tab', { name: 'Subspaces' }).click();
+    // CRD renders subspaces as cards (link → article → heading) in a grid
+    // region; the card link is unnamed, so assert the subspace heading.
     await expect(
-      page.getByRole('link', { name: /Card banner:.*seed-public-space/ })
+      page
+        .getByRole('region', { name: 'Subspaces grid' })
+        .getByRole('heading', { name: /seed-public-space/ })
+        .first()
     ).toBeVisible();
 
     await page.getByRole('tab', { name: 'community' }).click();
     await expect(
-      page.getByRole('heading', { name: "Who's involved" })
+      page.getByText('The contributors to this Space!')
     ).toBeVisible();
 
     await page.getByRole('tab', { name: 'Home' }).click();
@@ -127,19 +136,13 @@ test.describe('Edge Cases and Error Handling', () => {
     // Navigate to Subspaces tab and enter a subspace
     await page.getByRole('tab', { name: 'Subspaces' }).click();
 
-    // Click on the subspace card to enter the public subspace - clicking on Card banner should be provided Space Avatar, which in my opinion is not correct
-    // await page
-    //   .getByRole('link', {
-    //     name: new RegExp(
-    //       `Card banner:.*${baseScenario.space.about.profile.displayName}`
-    //     ),
-    //   })
-    //   .click();
-
+    // Click on the subspace card to enter the public subspace. In CRD the
+    // subspace card is an unnamed link wrapping an article with the subspace
+    // heading; click the card via its heading.
     await page
-      .getByRole('link', {
-        name: `Avatar ${baseScenario.subspace.about.profile.displayName}`,
-      })
+      .getByRole('region', { name: 'Subspaces grid' })
+      .getByRole('heading', { name: /seed-public-space/ })
+      .first()
       .click();
 
     // Verify we are in the subspace
@@ -203,12 +206,15 @@ test.describe('Edge Cases and Error Handling', () => {
     // Step 4: Navigate between tabs after session expiry
     await page.getByRole('tab', { name: 'Subspaces' }).click();
     await expect(
-      page.getByRole('link', { name: /Card banner:.*seed-public-space/ })
+      page
+        .getByRole('region', { name: 'Subspaces grid' })
+        .getByRole('heading', { name: /seed-public-space/ })
+        .first()
     ).toBeVisible();
 
     await page.getByRole('tab', { name: 'community' }).click();
     await expect(
-      page.getByRole('heading', { name: "Who's involved" })
+      page.getByText('The contributors to this Space!')
     ).toBeVisible();
 
     // Verify user is not forcefully redirected to login

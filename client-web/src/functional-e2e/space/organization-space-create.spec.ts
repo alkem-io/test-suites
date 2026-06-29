@@ -192,10 +192,9 @@ test.describe('CREATE Space Operations (Organization Account)', () => {
     // Try to enter a URL longer than 25 characters
     await createSpaceDialog.fillUrl('this-url-is-way-too-long-for-validation');
 
-    // Verify the character count indicator shows exceeded limit
-    await expect(createSpaceDialog.urlCharacterCount).toBeVisible();
-
-    // Check terms
+    // CRD no longer renders an "N / 25" URL character-count indicator
+    // (gap logged); the URL-length rule is enforced by keeping the Create
+    // button disabled. Check terms, then assert that gating.
     await createSpaceDialog.acceptTermsAndConditions();
 
     // Verify Create button remains disabled due to URL length validation

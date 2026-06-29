@@ -115,23 +115,24 @@ test.describe('Subspace Navigation for Non-Members', () => {
     // Navigate to Subspaces tab
     await page.getByRole('tab', { name: 'Subspaces' }).click();
 
+    // CRD renders each subspace as an unnamed link wrapping an article with
+    // a level-3 heading carrying the subspace display name. Target the card
+    // link via the heading it contains.
+    const subspaceCard = page
+      .getByRole('region', { name: 'Subspaces grid' })
+      .getByRole('link')
+      .filter({
+        has: page.getByRole('heading', {
+          name: baseScenario.subspace.about.profile.displayName,
+          exact: true,
+        }),
+      });
+
     // Verify subspace card is visible
-    await expect(
-      page.getByRole('link', {
-        name: new RegExp(
-          `Card banner:.*${baseScenario.subspace.about.profile.displayName}`
-        ),
-      })
-    ).toBeVisible();
+    await expect(subspaceCard).toBeVisible();
 
     // Click on the subspace card
-    await page
-      .getByRole('link', {
-        name: new RegExp(
-          `Card banner:.*${baseScenario.subspace.about.profile.displayName}`
-        ),
-      })
-      .click();
+    await subspaceCard.click();
 
     // Verify subspace landing page loads successfully
     await expect(page).toHaveURL(
@@ -174,21 +175,25 @@ test.describe('Subspace Navigation for Non-Members', () => {
     const subsubspaceProfile = baseScenario.subsubspace.about.profile;
     await page.getByRole('tab', { name: 'Subspaces' }).click();
 
-    // Verify subspace card is visible using regex pattern
-    await expect(
-      page.getByRole('link', {
-        name: new RegExp(`Card banner:.*${subspaceProfile.displayName}`),
-      })
-    ).toBeVisible({
+    // CRD subspace card = unnamed link wrapping an article with a level-3
+    // heading carrying the subspace display name.
+    const subspaceCard = page
+      .getByRole('region', { name: 'Subspaces grid' })
+      .getByRole('link')
+      .filter({
+        has: page.getByRole('heading', {
+          name: subspaceProfile.displayName,
+          exact: true,
+        }),
+      });
+
+    // Verify subspace card is visible
+    await expect(subspaceCard).toBeVisible({
       timeout: 10_000,
     });
 
     // Click on the subspace card to enter the public subspace
-    await page
-      .getByRole('link', {
-        name: `Avatar ${subspaceProfile.displayName}`,
-      })
-      .click();
+    await subspaceCard.click();
 
     await page.waitForTimeout(2_000);
     // Verify we are in the subspace
@@ -199,25 +204,21 @@ test.describe('Subspace Navigation for Non-Members', () => {
       })
     ).toBeVisible();
 
-    await expect(
-      page.getByRole('heading', {
-        name: subspaceProfile.tagline,
-      })
-    ).toBeVisible();
+    // CRD renders the tagline as a paragraph, not a heading.
+    await expect(page.getByText(subspaceProfile.tagline)).toBeVisible();
+
+    // CRD lists the sub-subspaces in the subspace sidebar (under the
+    // "Subspaces" heading), not under a tab. The private sub-subspace renders
+    // as a named link "<initial> <displayName> Private".
+    const subsubspaceCard = page.getByRole('link', {
+      name: new RegExp(`${subsubspaceProfile.displayName}.*Private`),
+    });
 
     // Verify sub-subspace is visible in the hierarchy (cards ARE visible)
-    await expect(
-      page.getByRole('link', {
-        name: `${subsubspaceProfile.displayName}`,
-      })
-    ).toBeVisible();
+    await expect(subsubspaceCard).toBeVisible();
 
-    // Click on the PRIVATE sub-subspace link
-    await page
-      .getByRole('link', {
-        name: `Avatar ${subsubspaceProfile.displayName} Locked`,
-      })
-      .click();
+    // Click on the PRIVATE sub-subspace card
+    await subsubspaceCard.click();
 
     // For PRIVATE sub-subspace, non-member should see a dialog or restricted content
     // Wait a moment for any dialog to appear
@@ -257,10 +258,16 @@ test.describe('Subspace Navigation for Non-Members', () => {
     // Navigate to Subspaces tab
     await page.getByRole('tab', { name: 'Subspaces' }).click();
 
-    // Click on the subspace card from list tesults - clicking on Card banner should be provided Space Avatar, which in my opinion is not correct
+    // Click on the subspace card (CRD: unnamed link wrapping an article
+    // with the subspace display-name heading).
     await page
-      .getByRole('link', {
-        name: `Avatar ${baseScenario.subspace.about.profile.displayName}`,
+      .getByRole('region', { name: 'Subspaces grid' })
+      .getByRole('link')
+      .filter({
+        has: page.getByRole('heading', {
+          name: baseScenario.subspace.about.profile.displayName,
+          exact: true,
+        }),
       })
       .click();
 
@@ -269,29 +276,20 @@ test.describe('Subspace Navigation for Non-Members', () => {
       new RegExp(`/challenges/${baseScenario.subspace.nameId}`)
     );
 
-    // Click to the subspace Contributors button
-    await page.getByRole('button', { name: 'Contributors' }).click();
-
-    // Verify Contributors dialog to load
-    await expect(
-      page.getByRole('heading', { name: 'Contributors' })
-    ).toBeVisible();
-
-    // Close Contributors dialog
-    await page.getByRole('button', { name: 'Close' }).click();
-
-    // Click on subspace About button
+    // CRD exposes the contributors via the "Community" quick action in the
+    // subspace sidebar (replacing the MUI "Contributors" button).
     await page
-      .getByRole('button', { name: 'About' })
+      .getByRole('button', { name: 'Community' })
+      .first()
       .click({ timeout: 10_000 });
 
-    await page.waitForTimeout(2_000);
-
-    // Click on the lead profile link
+    // The community dialog lists the space leads; the subspace admin is shown
+    // as a profile link. Click it to open the lead profile.
     await page
       .getByRole('link', {
-        name: `User avatar ${TestUserManager.users.subspaceAdmin.displayName}`,
+        name: new RegExp(TestUserManager.users.subspaceAdmin.displayName),
       })
+      .first()
       .click({ timeout: 10_000 });
 
     // Verify Subspace Lead profile page loads
@@ -318,10 +316,16 @@ test.describe('Subspace Navigation for Non-Members', () => {
     //   })
     //   .click();
 
-    // Click on the subspace card from list tesults
+    // Click on the subspace card (CRD: unnamed link wrapping an article
+    // with the subspace display-name heading).
     await page
-      .getByRole('link', {
-        name: `Avatar ${baseScenario.subspace.about.profile.displayName}`,
+      .getByRole('region', { name: 'Subspaces grid' })
+      .getByRole('link')
+      .filter({
+        has: page.getByRole('heading', {
+          name: baseScenario.subspace.about.profile.displayName,
+          exact: true,
+        }),
       })
       .click();
 
@@ -330,19 +334,28 @@ test.describe('Subspace Navigation for Non-Members', () => {
       page.getByText(baseScenario.subspace.about.profile.tagline)
     ).toBeVisible();
 
-    // Verify action buttons are visible (scoped to main content area)
+    // Verify action affordances are visible. CRD renames/reshapes these:
+    // the subspace About is a sidebar button ("About this Subspace"), the
+    // video call is a header link ("Start video call"), and recent activity
+    // / share are header buttons.
     await expect(
-      page.getByRole('main').getByRole('link', { name: 'About' })
+      page.getByRole('button', { name: 'About this Subspace' })
     ).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Video Call' })).toBeVisible();
     await expect(
-      page.getByRole('link', { name: 'Contributors' })
+      page.getByRole('link', { name: 'Start video call' })
     ).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Activity' })).toBeVisible();
+    // "Recent activity" (header) collides with the "Recent Activity" quick
+    // action; pin the header affordance with an exact match.
+    await expect(
+      page.getByRole('button', { name: 'Recent activity', exact: true })
+    ).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Share' })).toBeVisible();
 
-    // Verify phase navigation is visible
+    // Verify phase navigation is visible. CRD renders the innovation-flow
+    // phases as "Switch to phase <name>" buttons inside the
+    // "Innovation flow phases" navigation.
     await expect(
-      page.getByRole('button', { name: /Current Phase: Explore/ })
+      page.getByRole('button', { name: /Switch to phase Explore/ })
     ).toBeVisible();
 
     // Non-member is logged in, so they may see "Apply" button or no button
