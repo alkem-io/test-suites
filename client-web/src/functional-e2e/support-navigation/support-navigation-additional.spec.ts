@@ -62,14 +62,20 @@ test.describe('Support Navigation Additional Tests', () => {
       // 1. Navigate directly to /docs
       await page.goto(`${baseUrl}/docs`);
 
-      // 2. Verify documentation page loads with "Documentation" heading
-      await expect(
-        page.getByRole('heading', { name: 'Documentation' })
-      ).toBeVisible();
+      // 2. Verify documentation page loads. CRD no longer renders an outer
+      // "Documentation" heading on the /docs page; the page is the embedded
+      // documentation iframe. Assert the iframe (CRD title "Alkemio
+      // documentation") is present and its content loaded.
+      const iframe = page.locator('iframe[title="Alkemio documentation"]');
+      await expect(iframe).toBeVisible({ timeout: 15000 });
 
-      // 3. Verify iframe with documentation content is visible
-      const iframe = page.locator('iframe[title="Documentation"]');
-      await expect(iframe).toBeVisible();
+      // 3. Verify the documentation content rendered inside the iframe
+      const docsFrame = page.frameLocator(
+        'iframe[title="Alkemio documentation"]'
+      );
+      await expect(
+        docsFrame.getByRole('heading', { name: 'Welcome to Alkemio Docs' })
+      ).toBeVisible({ timeout: 15000 });
     });
 
     test('Navigate Back to Dashboard from Documentation', async ({ page }) => {
@@ -77,17 +83,15 @@ test.describe('Support Navigation Additional Tests', () => {
       // 1. Navigate directly to /docs
       await page.goto(`${baseUrl}/docs`);
 
-      // 2. Wait for documentation page to load
-      await page
-        .getByText('Documentation')
-        .first()
-        .waitFor({ state: 'visible' });
-      await expect(
-        page.getByRole('heading', { name: 'Documentation' })
-      ).toBeVisible();
+      // 2. Wait for documentation page (the embedded iframe) to load
+      const iframe = page.locator('iframe[title="Alkemio documentation"]');
+      await expect(iframe).toBeVisible({ timeout: 15000 });
 
-      // 3. Click "My Dashboard" link
-      await page.getByRole('link', { name: 'My Dashboard' }).click();
+      // 3. Navigate back to the dashboard. CRD removed the "My Dashboard" link
+      // from the /docs page; the Alkemio header "Home" logo link (→ /home) is
+      // the return-to-dashboard affordance.
+      await page.getByRole('link', { name: 'Home' }).first().click();
+      await page.waitForURL(/.*\/home.*/, { timeout: 15000 });
 
       // 4. Verify return to dashboard
       await verifyMyDashboardWelcomeElement(page);

@@ -10,82 +10,96 @@ test.describe('My Profile Tab - View and Edit', () => {
   test('View Profile Information', async ({ page }) => {
     // Seed: Login
     await page.goto(baseUrl);
-    await page.getByRole('button', { name: 'Accept All Cookies' }).click();
-    await page.getByTestId('PersonIcon').click();
-    await page.getByRole('menuitem', { name: 'Log In | Sign Up' }).click();
+    const cookieButton = page.getByRole('button', {
+      name: 'Accept All Cookies',
+    });
+    if (await cookieButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await cookieButton.click();
+    }
+    const loginLink = page.getByRole('link', { name: 'Log in', exact: true });
+    await loginLink.waitFor({ state: 'visible', timeout: 30_000 });
+    await loginLink.click();
     await page.waitForURL(/.*login.*/);
     await page.getByRole('textbox', { name: 'E-Mail' }).fill('admin@alkem.io');
     await page.getByRole('textbox', { name: 'Password' }).fill(password);
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
     await page.waitForURL(/.*home.*/);
+    const switchToNewDesign = page.getByRole('button', {
+      name: /take me to the new design/i,
+    });
+    if (
+      await switchToNewDesign.isVisible({ timeout: 5000 }).catch(() => false)
+    ) {
+      await switchToNewDesign.click().catch(() => {});
+    }
 
-    // Navigate to My profile tab
+    // Navigate to the Profile settings tab
     await page.goto(`${baseUrl}/user/admin-alkemio/settings/profile`);
 
-    // 1. Verify profile avatar is displayed
-    await expect(page.getByRole('img', { name: 'Not yet set' })).toBeVisible();
+    // CRD redesigns this surface as an inline-edit settings page:
+    //  - identity fields (Display/First/Last Name, Phone, Tagline) are now
+    //    inline-edit buttons that open a popover, not textboxes
+    //  - the avatar editor is "Change Avatar" under a "Profile Picture" heading
+    //  - Bio is a rich-text editor exposed as the "Formatting toolbar" textbox
+    //  - the legacy "Full Name" field and bottom "Save" button no longer exist
+    //    (each field auto-saves via its popover)
 
-    // 2. Verify Edit button is visible next to avatar
-    await expect(page.getByRole('button', { name: 'Edit' })).toBeVisible();
-
-    // 3. Verify First Name textbox is visible
+    // 1. Verify the avatar editor is displayed
     await expect(
-      page.getByRole('textbox', { name: 'First Name' })
+      page.getByRole('heading', { name: 'Profile Picture' })
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Change Avatar' })
     ).toBeVisible();
 
-    // 3. Verify Last name textbox is visible
+    // 2. Verify identity inline-edit fields are visible
     await expect(
-      page.getByRole('textbox', { name: 'Last name' })
+      page.getByRole('button', { name: 'Display Name' })
     ).toBeVisible();
-
-    // 3. Verify Full Name textbox is visible
     await expect(
-      page.getByRole('textbox', { name: 'Full Name' })
+      page.getByRole('button', { name: 'First Name' })
     ).toBeVisible();
-
-    // 3. Verify Phone textbox is visible
-    await expect(page.getByRole('textbox', { name: 'Phone' })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Last Name' })
+    ).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Phone' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Tagline' })).toBeVisible();
 
     // 3. Verify City textbox is visible
     await expect(page.getByRole('textbox', { name: 'City' })).toBeVisible();
 
-    // 3. Verify Country combobox is visible
-    await expect(page.getByRole('combobox', { name: 'Country' })).toBeVisible();
+    // 3. Verify Country field is visible (CRD renders it as an unnamed
+    // combobox under a "Country" label; assert via the label text).
+    await expect(page.getByText('Country', { exact: true })).toBeVisible();
 
-    // 3. Verify Tagline textbox is visible
-    await expect(page.getByRole('textbox', { name: 'Tagline' })).toBeVisible();
-
-    // 3. Verify Bio Markdown editor is visible
+    // 3. Verify Bio rich-text editor is visible
     await expect(
-      page.getByRole('textbox', { name: 'Markdown editor' })
+      page.getByRole('textbox', { name: 'Formatting toolbar' })
     ).toBeVisible();
 
-    // 3. Verify Skills combobox is visible
+    // 3. Verify Skills section input is visible
     await expect(
-      page.getByRole('combobox', { name: 'Skills Keywords' })
+      page.getByRole('textbox', {
+        name: 'e.g. UX research, TypeScript, facilitation',
+      })
     ).toBeVisible();
 
-    // 3. Verify Linkedin textbox is visible
-    await expect(page.getByRole('textbox', { name: 'Linkedin' })).toBeVisible();
+    // 3. Verify social link textboxes are visible
+    await expect(
+      page.getByRole('textbox', { name: 'LinkedIn' })
+    ).toBeVisible();
+    await expect(page.getByRole('textbox', { name: 'Bluesky' })).toBeVisible();
+    await expect(page.getByRole('textbox', { name: 'GitHub' })).toBeVisible();
 
-    // 3. Verify BlueSky textbox is visible
-    await expect(page.getByRole('textbox', { name: 'BlueSky' })).toBeVisible();
-
-    // 3. Verify Github textbox is visible
-    await expect(page.getByRole('textbox', { name: 'Github' })).toBeVisible();
-
-    // 3. Verify Mail textbox is visible and disabled
-    await expect(page.getByRole('textbox', { name: 'Mail' })).toBeVisible();
+    // 3. Verify Email textbox is visible
+    await expect(page.getByRole('textbox', { name: 'Email' })).toBeVisible();
 
     // 3. Verify Add Reference button is visible
     await expect(
-      page.getByRole('button', { name: 'Add Reference' })
+      page.getByRole('button', { name: 'Add another reference' })
     ).toBeVisible();
 
     // 3. Verify References section shows no references message
     await expect(page.getByText('No references yet')).toBeVisible();
-
-    // 3. Verify Save button is visible at the bottom
-    await expect(page.getByRole('button', { name: 'Save' })).toBeVisible();
   });
 });

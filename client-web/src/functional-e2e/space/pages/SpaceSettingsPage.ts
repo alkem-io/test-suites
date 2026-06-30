@@ -40,24 +40,21 @@ export class SpaceSettingsPage {
     return this.page.getByRole('tab', { name: 'account' });
   }
 
-  // Account tab elements
+  // Account tab elements. CRD renders delete under an Account-tab
+  // "Danger Zone" as a "Delete this Space" button.
   get deleteSpaceButton() {
-    return this.page.getByText('Delete this Space', { exact: true });
+    return this.page.getByRole('button', { name: 'Delete this Space' });
   }
 
-  // Delete dialog
+  // CRD confirmation is a Radix alertdialog "Delete Space" with no checkbox;
+  // a "Delete Space" button confirms (replacing the old checkbox + "Yes,
+  // delete" flow).
   get deleteDialog() {
-    return this.page.getByRole('dialog');
-  }
-
-  get deleteConfirmCheckbox() {
-    return this.page.getByRole('checkbox', {
-      name: 'Please check this box if you',
-    });
+    return this.page.getByRole('alertdialog', { name: 'Delete Space' });
   }
 
   get confirmDeleteButton() {
-    return this.page.getByRole('button', { name: 'Yes, delete' });
+    return this.deleteDialog.getByRole('button', { name: 'Delete Space' });
   }
 
   // Methods
@@ -70,9 +67,10 @@ export class SpaceSettingsPage {
     await this.navigateToAccount();
     await this.deleteSpaceButton.click();
     await expect(this.deleteDialog).toBeVisible();
-    await this.deleteConfirmCheckbox.click();
     await this.confirmDeleteButton.click();
     // Wait for redirect after deletion
-    await this.page.waitForURL(/.*\/(home|spaces).*/);
+    await this.page.waitForURL(/.*\/(home|spaces|account).*/, {
+      timeout: 30_000,
+    });
   }
 }

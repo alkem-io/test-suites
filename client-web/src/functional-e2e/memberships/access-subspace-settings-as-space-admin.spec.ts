@@ -101,14 +101,11 @@ test.describe('Space/Subspace Settings Access Control', () => {
         new RegExp(`/${baseScenario.subspace.nameId}`)
       );
 
-      // 3. Check if settings icon is visible
-      const settingsIcon = page.getByRole('button', {
-        name: 'Settings',
-        exact: true,
-      });
-
-      await settingsIcon.isVisible({ timeout: 5000 });
-      await settingsIcon.click();
+      // 3. Check if settings entry point is visible (CRD: settings entry is a
+      // link in the subspace banner with accessible name "Settings").
+      const settingsLink = page.getByRole('link', { name: 'Settings' }).first();
+      await expect(settingsLink).toBeVisible({ timeout: 5000 });
+      await settingsLink.click();
 
       // 4. Verify navigated to subspace settings page
       await expect(page).toHaveURL(
@@ -119,8 +116,10 @@ test.describe('Space/Subspace Settings Access Control', () => {
       await expect(page.getByRole('tab', { name: 'About' })).toBeVisible({
         timeout: 5000,
       });
+      // CRD: the About settings tab exposes the "Space Name" field section
+      // (replaces the legacy "Details" heading).
       await expect(
-        page.getByRole('heading', { name: 'Details' })
+        page.getByRole('heading', { name: 'Space Name' })
       ).toBeVisible();
     }
   );

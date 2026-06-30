@@ -142,10 +142,12 @@ test.describe('Security & Permissions', () => {
           .first()
       ).toBeVisible({ timeout: 5000 });
 
-      // 3. Verify can participate in collaboration (contributors button visible)
+      // 3. Verify can participate in collaboration
+      // CRD: full member access exposes the "Community" view (replaces the
+      // legacy "contributors" affordance).
       await expect(
-        page.getByRole('button', { name: /contributors/i })
-      ).toBeVisible();
+        page.getByRole('button', { name: 'Community', exact: true }).first()
+      ).toBeVisible({ timeout: 5000 });
 
       // 4. Navigate to user membership settings
       await page.goto(
@@ -154,21 +156,31 @@ test.describe('Security & Permissions', () => {
       await expect(page).toHaveURL(/.*\/settings\/membership/);
 
       // 5. Leave the subsubspace community
-      // Find the leave button for the subsubspace
-      const subsubspaceCard = page.getByText(
-        baseScenario.subsubspace.about.profile.displayName
-      );
-      await expect(subsubspaceCard).toBeVisible({ timeout: 5000 });
+      // CRD: memberships are a searchable card grid; narrow to the subsubspace
+      // so the per-card actions are unambiguous.
+      const subsubspaceName = baseScenario.subsubspace.about.profile.displayName;
+      const search = page.getByPlaceholder('Search memberships...');
+      await search.fill(subsubspaceName);
 
-      const leaveBtn = page.getByRole('button', { name: 'Leave' }).first();
-      await expect(leaveBtn).toBeVisible();
-      await leaveBtn.click();
+      const subsubspaceCardLink = page
+        .getByRole('link', { name: subsubspaceName })
+        .first();
+      await expect(subsubspaceCardLink).toBeVisible({ timeout: 5000 });
 
-      // 6. Confirm leaving in the modal dialog
-      await page.getByRole('button', { name: 'Leave' }).first().click();
+      // CRD flow change: the Leave action lives in the card's "More actions"
+      // (kebab) menu, then a confirmation alertdialog.
+      await page.getByRole('button', { name: 'More actions' }).first().click();
+      await page.getByRole('menuitem', { name: /Leave/i }).click();
+
+      // 6. Confirm leaving in the destructive alertdialog.
+      const confirmDialog = page.getByRole('alertdialog');
+      await expect(confirmDialog).toBeVisible({ timeout: 5000 });
+      await confirmDialog.getByRole('button', { name: 'Leave' }).click();
 
       // 7. Wait for the leave action to complete
-      await expect(subsubspaceCard).not.toBeVisible({ timeout: 5000 });
+      await expect(
+        page.getByRole('link', { name: subsubspaceName })
+      ).not.toBeVisible({ timeout: 5000 });
 
       // 8. Navigate back to the private subsubspace
       await page.goto(
@@ -197,8 +209,13 @@ test.describe('Security & Permissions', () => {
       // ).toBeVisible();
 
       // 13. Verify privacy indicator is shown (limited preview mode)
-      const privacyIcon = page.locator('[data-testid="LockOutlinedIcon"]');
-      await expect(privacyIcon).toBeVisible();
+      // CRD: after leaving, the gated About dialog surfaces the no-access /
+      // privacy state as an image with the accessible name "You don't have
+      // access to this space." (the icon's alt text is the stable hook; there
+      // is no literal "Private" label on this preview surface).
+      await expect(
+        page.getByRole('img', { name: /don't have access to this space/i }).first()
+      ).toBeVisible();
     }
   );
 });

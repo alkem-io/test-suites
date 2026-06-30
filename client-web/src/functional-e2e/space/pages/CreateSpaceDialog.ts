@@ -4,57 +4,67 @@ export class CreateSpaceDialog {
   private dialog: Locator;
 
   constructor(private page: Page) {
-    this.dialog = page.getByRole('dialog', { name: 'Create a new Space' });
+    // CRD renames the dialog from "Create a new Space" to "Create new Space".
+    this.dialog = page.getByRole('dialog', { name: 'Create new Space' });
   }
 
-  // Form fields
+  // Form fields (CRD renames "Title *" -> "Name *", keeps "URL *"/"Tagline").
   get titleInput() {
-    return this.page.getByRole('textbox', { name: 'Title *' });
+    return this.dialog.getByRole('textbox', { name: 'Name *' });
   }
 
   get urlInput() {
-    return this.page.getByRole('textbox', { name: 'URL' });
+    return this.dialog.getByRole('textbox', { name: 'URL *' });
   }
 
   get taglineInput() {
-    return this.page.getByRole('textbox', { name: 'Tagline' });
+    return this.dialog.getByRole('textbox', { name: 'Tagline' });
   }
 
   get tagsCombobox() {
-    return this.page.getByRole('combobox', { name: 'Tags' });
+    // CRD renders Tags as a free-text "press Enter to add" input, not a combobox.
+    return this.dialog.getByRole('textbox', {
+      name: 'Add a tag and press Enter',
+    });
   }
 
   get tutorialsCheckbox() {
-    return this.page.getByRole('checkbox', {
-      name: 'Add Tutorials to this Space',
+    return this.dialog.getByRole('checkbox', {
+      name: 'Add Tutorials and example posts to this Space',
     });
   }
 
   get termsCheckbox() {
-    return this.page.getByRole('checkbox', {
-      name: 'I have read and accept the',
+    return this.dialog.getByRole('checkbox', {
+      name: 'I accept the terms and conditions for creating a Space.',
     });
   }
 
   get changeTemplateButton() {
-    return this.page.getByRole('button', { name: 'Change Template' });
+    // CRD renames "Change Template" -> "Choose a template".
+    return this.dialog.getByRole('button', { name: 'Choose a template' });
   }
 
   get uploadButtons() {
-    return this.page.getByRole('button', { name: 'Upload' });
+    // CRD names the two upload buttons explicitly.
+    return this.dialog.getByRole('button', { name: /Upload .* banner/ });
   }
 
   // Action buttons
   get createButton() {
-    return this.page.getByRole('button', { name: 'Create' });
+    // CRD renames "Create" -> "Create Space"; scoped to the dialog to avoid
+    // colliding with the account page's own "Create Space" button.
+    return this.dialog.getByRole('button', { name: 'Create Space' });
   }
 
   get cancelButton() {
-    return this.page.getByRole('button', { name: 'Cancel' });
+    return this.dialog.getByRole('button', { name: 'Cancel' });
   }
 
   get closeButton() {
-    return this.page.getByRole('button', { name: 'Close' });
+    // CRD renders the dialog dismiss control as an unnamed icon button; it is
+    // the last button in the dialog. Fall back to Escape-equivalent click.
+    return this.dialog.getByRole('button').last();
   }
 
   // Character count indicator
@@ -72,7 +82,7 @@ export class CreateSpaceDialog {
   }
 
   async waitForHidden() {
-    await expect(this.dialog).toBeHidden();
+    await expect(this.dialog).toBeHidden({ timeout: 15_000 });
   }
 
   // Fill methods
@@ -155,10 +165,18 @@ export class CreateSpaceDialog {
 
   async clickCancel() {
     await this.cancelButton.click();
+    // CRD's Radix dialog occasionally needs a beat to dismiss; if it lingers,
+    // fall back to Escape so the dialog reliably closes.
+    if (await this.dialog.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await this.page.keyboard.press('Escape');
+    }
   }
 
   async clickClose() {
     await this.closeButton.click();
+    if (await this.dialog.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await this.page.keyboard.press('Escape');
+    }
   }
 
   async createSpace(

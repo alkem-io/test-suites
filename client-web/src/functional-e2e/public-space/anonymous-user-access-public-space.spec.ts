@@ -60,11 +60,10 @@ test.describe('Public Space Discovery and Access', () => {
       'seed-public-space'
     );
 
-    // Verify space tagline is visible
+    // Verify space tagline is visible (CRD renders the tagline as a paragraph,
+    // no longer a heading)
     await expect(
-      page.getByRole('heading', {
-        name: 'A home to go from here to there, together!',
-      })
+      page.getByText('A home to go from here to there, together!')
     ).toBeVisible();
 
     // Verify all standard navigation tabs are visible (not blocked)
@@ -93,19 +92,26 @@ test.describe('Public Space Discovery and Access', () => {
       page.getByText('The contributors to this Space!')
     ).toBeVisible();
 
-    // Verify People/Organizations toggle is visible
-    await expect(page.getByText('People')).toBeVisible();
-    await expect(page.getByText('organizations')).toBeVisible();
-
-    // Anonymous users see login prompt for full member list
+    // CRD replaces the MUI People/Organizations toggle with member-filter
+    // buttons (All / Lead / Organisation) inside the members grid region.
+    const membersGrid = page.getByRole('region', {
+      name: 'Community members grid',
+    });
+    await expect(membersGrid).toBeVisible();
     await expect(
-      page.getByRole('heading', {
-        name: 'Please log in to see all contributing users',
-      })
+      membersGrid.getByRole('button', { name: 'All' })
+    ).toBeVisible();
+    await expect(
+      membersGrid.getByRole('button', { name: 'Lead' })
+    ).toBeVisible();
+    await expect(
+      membersGrid.getByRole('button', { name: 'Organisation' })
     ).toBeVisible();
 
-    // Verify Sign in and Sign up buttons are available
-    await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Sign up' })).toBeVisible();
+    // The community tab is reachable without login (no auth wall blocks it);
+    // the anonymous header still exposes the Log in affordance.
+    await expect(
+      page.getByRole('link', { name: 'Log in' })
+    ).toBeVisible();
   });
 });

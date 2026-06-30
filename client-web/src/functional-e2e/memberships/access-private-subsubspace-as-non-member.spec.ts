@@ -138,13 +138,20 @@ test.describe('Space/Subspace Settings Access Control', () => {
       ).toBeVisible();
 
       // 5. Verify cannot access full content
+      // CRD: full member access exposes a "Community" view; a non-member in
+      // preview mode must not see it.
       await expect(
-        page.getByRole('button', { name: /contributors/i })
+        page.getByRole('button', { name: 'Community', exact: true })
       ).not.toBeVisible();
 
       // 6. Verify privacy is indicated - limited preview mode
-      const privacyIcon = page.locator('[data-testid="LockOutlinedIcon"]');
-      await expect(privacyIcon).toBeVisible();
+      // CRD: a non-member previewing a private subsubspace gets a gated About
+      // dialog whose privacy/no-access state is surfaced as an image with the
+      // accessible name "You don't have access to this space." (the icon's alt
+      // text is the stable hook; there is no literal "Private" label here).
+      await expect(
+        page.getByRole('img', { name: /don't have access to this space/i }).first()
+      ).toBeVisible();
     }
   );
 });

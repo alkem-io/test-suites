@@ -134,37 +134,37 @@ memberFixture.test.describe.serial('Callout Contributions - Member', () => {
       );
       await expect(page.getByText(originalTitle).first()).toBeVisible();
 
-      // Find and open the contribution card
+      // Find and open the contribution card inside the open callout dialog
+      // (the same title also appears in the feed behind the dialog). The card is
+      // a button whose accessible name begins with the contribution title.
       const contributionCard = page
-        .getByRole('heading', { level: 2 })
-        .filter({ hasText: originalTitle })
+        .getByRole('dialog')
+        .getByRole('button', { name: originalTitle })
         .first();
       await contributionCard.click();
 
-      // Click edit button (contextual menu)
-      const editButton = page
-        .locator('[data-testid="EditOutlinedIcon"]')
-        .first();
+      // CRD: the opened contribution preview exposes an "Edit response" button.
+      const editButton = page.getByRole('button', { name: 'Edit response' });
       await expect(editButton).toBeVisible();
       await editButton.click();
 
       await delay(500); // Small delay to allow editor to load
 
-      // Edit the title
-      const titleInput = page.getByLabel(/title/i);
+      // Edit the title (CRD: textbox named "Title")
+      const titleInput = page.getByRole('textbox', { name: 'Title' });
       await titleInput.clear();
       await titleInput.fill(editedTitle);
 
-      // Edit the content
+      // Edit the content (CRD: editor placeholder "Write your post..."/"Write something...")
       const contentEditor = page.getByRole('textbox', {
-        name: /markdown editor/i,
+        name: /write (something|your post)/i,
       });
       await contentEditor.click();
       await page.keyboard.press('Control+A');
       await page.keyboard.type(editedContent, { delay: 50 });
 
-      // Save changes
-      await page.getByRole('button', { name: /save/i }).click();
+      // Save changes (CRD primary submit)
+      await page.getByRole('button', { name: /^(save|update|post)$/i }).click();
 
       // Verify edited content is visible
       await expect(page.getByText(editedTitle).first()).toBeVisible({

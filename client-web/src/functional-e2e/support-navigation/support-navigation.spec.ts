@@ -68,13 +68,17 @@ test.describe('Support Navigation Flow', () => {
     const newPage = await page.context().waitForEvent('page', { timeout: 700 });
     await newPage.waitForURL(/.*docs.*/);
 
-    // 4. Verify documentation page loads at /docs with "Documentation" heading
+    // 4. Verify documentation page loads at /docs. CRD renders the docs as an
+    // embedded iframe (title "Alkemio documentation") with no outer
+    // "Documentation" heading; assert the iframe content rendered.
+    const docsFrame = newPage.frameLocator(
+      'iframe[title="Alkemio documentation"]'
+    );
     await expect(
-      newPage.getByRole('heading', { name: 'Documentation' })
-    ).toBeVisible();
+      docsFrame.getByRole('heading', { name: 'Welcome to Alkemio Docs' })
+    ).toBeVisible({ timeout: 15000 });
 
     // 5. Navigate to "How to..." section and click "Inviting People to a Space"
-    const docsFrame = newPage.frameLocator('iframe[title="Documentation"]');
     await docsFrame
       .getByRole('link', { name: 'Inviting People to a Space' })
       .click();

@@ -71,9 +71,11 @@ test.describe('Space/Subspace Settings Access Control', () => {
       // 1. Navigate to "Membership Test Space"
       await page.goto(`${baseUrl}/${baseScenario.space.nameId}`);
 
-      // 2. Verify settings icon is not visible to member
-      const settingsIcon = page.locator('[data-testid="SettingsOutlinedIcon"]');
-      await expect(settingsIcon).not.toBeVisible();
+      // 2. Verify settings entry point is not visible to member
+      // CRD: settings entry is a link in the space banner with accessible
+      // name "Settings"; a plain member must not see it.
+      const settingsLink = page.getByRole('link', { name: 'Settings' });
+      await expect(settingsLink).not.toBeVisible();
 
       // todo: not enught
     }

@@ -67,17 +67,23 @@ test.describe('Home Dashboard Membership Display', () => {
       // 2. Verify home dashboard loads successfully
       await expect(page).toHaveURL(/.*\/home/);
 
-      // 3. Verify "My Spaces" or similar section shows user's memberships
-      await expect(page.getByText(/My Spaces|Spaces/i)).toBeVisible();
+      // 3. Verify the user's spaces section is shown
+      // CRD: the home dashboard surfaces the membership spaces under the
+      // "Recent Spaces" section heading.
+      await expect(
+        page.getByRole('heading', { name: /Recent Spaces/i })
+      ).toBeVisible({ timeout: 5000 });
 
-      // 4. Verify displays card for "Membership Test Space" (member)
+      // 4. Verify displays card for the member's space
       await expect(
         page.getByText(baseScenario.space.about.profile.displayName).first()
-      ).toBeVisible({ timeout: 2000 });
+      ).toBeVisible({ timeout: 5000 });
 
-      // 5. Verify each card shows quick access links
+      // 5. Verify the space is reachable as a card link (quick access)
       const spaceCard = page
-        .locator(`text=${baseScenario.space.about.profile.displayName}`)
+        .getByRole('link', {
+          name: new RegExp(baseScenario.space.about.profile.displayName),
+        })
         .first();
       await expect(spaceCard).toBeVisible();
     }

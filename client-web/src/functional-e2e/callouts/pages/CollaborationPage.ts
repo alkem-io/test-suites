@@ -19,7 +19,10 @@ export class CollaborationPage {
 
   // Callout creation
   get addCalloutButton() {
-    return this.page.getByRole('button', { name: /create|post/i }).first();
+    // CRD: the tab-level create trigger is exactly "Add Post" (capital P).
+    // Posts-collection callout cards also expose a contribution-level
+    // "Add post" (lowercase) button, so match exactly to avoid colliding.
+    return this.page.getByRole('button', { name: 'Add Post', exact: true });
   }
 
   get createCalloutButton() {
@@ -37,7 +40,8 @@ export class CollaborationPage {
   }
 
   get whiteboardOption() {
-    return this.page.getByRole('button', { name: /whiteboard/i });
+    // exact: avoid also matching the "Whiteboards" responses radio.
+    return this.page.getByRole('radio', { name: 'Whiteboard', exact: true });
   }
 
   get linkCollectionOption() {
@@ -45,12 +49,14 @@ export class CollaborationPage {
   }
 
   get linkOption() {
-    return this.page.getByRole('button', { name: /Call To Action/i });
+    return this.page.getByRole('radio', { name: 'Call to Action' });
   }
 
   // CTA (Call To Action) specific fields
   get ctaLinkTextInput() {
-    return this.page.getByRole('textbox', { name: 'Call To Action' });
+    // CRD: after selecting the "Call to Action" framing, the link's label field
+    // is a textbox named "Display Name" (alongside the "URL" textbox).
+    return this.page.getByRole('textbox', { name: 'Display Name' });
   }
 
   get ctaUrlInput() {
@@ -58,25 +64,31 @@ export class CollaborationPage {
   }
 
   get memoOption() {
-    return this.page.getByRole('button', { name: /memo/i });
+    // exact: avoid also matching the "Memos" responses radio.
+    return this.page.getByRole('radio', { name: 'Memo', exact: true });
   }
 
   // Creation form fields
   get displayNameInput() {
-    return this.page.getByLabel(/display.*name|title|name/i).first();
+    // CRD: the callout title field is a textbox with accessible name "Title".
+    return this.page.getByRole('textbox', { name: 'Title' });
   }
 
   get descriptionInput() {
-    // TipTap rich text editor - contenteditable div with aria-label
-    return this.page.getByRole('textbox', { name: 'Markdown editor' });
+    // CRD: the rich-text body editor's accessible name is its placeholder
+    // "Write something..." (was "Markdown editor").
+    return this.page.getByRole('textbox', { name: 'Write something' });
   }
 
   get saveAsDraftButton() {
-    return this.page.getByRole('button', { name: /save as draft/i });
+    return this.page.getByRole('button', { name: 'Save Draft' });
   }
 
   get saveButton() {
-    return this.page.getByRole('button', { name: /^(create|post|save)$/i });
+    // CRD primary submit is "Post" (create) / "Save" (edit); allow "Publish" too.
+    return this.page.getByRole('button', {
+      name: /^(create|post|save|publish)$/i,
+    });
   }
 
   get cancelButton() {
@@ -98,19 +110,19 @@ export class CollaborationPage {
   }
 
   get collectionLinksFilesOption() {
-    return this.page.getByRole('button', { name: 'Links & Files' });
+    return this.page.getByRole('radio', { name: 'Links & Files' });
   }
 
   get collectionPostsOption() {
-    return this.page.getByRole('button', { name: 'Posts' });
+    return this.page.getByRole('radio', { name: 'Posts' });
   }
 
   get collectionMemosOption() {
-    return this.page.getByRole('button', { name: 'Memos' });
+    return this.page.getByRole('radio', { name: 'Memos' });
   }
 
   get collectionWhiteboardsOption() {
-    return this.page.getByRole('button', { name: 'Whiteboards' });
+    return this.page.getByRole('radio', { name: 'Whiteboards' });
   }
 
   // Draft/Published indicators
@@ -151,11 +163,11 @@ export class CollaborationPage {
     return this.page.getByRole('button', { name: /settings/i });
   }
 
-  // Comments section - selectors verified via Playwright browser inspection
+  // Comments section
   get commentInput() {
-    return this.page
-      .getByRole('textbox', { name: 'Type your comment here' })
-      .first();
+    // CRD: the comment box is a textbox with placeholder "Add a comment..."
+    // (no accessible name/label) under the "Discussion" section heading.
+    return this.page.getByPlaceholder('Add a comment...').first();
   }
 
   get postCommentButton() {
@@ -184,7 +196,13 @@ export class CollaborationPage {
 
   // Contributions
   get addContributionButton() {
-    return this.page.getByRole('button', { name: 'Add', exact: true });
+    // CRD: the contribution-add button is named by collection type
+    // ("Add post" / "Add link or file" / "Add memo" / "Add whiteboard"),
+    // scoped to the open callout detail dialog so it excludes the tab-level
+    // "Add Post" create button behind it.
+    return this.calloutDialog.getByRole('button', {
+      name: /add (post|link|file|memo|whiteboard)/i,
+    });
   }
 
   get contributionsList() {
@@ -195,15 +213,17 @@ export class CollaborationPage {
 
   // Confirmation dialog
   get confirmDialog() {
-    return this.page.getByRole('dialog');
+    // CRD confirmations are Radix AlertDialogs (role=alertdialog),
+    // e.g. "Publish this post?", "Delete callout".
+    return this.page.getByRole('alertdialog');
   }
 
   get confirmDeleteButton() {
-    return this.page.getByRole('button', { name: 'Delete' });
+    return this.confirmDialog.getByRole('button', { name: 'Delete' });
   }
 
   get confirmButton() {
-    return this.page.getByRole('button', {
+    return this.confirmDialog.getByRole('button', {
       name: /confirm|yes|delete|publish/i,
     });
   }
@@ -212,12 +232,25 @@ export class CollaborationPage {
 
   async navigateToSpace(spaceNameId: string) {
     await this.page.goto(`${this.baseUrl}/${spaceNameId}`);
+    await this.dismissCookieBanner();
   }
 
   async navigateToSubspace(spaceNameId: string, subspaceNameId: string) {
     await this.page.goto(
       `${this.baseUrl}/${spaceNameId}/challenges/${subspaceNameId}`
     );
+    await this.dismissCookieBanner();
+  }
+
+  // CRD: a cookie-consent banner can overlay controls at the viewport bottom
+  // (e.g. the create dialog's submit button); dismiss it if present.
+  private async dismissCookieBanner() {
+    const accept = this.page.getByRole('button', {
+      name: /accept all cookies/i,
+    });
+    if (await accept.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await accept.click().catch(() => {});
+    }
   }
 
   async openKnowledgeTab() {
@@ -270,8 +303,9 @@ export class CollaborationPage {
   }
 
   async expandResponseOptions() {
-    await this.responseOptionsExpandButton.click();
-    await delay(300); // Wait for animation
+    // CRD: the "Responses" radiogroup is shown inline in the create dialog;
+    // no expand step is needed (kept as a no-op for scenario compatibility).
+    await Promise.resolve();
   }
 
   async selectCollectionType(
@@ -292,7 +326,8 @@ export class CollaborationPage {
         break;
       case 'none':
       default:
-        await this.collectionNoneOption.click();
+        // CRD: leaving no Responses radio selected means "no responses".
+        break;
     }
   }
 
@@ -352,8 +387,17 @@ export class CollaborationPage {
   }
 
   async clickCallout(name: string) {
-    const callout = await this.getCalloutByName(name);
-    await callout.click({ timeout: 10000 });
+    // If this callout's detail dialog is already open (e.g. straight after an
+    // edit, where the dialog stays open over the feed), there is nothing to do.
+    const openDialog = this.page.getByRole('dialog', { name });
+    if (await openDialog.isVisible({ timeout: 1000 }).catch(() => false)) {
+      return;
+    }
+    // CRD: the callout card exposes an "Open {title}" link that opens the
+    // callout detail dialog (the heading itself is not the click target).
+    await this.page
+      .getByRole('link', { name: `Open ${name}` })
+      .click({ timeout: 10000 });
   }
 
   async isCalloutVisible(name: string): Promise<boolean> {
@@ -363,9 +407,10 @@ export class CollaborationPage {
 
   async publishCallout() {
     await this.publishMenuItem.click();
-    // Wait for confirmation if dialog appears
+    // CRD: publishing opens a "Publish this post?" alertdialog whose confirm
+    // button is "Publish" (a "Notify space members" switch defaults on).
     if (
-      await this.confirmDialog.isVisible({ timeout: 2000 }).catch(() => false)
+      await this.confirmDialog.isVisible({ timeout: 5000 }).catch(() => false)
     ) {
       await this.confirmButton.click();
     }
@@ -471,23 +516,30 @@ export class CollaborationPage {
   }
 
   async addPostContribution(title: string, content: string) {
-    await this.addContributionButton.click({ timeout: 5000 });
+    await this.addContributionButton.first().click({ timeout: 5000 });
     await this.page.getByRole('textbox', { name: 'Title' }).fill(title);
-    // await this.page.getByLabel(/content|description/i).fill(content);
 
-    const editor = this.page.getByRole('textbox', { name: /markdown editor/i });
+    // Post-contribution body editor placeholder is "Write your post..." (the
+    // callout create form uses "Write something..."); match either.
+    const editor = this.page.getByRole('textbox', {
+      name: /write (something|your post)/i,
+    });
     await editor.click(); // focus
     await this.page.keyboard.type(content, { delay: 50 });
     await this.saveButton.click();
   }
 
   async addLinkContribution(url: string, title?: string) {
-    await this.addContributionButton.click();
-    await this.page.getByLabel(/url/i).fill(url);
+    await this.addContributionButton.first().click();
+    await this.page.getByRole('textbox', { name: 'URL' }).fill(url);
     if (title) {
-      await this.page.getByLabel(/title/i).fill(title);
+      // CRD: the link's label field is "Display name" (not "Title").
+      await this.page
+        .getByRole('textbox', { name: 'Display name' })
+        .fill(title);
     }
-    await this.saveButton.click();
+    // CRD: the link contribution dialog submit button is "Add".
+    await this.page.getByRole('button', { name: 'Add', exact: true }).click();
   }
 
   async getContributionCount(): Promise<number> {
