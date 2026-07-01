@@ -77,6 +77,7 @@ describe('Functional tests - VC', () => {
       );
     });
     const allPrivileges = [
+      'ACCOUNT_AI_ASSISTANT_TOKENS_MONTH',
       'ACCOUNT_SPACE_FREE',
       'ACCOUNT_INNOVATION_HUB',
       'ACCOUNT_VIRTUAL_CONTRIBUTOR',
@@ -84,6 +85,7 @@ describe('Functional tests - VC', () => {
     ].sort();
 
     const withoutCreateVs = [
+      'ACCOUNT_AI_ASSISTANT_TOKENS_MONTH',
       'ACCOUNT_INNOVATION_HUB',
       'ACCOUNT_INNOVATION_PACK',
       'ACCOUNT_SPACE_FREE',

@@ -613,6 +613,7 @@ export enum ActorType {
   Organization = "ORGANIZATION",
   Space = "SPACE",
   User = "USER",
+  VirtualAssistant = "VIRTUAL_ASSISTANT",
   VirtualContributor = "VIRTUAL_CONTRIBUTOR",
 }
 
@@ -772,6 +773,38 @@ export type AssignUserGroupMemberInput = {
   userID: Scalars["UUID"]["input"];
 };
 
+export type AssistantCapability = {
+  /** What the capability does (for the settings UI). */
+  description: Scalars["String"]["output"];
+  /** Human-readable label for the capability toggle. */
+  displayName: Scalars["String"]["output"];
+  /** READ | WRITE_ADDITIVE | WRITE_DESTRUCTIVE — drives the default (READ enabled, WRITE_* disabled) and confirmation behaviour. */
+  kind: AssistantCapabilityKind;
+  /** The MCP tool name, e.g. "search_content". */
+  name: Scalars["String"]["output"];
+};
+
+/** The kind of an assistant capability — READ is enabled by default; WRITE_* are disabled by default and confirmation-gated. */
+export enum AssistantCapabilityKind {
+  Read = "READ",
+  WriteAdditive = "WRITE_ADDITIVE",
+  WriteDestructive = "WRITE_DESTRUCTIVE",
+}
+
+export type AssistantCapabilityToggle = {
+  /** The capability (MCP tool name) this toggle controls. */
+  capability: Scalars["String"]["output"];
+  /** Whether the capability is enabled. */
+  enabled: Scalars["Boolean"]["output"];
+};
+
+export type AssistantCapabilityToggleInput = {
+  /** The capability (MCP tool name) this toggle controls. */
+  capability: Scalars["String"]["input"];
+  /** Whether the capability is enabled. */
+  enabled: Scalars["Boolean"]["input"];
+};
+
 export type AuthenticationConfig = {
   /** Alkemio Authentication Providers Config. */
   providers: Array<AuthenticationProviderConfig>;
@@ -827,6 +860,7 @@ export type AuthorizationHasPrivilegeArgs = {
 
 export enum AuthorizationCredential {
   AccountAdmin = "ACCOUNT_ADMIN",
+  AssistantAccess = "ASSISTANT_ACCESS",
   BetaTester = "BETA_TESTER",
   GlobalAdmin = "GLOBAL_ADMIN",
   GlobalAnonymous = "GLOBAL_ANONYMOUS",
@@ -925,6 +959,7 @@ export enum AuthorizationPolicyType {
   User = "USER",
   UserGroup = "USER_GROUP",
   UserSettings = "USER_SETTINGS",
+  VirtualAssistant = "VIRTUAL_ASSISTANT",
   VirtualContributor = "VIRTUAL_CONTRIBUTOR",
   Visual = "VISUAL",
   Whiteboard = "WHITEBOARD",
@@ -932,6 +967,7 @@ export enum AuthorizationPolicyType {
 
 export enum AuthorizationPrivilege {
   AccessInteractiveGuidance = "ACCESS_INTERACTIVE_GUIDANCE",
+  AccessVirtualAssistant = "ACCESS_VIRTUAL_ASSISTANT",
   AccountLicenseManage = "ACCOUNT_LICENSE_MANAGE",
   AuthorizationReset = "AUTHORIZATION_RESET",
   CommunityAssignVcFromAccount = "COMMUNITY_ASSIGN_VC_FROM_ACCOUNT",
@@ -2562,6 +2598,7 @@ export type CredentialDefinition = {
 export enum CredentialType {
   AccountAdmin = "ACCOUNT_ADMIN",
   AccountLicensePlus = "ACCOUNT_LICENSE_PLUS",
+  AssistantAccess = "ASSISTANT_ACCESS",
   BetaTester = "BETA_TESTER",
   GlobalAdmin = "GLOBAL_ADMIN",
   GlobalAnonymous = "GLOBAL_ANONYMOUS",
@@ -2716,6 +2753,22 @@ export type DeleteVisualFromMediaGalleryInput = {
 export type DeleteWhiteboardInput = {
   ID: Scalars["UUID"]["input"];
 };
+
+export type DirectMessageDeliveryResult = {
+  /** Set when status = SENT — the (existing or newly created) 1:1 conversation the message was delivered to. */
+  conversationID?: Maybe<Scalars["UUID"]["output"]>;
+  /** The intended recipient. */
+  receiverID: Scalars["UUID"]["output"];
+  /** The per-recipient delivery outcome. */
+  status: DirectMessageDeliveryStatus;
+};
+
+/** Per-recipient outcome of sendDirectMessageToUsers. SENT: delivered (a conversation id is returned). BLOCKED_NO_CONSENT: the recipient disabled direct messages. FAILED: an unexpected per-recipient error (other recipients are still processed). */
+export enum DirectMessageDeliveryStatus {
+  BlockedNoConsent = "BLOCKED_NO_CONSENT",
+  Failed = "FAILED",
+  Sent = "SENT",
+}
 
 export type Discussion = {
   /** The authorization rules for the entity */
@@ -2937,6 +2990,13 @@ export type GeoLocation = {
   latitude?: Maybe<Scalars["Float"]["output"]>;
   /** The Longitude for this Location, derived from (City, Country) if those are set. */
   longitude?: Maybe<Scalars["Float"]["output"]>;
+};
+
+export type GrantAssistantActorCapabilitiesInput = {
+  /** Per-capability enable/disable toggles governing what the assistant may do system-invoked (default read-only). */
+  enabledCapabilities: Array<AssistantCapabilityToggleInput>;
+  /** The VirtualAssistant actor whose admin grant is being set. */
+  virtualAssistantID: Scalars["UUID"]["input"];
 };
 
 export type GrantAuthorizationCredentialInput = {
@@ -3598,6 +3658,7 @@ export enum LicenseEntitlementDataType {
 }
 
 export enum LicenseEntitlementType {
+  AccountAiAssistantTokensMonth = "ACCOUNT_AI_ASSISTANT_TOKENS_MONTH",
   AccountInnovationHub = "ACCOUNT_INNOVATION_HUB",
   AccountInnovationPack = "ACCOUNT_INNOVATION_PACK",
   AccountSpaceFree = "ACCOUNT_SPACE_FREE",
@@ -4381,6 +4442,7 @@ export enum MimeType {
   Gif = "GIF",
   Heic = "HEIC",
   Heif = "HEIF",
+  Ics = "ICS",
   Jpeg = "JPEG",
   Jpg = "JPG",
   Odg = "ODG",
@@ -4747,6 +4809,8 @@ export type Mutation = {
   revokeLicensePlanFromAccount: Account;
   /** Revokes the specified LicensePlan on a Space. */
   revokeLicensePlanFromSpace: Space;
+  /** Send a private (1:1) chat message to each of the given Users individually. Does NOT create a group conversation. Each recipient is processed independently and reported on; partial success is possible. */
+  sendDirectMessageToUsers: Array<DirectMessageDeliveryResult>;
   /** Sends a reply to a message from the specified Room. */
   sendMessageReplyToRoom: Message;
   /** Send message to Community Leads. */
@@ -4777,6 +4841,8 @@ export type Mutation = {
   unsubscribeFromPushNotifications: PushSubscription;
   /** Update the Application Form used by this RoleSet. */
   updateApplicationFormOnRoleSet: RoleSet;
+  /** Set the admin per-capability grant on the virtual-assistant actor, governing what it may do system-invoked (default read-only). Requires platform-admin. */
+  updateAssistantActorCapabilities: VirtualAssistant;
   /** Update the baseline License Plan on the specified Account. */
   updateBaselineLicensePlanOnAccount: Account;
   /** Updates the specified CalendarEvent. */
@@ -5415,6 +5481,10 @@ export type MutationRevokeLicensePlanFromSpaceArgs = {
   planData: RevokeLicensePlanFromSpace;
 };
 
+export type MutationSendDirectMessageToUsersArgs = {
+  messageData: SendDirectMessageToUsersInput;
+};
+
 export type MutationSendMessageReplyToRoomArgs = {
   messageData: RoomSendMessageReplyInput;
 };
@@ -5473,6 +5543,10 @@ export type MutationUnsubscribeFromPushNotificationsArgs = {
 
 export type MutationUpdateApplicationFormOnRoleSetArgs = {
   applicationFormData: UpdateApplicationFormOnRoleSetInput;
+};
+
+export type MutationUpdateAssistantActorCapabilitiesArgs = {
+  grantData: GrantAssistantActorCapabilitiesInput;
 };
 
 export type MutationUpdateBaselineLicensePlanOnAccountArgs = {
@@ -6087,6 +6161,8 @@ export type Platform = {
   templatesManager?: Maybe<TemplatesManager>;
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
+  /** Whether the current user may use the web AI assistant (the ACCESS_VIRTUAL_ASSISTANT privilege, 004-web-ai-assistant). client-web reads this to gate every assistant UI cue. */
+  virtualAssistantAccess: Scalars["Boolean"]["output"];
   /** The mappings of well-known Virtual Contributors to their UUIDs. */
   wellKnownVirtualContributors: PlatformWellKnownVirtualContributors;
 };
@@ -6145,6 +6221,8 @@ export type PlatformAdminQueryResults = {
   userEmailChangeAuditEntries: UserEmailChangeAuditEntries;
   /** Retrieve all Users on the Platform. This is only available to Platform Admins. */
   users: PaginatedUsers;
+  /** The singleton virtual-assistant actor, including its current admin capability grant and ID. This is only available to Platform Admins, and is the discovery path for updateAssistantActorCapabilities. */
+  virtualAssistant: VirtualAssistant;
   /** Retrieve all Virtual Contributors on the Platform. This is only available to Platform Admins. */
   virtualContributors: Array<VirtualContributor>;
 };
@@ -6721,6 +6799,8 @@ export type Query = {
   platform: Platform;
   /** Allow looking up of information for Platform administration. */
   platformAdmin: PlatformAdminQueryResults;
+  /** The enumerable assistant capability surface (one per MCP tool), with each tool classified READ / WRITE_ADDITIVE / WRITE_DESTRUCTIVE. */
+  platformCapabilities: Array<AssistantCapability>;
   /** Get the list of restricted space names. */
   restrictedSpaceNames: Array<Scalars["String"]["output"]>;
   /** The roles that the specified Organization has. */
@@ -7148,6 +7228,7 @@ export enum RoleName {
   Lead = "LEAD",
   Member = "MEMBER",
   Owner = "OWNER",
+  PlatformAssistantAccess = "PLATFORM_ASSISTANT_ACCESS",
   PlatformBetaTester = "PLATFORM_BETA_TESTER",
   PlatformVcCampaign = "PLATFORM_VC_CAMPAIGN",
   Registered = "REGISTERED",
@@ -7528,6 +7609,10 @@ export type SearchFilterInput = {
 export type SearchInput = {
   /** Return results that satisfy these conditions. */
   filters?: InputMaybe<Array<SearchFilterInput>>;
+  /** When searching Callouts (COLLABORATION_TOOLS / CALLOUT), also match in the Callout framing resources (whiteboard, memo) and its contributions (post, whiteboard, memo). Any match folds up to the containing Callout, deduped, in calloutResults. */
+  foldCalloutResources?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Restrict the search to a single flow state, identified by the InnovationFlowState UUID. The state UUID is globally unique and transitively identifies its Collaboration, so no separate CalloutsSet filter is needed. Default is all flow states. */
+  searchInFlowStateFilter?: InputMaybe<Scalars["UUID"]["input"]>;
   /** Restrict the search to only the specified Space. Default is all Spaces. */
   searchInSpaceFilter?: InputMaybe<Scalars["UUID"]["input"]>;
   /** Expand the search to includes Tagsets with the provided names. Max 2. */
@@ -7675,6 +7760,13 @@ export enum SearchVisibility {
   Hidden = "HIDDEN",
   Public = "PUBLIC",
 }
+
+export type SendDirectMessageToUsersInput = {
+  /** The message being sent to each recipient. */
+  message: Scalars["String"]["input"];
+  /** The Users (1..N) the message is sent to, each as an individual 1:1 chat. No group conversation is created. */
+  receiverIDs: Array<Scalars["UUID"]["input"]>;
+};
 
 export type Sentry = {
   /** Flag indicating if the client should use Sentry for monitoring. */
@@ -9001,15 +9093,24 @@ export type UpdateUserPlatformSettingsInput = {
   userID: Scalars["String"]["input"];
 };
 
+export type UpdateUserSettingsAssistantInput = {
+  /** Per-capability enable/disable toggles bounding what the assistant may do on behalf of this user. */
+  enabledCapabilities?: InputMaybe<Array<AssistantCapabilityToggleInput>>;
+};
+
 export type UpdateUserSettingsCommunicationInput = {
+  /** Allow other Users to be offered an email contact route to this User (using the account email; the address is never exposed). */
+  allowOtherUsersToContactViaEmail?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** Allow Users to send messages to this User. */
   allowOtherUsersToSendMessages?: InputMaybe<Scalars["Boolean"]["input"]>;
 };
 
 export type UpdateUserSettingsEntityInput = {
+  /** Settings related to the AI assistant authority for this User. */
+  assistant?: InputMaybe<UpdateUserSettingsAssistantInput>;
   /** Settings related to this users Communication preferences. */
   communication?: InputMaybe<UpdateUserSettingsCommunicationInput>;
-  /** Update the user's design version. Any integer accepted (1 = legacy design generation; 2 = current default design generation; 3+ reserved for future generations). */
+  /** Update the user's design version. Any integer accepted (1 = legacy design generation, deprecated and scheduled for removal; 2 = current default design generation; 3+ reserved for future generations). */
   designVersion?: InputMaybe<Scalars["Int"]["input"]>;
   /** Settings related to Home Space. */
   homeSpace?: InputMaybe<UpdateUserSettingsHomeSpaceInput>;
@@ -9361,6 +9462,8 @@ export type User = ActorFull & {
   id: Scalars["UUID"]["output"];
   /** Can a message be sent to this User. */
   isContactable: Scalars["Boolean"]["output"];
+  /** Whether this User can be offered an email contact route (they enabled email contact). Exposes only the consent flag, never the email address. */
+  isContactableViaEmail: Scalars["Boolean"]["output"];
   lastName: Scalars["String"]["output"];
   /** A name identifier of the entity, unique within a given scope. */
   nameID: Scalars["NameID"]["output"];
@@ -9489,13 +9592,15 @@ export type UserProfileSummary = {
 };
 
 export type UserSettings = {
+  /** The AI assistant authority settings for this User (per-capability toggles). */
+  assistant: UserSettingsAssistant;
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
   /** The communication settings for this User. */
   communication: UserSettingsCommunication;
   /** The date at which the entity was created. */
   createdDate: Scalars["DateTime"]["output"];
-  /** The design version this User has selected (1 = legacy design generation; 2 = current default design generation; 3+ reserved for future generations). */
+  /** The design version this User has selected (1 = legacy design generation, deprecated and scheduled for removal; 2 = current default design generation; 3+ reserved for future generations). */
   designVersion: Scalars["Int"]["output"];
   /** The home space settings for this User. */
   homeSpace: UserSettingsHomeSpace;
@@ -9509,7 +9614,14 @@ export type UserSettings = {
   updatedDate: Scalars["DateTime"]["output"];
 };
 
+export type UserSettingsAssistant = {
+  /** Per-capability enable/disable toggles bounding what the assistant may do on behalf of this user (read-only by default). */
+  enabledCapabilities: Array<AssistantCapabilityToggle>;
+};
+
 export type UserSettingsCommunication = {
+  /** Allow other Users to be offered an email contact route to this User (using the account email; the address is never exposed). Default false. */
+  allowOtherUsersToContactViaEmail: Scalars["Boolean"]["output"];
   /** Allow Users to send messages to this User. */
   allowOtherUsersToSendMessages: Scalars["Boolean"]["output"];
 };
@@ -9655,6 +9767,27 @@ export type VcInteraction = {
   threadID: Scalars["MessageID"]["output"];
   /** The actor ID (agent.id) of the Virtual Contributor */
   virtualContributorID: Scalars["String"]["output"];
+};
+
+export type VirtualAssistant = ActorFull & {
+  /** The authorization rules for the Actor */
+  authorization?: Maybe<Authorization>;
+  /** The admin per-capability grant governing system-invoked authority for this Virtual Assistant (default read-only). */
+  capabilityGrant: Array<AssistantCapabilityToggle>;
+  /** The date at which the entity was created. */
+  createdDate: Scalars["DateTime"]["output"];
+  /** The credentials held by this Actor */
+  credentials?: Maybe<Array<Credential>>;
+  /** The ID of the Actor */
+  id: Scalars["UUID"]["output"];
+  /** A name identifier of the entity, unique within a given scope. */
+  nameID: Scalars["NameID"]["output"];
+  /** The profile for this Actor. */
+  profile?: Maybe<Profile>;
+  /** The type of Actor */
+  type: ActorType;
+  /** The date at which the entity was last updated. */
+  updatedDate: Scalars["DateTime"]["output"];
 };
 
 export type VirtualContributor = ActorFull & {
@@ -10213,6 +10346,10 @@ export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> =
           credentials?: Maybe<Array<_RefType["Credential"]>>;
           profile?: Maybe<_RefType["Profile"]>;
         })
+      | (Omit<VirtualAssistant, "credentials" | "profile"> & {
+          credentials?: Maybe<Array<_RefType["Credential"]>>;
+          profile?: Maybe<_RefType["Profile"]>;
+        })
       | (Omit<
           VirtualContributor,
           | "account"
@@ -10514,6 +10651,10 @@ export type ResolversTypes = {
   AssignPlatformRoleInput: AssignPlatformRoleInput;
   AssignRoleOnRoleSetInput: AssignRoleOnRoleSetInput;
   AssignUserGroupMemberInput: AssignUserGroupMemberInput;
+  AssistantCapability: ResolverTypeWrapper<AssistantCapability>;
+  AssistantCapabilityKind: AssistantCapabilityKind;
+  AssistantCapabilityToggle: ResolverTypeWrapper<AssistantCapabilityToggle>;
+  AssistantCapabilityToggleInput: AssistantCapabilityToggleInput;
   AuthenticationConfig: ResolverTypeWrapper<
     Omit<AuthenticationConfig, "providers"> & {
       providers: Array<ResolversTypes["AuthenticationProviderConfig"]>;
@@ -10815,6 +10956,8 @@ export type ResolversTypes = {
   DeleteVirtualContributorInput: DeleteVirtualContributorInput;
   DeleteVisualFromMediaGalleryInput: DeleteVisualFromMediaGalleryInput;
   DeleteWhiteboardInput: DeleteWhiteboardInput;
+  DirectMessageDeliveryResult: ResolverTypeWrapper<DirectMessageDeliveryResult>;
+  DirectMessageDeliveryStatus: DirectMessageDeliveryStatus;
   Discussion: ResolverTypeWrapper<
     Omit<Discussion, "profile"> & { profile: ResolversTypes["Profile"] }
   >;
@@ -10846,6 +10989,7 @@ export type ResolversTypes = {
   ForumDiscussionPrivacy: ForumDiscussionPrivacy;
   Geo: ResolverTypeWrapper<Geo>;
   GeoLocation: ResolverTypeWrapper<GeoLocation>;
+  GrantAssistantActorCapabilitiesInput: GrantAssistantActorCapabilitiesInput;
   GrantAuthorizationCredentialInput: GrantAuthorizationCredentialInput;
   GrantOrganizationAuthorizationCredentialInput: GrantOrganizationAuthorizationCredentialInput;
   Groupable: ResolverTypeWrapper<
@@ -11321,12 +11465,14 @@ export type ResolversTypes = {
       | "innovationPacks"
       | "organizations"
       | "spaces"
+      | "virtualAssistant"
     > & {
       accounts: Array<ResolversTypes["Account"]>;
       innovationHubs: Array<ResolversTypes["InnovationHub"]>;
       innovationPacks: Array<ResolversTypes["InnovationPack"]>;
       organizations: ResolversTypes["PaginatedOrganization"];
       spaces: Array<ResolversTypes["Space"]>;
+      virtualAssistant: ResolversTypes["VirtualAssistant"];
     }
   >;
   PlatformFeatureFlag: ResolverTypeWrapper<PlatformFeatureFlag>;
@@ -11522,6 +11668,7 @@ export type ResolversTypes = {
     Omit<SearchResultWhiteboard, "space"> & { space: ResolversTypes["Space"] }
   >;
   SearchVisibility: SearchVisibility;
+  SendDirectMessageToUsersInput: SendDirectMessageToUsersInput;
   Sentry: ResolverTypeWrapper<Sentry>;
   ServiceMetadata: ResolverTypeWrapper<ServiceMetadata>;
   SetDefaultCalloutTemplateOnInnovationFlowStateInput: SetDefaultCalloutTemplateOnInnovationFlowStateInput;
@@ -11751,6 +11898,7 @@ export type ResolversTypes = {
   UpdateUserGroupInput: UpdateUserGroupInput;
   UpdateUserInput: UpdateUserInput;
   UpdateUserPlatformSettingsInput: UpdateUserPlatformSettingsInput;
+  UpdateUserSettingsAssistantInput: UpdateUserSettingsAssistantInput;
   UpdateUserSettingsCommunicationInput: UpdateUserSettingsCommunicationInput;
   UpdateUserSettingsEntityInput: UpdateUserSettingsEntityInput;
   UpdateUserSettingsHomeSpaceInput: UpdateUserSettingsHomeSpaceInput;
@@ -11814,6 +11962,7 @@ export type ResolversTypes = {
   >;
   UserProfileSummary: ResolverTypeWrapper<UserProfileSummary>;
   UserSettings: ResolverTypeWrapper<UserSettings>;
+  UserSettingsAssistant: ResolverTypeWrapper<UserSettingsAssistant>;
   UserSettingsCommunication: ResolverTypeWrapper<UserSettingsCommunication>;
   UserSettingsHomeSpace: ResolverTypeWrapper<UserSettingsHomeSpace>;
   UserSettingsNotification: ResolverTypeWrapper<UserSettingsNotification>;
@@ -11834,6 +11983,12 @@ export type ResolversTypes = {
   >;
   UsersWithAuthorizationCredentialInput: UsersWithAuthorizationCredentialInput;
   VcInteraction: ResolverTypeWrapper<VcInteraction>;
+  VirtualAssistant: ResolverTypeWrapper<
+    Omit<VirtualAssistant, "credentials" | "profile"> & {
+      credentials?: Maybe<Array<ResolversTypes["Credential"]>>;
+      profile?: Maybe<ResolversTypes["Profile"]>;
+    }
+  >;
   VirtualContributor: ResolverTypeWrapper<
     Omit<
       VirtualContributor,
@@ -12039,6 +12194,9 @@ export type ResolversParentTypes = {
   AssignPlatformRoleInput: AssignPlatformRoleInput;
   AssignRoleOnRoleSetInput: AssignRoleOnRoleSetInput;
   AssignUserGroupMemberInput: AssignUserGroupMemberInput;
+  AssistantCapability: AssistantCapability;
+  AssistantCapabilityToggle: AssistantCapabilityToggle;
+  AssistantCapabilityToggleInput: AssistantCapabilityToggleInput;
   AuthenticationConfig: Omit<AuthenticationConfig, "providers"> & {
     providers: Array<ResolversParentTypes["AuthenticationProviderConfig"]>;
   };
@@ -12301,6 +12459,7 @@ export type ResolversParentTypes = {
   DeleteVirtualContributorInput: DeleteVirtualContributorInput;
   DeleteVisualFromMediaGalleryInput: DeleteVisualFromMediaGalleryInput;
   DeleteWhiteboardInput: DeleteWhiteboardInput;
+  DirectMessageDeliveryResult: DirectMessageDeliveryResult;
   Discussion: Omit<Discussion, "profile"> & {
     profile: ResolversParentTypes["Profile"];
   };
@@ -12330,6 +12489,7 @@ export type ResolversParentTypes = {
   ForumCreateDiscussionInput: ForumCreateDiscussionInput;
   Geo: Geo;
   GeoLocation: GeoLocation;
+  GrantAssistantActorCapabilitiesInput: GrantAssistantActorCapabilitiesInput;
   GrantAuthorizationCredentialInput: GrantAuthorizationCredentialInput;
   GrantOrganizationAuthorizationCredentialInput: GrantOrganizationAuthorizationCredentialInput;
   Groupable: ResolversInterfaceTypes<ResolversParentTypes>["Groupable"];
@@ -12729,12 +12889,14 @@ export type ResolversParentTypes = {
     | "innovationPacks"
     | "organizations"
     | "spaces"
+    | "virtualAssistant"
   > & {
     accounts: Array<ResolversParentTypes["Account"]>;
     innovationHubs: Array<ResolversParentTypes["InnovationHub"]>;
     innovationPacks: Array<ResolversParentTypes["InnovationPack"]>;
     organizations: ResolversParentTypes["PaginatedOrganization"];
     spaces: Array<ResolversParentTypes["Space"]>;
+    virtualAssistant: ResolversParentTypes["VirtualAssistant"];
   };
   PlatformFeatureFlag: PlatformFeatureFlag;
   PlatformIntegrationSettings: PlatformIntegrationSettings;
@@ -12892,6 +13054,7 @@ export type ResolversParentTypes = {
   SearchResultWhiteboard: Omit<SearchResultWhiteboard, "space"> & {
     space: ResolversParentTypes["Space"];
   };
+  SendDirectMessageToUsersInput: SendDirectMessageToUsersInput;
   Sentry: Sentry;
   ServiceMetadata: ServiceMetadata;
   SetDefaultCalloutTemplateOnInnovationFlowStateInput: SetDefaultCalloutTemplateOnInnovationFlowStateInput;
@@ -13108,6 +13271,7 @@ export type ResolversParentTypes = {
   UpdateUserGroupInput: UpdateUserGroupInput;
   UpdateUserInput: UpdateUserInput;
   UpdateUserPlatformSettingsInput: UpdateUserPlatformSettingsInput;
+  UpdateUserSettingsAssistantInput: UpdateUserSettingsAssistantInput;
   UpdateUserSettingsCommunicationInput: UpdateUserSettingsCommunicationInput;
   UpdateUserSettingsEntityInput: UpdateUserSettingsEntityInput;
   UpdateUserSettingsHomeSpaceInput: UpdateUserSettingsHomeSpaceInput;
@@ -13163,6 +13327,7 @@ export type ResolversParentTypes = {
   };
   UserProfileSummary: UserProfileSummary;
   UserSettings: UserSettings;
+  UserSettingsAssistant: UserSettingsAssistant;
   UserSettingsCommunication: UserSettingsCommunication;
   UserSettingsHomeSpace: UserSettingsHomeSpace;
   UserSettingsNotification: UserSettingsNotification;
@@ -13181,6 +13346,10 @@ export type ResolversParentTypes = {
   };
   UsersWithAuthorizationCredentialInput: UsersWithAuthorizationCredentialInput;
   VcInteraction: VcInteraction;
+  VirtualAssistant: Omit<VirtualAssistant, "credentials" | "profile"> & {
+    credentials?: Maybe<Array<ResolversParentTypes["Credential"]>>;
+    profile?: Maybe<ResolversParentTypes["Profile"]>;
+  };
   VirtualContributor: Omit<
     VirtualContributor,
     | "account"
@@ -13687,6 +13856,7 @@ export type ActorFullResolvers<
     | "RelayPaginatedSpace"
     | "Space"
     | "User"
+    | "VirtualAssistant"
     | "VirtualContributor",
     ParentType,
     ContextType
@@ -13837,6 +14007,30 @@ export type ApplicationResolvers<
   >;
   state?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type AssistantCapabilityResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["AssistantCapability"] = ResolversParentTypes["AssistantCapability"]
+> = {
+  description?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  kind?: Resolver<
+    ResolversTypes["AssistantCapabilityKind"],
+    ParentType,
+    ContextType
+  >;
+  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type AssistantCapabilityToggleResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["AssistantCapabilityToggle"] = ResolversParentTypes["AssistantCapabilityToggle"]
+> = {
+  capability?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  enabled?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -15344,6 +15538,24 @@ export interface DateTimeScalarConfig
   extends GraphQLScalarTypeConfig<ResolversTypes["DateTime"], any> {
   name: "DateTime";
 }
+
+export type DirectMessageDeliveryResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["DirectMessageDeliveryResult"] = ResolversParentTypes["DirectMessageDeliveryResult"]
+> = {
+  conversationID?: Resolver<
+    Maybe<ResolversTypes["UUID"]>,
+    ParentType,
+    ContextType
+  >;
+  receiverID?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  status?: Resolver<
+    ResolversTypes["DirectMessageDeliveryStatus"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
 
 export type DiscussionResolvers<
   ContextType = any,
@@ -18271,6 +18483,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationRevokeLicensePlanFromSpaceArgs, "planData">
   >;
+  sendDirectMessageToUsers?: Resolver<
+    Array<ResolversTypes["DirectMessageDeliveryResult"]>,
+    ParentType,
+    ContextType,
+    RequireFields<MutationSendDirectMessageToUsersArgs, "messageData">
+  >;
   sendMessageReplyToRoom?: Resolver<
     ResolversTypes["Message"],
     ParentType,
@@ -18375,6 +18593,12 @@ export type MutationResolvers<
       MutationUpdateApplicationFormOnRoleSetArgs,
       "applicationFormData"
     >
+  >;
+  updateAssistantActorCapabilities?: Resolver<
+    ResolversTypes["VirtualAssistant"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationUpdateAssistantActorCapabilitiesArgs, "grantData">
   >;
   updateBaselineLicensePlanOnAccount?: Resolver<
     ResolversTypes["Account"],
@@ -19131,6 +19355,11 @@ export type PlatformResolvers<
     ContextType
   >;
   updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  virtualAssistantAccess?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
   wellKnownVirtualContributors?: Resolver<
     ResolversTypes["PlatformWellKnownVirtualContributors"],
     ParentType,
@@ -19251,6 +19480,11 @@ export type PlatformAdminQueryResultsResolvers<
     ParentType,
     ContextType,
     Partial<PlatformAdminQueryResultsUsersArgs>
+  >;
+  virtualAssistant?: Resolver<
+    ResolversTypes["VirtualAssistant"],
+    ParentType,
+    ContextType
   >;
   virtualContributors?: Resolver<
     Array<ResolversTypes["VirtualContributor"]>,
@@ -19978,6 +20212,11 @@ export type QueryResolvers<
   platform?: Resolver<ResolversTypes["Platform"], ParentType, ContextType>;
   platformAdmin?: Resolver<
     ResolversTypes["PlatformAdminQueryResults"],
+    ParentType,
+    ContextType
+  >;
+  platformCapabilities?: Resolver<
+    Array<ResolversTypes["AssistantCapability"]>,
     ParentType,
     ContextType
   >;
@@ -21853,6 +22092,11 @@ export type UserResolvers<
   firstName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
   isContactable?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  isContactableViaEmail?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
   lastName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   nameID?: Resolver<ResolversTypes["NameID"], ParentType, ContextType>;
   phone?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
@@ -22021,6 +22265,11 @@ export type UserSettingsResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["UserSettings"] = ResolversParentTypes["UserSettings"]
 > = {
+  assistant?: Resolver<
+    ResolversTypes["UserSettingsAssistant"],
+    ParentType,
+    ContextType
+  >;
   authorization?: Resolver<
     Maybe<ResolversTypes["Authorization"]>,
     ParentType,
@@ -22053,10 +22302,27 @@ export type UserSettingsResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type UserSettingsAssistantResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["UserSettingsAssistant"] = ResolversParentTypes["UserSettingsAssistant"]
+> = {
+  enabledCapabilities?: Resolver<
+    Array<ResolversTypes["AssistantCapabilityToggle"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type UserSettingsCommunicationResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["UserSettingsCommunication"] = ResolversParentTypes["UserSettingsCommunication"]
 > = {
+  allowOtherUsersToContactViaEmail?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
   allowOtherUsersToSendMessages?: Resolver<
     ResolversTypes["Boolean"],
     ParentType,
@@ -22368,6 +22634,34 @@ export type VcInteractionResolvers<
     ParentType,
     ContextType
   >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type VirtualAssistantResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["VirtualAssistant"] = ResolversParentTypes["VirtualAssistant"]
+> = {
+  authorization?: Resolver<
+    Maybe<ResolversTypes["Authorization"]>,
+    ParentType,
+    ContextType
+  >;
+  capabilityGrant?: Resolver<
+    Array<ResolversTypes["AssistantCapabilityToggle"]>,
+    ParentType,
+    ContextType
+  >;
+  createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  credentials?: Resolver<
+    Maybe<Array<ResolversTypes["Credential"]>>,
+    ParentType,
+    ContextType
+  >;
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  nameID?: Resolver<ResolversTypes["NameID"], ParentType, ContextType>;
+  profile?: Resolver<Maybe<ResolversTypes["Profile"]>, ParentType, ContextType>;
+  type?: Resolver<ResolversTypes["ActorType"], ParentType, ContextType>;
+  updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -22735,6 +23029,8 @@ export type Resolvers<ContextType = any> = {
   AiPersona?: AiPersonaResolvers<ContextType>;
   AiServer?: AiServerResolvers<ContextType>;
   Application?: ApplicationResolvers<ContextType>;
+  AssistantCapability?: AssistantCapabilityResolvers<ContextType>;
+  AssistantCapabilityToggle?: AssistantCapabilityToggleResolvers<ContextType>;
   AuthenticationConfig?: AuthenticationConfigResolvers<ContextType>;
   AuthenticationProviderConfig?: AuthenticationProviderConfigResolvers<ContextType>;
   AuthenticationProviderConfigUnion?: AuthenticationProviderConfigUnionResolvers<ContextType>;
@@ -22810,6 +23106,7 @@ export type Resolvers<ContextType = any> = {
   Credential?: CredentialResolvers<ContextType>;
   CredentialDefinition?: CredentialDefinitionResolvers<ContextType>;
   DateTime?: GraphQLScalarType;
+  DirectMessageDeliveryResult?: DirectMessageDeliveryResultResolvers<ContextType>;
   Discussion?: DiscussionResolvers<ContextType>;
   DiscussionDetails?: DiscussionDetailsResolvers<ContextType>;
   Document?: DocumentResolvers<ContextType>;
@@ -23024,6 +23321,7 @@ export type Resolvers<ContextType = any> = {
   UserGroup?: UserGroupResolvers<ContextType>;
   UserProfileSummary?: UserProfileSummaryResolvers<ContextType>;
   UserSettings?: UserSettingsResolvers<ContextType>;
+  UserSettingsAssistant?: UserSettingsAssistantResolvers<ContextType>;
   UserSettingsCommunication?: UserSettingsCommunicationResolvers<ContextType>;
   UserSettingsHomeSpace?: UserSettingsHomeSpaceResolvers<ContextType>;
   UserSettingsNotification?: UserSettingsNotificationResolvers<ContextType>;
@@ -23039,6 +23337,7 @@ export type Resolvers<ContextType = any> = {
   UserSettingsPrivacy?: UserSettingsPrivacyResolvers<ContextType>;
   UsersInRolesResponse?: UsersInRolesResponseResolvers<ContextType>;
   VcInteraction?: VcInteractionResolvers<ContextType>;
+  VirtualAssistant?: VirtualAssistantResolvers<ContextType>;
   VirtualContributor?: VirtualContributorResolvers<ContextType>;
   VirtualContributorModelCard?: VirtualContributorModelCardResolvers<ContextType>;
   VirtualContributorModelCardFlag?: VirtualContributorModelCardFlagResolvers<ContextType>;

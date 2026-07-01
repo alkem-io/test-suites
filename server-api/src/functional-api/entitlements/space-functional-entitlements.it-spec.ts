@@ -61,12 +61,14 @@ describe('Functional tests - Space', () => {
       );
     });
     const allPrivileges = [
+      'ACCOUNT_AI_ASSISTANT_TOKENS_MONTH',
       'ACCOUNT_SPACE_FREE',
       'ACCOUNT_INNOVATION_HUB',
       'ACCOUNT_VIRTUAL_CONTRIBUTOR',
       'ACCOUNT_INNOVATION_PACK',
     ].sort();
     const withoutCreateSpace = [
+      'ACCOUNT_AI_ASSISTANT_TOKENS_MONTH',
       'ACCOUNT_INNOVATION_HUB',
       'ACCOUNT_VIRTUAL_CONTRIBUTOR',
       'ACCOUNT_INNOVATION_PACK',
