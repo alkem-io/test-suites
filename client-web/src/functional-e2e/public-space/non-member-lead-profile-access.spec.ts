@@ -105,11 +105,12 @@ test.describe('Space Lead Profile Access', () => {
       page.getByText('The contributors to this Space!')
     ).toBeVisible();
 
-    // Wait for user profile links to appear in the CRD members grid.
-    // CRD renders the member links with absolute hrefs
+    // The hard-coded community members grid was removed (feature 008 / story
+    // client-web#9928); space leads now render in the "Space Leads" section of
+    // the CRD space sidebar. Their profile links use absolute hrefs
     // (http://localhost:3000/user/<id>), so match on a substring.
     const userLink = page
-      .getByRole('region', { name: 'Community members grid' })
+      .getByRole('navigation', { name: 'Space sidebar' })
       .locator('a[href*="/user/"]')
       .first();
 
@@ -138,10 +139,11 @@ test.describe('Space Lead Profile Access', () => {
 
     await communityTab.click();
 
-    // Wait for and click on the first user profile link in the CRD members
-    // grid. CRD uses absolute hrefs, so match on a substring.
+    // Wait for and click on the first lead profile link in the CRD space
+    // sidebar (the community members grid was removed — feature 008). CRD uses
+    // absolute hrefs, so match on a substring.
     const userLink = page
-      .getByRole('region', { name: 'Community members grid' })
+      .getByRole('navigation', { name: 'Space sidebar' })
       .locator('a[href*="/user/"]')
       .first();
 

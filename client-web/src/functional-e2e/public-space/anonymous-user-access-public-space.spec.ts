@@ -87,25 +87,13 @@ test.describe('Public Space Discovery and Access', () => {
     // Navigate to the Community tab as anonymous user
     await page.getByRole('tab', { name: 'community' }).click();
 
-    // Verify community content is visible without login
+    // Verify community content is visible without login. The hard-coded
+    // "Community members grid" (with its All / Lead / Organisation filter
+    // toggle) was removed by the Contributors-callout work (feature 008 / story
+    // client-web#9928); the community tab's public intro heading remains the
+    // no-auth-wall content signal for an anonymous visitor.
     await expect(
       page.getByText('The contributors to this Space!')
-    ).toBeVisible();
-
-    // CRD replaces the MUI People/Organizations toggle with member-filter
-    // buttons (All / Lead / Organisation) inside the members grid region.
-    const membersGrid = page.getByRole('region', {
-      name: 'Community members grid',
-    });
-    await expect(membersGrid).toBeVisible();
-    await expect(
-      membersGrid.getByRole('button', { name: 'All' })
-    ).toBeVisible();
-    await expect(
-      membersGrid.getByRole('button', { name: 'Lead' })
-    ).toBeVisible();
-    await expect(
-      membersGrid.getByRole('button', { name: 'Organisation' })
     ).toBeVisible();
 
     // The community tab is reachable without login (no auth wall blocks it);

@@ -155,12 +155,9 @@ test.describe('Explore Alkemio Platform - Anonymous User Flow', () => {
       page.getByText('The contributors to this Space!')
     ).toBeVisible();
 
-    // CRD replaces the "Please log in to see all contributing users" heading
-    // with the community members grid; anonymous users still get a header
-    // "Log in" affordance.
-    await expect(
-      page.getByRole('region', { name: 'Community members grid' })
-    ).toBeVisible();
+    // The hard-coded community members grid was removed (feature 008 / story
+    // client-web#9928); the community intro heading is the anonymous content
+    // signal and the header still exposes a "Log in" affordance.
     await expect(
       page.getByRole('link', { name: 'Log in' })
     ).toBeVisible();
