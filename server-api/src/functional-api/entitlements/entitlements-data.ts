@@ -79,6 +79,7 @@ export const accountVCCampaignLicenses = {
     type: 'ACCOUNT',
     authorization: { myPrivileges: ['READ', 'CREATE', 'UPDATE', 'DELETE'] },
     availableEntitlements: [
+      'ACCOUNT_AI_ASSISTANT_TOKENS_MONTH',
       'ACCOUNT_SPACE_FREE',
       'ACCOUNT_INNOVATION_HUB',
       'ACCOUNT_VIRTUAL_CONTRIBUTOR',
@@ -156,6 +157,7 @@ export const accountVCCampaignLicenses1SpaceVCPack = {
     type: 'ACCOUNT',
     authorization: { myPrivileges: ['READ', 'CREATE', 'UPDATE', 'DELETE'] },
     availableEntitlements: [
+      'ACCOUNT_AI_ASSISTANT_TOKENS_MONTH',
       'ACCOUNT_SPACE_FREE',
       'ACCOUNT_INNOVATION_HUB',
       'ACCOUNT_VIRTUAL_CONTRIBUTOR',
@@ -292,6 +294,7 @@ export const accountVCCampaignLicenses1SpacePlus = {
     type: 'ACCOUNT',
     authorization: { myPrivileges: ['CREATE', 'READ', 'UPDATE', 'DELETE'] },
     availableEntitlements: [
+      'ACCOUNT_AI_ASSISTANT_TOKENS_MONTH',
       'ACCOUNT_SPACE_FREE',
       'ACCOUNT_INNOVATION_HUB',
       'ACCOUNT_VIRTUAL_CONTRIBUTOR',

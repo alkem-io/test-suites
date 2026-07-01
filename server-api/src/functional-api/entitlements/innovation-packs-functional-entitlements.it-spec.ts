@@ -67,12 +67,14 @@ describe('Functional tests - Innovation Pack', () => {
       );
     });
     const allPrivileges = [
+      'ACCOUNT_AI_ASSISTANT_TOKENS_MONTH',
       'ACCOUNT_SPACE_FREE',
       'ACCOUNT_INNOVATION_HUB',
       'ACCOUNT_VIRTUAL_CONTRIBUTOR',
       'ACCOUNT_INNOVATION_PACK',
     ].sort();
     const withoutPack = [
+      'ACCOUNT_AI_ASSISTANT_TOKENS_MONTH',
       'ACCOUNT_SPACE_FREE',
       'ACCOUNT_VIRTUAL_CONTRIBUTOR',
       'ACCOUNT_INNOVATION_HUB',
