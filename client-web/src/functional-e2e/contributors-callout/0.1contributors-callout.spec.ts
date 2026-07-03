@@ -106,7 +106,7 @@ adminFixture.test.describe.serial('Contributors Callout - Admin', () => {
       await expect(cc.framingContributorsOption).toBeVisible();
 
       // Abandon the draft without persisting.
-      await page.getByRole('button', { name: 'Close' }).first().click();
+      await cc.closeButton.click();
       await expect(
         page.getByRole('heading', { name: title })
       ).toHaveCount(0);
@@ -250,6 +250,34 @@ adminFixture.test.describe.serial('Contributors Callout - Admin', () => {
       await expect(col.typeSwitchTab('People')).toHaveCount(0);
       await expect(col.typeSwitchTab('Organizations')).toHaveCount(0);
       await expect(col.typeSwitchTab('Virtual Contributors')).toHaveCount(0);
+    }
+  );
+
+  // AC1/US1 — a non-default `defaultType` opens the collection on that segment
+  // (not People), confirming the create-form default-type override is honoured.
+  adminFixture.test(
+    '1.9 A non-default defaultType opens the collection on that segment',
+    async ({ page }) => {
+      adminFixture.test.setTimeout(60_000);
+      const cc = new ContributorsCalloutPage(page, baseUrl);
+      await cc.navigateToSpace(baseScenario.space.nameId);
+
+      const orgDefault = `Org Default ${Date.now()}`;
+      await cc.createContributorsCallout(orgDefault, {
+        defaultType: 'Organizations',
+      });
+
+      const col = cc.collection(orgDefault);
+      await expect(col.region).toBeVisible();
+      // Opens on the configured default type (Organizations), not People.
+      await expect(col.typeSwitchTab('Organizations')).toHaveAttribute(
+        'aria-selected',
+        'true'
+      );
+      await expect(col.typeSwitchTab('People')).toHaveAttribute(
+        'aria-selected',
+        'false'
+      );
     }
   );
 });

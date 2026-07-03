@@ -8,8 +8,8 @@ All selectors below were confirmed empirically by dumping the accessible tree of
 create dialog and the rendered collection, then by a green suite run under
 `--workers=1 --retries=2` (headless). Strategy priority: ARIA role + accessible name,
 then `aria-pressed`/`aria-selected`/`aria-checked`, then placeholder-as-label. No
-MUI-only markup and no positional `.nth()`/`.last()` selectors are used except the one
-annotated map-region `.first()` below.
+MUI-only markup and no positional `.nth()`/`.last()` selectors are used except the two
+annotated exceptions below: the callout-card scoping `.last()` and the map-region `.first()`.
 
 ## Create / edit callout form
 
@@ -31,7 +31,7 @@ annotated map-region `.first()` below.
 **Scoping:** every rendered assertion is scoped to the **callout card under test**, not a
 page-wide region, because a migrated env auto-provisions a default Contributors callout on
 new spaces (so >1 `region "Contributors"` may exist). The card is:
-`page.locator('div').filter({ has: heading(title) }).filter({ has: region("Contributors") }).last()`
+**Annotated `.last()`**: `page.locator('div').filter({ has: heading(title) }).filter({ has: region("Contributors") }).last()`
 — the innermost element holding both the callout's title heading and a Contributors region.
 All selectors below are resolved **within** that card (`ContributorsCalloutPage.collection(title)`).
 

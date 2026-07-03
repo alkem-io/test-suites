@@ -1,4 +1,3 @@
-import { delay } from '@alkemio/tests-lib';
 import { Page, expect, Locator } from '@playwright/test';
 
 /**
@@ -22,6 +21,13 @@ import { Page, expect, Locator } from '@playwright/test';
  */
 export type ContributorType = 'People' | 'Organizations' | 'Virtual Contributors';
 
+/** The full set of contributor types, in render order. */
+const ALL_CONTRIBUTOR_TYPES: ContributorType[] = [
+  'People',
+  'Organizations',
+  'Virtual Contributors',
+];
+
 export class ContributorsCalloutPage {
   constructor(
     private page: Page,
@@ -40,8 +46,13 @@ export class ContributorsCalloutPage {
     const accept = this.page.getByRole('button', {
       name: /accept all cookies/i,
     });
-    if (await accept.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await accept.click().catch(() => {});
+    // Wait for the banner to actually render before clicking — a snapshot check
+    // can miss it in the moment right after goto(). No banner is fine.
+    try {
+      await accept.waitFor({ state: 'visible', timeout: 2000 });
+      await accept.click();
+    } catch {
+      /* no banner surfaced — nothing to dismiss */
     }
   }
 
@@ -53,8 +64,11 @@ export class ContributorsCalloutPage {
   }
 
   async isAddCalloutVisible(): Promise<boolean> {
+    // A real wait rather than an immediate snapshot: return true only if the
+    // button actually appears within the window, false once it times out.
     return await this.addCalloutButton
-      .isVisible({ timeout: 5000 })
+      .waitFor({ state: 'visible', timeout: 5000 })
+      .then(() => true)
       .catch(() => false);
   }
 
@@ -74,6 +88,11 @@ export class ContributorsCalloutPage {
   get saveEditButton() {
     // Edit mode primary submit is "Save".
     return this.page.getByRole('button', { name: 'Save', exact: true });
+  }
+
+  /** Dialog dismiss / cancel button. */
+  get closeButton() {
+    return this.page.getByRole('button', { name: 'Close' }).first();
   }
 
   /** Contributor-type multi-select toggle (button with `aria-pressed`). */
@@ -134,17 +153,13 @@ export class ContributorsCalloutPage {
       defaultView?: 'List' | 'Map';
     }
   ) {
-    const types = options?.types ?? [
-      'People',
-      'Organizations',
-      'Virtual Contributors',
-    ];
+    const types = options?.types ?? ALL_CONTRIBUTOR_TYPES;
 
     await this.openCreateForm();
     await this.selectContributorsFraming();
     await this.titleInput.fill(displayName);
 
-    for (const t of ['People', 'Organizations', 'Virtual Contributors'] as ContributorType[]) {
+    for (const t of ALL_CONTRIBUTOR_TYPES) {
       await this.setTypeSelected(t, types.includes(t));
     }
 
@@ -155,7 +170,8 @@ export class ContributorsCalloutPage {
       await this.defaultViewRadio(options.defaultView).click();
     }
 
-    await delay(300);
+    // Every toggle/radio interaction above is already awaited, and the
+    // post-click heading assertion below auto-retries — no fixed sleep needed.
     await this.postButton.click();
 
     // The rendered collection carries the callout title as a heading.
@@ -214,12 +230,19 @@ export class ContributorsCalloutPage {
       contributorCard: (name: string): Locator =>
         region.getByRole('link', { name }),
       switchType: async (type: ContributorType) => {
-        await card.getByRole('tab', { name: new RegExp(`^${type}\\s*\\d`) }).click();
-        await delay(500);
+        const tab = card.getByRole('tab', {
+          name: new RegExp(`^${type}\\s*\\d`),
+        });
+        await tab.click();
+        // Wait for the tab to actually become active rather than a fixed sleep.
+        await expect(tab).toHaveAttribute('aria-selected', 'true');
       },
       search: async (term: string) => {
-        await region.getByRole('textbox', { name: 'Search by name…' }).fill(term);
-        await delay(500);
+        const input = region.getByRole('textbox', { name: 'Search by name…' });
+        await input.fill(term);
+        // Confirm the value landed; the debounced filter settling is covered by
+        // each caller's auto-retrying visibility assertion.
+        await expect(input).toHaveValue(term);
       },
     };
   }

@@ -9,9 +9,19 @@ import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
-import { expect } from '@playwright/test';
+import { expect, Page } from '@playwright/test';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 import { TestUserManager } from '@alkemio/tests-lib';
+
+// The hard-coded community members grid was removed (feature 008 / story
+// client-web#9928); space leads now render in the "Space Leads" section of the
+// CRD space sidebar. Their profile links use absolute hrefs
+// (http://localhost:3000/user/<id>), so match on a substring.
+const firstLeadUserLink = (page: Page) =>
+  page
+    .getByRole('navigation', { name: 'Space sidebar' })
+    .locator('a[href*="/user/"]')
+    .first();
 
 const { test, setupAuthentication, teardownAuthentication } =
   createAuthenticatedSessionFixture({
@@ -105,14 +115,8 @@ test.describe('Space Lead Profile Access', () => {
       page.getByText('The contributors to this Space!')
     ).toBeVisible();
 
-    // The hard-coded community members grid was removed (feature 008 / story
-    // client-web#9928); space leads now render in the "Space Leads" section of
-    // the CRD space sidebar. Their profile links use absolute hrefs
-    // (http://localhost:3000/user/<id>), so match on a substring.
-    const userLink = page
-      .getByRole('navigation', { name: 'Space sidebar' })
-      .locator('a[href*="/user/"]')
-      .first();
+    // Space leads render in the CRD space-sidebar "Space Leads" section.
+    const userLink = firstLeadUserLink(page);
 
     // Wait for the user link to be visible
     await expect(userLink).toBeVisible({ timeout: 60_000 });
@@ -140,12 +144,8 @@ test.describe('Space Lead Profile Access', () => {
     await communityTab.click();
 
     // Wait for and click on the first lead profile link in the CRD space
-    // sidebar (the community members grid was removed — feature 008). CRD uses
-    // absolute hrefs, so match on a substring.
-    const userLink = page
-      .getByRole('navigation', { name: 'Space sidebar' })
-      .locator('a[href*="/user/"]')
-      .first();
+    // sidebar (the community members grid was removed — feature 008).
+    const userLink = firstLeadUserLink(page);
 
     // Wait for the user link to be visible
     await expect(userLink).toBeVisible({ timeout: 10_000 });
