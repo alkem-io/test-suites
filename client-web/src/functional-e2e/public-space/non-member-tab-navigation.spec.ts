@@ -183,14 +183,18 @@ test.describe('Space Tab Navigation for Non-Members', () => {
     await page.getByRole('tab', { name: 'community' }).click();
 
     // Verify community tab content loads. CRD replaces the MUI "Who's
-    // involved" heading with the contributors intro paragraph and a
-    // "Community members grid" region.
+    // involved" heading with the contributors intro paragraph; the hard-coded
+    // "Community members grid" was removed (feature 008 / story
+    // client-web#9928), so community membership now surfaces via the "Space
+    // Leads" section in the space sidebar.
     await expect(
       page.getByText('The contributors to this Space!')
     ).toBeVisible();
 
     await expect(
-      page.getByRole('region', { name: 'Community members grid' })
+      page
+        .getByRole('navigation', { name: 'Space sidebar' })
+        .getByText('Space Leads')
     ).toBeVisible();
 
     // For non-members, they can see the community content
