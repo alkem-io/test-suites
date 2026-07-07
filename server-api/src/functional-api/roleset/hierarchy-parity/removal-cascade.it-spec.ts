@@ -27,6 +27,7 @@ import { eventOnRoleSetApplication } from '@functional-api/roleset/roleset-event
 import { getRoleSetUsersInMemberRole } from '@functional-api/roleset/roleset.request.params';
 import {
   buildHierarchyScenarioConfig,
+  cleanupScenarioSafely,
   HIERARCHY_TEST_TIMEOUT_MS,
   PRIVACY_COMBOS,
 } from './hierarchy-parity.fixture';
@@ -115,7 +116,7 @@ describe('Removal cascade + re-application (workspace#017 regression guard)', ()
         );
         expect(await isMemberOf(scenario.space.community.roleSetId)).toBe(true);
       } finally {
-        await TestScenarioFactory.cleanUpBaseScenario(scenario);
+        await cleanupScenarioSafely(scenario);
       }
     },
     HIERARCHY_TEST_TIMEOUT_MS

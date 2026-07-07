@@ -29,6 +29,8 @@ import { eventOnRoleSetApplication } from '@functional-api/roleset/roleset-event
 import { getRoleSetUsersInMemberRole } from '@functional-api/roleset/roleset.request.params';
 import {
   buildHierarchyScenarioConfig,
+  cleanupScenarioSafely,
+  COMBINED_FLOW_REJECTION,
   comboLabel,
   expectCombinedAncestryGrant,
   HIERARCHY_TEST_TIMEOUT_MS,
@@ -141,7 +143,7 @@ describe('Application hierarchy parity — combined flow (FR-019/SC-009)', () =>
               );
             }
           } finally {
-            await TestScenarioFactory.cleanUpBaseScenario(scenario);
+            await cleanupScenarioSafely(scenario);
           }
         },
         HIERARCHY_TEST_TIMEOUT_MS
@@ -166,7 +168,9 @@ describe('Application hierarchy parity — combined flow (FR-019/SC-009)', () =>
         );
 
         try {
-          expect(applicationResult?.error?.errors?.[0]?.message).toBeDefined();
+          expect(applicationResult?.error?.errors?.[0]?.message).toMatch(
+            COMBINED_FLOW_REJECTION
+          );
           expect(
             applicationResult?.data?.applyForEntryRoleOnRoleSet?.id
           ).toBeFalsy();
@@ -181,7 +185,7 @@ describe('Application hierarchy parity — combined flow (FR-019/SC-009)', () =>
             false
           );
         } finally {
-          await TestScenarioFactory.cleanUpBaseScenario(scenario);
+          await cleanupScenarioSafely(scenario);
         }
       },
       HIERARCHY_TEST_TIMEOUT_MS
@@ -222,7 +226,7 @@ describe('Application hierarchy parity — combined flow (FR-019/SC-009)', () =>
             false
           );
         } finally {
-          await TestScenarioFactory.cleanUpBaseScenario(scenario);
+          await cleanupScenarioSafely(scenario);
         }
       },
       HIERARCHY_TEST_TIMEOUT_MS

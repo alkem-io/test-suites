@@ -48,6 +48,7 @@ import {
 } from '@functional-api/roleset/roleset.request.params';
 import {
   buildHierarchyScenarioConfig,
+  cleanupScenarioSafely,
   comboLabel,
   HIERARCHY_TEST_TIMEOUT_MS,
   PRIVACY_COMBOS,
@@ -120,7 +121,7 @@ describe('Invitation hierarchy parity — behaviour preservation (SC-008)', () =
               true
             );
           } finally {
-            await TestScenarioFactory.cleanUpBaseScenario(scenario);
+            await cleanupScenarioSafely(scenario);
           }
         },
         HIERARCHY_TEST_TIMEOUT_MS
@@ -154,7 +155,7 @@ describe('Invitation hierarchy parity — behaviour preservation (SC-008)', () =
         );
         expect(await isMemberOf(scenario.space.community.roleSetId)).toBe(true);
       } finally {
-        await TestScenarioFactory.cleanUpBaseScenario(scenario);
+        await cleanupScenarioSafely(scenario);
       }
     },
     HIERARCHY_TEST_TIMEOUT_MS
@@ -190,7 +191,7 @@ describe('Invitation hierarchy parity — behaviour preservation (SC-008)', () =
             await isMemberOf(scenario.subsubspace.community.roleSetId)
           ).toBe(false);
         } finally {
-          await TestScenarioFactory.cleanUpBaseScenario(scenario);
+          await cleanupScenarioSafely(scenario);
         }
       },
       HIERARCHY_TEST_TIMEOUT_MS

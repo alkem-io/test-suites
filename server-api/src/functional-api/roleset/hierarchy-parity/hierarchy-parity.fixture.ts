@@ -21,10 +21,42 @@ import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
-import { TestScenarioConfig } from '@alkemio/tests-lib';
+import { TestScenarioConfig, TestScenarioFactory } from '@alkemio/tests-lib';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 
-/** Hooks are heavy (org + 3 spaces created per cell) — raise past the default hookTimeout/testTimeout budget is already generous (30 min global), but keep an explicit constant so specs can reference it consistently. */
-export const HIERARCHY_TEST_TIMEOUT_MS = 300_000; // 5 minutes per cell
+/**
+ * Per-test budget. Each cell builds an org + 3 spaces via the real API, so it
+ * needs the same generous budget the rest of the integration suite gets —
+ * match the global 30-minute testTimeout (a per-test timeout OVERRIDES the
+ * global one, so a smaller value here would LOWER the budget, not raise it).
+ */
+export const HIERARCHY_TEST_TIMEOUT_MS = 1_800_000; // 30 minutes, = global testTimeout
+
+/**
+ * The combined application flow's rejection message for a non-eligible
+ * non-parent-member applicant (today's "join the parent first" rule). Negative
+ * cells assert THIS rejection — not merely that some error occurred — so a
+ * scenario-setup failure or an unrelated 500 cannot green-light the cell.
+ */
+export const COMBINED_FLOW_REJECTION = /not a member of the parent Community/i;
+
+/**
+ * Tear down a scenario without masking an in-flight test failure: a throw
+ * inside `finally` REPLACES the original assertion error (JS semantics), so a
+ * flaky teardown would otherwise hide the real reason a cell failed.
+ */
+export const cleanupScenarioSafely = async (
+  scenario: OrganizationWithSpaceModel
+): Promise<void> => {
+  try {
+    await TestScenarioFactory.cleanUpBaseScenario(scenario);
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      `hierarchy-parity: scenario cleanup failed (original test outcome preserved): ${e}`
+    );
+  }
+};
 
 export interface PrivacyCombo {
   /** Root (L0) Space privacy mode. */

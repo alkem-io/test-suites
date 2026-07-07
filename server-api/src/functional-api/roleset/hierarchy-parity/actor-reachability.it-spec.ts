@@ -30,6 +30,8 @@ import { eventOnRoleSetApplication } from '@functional-api/roleset/roleset-event
 import { getRoleSetUsersInMemberRole } from '@functional-api/roleset/roleset.request.params';
 import {
   buildHierarchyScenarioConfig,
+  cleanupScenarioSafely,
+  COMBINED_FLOW_REJECTION,
   HIERARCHY_TEST_TIMEOUT_MS,
 } from './hierarchy-parity.fixture';
 
@@ -96,7 +98,7 @@ describe('Actor-relative reachability — combined flow (workspace#017 / ADR 000
         );
         expect(await isMemberOf(scenario.space.community.roleSetId)).toBe(true);
       } finally {
-        await TestScenarioFactory.cleanUpBaseScenario(scenario);
+        await cleanupScenarioSafely(scenario);
       }
     },
     HIERARCHY_TEST_TIMEOUT_MS
@@ -121,7 +123,9 @@ describe('Actor-relative reachability — combined flow (workspace#017 / ADR 000
           scenario.subsubspace.community.roleSetId,
           APPLICANT
         );
-        expect(applicationResult?.error?.errors?.[0]?.message).toBeDefined();
+        expect(applicationResult?.error?.errors?.[0]?.message).toMatch(
+          COMBINED_FLOW_REJECTION
+        );
         expect(
           applicationResult?.data?.applyForEntryRoleOnRoleSet?.id
         ).toBeFalsy();
@@ -136,7 +140,7 @@ describe('Actor-relative reachability — combined flow (workspace#017 / ADR 000
           false
         );
       } finally {
-        await TestScenarioFactory.cleanUpBaseScenario(scenario);
+        await cleanupScenarioSafely(scenario);
       }
     },
     HIERARCHY_TEST_TIMEOUT_MS
