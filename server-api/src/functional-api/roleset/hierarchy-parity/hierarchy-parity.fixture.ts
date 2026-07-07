@@ -1,0 +1,153 @@
+/**
+ * Shared fixture for the public/private ancestry parity matrix (FR-019 /
+ * SC-009 — workspace feature 017-combined-subspace-application).
+ *
+ * Builds a Root (L0) -> Sub (L1) -> SubSub (L2) hierarchy via
+ * `TestScenarioFactory.createBaseScenario`'s recursive `space.subspace.subspace`
+ * config, each level carrying its own `settings.privacy.mode` +
+ * `settings.membership.policy`. Consumed by both
+ * `application-hierarchy-parity.it-spec.ts` and
+ * `invitation-hierarchy-parity.it-spec.ts` so the two flows are exercised
+ * against an identical hierarchy shape.
+ *
+ * Hooks that build a hierarchy are heavy (org + 3 spaces via the real API),
+ * so each test.each row builds and tears down its own scenario inside the
+ * test body rather than relying on a single shared `beforeAll` — this keeps
+ * every cell independent (no cross-cell contamination) at the cost of one
+ * scenario per cell. Callers should pass a generous per-test timeout (see
+ * `HIERARCHY_TEST_TIMEOUT_MS`).
+ */
+import {
+  CommunityMembershipPolicy,
+  SpacePrivacyMode,
+} from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { TestScenarioConfig } from '@alkemio/tests-lib';
+
+/** Hooks are heavy (org + 3 spaces created per cell) — raise past the default hookTimeout/testTimeout budget is already generous (30 min global), but keep an explicit constant so specs can reference it consistently. */
+export const HIERARCHY_TEST_TIMEOUT_MS = 300_000; // 5 minutes per cell
+
+export interface PrivacyCombo {
+  /** Root (L0) Space privacy mode. */
+  spacePrivacy: SpacePrivacyMode;
+  /** Sub (L1) Subspace privacy mode — the immediate ancestor of SubSub. */
+  subspacePrivacy: SpacePrivacyMode;
+  /** SubSub (L2) Sub-subspace privacy mode — the application/invitation target. */
+  subsubspacePrivacy: SpacePrivacyMode;
+}
+
+const { Public, Private } = SpacePrivacyMode;
+
+/**
+ * The full 2x2x2 public/private matrix across Root -> Sub -> SubSub
+ * (FR-019 / SC-009 / research R5).
+ */
+export const PRIVACY_COMBOS: PrivacyCombo[] = [
+  { spacePrivacy: Public, subspacePrivacy: Public, subsubspacePrivacy: Public },
+  {
+    spacePrivacy: Public,
+    subspacePrivacy: Public,
+    subsubspacePrivacy: Private,
+  },
+  {
+    spacePrivacy: Public,
+    subspacePrivacy: Private,
+    subsubspacePrivacy: Public,
+  },
+  {
+    spacePrivacy: Public,
+    subspacePrivacy: Private,
+    subsubspacePrivacy: Private,
+  },
+  {
+    spacePrivacy: Private,
+    subspacePrivacy: Public,
+    subsubspacePrivacy: Public,
+  },
+  {
+    spacePrivacy: Private,
+    subspacePrivacy: Public,
+    subsubspacePrivacy: Private,
+  },
+  {
+    spacePrivacy: Private,
+    subspacePrivacy: Private,
+    subsubspacePrivacy: Public,
+  },
+  {
+    spacePrivacy: Private,
+    subspacePrivacy: Private,
+    subsubspacePrivacy: Private,
+  },
+];
+
+/**
+ * FR-002 reachability precondition for the combined (application) flow: the
+ * ancestor chain — Root and Sub, i.e. every ancestor of the SubSub target up
+ * to the reachable root — must be public. Per the cross-repo contract (plan.md
+ * "Cross-repo overview": `parent(+ancestors) PUBLIC`), the SubSub's *own*
+ * privacy is not part of this gate — it is varied independently in the matrix
+ * precisely to prove it has no bearing on the ancestor-grant outcome.
+ */
+export const isAncestorChainPublic = (combo: PrivacyCombo): boolean =>
+  combo.spacePrivacy === Public && combo.subspacePrivacy === Public;
+
+/**
+ * Type-correct expected outcome for the application (combined) flow per
+ * FR-002/FR-003: the full ancestor grant (Sub + Root, in addition to SubSub
+ * itself) fires only when the whole ancestor chain is public AND the
+ * `allowSubspaceAdminsToInviteMembers` setting is enabled on that chain.
+ */
+export const expectCombinedAncestryGrant = (
+  combo: PrivacyCombo,
+  settingEnabled: boolean
+): boolean => isAncestorChainPublic(combo) && settingEnabled;
+
+export const comboLabel = (combo: PrivacyCombo): string =>
+  `space=${combo.spacePrivacy}/subspace=${combo.subspacePrivacy}/subsubspace=${combo.subsubspacePrivacy}`;
+
+/**
+ * Builds the `TestScenarioConfig` for one matrix cell: Root -> Sub -> SubSub,
+ * each with its own privacy mode; SubSub carries `membershipPolicy` (the
+ * application suite uses `Applications`, the invitation suite doesn't need a
+ * particular policy since invitations are admin-authorised directly). The
+ * `allowSubspaceAdminsToInviteMembers` setting is applied uniformly to Root
+ * and Sub — the two ancestors whose setting gates the combined grant per the
+ * spec's single-scalar `settingEnabled` axis.
+ */
+export const buildHierarchyScenarioConfig = (
+  name: string,
+  combo: PrivacyCombo,
+  opts: {
+    subsubspaceMembershipPolicy?: CommunityMembershipPolicy;
+    settingEnabled: boolean;
+  }
+): TestScenarioConfig => ({
+  name,
+  space: {
+    collaboration: { addTutorialCallouts: false },
+    settings: {
+      privacy: { mode: combo.spacePrivacy },
+      membership: {
+        allowSubspaceAdminsToInviteMembers: opts.settingEnabled,
+      },
+    },
+    subspace: {
+      collaboration: { addTutorialCallouts: false },
+      settings: {
+        privacy: { mode: combo.subspacePrivacy },
+        membership: {
+          allowSubspaceAdminsToInviteMembers: opts.settingEnabled,
+        },
+      },
+      subspace: {
+        collaboration: { addTutorialCallouts: false },
+        settings: {
+          privacy: { mode: combo.subsubspacePrivacy },
+          membership: opts.subsubspaceMembershipPolicy
+            ? { policy: opts.subsubspaceMembershipPolicy }
+            : undefined,
+        },
+      },
+    },
+  },
+});
