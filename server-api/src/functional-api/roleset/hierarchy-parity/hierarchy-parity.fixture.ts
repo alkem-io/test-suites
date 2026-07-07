@@ -34,12 +34,18 @@ import { getRoleSetUsersInMemberRole } from '@functional-api/roleset/roleset.req
 export const HIERARCHY_TEST_TIMEOUT_MS = 1_800_000; // 30 minutes, = global testTimeout
 
 /**
- * The combined application flow's rejection message for a non-eligible
- * non-parent-member applicant (today's "join the parent first" rule). Negative
- * cells assert THIS rejection — not merely that some error occurred — so a
- * scenario-setup failure or an unrelated 500 cannot green-light the cell.
+ * The combined application flow's rejection for a non-eligible
+ * non-parent-member applicant. Two legitimate rejection layers exist —
+ * negative cells assert one of THESE (not merely that some error occurred,
+ * so a scenario-setup failure or an unrelated 500 cannot green-light a cell):
+ * - authorization: the APPLY privilege is not exposed on the subspace
+ *   role-set (the privilege is the client's single trusted signal, so
+ *   ineligible applicants are stopped here first);
+ * - precondition: today's "join the parent first" rule inside the mutation
+ *   (defence in depth, e.g. authorisation revoked between exposure and call).
  */
-export const COMBINED_FLOW_REJECTION = /not a member of the parent Community/i;
+export const COMBINED_FLOW_REJECTION =
+  /not a member of the parent Community|Authorization: unable to grant 'roleset-entry-role-apply'/i;
 
 /**
  * Tear down a scenario without masking an in-flight test failure: a throw
