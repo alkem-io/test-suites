@@ -23,6 +23,7 @@ import {
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { TestScenarioConfig, TestScenarioFactory } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import { getRoleSetUsersInMemberRole } from '@functional-api/roleset/roleset.request.params';
 
 /**
  * Per-test budget. Each cell builds an org + 3 spaces via the real API, so it
@@ -75,6 +76,7 @@ const { Public, Private } = SpacePrivacyMode;
  */
 export const PRIVACY_COMBOS: PrivacyCombo[] = [
   { spacePrivacy: Public, subspacePrivacy: Public, subsubspacePrivacy: Public },
+  // (ALL_PUBLIC_COMBO below aliases this first entry — keep it first.)
   {
     spacePrivacy: Public,
     subspacePrivacy: Public,
@@ -111,6 +113,26 @@ export const PRIVACY_COMBOS: PrivacyCombo[] = [
     subsubspacePrivacy: Private,
   },
 ];
+
+/**
+ * Canonical baseline for non-matrix guard tests (setting-off, reject,
+ * removal-cascade, single-hop): the all-public cell, named explicitly so the
+ * guards do not depend on PRIVACY_COMBOS array ordering.
+ */
+export const ALL_PUBLIC_COMBO: PrivacyCombo = PRIVACY_COMBOS[0];
+
+/**
+ * Membership check shared by every parity assertion: is the given user a
+ * MEMBER of the role-set? (Centralised here — the specs previously duplicated
+ * this helper four times.)
+ */
+export const isUserMemberOfRoleSet = async (
+  roleSetId: string,
+  userId: string
+): Promise<boolean> => {
+  const members = await getRoleSetUsersInMemberRole(roleSetId);
+  return members.some(m => m.id === userId);
+};
 
 /**
  * FR-002 reachability precondition for the combined (application) flow: the

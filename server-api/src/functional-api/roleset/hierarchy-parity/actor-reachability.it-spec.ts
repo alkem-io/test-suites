@@ -27,21 +27,19 @@ import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/O
 import { createApplication } from '@functional-api/roleset/application/application.request.params';
 import { assignRoleToUser } from '@functional-api/roleset/roles-request.params';
 import { eventOnRoleSetApplication } from '@functional-api/roleset/roleset-events.request.params';
-import { getRoleSetUsersInMemberRole } from '@functional-api/roleset/roleset.request.params';
 import {
   buildHierarchyScenarioConfig,
   cleanupScenarioSafely,
   COMBINED_FLOW_REJECTION,
   HIERARCHY_TEST_TIMEOUT_MS,
+  isUserMemberOfRoleSet,
 } from './hierarchy-parity.fixture';
 
 const APPLICANT = TestUser.NON_SPACE_MEMBER;
 const applicantId = () => TestUserManager.users.nonSpaceMember.id;
 
-const isMemberOf = async (roleSetId: string): Promise<boolean> => {
-  const members = await getRoleSetUsersInMemberRole(roleSetId);
-  return members.some(m => m.id === applicantId());
-};
+const isMemberOf = (roleSetId: string): Promise<boolean> =>
+  isUserMemberOfRoleSet(roleSetId, applicantId());
 
 const privateRootCombo = {
   spacePrivacy: SpacePrivacyMode.Private,

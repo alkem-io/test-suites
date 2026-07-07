@@ -26,14 +26,15 @@ import {
   getRoleSetInvitationsApplications,
 } from '@functional-api/roleset/application/application.request.params';
 import { eventOnRoleSetApplication } from '@functional-api/roleset/roleset-events.request.params';
-import { getRoleSetUsersInMemberRole } from '@functional-api/roleset/roleset.request.params';
 import {
+  ALL_PUBLIC_COMBO,
   buildHierarchyScenarioConfig,
   cleanupScenarioSafely,
   COMBINED_FLOW_REJECTION,
   comboLabel,
   expectCombinedAncestryGrant,
   HIERARCHY_TEST_TIMEOUT_MS,
+  isUserMemberOfRoleSet,
   PRIVACY_COMBOS,
   PrivacyCombo,
 } from './hierarchy-parity.fixture';
@@ -41,10 +42,8 @@ import {
 const APPLICANT = TestUser.NON_SPACE_MEMBER;
 const applicantId = () => TestUserManager.users.nonSpaceMember.id;
 
-const isMemberOf = async (roleSetId: string): Promise<boolean> => {
-  const members = await getRoleSetUsersInMemberRole(roleSetId);
-  return members.some(m => m.id === applicantId());
-};
+const isMemberOf = (roleSetId: string): Promise<boolean> =>
+  isUserMemberOfRoleSet(roleSetId, applicantId());
 
 const buildAndApply = async (
   name: string,
@@ -58,12 +57,18 @@ const buildAndApply = async (
   const scenario: OrganizationWithSpaceModel =
     await TestScenarioFactory.createBaseScenario(scenarioConfig);
 
-  const applicationResult = await createApplication(
-    scenario.subsubspace.community.roleSetId,
-    APPLICANT
-  );
-
-  return { scenario, applicationResult };
+  // The apply runs after the scenario exists but before the caller's
+  // try/finally starts — an unexpected throw here must not leak the scenario.
+  try {
+    const applicationResult = await createApplication(
+      scenario.subsubspace.community.roleSetId,
+      APPLICANT
+    );
+    return { scenario, applicationResult };
+  } catch (e) {
+    await cleanupScenarioSafely(scenario);
+    throw e;
+  }
 };
 
 describe('Application hierarchy parity — combined flow (FR-019/SC-009)', () => {
@@ -125,9 +130,9 @@ describe('Application hierarchy parity — combined flow (FR-019/SC-009)', () =>
               // US3 AS-1/3: a private ancestor -> the combined flow is
               // unavailable; the non-parent-member's apply attempt is
               // rejected the same way it is today ("join the parent first").
-              expect(
-                applicationResult?.error?.errors?.[0]?.message
-              ).toBeDefined();
+              expect(applicationResult?.error?.errors?.[0]?.message).toMatch(
+                COMBINED_FLOW_REJECTION
+              );
               expect(
                 applicationResult?.data?.applyForEntryRoleOnRoleSet?.id
               ).toBeFalsy();
@@ -152,18 +157,12 @@ describe('Application hierarchy parity — combined flow (FR-019/SC-009)', () =>
   );
 
   describe('setting-disabled guard (US3 AS-2 / SC-005)', () => {
-    const allPublicCombo: PrivacyCombo = {
-      spacePrivacy: PRIVACY_COMBOS[0].spacePrivacy,
-      subspacePrivacy: PRIVACY_COMBOS[0].subspacePrivacy,
-      subsubspacePrivacy: PRIVACY_COMBOS[0].subsubspacePrivacy,
-    };
-
     test(
       'whole chain public but allowSubspaceAdminsToInviteMembers disabled -> combined flow unavailable',
       async () => {
         const { scenario, applicationResult } = await buildAndApply(
           'app-hierarchy-parity-setting-off',
-          allPublicCombo,
+          ALL_PUBLIC_COMBO,
           false
         );
 
@@ -193,18 +192,12 @@ describe('Application hierarchy parity — combined flow (FR-019/SC-009)', () =>
   });
 
   describe('reject guard (FR-007 / SC-004 / US3 AS-4)', () => {
-    const allPublicCombo: PrivacyCombo = {
-      spacePrivacy: PRIVACY_COMBOS[0].spacePrivacy,
-      subspacePrivacy: PRIVACY_COMBOS[0].subspacePrivacy,
-      subsubspacePrivacy: PRIVACY_COMBOS[0].subsubspacePrivacy,
-    };
-
     test(
       'REJECTed application on an all-public/setting-enabled hierarchy grants no membership at all',
       async () => {
         const { scenario, applicationResult } = await buildAndApply(
           'app-hierarchy-parity-reject',
-          allPublicCombo,
+          ALL_PUBLIC_COMBO,
           true
         );
 

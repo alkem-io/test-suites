@@ -42,15 +42,14 @@ import {
   inviteForEntryRoleOnRoleSet,
 } from '@functional-api/roleset/invitations/invitation.request.params';
 import { eventOnRoleSetInvitation } from '@functional-api/roleset/roleset-events.request.params';
+import { getSingleInvitationResult } from '@functional-api/roleset/roleset.request.params';
 import {
-  getRoleSetUsersInMemberRole,
-  getSingleInvitationResult,
-} from '@functional-api/roleset/roleset.request.params';
-import {
+  ALL_PUBLIC_COMBO,
   buildHierarchyScenarioConfig,
   cleanupScenarioSafely,
   comboLabel,
   HIERARCHY_TEST_TIMEOUT_MS,
+  isUserMemberOfRoleSet,
   PRIVACY_COMBOS,
   PrivacyCombo,
 } from './hierarchy-parity.fixture';
@@ -60,10 +59,8 @@ const message = 'Hello, feel free to join our community!';
 
 const inviteeId = () => TestUserManager.users.nonSpaceMember.id;
 
-const isMemberOf = async (roleSetId: string): Promise<boolean> => {
-  const members = await getRoleSetUsersInMemberRole(roleSetId);
-  return members.some(m => m.id === inviteeId());
-};
+const isMemberOf = (roleSetId: string): Promise<boolean> =>
+  isUserMemberOfRoleSet(roleSetId, inviteeId());
 
 const inviteAndAccept = async (roleSetId: string) => {
   const invitationData = await inviteForEntryRoleOnRoleSet(
@@ -132,7 +129,7 @@ describe('Invitation hierarchy parity — behaviour preservation (SC-008)', () =
   test(
     'setting disabled does not block the invitation ancestor grant (unlike applications, invitations are not setting-gated)',
     async () => {
-      const allPublicCombo: PrivacyCombo = PRIVACY_COMBOS[0];
+      const allPublicCombo: PrivacyCombo = ALL_PUBLIC_COMBO;
       const scenarioConfig = buildHierarchyScenarioConfig(
         'inv-hierarchy-parity-setting-off',
         allPublicCombo,
@@ -165,7 +162,7 @@ describe('Invitation hierarchy parity — behaviour preservation (SC-008)', () =
     test(
       'inviting directly into the immediate parent (Sub) still grants Root ancestor membership, unchanged',
       async () => {
-        const allPublicCombo: PrivacyCombo = PRIVACY_COMBOS[0];
+        const allPublicCombo: PrivacyCombo = ALL_PUBLIC_COMBO;
         const scenarioConfig = buildHierarchyScenarioConfig(
           'inv-hierarchy-parity-single-hop',
           allPublicCombo,

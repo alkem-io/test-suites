@@ -24,21 +24,19 @@ import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/O
 import { createApplication } from '@functional-api/roleset/application/application.request.params';
 import { removeRoleFromUser } from '@functional-api/roleset/roles-request.params';
 import { eventOnRoleSetApplication } from '@functional-api/roleset/roleset-events.request.params';
-import { getRoleSetUsersInMemberRole } from '@functional-api/roleset/roleset.request.params';
 import {
+  ALL_PUBLIC_COMBO,
   buildHierarchyScenarioConfig,
   cleanupScenarioSafely,
   HIERARCHY_TEST_TIMEOUT_MS,
-  PRIVACY_COMBOS,
+  isUserMemberOfRoleSet,
 } from './hierarchy-parity.fixture';
 
 const APPLICANT = TestUser.NON_SPACE_MEMBER;
 const applicantId = () => TestUserManager.users.nonSpaceMember.id;
 
-const isMemberOf = async (roleSetId: string): Promise<boolean> => {
-  const members = await getRoleSetUsersInMemberRole(roleSetId);
-  return members.some(m => m.id === applicantId());
-};
+const isMemberOf = (roleSetId: string): Promise<boolean> =>
+  isUserMemberOfRoleSet(roleSetId, applicantId());
 
 const applyAndApprove = async (roleSetId: string): Promise<void> => {
   const applicationResult = await createApplication(roleSetId, APPLICANT);
@@ -50,7 +48,7 @@ const applyAndApprove = async (roleSetId: string): Promise<void> => {
 
 describe('Removal cascade + re-application (workspace#017 regression guard)', () => {
   // All-public chain with the setting enabled — the positive combined cell.
-  const allPublicCombo = PRIVACY_COMBOS[0];
+  const allPublicCombo = ALL_PUBLIC_COMBO;
 
   test(
     'removing the actor from an ancestor cascades to descendants and a fresh application succeeds',
