@@ -45,6 +45,10 @@ jobs:
           kubectl scale deployment/kratos --replicas=0
           kubectl scale statefulset/kratos-courier --replicas=0
           kubectl scale deployment/hydra --replicas=0
+          # oidc-service holds live connections to the kratos/hydra DBs too;
+          # leaving it up during the wipe left a mid-wipe outage window
+          # (test-suites#555). Tolerate its absence on envs that don't run it.
+          kubectl scale deployment/oidc-service --replicas=0 || true
 
           kubectl rollout status deployment/alkemio-server-deployment --timeout=120s
           kubectl rollout status deployment/alkemio-matrix-adapter-deployment --timeout=120s
@@ -52,6 +56,7 @@ jobs:
           kubectl rollout status deployment/kratos --timeout=120s
           kubectl rollout status statefulset/kratos-courier --timeout=120s
           kubectl rollout status deployment/hydra --timeout=120s
+          kubectl rollout status deployment/oidc-service --timeout=120s || true
           echo "All services scaled down."
 
       - name: Port-forward and reset all Postgres databases
@@ -194,6 +199,30 @@ jobs:
           kubectl scale deployment/hydra --replicas=1
           kubectl rollout status deployment/hydra --timeout=600s
 
+      # Wiping the hydra DB drops its OAuth2 client rows. hydra-maester only
+      # re-registers clients on OAuth2Client CR *change* events, so after a wipe
+      # it never reconciles the now-empty DB and the env comes back green at pod
+      # level with zero clients — every login dies with `invalid_client`,
+      # invisible to all health checks (test-suites#555). Force a reconcile and
+      # ASSERT clients exist before declaring the env ready.
+      - name: Restore Hydra OAuth2 clients (hydra-maester) and assert
+        run: |
+          set -euo pipefail
+          kubectl rollout restart deployment/hydra-hydra-maester
+          kubectl rollout status  deployment/hydra-hydra-maester --timeout=180s
+
+          echo "Asserting Hydra has registered OAuth2 clients (login health != pod health)..."
+          kubectl run hydra-client-check-${{ github.run_id }} \
+            --rm -i --restart=Never --image=curlimages/curl:8.10.1 -- \
+            sh -c '
+              for i in $(seq 1 30); do
+                n=$(curl -sf http://hydra-admin:4445/admin/clients | grep -o "client_id" | wc -l) || n=0
+                echo "  attempt $i: $n client(s)"
+                [ "$n" -ge 2 ] && exit 0
+                sleep 5
+              done
+              echo "Hydra OAuth2 clients not restored — login would be broken"; exit 1'
+
       # Scale up dependencies before server migration: Synapse + matrix adapter
       - name: Start Synapse and supporting services
         run: |
@@ -203,9 +232,12 @@ jobs:
           kubectl scale deployment/alkemio-matrix-adapter-deployment --replicas=1
           kubectl scale deployment/alkemio-notifications-deployment --replicas=1
           kubectl scale deployment/alkemio-file-service-deployment --replicas=1
+          # Restore oidc-service (scaled to 0 before the wipe)
+          kubectl scale deployment/oidc-service --replicas=1 || true
           kubectl rollout status deployment/alkemio-matrix-adapter-deployment --timeout=600s
           kubectl rollout status deployment/alkemio-notifications-deployment --timeout=600s
           kubectl rollout status deployment/alkemio-file-service-deployment --timeout=600s
+          kubectl rollout status deployment/oidc-service --timeout=600s || true
 
       # apply the latest schema
       - name: Run migration job
@@ -232,3 +264,28 @@ jobs:
         run: |
           kubectl scale deployment/alkemio-server-deployment --replicas=1
           kubectl rollout status deployment/alkemio-server-deployment --timeout=600s
+
+      # `rollout status` returning does NOT mean the API is answering: the pod
+      # can be Ready while the traefik→server path is still settling (stale
+      # conntrack to the pre-wave pod IP), which is what produced ~500 ECONNRESET
+      # test failures in run 28944454812 (test-suites#555). Gate on a real
+      # round-trip to the exact endpoint the tests use before returning.
+      - name: Wait for server API readiness (end-to-end)
+        env:
+          ALKEMIO_SERVER: ${{ vars.ALKEMIO_SERVER }}
+        run: |
+          set -euo pipefail
+          echo "Probing $ALKEMIO_SERVER for readiness..."
+          for i in $(seq 1 60); do
+            CODE=$(curl -s -o /tmp/probe.out -w '%{http_code}' -X POST "$ALKEMIO_SERVER" \
+              -H 'Content-Type: application/json' \
+              --data '{"query":"{ __typename }"}' || echo 000)
+            if [ "$CODE" = "200" ] && grep -q '"data"' /tmp/probe.out; then
+              echo "Server API ready after ${i} attempt(s)."
+              exit 0
+            fi
+            echo "  attempt $i: HTTP $CODE"
+            sleep 5
+          done
+          echo "Server API not ready after 60 attempts:"; cat /tmp/probe.out || true
+          exit 1
