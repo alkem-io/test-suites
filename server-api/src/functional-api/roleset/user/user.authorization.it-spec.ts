@@ -2,6 +2,7 @@ import { getRoleSetUserPrivilege } from '../../journey/space/space.request.param
 import {
   sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC,
   sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization,
+  sorted__create_read_update_delete_grant_addMember_invite_addVC_accessVC_assignOrganization,
   sorted__create_read_update_delete_grant_apply_invite_addVC_accessVC,
   sorted__create_read_update_delete_grant_apply_invite_addVC_accessVC_assignOrganization,
   sorted__read_applyToRoleSet,
@@ -150,11 +151,19 @@ describe('Verify ROLESET_ENTRY_ROLE_ASSIGN privilege', () => {
     // ${TestUser.SPACE_ADMIN}          | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC} - skipped until bug is fixed: https://app.zenhub.com/workspaces/alkemio-development-5ecb98b262ebd9f4aec4194c/issues/gh/alkem-io/server/4860
 
     // Arrange
+    // Since the combined-subspace-application exposure fix (workspace#017,
+    // server#6232) a subspace role-set exposes ROLESET_ENTRY_ROLE_APPLY only
+    // to parent members or combined-flow-eligible users — the old blanket
+    // GLOBAL_REGISTERED grant was a false signal (the apply mutation rejected
+    // non-parent-members). On this subsubspace its parent (the subspace) has
+    // not opted in via allowSubspaceAdminsToInviteMembers, so:
+    //  - GLOBAL_SUPPORT_ADMIN (not a subspace member) no longer sees APPLY;
+    //  - SPACE_MEMBER (grandparent member only) no longer sees APPLY.
     test.each`
       user                             | myPrivileges
       ${TestUser.GLOBAL_ADMIN}         | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization}
-      ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization}
-      ${TestUser.SPACE_MEMBER}         | ${['ROLESET_ENTRY_ROLE_APPLY']}
+      ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${sorted__create_read_update_delete_grant_addMember_invite_addVC_accessVC_assignOrganization}
+      ${TestUser.SPACE_MEMBER}         | ${[]}
       ${TestUser.SUBSPACE_ADMIN}       | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC}
       ${TestUser.SUBSPACE_MEMBER}      | ${['ROLESET_ENTRY_ROLE_APPLY']}
       ${TestUser.SUBSUBSPACE_ADMIN}    | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC}
