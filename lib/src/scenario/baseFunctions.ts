@@ -35,7 +35,7 @@ export const updateCalloutVisibility = async (
   calloutID: string,
   visibility: CalloutVisibility = CalloutVisibility.Draft,
   userRole: TestUser = TestUser.GLOBAL_ADMIN,
-  sendNotification?: boolean
+  sendNotification?: boolean,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -49,7 +49,7 @@ export const updateCalloutVisibility = async (
       },
       {
         authorization: `Bearer ${authToken}`,
-      }
+      },
     );
 
   return graphqlErrorWrapper(callback, userRole);
@@ -59,7 +59,7 @@ export const assignRoleToUser = async (
   userID: string,
   roleSetID: string,
   role: RoleName,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -73,7 +73,7 @@ export const assignRoleToUser = async (
       },
       {
         authorization: `Bearer ${authToken}`,
-      }
+      },
     );
 
   return graphqlErrorWrapper(callback, userRole);
@@ -105,7 +105,7 @@ export const createUser = async (
       description?: string;
     };
   },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -118,7 +118,7 @@ export const createUser = async (
       },
       {
         authorization: `Bearer ${authToken}`,
-      }
+      },
     );
   return graphqlErrorWrapper(callback, userRole);
 };
@@ -215,7 +215,7 @@ export const createCalloutOnCalloutsSet = async (
       };
     };
   },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -229,7 +229,7 @@ export const createCalloutOnCalloutsSet = async (
       },
       {
         authorization: `Bearer ${authToken}`,
-      }
+      },
     );
 
   return graphqlErrorWrapper(callback, userRole);
@@ -260,7 +260,7 @@ export const createWhiteboardCalloutOnCalloutsSet = async (
       whiteboardContent?: string;
     };
   },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -283,7 +283,7 @@ export const createWhiteboardCalloutOnCalloutsSet = async (
       },
       {
         authorization: `Bearer ${authToken}`,
-      }
+      },
     );
 
   return graphqlErrorWrapper(callback, userRole);
@@ -292,7 +292,7 @@ export const createWhiteboardCalloutOnCalloutsSet = async (
 export const assignPlatformRole = async (
   actorID: string,
   roleName: RoleName,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -302,7 +302,7 @@ export const assignPlatformRole = async (
       },
       {
         authorization: `Bearer ${authToken}`,
-      }
+      },
     );
 
   return graphqlErrorWrapper(callback, userRole);
@@ -316,7 +316,7 @@ export const createOrganization = async (
   website?: string,
   contactEmail?: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN,
-  options?: { tags?: string[] }
+  options?: { tags?: string[] },
 ) => {
   const graphqlClient = getGraphqlClient();
   const defaultTag = "organization.admin@alkem.io";
@@ -348,7 +348,7 @@ export const createOrganization = async (
       },
       {
         authorization: `Bearer ${authToken}`,
-      }
+      },
     );
 
   return graphqlErrorWrapper(callback, userRole);
@@ -356,7 +356,7 @@ export const createOrganization = async (
 
 export const deleteOrganization = async (
   organizationId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -368,7 +368,7 @@ export const deleteOrganization = async (
       },
       {
         authorization: `Bearer ${authToken}`,
-      }
+      },
     );
 
   return graphqlErrorWrapper(callback, userRole);
@@ -379,7 +379,8 @@ export const createSubspace = async (
   subspaceNameId: string,
   parentId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN,
-  tagline?: string
+  tagline?: string,
+  addTutorialCallouts = false,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -389,12 +390,13 @@ export const createSubspace = async (
           subspaceName,
           subspaceNameId,
           parentId,
-          tagline
+          tagline,
+          addTutorialCallouts,
         ),
       },
       {
         authorization: `Bearer ${authToken}`,
-      }
+      },
     );
 
   return graphqlErrorWrapper(callback, userRole);
@@ -404,7 +406,8 @@ export const subspaceVariablesData = (
   displayName: string,
   nameId: string,
   spaceId: string,
-  tagline?: string
+  tagline?: string,
+  addTutorialCallouts = false,
 ) => {
   const variables = {
     nameID: nameId,
@@ -424,7 +427,7 @@ export const subspaceVariablesData = (
       },
     },
     collaborationData: {
-      addTutorialCallouts: false,
+      addTutorialCallouts,
       calloutsSetData: {},
     },
   };
@@ -435,7 +438,7 @@ export const subspaceVariablesData = (
 export const getCalloutsData = async (
   calloutsSetId: string,
   tags?: string[] | undefined,
-  role = TestUser.GLOBAL_ADMIN
+  role = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -451,7 +454,7 @@ export const getCalloutsData = async (
       },
       {
         authorization: `Bearer ${authToken}`,
-      }
+      },
     );
 
   return graphqlErrorWrapper(callback, role);
@@ -459,7 +462,7 @@ export const getCalloutsData = async (
 
 export const getCalloutDetails = async (
   calloutId: string,
-  role = TestUser.GLOBAL_ADMIN
+  role = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -469,7 +472,7 @@ export const getCalloutDetails = async (
       },
       {
         authorization: `Bearer ${authToken}`,
-      }
+      },
     );
 
   return graphqlErrorWrapper(callback, role);
@@ -480,7 +483,7 @@ export const createSpaceBasicData = async (
   spaceNameId: string,
   accountID: string,
   addTutorialCallouts = false,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const spaceData: CreateSpaceOnAccountInput = {
@@ -503,7 +506,7 @@ export const createSpaceBasicData = async (
       },
       {
         authorization: `Bearer ${authToken}`,
-      }
+      },
     );
 
   return graphqlErrorWrapper(callback, userRole);
@@ -531,7 +534,7 @@ export const updateSpaceSettings = async (
     };
   },
 
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
 ) => {
   if (!spaceID) {
     throw new Error("Space ID is required");
@@ -575,7 +578,7 @@ export const updateSpaceSettings = async (
       },
       {
         authorization: `Bearer ${authToken}`,
-      }
+      },
     );
 
   return graphqlErrorWrapper(callback, userRole);
@@ -585,7 +588,7 @@ export const spaceNameId = `testecoeid${getUniqueId()}`;
 
 export const getSpaceData = async (
   spaceId = spaceNameId,
-  role = TestUser.GLOBAL_ADMIN
+  role = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -595,7 +598,7 @@ export const getSpaceData = async (
       },
       {
         authorization: `Bearer ${authToken}`,
-      }
+      },
     );
 
   return graphqlErrorWrapper(callback, role);
@@ -603,7 +606,7 @@ export const getSpaceData = async (
 
 export const deleteSpace = async (
   spaceId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -615,14 +618,14 @@ export const deleteSpace = async (
       },
       {
         authorization: `Bearer ${authToken}`,
-      }
+      },
     );
 
   return graphqlErrorWrapper(callback, userRole);
 };
 
 export const getLicensePlans = async (
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -630,7 +633,7 @@ export const getLicensePlans = async (
       {},
       {
         authorization: `Bearer ${authToken}`,
-      }
+      },
     );
 
   return graphqlErrorWrapper(callback, userRole);
@@ -643,7 +646,7 @@ export const getLicensePlanByName = async (licenseCredential: string) => {
   const filteredLicensePlan = allLicensePlans.filter(
     (plan: { licenseCredential: string; id: string }) =>
       plan.licenseCredential.includes(licenseCredential) ||
-      plan.id === licenseCredential
+      plan.id === licenseCredential,
   );
   const licensePlan = filteredLicensePlan;
 
@@ -653,7 +656,7 @@ export const getLicensePlanByName = async (licenseCredential: string) => {
 export const assignLicensePlanToAccount = async (
   accountId: string,
   licensePlanId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
 ) => {
   const res = await getLicensePlans();
   const licensingId = res.data?.platform.licensingFramework.id ?? "";
@@ -667,7 +670,7 @@ export const assignLicensePlanToAccount = async (
       },
       {
         authorization: `Bearer ${authToken}`,
-      }
+      },
     );
 
   return graphqlErrorWrapper(callback, userRole);
@@ -680,7 +683,7 @@ export const createInnovationPack = async (
   displayName: string,
   nameID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN,
-  options?: { tags?: string[] }
+  options?: { tags?: string[] },
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -695,7 +698,7 @@ export const createInnovationPack = async (
       },
       {
         authorization: `Bearer ${authToken}`,
-      }
+      },
     );
 
   return graphqlErrorWrapper(callback, userRole);
@@ -714,7 +717,7 @@ export const createTemplateOnTemplatesSet = async (
     calloutResponseTypes?: Array<"POST" | "WHITEBOARD" | "MEMO" | "LINK">;
     calloutAllowedContributors?: "MEMBERS" | "ADMINS" | "NONE";
   },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
 
@@ -794,8 +797,8 @@ export const createTemplateOnTemplatesSet = async (
       `Creating callout template: "${
         options.profileDisplayName
       }" - framing: ${framingType} (${framingEnumValue}), responseTypes: [${responseTypes.join(
-        ", "
-      )}], contributors: ${allowedContributors} (${allowedContributorsEnumValue})`
+        ", ",
+      )}], contributors: ${allowedContributors} (${allowedContributorsEnumValue})`,
     );
 
     // Build framing data with optional whiteboard/memo/link based on type
@@ -884,11 +887,11 @@ export const createTemplateOnTemplatesSet = async (
       `Full calloutData being sent to CreateTemplate: ${JSON.stringify(
         calloutDataValue,
         null,
-        2
-      )}`
+        2,
+      )}`,
     );
     LogManager.getLogger().info(
-      `Full templateInput being sent: ${JSON.stringify(templateInput, null, 2)}`
+      `Full templateInput being sent: ${JSON.stringify(templateInput, null, 2)}`,
     );
   }
 
@@ -934,7 +937,7 @@ export const createVirtualContributor = async (
       description?: string;
     };
   },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
 
@@ -1007,7 +1010,7 @@ export const createVirtualContributor = async (
   LogManager.getLogger().info(
     `Creating virtual contributor: "${options.profileDisplayName}" - engine: ${
       options.aiPersona?.engine || "none"
-    }, BoK type: ${options.bodyOfKnowledgeType || "NONE"}`
+    }, BoK type: ${options.bodyOfKnowledgeType || "NONE"}`,
   );
   const callback = (authToken: string | undefined) =>
     graphqlClient.CreateVirtualContributorOnAccount(
@@ -1035,7 +1038,7 @@ export const createVirtualContributor = async (
       },
       {
         authorization: `Bearer ${authToken}`,
-      }
+      },
     );
 
   return graphqlErrorWrapper(callback, userRole);
@@ -1043,7 +1046,7 @@ export const createVirtualContributor = async (
 
 export const deleteVirtualContributor = async (
   virtualContributorId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -1055,7 +1058,7 @@ export const deleteVirtualContributor = async (
       },
       {
         authorization: `Bearer ${authToken}`,
-      }
+      },
     );
 
   return graphqlErrorWrapper(callback, userRole);
@@ -1068,7 +1071,7 @@ export const createPlatformDiscussion = async (
     description?: string;
     category?: ForumDiscussionCategory;
   },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -1087,7 +1090,7 @@ export const createPlatformDiscussion = async (
       },
       {
         authorization: `Bearer ${authToken}`,
-      }
+      },
     );
 
   return graphqlErrorWrapper(callback, userRole);
@@ -1095,7 +1098,7 @@ export const createPlatformDiscussion = async (
 
 export const deletePlatformDiscussion = async (
   discussionId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -1105,20 +1108,20 @@ export const deletePlatformDiscussion = async (
       },
       {
         authorization: `Bearer ${authToken}`,
-      }
+      },
     );
 
   return graphqlErrorWrapper(callback, userRole);
 };
 
 export const getPlatformForumId = async (
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
 ): Promise<string> => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
     graphqlClient.GetPlatformForumData(
       {},
-      authToken ? { authorization: `Bearer ${authToken}` } : undefined
+      authToken ? { authorization: `Bearer ${authToken}` } : undefined,
     );
 
   const res = await graphqlErrorWrapper(callback, userRole);
@@ -1127,7 +1130,7 @@ export const getPlatformForumId = async (
 
 export const deleteInnovationPack = async (
   innovationPackId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -1137,7 +1140,7 @@ export const deleteInnovationPack = async (
       },
       {
         authorization: `Bearer ${authToken}`,
-      }
+      },
     );
 
   return graphqlErrorWrapper(callback, userRole);
@@ -1146,7 +1149,7 @@ export const deleteInnovationPack = async (
 export const updateVirtualContributorVisibility = async (
   ID: string,
   visibility: { searchVisibility?: SearchVisibility; listedInStore?: boolean },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -1160,7 +1163,7 @@ export const updateVirtualContributorVisibility = async (
       },
       {
         authorization: `Bearer ${authToken}`,
-      }
+      },
     );
 
   return graphqlErrorWrapper(callback, userRole);
@@ -1169,10 +1172,10 @@ export const updateVirtualContributorVisibility = async (
 export const updateInnovationPackVisibility = async (
   ID: string,
   visibility: { searchVisibility?: SearchVisibility; listedInStore?: boolean },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = new GraphQLClient(
-    testConfiguration.endPoints.graphql.private
+    testConfiguration.endPoints.graphql.private,
   );
   const mutation = `
     mutation UpdateInnovationPack($data: UpdateInnovationPackInput!) {
@@ -1189,7 +1192,7 @@ export const updateInnovationPackVisibility = async (
           searchVisibility: visibility.searchVisibility,
         },
       },
-      authToken ? { authorization: `Bearer ${authToken}` } : undefined
+      authToken ? { authorization: `Bearer ${authToken}` } : undefined,
     );
 
   return graphqlErrorWrapper(callback, userRole);
@@ -1198,7 +1201,7 @@ export const updateInnovationPackVisibility = async (
 export const triggerOrganizationVerification = async (
   organizationVerificationID: string,
   eventName = "MANUALLY_VERIFY",
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -1211,7 +1214,7 @@ export const triggerOrganizationVerification = async (
       },
       {
         authorization: `Bearer ${authToken}`,
-      }
+      },
     );
 
   return graphqlErrorWrapper(callback, userRole);
@@ -1220,13 +1223,13 @@ export const triggerOrganizationVerification = async (
 export const applyOrganizationVerificationSequence = async (
   organizationVerificationID: string,
   events: string[],
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
 ) => {
   for (const eventName of events) {
     await triggerOrganizationVerification(
       organizationVerificationID,
       eventName,
-      userRole
+      userRole,
     );
   }
 };
