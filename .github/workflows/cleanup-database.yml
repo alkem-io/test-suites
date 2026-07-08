@@ -125,6 +125,11 @@ jobs:
           KRATOS_IMAGE=$(kubectl get deployment kratos -o jsonpath='{.spec.template.spec.containers[0].image}')
           echo "Using Kratos image: $KRATOS_IMAGE"
 
+          # Idempotent: the job name is keyed on github.run_id, so a re-run of a
+          # failed run collides with its own leftover job (a completed Job's spec
+          # is immutable, so `apply` errors). Delete any prior instance first.
+          kubectl delete job "$KRATOS_MIGRATION_JOB" --ignore-not-found --wait=true
+
           kubectl apply -f - <<EOF
           apiVersion: batch/v1
           kind: Job
@@ -162,6 +167,10 @@ jobs:
           HYDRA_MIGRATION_JOB="hydra-migration-job-${{ github.run_id }}"
           HYDRA_IMAGE=$(kubectl get deployment hydra -o jsonpath='{.spec.template.spec.containers[0].image}')
           echo "Using Hydra image: $HYDRA_IMAGE"
+
+          # Idempotent (see Kratos step): delete any leftover job from a re-run
+          # before re-creating, since a completed Job's spec is immutable.
+          kubectl delete job "$HYDRA_MIGRATION_JOB" --ignore-not-found --wait=true
 
           kubectl apply -f - <<EOF
           apiVersion: batch/v1
@@ -244,6 +253,12 @@ jobs:
         run: |
           # Define a unique job name based on the GitHub run ID
           MIGRATION_JOB_NAME="server-migration-job-${{ github.run_id }}"
+
+          # Idempotent: this job (created via --from=cronjob) has no
+          # ttlSecondsAfterFinished, so it never self-cleans — a re-run of a
+          # failed run hits `job already exists` on the create below. Delete any
+          # leftover instance first (test-suites#555).
+          kubectl delete job "$MIGRATION_JOB_NAME" --ignore-not-found --wait=true
 
           # Create the job from the cronjob
           kubectl create job --from=cronjob/server-migration $MIGRATION_JOB_NAME
