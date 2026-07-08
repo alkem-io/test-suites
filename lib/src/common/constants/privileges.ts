@@ -302,6 +302,24 @@ export const sorted__create_read_update_delete_grant_addMember_apply_invite_addV
     "ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION",
   ].sort();
 
+// Same as above WITHOUT ROLESET_ENTRY_ROLE_APPLY: since the combined-subspace-
+// application exposure fix (workspace#017, server#6232), a subspace role-set
+// only exposes APPLY to parent members or combined-flow-eligible users — the
+// blanket GLOBAL_REGISTERED grant was a false signal (the mutation rejected
+// non-parent-members) and was removed.
+export const sorted__create_read_update_delete_grant_addMember_invite_addVC_accessVC_assignOrganization =
+  [
+    "CREATE",
+    "GRANT",
+    ...readPrivilege,
+    "UPDATE",
+    "DELETE",
+    "ROLESET_ENTRY_ROLE_ASSIGN",
+    "ROLESET_ENTRY_ROLE_INVITE",
+    "COMMUNITY_ASSIGN_VC_FROM_ACCOUNT",
+    "ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION",
+  ].sort();
+
 export const sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization_notificationsAdmin =
   [
     "CREATE",
