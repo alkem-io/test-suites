@@ -47,6 +47,14 @@ on:
         required: false
         type: string
         default: develop
+      kratos_webhooks_branch:
+        required: false
+        type: string
+        default: develop
+      wopi_service_branch:
+        required: false
+        type: string
+        default: develop
   workflow_dispatch:
     inputs:
       server_branch:
@@ -104,6 +112,16 @@ on:
         required: false
         type: string
         default: develop
+      kratos_webhooks_branch:
+        description: "Branch for kratos-webhooks"
+        required: false
+        type: string
+        default: develop
+      wopi_service_branch:
+        description: "Branch for wopi-service"
+        required: false
+        type: string
+        default: develop
 
 jobs:
   trigger-deployments:
@@ -123,11 +141,13 @@ jobs:
             ["whiteboard-collaboration-service"]="${{ inputs.whiteboard_branch }}"
             ["matrix-adapter"]="${{ inputs.matrix_adapter_branch }}"
             ["oidc-service"]="${{ inputs.oidc_branch }}"
-            ["matrix-adapter"]="${{ inputs.file_service_branch }}"
+            ["file-service"]="${{ inputs.file_service_branch }}"
             ["authorization-evaluation-service"]="${{ inputs.auth_eval_branch }}"
             ["documentation"]="${{ inputs.documentations_branch }}"
             ["virtual-contributor-engine-libra-flow"]="${{ inputs.vc_engine_libra_flow_branch }}"
             ["collaborative-document-service"]="${{ inputs.collaborative_document_service_branch }}"
+            ["kratos-webhooks"]="${{ inputs.kratos_webhooks_branch }}"
+            ["wopi-service"]="${{ inputs.wopi_service_branch }}"
           )
 
           run_repo_map=()
