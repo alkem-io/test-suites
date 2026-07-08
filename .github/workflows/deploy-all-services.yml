@@ -35,27 +35,7 @@ on:
         required: false
         type: string
         default: develop
-      vc_ingest_branch:
-        required: false
-        type: string
-        default: develop
-      vc_engine_generic_branch:
-        required: false
-        type: string
-        default: develop
-      vc_engine_expert_branch:
-        required: false
-        type: string
-        default: develop
-      vc_engine_openai_branch:
-        required: false
-        type: string
-        default: develop
       documentations_branch:
-        required: false
-        type: string
-        default: develop
-      vc_engine_guidance_branch:
         required: false
         type: string
         default: develop
@@ -109,33 +89,8 @@ on:
         required: false
         type: string
         default: develop
-      vc_ingest_branch:
-        description: "Branch for virtual-contributor-ingest-space"
-        required: false
-        type: string
-        default: develop
-      vc_engine_generic_branch:
-        description: "Branch for virtual-contributor-engine-generic"
-        required: false
-        type: string
-        default: develop
-      vc_engine_expert_branch:
-        description: "Branch for virtual-contributor-engine-expert"
-        required: false
-        type: string
-        default: develop
-      vc_engine_openai_branch:
-        description: "Branch for virtual-contributor-engine-openai-assistant"
-        required: false
-        type: string
-        default: develop
       documentations_branch:
         description: "Branch for documentation"
-        required: false
-        type: string
-        default: develop
-      vc_engine_guidance_branch:
-        description: "Branch for virtual-contributor-engine-guidance"
         required: false
         type: string
         default: develop
@@ -170,12 +125,7 @@ jobs:
             ["oidc-service"]="${{ inputs.oidc_branch }}"
             ["matrix-adapter"]="${{ inputs.file_service_branch }}"
             ["authorization-evaluation-service"]="${{ inputs.auth_eval_branch }}"
-            ["virtual-contributor-ingest-space"]="${{ inputs.vc_ingest_branch }}"
-            ["virtual-contributor-engine-generic"]="${{ inputs.vc_engine_generic_branch }}"
-            ["virtual-contributor-engine-expert"]="${{ inputs.vc_engine_expert_branch }}"
-            ["virtual-contributor-engine-openai-assistant"]="${{ inputs.vc_engine_openai_branch }}"
             ["documentation"]="${{ inputs.documentations_branch }}"
-            ["virtual-contributor-engine-guidance"]="${{ inputs.vc_engine_guidance_branch }}"
             ["virtual-contributor-engine-libra-flow"]="${{ inputs.vc_engine_libra_flow_branch }}"
             ["collaborative-document-service"]="${{ inputs.collaborative_document_service_branch }}"
           )
