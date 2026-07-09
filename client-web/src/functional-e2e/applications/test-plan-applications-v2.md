@@ -32,12 +32,15 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
 
 **Important:**
 
-- **Subspace Visibility**: Subspaces are only visible to **direct members of their parent space**. This means:
+- **Subspace Visibility**: Subspaces are visible to **direct members of their parent space** OR when the parent space is **public**. This means:
   - Non-members can only see Level 0 (root) spaces
   - Level 0 members can see Level 1 subspaces (but NOT Level 2)
   - Level 1 members can see Level 2 subsubspaces (but nothing deeper)
   - Once a user is a member of a space, they can find its direct child subspaces under the `Subspaces` section in the subheader navigation on the space page.
+  - **When a Level 0 space is public**, non-members can also see Level 1 subspaces and apply to them directly (see "Public Parent Space" section below).
 - **Membership is NOT Inherited**: Being a member of a space does NOT automatically make you a member of its child spaces (subspaces). Users must apply separately to each level and have their application approved by an admin for that specific space level. For example, being a member of Level 0 (Space) allows you to see Level 1 (Subspace) cards, but you still need to apply and be approved to become a member of Level 1.
+- **L0 Apply Button Location**: The Apply button for Level 0 spaces is available **only on the About page** (`/about`), NOT on the space dashboard. Non-members of a private space are redirected to `/about` automatically. On a public space, the dashboard renders without an Apply button.
+- **Non-Parent-Member Subspace Applications**: When a Level 0 space is public and has `allowSubspaceAdminsToInviteMembers` enabled, users who are NOT members of the parent space can apply directly to Level 1 subspaces. The client trusts the server-granted `ROLESET_ENTRY_ROLE_APPLY` privilege instead of inferring eligibility from parent membership.
 
 ---
 
@@ -57,6 +60,29 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
 
 ### 1. Space Discovery and Privacy Indicators
 
+#### 1.0 Apply Button NOT Shown on L0 Space Dashboard
+
+**Prerequisites:**
+
+- User is already signed in as `${TestUser.NON_SPACE_MEMBER}@alkem.io` (reuse authenticated page from previous test)
+
+**Steps:**
+
+1. Navigate to Level 0 Space dashboard (use `baseScenario.space.nameId`, NOT `/about`)
+2. Verify no "Apply" button is visible on the dashboard
+
+**Expected Results:**
+
+- The dashboard renders (or redirects to `/about` for private spaces)
+- No Apply button is present on the dashboard page
+- Apply is only available via the About page (`/about`)
+
+**Notes:**
+
+- Per PR #10000, the Apply button was removed from the L0 space dashboard
+- On a private space, `CrdSpaceProtectedRoutes` redirects non-members to `/about`
+- On a public space, the dashboard renders without an Apply button
+
 #### 1.1 Submit Application to Level 0 Space
 
 **Prerequisites:**
@@ -65,8 +91,8 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
 
 **Steps:**
 
-1. Navigate to Level 0 Space About page (use `baseScenario.space.nameId`)
-2. Locate and click the "Apply" button
+1. Navigate to Level 0 Space **About page** (use `baseScenario.space.nameId` + `/about`)
+2. Locate and click the "Apply" button on the About page
 3. Verify questionnaire modal/form appears
 4. Fill in questionnaire fields with test data:
    - Answer all required questions
@@ -514,3 +540,77 @@ Follow the same steps as Level 0 test 2.4, substituting Level 1 Subspace referen
 #### 2.5 Approve Application Directly from Data Grid
 
 Follow the same steps as Level 0 test 2.5, substituting Level 1 Subspace references and using the differences noted above. The admin will receive a notification about a new subspace application and can navigate directly to the subspace community settings to approve it.
+
+---
+
+## Level 1 Subspace — Public Parent Space Test Suite
+
+**Spec file:** `space-applications-level-1-public-parent.spec.ts`
+
+This suite covers the new flow introduced by PR #9986 and PR #10000: when a Level 0 space is **public** and has `allowSubspaceAdminsToInviteMembers` enabled, a user who is **NOT a member of the parent space** can apply directly to Level 1 subspaces. The client trusts the server-granted `ROLESET_ENTRY_ROLE_APPLY` privilege instead of checking parent membership.
+
+**Seed configuration:**
+
+- Level 0 Space: **Public**, Applications policy, `allowSubspaceAdminsToInviteMembers: true`
+- Level 1 Subspace: **Private**, Applications policy
+- Applicant (`NON_SPACE_MEMBER`): **NOT** a member of Level 0
+- Subspace Admin (`SUBSPACE_ADMIN`): Admin of Level 1
+
+### 1. Subspace Discovery via Public Parent
+
+#### 1.1 Non-parent-member can see L1 subspace card from public L0 space
+
+**Steps:**
+
+1. Navigate to the public L0 space as a non-member
+2. Click on the "Subspaces" tab
+3. Verify the L1 subspace card is visible
+4. Verify the "Private" indicator is shown on the subspace card
+
+**Expected Results:**
+
+- The non-member can see the L0 space dashboard (it's public)
+- The Subspaces tab is visible and clickable
+- The L1 subspace card is displayed in the Subspaces grid
+- The subspace card shows a "Private" label
+
+#### 1.2 Non-parent-member can apply to L1 subspace from About dialog
+
+**Steps:**
+
+1. Navigate to the L1 subspace About page
+2. Locate and click the "Apply" button on the About dialog
+3. Fill in the questionnaire fields
+4. Submit the application
+5. Verify success confirmation ("Application submitted") appears
+6. Close the success dialog
+
+**Expected Results:**
+
+- The About page/dialog is reachable despite the user not being a parent member
+- The "Apply" button is visible (server grants `ROLESET_ENTRY_ROLE_APPLY`)
+- The questionnaire opens and accepts answers
+- The application is submitted successfully
+- Success dialog confirms the submission
+
+#### 1.3 View Pending Application as Subspace Admin
+
+**Steps:**
+
+1. As subspace admin, navigate to subspace settings → Community tab
+2. Verify the pending application from the non-parent-member is listed
+
+**Expected Results:**
+
+- The application appears in the "Pending Memberships" section
+- It shows "Application received" status
+
+### 2. Subspace Application Management (Public Parent)
+
+#### 2.1 Approve non-parent-member application to L1 Subspace
+
+Same as the standard L1 2.3 test, but the applicant is a non-parent-member. Verifies that the admin can view the questionnaire, approve the application, and the applicant receives a welcome notification.
+
+#### 2.2 Reject non-parent-member application to L1 Subspace
+
+Same as the standard L1 2.1 test, but the applicant is a non-parent-member. Verifies that the admin can reject the application and the applicant receives a declined notification.
