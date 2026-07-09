@@ -280,27 +280,38 @@ jobs:
           kubectl scale deployment/alkemio-server-deployment --replicas=1
           kubectl rollout status deployment/alkemio-server-deployment --timeout=600s
 
-      # `rollout status` returning does NOT mean the API is answering: the pod
-      # can be Ready while the traefik→server path is still settling (stale
-      # conntrack to the pre-wave pod IP), which is what produced ~500 ECONNRESET
-      # test failures in run 28944454812 (test-suites#555). Gate on a real
-      # round-trip to the exact endpoint the tests use before returning.
-      - name: Wait for server API readiness (end-to-end)
+      # `rollout status` returning does NOT mean the API is answering: on a fresh
+      # DB the server does a multi-minute bootstrap (auth reset, platform/space
+      # seeding) before it listens, and the traefik→server path can still be
+      # settling — which produced ~500 ECONNRESET test failures in run
+      # 28944454812 (test-suites#555). Gate on a real round-trip to the exact
+      # endpoint the tests use before returning.
+      #
+      # The probe runs INSIDE the cluster (via a curl pod), not from this
+      # ubuntu-latest runner: test-alkem.io is reachable from the m4 test
+      # runners and from within the cluster, but NOT from GitHub-hosted runners,
+      # so probing here directly returns HTTP 000 (false negative — observed in
+      # run 28956766280 while the server was in fact healthy and listening).
+      - name: Wait for server API readiness (end-to-end, in-cluster)
         env:
           ALKEMIO_SERVER: ${{ vars.ALKEMIO_SERVER }}
         run: |
           set -euo pipefail
-          echo "Probing $ALKEMIO_SERVER for readiness..."
-          for i in $(seq 1 60); do
-            CODE=$(curl -s -o /tmp/probe.out -w '%{http_code}' -X POST "$ALKEMIO_SERVER" \
-              -H 'Content-Type: application/json' \
-              --data '{"query":"{ __typename }"}' || echo 000)
-            if [ "$CODE" = "200" ] && grep -q '"data"' /tmp/probe.out; then
-              echo "Server API ready after ${i} attempt(s)."
-              exit 0
-            fi
-            echo "  attempt $i: HTTP $CODE"
-            sleep 5
-          done
-          echo "Server API not ready after 60 attempts:"; cat /tmp/probe.out || true
-          exit 1
+          echo "Probing $ALKEMIO_SERVER for readiness from inside the cluster..."
+          kubectl run api-readiness-check-${{ github.run_id }}-${{ github.run_attempt }} \
+            --rm -i --restart=Never --image=curlimages/curl:8.10.1 \
+            --env="ALKEMIO_SERVER=$ALKEMIO_SERVER" -- \
+            sh -c '
+              for i in $(seq 1 60); do
+                body=$(curl -s -m 8 -w "\n%{http_code}" -X POST "$ALKEMIO_SERVER" \
+                  -H "Content-Type: application/json" \
+                  --data "{\"query\":\"{ __typename }\"}") || body="000"
+                code=$(printf "%s" "$body" | tail -n1)
+                echo "  attempt $i: HTTP $code"
+                if [ "$code" = "200" ] && printf "%s" "$body" | grep -q "\"data\""; then
+                  echo "Server API ready after $i attempt(s)."
+                  exit 0
+                fi
+                sleep 5
+              done
+              echo "Server API not ready after 60 attempts"; exit 1'
