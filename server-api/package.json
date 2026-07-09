@@ -81,7 +81,7 @@
     "@types/node": "^20.13.1",
     "@vitest/ui": "^4.0.18",
     "cross-env": "^7.0.3",
-    "eslint": "^8.57.0",
+    "eslint": "^9.38.0",
     "globals": "^15.14.0",
     "graphql-request": "6.0.0",
     "prettier": "^3.4.2",

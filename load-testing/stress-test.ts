@@ -104,7 +104,11 @@ const createPrerequisites = async (whiteboardsCount: number) => {
       `wb-stress-test-${i}`,
       `Whiteboard Stress Test-${i}`
     );
-    wbIds.push(res.data.createCalloutOnCalloutsSet.framing.whiteboard.id);
+    const whiteboardId = res.data?.createCalloutOnCalloutsSet.framing.whiteboard?.id;
+    if (!whiteboardId) {
+      throw new Error(`Failed to create whiteboard callout ${i}`);
+    }
+    wbIds.push(whiteboardId);
   }
 
   return { baseScenario, wbIds };

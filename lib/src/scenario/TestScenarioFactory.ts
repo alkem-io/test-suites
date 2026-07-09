@@ -357,7 +357,7 @@ export class TestScenarioFactory {
     baseScenario: OrganizationWithSpaceModel,
   ): Promise<void> {
     try {
-      const { createVirtualContributor } = await import("./baseFunctions");
+      const { createVirtualContributor } = await import("./baseFunctions.js");
 
       if (
         !config.virtualContributors ||

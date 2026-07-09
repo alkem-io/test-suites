@@ -1,11 +1,10 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "moduleResolution": "node",
-    "module": "CommonJS",
+    "moduleResolution": "bundler",
+    "module": "ESNext",
     "lib": ["es2018", "dom"],
     "sourceMap": true,
-    "baseUrl": "./",
     "outDir": "./dist",
     "removeComments": true,
     "strict": true,
@@ -17,11 +16,12 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "allowJs": true,
+    "types": ["node"],
     "paths": {
-      "@common/*": ["src/common/*"],
-      "@generated/*": ["src/generated/*"],
-      "@utils/*": ["src/utils/*"],
-      "@src/*": ["src/*"],
+      "@common/*": ["./src/common/*"],
+      "@generated/*": ["./src/generated/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@src/*": ["./src/*"],
       "@alkemio/tests-lib": ["../lib/src/index.ts"],
       "@alkemio/tests-lib/*": ["../lib/src/*"]
     }
