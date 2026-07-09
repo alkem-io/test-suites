@@ -6,6 +6,7 @@
     "lib": ["es2018", "dom"],
     "sourceMap": true,
     "outDir": "./dist",
+    "rootDir": "..",
     "removeComments": true,
     "strict": true,
     "allowSyntheticDefaultImports": true,

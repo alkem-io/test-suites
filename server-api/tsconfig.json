@@ -17,6 +17,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "outDir": "./dist",
+    "rootDir": "..",
     "types": ["node"],
     "typeRoots": ["./node_modules/@types", "../node_modules/@types", "./src/types"],
     "incremental": true,
