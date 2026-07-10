@@ -50,7 +50,7 @@ describe('Platform configuration', () => {
         },
         storage: {
           file: {
-            maxFileSize: 2097152,
+            maxFileSize: 15728640,
           },
         },
         featureFlags: [
