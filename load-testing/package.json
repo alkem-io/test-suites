@@ -4,11 +4,12 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "start": "tsx stress-test.ts"
+    "start": "tsx stress-test.ts",
+    "typecheck:native": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
     "@types/node": "^20.16.5",
-    "typescript": "^5.8.3"
+    "typescript": "7.0.2"
   },
   "private": true,
   "keywords": [],

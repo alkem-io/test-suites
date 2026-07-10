@@ -15,9 +15,10 @@
     "prebuild": "rimraf dist",
     "build": "tsc",
     "circular-dependencies": "madge --circular dist",
-    "lint": "tsc --noEmit && eslint src/**/*.ts{,x}",
-    "lint:prod": "tsc --noEmit && cross-env NODE_ENV=production eslint src/**/*.ts{,x}",
-    "lint:fix": "tsc --noEmit && eslint src/**/*.ts{,x} --fix",
+    "lint": "pnpm run typecheck:native && eslint src/**/*.ts{,x}",
+    "lint:prod": "pnpm run typecheck:native && cross-env NODE_ENV=production eslint src/**/*.ts{,x}",
+    "lint:fix": "pnpm run typecheck:native && eslint src/**/*.ts{,x} --fix",
+    "typecheck:native": "tsc -p tsconfig.json --noEmit",
     "codegen": "graphql-codegen --config codegen.ts",
     "stop-process": "fuser 4000/tcp -k",
     "test:auth-playwright": "playwright test",
@@ -41,8 +42,8 @@
     "@graphql-codegen/typescript-resolvers": "4.4.1",
     "@playwright/test": "^1.57.0",
     "@types/node": "^20.13.1",
-    "@typescript-eslint/eslint-plugin": "8.18.1",
-    "@typescript-eslint/parser": "8.18.1",
+    "@typescript-eslint/eslint-plugin": "^8.46.2",
+    "@typescript-eslint/parser": "^8.46.2",
     "cross-env": "^7.0.3",
     "dotenv": "^16.0.0",
     "eslint": "^9.17.0",
@@ -52,7 +53,8 @@
     "prettier": "^3.4.2",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "~5.7.2"
+    "@typescript/native": "npm:typescript@7.0.2",
+    "typescript": "npm:@typescript/typescript6@~6.0.2"
   },
   "_moduleAliases": {
     "@src": "./src"

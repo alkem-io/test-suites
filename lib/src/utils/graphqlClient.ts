@@ -1,10 +1,10 @@
 import { testConfiguration } from '../config/test.configuration';
-import { getSdk } from '../core/generated/graphql';
+import { getSdk, Sdk } from '../core/generated/graphql';
 import { GraphQLClient } from 'graphql-request';
 
-let graphqlSdkClient: ReturnType<typeof getSdk>;
+let graphqlSdkClient: Sdk;
 
-export const getGraphqlClient = () => {
+export const getGraphqlClient = (): Sdk => {
   if (!graphqlSdkClient) {
     const graphqlClient = new GraphQLClient(
       testConfiguration.endPoints.graphql.private
