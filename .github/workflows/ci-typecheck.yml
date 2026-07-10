@@ -1,0 +1,44 @@
+name: TypeScript Native Typecheck
+
+on:
+  pull_request:
+
+concurrency:
+  group: ci-typecheck-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  typecheck-native:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20.19.0
+          cache: 'pnpm'
+
+      - name: Install workspace dependencies (lib, server-api, client-web)
+        run: pnpm install --frozen-lockfile
+
+      - name: Native TS7 typecheck — lib (workspace#019-typescript-7-upgrade)
+        run: pnpm --filter @alkemio/tests-lib run typecheck:native
+
+      - name: Native TS7 typecheck — server-api (workspace#019-typescript-7-upgrade)
+        run: pnpm --filter @alkemio/test-suite-server-api run typecheck:native
+
+      - name: Native TS7 typecheck — client-web (workspace#019-typescript-7-upgrade)
+        run: pnpm --filter @alkemio/test-suite-client-web run typecheck:native
+
+      - name: Install load-testing dependencies
+        working-directory: load-testing
+        run: npm ci
+
+      - name: Native TS7 typecheck — load-testing (workspace#019-typescript-7-upgrade)
+        working-directory: load-testing
+        run: npm run typecheck:native
