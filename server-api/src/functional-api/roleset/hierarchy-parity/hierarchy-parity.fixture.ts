@@ -48,6 +48,20 @@ export const COMBINED_FLOW_REJECTION =
   /not a member of the parent Community|Authorization: unable to grant 'roleset-entry-role-apply'/i;
 
 /**
+ * The combined DIRECT-JOIN flow's rejection for a non-eligible
+ * non-parent-member joiner (workspace#017 round 2 — the `OPEN` membership
+ * policy). As with the application flow there are two legitimate rejection
+ * layers; a negative cell asserts one of THESE:
+ * - authorization: the JOIN privilege is not exposed on the subspace role-set
+ *   (the privilege is the client's single trusted signal, so ineligible
+ *   joiners are stopped here first);
+ * - precondition: `assignActorToRole`'s parent-membership check inside the
+ *   join mutation (defence in depth).
+ */
+export const JOIN_COMBINED_FLOW_REJECTION =
+  /member of the parent|Authorization: unable to grant 'roleset-entry-role-join'/i;
+
+/**
  * Tear down a scenario without masking an in-flight test failure: a throw
  * inside `finally` REPLACES the original assertion error (JS semantics), so a
  * flaky teardown would otherwise hide the real reason a cell failed.
