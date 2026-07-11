@@ -3,6 +3,7 @@ import {
   registerAllTestUsers,
   stringifyConfig,
   testConfiguration,
+  verifyEnvPrerequisites,
 } from '@alkemio/tests-lib';
 
 export default async function setup() {
@@ -19,9 +20,17 @@ export default async function setup() {
     `\nLaunching tests using configuration: ${stringifyConfig(testConfiguration)}`
   );
 
-  if (!testConfiguration.registerUsers) return;
+  if (testConfiguration.registerUsers) {
+    await registerAllTestUsers();
+  }
 
-  await registerAllTestUsers();
+  // Env-prerequisite gate (test-suites#565, Phase 1): prove the auth prerequisite
+  // is actually met by minting a real admin token BEFORE any scenario runs. A
+  // broken env (e.g. Kratos admin provisioned with a mismatched password) then
+  // aborts here with one clear message instead of cascading into every scenario
+  // failing 40+ minutes in. Runs even when registration is skipped (users are
+  // expected pre-seeded in that mode — verify they can authenticate).
+  await verifyEnvPrerequisites();
 
   // Return a teardown function so Vitest can ensure a clean exit.
   // The GraphQL client is stateless HTTP and WebSocket subscriptions are
