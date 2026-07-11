@@ -87,6 +87,7 @@ export const graphqlErrorWrapper = async <TData>(
     const userModel = TestUserManager.getUserModelByType(userRole);
     authToken = userModel.authToken;
   }
+  const wrapperStartedAt = Date.now();
   for (let attempt = 1; ; attempt++) {
     const startedAt = Date.now();
     try {
@@ -105,8 +106,9 @@ export const graphqlErrorWrapper = async <TData>(
           await sleep(delay);
           continue;
         }
+        const totalMs = Date.now() - wrapperStartedAt;
         LogManager.getLogger().error(
-          `[${code}] request failed after ${elapsedMs}ms on attempt ${attempt}: '${fn}'`,
+          `[${code}] request failed on attempt ${attempt} (${elapsedMs}ms this attempt, ${totalMs}ms total incl. retries): '${fn}'`,
         );
         LogManager.getLogger().error("Returned error:");
         LogManager.getLogger().error(err);
@@ -114,7 +116,7 @@ export const graphqlErrorWrapper = async <TData>(
           error: {
             errors: [
               {
-                message: `[${code}] ${detail} (after ${elapsedMs}ms)`,
+                message: `[${code}] ${detail} (after ${totalMs}ms across ${attempt} attempt(s))`,
                 code,
               },
             ],
