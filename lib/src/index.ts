@@ -22,6 +22,7 @@ export * from "./scenario/registration/send-kratos-flow";
 export * from "./scenario/registration/verify-in-kratos-or-fail";
 export * from "./scenario/registration/register-test-user";
 export * from "./scenario/registration/verify-env-prerequisites";
+export * from "./scenario/registration/provision-test-identities";
 export * from "./config/test.configuration";
 export * from "./config/alkemio-test-config";
 export * from "./config/create-config-using-envvars";
