@@ -24,6 +24,7 @@ export const createConfigUsingEnvVars = (): AlkemioTestConfig => {
       kratos: {
         public: process.env.KRATOS_ENDPOINT ?? 'http://localhost:4434',
         private: process.env.KRATOS_PRIVATE_API_URL ?? 'http://localhost:4434',
+        admin: process.env.KRATOS_ADMIN_URL ?? '',
       },
     },
     identities: {

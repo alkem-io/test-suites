@@ -1,5 +1,6 @@
 import {
   LogManager,
+  provisionTestIdentities,
   registerAllTestUsers,
   stringifyConfig,
   testConfiguration,
@@ -20,7 +21,14 @@ export default async function setup() {
     `\nLaunching tests using configuration: ${stringifyConfig(testConfiguration)}`
   );
 
-  if (testConfiguration.registerUsers) {
+  // Provision test-user identities (#565 Phase 2). When the Kratos admin API is
+  // reachable (CI, via an in-cluster port-forward → KRATOS_ADMIN_URL) upsert the
+  // identities deterministically through it — no self-service policy/HIBP checks,
+  // no "already exists" no-op, always the correct password. Otherwise (local dev,
+  // no admin access) fall back to self-service registration.
+  if (testConfiguration.endPoints.kratos.admin) {
+    await provisionTestIdentities();
+  } else if (testConfiguration.registerUsers) {
     await registerAllTestUsers();
   }
 

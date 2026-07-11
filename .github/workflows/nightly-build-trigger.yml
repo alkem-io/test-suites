@@ -43,6 +43,17 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Install Kubectl
+        uses: azure/setup-kubectl@v4.0.0
+        with:
+          version: "v1.29.6"
+
+      - name: Set up Kubeconfig for Hetzner k3s
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG_SECRET_HETZNER_TEST }}" > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
       - name: Set run folder variables
         run: |
           DATE=$(date +'%Y-%m-%d')
@@ -61,7 +72,24 @@ jobs:
           KRATOS_ENDPOINT: ${{ vars.KRATOS_ENDPOINT }}
           MAIL_SLURPER_ENDPOINT: ${{ vars.MAIL_SLURPER_ENDPOINT }}
           AUTH_TEST_HARNESS_PASSWORD: ${{ secrets.AUTH_TEST_HARNESS_PASSWORD }}
-        run: pnpm --filter @alkemio/test-suite-server-api run test:nightly
+          # Deterministic Kratos provisioning (#565 Phase 2): the harness upserts
+          # test identities via the in-cluster admin API, port-forwarded below.
+          KRATOS_ADMIN_URL: http://localhost:4434
+        run: |
+          set -uo pipefail
+          # kratos-admin is ClusterIP (network-isolated); reach it via a
+          # port-forward that lives for the whole test run.
+          kubectl port-forward -n default svc/kratos-admin 4434:80 > /tmp/kratos-admin-pf.log 2>&1 &
+          PF_PID=$!
+          trap 'kill $PF_PID 2>/dev/null || true' EXIT
+          for i in $(seq 1 20); do
+            grep -q "Forwarding from" /tmp/kratos-admin-pf.log && break
+            sleep 1
+          done
+          if ! grep -q "Forwarding from" /tmp/kratos-admin-pf.log; then
+            echo "kratos-admin port-forward failed"; cat /tmp/kratos-admin-pf.log; exit 1
+          fi
+          pnpm --filter @alkemio/test-suite-server-api run test:nightly
 
       - name: Publish report to GitHub Pages
         if: ${{ always() }}
