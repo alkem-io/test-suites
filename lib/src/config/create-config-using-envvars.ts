@@ -48,10 +48,24 @@ export const createConfigUsingEnvVars = (): AlkemioTestConfig => {
  * `ALKEMIO_SERVER_REST` set to `http://…` instead of `https://…`). Localhost
  * over http/ws is normal for local dev and is exempt.
  */
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '0.0.0.0', '::1']);
+
 const validateEndpointSchemes = (config: AlkemioTestConfig): void => {
-  const isInsecureRemote = (url: string): boolean =>
-    /^(http|ws):\/\//i.test(url) &&
-    !/^(http|ws):\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0)(:|\/|$)/i.test(url);
+  // Parse the URL rather than regex the raw string: a string regex both
+  // false-rejects valid local forms (`http://localhost?x=1`, `http://[::1]`) and
+  // can be fooled by userinfo (`http://localhost@evil.example`). The parsed
+  // `hostname` is the real host to compare against the loopback allowlist.
+  const isInsecureRemote = (url: string): boolean => {
+    let parsed: URL;
+    try {
+      parsed = new URL(url);
+    } catch {
+      return false; // unparseable — not our concern (fails elsewhere with a clearer error)
+    }
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'ws:') return false;
+    const host = parsed.hostname.replace(/^\[|\]$/g, '').toLowerCase();
+    return !LOOPBACK_HOSTS.has(host);
+  };
 
   const named: Array<[string, string]> = [
     ['ALKEMIO_SERVER (graphql.private)', config.endPoints.graphql.private],
