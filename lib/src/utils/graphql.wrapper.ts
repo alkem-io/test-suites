@@ -3,6 +3,7 @@ import Headers from "graphql-request";
 import { TestUserManager } from "../scenario/TestUserManager";
 import { LogManager } from "../scenario/LogManager";
 import { TestUser } from "../common/enums/test.user";
+import { describeError, isEnvFailure } from "./env-failure";
 
 export type ErrorType = {
   response: {
@@ -26,38 +27,14 @@ export type GraphqlReturnWithError<TData> = Partial<
   };
 };
 
-/**
- * Connection-level failure signatures. When one of these is hit the API was
- * never (or not fully) reached — the failure is an ENVIRONMENT problem
- * (proxy reset, DNS, service down), NOT an assertion-worthy API response.
- * Tagging them distinctly keeps environment flakiness from masquerading as
- * product regressions in the reports.
- */
-const ENV_FAILURE_SIGNATURES = [
-  "ECONNRESET",
-  "ECONNREFUSED",
-  "ETIMEDOUT",
-  "EAI_AGAIN",
-  "EPIPE",
-  "socket hang up",
-  "fetch failed",
-  "network timeout",
-  "getaddrinfo",
-];
-
+// Environment-failure signatures + classifier are centralised in
+// ./env-failure so the GraphQL wrapper and core scenario-setup retry share one
+// source of truth (test-suites#563).
 const classifyNonGraphqlError = (
   err: unknown,
 ): { code: "ENV_FAILURE" | "UNKNOWN"; detail: string } => {
-  const cause =
-    err instanceof Error
-      ? (err as Error & { cause?: unknown }).cause
-      : undefined;
-  const detail =
-    err instanceof Error
-      ? `${err.message}${cause ? ` (cause: ${cause})` : ""}`
-      : String(err);
-  const isEnv = ENV_FAILURE_SIGNATURES.some((sig) => detail.includes(sig));
-  return { code: isEnv ? "ENV_FAILURE" : "UNKNOWN", detail };
+  const detail = describeError(err);
+  return { code: isEnvFailure(err) ? "ENV_FAILURE" : "UNKNOWN", detail };
 };
 
 /**
