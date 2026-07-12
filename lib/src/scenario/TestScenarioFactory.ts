@@ -19,6 +19,8 @@ import {
 } from "../core/generated/alkemio-schema";
 import { TestUser } from "../common/enums/test.user";
 import { UniqueIDGenerator } from "../utils/uniqueId";
+import { describeError, isEnvFailure } from "../utils/env-failure";
+import { delay } from "../utils/delay";
 import {
   assignPlatformRole,
   assignRoleToUser,
@@ -66,12 +68,65 @@ export class TestScenarioFactory {
   public static async createBaseScenario(
     scenarioConfig: TestScenarioConfig,
   ): Promise<OrganizationWithSpaceModel> {
-    const result = await this.createBaseScenarioPrivate(scenarioConfig);
-    // logElapsedTime('createBaseScenario', start);
-    return result;
+    return this.withEnvFailureRetry(
+      () => this.createBaseScenarioPrivate(scenarioConfig),
+      `base scenario '${scenarioConfig.name}'`,
+    );
+  }
+
+  // Env-failure signatures + backoff for core scenario setup (test-suites#563).
+  private static readonly SETUP_MAX_ATTEMPTS = 2; // one retry
+  private static readonly SETUP_RETRY_BASE_MS = 3000;
+
+  /**
+   * Retries core scenario setup ONLY on environment failures (Matrix/RPC
+   * timeout, auth endpoint mid-roll, connection reset) — never on a product
+   * error, because setup makes no assertions, so any failure here is either
+   * infra flake (retry) or a genuine setup bug (surface it). A transient
+   * Synapse/adapter blip or a brief pod roll then recovers on the retry instead
+   * of failing the whole suite. If it still fails and the cause is
+   * environmental, the error is tagged `[ENV_FAILURE]` so the report shows it
+   * as environment noise, not a product regression.
+   */
+  private static async withEnvFailureRetry<T>(
+    fn: () => Promise<T>,
+    label: string,
+  ): Promise<T> {
+    let lastError: unknown;
+    for (let attempt = 1; attempt <= this.SETUP_MAX_ATTEMPTS; attempt++) {
+      try {
+        return await fn();
+      } catch (e) {
+        lastError = e;
+        if (isEnvFailure(e) && attempt < this.SETUP_MAX_ATTEMPTS) {
+          const wait = this.SETUP_RETRY_BASE_MS * attempt;
+          LogManager.getLogger().warn(
+            `[ENV_FAILURE] setup of ${label} failed (attempt ${attempt}/${this.SETUP_MAX_ATTEMPTS}); retrying in ${wait}ms — ${describeError(e)}`,
+          );
+          await delay(wait);
+          continue;
+        }
+        break;
+      }
+    }
+    if (isEnvFailure(lastError)) {
+      throw new Error(
+        `[ENV_FAILURE] setup of ${label} failed after ${this.SETUP_MAX_ATTEMPTS} attempt(s) — environment, not product: ${describeError(lastError)}`,
+      );
+    }
+    throw lastError;
   }
 
   public static async createBaseScenarioOrganization(
+    scenarioConfig: TestScenarioConfig,
+  ): Promise<OrganizationWithSpaceModel> {
+    return this.withEnvFailureRetry(
+      () => this.createBaseScenarioOrganizationPrivate(scenarioConfig),
+      `organization scenario '${scenarioConfig.name}'`,
+    );
+  }
+
+  private static async createBaseScenarioOrganizationPrivate(
     scenarioConfig: TestScenarioConfig,
   ): Promise<OrganizationWithSpaceModel> {
     const baseScenario: OrganizationWithSpaceModel =
