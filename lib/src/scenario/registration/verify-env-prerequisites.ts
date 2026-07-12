@@ -17,14 +17,23 @@ import { getUserToken } from './get-user-token';
  * healthy env).
  */
 
-// If admin can't authenticate the environment is unusable — fail fast.
-const CRITICAL_USERS: TestUser[] = [TestUser.GLOBAL_ADMIN];
-
-// A spread of roles probed for early diagnostics only (logged, non-fatal).
-const REPRESENTATIVE_USERS: TestUser[] = [
+// Users whose auth failure means the environment is unusable — fail fast.
+// Broadened beyond admin (test-suites#569, R4): Phase 2 (#567) provisions every
+// TestUser deterministically via the Kratos admin API, so a representative
+// spread across privilege levels is expected to authenticate; if any of these
+// can't, the env is broken and every scenario would cascade — abort now.
+const CRITICAL_USERS: TestUser[] = [
+  TestUser.GLOBAL_ADMIN,
   TestUser.SPACE_ADMIN,
   TestUser.SPACE_MEMBER,
   TestUser.NON_SPACE_MEMBER,
+];
+
+// Remaining roles probed for early diagnostics only (logged, non-fatal).
+const REPRESENTATIVE_USERS: TestUser[] = [
+  TestUser.SUBSPACE_ADMIN,
+  TestUser.SUBSPACE_MEMBER,
+  TestUser.ORGANIZATION_ADMIN,
 ];
 
 const emailOf = (user: TestUser): string => `${user}@alkem.io`;
