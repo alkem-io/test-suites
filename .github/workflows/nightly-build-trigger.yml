@@ -3,6 +3,9 @@ name: Nightly Clean Up Environment and Trigger Tests
 on:
   schedule:
     - cron: "0 0 * * *" # Runs every day at midnight UTC
+  # Allow on-demand runs (verify a fix, reproduce a failure) — same pipeline,
+  # including the shared test-cluster deploy lock.
+  workflow_dispatch:
 
 jobs:
   deploy-all-services:
