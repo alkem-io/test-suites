@@ -9,8 +9,36 @@ jobs:
     uses: ./.github/workflows/deploy-all-services.yml
     secrets: inherit
 
-  cleanup-db:
+  # Take the shared test-cluster lock *after* our own service deploys finish, and
+  # hold it across cleanup-db + e2e so an ad-hoc `build-deploy-k8s-test-hetzner`
+  # dispatch can't roll the server pod / migrate the DB mid-run — which tore down
+  # the auth endpoint and cascaded a run to failure (test-suites#563). Acquiring
+  # after deploy-all-services is deadlock-free: the deploys we trigger run while
+  # the lock is still free.
+  acquire-lock:
     needs: deploy-all-services
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Kubectl
+        uses: azure/setup-kubectl@v4.0.0
+        with:
+          version: "v1.29.6"
+
+      - name: Set up Kubeconfig for Hetzner k3s
+        run: |
+          mkdir -p "$HOME/.kube"
+          echo "${{ secrets.KUBECONFIG_SECRET_HETZNER_TEST }}" > "$HOME/.kube/config"
+          chmod 600 "$HOME/.kube/config"
+
+      - name: Acquire test-cluster deploy lock
+        run: |
+          chmod +x .github/scripts/test-cluster-lock.sh
+          .github/scripts/test-cluster-lock.sh acquire "nightly-${{ github.run_id }}"
+
+  cleanup-db:
+    needs: acquire-lock
     uses: ./.github/workflows/cleanup-database.yml
     with:
       postgres_db: alkemio
@@ -114,3 +142,29 @@ jobs:
     with:
       ref: gh-pages
       path: gh-pages-root
+
+  # Always release the lock after e2e — even on failure — so the next nightly or
+  # deploy isn't blocked until the stale-TTL reclaim (60 min). The gh-pages
+  # `deploy` job doesn't touch the test cluster, so it runs unlocked in parallel.
+  release-lock:
+    needs: [acquire-lock, run-e2e-tests]
+    if: always() && needs.acquire-lock.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Kubectl
+        uses: azure/setup-kubectl@v4.0.0
+        with:
+          version: "v1.29.6"
+
+      - name: Set up Kubeconfig for Hetzner k3s
+        run: |
+          mkdir -p "$HOME/.kube"
+          echo "${{ secrets.KUBECONFIG_SECRET_HETZNER_TEST }}" > "$HOME/.kube/config"
+          chmod 600 "$HOME/.kube/config"
+
+      - name: Release test-cluster deploy lock
+        run: |
+          chmod +x .github/scripts/test-cluster-lock.sh
+          .github/scripts/test-cluster-lock.sh release "nightly-${{ github.run_id }}"
