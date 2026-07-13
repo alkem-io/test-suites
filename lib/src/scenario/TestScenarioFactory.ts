@@ -845,21 +845,32 @@ export class TestScenarioFactory {
     }
 
     const licensePlan = await getLicensePlanByName("ACCOUNT_LICENSE_PLUS");
-    if (licensePlan && licensePlan.length > 0) {
+    if (!licensePlan || licensePlan.length === 0) {
+      // Without this plan, accounts get `account-space-free: 0` and every
+      // subsequent createSpace is denied. Surface it rather than silently
+      // proceeding to a masked "Space ID is required" later (test-suites#563).
+      LogManager.getLogger().warn(
+        "[license] ACCOUNT_LICENSE_PLUS plan not found — accounts will lack the free-space entitlement and space creation will be denied",
+      );
+    } else {
       const licensePlanId = licensePlan[0].id;
-      if (model.accountId) {
-        await assignLicensePlanToAccount(model.accountId, licensePlanId);
-      }
-
-      const adminUser = TestUserManager.users.globalAdmin;
-      if (adminUser && adminUser.accountId) {
-        await assignLicensePlanToAccount(adminUser.accountId, licensePlanId);
-      }
-
-      const spaceAdmin = TestUserManager.users.spaceAdmin;
-      if (spaceAdmin && spaceAdmin.accountId) {
-        await assignLicensePlanToAccount(spaceAdmin.accountId, licensePlanId);
-      }
+      // Assign the free-space entitlement, and surface any failure — a swallowed
+      // assignment error is the upstream cause of the entitlement-denied cascade.
+      const assignPlan = async (label: string, accountId?: string) => {
+        if (!accountId) return;
+        const res = await assignLicensePlanToAccount(accountId, licensePlanId);
+        if (res?.error) {
+          LogManager.getLogger().warn(
+            `[license] failed to assign ACCOUNT_LICENSE_PLUS to ${label} account '${accountId}': ${JSON.stringify(res.error.errors)}`,
+          );
+        }
+      };
+      await assignPlan("organization", model.accountId);
+      await assignPlan(
+        "globalAdmin",
+        TestUserManager.users.globalAdmin?.accountId,
+      );
+      await assignPlan("spaceAdmin", TestUserManager.users.spaceAdmin?.accountId);
     }
 
     // Assign the organization admin user to the organization's roleSet as Member and Admin
@@ -1193,7 +1204,20 @@ export class TestScenarioFactory {
       addTutorialCallouts,
       role,
     );
-    const spaceId = response?.data?.createSpace.id ?? "";
+    const spaceId = response?.data?.createSpace?.id;
+    if (!spaceId) {
+      // Do NOT swallow the failure with `?? ""` — that turned a real
+      // createSpace error (e.g. an `account-space-free` entitlement denial)
+      // into a generic downstream "Space ID is required", masking the root
+      // cause across whole nightly cascades (test-suites#563). Surface the
+      // actual GraphQL error so the report shows *why* the space wasn't made.
+      const detail = response?.error
+        ? JSON.stringify(response.error.errors)
+        : "server returned no createSpace.id and no error";
+      throw new Error(
+        `Failed to create root space '${spaceName}' (nameID '${spaceNameId}', account '${accountID}'): ${detail}`,
+      );
+    }
     await updateSpaceSettings(spaceId, {
       privacy: { allowPlatformSupportAsAdmin: true },
     });
