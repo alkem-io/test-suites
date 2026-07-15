@@ -193,7 +193,8 @@ describe('Subspace sorting and pinning', () => {
       );
 
       // Assert
-      expect(JSON.stringify(response)).toContain('error');
+      expect(response.data?.updateSubspacePinned).toBeUndefined();
+      expect(response.error?.errors?.[0]?.code).toEqual('ENTITY_NOT_FOUND');
     });
 
     test('should return error when pinning with invalid subspaceID', async () => {
@@ -205,7 +206,11 @@ describe('Subspace sorting and pinning', () => {
       );
 
       // Assert
-      expect(JSON.stringify(response)).toContain('error');
+      expect(response.data?.updateSubspacePinned).toBeUndefined();
+      expect(response.error?.errors?.[0]?.code).toEqual('ENTITY_NOT_FOUND');
+      expect(response.error?.errors?.[0]?.message).toContain(
+        'Subspace not found within parent Space'
+      );
     });
   });
 
@@ -252,7 +257,8 @@ describe('Subspace sorting and pinning', () => {
       );
 
       // Assert
-      expect(JSON.stringify(response)).toContain('error');
+      expect(response.data?.updateSubspacePinned).toBeUndefined();
+      expect(response.error?.errors?.[0]?.code).toEqual('FORBIDDEN_POLICY');
     });
 
     test('should not allow non-space member to pin a subspace', async () => {
@@ -265,7 +271,8 @@ describe('Subspace sorting and pinning', () => {
       );
 
       // Assert
-      expect(JSON.stringify(response)).toContain('error');
+      expect(response.data?.updateSubspacePinned).toBeUndefined();
+      expect(response.error?.errors?.[0]?.code).toEqual('FORBIDDEN_POLICY');
     });
   });
 
@@ -409,7 +416,8 @@ describe('Subspace sorting and pinning', () => {
       );
 
       // Assert
-      expect(JSON.stringify(response)).toContain('error');
+      expect(response.data?.updateSubspacesSortOrder).toBeUndefined();
+      expect(response.error?.errors?.[0]?.code).toEqual('FORBIDDEN_POLICY');
     });
   });
 
