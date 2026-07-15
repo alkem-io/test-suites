@@ -55,6 +55,17 @@ const ENV_FAILURE_RETRY_BASE_MS = 1000;
 const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
+// JSON.stringify throws on circular structures (axios errors carry them);
+// throwing inside the wrapper's catch handler would replace the real failure
+// with a serialization error.
+const safeStringify = (value: unknown): string => {
+  try {
+    return JSON.stringify(value) ?? String(value);
+  } catch {
+    return String(value);
+  }
+};
+
 export const graphqlErrorWrapper = async <TData>(
   fn: (authToken: string | undefined) => GraphQLReturnType<TData>,
   userRole?: TestUser,
@@ -89,7 +100,7 @@ export const graphqlErrorWrapper = async <TData>(
         );
         LogManager.getLogger().error("Returned error:");
         LogManager.getLogger().error(
-          err instanceof Error ? (err.stack ?? err.message) : JSON.stringify(err),
+          err instanceof Error ? (err.stack ?? err.message) : safeStringify(err),
         );
         return {
           error: {
@@ -111,7 +122,7 @@ export const graphqlErrorWrapper = async <TData>(
         // Stringify explicitly — winston's console transport renders raw
         // objects as `[object Object]`, which hid the actual GraphQL errors of
         // the failed recovery lookups in the 2026-07-15 nightly (#563).
-        LogManager.getLogger().error(JSON.stringify(badErrors));
+        LogManager.getLogger().error(safeStringify(badErrors));
         LogManager.getLogger().error(`Unable to complete call '${fn}'`);
 
         //throw new Error(`GraphQL error: ${badErrors.map(e => e.message).join(', ')}`);
