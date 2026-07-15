@@ -87,6 +87,11 @@ export const createSubspace = async (
  *    and return it. (This is the caveat the wrapper's retry comment calls
  *    "harmless"; for a create it is not — hence this recovery.)
  *
+ * A preflight lookup establishes provenance: we reject a nameID that already
+ * exists under the parent *before* creating, so the recovery only ever returns a
+ * subspace this call committed — never a pre-existing one, which would hide a
+ * genuine duplicate.
+ *
  * The recovery lookup must POLL, not fire once. createSubspace is not atomic
  * server-side: the space row (which reserves the nameID) lands first and the
  * children (about/collaboration/community…) keep landing for up to ~30s more
@@ -107,6 +112,23 @@ export const createSubspaceOrFail = async (
   parentId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ): Promise<string> => {
+  // Preflight for provenance: if the nameID already exists under the parent
+  // BEFORE we create, a later `already taken` is a GENUINE duplicate — not our
+  // own retry-after-commit — and the recovery below would wrongly return that
+  // pre-existing subspace, hiding the failure. Reject it up front so the
+  // recovery can trust that any `already taken` is our own committed-then-
+  // retried create. Fails open if the preflight lookup errors/half-reads (it
+  // cannot prove pre-existence).
+  const preflight = await getSubspacesData(parentId);
+  const preflightSubspaces = preflight.data?.lookup?.space?.subspaces as
+    | Array<{ id: string; nameID: string }>
+    | undefined;
+  if (preflightSubspaces?.some(s => s.nameID === subspaceNameId)) {
+    throw new Error(
+      `Refusing to create subspace '${subspaceName}': nameID '${subspaceNameId}' already exists under parent '${parentId}' before creation — genuine duplicate, not a retry-after-commit`
+    );
+  }
+
   const response = await createSubspace(
     subspaceName,
     subspaceNameId,
