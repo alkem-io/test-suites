@@ -4,6 +4,7 @@ import {
   createSubspace,
   createSubspaceOrFail,
   getSubspaceData,
+  subspaceVariablesData,
 } from '../subspace/subspace.request.params';
 import {
   TestScenarioConfig,
@@ -56,10 +57,7 @@ describe('Opportunities', () => {
   test('should create subsubspace and query the data', async () => {
     // Act
     // Create Subsubspace (resilient to the ENV_FAILURE retry-after-commit race
-    // — see createSubspaceOrFail). Asserting the *create-response* object
-    // against the query is fragile: under that race there is no create response
-    // to compare, even though the subsubspace exists. Assert instead that the
-    // created subsubspace is queryable and matches the requested input.
+    // — see createSubspaceOrFail).
     subsubspaceId = await createSubspaceOrFail(
       subsubspaceName,
       subsubspaceNameId,
@@ -68,15 +66,35 @@ describe('Opportunities', () => {
 
     // Query Subsubspace data
     const requestQuerySubsubspace = await getSubspaceData(subsubspaceId);
-    const requestSubsubspaceData = requestQuerySubsubspace?.data?.lookup?.space;
+    const queried = requestQuerySubsubspace?.data?.lookup?.space;
 
-    // Assert
-    expect(requestSubsubspaceData?.id).toEqual(subsubspaceId);
-    expect(requestSubsubspaceData?.about?.profile?.displayName).toEqual(
-      subsubspaceName
-    );
-    expect(requestSubsubspaceData?.collaboration).toBeDefined();
-    expect(requestSubsubspaceData?.community).toBeDefined();
+    // Assert the content we submitted round-tripped correctly: compare the
+    // queried subsubspace against the exact input createSubspace sent
+    // (`subspaceVariablesData`). This is a correctness check on our own inputs,
+    // so it needs no create-response and is unaffected by the race.
+    const expected = subspaceVariablesData(
+      subsubspaceName,
+      subsubspaceNameId,
+      baseScenario.subspace.id
+    ).about;
+
+    expect(queried?.id).toEqual(subsubspaceId);
+    expect(queried?.nameID).toEqual(subsubspaceNameId);
+    expect(queried?.about?.why).toEqual(expected.why);
+    expect(queried?.about?.who).toEqual(expected.who);
+    expect({
+      displayName: queried?.about?.profile?.displayName,
+      tagline: queried?.about?.profile?.tagline,
+      description: queried?.about?.profile?.description,
+    }).toEqual({
+      displayName: expected.profileData.displayName,
+      tagline: expected.profileData.tagline,
+      description: expected.profileData.description,
+    });
+    // Note: `referencesData` sent at creation is intentionally not asserted —
+    // createSubspace does not persist profile references (the query returns
+    // `references: []`); they are added via a separate mutation. The old
+    // create-vs-query comparison hid this because both sides were empty.
   });
 
   test('should update subsubspace and query the data', async () => {
