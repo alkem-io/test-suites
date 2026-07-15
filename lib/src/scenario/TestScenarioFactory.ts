@@ -908,30 +908,58 @@ export class TestScenarioFactory {
     scenarioName: string,
     addTutorialCallouts: boolean,
   ): Promise<SpaceModel> {
-    const uniqueId = UniqueIDGenerator.getID();
     const truncatedScenarioName = scenarioName.slice(0, 18);
-    const spaceName = `${truncatedScenarioName}-${uniqueId}`;
-    const spaceNameId = this.validateAndClean(`${spaceName.toLowerCase()}`);
-    if (!spaceNameId) {
-      throw new Error(`Unable to create space: Invalid nameId: ${spaceNameId}`);
+
+    // Create the root space, retrying a nameID collision with a fresh id.
+    // Under Vitest `pool: threads` the per-process UniqueIDGenerator counter can
+    // reset across files, so two files whose scenario names share the
+    // truncated-18 prefix (e.g. several `storage-auth-public…` scenarios) can
+    // draw the same short id and collide (test-suites#563). Any other failure is
+    // surfaced verbatim rather than masked (test-suites#577).
+    const createOnce = async () => {
+      const uniqueId = UniqueIDGenerator.getID();
+      const spaceName = `${truncatedScenarioName}-${uniqueId}`;
+      const spaceNameId = this.validateAndClean(spaceName.toLowerCase());
+      if (!spaceNameId) {
+        throw new Error(
+          `Unable to create space: Invalid nameId: ${spaceNameId}`,
+        );
+      }
+      const res = await this.createSpaceAndGetData(
+        "l0-" + spaceName,
+        spaceNameId,
+        accountID,
+        addTutorialCallouts,
+      );
+      return { spaceName, res };
+    };
+
+    // createSpaceAndGetData throws on a failed create (its de-masking throw,
+    // test-suites#577) with the GraphQL error detail in the message — so the
+    // collision arrives as a thrown Error, not as `res.error`. Catch it, retry
+    // with a fresh id, and rethrow anything else verbatim.
+    let attempt: Awaited<ReturnType<typeof createOnce>> | undefined;
+    for (let i = 0; i < 3; i++) {
+      try {
+        attempt = await createOnce();
+        break;
+      } catch (e) {
+        const message = e instanceof Error ? e.message : String(e);
+        if (i === 2 || !message.includes("already taken or restricted")) {
+          throw e;
+        }
+      }
     }
 
-    const responseRootSpace = await this.createSpaceAndGetData(
-      "l0-" + spaceName,
-      spaceNameId,
-      accountID,
-      addTutorialCallouts,
-    );
-
-    if (!responseRootSpace.data?.lookup?.space) {
+    if (!attempt || !attempt.res.data?.lookup?.space) {
       throw new Error(
-        `Failed to create root space: ${JSON.stringify(
-          responseRootSpace.error,
+        `Failed to create root space '${attempt?.spaceName ?? truncatedScenarioName}' (account '${accountID}'): ${JSON.stringify(
+          attempt?.res.error ?? {},
         )}`,
       );
     }
 
-    const spaceData = responseRootSpace.data?.lookup?.space;
+    const spaceData = attempt.res.data.lookup.space;
     spaceModel.id = spaceData?.id ?? "";
     spaceModel.nameId = spaceData?.nameID ?? "";
     spaceModel.about = {
