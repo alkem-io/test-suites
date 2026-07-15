@@ -34,6 +34,7 @@ import {
 import { getMyEntitlementsQuery } from './entitlements-request.params';
 import {
   createSpaceBasicData,
+  createSpaceBasicDataOrFail,
   deleteSpace,
 } from '@functional-api/journey/space/space.request.params';
 import { getAccountMainEntities } from '../account/account.params.request';
@@ -92,20 +93,23 @@ describe('Functional tests - Space', () => {
     });
 
     test.each`
-      spaceName               | availableEntitlements | error
-      ${`space1-${uniqueId}`} | ${allPrivileges}      | ${undefined}
-      ${`space2-${uniqueId}`} | ${allPrivileges}      | ${undefined}
-      ${`space3-${uniqueId}`} | ${allPrivileges}      | ${undefined}
+      spaceName               | availableEntitlements
+      ${`space1-${uniqueId}`} | ${allPrivileges}
+      ${`space2-${uniqueId}`} | ${allPrivileges}
+      ${`space3-${uniqueId}`} | ${allPrivileges}
     `(
       'User: VC campaign has license $availableEntitlements to creates a space with name: $spaceName',
-      async ({ spaceName, availableEntitlements, error }) => {
+      async ({ spaceName, availableEntitlements }) => {
         // Arrange
         const response = await getMyEntitlementsQuery(
           TestUser.NON_SPACE_MEMBER
         );
 
-        // Act
-        const createSpace = await createSpaceBasicData(
+        // Act — resilient to the ENV_FAILURE retry-after-commit race: a reset
+        // can make createSpace re-issue an already-committed create and come
+        // back `already taken`; createSpaceBasicDataOrFail recovers the
+        // committed space (and throws on a genuine failure).
+        const spaceId = await createSpaceBasicDataOrFail(
           spaceName,
           spaceName,
           TestUserManager.users.nonSpaceMember.accountId,
@@ -117,7 +121,7 @@ describe('Functional tests - Space', () => {
         expect(
           response?.data?.me.user?.account?.license?.availableEntitlements?.sort()
         ).toEqual(availableEntitlements);
-        expect(createSpace?.error?.errors?.[0].message).toEqual(error);
+        expect(spaceId).toBeTruthy();
       }
     );
     // Test is dependant on the above test
