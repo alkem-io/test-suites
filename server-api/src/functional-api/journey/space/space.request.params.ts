@@ -62,6 +62,10 @@ export const createSpaceBasicData = async (
  * failing a test for a create that actually succeeded (the 2026-07-15
  * `space1-… already taken` entitlements failure, test-suites#563).
  *
+ * A preflight lookup establishes provenance: we reject a nameID that already
+ * exists *before* creating, so the recovery only ever returns a space this call
+ * committed — never a pre-existing one, which would hide a genuine duplicate.
+ *
  * The lookup POLLS: like subspaces, root-space creation is not atomic — the
  * space row lands first and community/collaboration keep landing for ~30s, and
  * while the space is half-built the `account.spaces` query nulls via non-null
@@ -77,6 +81,24 @@ export const createSpaceBasicDataOrFail = async (
   addTutorialCallouts = true,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ): Promise<string> => {
+  // Preflight for provenance: if the nameID is already on the account BEFORE we
+  // create, a later `already taken` is a GENUINE duplicate — not our own
+  // retry-after-commit — and the recovery below would wrongly return that
+  // pre-existing space, hiding the failure. Reject it up front so the recovery
+  // can trust that any `already taken` is our own committed-then-retried create.
+  // (Belt-and-suspenders for the nightly: nameIDs are run-unique on a per-run
+  // fresh DB and the single worker has no concurrent creator; a lookup that
+  // errors/half-reads fails open, since it cannot prove pre-existence.)
+  const preflight = await getAccountMainEntities(accountID, userRole);
+  const preflightSpaces = preflight.data?.lookup?.account?.spaces as
+    | Array<{ id: string; nameID: string }>
+    | undefined;
+  if (preflightSpaces?.some(s => s.nameID === spaceNameId)) {
+    throw new Error(
+      `Refusing to create space '${spaceName}': nameID '${spaceNameId}' already exists on account '${accountID}' before creation — genuine duplicate, not a retry-after-commit`
+    );
+  }
+
   const response = await createSpaceBasicData(
     spaceName,
     spaceNameId,
