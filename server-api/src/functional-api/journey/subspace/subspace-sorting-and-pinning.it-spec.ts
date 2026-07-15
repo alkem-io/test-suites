@@ -9,6 +9,7 @@ import {
 import { SpaceSortMode } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import {
   createSubspace,
+  createSubspaceOrFail,
   getSubspacesData,
   updateSubspacePinned,
   updateSubspacesSortOrder,
@@ -59,26 +60,23 @@ describe('Subspace sorting and pinning', () => {
   let subspaceCId = '';
 
   beforeAll(async () => {
-    const resA = await createSubspace(
+    subspaceAId = await createSubspaceOrFail(
       `alpha-${uniqueId}`,
       `alpha-${uniqueId}`,
       baseScenario.space.id
     );
-    subspaceAId = resA.data?.createSubspace.id ?? '';
 
-    const resB = await createSubspace(
+    subspaceBId = await createSubspaceOrFail(
       `bravo-${uniqueId}`,
       `bravo-${uniqueId}`,
       baseScenario.space.id
     );
-    subspaceBId = resB.data?.createSubspace.id ?? '';
 
-    const resC = await createSubspace(
+    subspaceCId = await createSubspaceOrFail(
       `charlie-${uniqueId}`,
       `charlie-${uniqueId}`,
       baseScenario.space.id
     );
-    subspaceCId = resC.data?.createSubspace.id ?? '';
   });
 
   afterAll(async () => {

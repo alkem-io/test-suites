@@ -2,6 +2,7 @@ import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/O
 import { deleteSpace, updateSpaceContext } from '../space/space.request.params';
 import {
   createSubspace,
+  createSubspaceOrFail,
   getSubspaceData,
 } from '../subspace/subspace.request.params';
 import {
@@ -60,8 +61,13 @@ describe('Opportunities', () => {
       subsubspaceNameId,
       baseScenario.subspace.id
     );
+    // Surface a failed create instead of letting `?? ''` mask it into an empty
+    // id that makes the comparisons below trivially pass (undefined ===
+    // undefined) — the masking that hid the 2026-07-15 nightly failure.
+    expect(responseCreateSubsubspaceOnSubspace.error).toBeUndefined();
     const createSubsubspaceData =
       responseCreateSubsubspaceOnSubspace?.data?.createSubspace;
+    expect(createSubsubspaceData?.id).toBeTruthy();
 
     subsubspaceId = createSubsubspaceData?.id ?? '';
 
@@ -87,14 +93,11 @@ describe('Opportunities', () => {
   test('should update subsubspace and query the data', async () => {
     // Arrange
     // Create Subsubspace on Subspace
-    const responseCreateSubsubspaceOnSubspace = await createSubspace(
+    subsubspaceId = await createSubspaceOrFail(
       subsubspaceName,
       subsubspaceNameId,
       baseScenario.subspace.id
     );
-
-    subsubspaceId =
-      responseCreateSubsubspaceOnSubspace?.data?.createSubspace.id ?? '';
     // Act
     // Update the created Subsubspace
     const responseUpdateSubsubspace = await updateSpaceContext(subsubspaceId);
@@ -114,13 +117,11 @@ describe('Opportunities', () => {
   test('should remove subsubspace and query the data', async () => {
     // Arrange
     // Create Subsubspace
-    const responseCreateSubsubspaceOnSubspace = await createSubspace(
+    subsubspaceId = await createSubspaceOrFail(
       subsubspaceName,
       subsubspaceNameId,
       baseScenario.subspace.id
     );
-    subsubspaceId =
-      responseCreateSubsubspaceOnSubspace?.data?.createSubspace.id ?? '';
 
     // Act
     // Remove subsubspace
@@ -140,13 +141,11 @@ describe('Opportunities', () => {
 
   test('should throw an error for creating subsubspace with same name/NameId on different subspaces', async () => {
     // Arrange
-    const responseCreateSubspaceTwo = await createSubspace(
+    additionalSubspaceId = await createSubspaceOrFail(
       `${subsubspaceName}ch`,
       `${uniqueId}ch`,
       baseScenario.space.id
     );
-    additionalSubspaceId =
-      responseCreateSubspaceTwo?.data?.createSubspace.id ?? '';
 
     // Act
     // Create Subsubspace on Challange One

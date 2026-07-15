@@ -62,6 +62,42 @@ export const createSubspace = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
+/**
+ * Setup-time subspace creation that surfaces failures instead of masking them.
+ *
+ * The `createSubspace(...).data?.createSubspace.id ?? ''` idiom used in test
+ * setup turns a failed create — a `graphqlErrorWrapper`-swallowed
+ * BAD_USER_INPUT / FORBIDDEN_POLICY, or an exhausted ENV_FAILURE retry — into an
+ * empty string. Later mutations/queries then reject that empty id with a
+ * misleading `UUID not valid:`, which is how the 2026-07-15 nightly produced a
+ * 12-failure cascade across subspace-sorting-and-pinning and subsubspace with no
+ * trace of the real cause. Throw the actual error at the true failure point
+ * instead (same de-masking as `createRootSpace`, test-suites#577 / #563).
+ */
+export const createSubspaceOrFail = async (
+  subspaceName: string,
+  subspaceNameId: string,
+  parentId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+): Promise<string> => {
+  const response = await createSubspace(
+    subspaceName,
+    subspaceNameId,
+    parentId,
+    userRole
+  );
+  const id = response.data?.createSubspace?.id;
+  if (!id) {
+    const detail = response.error
+      ? JSON.stringify(response.error.errors)
+      : 'server returned no createSubspace.id and no error';
+    throw new Error(
+      `Failed to create subspace '${subspaceName}' (nameID '${subspaceNameId}', parent '${parentId}'): ${detail}`
+    );
+  }
+  return id;
+};
+
 export const subspaceVariablesData = (
   displayName: string,
   nameId: string,
