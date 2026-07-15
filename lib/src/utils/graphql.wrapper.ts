@@ -88,7 +88,9 @@ export const graphqlErrorWrapper = async <TData>(
           `[${code}] request failed on attempt ${attempt} (${elapsedMs}ms this attempt, ${totalMs}ms total incl. retries): '${fn}'`,
         );
         LogManager.getLogger().error("Returned error:");
-        LogManager.getLogger().error(err);
+        LogManager.getLogger().error(
+          err instanceof Error ? (err.stack ?? err.message) : JSON.stringify(err),
+        );
         return {
           error: {
             errors: [
@@ -106,7 +108,10 @@ export const graphqlErrorWrapper = async <TData>(
           e.extensions.code !== "FORBIDDEN_POLICY",
       );
       if (badErrors.length > 0) {
-        LogManager.getLogger().error(badErrors);
+        // Stringify explicitly — winston's console transport renders raw
+        // objects as `[object Object]`, which hid the actual GraphQL errors of
+        // the failed recovery lookups in the 2026-07-15 nightly (#563).
+        LogManager.getLogger().error(JSON.stringify(badErrors));
         LogManager.getLogger().error(`Unable to complete call '${fn}'`);
 
         //throw new Error(`GraphQL error: ${badErrors.map(e => e.message).join(', ')}`);
