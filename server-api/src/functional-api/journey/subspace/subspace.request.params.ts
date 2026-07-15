@@ -63,16 +63,29 @@ export const createSubspace = async (
 };
 
 /**
- * Setup-time subspace creation that surfaces failures instead of masking them.
+ * Setup-time subspace creation that is resilient to the ENV_FAILURE
+ * retry-after-commit race, and surfaces genuine failures instead of masking
+ * them.
  *
- * The `createSubspace(...).data?.createSubspace.id ?? ''` idiom used in test
- * setup turns a failed create — a `graphqlErrorWrapper`-swallowed
- * BAD_USER_INPUT / FORBIDDEN_POLICY, or an exhausted ENV_FAILURE retry — into an
- * empty string. Later mutations/queries then reject that empty id with a
- * misleading `UUID not valid:`, which is how the 2026-07-15 nightly produced a
- * 12-failure cascade across subspace-sorting-and-pinning and subsubspace with no
- * trace of the real cause. Throw the actual error at the true failure point
- * instead (same de-masking as `createRootSpace`, test-suites#577 / #563).
+ * Two problems this replaces the plain
+ * `createSubspace(...).data?.createSubspace.id ?? ''` idiom for:
+ *
+ * 1. Masking. The `?? ''` turns a failed create into an empty string; later
+ *    mutations/queries then reject that empty id with a misleading
+ *    `UUID not valid:`. That is how the 2026-07-15 nightly produced a 12-failure
+ *    cascade across subspace-sorting-and-pinning and subsubspace with no trace
+ *    of the real cause. We throw the actual error at the true failure point
+ *    instead (same de-masking as `createRootSpace`, test-suites#577 / #563).
+ *
+ * 2. The retry-after-commit race. On a ~5s connection reset (test-suites#563 /
+ *    server#6258), `graphqlErrorWrapper` retries the mutation — but a create may
+ *    have already committed server-side before the reset, so the retry comes
+ *    back as `nameID already taken` (BAD_USER_INPUT). The subspace *does* exist;
+ *    failing setup for a create that actually succeeded is wrong. Because the
+ *    nameID is unique per run, `already taken` here reliably means our own
+ *    committed-then-retried create — so we look it up by nameID under the parent
+ *    and return it. (This is the caveat the wrapper's retry comment calls
+ *    "harmless"; for a create it is not — hence this recovery.)
  */
 export const createSubspaceOrFail = async (
   subspaceName: string,
@@ -87,15 +100,33 @@ export const createSubspaceOrFail = async (
     userRole
   );
   const id = response.data?.createSubspace?.id;
-  if (!id) {
-    const detail = response.error
-      ? JSON.stringify(response.error.errors)
-      : 'server returned no createSubspace.id and no error';
-    throw new Error(
-      `Failed to create subspace '${subspaceName}' (nameID '${subspaceNameId}', parent '${parentId}'): ${detail}`
-    );
+  if (id) {
+    return id;
   }
-  return id;
+
+  const alreadyTaken = response.error?.errors?.some(e =>
+    String((e as { message?: unknown }).message ?? '').includes(
+      'nameID is already taken'
+    )
+  );
+  if (alreadyTaken) {
+    const existing = await getSubspacesData(parentId);
+    const subspaces = (existing.data?.lookup?.space?.subspaces ?? []) as Array<{
+      id: string;
+      nameID: string;
+    }>;
+    const match = subspaces.find(s => s.nameID === subspaceNameId);
+    if (match?.id) {
+      return match.id;
+    }
+  }
+
+  const detail = response.error
+    ? JSON.stringify(response.error.errors)
+    : 'server returned no createSubspace.id and no error';
+  throw new Error(
+    `Failed to create subspace '${subspaceName}' (nameID '${subspaceNameId}', parent '${parentId}'): ${detail}`
+  );
 };
 
 export const subspaceVariablesData = (
