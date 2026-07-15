@@ -106,6 +106,11 @@ jobs:
           # Deterministic Kratos provisioning (#565 Phase 2): the harness upserts
           # test identities via the in-cluster admin API, port-forwarded below.
           KRATOS_ADMIN_URL: http://localhost:4434
+          # Surface [ENV_FAILURE] retry warnings in CI stdout. The console
+          # transport defaults to error-only, which hid the silent
+          # retried-after-commit createSubspace failures behind cryptic
+          # 'nameID already taken' errors (2026-07-15 nightly, #563).
+          LOG_LEVEL: warn
         run: |
           set -uo pipefail
           # kratos-admin is ClusterIP (network-isolated); reach it via a

@@ -1,4 +1,4 @@
-import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
+import { delay, getGraphqlClient, TestUser } from '@alkemio/tests-lib';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 const uniqueId = UniqueIDGenerator.getID();
@@ -86,7 +86,21 @@ export const createSubspace = async (
  *    committed-then-retried create — so we look it up by nameID under the parent
  *    and return it. (This is the caveat the wrapper's retry comment calls
  *    "harmless"; for a create it is not — hence this recovery.)
+ *
+ * The recovery lookup must POLL, not fire once. createSubspace is not atomic
+ * server-side: the space row (which reserves the nameID) lands first and the
+ * children (about/collaboration/community…) keep landing for up to ~30s more
+ * (e.g. behind the Matrix 30s RPC timeout). While the space is half-built, the
+ * parent's subspaces query fails on child resolvers and non-null bubbling nulls
+ * the whole list — a single-shot lookup therefore missed a subspace that
+ * demonstrably existed (2026-07-15 nightly, test-suites#563: `alpha-35e44f` /
+ * `opio2fed` were direct children of the queried parent yet setup still threw
+ * `already taken`). We retry until the tree reads clean, and if it never does,
+ * we throw with BOTH the create error and the last lookup failure — never
+ * masking either.
  */
+const RECOVERY_LOOKUP_ATTEMPTS = 10;
+const RECOVERY_LOOKUP_DELAY_MS = 5000;
 export const createSubspaceOrFail = async (
   subspaceName: string,
   subspaceNameId: string,
@@ -109,23 +123,42 @@ export const createSubspaceOrFail = async (
       'nameID is already taken'
     )
   );
-  if (alreadyTaken) {
-    const existing = await getSubspacesData(parentId);
-    const subspaces = (existing.data?.lookup?.space?.subspaces ?? []) as Array<{
-      id: string;
-      nameID: string;
-    }>;
-    const match = subspaces.find(s => s.nameID === subspaceNameId);
-    if (match?.id) {
-      return match.id;
-    }
-  }
-
-  const detail = response.error
+  const createDetail = response.error
     ? JSON.stringify(response.error.errors)
     : 'server returned no createSubspace.id and no error';
+
+  if (alreadyTaken) {
+    let lastLookupDetail = '';
+    for (let attempt = 1; attempt <= RECOVERY_LOOKUP_ATTEMPTS; attempt++) {
+      const existing = await getSubspacesData(parentId);
+      const subspaces = existing.data?.lookup?.space?.subspaces as
+        | Array<{ id: string; nameID: string }>
+        | undefined;
+      if (existing.error || !subspaces) {
+        // Half-built space (or a transient env failure): record why and retry.
+        lastLookupDetail = `lookup failed: ${JSON.stringify(
+          existing.error?.errors ?? 'no data'
+        )}`;
+      } else {
+        const match = subspaces.find(s => s.nameID === subspaceNameId);
+        if (match?.id) {
+          return match.id;
+        }
+        lastLookupDetail = `no subspace with nameID '${subspaceNameId}' among [${subspaces
+          .map(s => s.nameID)
+          .join(', ')}]`;
+      }
+      if (attempt < RECOVERY_LOOKUP_ATTEMPTS) {
+        await delay(RECOVERY_LOOKUP_DELAY_MS);
+      }
+    }
+    throw new Error(
+      `Failed to create subspace '${subspaceName}' (nameID '${subspaceNameId}', parent '${parentId}'): create reported '${createDetail}' and the committed-create recovery did not stabilise after ${RECOVERY_LOOKUP_ATTEMPTS} lookups: ${lastLookupDetail}`
+    );
+  }
+
   throw new Error(
-    `Failed to create subspace '${subspaceName}' (nameID '${subspaceNameId}', parent '${parentId}'): ${detail}`
+    `Failed to create subspace '${subspaceName}' (nameID '${subspaceNameId}', parent '${parentId}'): ${createDetail}`
   );
 };
 
