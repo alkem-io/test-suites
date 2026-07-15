@@ -8,7 +8,6 @@ import {
 } from '@alkemio/tests-lib';
 import { SpaceSortMode } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import {
-  createSubspace,
   createSubspaceOrFail,
   getSubspacesData,
   updateSubspacePinned,
@@ -424,17 +423,15 @@ describe('Subspace sorting and pinning', () => {
     });
 
     test('should create subspace with pinned=false by default', async () => {
-      // Act
-      const response = await createSubspace(
+      // Act — resilient to the ENV_FAILURE retry-after-commit race (see
+      // createSubspaceOrFail); a throw here is a genuine create failure.
+      newSubspaceId = await createSubspaceOrFail(
         `new-sub-${uniqueId}`,
         `new-sub-${uniqueId}`,
         baseScenario.space.id
       );
-      newSubspaceId = response.data?.createSubspace.id ?? '';
 
       // Assert
-      expect(response.error).toBeUndefined();
-
       const subspacesResponse = await getSubspacesData(baseScenario.space.id);
       const subspaces =
         (subspacesResponse.data?.lookup?.space?.subspaces as any[]) ?? [];
