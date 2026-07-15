@@ -431,8 +431,8 @@ describe('Subspace sorting and pinning', () => {
     });
 
     test('should create subspace with pinned=false by default', async () => {
-      // Act — resilient to the ENV_FAILURE retry-after-commit race (see
-      // createSubspaceOrFail); a throw here is a genuine create failure.
+      // Act — createSubspaceOrFail surfaces a genuine create failure instead of
+      // masking it into an empty id.
       newSubspaceId = await createSubspaceOrFail(
         `new-sub-${uniqueId}`,
         `new-sub-${uniqueId}`,

@@ -56,8 +56,8 @@ describe('Opportunities', () => {
 
   test('should create subsubspace and query the data', async () => {
     // Act
-    // Create Subsubspace (resilient to the ENV_FAILURE retry-after-commit race
-    // — see createSubspaceOrFail).
+    // Create Subsubspace (createSubspaceOrFail surfaces a genuine create failure
+    // instead of masking it into an empty id).
     subsubspaceId = await createSubspaceOrFail(
       subsubspaceName,
       subsubspaceNameId,
