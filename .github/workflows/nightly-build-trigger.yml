@@ -3,14 +3,45 @@ name: Nightly Clean Up Environment and Trigger Tests
 on:
   schedule:
     - cron: "0 0 * * *" # Runs every day at midnight UTC
+  # Allow on-demand runs (verify a fix, reproduce a failure) — same pipeline,
+  # including the shared test-cluster deploy lock.
+  workflow_dispatch:
 
 jobs:
   deploy-all-services:
     uses: ./.github/workflows/deploy-all-services.yml
     secrets: inherit
 
-  cleanup-db:
+  # Take the shared test-cluster lock *after* our own service deploys finish, and
+  # hold it across cleanup-db + e2e so an ad-hoc `build-deploy-k8s-test-hetzner`
+  # dispatch can't roll the server pod / migrate the DB mid-run — which tore down
+  # the auth endpoint and cascaded a run to failure (test-suites#563). Acquiring
+  # after deploy-all-services is deadlock-free: the deploys we trigger run while
+  # the lock is still free.
+  acquire-lock:
     needs: deploy-all-services
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Kubectl
+        uses: azure/setup-kubectl@v4.0.0
+        with:
+          version: "v1.29.6"
+
+      - name: Set up Kubeconfig for Hetzner k3s
+        run: |
+          mkdir -p "$HOME/.kube"
+          echo "${{ secrets.KUBECONFIG_SECRET_HETZNER_TEST }}" > "$HOME/.kube/config"
+          chmod 600 "$HOME/.kube/config"
+
+      - name: Acquire test-cluster deploy lock
+        run: |
+          chmod +x .github/scripts/test-cluster-lock.sh
+          .github/scripts/test-cluster-lock.sh acquire "nightly-${{ github.run_id }}"
+
+  cleanup-db:
+    needs: acquire-lock
     uses: ./.github/workflows/cleanup-database.yml
     with:
       postgres_db: alkemio
@@ -43,6 +74,17 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Install Kubectl
+        uses: azure/setup-kubectl@v4.0.0
+        with:
+          version: "v1.29.6"
+
+      - name: Set up Kubeconfig for Hetzner k3s
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG_SECRET_HETZNER_TEST }}" > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
       - name: Set run folder variables
         run: |
           DATE=$(date +'%Y-%m-%d')
@@ -61,7 +103,29 @@ jobs:
           KRATOS_ENDPOINT: ${{ vars.KRATOS_ENDPOINT }}
           MAIL_SLURPER_ENDPOINT: ${{ vars.MAIL_SLURPER_ENDPOINT }}
           AUTH_TEST_HARNESS_PASSWORD: ${{ secrets.AUTH_TEST_HARNESS_PASSWORD }}
-        run: pnpm --filter @alkemio/test-suite-server-api run test:nightly
+          # Deterministic Kratos provisioning (#565 Phase 2): the harness upserts
+          # test identities via the in-cluster admin API, port-forwarded below.
+          KRATOS_ADMIN_URL: http://localhost:4434
+          # Surface [ENV_FAILURE] retry warnings in CI stdout. The console
+          # transport defaults to error-only, which hid the silent
+          # retried-after-commit createSubspace failures behind cryptic
+          # 'nameID already taken' errors (2026-07-15 nightly, #563).
+          LOG_LEVEL: warn
+        run: |
+          set -uo pipefail
+          # kratos-admin is ClusterIP (network-isolated); reach it via a
+          # port-forward that lives for the whole test run.
+          kubectl port-forward -n default svc/kratos-admin 4434:80 > /tmp/kratos-admin-pf.log 2>&1 &
+          PF_PID=$!
+          trap 'kill $PF_PID 2>/dev/null || true' EXIT
+          for i in $(seq 1 20); do
+            grep -q "Forwarding from" /tmp/kratos-admin-pf.log && break
+            sleep 1
+          done
+          if ! grep -q "Forwarding from" /tmp/kratos-admin-pf.log; then
+            echo "kratos-admin port-forward failed"; cat /tmp/kratos-admin-pf.log; exit 1
+          fi
+          pnpm --filter @alkemio/test-suite-server-api run test:nightly
 
       - name: Publish report to GitHub Pages
         if: ${{ always() }}
@@ -86,3 +150,29 @@ jobs:
     with:
       ref: gh-pages
       path: gh-pages-root
+
+  # Always release the lock after e2e — even on failure — so the next nightly or
+  # deploy isn't blocked until the stale-TTL reclaim (60 min). The gh-pages
+  # `deploy` job doesn't touch the test cluster, so it runs unlocked in parallel.
+  release-lock:
+    needs: [acquire-lock, run-e2e-tests]
+    if: always() && needs.acquire-lock.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Kubectl
+        uses: azure/setup-kubectl@v4.0.0
+        with:
+          version: "v1.29.6"
+
+      - name: Set up Kubeconfig for Hetzner k3s
+        run: |
+          mkdir -p "$HOME/.kube"
+          echo "${{ secrets.KUBECONFIG_SECRET_HETZNER_TEST }}" > "$HOME/.kube/config"
+          chmod 600 "$HOME/.kube/config"
+
+      - name: Release test-cluster deploy lock
+        run: |
+          chmod +x .github/scripts/test-cluster-lock.sh
+          .github/scripts/test-cluster-lock.sh release "nightly-${{ github.run_id }}"

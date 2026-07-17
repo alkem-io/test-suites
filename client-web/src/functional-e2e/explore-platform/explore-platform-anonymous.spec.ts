@@ -131,9 +131,12 @@ test.describe('Explore Alkemio Platform - Anonymous User Flow', () => {
     await expect(page.getByRole('tab', { name: 'Subspaces' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Knowledge' })).toBeVisible();
 
-    // Verify Sign in to apply button (anonymous user)
+    // Verify Sign in to apply button (anonymous user). CRD moved the apply
+    // affordance out of the dashboard and into the About dialog; open it to
+    // surface the "Sign in to apply" button.
+    await page.getByRole('button', { name: 'About this Space' }).click();
     await expect(
-      page.getByRole('button', { name: 'Sign in to apply' })
+      page.getByRole('dialog').getByRole('button', { name: 'Sign in to apply' })
     ).toBeVisible();
   });
 
@@ -290,12 +293,12 @@ test.describe('Explore Alkemio Platform - Anonymous User Flow', () => {
     // Click Template Library
     await page.getByRole('link', { name: 'Template Library' }).click();
 
-    // Verify navigation. CRD renames the page heading "Alkemio's Template
-    // Library" -> "Innovation Library".
+    // Verify navigation. The route is /innovation-library but the page heading
+    // is "Template Library".
     await expect(page).toHaveURL(/\/innovation-library/);
     await expect(
       page.getByRole('heading', {
-        name: 'Innovation Library',
+        name: 'Template Library',
         level: 1,
       })
     ).toBeVisible();
@@ -316,10 +319,10 @@ test.describe('Explore Alkemio Platform - Anonymous User Flow', () => {
   test('14. Click on Collaboration Tool Template filter', async ({ page }) => {
     await page.goto(`${baseUrl}/innovation-library`);
 
-    // Wait for page to load (CRD: "Innovation Library").
+    // Wait for page to load (heading "Template Library").
     await expect(
       page.getByRole('heading', {
-        name: 'Innovation Library',
+        name: 'Template Library',
         level: 1,
       })
     ).toBeVisible();
