@@ -7,10 +7,25 @@ import { getGraphqlClient } from "../utils/graphqlClient";
 export class TestUserManager {
   private static userModelMapEmail: Map<string, UserModel>;
   private static userModelMapType: Map<string, UserModel>;
+  private static populated = false;
 
   public static users: TestUserModels;
 
+  /**
+   * Mints each core test user's token ONCE per run and caches it (the class is a
+   * module singleton under Vitest `isolate:false`). It used to re-mint every
+   * user on every scenario setup — a full Kratos native login flow per user per
+   * file (~users × files ≈ hundreds of logins). Under that load Kratos
+   * rate-limits (429), which the server maps to `invalid_credentials`, failing
+   * setups intermittently mid-run (test-suites#563). Non-interactive-login
+   * tokens live 4h — far longer than a run — so a single mint per user is safe.
+   * The `populated` flag flips only after a full pass, so a partial failure
+   * (e.g. an early rate-limit) is retried in full rather than left incomplete.
+   */
   public static async populateUserModelMap() {
+    if (this.populated) {
+      return;
+    }
     this.userModelMapEmail = new Map<string, UserModel>();
     this.userModelMapType = new Map<string, UserModel>();
 
@@ -31,6 +46,9 @@ export class TestUserManager {
     }
     // Finally ensure the exposed users field is populated
     this.populateUsers();
+
+    // Cache is complete — subsequent scenario setups reuse these tokens.
+    this.populated = true;
 
     // logElapsedTime('populateUserModels', start);
   }

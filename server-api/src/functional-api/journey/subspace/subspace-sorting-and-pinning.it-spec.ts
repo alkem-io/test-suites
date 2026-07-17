@@ -8,7 +8,7 @@ import {
 } from '@alkemio/tests-lib';
 import { SpaceSortMode } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import {
-  createSubspace,
+  createSubspaceOrFail,
   getSubspacesData,
   updateSubspacePinned,
   updateSubspacesSortOrder,
@@ -59,26 +59,23 @@ describe('Subspace sorting and pinning', () => {
   let subspaceCId = '';
 
   beforeAll(async () => {
-    const resA = await createSubspace(
+    subspaceAId = await createSubspaceOrFail(
       `alpha-${uniqueId}`,
       `alpha-${uniqueId}`,
       baseScenario.space.id
     );
-    subspaceAId = resA.data?.createSubspace.id ?? '';
 
-    const resB = await createSubspace(
+    subspaceBId = await createSubspaceOrFail(
       `bravo-${uniqueId}`,
       `bravo-${uniqueId}`,
       baseScenario.space.id
     );
-    subspaceBId = resB.data?.createSubspace.id ?? '';
 
-    const resC = await createSubspace(
+    subspaceCId = await createSubspaceOrFail(
       `charlie-${uniqueId}`,
       `charlie-${uniqueId}`,
       baseScenario.space.id
     );
-    subspaceCId = resC.data?.createSubspace.id ?? '';
   });
 
   afterAll(async () => {
@@ -196,7 +193,8 @@ describe('Subspace sorting and pinning', () => {
       );
 
       // Assert
-      expect(JSON.stringify(response)).toContain('error');
+      expect(response.data?.updateSubspacePinned).toBeUndefined();
+      expect(response.error?.errors?.[0]?.code).toEqual('ENTITY_NOT_FOUND');
     });
 
     test('should return error when pinning with invalid subspaceID', async () => {
@@ -208,7 +206,11 @@ describe('Subspace sorting and pinning', () => {
       );
 
       // Assert
-      expect(JSON.stringify(response)).toContain('error');
+      expect(response.data?.updateSubspacePinned).toBeUndefined();
+      expect(response.error?.errors?.[0]?.code).toEqual('ENTITY_NOT_FOUND');
+      expect(response.error?.errors?.[0]?.message).toContain(
+        'Subspace not found within parent Space'
+      );
     });
   });
 
@@ -255,7 +257,8 @@ describe('Subspace sorting and pinning', () => {
       );
 
       // Assert
-      expect(JSON.stringify(response)).toContain('error');
+      expect(response.data?.updateSubspacePinned).toBeUndefined();
+      expect(response.error?.errors?.[0]?.code).toEqual('FORBIDDEN_POLICY');
     });
 
     test('should not allow non-space member to pin a subspace', async () => {
@@ -268,7 +271,8 @@ describe('Subspace sorting and pinning', () => {
       );
 
       // Assert
-      expect(JSON.stringify(response)).toContain('error');
+      expect(response.data?.updateSubspacePinned).toBeUndefined();
+      expect(response.error?.errors?.[0]?.code).toEqual('FORBIDDEN_POLICY');
     });
   });
 
@@ -412,7 +416,8 @@ describe('Subspace sorting and pinning', () => {
       );
 
       // Assert
-      expect(JSON.stringify(response)).toContain('error');
+      expect(response.data?.updateSubspacesSortOrder).toBeUndefined();
+      expect(response.error?.errors?.[0]?.code).toEqual('FORBIDDEN_POLICY');
     });
   });
 
@@ -426,17 +431,15 @@ describe('Subspace sorting and pinning', () => {
     });
 
     test('should create subspace with pinned=false by default', async () => {
-      // Act
-      const response = await createSubspace(
+      // Act — resilient to the ENV_FAILURE retry-after-commit race (see
+      // createSubspaceOrFail); a throw here is a genuine create failure.
+      newSubspaceId = await createSubspaceOrFail(
         `new-sub-${uniqueId}`,
         `new-sub-${uniqueId}`,
         baseScenario.space.id
       );
-      newSubspaceId = response.data?.createSubspace.id ?? '';
 
       // Assert
-      expect(response.error).toBeUndefined();
-
       const subspacesResponse = await getSubspacesData(baseScenario.space.id);
       const subspaces =
         (subspacesResponse.data?.lookup?.space?.subspaces as any[]) ?? [];

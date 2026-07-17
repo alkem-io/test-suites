@@ -19,6 +19,8 @@ import {
 } from "../core/generated/alkemio-schema";
 import { TestUser } from "../common/enums/test.user";
 import { UniqueIDGenerator } from "../utils/uniqueId";
+import { describeError, isEnvFailure } from "../utils/env-failure";
+import { delay } from "../utils/delay";
 import {
   assignPlatformRole,
   assignRoleToUser,
@@ -66,12 +68,65 @@ export class TestScenarioFactory {
   public static async createBaseScenario(
     scenarioConfig: TestScenarioConfig,
   ): Promise<OrganizationWithSpaceModel> {
-    const result = await this.createBaseScenarioPrivate(scenarioConfig);
-    // logElapsedTime('createBaseScenario', start);
-    return result;
+    return this.withEnvFailureRetry(
+      () => this.createBaseScenarioPrivate(scenarioConfig),
+      `base scenario '${scenarioConfig.name}'`,
+    );
+  }
+
+  // Env-failure signatures + backoff for core scenario setup (test-suites#563).
+  private static readonly SETUP_MAX_ATTEMPTS = 2; // one retry
+  private static readonly SETUP_RETRY_BASE_MS = 3000;
+
+  /**
+   * Retries core scenario setup ONLY on environment failures (Matrix/RPC
+   * timeout, auth endpoint mid-roll, connection reset) — never on a product
+   * error, because setup makes no assertions, so any failure here is either
+   * infra flake (retry) or a genuine setup bug (surface it). A transient
+   * Synapse/adapter blip or a brief pod roll then recovers on the retry instead
+   * of failing the whole suite. If it still fails and the cause is
+   * environmental, the error is tagged `[ENV_FAILURE]` so the report shows it
+   * as environment noise, not a product regression.
+   */
+  private static async withEnvFailureRetry<T>(
+    fn: () => Promise<T>,
+    label: string,
+  ): Promise<T> {
+    let lastError: unknown;
+    for (let attempt = 1; attempt <= this.SETUP_MAX_ATTEMPTS; attempt++) {
+      try {
+        return await fn();
+      } catch (e) {
+        lastError = e;
+        if (isEnvFailure(e) && attempt < this.SETUP_MAX_ATTEMPTS) {
+          const wait = this.SETUP_RETRY_BASE_MS * attempt;
+          LogManager.getLogger().warn(
+            `[ENV_FAILURE] setup of ${label} failed (attempt ${attempt}/${this.SETUP_MAX_ATTEMPTS}); retrying in ${wait}ms — ${describeError(e)}`,
+          );
+          await delay(wait);
+          continue;
+        }
+        break;
+      }
+    }
+    if (isEnvFailure(lastError)) {
+      throw new Error(
+        `[ENV_FAILURE] setup of ${label} failed after ${this.SETUP_MAX_ATTEMPTS} attempt(s) — environment, not product: ${describeError(lastError)}`,
+      );
+    }
+    throw lastError;
   }
 
   public static async createBaseScenarioOrganization(
+    scenarioConfig: TestScenarioConfig,
+  ): Promise<OrganizationWithSpaceModel> {
+    return this.withEnvFailureRetry(
+      () => this.createBaseScenarioOrganizationPrivate(scenarioConfig),
+      `organization scenario '${scenarioConfig.name}'`,
+    );
+  }
+
+  private static async createBaseScenarioOrganizationPrivate(
     scenarioConfig: TestScenarioConfig,
   ): Promise<OrganizationWithSpaceModel> {
     const baseScenario: OrganizationWithSpaceModel =
@@ -790,21 +845,32 @@ export class TestScenarioFactory {
     }
 
     const licensePlan = await getLicensePlanByName("ACCOUNT_LICENSE_PLUS");
-    if (licensePlan && licensePlan.length > 0) {
+    if (!licensePlan || licensePlan.length === 0) {
+      // Without this plan, accounts get `account-space-free: 0` and every
+      // subsequent createSpace is denied. Surface it rather than silently
+      // proceeding to a masked "Space ID is required" later (test-suites#563).
+      LogManager.getLogger().warn(
+        "[license] ACCOUNT_LICENSE_PLUS plan not found — accounts will lack the free-space entitlement and space creation will be denied",
+      );
+    } else {
       const licensePlanId = licensePlan[0].id;
-      if (model.accountId) {
-        await assignLicensePlanToAccount(model.accountId, licensePlanId);
-      }
-
-      const adminUser = TestUserManager.users.globalAdmin;
-      if (adminUser && adminUser.accountId) {
-        await assignLicensePlanToAccount(adminUser.accountId, licensePlanId);
-      }
-
-      const spaceAdmin = TestUserManager.users.spaceAdmin;
-      if (spaceAdmin && spaceAdmin.accountId) {
-        await assignLicensePlanToAccount(spaceAdmin.accountId, licensePlanId);
-      }
+      // Assign the free-space entitlement, and surface any failure — a swallowed
+      // assignment error is the upstream cause of the entitlement-denied cascade.
+      const assignPlan = async (label: string, accountId?: string) => {
+        if (!accountId) return;
+        const res = await assignLicensePlanToAccount(accountId, licensePlanId);
+        if (res?.error) {
+          LogManager.getLogger().warn(
+            `[license] failed to assign ACCOUNT_LICENSE_PLUS to ${label} account '${accountId}': ${JSON.stringify(res.error.errors)}`,
+          );
+        }
+      };
+      await assignPlan("organization", model.accountId);
+      await assignPlan(
+        "globalAdmin",
+        TestUserManager.users.globalAdmin?.accountId,
+      );
+      await assignPlan("spaceAdmin", TestUserManager.users.spaceAdmin?.accountId);
     }
 
     // Assign the organization admin user to the organization's roleSet as Member and Admin
@@ -842,30 +908,58 @@ export class TestScenarioFactory {
     scenarioName: string,
     addTutorialCallouts: boolean,
   ): Promise<SpaceModel> {
-    const uniqueId = UniqueIDGenerator.getID();
     const truncatedScenarioName = scenarioName.slice(0, 18);
-    const spaceName = `${truncatedScenarioName}-${uniqueId}`;
-    const spaceNameId = this.validateAndClean(`${spaceName.toLowerCase()}`);
-    if (!spaceNameId) {
-      throw new Error(`Unable to create space: Invalid nameId: ${spaceNameId}`);
+
+    // Create the root space, retrying a nameID collision with a fresh id.
+    // Under Vitest `pool: threads` the per-process UniqueIDGenerator counter can
+    // reset across files, so two files whose scenario names share the
+    // truncated-18 prefix (e.g. several `storage-auth-public…` scenarios) can
+    // draw the same short id and collide (test-suites#563). Any other failure is
+    // surfaced verbatim rather than masked (test-suites#577).
+    const createOnce = async () => {
+      const uniqueId = UniqueIDGenerator.getID();
+      const spaceName = `${truncatedScenarioName}-${uniqueId}`;
+      const spaceNameId = this.validateAndClean(spaceName.toLowerCase());
+      if (!spaceNameId) {
+        throw new Error(
+          `Unable to create space: Invalid nameId: ${spaceNameId}`,
+        );
+      }
+      const res = await this.createSpaceAndGetData(
+        "l0-" + spaceName,
+        spaceNameId,
+        accountID,
+        addTutorialCallouts,
+      );
+      return { spaceName, res };
+    };
+
+    // createSpaceAndGetData throws on a failed create (its de-masking throw,
+    // test-suites#577) with the GraphQL error detail in the message — so the
+    // collision arrives as a thrown Error, not as `res.error`. Catch it, retry
+    // with a fresh id, and rethrow anything else verbatim.
+    let attempt: Awaited<ReturnType<typeof createOnce>> | undefined;
+    for (let i = 0; i < 3; i++) {
+      try {
+        attempt = await createOnce();
+        break;
+      } catch (e) {
+        const message = e instanceof Error ? e.message : String(e);
+        if (i === 2 || !message.includes("already taken or restricted")) {
+          throw e;
+        }
+      }
     }
 
-    const responseRootSpace = await this.createSpaceAndGetData(
-      "l0-" + spaceName,
-      spaceNameId,
-      accountID,
-      addTutorialCallouts,
-    );
-
-    if (!responseRootSpace.data?.lookup?.space) {
+    if (!attempt || !attempt.res.data?.lookup?.space) {
       throw new Error(
-        `Failed to create root space: ${JSON.stringify(
-          responseRootSpace.error,
+        `Failed to create root space '${attempt?.spaceName ?? truncatedScenarioName}' (account '${accountID}'): ${JSON.stringify(
+          attempt?.res.error ?? {},
         )}`,
       );
     }
 
-    const spaceData = responseRootSpace.data?.lookup?.space;
+    const spaceData = attempt.res.data.lookup.space;
     spaceModel.id = spaceData?.id ?? "";
     spaceModel.nameId = spaceData?.nameID ?? "";
     spaceModel.about = {
@@ -1138,7 +1232,20 @@ export class TestScenarioFactory {
       addTutorialCallouts,
       role,
     );
-    const spaceId = response?.data?.createSpace.id ?? "";
+    const spaceId = response?.data?.createSpace?.id;
+    if (!spaceId) {
+      // Do NOT swallow the failure with `?? ""` — that turned a real
+      // createSpace error (e.g. an `account-space-free` entitlement denial)
+      // into a generic downstream "Space ID is required", masking the root
+      // cause across whole nightly cascades (test-suites#563). Surface the
+      // actual GraphQL error so the report shows *why* the space wasn't made.
+      const detail = response?.error
+        ? JSON.stringify(response.error.errors)
+        : "server returned no createSpace.id and no error";
+      throw new Error(
+        `Failed to create root space '${spaceName}' (nameID '${spaceNameId}', account '${accountID}'): ${detail}`,
+      );
+    }
     await updateSpaceSettings(spaceId, {
       privacy: { allowPlatformSupportAsAdmin: true },
     });

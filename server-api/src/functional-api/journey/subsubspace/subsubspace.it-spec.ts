@@ -2,7 +2,9 @@ import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/O
 import { deleteSpace, updateSpaceContext } from '../space/space.request.params';
 import {
   createSubspace,
+  createSubspaceOrFail,
   getSubspaceData,
+  subspaceVariablesData,
 } from '../subspace/subspace.request.params';
 import {
   TestScenarioConfig,
@@ -54,47 +56,55 @@ describe('Opportunities', () => {
 
   test('should create subsubspace and query the data', async () => {
     // Act
-    // Create Subsubspace
-    const responseCreateSubsubspaceOnSubspace = await createSubspace(
+    // Create Subsubspace (resilient to the ENV_FAILURE retry-after-commit race
+    // — see createSubspaceOrFail).
+    subsubspaceId = await createSubspaceOrFail(
       subsubspaceName,
       subsubspaceNameId,
       baseScenario.subspace.id
     );
-    const createSubsubspaceData =
-      responseCreateSubsubspaceOnSubspace?.data?.createSubspace;
-
-    subsubspaceId = createSubsubspaceData?.id ?? '';
 
     // Query Subsubspace data
     const requestQuerySubsubspace = await getSubspaceData(subsubspaceId);
-    const requestSubsubspaceData = requestQuerySubsubspace?.data?.lookup?.space;
+    const queried = requestQuerySubsubspace?.data?.lookup?.space;
 
-    // Assert
-    // expect(createSubsubspaceData).toEqual(requestSubsubspaceData);
-    expect(createSubsubspaceData?.about).toEqual(requestSubsubspaceData?.about);
-    expect(createSubsubspaceData?.collaboration).toEqual(
-      requestSubsubspaceData?.collaboration
-    );
-    expect(createSubsubspaceData?.community).toEqual(
-      requestSubsubspaceData?.community
-    );
-    expect(createSubsubspaceData?.id).toEqual(requestSubsubspaceData?.id);
-    expect(createSubsubspaceData?.subspaces).toEqual(
-      requestSubsubspaceData?.subspaces
-    );
+    // Assert the content we submitted round-tripped correctly: compare the
+    // queried subsubspace against the exact input createSubspace sent
+    // (`subspaceVariablesData`). This is a correctness check on our own inputs,
+    // so it needs no create-response and is unaffected by the race.
+    const expected = subspaceVariablesData(
+      subsubspaceName,
+      subsubspaceNameId,
+      baseScenario.subspace.id
+    ).about;
+
+    expect(queried?.id).toEqual(subsubspaceId);
+    expect(queried?.nameID).toEqual(subsubspaceNameId);
+    expect(queried?.about?.why).toEqual(expected.why);
+    expect(queried?.about?.who).toEqual(expected.who);
+    expect({
+      displayName: queried?.about?.profile?.displayName,
+      tagline: queried?.about?.profile?.tagline,
+      description: queried?.about?.profile?.description,
+    }).toEqual({
+      displayName: expected.profileData.displayName,
+      tagline: expected.profileData.tagline,
+      description: expected.profileData.description,
+    });
+    // Note: `referencesData` sent at creation is intentionally not asserted —
+    // createSubspace does not persist profile references (the query returns
+    // `references: []`); they are added via a separate mutation. The old
+    // create-vs-query comparison hid this because both sides were empty.
   });
 
   test('should update subsubspace and query the data', async () => {
     // Arrange
     // Create Subsubspace on Subspace
-    const responseCreateSubsubspaceOnSubspace = await createSubspace(
+    subsubspaceId = await createSubspaceOrFail(
       subsubspaceName,
       subsubspaceNameId,
       baseScenario.subspace.id
     );
-
-    subsubspaceId =
-      responseCreateSubsubspaceOnSubspace?.data?.createSubspace.id ?? '';
     // Act
     // Update the created Subsubspace
     const responseUpdateSubsubspace = await updateSpaceContext(subsubspaceId);
@@ -114,13 +124,11 @@ describe('Opportunities', () => {
   test('should remove subsubspace and query the data', async () => {
     // Arrange
     // Create Subsubspace
-    const responseCreateSubsubspaceOnSubspace = await createSubspace(
+    subsubspaceId = await createSubspaceOrFail(
       subsubspaceName,
       subsubspaceNameId,
       baseScenario.subspace.id
     );
-    subsubspaceId =
-      responseCreateSubsubspaceOnSubspace?.data?.createSubspace.id ?? '';
 
     // Act
     // Remove subsubspace
@@ -140,23 +148,21 @@ describe('Opportunities', () => {
 
   test('should throw an error for creating subsubspace with same name/NameId on different subspaces', async () => {
     // Arrange
-    const responseCreateSubspaceTwo = await createSubspace(
+    additionalSubspaceId = await createSubspaceOrFail(
       `${subsubspaceName}ch`,
       `${uniqueId}ch`,
       baseScenario.space.id
     );
-    additionalSubspaceId =
-      responseCreateSubspaceTwo?.data?.createSubspace.id ?? '';
 
     // Act
-    // Create Subsubspace on Challange One
-    const responseCreateSubsubspaceOnSubspaceOne = await createSubspace(
+    // Create Subsubspace on Challange One (arrange-success — resilient to the
+    // retry-after-commit race). The assertion under test is that reusing this
+    // nameID on a different parent below is rejected.
+    subsubspaceId = await createSubspaceOrFail(
       subsubspaceName,
       `${subsubspaceNameId}new`,
       baseScenario.subspace.id
     );
-    subsubspaceId =
-      responseCreateSubsubspaceOnSubspaceOne?.data?.createSubspace.id ?? '';
 
     const responseCreateSubsubspaceOnSubspaceTwo = await createSubspace(
       subsubspaceName,
@@ -165,7 +171,6 @@ describe('Opportunities', () => {
     );
 
     // Assert
-    expect(responseCreateSubsubspaceOnSubspaceOne.error).toBeUndefined();
     expect(
       responseCreateSubsubspaceOnSubspaceTwo?.error?.errors[0].message
     ).toContain(

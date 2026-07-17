@@ -24,6 +24,7 @@ export const createConfigUsingEnvVars = (): AlkemioTestConfig => {
       kratos: {
         public: process.env.KRATOS_ENDPOINT ?? 'http://localhost:4434',
         private: process.env.KRATOS_PRIVATE_API_URL ?? 'http://localhost:4434',
+        admin: process.env.KRATOS_ADMIN_URL ?? '',
       },
     },
     identities: {
@@ -33,7 +34,57 @@ export const createConfigUsingEnvVars = (): AlkemioTestConfig => {
       },
     },
   };
+  validateEndpointSchemes(config);
   return config;
+};
+
+/**
+ * Fail fast when a REMOTE endpoint is configured over an insecure scheme
+ * (`http://` / `ws://`). Every hosted environment (test/dev/…) is served over
+ * TLS behind Traefik, which 301-redirects http→https and (for wss) rejects
+ * plain ws. A client like supertest that doesn't follow redirects then sees a
+ * 301 on every request, which surfaces as a cryptic assertion failure
+ * (`expected 301 to deeply equal 200`) rather than an obvious config error —
+ * exactly the drift that broke the storage/auth suite (alkem-io/server#6257,
+ * `ALKEMIO_SERVER_REST` set to `http://…` instead of `https://…`). Localhost
+ * over http/ws is normal for local dev and is exempt.
+ */
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '0.0.0.0', '::1']);
+
+const validateEndpointSchemes = (config: AlkemioTestConfig): void => {
+  // Parse the URL rather than regex the raw string: a string regex both
+  // false-rejects valid local forms (`http://localhost?x=1`, `http://[::1]`) and
+  // can be fooled by userinfo (`http://localhost@evil.example`). The parsed
+  // `hostname` is the real host to compare against the loopback allowlist.
+  const isInsecureRemote = (url: string): boolean => {
+    let parsed: URL;
+    try {
+      parsed = new URL(url);
+    } catch {
+      return false; // unparseable — not our concern (fails elsewhere with a clearer error)
+    }
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'ws:') return false;
+    const host = parsed.hostname.replace(/^\[|\]$/g, '').toLowerCase();
+    return !LOOPBACK_HOSTS.has(host);
+  };
+
+  const named: Array<[string, string]> = [
+    ['ALKEMIO_SERVER (graphql.private)', config.endPoints.graphql.private],
+    ['ALKEMIO_BASE_URL (server)', config.endPoints.server],
+    ['ALKEMIO_SERVER_WS (ws)', config.endPoints.ws],
+    ['ALKEMIO_SERVER_REST (rest)', config.endPoints.rest],
+    ['MAIL_SLURPER_ENDPOINT (mailSlurper)', config.endPoints.mailSlurper],
+    ['KRATOS_ENDPOINT (kratos.public)', config.endPoints.kratos.public],
+    ['KRATOS_PRIVATE_API_URL (kratos.private)', config.endPoints.kratos.private],
+  ];
+
+  const offenders = named.filter(([, url]) => isInsecureRemote(url));
+  if (offenders.length > 0) {
+    const detail = offenders.map(([n, url]) => `  - ${n} = ${url}`).join('\n');
+    throw new Error(
+      `Insecure scheme on remote endpoint(s) — use https:// / wss:// (Traefik 301-redirects http→https, which non-redirect-following clients read as a failing status):\n${detail}`
+    );
+  }
 };
 
 export const stringifyConfig = (config: AlkemioTestConfig): string => {

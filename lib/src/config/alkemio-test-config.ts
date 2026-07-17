@@ -11,6 +11,10 @@ export interface AlkemioTestConfig {
     kratos: {
       public: string;
       private: string;
+      /** In-cluster Kratos ADMIN API (network-isolated). Set on CI via a
+       * port-forward for deterministic identity provisioning (#565 Phase 2);
+       * empty when unavailable (local dev falls back to self-registration). */
+      admin: string;
     };
   };
   identities: {
