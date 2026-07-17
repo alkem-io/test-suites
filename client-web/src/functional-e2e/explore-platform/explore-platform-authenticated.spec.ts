@@ -17,6 +17,7 @@ import {
 } from '@alkemio/client-lib/dist/generated/graphql';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 import { verifyMyDashboardWelcomeElement } from '../my-dashboard/my-dashboard-page-objects';
+import { userMenuAvatar } from '../authentication/common-authentication-page-elements';
 
 const { test, setupAuthentication, teardownAuthentication } =
   createAuthenticatedSessionFixture({
@@ -151,9 +152,12 @@ test.describe('Explore Alkemio Platform - Authenticated User Flow', () => {
     await expect(page.getByRole('tab', { name: 'Subspaces' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Knowledge' })).toBeVisible();
 
-    // Authenticated user should see apply/join button (not "Sign in to apply")
+    // Authenticated user should see apply/join button (not "Sign in to apply").
+    // CRD moved the apply affordance out of the dashboard and into the About
+    // dialog; open it to surface the apply/join button.
+    await page.getByRole('button', { name: 'About this Space' }).click();
     await expect(
-      page.getByRole('button', { name: /apply|join/i })
+      page.getByRole('dialog').getByRole('button', { name: /apply|join/i })
     ).toBeVisible();
   });
 
@@ -352,11 +356,12 @@ test.describe('Explore Alkemio Platform - Authenticated User Flow', () => {
     // Click Template Library
     await page.getByRole('link', { name: 'Template Library' }).click();
 
-    // Verify navigation
+    // Verify navigation. The route is /innovation-library but the page heading
+    // is "Template Library".
     await expect(page).toHaveURL(/\/innovation-library/);
     await expect(
       page.getByRole('heading', {
-        name: 'Innovation Library',
+        name: 'Template Library',
         level: 1,
       })
     ).toBeVisible();
@@ -378,10 +383,10 @@ test.describe('Explore Alkemio Platform - Authenticated User Flow', () => {
   test('14. Click on Collaboration Tool Template filter', async ({ page }) => {
     await page.goto(`${baseUrl}/innovation-library`);
 
-    // Wait for page to load (CRD: "Innovation Library").
+    // Wait for page to load (heading "Template Library").
     await expect(
       page.getByRole('heading', {
-        name: 'Innovation Library',
+        name: 'Template Library',
         level: 1,
       })
     ).toBeVisible();
@@ -415,9 +420,12 @@ test.describe('Explore Alkemio Platform - Authenticated User Flow', () => {
     await verifyMyDashboardWelcomeElement(page);
 
     // CRD replaces the legacy avatar/"My Dashboard" affordance with a user
-    // button in the header (avatar + the "Beta" badge) that opens the account
-    // menu. Open it and verify the profile/account/logout options are present.
-    await page.getByRole('button', { name: /Beta/ }).last().click();
+    // button in the header (the avatar, keyed by the user's display name). The
+    // "Beta" badge that used to label this header button moved into the account
+    // menu it opens and is now a purely decorative badge (not exposed to the
+    // accessibility tree), so target the avatar positionally instead of by
+    // "Beta" text and verify the profile/account/logout options inside the menu.
+    await userMenuAvatar(page).click();
 
     await expect(
       page.getByRole('menuitem', { name: 'My Profile' })

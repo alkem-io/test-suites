@@ -72,9 +72,12 @@ test.describe('Public Space Discovery and Access', () => {
     await expect(page.getByRole('tab', { name: 'Subspaces' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Knowledge' })).toBeVisible();
 
-    // Verify Login/Sign Up option remains available (user not logged in)
+    // Verify Login/Sign Up option remains available (user not logged in).
+    // CRD moved the apply affordance out of the dashboard and into the About
+    // dialog; open it to surface the "Sign in to apply" button.
+    await page.getByRole('button', { name: 'About this Space' }).click();
     await expect(
-      page.getByRole('button', { name: 'Sign in to apply' })
+      page.getByRole('dialog').getByRole('button', { name: 'Sign in to apply' })
     ).toBeVisible();
   });
 
