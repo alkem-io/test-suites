@@ -72,6 +72,44 @@ test.describe('Level 0 Space - Applications', () => {
   });
 
   test.describe('Space Discovery and Applications', () => {
+    test('1.0 Apply button is NOT shown on a public L0 space dashboard', async () => {
+      // Use a dedicated PUBLIC space so the non-member actually lands on the
+      // dashboard (private spaces redirect non-members to /about).
+      const publicScenarioConfig: TestScenarioConfig = {
+        name: 'seed-space-apps-public-dashboard',
+        space: {
+          collaboration: { addTutorialCallouts: false },
+          community: {
+            admins: [TestUser.SPACE_ADMIN],
+            members: [TestUser.SPACE_ADMIN],
+          },
+          settings: {
+            privacy: { mode: SpacePrivacyMode.Public },
+            membership: { policy: CommunityMembershipPolicy.Applications },
+          },
+        },
+      };
+
+      const publicScenario =
+        await TestScenarioFactory.createBaseScenario(publicScenarioConfig);
+
+      try {
+        const page = nonSpaceMemberPage;
+
+        // Navigate to the PUBLIC space dashboard (not /about)
+        await page.goto(`${baseUrl}/${publicScenario.space.nameId}`, {
+          waitUntil: 'networkidle',
+        });
+
+        // Verify no Apply button on the dashboard — per PR #10000,
+        // the Apply button was removed from the L0 dashboard entirely.
+        const applyButton = page.getByRole('button', { name: 'Apply' });
+        await expect(applyButton).not.toBeVisible();
+      } finally {
+        await TestScenarioFactory.cleanUpBaseScenario(publicScenario);
+      }
+    });
+
     test('1.1 Submit Application to Level 0 Space', async () => {
       const page = nonSpaceMemberPage;
       const spaceNameId = baseScenario.space.nameId;
