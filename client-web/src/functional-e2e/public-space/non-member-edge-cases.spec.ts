@@ -224,9 +224,16 @@ test.describe('Edge Cases and Error Handling', () => {
     // Try to access "Apply to Join" or similar member-only action
     await page.getByRole('tab', { name: 'Home' }).click();
 
+    // CRD moved the apply affordance out of the dashboard and into the About
+    // dialog; open it to surface the login-gated apply button.
+    await page.getByRole('button', { name: 'About this Space' }).click();
+
     // Check if "Sign in to apply" button appears (indicating login required for private actions)
     await expect(
-      page.getByRole('button', { name: /Sign in to apply|Apply/i }).first()
+      page
+        .getByRole('dialog')
+        .getByRole('button', { name: /Sign in to apply|Apply/i })
+        .first()
     ).toBeVisible();
   });
 });

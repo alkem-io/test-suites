@@ -23,26 +23,23 @@ const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
 /**
  * Helper to get the flow state menu button for the "Home" flow state.
- * CRD renders each flow state as a column whose header has an
- * "Edit column title" button (showing the flow-state name) and a sibling
- * "Column actions" button (aria-haspopup="menu") that opens the per-column
- * menu — the CRD replacement for the MUI sortable-card MoreVert button.
- * Home is the first column, so its "Column actions" is the first one.
+ * CRD renders each flow state as a column whose header shows the flow-state
+ * name as plain text and a sibling "Column actions" button
+ * (aria-haspopup="menu") that opens the per-column menu — the CRD replacement
+ * for the MUI sortable-card MoreVert button. Home is the first column, so its
+ * "Column actions" is the first one.
  */
 function getFlowStateMenuButton(page: Page) {
   return page.getByRole('button', { name: 'Column actions' }).first();
 }
 
 /**
- * Helper to get the "Set default callout template…" menu item.
- * CRD renamed the MUI "Set Default Post Template" item to a generic
- * callout-template label (with a trailing ellipsis), since the default is a
- * callout template, not specifically a post.
+ * Helper to get the default-template menu item in the column-actions menu.
+ * CRD labels this item "Post Template" (it opens the "Use a template" dialog
+ * that sets the flow state's default callout template).
  */
 function getDefaultTemplateMenuItem(page: Page) {
-  return page
-    .getByRole('menuitem')
-    .filter({ hasText: /Set default callout template/i });
+  return page.getByRole('menuitem', { name: 'Post Template', exact: true });
 }
 
 /**
@@ -96,6 +93,19 @@ async function openTemplateLibraryDialog(page: Page): Promise<void> {
   const menuItem = getDefaultTemplateMenuItem(page);
   await expect(menuItem).toBeVisible({ timeout: 5000 });
   await menuItem.click();
+
+  // CRD opens an intermediate "Post Template: <flow state>" dialog first (it
+  // shows the current default and a "Choose template…" button). Click that to
+  // open the "Use a template" picker.
+  const postTemplateDialog = page
+    .getByRole('dialog')
+    .filter({ has: page.getByRole('heading', { name: /^Post Template:/ }) })
+    .first();
+  await expect(postTemplateDialog).toBeVisible({ timeout: 5000 });
+  await postTemplateDialog
+    .getByRole('button', { name: /choose template|change template/i })
+    .first()
+    .click();
 
   const dialog = getTemplateLibraryDialog(page);
   await expect(dialog).toBeVisible({ timeout: 5000 });
@@ -203,11 +213,12 @@ test.describe('Default Template Per Flow State', () => {
       await page.waitForLoadState('networkidle');
 
       // Verify the Home flow-state column header is visible. CRD renders each
-      // flow state as a column whose header is an "Edit column title" button
-      // showing the flow-state name.
-      const homeFlowState = page
-        .getByRole('button', { name: 'Edit column title' })
-        .filter({ hasText: 'Home' });
+      // flow state as a column whose header is now plain text (no longer an
+      // "Edit column title" button) beside the per-column "Column actions"
+      // button. The header logo link's "Home" is an accessible name on an image
+      // link (not a text node), so an exact text match targets only the column
+      // header.
+      const homeFlowState = page.getByText('Home', { exact: true }).first();
       await expect(homeFlowState).toBeVisible({ timeout: 10000 });
 
       // Open the flow-state (column actions) menu
