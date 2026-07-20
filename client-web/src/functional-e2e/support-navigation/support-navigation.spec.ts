@@ -60,10 +60,11 @@ test.describe('Support Navigation Flow', () => {
     ).toBeVisible();
 
     // 3. Click "Explore Documentation" button
+    // Register the waiter before the click: context.waitForEvent does not
+    // buffer, so a tab that opens before the listener is attached is missed.
+    const pagePromise = page.context().waitForEvent('page');
     await page.getByRole('link', { name: 'Explore Documentation' }).click();
-
-    // Wait for the new tab to open and switch to it
-    const newPage = await page.context().waitForEvent('page');
+    const newPage = await pagePromise;
     await newPage.waitForURL(/.*docs.*/);
 
     // 4. Verify documentation page loads at /docs. CRD renders the docs as an
