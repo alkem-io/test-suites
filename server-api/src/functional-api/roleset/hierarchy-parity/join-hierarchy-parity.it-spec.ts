@@ -11,16 +11,14 @@
  * in one action (FR-023). The join is both the entry point and the grant
  * point, so the combined-flow authorisation is evaluated once, at join time.
  *
- * IMPORTANT — rollout ordering: these specs assert NEW server behaviour (JOIN
- * privilege exposure on eligible open-join subspaces + join routed through the
- * shared ancestor-chain grant). They only go green once the round-2 `server`
- * slice of workspace#017 has merged; until then they are expected to fail
- * end-to-end (this file is authored so it typechecks/collects cleanly now —
- * see plan.md "Round 2 rollout").
+ * The ancestor gate is actor-relative (ADR 0001 §7-8): ancestors the joiner
+ * already belongs to are skipped rather than gated, so the requirement is that
+ * every ancestor the joiner would be *newly granted into* is public. For a
+ * stranger that is the whole chain; for a partial member it is only the missing
+ * part — see the reachability cells at the bottom of this file.
  */
 import {
   CommunityMembershipPolicy,
-  RoleName,
   SpacePrivacyMode,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import {
@@ -29,12 +27,10 @@ import {
   TestUserManager,
 } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import {
-  assignRoleToUser,
-  joinRoleSet,
-} from '@functional-api/roleset/roles-request.params';
+import { joinRoleSet } from '@functional-api/roleset/roles-request.params';
 import {
   ALL_PUBLIC_COMBO,
+  assignMemberRoleOrFail,
   buildHierarchyScenarioConfig,
   cleanupScenarioSafely,
   comboLabel,
@@ -169,9 +165,24 @@ describe('Join hierarchy parity — direct-join combined flow (US4 / SC-015)', (
     );
   });
 
+  /**
+   * SC-014 / FR-028 is a PRESERVATION criterion: the parent-member join is the
+   * path that already worked before feature 017, and the new combined-flow code
+   * must leave it untouched. This cell guards exactly that — the join is not
+   * intercepted or rejected, and still grants the SubSub.
+   *
+   * It deliberately does NOT prove "no ancestor walk fired". A parent-member
+   * already holds every ancestor, so the single-target and combined paths reach
+   * an identical end state, and the server's parent-first rule makes
+   * "member of Sub but not Root" unreachable — no API-level assertion can
+   * separate them. That proof is a call-path assertion and lives server-side in
+   * `role.set.service.spec.ts` ("a parent-member / non-eligible join grants ONLY
+   * the target via assignActorToRole (no ancestor walk)"), which spies on
+   * `getRoleSetAncestorChain` / `grantRoleCredential` and asserts neither ran.
+   */
   describe('behaviour preservation — parent member (SC-014 / FR-028)', () => {
     test(
-      'a parent-member joining the open SubSub is granted ONLY the SubSub (single-target, today’s rule)',
+      'a parent-member joining the open SubSub still joins successfully — pre-017 behaviour preserved',
       async () => {
         const scenario = await buildOpenJoinScenario(
           'join-hierarchy-parity-parent-member',
@@ -180,19 +191,25 @@ describe('Join hierarchy parity — direct-join combined flow (US4 / SC-015)', (
         );
 
         try {
-          // Precondition: the joiner is already a member of the immediate
-          // parent (Sub) — and therefore, by member(Space) => member(parent),
-          // of Root too. A direct join must behave exactly as today: grant the
-          // SubSub only, no combined ancestor walk.
-          await assignRoleToUser(
+          // Precondition: the joiner is a member of the immediate parent (Sub).
+          // Root must be assigned FIRST — `assignActorToRole` hard-requires
+          // membership of the immediate parent role-set, so Sub is unreachable
+          // without Root (member(parent) is a PREREQUISITE for member(child),
+          // not a consequence of it).
+          await assignMemberRoleOrFail(
+            joinerId(),
+            scenario.space.community.roleSetId,
+            'Root (L0)'
+          );
+          await assignMemberRoleOrFail(
             joinerId(),
             scenario.subspace.community.roleSetId,
-            RoleName.Member
-          );
-          expect(await isMemberOf(scenario.subspace.community.roleSetId)).toBe(
-            true
+            'Sub (L1)'
           );
 
+          // The join must behave exactly as it did before feature 017: it is
+          // NOT intercepted or rejected by the newly-added combined-flow
+          // authorisation, and it still grants the SubSub.
           const joinResult = await joinRoleSet(
             scenario.subsubspace.community.roleSetId,
             JOINER
@@ -202,8 +219,11 @@ describe('Join hierarchy parity — direct-join combined flow (US4 / SC-015)', (
           expect(
             await isMemberOf(scenario.subsubspace.community.roleSetId)
           ).toBe(true);
-          // Already a member of the parent; the flow adds nothing new there.
+          // Ancestors were already held going in; the flow adds nothing new.
           expect(await isMemberOf(scenario.subspace.community.roleSetId)).toBe(
+            true
+          );
+          expect(await isMemberOf(scenario.space.community.roleSetId)).toBe(
             true
           );
         } finally {
@@ -233,13 +253,10 @@ describe('Join hierarchy parity — direct-join combined flow (US4 / SC-015)', (
         try {
           // The joiner owns the PRIVATE root only; it imposes no requirement
           // (missing-only), and L1 is public + opted in.
-          await assignRoleToUser(
+          await assignMemberRoleOrFail(
             joinerId(),
             scenario.space.community.roleSetId,
-            RoleName.Member
-          );
-          expect(await isMemberOf(scenario.space.community.roleSetId)).toBe(
-            true
+            'PRIVATE Root (L0)'
           );
           expect(await isMemberOf(scenario.subspace.community.roleSetId)).toBe(
             false

@@ -19,10 +19,12 @@
  */
 import {
   CommunityMembershipPolicy,
+  RoleName,
   SpacePrivacyMode,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { TestScenarioConfig, TestScenarioFactory } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import { assignRoleToUser } from '@functional-api/roleset/roles-request.params';
 import { getRoleSetUsersInMemberRole } from '@functional-api/roleset/roleset.request.params';
 
 /**
@@ -72,7 +74,6 @@ export const cleanupScenarioSafely = async (
   try {
     await TestScenarioFactory.cleanUpBaseScenario(scenario);
   } catch (e) {
-    // eslint-disable-next-line no-console
     console.warn(
       `hierarchy-parity: scenario cleanup failed (original test outcome preserved): ${e}`
     );
@@ -152,6 +153,38 @@ export const isUserMemberOfRoleSet = async (
 ): Promise<boolean> => {
   const members = await getRoleSetUsersInMemberRole(roleSetId);
   return members.some(m => m.id === userId);
+};
+
+/**
+ * Assign the MEMBER role as a test PRECONDITION, failing loudly if it did not
+ * take effect. `assignRoleToUser` resolves with a GraphQL error payload rather
+ * than throwing, so an unchecked call lets a rejected precondition masquerade
+ * as a failed assertion further down the test — the setup looks fine and the
+ * behaviour under test appears broken.
+ *
+ * The common way to hit this: the server's `assignActorToRole` hard-requires
+ * membership of the IMMEDIATE PARENT role-set (server
+ * `role.set.service.ts` — "actor is not a member of parent roleSet"), so
+ * ancestors must be assigned top-down, Root before Sub. Membership is
+ * re-read after the mutation so a silent no-op fails here too.
+ */
+export const assignMemberRoleOrFail = async (
+  userId: string,
+  roleSetId: string,
+  label: string
+): Promise<void> => {
+  const result = await assignRoleToUser(userId, roleSetId, RoleName.Member);
+  const message = result?.error?.errors?.[0]?.message;
+  if (message) {
+    throw new Error(
+      `hierarchy-parity precondition: could not assign MEMBER on ${label} (roleSet ${roleSetId}) to user ${userId}: ${message}`
+    );
+  }
+  if (!(await isUserMemberOfRoleSet(roleSetId, userId))) {
+    throw new Error(
+      `hierarchy-parity precondition: MEMBER assignment on ${label} (roleSet ${roleSetId}) for user ${userId} reported no error but did not take effect`
+    );
+  }
 };
 
 /**
