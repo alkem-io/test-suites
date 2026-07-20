@@ -33,9 +33,9 @@ test.describe('Navigation and Access', () => {
     // Login
     await page.getByRole('textbox', { name: 'E-Mail' }).fill('admin@alkem.io');
     await page.getByRole('textbox', { name: 'Password' }).fill(password);
-    await page
-      .getByRole('button', { name: 'Sign in', exact: true })
-      .click({ timeout: 500 });
+    // No explicit timeout: a click's timeout also covers the navigation it
+    // schedules, and 500ms is far too tight for a login submit round-trip.
+    await page.getByRole('button', { name: 'Sign in', exact: true }).click();
 
     // Wait for dashboard
     await page.waitForURL(/.*home.*/);

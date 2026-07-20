@@ -96,12 +96,16 @@ export default defineConfig({
       ],
     },
     {
-      name: 'Templetes',
+      name: 'Templates',
+      // The legacy `templates/` suite targets the pre-CRD Templates settings
+      // page and fails wholesale against the redesigned UI. `templates-CRD/`
+      // is the migrated, validated equivalent — see
+      // src/functional-e2e/templates-CRD/instructions.md for the selector map.
       testMatch: [
-        '/templates/template-types/callout-tests.spec.ts',
-        '/templates/template-types/community-guidance-template.spec.ts',
-        '/templates/template-types/post-template.spec.ts',
-        '/templates/template-types/whiteboard-template.spec.ts',
+        '/templates-CRD/template-types/callout-tests.spec.ts',
+        '/templates-CRD/template-types/community-guidelines-template.spec.ts',
+        '/templates-CRD/template-types/post-template.spec.ts',
+        '/templates-CRD/template-types/whiteboard-template.spec.ts',
       ],
     },
     {
