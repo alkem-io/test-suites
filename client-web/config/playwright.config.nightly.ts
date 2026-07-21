@@ -77,7 +77,7 @@ export default defineConfig({
     {
       name: 'Explore platform',
       testMatch: [
-        '/explore-platform/explore-platform-anonymous-test.spec.ts',
+        '/explore-platform/explore-platform-anonymous.spec.ts',
         '/explore-platform/explore-platform-authenticated.spec.ts',
       ],
     },

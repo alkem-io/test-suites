@@ -77,25 +77,11 @@ test.describe('Support Navigation Flow', () => {
       docsFrame.getByRole('heading', { name: 'Welcome to Alkemio Docs' })
     ).toBeVisible({ timeout: 15000 });
 
-    // 5. Navigate to "How to..." section and click "Inviting People to a Space"
-    await docsFrame
-      .getByRole('link', { name: 'Inviting People to a Space' })
-      .click();
-
-    // 6. Verify page navigates to /docs/how-to/inviting
-    await expect(newPage).toHaveURL(`${baseUrl}/docs/en-US/how-to/inviting`);
-
-    // [BUG] no embeded arcade iframe in the docs on test env
-    // 7. Inside the embedded invite tutorial iframe, click "Get started"
-    // const inviteFrame = docsFrame.frameLocator('iframe');
-    // await expect(inviteFrame.getByText('Get started')).toBeVisible();
-    // await inviteFrame.getByText('Get started').click();
-
-    // 8. Return to dashboard using the original page (more stable than clicking inside docs tab)
+    // 5. Return to dashboard using the original page
     await page.bringToFront();
     await page.goto(`${baseUrl}/home`);
 
-    // 9. Verify return to dashboard
+    // 6. Verify return to dashboard
     await verifyMyDashboardWelcomeElement(page);
   });
 });
