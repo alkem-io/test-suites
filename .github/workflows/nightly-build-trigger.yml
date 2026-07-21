@@ -22,10 +22,10 @@ jobs:
     needs: deploy-all-services
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install Kubectl
-        uses: azure/setup-kubectl@v4.0.0
+        uses: azure/setup-kubectl@v5.1.0
         with:
           version: "v1.29.6"
 
@@ -53,21 +53,21 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       # Pull the existing GitHub Pages site so we can append this run's report
       # and keep a full history (incremental runs) across deployments.
       - name: Checkout existing GitHub Pages content (gh-pages)
         continue-on-error: true
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: gh-pages
           path: out
           fetch-depth: 1
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: lts/*
 
@@ -75,7 +75,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Install Kubectl
-        uses: azure/setup-kubectl@v4.0.0
+        uses: azure/setup-kubectl@v5.1.0
         with:
           version: "v1.29.6"
 
@@ -159,10 +159,10 @@ jobs:
     if: always() && needs.acquire-lock.result == 'success'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install Kubectl
-        uses: azure/setup-kubectl@v4.0.0
+        uses: azure/setup-kubectl@v5.1.0
         with:
           version: "v1.29.6"
 

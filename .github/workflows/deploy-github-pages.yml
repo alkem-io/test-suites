@@ -41,19 +41,19 @@ jobs:
 
     steps:
       - name: Checkout site content
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref }}
           fetch-depth: 1
 
       - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Upload artifact for GitHub Pages
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: ${{ inputs.path }}
 
       - name: Deploy to GitHub Pages
         id: deploy
-        uses: actions/deploy-pages@v4.0.5
+        uses: actions/deploy-pages@v5
