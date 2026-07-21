@@ -14,11 +14,11 @@ jobs:
     needs: cleanup-db
     runs-on: m4
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: pnpm/action-setup@v4
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: lts/*
 
@@ -26,7 +26,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Install Kubectl
-        uses: azure/setup-kubectl@v4.0.0
+        uses: azure/setup-kubectl@v5.1.0
         with:
           version: "v1.29.6"
 
