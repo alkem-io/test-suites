@@ -148,4 +148,22 @@ export class CalendarEventFormPage {
   fieldPresent(fieldLabel: string): Locator {
     return this.page.getByLabel(fieldLabel);
   }
+
+  /**
+   * From the LIST view, navigate the calendar grid to `target`'s month and return
+   * the locator for the highlighted covered-day cells. EventsCalendarView marks
+   * every covered day (eventStart | eventBetween | eventEnd) with `bg-primary/20`,
+   * so counting these is the rendered proof of how many days the event spans.
+   */
+  async coveredDayCells(target: Date): Promise<Locator> {
+    const grid = this.page.getByRole('grid', { name: new RegExp(monthYear(target), 'i') });
+    if (!(await grid.isVisible({ timeout: 2000 }).catch(() => false))) {
+      const next = this.page.getByRole('button', { name: /next month/i });
+      for (let i = 0; i < 18 && !(await grid.isVisible({ timeout: 500 }).catch(() => false)); i++) {
+        await next.click();
+      }
+    }
+    await expect(grid, `${monthYear(target)} grid`).toBeVisible({ timeout: 10_000 });
+    return grid.locator('[class*="bg-primary/20"]');
+  }
 }

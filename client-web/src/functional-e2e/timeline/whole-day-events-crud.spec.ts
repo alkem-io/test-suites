@@ -185,8 +185,17 @@ test('T4: widening a single-day whole-day event to 4 days persists', async ({ fo
   await form.pickDate('End date', D(8, 13)); // widen to 4 days
   await form.save();
 
+  // Round-trip: the widened End date survives (indirect — implies durationMinutes persisted).
   await form.openEditFromDetail();
   expect(await form.readDate('End date')).toMatch(dateLabelRe(D(8, 13)));
+
+  // Direct proof it actually BECAME multi-day: the list-view grid must highlight
+  // exactly the 4 covered days (10, 11, 12, 13 Aug) — not stay a single cell.
+  // Guards against a "dates persist but multipleDays renders stale" regression,
+  // which the End-date read above cannot catch on its own.
+  await form.gotoCalendar(spaceNameId);
+  const cells = await form.coveredDayCells(D(8, 10));
+  await expect(cells, 'a widened 10->13 Aug whole-day event must cover exactly 4 days').toHaveCount(4);
 });
 
 // --- T5 (QA D4): toggling Whole day ON removes time-of-day fields -----------
