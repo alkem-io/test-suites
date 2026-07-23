@@ -156,14 +156,32 @@ export class CalendarEventFormPage {
    * so counting these is the rendered proof of how many days the event spans.
    */
   async coveredDayCells(target: Date): Promise<Locator> {
-    const grid = this.page.getByRole('grid', { name: new RegExp(monthYear(target), 'i') });
-    if (!(await grid.isVisible({ timeout: 2000 }).catch(() => false))) {
-      const next = this.page.getByRole('button', { name: /next month/i });
-      for (let i = 0; i < 18 && !(await grid.isVisible({ timeout: 500 }).catch(() => false)); i++) {
-        await next.click();
-      }
-    }
-    await expect(grid, `${monthYear(target)} grid`).toBeVisible({ timeout: 10_000 });
+    const grid = await this.monthGrid(target);
     return grid.locator('[class*="bg-primary/20"]');
+  }
+
+  /**
+   * Navigate the LIST-view calendar to `target`'s month and return that month's
+   * grid locator. Steps prev OR next (a target earlier than the shown month must
+   * be reachable), bounded. `Locator.isVisible()` is an instantaneous poll — no
+   * timeout is passed because Playwright ignores it on isVisible; the loop + waits
+   * do the waiting and the final `toBeVisible` is the authoritative assertion.
+   */
+  async monthGrid(target: Date): Promise<Locator> {
+    const wantLabel = monthYear(target);
+    const wantIdx = target.getFullYear() * 12 + target.getMonth();
+    const targetGrid = this.page.getByRole('grid', { name: new RegExp(wantLabel, 'i') });
+
+    for (let i = 0; i < 24; i++) {
+      if (await targetGrid.isVisible().catch(() => false)) break;
+      const shown = ((await this.page.getByRole('grid').first().getAttribute('aria-label')) ?? '').trim();
+      const [name, yr] = shown.split(' ');
+      const shownIdx = Number(yr) * 12 + MONTHS.indexOf(name);
+      const dir = Number.isFinite(shownIdx) && wantIdx < shownIdx ? /previous month/i : /next month/i;
+      await this.page.getByRole('button', { name: dir }).click();
+      await this.page.waitForTimeout(150);
+    }
+    await expect(targetGrid, `${wantLabel} grid`).toBeVisible({ timeout: 10_000 });
+    return targetGrid;
   }
 }

@@ -35,9 +35,19 @@ import { test, expect, Browser, BrowserContext } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 import { LoginPage } from '@src/functional-e2e/space/pages';
+import { CalendarEventFormPage, dateLabelRe } from './pages/CalendarEventFormPage';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const storageStatePath = path.join(process.cwd(), '.auth', 'whole-day-tz-admin.json');
+
+// Events live in NEXT year so the seeded dates and the grid month stay in the
+// future regardless of when the nightly runs (a hardcoded year silently expires).
+const YEAR = new Date().getFullYear() + 1;
+/** 3 Dec of YEAR — the single-day event; and the day before, for the off-by-one guard. */
+const DEC_3 = new Date(YEAR, 11, 3);
+const DEC_2 = new Date(YEAR, 11, 2);
+/** 23 Jul of YEAR — start of the 3-covered-day multi-day event. */
+const JUL_23 = new Date(YEAR, 6, 23);
 
 /** UTC-midnight wire value for a picked calendar date — what the fixed client sends. */
 const wholeDayWire = (y: number, m: number, d: number): Date =>
@@ -56,7 +66,9 @@ const VIEWER_TIMEZONES = [
 ] as const;
 
 const scenarioConfig: TestScenarioConfig = {
-  name: 'whole-day-tz',
+  // Per-run suffix so a retry / incomplete prior cleanup cannot collide on the
+  // space nameId (matches the API spec's cal-wd-tz-${uniqueId} convention).
+  name: `whole-day-tz-${Date.now()}`,
   space: {
     about: { profile: { displayName: 'Whole Day TZ Test Space' } },
     collaboration: {
@@ -124,13 +136,13 @@ test.beforeAll(async ({ browser }) => {
     calendarRes.data?.lookup?.space?.collaboration?.timeline?.calendar?.id ?? '';
   expect(calendarId, 'space calendar id').not.toBe('');
 
-  // 3 Dec 2026, single day (durationMinutes 0 => End === Start).
+  // 3 Dec, single day (durationMinutes 0 => End === Start).
   await createWholeDayEvent(
-    calendarId, admin.authToken, SINGLE_DAY_TITLE, wholeDayWire(2026, 12, 3), 0, 0, false
+    calendarId, admin.authToken, SINGLE_DAY_TITLE, wholeDayWire(YEAR, 12, 3), 0, 0, false
   );
-  // 23 -> 25 July 2026: offset of 2 days, so 3 covered days.
+  // 23 -> 25 July: offset of 2 days, so 3 covered days.
   await createWholeDayEvent(
-    calendarId, admin.authToken, MULTI_DAY_TITLE, wholeDayWire(2026, 7, 23), 2880, 2, true
+    calendarId, admin.authToken, MULTI_DAY_TITLE, wholeDayWire(YEAR, 7, 23), 2880, 2, true
   );
 
   calendarUrl = `${baseUrl}/${baseScenario.space.nameId}/calendar`;
@@ -177,9 +189,9 @@ for (const timezoneId of VIEWER_TIMEZONES) {
       await expect(card, `event visible in ${timezoneId}`).toBeVisible({ timeout: 15_000 });
 
       // EventDateBadge exposes the whole date as an aria-label (role="img") formatted
-      // with date-fns 'PPP' — e.g. "December 3rd, 2026". A day-shift regression shows
+      // with date-fns 'PPP' — e.g. "December 3rd, <YEAR>". A day-shift regression shows
       // up here as December 2nd for viewers east of UTC.
-      const badge = page.getByRole('img', { name: /December 3(rd)?, 2026/ }).first();
+      const badge = page.getByRole('img', { name: dateLabelRe(DEC_3) }).first();
       await expect(
         badge,
         `whole-day badge must read 3 December in ${timezoneId}, never 2 December`
@@ -188,7 +200,7 @@ for (const timezoneId of VIEWER_TIMEZONES) {
       // Explicitly assert the off-by-one day is ABSENT, so a badge that renders both
       // (or the wrong one) cannot pass.
       await expect(
-        page.getByRole('img', { name: /December 2(nd)?, 2026/ }),
+        page.getByRole('img', { name: dateLabelRe(DEC_2) }),
         `no 2 December badge may appear in ${timezoneId}`
       ).toHaveCount(0);
     } finally {
@@ -210,15 +222,8 @@ test('UI-C1: a 23->25 July whole-day event highlights exactly 3 calendar cells',
       timeout: 15_000,
     });
 
-    // Navigate the grid to July 2026 if it is not already showing.
-    const july = page.getByRole('grid', { name: /July 2026/i });
-    if (!(await july.isVisible({ timeout: 2000 }).catch(() => false))) {
-      const next = page.getByRole('button', { name: /next month/i });
-      for (let i = 0; i < 18 && !(await july.isVisible({ timeout: 500 }).catch(() => false)); i++) {
-        await next.click();
-      }
-    }
-    await expect(july, 'July 2026 grid').toBeVisible({ timeout: 10_000 });
+    // Navigate the grid to the event's month (July of YEAR), stepping either way.
+    const july = await new CalendarEventFormPage(page, baseUrl).monthGrid(JUL_23);
 
     // EventsCalendarView marks every covered day (eventStart | eventBetween | eventEnd)
     // with the shared `bg-primary/20` highlight class. Counting those cells is the

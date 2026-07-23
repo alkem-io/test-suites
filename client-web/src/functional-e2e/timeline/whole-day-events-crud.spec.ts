@@ -35,11 +35,17 @@ const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const storageStatePath = path.join(process.cwd(), '.auth', 'whole-day-crud-admin.json');
 const VIEWER_TZ = 'Europe/Sofia';
 
-// Fixed future dates (today is well before these), so picker month-nav is deterministic.
-const D = (m: number, d: number) => new Date(2026, m - 1, d);
+// Dates live in NEXT year so they are always in the future regardless of when the
+// suite runs (a hardcoded year silently expires — and would strand the nightly).
+// Using a fixed year keeps the month/day semantics stable and every intra-test
+// relationship (adjacent days, same-month spans) intact.
+const YEAR = new Date().getFullYear() + 1;
+const D = (m: number, d: number) => new Date(YEAR, m - 1, d);
 
 const scenarioConfig: TestScenarioConfig = {
-  name: 'whole-day-crud',
+  // Per-run suffix so a retry / incomplete prior cleanup cannot collide on the
+  // space nameId (matches the API spec's cal-wd-tz-${uniqueId} convention).
+  name: `whole-day-crud-${Date.now()}`,
   space: {
     about: { profile: { displayName: 'Whole Day CRUD Space' } },
     collaboration: {
@@ -106,10 +112,11 @@ test('T1: create a whole-day event via the form; it displays on the picked date'
 
   // Lands on the detail view; the badge must read the picked day, never a neighbour.
   await expect(
-    page.getByRole('img', { name: /December 3(rd)?, 2026/ }).first(),
+    page.getByRole('img', { name: dateLabelRe(D(12, 3)) }).first(),
     'whole-day create must anchor to the picked date (toWholeDayWire), not shift a day'
   ).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByRole('img', { name: /December 2(nd)?, 2026/ })).toHaveCount(0);
+  // The off-by-one bug shifts east-of-UTC viewers one day earlier — assert that day is absent.
+  await expect(page.getByRole('img', { name: dateLabelRe(D(12, 2)) })).toHaveCount(0);
 });
 
 // --- T2 (QA A9): edit round-trips the chosen dates with no ±1 drift --------
@@ -262,7 +269,7 @@ test('T7: a single-day whole-day event can be created without a date-range error
 
   // No "End must be after start" / "Invalid duration"; we reach the detail view.
   await expect(page.getByText('End must be after start')).toHaveCount(0);
-  await expect(page.getByRole('img', { name: /October 5(th)?, 2026/ }).first()).toBeVisible({
+  await expect(page.getByRole('img', { name: dateLabelRe(D(10, 5)) }).first()).toBeVisible({
     timeout: 15_000,
   });
 });
