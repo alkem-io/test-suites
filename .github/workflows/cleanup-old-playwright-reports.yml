@@ -19,7 +19,7 @@ jobs:
       # Check out gh-pages (best-effort: branch may not exist yet)
       - name: Checkout GitHub Pages content (gh-pages)
         continue-on-error: true
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: gh-pages
           path: out

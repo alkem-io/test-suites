@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install Kubectl
-        uses: azure/setup-kubectl@v4.0.0
+        uses: azure/setup-kubectl@v5.1.0
         with:
           version: "v1.29.6"
 
@@ -109,7 +109,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install Kubectl
-        uses: azure/setup-kubectl@v4.0.0
+        uses: azure/setup-kubectl@v5.1.0
         with:
           version: "v1.29.6"
 

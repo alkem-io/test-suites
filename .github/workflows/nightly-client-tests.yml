@@ -14,13 +14,13 @@ jobs:
     #      image: mcr.microsoft.com/playwright:v1.57.0-noble
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       # Pull the existing GitHub Pages site so we can append this run's report
       # and keep a full history (incremental runs) across deployments.
       - name: Checkout existing GitHub Pages content (gh-pages)
         continue-on-error: true
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: gh-pages
           path: out
@@ -28,7 +28,7 @@ jobs:
 
       - uses: pnpm/action-setup@v4
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 20.19.6
 
