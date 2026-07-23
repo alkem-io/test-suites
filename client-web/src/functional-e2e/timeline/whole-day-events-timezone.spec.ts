@@ -31,7 +31,7 @@ import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/O
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
 import { TestUserManager, getGraphqlClient } from '@alkemio/tests-lib';
 import { CalendarEventType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
-import { test as base, expect, Browser, BrowserContext } from '@playwright/test';
+import { test, expect, Browser, BrowserContext } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 import { LoginPage } from '@src/functional-e2e/space/pages';
@@ -107,10 +107,10 @@ const createWholeDayEvent = async (
   );
 };
 
-base.describe.configure({ mode: 'serial' });
+test.describe.configure({ mode: 'serial' });
 
-base.beforeAll(async ({ browser }) => {
-  base.setTimeout(120_000);
+test.beforeAll(async ({ browser }) => {
+  test.setTimeout(120_000);
 
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
 
@@ -149,7 +149,7 @@ base.beforeAll(async ({ browser }) => {
   await setupContext.close();
 });
 
-base.afterAll(async () => {
+test.afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
@@ -166,7 +166,7 @@ const openCalendarIn = async (
 
 // --- UI-A: the reported bug, at the layer the user actually sees ------------
 for (const timezoneId of VIEWER_TIMEZONES) {
-  base(`UI-A: a whole-day 3 Dec event displays as 3 December for a viewer in ${timezoneId}`, async ({
+  test(`UI-A: a whole-day 3 Dec event displays as 3 December for a viewer in ${timezoneId}`, async ({
     browser,
   }) => {
     const context = await openCalendarIn(browser, timezoneId);
@@ -198,7 +198,7 @@ for (const timezoneId of VIEWER_TIMEZONES) {
 }
 
 // --- UI-C1: multi-day span covers exactly its days -------------------------
-base('UI-C1: a 23->25 July whole-day event highlights exactly 3 calendar cells', async ({
+test('UI-C1: a 23->25 July whole-day event highlights exactly 3 calendar cells', async ({
   browser,
 }) => {
   // Timezone-neutral assertion; Sofia is used because it is the reported case.
@@ -245,7 +245,7 @@ base('UI-C1: a 23->25 July whole-day event highlights exactly 3 calendar cells',
 });
 
 // --- UI-D1: whole-day events have no time-of-day ---------------------------
-base('UI-D1: toggling "Whole day" removes Start time, End time and Duration', async ({
+test('UI-D1: toggling "Whole day" removes Start time, End time and Duration', async ({
   browser,
 }) => {
   const context = await openCalendarIn(browser, 'Europe/Sofia');

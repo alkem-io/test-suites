@@ -116,9 +116,9 @@ describe('Whole-day calendar events - export date correctness (server#6279)', ()
     const eventId = await createWholeDay(
       'WholeDay Dec',
       wholeDayWire(2026, 12, 3),
-      1440, // End - Start = 1 day
+      1440, // End - Start = 1 day offset => covers 2 days (3 + 4 Dec)
       1,
-      false
+      true // a 2-covered-day whole-day event is multi-day (durationDays > 0)
     );
 
     const ics = await downloadIcsFile(eventId, TestUser.SPACE_ADMIN);
@@ -136,9 +136,9 @@ describe('Whole-day calendar events - export date correctness (server#6279)', ()
     const eventId = await createWholeDay(
       'WholeDay Links',
       wholeDayWire(2026, 12, 3),
-      1440,
+      1440, // covers 2 days (3 + 4 Dec)
       1,
-      false
+      true
     );
 
     const res = await getCalendarEventById(eventId);
@@ -179,9 +179,9 @@ describe('Whole-day calendar events - export date correctness (server#6279)', ()
     const eventId = await createWholeDay(
       'WholeDay NewYear',
       wholeDayWire(2026, 12, 31),
-      1440,
+      1440, // covers 2 days: 31 Dec 2026 + 1 Jan 2027
       1,
-      false
+      true
     );
 
     const ics = await downloadIcsFile(eventId, TestUser.SPACE_ADMIN);

@@ -128,6 +128,13 @@ export default defineConfig({
         '/user-profile/view-profile-information.spec.ts',
       ],
     },
+    {
+      // Whole-day calendar timezone coverage (server#6279): rendering across
+      // browser timezones + client-driven CRUD. Browser TZ is pinned per test
+      // context, so these are valid against the UTC acceptance server.
+      name: 'Timeline',
+      testMatch: ['/timeline/*.spec.ts'],
+    },
   ],
   // % or number of the available CPUs
   // workers: '100%',
