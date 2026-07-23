@@ -29,7 +29,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: arc-runner-set
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       pages: write
