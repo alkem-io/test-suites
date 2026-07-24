@@ -270,11 +270,12 @@ describe('Move L1 to L2 - validation errors', () => {
  * stale anonymous READ (visibility leak), and a private→public move keeps a stale
  * lockout.
  *
- * ⚠️ EXPECTED TO FAIL against a server whose moveSpaceL1ToSpaceL2 omits
- * `updatePlatformRolesAccessRecursively` (alkem-io/server develop as of this
- * writing). The two "BEFORE the move" baselines pass; the two "after moving"
- * assertions fail until the server adds the recompute. Mirrors
- * move-L2-to-L1-authorization.it-spec.ts.
+ * ⚠️ These fail against a server that omits the recompute in moveSpaceL1ToSpaceL2
+ * (i.e. alkem-io/server before alkem-io/server#6304 / issue #6303) and pass once
+ * that fix is deployed. The two "after moving" tests each re-assert the anonymous
+ * precondition inline before the move, so a scenario that fails to grant anonymous
+ * read fails LOUDLY as a setup error instead of masking the leak with a vacuous
+ * [] → []. Mirrors move-L2-to-L1-authorization.it-spec.ts.
  */
 const anonymousSpacePrivileges = async (spaceId: string) => {
   const graphqlClient = getGraphqlClient();
@@ -362,6 +363,14 @@ describe('Move L1 to L2 - privacy recompute (platform-level anonymous access)', 
     });
 
     test('after demotion into the private chain, anonymous access is revoked entirely', async () => {
+      // Precondition guard: the public source MUST grant anonymous read here,
+      // else the post-move [] would be a vacuous pass that hides the leak.
+      const before = await anonymousSpacePrivileges(sourceScenario.subspace.id);
+      expect(
+        before,
+        'precondition: anonymous must be able to read the PUBLIC source L1 before the move — if this is [], the scenario is not establishing anonymous read and the test below would pass vacuously'
+      ).toEqual(sorted_read_readAbout_readLicense);
+
       const res = await moveSpaceL1ToSpaceL2(
         sourceScenario.subspace.id,
         targetScenario.subspace.id // target L1 → moved space becomes its L2
