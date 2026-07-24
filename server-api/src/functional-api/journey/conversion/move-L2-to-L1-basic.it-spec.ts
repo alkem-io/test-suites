@@ -235,9 +235,11 @@ describe('Move L2 to L1 - basic', () => {
 });
 
 /**
- * Rejections (FR-007) and the platform-admin gate (FR-012 / S9). Each rejection
- * uses a fresh pair of scenarios so a failed move cannot pollute the assertions
- * of a later case, and asserts an error plus no observable change.
+ * Rejections (FR-007) and the platform-admin gate (FR-012 / S9). A single pair
+ * of scenarios (rejSource/rejTarget) is created once in beforeAll and shared
+ * across every case — this is safe because each move is REJECTED and therefore
+ * produces no observable state change to pollute a later assertion. Each case
+ * asserts an error plus (where relevant) that nothing moved.
  */
 describe('Move L2 to L1 - rejections and authorization', () => {
   let rejSource: OrganizationWithSpaceModel;

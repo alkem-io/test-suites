@@ -270,12 +270,13 @@ describe('Move L1 to L2 - validation errors', () => {
  * stale anonymous READ (visibility leak), and a private→public move keeps a stale
  * lockout.
  *
- * ⚠️ These fail against a server that omits the recompute in moveSpaceL1ToSpaceL2
- * (i.e. alkem-io/server before alkem-io/server#6304 / issue #6303) and pass once
- * that fix is deployed. The two "after moving" tests each re-assert the anonymous
- * precondition inline before the move, so a scenario that fails to grant anonymous
- * read fails LOUDLY as a setup error instead of masking the leak with a vacuous
- * [] → []. Mirrors move-L2-to-L1-authorization.it-spec.ts.
+ * The recompute in moveSpaceL1ToSpaceL2 landed in alkem-io/server#6304 (fixes
+ * #6303), so these pass against current server. They were red before that fix.
+ * The two "after moving" tests each re-assert the anonymous precondition inline
+ * before the move, so a scenario that fails to grant anonymous read fails LOUDLY
+ * as a setup error instead of masking a regression with a vacuous [] → []. If
+ * the recompute is ever reverted, the "after moving" assertions go red again.
+ * Mirrors move-L2-to-L1-authorization.it-spec.ts.
  */
 const anonymousSpacePrivileges = async (spaceId: string) => {
   const graphqlClient = getGraphqlClient();

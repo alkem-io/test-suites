@@ -12,6 +12,7 @@ import {
   eventOnRoleSetInvitation,
 } from '@functional-api/roleset/roleset-events.request.params';
 import { getSingleInvitationResult } from '@functional-api/roleset/roleset.request.params';
+import { COMBINED_FLOW_REJECTION } from '@functional-api/roleset/hierarchy-parity/hierarchy-parity.fixture';
 import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
@@ -204,7 +205,11 @@ describe('Move L2 to L1 - pre-existing applications and invitations', () => {
       TestUser.SUBSUBSPACE_MEMBER
     );
 
-    expect(deniedApp.error?.errors?.length).toBeGreaterThan(0);
+    // Assert the specific eligibility denial, not merely that some error
+    // occurred — an unrelated GraphQL failure would otherwise satisfy the test.
+    expect(deniedApp.error?.errors?.[0]?.message).toMatch(
+      COMBINED_FLOW_REJECTION
+    );
     expect(deniedApp.data?.applyForEntryRoleOnRoleSet?.id).toBeUndefined();
   });
 });
