@@ -190,4 +190,21 @@ describe('Move L2 to L1 - pre-existing applications and invitations', () => {
       'approved'
     );
   });
+
+  test('a wiped former L2 member cannot apply after the move (recomputed eligibility)', async () => {
+    // SUBSUBSPACE_MEMBER was a member of the SOURCE L2; the move wiped that role
+    // and they are absent from the NEW parent chain (target L1). Apply-eligibility
+    // is recomputed from the new hierarchy:
+    //   - tier 1 (direct-parent members): they are NOT a target-L1 member;
+    //   - tier 2 (any authenticated platform user): requires an all-public +
+    //     opted-in chain, and the moved L2's chain is private — so it is off.
+    // Both tiers therefore deny them ROLESET_ENTRY_ROLE_APPLY. The apply must fail.
+    const deniedApp = await createApplication(
+      sourceScenario.subsubspace.community.roleSetId,
+      TestUser.SUBSUBSPACE_MEMBER
+    );
+
+    expect(deniedApp.error?.errors?.length).toBeGreaterThan(0);
+    expect(deniedApp.data?.applyForEntryRoleOnRoleSet?.id).toBeUndefined();
+  });
 });
