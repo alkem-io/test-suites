@@ -1,5 +1,4 @@
 import {
-  readAboutPrivilege,
   sorted_read_readAbout_readLicense,
   TestScenarioConfig,
   TestScenarioFactory,
@@ -231,19 +230,22 @@ describe('Move L2 to L1 - privacy recompute (FR-006 / US2-AS4 / SC-003 / S7)', (
       expect(privs).toEqual(sorted_read_readAbout_readLicense);
     });
 
-    test('after moving into the private chain, anonymous read is revoked (recomputed access)', async () => {
+    test('after moving into the private chain, anonymous access is revoked entirely (recomputed access)', async () => {
       const res = await moveSpaceL2ToSpaceL1(
         sourceScenario.subsubspace.id,
         targetScenario.subspace.id
       );
       expect(res.data?.moveSpaceL2ToSpaceL1).toBeDefined();
 
-      // Recomputed platform-access from the NEW (private) chain: anonymous
-      // loses READ and keeps only READ_ABOUT — no residual visibility.
+      // Recomputed platform-access from the NEW (private) chain: a subspace's
+      // anonymous access is gated behind the parent's anonymous READ. The new
+      // parent chain (private L1 under private L0) grants anonymous nothing, so
+      // the moved L2 — even though its own privacy mode is still public — loses
+      // ALL anonymous access, not merely READ. No residual visibility.
       const privs = await anonymousSpacePrivileges(
         sourceScenario.subsubspace.id
       );
-      expect(privs).toEqual(readAboutPrivilege);
+      expect(privs).toEqual([]);
     });
   });
 
@@ -251,7 +253,10 @@ describe('Move L2 to L1 - privacy recompute (FR-006 / US2-AS4 / SC-003 / S7)', (
     let sourceScenario: OrganizationWithSpaceModel;
     let targetScenario: OrganizationWithSpaceModel;
 
-    // Source top-level chain is PRIVATE.
+    // Source L0 + L1 are PRIVATE; the moved L2 leaf itself stays PUBLIC. This
+    // isolates the recompute: any anonymous access the L2 has must come from
+    // its parent chain, not its own privacy mode — so BEFORE (private chain) it
+    // has none, and AFTER (public chain) it regains full READ. Mirrors block 1.
     const privateSourceConfig: TestScenarioConfig = {
       ...publicSourceConfig,
       name: 'move-l2-l1-priv2pub-src',
@@ -264,10 +269,7 @@ describe('Move L2 to L1 - privacy recompute (FR-006 / US2-AS4 / SC-003 / S7)', (
         subspace: {
           ...publicSourceConfig.space!.subspace!,
           settings: { privacy: { mode: SpacePrivacyMode.Private } },
-          subspace: {
-            ...publicSourceConfig.space!.subspace!.subspace!,
-            settings: { privacy: { mode: SpacePrivacyMode.Private } },
-          },
+          // L2 leaf left PUBLIC (inherits publicSourceConfig's subsubspace).
         },
       },
     };
@@ -286,11 +288,13 @@ describe('Move L2 to L1 - privacy recompute (FR-006 / US2-AS4 / SC-003 / S7)', (
       await TestScenarioFactory.cleanUpBaseScenario(targetScenario);
     });
 
-    test('anonymous cannot read the private L2 BEFORE the move', async () => {
+    test('anonymous has no access to the public L2 under a private chain BEFORE the move', async () => {
+      // The L2 is public, but its private parent chain gates anonymous access
+      // to nothing — so anonymous sees the L2 not at all.
       const privs = await anonymousSpacePrivileges(
         sourceScenario.subsubspace.id
       );
-      expect(privs).toEqual(readAboutPrivilege);
+      expect(privs).toEqual([]);
     });
 
     test('after moving into the public chain, anonymous can read (no stale lockout)', async () => {
@@ -300,8 +304,9 @@ describe('Move L2 to L1 - privacy recompute (FR-006 / US2-AS4 / SC-003 / S7)', (
       );
       expect(res.data?.moveSpaceL2ToSpaceL1).toBeDefined();
 
-      // Recomputed platform-access from the NEW (public) chain: anonymous
-      // regains READ — no lockout from stale rules of the old private chain.
+      // Recomputed platform-access from the NEW (public) chain: the public L2
+      // regains full READ — no lockout from stale rules of the old private
+      // chain, and no partial state.
       const privs = await anonymousSpacePrivileges(
         sourceScenario.subsubspace.id
       );

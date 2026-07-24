@@ -21,10 +21,12 @@ import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/O
  * Move L2 to L1 - rooms and communication
  * (workspace#030-move-subspace-parent, FR-013)
  *
- * Messaging-room cleanup after a move is best-effort and never fails the move.
- * Discussion/comment rooms and their history are preserved; the announcement
- * (updates) channel is reset. Former members lose access to the moved space.
- * Mirrors move-L1-to-L2-rooms.it-spec.ts on an L2 source.
+ * A cross-L0 move removes memberships and pending applications/invitations
+ * only; all content travels with the space. Discussion/comment rooms, the
+ * updates (announcement) channel, and calendar events keep their history
+ * (epic alkem-io/alkemio#1846: "Updates go with the space"). Former members
+ * lose access to the moved space. Mirrors move-L1-to-L2-rooms.it-spec.ts on
+ * an L2 source.
  */
 
 let sourceScenario: OrganizationWithSpaceModel;
@@ -157,14 +159,17 @@ describe('Move L2 to L1 - rooms and communication', () => {
     expect(preserved?.profile.displayName).toBe('Event before move L2 to L1');
   });
 
-  test('announcement (updates) channel is reset after cross-L0 move (FR-013)', async () => {
+  test('updates (announcement) channel messages are preserved after cross-L0 move (FR-013)', async () => {
     const commData = await getSpaceCommunication(sourceScenario.subsubspace.id);
     const updatesMessages =
       commData.data?.lookup.space?.community.communication.updates.messages ??
       [];
 
-    // The announcement channel is reset (recreated empty) on a cross-L0 move.
-    expect(updatesMessages).toHaveLength(0);
+    // Content travels with the space: a cross-L0 move removes memberships and
+    // pending applications/invitations only. The updates channel and its
+    // history are preserved (epic alkem-io/alkemio#1846: "Updates go with the
+    // space"), like discussion messages and calendar events above.
+    expect(updatesMessages).toHaveLength(1);
   });
 
   test('former member cannot access the moved space (FR-004 downstream)', async () => {
