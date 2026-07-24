@@ -167,9 +167,19 @@ describe('Move L2 to L1 - pre-existing applications and invitations', () => {
   });
 
   test('new application can be submitted and approved after move', async () => {
+    // Apply as a member of the moved L2's NEW direct parent (target L1). After
+    // the move, apply-eligibility is recomputed from the new hierarchy:
+    //   - direct-parent (target L1) members get ROLESET_ENTRY_ROLE_APPLY
+    //     unconditionally (privacy-independent);
+    //   - the broader "any authenticated platform user" tier applies ONLY when
+    //     every ancestor is public + opted-in — a private L0/L1 removes it.
+    // The moved L2's chain here is private, so a former L2 member
+    // (SUBSUBSPACE_MEMBER, wiped by the move and absent from the new chain)
+    // correctly cannot apply. SUBSPACE_MEMBER is a target-L1 member and not a
+    // member of the wiped L2, so it is genuinely eligible.
     const newApp = await createApplication(
       sourceScenario.subsubspace.community.roleSetId,
-      TestUser.SUBSUBSPACE_MEMBER
+      TestUser.SUBSPACE_MEMBER
     );
     const newAppId = newApp?.data?.applyForEntryRoleOnRoleSet?.id ?? '';
     expect(newAppId).not.toBe('');
