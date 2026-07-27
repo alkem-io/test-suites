@@ -26,14 +26,14 @@ import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/O
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
 import { TestUserManager } from '@alkemio/tests-lib';
 import { test as base, expect, BrowserContext, Page } from '@playwright/test';
-import fs from 'fs';
-import path from 'path';
-import { LoginPage } from '@src/functional-e2e/space/pages';
+import { ensurePersonaState } from '@src/functional-e2e/fixtures/authenticated-session.fixture';
 import { CalendarEventFormPage, dateLabelRe } from './pages/CalendarEventFormPage';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
-const storageStatePath = path.join(process.cwd(), '.auth', 'whole-day-crud-admin.json');
 const VIEWER_TZ = 'Europe/Sofia';
+// Resolved in beforeAll to the shared per-persona session (login happens at
+// most once per user per run — see authenticated-session.fixture).
+let storageStatePath: string;
 
 // Dates live in NEXT year so they are always in the future regardless of when the
 // suite runs (a hardcoded year silently expires — and would strand the nightly).
@@ -82,14 +82,12 @@ test.beforeAll(async ({ browser }) => {
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
   spaceNameId = baseScenario.space.nameId;
 
-  await fs.promises.mkdir(path.dirname(storageStatePath), { recursive: true });
-  const setupContext = await browser.newContext({ timezoneId: VIEWER_TZ });
-  const setupPage = await setupContext.newPage();
-  await new LoginPage(setupPage, baseUrl).login(TestUserManager.users.spaceAdmin.email);
-  const accept = setupPage.getByRole('button', { name: 'Accept all cookies' });
-  if (await accept.isVisible({ timeout: 3000 }).catch(() => false)) await accept.click();
-  await setupContext.storageState({ path: storageStatePath });
-  await setupContext.close();
+  // Reuse the shared spaceAdmin session (logs in once per run, cached to disk).
+  // The timezone pinning lives on the per-test context below, not the session.
+  storageStatePath = await ensurePersonaState(
+    browser,
+    TestUserManager.users.spaceAdmin.email
+  );
 });
 
 test.afterAll(async () => {
