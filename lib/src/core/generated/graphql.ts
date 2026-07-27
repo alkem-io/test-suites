@@ -45,18 +45,28 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean };
   Int: { input: number; output: number };
   Float: { input: number; output: number };
+  /** A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format. */
   DateTime: { input: Date; output: Date };
+  /** An Emoji. */
   Emoji: { input: any; output: any };
+  /** A representation of a Lifecycle Definition, based on XState. It is serialized JSON. */
   LifecycleDefinition: { input: any; output: any };
+  /** A markdown string. */
   Markdown: { input: any; output: any };
+  /** An identifier that originates from the underlying messaging platform. */
   MessageID: { input: any; output: any };
+  /** A human readable identifier, 3 <= length <= 28. Used for URL paths in clients. Characters allowed: a-z,A-Z,0-9. */
   NameID: { input: string; output: string };
+  /** Cursor used for paginating search results. */
   SearchCursor: { input: any; output: any };
+  /** A uuid identifier. Length 36 characters. */
   UUID: { input: string; output: string };
+  /** The `Upload` scalar type represents a file upload. */
   Upload: {
     input: import("graphql-upload").FileUpload;
     output: import("graphql-upload").FileUpload;
   };
+  /** Content of a Whiteboard, as JSON. */
   WhiteboardContent: { input: any; output: any };
 };
 
@@ -868,6 +878,9 @@ export enum AuthorizationCredential {
   AccountAdmin = "ACCOUNT_ADMIN",
   AssistantAccess = "ASSISTANT_ACCESS",
   BetaTester = "BETA_TESTER",
+  FeatureBetaTester = "FEATURE_BETA_TESTER",
+  FeatureOrganizationCreator = "FEATURE_ORGANIZATION_CREATOR",
+  FeatureVirtualAssistant = "FEATURE_VIRTUAL_ASSISTANT",
   GlobalAdmin = "GLOBAL_ADMIN",
   GlobalAnonymous = "GLOBAL_ANONYMOUS",
   GlobalCommunityRead = "GLOBAL_COMMUNITY_READ",
@@ -881,6 +894,16 @@ export enum AuthorizationCredential {
   OrganizationAdmin = "ORGANIZATION_ADMIN",
   OrganizationAssociate = "ORGANIZATION_ASSOCIATE",
   OrganizationOwner = "ORGANIZATION_OWNER",
+  PlatformAuditReader = "PLATFORM_AUDIT_READER",
+  PlatformContentFullAccess = "PLATFORM_CONTENT_FULL_ACCESS",
+  PlatformLicenseManager = "PLATFORM_LICENSE_MANAGER",
+  PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
+  PlatformResourceAdmin = "PLATFORM_RESOURCE_ADMIN",
+  PlatformRolesAdmin = "PLATFORM_ROLES_ADMIN",
+  PlatformSettingsAdmin = "PLATFORM_SETTINGS_ADMIN",
+  PlatformSpacesReader = "PLATFORM_SPACES_READER",
+  PlatformSupport = "PLATFORM_SUPPORT",
+  PlatformUsersAdmin = "PLATFORM_USERS_ADMIN",
   SpaceAdmin = "SPACE_ADMIN",
   SpaceLead = "SPACE_LEAD",
   SpaceMember = "SPACE_MEMBER",
@@ -993,6 +1016,9 @@ export enum AuthorizationPrivilege {
   CreateVirtual = "CREATE_VIRTUAL",
   CreateWhiteboard = "CREATE_WHITEBOARD",
   Delete = "DELETE",
+  DeleteOrganization = "DELETE_ORGANIZATION",
+  FeatureRoleAssign = "FEATURE_ROLE_ASSIGN",
+  FeatureRoleHoldersRead = "FEATURE_ROLE_HOLDERS_READ",
   FileDelete = "FILE_DELETE",
   FileUpload = "FILE_UPLOAD",
   Grant = "GRANT",
@@ -1001,7 +1027,14 @@ export enum AuthorizationPrivilege {
   MoveContribution = "MOVE_CONTRIBUTION",
   MovePost = "MOVE_POST",
   PlatformAdmin = "PLATFORM_ADMIN",
+  PlatformAuditRead = "PLATFORM_AUDIT_READ",
+  PlatformContentFullAccess = "PLATFORM_CONTENT_FULL_ACCESS",
+  PlatformForumManage = "PLATFORM_FORUM_MANAGE",
+  PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
+  PlatformRoleHoldersRead = "PLATFORM_ROLE_HOLDERS_READ",
   PlatformSettingsAdmin = "PLATFORM_SETTINGS_ADMIN",
+  PlatformSupportOrgResources = "PLATFORM_SUPPORT_ORG_RESOURCES",
+  PlatformUsersAdmin = "PLATFORM_USERS_ADMIN",
   PublicShare = "PUBLIC_SHARE",
   Read = "READ",
   ReadAbout = "READ_ABOUT",
@@ -1020,12 +1053,14 @@ export enum AuthorizationPrivilege {
   RolesetEntryRoleInvite = "ROLESET_ENTRY_ROLE_INVITE",
   RolesetEntryRoleInviteAccept = "ROLESET_ENTRY_ROLE_INVITE_ACCEPT",
   RolesetEntryRoleJoin = "ROLESET_ENTRY_ROLE_JOIN",
+  SetServiceProfile = "SET_SERVICE_PROFILE",
   TransferResourceAccept = "TRANSFER_RESOURCE_ACCEPT",
   TransferResourceOffer = "TRANSFER_RESOURCE_OFFER",
   Update = "UPDATE",
   UpdateCalloutPublisher = "UPDATE_CALLOUT_PUBLISHER",
   UpdateContent = "UPDATE_CONTENT",
   UpdateInnovationFlow = "UPDATE_INNOVATION_FLOW",
+  UpdateNameid = "UPDATE_NAMEID",
 }
 
 export type Calendar = {
@@ -2731,6 +2766,9 @@ export enum CredentialType {
   AccountLicensePlus = "ACCOUNT_LICENSE_PLUS",
   AssistantAccess = "ASSISTANT_ACCESS",
   BetaTester = "BETA_TESTER",
+  FeatureBetaTester = "FEATURE_BETA_TESTER",
+  FeatureOrganizationCreator = "FEATURE_ORGANIZATION_CREATOR",
+  FeatureVirtualAssistant = "FEATURE_VIRTUAL_ASSISTANT",
   GlobalAdmin = "GLOBAL_ADMIN",
   GlobalAnonymous = "GLOBAL_ANONYMOUS",
   GlobalCommunityRead = "GLOBAL_COMMUNITY_READ",
@@ -2744,6 +2782,16 @@ export enum CredentialType {
   OrganizationAdmin = "ORGANIZATION_ADMIN",
   OrganizationAssociate = "ORGANIZATION_ASSOCIATE",
   OrganizationOwner = "ORGANIZATION_OWNER",
+  PlatformAuditReader = "PLATFORM_AUDIT_READER",
+  PlatformContentFullAccess = "PLATFORM_CONTENT_FULL_ACCESS",
+  PlatformLicenseManager = "PLATFORM_LICENSE_MANAGER",
+  PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
+  PlatformResourceAdmin = "PLATFORM_RESOURCE_ADMIN",
+  PlatformRolesAdmin = "PLATFORM_ROLES_ADMIN",
+  PlatformSettingsAdmin = "PLATFORM_SETTINGS_ADMIN",
+  PlatformSpacesReader = "PLATFORM_SPACES_READER",
+  PlatformSupport = "PLATFORM_SUPPORT",
+  PlatformUsersAdmin = "PLATFORM_USERS_ADMIN",
   SpaceAdmin = "SPACE_ADMIN",
   SpaceFeatureMemoMultiUser = "SPACE_FEATURE_MEMO_MULTI_USER",
   SpaceFeatureOfficeDocuments = "SPACE_FEATURE_OFFICE_DOCUMENTS",
@@ -4713,9 +4761,9 @@ export type Mutation = {
   adminUpdateGeoLocationData: Scalars["Boolean"]["output"];
   /** Remove the Kratos account associated with the specified User. Note: the Users profile on the platform is not deleted. */
   adminUserAccountDelete: User;
-  /** Change a user's login email synchronously, acting as a platform administrator. The admin is responsible for verifying the subject user's identity out-of-band — the platform does NOT send a confirmation message to the new mailbox and does NOT require the new mailbox to prove ownership. Validates uniqueness, commits Kratos → Alkemio with bounded retry, invalidates the subject's existing sessions, and sends a security-signal notification to the old address. Requires PLATFORM_ADMIN. */
+  /** Change a user's login email synchronously, acting as a platform administrator. The admin is responsible for verifying the subject user's identity out-of-band — the platform does NOT send a confirmation message to the new mailbox and does NOT require the new mailbox to prove ownership. Validates uniqueness, commits Kratos → Alkemio with bounded retry, invalidates the subject's existing sessions, and sends a security-signal notification to the old address. Requires PLATFORM_USERS_ADMIN. */
   adminUserEmailChange: UserEmailChangeResult;
-  /** Reconcile an outstanding drift-detected state for a subject user by force-aligning Alkemio and Kratos to a canonical email chosen by the admin. Requires PLATFORM_ADMIN. */
+  /** Reconcile an outstanding drift-detected state for a subject user by force-aligning Alkemio and Kratos to a canonical email chosen by the admin. Requires PLATFORM_USERS_ADMIN. */
   adminUserEmailChangeDriftResolve: UserEmailChangeResult;
   /** Create a test customer on wingback. */
   adminWingbackCreateTestCustomer: Scalars["String"]["output"];
@@ -4737,6 +4785,8 @@ export type Mutation = {
   assignLicensePlanToAccount: Account;
   /** Assign the specified LicensePlan to a Space. */
   assignLicensePlanToSpace: Space;
+  /** Assigns an Organization to a role on the Platform. */
+  assignPlatformRoleToOrganization: Organization;
   /** Assigns a User to a role on the Platform. */
   assignPlatformRoleToUser: User;
   /** Assigns an Actor (User, Organization, or Virtual Contributor) to a role in the specified RoleSet. */
@@ -4927,6 +4977,8 @@ export type Mutation = {
   removeMessageOnRoom: Scalars["MessageID"]["output"];
   /** Removes an email address from the platform notification blacklist */
   removeNotificationEmailFromBlacklist: Array<Scalars["String"]["output"]>;
+  /** Removes an Organization from a Role on the Platform. */
+  removePlatformRoleFromOrganization: Organization;
   /** Removes a User from a Role on the Platform. */
   removePlatformRoleFromUser: User;
   /** Remove an option from a Poll. Requires UPDATE privilege. Poll must retain at least 2 options. Votes that selected this option are deleted and affected voters are notified. */
@@ -4995,7 +5047,7 @@ export type Mutation = {
   unsubscribeFromPushNotifications: PushSubscription;
   /** Update the Application Form used by this RoleSet. */
   updateApplicationFormOnRoleSet: RoleSet;
-  /** Set the admin per-capability grant on the virtual-assistant actor, governing what it may do system-invoked (default read-only). Requires platform-admin. */
+  /** Set the admin per-capability grant on the virtual-assistant actor, governing what it may do system-invoked (default read-only). Requires the platform-operations-admin privilege. */
   updateAssistantActorCapabilities: VirtualAssistant;
   /** Update the baseline License Plan on the specified Account. */
   updateBaselineLicensePlanOnAccount: Account;
@@ -5207,6 +5259,10 @@ export type MutationAssignLicensePlanToAccountArgs = {
 
 export type MutationAssignLicensePlanToSpaceArgs = {
   planData: AssignLicensePlanToSpace;
+};
+
+export type MutationAssignPlatformRoleToOrganizationArgs = {
+  roleData: AssignPlatformRoleInput;
 };
 
 export type MutationAssignPlatformRoleToUserArgs = {
@@ -5571,6 +5627,10 @@ export type MutationRemoveMessageOnRoomArgs = {
 
 export type MutationRemoveNotificationEmailFromBlacklistArgs = {
   input: NotificationEmailAddressInput;
+};
+
+export type MutationRemovePlatformRoleFromOrganizationArgs = {
+  roleData: RemovePlatformRoleInput;
 };
 
 export type MutationRemovePlatformRoleFromUserArgs = {
@@ -7393,6 +7453,9 @@ export enum RoleName {
   Admin = "ADMIN",
   Anonymous = "ANONYMOUS",
   Associate = "ASSOCIATE",
+  FeatureBetaTester = "FEATURE_BETA_TESTER",
+  FeatureOrganizationCreator = "FEATURE_ORGANIZATION_CREATOR",
+  FeatureVirtualAssistant = "FEATURE_VIRTUAL_ASSISTANT",
   GlobalAdmin = "GLOBAL_ADMIN",
   GlobalCommunityReader = "GLOBAL_COMMUNITY_READER",
   GlobalLicenseManager = "GLOBAL_LICENSE_MANAGER",
@@ -7405,7 +7468,17 @@ export enum RoleName {
   Member = "MEMBER",
   Owner = "OWNER",
   PlatformAssistantAccess = "PLATFORM_ASSISTANT_ACCESS",
+  PlatformAuditReader = "PLATFORM_AUDIT_READER",
   PlatformBetaTester = "PLATFORM_BETA_TESTER",
+  PlatformContentFullAccess = "PLATFORM_CONTENT_FULL_ACCESS",
+  PlatformLicenseManager = "PLATFORM_LICENSE_MANAGER",
+  PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
+  PlatformResourceAdmin = "PLATFORM_RESOURCE_ADMIN",
+  PlatformRolesAdmin = "PLATFORM_ROLES_ADMIN",
+  PlatformSettingsAdmin = "PLATFORM_SETTINGS_ADMIN",
+  PlatformSpacesReader = "PLATFORM_SPACES_READER",
+  PlatformSupport = "PLATFORM_SUPPORT",
+  PlatformUsersAdmin = "PLATFORM_USERS_ADMIN",
   PlatformVcCampaign = "PLATFORM_VC_CAMPAIGN",
   Registered = "REGISTERED",
 }
@@ -18945,6 +19018,15 @@ export type MutationResolvers<
     ContextType,
     RequireFields<SchemaTypes.MutationAssignLicensePlanToSpaceArgs, "planData">
   >;
+  assignPlatformRoleToOrganization?: Resolver<
+    ResolversTypes["Organization"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationAssignPlatformRoleToOrganizationArgs,
+      "roleData"
+    >
+  >;
   assignPlatformRoleToUser?: Resolver<
     ResolversTypes["User"],
     ParentType,
@@ -19625,6 +19707,15 @@ export type MutationResolvers<
     RequireFields<
       SchemaTypes.MutationRemoveNotificationEmailFromBlacklistArgs,
       "input"
+    >
+  >;
+  removePlatformRoleFromOrganization?: Resolver<
+    ResolversTypes["Organization"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationRemovePlatformRoleFromOrganizationArgs,
+      "roleData"
     >
   >;
   removePlatformRoleFromUser?: Resolver<
