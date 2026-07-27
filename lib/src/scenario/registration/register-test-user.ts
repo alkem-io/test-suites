@@ -1,6 +1,7 @@
 import { UiText } from '@ory/kratos-client';
 import { registerInKratosOrFail } from './register-in-kratos-or-fail';
 import { verifyInKratosOrFail } from './verify-in-kratos-or-fail';
+import { grantSingleRoleFixtures } from './grant-single-role-fixtures';
 import { TestUser } from '../../common/enums/test.user';
 
 const parseUserName = (userName: string): [string, string] => {
@@ -82,4 +83,12 @@ export const registerAllTestUsers = async (): Promise<void> => {
       console.error(`Unable to register user ${username}: ${error}`);
     }
   }
+
+  // workspace#027-platform-role-redesign (Slice A, T004): grant each new
+  // single-role fixture its one target role, now that every fixture is a
+  // registered + verified Kratos identity. Deliberately a second pass rather
+  // than interleaved above — role assignment is Alkemio-side and shares none
+  // of the Kratos-flow rate-limit constraints that make the loop above
+  // sequential.
+  await grantSingleRoleFixtures();
 };
