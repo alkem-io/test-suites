@@ -82,18 +82,28 @@ export async function ensurePersonaState(
   let lastError: unknown;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const context = await browser.newContext({ storageState: undefined });
+    // pid-unique temp path so two concurrent workers can't clobber each other's
+    // in-progress write.
+    const tmpPath = `${statePath}.${process.pid}.${attempt}.tmp`;
     try {
       const page = await context.newPage();
       const loginPage = new LoginPage(page, baseUrl);
       await loginPage.login(email);
       await dismissNewDesignDialog(page);
-      await context.storageState({ path: statePath });
+      // Write atomically: the fs.existsSync reuse check above must never observe
+      // a half-written persona file (a concurrent worker in the default
+      // multi-worker config would then load truncated JSON). Write a temp file,
+      // then rename it into place (atomic on the same filesystem). Last writer
+      // wins, which is fine — every persona session is equivalent.
+      await context.storageState({ path: tmpPath });
+      await fs.promises.rename(tmpPath, statePath);
       await context.close();
       personaStatePaths.set(email, statePath);
       return statePath;
     } catch (error) {
       lastError = error;
       await context.close().catch(() => {});
+      await fs.promises.unlink(tmpPath).catch(() => {});
       console.warn(
         `[auth] login for ${email} failed (attempt ${attempt}/${maxAttempts}): ${
           (error as Error)?.message ?? error
