@@ -115,6 +115,20 @@ export default defineConfig({
       project('graphql-guard', [
         'src/functional-api/graphql-guard/**/*.it-spec.ts',
       ]),
+      // workspace#027-platform-role-redesign (T005). Both projects read the
+      // SAME generated table (role-action-matrix.data.ts, T008) with a
+      // filter, so they cannot disagree with each other — a second table
+      // would be the defect. `platform-roles-canonical` is the PR-feedback
+      // inner loop (one canonical surface per live A-row); `platform-roles`
+      // is the full cross-product and the Slice B release-train gate.
+      // Empty until the census (T007a) and matrix (T008/T009) land — see
+      // the Phase 2 checkpoint in tasks/test-suites.md.
+      project('platform-roles-canonical', [
+        'src/functional-api/platform-roles/**/*.it-spec.ts',
+      ]),
+      project('platform-roles', [
+        'src/functional-api/platform-roles/**/*.it-spec.ts',
+      ]),
       project('nightly', [
         'src/functional-api/account/**/*.it-spec.ts',
         'src/functional-api/roleset/**/*.it-spec.ts',
