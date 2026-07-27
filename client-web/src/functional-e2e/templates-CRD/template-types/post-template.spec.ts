@@ -125,11 +125,10 @@ test.describe.serial('Post Templates', () => {
     // Click the Save button to save the Post Template
     await saveButton.click();
 
-    // Verify the dialog closes. The save round-trip is slower on the test env,
-    // so allow more than the default 5s for the dialog to disappear.
+    // Verify the dialog closes
     await expect(
       page.getByRole('heading', { name: 'Create post template' })
-    ).not.toBeVisible({ timeout: 15000 });
+    ).not.toBeVisible();
 
     await verifyPostTemplate(page, templateData);
   });
@@ -164,11 +163,10 @@ test.describe.serial('Post Templates', () => {
     await expect(saveButton).toBeEnabled();
     await saveButton.click();
 
-    // Verify the dialog closes. The save round-trip is slower on the test env,
-    // so allow more than the default 5s for the dialog to disappear.
+    // Verify the dialog closes
     await expect(
       page.getByRole('heading', { name: 'Edit post template' })
-    ).not.toBeVisible({ timeout: 15000 });
+    ).not.toBeVisible();
 
     // Verify the data was updated
     await verifyPostTemplate(page, templateData);

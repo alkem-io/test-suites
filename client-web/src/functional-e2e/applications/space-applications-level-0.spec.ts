@@ -203,6 +203,9 @@ test.describe('Level 0 Space - Applications', () => {
 
   test.describe('Application Management', () => {
     test.beforeEach(async () => {
+      // Per-test scenario creation + application submission exceeds the default
+      // 30s hook budget on the slower test env.
+      test.setTimeout(60_000);
       baseScenario =
         await TestScenarioFactory.createBaseScenario(scenarioConfig);
       const spaceName = baseScenario.space.about.profile.displayName;

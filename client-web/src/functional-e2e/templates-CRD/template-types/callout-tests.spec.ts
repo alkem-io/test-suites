@@ -207,11 +207,6 @@ test.describe.serial('Callout Templates', () => {
   });
 
   test.beforeEach(async ({ page }) => {
-    // On the test env the settings navigation + reload eats much of the default
-    // 30s budget, leaving too little for the create-template flow (the "Create
-    // new" menu item click timed out). Extend the per-test budget for this
-    // (slow, data-driven) suite so the body has room to complete.
-    test.setTimeout(60_000);
     await page.goto(
       `${baseUrl}/${baseScenario.space.nameId}/settings/templates`
     );
