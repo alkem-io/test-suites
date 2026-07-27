@@ -1,0 +1,5 @@
+mutation authorizationPolicyResetToGlobalAdminsAccess($authorizationID: String!) {
+  authorizationPolicyResetToGlobalAdminsAccess(authorizationID: $authorizationID) {
+    id
+  }
+}

@@ -659,6 +659,13 @@ export type AdminUserEmailChangeInput = {
   userID: Scalars["UUID"]["input"];
 };
 
+/** [test-suites patch — mirrors src/platform-admin/domain/whiteboard/admin.whiteboard.files.result.ts] */
+export type AdminWhiteboardFilesResult = {
+  errors: Array<Scalars["String"]["output"]>;
+  results: Array<Scalars["String"]["output"]>;
+  warns: Array<Scalars["String"]["output"]>;
+};
+
 export type AiPersona = {
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
@@ -4609,6 +4616,7 @@ export type Metadata = {
   services: Array<ServiceMetadata>;
 };
 
+/** [test-suites patch — mirrors src/services/ai-server/ai-server/ai.server.resolver.mutations.ts's local @ObjectType('MigrateEmbeddings')] */
 export type MigrateEmbeddings = {
   /** Result from the mutation execution. */
   success: Scalars["Boolean"]["output"];
@@ -4753,6 +4761,8 @@ export type Mutation = {
   adminUpdateContributorAvatars: Profile;
   /** Updates the GeoLocation data where required on the platform. */
   adminUpdateGeoLocationData: Scalars["Boolean"]["output"];
+  /** [test-suites patch] Uploads the files from the Whiteboard content into the StorageBucket of that Whiteboard. */
+  adminUploadFilesFromContentToStorageBucket: AdminWhiteboardFilesResult;
   /** Remove the Kratos account associated with the specified User. Note: the Users profile on the platform is not deleted. */
   adminUserAccountDelete: User;
   /** Change a user's login email synchronously, acting as a platform administrator. The admin is responsible for verifying the subject user's identity out-of-band — the platform does NOT send a confirmation message to the new mailbox and does NOT require the new mailbox to prove ownership. Validates uniqueness, commits Kratos → Alkemio with bounded retry, invalidates the subject's existing sessions, and sends a security-signal notification to the old address. Requires PLATFORM_USERS_ADMIN. */
@@ -11034,6 +11044,7 @@ export type ResolversTypes = {
   AddVisualToMediaGalleryInput: AddVisualToMediaGalleryInput;
   AdminUserEmailChangeDriftResolveInput: AdminUserEmailChangeDriftResolveInput;
   AdminUserEmailChangeInput: AdminUserEmailChangeInput;
+  AdminWhiteboardFilesResult: ResolverTypeWrapper<AdminWhiteboardFilesResult>;
   AiPersona: ResolverTypeWrapper<AiPersona>;
   AiPersonaEngine: AiPersonaEngine;
   AiServer: ResolverTypeWrapper<AiServer>;
@@ -12628,6 +12639,7 @@ export type ResolversParentTypes = {
   AddVisualToMediaGalleryInput: AddVisualToMediaGalleryInput;
   AdminUserEmailChangeDriftResolveInput: AdminUserEmailChangeDriftResolveInput;
   AdminUserEmailChangeInput: AdminUserEmailChangeInput;
+  AdminWhiteboardFilesResult: AdminWhiteboardFilesResult;
   AiPersona: AiPersona;
   AiServer: AiServer;
   Application: Omit<Application, "actor"> & {
@@ -14399,6 +14411,16 @@ export type ActorRolesResolvers<
     ParentType,
     ContextType
   >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type AdminWhiteboardFilesResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["AdminWhiteboardFilesResult"] = ResolversParentTypes["AdminWhiteboardFilesResult"]
+> = {
+  errors?: Resolver<Array<ResolversTypes["String"]>, ParentType, ContextType>;
+  results?: Resolver<Array<ResolversTypes["String"]>, ParentType, ContextType>;
+  warns?: Resolver<Array<ResolversTypes["String"]>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -18375,6 +18397,11 @@ export type MutationResolvers<
   >;
   adminUpdateGeoLocationData?: Resolver<
     ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
+  adminUploadFilesFromContentToStorageBucket?: Resolver<
+    ResolversTypes["AdminWhiteboardFilesResult"],
     ParentType,
     ContextType
   >;
@@ -23775,6 +23802,7 @@ export type Resolvers<ContextType = any> = {
   ActorFull?: ActorFullResolvers<ContextType>;
   ActorRolePolicy?: ActorRolePolicyResolvers<ContextType>;
   ActorRoles?: ActorRolesResolvers<ContextType>;
+  AdminWhiteboardFilesResult?: AdminWhiteboardFilesResultResolvers<ContextType>;
   AiPersona?: AiPersonaResolvers<ContextType>;
   AiServer?: AiServerResolvers<ContextType>;
   Application?: ApplicationResolvers<ContextType>;
@@ -79402,6 +79430,396 @@ export type UpdateOrganizationSettingsMutation = {
   };
 };
 
+export type AddIframeAllowedUrlMutationVariables = Exact<{
+  whitelistedURL: Scalars["String"]["input"];
+}>;
+
+export type AddIframeAllowedUrlMutation = {
+  addIframeAllowedURL: Array<string>;
+};
+
+export type AddNotificationEmailToBlacklistMutationVariables = Exact<{
+  input: NotificationEmailAddressInput;
+}>;
+
+export type AddNotificationEmailToBlacklistMutation = {
+  addNotificationEmailToBlacklist: Array<string>;
+};
+
+export type AdminCommunicationEnsureAccessToCommunicationsMutationVariables =
+  Exact<{
+    communicationData: CommunicationAdminEnsureAccessInput;
+  }>;
+
+export type AdminCommunicationEnsureAccessToCommunicationsMutation = {
+  adminCommunicationEnsureAccessToCommunications: boolean;
+};
+
+export type AdminCommunicationMigrateOrphanedConversationsMutationVariables =
+  Exact<{ [key: string]: never }>;
+
+export type AdminCommunicationMigrateOrphanedConversationsMutation = {
+  adminCommunicationMigrateOrphanedConversations: { migrated: number };
+};
+
+export type AdminCommunicationRemoveOrphanedRoomMutationVariables = Exact<{
+  orphanedRoomData: CommunicationAdminRemoveOrphanedRoomInput;
+}>;
+
+export type AdminCommunicationRemoveOrphanedRoomMutation = {
+  adminCommunicationRemoveOrphanedRoom: boolean;
+};
+
+export type AdminCommunicationSyncSpaceHierarchyMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type AdminCommunicationSyncSpaceHierarchyMutation = {
+  adminCommunicationSyncSpaceHierarchy: boolean;
+};
+
+export type AdminCommunicationUpdateRoomStateMutationVariables = Exact<{
+  roomStateData: CommunicationAdminUpdateRoomStateInput;
+}>;
+
+export type AdminCommunicationUpdateRoomStateMutation = {
+  adminCommunicationUpdateRoomState: boolean;
+};
+
+export type AdminIdentityDeleteKratosIdentityMutationVariables = Exact<{
+  kratosIdentityId: Scalars["UUID"]["input"];
+}>;
+
+export type AdminIdentityDeleteKratosIdentityMutation = {
+  adminIdentityDeleteKratosIdentity: boolean;
+};
+
+export type AdminInAppNotificationsPruneMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type AdminInAppNotificationsPruneMutation = {
+  adminInAppNotificationsPrune: { removedCountExceedingUserLimit: number };
+};
+
+export type AdminLicensePolicyCreateCredentialRuleMutationVariables = Exact<{
+  createData: CreateLicensePolicyCredentialRuleInput;
+}>;
+
+export type AdminLicensePolicyCreateCredentialRuleMutation = {
+  adminLicensePolicyCreateCredentialRule: { id: string };
+};
+
+export type AdminLicensePolicyDeleteCredentialRuleMutationVariables = Exact<{
+  deleteData: DeleteLicensePolicyCredentialRuleInput;
+}>;
+
+export type AdminLicensePolicyDeleteCredentialRuleMutation = {
+  adminLicensePolicyDeleteCredentialRule: { id: string };
+};
+
+export type AdminLicensePolicyUpdateCredentialRuleMutationVariables = Exact<{
+  updateData: UpdateLicensePolicyCredentialRuleInput;
+}>;
+
+export type AdminLicensePolicyUpdateCredentialRuleMutation = {
+  adminLicensePolicyUpdateCredentialRule: { id: string };
+};
+
+export type AdminUpdateGeoLocationDataMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type AdminUpdateGeoLocationDataMutation = {
+  adminUpdateGeoLocationData: boolean;
+};
+
+export type AdminUploadFilesFromContentToStorageBucketMutationVariables =
+  Exact<{ [key: string]: never }>;
+
+export type AdminUploadFilesFromContentToStorageBucketMutation = {
+  adminUploadFilesFromContentToStorageBucket: { results: Array<string> };
+};
+
+export type AdminUserAccountDeleteMutationVariables = Exact<{
+  userID: Scalars["UUID"]["input"];
+}>;
+
+export type AdminUserAccountDeleteMutation = {
+  adminUserAccountDelete: { id: string };
+};
+
+export type AdminUserEmailChangeMutationVariables = Exact<{
+  adminUserEmailChangeData: AdminUserEmailChangeInput;
+}>;
+
+export type AdminUserEmailChangeMutation = {
+  adminUserEmailChange: { success: boolean };
+};
+
+export type AdminUserEmailChangeDriftResolveMutationVariables = Exact<{
+  adminUserEmailChangeDriftResolveData: AdminUserEmailChangeDriftResolveInput;
+}>;
+
+export type AdminUserEmailChangeDriftResolveMutation = {
+  adminUserEmailChangeDriftResolve: { success: boolean };
+};
+
+export type AiServerAuthorizationPolicyResetMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type AiServerAuthorizationPolicyResetMutation = {
+  aiServerAuthorizationPolicyReset: { id: string };
+};
+
+export type AssignPlatformRoleToOrganizationMutationVariables = Exact<{
+  roleData: AssignPlatformRoleInput;
+}>;
+
+export type AssignPlatformRoleToOrganizationMutation = {
+  assignPlatformRoleToOrganization: { id: string };
+};
+
+export type AuthorizationPlatformRolesAccessResetMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type AuthorizationPlatformRolesAccessResetMutation = {
+  authorizationPlatformRolesAccessReset: boolean;
+};
+
+export type AuthorizationPolicyResetAllMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type AuthorizationPolicyResetAllMutation = {
+  authorizationPolicyResetAll: string;
+};
+
+export type AuthorizationPolicyResetOnAccountMutationVariables = Exact<{
+  authorizationResetData: AccountAuthorizationResetInput;
+}>;
+
+export type AuthorizationPolicyResetOnAccountMutation = {
+  authorizationPolicyResetOnAccount: { id: string };
+};
+
+export type AuthorizationPolicyResetOnOrganizationMutationVariables = Exact<{
+  authorizationResetData: OrganizationAuthorizationResetInput;
+}>;
+
+export type AuthorizationPolicyResetOnOrganizationMutation = {
+  authorizationPolicyResetOnOrganization: { id: string };
+};
+
+export type AuthorizationPolicyResetOnPlatformMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type AuthorizationPolicyResetOnPlatformMutation = {
+  authorizationPolicyResetOnPlatform: { id: string };
+};
+
+export type AuthorizationPolicyResetOnUserMutationVariables = Exact<{
+  authorizationResetData: UserAuthorizationResetInput;
+}>;
+
+export type AuthorizationPolicyResetOnUserMutation = {
+  authorizationPolicyResetOnUser: { id: string };
+};
+
+export type AuthorizationPolicyResetToGlobalAdminsAccessMutationVariables =
+  Exact<{
+    authorizationID: Scalars["String"]["input"];
+  }>;
+
+export type AuthorizationPolicyResetToGlobalAdminsAccessMutation = {
+  authorizationPolicyResetToGlobalAdminsAccess: { id: string };
+};
+
+export type CleanupCollectionsMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type CleanupCollectionsMutation = {
+  cleanupCollections: { success: boolean };
+};
+
+export type CreateTemplateFromContentSpaceMutationVariables = Exact<{
+  templateData: CreateTemplateFromContentSpaceOnTemplatesSetInput;
+}>;
+
+export type CreateTemplateFromContentSpaceMutation = {
+  createTemplateFromContentSpace: { id: string };
+};
+
+export type CreateWingbackAccountMutationVariables = Exact<{
+  accountID: Scalars["UUID"]["input"];
+}>;
+
+export type CreateWingbackAccountMutation = { createWingbackAccount: string };
+
+export type DeleteContributionMutationVariables = Exact<{
+  deleteData: DeleteContributionInput;
+}>;
+
+export type DeleteContributionMutation = { deleteContribution: { id: string } };
+
+export type GrantCredentialToOrganizationMutationVariables = Exact<{
+  grantCredentialData: GrantOrganizationAuthorizationCredentialInput;
+}>;
+
+export type GrantCredentialToOrganizationMutation = {
+  grantCredentialToOrganization: { id: string };
+};
+
+export type GrantCredentialToUserMutationVariables = Exact<{
+  grantCredentialData: GrantAuthorizationCredentialInput;
+}>;
+
+export type GrantCredentialToUserMutation = {
+  grantCredentialToUser: { id: string };
+};
+
+export type LicenseResetOnAccountMutationVariables = Exact<{
+  resetData: AccountLicenseResetInput;
+}>;
+
+export type LicenseResetOnAccountMutation = {
+  licenseResetOnAccount: { id: string };
+};
+
+export type MoveContributionToCalloutMutationVariables = Exact<{
+  moveContributionData: MoveCalloutContributionInput;
+}>;
+
+export type MoveContributionToCalloutMutation = {
+  moveContributionToCallout: { id: string };
+};
+
+export type RefreshAllBodiesOfKnowledgeMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type RefreshAllBodiesOfKnowledgeMutation = {
+  refreshAllBodiesOfKnowledge: boolean;
+};
+
+export type RemoveIframeAllowedUrlMutationVariables = Exact<{
+  whitelistedURL: Scalars["String"]["input"];
+}>;
+
+export type RemoveIframeAllowedUrlMutation = {
+  removeIframeAllowedURL: Array<string>;
+};
+
+export type RemoveNotificationEmailFromBlacklistMutationVariables = Exact<{
+  input: NotificationEmailAddressInput;
+}>;
+
+export type RemoveNotificationEmailFromBlacklistMutation = {
+  removeNotificationEmailFromBlacklist: Array<string>;
+};
+
+export type RemovePlatformRoleFromOrganizationMutationVariables = Exact<{
+  roleData: RemovePlatformRoleInput;
+}>;
+
+export type RemovePlatformRoleFromOrganizationMutation = {
+  removePlatformRoleFromOrganization: { id: string };
+};
+
+export type ResetLicenseOnAccountsMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type ResetLicenseOnAccountsMutation = {
+  resetLicenseOnAccounts: boolean;
+};
+
+export type RevokeCredentialFromOrganizationMutationVariables = Exact<{
+  revokeCredentialData: RevokeOrganizationAuthorizationCredentialInput;
+}>;
+
+export type RevokeCredentialFromOrganizationMutation = {
+  revokeCredentialFromOrganization: { id: string };
+};
+
+export type RevokeCredentialFromUserMutationVariables = Exact<{
+  revokeCredentialData: RevokeAuthorizationCredentialInput;
+}>;
+
+export type RevokeCredentialFromUserMutation = {
+  revokeCredentialFromUser: { id: string };
+};
+
+export type SetPlatformWellKnownVirtualContributorMutationVariables = Exact<{
+  mappingData: SetPlatformWellKnownVirtualContributorInput;
+}>;
+
+export type SetPlatformWellKnownVirtualContributorMutation = {
+  setPlatformWellKnownVirtualContributor: {
+    mappings: Array<{ wellKnown: VirtualContributorWellKnown }>;
+  };
+};
+
+export type UpdateAssistantActorCapabilitiesMutationVariables = Exact<{
+  grantData: GrantAssistantActorCapabilitiesInput;
+}>;
+
+export type UpdateAssistantActorCapabilitiesMutation = {
+  updateAssistantActorCapabilities: { id: string };
+};
+
+export type UpdateBaselineLicensePlanOnAccountMutationVariables = Exact<{
+  updateData: UpdateBaselineLicensePlanOnAccount;
+}>;
+
+export type UpdateBaselineLicensePlanOnAccountMutation = {
+  updateBaselineLicensePlanOnAccount: { id: string };
+};
+
+export type UpdateCalloutPublishInfoMutationVariables = Exact<{
+  calloutData: UpdateCalloutPublishInfoInput;
+}>;
+
+export type UpdateCalloutPublishInfoMutation = {
+  updateCalloutPublishInfo: { id: string };
+};
+
+export type UpdateInnovationHubMutationVariables = Exact<{
+  updateData: UpdateInnovationHubInput;
+}>;
+
+export type UpdateInnovationHubMutation = {
+  updateInnovationHub: { id: string };
+};
+
+export type UpdateInnovationPackMutationVariables = Exact<{
+  innovationPackData: UpdateInnovationPackInput;
+}>;
+
+export type UpdateInnovationPackMutation = {
+  updateInnovationPack: { id: string };
+};
+
+export type UpdatePlatformSettingsMutationVariables = Exact<{
+  settingsData: UpdatePlatformSettingsInput;
+}>;
+
+export type UpdatePlatformSettingsMutation = {
+  updatePlatformSettings: { integration: { iframeAllowedUrls: Array<string> } };
+};
+
+export type UpdateTemplateFromSpaceMutationVariables = Exact<{
+  updateData: UpdateTemplateFromSpaceInput;
+}>;
+
+export type UpdateTemplateFromSpaceMutation = {
+  updateTemplateFromSpace: { id: string };
+};
+
 export type AssignPlatformRoleToUserMutationVariables = Exact<{
   roleData: AssignPlatformRoleInput;
 }>;
@@ -88956,6 +89374,82 @@ export type UsersPaginatedQuery = {
       endCursor?: string | undefined;
       hasNextPage: boolean;
       hasPreviousPage: boolean;
+    };
+  };
+};
+
+export type LatestUserEmailChangeAuditEntryQueryVariables = Exact<{
+  userID: Scalars["UUID"]["input"];
+}>;
+
+export type LatestUserEmailChangeAuditEntryQuery = {
+  platformAdmin: {
+    latestUserEmailChangeAuditEntry?:
+      | { id: string; outcome: UserEmailChangeAuditOutcome }
+      | undefined;
+  };
+};
+
+export type PlatformRoleSetOrganizationsInRoleQueryVariables = Exact<{
+  role: RoleName;
+}>;
+
+export type PlatformRoleSetOrganizationsInRoleQuery = {
+  platform: { roleSet: { organizationsInRole: Array<{ id: string }> } };
+};
+
+export type PlatformRoleSetOrganizationsInRolesQueryVariables = Exact<{
+  roles: Array<RoleName> | RoleName;
+}>;
+
+export type PlatformRoleSetOrganizationsInRolesQuery = {
+  platform: {
+    roleSet: {
+      organizationsInRoles: Array<{
+        role: RoleName;
+        organizations: Array<{ id: string }>;
+      }>;
+    };
+  };
+};
+
+export type PlatformRoleSetUsersInRoleQueryVariables = Exact<{
+  role: RoleName;
+}>;
+
+export type PlatformRoleSetUsersInRoleQuery = {
+  platform: { roleSet: { usersInRole: Array<{ id: string }> } };
+};
+
+export type PlatformRoleSetUsersInRolesQueryVariables = Exact<{
+  roles: Array<RoleName> | RoleName;
+}>;
+
+export type PlatformRoleSetUsersInRolesQuery = {
+  platform: {
+    roleSet: {
+      usersInRoles: Array<{ role: RoleName; users: Array<{ id: string }> }>;
+    };
+  };
+};
+
+export type SpaceReadProbeQueryVariables = Exact<{
+  spaceId: Scalars["UUID"]["input"];
+}>;
+
+export type SpaceReadProbeQuery = {
+  lookup: { space?: { id: string } | undefined };
+};
+
+export type UserEmailChangeAuditEntriesQueryVariables = Exact<{
+  userID: Scalars["UUID"]["input"];
+}>;
+
+export type UserEmailChangeAuditEntriesQuery = {
+  platformAdmin: {
+    userEmailChangeAuditEntries: {
+      total: number;
+      auditEntries: Array<{ id: string; outcome: UserEmailChangeAuditOutcome }>;
     };
   };
 };

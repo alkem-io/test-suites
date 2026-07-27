@@ -1,0 +1,5 @@
+mutation moveContributionToCallout($moveContributionData: MoveCalloutContributionInput!) {
+  moveContributionToCallout(moveContributionData: $moveContributionData) {
+    id
+  }
+}
