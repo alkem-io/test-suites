@@ -32,13 +32,13 @@ import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFac
 import { TestUserManager, getGraphqlClient } from '@alkemio/tests-lib';
 import { CalendarEventType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { test, expect, Browser, BrowserContext } from '@playwright/test';
-import fs from 'fs';
-import path from 'path';
-import { LoginPage } from '@src/functional-e2e/space/pages';
+import { ensurePersonaState } from '@src/functional-e2e/fixtures/authenticated-session.fixture';
 import { CalendarEventFormPage, dateLabelRe } from './pages/CalendarEventFormPage';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
-const storageStatePath = path.join(process.cwd(), '.auth', 'whole-day-tz-admin.json');
+// Resolved in beforeAll to the shared per-persona session (login happens at
+// most once per user per run — see authenticated-session.fixture).
+let storageStatePath: string;
 
 // Events live in NEXT year so the seeded dates and the grid month stay in the
 // future regardless of when the nightly runs (a hardcoded year silently expires).
@@ -147,18 +147,12 @@ test.beforeAll(async ({ browser }) => {
 
   calendarUrl = `${baseUrl}/${baseScenario.space.nameId}/calendar`;
 
-  // Log in once; every timezone context is built from this storage state.
-  await fs.promises.mkdir(path.dirname(storageStatePath), { recursive: true });
-  const setupContext = await browser.newContext();
-  const setupPage = await setupContext.newPage();
-  const loginPage = new LoginPage(setupPage, baseUrl);
-  await loginPage.login(TestUserManager.users.spaceAdmin.email);
-  const acceptCookies = setupPage.getByRole('button', { name: 'Accept all cookies' });
-  if (await acceptCookies.isVisible({ timeout: 3000 }).catch(() => false)) {
-    await acceptCookies.click();
-  }
-  await setupContext.storageState({ path: storageStatePath });
-  await setupContext.close();
+  // Reuse the shared spaceAdmin session (logs in once per run, cached to disk);
+  // every timezone context below is built from this storage state.
+  storageStatePath = await ensurePersonaState(
+    browser,
+    TestUserManager.users.spaceAdmin.email
+  );
 });
 
 test.afterAll(async () => {

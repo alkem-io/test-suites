@@ -4,12 +4,37 @@ import {
   testConfiguration,
 } from '@alkemio/tests-lib';
 import dotenv from 'dotenv';
+import fs from 'fs';
 import path from 'path';
 
 dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 
+/**
+ * Remove cached per-persona sessions from previous runs. The authenticated
+ * session fixture reuses `.auth/persona.*.json` across worker restarts within a
+ * run; clearing them here keeps that reuse strictly run-scoped, so a stale /
+ * expired Kratos session can never leak into a fresh run.
+ *
+ * Resolve `.auth` from `process.cwd()` — NOT `__dirname` — so this matches the
+ * location the fixture writes to (`authenticated-session.fixture.ts` also uses
+ * `process.cwd()/.auth`). globalSetup and the workers share one cwd, so both
+ * always agree; deriving from `__dirname` here would point at `client-web/.auth`
+ * and silently miss (leak) sessions whenever Playwright runs from another cwd.
+ */
+function clearPersonaSessions() {
+  const authDir = path.join(process.cwd(), '.auth');
+  if (!fs.existsSync(authDir)) return;
+  for (const file of fs.readdirSync(authDir)) {
+    if (file.startsWith('persona.') && file.endsWith('.json')) {
+      fs.rmSync(path.join(authDir, file), { force: true });
+    }
+  }
+}
+
 export default async function globalSetup() {
   console.log('[globalSetup] Starting Playwright global setup...');
+
+  clearPersonaSessions();
 
   if (!testConfiguration.registerUsers) return;
 

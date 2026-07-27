@@ -157,6 +157,15 @@ export default defineConfig({
 
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
+    /* Match the interactive config (playwright.config.ts): branded Chrome at
+     * 1920×1080. Without this the nightly ran bundled Chromium at the default
+     * 1280×720, where the sticky app header overlaps the calendar form's Save
+     * button and intercepts the click (whole-day-events-crud T1 failed on every
+     * nightly but passed at 1920×1080). Keep these in sync with the main config. */
+    ...devices['Desktop Chrome'],
+    channel: 'chrome',
+    viewport: { width: 1920, height: 1080 },
+
     headless: true,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
