@@ -60,6 +60,10 @@ test.describe('Level 1 Subspace - Applications', () => {
   let subspaceAdminPage: Page;
 
   test.beforeAll(async ({ browser }) => {
+    // Scenario creation + two isolated logins (non-member, subspace admin) can
+    // exceed the default 30s hook budget on the slower test env; give it
+    // headroom so the hook doesn't time out and fail the first test.
+    test.setTimeout(60_000);
     globalBaseScenario =
       await TestScenarioFactory.createBaseScenario(scenarioConfig);
     baseScenario = globalBaseScenario;
@@ -252,6 +256,9 @@ test.describe('Level 1 Subspace - Applications', () => {
 
   test.describe('Subspace Application Management', () => {
     test.beforeEach(async () => {
+      // Per-test scenario creation + application submission exceeds the default
+      // 30s hook budget on the slower test env.
+      test.setTimeout(60_000);
       baseScenario =
         await TestScenarioFactory.createBaseScenario(scenarioConfig);
       const spaceNameId = baseScenario.space.nameId;

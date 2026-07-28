@@ -24,10 +24,10 @@ test.describe('Navigation and Access', () => {
     await page.waitForURL(/.*\/user\/.*\/settings\/account/);
     await expect(page).toHaveURL(/.*\/user\/admin-alkemio\/settings\/account/);
 
-    // Verify user settings page loads with account tab active
-    await expect(page.getByRole('tab', { name: 'account' })).toBeVisible({
-      timeout: 500,
-    });
+    // Verify user settings page loads with account tab active. Use the default
+    // expect timeout rather than a 500ms one — the settings page is slower to
+    // render on the test env and the tight bound flaked there.
+    await expect(page.getByRole('tab', { name: 'account' })).toBeVisible();
 
     // Verify page banner displays user's avatar and name
     await expect(
