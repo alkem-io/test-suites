@@ -1,0 +1,5 @@
+Run ID: 30354665753
+Date: 2026-07-28
+Branch: refs/heads/fix/nightly-testenv-failures
+Commit: 245e53d3b327706dbc5ec469cef730ee6a011144
+Playwright outcome: failure
