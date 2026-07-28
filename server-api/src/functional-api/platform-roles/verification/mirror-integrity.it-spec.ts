@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { AuthorizationCredential } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import {
   A_ROW_SURFACES,
   type ARowId,
@@ -195,6 +196,143 @@ describe('mirror-integrity (T007a) — the mirrored census matches its own docum
   it('A17s intent is the empty set on both surfaces (owned by the entity admin, not any global role)', () => {
     for (const surface of A_ROW_SURFACES.A17) {
       expect(surface.intendedOwners).toEqual([]);
+    }
+  });
+});
+
+/**
+ * THE STRUCTURAL-DIFF GUARD (T007a, corrective wave). `mirror-integrity`'s
+ * checks above are self-consistency only — they pass even when this
+ * mirror's DATA has silently drifted from server's, as long as the mirror
+ * still agrees with itself. That is exactly how today's defect slipped
+ * through: server's T070m commit (3c4cacd17) corrected four rows'
+ * `legacyReachers` AND added three `ManagedPrivilege` members plus the
+ * whole `TREE_SCOPED_PRIVILEGE_GRANTS` mechanism to `privilege.grants.ts`,
+ * in the SAME parallel wave this mirror was built from the pre-T070m
+ * census — a race, not a judgement error, but nothing here would have
+ * caught it because nothing here computed a DERIVED fact and pinned it.
+ *
+ * These assertions are pure (`reachers()` — no I/O, no Nest DI, no network)
+ * and pin the SC-002 positive ownership + T070m watch-cells the census's own
+ * comments call out, converting "read `reachability.spec.ts` in `server`
+ * before touching anything here" (tasks.md Notes) from a prose warning a
+ * human might skip into code that runs, and fails LOUDLY, every time this
+ * suite runs — Slice A or B, canonical or full, with no live stack required.
+ * A future edit to `a-row-surfaces.data.ts`, `cascade-and-grants.data.ts` or
+ * `reachability.ts` that silently narrows (or fails to widen) a reacher set
+ * breaks one of these, at build/test time, rather than needing a human to
+ * diff two repos by hand.
+ */
+describe('mirror-integrity (T007a) — the structural-diff guard: derived reachability matches its own documented exceptions', () => {
+  const stageA = 'A' as const;
+
+  it('the DECLARED legacyReachers fields the T070m race left stale are exactly as wide as server (A4, A7, A14, A16)', () => {
+    // A4 — the shared PLATFORM_USERS_ADMIN credential rule's legacy list is
+    // undifferentiated across A4/A5, so GLOBAL_PLATFORM_MANAGER (added for
+    // A5) reaches A4 too.
+    for (const surface of A_ROW_SURFACES.A4) {
+      expect(surface.legacyReachers).toEqual(
+        expect.arrayContaining([AuthorizationCredential.GlobalPlatformManager])
+      );
+    }
+    // A7 — global-admin reaches the account-tree UPDATE branch of every A7
+    // dual-path gate via the Slice-A-only legacy CRUD+GRANT cascade.
+    for (const surface of A_ROW_SURFACES.A7) {
+      expect(surface.legacyReachers).toEqual(
+        expect.arrayContaining([AuthorizationCredential.GlobalAdmin])
+      );
+    }
+    // A14 — global-license-manager already holds ACCOUNT_LICENSE_MANAGE
+    // today, pre-dating this feature's additive extension.
+    for (const surface of A_ROW_SURFACES.A14) {
+      expect(surface.legacyReachers).toEqual(
+        expect.arrayContaining([AuthorizationCredential.GlobalLicenseManager])
+      );
+    }
+    // A16 — the legacy root cascade grants plain READ on the space tree to
+    // BOTH global-admin and global-support today, alongside the void
+    // global-spaces-reader row.
+    for (const surface of A_ROW_SURFACES.A16) {
+      expect(surface.legacyReachers).toEqual(
+        expect.arrayContaining([
+          AuthorizationCredential.GlobalAdmin,
+          AuthorizationCredential.GlobalSupport,
+        ])
+      );
+    }
+  });
+
+  it('SC-002: platform-operations-admin is a DERIVED reacher of every A3 and A11 surface at stage A', () => {
+    // This is the exact regression the missing AUTHORIZATION_RESET /
+    // LICENSE_RESET / PLATFORM_OPERATIONS_ADMIN ManagedPrivilege members
+    // caused: without them, `isManagedPrivilege()` returns false for A3/A11's
+    // literal gates and `reachers()` silently returns an EMPTY set for every
+    // role, including the row's own intended owner.
+    for (const surface of A_ROW_SURFACES.A3) {
+      expect(reachers(surface, stageA)).toContain(
+        AuthorizationCredential.PlatformOperationsAdmin
+      );
+    }
+    for (const surface of A_ROW_SURFACES.A11) {
+      expect(reachers(surface, stageA)).toContain(
+        AuthorizationCredential.PlatformOperationsAdmin
+      );
+    }
+  });
+
+  it('A16: derived reachers include BOTH the explicit READ grant (owner + legacy) and the root-cascade extra reachers', () => {
+    // Without a ManagedPrivilege entry for bare READ, the explicit-grant
+    // half (platform-spaces-reader / global-spaces-reader) silently drops
+    // out, leaving only the root-cascade credentials — A16 would then look
+    // like its OWN owner cannot reach it.
+    const [a16] = A_ROW_SURFACES.A16;
+    const reached = reachers(a16, stageA);
+    expect(reached).toEqual(
+      expect.arrayContaining([
+        AuthorizationCredential.PlatformSpacesReader,
+        AuthorizationCredential.GlobalSpacesReader,
+        AuthorizationCredential.PlatformContentFullAccess,
+        AuthorizationCredential.GlobalAdmin,
+        AuthorizationCredential.GlobalSupport,
+      ])
+    );
+  });
+
+  it('A12/A13: the tree-scoped grants reach their owning role at stage A (licensing-framework)', () => {
+    // Without TREE_SCOPED_PRIVILEGE_GRANTS, a bare GRANT/CREATE/UPDATE/DELETE
+    // gate on the licensing-framework tree derives an EMPTY reacher set —
+    // these gates are deliberately declared with the family's OWNING
+    // privilege name (PLATFORM_SETTINGS_ADMIN et al.) in intent, but the
+    // LITERAL gate checked is the bare CRUD verb (T040's documented
+    // exception), so `reachers()` has nowhere else to source the owner from.
+    const licenseManagerSurfaces = A_ROW_SURFACES.A12.filter(
+      s => s.tree === 'licensing-framework'
+    );
+    expect(licenseManagerSurfaces.length).toBeGreaterThan(0);
+    for (const surface of licenseManagerSurfaces) {
+      expect(reachers(surface, stageA)).toContain(
+        AuthorizationCredential.PlatformLicenseManager
+      );
+    }
+    for (const surface of A_ROW_SURFACES.A13) {
+      expect(reachers(surface, stageA)).toContain(
+        AuthorizationCredential.PlatformSettingsAdmin
+      );
+    }
+  });
+
+  it('A9: the conversion-admin-synthetic tree-scoped grant reaches platform-resource-admin at stage A', () => {
+    // The three cross-L0 moves are checked against the legacy PLATFORM_ADMIN
+    // catch-all via a resolver-local synthetic policy — only reachable
+    // through TREE_SCOPED_PRIVILEGE_GRANTS['conversion-admin-synthetic'].
+    const conversionSurfaces = A_ROW_SURFACES.A9.filter(
+      s => s.tree === 'conversion-admin-synthetic'
+    );
+    expect(conversionSurfaces.length).toBe(3);
+    for (const surface of conversionSurfaces) {
+      expect(reachers(surface, stageA)).toContain(
+        AuthorizationCredential.PlatformResourceAdmin
+      );
     }
   });
 });

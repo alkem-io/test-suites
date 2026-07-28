@@ -1,6 +1,14 @@
 /**
  * MIRRORED from `server`'s `src/platform/platform-role/verification/a.row.surfaces.ts`
- * (commit c0a5ab135, workspace#027-platform-role-redesign T040b-T040d).
+ * (commit 3c4cacd17, workspace#027-platform-role-redesign T040b-T040d, T070a/T070b/T070m).
+ * Re-synced during the corrective wave after a field-by-field diff against
+ * server found this mirror's `legacyReachers` stale on several surfaces
+ * (T070m corrected them in the SAME parallel wave this mirror was built in
+ * — a race, not a judgement error) AND `privilege.grants.ts`'s T070m
+ * additions (AUTHORIZATION_RESET/LICENSE_RESET/PLATFORM_OPERATIONS_ADMIN,
+ * the bare READ grant, and the whole `TREE_SCOPED_PRIVILEGE_GRANTS`
+ * mechanism) never mirrored at all — silently zeroing `reachers()` for
+ * A3/A9/A11/A12/A13/A16.
  *
  * T007a (research D24/D26/D27): this repo holds no independent notion of who
  * owns what — a gap found here is a `server` finding to report, never a local
@@ -391,6 +399,13 @@ export const A_ROW_SURFACES: Record<ARowId, readonly SurfaceRef[]> = {
   ),
 
   // ===== A4 — change login email =====
+  // T070m finding: the ONE `PLATFORM_USERS_ADMIN` credential rule
+  // (`user.service.authorization.ts`) grants it to A4's AND A5's legacy
+  // reachers as a single undifferentiated list — the privilege carries no
+  // memory of which A-row's legacy set a credential was added for, so
+  // `GLOBAL_PLATFORM_MANAGER` (added there for A5) reaches A4 too. Fixed
+  // here rather than narrowing the shared credential rule, which would
+  // remove a legacy holder's TODAY access (forbidden in the additive slice).
   A4: [
     {
       file: 'src/platform-admin/domain/user/email-change/admin.user.email.change.resolver.mutations.ts',
@@ -399,7 +414,7 @@ export const A_ROW_SURFACES: Record<ARowId, readonly SurfaceRef[]> = {
       tree: 'platform',
       gate: { requires: AuthorizationPrivilege.PlatformUsersAdmin },
       intendedOwners: [AuthorizationCredential.PlatformUsersAdmin],
-      legacyReachers: [GA, GS, GLM],
+      legacyReachers: [GA, GS, GLM, GPM],
     },
     {
       file: 'src/platform-admin/domain/user/email-change/admin.user.email.change.resolver.mutations.ts',
@@ -408,7 +423,7 @@ export const A_ROW_SURFACES: Record<ARowId, readonly SurfaceRef[]> = {
       tree: 'platform',
       gate: { requires: AuthorizationPrivilege.PlatformUsersAdmin },
       intendedOwners: [AuthorizationCredential.PlatformUsersAdmin],
-      legacyReachers: [GA, GS, GLM],
+      legacyReachers: [GA, GS, GLM, GPM],
     },
   ],
 
@@ -534,7 +549,13 @@ export const A_ROW_SURFACES: Record<ARowId, readonly SurfaceRef[]> = {
         ],
       },
       intendedOwners: [AuthorizationCredential.PlatformSupport],
-      legacyReachers: [],
+      // T070m finding: NOT empty — `global-admin` still holds ordinary
+      // UPDATE on the account tree via the Slice-A-only legacy CRUD+GRANT
+      // cascade (`LEGACY_CASCADES.globalAdminRootCrud`), so it reaches this
+      // dual-path gate's OWNER branch today, exactly as any other
+      // account-tree UPDATE holder would. `global-support`'s platform-
+      // SUBTREE cascade does not cover `account`, so it is correctly absent.
+      legacyReachers: [GA],
     })
   ),
 
@@ -926,7 +947,10 @@ export const A_ROW_SURFACES: Record<ARowId, readonly SurfaceRef[]> = {
       tree: 'space',
       gate: { requires: AuthorizationPrivilege.AccountLicenseManage },
       intendedOwners: [AuthorizationCredential.PlatformLicenseManager],
-      legacyReachers: [GA],
+      // T070m finding: `global-license-manager` already holds
+      // ACCOUNT_LICENSE_MANAGE today (account.service.authorization.ts,
+      // pre-dating T037's additive extension) — omitted here originally.
+      legacyReachers: [GA, GLM],
     },
   ],
 
@@ -989,7 +1013,14 @@ export const A_ROW_SURFACES: Record<ARowId, readonly SurfaceRef[]> = {
             'FR-010 read-family exception — the root cascade grants READ on the space tree; A16 holds no admin-family cell so this is accepted, not a defect.',
         },
       ],
-      legacyReachers: [AuthorizationCredential.GlobalSpacesReader],
+      // T070m finding: Slice A's legacy root cascade
+      // (`platform.authorization.policy.service.ts`'s god-mode rule) grants
+      // plain READ on the space tree to BOTH global-admin and global-support
+      // TODAY, alongside the void `global-spaces-reader` row — all three
+      // read across spaces right now, and the additive rule requires every
+      // one of them stay reachable through Slice A. Retired outright at
+      // Slice B (T072/T081), same as every other legacy reacher.
+      legacyReachers: [AuthorizationCredential.GlobalSpacesReader, GA, GS],
     },
   ],
 

@@ -1,6 +1,14 @@
 /**
  * MIRRORED from `server`'s `src/platform/platform-role/verification/reachability.ts`
- * (commit c0a5ab135, workspace#027-platform-role-redesign T040b-T040d).
+ * (commit 3c4cacd17, workspace#027-platform-role-redesign T040b-T040d, T070a/T070b/T070m).
+ * Re-synced during the corrective wave after a field-by-field diff against
+ * server found this mirror's `legacyReachers` stale on several surfaces
+ * (T070m corrected them in the SAME parallel wave this mirror was built in
+ * — a race, not a judgement error) AND `privilege.grants.ts`'s T070m
+ * additions (AUTHORIZATION_RESET/LICENSE_RESET/PLATFORM_OPERATIONS_ADMIN,
+ * the bare READ grant, and the whole `TREE_SCOPED_PRIVILEGE_GRANTS`
+ * mechanism) never mirrored at all — silently zeroing `reachers()` for
+ * A3/A9/A11/A12/A13/A16.
  *
  * T007a (research D24/D26/D27): this repo holds no independent notion of who
  * owns what — a gap found here is a `server` finding to report, never a local
@@ -39,6 +47,7 @@ import {
   grantedCredentials,
   isManagedPrivilege,
   PRIVILEGE_GRANTS,
+  TREE_SCOPED_PRIVILEGE_GRANTS,
 } from './cascade-and-grants.data';
 
 /**
@@ -105,6 +114,25 @@ export function reachers(
       if (isManagedPrivilege(privilege)) {
         for (const credential of grantedCredentials(privilege, slice)) {
           result.add(credential);
+        }
+      }
+
+      // Tree-scoped grants (T070m) — the three census rows whose literal
+      // gate is a baseline CRUD verb or the legacy PLATFORM_ADMIN catch-all
+      // reused too promiscuously elsewhere to manage globally (A9's
+      // cross-L0 moves, A12, A13). Scoped to the surface's OWN tree so this
+      // cannot leak into A6/A7/A8's unrelated `anyOf` gates over the same
+      // literal privileges.
+      const treeScoped =
+        TREE_SCOPED_PRIVILEGE_GRANTS[surface.tree]?.[privilege];
+      if (treeScoped) {
+        for (const credential of treeScoped.owningCredentials) {
+          result.add(credential);
+        }
+        if (slice === 'A') {
+          for (const credential of treeScoped.legacyCredentials) {
+            result.add(credential);
+          }
         }
       }
 
