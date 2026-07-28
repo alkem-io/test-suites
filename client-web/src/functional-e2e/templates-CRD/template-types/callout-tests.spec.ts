@@ -66,7 +66,7 @@ const createAndVerifyCalloutTemplate = async (
   });
   await expect(async () => {
     if (!(await createNewItem.isVisible().catch(() => false))) {
-      await addNewButton.click();
+      await addNewButton.click({ timeout: 2000 });
     }
     await createNewItem.click({ timeout: 2000 });
     await expect(dialog).toBeVisible({ timeout: 3000 });

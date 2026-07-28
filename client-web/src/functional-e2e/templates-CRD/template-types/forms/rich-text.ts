@@ -19,5 +19,21 @@ export async function typeIntoRichTextEditor(
 ): Promise<void> {
   await editor.click();
   await editor.pressSequentially(text);
-  await expect(editor).not.toBeEmpty();
+
+  // Confirm the content actually registered — a partial insertion must not pass.
+  // Anchor on the LAST non-empty line with its leading markdown token stripped
+  // (Tiptap's input rules turn `# `/`- `/`1. ` into headings/lists, dropping the
+  // marker), so we assert against text Tiptap keeps verbatim. Using the last
+  // line also proves typing reached the end. The anchor lives inside a single
+  // block, so `toContainText` (which concatenates block text) matches reliably.
+  const anchor = text
+    .split('\n')
+    .map(line => line.replace(/^\s*(#{1,6}|[-*+]|\d+\.)\s+/, '').trim())
+    .filter(Boolean)
+    .pop();
+  if (anchor) {
+    await expect(editor).toContainText(anchor);
+  } else {
+    await expect(editor).not.toBeEmpty();
+  }
 }
