@@ -87320,6 +87320,14 @@ export type AdminLicensePolicyUpdateCredentialRuleMutation = {
   adminLicensePolicyUpdateCredentialRule: { id: string };
 };
 
+export type AdminUpdateContributorAvatarsMutationVariables = SchemaTypes.Exact<{
+  profileID: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type AdminUpdateContributorAvatarsMutation = {
+  adminUpdateContributorAvatars: { id: string };
+};
+
 export type AdminUpdateGeoLocationDataMutationVariables = SchemaTypes.Exact<{
   [key: string]: never;
 }>;
@@ -87440,6 +87448,14 @@ export type CleanupCollectionsMutationVariables = SchemaTypes.Exact<{
 
 export type CleanupCollectionsMutation = {
   cleanupCollections: { success: boolean };
+};
+
+export type CreateContributionOnCalloutIdMutationVariables = SchemaTypes.Exact<{
+  contributionData: SchemaTypes.CreateContributionOnCalloutInput;
+}>;
+
+export type CreateContributionOnCalloutIdMutation = {
+  createContributionOnCallout: { id: string };
 };
 
 export type CreateTemplateFromContentSpaceMutationVariables =
@@ -97712,6 +97728,14 @@ export type LatestUserEmailChangeAuditEntryQuery = {
   };
 };
 
+export type PlatformAdminVirtualAssistantQueryVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type PlatformAdminVirtualAssistantQuery = {
+  platformAdmin: { virtualAssistant: { id: string } };
+};
+
 export type PlatformRoleSetOrganizationsInRoleQueryVariables =
   SchemaTypes.Exact<{
     role: SchemaTypes.RoleName;
@@ -97758,6 +97782,14 @@ export type PlatformRoleSetUsersInRolesQuery = {
       }>;
     };
   };
+};
+
+export type PlatformRoleSetRoleNamesQueryVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type PlatformRoleSetRoleNamesQuery = {
+  platform: { roleSet: { roleNames: Array<SchemaTypes.RoleName> } };
 };
 
 export type SpaceReadProbeQueryVariables = SchemaTypes.Exact<{
@@ -116868,6 +116900,13 @@ export const AdminLicensePolicyUpdateCredentialRuleDocument = gql`
     }
   }
 `;
+export const AdminUpdateContributorAvatarsDocument = gql`
+  mutation adminUpdateContributorAvatars($profileID: UUID!) {
+    adminUpdateContributorAvatars(profileID: $profileID) {
+      id
+    }
+  }
+`;
 export const AdminUpdateGeoLocationDataDocument = gql`
   mutation adminUpdateGeoLocationData {
     adminUpdateGeoLocationData
@@ -116988,6 +117027,15 @@ export const CleanupCollectionsDocument = gql`
   mutation cleanupCollections {
     cleanupCollections {
       success
+    }
+  }
+`;
+export const CreateContributionOnCalloutIdDocument = gql`
+  mutation createContributionOnCalloutId(
+    $contributionData: CreateContributionOnCalloutInput!
+  ) {
+    createContributionOnCallout(contributionData: $contributionData) {
+      id
     }
   }
 `;
@@ -118740,6 +118788,15 @@ export const LatestUserEmailChangeAuditEntryDocument = gql`
     }
   }
 `;
+export const PlatformAdminVirtualAssistantDocument = gql`
+  query platformAdminVirtualAssistant {
+    platformAdmin {
+      virtualAssistant {
+        id
+      }
+    }
+  }
+`;
 export const PlatformRoleSetOrganizationsInRoleDocument = gql`
   query platformRoleSetOrganizationsInRole($role: RoleName!) {
     platform {
@@ -118786,6 +118843,15 @@ export const PlatformRoleSetUsersInRolesDocument = gql`
             id
           }
         }
+      }
+    }
+  }
+`;
+export const PlatformRoleSetRoleNamesDocument = gql`
+  query platformRoleSetRoleNames {
+    platform {
+      roleSet {
+        roleNames
       }
     }
   }
@@ -119820,6 +119886,9 @@ const AdminLicensePolicyDeleteCredentialRuleDocumentString = print(
 const AdminLicensePolicyUpdateCredentialRuleDocumentString = print(
   AdminLicensePolicyUpdateCredentialRuleDocument
 );
+const AdminUpdateContributorAvatarsDocumentString = print(
+  AdminUpdateContributorAvatarsDocument
+);
 const AdminUpdateGeoLocationDataDocumentString = print(
   AdminUpdateGeoLocationDataDocument
 );
@@ -119861,6 +119930,9 @@ const AuthorizationPolicyResetToGlobalAdminsAccessDocumentString = print(
   AuthorizationPolicyResetToGlobalAdminsAccessDocument
 );
 const CleanupCollectionsDocumentString = print(CleanupCollectionsDocument);
+const CreateContributionOnCalloutIdDocumentString = print(
+  CreateContributionOnCalloutIdDocument
+);
 const CreateTemplateFromContentSpaceDocumentString = print(
   CreateTemplateFromContentSpaceDocument
 );
@@ -120071,6 +120143,12 @@ const OrganizationsPaginatedDocumentString = print(
 const UsersPaginatedDocumentString = print(UsersPaginatedDocument);
 const LatestUserEmailChangeAuditEntryDocumentString = print(
   LatestUserEmailChangeAuditEntryDocument
+);
+const PlatformAdminVirtualAssistantDocumentString = print(
+  PlatformAdminVirtualAssistantDocument
+);
+const PlatformRoleSetRoleNamesDocumentString = print(
+  PlatformRoleSetRoleNamesDocument
 );
 const PlatformRoleSetOrganizationsInRoleDocumentString = print(
   PlatformRoleSetOrganizationsInRoleDocument
@@ -122087,6 +122165,28 @@ export function getSdk(
         variables
       );
     },
+    adminUpdateContributorAvatars(
+      variables: SchemaTypes.AdminUpdateContributorAvatarsMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminUpdateContributorAvatarsMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminUpdateContributorAvatarsMutation>(
+            AdminUpdateContributorAvatarsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminUpdateContributorAvatars",
+        "mutation",
+        variables
+      );
+    },
     adminUpdateGeoLocationData(
       variables?: SchemaTypes.AdminUpdateGeoLocationDataMutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -122413,6 +122513,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "cleanupCollections",
+        "mutation",
+        variables
+      );
+    },
+    createContributionOnCalloutId(
+      variables: SchemaTypes.CreateContributionOnCalloutIdMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.CreateContributionOnCalloutIdMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.CreateContributionOnCalloutIdMutation>(
+            CreateContributionOnCalloutIdDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "createContributionOnCalloutId",
         "mutation",
         variables
       );
@@ -124595,6 +124717,28 @@ export function getSdk(
         variables
       );
     },
+    platformAdminVirtualAssistant(
+      variables?: SchemaTypes.PlatformAdminVirtualAssistantQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformAdminVirtualAssistantQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformAdminVirtualAssistantQuery>(
+            PlatformAdminVirtualAssistantDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "platformAdminVirtualAssistant",
+        "query",
+        variables
+      );
+    },
     platformRoleSetOrganizationsInRole(
       variables: SchemaTypes.PlatformRoleSetOrganizationsInRoleQueryVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -124679,6 +124823,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "platformRoleSetUsersInRoles",
+        "query",
+        variables
+      );
+    },
+    platformRoleSetRoleNames(
+      variables?: SchemaTypes.PlatformRoleSetRoleNamesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRoleSetRoleNamesQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRoleSetRoleNamesQuery>(
+            PlatformRoleSetRoleNamesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "platformRoleSetRoleNames",
         "query",
         variables
       );

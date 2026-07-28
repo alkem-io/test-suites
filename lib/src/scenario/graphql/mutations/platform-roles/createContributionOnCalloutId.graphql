@@ -1,0 +1,5 @@
+mutation createContributionOnCalloutId($contributionData: CreateContributionOnCalloutInput!) {
+  createContributionOnCallout(contributionData: $contributionData) {
+    id
+  }
+}

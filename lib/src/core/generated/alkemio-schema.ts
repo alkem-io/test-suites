@@ -79526,6 +79526,14 @@ export type AdminLicensePolicyUpdateCredentialRuleMutation = {
   adminLicensePolicyUpdateCredentialRule: { id: string };
 };
 
+export type AdminUpdateContributorAvatarsMutationVariables = Exact<{
+  profileID: Scalars["UUID"]["input"];
+}>;
+
+export type AdminUpdateContributorAvatarsMutation = {
+  adminUpdateContributorAvatars: { id: string };
+};
+
 export type AdminUpdateGeoLocationDataMutationVariables = Exact<{
   [key: string]: never;
 }>;
@@ -79644,6 +79652,14 @@ export type CleanupCollectionsMutationVariables = Exact<{
 
 export type CleanupCollectionsMutation = {
   cleanupCollections: { success: boolean };
+};
+
+export type CreateContributionOnCalloutIdMutationVariables = Exact<{
+  contributionData: CreateContributionOnCalloutInput;
+}>;
+
+export type CreateContributionOnCalloutIdMutation = {
+  createContributionOnCallout: { id: string };
 };
 
 export type CreateTemplateFromContentSpaceMutationVariables = Exact<{
@@ -89390,6 +89406,14 @@ export type LatestUserEmailChangeAuditEntryQuery = {
   };
 };
 
+export type PlatformAdminVirtualAssistantQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type PlatformAdminVirtualAssistantQuery = {
+  platformAdmin: { virtualAssistant: { id: string } };
+};
+
 export type PlatformRoleSetOrganizationsInRoleQueryVariables = Exact<{
   role: RoleName;
 }>;
@@ -89431,6 +89455,14 @@ export type PlatformRoleSetUsersInRolesQuery = {
       usersInRoles: Array<{ role: RoleName; users: Array<{ id: string }> }>;
     };
   };
+};
+
+export type PlatformRoleSetRoleNamesQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type PlatformRoleSetRoleNamesQuery = {
+  platform: { roleSet: { roleNames: Array<RoleName> } };
 };
 
 export type SpaceReadProbeQueryVariables = Exact<{
