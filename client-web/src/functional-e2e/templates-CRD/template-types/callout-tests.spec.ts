@@ -50,16 +50,27 @@ const createAndVerifyCalloutTemplate = async (
     .getByRole('button', { name: /^Collaboration tools/ })
     .waitFor({ state: 'visible' });
 
-  // Open the "Add new" menu in the Collaboration tools section.
-  // The sections are: Space templates (0), Collaboration tools (1), Whiteboard (2), Post (3), Community guidelines (4)
-  await page.getByRole('button', { name: 'Add new' }).nth(1).click();
-  await page.getByRole('menuitem', { name: 'Create new' }).click();
-
-  // Wait for the dialog to appear
+  // Open the "Add new" menu in the Collaboration tools section and pick
+  // "Create new". The sections are: Space templates (0), Collaboration
+  // tools (1), Whiteboard (2), Post (3), Community guidelines (4).
+  //
+  // On the slower test env the Radix dropdown can flicker shut before the menu
+  // item is clicked (a notification re-render steals focus), leaving "Create
+  // new" resolved-but-never-clickable until the 30s test timeout. Retry the
+  // open -> click -> dialog-appears sequence as a unit: only (re-)open the menu
+  // when it is closed, so a flicker is simply re-opened rather than hung on.
+  const addNewButton = page.getByRole('button', { name: 'Add new' }).nth(1);
+  const createNewItem = page.getByRole('menuitem', { name: 'Create new' });
   const dialog = page.getByRole('dialog', {
     name: 'Create collaboration-tool template',
   });
-  await expect(dialog).toBeVisible();
+  await expect(async () => {
+    if (!(await createNewItem.isVisible().catch(() => false))) {
+      await addNewButton.click();
+    }
+    await createNewItem.click({ timeout: 2000 });
+    await expect(dialog).toBeVisible({ timeout: 3000 });
+  }).toPass({ timeout: 20000 });
 
   // Fill the form
   await fillCalloutTemplateForm(page, templateData);
@@ -197,6 +208,10 @@ test.describe.serial('Callout Templates', () => {
   });
 
   test.afterAll(async () => {
+    // Tearing down the scenario deletes the space plus all 68 templates this
+    // suite created; on the slower test env that exceeds the default 30s hook
+    // budget, so give it headroom.
+    test.setTimeout(120_000);
     try {
       await teardownAuthentication();
     } finally {

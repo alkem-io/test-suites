@@ -1,6 +1,7 @@
 import { Page } from '@playwright/test';
 import { fillTemplateForm } from './template-form';
 import { PostTemplateForm } from './template-form.models';
+import { typeIntoRichTextEditor } from './rich-text';
 
 export const fillPostTemplateForm = async (
   page: Page,
@@ -8,10 +9,12 @@ export const fillPostTemplateForm = async (
 ) => {
   await fillTemplateForm(page, templateData);
 
-  // "Default description" section - the content pre-filled for new posts
-  await page
-    .getByRole('textbox', {
+  // "Default description" — the content pre-filled for new posts. Tiptap
+  // rich-text editor: must be typed, not `.fill()`ed (see typeIntoRichTextEditor).
+  await typeIntoRichTextEditor(
+    page.getByRole('textbox', {
       name: 'Content pre-filled for new posts using this template',
-    })
-    .fill(templateData.defaultContent);
+    }),
+    templateData.defaultContent
+  );
 };
