@@ -89465,12 +89465,30 @@ export type PlatformRoleSetRoleNamesQuery = {
   platform: { roleSet: { roleNames: Array<RoleName> } };
 };
 
+export type UpdateUserServiceProfileMutationVariables = Exact<{
+  userData: UpdateUserInput;
+}>;
+
+export type UpdateUserServiceProfileMutation = {
+  updateUser: { id: string };
+};
+
 export type SpaceReadProbeQueryVariables = Exact<{
   spaceId: Scalars["UUID"]["input"];
 }>;
 
 export type SpaceReadProbeQuery = {
   lookup: { space?: { id: string } | undefined };
+};
+
+export type SpaceCollaborationReadProbeQueryVariables = Exact<{
+  spaceId: Scalars["UUID"]["input"];
+}>;
+
+export type SpaceCollaborationReadProbeQuery = {
+  lookup: {
+    space?: { id: string; collaboration: { id: string } } | undefined;
+  };
 };
 
 export type UserEmailChangeAuditEntriesQueryVariables = Exact<{

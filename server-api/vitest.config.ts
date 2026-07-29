@@ -130,6 +130,16 @@ export default defineConfig({
           name: 'platform-roles-canonical',
           include: ['src/functional-api/platform-roles/**/*.it-spec.ts'],
           env: { PLATFORM_ROLES_MATRIX_SCOPE: 'canonical' },
+          // corr-ts-5/qual-ts-6 (2026-07-30 fix wave): every file here
+          // shares mutable state through the SAME shared TestUser fixtures
+          // (`fixtures.ts`'s `targetUserId`/`rolesProbeUserId` resolve to
+          // fixed identities, and `platform-roles-admin`'s holder count is
+          // read/written across files) — running the 10 spec files in
+          // parallel races those mutations. Every other integration project
+          // in this repo is invoked with `--fileParallelism=false` for the
+          // same reason; this sets it in the project config itself so it
+          // applies regardless of how the project is invoked.
+          fileParallelism: false,
         },
       },
       {
@@ -138,6 +148,7 @@ export default defineConfig({
           name: 'platform-roles',
           include: ['src/functional-api/platform-roles/**/*.it-spec.ts'],
           env: { PLATFORM_ROLES_MATRIX_SCOPE: 'full' },
+          fileParallelism: false,
         },
       },
       project('nightly', [

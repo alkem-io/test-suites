@@ -118856,11 +118856,30 @@ export const PlatformRoleSetRoleNamesDocument = gql`
     }
   }
 `;
+export const UpdateUserServiceProfileDocument = gql`
+  mutation updateUserServiceProfile($userData: UpdateUserInput!) {
+    updateUser(userData: $userData) {
+      id
+    }
+  }
+`;
 export const SpaceReadProbeDocument = gql`
   query spaceReadProbe($spaceId: UUID!) {
     lookup {
       space(ID: $spaceId) {
         id
+      }
+    }
+  }
+`;
+export const SpaceCollaborationReadProbeDocument = gql`
+  query spaceCollaborationReadProbe($spaceId: UUID!) {
+    lookup {
+      space(ID: $spaceId) {
+        id
+        collaboration {
+          id
+        }
       }
     }
   }
@@ -120162,7 +120181,13 @@ const PlatformRoleSetUsersInRoleDocumentString = print(
 const PlatformRoleSetUsersInRolesDocumentString = print(
   PlatformRoleSetUsersInRolesDocument
 );
+const UpdateUserServiceProfileDocumentString = print(
+  UpdateUserServiceProfileDocument
+);
 const SpaceReadProbeDocumentString = print(SpaceReadProbeDocument);
+const SpaceCollaborationReadProbeDocumentString = print(
+  SpaceCollaborationReadProbeDocument
+);
 const UserEmailChangeAuditEntriesDocumentString = print(
   UserEmailChangeAuditEntriesDocument
 );
@@ -123573,6 +123598,28 @@ export function getSdk(
         variables
       );
     },
+    updateUserServiceProfile(
+      variables: SchemaTypes.UpdateUserServiceProfileMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateUserServiceProfileMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateUserServiceProfileMutation>(
+            UpdateUserServiceProfileDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "updateUserServiceProfile",
+        "mutation",
+        variables
+      );
+    },
     UpdateUserSettings(
       variables: SchemaTypes.UpdateUserSettingsMutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -124867,6 +124914,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "spaceReadProbe",
+        "query",
+        variables
+      );
+    },
+    spaceCollaborationReadProbe(
+      variables: SchemaTypes.SpaceCollaborationReadProbeQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.SpaceCollaborationReadProbeQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.SpaceCollaborationReadProbeQuery>(
+            SpaceCollaborationReadProbeDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "spaceCollaborationReadProbe",
         "query",
         variables
       );

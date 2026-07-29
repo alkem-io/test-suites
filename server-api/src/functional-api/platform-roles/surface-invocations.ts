@@ -58,6 +58,70 @@ async function invoke<T>(
 }
 
 /**
+ * sec-test-suites-3 (2026-07-30 fix wave): a DENY cell must fail because the
+ * AUTHORIZATION gate rejected it, not because of an unrelated validation or
+ * not-found error upstream of that gate — the "green denial for the wrong
+ * reason" hazard this suite's own header repeatedly warns about, applied to
+ * its OWN negative assertions rather than a fixture bug. The graphql wrapper
+ * (`graphql.wrapper.ts`) already flattens each error's Apollo `extensions.code`
+ * onto a top-level `code` field — this checks that against the two codes an
+ * authorization rejection can carry: `FORBIDDEN` (the rule-engine's plain
+ * `ForbiddenException`, e.g. `platform.role.assignment.rules.service.ts`) and
+ * `FORBIDDEN_POLICY` (`ForbiddenAuthorizationPolicyException`, every
+ * privilege-gate rejection). Mirrors `us3-grantability.forge-acceptance.spec.ts`'s
+ * `extensions.code === 'FORBIDDEN'` assertion, generalised to both codes.
+ *
+ * **Deliberately NOT a broad `code !== undefined` (or `code === 'UNSPECIFIED'`)
+ * check** — live-verification (2026-07-30) found `updateUser`'s
+ * `serviceProfile` write path (A21) throws a raw, uncaught `Error` from
+ * `resolveInitiatorRole` (`platform-audit-attribution/resolve.initiator.role.ts`)
+ * for any non-owner caller — a genuine denial, semantically, but surfaced
+ * with Apollo's generic fallback `code: 'UNSPECIFIED'` rather than a proper
+ * `ForbiddenException`. Accepting `UNSPECIFIED` wholesale would silently
+ * re-admit the exact "any error passes" anti-pattern this fix removes (that
+ * code is also what an unrelated server crash carries — e.g. a null-pointer
+ * in the notification adapter, observed on the SAME live run). Recognising
+ * ONLY this specific, self-documented message prefix keeps the net narrow:
+ * a genuine (if awkwardly-thrown) authorization denial is still recognised,
+ * without opening the door to crashes reading as denials. This is a `server`
+ * finding — `resolveInitiatorRole` should throw a `ForbiddenException`, not
+ * a raw `Error` — recognised defensively here, not silently masked.
+ */
+const AUTHORIZATION_DENIAL_CODES: ReadonlySet<string> = new Set([
+  'FORBIDDEN',
+  'FORBIDDEN_POLICY',
+]);
+
+const AUTHORIZATION_DENIAL_MESSAGE_PREFIXES: readonly string[] = [
+  'resolveInitiatorRole:',
+];
+
+export function isAuthorizationDenial(
+  errors: readonly Record<string, unknown>[] | undefined
+): boolean {
+  return (errors ?? []).some(e => {
+    const code = (e as { code?: unknown }).code;
+    if (typeof code === 'string' && AUTHORIZATION_DENIAL_CODES.has(code)) {
+      return true;
+    }
+    const message = (e as { message?: unknown }).message;
+    if (
+      typeof message === 'string' &&
+      AUTHORIZATION_DENIAL_MESSAGE_PREFIXES.some(prefix =>
+        message.startsWith(prefix)
+      )
+    ) {
+      return true;
+    }
+    const extensions = (e as { extensions?: { code?: unknown } }).extensions;
+    return (
+      typeof extensions?.code === 'string' &&
+      AUTHORIZATION_DENIAL_CODES.has(extensions.code)
+    );
+  });
+}
+
+/**
  * A9's three cross-hierarchy space-move mutations (`moveSpaceL1ToSpaceL0`,
  * `moveSpaceL1ToSpaceL2`, `moveSpaceL2ToSpaceL1`) all return the shared
  * `SpaceData` fragment, which also requests `Space.account` and
@@ -311,13 +375,18 @@ export function buildSurfaceInvocations(
 
   // ===== A4 — change login email (2) =====
   registerRow('A4', [
+    // `fx.emailChangeTargetUserId` — a disposable target, NEVER
+    // `fx.targetUserId` (the shared `NON_SPACE_MEMBER` fixture 67 other test
+    // files depend on). An ALLOW caller here really rewrites the login
+    // email; doing that to the shared fixture broke every later file
+    // authenticating as it (sec-test-suites-2, 2026-07-29 corrective wave).
     caller =>
       invoke(
         token =>
           client().adminUserEmailChange(
             {
               adminUserEmailChangeData: {
-                userID: fx.targetUserId,
+                userID: fx.emailChangeTargetUserId,
                 newEmail: `matrix-changed-${Date.now()}@alkem.io`,
                 reason: 'platform-roles matrix invocation (T007b)',
                 approver: {
@@ -336,8 +405,8 @@ export function buildSurfaceInvocations(
           client().adminUserEmailChangeDriftResolve(
             {
               adminUserEmailChangeDriftResolveData: {
-                userID: fx.targetUserId,
-                canonicalEmail: fx.targetUserEmail,
+                userID: fx.emailChangeTargetUserId,
+                canonicalEmail: fx.emailChangeTargetUserEmail,
               },
             },
             bearer(token)
@@ -351,7 +420,7 @@ export function buildSurfaceInvocations(
     // `deleteUser` is the D5 dual path (owner-self-delete vs. PLATFORM_USERS_ADMIN)
     // — invoked here against `fx.deletableUserId`, a disposable single-use
     // target, NEVER `fx.targetUserId`. That shared "generic target user" is
-    // the object of A1/A2/A4/A21's mutations too, so an ALLOWED caller
+    // the object of A1/A2/A21's mutations too, so an ALLOWED caller
     // actually deleting it would take every one of those cells (and
     // `audit-coverage.it-spec.ts`) down with it for the rest of the run —
     // the 2026-07-29 live-verification finding.
@@ -370,11 +439,14 @@ export function buildSurfaceInvocations(
           ),
         caller
       ),
+    // `fx.accountDeleteTargetUserId` — a disposable target, NEVER
+    // `fx.targetUserId`: this call deletes the target's Kratos identity
+    // outright (sec-test-suites-2).
     caller =>
       invoke(
         token =>
           client().adminUserAccountDelete(
-            { userID: fx.targetUserId },
+            { userID: fx.accountDeleteTargetUserId },
             bearer(token)
           ),
         caller
@@ -519,12 +591,17 @@ export function buildSurfaceInvocations(
 
   // ===== A8 — delete callout/contribution/space; delete an org-owned
   // innovation pack or hub; set publisher (6) =====
+  // Every destructive helper below targets its OWN disposable fixture —
+  // never `secondCalloutId`/`contributionId`/`spaceId`/`innovationPackId`/
+  // `innovationHubId`, all of which A7/A9/A12/A13 still need intact after
+  // this row runs (corr-ts-1, 2026-07-29 corrective wave: A8's real
+  // deletions used to destroy exactly those shared fixtures).
   registerRow('A8', [
     caller =>
       invoke(
         token =>
           client().deleteCallout(
-            { calloutId: fx.secondCalloutId },
+            { calloutId: fx.a8DeletableCalloutId },
             bearer(token)
           ),
         caller
@@ -533,7 +610,7 @@ export function buildSurfaceInvocations(
       invoke(
         token =>
           client().deleteContribution(
-            { deleteData: { ID: fx.contributionId } },
+            { deleteData: { ID: fx.a8DeletableContributionId } },
             bearer(token)
           ),
         caller
@@ -541,14 +618,17 @@ export function buildSurfaceInvocations(
     caller =>
       invoke(
         token =>
-          client().deleteSpace({ deleteData: { ID: fx.spaceId } }, bearer(token)),
+          client().deleteSpace(
+            { deleteData: { ID: fx.a8DeletableSpaceId } },
+            bearer(token)
+          ),
         caller
       ),
     caller =>
       invoke(
         token =>
           client().deleteInnovationPack(
-            { innovationPackId: fx.innovationPackId },
+            { innovationPackId: fx.a8DeletableInnovationPackId },
             bearer(token)
           ),
         caller
@@ -557,7 +637,7 @@ export function buildSurfaceInvocations(
       invoke(
         token =>
           client().DeleteInnovationHub(
-            { input: { ID: fx.innovationHubId } },
+            { input: { ID: fx.a8DeletableInnovationHubId } },
             bearer(token)
           ),
         caller
@@ -943,12 +1023,16 @@ export function buildSurfaceInvocations(
   ]);
 
   // ===== A13 — define license plans + entitlement mappings (5) =====
+  // `DeleteLicensePlan`/`UpdateLicensePlan` target the DISPOSABLE plan this
+  // fixture set created, never `fx.licensePlanId` — a real, platform-seeded
+  // plan A12's assign/revoke helpers (and every OTHER test in this repo) also
+  // read (corr-ts-7, 2026-07-29 corrective wave).
   registerRow('A13', [
     caller =>
       invoke(
         token =>
           client().DeleteLicensePlan(
-            { LicensePlan: { ID: fx.licensePlanId } },
+            { LicensePlan: { ID: fx.a13DeletableLicensePlanId } },
             bearer(token)
           ),
         caller
@@ -957,7 +1041,7 @@ export function buildSurfaceInvocations(
       invoke(
         token =>
           client().UpdateLicensePlan(
-            { LicensePlan: { ID: fx.licensePlanId } },
+            { LicensePlan: { ID: fx.a13UpdatableLicensePlanId } },
             bearer(token)
           ),
         caller
@@ -1027,16 +1111,21 @@ export function buildSurfaceInvocations(
 
   // ===== A15 — in-space support; manage the forum (3) =====
   registerRow('A15', [
-    // The `condition`-gated in-space-support read — proxied via an ordinary
-    // space read as a caller with no other membership in the space. A
-    // caller reaching this only through `allowPlatformSupportAsAdmin`
-    // succeeds; every other non-member caller is denied at the space's
-    // ordinary READ gate — which is the family this row's positive case
-    // needs to be distinguishable from.
+    // The `condition`-gated in-space-support read — probed against
+    // `fx.a15ConditionSpaceId`, a PRIVATE space with
+    // `settings.privacy.allowPlatformSupportAsAdmin` explicitly set
+    // (corr-ts-4, 2026-07-30 fix wave). Previously shared `fx.spaceId` AND
+    // the same `spaceReadProbe` query with A16 below — `lookup.space` is
+    // gated on READ_ABOUT, which `platform-content-full-access` also
+    // reaches via the plain READ->READ_ABOUT mapping regardless of this
+    // condition, so the two rows could not be told apart.
     caller =>
       invoke(
         token =>
-          client().spaceReadProbe({ spaceId: fx.spaceId }, bearer(token)),
+          client().spaceReadProbe(
+            { spaceId: fx.a15ConditionSpaceId },
+            bearer(token)
+          ),
         caller
       ),
     caller =>
@@ -1060,11 +1149,23 @@ export function buildSurfaceInvocations(
   ]);
 
   // ===== A16 — read across spaces (1) =====
+  // Probed via `spaceCollaborationReadProbe` (selects `collaboration.id`,
+  // gated on plain `READ` — `space.resolver.fields.ts`) against
+  // `fx.a16PrivateSpaceId`, a PRIVATE space with no condition set
+  // (corr-ts-4). `lookup.space` itself is gated on READ_ABOUT, a STRICTLY
+  // WEAKER precondition that `platform-spaces-reader`'s A15 condition (and
+  // any READ holder, via the READ->READ_ABOUT mapping) also satisfies — so
+  // probing only `lookup.space { id }` could not distinguish "reaches
+  // READ_ABOUT" from "reaches READ", which is what THIS row's gate actually
+  // requires.
   registerRow('A16', [
     caller =>
       invoke(
         token =>
-          client().spaceReadProbe({ spaceId: fx.spaceId }, bearer(token)),
+          client().spaceCollaborationReadProbe(
+            { spaceId: fx.a16PrivateSpaceId },
+            bearer(token)
+          ),
         caller
       ),
   ]);
@@ -1183,14 +1284,26 @@ export function buildSurfaceInvocations(
   ]);
 
   // ===== A21 — set/clear user.serviceProfile (1) =====
+  // `fx.rolesProbeUserId` — a disposable, per-file-fresh target, NEVER
+  // `fx.targetUserId` (corr-ts-8/sec-test-suites-2, 2026-07-30 fix wave):
+  // the ALLOW cell here really sets `serviceProfile: true`, and doing that
+  // to the shared `NON_SPACE_MEMBER` fixture would silently flip
+  // `assignment-rules.it-spec.ts`'s rule-3 denial assertion (which relies
+  // on that identity NOT being a service account) for every later run.
   registerRow('A21', [
     caller =>
       invoke(
         token =>
-          client().updateUser(
+          // `updateUserServiceProfile` — see fixtures.ts / grant-single-
+          // role-fixtures.ts for why this is not the heavy `updateUser`:
+          // its full `UserData` fragment echoes the target's private
+          // `settings`, gated on a privilege the caller need not hold to
+          // perform (and here, to have this row's OWN gate exercise)
+          // just the serviceProfile write.
+          client().updateUserServiceProfile(
             {
               userData: {
-                ID: fx.targetUserId,
+                ID: fx.rolesProbeUserId,
                 serviceProfile: true,
               },
             },

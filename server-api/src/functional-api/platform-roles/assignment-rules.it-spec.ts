@@ -5,6 +5,7 @@ import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import type { GraphQLReturnType } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import { buildMatrixFixtures, teardownMatrixFixtures } from './fixtures';
 import type { MatrixFixtures } from './fixtures';
+import { isAuthorizationDenial } from './surface-invocations';
 
 /**
  * workspace#027-platform-role-redesign — [US3].
@@ -259,15 +260,46 @@ describe('assignment rules (T010) — the five rules, each with its own distinct
 
 describe('service-profile assertions (T011, A21/FR-002)', () => {
   it('setting `serviceProfile` is denied to every role but Platform Roles Admin', async () => {
-    const before = await getGraphqlClient().getMyUserInfo(
-      {},
-      {
-        authorization: `Bearer ${
-          TestUserManager.getUserModelByType(TestUser.PLATFORM_SUPPORT)
-            .authToken
-        }`,
-      }
+    // spec-ts-2 (2026-07-30 fix wave): `serviceProfile` carries no GraphQL
+    // `@Field()` decorator on the server (`user.interface.ts`) — it cannot
+    // be read back directly over this repo's GraphQL-only vantage point.
+    // The "separate, fresh-read" assertion the eighth clarification pass
+    // asked for is therefore an INDIRECT probe of the marker's real effect:
+    // rule 3 (`platform.role.assignment.rules.service.ts`) rejects granting
+    // `platform-spaces-reader` to a non-service-account target with a
+    // specific, distinct message. Probing that BEFORE and AFTER the denied
+    // `updateUser` call proves the marker did not move — the previous
+    // version instead read the CALLER's own `me.user.id` before the
+    // mutation and asserted only that it was truthy, which could not
+    // observe the TARGET's `serviceProfile` at all and would pass
+    // identically against a silent partial-apply.
+    // Wrapped via `asUser` (`graphqlErrorWrapper`), never the raw generated
+    // SDK client directly — the raw client throws an uncaught exception on
+    // any GraphQL error response instead of returning it as `.error`
+    // (the same 2026-07-29 live-verification finding every other probe in
+    // this repo already guards against; this probe was missed in the
+    // spec-ts-2 fix wave and reproduced the identical unasserted-exception
+    // failure live, 2026-07-30).
+    const spacesReaderProbe = () =>
+      asUser(
+        token =>
+          getGraphqlClient().assignPlatformRoleToUser(
+            {
+              roleData: {
+                actorID: fixtures.targetUserId,
+                role: RoleName.PlatformSpacesReader,
+              },
+            },
+            { authorization: `Bearer ${token}` }
+          ),
+        TestUser.PLATFORM_ROLES_ADMIN
+      );
+
+    const probeBefore = await spacesReaderProbe();
+    expect(probeBefore.error?.errors?.[0]?.message).toContain(
+      'may only be granted to a service account'
     );
+
     const res = await asUser(
       token =>
         getGraphqlClient().updateUser(
@@ -278,11 +310,14 @@ describe('service-profile assertions (T011, A21/FR-002)', () => {
         ),
       TestUser.PLATFORM_SUPPORT
     );
-    // Assert the call is REJECTED with an error — and separately (via a
-    // fresh read, not merely "no error thrown") that the marker did not
-    // move, per the eighth clarification pass's explicit split.
-    expect(res.error?.errors?.length ?? 0).toBeGreaterThan(0);
-    expect(before.data?.me?.user?.id).toBeTruthy();
+    expect(isAuthorizationDenial(res.error?.errors)).toBe(true);
+
+    // Fresh read: the marker did NOT move — the same rule-3 probe,
+    // repeated, must still reject the target for the same reason.
+    const probeAfter = await spacesReaderProbe();
+    expect(probeAfter.error?.errors?.[0]?.message).toContain(
+      'may only be granted to a service account'
+    );
   });
 
   it('clearing `serviceProfile` is denied to every role but Platform Roles Admin', async () => {
@@ -296,7 +331,7 @@ describe('service-profile assertions (T011, A21/FR-002)', () => {
         ),
       TestUser.PLATFORM_OPERATIONS_ADMIN
     );
-    expect(res.error?.errors?.length ?? 0).toBeGreaterThan(0);
+    expect(isAuthorizationDenial(res.error?.errors)).toBe(true);
   });
 
   // The DENIED case's audit contrast (T011: written vs. NOT written) and the

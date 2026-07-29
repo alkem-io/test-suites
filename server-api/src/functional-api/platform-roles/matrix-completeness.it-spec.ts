@@ -105,13 +105,25 @@ describe('matrix-completeness (T017b) — every census A-row appears with declar
   const matrix = buildMatrix(stage);
   const rowsInMatrix = new Set(matrix.map(c => c.aRow));
 
-  // The two, and ONLY two, declared exemptions — read off the `lifecycle`
-  // marker, never off "the row happens to be empty" (T017's own explicit
-  // warning: an omitted declaration must never be able to pass as "nobody
-  // owns this").
+  // The one row genuinely exempt from needing ANY surface at all: A18
+  // (`{retired}` — removed by FR-020, zero entries in both slices).
+  // spec-ts-3 (2026-07-30 fix wave): server's census type
+  // (`a.row.surfaces.ts`) documents a per-SURFACE `'retired'` lifecycle
+  // value, but A18 has no surface at all to CARRY one — there is nothing to
+  // mirror at the surface level for a row with zero entries. Until server
+  // declares a ROW-level marker, this is a closed, NAMED allowlist — never
+  // "the row happens to be empty" (T017's own explicit warning: an omitted
+  // declaration must never be able to pass as "nobody owns this"). A future
+  // `AXX: []` is NOT in this list, so `isExemptAtStage` returns `false` for
+  // it, the row is absent from the generated matrix (nothing to iterate),
+  // and the assertion below (`present || exempt`) correctly fails — exactly
+  // the protection "the row happens to be empty" was silently defeating.
+  const RETIRED_ROWS: ReadonlySet<ARowId> = new Set(['A18']);
+
   const isExemptAtStage = (aRow: ARowId): boolean => {
+    if (RETIRED_ROWS.has(aRow)) return true;
     const surfaces = A_ROW_SURFACES[aRow];
-    if (surfaces.length === 0) return true; // A18: {retired}, zero entries in both slices
+    if (surfaces.length === 0) return false; // an UNDECLARED empty row is a gap, not an exemption
     return surfaces.every(
       s =>
         typeof s.lifecycle === 'object' &&

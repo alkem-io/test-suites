@@ -185,6 +185,31 @@ export function canonicalSurfaceByRow(
   return map;
 }
 
+/**
+ * qual-ts-4 (2026-07-30 fix wave): whether a DENY cell's expectation is
+ * IDENTICAL at both stages for this ONE credential — i.e. adding Slice A's
+ * legacy reachers to the surface's reach set does not change whether THIS
+ * credential reaches it. `reachers()` only ever ADDS legacy credentials at
+ * stage A (`GLOBAL_ADMIN`/`GLOBAL_SUPPORT` and the two legacy cascades) —
+ * none of which is ever one of our 13 target roles' own credential
+ * (`credentialFor`) — so for the overwhelming majority of cells this is
+ * true and the denial is NOT "meaningless before Slice B" (D18): it is
+ * simply early. The only way it can be false is a surface whose OWN
+ * (non-legacy) grant model differs between the two slices for this
+ * specific credential (e.g. A17 arriving at Slice B, or a cascade
+ * widening) — computed here rather than hand-listing exceptions, so every
+ * such case is covered automatically as the mirror (T007a) evolves.
+ */
+export function denyIsStageInvariant(
+  surface: SurfaceRef,
+  role: RoleName
+): boolean {
+  const credential = credentialFor(role);
+  const reachesA = reachers(surface, 'A').includes(credential);
+  const reachesB = reachers(surface, 'B').includes(credential);
+  return reachesA === reachesB;
+}
+
 /** The full cross-product: every target role x every surface live at this
  * stage. This is `platform-roles`' table — the Slice B release-train gate,
  * ~99x13 in shape once every surface is live (T008's own doc comment: never

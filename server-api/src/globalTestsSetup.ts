@@ -1,4 +1,5 @@
 import {
+  grantSingleRoleFixtures,
   LogManager,
   provisionTestIdentities,
   registerAllTestUsers,
@@ -31,6 +32,16 @@ export default async function setup() {
   } else if (testConfiguration.registerUsers) {
     await registerAllTestUsers();
   }
+
+  // workspace#027-platform-role-redesign (Slice A, T004; qual-ts-2,
+  // 2026-07-30 fix wave): grant each single-role fixture its one target
+  // role, now that every fixture is a registered identity — on BOTH
+  // provisioning branches above. Previously called only from
+  // `registerAllTestUsers`, so the CI `provisionTestIdentities` branch left
+  // every single-role fixture holding NO platform role at all, and every
+  // ALLOW cell in `role-action-matrix.it-spec.ts` failed as a false
+  // enforcement defect.
+  await grantSingleRoleFixtures();
 
   // Env-prerequisite gate (test-suites#565, Phase 1): prove the auth prerequisite
   // is actually met by minting a real admin token BEFORE any scenario runs. A

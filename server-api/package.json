@@ -60,6 +60,8 @@
     "test:configuration": "vitest run --project configuration --fileParallelism=false",
     "test:push-notifications": "vitest run --project push-notifications --fileParallelism=false",
     "test:graphql-guard:ui": "vitest --project graphql-guard --fileParallelism=false --ui",
+    "test:platform-roles": "vitest run --project platform-roles --fileParallelism=false",
+    "test:platform-roles:canonical": "vitest run --project platform-roles-canonical --fileParallelism=false",
     "innovation-pack-with-templates": "tsx ./src/functional-api/innovation-pack/innovation-pack-with-templates.ts",
     "validate-scenario-setup": "tsx ./src/scripts/validate-scenario-setup.ts"
   },

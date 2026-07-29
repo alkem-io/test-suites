@@ -6,6 +6,7 @@ import type { GraphQLReturnType } from '@alkemio/tests-lib/utils/graphql.wrapper
 import { buildMatrixFixtures, teardownMatrixFixtures } from './fixtures';
 import type { MatrixFixtures } from './fixtures';
 import { TARGET_ROLES } from './role-action-matrix.data';
+import { isAuthorizationDenial } from './surface-invocations';
 
 /**
  * workspace#027-platform-role-redesign — [US4/US3].
@@ -62,8 +63,37 @@ describe('grantability (T012, SC-009) — every target role is grantable + revoc
     ).authToken;
 
     for (const role of TARGET_ROLES) {
+      // `platform-spaces-reader` is the one role this loop cannot grant to
+      // `fixtures.targetUserId` unconditionally (corr-ts-2, 2026-07-30 fix
+      // wave): rule 3 (`assignment-rules.it-spec.ts`) rejects it for any
+      // holder whose `serviceProfile` is not `true`. Route it at a
+      // DISPOSABLE target instead of flipping the marker on the shared
+      // `NON_SPACE_MEMBER` fixture — that fixture's `serviceProfile` staying
+      // `false` is exactly what `assignment-rules.it-spec.ts`'s rule-3
+      // DENIAL test depends on.
+      const isSpacesReader = role === RoleName.PlatformSpacesReader;
+      const targetId = isSpacesReader
+        ? fixtures.rolesProbeUserId
+        : fixtures.targetUserId;
+
+      if (isSpacesReader) {
+        // `updateUserServiceProfile`, not the heavy `updateUser` — see
+        // `surface-invocations.ts`'s A21 helper for why: the full
+        // `UserData` fragment echoes the target's private `settings`,
+        // independently privilege-gated, and failing THAT read must not
+        // read as this write being rejected.
+        const markerSet = await getGraphqlClient().updateUserServiceProfile(
+          { userData: { ID: targetId, serviceProfile: true } },
+          { authorization: `Bearer ${rolesAdminToken}` }
+        );
+        expect(
+          markerSet.errors,
+          'setting serviceProfile on the disposable spaces-reader target should succeed'
+        ).toBeUndefined();
+      }
+
       const grant = await getGraphqlClient().assignPlatformRoleToUser(
-        { roleData: { actorID: fixtures.targetUserId, role } },
+        { roleData: { actorID: targetId, role } },
         { authorization: `Bearer ${rolesAdminToken}` }
       );
       expect(grant.errors, `grant of ${role} should succeed`).toBeUndefined();
@@ -73,14 +103,12 @@ describe('grantability (T012, SC-009) — every target role is grantable + revoc
         { authorization: `Bearer ${rolesAdminToken}` }
       );
       expect(
-        holders.data?.platform.roleSet.usersInRole.some(
-          u => u.id === fixtures.targetUserId
-        ),
+        holders.data?.platform.roleSet.usersInRole.some(u => u.id === targetId),
         `freshly-granted holder should appear in ${role}'s holder list`
       ).toBe(true);
 
       const revoke = await getGraphqlClient().removePlatformRoleFromUser(
-        { roleData: { actorID: fixtures.targetUserId, role } },
+        { roleData: { actorID: targetId, role } },
         { authorization: `Bearer ${rolesAdminToken}` }
       );
       expect(revoke.errors, `revoke of ${role} should succeed`).toBeUndefined();
@@ -157,7 +185,10 @@ describe('holder-list read partitioning (T018/T018a, FR-032/SC-017)', () => {
         ),
       TestUser.PLATFORM_USERS_ADMIN
     );
-    expect(res.error?.errors?.length ?? 0).toBeGreaterThan(0);
+    // sec-test-suites-3: assert an AUTHORIZATION denial specifically
+    // (FORBIDDEN/FORBIDDEN_POLICY), not merely "any error" — a bare
+    // failure passes identically against a validation/not-found error.
+    expect(isAuthorizationDenial(res.error?.errors)).toBe(true);
   });
 
   it('`Platform …` holder lists: denied to every other role (representative: platform-support)', async () => {
@@ -169,7 +200,10 @@ describe('holder-list read partitioning (T018/T018a, FR-032/SC-017)', () => {
         ),
       TestUser.PLATFORM_SUPPORT
     );
-    expect(res.error?.errors?.length ?? 0).toBeGreaterThan(0);
+    // sec-test-suites-3: assert an AUTHORIZATION denial specifically
+    // (FORBIDDEN/FORBIDDEN_POLICY), not merely "any error" — a bare
+    // failure passes identically against a validation/not-found error.
+    expect(isAuthorizationDenial(res.error?.errors)).toBe(true);
   });
 
   it('`Feature …` holder lists: readable by platform-roles-admin, platform-audit-reader AND platform-users-admin', async () => {
@@ -243,7 +277,10 @@ describe('holder-list read partitioning (T018/T018a, FR-032/SC-017)', () => {
     );
     // Assert on the DATA, not only the error — a partial-result
     // implementation would pass an error-only assertion identically.
-    expect(res.error?.errors?.length ?? 0).toBeGreaterThan(0);
+    // sec-test-suites-3: assert an AUTHORIZATION denial specifically
+    // (FORBIDDEN/FORBIDDEN_POLICY), not merely "any error" — a bare
+    // failure passes identically against a validation/not-found error.
+    expect(isAuthorizationDenial(res.error?.errors)).toBe(true);
     expect(res.data?.platform.roleSet.usersInRoles ?? []).toEqual([]);
   });
 
@@ -261,7 +298,10 @@ describe('holder-list read partitioning (T018/T018a, FR-032/SC-017)', () => {
         ),
       TestUser.PLATFORM_USERS_ADMIN
     );
-    expect(res.error?.errors?.length ?? 0).toBeGreaterThan(0);
+    // sec-test-suites-3: assert an AUTHORIZATION denial specifically
+    // (FORBIDDEN/FORBIDDEN_POLICY), not merely "any error" — a bare
+    // failure passes identically against a validation/not-found error.
+    expect(isAuthorizationDenial(res.error?.errors)).toBe(true);
     expect(res.data?.platform.roleSet.organizationsInRoles ?? []).toEqual([]);
   });
 });
@@ -300,7 +340,10 @@ describe('audit-read (T019, FR-028/SC-014)', () => {
         ),
       TestUser.PLATFORM_USERS_ADMIN
     );
-    expect(res.error?.errors?.length ?? 0).toBeGreaterThan(0);
+    // sec-test-suites-3: assert an AUTHORIZATION denial specifically
+    // (FORBIDDEN/FORBIDDEN_POLICY), not merely "any error" — a bare
+    // failure passes identically against a validation/not-found error.
+    expect(isAuthorizationDenial(res.error?.errors)).toBe(true);
   });
 
   it('platform-users-admin is DENIED userEmailChangeAuditEntries too', async () => {
@@ -312,7 +355,10 @@ describe('audit-read (T019, FR-028/SC-014)', () => {
         ),
       TestUser.PLATFORM_USERS_ADMIN
     );
-    expect(res.error?.errors?.length ?? 0).toBeGreaterThan(0);
+    // sec-test-suites-3: assert an AUTHORIZATION denial specifically
+    // (FORBIDDEN/FORBIDDEN_POLICY), not merely "any error" — a bare
+    // failure passes identically against a validation/not-found error.
+    expect(isAuthorizationDenial(res.error?.errors)).toBe(true);
   });
 
   it('platform-roles-admin is DENIED both audit-read GraphQL fields too — audit read belongs to platform-audit-reader ALONE', async () => {
@@ -334,8 +380,8 @@ describe('audit-read (T019, FR-028/SC-014)', () => {
         TestUser.PLATFORM_ROLES_ADMIN
       ),
     ]);
-    expect(a.error?.errors?.length ?? 0).toBeGreaterThan(0);
-    expect(b.error?.errors?.length ?? 0).toBeGreaterThan(0);
+    expect(isAuthorizationDenial(a.error?.errors)).toBe(true);
+    expect(isAuthorizationDenial(b.error?.errors)).toBe(true);
   });
 
   // The third A19 surface — the MCP `audit-log-analyze` tool — has no

@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, it, expect } from 'vitest';
 import { buildMatrixFixtures, teardownMatrixFixtures } from './fixtures';
 import type { MatrixFixtures } from './fixtures';
-import { buildSurfaceInvocations } from './surface-invocations';
+import { buildSurfaceInvocations, isAuthorizationDenial } from './surface-invocations';
 import type { SurfaceInvocation } from './surface-invocations';
 import type { SurfaceRef } from './verification/a-row-surfaces.data';
 import {
@@ -91,17 +91,44 @@ describe(`role-action-matrix (T008/T009) — scope=${activeMatrixScope()} stage=
         ).toBe(true);
       });
     } else {
-      // Denial cells are meaningless before Slice B removes the legacy
-      // broad grants (D18) — declared but skipped at stage A rather than
-      // silently omitted, so the SHAPE of the suite is visible even when
-      // the assertion cannot yet fire.
-      it.skipIf(!isStageB() || noClientWired)(`DENY: ${label}`, async () => {
-        const outcome = await invocationFor(cell.surface)(caller);
-        expect(
-          outcome.ok,
-          `expected ${label} to be DENIED, but it succeeded`
-        ).toBe(false);
-      });
+      // qual-ts-4 (2026-07-30 fix wave) proposed executing a stage-A DENY
+      // cell early whenever `denyIsStageInvariant` shows the credential's
+      // reach is identical at both stages — legitimate in THEORY (D18's
+      // legacy grants never widen one of our 13 roles' own reach), but
+      // **live-verification found it unsafe for DESTRUCTIVE, single-use
+      // surfaces** (A5's `deleteUser`, A8's deletes, A13's
+      // `DeleteLicensePlan`): every DENY cell for a surface shares ONE
+      // disposable target with the ONE real ALLOW caller who deletes it —
+      // `TARGET_ROLES` order puts several DENY roles AFTER the owning role,
+      // so once the real deletion runs, every later DENY cell hits
+      // `EntityNotFoundException` instead of an authorization rejection —
+      // exactly the "green/red for the wrong reason" hazard this suite
+      // exists to prevent, now self-inflicted. Fixing this properly needs a
+      // per-surface "destructive" classification the census does not carry
+      // yet (or a disposable target per DENY role, which is not affordable
+      // at ~76 helpers x 12 denials). Reverted to skipping the whole DENY
+      // half at stage A until that lands — `denyIsStageInvariant` stays
+      // exported, documented, for that follow-up.
+      it.skipIf(!isStageB() || noClientWired)(
+        `DENY: ${label}`,
+        async () => {
+          const outcome = await invocationFor(cell.surface)(caller);
+          expect(
+            outcome.ok,
+            `expected ${label} to be DENIED, but it succeeded`
+          ).toBe(false);
+          // sec-test-suites-3: the denial must be an AUTHORIZATION denial
+          // (FORBIDDEN/FORBIDDEN_POLICY), not a validation/not-found error
+          // that happens to precede the gate — a green denial for the
+          // wrong reason is exactly the failure mode this suite's own
+          // header warns about, applied to its own assertions.
+          const errors = outcome.ok ? [] : outcome.errors;
+          expect(
+            isAuthorizationDenial(errors),
+            `expected ${label} to be DENIED with an authorization error (FORBIDDEN/FORBIDDEN_POLICY), got: ${JSON.stringify(errors)}`
+          ).toBe(true);
+        }
+      );
     }
   }
 });

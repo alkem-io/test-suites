@@ -1,7 +1,6 @@
 import { UiText } from '@ory/kratos-client';
 import { registerInKratosOrFail } from './register-in-kratos-or-fail';
 import { verifyInKratosOrFail } from './verify-in-kratos-or-fail';
-import { grantSingleRoleFixtures } from './grant-single-role-fixtures';
 import { TestUser } from '../../common/enums/test.user';
 
 const parseUserName = (userName: string): [string, string] => {
@@ -84,11 +83,11 @@ export const registerAllTestUsers = async (): Promise<void> => {
     }
   }
 
-  // workspace#027-platform-role-redesign (Slice A, T004): grant each new
-  // single-role fixture its one target role, now that every fixture is a
-  // registered + verified Kratos identity. Deliberately a second pass rather
-  // than interleaved above — role assignment is Alkemio-side and shares none
-  // of the Kratos-flow rate-limit constraints that make the loop above
-  // sequential.
-  await grantSingleRoleFixtures();
+  // workspace#027-platform-role-redesign (Slice A, T004): single-role
+  // fixture role seeding (`grantSingleRoleFixtures`) is called from
+  // `globalTestsSetup.ts` AFTER both provisioning branches (this one and
+  // `provisionTestIdentities`), not here — qual-ts-2 (2026-07-30 fix wave):
+  // calling it only from this function left the CI `provisionTestIdentities`
+  // branch with single-role fixtures holding NO platform role at all, so
+  // every ALLOW cell failed and every denial assertion passed vacuously.
 };

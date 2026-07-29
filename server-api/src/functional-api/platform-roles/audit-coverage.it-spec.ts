@@ -5,6 +5,7 @@ import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import type { GraphQLReturnType } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import { buildMatrixFixtures, teardownMatrixFixtures } from './fixtures';
 import type { MatrixFixtures } from './fixtures';
+import { isAuthorizationDenial } from './surface-invocations';
 
 const asUser = <TData>(
   fn: (authToken: string | undefined) => GraphQLReturnType<TData>,
@@ -81,7 +82,7 @@ describe('audit-coverage outcome checks reachable without a generic audit read (
         ),
       TestUser.PLATFORM_SUPPORT
     );
-    expect(rejected.error?.errors?.length ?? 0).toBeGreaterThan(0);
+    expect(isAuthorizationDenial(rejected.error?.errors)).toBe(true);
 
     const holders = await getGraphqlClient().platformRoleSetUsersInRole(
       { role: RoleName.PlatformSupport },
@@ -104,21 +105,45 @@ describe('audit-coverage outcome checks reachable without a generic audit read (
 
 describe('SC-015 self-affecting retrievability — the ONE GraphQL-reachable audit category (T014a)', () => {
   it("a Roles Admin's OWN login-email change is retrievable under initiatorUserId = subjectUserId", async () => {
-    const rolesAdminUser = TestUserManager.getUserModelByType(
+    // sec-test-suites-1/corr-ts-3/qual-ts-5 (2026-07-30 fix wave): target a
+    // DISPOSABLE identity, NEVER the shared `PLATFORM_ROLES_ADMIN` fixture —
+    // `adminUserEmailChange` permanently rewrites the Kratos login email
+    // with no restore, and doing that to the canonical roles-admin fixture
+    // broke every subsequent run's ability to authenticate as it. Grant
+    // `platform-roles-admin` to the disposable target first so the subject
+    // genuinely IS a Roles Admin, preserving this test's own title/intent.
+    //
+    // Uses `fixtures.emailChangeTargetUserId`, NOT `rolesProbeUserId`
+    // (live-verification finding, 2026-07-30): `adminUserEmailChange` loads
+    // its subject through the identity-provider link and throws
+    // `EMAIL_CHANGE_SUBJECT_NOT_FOUND` for a bare `createUser()` account —
+    // `emailChangeTargetUserId` is this fixture set's ONE genuinely
+    // Kratos-registered disposable identity (`registerVerifiedUser`),
+    // built for exactly this class of surface.
+    const rolesAdminToken = TestUserManager.getUserModelByType(
       TestUser.PLATFORM_ROLES_ADMIN
+    ).authToken;
+    const probeUserId = fixtures.emailChangeTargetUserId;
+    const grant = await getGraphqlClient().assignPlatformRoleToUser(
+      {
+        roleData: { actorID: probeUserId, role: RoleName.PlatformRolesAdmin },
+      },
+      { authorization: `Bearer ${rolesAdminToken}` }
     );
+    expect(grant.errors).toBeUndefined();
+
     // A4's `adminUserEmailChange` requires PLATFORM_USERS_ADMIN — the
-    // Roles Admin fixture does not hold it (single-role, separation of
-    // duties), so this self-targeted change is performed by Users Admin
-    // ON the Roles Admin's own account, then read back by Audit Reader —
-    // the retrievability predicate is about the SUBJECT, not the caller.
+    // disposable target does not hold it, so this self-targeted change is
+    // performed by Users Admin ON the disposable Roles Admin's own account,
+    // then read back by Audit Reader — the retrievability predicate is
+    // about the SUBJECT, not the caller.
     const usersAdminToken = TestUserManager.getUserModelByType(
       TestUser.PLATFORM_USERS_ADMIN
     ).authToken;
     await getGraphqlClient().adminUserEmailChange(
       {
         adminUserEmailChangeData: {
-          userID: rolesAdminUser.id,
+          userID: probeUserId,
           newEmail: `sc015-self-${Date.now()}@alkem.io`,
           reason: 'T014a self-affecting retrievability probe',
           approver: {
@@ -134,7 +159,7 @@ describe('SC-015 self-affecting retrievability — the ONE GraphQL-reachable aud
       TestUser.PLATFORM_AUDIT_READER
     ).authToken;
     const entries = await getGraphqlClient().userEmailChangeAuditEntries(
-      { userID: rolesAdminUser.id },
+      { userID: probeUserId },
       { authorization: `Bearer ${auditReaderToken}` }
     );
     expect(entries.errors).toBeUndefined();
@@ -149,9 +174,7 @@ describe('SC-015 self-affecting retrievability — the ONE GraphQL-reachable aud
     // SUBJECT `userID` only, with no initiator filter exposed over
     // GraphQL) — recorded as a known gap alongside the rest of this file's
     // header rather than asserted on a query that does not exist.
-    expect(fixtures.targetUserId).not.toBe(
-      TestUserManager.getUserModelByType(TestUser.PLATFORM_ROLES_ADMIN).id
-    );
+    expect(fixtures.targetUserId).not.toBe(fixtures.emailChangeTargetUserId);
   });
 
   // (b) — a platform-wide operational action (`authorizationPolicyResetOnPlatform`,

@@ -5,6 +5,7 @@ import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import type { GraphQLReturnType } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import { buildMatrixFixtures, teardownMatrixFixtures } from '../fixtures';
 import type { MatrixFixtures } from '../fixtures';
+import { isAuthorizationDenial } from '../surface-invocations';
 
 const asUser = <TData>(
   fn: (authToken: string | undefined) => GraphQLReturnType<TData>,
@@ -83,8 +84,8 @@ describe('flow 1 — grant, act, revoke, deny (T019a, FR-031/SC-016)', () => {
       TestUser.NON_SPACE_MEMBER
     );
     expect(
-      deny.error?.errors?.length ?? 0,
-      'the request immediately following a revoke must be denied — no gap for a cache/reset to hide behind'
-    ).toBeGreaterThan(0);
+      isAuthorizationDenial(deny.error?.errors),
+      'the request immediately following a revoke must be denied with an authorization error — no gap for a cache/reset to hide behind'
+    ).toBe(true);
   });
 });
