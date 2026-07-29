@@ -14,6 +14,11 @@ dotenv.config({ path: path.resolve(__dirname, '.env') });
 export default defineConfig({
   globalSetup: './config/global-setup.ts',
   testDir: './src/functional-e2e',
+  /* forge-acceptance specs are durable regression cover for /forge acceptance
+   * walks (tag @forge-acceptance). They need a live, seeded acceptance stack
+   * and are not part of the default gate — run explicitly via
+   * `playwright test --grep @forge-acceptance`. */
+  testIgnore: '**/*.forge-acceptance.spec.ts',
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
