@@ -27,7 +27,7 @@
  * Mirror everything else structurally (same ids, same order, same
  * commentary) so a diff against the server file stays a one-line check —
  * `mirror-integrity.it-spec.ts` in this directory guards the census's own
- * documented counts (93 multiplying at stage A / 99 total entries / 21 live rows) so a
+ * documented counts (96 multiplying at stage A / 102 total entries / 21 live rows) so a
  * stale local edit fails loudly even without cross-repo file access at test
  * time (this repo's worktree never reads another repo's tree at runtime).
  */
@@ -103,19 +103,31 @@ export type TreeId =
 /**
  * The root policy's replacement rule (T036), added ALONGSIDE the legacy
  * god-mode rule (never narrowing before the replacement exists — the
- * eleventh analyze pass's ordering requirement). Deliberately carries ONLY
- * `READ` and `PLATFORM_CONTENT_FULL_ACCESS` — `CREATE`/`UPDATE`/`DELETE`
- * and `UPDATE_NAMEID` are absent BY DESIGN (privilege-map.md §"The root rule
- * is..."): cascading them would satisfy the owner branch of every
- * `anyOf` dual-path gate (A6, A7, A8) and hand Content Full Access
- * capabilities spec.md row 2 denies it.
+ * eleventh analyze pass's ordering requirement). **Reversed at the ninth
+ * `/speckit-analyze` pass** (FR-004/SC-004, spec-server-1 fix): carries full
+ * `CREATE`/`READ`/`UPDATE`/`DELETE` plus `PLATFORM_CONTENT_FULL_ACCESS` — a
+ * deliberate, signed-off widening that ALSO satisfies the owner branch of
+ * A6/A7's `anyOf` dual-path gates (accepted as SC-004's single named
+ * exception; see `a-row-surfaces.data.ts`'s A6/A7 `acceptedExtraReachers`).
+ * `UPDATE_NAMEID` stays absent BY DESIGN: A17 is owned by NO global role
+ * (spec row 2, FR-020), so cascading it would hand Content Full Access
+ * entity renames the spec explicitly denies it.
  *
- * Reaches the seven direct root-inheritors. `Slice B` (T072) deletes the
- * legacy `global-admin` CRUD+GRANT rule entirely and narrows this rule's
- * credential list to `platform-content-full-access` alone — update THIS
- * declaration in the same commit as that task, so `reachability.spec.ts`
- * (T070m, not built this wave) re-derives against the Slice B shape rather
- * than silently checking the Slice A one forever.
+ * Reaches the seven direct root-inheritors. `GLOBAL_SUPPORT` is
+ * deliberately NOT a Slice A credential here (sec-server-3/corr-server-2
+ * fix): unlike `GLOBAL_ADMIN`, it never held blanket CRUD across these
+ * seven trees before this feature — only the platform-SUBTREE cascade
+ * (`LEGACY_CASCADES.globalSupportPlatformSubtree` below, which does not
+ * reach the other six) and per-space, flag-gated privileges
+ * (`allowPlatformSupportAsAdmin`). Adding it here would bypass that
+ * per-space consent gate platform-wide.
+ *
+ * `Slice B` (T072) deletes the legacy `global-admin` CRUD+GRANT rule
+ * entirely and narrows this rule's credential list to
+ * `platform-content-full-access` alone — update THIS declaration in the
+ * same commit as that task, so `reachability.spec.ts` (T070m) re-derives
+ * against the Slice B shape rather than silently checking the Slice A one
+ * forever.
  */
 export const ROOT_CASCADE: {
   readonly privileges: readonly AuthorizationPrivilege[];
@@ -123,7 +135,7 @@ export const ROOT_CASCADE: {
   /** Credentials reaching the cascade in EACH slice — both are declared
    * here (rather than only in `privilege.grants.ts`) because the root rule
    * is a single credential rule whose CREDENTIAL LIST changes shape between
-   * slices (Slice A: content-full-access ∪ the two legacy CRUD holders;
+   * slices (Slice A: content-full-access ∪ global-admin;
    * Slice B: content-full-access alone, T072). */
   readonly credentialsBySlice: {
     readonly A: readonly AuthorizationCredential[];
@@ -131,7 +143,10 @@ export const ROOT_CASCADE: {
   };
 } = {
   privileges: [
+    AuthorizationPrivilege.Create,
     AuthorizationPrivilege.Read,
+    AuthorizationPrivilege.Update,
+    AuthorizationPrivilege.Delete,
     AuthorizationPrivilege.PlatformContentFullAccess,
   ],
   trees: [
@@ -147,7 +162,6 @@ export const ROOT_CASCADE: {
     A: [
       AuthorizationCredential.PlatformContentFullAccess,
       AuthorizationCredential.GlobalAdmin,
-      AuthorizationCredential.GlobalSupport,
     ],
     B: [AuthorizationCredential.PlatformContentFullAccess],
   },
@@ -356,21 +370,21 @@ export const PRIVILEGE_GRANTS: Record<ManagedPrivilege, PrivilegeGrant> = {
     ],
   },
   // --- A7/A8's platform-side branch, and the root rule's own replacement
-  // grant (T036). `global-support` reaches this too in Slice A, but NOT via
-  // this credential rule — via its OWN platform-subtree cascade
-  // (`cascade.model.ts`'s `globalSupportPlatformSubtree`), which does not
-  // reach the other six root-inheritors. The root rule's own credential
-  // list additionally carries `global-admin`/`global-support` directly
-  // (`cascade.model.ts`'s `ROOT_CASCADE.credentialsBySlice.A`) — declared
-  // there, not duplicated here, since this privilege's reachability is
-  // ENTIRELY cascade-carried (no separate non-root grant exists for it).
+  // grant (T036, reversed at the ninth analyze pass — FR-004/SC-004,
+  // spec-server-1 fix). `global-support` deliberately does NOT reach this
+  // privilege (sec-server-3/corr-server-2 fix): its reach is (a) its OWN
+  // platform-subtree cascade (`cascade-and-grants.data.ts`'s
+  // `globalSupportPlatformSubtree`, which does not reach the other six
+  // root-inheritors), and (b) per-space, flag-gated privileges — never a
+  // blanket grant of THIS privilege. The root rule's own credential list
+  // additionally carries `global-admin` directly
+  // (`ROOT_CASCADE.credentialsBySlice.A`) — declared there, not duplicated
+  // here, since this privilege's reachability is ENTIRELY cascade-carried
+  // (no separate non-root grant exists for it).
   [AuthorizationPrivilege.PlatformContentFullAccess]: {
     anchor: 'root',
     owningCredentials: [AuthorizationCredential.PlatformContentFullAccess],
-    legacyCredentials: [
-      AuthorizationCredential.GlobalAdmin,
-      AuthorizationCredential.GlobalSupport,
-    ],
+    legacyCredentials: [AuthorizationCredential.GlobalAdmin],
   },
   // --- A4/A5 (T035, T061/T062). Grant set is the UNION of A4's legacy
   // reachers (today's PLATFORM_ADMIN: GA/GS/GLM) and A5's (today's

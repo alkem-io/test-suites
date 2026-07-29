@@ -116,29 +116,48 @@ export default defineConfig({
         'src/functional-api/graphql-guard/**/*.it-spec.ts',
       ]),
       // workspace#027-platform-role-redesign (T005/T008/T009). Both
-      // projects share the SAME `include` glob and the SAME generated table
-      // (role-action-matrix.data.ts) — the only difference is the
-      // `PLATFORM_ROLES_MATRIX_SCOPE` env var each project sets, which
-      // `role-action-matrix.it-spec.ts` reads to pick `buildCanonicalMatrix`
-      // (one surface per live A-row — the PR-feedback inner loop) vs.
-      // `buildMatrix` (the full cross-product — the Slice B release-train
-      // gate). A second table would be the defect this shape avoids; a
-      // second env var name would be too, so it lives nowhere else.
+      // projects read the SAME generated table (role-action-matrix.data.ts)
+      // — the `PLATFORM_ROLES_MATRIX_SCOPE` env var each project sets is
+      // what `role-action-matrix.it-spec.ts` reads to pick
+      // `buildCanonicalMatrix` (one surface per live A-row — the
+      // PR-feedback inner loop) vs. `buildMatrix` (the full cross-product —
+      // the Slice B release-train gate). A second table would be the defect
+      // this shape avoids; a second env var name would be too, so it lives
+      // nowhere else.
+      //
+      // qual-ts-15 (2026-07-30 fix wave): the two projects' `include` globs
+      // are DELIBERATELY DIFFERENT — `role-action-matrix.it-spec.ts` is the
+      // ONLY file that reads `PLATFORM_ROLES_MATRIX_SCOPE`
+      // (`role-action-matrix.data.ts`'s `activeMatrixScope()`), so it is the
+      // only file whose behaviour differs between the two projects. Every
+      // other spec in the directory (assignment-rules, audit-coverage,
+      // grantability, immediacy, matrix-completeness, mirror-integrity,
+      // the three `flows/` files) previously ran identically in BOTH
+      // projects — eight `buildMatrixFixtures()` builds (~35 live API
+      // writes each) plus eight platform-wide `authorizationPlatformRolesAccessReset`
+      // calls, entirely redundant. `platform-roles-canonical` now covers
+      // only the scope-sensitive file; `platform-roles` still covers the
+      // whole directory as the Slice B release-train gate.
       {
         extends: true as const,
         test: {
           name: 'platform-roles-canonical',
-          include: ['src/functional-api/platform-roles/**/*.it-spec.ts'],
+          include: [
+            'src/functional-api/platform-roles/role-action-matrix.it-spec.ts',
+          ],
           env: { PLATFORM_ROLES_MATRIX_SCOPE: 'canonical' },
+          setupFiles: [
+            './src/functional-api/platform-roles/platform-roles.setup.ts',
+          ],
           // corr-ts-5/qual-ts-6 (2026-07-30 fix wave): every file here
           // shares mutable state through the SAME shared TestUser fixtures
           // (`fixtures.ts`'s `targetUserId`/`rolesProbeUserId` resolve to
           // fixed identities, and `platform-roles-admin`'s holder count is
-          // read/written across files) — running the 10 spec files in
-          // parallel races those mutations. Every other integration project
-          // in this repo is invoked with `--fileParallelism=false` for the
-          // same reason; this sets it in the project config itself so it
-          // applies regardless of how the project is invoked.
+          // read/written across files) — running spec files in parallel
+          // races those mutations. Every other integration project in this
+          // repo is invoked with `--fileParallelism=false` for the same
+          // reason; this sets it in the project config itself so it applies
+          // regardless of how the project is invoked.
           fileParallelism: false,
         },
       },
@@ -148,6 +167,9 @@ export default defineConfig({
           name: 'platform-roles',
           include: ['src/functional-api/platform-roles/**/*.it-spec.ts'],
           env: { PLATFORM_ROLES_MATRIX_SCOPE: 'full' },
+          setupFiles: [
+            './src/functional-api/platform-roles/platform-roles.setup.ts',
+          ],
           fileParallelism: false,
         },
       },

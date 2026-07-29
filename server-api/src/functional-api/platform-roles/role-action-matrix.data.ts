@@ -212,19 +212,37 @@ export function denyIsStageInvariant(
 
 /** The full cross-product: every target role x every surface live at this
  * stage. This is `platform-roles`' table — the Slice B release-train gate,
- * ~99x13 in shape once every surface is live (T008's own doc comment: never
- * assert a literal count copied from a task description — derive it). */
+ * ~102x13 in shape once every surface is live (T008's own doc comment: never
+ * assert a literal count copied from a task description — derive it).
+ *
+ * corr-ts-16 (2026-07-30 fix wave): within EACH surface's 13-role slice, DENY
+ * cells are ordered BEFORE ALLOW cells (a stable partition — TARGET_ROLES
+ * order is preserved within each half). `role-action-matrix.it-spec.ts`
+ * registers `it()`s in array order and they execute in that order, so
+ * without this a destructive/single-use surface (A5's `deleteUser`, A8's
+ * deletes, A13's `DeleteLicensePlan`, A9's cross-L0 moves…) would let its
+ * ONE real ALLOW invocation consume the shared disposable target BEFORE
+ * later DENY cells for the SAME surface ran — those then hit
+ * `EntityNotFoundException` instead of an authorization rejection, exactly
+ * the "green/red for the wrong reason" hazard this suite exists to prevent.
+ * Running every surface's ALLOW cell(s) last is always safe (a DENY cell
+ * never mutates state) and needs no per-surface "destructive" classification
+ * — it fixes the general case, not just the surfaces observed to hit it. */
 export function buildMatrix(stage: PlatformRolesStage): readonly MatrixCell[] {
   const cells: MatrixCell[] = [];
   for (const { aRow, surface } of liveSurfaces(stage)) {
     const reachSet = reachers(surface, stage);
+    const denyCells: MatrixCell[] = [];
+    const allowCells: MatrixCell[] = [];
     for (const role of TARGET_ROLES) {
       const credential = credentialFor(role);
       const expected: MatrixExpectation = reachSet.includes(credential)
         ? 'allow'
         : 'deny';
-      cells.push({ role, aRow, surface, expected });
+      const cell: MatrixCell = { role, aRow, surface, expected };
+      (expected === 'allow' ? allowCells : denyCells).push(cell);
     }
+    cells.push(...denyCells, ...allowCells);
   }
   return cells;
 }

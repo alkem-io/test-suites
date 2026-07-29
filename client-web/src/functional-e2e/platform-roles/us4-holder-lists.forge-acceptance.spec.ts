@@ -22,9 +22,10 @@
 // deliberately out of scope for this spec — do not add them until the
 // subtractive slice removes the legacy credential paths.
 //
-// Fixture users (pre-seeded, single-role by construction — see
-// server/src/core/bootstrap/platform-template-definitions/user/users.json and
-// the platform-roles matrix fixtures):
+// Fixture users (registered by Playwright's globalSetup, then granted their
+// single role by `grantSingleRoleFixtures()` — corr-ts-15/qual-ts-12 — NOT
+// `server/src/core/bootstrap/platform-template-definitions/user/users.json`,
+// which seeds only admin@/notifications@/spaces-reader@):
 //   platform.rolesadmin@alkem.io  -> PLATFORM_ROLES_ADMIN only
 //   platform.auditreader@alkem.io -> PLATFORM_AUDIT_READER only
 //   platform.usersadmin@alkem.io  -> PLATFORM_USERS_ADMIN only

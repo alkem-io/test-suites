@@ -199,10 +199,23 @@ describe('organization-standing immediacy (T013, FR-002/FR-031)', () => {
       ).toBeUndefined();
       const createdId = asAdmin.data?.createOrganization?.id;
       if (createdId) {
-        await getGraphqlClient().deleteOrganization(
-          { deleteData: { ID: createdId } },
-          { authorization: `Bearer ${rolesAdminToken}` }
-        );
+        // corr-ts-17: `deleteOrganization`'s gate is `anyOf[DELETE,
+        // DELETE_ORGANIZATION]`, owned by `platform-support` alone
+        // (`DELETE_ORGANIZATION`) — a single-role `platform-roles-admin`
+        // fixture holds NEITHER, so cleaning up with `rolesAdminToken` was
+        // itself an authorization failure that escaped this best-effort
+        // cleanup and failed the test after its real assertions had already
+        // passed. Use `globalAdmin` (still cascade-reachable at Slice A) and
+        // make the cleanup best-effort, matching this file's other
+        // teardown calls.
+        try {
+          await getGraphqlClient().deleteOrganization(
+            { deleteData: { ID: createdId } },
+            { authorization: `Bearer ${globalAdminToken}` }
+          );
+        } catch {
+          // best-effort cleanup
+        }
       }
 
       // Demote back to Associate — loses it on the very next request. No

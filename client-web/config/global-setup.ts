@@ -1,4 +1,5 @@
 import {
+  grantSingleRoleFixtures,
   registerAllTestUsers,
   stringifyConfig,
   testConfiguration,
@@ -43,4 +44,14 @@ export default async function globalSetup() {
   );
 
   await registerAllTestUsers();
+
+  // corr-ts-15/qual-ts-12: `registerAllTestUsers()` (post qual-ts-2 fix)
+  // registers the Kratos/Alkemio identities for the 027-platform-role-redesign
+  // single-role fixtures but grants them NO platform role — that step moved
+  // to `grantSingleRoleFixtures()`, called from `server-api`'s
+  // `globalTestsSetup.ts`, a file Playwright never loads. Without this call,
+  // every `@forge-acceptance` spec (`us2-role-capabilities`,
+  // `us3-grantability`, `us4-holder-lists`) authenticates as a role-less
+  // user and fails at its first authorization assertion.
+  await grantSingleRoleFixtures();
 }

@@ -91,8 +91,8 @@ describe('mirror-integrity (T007a) — the mirrored census matches its own docum
     expect(LIVE_ROW_IDS).not.toContain('A18');
   });
 
-  it('the census file holds 99 entries total (the fifteenth-pass-corrected count — every planning document that still says ~76/~80 is stale)', () => {
-    expect(ALL_ENTRIES.length).toBe(99);
+  it('the census file holds 102 entries total (T007c re-sync count — every planning document that still says ~76/~80/99 is stale)', () => {
+    expect(ALL_ENTRIES.length).toBe(102);
   });
 
   it('exactly 4 entries carry {retiredIn: "B"} — A1s FR-022 credential mutations', () => {
@@ -109,17 +109,17 @@ describe('mirror-integrity (T007a) — the mirrored census matches its own docum
     }
   });
 
-  it('93 entries multiply at stage A; 95 at stage B (99 total minus the 4 non-multiplying retiredIn entries, minus A17s 2 deferred-until-B entries at stage A only)', () => {
-    expect(multiplyingAt('A').length).toBe(93);
-    expect(multiplyingAt('B').length).toBe(95);
+  it('96 entries multiply at stage A; 98 at stage B (102 total minus the 4 non-multiplying retiredIn entries, minus A17s 2 deferred-until-B entries at stage A only)', () => {
+    expect(multiplyingAt('A').length).toBe(96);
+    expect(multiplyingAt('B').length).toBe(98);
   });
 
   it('per-row surface counts match the documented census table (stage-A declared count)', () => {
     const expected: Record<ARowId, number> = {
-      A1: 6,
+      A1: 8,
       A2: 4,
       A3: 10,
-      A4: 2,
+      A4: 3,
       A5: 3,
       A6: 2,
       A7: 8,
@@ -229,8 +229,15 @@ describe('mirror-integrity (T007a) — the structural-diff guard: derived reacha
   it('the DECLARED legacyReachers fields the T070m race left stale are exactly as wide as server (A4, A7, A14, A16)', () => {
     // A4 — the shared PLATFORM_USERS_ADMIN credential rule's legacy list is
     // undifferentiated across A4/A5, so GLOBAL_PLATFORM_MANAGER (added for
-    // A5) reaches A4 too.
+    // A5) reaches A4 too. Scoped to the `requires`/`anyOf` surfaces only —
+    // A4 also carries the `deleteUser` legacy-admin CREDENTIAL PIN
+    // (spec-ts-8), whose `legacyReachers` is deliberately `[GA]` alone (the
+    // pin's whole point is that it is NOT reached via the shared privilege's
+    // wider legacy list).
     for (const surface of A_ROW_SURFACES.A4) {
+      if (!isRequiresGate(surface.gate) && !isAnyOfGate(surface.gate)) {
+        continue;
+      }
       expect(surface.legacyReachers).toEqual(
         expect.arrayContaining([AuthorizationCredential.GlobalPlatformManager])
       );
@@ -250,14 +257,17 @@ describe('mirror-integrity (T007a) — the structural-diff guard: derived reacha
       );
     }
     // A16 — the legacy root cascade grants plain READ on the space tree to
-    // BOTH global-admin and global-support today, alongside the void
-    // global-spaces-reader row.
+    // global-admin today, alongside the void global-spaces-reader row.
+    // global-support is deliberately ABSENT (sec-server-3/corr-server-2
+    // fix, spec-ts-7): its cross-space READ came ONLY from the root rule's
+    // now-removed GLOBAL_SUPPORT membership — re-pinning it here would be
+    // asserting the exact divergence this guard exists to catch.
     for (const surface of A_ROW_SURFACES.A16) {
       expect(surface.legacyReachers).toEqual(
-        expect.arrayContaining([
-          AuthorizationCredential.GlobalAdmin,
-          AuthorizationCredential.GlobalSupport,
-        ])
+        expect.arrayContaining([AuthorizationCredential.GlobalAdmin])
+      );
+      expect(surface.legacyReachers).not.toContain(
+        AuthorizationCredential.GlobalSupport
       );
     }
   });
@@ -293,9 +303,13 @@ describe('mirror-integrity (T007a) — the structural-diff guard: derived reacha
         AuthorizationCredential.GlobalSpacesReader,
         AuthorizationCredential.PlatformContentFullAccess,
         AuthorizationCredential.GlobalAdmin,
-        AuthorizationCredential.GlobalSupport,
       ])
     );
+    // spec-ts-7: global-support must NOT be a derived reacher any more —
+    // sec-server-3/corr-server-2 removed its only path (the root rule's
+    // credential list). Re-appearing here would mean the mirror (or the
+    // server) regressed the fix.
+    expect(reached).not.toContain(AuthorizationCredential.GlobalSupport);
   });
 
   it('A12/A13: the tree-scoped grants reach their owning role at stage A (licensing-framework)', () => {

@@ -151,6 +151,126 @@ describe('grantability (T012, SC-009) — every target role is grantable + revoc
   // need a fresh stack start (research D25) — Phase V.
 });
 
+describe('self-assignment denial (T012a, spec-ts-9, FR-015)', () => {
+  // Rule 6 (self-assignment, ninth clarification pass) shipped server-side
+  // and enforced FIRST in `evaluate()`, but had ZERO coverage anywhere in
+  // this repo — nothing would notice a regression that dropped
+  // `checkSelfAssignment()` entirely. Live at stage A (the block is
+  // enforced by the rule engine itself, not by the absence of a legacy
+  // grant, so it is not one of D18's meaningless-before-Slice-B denials).
+  const rolesAdmin = () =>
+    TestUserManager.getUserModelByType(TestUser.PLATFORM_ROLES_ADMIN);
+
+  it('a Platform Roles Admin cannot grant itself a Platform role — rejected with the separation-of-duties error, and the grant does not take effect', async () => {
+    const admin = rolesAdmin();
+    const res = await asUser(
+      token =>
+        getGraphqlClient().assignPlatformRoleToUser(
+          {
+            roleData: { actorID: admin.id, role: RoleName.PlatformSupport },
+          },
+          { authorization: `Bearer ${token}` }
+        ),
+      TestUser.PLATFORM_ROLES_ADMIN
+    );
+    expect(res.error?.errors?.[0]?.message).toContain('self-assignment');
+    expect(res.error?.errors?.[0]?.message).toContain('is blocked');
+
+    const holders = await getGraphqlClient().platformRoleSetUsersInRole(
+      { role: RoleName.PlatformSupport },
+      { authorization: `Bearer ${admin.authToken}` }
+    );
+    expect(
+      holders.data?.platform.roleSet.usersInRole.some(u => u.id === admin.id),
+      'the self-grant must not have taken effect'
+    ).toBe(false);
+  });
+
+  it('a Platform Roles Admin cannot grant itself a Feature role either', async () => {
+    const admin = rolesAdmin();
+    const res = await asUser(
+      token =>
+        getGraphqlClient().assignPlatformRoleToUser(
+          {
+            roleData: { actorID: admin.id, role: RoleName.FeatureBetaTester },
+          },
+          { authorization: `Bearer ${token}` }
+        ),
+      TestUser.PLATFORM_ROLES_ADMIN
+    );
+    expect(res.error?.errors?.[0]?.message).toContain('self-assignment');
+    expect(res.error?.errors?.[0]?.message).toContain('is blocked');
+
+    const holders = await getGraphqlClient().platformRoleSetUsersInRole(
+      { role: RoleName.FeatureBetaTester },
+      { authorization: `Bearer ${admin.authToken}` }
+    );
+    expect(
+      holders.data?.platform.roleSet.usersInRole.some(u => u.id === admin.id)
+    ).toBe(false);
+  });
+
+  it('a Platform Roles Admin cannot revoke its OWN platform-roles-admin role via self-revocation', async () => {
+    const admin = rolesAdmin();
+    const res = await asUser(
+      token =>
+        getGraphqlClient().removePlatformRoleFromUser(
+          {
+            roleData: { actorID: admin.id, role: RoleName.PlatformRolesAdmin },
+          },
+          { authorization: `Bearer ${token}` }
+        ),
+      TestUser.PLATFORM_ROLES_ADMIN
+    );
+    expect(res.error?.errors?.[0]?.message).toContain('self-assignment');
+    expect(res.error?.errors?.[0]?.message).toContain('is blocked');
+
+    const holders = await getGraphqlClient().platformRoleSetUsersInRole(
+      { role: RoleName.PlatformRolesAdmin },
+      { authorization: `Bearer ${admin.authToken}` }
+    );
+    expect(
+      holders.data?.platform.roleSet.usersInRole.some(u => u.id === admin.id),
+      'the fixture must still hold platform-roles-admin — self-revoke must not have taken effect'
+    ).toBe(true);
+  });
+
+  it('the two-person path works: a Platform Roles Admin CAN grant platform-roles-admin to a DIFFERENT person', async () => {
+    // Not the bootstrap-seed path (FR-013b is exempt by design and out of
+    // scope here — this repo cannot restart the stack, research D25) — an
+    // ordinary, live grant from one Roles Admin to a genuinely different
+    // target, which rule 6 must NOT block.
+    const admin = rolesAdmin();
+    const probeId = fixtures.rolesProbeUserId;
+    const grant = await getGraphqlClient().assignPlatformRoleToUser(
+      { roleData: { actorID: probeId, role: RoleName.PlatformRolesAdmin } },
+      { authorization: `Bearer ${admin.authToken}` }
+    );
+    try {
+      expect(
+        grant.errors,
+        'a non-self grant of the same role the tests above block for self must succeed'
+      ).toBeUndefined();
+      const holders = await getGraphqlClient().platformRoleSetUsersInRole(
+        { role: RoleName.PlatformRolesAdmin },
+        { authorization: `Bearer ${admin.authToken}` }
+      );
+      expect(
+        holders.data?.platform.roleSet.usersInRole.some(u => u.id === probeId)
+      ).toBe(true);
+    } finally {
+      await getGraphqlClient()
+        .removePlatformRoleFromUser(
+          { roleData: { actorID: probeId, role: RoleName.PlatformRolesAdmin } },
+          { authorization: `Bearer ${admin.authToken}` }
+        )
+        .catch(() => {
+          // best-effort cleanup
+        });
+    }
+  });
+});
+
 describe('holder-list read partitioning (T018/T018a, FR-032/SC-017)', () => {
   it('`Platform …` holder lists: readable by platform-roles-admin', async () => {
     const res = await asUser(

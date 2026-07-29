@@ -161,6 +161,15 @@ export const sorted__create_read_update_delete_grant_fileUp_fileDel = [
   "FILE_DELETE",
 ].sort();
 
+// workspace#027-platform-role-redesign (qual-ts-13): GLOBAL_ADMIN-only
+// variant — see `sorted__create_read_update_delete_grant_contribute_globalAdmin`
+// above for why a dedicated constant, not a widening of the shared one.
+export const sorted__create_read_update_delete_grant_fileUp_fileDel_globalAdmin =
+  [
+    ...sorted__create_read_update_delete_grant_fileUp_fileDel,
+    "PLATFORM_CONTENT_FULL_ACCESS",
+  ].sort();
+
 export const sorted__create_read_update_delete_grant_fileUp_fileDel_notificationsAdmin =
   [
     ...sorted__create_read_update_delete_grant,
@@ -219,6 +228,15 @@ export const sorted__create_read_update_delete_grant_fileUp_fileDel_contribute =
   [
     ...sorted__create_read_update_delete_grant_fileUp_fileDel,
     "CONTRIBUTE",
+  ].sort();
+
+// workspace#027-platform-role-redesign (qual-ts-13): GLOBAL_ADMIN-only
+// variant — see `sorted__create_read_update_delete_grant_contribute_globalAdmin`
+// above for why a dedicated constant, not a widening of the shared one.
+export const sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_globalAdmin =
+  [
+    ...sorted__create_read_update_delete_grant_fileUp_fileDel_contribute,
+    "PLATFORM_CONTENT_FULL_ACCESS",
   ].sort();
 
 export const sorted__create_read_readAbout_update_delete_grant_fileUp_fileDel_contribute =
@@ -288,11 +306,13 @@ export const sorted__create_read_update_delete_grant_addMember_apply_invite_addV
     "RECEIVE_NOTIFICATIONS_ADMIN",
   ].sort();
 
-// workspace#027-platform-role-redesign: GLOBAL_ADMIN and GLOBAL_SUPPORT_ADMIN
-// inherit PLATFORM_CONTENT_FULL_ACCESS via the additive Slice A root-rule
-// cascade `[READ, PLATFORM_CONTENT_FULL_ACCESS]` (spec.md FR-004/FR-007(e),
-// Q&A at spec.md:89) — a union with the legacy broad grant, by design, not a
-// regression.
+// workspace#027-platform-role-redesign (qual-ts-13 correction): ONLY
+// GLOBAL_ADMIN inherits PLATFORM_CONTENT_FULL_ACCESS via the Slice A
+// root-rule cascade — GLOBAL_SUPPORT_ADMIN does NOT (server e47f9510e,
+// sec-server-3/corr-server-2 fix, removed GLOBAL_SUPPORT from the root
+// content-full-access credential rule). This constant is GLOBAL_ADMIN's;
+// GLOBAL_SUPPORT_ADMIN's own rows use the `_noContentFullAccess` variant
+// below instead of this one, even where both used to share it.
 export const sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization =
   [
     "CREATE",
@@ -308,14 +328,36 @@ export const sorted__create_read_update_delete_grant_addMember_apply_invite_addV
     "PLATFORM_CONTENT_FULL_ACCESS",
   ].sort();
 
+// workspace#027-platform-role-redesign (qual-ts-13): GLOBAL_SUPPORT_ADMIN's
+// own expectation for the same shape — identical to the constant above MINUS
+// `PLATFORM_CONTENT_FULL_ACCESS` (see that constant's comment).
+export const sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization_noContentFullAccess =
+  [
+    "CREATE",
+    "GRANT",
+    ...readPrivilege,
+    "UPDATE",
+    "DELETE",
+    "ROLESET_ENTRY_ROLE_ASSIGN",
+    "ROLESET_ENTRY_ROLE_APPLY",
+    "ROLESET_ENTRY_ROLE_INVITE",
+    "COMMUNITY_ASSIGN_VC_FROM_ACCOUNT",
+    "ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION",
+  ].sort();
+
 // Same as above WITHOUT ROLESET_ENTRY_ROLE_APPLY: since the combined-subspace-
 // application exposure fix (workspace#017, server#6232), a subspace role-set
 // only exposes APPLY to parent members or combined-flow-eligible users — the
 // blanket GLOBAL_REGISTERED grant was a false signal (the mutation rejected
 // non-parent-members) and was removed.
 //
-// workspace#027-platform-role-redesign: also carries PLATFORM_CONTENT_FULL_ACCESS
-// (see comment above).
+// workspace#027-platform-role-redesign (qual-ts-13): this constant's SOLE
+// consumer is the GLOBAL_SUPPORT_ADMIN row (user.authorization.it-spec.ts),
+// and server commit e47f9510e (sec-server-3/corr-server-2 fix) removed
+// GLOBAL_SUPPORT from the root content-full-access credential rule — it is
+// deliberately NOT a Slice A credential there (unlike GLOBAL_ADMIN). No
+// `PLATFORM_CONTENT_FULL_ACCESS` here; adding it was the qual-ts-13
+// regression this comment replaces.
 export const sorted__create_read_update_delete_grant_addMember_invite_addVC_accessVC_assignOrganization =
   [
     "CREATE",
@@ -327,7 +369,6 @@ export const sorted__create_read_update_delete_grant_addMember_invite_addVC_acce
     "ROLESET_ENTRY_ROLE_INVITE",
     "COMMUNITY_ASSIGN_VC_FROM_ACCOUNT",
     "ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION",
-    "PLATFORM_CONTENT_FULL_ACCESS",
   ].sort();
 
 export const sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization_notificationsAdmin =
@@ -482,6 +523,20 @@ export const sorted__read_applyToRoleSet_invite_addVC_notifications = [
 export const sorted__create_read_update_delete_grant_contribute = [
   ...sorted__create_read_update_delete_grant,
   "CONTRIBUTE",
+].sort();
+
+// workspace#027-platform-role-redesign (qual-ts-13): GLOBAL_ADMIN alone (NOT
+// GLOBAL_SUPPORT, NOT SPACE_ADMIN/SUBSPACE_ADMIN — this base constant above
+// is shared by all three in the storage-auth tables that consume it) also
+// carries PLATFORM_CONTENT_FULL_ACCESS on every root-inheriting entity
+// (user/organization/account/space/virtual-contributor/virtual-assistant)
+// since server e47f9510e reversed the root rule to full CRUD
+// (spec.md FR-004/FR-007(e)). A dedicated GLOBAL_ADMIN-only variant, rather
+// than widening the shared constant, so SPACE_ADMIN/SUBSPACE_ADMIN rows in
+// the SAME parameterised table are not incorrectly widened too.
+export const sorted__create_read_update_delete_grant_contribute_globalAdmin = [
+  ...sorted__create_read_update_delete_grant_contribute,
+  "PLATFORM_CONTENT_FULL_ACCESS",
 ].sort();
 
 export const sorted__create_read_readAbout_update_delete_grant_contribute = [

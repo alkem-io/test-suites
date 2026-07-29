@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -175,4 +175,67 @@ describe('matrix-completeness (T017c) — the stateful flows this repo owns have
   it.each(STATEFUL_FLOW_FILES)('%s has a named, existing spec file', (_flow, relativePath) => {
     expect(existsSync(path.join(__dirname, relativePath))).toBe(true);
   });
+});
+
+describe('matrix-completeness (T017d, spec-ts-9) — every assignment rule has a named covering test', () => {
+  // spec-ts-9: rule 6 (self-assignment) shipped server-side
+  // (`platform.role.assignment.rules.service.ts`) and had ZERO coverage
+  // anywhere in this repo, and NOTHING here would have noticed — the other
+  // two dimensions above cover roles and A-rows, not the RULE ENGINE's own
+  // inventory. Mirrored from the server's `PlatformRoleAssignmentRuleViolation
+  // ['ruleId']` union (6 members). A 7th rule requires updating this list
+  // AND adding its own covering assertion — the list going stale (a rule
+  // added there but not here) is exactly the gap this dimension exists to
+  // catch, so it is deliberately NOT derived from anything live: there is no
+  // API surface that reports the rule-engine's own inventory.
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+  const ASSIGNMENT_RULE_IDS = [
+    'self-assignment',
+    'assigner-capability',
+    'holder-kind',
+    'spaces-reader-service-account',
+    'audit-reader-exclusion',
+    'last-roles-admin',
+  ] as const;
+
+  // The rule engine's own error strings are CONTRACT
+  // (`platform.role.assignment.rules.service.ts`: "client-web surfaces them
+  // verbatim") — matched here rather than the internal `ruleId`, so this
+  // also catches a rule whose MESSAGE changed with no matching test update.
+  const RULE_MESSAGE_SUBSTRINGS: Record<
+    (typeof ASSIGNMENT_RULE_IDS)[number],
+    string
+  > = {
+    'self-assignment': 'self-assignment of role',
+    'assigner-capability': 'required to assign role',
+    'holder-kind': 'may not be granted to a organization',
+    'spaces-reader-service-account': 'may only be granted to a service account',
+    'audit-reader-exclusion': 'mutually exclusive',
+    'last-roles-admin': 'cannot remove the last platform-roles-admin',
+  };
+
+  const RULE_COVERING_FILES = [
+    path.join(__dirname, 'assignment-rules.it-spec.ts'),
+    path.join(__dirname, 'grantability.it-spec.ts'),
+    path.join(__dirname, 'flows/rejection-audited.it-spec.ts'),
+  ];
+
+  it('the mirrored rule inventory has exactly 6 members (a 7th requires updating this list AND adding coverage)', () => {
+    expect(ASSIGNMENT_RULE_IDS.length).toBe(6);
+  });
+
+  it.each(ASSIGNMENT_RULE_IDS)(
+    'rule "%s" has a covering assertion in at least one rule-covering spec file',
+    ruleId => {
+      const substring = RULE_MESSAGE_SUBSTRINGS[ruleId];
+      const found = RULE_COVERING_FILES.some(
+        file => existsSync(file) && readFileSync(file, 'utf-8').includes(substring)
+      );
+      expect(
+        found,
+        `no spec file among [${RULE_COVERING_FILES.map(f => path.basename(f)).join(', ')}] asserts rule "${ruleId}"'s error text ("${substring}")`
+      ).toBe(true);
+    }
+  );
 });

@@ -254,6 +254,14 @@ describe('flow 5 — every rejection is distinctly attributable and takes no eff
     }
 
     try {
+      // corr-ts-14: the actor performing this removal must be a DIFFERENT
+      // identity than the target — rule 6 (self-assignment) is evaluated
+      // FIRST and unconditionally blocks a self-revoke with its own,
+      // distinct message, which shadowed rule 5 here identically to
+      // `assignment-rules.it-spec.ts`. `GLOBAL_ADMIN` already performs
+      // every other admin action in this test (the restore loops above/
+      // below) and still reaches `GRANT_GLOBAL_ADMINS` via A1's legacy
+      // cascade at Slice A.
       const res = await asUser(
         token =>
           getGraphqlClient().removePlatformRoleFromUser(
@@ -265,7 +273,7 @@ describe('flow 5 — every rejection is distinctly attributable and takes no eff
             },
             { authorization: `Bearer ${token}` }
           ),
-        TestUser.PLATFORM_ROLES_ADMIN
+        TestUser.GLOBAL_ADMIN
       );
       expect(res.error?.errors?.[0]?.message).toContain(
         'cannot remove the last platform-roles-admin'

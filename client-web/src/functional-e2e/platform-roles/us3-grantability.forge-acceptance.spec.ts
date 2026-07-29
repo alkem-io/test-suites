@@ -20,10 +20,16 @@
 // 1-3's "When they attempt ... Then denied") belongs to Slice B once the
 // legacy credential paths are removed.
 //
-// Fixture users (pre-seeded, single-role by construction — see
-// server/src/core/bootstrap/platform-template-definitions/user/users.json):
-//   admin@alkem.io               -> seeded break-glass PLATFORM_ROLES_ADMIN (FR-013b)
-//   platform.usersadmin@alkem.io -> PLATFORM_USERS_ADMIN only
+// Fixture users:
+//   admin@alkem.io               -> seeded break-glass PLATFORM_ROLES_ADMIN
+//                                    (FR-013b) — genuinely pre-seeded via
+//                                    server/src/core/bootstrap/platform-template-definitions/user/users.json
+//   platform.usersadmin@alkem.io -> PLATFORM_USERS_ADMIN only — registered by
+//                                    Playwright's globalSetup and granted this
+//                                    role by `grantSingleRoleFixtures()`
+//                                    (corr-ts-15/qual-ts-12); NOT users.json,
+//                                    which seeds only admin@/notifications@/
+//                                    spaces-reader@
 //   qa.user@alkem.io             -> REGISTERED only (assignment target, restored after use)
 
 import { test, expect, APIRequestContext } from '@playwright/test';

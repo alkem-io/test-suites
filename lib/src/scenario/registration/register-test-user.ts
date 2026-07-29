@@ -84,10 +84,18 @@ export const registerAllTestUsers = async (): Promise<void> => {
   }
 
   // workspace#027-platform-role-redesign (Slice A, T004): single-role
-  // fixture role seeding (`grantSingleRoleFixtures`) is called from
-  // `globalTestsSetup.ts` AFTER both provisioning branches (this one and
-  // `provisionTestIdentities`), not here — qual-ts-2 (2026-07-30 fix wave):
-  // calling it only from this function left the CI `provisionTestIdentities`
-  // branch with single-role fixtures holding NO platform role at all, so
-  // every ALLOW cell failed and every denial assertion passed vacuously.
+  // fixture role seeding (`grantSingleRoleFixtures`) is NOT called here.
+  // qual-ts-2 (2026-07-30 fix wave): calling it only from this function left
+  // the CI `provisionTestIdentities` branch (server-api's alternate
+  // registration path) with single-role fixtures holding NO platform role
+  // at all, so every ALLOW cell failed and every denial assertion passed
+  // vacuously. qual-ts-14 (same wave, corrective pass): it no longer lives
+  // in the shared `server-api/src/globalTestsSetup.ts` either — that ran it
+  // for ALL 32 vitest projects, hard-failing unrelated suites on this
+  // feature's own fixture seeding. It is called from:
+  //  - `server-api`: a project-scoped `setupFiles` entry
+  //    (`functional-api/platform-roles/platform-roles.setup.ts`), wired
+  //    only into the `platform-roles`/`platform-roles-canonical` projects;
+  //  - `client-web`: `config/global-setup.ts`, after `registerAllTestUsers()`
+  //    (corr-ts-15/qual-ts-12).
 };

@@ -103,12 +103,17 @@ describe(`role-action-matrix (T008/T009) — scope=${activeMatrixScope()} stage=
       // so once the real deletion runs, every later DENY cell hits
       // `EntityNotFoundException` instead of an authorization rejection —
       // exactly the "green/red for the wrong reason" hazard this suite
-      // exists to prevent, now self-inflicted. Fixing this properly needs a
-      // per-surface "destructive" classification the census does not carry
-      // yet (or a disposable target per DENY role, which is not affordable
-      // at ~76 helpers x 12 denials). Reverted to skipping the whole DENY
-      // half at stage A until that lands — `denyIsStageInvariant` stays
-      // exported, documented, for that follow-up.
+      // exists to prevent, now self-inflicted.
+      //
+      // corr-ts-16 (2026-07-30 corrective wave) fixed the root cause instead
+      // of working around it: `buildMatrix` (`role-action-matrix.data.ts`)
+      // now orders every surface's ALLOW cell(s) AFTER its DENY cells, so
+      // the real, state-mutating ALLOW invocation can never run ahead of a
+      // DENY cell for the same surface, at EITHER stage. The stage-A DENY
+      // skip below stays — it is D18's separate concern (legacy grants
+      // still reach every surface at stage A, so a green denial there is
+      // meaningless, not unsafe) — `denyIsStageInvariant` stays exported,
+      // documented, for a future stage-A-safe-denial follow-up.
       it.skipIf(!isStageB() || noClientWired)(
         `DENY: ${label}`,
         async () => {

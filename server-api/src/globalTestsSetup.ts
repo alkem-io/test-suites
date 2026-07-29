@@ -1,5 +1,4 @@
 import {
-  grantSingleRoleFixtures,
   LogManager,
   provisionTestIdentities,
   registerAllTestUsers,
@@ -33,16 +32,6 @@ export default async function setup() {
     await registerAllTestUsers();
   }
 
-  // workspace#027-platform-role-redesign (Slice A, T004; qual-ts-2,
-  // 2026-07-30 fix wave): grant each single-role fixture its one target
-  // role, now that every fixture is a registered identity — on BOTH
-  // provisioning branches above. Previously called only from
-  // `registerAllTestUsers`, so the CI `provisionTestIdentities` branch left
-  // every single-role fixture holding NO platform role at all, and every
-  // ALLOW cell in `role-action-matrix.it-spec.ts` failed as a false
-  // enforcement defect.
-  await grantSingleRoleFixtures();
-
   // Env-prerequisite gate (test-suites#565, Phase 1): prove the auth prerequisite
   // is actually met by minting a real admin token BEFORE any scenario runs. A
   // broken env (e.g. Kratos admin provisioned with a mismatched password) then
@@ -50,6 +39,20 @@ export default async function setup() {
   // failing 40+ minutes in. Runs even when registration is skipped (users are
   // expected pre-seeded in that mode — verify they can authenticate).
   await verifyEnvPrerequisites();
+
+  // workspace#027-platform-role-redesign (qual-ts-14, 2026-07-30 fix wave):
+  // seeding the 027 single-role fixtures (`grantSingleRoleFixtures()`) no
+  // longer lives here. This file is the shared root `globalSetup`, inherited
+  // by ALL 32 vitest projects via `extends: true` — an unconditional call
+  // here (a) hard-fails every UNRELATED suite whenever a single-role fixture
+  // cannot be seeded (e.g. the server does not yet carry the 12 new
+  // `RoleName` values), and (b) used to run AHEAD of the env-prerequisite
+  // gate above, pre-empting the one-clear-message abort it exists to
+  // provide. It now runs from a project-scoped setupFile
+  // (`functional-api/platform-roles/platform-roles.setup.ts`), wired ONLY
+  // into the two `platform-roles`/`platform-roles-canonical` projects
+  // (`vitest.config.ts`) — the only consumers of these fixtures — so no
+  // other project is ever blocked by this feature's own fixture seeding.
 
   // Return a teardown function so Vitest can ensure a clean exit.
   // The GraphQL client is stateless HTTP and WebSocket subscriptions are

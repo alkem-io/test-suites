@@ -17,7 +17,7 @@ import type { MatrixFixtures } from './fixtures';
 
 /**
  * workspace#027-platform-role-redesign (T007b) — one invocation helper per
- * matrix-eligible census entry (93 at Slice A: 99 declared minus A1's 4
+ * matrix-eligible census entry (96 at Slice A: 102 declared minus A1's 4
  * `{retiredIn: 'B'}` entries, which generate no cell in either slice, minus
  * A17's 2 `{deferred: 'B'}` entries, which arrive at T022a). **One per
  * entry, not per distinct mutation** — A1's and A2's `assignPlatformRoleToUser`
@@ -204,7 +204,7 @@ export function buildSurfaceInvocations(
     eligible.forEach((surface, i) => map.set(surface, invocations[i]));
   }
 
-  // ===== A1 — assign/revoke a PLATFORM role (2 helper-eligible; the 4
+  // ===== A1 — assign/revoke a PLATFORM role (4 helper-eligible; the 4
   // FR-022 credential mutations are `{retiredIn: 'B'}`, no helper) =====
   registerRow('A1', [
     caller =>
@@ -229,6 +229,45 @@ export function buildSurfaceInvocations(
               roleData: {
                 actorID: fx.targetUserId,
                 role: RoleName.PlatformOperationsAdmin,
+              },
+            },
+            bearer(token)
+          ),
+        caller
+      ),
+    // --- Legacy-role branch pin (spec-ts-8) — the SAME two resolver
+    // mutations, invoked with a LEGACY (non-rule-engine-governed) role
+    // payload so the call actually reaches `legacyGlobalAdminPolicy`
+    // (`{credential: GA}`) rather than the rule engine. `RoleName.GlobalAdmin`
+    // is not in `RULE_ENGINE_GOVERNED_ROLES`
+    // (`platform.role.assignment.rules.service.ts`), so this always lands on
+    // the pinned branch. None of the 13 single-role fixtures hold the literal
+    // `GLOBAL_ADMIN` credential, so every cell here is a denial in both
+    // slices (declared reach = `{GA}` at stage A, `{}` at stage B) and the
+    // call never actually mutates `fx.targetUserId` — safe to reuse the
+    // shared fixture.
+    caller =>
+      invoke(
+        token =>
+          client().assignPlatformRoleToUser(
+            {
+              roleData: {
+                actorID: fx.targetUserId,
+                role: RoleName.GlobalAdmin,
+              },
+            },
+            bearer(token)
+          ),
+        caller
+      ),
+    caller =>
+      invoke(
+        token =>
+          client().removePlatformRoleFromUser(
+            {
+              roleData: {
+                actorID: fx.targetUserId,
+                role: RoleName.GlobalAdmin,
               },
             },
             bearer(token)
@@ -399,6 +438,21 @@ export function buildSurfaceInvocations(
           ),
         caller
       ),
+    // --- Legacy-admin pin (spec-ts-8) — the SAME `deleteUser` mutation A5
+    // exercises for real (against `fx.deletableUserId`), but here declared
+    // as A4's `{credential: GA}` pin: its derived reach is `{GA}` at stage A,
+    // `{}` at stage B, and none of the 13 single-role fixtures hold the
+    // literal `GLOBAL_ADMIN` credential — so every cell is a denial and the
+    // real lookup-then-deny never mutates its target. Reuses the shared
+    // `fx.targetUserId` (a real, existing user, so the call reaches the
+    // authorization gate rather than failing lookup first) — safe because it
+    // is never actually deleted here.
+    caller =>
+      invoke(
+        token =>
+          client().deleteUser({ deleteData: { ID: fx.targetUserId } }, bearer(token)),
+        caller
+      ),
     caller =>
       invoke(
         token =>
@@ -479,11 +533,16 @@ export function buildSurfaceInvocations(
         },
         caller
       ),
+    // corr-ts-12: `fx.a6DeletableOrganizationId`, NEVER `fx.secondOrganizationId`
+    // — that organization's account hosts `fx.a9TargetSpaceL0Id`, so the
+    // server's account-has-resources guard (`organization.service.ts`)
+    // always rejects deleting it, and if that guard were ever relaxed the
+    // delete would take A9's own transfer/move targets down with it.
     caller =>
       invoke(
         token =>
           client().deleteOrganization(
-            { deleteData: { ID: fx.secondOrganizationId } },
+            { deleteData: { ID: fx.a6DeletableOrganizationId } },
             bearer(token)
           ),
         caller
@@ -678,28 +737,35 @@ export function buildSurfaceInvocations(
           ),
         caller
       ),
+    // corr-ts-18: genuine level-correct source/target pairs, the way
+    // `moveSpaceL1ToSpaceL0` above does — `fx.spaceId` for both source and
+    // target failed the mutation's own level-check (`Only L1 spaces can be
+    // moved…`) before authorization was ever exercised. `a9SecondSubspaceId`
+    // (a real L1) moves under `a9L1MoveTargetId` (a different, genuine L1).
     caller =>
       invokeMove(
         token =>
           client().MoveSpaceL1ToSpaceL2(
             {
               moveData: {
-                spaceL1ID: fx.spaceId,
-                targetSpaceL1ID: fx.spaceId,
+                spaceL1ID: fx.a9SecondSubspaceId,
+                targetSpaceL1ID: fx.a9L1MoveTargetId,
               },
             },
             bearer(token)
           ),
         caller
       ),
+    // `a9L2Id` (a real L2, created under `a9SecondSubspaceId`) is promoted
+    // to L1 under `a9L1MoveTargetId`.
     caller =>
       invokeMove(
         token =>
           client().MoveSpaceL2ToSpaceL1(
             {
               moveData: {
-                spaceL2ID: fx.spaceId,
-                targetSpaceL1ID: fx.spaceId,
+                spaceL2ID: fx.a9L2Id,
+                targetSpaceL1ID: fx.a9L1MoveTargetId,
               },
             },
             bearer(token)
@@ -963,7 +1029,11 @@ export function buildSurfaceInvocations(
             {
               licensePlanId: fx.licensePlanId,
               accountId: fx.organizationAccountId,
-              licensingId: fx.licensePlanId, // resolved server-side per plan; placeholder acceptable pre-gate
+              // corr-ts-13: MUST be the LicensingFramework id, not a
+              // LicensePlan id — the server resolves this before the
+              // authorization gate (`getLicensingOrFail`), so a plan id
+              // here throws EntityNotFound ahead of the gate on every cell.
+              licensingId: fx.licensingFrameworkId,
             },
             bearer(token)
           ),
@@ -990,7 +1060,9 @@ export function buildSurfaceInvocations(
             {
               accountId: fx.organizationAccountId,
               licensePlanId: fx.licensePlanId,
-              licensingId: fx.licensePlanId,
+              // corr-ts-13: the framework id, not the plan id — see the
+              // AssignLicensePlanToAccount helper above.
+              licensingId: fx.licensingFrameworkId,
             },
             bearer(token)
           ),
@@ -1004,7 +1076,9 @@ export function buildSurfaceInvocations(
               planData: {
                 spaceID: fx.spaceId,
                 licensePlanID: fx.licensePlanId,
-                licensingID: fx.licensePlanId,
+                // corr-ts-13: the framework id, not the plan id — see the
+                // AssignLicensePlanToAccount helper above.
+                licensingID: fx.licensingFrameworkId,
               },
             },
             bearer(token)

@@ -218,6 +218,38 @@ export interface MatrixFixtures {
    * `lookup.space` itself, which is gated on `READ_ABOUT` and would let a
    * READ_ABOUT-only holder (e.g. A15's condition) through by mistake. */
   readonly a16PrivateSpaceId: string;
+  /** A6's `deleteOrganization` disposable target — an organization whose
+   * account hosts NOTHING (corr-ts-12): `secondOrganizationId`'s account
+   * hosts `a9TargetSpaceL0Id`, so `deleteOrganization` against it always
+   * fails the server's account-has-resources guard
+   * (`organization.service.ts`), and if that guard were ever relaxed it
+   * would destroy A9's own cross-account transfer/move targets. This
+   * organization is created fresh, never populated with a space, and
+   * referenced nowhere else. */
+  readonly a6DeletableOrganizationId: string;
+  /** The platform's default licensing framework id (corr-ts-13) — A12's
+   * `assignLicensePlanToAccount` / `revokeLicensePlanFromAccount` /
+   * `revokeLicensePlanFromSpace` helpers need the FRAMEWORK id, not a PLAN
+   * id (`fx.licensePlanId`), for their `licensingID` argument. Looked up
+   * once here (already computed for the A13 plan-creation calls above) so
+   * every consumer resolves it the same way. */
+  readonly licensingFrameworkId: string;
+  /** A9's `moveSpaceL1ToSpaceL2` source — a SECOND, fresh L1 under the base
+   * scenario's L0, distinct from `subspaceId` (corr-ts-18): `subspaceId` is
+   * the real move SOURCE for the ALLOW cell of `moveSpaceL1ToSpaceL0`, which
+   * actually promotes it out from under `spaceId` when that cell runs — a
+   * shared target would leave `moveSpaceL1ToSpaceL2` moving a space that is
+   * no longer where this fixture set thinks it is. */
+  readonly a9SecondSubspaceId: string;
+  /** A9's `moveSpaceL1ToSpaceL2` destination — a second L1 sibling, distinct
+   * from every other L1 this fixture set builds, so the move has a genuine,
+   * unrelated target parent. */
+  readonly a9L1MoveTargetId: string;
+  /** A9's `moveSpaceL2ToSpaceL1` source — a real L2 created under
+   * `a9SecondSubspaceId`, so the mutation's own level-check
+   * (`Only L2 spaces can be moved to L1`) is satisfied before authorization
+   * is exercised. */
+  readonly a9L2Id: string;
 }
 
 const uid = () => UniqueIDGenerator.getID();
@@ -276,6 +308,39 @@ export async function buildMatrixFixtures(): Promise<MatrixFixtures> {
     `matrixa9t${runId}`,
     secondOrg?.account?.id ?? ''
   );
+
+  // corr-ts-18: `moveSpaceL1ToSpaceL2`/`moveSpaceL2ToSpaceL1` each need their
+  // OWN genuine, level-correct source/target — `subspaceId` above is the
+  // real move SOURCE for `moveSpaceL1ToSpaceL0`'s ALLOW cell, which promotes
+  // it out from under `spaceId` for real when that cell runs, so it cannot
+  // be shared with these two siblings.
+  const a9SecondSubspaceId = await createSubspaceOrFail(
+    `matrix-a9-l1-${runId}`,
+    `matrixa9l1${runId}`,
+    base.space.id
+  );
+  const a9L1MoveTargetId = await createSubspaceOrFail(
+    `matrix-a9-l1-target-${runId}`,
+    `matrixa9l1t${runId}`,
+    base.space.id
+  );
+  const a9L2Id = await createSubspaceOrFail(
+    `matrix-a9-l2-${runId}`,
+    `matrixa9l2${runId}`,
+    a9SecondSubspaceId
+  );
+
+  // corr-ts-12: A6's `deleteOrganization` needs its OWN disposable
+  // organization whose account hosts NOTHING — `secondOrganizationId`'s
+  // account hosts `a9TargetSpaceL0Id` above, so the server's
+  // account-has-resources guard (`organization.service.ts`) always rejects
+  // deleting it, and if that guard were ever relaxed the delete would take
+  // A9's own transfer/move targets down with it.
+  const a6OrgResult = await createOrganization(
+    `matrix-a6-deletable-${runId}`,
+    `matrixa6del${runId}`
+  );
+  const a6DeletableOrganizationId = a6OrgResult.data?.createOrganization?.id ?? '';
 
   // A5's `deleteUser` disposable target — a throwaway Alkemio user (no
   // Kratos flow needed for a `createUser`-created account), never
@@ -615,6 +680,11 @@ export async function buildMatrixFixtures(): Promise<MatrixFixtures> {
     a13UpdatableLicensePlanId,
     a15ConditionSpaceId,
     a16PrivateSpaceId,
+    a6DeletableOrganizationId,
+    licensingFrameworkId: licensingFrameworkId ?? '',
+    a9SecondSubspaceId,
+    a9L1MoveTargetId,
+    a9L2Id,
   };
 }
 
@@ -629,6 +699,25 @@ export async function teardownMatrixFixtures(
   // fixture), but `deleteSpace` takes it by ID regardless of current parent.
   try {
     await deleteSpace(fixtures.subspaceId);
+  } catch {
+    // best-effort cleanup
+  }
+
+  // corr-ts-18's dedicated A9 L1/L2 tree — same reasoning as `subspaceId`
+  // above (not tracked by `TestScenarioFactory`, best-effort, order-
+  // independent of current parent). The L2 first, then its two L1s.
+  try {
+    await deleteSpace(fixtures.a9L2Id);
+  } catch {
+    // best-effort cleanup
+  }
+  try {
+    await deleteSpace(fixtures.a9SecondSubspaceId);
+  } catch {
+    // best-effort cleanup
+  }
+  try {
+    await deleteSpace(fixtures.a9L1MoveTargetId);
   } catch {
     // best-effort cleanup
   }
@@ -668,6 +757,17 @@ export async function teardownMatrixFixtures(
   try {
     await getGraphqlClient().deleteOrganization(
       { deleteData: { ID: fixtures.secondOrganizationId } },
+      { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
+    );
+  } catch {
+    // best-effort cleanup
+  }
+  // corr-ts-12's dedicated A6 delete target — best-effort: the whole point
+  // of this fixture is that the ALLOW cell (platform-support's
+  // `deleteOrganization`) may already have deleted it for real.
+  try {
+    await getGraphqlClient().deleteOrganization(
+      { deleteData: { ID: fixtures.a6DeletableOrganizationId } },
       { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
     );
   } catch {

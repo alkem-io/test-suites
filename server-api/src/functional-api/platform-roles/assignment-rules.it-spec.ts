@@ -201,6 +201,13 @@ describe('assignment rules (T010) — the five rules, each with its own distinct
     const otherHoldersBefore = before.filter(u => u.id !== rolesAdminId);
     const isSoleHolder = otherHoldersBefore.length === 0;
 
+    // corr-ts-14: the ACTOR here must be a DIFFERENT identity from the
+    // target — rule 6 (self-assignment, ninth clarification pass) is
+    // evaluated FIRST and unconditionally blocks a self-revoke with its own
+    // distinct message, which shadowed rule 5 entirely when the fixture
+    // removed its own role. `GLOBAL_ADMIN` still reaches `GRANT_GLOBAL_ADMINS`
+    // via A1's legacy cascade at Slice A, so it can act here without being
+    // the target.
     const res = await asUser(
       token =>
         getGraphqlClient().removePlatformRoleFromUser(
@@ -212,7 +219,7 @@ describe('assignment rules (T010) — the five rules, each with its own distinct
           },
           { authorization: `Bearer ${token}` }
         ),
-      TestUser.PLATFORM_ROLES_ADMIN
+      TestUser.GLOBAL_ADMIN
     );
     try {
       if (isSoleHolder) {
@@ -343,20 +350,47 @@ describe('service-profile assertions (T011, A21/FR-002)', () => {
 
 describe('FR-003 one-way assertion (T016)', () => {
   it('platform-users-admin can assign a Feature role', async () => {
-    const res = await asUser(
-      token =>
-        getGraphqlClient().assignPlatformRoleToUser(
+    // corr-ts-19: target `fixtures.rolesProbeUserId` (a per-file disposable
+    // identity), NEVER `fixtures.targetUserId` (`TestUser.NON_SPACE_MEMBER`)
+    // — that fixture is shared and long-lived across 67+ other spec files
+    // and every other vitest project, and this grant was never revoked,
+    // leaving a permanent `feature-beta-tester` credential on it. Revoked in
+    // a `finally` regardless, so a probe assertion failure never leaves the
+    // grant behind either.
+    const rolesAdminToken = TestUserManager.getUserModelByType(
+      TestUser.PLATFORM_ROLES_ADMIN
+    ).authToken;
+    try {
+      const res = await asUser(
+        token =>
+          getGraphqlClient().assignPlatformRoleToUser(
+            {
+              roleData: {
+                actorID: fixtures.rolesProbeUserId,
+                role: RoleName.FeatureBetaTester,
+              },
+            },
+            { authorization: `Bearer ${token}` }
+          ),
+        TestUser.PLATFORM_USERS_ADMIN
+      );
+      expect(res.error).toBeUndefined();
+    } finally {
+      await getGraphqlClient()
+        .removePlatformRoleFromUser(
           {
             roleData: {
-              actorID: fixtures.targetUserId,
+              actorID: fixtures.rolesProbeUserId,
               role: RoleName.FeatureBetaTester,
             },
           },
-          { authorization: `Bearer ${token}` }
-        ),
-      TestUser.PLATFORM_USERS_ADMIN
-    );
-    expect(res.error).toBeUndefined();
+          { authorization: `Bearer ${rolesAdminToken}` }
+        )
+        .catch(() => {
+          // best-effort — a correctly-rejected grant above means there is
+          // nothing to revoke
+        });
+    }
   });
 
   it('platform-users-admin is denied assigning a Platform role, with the assigner-capability error', async () => {

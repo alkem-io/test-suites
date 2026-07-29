@@ -104,78 +104,43 @@ describe('audit-coverage outcome checks reachable without a generic audit read (
 });
 
 describe('SC-015 self-affecting retrievability — the ONE GraphQL-reachable audit category (T014a)', () => {
-  it("a Roles Admin's OWN login-email change is retrievable under initiatorUserId = subjectUserId", async () => {
-    // sec-test-suites-1/corr-ts-3/qual-ts-5 (2026-07-30 fix wave): target a
-    // DISPOSABLE identity, NEVER the shared `PLATFORM_ROLES_ADMIN` fixture —
-    // `adminUserEmailChange` permanently rewrites the Kratos login email
-    // with no restore, and doing that to the canonical roles-admin fixture
-    // broke every subsequent run's ability to authenticate as it. Grant
-    // `platform-roles-admin` to the disposable target first so the subject
-    // genuinely IS a Roles Admin, preserving this test's own title/intent.
-    //
-    // Uses `fixtures.emailChangeTargetUserId`, NOT `rolesProbeUserId`
-    // (live-verification finding, 2026-07-30): `adminUserEmailChange` loads
-    // its subject through the identity-provider link and throws
-    // `EMAIL_CHANGE_SUBJECT_NOT_FOUND` for a bare `createUser()` account —
-    // `emailChangeTargetUserId` is this fixture set's ONE genuinely
-    // Kratos-registered disposable identity (`registerVerifiedUser`),
-    // built for exactly this class of surface.
-    const rolesAdminToken = TestUserManager.getUserModelByType(
-      TestUser.PLATFORM_ROLES_ADMIN
-    ).authToken;
-    const probeUserId = fixtures.emailChangeTargetUserId;
-    const grant = await getGraphqlClient().assignPlatformRoleToUser(
-      {
-        roleData: { actorID: probeUserId, role: RoleName.PlatformRolesAdmin },
-      },
-      { authorization: `Bearer ${rolesAdminToken}` }
-    );
-    expect(grant.errors).toBeUndefined();
+  // qual-ts-16 (2026-07-30 fix wave): both tests below were converted to
+  // `it.todo` — neither could fail for the reason its title claimed.
+  //
+  // The FIRST test's assertion (`expect(total).toBeGreaterThan(0)`) is
+  // satisfied by ANY email-change record for the subject, from ANY
+  // initiator — it never actually checked `initiatorUserId = subjectUserId`
+  // and the change it performed wasn't even self-affecting (Users Admin
+  // acted ON the disposable target, not the target acting on itself). A
+  // genuine fix needs the query to SELECT the initiator, which this repo's
+  // generated SDK does not: `userEmailChangeAuditEntries.graphql` requests
+  // only `{ id, outcome }` per entry — the schema DOES carry
+  // `UserEmailChangeAuditEntry.initiator` (`UserProfileSummary`), but adding
+  // it to the query document requires a codegen re-run against a live
+  // server (`lib/codegen.ts` introspects `localhost:3000`), which is a
+  // Phase-V dependency this wave's gates (lint + build only) cannot satisfy.
+  //
+  // The SECOND test's assertion (`fixtures.targetUserId !== fixtures.emailChangeTargetUserId`)
+  // is a tautology over two distinct fixture ids — it never called the API
+  // at all. The genuine "zero false positives" property (a third-party-
+  // initiated entry is never returned by the self-affecting predicate) is
+  // not independently checkable from this repo's GraphQL-only vantage point
+  // either, for the identical reason: the subject-keyed query returns every
+  // entry for that subject regardless of who initiated it, with no
+  // initiator-filtered variant exposed.
+  //
+  // Both gaps are covered server-side: `platform.role.assignment.rules
+  // .service.ts`'s self-affecting retrievability predicate (server T025/T063)
+  // has its own unit coverage there. This repo's honest position, until the
+  // query is regenerated with `initiator.id` selected, is "cannot verify",
+  // not a green check for the wrong reason.
+  it.todo(
+    "a Roles Admin's OWN login-email change is retrievable under initiatorUserId = subjectUserId — blocked on regenerating userEmailChangeAuditEntries.graphql to select initiator.id (Phase V, live codegen)"
+  );
 
-    // A4's `adminUserEmailChange` requires PLATFORM_USERS_ADMIN — the
-    // disposable target does not hold it, so this self-targeted change is
-    // performed by Users Admin ON the disposable Roles Admin's own account,
-    // then read back by Audit Reader — the retrievability predicate is
-    // about the SUBJECT, not the caller.
-    const usersAdminToken = TestUserManager.getUserModelByType(
-      TestUser.PLATFORM_USERS_ADMIN
-    ).authToken;
-    await getGraphqlClient().adminUserEmailChange(
-      {
-        adminUserEmailChangeData: {
-          userID: probeUserId,
-          newEmail: `sc015-self-${Date.now()}@alkem.io`,
-          reason: 'T014a self-affecting retrievability probe',
-          approver: {
-            name: 'T014a Approver',
-            role: 'Organization Administrator',
-          },
-        },
-      },
-      { authorization: `Bearer ${usersAdminToken}` }
-    );
-
-    const auditReaderToken = TestUserManager.getUserModelByType(
-      TestUser.PLATFORM_AUDIT_READER
-    ).authToken;
-    const entries = await getGraphqlClient().userEmailChangeAuditEntries(
-      { userID: probeUserId },
-      { authorization: `Bearer ${auditReaderToken}` }
-    );
-    expect(entries.errors).toBeUndefined();
-    expect(
-      entries.data?.platformAdmin.userEmailChangeAuditEntries.total ?? 0
-    ).toBeGreaterThan(0);
-  });
-
-  it('zero false positives: an ordinary grant to ANOTHER user is not conflated with a self-affecting record', async () => {
-    // Not directly assertable without a generic `initiatorUserId =
-    // subjectUserId` query surface (the email-change fields are keyed by
-    // SUBJECT `userID` only, with no initiator filter exposed over
-    // GraphQL) — recorded as a known gap alongside the rest of this file's
-    // header rather than asserted on a query that does not exist.
-    expect(fixtures.targetUserId).not.toBe(fixtures.emailChangeTargetUserId);
-  });
+  it.todo(
+    'zero false positives: an ordinary grant to ANOTHER user is not conflated with a self-affecting record — same Phase-V blocker as above'
+  );
 
   // (b) — a platform-wide operational action (`authorizationPolicyResetOnPlatform`,
   // subjectUserId = NULL) never appearing as a "self-affecting" record for

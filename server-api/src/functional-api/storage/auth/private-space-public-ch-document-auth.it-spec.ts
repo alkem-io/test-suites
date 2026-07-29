@@ -3,9 +3,12 @@ import {
   readPrivilege,
   sorted__create_read_update_delete_grant,
   sorted__create_read_update_delete_grant_contribute,
+  sorted__create_read_update_delete_grant_contribute_globalAdmin,
   sorted__create_read_update_delete_grant_contribute_updateContent,
   sorted__create_read_update_delete_grant_fileUp_fileDel,
+  sorted__create_read_update_delete_grant_fileUp_fileDel_globalAdmin,
   sorted__create_read_update_delete_grant_fileUp_fileDel_contribute,
+  sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_globalAdmin,
   sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent,
   TestScenarioConfig,
   TestScenarioFactory,
@@ -176,7 +179,7 @@ describe('Private Space - Public Subspace - visual on profile', () => {
       userRole                     | privileges                                                | parentEntityType
       ${undefined}                 | ${undefined}                                              | ${undefined}
       ${TestUser.NON_SPACE_MEMBER} | ${undefined}                                              | ${undefined}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${'SPACE_ABOUT'}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_globalAdmin} | ${'SPACE_ABOUT'}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${'SPACE_ABOUT'}
       ${TestUser.SPACE_MEMBER}     | ${readPrivilege}                                          | ${'SPACE_ABOUT'}
       ${TestUser.SUBSPACE_ADMIN}   | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${'SPACE_ABOUT'}
@@ -251,7 +254,7 @@ describe('Private Space - Public Subspace - visual on profile', () => {
       userRole                     | privileges                                                | parentEntityType
       ${undefined}                 | ${undefined}                                              | ${undefined}
       ${TestUser.NON_SPACE_MEMBER} | ${undefined}                                              | ${undefined}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${'SPACE_ABOUT'}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_globalAdmin} | ${'SPACE_ABOUT'}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${'SPACE_ABOUT'}
       ${TestUser.SPACE_MEMBER}     | ${readPrivilege}                                          | ${'SPACE_ABOUT'}
       ${TestUser.SUBSPACE_ADMIN}   | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${'SPACE_ABOUT'}
@@ -332,7 +335,7 @@ describe('Private Space - Public Subspace - visual on profile', () => {
       userRole                     | privileges                                                | parentEntityType
       ${undefined}                 | ${undefined}                                              | ${undefined}
       ${TestUser.NON_SPACE_MEMBER} | ${undefined}                                              | ${undefined}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${'SPACE_ABOUT'}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_globalAdmin} | ${'SPACE_ABOUT'}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${'SPACE_ABOUT'}
       ${TestUser.SPACE_MEMBER}     | ${readPrivilege}                                          | ${'SPACE_ABOUT'}
       ${TestUser.SUBSPACE_ADMIN}   | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${'SPACE_ABOUT'}
@@ -388,7 +391,7 @@ describe('Private Space - Public Subspace - visual on profile', () => {
       userRole                     | privileges                                            | expectedStatus
       ${undefined}                 | ${undefined}                                          | ${403}
       ${TestUser.NON_SPACE_MEMBER} | ${undefined}                                          | ${403}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute} | ${200}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_globalAdmin} | ${200}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute} | ${200}
       ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'READ']}                             | ${200}
       ${TestUser.SUBSPACE_ADMIN}   | ${sorted__create_read_update_delete_grant_contribute} | ${200}
@@ -415,7 +418,7 @@ describe('Private Space - Public Subspace - visual on profile', () => {
       userRole                     | privileges                                                           | parentEntityType
       ${undefined}                 | ${undefined}                                                         | ${undefined}
       ${TestUser.NON_SPACE_MEMBER} | ${undefined}                                                         | ${undefined}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${'CALLOUT_FRAMING'}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_globalAdmin} | ${'CALLOUT_FRAMING'}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${'CALLOUT_FRAMING'}
       ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${'CALLOUT_FRAMING'}
       ${TestUser.SUBSPACE_ADMIN}   | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${'CALLOUT_FRAMING'}
@@ -472,7 +475,7 @@ describe('Private Space - Public Subspace - visual on profile', () => {
       userRole                     | privileges                                            | expectedStatus
       ${undefined}                 | ${undefined}                                          | ${403}
       ${TestUser.NON_SPACE_MEMBER} | ${undefined}                                          | ${403}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute} | ${200}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_globalAdmin} | ${200}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute} | ${200}
       ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'READ']}                             | ${200}
       ${TestUser.SUBSPACE_ADMIN}   | ${sorted__create_read_update_delete_grant_contribute} | ${200}
@@ -497,7 +500,7 @@ describe('Private Space - Public Subspace - visual on profile', () => {
       userRole                     | privileges                                                           | parentEntityType
       ${undefined}                 | ${undefined}                                                         | ${undefined}
       ${TestUser.NON_SPACE_MEMBER} | ${undefined}                                                         | ${undefined}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${'POST'}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_globalAdmin} | ${'POST'}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${'POST'}
       ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${'POST'}
       ${TestUser.SUBSPACE_ADMIN}   | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${'POST'}
@@ -559,7 +562,7 @@ describe('Private Space - Public Subspace - visual on profile', () => {
       userRole                     | privileges                                            | expectedStatus
       ${undefined}                 | ${undefined}                                          | ${403}
       ${TestUser.NON_SPACE_MEMBER} | ${undefined}                                          | ${403}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute} | ${200}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_globalAdmin} | ${200}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute} | ${200}
       ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'READ']}                             | ${200}
       ${TestUser.SUBSPACE_ADMIN}   | ${sorted__create_read_update_delete_grant_contribute} | ${200}
@@ -583,7 +586,7 @@ describe('Private Space - Public Subspace - visual on profile', () => {
       userRole                     | privileges                                                           | parentEntityType
       ${undefined}                 | ${undefined}                                                         | ${undefined}
       ${TestUser.NON_SPACE_MEMBER} | ${undefined}                                                         | ${undefined}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${'POST'}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_globalAdmin} | ${'POST'}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${'POST'}
       ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${'POST'}
       ${TestUser.SUBSPACE_ADMIN}   | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${'POST'}
@@ -740,7 +743,7 @@ describe('Private Space - Public Subspace - visual on profile', () => {
       userRole                     | privileges                                            | expectedStatus
       ${undefined}                 | ${undefined}                                          | ${403}
       ${TestUser.NON_SPACE_MEMBER} | ${undefined}                                          | ${403}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute} | ${200}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_globalAdmin} | ${200}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute} | ${200}
       ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'READ']}                             | ${200}
       ${TestUser.SUBSPACE_ADMIN}   | ${sorted__create_read_update_delete_grant_contribute} | ${200}
@@ -765,7 +768,7 @@ describe('Private Space - Public Subspace - visual on profile', () => {
       userRole                     | privileges                                                           | parentEntityType
       ${undefined}                 | ${undefined}                                                         | ${undefined}
       ${TestUser.NON_SPACE_MEMBER} | ${undefined}                                                         | ${undefined}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${'CALLOUT_FRAMING'}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_globalAdmin} | ${'CALLOUT_FRAMING'}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${'CALLOUT_FRAMING'}
       ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${'CALLOUT_FRAMING'}
       ${TestUser.SUBSPACE_ADMIN}   | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${'CALLOUT_FRAMING'}
@@ -821,7 +824,7 @@ describe('Private Space - Public Subspace - visual on profile', () => {
       userRole                     | privileges                                            | expectedStatus
       ${undefined}                 | ${undefined}                                          | ${403}
       ${TestUser.NON_SPACE_MEMBER} | ${undefined}                                          | ${403}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute} | ${200}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_globalAdmin} | ${200}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute} | ${200}
       ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'READ']}                             | ${200}
       ${TestUser.SUBSPACE_ADMIN}   | ${sorted__create_read_update_delete_grant_contribute} | ${200}
@@ -845,7 +848,7 @@ describe('Private Space - Public Subspace - visual on profile', () => {
       userRole                     | privileges                                                           | parentEntityType
       ${undefined}                 | ${undefined}                                                         | ${undefined}
       ${TestUser.NON_SPACE_MEMBER} | ${undefined}                                                         | ${undefined}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${'CALLOUT_FRAMING'}
+      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_globalAdmin} | ${'CALLOUT_FRAMING'}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${'CALLOUT_FRAMING'}
       ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${'CALLOUT_FRAMING'}
       ${TestUser.SUBSPACE_ADMIN}   | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${'CALLOUT_FRAMING'}
