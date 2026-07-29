@@ -1,0 +1,87 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e5]:
+    - link "Skip to content" [ref=e6] [cursor=pointer]:
+      - /url: "#crd-main-content"
+    - banner [ref=e7]:
+      - generic [ref=e10]:
+        - generic [ref=e11]:
+          - link "Home" [ref=e12] [cursor=pointer]:
+            - /url: /home
+            - img "Alkemio" [ref=e14]
+          - navigation "breadcrumb" [ref=e22]:
+            - list [ref=e23]:
+              - listitem [ref=e24]:
+                - img [ref=e25]
+                - generic [ref=e29]: l0-callout-access-con-6ddfc
+        - navigation "Menu" [ref=e30]:
+          - button "Search" [ref=e31] [cursor=pointer]:
+            - img
+          - button "Messages" [ref=e32] [cursor=pointer]:
+            - img
+          - button "Notifications" [ref=e33] [cursor=pointer]:
+            - img
+            - generic [ref=e35]: 1 unread notifications
+          - button "Platform navigation" [ref=e36] [cursor=pointer]:
+            - img
+          - button "space admin" [ref=e38] [cursor=pointer]:
+            - img "space admin" [ref=e41]
+    - main [ref=e42]:
+      - generic [ref=e43]:
+        - generic [ref=e44]:
+          - img "Space banner for l0-callout-access-con-6ddfc" [ref=e47]
+          - generic [ref=e51]:
+            - generic [ref=e52]:
+              - heading "l0-callout-access-con-6ddfc" [level=1] [ref=e54]
+              - generic [ref=e55]:
+                - button "Activity" [ref=e56] [cursor=pointer]:
+                  - img
+                - button "Expand to full width" [ref=e57] [cursor=pointer]:
+                  - img
+                - link "Video Call" [ref=e58] [cursor=pointer]:
+                  - /url: https://meet.jit.si/callout-access-con-6ddfc-7bc7fcdc-8a10-49c6-9033-1005c5db8a6b
+                  - img
+                - button "Share" [ref=e59] [cursor=pointer]:
+                  - img
+                - link "Settings" [ref=e60] [cursor=pointer]:
+                  - /url: https://test-alkem.io/callout-access-con-6ddfc/settings
+                  - img
+            - paragraph [ref=e61]: A home to go from here to there, together!
+        - generic [ref=e64]:
+          - navigation "Space navigation tabs" [ref=e66]:
+            - tablist [ref=e68]:
+              - tab "Home" [selected] [ref=e69] [cursor=pointer]
+              - tab "Community" [ref=e70] [cursor=pointer]
+              - tab "Subspaces" [ref=e71] [cursor=pointer]
+              - tab "Knowledge" [ref=e72] [cursor=pointer]
+          - status "Loading" [ref=e73]:
+            - img [ref=e74]
+    - contentinfo [ref=e76]:
+      - generic [ref=e77]:
+        - generic [ref=e78]:
+          - img "Alkemio" [ref=e80]
+          - generic [ref=e86]: © 2026 Alkemio B.V.
+        - navigation "Footer" [ref=e87]:
+          - link "Terms" [ref=e88] [cursor=pointer]:
+            - /url: https://welcome.alkem.io/legal/terms/
+          - link "Privacy" [ref=e89] [cursor=pointer]:
+            - /url: https://welcome.alkem.io/legal/privacy
+          - link "Security" [ref=e90] [cursor=pointer]:
+            - /url: https://welcome.alkem.io/legal/security
+          - button "Support" [ref=e91] [cursor=pointer]
+          - link "About" [ref=e92] [cursor=pointer]:
+            - /url: https://welcome.alkem.io
+        - button "English" [ref=e94] [cursor=pointer]:
+          - img [ref=e95]
+          - generic [ref=e98]: English
+  - generic [ref=e100]:
+    - paragraph [ref=e101]: By clicking "Accept All Cookies", you agree to the storing of cookies on your device to enhance site navigation and analyse site usage.
+    - generic [ref=e102]:
+      - button "settings" [ref=e103] [cursor=pointer]
+      - button "Accept All Cookies" [ref=e104] [cursor=pointer]
+  - region "Notifications alt+T"
+  - button "Open chat" [ref=e105]:
+    - img [ref=e106]
+```
