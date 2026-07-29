@@ -76,8 +76,11 @@ adminFixture.test.describe.serial('Callout Access Control', () => {
 
     await collaborationPage.navigateToSpace(baseScenario.space.nameId);
 
+    // The "Add Post" create button appears after the space + collaboration tab
+    // finish rendering; on the slower test env that can take longer than the
+    // old 3s bound (7.1 flaked here, and 7.2 then can't find 7.1's callout).
     await expect(collaborationPage.addCalloutButton).toBeVisible({
-      timeout: 3000,
+      timeout: 15000,
     });
 
     await collaborationPage.createCallout(
