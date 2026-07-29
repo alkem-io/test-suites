@@ -155,16 +155,57 @@ describe('assignment rules (T010) — the five rules, each with its own distinct
 
   it('rule 5 (last-roles-admin): the platform must always retain at least one Platform Roles Admin', async () => {
     // T003/T004's PLATFORM_ROLES_ADMIN fixture holds EXACTLY one role
-    // (separation of duties) — it is, by construction, the platform's only
-    // holder in a from-scratch environment, so revoking it must trip rule 5.
+    // (separation of duties). It is NOT assumed to be the platform's only
+    // holder of `platform-roles-admin` — on a shared, persistent stack it
+    // rarely is (the FR-013b seeded break-glass account and leftover
+    // accounts from prior runs are also live holders).
+    //
+    // CORRECTED (2026-07-29 live-verification finding, test-bug attribution):
+    // the previous version hardcoded "removal is rejected", which is only
+    // true when the fixture is the SOLE holder. On this persistent stack it
+    // routinely is not, so the removal legitimately succeeds and the
+    // hardcoded rejection assertion fails for the wrong reason. Rule 5's
+    // actual invariant is "the platform never drops to zero holders" — so
+    // assert on the live holder COUNT instead of a fixed scenario: read the
+    // holder list first (via PLATFORM_AUDIT_READER, whose read access does
+    // not depend on the fixture retaining its role), then branch the
+    // expectation on whether any OTHER holder currently exists.
+    //
+    // This fixture is SHARED and PERSISTENT — every other file in this
+    // vitest project run (and every future run) authenticates as it. If the
+    // fixture turns out to be the sole holder and the SERVER's rule 5 has a
+    // bug that lets the removal through anyway, that is not a local
+    // failure: every later file acting as TestUser.PLATFORM_ROLES_ADMIN
+    // starts failing "Forbidden" for the rest of the run, and the real
+    // seeded account stays broken afterward too (exactly what happened on
+    // 2026-07-29). This suite cannot fix a server rule-5 bug, but it CAN
+    // stop it from cascading: the `finally` below unconditionally
+    // re-asserts the fixture's grant — a harmless idempotent no-op when the
+    // fixture was never removed, and a same-test repair when it was.
+    const rolesAdminId = TestUserManager.getUserModelByType(
+      TestUser.PLATFORM_ROLES_ADMIN
+    ).id;
+    const auditReaderToken = TestUserManager.getUserModelByType(
+      TestUser.PLATFORM_AUDIT_READER
+    ).authToken;
+    const holderCount = async () => {
+      const holders = await getGraphqlClient().platformRoleSetUsersInRole(
+        { role: RoleName.PlatformRolesAdmin },
+        { authorization: `Bearer ${auditReaderToken}` }
+      );
+      return holders.data?.platform.roleSet.usersInRole ?? [];
+    };
+
+    const before = await holderCount();
+    const otherHoldersBefore = before.filter(u => u.id !== rolesAdminId);
+    const isSoleHolder = otherHoldersBefore.length === 0;
+
     const res = await asUser(
       token =>
         getGraphqlClient().removePlatformRoleFromUser(
           {
             roleData: {
-              actorID: TestUserManager.getUserModelByType(
-                TestUser.PLATFORM_ROLES_ADMIN
-              ).id,
+              actorID: rolesAdminId,
               role: RoleName.PlatformRolesAdmin,
             },
           },
@@ -172,9 +213,47 @@ describe('assignment rules (T010) — the five rules, each with its own distinct
         ),
       TestUser.PLATFORM_ROLES_ADMIN
     );
-    expect(res.error?.errors[0]?.message).toContain(
-      'cannot remove the last platform-roles-admin'
-    );
+    try {
+      if (isSoleHolder) {
+        // The fixture is, right now, the platform's only Platform Roles
+        // Admin — rule 5 MUST reject the removal and the holder count must
+        // not move.
+        expect(res.error?.errors[0]?.message).toContain(
+          'cannot remove the last platform-roles-admin'
+        );
+        const after = await holderCount();
+        expect(after.length).toBe(before.length);
+      } else {
+        // At least one other holder remains — rule 5 legitimately allows
+        // the removal, and the count must drop by exactly one (the
+        // fixture, and only the fixture).
+        expect(res.error).toBeUndefined();
+        const after = await holderCount();
+        expect(after.length).toBe(before.length - 1);
+        expect(after.some(u => u.id === rolesAdminId)).toBe(false);
+      }
+    } finally {
+      // Self-heal regardless of the branch taken above. Uses GLOBAL_ADMIN
+      // as grantor — its legacy root-cascade assign capability does not
+      // depend on this fixture at all, so it stays available even in the
+      // exact failure mode this guards against.
+      try {
+        await getGraphqlClient().assignPlatformRoleToUser(
+          {
+            roleData: {
+              actorID: rolesAdminId,
+              role: RoleName.PlatformRolesAdmin,
+            },
+          },
+          {
+            authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}`,
+          }
+        );
+      } catch {
+        // best-effort — if the fixture never lost the role, re-granting an
+        // already-held role is expected to no-op or error harmlessly.
+      }
+    }
   });
 });
 

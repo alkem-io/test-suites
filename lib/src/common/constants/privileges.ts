@@ -288,6 +288,11 @@ export const sorted__create_read_update_delete_grant_addMember_apply_invite_addV
     "RECEIVE_NOTIFICATIONS_ADMIN",
   ].sort();
 
+// workspace#027-platform-role-redesign: GLOBAL_ADMIN and GLOBAL_SUPPORT_ADMIN
+// inherit PLATFORM_CONTENT_FULL_ACCESS via the additive Slice A root-rule
+// cascade `[READ, PLATFORM_CONTENT_FULL_ACCESS]` (spec.md FR-004/FR-007(e),
+// Q&A at spec.md:89) — a union with the legacy broad grant, by design, not a
+// regression.
 export const sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization =
   [
     "CREATE",
@@ -300,6 +305,7 @@ export const sorted__create_read_update_delete_grant_addMember_apply_invite_addV
     "ROLESET_ENTRY_ROLE_INVITE",
     "COMMUNITY_ASSIGN_VC_FROM_ACCOUNT",
     "ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION",
+    "PLATFORM_CONTENT_FULL_ACCESS",
   ].sort();
 
 // Same as above WITHOUT ROLESET_ENTRY_ROLE_APPLY: since the combined-subspace-
@@ -307,6 +313,9 @@ export const sorted__create_read_update_delete_grant_addMember_apply_invite_addV
 // only exposes APPLY to parent members or combined-flow-eligible users — the
 // blanket GLOBAL_REGISTERED grant was a false signal (the mutation rejected
 // non-parent-members) and was removed.
+//
+// workspace#027-platform-role-redesign: also carries PLATFORM_CONTENT_FULL_ACCESS
+// (see comment above).
 export const sorted__create_read_update_delete_grant_addMember_invite_addVC_accessVC_assignOrganization =
   [
     "CREATE",
@@ -318,6 +327,7 @@ export const sorted__create_read_update_delete_grant_addMember_invite_addVC_acce
     "ROLESET_ENTRY_ROLE_INVITE",
     "COMMUNITY_ASSIGN_VC_FROM_ACCOUNT",
     "ROLESET_ENTRY_ROLE_ASSIGN_ORGANIZATION",
+    "PLATFORM_CONTENT_FULL_ACCESS",
   ].sort();
 
 export const sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization_notificationsAdmin =

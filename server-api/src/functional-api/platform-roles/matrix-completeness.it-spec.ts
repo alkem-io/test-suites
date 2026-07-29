@@ -35,6 +35,12 @@ import { platformRolesStage } from './stage';
 
 describe('matrix-completeness (T017a) — every platform role-set role is covered', () => {
   it('the live API role-set and the generated matrix agree on which roles are covered', async () => {
+    // Every other platform-roles spec reaches this map as a side effect of
+    // TestScenarioFactory.createBaseScenario (or similar); this spec calls
+    // TestUserManager directly, so it must populate the map itself. Idempotent
+    // (TestUserManager.populateUserModelMap no-ops once `populated` is set).
+    await TestUserManager.populateUserModelMap();
+
     const rolesAdminToken = TestUserManager.getUserModelByType(
       TestUser.PLATFORM_ROLES_ADMIN
     ).authToken;
