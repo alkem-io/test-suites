@@ -1,8 +1,15 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { getGraphqlClient, TestUser, TestUserManager } from '@alkemio/tests-lib';
 import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
+import type { GraphQLReturnType } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import { buildMatrixFixtures, teardownMatrixFixtures } from '../fixtures';
 import type { MatrixFixtures } from '../fixtures';
+
+const asUser = <TData>(
+  fn: (authToken: string | undefined) => GraphQLReturnType<TData>,
+  user: TestUser
+) => graphqlErrorWrapper(fn, user);
 
 /**
  * workspace#027-platform-role-redesign (T019b) — [US3]. FLOW 2: an
@@ -49,6 +56,19 @@ describe('flow 2 — organization inheritance then demotion (T019b, FR-002/FR-03
       { authorization: `Bearer ${rolesAdminToken}` }
     );
 
+    // Organization-roleSet membership (Associate/Admin) is managed by
+    // organization standing, not `platform-roles-admin` — that role's scope
+    // is PLATFORM role assignment only (the `assignPlatformRoleToOrganization`
+    // call above), and this environment's own roleSet authorization rejects
+    // `rolesAdminToken` here with `FORBIDDEN_POLICY` for lacking `grant` on
+    // an arbitrary organization's roleSet (2026-07-29 live-verification
+    // finding — `immediacy.it-spec.ts` hit the identical failure). The
+    // legacy GLOBAL_ADMIN fixture retains its root-cascade grant privilege
+    // for org-membership management through the end of Slice A
+    // (test.user.ts T003), so it is the correct actor for these roleSet
+    // mutations.
+    const globalAdminToken = TestUserManager.users.globalAdmin.authToken;
+
     try {
       // Promote to ADMIN — inherits the org's credential.
       await getGraphqlClient().assignRoleToUser(
@@ -59,20 +79,30 @@ describe('flow 2 — organization inheritance then demotion (T019b, FR-002/FR-03
             role: RoleName.Admin,
           },
         },
-        { authorization: `Bearer ${rolesAdminToken}` }
+        { authorization: `Bearer ${globalAdminToken}` }
       );
 
-      const asAdmin = await getGraphqlClient().CreateOrganization(
-        {
-          organizationData: {
-            nameID: `flow2-admin-${Date.now()}`,
-            profileData: { displayName: 'flow 2 admin probe' },
-          },
-        },
-        { authorization: `Bearer ${standingUser.authToken}` }
+      // Wrapped via `asUser` (`graphqlErrorWrapper`) — the raw generated SDK
+      // client throws an uncaught exception on any GraphQL error response
+      // instead of returning it as `.error` (2026-07-29 live-verification
+      // finding). This call is expected to SUCCEED; wrapping it just means a
+      // genuine inheritance-grant failure surfaces as a clean assertion
+      // failure instead of an unasserted exception.
+      const asAdmin = await asUser(
+        token =>
+          getGraphqlClient().CreateOrganization(
+            {
+              organizationData: {
+                nameID: `flow2-admin-${Date.now()}`,
+                profileData: { displayName: 'flow 2 admin probe' },
+              },
+            },
+            { authorization: `Bearer ${token}` }
+          ),
+        TestUser.NON_SPACE_MEMBER
       );
       expect(
-        asAdmin.errors,
+        asAdmin.error,
         'the org admin must inherit the Feature role while holding admin standing'
       ).toBeUndefined();
       const createdId = asAdmin.data?.createOrganization?.id;
@@ -92,23 +122,28 @@ describe('flow 2 — organization inheritance then demotion (T019b, FR-002/FR-03
             role: RoleName.Admin,
           },
         },
-        { authorization: `Bearer ${rolesAdminToken}` }
+        { authorization: `Bearer ${globalAdminToken}` }
       );
 
-      // DENIED — the very next request.
-      const afterDemotion = await getGraphqlClient().CreateOrganization(
-        {
-          organizationData: {
-            nameID: `flow2-demoted-${Date.now()}`,
-            profileData: { displayName: 'flow 2 demoted probe' },
-          },
-        },
-        { authorization: `Bearer ${standingUser.authToken}` }
+      // DENIED — the very next request. Wrapped via `asUser` for the same
+      // raw-throw reason as `asAdmin` above.
+      const afterDemotion = await asUser(
+        token =>
+          getGraphqlClient().CreateOrganization(
+            {
+              organizationData: {
+                nameID: `flow2-demoted-${Date.now()}`,
+                profileData: { displayName: 'flow 2 demoted probe' },
+              },
+            },
+            { authorization: `Bearer ${token}` }
+          ),
+        TestUser.NON_SPACE_MEMBER
       );
       expect(
-        afterDemotion.errors,
+        afterDemotion.error?.errors?.length ?? 0,
         'demotion must deny the very next request — a pass here would mean the actor-context cache was not invalidated (server T057)'
-      ).toBeDefined();
+      ).toBeGreaterThan(0);
     } finally {
       await getGraphqlClient().removeRoleFromUser(
         {
@@ -118,7 +153,7 @@ describe('flow 2 — organization inheritance then demotion (T019b, FR-002/FR-03
             role: RoleName.Associate,
           },
         },
-        { authorization: `Bearer ${rolesAdminToken}` }
+        { authorization: `Bearer ${globalAdminToken}` }
       );
       await getGraphqlClient().removePlatformRoleFromOrganization(
         {

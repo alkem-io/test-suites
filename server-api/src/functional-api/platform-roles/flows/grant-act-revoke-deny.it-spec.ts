@@ -1,8 +1,15 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { getGraphqlClient, TestUser, TestUserManager } from '@alkemio/tests-lib';
 import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
+import type { GraphQLReturnType } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import { buildMatrixFixtures, teardownMatrixFixtures } from '../fixtures';
 import type { MatrixFixtures } from '../fixtures';
+
+const asUser = <TData>(
+  fn: (authToken: string | undefined) => GraphQLReturnType<TData>,
+  user: TestUser
+) => graphqlErrorWrapper(fn, user);
 
 /**
  * workspace#027-platform-role-redesign (T019a) — [US3]. FLOW 1: grant a
@@ -63,14 +70,21 @@ describe('flow 1 — grant, act, revoke, deny (T019a, FR-031/SC-016)', () => {
     );
     expect(revoke.errors).toBeUndefined();
 
-    // DENY — the VERY NEXT request, no wait of any kind in between.
-    const deny = await getGraphqlClient().userEmailChangeAuditEntries(
-      { userID: fixtures.targetUserId },
-      { authorization: `Bearer ${holder.authToken}` }
+    // DENY — the VERY NEXT request, no wait of any kind in between. Wrapped
+    // via `asUser` (`graphqlErrorWrapper`) — the raw generated SDK client
+    // throws an uncaught exception on any GraphQL error response instead of
+    // returning it as `.error` (2026-07-29 live-verification finding).
+    const deny = await asUser(
+      token =>
+        getGraphqlClient().userEmailChangeAuditEntries(
+          { userID: fixtures.targetUserId },
+          { authorization: `Bearer ${token}` }
+        ),
+      TestUser.NON_SPACE_MEMBER
     );
     expect(
-      deny.errors,
+      deny.error?.errors?.length ?? 0,
       'the request immediately following a revoke must be denied — no gap for a cache/reset to hide behind'
-    ).toBeDefined();
+    ).toBeGreaterThan(0);
   });
 });

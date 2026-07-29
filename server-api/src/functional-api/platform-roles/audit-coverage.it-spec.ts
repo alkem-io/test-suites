@@ -1,8 +1,15 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { getGraphqlClient, TestUser, TestUserManager } from '@alkemio/tests-lib';
 import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
+import type { GraphQLReturnType } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import { buildMatrixFixtures, teardownMatrixFixtures } from './fixtures';
 import type { MatrixFixtures } from './fixtures';
+
+const asUser = <TData>(
+  fn: (authToken: string | undefined) => GraphQLReturnType<TData>,
+  user: TestUser
+) => graphqlErrorWrapper(fn, user);
 
 /**
  * workspace#027-platform-role-redesign — [US3].
@@ -54,16 +61,27 @@ describe('audit-coverage outcome checks reachable without a generic audit read (
       TestUser.PLATFORM_ROLES_ADMIN
     ).authToken;
 
-    const rejected = await getGraphqlClient().assignPlatformRoleToUser(
-      {
-        roleData: {
-          actorID: fixtures.secondOrganizationId, // wrong actor kind for a `Platform …` role is not applicable here; use a plain privilege failure instead
-          role: RoleName.PlatformSupport,
-        },
-      },
-      { authorization: `Bearer ${TestUserManager.getUserModelByType(TestUser.PLATFORM_SUPPORT).authToken}` }
+    // A genuine privilege-denial scenario: `platform-support` holds no
+    // `platform-roles-admin` grant, so this call is rejected on the
+    // AUTHORIZATION gate itself, not on input resolution — the outcome
+    // this assertion is actually about. Wrapped via `asUser`
+    // (`graphqlErrorWrapper`) because the raw generated SDK client throws
+    // an uncaught exception on any GraphQL error response instead of
+    // returning it as `.error` (2026-07-29 live-verification finding).
+    const rejected = await asUser(
+      token =>
+        getGraphqlClient().assignPlatformRoleToUser(
+          {
+            roleData: {
+              actorID: fixtures.targetUserId,
+              role: RoleName.PlatformSupport,
+            },
+          },
+          { authorization: `Bearer ${token}` }
+        ),
+      TestUser.PLATFORM_SUPPORT
     );
-    expect(rejected.errors).toBeDefined();
+    expect(rejected.error?.errors?.length ?? 0).toBeGreaterThan(0);
 
     const holders = await getGraphqlClient().platformRoleSetUsersInRole(
       { role: RoleName.PlatformSupport },
@@ -71,7 +89,7 @@ describe('audit-coverage outcome checks reachable without a generic audit read (
     );
     expect(
       holders.data?.platform.roleSet.usersInRole.some(
-        u => u.id === fixtures.secondOrganizationId
+        u => u.id === fixtures.targetUserId
       ),
       'a rejected grant must not appear as a successful holder'
     ).toBe(false);

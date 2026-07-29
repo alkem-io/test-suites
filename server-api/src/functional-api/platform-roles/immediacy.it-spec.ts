@@ -1,8 +1,20 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { getGraphqlClient, TestUser, TestUserManager } from '@alkemio/tests-lib';
+import {
+  getGraphqlClient,
+  TestUser,
+  TestUserManager,
+  UniqueIDGenerator,
+} from '@alkemio/tests-lib';
 import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
+import type { GraphQLReturnType } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import { buildMatrixFixtures, teardownMatrixFixtures } from './fixtures';
 import type { MatrixFixtures } from './fixtures';
+
+const asUser = <TData>(
+  fn: (authToken: string | undefined) => GraphQLReturnType<TData>,
+  user: TestUser
+) => graphqlErrorWrapper(fn, user);
 
 /**
  * workspace#027-platform-role-redesign (T013) — [US3]. FR-031/SC-016: a
@@ -71,14 +83,23 @@ describe('immediacy on a single surface (T013, FR-031/SC-016)', () => {
       { authorization: `Bearer ${rolesAdminToken}` }
     );
 
-    const afterRevoke = await getGraphqlClient().userEmailChangeAuditEntries(
-      { userID: fixtures.targetUserId },
-      { authorization: `Bearer ${targetUser.authToken}` }
+    // The raw generated SDK throws a `ClientError` on any GraphQL error
+    // response rather than returning it as `.errors` (2026-07-29
+    // live-verification finding, reproduced live) — expected-DENIAL calls
+    // must go through `graphqlErrorWrapper` (`asUser`) to observe the
+    // rejection instead of failing with an unasserted exception.
+    const afterRevoke = await asUser(
+      token =>
+        getGraphqlClient().userEmailChangeAuditEntries(
+          { userID: fixtures.targetUserId },
+          { authorization: `Bearer ${token}` }
+        ),
+      TestUser.NON_SPACE_MEMBER
     );
     expect(
-      afterRevoke.errors,
+      afterRevoke.error?.errors?.length ?? 0,
       'the very next request after a revoke must be denied'
-    ).toBeDefined();
+    ).toBeGreaterThan(0);
   });
 });
 
@@ -101,6 +122,19 @@ describe('organization-standing immediacy (T013, FR-002/FR-031)', () => {
       { authorization: `Bearer ${rolesAdminToken}` }
     );
 
+    // Organization-roleSet membership (Associate/Admin) is managed by
+    // organization standing, not by `platform-roles-admin` — that role's
+    // scope is PLATFORM role assignment only (`assignPlatformRoleToOrganization`
+    // above), and this environment's own roleSet authorization rejects it
+    // with `FORBIDDEN_POLICY` for lacking `grant` on an arbitrary
+    // organization's roleSet (2026-07-29 live-verification finding). The
+    // legacy GLOBAL_ADMIN fixture retains its root-cascade grant privilege
+    // for org-membership management through the end of Slice A (test.user.ts
+    // T003), so it — not `rolesAdminToken` — is the correct actor for these
+    // roleSet mutations; only the Feature-role grant/revoke on the platform
+    // roleSet above/below is `platform-roles-admin`'s own surface.
+    const globalAdminToken = TestUserManager.users.globalAdmin.authToken;
+
     try {
       // Associate only — never gains the org's Feature credential.
       await getGraphqlClient().assignRoleToUser(
@@ -111,21 +145,32 @@ describe('organization-standing immediacy (T013, FR-002/FR-031)', () => {
             role: RoleName.Associate,
           },
         },
-        { authorization: `Bearer ${rolesAdminToken}` }
+        { authorization: `Bearer ${globalAdminToken}` }
       );
-      const asAssociate = await getGraphqlClient().CreateOrganization(
-        {
-          organizationData: {
-            nameID: `immediacy-associate-${Date.now()}`,
-            profileData: { displayName: 'immediacy associate-only probe' },
-          },
-        },
-        { authorization: `Bearer ${standingUser.authToken}` }
+      // Wrapped via `asUser` — a plain associate is expected to be DENIED
+      // `create-organization`, and the raw generated SDK client throws on
+      // any GraphQL error response rather than returning it as `.error`
+      // (same 2026-07-29 live-verification finding as the A19 probe above).
+      // The nameID is also kept short (`UniqueIDGenerator`, not `Date.now()`)
+      // so a too-long literal never fails input VALIDATION first and masks
+      // the authorization outcome this assertion is actually about.
+      const asAssociate = await asUser(
+        token =>
+          getGraphqlClient().CreateOrganization(
+            {
+              organizationData: {
+                nameID: `assoc-${UniqueIDGenerator.getID()}`,
+                profileData: { displayName: 'immediacy associate-only probe' },
+              },
+            },
+            { authorization: `Bearer ${token}` }
+          ),
+        TestUser.NON_SPACE_MEMBER
       );
       expect(
-        asAssociate.errors,
+        asAssociate.error?.errors?.length ?? 0,
         'a plain associate must never inherit a Feature role'
-      ).toBeDefined();
+      ).toBeGreaterThan(0);
 
       // Promote to Admin — inherits the org's Feature credential on the
       // very next request.
@@ -137,12 +182,12 @@ describe('organization-standing immediacy (T013, FR-002/FR-031)', () => {
             role: RoleName.Admin,
           },
         },
-        { authorization: `Bearer ${rolesAdminToken}` }
+        { authorization: `Bearer ${globalAdminToken}` }
       );
       const asAdmin = await getGraphqlClient().CreateOrganization(
         {
           organizationData: {
-            nameID: `immediacy-admin-${Date.now()}`,
+            nameID: `admin-${UniqueIDGenerator.getID()}`,
             profileData: { displayName: 'immediacy admin probe' },
           },
         },
@@ -170,21 +215,25 @@ describe('organization-standing immediacy (T013, FR-002/FR-031)', () => {
             role: RoleName.Admin,
           },
         },
-        { authorization: `Bearer ${rolesAdminToken}` }
+        { authorization: `Bearer ${globalAdminToken}` }
       );
-      const afterDemotion = await getGraphqlClient().CreateOrganization(
-        {
-          organizationData: {
-            nameID: `immediacy-demoted-${Date.now()}`,
-            profileData: { displayName: 'immediacy demoted probe' },
-          },
-        },
-        { authorization: `Bearer ${standingUser.authToken}` }
+      const afterDemotion = await asUser(
+        token =>
+          getGraphqlClient().CreateOrganization(
+            {
+              organizationData: {
+                nameID: `demoted-${UniqueIDGenerator.getID()}`,
+                profileData: { displayName: 'immediacy demoted probe' },
+              },
+            },
+            { authorization: `Bearer ${token}` }
+          ),
+        TestUser.NON_SPACE_MEMBER
       );
       expect(
-        afterDemotion.errors,
+        afterDemotion.error?.errors?.length ?? 0,
         'demotion to associate must deny on the very next request — no ActorContext cache lag'
-      ).toBeDefined();
+      ).toBeGreaterThan(0);
     } finally {
       await getGraphqlClient().removeRoleFromUser(
         {
@@ -194,7 +243,7 @@ describe('organization-standing immediacy (T013, FR-002/FR-031)', () => {
             role: RoleName.Associate,
           },
         },
-        { authorization: `Bearer ${rolesAdminToken}` }
+        { authorization: `Bearer ${globalAdminToken}` }
       );
       await getGraphqlClient().removePlatformRoleFromOrganization(
         {

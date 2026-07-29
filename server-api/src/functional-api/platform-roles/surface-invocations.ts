@@ -1,4 +1,9 @@
-import { getGraphqlClient, TestUser, TestUserManager } from '@alkemio/tests-lib';
+import {
+  getGraphqlClient,
+  TestUser,
+  TestUserManager,
+  UniqueIDGenerator,
+} from '@alkemio/tests-lib';
 import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import type { GraphQLReturnType } from '@alkemio/tests-lib/utils/graphql.wrapper';
@@ -50,6 +55,48 @@ async function invoke<T>(
     return { ok: false, errors: result.error.errors };
   }
   return { ok: true };
+}
+
+/**
+ * A9's three cross-hierarchy space-move mutations (`moveSpaceL1ToSpaceL0`,
+ * `moveSpaceL1ToSpaceL2`, `moveSpaceL2ToSpaceL1`) all return the shared
+ * `SpaceData` fragment, which also requests `Space.account` and
+ * `Space.templatesManager` — fields gated behind plain Space `READ`, a
+ * privilege `PLATFORM_RESOURCE_ADMIN` is deliberately NOT granted (that
+ * role only gets `TRANSFER_RESOURCE_OFFER`/`TRANSFER_RESOURCE_ACCEPT`, per
+ * `account.service.authorization.ts`). That produces a collateral
+ * `FORBIDDEN_POLICY` on those two SUB-fields even when the move privilege
+ * itself was correctly granted, entangling this row's ALLOW/DENY assertion
+ * with a separate, intentionally-narrower privilege (2026-07-29
+ * live-verification finding).
+ *
+ * The correct fix is a leaner query for these three operations, but that
+ * needs regenerating the SDK against a live schema (`lib/codegen.ts`
+ * introspects `localhost:3000`) — not available to this fix pass. Until
+ * then, this wrapper tolerates ONLY errors on those two named fields and
+ * still reports every other error (including a genuine denial of the move
+ * mutation itself) as a real failure — it narrows the assertion to the
+ * move-privilege gate without touching the shared, widely-used
+ * `moveSpaceL1ToSpaceL0.graphql` et al. or `graphql.wrapper.ts`.
+ */
+const A9_COLLATERAL_READ_FIELDS = ['Space.account', 'Space.templatesManager'] as const;
+
+async function invokeMove<T>(
+  fn: (authToken: string | undefined) => GraphQLReturnType<T>,
+  caller: TestUser
+): Promise<InvocationOutcome> {
+  const result = await graphqlErrorWrapper(fn, caller);
+  if (!result.error) {
+    return { ok: true };
+  }
+  const nonCollateral = result.error.errors.filter(e => {
+    const message = typeof e.message === 'string' ? e.message : '';
+    return !A9_COLLATERAL_READ_FIELDS.some(field => message.includes(field));
+  });
+  if (nonCollateral.length === 0) {
+    return { ok: true };
+  }
+  return { ok: false, errors: nonCollateral };
 }
 
 const bearer = (token: string | undefined) => ({
@@ -302,13 +349,16 @@ export function buildSurfaceInvocations(
   // ===== A5 — delete user; reset identity/account (3) =====
   registerRow('A5', [
     // `deleteUser` is the D5 dual path (owner-self-delete vs. PLATFORM_USERS_ADMIN)
-    // — invoked here against the fixture target user, never against a
-    // single-role fixture (deleting one would take a whole cell's worth of
-    // future matrix runs down with it).
+    // — invoked here against `fx.deletableUserId`, a disposable single-use
+    // target, NEVER `fx.targetUserId`. That shared "generic target user" is
+    // the object of A1/A2/A4/A21's mutations too, so an ALLOWED caller
+    // actually deleting it would take every one of those cells (and
+    // `audit-coverage.it-spec.ts`) down with it for the rest of the run —
+    // the 2026-07-29 live-verification finding.
     caller =>
       invoke(
         token =>
-          client().deleteUser({ deleteData: { ID: fx.targetUserId } }, bearer(token)),
+          client().deleteUser({ deleteData: { ID: fx.deletableUserId } }, bearer(token)),
         caller
       ),
     caller =>
@@ -333,18 +383,28 @@ export function buildSurfaceInvocations(
 
   // ===== A6 — create / delete an organization (2) =====
   registerRow('A6', [
+    // Every ALLOW caller in this matrix (both `platform-support` and
+    // `feature-organization-creator`, per A6's per-surface intent split)
+    // invokes this SAME helper against a run-fixed literal displayName —
+    // a second run against the same persistent environment collided with
+    // the org left over from the first (2026-07-29 live-verification
+    // finding). Suffix with a fresh id per CALL, not per fixture build, so
+    // repeated invocations within one run never collide with each other
+    // either.
     caller =>
       invoke(
-        token =>
-          client().CreateOrganization(
+        token => {
+          const uniqueSuffix = UniqueIDGenerator.getID();
+          return client().CreateOrganization(
             {
               organizationData: {
-                nameID: `matrix-a6-${Date.now()}`,
-                profileData: { displayName: 'matrix A6 org' },
+                nameID: `matrix-a6-${uniqueSuffix}`,
+                profileData: { displayName: `matrix A6 org ${uniqueSuffix}` },
               },
             },
             bearer(token)
-          ),
+          );
+        },
         caller
       ),
     caller =>
@@ -514,20 +574,24 @@ export function buildSurfaceInvocations(
   ]);
 
   // ===== A9 — move space / hub / pack / VC / callout (9) =====
-  // The three cross-L0 space moves are best-effort placeholders: this
-  // fixture set builds one L0 space, not a two-hierarchy tree, so these
-  // three will fail validation (not authorization) until Phase V adds the
-  // real fixtures — a known limitation (T007b, this file's header), not an
+  // `moveSpaceL1ToSpaceL0` now uses a real two-level tree (`fx.subspaceId`,
+  // an actual L1 under `fx.spaceId`) and a genuinely different L0
+  // (`fx.a9TargetSpaceL0Id`) — passing the same L0 space for both source
+  // and target failed `ValidationException: Only L1 spaces can be moved
+  // cross-L0` before authorization was ever exercised (2026-07-29
+  // live-verification finding). The other two cross-L0 moves below remain
+  // best-effort placeholders pending Phase V's own two-hierarchy fixtures
+  // (T007b, this file's header) — a known limitation, not an
   // authorization-model claim.
   registerRow('A9', [
     caller =>
-      invoke(
+      invokeMove(
         token =>
           client().MoveSpaceL1ToSpaceL0(
             {
               moveData: {
-                spaceL1ID: fx.spaceId,
-                targetSpaceL0ID: fx.spaceId,
+                spaceL1ID: fx.subspaceId,
+                targetSpaceL0ID: fx.a9TargetSpaceL0Id,
               },
             },
             bearer(token)
@@ -535,7 +599,7 @@ export function buildSurfaceInvocations(
         caller
       ),
     caller =>
-      invoke(
+      invokeMove(
         token =>
           client().MoveSpaceL1ToSpaceL2(
             {
@@ -549,7 +613,7 @@ export function buildSurfaceInvocations(
         caller
       ),
     caller =>
-      invoke(
+      invokeMove(
         token =>
           client().MoveSpaceL2ToSpaceL1(
             {
