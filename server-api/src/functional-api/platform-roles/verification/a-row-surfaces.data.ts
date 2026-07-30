@@ -21,6 +21,21 @@
  * `cascade-and-grants.data.ts`'s matching re-sync note for the
  * `TREE_SCOPED_PRIVILEGE_GRANTS` half of this same commit pair.
  *
+ * THIRD re-sync (corr-ts-27/spec-ts-19/qual-ts-24, against server c7610d6fa):
+ * server's `sec-server-9`/`sec-server-10`/`sec-server-11` commits (095de9d3f)
+ * closed three bypasses this mirror had not yet caught up with — A1 gained
+ * the two generic actor-credential mutations (`grantCredentialToActor`/
+ * `revokeCredentialFromActor`, `PLATFORM_ADMIN`-gated, `intendedOwners: []`,
+ * no `retiredIn` marker — this bypass mutation is not deleted at Slice B,
+ * unlike the FR-022 four); A20/A20b each gained a `graphql-query` pair
+ * (`actorsWithCredential`/`usersWithAuthorizationCredential`, moved onto the
+ * shared `platform.role.holder.list.access.ts` file alongside the four field
+ * resolvers, which themselves moved off `role.set.resolver.fields.ts` onto
+ * the same shared file); A21 gained a second, resolver-level `updateUser`
+ * entry (defense-in-depth `SET_SERVICE_PROFILE` check). A13's legacyReachers
+ * also regained `GLOBAL_SUPPORT` (corr-server-12, already reflected in
+ * `server` but dropped in the SECOND re-sync above). Total entries: 106 -> 113.
+ *
  * T007a (research D24/D26/D27): this repo holds no independent notion of who
  * owns what — a gap found here is a `server` finding to report, never a local
  * edit to close. `AuthorizationCredential` / `AuthorizationPrivilege` are
@@ -38,7 +53,7 @@
  * Mirror everything else structurally (same ids, same order, same
  * commentary) so a diff against the server file stays a one-line check —
  * `mirror-integrity.it-spec.ts` in this directory guards the census's own
- * documented counts (100 multiplying at stage A / 106 total entries / 21 live rows) so a
+ * documented counts (107 multiplying at stage A / 113 total entries / 21 live rows) so a
  * stale local edit fails loudly even without cross-repo file access at test
  * time (this repo's worktree never reads another repo's tree at runtime).
  */
@@ -98,7 +113,11 @@ export interface SurfaceRef {
    * one row whose surface is RENAMED between slices (`updateSpacePlatformSettings`
    * at A, `adminUpdateSpaceVisibility` at B, T078). */
   readonly member: string | { readonly A: string; readonly B: string };
-  readonly kind: 'graphql-mutation' | 'graphql-field' | 'mcp-tool';
+  readonly kind:
+    | 'graphql-mutation'
+    | 'graphql-query'
+    | 'graphql-field'
+    | 'mcp-tool';
   /** Which authorization tree carries the gate. */
   readonly tree: TreeId;
   /** The closed gate vocabulary (`gate.model.ts`) — what a caller must hold
@@ -168,6 +187,17 @@ export const INDIRECT_ENFORCEMENT_FILES: readonly string[] = [
   // `ROLESET_ENTRY_ROLE_ASSIGN`; ORGANIZATION → `GRANT`) — a dead literal,
   // not a live PLATFORM-role gate, and outside this census's 21 rows.
   'src/domain/access/role-set/role.set.resolver.mutations.ts',
+  // A20/A20b (sec-server-10 fix): `admin.authorization.resolver.queries.ts`
+  // NAMES `actorsWithCredential`/`usersWithAuthorizationCredential`, but the
+  // actual PLATFORM_ROLE_HOLDERS_READ/FEATURE_ROLE_HOLDERS_READ check is
+  // enforced in the SHARED `platform.role.holder.list.access.ts` predicate
+  // (declared as those two members' `file` above) — the same resolver→
+  // shared-service indirection as A1/A2. This file's own literal
+  // `AuthorizationPrivilege.READ_USERS` (the unchanged, non-role-family
+  // path) is outside `ManagedPrivilege`/`SCANNED_PRIVILEGES` and therefore
+  // never trips rule 1/2 on its own — this entry exists so rule 4 (the
+  // credential-typed-argument completeness scan) recognizes the file.
+  'src/platform-admin/domain/authorization/admin.authorization.resolver.queries.ts',
 ];
 
 const GA = AuthorizationCredential.GlobalAdmin;
@@ -298,6 +328,40 @@ export const A_ROW_SURFACES: Record<ARowId, readonly SurfaceRef[]> = {
       },
       intendedOwners: [],
       legacyReachers: [GA],
+    },
+    // --- sec-server-9 fix: the generic, un-censused actor-credential
+    // mutations became grantable/revokable for all 13 platform-*/feature-*
+    // role credentials the moment they joined the shared
+    // `AuthorizationCredential`/`CredentialType` enums — a complete bypass
+    // of the six-rule assignment engine and its audit trail. Both mutations
+    // now reject that vocabulary outright before their UNCHANGED
+    // `PLATFORM_ADMIN` check (still {global-admin, global-support,
+    // global-license-manager} — NOT narrowed to a [GLOBAL_ADMIN]-only pin
+    // like the FR-022 four, since this generic mutation is still legitimately
+    // used for every OTHER, non-role-family credential type). No
+    // `lifecycle.retiredIn: 'B'` marker (unlike the FR-022 four): those are
+    // deleted outright at Slice B (T080); this mutation is not — it is
+    // simply not a target-role-model owned surface. `intendedOwners: []`
+    // reflects that honestly: nobody OWNS this generic bypass, it is
+    // reachable only via the legacy, tree-scoped `PLATFORM_ADMIN` grant
+    // (`TREE_SCOPED_PRIVILEGE_GRANTS['platform'][PLATFORM_ADMIN]` below).
+    {
+      file: 'src/domain/actor/actor/actor.resolver.mutations.ts',
+      member: 'grantCredentialToActor',
+      kind: 'graphql-mutation',
+      tree: 'platform',
+      gate: { requires: AuthorizationPrivilege.PlatformAdmin },
+      intendedOwners: [],
+      legacyReachers: [GA, GS, GLM],
+    },
+    {
+      file: 'src/domain/actor/actor/actor.resolver.mutations.ts',
+      member: 'revokeCredentialFromActor',
+      kind: 'graphql-mutation',
+      tree: 'platform',
+      gate: { requires: AuthorizationPrivilege.PlatformAdmin },
+      intendedOwners: [],
+      legacyReachers: [GA, GS, GLM],
     },
   ],
 
@@ -1072,12 +1136,13 @@ export const A_ROW_SURFACES: Record<ARowId, readonly SurfaceRef[]> = {
       tree: 'licensing-framework',
       gate: { requires: literalGate },
       intendedOwners: [AuthorizationCredential.PlatformSettingsAdmin],
-      // GLOBAL_ADMIN added (corr-ts-20/qual-ts-17 re-sync,
-      // corr-server-7/corr-server-10 fix): the resolver-local synthetic
-      // policy (`GLOBAL_POLICY_LICENSE_DEFINITION_ADMIN`) grants bare
-      // CREATE/UPDATE/DELETE to exactly {platform-settings-admin,
-      // global-admin, global-license-manager, global-platform-manager}.
-      legacyReachers: [GA, GLM, GPM],
+      // GLOBAL_ADMIN and GLOBAL_SUPPORT (corr-ts-27/spec-ts-19 re-sync,
+      // corr-server-7/corr-server-10/corr-server-12 fix): the resolver-local
+      // synthetic policy (`GLOBAL_POLICY_LICENSE_DEFINITION_ADMIN`) grants
+      // bare CREATE/UPDATE/DELETE to exactly {platform-settings-admin,
+      // global-admin, global-support, global-license-manager,
+      // global-platform-manager}.
+      legacyReachers: [GA, GS, GLM, GPM],
     })
   ),
 
@@ -1250,63 +1315,146 @@ export const A_ROW_SURFACES: Record<ARowId, readonly SurfaceRef[]> = {
     },
   ],
 
-  // ===== A20 — read Platform … holder lists — 4 field resolvers =====
-  A20: (
-    [
-      'usersInRole',
-      'usersInRoles',
-      'organizationsInRole',
-      'organizationsInRoles',
-    ] as const
-  ).map(
-    (member): SurfaceRef => ({
-      file: 'src/domain/access/role-set/role.set.resolver.fields.ts',
-      member,
-      kind: 'graphql-field',
-      tree: 'role-set',
-      gate: { requires: AuthorizationPrivilege.PlatformRoleHoldersRead },
-      intendedOwners: [
-        AuthorizationCredential.PlatformRolesAdmin,
-        AuthorizationCredential.PlatformAuditReader,
-      ],
-      legacyReachers: [GA, GS, GLM],
-    })
-  ),
-
-  // ===== A20b — read Feature … holder lists — the SAME 4 resolvers, the
-  // `feature-*` payload half (research D9, sixth clarification pass) =====
-  A20b: (
-    [
-      'usersInRole',
-      'usersInRoles',
-      'organizationsInRole',
-      'organizationsInRoles',
-    ] as const
-  ).map(
-    (member): SurfaceRef => ({
-      file: 'src/domain/access/role-set/role.set.resolver.fields.ts',
-      member,
-      kind: 'graphql-field',
-      tree: 'role-set',
-      gate: {
-        anyOf: [
-          AuthorizationPrivilege.FeatureRoleHoldersRead,
-          AuthorizationPrivilege.PlatformRoleHoldersRead,
+  // ===== A20 — read Platform … holder lists — 4 field resolvers, PLUS
+  // (sec-server-10 fix) the two admin.authorization.resolver.queries.ts
+  // credential-based reads of the SAME data =====
+  //
+  // sec-server-10 fix: `file` moved from `role.set.resolver.fields.ts` to
+  // `platform.role.holder.list.access.ts` — the SHARED predicate the
+  // isAccessGranted/throw logic was extracted into, so a second surface
+  // reading the same holder-list data by credential rather than by
+  // `RoleName` (`actorsWithCredential`/`usersWithAuthorizationCredential`)
+  // cannot drift from it. `role.set.resolver.fields.ts` (which still NAMES
+  // the four field resolvers, but delegates the actual check) is declared
+  // in `INDIRECT_ENFORCEMENT_FILES` above, the same shape as A1/A2's
+  // resolver → rule-engine-service indirection.
+  A20: [
+    ...(
+      [
+        'usersInRole',
+        'usersInRoles',
+        'organizationsInRole',
+        'organizationsInRoles',
+      ] as const
+    ).map(
+      (member): SurfaceRef => ({
+        file: 'src/platform/platform-role/platform.role.holder.list.access.ts',
+        member,
+        kind: 'graphql-field',
+        tree: 'role-set',
+        gate: { requires: AuthorizationPrivilege.PlatformRoleHoldersRead },
+        intendedOwners: [
+          AuthorizationCredential.PlatformRolesAdmin,
+          AuthorizationCredential.PlatformAuditReader,
         ],
-      },
-      intendedOwners: [
-        AuthorizationCredential.PlatformUsersAdmin,
-        AuthorizationCredential.PlatformRolesAdmin,
-        AuthorizationCredential.PlatformAuditReader,
-      ],
-      legacyReachers: [GA, GS, GLM],
-    })
-  ),
+        legacyReachers: [GA, GS, GLM],
+      })
+    ),
+    ...(
+      ['actorsWithCredential', 'usersWithAuthorizationCredential'] as const
+    ).map(
+      (member): SurfaceRef => ({
+        file: 'src/platform/platform-role/platform.role.holder.list.access.ts',
+        member,
+        kind: 'graphql-query',
+        tree: 'role-set',
+        gate: { requires: AuthorizationPrivilege.PlatformRoleHoldersRead },
+        intendedOwners: [
+          AuthorizationCredential.PlatformRolesAdmin,
+          AuthorizationCredential.PlatformAuditReader,
+        ],
+        // sec-server-10 fix: SAME legacy reach as the four field resolvers
+        // above — `PLATFORM_ROLE_HOLDERS_READ`'s grant set
+        // (`privilege.grants.ts`) is a single, tree-independent
+        // `ManagedPrivilege` entry, so `reachers()` derives the identical
+        // {global-admin, global-support, global-license-manager} set here
+        // regardless of which resolver file the gate is checked from. This
+        // pre-existing legacy reach is UNCHANGED by the sec-server-10 fix —
+        // what changed is that a `platform-*` credential argument no longer
+        // ALSO satisfies the blanket `READ_USERS` any registered user holds.
+        legacyReachers: [GA, GS, GLM],
+      })
+    ),
+  ],
+
+  // ===== A20b — read Feature … holder lists — the SAME 4 field resolvers
+  // plus the same two admin queries, the `feature-*` payload half (research
+  // D9, sixth clarification pass) =====
+  A20b: [
+    ...(
+      [
+        'usersInRole',
+        'usersInRoles',
+        'organizationsInRole',
+        'organizationsInRoles',
+      ] as const
+    ).map(
+      (member): SurfaceRef => ({
+        file: 'src/platform/platform-role/platform.role.holder.list.access.ts',
+        member,
+        kind: 'graphql-field',
+        tree: 'role-set',
+        gate: {
+          anyOf: [
+            AuthorizationPrivilege.FeatureRoleHoldersRead,
+            AuthorizationPrivilege.PlatformRoleHoldersRead,
+          ],
+        },
+        intendedOwners: [
+          AuthorizationCredential.PlatformUsersAdmin,
+          AuthorizationCredential.PlatformRolesAdmin,
+          AuthorizationCredential.PlatformAuditReader,
+        ],
+        legacyReachers: [GA, GS, GLM],
+      })
+    ),
+    ...(
+      ['actorsWithCredential', 'usersWithAuthorizationCredential'] as const
+    ).map(
+      (member): SurfaceRef => ({
+        file: 'src/platform/platform-role/platform.role.holder.list.access.ts',
+        member,
+        kind: 'graphql-query',
+        tree: 'role-set',
+        gate: {
+          anyOf: [
+            AuthorizationPrivilege.FeatureRoleHoldersRead,
+            AuthorizationPrivilege.PlatformRoleHoldersRead,
+          ],
+        },
+        intendedOwners: [
+          AuthorizationCredential.PlatformUsersAdmin,
+          AuthorizationCredential.PlatformRolesAdmin,
+          AuthorizationCredential.PlatformAuditReader,
+        ],
+        // sec-server-10 fix: same reasoning as A20's query entries above —
+        // `reachers()` derives this from the shared `ManagedPrivilege`
+        // grant sets regardless of tree/file, so the legacy reach here must
+        // match the field resolvers' identical privilege pair exactly.
+        legacyReachers: [GA, GS, GLM],
+      })
+    ),
+  ],
 
   // ===== A21 — set/clear user.serviceProfile =====
   A21: [
     {
       file: 'src/domain/community/user/user.service.ts',
+      member: 'updateUser',
+      kind: 'graphql-mutation',
+      tree: 'platform',
+      gate: { requires: AuthorizationPrivilege.SetServiceProfile },
+      intendedOwners: [AuthorizationCredential.PlatformRolesAdmin],
+      legacyReachers: [GA, GS, GLM],
+    },
+    // sec-server-11 fix: `user.resolver.mutations.ts`'s `updateUser` now
+    // gates SET_SERVICE_PROFILE itself, ahead of delegating to
+    // `UserService.updateUser` above — a genuine SECOND, resolver-level
+    // check of the SAME privilege (defense in depth), added so an
+    // unprivileged/anonymous caller is rejected without reaching the
+    // redundant DB lookup + fail-closed audit writer in the service.
+    {
+      file: 'src/domain/community/user/user.resolver.mutations.ts',
       member: 'updateUser',
       kind: 'graphql-mutation',
       tree: 'platform',

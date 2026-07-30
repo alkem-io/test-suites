@@ -79682,6 +79682,16 @@ export type DeleteContributionMutationVariables = Exact<{
 
 export type DeleteContributionMutation = { deleteContribution: { id: string } };
 
+export type GrantCredentialToActorMutationVariables = Exact<{
+  actorID: Scalars["UUID"]["input"];
+  credentialType: CredentialType;
+  resourceID?: InputMaybe<Scalars["UUID"]["input"]>;
+}>;
+
+export type GrantCredentialToActorMutation = {
+  grantCredentialToActor: { id: string };
+};
+
 export type GrantCredentialToOrganizationMutationVariables = Exact<{
   grantCredentialData: GrantOrganizationAuthorizationCredentialInput;
 }>;
@@ -79752,6 +79762,16 @@ export type ResetLicenseOnAccountsMutationVariables = Exact<{
 
 export type ResetLicenseOnAccountsMutation = {
   resetLicenseOnAccounts: boolean;
+};
+
+export type RevokeCredentialFromActorMutationVariables = Exact<{
+  actorID: Scalars["UUID"]["input"];
+  credentialType: CredentialType;
+  resourceID?: InputMaybe<Scalars["UUID"]["input"]>;
+}>;
+
+export type RevokeCredentialFromActorMutation = {
+  revokeCredentialFromActor: boolean;
 };
 
 export type RevokeCredentialFromOrganizationMutationVariables = Exact<{
@@ -89460,6 +89480,23 @@ export type PlatformRoleSetOrganizationsInRolesQuery = {
   };
 };
 
+export type ActorsWithCredentialQueryVariables = Exact<{
+  credentialType: CredentialType;
+  resourceID?: InputMaybe<Scalars["UUID"]["input"]>;
+}>;
+
+export type ActorsWithCredentialQuery = {
+  actorsWithCredential: Array<{ id: string }>;
+};
+
+export type UsersWithAuthorizationCredentialQueryVariables = Exact<{
+  credentialsCriteriaData: UsersWithAuthorizationCredentialInput;
+}>;
+
+export type UsersWithAuthorizationCredentialQuery = {
+  usersWithAuthorizationCredential: Array<{ id: string }>;
+};
+
 export type PlatformRoleSetUsersInRoleQueryVariables = Exact<{
   role: RoleName;
 }>;
@@ -89534,6 +89571,23 @@ export type SpaceCollaborationReadProbeQueryVariables = Exact<{
 export type SpaceCollaborationReadProbeQuery = {
   lookup: {
     space?: { id: string; collaboration: { id: string } } | undefined;
+  };
+};
+
+export type SpaceSupportAdminPrivilegeProbeQueryVariables = Exact<{
+  spaceId: Scalars["UUID"]["input"];
+}>;
+
+export type SpaceSupportAdminPrivilegeProbeQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          authorization?:
+            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+            | undefined;
+        }
+      | undefined;
   };
 };
 

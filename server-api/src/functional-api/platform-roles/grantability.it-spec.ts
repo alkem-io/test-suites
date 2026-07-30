@@ -62,26 +62,28 @@ describe('grantability (T012, SC-009) — every target role is grantable + revoc
       TestUser.PLATFORM_ROLES_ADMIN
     ).authToken;
 
+    // sec-test-suites-18 fix: EVERY role in this loop targets the
+    // disposable, per-file-fresh `fixtures.rolesProbeUserId` — never
+    // `fixtures.targetUserId` (`TestUser.NON_SPACE_MEMBER`, a long-lived
+    // identity 68+ other spec files across this project run authenticate
+    // as, several asserting it is DENIED various privileges). The FIRST
+    // role in `TARGET_ROLES` is `platform-roles-admin` — the authority to
+    // grant every one of the 13 platform roles to anybody — so a thrown
+    // assertion (a flaky holder-list read, live-verification's documented
+    // grant/read propagation lag) between grant and revoke must never be
+    // able to leave that on the shared fixture.
     for (const role of TARGET_ROLES) {
-      // `platform-spaces-reader` is the one role this loop cannot grant to
-      // `fixtures.targetUserId` unconditionally (corr-ts-2, 2026-07-30 fix
-      // wave): rule 3 (`assignment-rules.it-spec.ts`) rejects it for any
-      // holder whose `serviceProfile` is not `true`. Route it at a
-      // DISPOSABLE target instead of flipping the marker on the shared
-      // `NON_SPACE_MEMBER` fixture — that fixture's `serviceProfile` staying
-      // `false` is exactly what `assignment-rules.it-spec.ts`'s rule-3
-      // DENIAL test depends on.
+      const targetId = fixtures.rolesProbeUserId;
       const isSpacesReader = role === RoleName.PlatformSpacesReader;
-      const targetId = isSpacesReader
-        ? fixtures.rolesProbeUserId
-        : fixtures.targetUserId;
 
       if (isSpacesReader) {
-        // `updateUserServiceProfile`, not the heavy `updateUser` — see
-        // `surface-invocations.ts`'s A21 helper for why: the full
-        // `UserData` fragment echoes the target's private `settings`,
-        // independently privilege-gated, and failing THAT read must not
-        // read as this write being rejected.
+        // `platform-spaces-reader` is the one role `evaluateOrFail()` rule 3
+        // rejects for any holder whose `serviceProfile` is not `true`
+        // (corr-ts-2). `updateUserServiceProfile`, not the heavy
+        // `updateUser` — see `surface-invocations.ts`'s A21 helper for why:
+        // the full `UserData` fragment echoes the target's private
+        // `settings`, independently privilege-gated, and failing THAT read
+        // must not read as this write being rejected.
         const markerSet = await getGraphqlClient().updateUserServiceProfile(
           { userData: { ID: targetId, serviceProfile: true } },
           { authorization: `Bearer ${rolesAdminToken}` }
@@ -98,20 +100,49 @@ describe('grantability (T012, SC-009) — every target role is grantable + revoc
       );
       expect(grant.errors, `grant of ${role} should succeed`).toBeUndefined();
 
-      const holders = await getGraphqlClient().platformRoleSetUsersInRole(
-        { role },
-        { authorization: `Bearer ${rolesAdminToken}` }
-      );
-      expect(
-        holders.data?.platform.roleSet.usersInRole.some(u => u.id === targetId),
-        `freshly-granted holder should appear in ${role}'s holder list`
-      ).toBe(true);
+      // sec-test-suites-18 fix: try/finally around the post-grant assertion
+      // + the meaningful revoke assertion, mirroring the two-person-path
+      // test below — a thrown `holders` assertion still triggers a
+      // best-effort revoke, so the loop's NEXT iteration (and every other
+      // file authenticating as this identity) never observes a residual
+      // grant. Guarded by `revoked` so the finally block never double-fires
+      // the (already-asserted) revoke on the happy path.
+      let revoked = false;
+      try {
+        const holders = await getGraphqlClient().platformRoleSetUsersInRole(
+          { role },
+          { authorization: `Bearer ${rolesAdminToken}` }
+        );
+        expect(
+          holders.data?.platform.roleSet.usersInRole.some(
+            u => u.id === targetId
+          ),
+          `freshly-granted holder should appear in ${role}'s holder list`
+        ).toBe(true);
 
-      const revoke = await getGraphqlClient().removePlatformRoleFromUser(
-        { roleData: { actorID: targetId, role } },
-        { authorization: `Bearer ${rolesAdminToken}` }
-      );
-      expect(revoke.errors, `revoke of ${role} should succeed`).toBeUndefined();
+        const revoke = await getGraphqlClient().removePlatformRoleFromUser(
+          { roleData: { actorID: targetId, role } },
+          { authorization: `Bearer ${rolesAdminToken}` }
+        );
+        expect(
+          revoke.errors,
+          `revoke of ${role} should succeed`
+        ).toBeUndefined();
+        revoked = true;
+      } finally {
+        if (!revoked) {
+          await getGraphqlClient()
+            .removePlatformRoleFromUser(
+              { roleData: { actorID: targetId, role } },
+              { authorization: `Bearer ${rolesAdminToken}` }
+            )
+            .catch(() => {
+              // best-effort cleanup — the failed assertion above is the
+              // real test failure; this only prevents the residue from
+              // poisoning every later iteration/file.
+            });
+        }
+      }
     }
   });
 
@@ -132,16 +163,38 @@ describe('grantability (T012, SC-009) — every target role is grantable + revoc
         `organization-target grant of ${role} should succeed`
       ).toBeUndefined();
 
-      const revoke = await getGraphqlClient().removePlatformRoleFromOrganization(
-        {
-          roleData: { actorID: fixtures.secondOrganizationId, role },
-        },
-        { authorization: `Bearer ${rolesAdminToken}` }
-      );
-      expect(
-        revoke.errors,
-        `organization-target revoke of ${role} should succeed`
-      ).toBeUndefined();
+      // sec-test-suites-18 fix: same try/finally discipline as the
+      // user-target loop above — `fixtures.secondOrganizationId` is reused
+      // by other tests in this file, so a thrown assertion here must not
+      // leave it holding a `feature-*` role into a later, unrelated test.
+      let revoked = false;
+      try {
+        const revoke =
+          await getGraphqlClient().removePlatformRoleFromOrganization(
+            {
+              roleData: { actorID: fixtures.secondOrganizationId, role },
+            },
+            { authorization: `Bearer ${rolesAdminToken}` }
+          );
+        expect(
+          revoke.errors,
+          `organization-target revoke of ${role} should succeed`
+        ).toBeUndefined();
+        revoked = true;
+      } finally {
+        if (!revoked) {
+          await getGraphqlClient()
+            .removePlatformRoleFromOrganization(
+              {
+                roleData: { actorID: fixtures.secondOrganizationId, role },
+              },
+              { authorization: `Bearer ${rolesAdminToken}` }
+            )
+            .catch(() => {
+              // best-effort cleanup
+            });
+        }
+      }
       // The organization-subject audit row (FR-026) is Phase-V-only — no
       // generic audit-read surface exists in this repo (see file header).
     }

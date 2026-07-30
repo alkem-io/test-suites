@@ -117069,6 +117069,21 @@ export const DeleteContributionDocument = gql`
     }
   }
 `;
+export const GrantCredentialToActorDocument = gql`
+  mutation grantCredentialToActor(
+    $actorID: UUID!
+    $credentialType: CredentialType!
+    $resourceID: UUID
+  ) {
+    grantCredentialToActor(
+      actorID: $actorID
+      credentialType: $credentialType
+      resourceID: $resourceID
+    ) {
+      id
+    }
+  }
+`;
 export const GrantCredentialToOrganizationDocument = gql`
   mutation grantCredentialToOrganization(
     $grantCredentialData: GrantOrganizationAuthorizationCredentialInput!
@@ -117132,6 +117147,19 @@ export const RemovePlatformRoleFromOrganizationDocument = gql`
 export const ResetLicenseOnAccountsDocument = gql`
   mutation resetLicenseOnAccounts {
     resetLicenseOnAccounts
+  }
+`;
+export const RevokeCredentialFromActorDocument = gql`
+  mutation revokeCredentialFromActor(
+    $actorID: UUID!
+    $credentialType: CredentialType!
+    $resourceID: UUID
+  ) {
+    revokeCredentialFromActor(
+      actorID: $actorID
+      credentialType: $credentialType
+      resourceID: $resourceID
+    )
   }
 `;
 export const RevokeCredentialFromOrganizationDocument = gql`
@@ -118845,6 +118873,30 @@ export const PlatformRoleSetOrganizationsInRolesDocument = gql`
     }
   }
 `;
+export const ActorsWithCredentialDocument = gql`
+  query actorsWithCredential(
+    $credentialType: CredentialType!
+    $resourceID: UUID
+  ) {
+    actorsWithCredential(
+      credentialType: $credentialType
+      resourceID: $resourceID
+    ) {
+      id
+    }
+  }
+`;
+export const UsersWithAuthorizationCredentialDocument = gql`
+  query usersWithAuthorizationCredential(
+    $credentialsCriteriaData: UsersWithAuthorizationCredentialInput!
+  ) {
+    usersWithAuthorizationCredential(
+      credentialsCriteriaData: $credentialsCriteriaData
+    ) {
+      id
+    }
+  }
+`;
 export const PlatformRoleSetUsersInRoleDocument = gql`
   query platformRoleSetUsersInRole($role: RoleName!) {
     platform {
@@ -118902,6 +118954,18 @@ export const SpaceCollaborationReadProbeDocument = gql`
         id
         collaboration {
           id
+        }
+      }
+    }
+  }
+`;
+export const SpaceSupportAdminPrivilegeProbeDocument = gql`
+  query spaceSupportAdminPrivilegeProbe($spaceId: UUID!) {
+    lookup {
+      space(ID: $spaceId) {
+        id
+        authorization {
+          myPrivileges
         }
       }
     }
@@ -119985,6 +120049,9 @@ const CreateWingbackAccountDocumentString = print(
   CreateWingbackAccountDocument
 );
 const DeleteContributionDocumentString = print(DeleteContributionDocument);
+const GrantCredentialToActorDocumentString = print(
+  GrantCredentialToActorDocument
+);
 const GrantCredentialToOrganizationDocumentString = print(
   GrantCredentialToOrganizationDocument
 );
@@ -120011,6 +120078,9 @@ const RemovePlatformRoleFromOrganizationDocumentString = print(
 );
 const ResetLicenseOnAccountsDocumentString = print(
   ResetLicenseOnAccountsDocument
+);
+const RevokeCredentialFromActorDocumentString = print(
+  RevokeCredentialFromActorDocument
 );
 const RevokeCredentialFromOrganizationDocumentString = print(
   RevokeCredentialFromOrganizationDocument
@@ -120204,6 +120274,12 @@ const PlatformRoleSetOrganizationsInRoleDocumentString = print(
 const PlatformRoleSetOrganizationsInRolesDocumentString = print(
   PlatformRoleSetOrganizationsInRolesDocument
 );
+const ActorsWithCredentialDocumentString = print(
+  ActorsWithCredentialDocument
+);
+const UsersWithAuthorizationCredentialDocumentString = print(
+  UsersWithAuthorizationCredentialDocument
+);
 const PlatformRoleSetUsersInRoleDocumentString = print(
   PlatformRoleSetUsersInRoleDocument
 );
@@ -120216,6 +120292,9 @@ const UpdateUserServiceProfileDocumentString = print(
 const SpaceReadProbeDocumentString = print(SpaceReadProbeDocument);
 const SpaceCollaborationReadProbeDocumentString = print(
   SpaceCollaborationReadProbeDocument
+);
+const SpaceSupportAdminPrivilegeProbeDocumentString = print(
+  SpaceSupportAdminPrivilegeProbeDocument
 );
 const UserEmailChangeAuditEntriesDocumentString = print(
   UserEmailChangeAuditEntriesDocument
@@ -122681,6 +122760,28 @@ export function getSdk(
         variables
       );
     },
+    grantCredentialToActor(
+      variables: SchemaTypes.GrantCredentialToActorMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.GrantCredentialToActorMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.GrantCredentialToActorMutation>(
+            GrantCredentialToActorDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "grantCredentialToActor",
+        "mutation",
+        variables
+      );
+    },
     grantCredentialToOrganization(
       variables: SchemaTypes.GrantCredentialToOrganizationMutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -122875,6 +122976,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "resetLicenseOnAccounts",
+        "mutation",
+        variables
+      );
+    },
+    revokeCredentialFromActor(
+      variables: SchemaTypes.RevokeCredentialFromActorMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.RevokeCredentialFromActorMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.RevokeCredentialFromActorMutation>(
+            RevokeCredentialFromActorDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "revokeCredentialFromActor",
         "mutation",
         variables
       );
@@ -124903,6 +125026,50 @@ export function getSdk(
         variables
       );
     },
+    actorsWithCredential(
+      variables: SchemaTypes.ActorsWithCredentialQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ActorsWithCredentialQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ActorsWithCredentialQuery>(
+            ActorsWithCredentialDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "actorsWithCredential",
+        "query",
+        variables
+      );
+    },
+    usersWithAuthorizationCredential(
+      variables: SchemaTypes.UsersWithAuthorizationCredentialQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UsersWithAuthorizationCredentialQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UsersWithAuthorizationCredentialQuery>(
+            UsersWithAuthorizationCredentialDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "usersWithAuthorizationCredential",
+        "query",
+        variables
+      );
+    },
     platformRoleSetUsersInRole(
       variables: SchemaTypes.PlatformRoleSetUsersInRoleQueryVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -125009,6 +125176,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "spaceCollaborationReadProbe",
+        "query",
+        variables
+      );
+    },
+    spaceSupportAdminPrivilegeProbe(
+      variables: SchemaTypes.SpaceSupportAdminPrivilegeProbeQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.SpaceSupportAdminPrivilegeProbeQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.SpaceSupportAdminPrivilegeProbeQuery>(
+            SpaceSupportAdminPrivilegeProbeDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "spaceSupportAdminPrivilegeProbe",
         "query",
         variables
       );

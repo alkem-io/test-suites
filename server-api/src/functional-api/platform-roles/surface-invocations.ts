@@ -8,6 +8,11 @@ import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import type { GraphQLReturnType } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import { SpaceVisibility } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { LicensingCredentialBasedCredentialType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { VirtualContributorWellKnown } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { CredentialType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { AuthorizationCredential } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { AuthorizationPrivilege } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import {
   A_ROW_SURFACES,
   type ARowId,
@@ -17,7 +22,7 @@ import type { MatrixFixtures } from './fixtures';
 
 /**
  * workspace#027-platform-role-redesign (T007b) — one invocation helper per
- * matrix-eligible census entry (100 at Slice A: 106 declared minus A1's 4
+ * matrix-eligible census entry (107 at Slice A: 113 declared minus A1's 4
  * `{retiredIn: 'B'}` entries, which generate no cell in either slice, minus
  * A17's 2 `{deferred: 'B'}` entries, which arrive at T022a). **One per
  * entry, not per distinct mutation** — A1's and A2's `assignPlatformRoleToUser`
@@ -204,8 +209,17 @@ export function buildSurfaceInvocations(
     eligible.forEach((surface, i) => map.set(surface, invocations[i]));
   }
 
-  // ===== A1 — assign/revoke a PLATFORM role (4 helper-eligible; the 4
+  // ===== A1 — assign/revoke a PLATFORM role (6 helper-eligible; the 4
   // FR-022 credential mutations are `{retiredIn: 'B'}`, no helper) =====
+  // corr-ts-29 fix: the first two invocations below target
+  // `fx.rolesProbeUserId` (a disposable, per-file-fresh identity), NEVER
+  // `fx.targetUserId` (the shared `NON_SPACE_MEMBER` fixture 67+ other
+  // files depend on) — under the CANONICAL projection only the FIRST
+  // eligible surface per row survives (`canonicalSurfaceByRow`), so the
+  // `assignPlatformRoleToUser` ALLOW cell here runs with no matching
+  // `removePlatformRoleFromUser` cell to undo it. Granting a real Platform
+  // role to the disposable probe identity is inert to the rest of the
+  // suite; granting it to the shared fixture is not.
   registerRow('A1', [
     caller =>
       invoke(
@@ -213,7 +227,7 @@ export function buildSurfaceInvocations(
           client().assignPlatformRoleToUser(
             {
               roleData: {
-                actorID: fx.targetUserId,
+                actorID: fx.rolesProbeUserId,
                 role: RoleName.PlatformOperationsAdmin,
               },
             },
@@ -227,7 +241,7 @@ export function buildSurfaceInvocations(
           client().removePlatformRoleFromUser(
             {
               roleData: {
-                actorID: fx.targetUserId,
+                actorID: fx.rolesProbeUserId,
                 role: RoleName.PlatformOperationsAdmin,
               },
             },
@@ -274,9 +288,45 @@ export function buildSurfaceInvocations(
           ),
         caller
       ),
+    // --- sec-server-9 fix (corr-ts-27/spec-ts-19 re-sync): the generic,
+    // un-censused actor-credential bypass. `CredentialType.AssistantAccess`
+    // is deliberately NOT one of the 13 platform-*/feature-* role
+    // credentials — the resolver rejects those outright before its
+    // (legacy-only) `PLATFORM_ADMIN` check runs, which would produce a
+    // green denial for the WRONG reason (a validation rejection, not an
+    // authorization one). None of the 13 single-role fixtures holds
+    // GLOBAL_ADMIN/GLOBAL_SUPPORT/GLOBAL_LICENSE_MANAGER, so every cell on
+    // this surface is a real authorization denial in both slices — targets
+    // the disposable `fx.rolesProbeUserId`, never the shared fixture.
+    caller =>
+      invoke(
+        token =>
+          client().grantCredentialToActor(
+            {
+              actorID: fx.rolesProbeUserId,
+              credentialType: CredentialType.AssistantAccess,
+            },
+            bearer(token)
+          ),
+        caller
+      ),
+    caller =>
+      invoke(
+        token =>
+          client().revokeCredentialFromActor(
+            {
+              actorID: fx.rolesProbeUserId,
+              credentialType: CredentialType.AssistantAccess,
+            },
+            bearer(token)
+          ),
+        caller
+      ),
   ]);
 
   // ===== A2 — assign/revoke a FEATURE role (4) =====
+  // corr-ts-29 fix: same reasoning as A1 above — `fx.rolesProbeUserId`,
+  // never `fx.targetUserId`, for the two user-directed helpers below.
   registerRow('A2', [
     caller =>
       invoke(
@@ -284,7 +334,7 @@ export function buildSurfaceInvocations(
           client().assignPlatformRoleToUser(
             {
               roleData: {
-                actorID: fx.targetUserId,
+                actorID: fx.rolesProbeUserId,
                 role: RoleName.FeatureBetaTester,
               },
             },
@@ -298,7 +348,7 @@ export function buildSurfaceInvocations(
           client().removePlatformRoleFromUser(
             {
               roleData: {
-                actorID: fx.targetUserId,
+                actorID: fx.rolesProbeUserId,
                 role: RoleName.FeatureBetaTester,
               },
             },
@@ -974,7 +1024,12 @@ export function buildSurfaceInvocations(
             {
               mappingData: {
                 virtualContributorID: fx.virtualContributorId,
-                wellKnown: 'COMMUNITY_MANAGER' as never,
+                // corr-ts-28 fix: COMMUNITY_MANAGER is not a member of the
+                // VirtualContributorWellKnown enum (ChatGuidance |
+                // StewardOwnershipExpert) — the previous literal + `as never`
+                // cast sent a value the schema rejects at variable coercion,
+                // before the resolver's authorization gate ever runs.
+                wellKnown: VirtualContributorWellKnown.ChatGuidance,
               },
             },
             bearer(token)
@@ -1204,7 +1259,14 @@ export function buildSurfaceInvocations(
             {
               updateData: {
                 ID: fx.a13UpdatableCredentialRuleId,
-                credentialType: 'FEATURE_BETA_TESTER' as never,
+                // corr-ts-28 fix: FEATURE_BETA_TESTER is not a member of
+                // LicensingCredentialBasedCredentialType — the previous
+                // literal + `as never` cast sent a value the schema rejects
+                // at variable coercion, before the authorization gate runs.
+                // fixtures.ts already uses this same enum member for the
+                // equivalent call.
+                credentialType:
+                  LicensingCredentialBasedCredentialType.SpaceLicensePlus,
                 grantedEntitlements: [],
               },
             },
@@ -1219,7 +1281,8 @@ export function buildSurfaceInvocations(
             {
               createData: {
                 name: `matrix-a13-rule-${Date.now()}`,
-                credentialType: 'FEATURE_BETA_TESTER' as never,
+                credentialType:
+                  LicensingCredentialBasedCredentialType.SpaceLicensePlus,
                 grantedEntitlements: [],
               },
             },
@@ -1253,24 +1316,50 @@ export function buildSurfaceInvocations(
   ]);
 
   // ===== A15 — in-space support; manage the forum (3) =====
+  // corr-ts-30 fix: the condition-gated probe below no longer reuses
+  // `spaceReadProbe` — `lookup.space` is gated on plain READ_ABOUT, which
+  // BOTH `platform-content-full-access` (root-cascade READ->READ_ABOUT,
+  // unconditionally) and `platform-spaces-reader` (its own READ grant,
+  // A16) reach regardless of `allowPlatformSupportAsAdmin`, so that probe
+  // could never produce a DENY for either. `getAccessPrivilegesForSupport`
+  // (space.service.platform.roles.access.ts) grants GRANT ONLY when the
+  // condition is set — content-full-access's root cascade does not include
+  // GRANT (`cascade.model.ts`'s `ROOT_CASCADE.privileges`), and
+  // spaces-reader's own grant is READ alone — so GRANT is the one privilege
+  // the condition exclusively confers among our 13 fixtures. The probe
+  // still only requires reaching READ_ABOUT to run (so it never fails for
+  // an unrelated reason); the ALLOW/DENY split is computed from the
+  // returned privilege list itself, converting an absent GRANT into a
+  // synthesized FORBIDDEN denial `isAuthorizationDenial` recognises.
   registerRow('A15', [
-    // The `condition`-gated in-space-support read — probed against
-    // `fx.a15ConditionSpaceId`, a PRIVATE space with
-    // `settings.privacy.allowPlatformSupportAsAdmin` explicitly set
-    // (corr-ts-4, 2026-07-30 fix wave). Previously shared `fx.spaceId` AND
-    // the same `spaceReadProbe` query with A16 below — `lookup.space` is
-    // gated on READ_ABOUT, which `platform-content-full-access` also
-    // reaches via the plain READ->READ_ABOUT mapping regardless of this
-    // condition, so the two rows could not be told apart.
-    caller =>
-      invoke(
+    async caller => {
+      const result = await graphqlErrorWrapper(
         token =>
-          client().spaceReadProbe(
+          client().spaceSupportAdminPrivilegeProbe(
             { spaceId: fx.a15ConditionSpaceId },
             bearer(token)
           ),
         caller
-      ),
+      );
+      if (result.error) {
+        return { ok: false, errors: result.error.errors };
+      }
+      const privileges =
+        result.data?.lookup.space?.authorization?.myPrivileges ?? [];
+      if (privileges.includes(AuthorizationPrivilege.Grant)) {
+        return { ok: true };
+      }
+      return {
+        ok: false,
+        errors: [
+          {
+            code: 'FORBIDDEN',
+            message:
+              'A15 probe: caller reaches the space (READ_ABOUT) but holds no GRANT privilege there — GRANT is the one privilege allowPlatformSupportAsAdmin exclusively confers among this matrix\'s 13 fixtures, so no in-space support/admin capability is actually reachable.',
+          },
+        ],
+      };
+    },
     caller =>
       invoke(
         token =>
@@ -1383,10 +1472,34 @@ export function buildSurfaceInvocations(
           ),
         caller
       ),
+    // --- sec-server-10 fix (corr-ts-27/spec-ts-19 re-sync): the two
+    // credential-based admin reads of the same holder-list data.
+    caller =>
+      invoke(
+        token =>
+          client().actorsWithCredential(
+            { credentialType: CredentialType.PlatformRolesAdmin },
+            bearer(token)
+          ),
+        caller
+      ),
+    caller =>
+      invoke(
+        token =>
+          client().usersWithAuthorizationCredential(
+            {
+              credentialsCriteriaData: {
+                type: AuthorizationCredential.PlatformRolesAdmin,
+              },
+            },
+            bearer(token)
+          ),
+        caller
+      ),
   ]);
 
   // ===== A20b — read Feature … holder lists — same 4 resolvers, feature
-  // payload (4) =====
+  // payload, plus the same two admin queries (6) =====
   registerRow('A20b', [
     caller =>
       invoke(
@@ -1424,15 +1537,45 @@ export function buildSurfaceInvocations(
           ),
         caller
       ),
+    // --- sec-server-10 fix (corr-ts-27/spec-ts-19 re-sync): same reasoning
+    // as A20's query entries above — the feature-payload half.
+    caller =>
+      invoke(
+        token =>
+          client().actorsWithCredential(
+            { credentialType: CredentialType.FeatureBetaTester },
+            bearer(token)
+          ),
+        caller
+      ),
+    caller =>
+      invoke(
+        token =>
+          client().usersWithAuthorizationCredential(
+            {
+              credentialsCriteriaData: {
+                type: AuthorizationCredential.FeatureBetaTester,
+              },
+            },
+            bearer(token)
+          ),
+        caller
+      ),
   ]);
 
-  // ===== A21 — set/clear user.serviceProfile (1) =====
+  // ===== A21 — set/clear user.serviceProfile (2: the service-level check
+  // and, corr-ts-27/spec-ts-19 re-sync, sec-server-11's SECOND,
+  // resolver-level defense-in-depth check of the SAME privilege) =====
   // `fx.rolesProbeUserId` — a disposable, per-file-fresh target, NEVER
   // `fx.targetUserId` (corr-ts-8/sec-test-suites-2, 2026-07-30 fix wave):
   // the ALLOW cell here really sets `serviceProfile: true`, and doing that
   // to the shared `NON_SPACE_MEMBER` fixture would silently flip
   // `assignment-rules.it-spec.ts`'s rule-3 denial assertion (which relies
   // on that identity NOT being a service account) for every later run.
+  // Both census entries are the SAME GraphQL surface — a single client call
+  // exercises the resolver-level check first, then (if it passes) the
+  // service-level one — so both helpers are deliberately identical
+  // invocations; the ALLOW mutation is idempotent (setting `true` twice).
   registerRow('A21', [
     caller =>
       invoke(
@@ -1443,6 +1586,20 @@ export function buildSurfaceInvocations(
           // `settings`, gated on a privilege the caller need not hold to
           // perform (and here, to have this row's OWN gate exercise)
           // just the serviceProfile write.
+          client().updateUserServiceProfile(
+            {
+              userData: {
+                ID: fx.rolesProbeUserId,
+                serviceProfile: true,
+              },
+            },
+            bearer(token)
+          ),
+        caller
+      ),
+    caller =>
+      invoke(
+        token =>
           client().updateUserServiceProfile(
             {
               userData: {

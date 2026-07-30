@@ -877,7 +877,66 @@ export async function teardownMatrixFixtures(
     // best-effort cleanup
   }
 
+  // corr-ts-31 fix: every resource still hosted on `base.organization`'s
+  // account MUST be torn down BEFORE `cleanUpBaseScenario` below, whose last
+  // step is `deleteOrganization(base.organization.id)` — the server's
+  // account-has-resources guard rejects that delete while ANY of these
+  // still exist, and `cleanUpBaseScenario` swallows the resulting error
+  // (TestScenarioFactory.ts), so the organization + its account + this
+  // innovation hub leaked silently on every previous run. Best-effort: a
+  // denial-only run may not have created every optional resource, and an
+  // ALLOW cell may already have deleted one of these for real (the whole
+  // point of the disposable fixture) — never fail the suite on ordinary
+  // cleanup, T017's completeness check is what must be trustworthy.
+  try {
+    await deleteSpace(fixtures.a8DeletableSpaceId);
+  } catch {
+    // best-effort cleanup
+  }
+  try {
+    await deleteSpace(fixtures.a15ConditionSpaceId);
+  } catch {
+    // best-effort cleanup
+  }
+  try {
+    await deleteSpace(fixtures.a16PrivateSpaceId);
+  } catch {
+    // best-effort cleanup
+  }
+  try {
+    await getGraphqlClient().DeleteInnovationHub(
+      { input: { ID: fixtures.innovationHubId } },
+      { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
+    );
+  } catch {
+    // best-effort cleanup
+  }
+
   await TestScenarioFactory.cleanUpBaseScenario(fixtures.base);
+
+  // A13's two credential rules (fixtures.ts's `adminLicensePolicyCreate/
+  // UpdateCredentialRule` calls, corr-ts-31 fix) — unlike the two license
+  // PLANS above (already cleaned up), these had no teardown entry at all,
+  // so every run added at least one live rule to the platform LicensePolicy,
+  // changing entitlement computation for every other suite on the stack.
+  // Best-effort: `adminLicensePolicyDeleteCredentialRule` (A13's own ALLOW
+  // cell) may already have deleted `a13DeletableCredentialRuleId` for real.
+  try {
+    await getGraphqlClient().adminLicensePolicyDeleteCredentialRule(
+      { deleteData: { ID: fixtures.a13DeletableCredentialRuleId } },
+      { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
+    );
+  } catch {
+    // best-effort cleanup
+  }
+  try {
+    await getGraphqlClient().adminLicensePolicyDeleteCredentialRule(
+      { deleteData: { ID: fixtures.a13UpdatableCredentialRuleId } },
+      { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
+    );
+  } catch {
+    // best-effort cleanup
+  }
 
   // best-effort — a denial-only run may not have created every optional
   // resource; failures here must never fail the suite (T017's completeness
@@ -931,12 +990,9 @@ export async function teardownMatrixFixtures(
 
   // A8's disposable delete targets (corr-ts-1) — best-effort: the whole
   // point of these fixtures is that an ALLOW cell may already have deleted
-  // one of them for real.
-  try {
-    await deleteSpace(fixtures.a8DeletableSpaceId);
-  } catch {
-    // best-effort cleanup
-  }
+  // one of them for real. `a8DeletableSpaceId` itself is torn down ABOVE,
+  // before `cleanUpBaseScenario` (corr-ts-31 fix — it lives on the base
+  // organization's account).
   try {
     await getGraphqlClient().deleteCallout(
       { calloutId: fixtures.a8DeletableCalloutId },
@@ -981,15 +1037,7 @@ export async function teardownMatrixFixtures(
     // best-effort cleanup
   }
 
-  // A15/A16's dedicated probe spaces (corr-ts-4).
-  try {
-    await deleteSpace(fixtures.a15ConditionSpaceId);
-  } catch {
-    // best-effort cleanup
-  }
-  try {
-    await deleteSpace(fixtures.a16PrivateSpaceId);
-  } catch {
-    // best-effort cleanup
-  }
+  // A15/A16's dedicated probe spaces (corr-ts-4) are torn down ABOVE, before
+  // `cleanUpBaseScenario` (corr-ts-31 fix — both live on the base
+  // organization's account).
 }

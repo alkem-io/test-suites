@@ -10,6 +10,16 @@
  * mechanism) never mirrored at all — silently zeroing `reachers()` for
  * A3/A9/A11/A12/A13/A16.
  *
+ * THIRD re-sync (corr-ts-27/spec-ts-19/qual-ts-24, against server c7610d6fa):
+ * `LEGACY_CASCADES.globalSupportPlatformSubtree.trees` gained
+ * `licensing-framework`/`license-policy` (corr-server-12 fix — the mirror had
+ * dropped these when the second re-sync landed); `TREE_SCOPED_PRIVILEGE_GRANTS`
+ * gained a `platform[PLATFORM_ADMIN]` entry (sec-server-9 fix — A1's two new
+ * `grantCredentialToActor`/`revokeCredentialFromActor` surfaces anchor on the
+ * `platform` tree and would derive an EMPTY reacher set without it); and A13's
+ * three `licensing-framework` CREATE/UPDATE/DELETE grants regained
+ * `GLOBAL_SUPPORT` in `legacyCredentials` (corr-server-12 fix, same drop).
+ *
  * T007a (research D24/D26/D27): this repo holds no independent notion of who
  * owns what — a gap found here is a `server` finding to report, never a local
  * edit to close. `AuthorizationCredential` / `AuthorizationPrivilege` are
@@ -27,7 +37,7 @@
  * Mirror everything else structurally (same ids, same order, same
  * commentary) so a diff against the server file stays a one-line check —
  * `mirror-integrity.it-spec.ts` in this directory guards the census's own
- * documented counts (100 multiplying at stage A / 106 total entries / 21 live rows) so a
+ * documented counts (107 multiplying at stage A / 113 total entries / 21 live rows) so a
  * stale local edit fails loudly even without cross-repo file access at test
  * time (this repo's worktree never reads another repo's tree at runtime).
  */
@@ -205,6 +215,12 @@ export const LEGACY_CASCADES: {
     readonly trees: readonly TreeId[];
   };
 } = {
+  // `licensing-framework` / `license-policy` added (corr-ts-27/spec-ts-19
+  // re-sync, corr-server-12 fix): `platform.service.authorization.ts` passes
+  // `platform.authorization` as the PARENT of `licensing.authorization`
+  // (`inheritParentAuthorization(licensing.authorization,
+  // platform.authorization)`), so this cascade DOES reach the licensing
+  // tree too — the model previously under-reported it.
   globalAdminRootCrud: {
     credential: AuthorizationCredential.GlobalAdmin,
     privileges: [
@@ -240,6 +256,8 @@ export const LEGACY_CASCADES: {
       'role-set',
       'storage',
       'messaging',
+      'licensing-framework',
+      'license-policy',
     ],
   },
 };
@@ -605,6 +623,28 @@ export const TREE_SCOPED_PRIVILEGE_GRANTS: {
     readonly [P in AuthorizationPrivilege]?: PrivilegeGrant;
   };
 } = {
+  // sec-server-9 fix (corr-ts-27/spec-ts-19 re-sync): `grantCredentialToActor`/
+  // `revokeCredentialFromActor` (actor.resolver.mutations.ts, A1) check bare
+  // `PLATFORM_ADMIN` on the PLATFORM tree's own authorization — the SAME
+  // literal privilege A9's conversion-admin-synthetic resolvers check, but on
+  // a DIFFERENT, UNCHANGED credential rule (`platformAdmin` in `platform.
+  // service.authorization.ts`): `{global-admin, global-support,
+  // global-license-manager}`, cascade:false, no owning role. Scoped to the
+  // `platform` tree (not the global `ManagedPrivilege` union) for the same
+  // reason A9's PLATFORM_ADMIN grant is tree-scoped — PLATFORM_ADMIN is
+  // reused far too promiscuously elsewhere in the codebase (~24 files) to
+  // manage as a flat, tree-independent entry.
+  platform: {
+    [AuthorizationPrivilege.PlatformAdmin]: {
+      anchor: 'platform',
+      owningCredentials: [],
+      legacyCredentials: [
+        AuthorizationCredential.GlobalAdmin,
+        AuthorizationCredential.GlobalSupport,
+        AuthorizationCredential.GlobalLicenseManager,
+      ],
+    },
+  },
   'licensing-framework': {
     // A12 — assign/revoke license plans (admin.licensing.resolver.mutations.ts).
     [AuthorizationPrivilege.Grant]: {
@@ -619,18 +659,21 @@ export const TREE_SCOPED_PRIVILEGE_GRANTS: {
     // A13 — license-plan / license-policy CRUD, re-anchored (in intent,
     // not in literal gate) onto `platform-settings-admin` (T040).
     // GLOBAL_ADMIN added to each (corr-server-7/corr-server-10 fix,
-    // corr-ts-20/qual-ts-17 re-sync): the five A13 resolvers now check a
-    // resolver-local synthetic policy
+    // corr-ts-20/qual-ts-17 re-sync); GLOBAL_SUPPORT added (corr-server-12
+    // fix, corr-ts-27/spec-ts-19 re-sync — previously dropped here): the
+    // five A13 resolvers now check a resolver-local synthetic policy
     // (`GLOBAL_POLICY_LICENSE_DEFINITION_ADMIN`) that grants bare
     // CREATE/UPDATE/DELETE to exactly {platform-settings-admin,
-    // global-admin, global-license-manager, global-platform-manager} — NOT
-    // the entity's own (root-cascade-inheriting) authorization, so
-    // `platform-content-full-access` no longer reaches these surfaces.
+    // global-admin, global-support, global-license-manager,
+    // global-platform-manager} — NOT the entity's own (root-cascade-
+    // inheriting) authorization, so `platform-content-full-access` no
+    // longer reaches these surfaces.
     [AuthorizationPrivilege.Create]: {
       anchor: 'licensing-framework',
       owningCredentials: [AuthorizationCredential.PlatformSettingsAdmin],
       legacyCredentials: [
         AuthorizationCredential.GlobalAdmin,
+        AuthorizationCredential.GlobalSupport,
         AuthorizationCredential.GlobalLicenseManager,
         AuthorizationCredential.GlobalPlatformManager,
       ],
@@ -640,6 +683,7 @@ export const TREE_SCOPED_PRIVILEGE_GRANTS: {
       owningCredentials: [AuthorizationCredential.PlatformSettingsAdmin],
       legacyCredentials: [
         AuthorizationCredential.GlobalAdmin,
+        AuthorizationCredential.GlobalSupport,
         AuthorizationCredential.GlobalLicenseManager,
         AuthorizationCredential.GlobalPlatformManager,
       ],
@@ -649,6 +693,7 @@ export const TREE_SCOPED_PRIVILEGE_GRANTS: {
       owningCredentials: [AuthorizationCredential.PlatformSettingsAdmin],
       legacyCredentials: [
         AuthorizationCredential.GlobalAdmin,
+        AuthorizationCredential.GlobalSupport,
         AuthorizationCredential.GlobalLicenseManager,
         AuthorizationCredential.GlobalPlatformManager,
       ],

@@ -55,37 +55,67 @@ describe('flow 1 — grant, act, revoke, deny (T019a, FR-031/SC-016)', () => {
     );
     expect(grant.errors).toBeUndefined();
 
-    // ACT — the holder performs its OWNED action (A19's read family).
-    const act = await getGraphqlClient().userEmailChangeAuditEntries(
-      { userID: fixtures.targetUserId },
-      { authorization: `Bearer ${holder.authToken}` }
-    );
-    expect(act.errors).toBeUndefined();
+    // sec-test-suites-18 fix: the ACT step MUST authenticate as
+    // `holder.authToken` (`TestUser.NON_SPACE_MEMBER`'s own login) to prove
+    // the grant reaches ITS OWN next request — `fixtures.rolesProbeUserId`
+    // has no Kratos login (bare `createUser()`, never
+    // `registerVerifiedUser`), so the shared fixture is the only identity
+    // that can play both grantee and caller here. try/finally instead: a
+    // thrown assertion between grant and revoke must still trigger a
+    // best-effort revoke, so `platform-audit-reader` never lingers on the
+    // identity 68+ other spec files across this project run authenticate
+    // as.
+    let revoked = false;
+    try {
+      // ACT — the holder performs its OWNED action (A19's read family).
+      const act = await getGraphqlClient().userEmailChangeAuditEntries(
+        { userID: fixtures.targetUserId },
+        { authorization: `Bearer ${holder.authToken}` }
+      );
+      expect(act.errors).toBeUndefined();
 
-    // REVOKE
-    const revoke = await getGraphqlClient().removePlatformRoleFromUser(
-      {
-        roleData: { actorID: fixtures.targetUserId, role: RoleName.PlatformAuditReader },
-      },
-      { authorization: `Bearer ${rolesAdminToken}` }
-    );
-    expect(revoke.errors).toBeUndefined();
+      // REVOKE
+      const revoke = await getGraphqlClient().removePlatformRoleFromUser(
+        {
+          roleData: { actorID: fixtures.targetUserId, role: RoleName.PlatformAuditReader },
+        },
+        { authorization: `Bearer ${rolesAdminToken}` }
+      );
+      expect(revoke.errors).toBeUndefined();
+      revoked = true;
 
-    // DENY — the VERY NEXT request, no wait of any kind in between. Wrapped
-    // via `asUser` (`graphqlErrorWrapper`) — the raw generated SDK client
-    // throws an uncaught exception on any GraphQL error response instead of
-    // returning it as `.error` (2026-07-29 live-verification finding).
-    const deny = await asUser(
-      token =>
-        getGraphqlClient().userEmailChangeAuditEntries(
-          { userID: fixtures.targetUserId },
-          { authorization: `Bearer ${token}` }
-        ),
-      TestUser.NON_SPACE_MEMBER
-    );
-    expect(
-      isAuthorizationDenial(deny.error?.errors),
-      'the request immediately following a revoke must be denied with an authorization error — no gap for a cache/reset to hide behind'
-    ).toBe(true);
+      // DENY — the VERY NEXT request, no wait of any kind in between. Wrapped
+      // via `asUser` (`graphqlErrorWrapper`) — the raw generated SDK client
+      // throws an uncaught exception on any GraphQL error response instead of
+      // returning it as `.error` (2026-07-29 live-verification finding).
+      const deny = await asUser(
+        token =>
+          getGraphqlClient().userEmailChangeAuditEntries(
+            { userID: fixtures.targetUserId },
+            { authorization: `Bearer ${token}` }
+          ),
+        TestUser.NON_SPACE_MEMBER
+      );
+      expect(
+        isAuthorizationDenial(deny.error?.errors),
+        'the request immediately following a revoke must be denied with an authorization error — no gap for a cache/reset to hide behind'
+      ).toBe(true);
+    } finally {
+      if (!revoked) {
+        await getGraphqlClient()
+          .removePlatformRoleFromUser(
+            {
+              roleData: {
+                actorID: fixtures.targetUserId,
+                role: RoleName.PlatformAuditReader,
+              },
+            },
+            { authorization: `Bearer ${rolesAdminToken}` }
+          )
+          .catch(() => {
+            // best-effort cleanup
+          });
+      }
+    }
   });
 });

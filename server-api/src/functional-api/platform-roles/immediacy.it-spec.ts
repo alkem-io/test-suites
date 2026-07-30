@@ -52,9 +52,19 @@ describe('immediacy on a single surface (T013, FR-031/SC-016)', () => {
       TestUser.NON_SPACE_MEMBER
     );
 
-    // A19's read family — PLATFORM_AUDIT_READER is its sole owner, so a
-    // grant/revoke round trip here is a clean, side-effect-free (read-only)
-    // probe of the timing property.
+    // sec-test-suites-18 fix: this test MUST authenticate as the just-
+    // granted holder itself to prove the grant reaches ITS OWN next
+    // request — `fixtures.rolesProbeUserId` (the disposable identity this
+    // feature otherwise routes role-grant probes through) has no Kratos
+    // login/authToken (created via bare `createUser()`, never
+    // `registerVerifiedUser`), so `TestUser.NON_SPACE_MEMBER` is the only
+    // fixture that can play both roles here. The round trip is therefore
+    // wrapped in try/finally instead: a thrown assertion (or a flaky
+    // grant->read propagation, live-verification's documented lag) between
+    // grant and revoke must still trigger a best-effort revoke, so
+    // `platform-audit-reader` — whole-platform read of the user
+    // email-change audit trail — never lingers on the identity 68+ other
+    // spec files across this project run authenticate as.
     await getGraphqlClient().assignPlatformRoleToUser(
       {
         roleData: {
@@ -65,47 +75,70 @@ describe('immediacy on a single surface (T013, FR-031/SC-016)', () => {
       { authorization: `Bearer ${rolesAdminToken}` }
     );
 
-    const afterGrant = await getGraphqlClient().userEmailChangeAuditEntries(
-      { userID: fixtures.targetUserId },
-      { authorization: `Bearer ${targetUser.authToken}` }
-    );
-    expect(
-      afterGrant.errors,
-      'the very next request after a grant must succeed'
-    ).toBeUndefined();
+    let revoked = false;
+    try {
+      // A19's read family — PLATFORM_AUDIT_READER is its sole owner, so a
+      // grant/revoke round trip here is a clean, side-effect-free (read-only)
+      // probe of the timing property.
+      const afterGrant = await getGraphqlClient().userEmailChangeAuditEntries(
+        { userID: fixtures.targetUserId },
+        { authorization: `Bearer ${targetUser.authToken}` }
+      );
+      expect(
+        afterGrant.errors,
+        'the very next request after a grant must succeed'
+      ).toBeUndefined();
 
-    await getGraphqlClient().removePlatformRoleFromUser(
-      {
-        roleData: {
-          actorID: fixtures.targetUserId,
-          role: RoleName.PlatformAuditReader,
+      await getGraphqlClient().removePlatformRoleFromUser(
+        {
+          roleData: {
+            actorID: fixtures.targetUserId,
+            role: RoleName.PlatformAuditReader,
+          },
         },
-      },
-      { authorization: `Bearer ${rolesAdminToken}` }
-    );
+        { authorization: `Bearer ${rolesAdminToken}` }
+      );
+      revoked = true;
 
-    // The raw generated SDK throws a `ClientError` on any GraphQL error
-    // response rather than returning it as `.errors` (2026-07-29
-    // live-verification finding, reproduced live) — expected-DENIAL calls
-    // must go through `graphqlErrorWrapper` (`asUser`) to observe the
-    // rejection instead of failing with an unasserted exception.
-    const afterRevoke = await asUser(
-      token =>
-        getGraphqlClient().userEmailChangeAuditEntries(
-          { userID: fixtures.targetUserId },
-          { authorization: `Bearer ${token}` }
-        ),
-      TestUser.NON_SPACE_MEMBER
-    );
-    // qual-ts-23 fix: `isAuthorizationDenial` — not "any error came back" —
-    // is the shared predicate this feature already uses everywhere else
-    // (surface-invocations.ts); a coincidental validation/not-found/crash
-    // error must never read as "the actor-context cache was invalidated
-    // correctly".
-    expect(
-      isAuthorizationDenial(afterRevoke.error?.errors),
-      'the very next request after a revoke must be denied'
-    ).toBe(true);
+      // The raw generated SDK throws a `ClientError` on any GraphQL error
+      // response rather than returning it as `.errors` (2026-07-29
+      // live-verification finding, reproduced live) — expected-DENIAL calls
+      // must go through `graphqlErrorWrapper` (`asUser`) to observe the
+      // rejection instead of failing with an unasserted exception.
+      const afterRevoke = await asUser(
+        token =>
+          getGraphqlClient().userEmailChangeAuditEntries(
+            { userID: fixtures.targetUserId },
+            { authorization: `Bearer ${token}` }
+          ),
+        TestUser.NON_SPACE_MEMBER
+      );
+      // qual-ts-23 fix: `isAuthorizationDenial` — not "any error came back" —
+      // is the shared predicate this feature already uses everywhere else
+      // (surface-invocations.ts); a coincidental validation/not-found/crash
+      // error must never read as "the actor-context cache was invalidated
+      // correctly".
+      expect(
+        isAuthorizationDenial(afterRevoke.error?.errors),
+        'the very next request after a revoke must be denied'
+      ).toBe(true);
+    } finally {
+      if (!revoked) {
+        await getGraphqlClient()
+          .removePlatformRoleFromUser(
+            {
+              roleData: {
+                actorID: fixtures.targetUserId,
+                role: RoleName.PlatformAuditReader,
+              },
+            },
+            { authorization: `Bearer ${rolesAdminToken}` }
+          )
+          .catch(() => {
+            // best-effort cleanup
+          });
+      }
+    }
   });
 });
 
