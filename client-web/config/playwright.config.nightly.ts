@@ -168,14 +168,29 @@ export default defineConfig({
 
     headless: true,
 
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-all-retries',
+    /**
+     * sec-test-suites-16 fix (2026-07-30 corrective wave): traces and
+     * videos are OFF, not `on-all-retries`/`retain-on-failure` — this repo
+     * is PUBLIC (workspace repos.yaml `visibility: public`) and this
+     * config's report is published to GitHub Pages
+     * (`.github/workflows/nightly-client-tests.yml`). A Playwright trace
+     * embeds full request bodies and response headers; several
+     * authentication specs POST the shared `AUTH_TEST_HARNESS_PASSWORD`
+     * and subsequently carry `Authorization: Bearer <token>` headers, so a
+     * retried/failed login test's trace would publish the live test-harness
+     * password and bearer tokens in cleartext to a public site. Screenshots
+     * (no request/response bodies) stay on for failure triage; that is the
+     * lowest-exposure signal this job can safely publish.
+     */
+    trace: 'off',
 
     /* Screenshot on failure */
     screenshot: 'only-on-failure',
 
-    /* Video on retry */
-    video: 'retain-on-failure',
+    /* Video off — same reasoning as `trace` above (recordings can capture
+     * on-screen network/devtools state and add another published artifact
+     * this job does not need). */
+    video: 'off',
   },
 
   timeout: 30000,
