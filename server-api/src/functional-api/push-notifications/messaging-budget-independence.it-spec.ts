@@ -13,6 +13,7 @@ import {
   unsubscribeFromPushNotifications,
 } from '@functional-api/push-notifications/push-notifications.request.params';
 import {
+  delay,
   TestScenarioFactory,
   TestScenarioNoPreCreationConfig,
   TestUser,
@@ -23,7 +24,6 @@ import { leaveConversation } from '@functional-api/communications/conversations/
 import {
   createDirectConversation,
   expectPushEmitAfter,
-  getPushQueuePublishedTotal,
 } from '../notifications/notification.helpers';
 
 const scenarioConfig: TestScenarioNoPreCreationConfig = {
@@ -77,6 +77,22 @@ describe('Messaging push budget independence (US4-AS2)', () => {
     }
   });
 
+  /**
+   * The budget is a fixed epoch-minute bucket (`Math.floor(Date.now() /
+   * 60000)`). A burst sent sequentially can straddle a minute boundary and
+   * spuriously reset the counter mid-burst (a healthy build would then
+   * falsely appear to let the extra message through). Waiting for a fresh
+   * minute to just start, THEN firing the whole burst concurrently, keeps
+   * the burst's wall-clock span far under a minute so it cannot cross a
+   * boundary either way.
+   */
+  const waitForFreshEpochMinute = async (marginMs = 5_000) => {
+    const msIntoMinute = Date.now() % 60_000;
+    if (msIntoMinute > marginMs) {
+      await delay(60_000 - msIntoMinute + 250);
+    }
+  };
+
   test(
     'exhausting the messaging push budget never blocks a non-messaging push for the same user, and vice versa',
     async () => {
@@ -92,40 +108,50 @@ describe('Messaging push budget independence (US4-AS2)', () => {
       expect(roomId).toBeDefined();
       if (conversationId) conversationsToCleanup.push(conversationId);
 
-      const baseline = await getPushQueuePublishedTotal();
+      await waitForFreshEpochMinute();
 
-      // Act 1 — exhaust the MESSAGING budget: send one more message than the
-      // cap allows, rapidly, within one epoch-minute.
-      const afterMessagingBurst = await expectPushEmitAfter(async () => {
-        for (let i = 0; i < MESSAGING_PUSH_MAX_PER_MINUTE + 1; i++) {
-          await sendMessageToRoom(
-            roomId as string,
-            `Budget-exhausting message ${i + 1}`,
-            TestUser.GLOBAL_ADMIN
-          );
-        }
-      }, MESSAGING_PUSH_MAX_PER_MINUTE);
-
-      // Assert — exactly the cap's worth of pushes made it to the queue,
-      // never the extra one (the budget is enforced, not merely present).
-      expect(afterMessagingBurst.publishedTotal).toBe(
-        baseline + MESSAGING_PUSH_MAX_PER_MINUTE
+      // Act 1 — exhaust the MESSAGING budget: fire one more message than the
+      // cap allows, CONCURRENTLY (near-instant, cannot straddle a minute
+      // boundary) — Redis INCR is atomic, so the budget is still enforced
+      // exactly regardless of arrival order.
+      const afterMessagingBurst = await expectPushEmitAfter(
+        () =>
+          Promise.all(
+            Array.from({ length: MESSAGING_PUSH_MAX_PER_MINUTE + 1 }, (_, i) =>
+              sendMessageToRoom(
+                roomId as string,
+                `Budget-exhausting message ${i + 1}`,
+                TestUser.GLOBAL_ADMIN
+              )
+            )
+          ),
+        MESSAGING_PUSH_MAX_PER_MINUTE
       );
+
+      // Assert — EXACT equality: exactly the cap's worth of pushes made it
+      // to the queue, never the extra one. `expectPushEmitAfter`'s settle
+      // delay means a late 11th publish (a real regression) would show up
+      // here as delta = cap + 1, not silently pass a `>=` check.
+      expect(afterMessagingBurst.delta).toBe(MESSAGING_PUSH_MAX_PER_MINUTE);
 
       // Act 2 — with the MESSAGING budget now exhausted, drive the SHARED
       // (non-messaging) bucket for the SAME user up to its own full cap via
       // the pre-existing person-to-person message feature (a distinct
       // NotificationEvent.USER_MESSAGE path — NotificationPushAdapter routes
       // it through the shared throttle, never the messaging budget).
-      const afterSharedBurst = await expectPushEmitAfter(async () => {
-        for (let i = 0; i < SHARED_PUSH_MAX_PER_MINUTE; i++) {
-          await sendMessageToUser(
-            [recipientId],
-            `Non-messaging push ${i + 1}`,
-            TestUser.GLOBAL_ADMIN
-          );
-        }
-      }, SHARED_PUSH_MAX_PER_MINUTE);
+      const afterSharedBurst = await expectPushEmitAfter(
+        () =>
+          Promise.all(
+            Array.from({ length: SHARED_PUSH_MAX_PER_MINUTE }, (_, i) =>
+              sendMessageToUser(
+                [recipientId],
+                `Non-messaging push ${i + 1}`,
+                TestUser.GLOBAL_ADMIN
+              )
+            )
+          ),
+        SHARED_PUSH_MAX_PER_MINUTE
+      );
 
       // Assert — every one of those non-messaging pushes still made it to
       // the queue. This is the core US4-AS2 assertion (a non-messaging push
@@ -133,9 +159,7 @@ describe('Messaging push budget independence (US4-AS2)', () => {
       // messaging burst above never touched the shared bucket (had it, the
       // shared bucket would already have been partially consumed and fewer
       // than SHARED_PUSH_MAX_PER_MINUTE of these would have gone through).
-      expect(afterSharedBurst.publishedTotal).toBe(
-        afterMessagingBurst.publishedTotal + SHARED_PUSH_MAX_PER_MINUTE
-      );
+      expect(afterSharedBurst.delta).toBe(SHARED_PUSH_MAX_PER_MINUTE);
     },
     120_000
   );
