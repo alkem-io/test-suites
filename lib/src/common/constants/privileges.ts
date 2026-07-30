@@ -658,6 +658,75 @@ export const sorted__create_read_update_delete_contribute_createCallout_readAbou
     "READ_ABOUT",
   ].sort();
 
+// workspace#027-platform-role-redesign (qual-ts-20 fix, 2026-07-30 corrective
+// wave): completing the qual-ts-13 GLOBAL_ADMIN sweep — server e47f9510e's
+// root rule grants CREATE/READ/UPDATE/DELETE/PLATFORM_CONTENT_FULL_ACCESS to
+// GLOBAL_ADMIN with `cascade: true`, so EVERY entity under a root-inheriting
+// tree (user/organization/account/space/virtual-contributor/
+// virtual-assistant) — not just the entity the cascading rule is declared
+// on — carries PLATFORM_CONTENT_FULL_ACCESS in GLOBAL_ADMIN's `myPrivileges`.
+// These dedicated GLOBAL_ADMIN-only variants (never a widening of the shared
+// constant, so sibling roles in the SAME parameterised table are not
+// incorrectly widened too) close the sweep for the knowledge-base,
+// user-document, organization-document and space-document auth suites.
+export const sorted__create_read_update_delete_grant_readAbout_globalAdmin = [
+  ...sorted__create_read_update_delete_grant_readAbout,
+  "PLATFORM_CONTENT_FULL_ACCESS",
+].sort();
+
+export const sorted__create_read_update_delete_grant_createCallout_transferAccept_transferOffer_globalAdmin =
+  [
+    ...sorted__create_read_update_delete_grant_createCallout_transferAccept_transferOffer,
+    "PLATFORM_CONTENT_FULL_ACCESS",
+  ].sort();
+
+export const sorted__create_read_update_delete_grant_fileDelete_fileUpload_globalAdmin =
+  [
+    ...sorted__create_read_update_delete_grant_fileDelete_fileUpload,
+    "PLATFORM_CONTENT_FULL_ACCESS",
+  ].sort();
+
+export const sorted__create_read_update_delete_grant_readUserPii_globalAdmin =
+  [
+    ...sorted__create_read_update_delete_grant_readUserPii,
+    "PLATFORM_CONTENT_FULL_ACCESS",
+  ].sort();
+
+export const sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii_globalAdmin =
+  [
+    ...sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii,
+    "PLATFORM_CONTENT_FULL_ACCESS",
+  ].sort();
+
+export const sorted__create_read_update_delete_grant_platformAdmin_notificationsAdmin_globalAdmin =
+  [
+    ...sorted__create_read_update_delete_grant_platformAdmin_notificationsAdmin,
+    "PLATFORM_CONTENT_FULL_ACCESS",
+  ].sort();
+
+export const sorted__create_read_update_delete_grant_fileUp_fileDel_platformAdmin_notificationsAdmin_globalAdmin =
+  [
+    ...sorted__create_read_update_delete_grant_fileUp_fileDel_platformAdmin_notificationsAdmin,
+    "PLATFORM_CONTENT_FULL_ACCESS",
+  ].sort();
+
+export const sorted__create_read_update_delete_grant_globalAdmin = [
+  ...sorted__create_read_update_delete_grant,
+  "PLATFORM_CONTENT_FULL_ACCESS",
+].sort();
+
+export const sorted__create_read_update_delete_grant_contribute_updateContent_globalAdmin =
+  [
+    ...sorted__create_read_update_delete_grant_contribute_updateContent,
+    "PLATFORM_CONTENT_FULL_ACCESS",
+  ].sort();
+
+export const sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent_globalAdmin =
+  [
+    ...sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent,
+    "PLATFORM_CONTENT_FULL_ACCESS",
+  ].sort();
+
 export const sorted__create_read_update_delete_readAbout_fileDelete_fileUpload =
   [
     ...sorted__create_read_update_delete_grant,
