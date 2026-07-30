@@ -10,6 +10,7 @@ import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import type { GraphQLReturnType } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import { buildMatrixFixtures, teardownMatrixFixtures } from './fixtures';
 import type { MatrixFixtures } from './fixtures';
+import { isAuthorizationDenial } from './surface-invocations';
 
 const asUser = <TData>(
   fn: (authToken: string | undefined) => GraphQLReturnType<TData>,
@@ -96,10 +97,15 @@ describe('immediacy on a single surface (T013, FR-031/SC-016)', () => {
         ),
       TestUser.NON_SPACE_MEMBER
     );
+    // qual-ts-23 fix: `isAuthorizationDenial` — not "any error came back" —
+    // is the shared predicate this feature already uses everywhere else
+    // (surface-invocations.ts); a coincidental validation/not-found/crash
+    // error must never read as "the actor-context cache was invalidated
+    // correctly".
     expect(
-      afterRevoke.error?.errors?.length ?? 0,
+      isAuthorizationDenial(afterRevoke.error?.errors),
       'the very next request after a revoke must be denied'
-    ).toBeGreaterThan(0);
+    ).toBe(true);
   });
 });
 
@@ -170,9 +176,9 @@ describe('organization-standing immediacy (T013, FR-002/FR-031)', () => {
         TestUser.NON_SPACE_MEMBER
       );
       expect(
-        asAssociate.error?.errors?.length ?? 0,
+        isAuthorizationDenial(asAssociate.error?.errors),
         'a plain associate must never inherit a Feature role'
-      ).toBeGreaterThan(0);
+      ).toBe(true);
 
       // Promote to Admin — inherits the org's Feature credential on the
       // very next request.
@@ -250,9 +256,9 @@ describe('organization-standing immediacy (T013, FR-002/FR-031)', () => {
         TestUser.NON_SPACE_MEMBER
       );
       expect(
-        afterDemotion.error?.errors?.length ?? 0,
+        isAuthorizationDenial(afterDemotion.error?.errors),
         'demotion to associate must deny on the very next request — no ActorContext cache lag'
-      ).toBeGreaterThan(0);
+      ).toBe(true);
     } finally {
       await getGraphqlClient().removeRoleFromUser(
         {

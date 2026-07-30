@@ -5,6 +5,7 @@ import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import type { GraphQLReturnType } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import { buildMatrixFixtures, teardownMatrixFixtures } from '../fixtures';
 import type { MatrixFixtures } from '../fixtures';
+import { isAuthorizationDenial } from '../surface-invocations';
 
 const asUser = <TData>(
   fn: (authToken: string | undefined) => GraphQLReturnType<TData>,
@@ -155,9 +156,9 @@ describe('flow 2 — organization inheritance then demotion (T019b, FR-002/FR-03
         TestUser.NON_SPACE_MEMBER
       );
       expect(
-        afterDemotion.error?.errors?.length ?? 0,
+        isAuthorizationDenial(afterDemotion.error?.errors),
         'demotion must deny the very next request — a pass here would mean the actor-context cache was not invalidated (server T057)'
-      ).toBeGreaterThan(0);
+      ).toBe(true);
     } finally {
       await getGraphqlClient().removeRoleFromUser(
         {
