@@ -33,6 +33,9 @@ import {
   createDirectConversation,
   createGroupConversation,
   expectPushEmitAfter,
+  PushSubscriptionHandle,
+  subscribeRecipientsToPush,
+  unsubscribeRecipientsFromPush,
   updateConversationMessagingSettings,
   waitForMailsCountAtLeast,
 } from '../notification.helpers';
@@ -41,8 +44,20 @@ const scenarioConfig: TestScenarioNoPreCreationConfig = {
   name: 'conversation-messages-positive',
 };
 
+let pushSubscriptions: PushSubscriptionHandle[] = [];
+
 beforeAll(async () => {
   await TestScenarioFactory.createBaseScenarioEmpty(scenarioConfig);
+  // Required precondition for the push-emit assertions below: the adapter
+  // no-ops for a recipient with zero active subscriptions.
+  pushSubscriptions = await subscribeRecipientsToPush([
+    { userRole: TestUser.SPACE_MEMBER, label: 'conv-messages-positive-member' },
+    { userRole: TestUser.SPACE_ADMIN, label: 'conv-messages-positive-admin' },
+  ]);
+});
+
+afterAll(async () => {
+  await unsubscribeRecipientsFromPush(pushSubscriptions);
 });
 
 beforeEach(async () => {
@@ -71,13 +86,13 @@ describe('Conversation-message notifications — positive matrix', () => {
       const roomId = conversationRes?.data?.createConversation?.room?.id;
       expect(roomId).toBeDefined();
 
-      const stats = await expectPushEmitAfter(
+      const { delta } = await expectPushEmitAfter(
         () =>
           sendMessageToRoom(roomId as string, 'Hello!', TestUser.GLOBAL_ADMIN),
         1
       );
 
-      expect(stats.publishedTotal).toBeGreaterThanOrEqual(1);
+      expect(delta).toBe(1);
       const [, emailTotal] = await getMailsData();
       expect(emailTotal).toBe(0);
     });
@@ -96,7 +111,7 @@ describe('Conversation-message notifications — positive matrix', () => {
       expect(roomId).toBeDefined();
 
       // 2 non-sender members (spaceMember + spaceAdmin) => +2 push publishes.
-      const stats = await expectPushEmitAfter(
+      const { delta } = await expectPushEmitAfter(
         () =>
           sendMessageToRoom(
             roomId as string,
@@ -106,7 +121,7 @@ describe('Conversation-message notifications — positive matrix', () => {
         2
       );
 
-      expect(stats.publishedTotal).toBeGreaterThanOrEqual(2);
+      expect(delta).toBe(2);
       const [, emailTotal] = await getMailsData();
       expect(emailTotal).toBe(0);
     });
@@ -212,6 +227,14 @@ describe('Conversation-message notifications — positive matrix', () => {
   });
 
   describe('Hostile message content never leaks into email (US1-AS5, SC-004)', () => {
+    // Deliberately a DIFFERENT recipient than the "Email opt-in" describe
+    // above (subspaceMember, not spaceMember): DIRECT conversations dedupe
+    // per (creator, other-actor) pair (messaging.service.ts
+    // findConversationBetweenActors), so reusing (globalAdmin, spaceMember)
+    // here would risk landing this message on the SAME conversation the
+    // "Email opt-in" test just emailed on, inside its still-open per
+    // (recipient, conversation) suppression window (300s default) — an
+    // order/timing-dependent false failure, not a real regression.
     let conversationId = '';
     const hostileMessage =
       'Say "hi" to <script>alert(1)</script>\nline two <b>bold</b> & "quoted"';
@@ -224,21 +247,21 @@ describe('Conversation-message notifications — positive matrix', () => {
         conversationId = '';
       }
       await updateConversationMessagingSettings(
-        TestUserManager.users.spaceMember.id,
+        TestUserManager.users.subspaceMember.id,
         { direct: { email: false } },
-        TestUser.SPACE_MEMBER
+        TestUser.SUBSPACE_MEMBER
       );
     });
 
     test('subject and body contain none of the message-derived text', async () => {
       await updateConversationMessagingSettings(
-        TestUserManager.users.spaceMember.id,
+        TestUserManager.users.subspaceMember.id,
         { direct: { email: true } },
-        TestUser.SPACE_MEMBER
+        TestUser.SUBSPACE_MEMBER
       );
 
       const conversationRes = await createDirectConversation(
-        TestUserManager.users.spaceMember.agentId,
+        TestUserManager.users.subspaceMember.agentId,
         TestUser.GLOBAL_ADMIN
       );
       conversationId = conversationRes?.data?.createConversation?.id ?? '';
@@ -255,7 +278,7 @@ describe('Conversation-message notifications — positive matrix', () => {
       expect(total).toBe(1);
 
       const mail = mailItems.find((m: any) =>
-        m.toAddresses?.includes(TestUserManager.users.spaceMember.email)
+        m.toAddresses?.includes(TestUserManager.users.subspaceMember.email)
       );
       expect(mail).toBeDefined();
       expect(mail.subject).toBe(

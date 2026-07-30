@@ -25,6 +25,9 @@ import {
   createDirectConversation,
   createGroupConversation,
   expectPushEmitAfter,
+  PushSubscriptionHandle,
+  subscribeRecipientsToPush,
+  unsubscribeRecipientsFromPush,
   updateConversationMessagingSettings,
   waitForMailsCountAtLeast,
 } from '../notification.helpers';
@@ -36,8 +39,21 @@ const scenarioConfig: TestScenarioNoPreCreationConfig = {
 const toAddressesOf = (mailItems: any[]) =>
   mailItems.flatMap(item => item.toAddresses ?? []);
 
+let pushSubscriptions: PushSubscriptionHandle[] = [];
+
 beforeAll(async () => {
   await TestScenarioFactory.createBaseScenarioEmpty(scenarioConfig);
+  // Required precondition for the push-emit assertion in the "disabled
+  // channel" describe below: the adapter no-ops for a recipient with zero
+  // active subscriptions.
+  pushSubscriptions = await subscribeRecipientsToPush([
+    { userRole: TestUser.SPACE_MEMBER, label: 'conv-messages-negative-member' },
+    { userRole: TestUser.SPACE_ADMIN, label: 'conv-messages-negative-admin' },
+  ]);
+});
+
+afterAll(async () => {
+  await unsubscribeRecipientsFromPush(pushSubscriptions);
 });
 
 beforeEach(async () => {
@@ -179,6 +195,13 @@ describe('Conversation-message notifications — negative matrix', () => {
   });
 
   describe('Sender never notified of their own message (US1-AS4)', () => {
+    // Recipient is subspaceAdmin (NOT spaceMember): the recipient's direct
+    // channel defaults to OFF, so without ALSO enabling it here there would
+    // be zero emails to assert on at all (an unsatisfiable assertion, not a
+    // self-exclusion proof). Using a persona distinct from the "Email
+    // opt-in"/"Hostile message" describes elsewhere in this matrix also
+    // avoids colliding with their (globalAdmin, spaceMember/subspaceMember)
+    // DIRECT conversations, which dedupe per actor pair.
     let conversationId = '';
 
     afterAll(async () => {
@@ -192,19 +215,31 @@ describe('Conversation-message notifications — negative matrix', () => {
         { direct: { email: false } },
         TestUser.GLOBAL_ADMIN
       );
+      await updateConversationMessagingSettings(
+        TestUserManager.users.subspaceAdmin.id,
+        { direct: { email: false } },
+        TestUser.SUBSPACE_ADMIN
+      );
     });
 
     test('A (sender, email enabled) never appears as an email recipient', async () => {
-      // Arrange — the SENDER has the channel enabled; if self-exclusion ever
-      // regressed, A would appear as a `toAddresses` recipient below.
+      // Arrange — BOTH the sender (A, self-exclusion under test) and the
+      // recipient (B) have the channel enabled: exactly one email is
+      // expected (B's), and if self-exclusion ever regressed, A would
+      // appear alongside it in `toAddresses` below.
       await updateConversationMessagingSettings(
         TestUserManager.users.globalAdmin.id,
         { direct: { email: true } },
         TestUser.GLOBAL_ADMIN
       );
+      await updateConversationMessagingSettings(
+        TestUserManager.users.subspaceAdmin.id,
+        { direct: { email: true } },
+        TestUser.SUBSPACE_ADMIN
+      );
 
       const conversationRes = await createDirectConversation(
-        TestUserManager.users.spaceMember.agentId,
+        TestUserManager.users.subspaceAdmin.agentId,
         TestUser.GLOBAL_ADMIN
       );
       conversationId = conversationRes?.data?.createConversation?.id ?? '';
@@ -215,8 +250,11 @@ describe('Conversation-message notifications — negative matrix', () => {
       await sendMessageToRoom(roomId as string, 'Hello!', TestUser.GLOBAL_ADMIN);
       const [mailItems, total] = await waitForMailsCountAtLeast(1);
 
-      // Assert
+      // Assert — exactly B's email, and A never appears as a recipient.
       expect(total).toBe(1);
+      expect(toAddressesOf(mailItems)).toContain(
+        TestUserManager.users.subspaceAdmin.email
+      );
       expect(toAddressesOf(mailItems)).not.toContain(
         TestUserManager.users.globalAdmin.email
       );
@@ -261,13 +299,14 @@ describe('Conversation-message notifications — negative matrix', () => {
 
       // Act — with B disabled, only C (default push ON) can produce a push
       // emit; the exact +1 delta (rather than +2) IS the proof B got none.
-      const stats = await expectPushEmitAfter(
+      const { delta } = await expectPushEmitAfter(
         () => sendMessageToRoom(roomId as string, 'Hello group', TestUser.GLOBAL_ADMIN),
         1
       );
 
-      // Assert
-      expect(stats.publishedTotal).toBeGreaterThanOrEqual(1);
+      // Assert — EXACT equality: a delta of 2 would mean B's disabled push
+      // leaked through too, which `>=` would have silently let pass.
+      expect(delta).toBe(1);
     });
   });
 
