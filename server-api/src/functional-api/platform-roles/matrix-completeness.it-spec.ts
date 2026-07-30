@@ -209,7 +209,16 @@ describe('matrix-completeness (T017d, spec-ts-9) — every assignment rule has a
   > = {
     'self-assignment': 'self-assignment of role',
     'assigner-capability': 'required to assign role',
-    'holder-kind': 'may not be granted to a organization',
+    // 2026-07-30 live-verification finding: the org-surface pin
+    // (`assertOrganizationSurfaceOrFail`, sec-server-6) now intercepts every
+    // `Platform …` role's `assignPlatformRoleToOrganization`/
+    // `removePlatformRoleFromOrganization` call before the shared rule
+    // engine's own `checkHolderKind` (rule 2) is reached, with a distinct
+    // literal — the covering specs (`assignment-rules.it-spec.ts`,
+    // `flows/rejection-audited.it-spec.ts`) were updated to match; this
+    // inventory entry follows so the guard keeps grepping for a substring
+    // that actually appears.
+    'holder-kind': 'may not be assigned or removed through the organization surface',
     'spaces-reader-service-account': 'may only be granted to a service account',
     'audit-reader-exclusion': 'mutually exclusive',
     'last-roles-admin': 'cannot remove the last platform-roles-admin',

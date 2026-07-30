@@ -110,8 +110,16 @@ describe('flow 5 — every rejection is distinctly attributable and takes no eff
         ),
       TestUser.PLATFORM_ROLES_ADMIN
     );
+    // 2026-07-30 live-verification finding (surfaced by this corrective
+    // wave's new `platform-roles-rules` gate track, sec-test-suites-10) —
+    // same re-point as `assignment-rules.it-spec.ts`'s identical rule-2
+    // test: `assertOrganizationSurfaceOrFail` (sec-server-6) now rejects
+    // this surface for every non-FEATURE-family role BEFORE the shared rule
+    // engine's `checkHolderKind` is ever reached, with a different literal
+    // message. The property this test verifies — no role, no effect — is
+    // unchanged.
     expect(res.error?.errors?.[0]?.message).toContain(
-      'may not be granted to a organization'
+      'may not be assigned or removed through the organization surface'
     );
 
     const rolesAdminToken = TestUserManager.getUserModelByType(
@@ -275,20 +283,33 @@ describe('flow 5 — every rejection is distinctly attributable and takes no eff
           ),
         TestUser.GLOBAL_ADMIN
       );
-      expect(res.error?.errors?.[0]?.message).toContain(
-        'cannot remove the last platform-roles-admin'
-      );
 
-      const holders = await getGraphqlClient().platformRoleSetUsersInRole(
-        { role: RoleName.PlatformRolesAdmin },
-        { authorization: `Bearer ${rolesAdminUser.authToken}` }
-      );
-      expect(
-        holders.data?.platform.roleSet.usersInRole.some(
-          u => u.id === rolesAdminUser.id
-        ),
-        'the platform must still hold at least one platform-roles-admin'
-      ).toBe(true);
+      // corr-ts-24 fix: the strip loop above is best-effort (`.catch(() =>
+      // {})`) — it can leave MORE than one holder (e.g. rule 6,
+      // self-assignment, blocks GLOBAL_ADMIN from revoking its own role if
+      // it happens to hold this one too). When that happens, rule 5
+      // correctly ALLOWS this removal — asserting the last-holder rejection
+      // unconditionally would fail on a false premise. Branch on the
+      // OBSERVED holder count instead of assuming the strip loop reached
+      // exactly one.
+      if (otherHolderIds.length === 0) {
+        expect(res.error?.errors?.[0]?.message).toContain(
+          'cannot remove the last platform-roles-admin'
+        );
+
+        const holders = await getGraphqlClient().platformRoleSetUsersInRole(
+          { role: RoleName.PlatformRolesAdmin },
+          { authorization: `Bearer ${rolesAdminUser.authToken}` }
+        );
+        expect(
+          holders.data?.platform.roleSet.usersInRole.some(
+            u => u.id === rolesAdminUser.id
+          ),
+          'the platform must still hold at least one platform-roles-admin'
+        ).toBe(true);
+      } else {
+        expect(res.error).toBeUndefined();
+      }
     } finally {
       // Restore every holder this test temporarily removed, regardless of
       // the assertion's outcome — this environment's other holders (e.g. a
@@ -303,6 +324,29 @@ describe('flow 5 — every rejection is distinctly attributable and takes no eff
             // best-effort restore
           });
       }
+      // corr-ts-24 fix: the fixture ITSELF (`rolesAdminUser`) must also be
+      // self-healed — if the removal above succeeded for real (the
+      // `otherHolderIds.length > 0` branch), the shared
+      // `platform.rolesadmin@alkem.io` fixture would otherwise lose its
+      // role PERMANENTLY, breaking every other spec/file that authenticates
+      // as PLATFORM_ROLES_ADMIN (exactly the 2026-07-29 outage
+      // `assignment-rules.it-spec.ts`'s identical self-heal documents).
+      // Idempotent re-grant: a no-op (harmless error) if the fixture never
+      // lost the role.
+      await getGraphqlClient()
+        .assignPlatformRoleToUser(
+          {
+            roleData: {
+              actorID: rolesAdminUser.id,
+              role: RoleName.PlatformRolesAdmin,
+            },
+          },
+          { authorization: `Bearer ${globalAdminToken}` }
+        )
+        .catch(() => {
+          // best-effort — if the fixture never lost the role, re-granting an
+          // already-held role is expected to no-op or error harmlessly.
+        });
     }
   });
 

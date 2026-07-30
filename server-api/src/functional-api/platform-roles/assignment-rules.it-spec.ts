@@ -89,8 +89,22 @@ describe('assignment rules (T010) — the five rules, each with its own distinct
         ),
       TestUser.PLATFORM_ROLES_ADMIN
     );
+    // 2026-07-30 live-verification finding (surfaced by this corrective
+    // wave's new `platform-roles-rules` gate track, sec-test-suites-10):
+    // `assignPlatformRoleToOrganization`'s resolver now runs
+    // `assertOrganizationSurfaceOrFail` (sec-server-6, the org-surface
+    // legacy-role-escalation block) BEFORE the shared rule engine's
+    // `evaluateGrantOrFail` — every `Platform …` role (not a member of
+    // `FEATURE_FAMILY_ROLES`) is rejected THERE, with its own distinct
+    // message, so rule 2's `checkHolderKind` branch for this surface is
+    // superseded rather than reached. The net effect this test cares about
+    // — a Platform role is never actually grantable to an organization — is
+    // unchanged; only the literal rejection text moved. Asserting the
+    // CURRENT text rather than `checkHolderKind`'s own message (a `server`
+    // finding worth raising separately: whether that branch is now dead
+    // code for every real caller of this GraphQL surface).
     expect(res.error?.errors[0]?.message).toContain(
-      'may not be granted to a organization'
+      'may not be assigned or removed through the organization surface'
     );
   });
 
@@ -114,44 +128,101 @@ describe('assignment rules (T010) — the five rules, each with its own distinct
   });
 
   it('rule 4 (audit-reader-exclusion, direction 1): granting Audit Reader to a holder of another Platform role is rejected', async () => {
-    const res = await asUser(
-      token =>
-        getGraphqlClient().assignPlatformRoleToUser(
-          {
-            roleData: {
-              // PLATFORM_SUPPORT already holds `platform-support` (T003/T004
-              // single-role fixture) — this asserts the OTHER direction of
-              // FR-028's bidirectional exclusion.
-              actorID: TestUserManager.getUserModelByType(
-                TestUser.PLATFORM_SUPPORT
-              ).id,
-              role: RoleName.PlatformAuditReader,
-            },
-          },
-          { authorization: `Bearer ${token}` }
-        ),
+    // corr-ts-26 fix: the shared single-role fixtures
+    // (`TestUser.PLATFORM_SUPPORT`/`TestUser.PLATFORM_AUDIT_READER`) hold
+    // EXACTLY one role each by construction (T003/T004) — a rule-4
+    // regression that let this grant SUCCEED would leave the shared fixture
+    // holding TWO roles, silently poisoning every other cell/spec that
+    // authenticates as it (no revoke-on-success, no residue cleanup covers
+    // the 13 role fixtures). Grant the prerequisite role to the disposable
+    // `rolesProbeUserId` for the DURATION of this test only, mirroring
+    // `flows/rejection-audited.it-spec.ts`'s identical rule-4 test.
+    const rolesAdminToken = TestUserManager.getUserModelByType(
       TestUser.PLATFORM_ROLES_ADMIN
+    ).authToken;
+    const probeUserId = fixtures.rolesProbeUserId;
+
+    await getGraphqlClient().assignPlatformRoleToUser(
+      { roleData: { actorID: probeUserId, role: RoleName.PlatformSupport } },
+      { authorization: `Bearer ${rolesAdminToken}` }
     );
-    expect(res.error?.errors[0]?.message).toContain('mutually exclusive');
+
+    try {
+      const res = await asUser(
+        token =>
+          getGraphqlClient().assignPlatformRoleToUser(
+            {
+              roleData: {
+                actorID: probeUserId,
+                role: RoleName.PlatformAuditReader,
+              },
+            },
+            { authorization: `Bearer ${token}` }
+          ),
+        TestUser.PLATFORM_ROLES_ADMIN
+      );
+      expect(res.error?.errors[0]?.message).toContain('mutually exclusive');
+    } finally {
+      await getGraphqlClient()
+        .removePlatformRoleFromUser(
+          { roleData: { actorID: probeUserId, role: RoleName.PlatformSupport } },
+          { authorization: `Bearer ${rolesAdminToken}` }
+        )
+        .catch(() => {
+          // best-effort — a correctly-rejected exclusion above means
+          // `platform-support` was never displaced, so this always applies
+        });
+    }
   });
 
   it('rule 4 (audit-reader-exclusion, direction 2): granting another Platform role to an Audit Reader holder is rejected', async () => {
-    const res = await asUser(
-      token =>
-        getGraphqlClient().assignPlatformRoleToUser(
+    // corr-ts-26 fix — same reasoning as direction 1 above, the OTHER way
+    // round: grant `platform-audit-reader` to the disposable
+    // `rolesProbeUserId` for this test's duration only.
+    const rolesAdminToken = TestUserManager.getUserModelByType(
+      TestUser.PLATFORM_ROLES_ADMIN
+    ).authToken;
+    const probeUserId = fixtures.rolesProbeUserId;
+
+    await getGraphqlClient().assignPlatformRoleToUser(
+      {
+        roleData: { actorID: probeUserId, role: RoleName.PlatformAuditReader },
+      },
+      { authorization: `Bearer ${rolesAdminToken}` }
+    );
+
+    try {
+      const res = await asUser(
+        token =>
+          getGraphqlClient().assignPlatformRoleToUser(
+            {
+              roleData: {
+                actorID: probeUserId,
+                role: RoleName.PlatformSupport,
+              },
+            },
+            { authorization: `Bearer ${token}` }
+          ),
+        TestUser.PLATFORM_ROLES_ADMIN
+      );
+      expect(res.error?.errors[0]?.message).toContain('mutually exclusive');
+    } finally {
+      await getGraphqlClient()
+        .removePlatformRoleFromUser(
           {
             roleData: {
-              actorID: TestUserManager.getUserModelByType(
-                TestUser.PLATFORM_AUDIT_READER
-              ).id,
-              role: RoleName.PlatformSupport,
+              actorID: probeUserId,
+              role: RoleName.PlatformAuditReader,
             },
           },
-          { authorization: `Bearer ${token}` }
-        ),
-      TestUser.PLATFORM_ROLES_ADMIN
-    );
-    expect(res.error?.errors[0]?.message).toContain('mutually exclusive');
+          { authorization: `Bearer ${rolesAdminToken}` }
+        )
+        .catch(() => {
+          // best-effort — a correctly-rejected exclusion above means
+          // `platform-audit-reader` was never displaced, so this always
+          // applies
+        });
+    }
   });
 
   it('rule 5 (last-roles-admin): the platform must always retain at least one Platform Roles Admin', async () => {
@@ -341,11 +412,110 @@ describe('service-profile assertions (T011, A21/FR-002)', () => {
     expect(isAuthorizationDenial(res.error?.errors)).toBe(true);
   });
 
-  // The DENIED case's audit contrast (T011: written vs. NOT written) and the
-  // "cleared marker can no longer hold platform-spaces-reader" half both
-  // need the MCP audit-read surface / a live serviceProfile toggle round
-  // trip respectively — Phase V (this wave's gates are lint + build only,
-  // and this repo has no MCP client, T007b/T019).
+  // The DENIED case's audit contrast (T011: written vs. NOT written) needs
+  // the MCP audit-read surface — Phase V (this wave's gates are lint + build
+  // only, and this repo has no MCP client, T007b/T019).
+
+  it('an account whose marker is cleared can no longer be GRANTED platform-spaces-reader (spec-ts-13 fix)', async () => {
+    // spec-ts-13: the deferral reason ("needs a live serviceProfile toggle
+    // round trip") does not hold — `grantability.it-spec.ts` already calls
+    // `updateUserServiceProfile({serviceProfile: true})` as
+    // PLATFORM_ROLES_ADMIN against the live stack, so the toggle surface is
+    // wired and exercised in this very project. Uses the disposable
+    // `rolesProbeUserId` (corr-ts-19 reasoning — never the shared
+    // `targetUserId`, and never `targetUserId`'s own rule-3 probe above,
+    // which deliberately never sets the marker at all).
+    //
+    // Deliberately OUT OF SCOPE (per this fix's own hint): whether clearing
+    // the marker auto-REVOKES an already-held `platform-spaces-reader`
+    // credential. Nothing in `platform.role.assignment.rules.service.ts`
+    // suggests the server does this (rule 3 is a GRANT-time gate, not a
+    // standing invariant enforced on every read), and asserting it without
+    // evidence would be exactly the kind of undocumented assumption this
+    // feature's rule engine exists to avoid encoding informally.
+    const rolesAdminToken = TestUserManager.getUserModelByType(
+      TestUser.PLATFORM_ROLES_ADMIN
+    ).authToken;
+
+    const markerSet = await getGraphqlClient().updateUserServiceProfile(
+      { userData: { ID: fixtures.rolesProbeUserId, serviceProfile: true } },
+      { authorization: `Bearer ${rolesAdminToken}` }
+    );
+    expect(
+      markerSet.errors,
+      'setting serviceProfile on the disposable rolesProbeUserId target should succeed'
+    ).toBeUndefined();
+
+    try {
+      const grantWhileMarked = await asUser(
+        token =>
+          getGraphqlClient().assignPlatformRoleToUser(
+            {
+              roleData: {
+                actorID: fixtures.rolesProbeUserId,
+                role: RoleName.PlatformSpacesReader,
+              },
+            },
+            { authorization: `Bearer ${token}` }
+          ),
+        TestUser.PLATFORM_ROLES_ADMIN
+      );
+      expect(grantWhileMarked.error).toBeUndefined();
+
+      await getGraphqlClient()
+        .removePlatformRoleFromUser(
+          {
+            roleData: {
+              actorID: fixtures.rolesProbeUserId,
+              role: RoleName.PlatformSpacesReader,
+            },
+          },
+          { authorization: `Bearer ${rolesAdminToken}` }
+        )
+        .catch(() => {
+          // best-effort — proceed regardless; the re-grant assertion below
+          // is what this test is actually about
+        });
+
+      const markerCleared = await getGraphqlClient().updateUserServiceProfile(
+        { userData: { ID: fixtures.rolesProbeUserId, serviceProfile: false } },
+        { authorization: `Bearer ${rolesAdminToken}` }
+      );
+      expect(markerCleared.errors).toBeUndefined();
+
+      const regrantAfterClear = await asUser(
+        token =>
+          getGraphqlClient().assignPlatformRoleToUser(
+            {
+              roleData: {
+                actorID: fixtures.rolesProbeUserId,
+                role: RoleName.PlatformSpacesReader,
+              },
+            },
+            { authorization: `Bearer ${token}` }
+          ),
+        TestUser.PLATFORM_ROLES_ADMIN
+      );
+      expect(regrantAfterClear.error?.errors?.[0]?.message).toContain(
+        'may only be granted to a service account'
+      );
+    } finally {
+      await getGraphqlClient()
+        .removePlatformRoleFromUser(
+          {
+            roleData: {
+              actorID: fixtures.rolesProbeUserId,
+              role: RoleName.PlatformSpacesReader,
+            },
+          },
+          { authorization: `Bearer ${rolesAdminToken}` }
+        )
+        .catch(() => {
+          // best-effort — a correctly-rejected re-grant means there is
+          // nothing to revoke
+        });
+    }
+  });
 });
 
 describe('FR-003 one-way assertion (T016)', () => {

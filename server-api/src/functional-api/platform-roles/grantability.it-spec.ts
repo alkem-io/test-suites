@@ -173,8 +173,15 @@ describe('self-assignment denial (T012a, spec-ts-9, FR-015)', () => {
         ),
       TestUser.PLATFORM_ROLES_ADMIN
     );
-    expect(res.error?.errors?.[0]?.message).toContain('self-assignment');
-    expect(res.error?.errors?.[0]?.message).toContain('is blocked');
+    // spec-ts-10/qual-ts-18 fix: assert the server's literal, contiguous
+    // phrase (`platform.role.assignment.rules.service.ts`'s rejection message)
+    // rather than two separate substrings — the split form is satisfied by
+    // any message containing both fragments anywhere, which is weaker than
+    // (and desynchronized from) `matrix-completeness.it-spec.ts`'s T017d rule
+    // inventory, which greps covering specs for this exact phrase.
+    expect(res.error?.errors?.[0]?.message).toContain(
+      'self-assignment of role'
+    );
 
     const holders = await getGraphqlClient().platformRoleSetUsersInRole(
       { role: RoleName.PlatformSupport },
@@ -198,8 +205,15 @@ describe('self-assignment denial (T012a, spec-ts-9, FR-015)', () => {
         ),
       TestUser.PLATFORM_ROLES_ADMIN
     );
-    expect(res.error?.errors?.[0]?.message).toContain('self-assignment');
-    expect(res.error?.errors?.[0]?.message).toContain('is blocked');
+    // spec-ts-10/qual-ts-18 fix: assert the server's literal, contiguous
+    // phrase (`platform.role.assignment.rules.service.ts`'s rejection message)
+    // rather than two separate substrings — the split form is satisfied by
+    // any message containing both fragments anywhere, which is weaker than
+    // (and desynchronized from) `matrix-completeness.it-spec.ts`'s T017d rule
+    // inventory, which greps covering specs for this exact phrase.
+    expect(res.error?.errors?.[0]?.message).toContain(
+      'self-assignment of role'
+    );
 
     const holders = await getGraphqlClient().platformRoleSetUsersInRole(
       { role: RoleName.FeatureBetaTester },
@@ -222,8 +236,15 @@ describe('self-assignment denial (T012a, spec-ts-9, FR-015)', () => {
         ),
       TestUser.PLATFORM_ROLES_ADMIN
     );
-    expect(res.error?.errors?.[0]?.message).toContain('self-assignment');
-    expect(res.error?.errors?.[0]?.message).toContain('is blocked');
+    // spec-ts-10/qual-ts-18 fix: assert the server's literal, contiguous
+    // phrase (`platform.role.assignment.rules.service.ts`'s rejection message)
+    // rather than two separate substrings — the split form is satisfied by
+    // any message containing both fragments anywhere, which is weaker than
+    // (and desynchronized from) `matrix-completeness.it-spec.ts`'s T017d rule
+    // inventory, which greps covering specs for this exact phrase.
+    expect(res.error?.errors?.[0]?.message).toContain(
+      'self-assignment of role'
+    );
 
     const holders = await getGraphqlClient().platformRoleSetUsersInRole(
       { role: RoleName.PlatformRolesAdmin },
