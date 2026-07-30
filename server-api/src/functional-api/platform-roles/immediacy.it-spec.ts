@@ -160,7 +160,9 @@ describe('organization-standing immediacy (T013, FR-002/FR-031)', () => {
             {
               organizationData: {
                 nameID: `assoc-${UniqueIDGenerator.getID()}`,
-                profileData: { displayName: 'immediacy associate-only probe' },
+                profileData: {
+                  displayName: `immediacy associate-only probe ${UniqueIDGenerator.getID()}`,
+                },
               },
             },
             { authorization: `Bearer ${token}` }
@@ -188,7 +190,9 @@ describe('organization-standing immediacy (T013, FR-002/FR-031)', () => {
         {
           organizationData: {
             nameID: `admin-${UniqueIDGenerator.getID()}`,
-            profileData: { displayName: 'immediacy admin probe' },
+            profileData: {
+              displayName: `immediacy admin probe ${UniqueIDGenerator.getID()}`,
+            },
           },
         },
         { authorization: `Bearer ${standingUser.authToken}` }
@@ -236,7 +240,9 @@ describe('organization-standing immediacy (T013, FR-002/FR-031)', () => {
             {
               organizationData: {
                 nameID: `demoted-${UniqueIDGenerator.getID()}`,
-                profileData: { displayName: 'immediacy demoted probe' },
+                profileData: {
+                  displayName: `immediacy demoted probe ${UniqueIDGenerator.getID()}`,
+                },
               },
             },
             { authorization: `Bearer ${token}` }

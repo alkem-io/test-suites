@@ -94,7 +94,7 @@ describe('flow 2 — organization inheritance then demotion (T019b, FR-002/FR-03
             {
               organizationData: {
                 nameID: `flow2-admin-${Date.now()}`,
-                profileData: { displayName: 'flow 2 admin probe' },
+                profileData: { displayName: `flow 2 admin probe ${Date.now()}` },
               },
             },
             { authorization: `Bearer ${token}` }
@@ -107,10 +107,22 @@ describe('flow 2 — organization inheritance then demotion (T019b, FR-002/FR-03
       ).toBeUndefined();
       const createdId = asAdmin.data?.createOrganization?.id;
       if (createdId) {
-        await getGraphqlClient().deleteOrganization(
-          { deleteData: { ID: createdId } },
-          { authorization: `Bearer ${rolesAdminToken}` }
-        );
+        // corr-ts-17 (same defect as immediacy.it-spec.ts): `deleteOrganization`
+        // gates on `anyOf[DELETE, DELETE_ORGANIZATION]`, and a single-role
+        // `platform-roles-admin` fixture holds NEITHER — so cleaning up with
+        // `rolesAdminToken` was itself an authorization failure that threw
+        // AFTER the real assertions had already passed. Use `globalAdmin`
+        // (still cascade-reachable at Slice A) and make it best-effort: a
+        // failed cleanup must never fail the test, but it DOES leave a squatter
+        // behind, which is why every probe displayName above is uniquified.
+        try {
+          await getGraphqlClient().deleteOrganization(
+            { deleteData: { ID: createdId } },
+            { authorization: `Bearer ${globalAdminToken}` }
+          );
+        } catch {
+          // best-effort cleanup
+        }
       }
 
       // DEMOTE to associate — no sleep, no re-login, no reset in between.
@@ -133,7 +145,9 @@ describe('flow 2 — organization inheritance then demotion (T019b, FR-002/FR-03
             {
               organizationData: {
                 nameID: `flow2-demoted-${Date.now()}`,
-                profileData: { displayName: 'flow 2 demoted probe' },
+                profileData: {
+                  displayName: `flow 2 demoted probe ${Date.now()}`,
+                },
               },
             },
             { authorization: `Bearer ${token}` }
