@@ -142,8 +142,19 @@ export default defineConfig({
         extends: true as const,
         test: {
           name: 'platform-roles-canonical',
+          // spec-ts-14/qual-ts-18 fix: `matrix-completeness.it-spec.ts` is
+          // back in this include list — it is what T017c documents as
+          // needing to "run and fail even when the matrix body is filtered
+          // down", i.e. exactly the canonical scope. It is cheap (one live
+          // role-set query plus file/inventory checks), unlike the eight
+          // OTHER non-matrix files (assignment-rules, grantability,
+          // immediacy, the three flows/, audit-coverage, mirror-integrity)
+          // this project still deliberately excludes per qual-ts-15's
+          // redundant-fixture-build reasoning — see the new
+          // `platform-roles-rules` project below for those.
           include: [
             'src/functional-api/platform-roles/role-action-matrix.it-spec.ts',
+            'src/functional-api/platform-roles/matrix-completeness.it-spec.ts',
           ],
           env: { PLATFORM_ROLES_MATRIX_SCOPE: 'canonical' },
           setupFiles: [
@@ -167,6 +178,33 @@ export default defineConfig({
           name: 'platform-roles',
           include: ['src/functional-api/platform-roles/**/*.it-spec.ts'],
           env: { PLATFORM_ROLES_MATRIX_SCOPE: 'full' },
+          setupFiles: [
+            './src/functional-api/platform-roles/platform-roles.setup.ts',
+          ],
+          fileParallelism: false,
+        },
+      },
+      // sec-test-suites-10 fix (2026-07-30 corrective wave): after the
+      // qual-ts-15 split above, `platform-roles-canonical` covered ONLY
+      // `role-action-matrix.it-spec.ts` — leaving the eight files that
+      // exercise the separation-of-duties RULE ENGINE itself (self-
+      // assignment, last-Roles-Admin protection, audit-reader exclusion,
+      // the service-profile marker, FR-031 revocation immediacy, the three
+      // stateful `flows/` specs, the audit-coverage and completeness/
+      // mirror-integrity guards) with NO Slice-A gate executing them at
+      // all — a live check written and shipped in this very feature, never
+      // run before release. This project runs every file in the directory
+      // EXCEPT the scope-sensitive matrix spec (which stays owned by
+      // `platform-roles-canonical`/`platform-roles` above, per qual-ts-15),
+      // exactly once, as a Slice A verification track.
+      {
+        extends: true as const,
+        test: {
+          name: 'platform-roles-rules',
+          include: ['src/functional-api/platform-roles/**/*.it-spec.ts'],
+          exclude: [
+            'src/functional-api/platform-roles/role-action-matrix.it-spec.ts',
+          ],
           setupFiles: [
             './src/functional-api/platform-roles/platform-roles.setup.ts',
           ],
