@@ -12,6 +12,11 @@ import { UpdateUserSettingsNotificationUserInput } from '@alkemio/tests-lib/core
 import { graphqlRequestAuth } from '@alkemio/tests-lib/utils/graphql.request';
 import { createConversation } from '@functional-api/communications/conversations/conversation.request.params';
 import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
+import {
+  generateFakePushSubscription,
+  subscribeToPushNotifications,
+  unsubscribeFromPushNotifications,
+} from '@functional-api/push-notifications/push-notifications.request.params';
 
 // Shared helper for building NotificationSettingInput objects in specs
 // Keeps tests concise and consistent with schema shape.
@@ -99,28 +104,99 @@ export const updateConversationMessagingSettings = async (
   );
 };
 
+export type PushSubscriptionRecipient = { userRole: TestUser; label: string };
+export type PushSubscriptionHandle = { userRole: TestUser; subscriptionId: string };
+
+/**
+ * Subscribes each given recipient to push with a fake (non-delivering)
+ * endpoint. This is a REQUIRED precondition for any push-emit assertion: the
+ * server's `NotificationPushAdapter` no-ops (never publishes to the queue)
+ * for a recipient with zero active push subscriptions
+ * (notification.push.adapter.ts — `if (subscriptions.length === 0) return;`).
+ * Mirrors the pattern in messaging-budget-independence.it-spec.ts's own
+ * `beforeAll`. Tear down with `unsubscribeRecipientsFromPush` in `afterAll`.
+ */
+export const subscribeRecipientsToPush = async (
+  recipients: PushSubscriptionRecipient[]
+): Promise<PushSubscriptionHandle[]> => {
+  const handles: PushSubscriptionHandle[] = [];
+  for (const { userRole, label } of recipients) {
+    const sub = generateFakePushSubscription(label);
+    const res = await subscribeToPushNotifications(
+      sub.endpoint,
+      sub.p256dh,
+      sub.auth,
+      userRole,
+      `${label}-test`
+    );
+    const subscriptionId =
+      res.body?.data?.subscribeToPushNotifications?.id ?? '';
+    handles.push({ userRole, subscriptionId });
+  }
+  return handles;
+};
+
+/** Tears down subscriptions created by `subscribeRecipientsToPush`. */
+export const unsubscribeRecipientsFromPush = async (
+  handles: PushSubscriptionHandle[]
+): Promise<void> => {
+  for (const { userRole, subscriptionId } of handles) {
+    if (subscriptionId) {
+      await unsubscribeFromPushNotifications(subscriptionId, userRole).catch(
+        () => {}
+      );
+    }
+  }
+};
+
 /** Current cumulative publish count for the push-notifications queue (baseline for emit assertions). */
 export const getPushQueuePublishedTotal = async (): Promise<number> => {
   const stats = await getQueueStats(PUSH_NOTIFICATIONS_QUEUE);
   return stats.publishedTotal;
 };
 
+export interface PushEmitResult {
+  /** `publishedTotal` observed immediately before `action` ran. */
+  baseline: number;
+  /** `publishedTotal` observed after the expected increase, plus a settle delay. */
+  stats: QueueStats;
+  /**
+   * `stats.publishedTotal - baseline` — the actual number of publishes
+   * attributable to `action`. Callers MUST assert on this (exact equality),
+   * never on `stats.publishedTotal` directly — the queue's cumulative
+   * counter never resets, so asserting the raw total against a literal
+   * passes regardless of what `action` did (it is nonzero the moment
+   * anything has ever published to the queue).
+   */
+  delta: number;
+}
+
 /**
- * Runs `action`, then waits for the push queue's cumulative publish counter
- * to advance by at least `expectedIncrease` past its pre-action baseline.
- * Use for POSITIVE push-emit assertions (a definite push is expected).
+ * Runs `action`, waits for the push queue's cumulative publish counter to
+ * advance by at least `expectedIncrease` past its pre-action baseline, then
+ * settles a little longer and re-reads before returning. Use for POSITIVE
+ * push-emit assertions (a definite push is expected) — assert
+ * `expect(result.delta).toBe(expectedIncrease)`, an EXACT equality. The
+ * settle delay matters as much as the poll: without it, an extra/late
+ * publish that arrives a moment after the target is first reached (e.g. a
+ * leak to a channel that should have stayed suppressed) would never be
+ * observed, and a `>=` assertion would hide it entirely.
  */
 export const expectPushEmitAfter = async (
   action: () => Promise<unknown>,
-  expectedIncrease = 1
-): Promise<QueueStats> => {
+  expectedIncrease = 1,
+  { settleMs = 2_000 }: { settleMs?: number } = {}
+): Promise<PushEmitResult> => {
   const baseline = await getPushQueuePublishedTotal();
   await action();
-  return waitForQueuePublishIncrease(
+  await waitForQueuePublishIncrease(
     PUSH_NOTIFICATIONS_QUEUE,
     baseline,
     expectedIncrease
   );
+  await delay(settleMs);
+  const stats = await getQueueStats(PUSH_NOTIFICATIONS_QUEUE);
+  return { baseline, stats, delta: stats.publishedTotal - baseline };
 };
 
 /**
