@@ -10,6 +10,7 @@ import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/mod
 import { CalloutContributionType, SpacePrivacyMode } from '@alkemio/client-lib';
 import { TemplateType } from '@alkemio/client-lib';
 import {
+  LicenseEntitlementType,
   LicensingCredentialBasedCredentialType,
   LicensingCredentialBasedPlanType,
   TemplateType as GeneratedTemplateType,
@@ -31,6 +32,7 @@ import { createSubspaceOrFail } from '@functional-api/journey/subspace/subspace.
 import {
   createSpaceBasicDataOrFail,
   deleteSpace,
+  getSpaceData,
   updateSpaceSettings,
 } from '@functional-api/journey/space/space.request.params';
 import { TARGET_ROLES } from './role-action-matrix.data';
@@ -198,6 +200,20 @@ export interface MatrixFixtures {
    * plan, the real ALLOW-caller deletion in the first pass would leave
    * nothing for the second pass's ALLOW caller to update. */
   readonly a13UpdatableLicensePlanId: string;
+  /** A13's `adminLicensePolicyDeleteCredentialRule` target (corr-ts-23 fix)
+   * — a credential rule created BY this fixture set, never
+   * `a13DeletableLicensePlanId` (a LicensePlan id, not a LicensePolicy
+   * credential-rule id): the two ID spaces are unrelated, and the resolver's
+   * post-gate `credentialRules.findIndex` throws `EntityNotFoundException`
+   * for a plan id, permanently failing the row's ALLOW cell regardless of
+   * authorization correctness. */
+  readonly a13DeletableCredentialRuleId: string;
+  /** A13's `adminLicensePolicyUpdateCredentialRule` target — a SECOND,
+   * separate disposable credential rule, distinct from
+   * `a13DeletableCredentialRuleId` for the same census-order reason as
+   * `a13UpdatableLicensePlanId` above (every Delete cell runs before any
+   * Update cell). */
+  readonly a13UpdatableCredentialRuleId: string;
   /** A15's condition-gated in-space-support probe target — a PRIVATE space
    * with `settings.privacy.allowPlatformSupportAsAdmin` explicitly set,
    * distinct from A16's (corr-ts-4, 2026-07-29 corrective wave). Both rows
@@ -250,6 +266,37 @@ export interface MatrixFixtures {
    * (`Only L2 spaces can be moved to L1`) is satisfied before authorization
    * is exercised. */
   readonly a9L2Id: string;
+  /** A9's `convertSpaceL1ToSpaceL0` source (corr-ts-20/qual-ts-17 fix) — a
+   * DEDICATED, fresh L1 under the base scenario's L0, distinct from every
+   * other A9 L1 this fixture set builds: `moveSpaceL1ToSpaceL2`'s ALLOW
+   * cell (which runs FIRST, census order) genuinely re-parents
+   * `a9SecondSubspaceId`, so sharing it here would have this conversion
+   * operate on a space that is no longer where this fixture set thinks it
+   * is. */
+  readonly a9ConvertL1ToL0SourceId: string;
+  /** A9's `convertSpaceL1ToSpaceL2`'s destination parent — a dedicated,
+   * fresh L1 sibling, never itself the SOURCE of a move/convert in this
+   * row (only ever referenced as a `parentSpaceL1ID`), so it stays a
+   * stable L1 for the whole matrix run. Also the parent of
+   * `a9ConvertL2ToL1SourceId` below (an unrelated child, promoting it does
+   * not disturb this space itself). */
+  readonly a9ConvertL1ToL2ParentId: string;
+  /** A9's `convertSpaceL1ToSpaceL2` source — a dedicated, fresh L1 sibling
+   * of `a9ConvertL1ToL2ParentId`, moved to become its L2 child. */
+  readonly a9ConvertL1ToL2SourceId: string;
+  /** A9's `convertSpaceL2ToSpaceL1` source — a real L2, created under
+   * `a9ConvertL1ToL2ParentId` (dedicated, distinct from
+   * `a9ConvertL1ToL2SourceId`), so the mutation's own level-check is
+   * satisfied before authorization is exercised. */
+  readonly a9ConvertL2ToL1SourceId: string;
+  /** A9's `transferCallout` destination CalloutsSet id (corr-ts-22 fix) —
+   * `a9L1MoveTargetId`'s OWN calloutsSet, a genuinely different CalloutsSet
+   * from the one `calloutId` already lives in. Never `spaceCollaborationId`
+   * (that is a Collaboration id, not a CalloutsSet id — the resolver's
+   * `getCalloutsSetOrFail` pre-gate lookup throws `EntityNotFoundException`
+   * for it regardless of authorization) and never the source's own
+   * CalloutsSet (a self-transfer). */
+  readonly a9TransferCalloutTargetCalloutsSetId: string;
 }
 
 const uid = () => UniqueIDGenerator.getID();
@@ -329,6 +376,42 @@ export async function buildMatrixFixtures(): Promise<MatrixFixtures> {
     `matrixa9l2${runId}`,
     a9SecondSubspaceId
   );
+
+  // A9's three promote/demote conversions (corr-ts-20/qual-ts-17 fix) — each
+  // gets its OWN dedicated space, never one of the move fixtures above:
+  // `moveSpaceL1ToSpaceL2`'s ALLOW cell (earlier in census order) genuinely
+  // re-parents `a9SecondSubspaceId` under `a9L1MoveTargetId`, so reusing
+  // either here would have a conversion operate on a space this fixture set
+  // no longer accurately describes.
+  const a9ConvertL1ToL0SourceId = await createSubspaceOrFail(
+    `matrix-a9-conv-l0-${runId}`,
+    `matrixa9cl0${runId}`,
+    base.space.id
+  );
+  const a9ConvertL1ToL2ParentId = await createSubspaceOrFail(
+    `matrix-a9-conv-l2p-${runId}`,
+    `matrixa9cl2p${runId}`,
+    base.space.id
+  );
+  const a9ConvertL1ToL2SourceId = await createSubspaceOrFail(
+    `matrix-a9-conv-l2s-${runId}`,
+    `matrixa9cl2s${runId}`,
+    base.space.id
+  );
+  const a9ConvertL2ToL1SourceId = await createSubspaceOrFail(
+    `matrix-a9-conv-l1s-${runId}`,
+    `matrixa9cl1s${runId}`,
+    a9ConvertL1ToL2ParentId
+  );
+
+  // A9's `transferCallout` destination CalloutsSet (corr-ts-22 fix) —
+  // `a9L1MoveTargetId`'s OWN CalloutsSet, genuinely different from the one
+  // `calloutId` already lives in (never `spaceCollaborationId`, a
+  // Collaboration id, not a CalloutsSet id).
+  const a9L1MoveTargetSpaceResult = await getSpaceData(a9L1MoveTargetId);
+  const a9TransferCalloutTargetCalloutsSetId =
+    a9L1MoveTargetSpaceResult.data?.lookup.space?.collaboration?.calloutsSet
+      .id ?? '';
 
   // corr-ts-12: A6's `deleteOrganization` needs its OWN disposable
   // organization whose account hosts NOTHING — `secondOrganizationId`'s
@@ -494,6 +577,47 @@ export async function buildMatrixFixtures(): Promise<MatrixFixtures> {
   );
   const a13UpdatableLicensePlanId =
     a13UpdatablePlanResult.data?.createLicensePlan?.id ?? '';
+
+  // A13's `adminLicensePolicyDeleteCredentialRule`/`adminLicensePolicyUpdateCredentialRule`
+  // disposable targets (corr-ts-23 fix) — credential RULES, not license
+  // PLANS: the two id spaces are unrelated and the resolver's post-gate
+  // lookup throws EntityNotFoundException for a plan id regardless of
+  // authorization. Two separate rules, same census-order reasoning as the
+  // two license plans above (every Delete cell runs before any Update
+  // cell).
+  const a13DeletableCredentialRuleResult =
+    await getGraphqlClient().adminLicensePolicyCreateCredentialRule(
+      {
+        createData: {
+          name: `matrix-a13-rule-delete-${runId}`,
+          credentialType: LicensingCredentialBasedCredentialType.SpaceLicensePlus,
+          grantedEntitlements: [
+            { type: LicenseEntitlementType.SpaceFlagSaveAsTemplate, limit: 1 },
+          ],
+        },
+      },
+      { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
+    );
+  const a13DeletableCredentialRuleId =
+    a13DeletableCredentialRuleResult.data?.adminLicensePolicyCreateCredentialRule
+      ?.id ?? '';
+
+  const a13UpdatableCredentialRuleResult =
+    await getGraphqlClient().adminLicensePolicyCreateCredentialRule(
+      {
+        createData: {
+          name: `matrix-a13-rule-update-${runId}`,
+          credentialType: LicensingCredentialBasedCredentialType.SpaceLicensePlus,
+          grantedEntitlements: [
+            { type: LicenseEntitlementType.SpaceFlagSaveAsTemplate, limit: 1 },
+          ],
+        },
+      },
+      { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
+    );
+  const a13UpdatableCredentialRuleId =
+    a13UpdatableCredentialRuleResult.data?.adminLicensePolicyCreateCredentialRule
+      ?.id ?? '';
 
   // ===== A8's five disposable delete targets (corr-ts-1) =====
   // A separate callout in the SAME collaboration for `deleteCallout` — never
@@ -678,6 +802,8 @@ export async function buildMatrixFixtures(): Promise<MatrixFixtures> {
     a8DeletableInnovationHubId,
     a13DeletableLicensePlanId,
     a13UpdatableLicensePlanId,
+    a13DeletableCredentialRuleId,
+    a13UpdatableCredentialRuleId,
     a15ConditionSpaceId,
     a16PrivateSpaceId,
     a6DeletableOrganizationId,
@@ -685,6 +811,11 @@ export async function buildMatrixFixtures(): Promise<MatrixFixtures> {
     a9SecondSubspaceId,
     a9L1MoveTargetId,
     a9L2Id,
+    a9ConvertL1ToL0SourceId,
+    a9ConvertL1ToL2ParentId,
+    a9ConvertL1ToL2SourceId,
+    a9ConvertL2ToL1SourceId,
+    a9TransferCalloutTargetCalloutsSetId,
   };
 }
 
@@ -718,6 +849,30 @@ export async function teardownMatrixFixtures(
   }
   try {
     await deleteSpace(fixtures.a9L1MoveTargetId);
+  } catch {
+    // best-effort cleanup
+  }
+
+  // corr-ts-20/qual-ts-17's dedicated A9 conversion tree — same reasoning
+  // (not tracked by `TestScenarioFactory`, best-effort, order-independent
+  // of current level/parent). The L2 first, then its L1s.
+  try {
+    await deleteSpace(fixtures.a9ConvertL2ToL1SourceId);
+  } catch {
+    // best-effort cleanup
+  }
+  try {
+    await deleteSpace(fixtures.a9ConvertL1ToL2SourceId);
+  } catch {
+    // best-effort cleanup
+  }
+  try {
+    await deleteSpace(fixtures.a9ConvertL1ToL2ParentId);
+  } catch {
+    // best-effort cleanup
+  }
+  try {
+    await deleteSpace(fixtures.a9ConvertL1ToL0SourceId);
   } catch {
     // best-effort cleanup
   }

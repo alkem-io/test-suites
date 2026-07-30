@@ -17,7 +17,7 @@ import type { MatrixFixtures } from './fixtures';
 
 /**
  * workspace#027-platform-role-redesign (T007b) — one invocation helper per
- * matrix-eligible census entry (96 at Slice A: 102 declared minus A1's 4
+ * matrix-eligible census entry (100 at Slice A: 106 declared minus A1's 4
  * `{retiredIn: 'B'}` entries, which generate no cell in either slice, minus
  * A17's 2 `{deferred: 'B'}` entries, which arrive at T022a). **One per
  * entry, not per distinct mutation** — A1's and A2's `assignPlatformRoleToUser`
@@ -712,7 +712,7 @@ export function buildSurfaceInvocations(
       ),
   ]);
 
-  // ===== A9 — move space / hub / pack / VC / callout (9) =====
+  // ===== A9 — move space / hub / pack / VC / callout (13) =====
   // `moveSpaceL1ToSpaceL0` now uses a real two-level tree (`fx.subspaceId`,
   // an actual L1 under `fx.spaceId`) and a genuinely different L0
   // (`fx.a9TargetSpaceL0Id`) — passing the same L0 space for both source
@@ -772,6 +772,63 @@ export function buildSurfaceInvocations(
           ),
         caller
       ),
+    // spec-server-10 fix (corr-ts-20/qual-ts-17 re-sync): the three
+    // promote/demote conversions ride the SAME resolver-local synthetic
+    // policy as the three cross-L0 moves above — `invokeMove` tolerates the
+    // same A9_COLLATERAL_READ_FIELDS plain-READ denial these share via the
+    // `SpaceData`-shaped fragment... except these three use a MINIMAL,
+    // hand-added selection (no `Space.account`/`Space.templatesManager`), so
+    // `invoke` (not `invokeMove`) is correct and sufficient here.
+    caller =>
+      invoke(
+        token =>
+          client().ConvertSpaceL1ToSpaceL0(
+            { convertData: { spaceL1ID: fx.a9ConvertL1ToL0SourceId } },
+            bearer(token)
+          ),
+        caller
+      ),
+    caller =>
+      invoke(
+        token =>
+          client().ConvertSpaceL2ToSpaceL1(
+            { convertData: { spaceL2ID: fx.a9ConvertL2ToL1SourceId } },
+            bearer(token)
+          ),
+        caller
+      ),
+    caller =>
+      invoke(
+        token =>
+          client().ConvertSpaceL1ToSpaceL2(
+            {
+              convertData: {
+                spaceL1ID: fx.a9ConvertL1ToL2SourceId,
+                parentSpaceL1ID: fx.a9ConvertL1ToL2ParentId,
+              },
+            },
+            bearer(token)
+          ),
+        caller
+      ),
+    // Best-effort placeholder (T007b's own header convention): reuses the
+    // shared `virtualContributorId`, built with `bodyOfKnowledgeType: 'NONE'`
+    // — this reaches the AUTHORIZATION gate (checked before the domain
+    // lookup, `conversion.resolver.mutations.ts`) correctly for every DENY
+    // cell, but the ALLOW cell's actual conversion may fail downstream if
+    // the VC is not genuinely Space-based. A dedicated space-backed VC
+    // fixture is the correct fix, deferred pending Phase V's live run.
+    caller =>
+      invoke(
+        token =>
+          client().convertVirtualContributorToUseKnowledgeBase(
+            {
+              conversionData: { virtualContributorID: fx.virtualContributorId },
+            },
+            bearer(token)
+          ),
+        caller
+      ),
     caller =>
       invoke(
         token =>
@@ -786,6 +843,11 @@ export function buildSurfaceInvocations(
           ),
         caller
       ),
+    // corr-ts-22 fix: `targetCalloutsSetID` must be a CalloutsSet id — the
+    // pre-fix code passed `fx.spaceCollaborationId` (a Collaboration id),
+    // which fails `getCalloutsSetOrFail` before either authorization gate
+    // runs. `a9TransferCalloutTargetCalloutsSetId` is a genuinely different,
+    // real CalloutsSet.
     caller =>
       invoke(
         token =>
@@ -793,7 +855,7 @@ export function buildSurfaceInvocations(
             {
               transferData: {
                 calloutID: fx.calloutId,
-                targetCalloutsSetID: fx.spaceCollaborationId,
+                targetCalloutsSetID: fx.a9TransferCalloutTargetCalloutsSetId,
               },
             },
             bearer(token)
@@ -1120,11 +1182,17 @@ export function buildSurfaceInvocations(
           ),
         caller
       ),
+    // corr-ts-23 fix: `ID` must be a LicensePolicy CREDENTIAL RULE id, never
+    // `fx.licensePlanId` (a LicensePlan id — a different entity entirely).
+    // The resolver's gate passes for the ALLOW caller, then
+    // `credentialRules.findIndex` throws `EntityNotFoundException` for any
+    // id outside the license policy's own rule list, permanently failing
+    // the ALLOW cell regardless of authorization correctness.
     caller =>
       invoke(
         token =>
           client().adminLicensePolicyDeleteCredentialRule(
-            { deleteData: { ID: fx.licensePlanId } },
+            { deleteData: { ID: fx.a13DeletableCredentialRuleId } },
             bearer(token)
           ),
         caller
@@ -1135,7 +1203,7 @@ export function buildSurfaceInvocations(
           client().adminLicensePolicyUpdateCredentialRule(
             {
               updateData: {
-                ID: fx.licensePlanId,
+                ID: fx.a13UpdatableCredentialRuleId,
                 credentialType: 'FEATURE_BETA_TESTER' as never,
                 grantedEntitlements: [],
               },
@@ -1163,18 +1231,19 @@ export function buildSurfaceInvocations(
 
   // ===== A14 — change space visibility (1) =====
   registerRow('A14', [
+    // corr-ts-21 fix: the shared `UpdateSpacePlatformSettings` document
+    // always sends `nameID`, which triggers the resolver's SECOND, legacy-
+    // credential-only rename gate (`legacySpaceNameIdRenamePolicy`, GA/GS
+    // only) ahead of the A14 (`ACCOUNT_LICENSE_MANAGE`) gate under test —
+    // `platform-license-manager`'s correct ALLOW was rejected there instead.
+    // `UpdateSpaceVisibilityPlatformSettings` omits `nameID` from
+    // `updateData` entirely, so the call reaches ONLY the A14 gate.
     caller =>
       invoke(
         token =>
-          client().UpdateSpacePlatformSettings(
+          client().UpdateSpaceVisibilityPlatformSettings(
             {
               spaceId: fx.spaceId,
-              // The mutation's `nameId` is required even though this A14
-              // helper only cares about exercising the AUTHORIZATION gate —
-              // passing the space's own unchanged nameID keeps the call a
-              // well-formed no-op rename rather than perturbing fixture
-              // state other helpers depend on.
-              nameId: fx.base.space.nameId,
               visibility: SpaceVisibility.Active,
             },
             bearer(token)

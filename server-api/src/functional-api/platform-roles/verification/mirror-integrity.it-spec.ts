@@ -91,8 +91,8 @@ describe('mirror-integrity (T007a) — the mirrored census matches its own docum
     expect(LIVE_ROW_IDS).not.toContain('A18');
   });
 
-  it('the census file holds 102 entries total (T007c re-sync count — every planning document that still says ~76/~80/99 is stale)', () => {
-    expect(ALL_ENTRIES.length).toBe(102);
+  it('the census file holds 106 entries total (corr-ts-20/qual-ts-17 re-sync count — every planning document that still says ~76/~80/99/102 is stale)', () => {
+    expect(ALL_ENTRIES.length).toBe(106);
   });
 
   it('exactly 4 entries carry {retiredIn: "B"} — A1s FR-022 credential mutations', () => {
@@ -109,9 +109,9 @@ describe('mirror-integrity (T007a) — the mirrored census matches its own docum
     }
   });
 
-  it('96 entries multiply at stage A; 98 at stage B (102 total minus the 4 non-multiplying retiredIn entries, minus A17s 2 deferred-until-B entries at stage A only)', () => {
-    expect(multiplyingAt('A').length).toBe(96);
-    expect(multiplyingAt('B').length).toBe(98);
+  it('100 entries multiply at stage A; 102 at stage B (106 total minus the 4 non-multiplying retiredIn entries, minus A17s 2 deferred-until-B entries at stage A only)', () => {
+    expect(multiplyingAt('A').length).toBe(100);
+    expect(multiplyingAt('B').length).toBe(102);
   });
 
   it('per-row surface counts match the documented census table (stage-A declared count)', () => {
@@ -124,7 +124,7 @@ describe('mirror-integrity (T007a) — the mirrored census matches its own docum
       A6: 2,
       A7: 8,
       A8: 6,
-      A9: 9,
+      A9: 13,
       A10: 6,
       A11: 13,
       A12: 6,
@@ -336,16 +336,43 @@ describe('mirror-integrity (T007a) — the structural-diff guard: derived reacha
   });
 
   it('A9: the conversion-admin-synthetic tree-scoped grant reaches platform-resource-admin at stage A', () => {
-    // The three cross-L0 moves are checked against the legacy PLATFORM_ADMIN
-    // catch-all via a resolver-local synthetic policy — only reachable
-    // through TREE_SCOPED_PRIVILEGE_GRANTS['conversion-admin-synthetic'].
+    // The three cross-L0 moves, the three promote/demote conversions and
+    // `convertVirtualContributorToUseKnowledgeBase` are ALL checked against
+    // the legacy PLATFORM_ADMIN catch-all via the SAME resolver-local
+    // synthetic policy (spec-server-10 fix, corr-ts-20/qual-ts-17 re-sync)
+    // — only reachable through
+    // TREE_SCOPED_PRIVILEGE_GRANTS['conversion-admin-synthetic'].
     const conversionSurfaces = A_ROW_SURFACES.A9.filter(
       s => s.tree === 'conversion-admin-synthetic'
     );
-    expect(conversionSurfaces.length).toBe(3);
+    expect(conversionSurfaces.length).toBe(7);
     for (const surface of conversionSurfaces) {
       expect(reachers(surface, stageA)).toContain(
         AuthorizationCredential.PlatformResourceAdmin
+      );
+    }
+  });
+
+  it('A9: transferCallout reaches platform-resource-admin via the callouts-set tree-scoped grant, with global-support-manager (not global-support) as its legacy reacher', () => {
+    // corr-server-9 fix (corr-ts-20/qual-ts-17 re-sync): transferCallout's
+    // OWN authorization tree is `callouts-set`, distinct from the `account`
+    // tree the other four A9 transfer mutations share.
+    const [transferCallout] = A_ROW_SURFACES.A9.filter(
+      s => s.tree === 'callouts-set'
+    );
+    expect(transferCallout).toBeDefined();
+    const reached = reachers(transferCallout, stageA);
+    expect(reached).toContain(AuthorizationCredential.PlatformResourceAdmin);
+    expect(reached).toContain(AuthorizationCredential.GlobalSupportManager);
+    expect(reached).not.toContain(AuthorizationCredential.GlobalSupport);
+  });
+
+  it('A13: global-admin is a derived legacy reacher at stage A', () => {
+    // corr-server-7/corr-server-10 fix (corr-ts-20/qual-ts-17 re-sync): the
+    // resolver-local synthetic policy explicitly includes GLOBAL_ADMIN.
+    for (const surface of A_ROW_SURFACES.A13) {
+      expect(reachers(surface, stageA)).toContain(
+        AuthorizationCredential.GlobalAdmin
       );
     }
   });

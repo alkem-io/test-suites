@@ -116599,6 +116599,15 @@ export const ConvertSpaceL1ToSpaceL0Document = gql`
   }
   ${SpaceDataFragmentDoc}
 `;
+export const ConvertSpaceL1ToSpaceL2Document = gql`
+  mutation ConvertSpaceL1ToSpaceL2($convertData: ConvertSpaceL1ToSpaceL2Input!) {
+    convertSpaceL1ToSpaceL2(convertData: $convertData) {
+      id
+      nameID
+      level
+    }
+  }
+`;
 export const ConvertSpaceL2ToSpaceL1Document = gql`
   mutation ConvertSpaceL2ToSpaceL1(
     $convertData: ConvertSpaceL2ToSpaceL1Input!
@@ -117290,6 +117299,20 @@ export const DeleteInnovationPackDocument = gql`
   mutation deleteInnovationPack($innovationPackId: UUID!) {
     deleteInnovationPack(deleteData: { ID: $innovationPackId }) {
       id
+      __typename
+    }
+  }
+`;
+export const UpdateSpaceVisibilityPlatformSettingsDocument = gql`
+  mutation UpdateSpaceVisibilityPlatformSettings(
+    $spaceId: UUID!
+    $visibility: SpaceVisibility!
+  ) {
+    updateSpacePlatformSettings(
+      updateData: { spaceID: $spaceId, visibility: $visibility }
+    ) {
+      id
+      visibility
       __typename
     }
   }
@@ -119837,6 +119860,9 @@ const UpdatePostDocumentString = print(UpdatePostDocument);
 const ConvertSpaceL1ToSpaceL0DocumentString = print(
   ConvertSpaceL1ToSpaceL0Document
 );
+const ConvertSpaceL1ToSpaceL2DocumentString = print(
+  ConvertSpaceL1ToSpaceL2Document
+);
 const ConvertSpaceL2ToSpaceL1DocumentString = print(
   ConvertSpaceL2ToSpaceL1Document
 );
@@ -120024,6 +120050,9 @@ const DeleteInnovationHubDocumentString = print(DeleteInnovationHubDocument);
 const DeleteInnovationPackDocumentString = print(DeleteInnovationPackDocument);
 const UpdateSpacePlatformSettingsDocumentString = print(
   UpdateSpacePlatformSettingsDocument
+);
+const UpdateSpaceVisibilityPlatformSettingsDocumentString = print(
+  UpdateSpaceVisibilityPlatformSettingsDocument
 );
 const SubscribeToPushNotificationsDocumentString = print(
   SubscribeToPushNotificationsDocument
@@ -121438,6 +121467,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "ConvertSpaceL1ToSpaceL0",
+        "mutation",
+        variables
+      );
+    },
+    ConvertSpaceL1ToSpaceL2(
+      variables: SchemaTypes.ConvertSpaceL1ToSpaceL2MutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ConvertSpaceL1ToSpaceL2Mutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ConvertSpaceL1ToSpaceL2Mutation>(
+            ConvertSpaceL1ToSpaceL2DocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ConvertSpaceL1ToSpaceL2",
         "mutation",
         variables
       );
@@ -123176,6 +123227,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "deleteInnovationPack",
+        "mutation",
+        variables
+      );
+    },
+    UpdateSpaceVisibilityPlatformSettings(
+      variables: SchemaTypes.UpdateSpaceVisibilityPlatformSettingsMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateSpaceVisibilityPlatformSettingsMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateSpaceVisibilityPlatformSettingsMutation>(
+            UpdateSpaceVisibilityPlatformSettingsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "UpdateSpaceVisibilityPlatformSettings",
         "mutation",
         variables
       );

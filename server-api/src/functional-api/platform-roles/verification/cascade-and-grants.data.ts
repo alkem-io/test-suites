@@ -27,7 +27,7 @@
  * Mirror everything else structurally (same ids, same order, same
  * commentary) so a diff against the server file stays a one-line check —
  * `mirror-integrity.it-spec.ts` in this directory guards the census's own
- * documented counts (96 multiplying at stage A / 102 total entries / 21 live rows) so a
+ * documented counts (100 multiplying at stage A / 106 total entries / 21 live rows) so a
  * stale local edit fails loudly even without cross-repo file access at test
  * time (this repo's worktree never reads another repo's tree at runtime).
  */
@@ -93,6 +93,16 @@ export type TreeId =
   | 'licensing-framework'
   | 'license-policy'
   | 'ai-server'
+  // corr-server-9 fix (corr-ts-20/qual-ts-17 re-sync): `transferCallout`'s
+  // TRANSFER_RESOURCE_OFFER/_ACCEPT are checked on the CalloutsSet's OWN
+  // authorization (`callouts.set.service.authorization.ts`), a DIFFERENT
+  // credential rule — and a different legacy reacher
+  // (`global-support-manager`, not `global-support`) — than the `account`
+  // tree the other four A9 transfer mutations share
+  // (`account.service.authorization.ts`). The two trees cannot share one
+  // flat `PRIVILEGE_GRANTS` entry for the same privilege names — split into
+  // its own tree-scoped anchor.
+  | 'callouts-set'
   // Per-resolver SYNTHETIC policies — fixed, in-memory, never persisted,
   // never reset. Named per resolver so a reviewer can find the constructor
   // that builds it.
@@ -283,8 +293,16 @@ export type ManagedPrivilege =
   | AuthorizationPrivilege.PlatformAuditRead
   | AuthorizationPrivilege.SetServiceProfile
   | AuthorizationPrivilege.PlatformSettingsAdmin
-  | AuthorizationPrivilege.TransferResourceOffer
-  | AuthorizationPrivilege.TransferResourceAccept
+  // TRANSFER_RESOURCE_OFFER/_ACCEPT are DELIBERATELY ABSENT here
+  // (corr-server-9 fix, corr-ts-20/qual-ts-17 re-sync): two independent
+  // credential rules — `account` (account.service.authorization.ts) and
+  // `callouts-set` (callouts.set.service.authorization.ts) — grant these
+  // two privileges with DIFFERENT legacy reacher sets (`global-support` vs
+  // `global-support-manager`). A flat, tree-independent entry here would
+  // apply ONE of those sets to every surface using either privilege
+  // regardless of tree — exactly the mistake that let `transferCallout`'s
+  // wrong legacy reacher go undetected. Declared per-tree instead, in
+  // `TREE_SCOPED_PRIVILEGE_GRANTS` below (`account` and `callouts-set`).
   | AuthorizationPrivilege.MoveContribution
   | AuthorizationPrivilege.UpdateCalloutPublisher
   | AuthorizationPrivilege.AccountLicenseManage
@@ -464,23 +482,6 @@ export const PRIVILEGE_GRANTS: Record<ManagedPrivilege, PrivilegeGrant> = {
       AuthorizationCredential.GlobalLicenseManager,
     ],
   },
-  // --- A9 (T037).
-  [AuthorizationPrivilege.TransferResourceOffer]: {
-    anchor: 'account',
-    owningCredentials: [AuthorizationCredential.PlatformResourceAdmin],
-    legacyCredentials: [
-      AuthorizationCredential.GlobalAdmin,
-      AuthorizationCredential.GlobalSupport,
-    ],
-  },
-  [AuthorizationPrivilege.TransferResourceAccept]: {
-    anchor: 'account',
-    owningCredentials: [AuthorizationCredential.PlatformResourceAdmin],
-    legacyCredentials: [
-      AuthorizationCredential.GlobalAdmin,
-      AuthorizationCredential.GlobalSupport,
-    ],
-  },
   // --- A9 (T038). `callout.contribution.service.authorization.ts` grants
   // it to `platform-resource-admin` directly PLUS whatever credentials the
   // space's own `platformRolesAccess` array carries with UPDATE — the
@@ -617,10 +618,19 @@ export const TREE_SCOPED_PRIVILEGE_GRANTS: {
     },
     // A13 — license-plan / license-policy CRUD, re-anchored (in intent,
     // not in literal gate) onto `platform-settings-admin` (T040).
+    // GLOBAL_ADMIN added to each (corr-server-7/corr-server-10 fix,
+    // corr-ts-20/qual-ts-17 re-sync): the five A13 resolvers now check a
+    // resolver-local synthetic policy
+    // (`GLOBAL_POLICY_LICENSE_DEFINITION_ADMIN`) that grants bare
+    // CREATE/UPDATE/DELETE to exactly {platform-settings-admin,
+    // global-admin, global-license-manager, global-platform-manager} — NOT
+    // the entity's own (root-cascade-inheriting) authorization, so
+    // `platform-content-full-access` no longer reaches these surfaces.
     [AuthorizationPrivilege.Create]: {
       anchor: 'licensing-framework',
       owningCredentials: [AuthorizationCredential.PlatformSettingsAdmin],
       legacyCredentials: [
+        AuthorizationCredential.GlobalAdmin,
         AuthorizationCredential.GlobalLicenseManager,
         AuthorizationCredential.GlobalPlatformManager,
       ],
@@ -629,6 +639,7 @@ export const TREE_SCOPED_PRIVILEGE_GRANTS: {
       anchor: 'licensing-framework',
       owningCredentials: [AuthorizationCredential.PlatformSettingsAdmin],
       legacyCredentials: [
+        AuthorizationCredential.GlobalAdmin,
         AuthorizationCredential.GlobalLicenseManager,
         AuthorizationCredential.GlobalPlatformManager,
       ],
@@ -637,6 +648,7 @@ export const TREE_SCOPED_PRIVILEGE_GRANTS: {
       anchor: 'licensing-framework',
       owningCredentials: [AuthorizationCredential.PlatformSettingsAdmin],
       legacyCredentials: [
+        AuthorizationCredential.GlobalAdmin,
         AuthorizationCredential.GlobalLicenseManager,
         AuthorizationCredential.GlobalPlatformManager,
       ],
@@ -651,6 +663,58 @@ export const TREE_SCOPED_PRIVILEGE_GRANTS: {
       anchor: 'conversion-admin-synthetic',
       owningCredentials: [AuthorizationCredential.PlatformResourceAdmin],
       legacyCredentials: [AuthorizationCredential.GlobalAdmin],
+    },
+  },
+  // A9 — the four account-tree resource transfers
+  // (account.resolver.mutations.ts: transferSpaceToAccount,
+  // transferInnovationHubToAccount, transferInnovationPackToAccount,
+  // transferVirtualContributorToAccount), gated on the account's own
+  // TRANSFER_RESOURCE_OFFER/_ACCEPT rule (account.service.authorization.ts).
+  // Split out of the flat `PRIVILEGE_GRANTS` (corr-server-9 fix) because
+  // `callouts-set` grants the SAME two privileges to a different legacy
+  // reacher below.
+  account: {
+    [AuthorizationPrivilege.TransferResourceOffer]: {
+      anchor: 'account',
+      owningCredentials: [AuthorizationCredential.PlatformResourceAdmin],
+      legacyCredentials: [
+        AuthorizationCredential.GlobalAdmin,
+        AuthorizationCredential.GlobalSupport,
+      ],
+    },
+    [AuthorizationPrivilege.TransferResourceAccept]: {
+      anchor: 'account',
+      owningCredentials: [AuthorizationCredential.PlatformResourceAdmin],
+      legacyCredentials: [
+        AuthorizationCredential.GlobalAdmin,
+        AuthorizationCredential.GlobalSupport,
+      ],
+    },
+  },
+  // A9 — `transferCallout`'s OWN authorization tree
+  // (callouts.set.service.authorization.ts), whose
+  // TRANSFER_RESOURCE_OFFER/_ACCEPT rule grants
+  // [GLOBAL_ADMIN, GLOBAL_SUPPORT_MANAGER, PLATFORM_RESOURCE_ADMIN] — NOT
+  // GLOBAL_SUPPORT (corr-server-9 fix: GLOBAL_SUPPORT_MANAGER is the ONLY
+  // legacy credential that reaches this surface; the account-tree grants
+  // above that DO include GLOBAL_SUPPORT are cascade:false and never reach
+  // the callouts-set).
+  'callouts-set': {
+    [AuthorizationPrivilege.TransferResourceOffer]: {
+      anchor: 'callouts-set',
+      owningCredentials: [AuthorizationCredential.PlatformResourceAdmin],
+      legacyCredentials: [
+        AuthorizationCredential.GlobalAdmin,
+        AuthorizationCredential.GlobalSupportManager,
+      ],
+    },
+    [AuthorizationPrivilege.TransferResourceAccept]: {
+      anchor: 'callouts-set',
+      owningCredentials: [AuthorizationCredential.PlatformResourceAdmin],
+      legacyCredentials: [
+        AuthorizationCredential.GlobalAdmin,
+        AuthorizationCredential.GlobalSupportManager,
+      ],
     },
   },
 };

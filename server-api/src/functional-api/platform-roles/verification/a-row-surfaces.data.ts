@@ -1,6 +1,6 @@
 /**
  * MIRRORED from `server`'s `src/platform/platform-role/verification/a.row.surfaces.ts`
- * (commit 3c4cacd17, workspace#027-platform-role-redesign T040b-T040d, T070a/T070b/T070m).
+ * (commit 78d79364c, workspace#027-platform-role-redesign T040b-T040d, T070a/T070b/T070m).
  * Re-synced during the corrective wave after a field-by-field diff against
  * server found this mirror's `legacyReachers` stale on several surfaces
  * (T070m corrected them in the SAME parallel wave this mirror was built in
@@ -9,6 +9,17 @@
  * the bare READ grant, and the whole `TREE_SCOPED_PRIVILEGE_GRANTS`
  * mechanism) never mirrored at all — silently zeroing `reachers()` for
  * A3/A9/A11/A12/A13/A16.
+ *
+ * SECOND re-sync (corr-ts-20/qual-ts-17, 2026-07-30): server's `spec-server-10`/
+ * `corr-server-9` commits (e47f9510e, 78d79364c) landed AFTER the first
+ * re-sync above — A9 grew from 9 to 13 declared surfaces (the three
+ * promote/demote conversions + `convertVirtualContributorToUseKnowledgeBase`
+ * ride the SAME `conversion-admin-synthetic` policy as the three cross-L0
+ * moves), `transferCallout` moved onto its own `callouts-set` tree with
+ * `GLOBAL_SUPPORT_MANAGER` (not `GLOBAL_SUPPORT`) as its legacy reacher, and
+ * A13 gained an explicit `GLOBAL_ADMIN` legacy reacher. See
+ * `cascade-and-grants.data.ts`'s matching re-sync note for the
+ * `TREE_SCOPED_PRIVILEGE_GRANTS` half of this same commit pair.
  *
  * T007a (research D24/D26/D27): this repo holds no independent notion of who
  * owns what — a gap found here is a `server` finding to report, never a local
@@ -27,7 +38,7 @@
  * Mirror everything else structurally (same ids, same order, same
  * commentary) so a diff against the server file stays a one-line check —
  * `mirror-integrity.it-spec.ts` in this directory guards the census's own
- * documented counts (96 multiplying at stage A / 102 total entries / 21 live rows) so a
+ * documented counts (100 multiplying at stage A / 106 total entries / 21 live rows) so a
  * stale local edit fails loudly even without cross-repo file access at test
  * time (this repo's worktree never reads another repo's tree at runtime).
  */
@@ -161,6 +172,7 @@ export const INDIRECT_ENFORCEMENT_FILES: readonly string[] = [
 
 const GA = AuthorizationCredential.GlobalAdmin;
 const GS = AuthorizationCredential.GlobalSupport;
+const GSM = AuthorizationCredential.GlobalSupportManager;
 const GLM = AuthorizationCredential.GlobalLicenseManager;
 const GPM = AuthorizationCredential.GlobalPlatformManager;
 
@@ -717,7 +729,7 @@ export const A_ROW_SURFACES: Record<ARowId, readonly SurfaceRef[]> = {
   // `MOVE_POST` resolved (T040b instruction): granted in
   // `post.service.authorization.ts` but NO resolver mutation checks it
   // (`post.dto.move.ts` exists, unwired) — a granted-but-unreachable
-  // privilege, not a gate site. A9 stays at 9, not 10.
+  // privilege, not a gate site. A9 stays at 13.
   A9: [
     // The three cross-L0 moves (spec 030) share ONE resolver-local
     // synthetic policy checked via the (legacy, retiring) PLATFORM_ADMIN
@@ -729,11 +741,22 @@ export const A_ROW_SURFACES: Record<ARowId, readonly SurfaceRef[]> = {
     // `reachers()` cannot yet derive these three correctly from the gate
     // alone — `intendedOwners`/`legacyReachers` below are the source of
     // truth for them until that is resolved.
+    // spec-server-10 fix (corr-ts-20/qual-ts-17 re-sync): the resolver's OWN
+    // constructor comment says all SEVEN mutations on this file share the
+    // ONE synthetic policy — the mirror previously declared only the three
+    // cross-L0 moves. The three promote/demote conversions are in-scope A9
+    // surfaces per spec §Action → owning role ("promote / demote / move a
+    // space"); declared here so `platform-resource-admin`'s reach over them
+    // is checked, not merely implied by the resolver's shared-policy
+    // comment.
     ...(
       [
         'moveSpaceL1ToSpaceL0',
         'moveSpaceL1ToSpaceL2',
         'moveSpaceL2ToSpaceL1',
+        'convertSpaceL1ToSpaceL0',
+        'convertSpaceL2ToSpaceL1',
+        'convertSpaceL1ToSpaceL2',
       ] as const
     ).map(
       (member): SurfaceRef => ({
@@ -746,6 +769,21 @@ export const A_ROW_SURFACES: Record<ARowId, readonly SurfaceRef[]> = {
         legacyReachers: [GA],
       })
     ),
+    // spec-server-10 fix: `convertVirtualContributorToUseKnowledgeBase`
+    // rides the SAME synthetic policy as the six space moves/conversions
+    // above (same resolver, same constructor field) — it is NOT split onto
+    // its own policy, so `platform-resource-admin` reaches it too. Declared
+    // as its own A9 entry (rather than left as an undeclared side-effect of
+    // sharing the resolver) so the reach is checked, not merely implied.
+    {
+      file: 'src/services/api/conversion/conversion.resolver.mutations.ts',
+      member: 'convertVirtualContributorToUseKnowledgeBase',
+      kind: 'graphql-mutation',
+      tree: 'conversion-admin-synthetic',
+      gate: { requires: AuthorizationPrivilege.PlatformAdmin },
+      intendedOwners: [AuthorizationCredential.PlatformResourceAdmin],
+      legacyReachers: [GA],
+    },
     {
       file: 'src/domain/collaboration/callout-contribution/callout.contribution.move.resolver.mutations.ts',
       member: 'moveContributionToCallout',
@@ -759,13 +797,18 @@ export const A_ROW_SURFACES: Record<ARowId, readonly SurfaceRef[]> = {
       file: 'src/domain/collaboration/callout-transfer/callout.transfer.resolver.mutations.ts',
       member: 'transferCallout',
       kind: 'graphql-mutation',
-      tree: 'account',
+      // corr-server-9 fix (corr-ts-20/qual-ts-17 re-sync): this surface is
+      // checked on the CalloutsSet's OWN authorization
+      // (callouts.set.service.authorization.ts) — a DIFFERENT credential
+      // rule, with a DIFFERENT legacy reacher, than the `account` tree the
+      // other four A9 transfer mutations share.
+      tree: 'callouts-set',
       // Both TRANSFER_RESOURCE_OFFER and TRANSFER_RESOURCE_ACCEPT are
       // literally checked (AND, not OR — GateExpr has no `allOf`).
       // `anyOf` is used here as the closest available shape purely so BOTH
       // names are visible to the derivation/drift-scan; it does not change
       // the derived reacher set because the two privileges resolve to an
-      // IDENTICAL credential set on this feature's grant sets (T037).
+      // IDENTICAL credential set on the `callouts-set` tree.
       gate: {
         anyOf: [
           AuthorizationPrivilege.TransferResourceOffer,
@@ -773,7 +816,10 @@ export const A_ROW_SURFACES: Record<ARowId, readonly SurfaceRef[]> = {
         ],
       },
       intendedOwners: [AuthorizationCredential.PlatformResourceAdmin],
-      legacyReachers: [GA, GS],
+      // GLOBAL_SUPPORT_MANAGER, not GLOBAL_SUPPORT (corr-server-9 fix) —
+      // the callouts-set rule's actual legacy reacher; GLOBAL_SUPPORT never
+      // reaches this surface (its account-tree grants are cascade:false).
+      legacyReachers: [GA, GSM],
     },
     ...(
       [
@@ -1026,7 +1072,12 @@ export const A_ROW_SURFACES: Record<ARowId, readonly SurfaceRef[]> = {
       tree: 'licensing-framework',
       gate: { requires: literalGate },
       intendedOwners: [AuthorizationCredential.PlatformSettingsAdmin],
-      legacyReachers: [GLM, GPM],
+      // GLOBAL_ADMIN added (corr-ts-20/qual-ts-17 re-sync,
+      // corr-server-7/corr-server-10 fix): the resolver-local synthetic
+      // policy (`GLOBAL_POLICY_LICENSE_DEFINITION_ADMIN`) grants bare
+      // CREATE/UPDATE/DELETE to exactly {platform-settings-admin,
+      // global-admin, global-license-manager, global-platform-manager}.
+      legacyReachers: [GA, GLM, GPM],
     })
   ),
 

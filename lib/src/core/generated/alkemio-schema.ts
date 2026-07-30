@@ -79943,6 +79943,29 @@ export type UpdateSpacePlatformSettingsMutation = {
   };
 };
 
+/**
+ * 027-platform-role-redesign (corr-ts-21 fix) — hand-added, matching the
+ * `graphql-codegen` shape this repo's other hand-added SDK entries follow
+ * (this repo's codegen needs a live server, unavailable to this fix pass).
+ * A14's matrix helper needs a visibility-only variant of
+ * `updateSpacePlatformSettings` that OMITS `nameID` from `updateData` —
+ * the shared `UpdateSpacePlatformSettings` document above always sends it,
+ * which triggers the resolver's SECOND, legacy-credential-only rename gate
+ * (`legacySpaceNameIdRenamePolicy`) ahead of the A14 gate under test.
+ */
+export type UpdateSpaceVisibilityPlatformSettingsMutationVariables = Exact<{
+  spaceId: Scalars["UUID"]["input"];
+  visibility: SpaceVisibility;
+}>;
+
+export type UpdateSpaceVisibilityPlatformSettingsMutation = {
+  updateSpacePlatformSettings: {
+    __typename: "Space";
+    id: string;
+    visibility: SpaceVisibility;
+  };
+};
+
 export type SubscribeToPushNotificationsMutationVariables = Exact<{
   subscriptionData: SubscribeToPushNotificationsInput;
 }>;
@@ -89471,6 +89494,29 @@ export type UpdateUserServiceProfileMutationVariables = Exact<{
 
 export type UpdateUserServiceProfileMutation = {
   updateUser: { id: string };
+};
+
+/**
+ * 027-platform-role-redesign (corr-ts-20/qual-ts-17 fix) — hand-added,
+ * matching the `graphql-codegen` shape this repo's other hand-added SDK
+ * entries follow (this repo's codegen needs a live server, unavailable to
+ * this fix pass). Deliberately a MINIMAL selection (not the full `SpaceData`
+ * fragment `convertSpaceL1ToSpaceL0`/`convertSpaceL2ToSpaceL1` request) so
+ * this new A9 helper does not inherit the same collateral plain-READ
+ * `Space.account`/`Space.templatesManager` denial `invokeMove()` already
+ * works around for the move mutations — `PLATFORM_RESOURCE_ADMIN` is not
+ * granted bare space READ.
+ */
+export type ConvertSpaceL1ToSpaceL2MutationVariables = Exact<{
+  convertData: ConvertSpaceL1ToSpaceL2Input;
+}>;
+
+export type ConvertSpaceL1ToSpaceL2Mutation = {
+  convertSpaceL1ToSpaceL2: {
+    id: string;
+    nameID: string;
+    level: SpaceLevel;
+  };
 };
 
 export type SpaceReadProbeQueryVariables = Exact<{
