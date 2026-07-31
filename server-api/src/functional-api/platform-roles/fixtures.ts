@@ -6,6 +6,7 @@ import {
   TestUserManager,
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
+import { graphqlRequestAuth } from '@alkemio/tests-lib/utils/graphql.request';
 import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { CalloutContributionType, SpacePrivacyMode } from '@alkemio/client-lib';
 import { TemplateType } from '@alkemio/client-lib';
@@ -14,6 +15,7 @@ import {
   LicensingCredentialBasedCredentialType,
   LicensingCredentialBasedPlanType,
   TemplateType as GeneratedTemplateType,
+  VirtualContributorWellKnown,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { createOrganization } from '@functional-api/contributor-management/organization/organization.request.params';
 import {
@@ -22,6 +24,7 @@ import {
   registerVerifiedUser,
 } from '@functional-api/contributor-management/user/user.request.params';
 import { createInnovationHub } from '@functional-api/innovation-hub/innovation-hub-params';
+import { createVirtualContributorOnAccountSpaceBased } from '@functional-api/contributor-management/virtual-contributor/vc.request.params';
 import { getLicensePlans } from '@functional-api/license/license.params.request';
 import {
   createDiscussion,
@@ -74,6 +77,23 @@ export interface MatrixFixtures {
   readonly spaceId: string;
   readonly spaceCollaborationId: string;
   readonly calloutId: string;
+  /**
+   * A real `AuthorizationPolicy` id — A3's
+   * `authorizationPolicyResetToGlobalAdminsAccess` target.
+   *
+   * corr-ts-33 (2026-07-31): that helper used to pass `fx.spaceId`. A Space
+   * id is not an AuthorizationPolicy id, so `resetAuthorizationPolicy()`
+   * threw `EntityNotFound` — **after** the gate had already granted access
+   * (`admin.authorization.resolver.mutations.ts` checks
+   * AUTHORIZATION_RESET first, looks the policy up second). The ALLOW cell
+   * therefore reported a failure that had nothing to do with authorization,
+   * which is the exact "post-gate error reads as a denial" class this suite
+   * exists to catch. Both are bare `string` in the SDK, so nothing warned.
+   *
+   * Sourced from the fixture callout's own policy: a real, disposable target
+   * whose reset is bounded to fixture data.
+   */
+  readonly a3AuthorizationPolicyId: string;
   /** A throwaway Post contribution inside `calloutId` — A8's
    * `deleteContribution` / A9's `moveContributionToCallout` target. */
   readonly contributionId: string;
@@ -87,6 +107,43 @@ export interface MatrixFixtures {
   readonly templateId: string;
   readonly innovationHubId: string;
   readonly virtualContributorId: string;
+  /**
+   * A9's `convertVirtualContributorToUseKnowledgeBase` source — a DEDICATED,
+   * genuinely SPACE-BASED Virtual Contributor.
+   *
+   * corr-ts-34 (2026-07-31): this used to share `virtualContributorId` with
+   * A9's `transferVirtualContributorToAccount`, and that was two defects in
+   * one line:
+   *
+   *  1. **Ordering.** Both surfaces have an ALLOW cell, and the transfer's
+   *     runs FIRST (census order) — it moves the shared VC to another
+   *     account, so the convert then operated on a VC that is no longer
+   *     where this fixture set thinks it is. `corr-ts-16`'s
+   *     DENY-before-ALLOW ordering cannot help: it orders cells WITHIN one
+   *     surface, and these are two surfaces.
+   *  2. **Body of knowledge.** The shared VC is built with
+   *     `bodyOfKnowledgeType: 'NONE'`, but the mutation converts a
+   *     SPACE-based VC to a knowledge-base-backed one. `surface-invocations.ts`
+   *     flagged this inline as a placeholder pending a live run.
+   *
+   * Created space-based on the base account, and referenced by nothing else.
+   */
+  readonly a9ConvertVcSourceId: string;
+  /**
+   * sec-test-suites-21 (2026-07-31): the platform's CHAT_GUIDANCE well-known
+   * Virtual Contributor mapping AS FOUND, so teardown can put it back.
+   *
+   * A10's `setPlatformWellKnownVirtualContributor` ALLOW cell re-points that
+   * mapping at this fixture's throwaway VC — a platform-wide SINGLETON, on a
+   * SHARED environment, with no restore. Every run left the platform's chat
+   * guidance pointing at a Virtual Contributor that teardown then deleted,
+   * so the mapping dangled until someone noticed.
+   *
+   * `null` when the mapping did not exist before the run (nothing to
+   * restore); `undefined` is never stored, so "unknown" and "absent" stay
+   * distinguishable.
+   */
+  readonly wellKnownChatGuidanceVcIdBefore: string | null;
   /** The singleton virtual-assistant actor — A11's
    * `updateAssistantActorCapabilities` target. */
   readonly virtualAssistantId: string;
@@ -257,15 +314,38 @@ export interface MatrixFixtures {
    * shared target would leave `moveSpaceL1ToSpaceL2` moving a space that is
    * no longer where this fixture set thinks it is. */
   readonly a9SecondSubspaceId: string;
-  /** A9's `moveSpaceL1ToSpaceL2` destination — a second L1 sibling, distinct
-   * from every other L1 this fixture set builds, so the move has a genuine,
-   * unrelated target parent. */
+  /**
+   * A9's `moveSpaceL1ToSpaceL2` AND `moveSpaceL2ToSpaceL1` destination — an
+   * L1 under **`a9TargetSpaceL0Id`, a DIFFERENT L0** from every move source.
+   *
+   * corr-ts-32 (2026-07-31): this used to be a sibling L1 under the base
+   * scenario's own L0, which made both mutations reject before authorization
+   * was ever the question. They are cross-L0-only operations
+   * (`conversion.service.ts`): same-L0 hits
+   * `'Source and target are in the same L0; use convertSpaceL1ToSpaceL2
+   * instead'` / `'…same-L0 lateral re-parenting of an L2 is not supported'`.
+   * Both are `ValidationException`s raised AFTER the resolver's
+   * `grantAccessOrFail`, so both ALLOW cells were permanently red for a
+   * fixture reason that looked like an authorization result.
+   */
   readonly a9L1MoveTargetId: string;
-  /** A9's `moveSpaceL2ToSpaceL1` source — a real L2 created under
-   * `a9SecondSubspaceId`, so the mutation's own level-check
-   * (`Only L2 spaces can be moved to L1`) is satisfied before authorization
-   * is exercised. */
+  /**
+   * A9's `moveSpaceL2ToSpaceL1` source — a real L2, so the mutation's own
+   * level-check is satisfied before authorization is exercised.
+   *
+   * corr-ts-32: created under its own dedicated parent
+   * (`a9L2MoveSourceL1Id`), NOT under `a9SecondSubspaceId`. Two reasons, and
+   * both were live defects: `moveSpaceL1ToSpaceL2` refuses a source that has
+   * L2 children (`'Cannot demote: source L1 has L2 children…'`), so
+   * `a9SecondSubspaceId` had to become childless; and its ALLOW cell runs
+   * FIRST in census order and relocates it to another L0 entirely, which
+   * would move this L2 out from under the next cell's feet.
+   */
   readonly a9L2Id: string;
+  /** corr-ts-32: the dedicated parent L1 for `a9L2Id`, under the base
+   * scenario's L0. Exists only so `a9SecondSubspaceId` can stay childless —
+   * see the note on `a9L2Id`. */
+  readonly a9L2MoveSourceL1Id: string;
   /** A9's `convertSpaceL1ToSpaceL0` source (corr-ts-20/qual-ts-17 fix) — a
    * DEDICATED, fresh L1 under the base scenario's L0, distinct from every
    * other A9 L1 this fixture set builds: `moveSpaceL1ToSpaceL2`'s ALLOW
@@ -334,6 +414,30 @@ export async function buildMatrixFixtures(): Promise<MatrixFixtures> {
     },
   });
 
+  // corr-ts-34: A9's convert surface gets its OWN space-based VC — see the
+  // field doc on `a9ConvertVcSourceId`. Space-based (bodyOfKnowledgeID = the
+  // base L0 space) so the conversion has something real to convert, and
+  // dedicated so the transfer cell cannot move it first.
+  // The helper defaults its caller to GLOBAL_BETA_TESTER, which holds no
+  // `create-virtual-contributor` on this account — observed live 2026-07-31
+  // as `FORBIDDEN_POLICY` on every fixture build. GLOBAL_ADMIN builds every
+  // other resource in this file.
+  const a9ConvertVcResult = await createVirtualContributorOnAccountSpaceBased(
+    `matrix-a9-convert-vc-${runId}`,
+    base.organization.accountId,
+    base.space.id,
+    TestUser.GLOBAL_ADMIN
+  );
+  const a9ConvertVcSourceId =
+    a9ConvertVcResult.data?.createVirtualContributor.id ?? '';
+  if (!a9ConvertVcSourceId) {
+    console.error(
+      `[platform-roles fixtures] could not create A9's dedicated convert-source VC — that cell falls back to the shared VC and re-opens corr-ts-34. Cause: ${JSON.stringify(
+        a9ConvertVcResult.error?.errors ?? 'unknown'
+      )}`
+    );
+  }
+
   const secondOrgResult = await createOrganization(
     `matrix-org-2-${runId}`,
     `matrix-org2-${runId}`
@@ -366,15 +470,29 @@ export async function buildMatrixFixtures(): Promise<MatrixFixtures> {
     `matrixa9l1${runId}`,
     base.space.id
   );
+  // corr-ts-32: the move target lives under `a9TargetSpaceL0Id` — a
+  // DIFFERENT L0. `moveSpaceL1ToSpaceL2` and `moveSpaceL2ToSpaceL1` are
+  // cross-L0-only; a same-L0 pair is rejected by the service AFTER the
+  // resolver's gate, so both ALLOW cells failed for a fixture reason that
+  // read as an authorization result.
   const a9L1MoveTargetId = await createSubspaceOrFail(
     `matrix-a9-l1-target-${runId}`,
     `matrixa9l1t${runId}`,
+    a9TargetSpaceL0Id
+  );
+  // corr-ts-32: `a9L2Id` gets its OWN parent L1. `a9SecondSubspaceId` must
+  // stay childless — `moveSpaceL1ToSpaceL2` refuses a source with L2
+  // children — and it is relocated to another L0 by its own ALLOW cell,
+  // which runs first.
+  const a9L2MoveSourceL1Id = await createSubspaceOrFail(
+    `matrix-a9-l2-parent-${runId}`,
+    `matrixa9l2p${runId}`,
     base.space.id
   );
   const a9L2Id = await createSubspaceOrFail(
     `matrix-a9-l2-${runId}`,
     `matrixa9l2${runId}`,
-    a9SecondSubspaceId
+    a9L2MoveSourceL1Id
   );
 
   // A9's three promote/demote conversions (corr-ts-20/qual-ts-17 fix) — each
@@ -484,6 +602,28 @@ export async function buildMatrixFixtures(): Promise<MatrixFixtures> {
   const innovationHubId = innovationHubResult.data?.createInnovationHub.id;
 
   const calloutId = base.space.collaboration.calloutPostId;
+
+  // corr-ts-33: a REAL AuthorizationPolicy id for A3's
+  // `authorizationPolicyResetToGlobalAdminsAccess` (see the field doc on
+  // `MatrixFixtures.a3AuthorizationPolicyId`). `CalloutDetails` is used
+  // because its fragment is one of the few that already selects
+  // `authorization { id }` — no codegen change needed.
+  const calloutDetails = await getGraphqlClient().CalloutDetails(
+    { calloutId },
+    {
+      authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}`,
+    }
+  );
+  const a3AuthorizationPolicyId =
+    calloutDetails.data?.lookup.callout?.authorization?.id;
+  if (!a3AuthorizationPolicyId) {
+    // Loud, not silent: an empty id here would put A3's ALLOW cell straight
+    // back into the post-gate-EntityNotFound failure mode corr-ts-33 fixed,
+    // and the cell would once again look like an authorization result.
+    throw new Error(
+      `platform-roles fixtures: could not resolve an AuthorizationPolicy id from callout ${calloutId} — A3's reset target would be empty (corr-ts-33).`
+    );
+  }
   // Uses a dedicated document (createContributionOnCalloutId.graphql) that
   // selects the CONTRIBUTION's own `id` — the shared `ContributionsData`
   // fragment `createPostOnCallout` otherwise uses selects the wrapped
@@ -724,6 +864,29 @@ export async function buildMatrixFixtures(): Promise<MatrixFixtures> {
   );
   const discussionId = discussionResult.data?.createDiscussion.id;
 
+  // corr-ts-36 (2026-07-31): `discussionId` was stored as `discussionId ?? ''`
+  // with no signal, and `createDiscussion` fails on EVERY fixture build
+  // (7/7 observed) against a server without alkem-io/server#6321 — a null
+  // `user.profile` makes the forum-discussion notification payload throw at
+  // `notification.external.adapter.ts:1255`, and the mutation returns that
+  // as a GraphQL error. A15's target was therefore the empty string in every
+  // run of every spec in this directory.
+  //
+  // Not thrown, deliberately: today that would red nine currently-green spec
+  // files for a defect that is neither theirs nor this feature's, and which
+  // #6321 already fixes on `develop`. Warn loudly instead, so the fixture
+  // stops being silent about handing out an id that cannot resolve. **Turn
+  // this into a throw once #6321 has merged** — at that point a failure here
+  // is a real regression, and `?? ''` is exactly the "wrong kind of id past
+  // the gate" class this suite keeps rediscovering.
+  if (!discussionId) {
+    console.error(
+      `[platform-roles fixtures] createDiscussion FAILED — A15's forum target will be an empty id, so any A15 cell that dereferences it fails POST-GATE and looks like an authorization result. Cause (expected until alkem-io/server#6321 lands): ${JSON.stringify(
+        discussionResult.error?.errors ?? discussionResult.error ?? 'unknown'
+      )}`
+    );
+  }
+
   // The generic target user — nonSpaceMember never holds any
   // `Platform …`/`Feature …` role, so it is safe as the object of every
   // user-directed admin mutation without perturbing the matrix's own
@@ -755,6 +918,34 @@ export async function buildMatrixFixtures(): Promise<MatrixFixtures> {
     }
   }
 
+  // sec-test-suites-21: snapshot the platform's CHAT_GUIDANCE well-known VC
+  // BEFORE any A10 cell runs, so teardown can put it back. Read through the
+  // raw request helper rather than the generated SDK: `platform.
+  // wellKnownVirtualContributors` has no codegen'd query in this repo, and
+  // regenerating the SDK to restore one field is a far larger change than
+  // the leak it fixes.
+  let wellKnownChatGuidanceVcIdBefore: string | null = null;
+  try {
+    const wellKnownResponse = await graphqlRequestAuth(
+      {
+        query:
+          'query { platform { wellKnownVirtualContributors { mappings { wellKnown virtualContributorID } } } }',
+      },
+      TestUser.GLOBAL_ADMIN
+    );
+    const mappings =
+      wellKnownResponse.body?.data?.platform?.wellKnownVirtualContributors
+        ?.mappings ?? [];
+    wellKnownChatGuidanceVcIdBefore =
+      mappings.find(
+        (mapping: { wellKnown?: string }) =>
+          mapping.wellKnown === 'CHAT_GUIDANCE'
+      )?.virtualContributorID ?? null;
+  } catch {
+    // Leave it null — teardown then restores nothing, which is strictly
+    // better than restoring a value we never actually observed.
+  }
+
   const virtualAssistantResult = await getGraphqlClient().platformAdminVirtualAssistant(
     {},
     { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
@@ -772,6 +963,7 @@ export async function buildMatrixFixtures(): Promise<MatrixFixtures> {
     spaceId: base.space.id,
     spaceCollaborationId: base.space.collaboration.id,
     calloutId,
+    a3AuthorizationPolicyId,
     contributionId: contributionId ?? '',
     secondCalloutId: secondCalloutId ?? '',
     innovationPackId: base.innovationPack?.id ?? '',
@@ -779,7 +971,10 @@ export async function buildMatrixFixtures(): Promise<MatrixFixtures> {
     templateId: templateId ?? '',
     innovationHubId: innovationHubId ?? '',
     virtualContributorId: base.virtualContributors?.[0]?.id ?? '',
+    a9ConvertVcSourceId:
+      a9ConvertVcSourceId || (base.virtualContributors?.[0]?.id ?? ''),
     virtualAssistantId: virtualAssistantId ?? '',
+    wellKnownChatGuidanceVcIdBefore,
     communityId: base.space.community.id,
     licensePlanId: licensePlanId ?? '',
     forumId: forumId ?? '',
@@ -811,6 +1006,7 @@ export async function buildMatrixFixtures(): Promise<MatrixFixtures> {
     a9SecondSubspaceId,
     a9L1MoveTargetId,
     a9L2Id,
+    a9L2MoveSourceL1Id,
     a9ConvertL1ToL0SourceId,
     a9ConvertL1ToL2ParentId,
     a9ConvertL1ToL2SourceId,
@@ -819,9 +1015,90 @@ export async function buildMatrixFixtures(): Promise<MatrixFixtures> {
   };
 }
 
+/**
+ * qual-ts-27 (2026-07-31): teardown's organization deletes were bare
+ * `try {} catch {}`, so a failure left an orphan organization + its account
+ * on a SHARED environment and said nothing. Observed 7/7 runs of the rules
+ * suite failing with *"Unable to delete Organization: account contain one or
+ * more resources"* — one per spec file, silently, every run, accumulating.
+ *
+ * The leak is not fixed by ignoring it harder. Deleting an organization
+ * requires its account to be empty, and which resource is still hosted
+ * depends on which ALLOW cells ran (several MOVE resources between accounts,
+ * which is the point of them). So this reports the blocking server error
+ * with the organization it belongs to, turning a silent leak into an
+ * actionable line in the log.
+ *
+ * Still non-fatal: T017's completeness check is what must be trustworthy,
+ * and failing a green suite on ordinary cleanup would hide real signal.
+ *
+ * @param expectAlreadyDeleted suppresses the report for fixtures an ALLOW
+ *   cell is SUPPOSED to have deleted — there, failure is the success case.
+ */
+async function deleteOrganizationOrReport(
+  organizationId: string,
+  label: string,
+  options: { expectAlreadyDeleted?: boolean } = {}
+): Promise<void> {
+  if (!organizationId) {
+    return;
+  }
+  const result = await getGraphqlClient()
+    .deleteOrganization(
+      { deleteData: { ID: organizationId } },
+      { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
+    )
+    .then(
+      () => undefined,
+      (error: unknown) => error
+    );
+  if (!result || options.expectAlreadyDeleted) {
+    return;
+  }
+  console.error(
+    `[platform-roles fixtures] LEAKED organization ${label} (${organizationId}) — it and its account remain on this environment. Cause: ${
+      result instanceof Error ? result.message : JSON.stringify(result)
+    }`
+  );
+}
+
 export async function teardownMatrixFixtures(
   fixtures: MatrixFixtures
 ): Promise<void> {
+  // sec-test-suites-21 (2026-07-31): restore the platform-wide CHAT_GUIDANCE
+  // mapping FIRST, before this teardown deletes the fixture VC that A10's
+  // ALLOW cell re-pointed it at. Ordering is the whole fix: restoring after
+  // the delete would leave the window open anyway, and doing neither left
+  // the platform's chat guidance pointing at a deleted entity after every
+  // single run of this suite on a shared environment.
+  //
+  // Note the other half of sec-test-suites-21 is NOT a defect:
+  // A10's `updatePlatformSettings({ settingsData: {} })` is a MERGE
+  // (`platform.settings.service.ts` only assigns keys present on
+  // `updateData.integration`), so an empty input changes nothing. Verified
+  // by reading the service, 2026-07-31 — left as-is deliberately.
+  if (fixtures.wellKnownChatGuidanceVcIdBefore) {
+    try {
+      await getGraphqlClient().setPlatformWellKnownVirtualContributor(
+        {
+          mappingData: {
+            virtualContributorID: fixtures.wellKnownChatGuidanceVcIdBefore,
+            wellKnown: VirtualContributorWellKnown.ChatGuidance,
+          },
+        },
+        {
+          authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}`,
+        }
+      );
+    } catch (error) {
+      console.error(
+        `[platform-roles fixtures] FAILED to restore the platform CHAT_GUIDANCE well-known Virtual Contributor to ${fixtures.wellKnownChatGuidanceVcIdBefore} — the platform-wide mapping may now point at a deleted fixture VC. Cause: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
+  }
+
   // `subspaceId` is not tracked on `fixtures.base` (it was created ad hoc,
   // outside `TestScenarioFactory`'s own subspace bookkeeping), so it must be
   // torn down explicitly and BEFORE the parent space below — deletion here
@@ -834,11 +1111,36 @@ export async function teardownMatrixFixtures(
     // best-effort cleanup
   }
 
+  // corr-ts-34: A9's dedicated convert-source VC. Best-effort — the convert
+  // ALLOW cell may have already changed its body-of-knowledge kind, which
+  // does not prevent deletion, and a denial-only run may never have created
+  // it.
+  if (fixtures.a9ConvertVcSourceId) {
+    try {
+      await getGraphqlClient().DeleteVirtualContributorOnAccount(
+        { virtualContributorData: { ID: fixtures.a9ConvertVcSourceId } },
+        {
+          authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}`,
+        }
+      );
+    } catch {
+      // best-effort cleanup
+    }
+  }
+
   // corr-ts-18's dedicated A9 L1/L2 tree — same reasoning as `subspaceId`
   // above (not tracked by `TestScenarioFactory`, best-effort, order-
-  // independent of current parent). The L2 first, then its two L1s.
+  // independent of current parent). Deepest first, then the L1s.
+  // corr-ts-32 added `a9L2MoveSourceL1Id`; after the ALLOW cells run, both
+  // `a9SecondSubspaceId` and `a9L2Id` live under `a9L1MoveTargetId` in the
+  // OTHER L0, so that one is deleted last.
   try {
     await deleteSpace(fixtures.a9L2Id);
+  } catch {
+    // best-effort cleanup
+  }
+  try {
+    await deleteSpace(fixtures.a9L2MoveSourceL1Id);
   } catch {
     // best-effort cleanup
   }
@@ -968,25 +1270,19 @@ export async function teardownMatrixFixtures(
     // best-effort — the ALLOW cell (A5's adminUserAccountDelete) may
     // already have deleted it for real; that is the intended, single use.
   }
-  try {
-    await getGraphqlClient().deleteOrganization(
-      { deleteData: { ID: fixtures.secondOrganizationId } },
-      { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
-    );
-  } catch {
-    // best-effort cleanup
-  }
-  // corr-ts-12's dedicated A6 delete target — best-effort: the whole point
-  // of this fixture is that the ALLOW cell (platform-support's
-  // `deleteOrganization`) may already have deleted it for real.
-  try {
-    await getGraphqlClient().deleteOrganization(
-      { deleteData: { ID: fixtures.a6DeletableOrganizationId } },
-      { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
-    );
-  } catch {
-    // best-effort cleanup
-  }
+  await deleteOrganizationOrReport(
+    fixtures.secondOrganizationId,
+    'secondOrganization (hosts a9TargetSpaceL0Id + the A9 move targets)'
+  );
+  // corr-ts-12's dedicated A6 delete target — the whole point of this
+  // fixture is that the ALLOW cell (platform-support's `deleteOrganization`)
+  // may already have deleted it for real, so an "already gone" failure here
+  // is EXPECTED and is not reported.
+  await deleteOrganizationOrReport(
+    fixtures.a6DeletableOrganizationId,
+    "a6DeletableOrganization (A6's disposable delete target)",
+    { expectAlreadyDeleted: true }
+  );
 
   // A8's disposable delete targets (corr-ts-1) — best-effort: the whole
   // point of these fixtures is that an ALLOW cell may already have deleted

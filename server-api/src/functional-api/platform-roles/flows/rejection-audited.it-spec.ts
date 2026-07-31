@@ -261,6 +261,37 @@ describe('flow 5 — every rejection is distinctly attributable and takes no eff
         });
     }
 
+    // corr-ts-35 + sec-test-suites-20 fix (2026-07-31): re-read the holder
+    // list AFTER the strip loop and branch on what is actually there.
+    //
+    // The branch below used to test `otherHolderIds.length`, which is the
+    // list captured BEFORE the strip ran. Two consequences, both bad:
+    //
+    //  * corr-ts-35 — when the strip SUCCEEDED (the normal case), the
+    //    pre-strip list was non-empty, so the test took the `else` branch and
+    //    asserted the revoke succeeds — while rule 5 correctly rejected it.
+    //    The assertion contradicted the behaviour it was written to protect.
+    //
+    //  * sec-test-suites-20 — the last-holder assertion therefore lived in a
+    //    branch reachable only when NO other holder existed to begin with,
+    //    which never happens on a bootstrap-seeded environment (`admin@
+    //    alkem.io` holds platform-roles-admin by FR-013b, alongside this
+    //    fixture). FR-013a's guard — the single control standing between the
+    //    platform and permanent administrative lockout — was asserted by
+    //    nothing, on any environment anyone actually runs.
+    //
+    // Post-strip state is the real precondition, so read it.
+    const afterStrip = await getGraphqlClient().platformRoleSetUsersInRole(
+      { role: RoleName.PlatformRolesAdmin },
+      { authorization: `Bearer ${rolesAdminUser.authToken}` }
+    );
+    const remainingHolderIds = (
+      afterStrip.data?.platform.roleSet.usersInRole ?? []
+    ).map(u => u.id);
+    const isLastHolder =
+      remainingHolderIds.length === 1 &&
+      remainingHolderIds[0] === rolesAdminUser.id;
+
     try {
       // corr-ts-14: the actor performing this removal must be a DIFFERENT
       // identity than the target — rule 6 (self-assignment) is evaluated
@@ -292,7 +323,7 @@ describe('flow 5 — every rejection is distinctly attributable and takes no eff
       // unconditionally would fail on a false premise. Branch on the
       // OBSERVED holder count instead of assuming the strip loop reached
       // exactly one.
-      if (otherHolderIds.length === 0) {
+      if (isLastHolder) {
         expect(res.error?.errors?.[0]?.message).toContain(
           'cannot remove the last platform-roles-admin'
         );
@@ -308,7 +339,14 @@ describe('flow 5 — every rejection is distinctly attributable and takes no eff
           'the platform must still hold at least one platform-roles-admin'
         ).toBe(true);
       } else {
-        expect(res.error).toBeUndefined();
+        // The strip loop is best-effort (`.catch(() => {})`) — rule 6
+        // (self-assignment) blocks GLOBAL_ADMIN from revoking its own
+        // platform-roles-admin, so a holder can survive it. With more than
+        // one holder left, rule 5 correctly ALLOWS the removal.
+        expect(
+          res.error,
+          `expected the revoke to succeed with ${remainingHolderIds.length} holders remaining, but it was rejected`
+        ).toBeUndefined();
       }
     } finally {
       // Restore every holder this test temporarily removed, regardless of

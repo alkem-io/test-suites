@@ -15,9 +15,12 @@ import { isAuthorizationDenial } from './surface-invocations';
  * through the platform's own assignment surface to the holder kinds its set
  * allows, and a freshly-granted holder actually receives the capability.
  * The service-account boot path and the "seeding is not a bypass" negative
- * case (FR-013) both need a fresh stack start — Phase V (research D25; this
- * wave's gates are lint + build only, and standing rules forbid booting a
- * stack here).
+ * case (FR-013) are asserted at the end of that describe block. They were
+ * originally deferred to Phase V as "needs a fresh stack start" (research
+ * D25); spec-ts-23 retired that blocker on 2026-07-31 — bootstrap's seeding
+ * is durable, so its result is a pure READ on any running stack. See the
+ * comment on that test for why the holder lists, not `user.credentials`,
+ * are the surface used.
  *
  * T018/T018a (FR-032/SC-017): holder-list read partitioning by role SET —
  * `Platform …` lists readable by `platform-roles-admin` +
@@ -200,8 +203,82 @@ describe('grantability (T012, SC-009) — every target role is grantable + revoc
     }
   });
 
-  // Service-account boot path + "seeding is not a bypass" (FR-013): both
-  // need a fresh stack start (research D25) — Phase V.
+  // spec-ts-23 (2026-07-31): this half of SC-009/FR-013 was cut with the
+  // blocker "needs a fresh stack start (research D25)". **That blocker is
+  // not real.** The bootstrap seeds `spaces-reader@alkem.io` ONCE, at first
+  // boot, and the result is durable — so the seeded state is observable on
+  // any already-running stack, through the very holder-list query this file
+  // already calls. Nothing here boots, restarts or mutates anything; it is
+  // a pure read of what bootstrap left behind, which is what the assertion
+  // was always about.
+  //
+  // Deliberately NOT asserted via `user.credentials`: `serviceProfile` has
+  // no GraphQL read (spec-ts-2), and the `users` query is unusable on a
+  // long-lived environment (observed 2026-07-31: one accumulated user row
+  // with no authorization policy fails the whole list with
+  // ENTITY_NOT_INITIALIZED). The holder lists are the supported surface and
+  // they answer both halves of FR-013 directly.
+  it('the bootstrap-seeded service account holds its seeded role — and ONLY that role (FR-013: seeding is not a bypass)', async () => {
+    const admin = TestUserManager.getUserModelByType(
+      TestUser.PLATFORM_ROLES_ADMIN
+    );
+
+    // `spaces-reader` is the nameID derived from `spaces-reader@alkem.io` in
+    // the server's `platform-template-definitions/user/users.json`. This is
+    // the SEEDED service account — distinct from the `platform.spacesreader`
+    // TEST fixture that `grant-single-role-fixtures.ts` creates, which also
+    // holds platform-spaces-reader and would mask a seeding regression if
+    // the two were conflated.
+    const seeded = await getGraphqlClient().GetUserByNameId(
+      { nameId: 'spaces-reader' },
+      { authorization: `Bearer ${admin.authToken}` }
+    );
+    const seededId = seeded.data?.lookupByName.user;
+    expect(
+      seededId,
+      'bootstrap seeded no `spaces-reader` service account — the service-account boot path did not run, or users.json changed'
+    ).toBeTruthy();
+
+    // T018a: a MIXED `Platform …` + `Feature …` call is rejected wholesale,
+    // so the two sets must be read separately — not a stylistic choice.
+    const platformRoles = TARGET_ROLES.filter(
+      role => !FEATURE_ROLES.includes(role)
+    );
+    const [platformHolders, featureHolders] = await Promise.all([
+      getGraphqlClient().platformRoleSetUsersInRoles(
+        { roles: [...platformRoles] },
+        { authorization: `Bearer ${admin.authToken}` }
+      ),
+      getGraphqlClient().platformRoleSetUsersInRoles(
+        { roles: [...FEATURE_ROLES] },
+        { authorization: `Bearer ${admin.authToken}` }
+      ),
+    ]);
+
+    const rolesHeldBySeeded = [
+      ...(platformHolders.data?.platform.roleSet.usersInRoles ?? []),
+      ...(featureHolders.data?.platform.roleSet.usersInRoles ?? []),
+    ]
+      .filter(entry => entry.users.some(u => u.id === seededId))
+      .map(entry => entry.role);
+
+    // Half 1 — the service-account boot path actually granted the seeded role.
+    expect(
+      rolesHeldBySeeded,
+      'the seeded service account does not hold platform-spaces-reader — the boot path granted nothing'
+    ).toContain(RoleName.PlatformSpacesReader);
+
+    // Half 2 — "seeding is not a bypass": bootstrap is a grant path like any
+    // other, not a back door. If it ever hands a service account a second
+    // platform role (platform-roles-admin above all), the platform has a
+    // god-mode account nobody assigned and no audit row explains.
+    expect(
+      rolesHeldBySeeded,
+      `the seeded service account holds MORE than its seeded role (${rolesHeldBySeeded.join(
+        ', '
+      )}) — bootstrap has become a privilege-escalation path`
+    ).toEqual([RoleName.PlatformSpacesReader]);
+  });
 });
 
 describe('self-assignment denial (T012a, spec-ts-9, FR-015)', () => {

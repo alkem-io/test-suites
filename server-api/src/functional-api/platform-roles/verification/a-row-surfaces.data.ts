@@ -146,7 +146,14 @@ export interface SurfaceRef {
   readonly lifecycle?:
     | 'retired' // absent in BOTH slices (A18)
     | { readonly deferred: 'B' } // absent at A, live at B (A17's two surfaces)
-    | { readonly retiredIn: 'B' }; // live at A, deleted at B (A1's four credential mutations)
+    | { readonly retiredIn: 'B' } // live at A, deleted at B (A1's four credential mutations)
+    // Live in BOTH slices for reachability + pin-drift purposes, but produces
+    // NO matrix cell in either — because ANOTHER census entry already covers
+    // the same invocable member, and two entries for one mutation generate two
+    // contradictory expectations for it (spec-server-25). Use this ONLY for a
+    // second declaration of an already-declared member; a genuinely
+    // uninvocable surface is a different problem.
+    | { readonly declarationOnly: true };
 }
 
 /**
@@ -535,11 +542,25 @@ export const A_ROW_SURFACES: Record<ARowId, readonly SurfaceRef[]> = {
     // (FR-004) DELETE cascade to `platform-content-full-access` cannot
     // satisfy it. Declared so `surface.drift.spec.ts`'s credential-pin check
     // knows this file also carries a pin.
+    //
+    // spec-server-25 fix (2026-07-31): `lifecycle: {declarationOnly: true}`.
+    // This is the SECOND census entry for the SAME `deleteUser` mutation —
+    // A5 declares the invocable one. Without the marker BOTH multiplied, so
+    // the matrix generated `PLATFORM_USERS_ADMIN x A4 (deleteUser) -> deny`
+    // alongside `PLATFORM_USERS_ADMIN x A5 (deleteUser) -> allow`: one
+    // mutation, two contradictory expectations, the DENY one guaranteed to
+    // fail at Slice B because the ALLOW is the correct answer. Worse, that
+    // DENY cell invoked a real `deleteUser` against the shared fixture user,
+    // and corr-ts-16's DENY-before-ALLOW ordering could not protect it —
+    // that orders cells WITHIN one surface, and these are two surfaces.
+    // Reachability and pin-drift still see this entry in both slices; only
+    // matrix multiplication is suppressed.
     {
       file: 'src/services/api/registration/registration.resolver.mutations.ts',
       member: 'deleteUser',
       kind: 'graphql-mutation',
       tree: 'credential-admin-synthetic',
+      lifecycle: { declarationOnly: true },
       gate: {
         credential: GA,
         reason:

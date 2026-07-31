@@ -442,8 +442,48 @@ export function buildSurfaceInvocations(
           ),
         caller
       ),
+    // corr-ts-37 (2026-07-31): `authorizationPolicyResetAll` REPUBLISHES every
+    // authorization policy on the platform, and it does NOT re-apply the
+    // platform ENTITY's own policy — only the role-set's. The seeded
+    // platform-roles-admin therefore loses `platform-role-holders-read` the
+    // instant this cell's ALLOW runs, and every LATER cell that needs the
+    // platform entity policy fails for that reason instead of an
+    // authorization one.
+    //
+    // Observed in the full-matrix run of 2026-07-31: this cell passed, and
+    // then ~60 downstream cells went red — every A20/A20b holder-list read,
+    // all six A10 platform-settings surfaces, plus A4/A7/A15/A21. It also
+    // took the NEXT suite down entirely (`platform-roles-rules` and
+    // `platform-roles-canonical` both failed at fixture build with
+    // `Forbidden: platform-role-holders-read required ...`, 0 tests run).
+    //
+    // This is exactly the repair the environment contract in `repos.yaml`
+    // already requires of anyone invoking `resetAll` by hand. The suite
+    // simply never performed it on itself. Repair AFTER the outcome is
+    // captured, so the cell still asserts what the mutation actually did —
+    // and never let a repair failure masquerade as the cell's own result.
     caller =>
-      invoke(token => client().authorizationPolicyResetAll({}, bearer(token)), caller),
+      invoke(token => client().authorizationPolicyResetAll({}, bearer(token)), caller).then(
+        async outcome => {
+          if (outcome.ok) {
+            try {
+              await client().authorizationPolicyResetOnPlatform(
+                {},
+                {
+                  authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}`,
+                }
+              );
+            } catch (error) {
+              console.error(
+                `[platform-roles] FAILED to re-apply the platform entity authorization policy after authorizationPolicyResetAll — every later cell that reads the platform entity policy will now fail for a NON-authorization reason (corr-ts-37). Cause: ${
+                  error instanceof Error ? error.message : String(error)
+                }`
+              );
+            }
+          }
+          return outcome;
+        }
+      ),
     caller =>
       invoke(
         token => client().authorizationPlatformRolesAccessReset({}, bearer(token)),
@@ -452,8 +492,13 @@ export function buildSurfaceInvocations(
     caller =>
       invoke(
         token =>
+          // corr-ts-33: `fx.a3AuthorizationPolicyId`, NOT `fx.spaceId`. This
+          // argument is an AuthorizationPolicy id; a Space id makes
+          // `resetAuthorizationPolicy()` throw EntityNotFound AFTER the gate
+          // has already granted access, so the ALLOW cell failed for a
+          // non-authorization reason and read as a denial.
           client().authorizationPolicyResetToGlobalAdminsAccess(
-            { authorizationID: fx.spaceId },
+            { authorizationID: fx.a3AuthorizationPolicyId },
             bearer(token)
           ),
         caller
@@ -861,19 +906,22 @@ export function buildSurfaceInvocations(
           ),
         caller
       ),
-    // Best-effort placeholder (T007b's own header convention): reuses the
-    // shared `virtualContributorId`, built with `bodyOfKnowledgeType: 'NONE'`
-    // — this reaches the AUTHORIZATION gate (checked before the domain
-    // lookup, `conversion.resolver.mutations.ts`) correctly for every DENY
-    // cell, but the ALLOW cell's actual conversion may fail downstream if
-    // the VC is not genuinely Space-based. A dedicated space-backed VC
-    // fixture is the correct fix, deferred pending Phase V's live run.
+    // corr-ts-34 fix (2026-07-31) — the deferred "dedicated space-backed VC
+    // fixture" this comment used to promise. `fx.a9ConvertVcSourceId`, NOT
+    // the shared `fx.virtualContributorId`, for two independent reasons:
+    // the shared VC is `bodyOfKnowledgeType: 'NONE'` (so the ALLOW cell's
+    // conversion failed downstream of a correctly-granted gate), and A9's
+    // `transferVirtualContributorToAccount` ALLOW cell — which runs FIRST in
+    // census order — moves it to another account before this cell runs.
+    // Two surfaces, two ALLOW cells, one single-use fixture; corr-ts-16's
+    // DENY-before-ALLOW ordering orders cells WITHIN a surface and cannot
+    // help across two.
     caller =>
       invoke(
         token =>
           client().convertVirtualContributorToUseKnowledgeBase(
             {
-              conversionData: { virtualContributorID: fx.virtualContributorId },
+              conversionData: { virtualContributorID: fx.a9ConvertVcSourceId },
             },
             bearer(token)
           ),

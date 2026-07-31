@@ -62,6 +62,8 @@
     "test:graphql-guard:ui": "vitest --project graphql-guard --fileParallelism=false --ui",
     "test:platform-roles": "vitest run --project platform-roles --fileParallelism=false",
     "test:platform-roles:canonical": "vitest run --project platform-roles-canonical --fileParallelism=false",
+    "test:platform-roles:rules": "vitest run --project platform-roles-rules --fileParallelism=false",
+    "test:platform-roles:all": "pnpm run test:platform-roles && pnpm run test:platform-roles:rules && pnpm run test:platform-roles:canonical",
     "innovation-pack-with-templates": "tsx ./src/functional-api/innovation-pack/innovation-pack-with-templates.ts",
     "validate-scenario-setup": "tsx ./src/scripts/validate-scenario-setup.ts"
   },

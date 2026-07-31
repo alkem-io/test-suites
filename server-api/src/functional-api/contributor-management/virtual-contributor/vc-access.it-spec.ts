@@ -18,7 +18,7 @@ import {
   sorted__create_read_update_delete_contribute_fileDelete_fileUpload_receiveNotifications,
   sorted__create_read_update_delete_contribute_readAbout_receiveNotifications,
   sorted__create_read_update_delete_grant_fileUp_fileDel_globalAdmin,
-  sorted__create_read_update_delete_grant_platformAdmin_readAbout,
+  sorted__create_read_update_delete_grant_platformAdmin_readAbout_globalAdmin,
   sorted_read_readAbout,
   TestScenarioConfig,
   TestScenarioFactory,
@@ -179,7 +179,7 @@ describe('Virtual Contributor ACCESS - All Public - Visibility Public / BoK / Pu
       ${TestUser.NON_SPACE_MEMBER}   | ${sorted_read_readAbout}
       ${TestUser.SPACE_ADMIN}        | ${sorted_read_readAbout}
       ${TestUser.SPACE_MEMBER}       | ${sorted_read_readAbout}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_readAbout}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_readAbout_globalAdmin}
       ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout_receiveNotifications}
     `(
       'User: "$userRole" has this privileges: "$privileges" to spaceBasedVC',
@@ -197,7 +197,7 @@ describe('Virtual Contributor ACCESS - All Public - Visibility Public / BoK / Pu
       ${TestUser.NON_SPACE_MEMBER}   | ${sorted_read_readAbout}
       ${TestUser.SPACE_ADMIN}        | ${sorted_read_readAbout}
       ${TestUser.SPACE_MEMBER}       | ${sorted_read_readAbout}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_readAbout}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_readAbout_globalAdmin}
       ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout_receiveNotifications}
     `(
       'User: "$userRole" has this privileges: "$privileges" to knowledgeBasedVC',
@@ -273,7 +273,7 @@ describe('Virtual Contributor Access - All Private - Visibility Private / BoK / 
       ${TestUser.NON_SPACE_MEMBER}   | ${undefined}
       ${TestUser.SPACE_ADMIN}        | ${sorted_read_readAbout}
       ${TestUser.SPACE_MEMBER}       | ${sorted_read_readAbout}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_readAbout}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_readAbout_globalAdmin}
       ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout_receiveNotifications}
     `(
       'User: "$userRole" has this privileges: "$privileges" to spaceBasedVC',
@@ -291,7 +291,7 @@ describe('Virtual Contributor Access - All Private - Visibility Private / BoK / 
       ${TestUser.NON_SPACE_MEMBER}   | ${undefined}
       ${TestUser.SPACE_ADMIN}        | ${sorted_read_readAbout}
       ${TestUser.SPACE_MEMBER}       | ${sorted_read_readAbout}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_readAbout}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_readAbout_globalAdmin}
       ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout_receiveNotifications}
     `(
       'User: "$userRole" has this privileges: "$privileges" to knowledgeBasedVC',
@@ -367,7 +367,7 @@ describe('Virtual Contributor Access - All Private - Visibility Private / BoK / 
       ${TestUser.NON_SPACE_MEMBER}   | ${undefined}
       ${TestUser.SPACE_ADMIN}        | ${sorted_read_readAbout}
       ${TestUser.SPACE_MEMBER}       | ${sorted_read_readAbout}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_readAbout}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_readAbout_globalAdmin}
       ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout_receiveNotifications}
     `(
       'User: "$userRole" has this privileges: "$privileges" to spaceBasedVC',
@@ -385,7 +385,7 @@ describe('Virtual Contributor Access - All Private - Visibility Private / BoK / 
       ${TestUser.NON_SPACE_MEMBER}   | ${undefined}
       ${TestUser.SPACE_ADMIN}        | ${sorted_read_readAbout}
       ${TestUser.SPACE_MEMBER}       | ${sorted_read_readAbout}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_readAbout}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_readAbout_globalAdmin}
       ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout_receiveNotifications}
     `(
       'User: "$userRole" has this privileges: "$privileges" to knowledgeBasedVC',
@@ -458,7 +458,7 @@ describe('Virtual Contributor Access - All Private - Visibility Public / BoK / P
       ${TestUser.NON_SPACE_MEMBER}   | ${sorted_read_readAbout}
       ${TestUser.SPACE_ADMIN}        | ${sorted_read_readAbout}
       ${TestUser.SPACE_MEMBER}       | ${sorted_read_readAbout}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_readAbout}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_readAbout_globalAdmin}
       ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout_receiveNotifications}
     `(
       'User: "$userRole" has this privileges: "$privileges" to spaceBasedVC',
@@ -476,7 +476,7 @@ describe('Virtual Contributor Access - All Private - Visibility Public / BoK / P
       ${TestUser.NON_SPACE_MEMBER}   | ${sorted_read_readAbout}
       ${TestUser.SPACE_ADMIN}        | ${sorted_read_readAbout}
       ${TestUser.SPACE_MEMBER}       | ${sorted_read_readAbout}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_readAbout}
+      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_readAbout_globalAdmin}
       ${TestUser.GLOBAL_BETA_TESTER} | ${sorted__create_read_update_delete_contribute_readAbout_receiveNotifications}
     `(
       'User: "$userRole" has this privileges: "$privileges" to knowledgeBasedVC',

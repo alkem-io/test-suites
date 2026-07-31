@@ -118,6 +118,13 @@ export function surfaceMemberName(
  *   slice — declared for `reachability.spec.ts`'s guard (server T070m) but
  *   deliberately non-multiplying here (privilege-map.md §"the census file
  *   holds 99 entries, fewer multiply").
+ * - `{declarationOnly: true}` (A4's `deleteUser` legacy pin): NEVER, in
+ *   EITHER slice — spec-server-25. A SECOND census entry for a member that
+ *   another entry already declares invocably (here A5's `deleteUser`).
+ *   Multiplying both produced two contradictory expectations for one
+ *   mutation, and the losing cell invoked a real destructive mutation
+ *   against the shared fixture user. Reachability and pin-drift still walk
+ *   it; only cell generation is suppressed.
  * - absent: always.
  */
 export function multipliesAtStage(
@@ -127,6 +134,7 @@ export function multipliesAtStage(
   const lc = surface.lifecycle;
   if (lc === 'retired') return false;
   if (lc && typeof lc === 'object' && 'retiredIn' in lc) return false;
+  if (lc && typeof lc === 'object' && 'declarationOnly' in lc) return false;
   if (lc && typeof lc === 'object' && 'deferred' in lc) return stage === 'B';
   return true;
 }

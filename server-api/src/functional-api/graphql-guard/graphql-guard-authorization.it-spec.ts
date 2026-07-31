@@ -1,8 +1,8 @@
 import {
   readAboutPrivilege,
   sorted_read_readAbout_readLicense_notifications,
-  sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense_notifications_notificationsAdmin,
-  sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense_notificationsAdmin,
+  sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notifications_notificationsAdmin_globalAdmin,
+  sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notificationsAdmin,
   sorted__create_read_readAbout_update_delete_grant_createSubspace_readLicense_notifications_notificationsAdmin,
   TestScenarioConfig,
   TestScenarioFactory,
@@ -95,8 +95,8 @@ describe('GraphQL Guard - Synchronous Authorization', () => {
   describe('Space-level authorization privileges', () => {
     test.each`
       user                             | spaceMyPrivileges
-      ${TestUser.GLOBAL_ADMIN}         | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense_notifications_notificationsAdmin}
-      ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense_notificationsAdmin}
+      ${TestUser.GLOBAL_ADMIN}         | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notifications_notificationsAdmin_globalAdmin}
+      ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notificationsAdmin}
       ${TestUser.SPACE_ADMIN}          | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_readLicense_notifications_notificationsAdmin}
       ${TestUser.SPACE_MEMBER}         | ${sorted_read_readAbout_readLicense_notifications}
       ${TestUser.NON_SPACE_MEMBER}     | ${readAboutPrivilege}
@@ -129,7 +129,7 @@ describe('GraphQL Guard - Synchronous Authorization', () => {
 
       // Verify authorization privileges match expected set
       expect(space?.authorization?.myPrivileges?.sort()).toEqual(
-        sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense_notifications_notificationsAdmin
+        sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notifications_notificationsAdmin_globalAdmin
       );
 
       // Verify about section — concrete ID and profile match
@@ -300,7 +300,7 @@ describe('GraphQL Guard - Synchronous Authorization', () => {
       ]);
 
       const expectedPrivileges =
-        sorted__create_read_readAbout_update_delete_grant_createSubspace_platformAdmin_readLicense_notifications_notificationsAdmin;
+        sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notifications_notificationsAdmin_globalAdmin;
 
       // Global admin should have identical elevated privileges at all levels
       expect(

@@ -743,3 +743,59 @@ export const sorted__create_read_update_delete_contribute_readAbout_fileDelete_f
     "FILE_DELETE",
     "FILE_UPLOAD",
   ].sort();
+
+// ---------------------------------------------------------------------------
+// workspace#027-platform-role-redesign (qual-ts-25 fix, 2026-07-31)
+//
+// The qual-ts-20 sweep above closed the four DOCUMENT/knowledge-base suites,
+// but four others still asserted the pre-feature arrays and go red the moment
+// Slice A deploys — confirmed live 2026-07-31 (17 failures across
+// `vc-access`, `space-platform-settings`, `graphql-guard-authorization` and
+// `graphql-guard-public-private-access`).
+//
+// TWO distinct deltas, which is why this needs three constants and not one:
+//
+//  1. VIRTUAL CONTRIBUTOR entities — purely ADDITIVE. `PLATFORM_ADMIN` is
+//     retained and `PLATFORM_CONTENT_FULL_ACCESS` joins it, same cascade as
+//     the qual-ts-20 batch.
+//
+//  2. SPACE entities — a SWAP, not an addition. Server T048/A14 re-anchored
+//     the space-visibility mutation off the `PLATFORM_ADMIN` catch-all onto
+//     `ACCOUNT_LICENSE_MANAGE` (`space.service.authorization.ts`), so
+//     `PLATFORM_ADMIN` LEAVES the array and `ACCOUNT_LICENSE_MANAGE` enters.
+//     GLOBAL_ADMIN additionally gains `PLATFORM_CONTENT_FULL_ACCESS`;
+//     GLOBAL_SUPPORT does NOT — it holds no content credential — so the two
+//     roles need separate constants rather than one shared widening.
+//
+// Written out in full rather than spread-from-the-old-name: `PLATFORM_ADMIN`
+// being ABSENT is the substance of the change, and a spread would hide it.
+// ---------------------------------------------------------------------------
+
+/** Virtual Contributor, GLOBAL_ADMIN — delta 1 (additive). */
+export const sorted__create_read_update_delete_grant_platformAdmin_readAbout_globalAdmin =
+  [
+    ...sorted__create_read_update_delete_grant_platformAdmin_readAbout,
+    "PLATFORM_CONTENT_FULL_ACCESS",
+  ].sort();
+
+/** Space, GLOBAL_ADMIN — delta 2. Note: no `PLATFORM_ADMIN`. */
+export const sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notifications_notificationsAdmin_globalAdmin =
+  [
+    ...sorted__create_read_readAbout_update_delete_grant,
+    "ACCOUNT_LICENSE_MANAGE",
+    "CREATE_SUBSPACE",
+    "PLATFORM_CONTENT_FULL_ACCESS",
+    "READ_LICENSE",
+    "RECEIVE_NOTIFICATIONS",
+    "RECEIVE_NOTIFICATIONS_ADMIN",
+  ].sort();
+
+/** Space, GLOBAL_SUPPORT — delta 2 without the content privilege. */
+export const sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notificationsAdmin =
+  [
+    ...sorted__create_read_readAbout_update_delete_grant,
+    "ACCOUNT_LICENSE_MANAGE",
+    "CREATE_SUBSPACE",
+    "READ_LICENSE",
+    "RECEIVE_NOTIFICATIONS_ADMIN",
+  ].sort();
