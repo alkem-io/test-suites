@@ -380,6 +380,16 @@ test.describe('US2 - group message notifications', () => {
   // from both the group's member list AND C's own chat list, and the
   // recipient-resolution log for the next USER_CONVERSATION_MESSAGE_GROUP event
   // no longer includes C's actor id on any channel.
+  //
+  // SCOPE WARNING — a green run here means "we stopped NOTIFYING them", NOT "we
+  // revoked their ACCESS". Two revocation gaps remain open under #6329:
+  //   (1) Matrix room membership still diverges — C's Matrix session can still reach
+  //       the room;
+  //   (2) ConversationAuthorizationService.applyAuthorizationPolicy pushes the
+  //       participant credential rule onto the persisted policy without calling
+  //       reset() first, so stale rules naming removed members are never cleared and
+  //       keep granting READ + CONTRIBUTE on the conversation.
+  // Do not widen this test — or cite it — as evidence that removal revokes access.
   test('US2-AS4: C removed from G — a message afterwards must reach nobody but current members', async ({
     browser,
   }) => {
