@@ -32,12 +32,12 @@ import {
   conversationMessageGroupSubject,
   createDirectConversation,
   createGroupConversation,
+  expectExactMailsAfter,
   expectPushEmitAfter,
   PushSubscriptionHandle,
   subscribeRecipientsToPush,
   unsubscribeRecipientsFromPush,
   updateConversationMessagingSettings,
-  waitForMailsCountAtLeast,
 } from '../notification.helpers';
 
 const scenarioConfig: TestScenarioNoPreCreationConfig = {
@@ -159,13 +159,17 @@ describe('Conversation-message notifications — positive matrix', () => {
       const roomId = conversationRes?.data?.createConversation?.room?.id;
       expect(roomId).toBeDefined();
 
-      await sendMessageToRoom(
-        roomId as string,
-        'Hello, opted-in!',
-        TestUser.GLOBAL_ADMIN
+      // Settle + re-read (not just first-hit) so a leaked second email would
+      // not be missed by an "exactly one" assertion (corr-test-suites-7).
+      const [mailItems, total] = await expectExactMailsAfter(
+        () =>
+          sendMessageToRoom(
+            roomId as string,
+            'Hello, opted-in!',
+            TestUser.GLOBAL_ADMIN
+          ),
+        1
       );
-
-      const [mailItems, total] = await waitForMailsCountAtLeast(1);
       expect(total).toBe(1);
 
       const mail = mailItems.find((m: any) =>
@@ -201,14 +205,17 @@ describe('Conversation-message notifications — positive matrix', () => {
       const roomId = conversationRes?.data?.createConversation?.room?.id;
       expect(roomId).toBeDefined();
 
-      await sendMessageToRoom(
-        roomId as string,
-        'Hello group, opted-in!',
-        TestUser.GLOBAL_ADMIN
+      // Only spaceMember opted in for the group row; spaceAdmin stayed
+      // default. Settle + re-read so a leak to spaceAdmin isn't missed.
+      const [mailItems, total] = await expectExactMailsAfter(
+        () =>
+          sendMessageToRoom(
+            roomId as string,
+            'Hello group, opted-in!',
+            TestUser.GLOBAL_ADMIN
+          ),
+        1
       );
-
-      // Only spaceMember opted in for the group row; spaceAdmin stayed default.
-      const [mailItems, total] = await waitForMailsCountAtLeast(1);
       expect(total).toBe(1);
 
       const mail = mailItems.find((m: any) =>
@@ -268,13 +275,11 @@ describe('Conversation-message notifications — positive matrix', () => {
       const roomId = conversationRes?.data?.createConversation?.room?.id;
       expect(roomId).toBeDefined();
 
-      await sendMessageToRoom(
-        roomId as string,
-        hostileMessage,
-        TestUser.GLOBAL_ADMIN
+      const [mailItems, total] = await expectExactMailsAfter(
+        () =>
+          sendMessageToRoom(roomId as string, hostileMessage, TestUser.GLOBAL_ADMIN),
+        1
       );
-
-      const [mailItems, total] = await waitForMailsCountAtLeast(1);
       expect(total).toBe(1);
 
       const mail = mailItems.find((m: any) =>
