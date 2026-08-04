@@ -282,3 +282,29 @@ export const waitForMailsCountAtLeast = async (
 
   return last;
 };
+
+/**
+ * Runs `action`, waits for at least `expectedCount` mails to land (via
+ * `waitForMailsCountAtLeast`), then settles a little longer and re-reads
+ * before returning — the email-channel counterpart of `expectPushEmitAfter`'s
+ * settle discipline. Use for any "exactly N emails" / "email X never
+ * appears" assertion: without the settle + re-read, a leaked extra email
+ * that lands a moment after the target count is first reached (e.g. a
+ * regression that also notifies a non-member or the sender) would never be
+ * observed, and the first-hit read that `waitForMailsCountAtLeast` alone
+ * returns would let the leak pass silently.
+ */
+export const expectExactMailsAfter = async (
+  action: () => Promise<unknown>,
+  expectedCount: number,
+  {
+    settleMs = 3_000,
+    timeout = 15_000,
+    interval = 1_000,
+  }: { settleMs?: number; timeout?: number; interval?: number } = {}
+): Promise<Awaited<ReturnType<typeof getMailsData>>> => {
+  await action();
+  await waitForMailsCountAtLeast(expectedCount, { timeout, interval });
+  await delay(settleMs);
+  return getMailsData();
+};

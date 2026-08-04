@@ -24,7 +24,10 @@ import {
 import {
   createDirectConversation,
   createGroupConversation,
+  expectExactMailsAfter,
+  expectNoPushEmitAfter,
   expectPushEmitAfter,
+  getPushQueuePublishedTotal,
   PushSubscriptionHandle,
   subscribeRecipientsToPush,
   unsubscribeRecipientsFromPush,
@@ -106,9 +109,13 @@ describe('Conversation-message notifications — negative matrix', () => {
       const roomId = conversationRes?.data?.createConversation?.room?.id;
       expect(roomId).toBeDefined();
 
-      // Act
-      await sendMessageToRoom(roomId as string, 'Hello group', TestUser.GLOBAL_ADMIN);
-      const [mailItems, total] = await waitForMailsCountAtLeast(1);
+      // Act — settle + re-read (not just first-hit) so a leaked email to D
+      // arriving moments after B's is not missed (corr-test-suites-7).
+      const [mailItems, total] = await expectExactMailsAfter(
+        () =>
+          sendMessageToRoom(roomId as string, 'Hello group', TestUser.GLOBAL_ADMIN),
+        1
+      );
 
       // Assert
       expect(total).toBe(1);
@@ -181,12 +188,24 @@ describe('Conversation-message notifications — negative matrix', () => {
       );
       await delay(3_000);
 
-      await sendMessageToRoom(
-        roomId as string,
-        'Message after C left',
-        TestUser.GLOBAL_ADMIN
+      // C still has an active push subscription (beforeAll) and group push
+      // at its default ON — assert the PUSH channel too (qual-test-suites
+      // -r2-2), not only email, so a membership-re-read regression that
+      // affects only the push path (e.g. a stale cached recipient list)
+      // isn't invisible to this test.
+      const pushBaselineAfterRemoval = await getPushQueuePublishedTotal();
+      const pushStatsAfterRemoval = await expectNoPushEmitAfter(
+        () =>
+          sendMessageToRoom(
+            roomId as string,
+            'Message after C left',
+            TestUser.GLOBAL_ADMIN
+          ),
+        5_000 // grace period — nothing SHOULD arrive for C
       );
-      await delay(5_000); // grace period — nothing SHOULD arrive for C
+      expect(pushStatsAfterRemoval.publishedTotal - pushBaselineAfterRemoval).toBe(
+        0
+      );
 
       // Assert — no NEW email for C (mail count unchanged from step 1)
       const [, totalAfterRemoval] = await getMailsData();
@@ -246,9 +265,12 @@ describe('Conversation-message notifications — negative matrix', () => {
       const roomId = conversationRes?.data?.createConversation?.room?.id;
       expect(roomId).toBeDefined();
 
-      // Act
-      await sendMessageToRoom(roomId as string, 'Hello!', TestUser.GLOBAL_ADMIN);
-      const [mailItems, total] = await waitForMailsCountAtLeast(1);
+      // Act — settle + re-read so a late, erroneous email to A (self-notify
+      // regression) arriving after B's is not missed (corr-test-suites-7).
+      const [mailItems, total] = await expectExactMailsAfter(
+        () => sendMessageToRoom(roomId as string, 'Hello!', TestUser.GLOBAL_ADMIN),
+        1
+      );
 
       // Assert — exactly B's email, and A never appears as a recipient.
       expect(total).toBe(1);
