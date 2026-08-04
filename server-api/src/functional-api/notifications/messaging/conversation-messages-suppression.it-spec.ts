@@ -14,6 +14,17 @@
 // across the server + test-suites processes — repos.yaml stack notes
 // recommend shortening it to 30s for walk speed) so its own wait matches
 // whatever window the live server is actually enforcing.
+//
+// Actor-pair isolation (corr-test-suites-6 / qual-test-suites-r2-1): DIRECT
+// conversations dedupe per unordered actor pair
+// (messaging.service.ts#findConversationBetweenActors), and `leaveConversation`
+// is a guaranteed no-op for a non-GROUP room (conversation.service.ts rejects
+// removal for anything but RoomType.CONVERSATION_GROUP) — so a DIRECT
+// conversation, and any suppression marker it opened, outlives the test that
+// created it for the lifetime of the run. This spec therefore uses actor
+// pairs (globalAdmin, qaUser) and (spaceAdmin, qaUser) that no other
+// direct-email test in this matrix touches, rather than relying on cleanup
+// to release the marker.
 import {
   delay,
   deleteMailSlurperMails,
@@ -23,7 +34,6 @@ import {
   TestUserManager,
 } from '@alkemio/tests-lib';
 import { sendMessageToRoom } from '@functional-api/communications/communication.params';
-import { leaveConversation } from '@functional-api/communications/conversations/conversation.request.params';
 import {
   createDirectConversation,
   updateConversationMessagingSettings,
@@ -43,41 +53,37 @@ beforeAll(async () => {
 });
 
 describe('Conversation-message notifications — email suppression burst (US1-AS3)', () => {
-  const conversationsToCleanup: string[] = [];
-
   beforeAll(async () => {
     await updateConversationMessagingSettings(
-      TestUserManager.users.spaceMember.id,
+      TestUserManager.users.qaUser.id,
       { direct: { email: true } },
-      TestUser.SPACE_MEMBER
+      TestUser.QA_USER
     );
   });
 
   afterAll(async () => {
-    for (const id of conversationsToCleanup) {
-      await leaveConversation(id, TestUser.GLOBAL_ADMIN).catch(() => {});
-    }
+    // No DIRECT-conversation cleanup here: `leaveConversation` cannot remove
+    // a member from a non-group room (server-enforced), so it would be a
+    // silent no-op — see the actor-pair-isolation note above for why this
+    // spec instead avoids reusing any conversation another test could touch.
     await updateConversationMessagingSettings(
-      TestUserManager.users.spaceMember.id,
+      TestUserManager.users.qaUser.id,
       { direct: { email: false } },
-      TestUser.SPACE_MEMBER
+      TestUser.QA_USER
     );
   });
 
   test(
     'burst is absorbed to 1 email; a second conversation with the same recipient gets its own window; the first conversation gets one more once its window elapses',
     async () => {
-      // Arrange — recipient B (spaceMember) has email enabled for direct messages.
+      // Arrange — recipient B (qaUser) has email enabled for direct messages.
       await deleteMailSlurperMails();
       const conversation1Res = await createDirectConversation(
-        TestUserManager.users.spaceMember.agentId,
+        TestUserManager.users.qaUser.agentId,
         TestUser.GLOBAL_ADMIN
       );
-      const conversation1Id =
-        conversation1Res?.data?.createConversation?.id ?? '';
       const room1Id = conversation1Res?.data?.createConversation?.room?.id;
       expect(room1Id).toBeDefined();
-      if (conversation1Id) conversationsToCleanup.push(conversation1Id);
 
       // Act — 5 rapid messages, well inside one suppression window
       for (let i = 0; i < 5; i++) {
@@ -98,16 +104,15 @@ describe('Conversation-message notifications — email suppression burst (US1-AS
       expect(totalStillAfterBurst).toBe(1);
 
       // Act — WHILE conversation 1's window is still open, message the SAME
-      // recipient in a brand-new, independent conversation.
+      // recipient in a brand-new, independent conversation (a different
+      // sender makes this a genuinely distinct actor pair, hence a distinct
+      // conversation under the dedup rule above).
       const conversation2Res = await createDirectConversation(
-        TestUserManager.users.spaceMember.agentId,
+        TestUserManager.users.qaUser.agentId,
         TestUser.SPACE_ADMIN
       );
-      const conversation2Id =
-        conversation2Res?.data?.createConversation?.id ?? '';
       const room2Id = conversation2Res?.data?.createConversation?.room?.id;
       expect(room2Id).toBeDefined();
-      if (conversation2Id) conversationsToCleanup.push(conversation2Id);
 
       await sendMessageToRoom(
         room2Id as string,
