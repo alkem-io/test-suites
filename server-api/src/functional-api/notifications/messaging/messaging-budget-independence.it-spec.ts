@@ -7,6 +7,17 @@
 // authored here in Phase 4 order but MUST be run LAST among the messaging
 // specs (after the settings/negative/suppression/positive matrix specs) so
 // budget exhaustion never skews their push-emit counts.
+//
+// Location note (sec-test-suites-2): this spec lives in
+// notifications/messaging/ (not push-notifications/) so it is picked up
+// ONLY by the explicitly-invoked `notifications-messaging` vitest project —
+// the `nightly` project's push-notifications glob does not reach this
+// directory, and this file's RabbitMQ-management dependency
+// (`getQueueStats`/`expectPushEmitAfter`) is not provisioned in the nightly
+// CI job (no RABBITMQ_* env, no broker port-forward). Its lexicographic
+// filename (`messaging-budget-independence` > `conversation-messages-*`)
+// keeps it running last within the project's `--fileParallelism=false`
+// sequential order, matching the runtime-last requirement above.
 import {
   generateFakePushSubscription,
   subscribeToPushNotifications,
@@ -24,7 +35,7 @@ import { leaveConversation } from '@functional-api/communications/conversations/
 import {
   createDirectConversation,
   expectPushEmitAfter,
-} from '../notifications/notification.helpers';
+} from '../notification.helpers';
 
 const scenarioConfig: TestScenarioNoPreCreationConfig = {
   name: 'messaging-push-budget-independence',
