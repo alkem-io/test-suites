@@ -43,6 +43,10 @@ test.describe('Level 0 Space - Applications', () => {
   let spaceAdminPage: Page;
 
   test.beforeAll(async ({ browser }) => {
+    // Scenario creation + isolated non-member login can exceed the default 30s
+    // hook budget on the slower test env; give it headroom so the hook doesn't
+    // time out and fail the first test with a beforeAll error.
+    test.setTimeout(60_000);
     globalBaseScenario =
       await TestScenarioFactory.createBaseScenario(scenarioConfig);
     baseScenario = globalBaseScenario;
@@ -199,6 +203,9 @@ test.describe('Level 0 Space - Applications', () => {
 
   test.describe('Application Management', () => {
     test.beforeEach(async () => {
+      // Per-test scenario creation + application submission exceeds the default
+      // 30s hook budget on the slower test env.
+      test.setTimeout(60_000);
       baseScenario =
         await TestScenarioFactory.createBaseScenario(scenarioConfig);
       const spaceName = baseScenario.space.about.profile.displayName;
