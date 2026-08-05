@@ -1,38 +1,16 @@
 // spec: client-web/src/functional-e2e/user-profile-test-plan.md
 // seed: seed-minimal.spec.js
 
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
+import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
 
-const password = process.env.AUTH_TEST_HARNESS_PASSWORD!;
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
+
+const test = createPersonaTest('admin@alkem.io');
 
 test.describe('My Profile Tab - View and Edit', () => {
   test('View Profile Information', async ({ page }) => {
-    // Seed: Login
-    await page.goto(baseUrl);
-    const cookieButton = page.getByRole('button', {
-      name: 'Accept All Cookies',
-    });
-    if (await cookieButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await cookieButton.click();
-    }
-    const loginLink = page.getByRole('link', { name: 'Log in', exact: true });
-    await loginLink.waitFor({ state: 'visible', timeout: 30_000 });
-    await loginLink.click();
-    await page.waitForURL(/.*login.*/);
-    await page.getByRole('textbox', { name: 'E-Mail' }).fill('admin@alkem.io');
-    await page.getByRole('textbox', { name: 'Password' }).fill(password);
-    await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-    await page.waitForURL(/.*home.*/);
-    const switchToNewDesign = page.getByRole('button', {
-      name: /take me to the new design/i,
-    });
-    if (
-      await switchToNewDesign.isVisible({ timeout: 5000 }).catch(() => false)
-    ) {
-      await switchToNewDesign.click().catch(() => {});
-    }
-
+    // Already authenticated as admin via the shared persona session.
     // Navigate to the Profile settings tab
     await page.goto(`${baseUrl}/user/admin-alkemio/settings/profile`);
 

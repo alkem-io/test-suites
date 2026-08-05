@@ -32,6 +32,9 @@ const scenarioConfig: TestScenarioNoPreCreationConfig = {
 
 test.describe('CREATE Space Operations (Organization Account)', () => {
   test.beforeAll(async ({ browser }) => {
+    // Server-side scenario creation can approach the default 30s hook budget;
+    // give it headroom so a slow setup doesn't time out and cascade the file.
+    test.setTimeout(60_000);
     baseScenario =
       await TestScenarioFactory.createBaseScenarioOrganization(scenarioConfig);
     await setupAuthentication(
