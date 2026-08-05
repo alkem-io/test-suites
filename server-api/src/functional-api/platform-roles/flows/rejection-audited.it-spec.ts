@@ -245,62 +245,79 @@ describe('flow 5 — every rejection is distinctly attributable and takes no eff
       { role: RoleName.PlatformRolesAdmin },
       { authorization: `Bearer ${rolesAdminUser.authToken}` }
     );
-    const otherHolderIds = (before.data?.platform.roleSet.usersInRole ?? [])
-      .map(u => u.id)
-      .filter(id => id !== rolesAdminUser.id);
+    const holderIdsBeforeStrip = (
+      before.data?.platform.roleSet.usersInRole ?? []
+    ).map(u => u.id);
+    const otherHolderIds = holderIdsBeforeStrip.filter(
+      id => id !== rolesAdminUser.id
+    );
 
+    // THE STRIP LOOP RUNS AS `PLATFORM_ROLES_ADMIN`, NOT AS GLOBAL_ADMIN —
+    // and that single token swap is what makes this test able to fail.
+    //
+    // Rule 6 (self-assignment) is evaluated FIRST, on revoke as well as
+    // grant, and keys purely on `actorID === targetActorId`. With
+    // `globalAdminToken` the loop therefore could never strip `admin@
+    // alkem.io`'s OWN platform-roles-admin: rule 6 rejected it every time.
+    // `admin@` always survived, the platform never reached one holder, rule 5
+    // was never reachable, and the test fell through to an `else` branch
+    // asserting that the revoke SUCCEEDS — the exact inverse of its own
+    // title. FR-013a, the single control standing between this platform and
+    // permanent administrative lockout, was exercised by nothing.
+    //
+    // `TestUser.PLATFORM_ROLES_ADMIN` holds `GRANT_GLOBAL_ADMINS` on the
+    // role-set policy (measured: policy B = [FEATURE_ROLE_ASSIGN,
+    // GRANT_GLOBAL_ADMINS, PLATFORM_ROLE_HOLDERS_READ]) and is never its own
+    // target in this loop, so rule 6 does not fire and every other holder —
+    // `admin@` included — actually comes off.
+    const rolesAdminToken = rolesAdminUser.authToken;
     for (const id of otherHolderIds) {
       await getGraphqlClient()
         .removePlatformRoleFromUser(
           { roleData: { actorID: id, role: RoleName.PlatformRolesAdmin } },
-          { authorization: `Bearer ${globalAdminToken}` }
+          { authorization: `Bearer ${rolesAdminToken}` }
         )
         .catch(() => {
-          // best-effort — proceed with whichever holders were actually
-          // removed; the assertions below reflect the resulting state
+          // best-effort — the post-strip precondition below HARD FAILS if the
+          // platform did not actually reach exactly one holder, so a silent
+          // partial strip can no longer be absorbed by a conditional
         });
     }
 
-    // corr-ts-35 + sec-test-suites-20 fix (2026-07-31): re-read the holder
-    // list AFTER the strip loop and branch on what is actually there.
-    //
-    // The branch below used to test `otherHolderIds.length`, which is the
-    // list captured BEFORE the strip ran. Two consequences, both bad:
-    //
-    //  * corr-ts-35 — when the strip SUCCEEDED (the normal case), the
-    //    pre-strip list was non-empty, so the test took the `else` branch and
-    //    asserted the revoke succeeds — while rule 5 correctly rejected it.
-    //    The assertion contradicted the behaviour it was written to protect.
-    //
-    //  * sec-test-suites-20 — the last-holder assertion therefore lived in a
-    //    branch reachable only when NO other holder existed to begin with,
-    //    which never happens on a bootstrap-seeded environment (`admin@
-    //    alkem.io` holds platform-roles-admin by FR-013b, alongside this
-    //    fixture). FR-013a's guard — the single control standing between the
-    //    platform and permanent administrative lockout — was asserted by
-    //    nothing, on any environment anyone actually runs.
-    //
-    // Post-strip state is the real precondition, so read it.
-    const afterStrip = await getGraphqlClient().platformRoleSetUsersInRole(
-      { role: RoleName.PlatformRolesAdmin },
-      { authorization: `Bearer ${rolesAdminUser.authToken}` }
-    );
-    const remainingHolderIds = (
-      afterStrip.data?.platform.roleSet.usersInRole ?? []
-    ).map(u => u.id);
-    const isLastHolder =
-      remainingHolderIds.length === 1 &&
-      remainingHolderIds[0] === rolesAdminUser.id;
-
     try {
+      // THE PRECONDITION IS ASSERTED, NOT BRANCHED ON.
+      //
+      // This block used to read the post-strip holder list into an
+      // `isLastHolder` flag and branch: last holder → assert the rejection;
+      // otherwise → assert the revoke SUCCEEDS. On every environment anyone
+      // actually runs, the strip could not remove `admin@alkem.io` (see the
+      // token note above), so the `else` arm was the one that executed — a
+      // test named "the platform retains its only Roles Admin" asserting that
+      // the last Roles Admin can be removed. A conditional that can assert
+      // the inverse of its own title is worse than no test, so the branch is
+      // gone: if the platform is not down to exactly one holder, this run
+      // cannot exercise rule 5 and says so, loudly, instead of quietly
+      // testing its opposite.
+      const afterStrip = await getGraphqlClient().platformRoleSetUsersInRole(
+        { role: RoleName.PlatformRolesAdmin },
+        { authorization: `Bearer ${rolesAdminToken}` }
+      );
+      const remainingHolderIds = (
+        afterStrip.data?.platform.roleSet.usersInRole ?? []
+      ).map(u => u.id);
+      expect(
+        remainingHolderIds,
+        `rule 5 needs the platform down to EXACTLY one platform-roles-admin (${rolesAdminUser.id}) before the revoke below can reach it; the strip loop left [${remainingHolderIds.join(', ')}]`
+      ).toEqual([rolesAdminUser.id]);
+
       // corr-ts-14: the actor performing this removal must be a DIFFERENT
       // identity than the target — rule 6 (self-assignment) is evaluated
       // FIRST and unconditionally blocks a self-revoke with its own,
       // distinct message, which shadowed rule 5 here identically to
-      // `assignment-rules.it-spec.ts`. `GLOBAL_ADMIN` already performs
-      // every other admin action in this test (the restore loops above/
-      // below) and still reaches `GRANT_GLOBAL_ADMINS` via A1's legacy
-      // cascade at Slice A.
+      // `assignment-rules.it-spec.ts`. `GLOBAL_ADMIN` is the right actor and
+      // is still sound after the strip: `GRANT_GLOBAL_ADMINS` is granted to
+      // [GLOBAL_ADMIN, PLATFORM_ROLES_ADMIN], so `admin@` still passes rule 1
+      // from its LEGACY credential even having just lost the new role.
       const res = await asUser(
         token =>
           getGraphqlClient().removePlatformRoleFromUser(
@@ -315,62 +332,62 @@ describe('flow 5 — every rejection is distinctly attributable and takes no eff
         TestUser.GLOBAL_ADMIN
       );
 
-      // corr-ts-24 fix: the strip loop above is best-effort (`.catch(() =>
-      // {})`) — it can leave MORE than one holder (e.g. rule 6,
-      // self-assignment, blocks GLOBAL_ADMIN from revoking its own role if
-      // it happens to hold this one too). When that happens, rule 5
-      // correctly ALLOWS this removal — asserting the last-holder rejection
-      // unconditionally would fail on a false premise. Branch on the
-      // OBSERVED holder count instead of assuming the strip loop reached
-      // exactly one.
-      if (isLastHolder) {
-        expect(res.error?.errors?.[0]?.message).toContain(
-          'cannot remove the last platform-roles-admin'
-        );
+      expect(res.error?.errors?.[0]?.message).toContain(
+        'cannot remove the last platform-roles-admin'
+      );
+      // The rule engine's internal id, nested TWO levels under `extensions`
+      // (`errors[0].extensions.details.ruleId`) — the message alone cannot
+      // distinguish rule 5 from a differently-worded future rejection.
+      expect(
+        (
+          res.error?.errors?.[0]?.extensions as
+            | { details?: { ruleId?: unknown } }
+            | undefined
+        )?.details?.ruleId
+      ).toBe('last-roles-admin');
 
-        const holders = await getGraphqlClient().platformRoleSetUsersInRole(
-          { role: RoleName.PlatformRolesAdmin },
-          { authorization: `Bearer ${rolesAdminUser.authToken}` }
-        );
-        expect(
-          holders.data?.platform.roleSet.usersInRole.some(
-            u => u.id === rolesAdminUser.id
-          ),
-          'the platform must still hold at least one platform-roles-admin'
-        ).toBe(true);
-      } else {
-        // The strip loop is best-effort (`.catch(() => {})`) — rule 6
-        // (self-assignment) blocks GLOBAL_ADMIN from revoking its own
-        // platform-roles-admin, so a holder can survive it. With more than
-        // one holder left, rule 5 correctly ALLOWS the removal.
-        expect(
-          res.error,
-          `expected the revoke to succeed with ${remainingHolderIds.length} holders remaining, but it was rejected`
-        ).toBeUndefined();
-      }
+      const holders = await getGraphqlClient().platformRoleSetUsersInRole(
+        { role: RoleName.PlatformRolesAdmin },
+        { authorization: `Bearer ${rolesAdminToken}` }
+      );
+      expect(
+        holders.data?.platform.roleSet.usersInRole.some(
+          u => u.id === rolesAdminUser.id
+        ),
+        'the platform must still hold at least one platform-roles-admin'
+      ).toBe(true);
     } finally {
-      // Restore every holder this test temporarily removed, regardless of
-      // the assertion's outcome — this environment's other holders (e.g. a
-      // bootstrap-seeded GLOBAL_ADMIN) must come back exactly as found.
+      // RESTORE AS `PLATFORM_ROLES_ADMIN`, FOR THE SAME REASON THE STRIP
+      // RUNS AS IT. This loop used to re-grant with `globalAdminToken`; once
+      // `admin@` is among the stripped holders that is a SELF-assignment,
+      // rejected by rule 6 and then swallowed by `.catch(() => {})` — which
+      // would leave the SHARED stack with exactly one platform-roles-admin,
+      // permanently, and every later spec that expects `admin@` to hold it
+      // red for a reason nothing in this file mentions. The leak was
+      // invisible only while the strip was symmetrically blocked; making the
+      // strip work makes it real.
+      const restoreFailures: string[] = [];
       for (const id of otherHolderIds) {
-        await getGraphqlClient()
-          .assignPlatformRoleToUser(
+        try {
+          await getGraphqlClient().assignPlatformRoleToUser(
             { roleData: { actorID: id, role: RoleName.PlatformRolesAdmin } },
-            { authorization: `Bearer ${globalAdminToken}` }
-          )
-          .catch(() => {
-            // best-effort restore
-          });
+            { authorization: `Bearer ${rolesAdminToken}` }
+          );
+        } catch (error) {
+          restoreFailures.push(
+            `${id}: ${error instanceof Error ? error.message : String(error)}`
+          );
+        }
       }
       // corr-ts-24 fix: the fixture ITSELF (`rolesAdminUser`) must also be
-      // self-healed — if the removal above succeeded for real (the
-      // `otherHolderIds.length > 0` branch), the shared
-      // `platform.rolesadmin@alkem.io` fixture would otherwise lose its
-      // role PERMANENTLY, breaking every other spec/file that authenticates
-      // as PLATFORM_ROLES_ADMIN (exactly the 2026-07-29 outage
+      // self-healed — if the removal above had succeeded for real, the shared
+      // `platform.rolesadmin@alkem.io` fixture would lose its role
+      // PERMANENTLY, breaking every other spec/file that authenticates as
+      // PLATFORM_ROLES_ADMIN (exactly the 2026-07-29 outage
       // `assignment-rules.it-spec.ts`'s identical self-heal documents).
       // Idempotent re-grant: a no-op (harmless error) if the fixture never
-      // lost the role.
+      // lost the role. Kept on `globalAdminToken` — `rolesAdminToken` here
+      // would be a self-assignment and rule 6 would refuse it.
       await getGraphqlClient()
         .assignPlatformRoleToUser(
           {
@@ -385,6 +402,21 @@ describe('flow 5 — every rejection is distinctly attributable and takes no eff
           // best-effort — if the fixture never lost the role, re-granting an
           // already-held role is expected to no-op or error harmlessly.
         });
+
+      // The restore is VERIFIED, not assumed. Without this, a restore that
+      // silently failed would hand the next spec a platform with one Roles
+      // Admin and no explanation.
+      const afterRestore = await getGraphqlClient().platformRoleSetUsersInRole(
+        { role: RoleName.PlatformRolesAdmin },
+        { authorization: `Bearer ${globalAdminToken}` }
+      );
+      const restoredHolderIds = (
+        afterRestore.data?.platform.roleSet.usersInRole ?? []
+      ).map(u => u.id);
+      expect(
+        [...restoredHolderIds].sort(),
+        `this test left the shared platform's platform-roles-admin holders CHANGED — before [${[...holderIdsBeforeStrip].sort().join(', ')}], after [${[...restoredHolderIds].sort().join(', ')}]${restoreFailures.length > 0 ? `; restore failures: ${restoreFailures.join(' | ')}` : ''}`
+      ).toEqual([...holderIdsBeforeStrip].sort());
     }
   });
 

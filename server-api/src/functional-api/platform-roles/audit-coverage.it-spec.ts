@@ -15,33 +15,38 @@ const asUser = <TData>(
 /**
  * workspace#027-platform-role-redesign — [US3].
  *
- * **A structural limitation, stated up front rather than smoothed over**:
- * this repo's only generic audit-read surface is the MCP `audit-log-analyze`
- * tool (A19), which has NO client wired here (T007b's `surface-
- * invocations.ts` header; same gap T019 notes for the GraphQL-side denial
- * assertions). The two GraphQL audit-read fields
- * (`latestUserEmailChangeAuditEntry` / `userEmailChangeAuditEntries`,
- * asserted in `grantability.it-spec.ts`, T019) expose ONE category only —
- * user email changes. Every OTHER audit category this feature adds
- * (`platform_role_assignment`, `role_grant_rejected`, `service_profile_
- * change`, organization-subject grants — FR-018/019/025/026/027) therefore
- * has NO test-suites-reachable READ path at all in Slice A. That is a real
- * gap for Phase V to close (wire an MCP client, per T007b/T019) or for a
- * future spec to reconsider (a GraphQL audit query surface beyond
- * email-change) — not something this file can paper over with an assertion
- * it cannot actually make good on.
+ * **Scope note — this file keeps ONLY the assertions that hold without
+ * reading the audit store.** Its header used to say that
+ * `platform_role_assignment` / `role_grant_rejected` had no
+ * test-suites-reachable READ path at all in Slice A. That is no longer
+ * true: `./helpers/audit-db.ts` reads `platform_audit_entry` directly (a
+ * read-only `docker exec … psql` against `alkemio_dev_postgres` — no new npm
+ * dependency), and `./audit-rows.it-spec.ts` uses it to assert the ROW for
+ * every handover group-C case: the grant row's category/outcome/subject and
+ * initiator attribution (C1-C3), the Feature-family narrowing to a non-admin
+ * initiator (C3b), the revoke row (C4), the rejection row and its
+ * `details.rejectedRule` (C5), the self-assignment case where the granter IS
+ * the subject (C6), and the organization-target row that populates
+ * `subjectOrganizationId` while leaving `subjectUserId` NULL (C-org).
  *
- * What THIS file asserts, honestly, given that constraint:
+ * Still genuinely unreachable from here, and deliberately NOT asserted:
+ * - the generic MCP `audit-log-analyze` READ surface (A19), which has no
+ *   client wired in this repo (T007b's `surface-invocations.ts` header) —
+ *   the SQL helper is a test-only vantage point, not that product surface;
+ * - the FR-012 "no revoke record per dropped legacy assignment" carve-out,
+ *   which is a claim about ABSENCE across a migration this repo does not run;
+ * - the two GraphQL audit-read fields
+ *   (`latestUserEmailChangeAuditEntry` / `userEmailChangeAuditEntries`,
+ *   asserted in `grantability.it-spec.ts`, T019) expose ONE category only —
+ *   user email changes — which is what blocks the two `it.todo`s below.
+ *
+ * What THIS file asserts, given that split:
  * - T014's outcome-coverage half, where independently OBSERVABLE without an
- *   audit read (a rejected grant did not take effect — the FR-012 "no
- *   revoke record per dropped legacy assignment" carve-out is a claim about
- *   ABSENCE this repo cannot observe either, and is noted as such).
+ *   audit read (a rejected grant did not take effect).
  * - T014a's self-affecting retrievability predicate, on the ONE audit
  *   category that IS GraphQL-reachable (user email change, via A4's
- *   `adminUserEmailChange` + the two A19 read fields) — the concrete,
- *   verifiable instance of "an admin's own record is retrievable under
- *   `initiatorUserId = subjectUserId`" and "a platform-wide operational
- *   action with no subject is never returned as a false positive".
+ *   `adminUserEmailChange` + the two A19 read fields) — currently two
+ *   `it.todo`s, for the reason recorded on them.
  */
 
 let fixtures: MatrixFixtures;
@@ -96,11 +101,13 @@ describe('audit-coverage outcome checks reachable without a generic audit read (
     ).toBe(false);
   });
 
-  // The audit RECORD's presence for both outcomes (success AND rejection),
-  // the per-category fail-open/fail-closed semantics, and the FR-012
-  // cleanup-carve-out absence check all require the MCP audit-read surface
-  // this repo does not have a client for (Phase V) — declared here as a
-  // known gap rather than a false-positive assertion.
+  // The audit RECORD's presence for both outcomes (grant AND rejection) now
+  // lives in `./audit-rows.it-spec.ts`, over `./helpers/audit-db.ts` — it is
+  // not repeated here. The per-category fail-open/fail-closed semantics
+  // (which need the audit store to be made to FAIL mid-mutation) and the
+  // FR-012 cleanup-carve-out absence check remain out of reach from this
+  // repo, and stay declared as known gaps rather than false-positive
+  // assertions.
 });
 
 describe('SC-015 self-affecting retrievability — the ONE GraphQL-reachable audit category (T014a)', () => {

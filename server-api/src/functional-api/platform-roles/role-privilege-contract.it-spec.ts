@@ -3,6 +3,11 @@ import { TestUser } from '@alkemio/tests-lib';
 import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { graphqlRequestAuth } from '@alkemio/tests-lib/utils/graphql.request';
 import { testUserFor } from './role-action-matrix.data';
+import {
+  expectedDeltaFor,
+  GRANTABLE_TO_HUMAN,
+  mustContainOn,
+} from './helpers/a-row-contract';
 
 /**
  * workspace#027-platform-role-redesign — the PRIVILEGE CONTRACT, per role.
@@ -22,12 +27,16 @@ import { testUserFor } from './role-action-matrix.data';
  * `platform.roleSet.authorization.myPrivileges`. The server was right every
  * time; no test stated what the server reports, so no test could catch it.
  *
- * The expectations below are an INDEPENDENT restatement of
+ * The expectations are an INDEPENDENT restatement of
  * `server/src/platform/platform-role/verification/privilege.grants.ts`,
  * transcribed by anchor: `@platform` entries belong on the platform policy,
- * `@role-set` entries on the role set's. Deliberately not derived from a
- * shared constant — a contract test that imports its own expectation asserts
- * only that the code equals itself.
+ * `@role-set` entries on the role set's. Still deliberately not derived from a
+ * server constant — a contract test that imports its own expectation asserts
+ * only that the code equals itself. It now lives in
+ * `./helpers/a-row-contract`, which is a TEST-OWNED hand transcription of the
+ * handover's group-A table, so the repo holds ONE copy of that table instead
+ * of the three it used to (here, the grant/revoke delta spec, and the
+ * handover). Correcting a row corrects every consumer at once.
  *
  * Slice A caveat, and it is the important one: these are all POSITIVE and
  * CROSS-CONTAMINATION assertions, both of which are meaningful today. What
@@ -37,40 +46,51 @@ import { testUserFor } from './role-action-matrix.data';
  * credential, which is what makes the negative assertions below sound.
  */
 
+/**
+ * The per-role contract, per policy — one row per grantable role, read from
+ * the single transcription in `./helpers/a-row-contract`.
+ *
+ * `mustContainOn` is that module's MEMBERSHIP view: the listed privileges must
+ * be PRESENT on that policy for a holder of that role. It is deliberately not
+ * an exact set here — every authenticated user also carries baseline
+ * privileges that are nobody's grant. The EXACT-delta view (`expectedDeltaFor`)
+ * belongs to the grant/revoke spec, which measures a real before/after.
+ *
+ * Roles whose expected list for a policy is EMPTY are filtered out rather than
+ * generating an `it()` that asserts nothing: A10/A11/A12 on both policies, and
+ * the role-set side of A4/A5/A8/A9. Their emptiness is a real claim and it IS
+ * asserted — against a live ordinary user, in the two EDGE blocks below. A
+ * zero-assertion green here would only look like coverage.
+ *
+ * TWO ROLES APPEAR ON BOTH POLICIES, AND BOTH ARE CORRECT — do not "fix" them
+ * by deleting the role-set row:
+ *
+ *  - A6, `PlatformContentFullAccess`: its five CRUD privileges arrive from the
+ *    ROOT cascade, which makes it the one row where a cascade change goes
+ *    unnoticed everywhere else. FR-004/SC-004's single named exception.
+ *  - A3, `PlatformSupport`: `PLATFORM_FORUM_MANAGE` is the only A-row
+ *    credential rule created with `cascade: true`, while that role's
+ *    `CREATE_ORGANIZATION` rule is `cascade: false` — which is exactly why one
+ *    doubles and the other does not.
+ *
+ * The mechanism in both cases is INHERITANCE, not a duplicated rule: the
+ * platform role-set policy is applied with `platform.authorization` as its
+ * parent, so any cascading platform rule also surfaces on policy B. If either
+ * ever appears on one policy only, that is a deliberate change and this case
+ * is UPDATED, never deleted.
+ */
+const contractFor = (
+  policy: 'platform' | 'roleSet'
+): [RoleName, readonly string[]][] =>
+  GRANTABLE_TO_HUMAN.map(
+    role => [role, mustContainOn(role, policy)] as [RoleName, readonly string[]]
+  ).filter(([, expected]) => expected.length > 0);
+
 /** Privileges the platform ENTITY policy must report, per role. */
-const PLATFORM_POLICY_CONTRACT: Partial<Record<RoleName, readonly string[]>> = {
-  // SET_SERVICE_PROFILE is the Roles Admin's ONLY platform-entity privilege —
-  // it marks service accounts (FR-020). Its assignment powers are on the role
-  // set, which is exactly the confusion this file exists to pin.
-  [RoleName.PlatformRolesAdmin]: ['SET_SERVICE_PROFILE'],
-  [RoleName.PlatformUsersAdmin]: ['PLATFORM_USERS_ADMIN'],
-  [RoleName.PlatformAuditReader]: ['PLATFORM_AUDIT_READ'],
-  [RoleName.PlatformSupport]: ['CREATE_ORGANIZATION', 'PLATFORM_FORUM_MANAGE'],
-  [RoleName.PlatformSettingsAdmin]: ['PLATFORM_SETTINGS_ADMIN'],
-  [RoleName.PlatformOperationsAdmin]: [
-    'AUTHORIZATION_RESET',
-    'PLATFORM_OPERATIONS_ADMIN',
-  ],
-  [RoleName.FeatureOrganizationCreator]: ['CREATE_ORGANIZATION'],
-  [RoleName.FeatureVirtualAssistant]: ['ACCESS_VIRTUAL_ASSISTANT'],
-};
+const PLATFORM_POLICY_CONTRACT = contractFor('platform');
 
 /** Privileges the platform ROLE SET's policy must report, per role. */
-const ROLE_SET_POLICY_CONTRACT: Partial<Record<RoleName, readonly string[]>> = {
-  [RoleName.PlatformRolesAdmin]: [
-    'GRANT_GLOBAL_ADMINS',
-    'FEATURE_ROLE_ASSIGN',
-    // Without the holder read a Roles Admin can grant but never revoke: the
-    // UI cannot render a list to revoke from. SC-017/A20b.
-    'PLATFORM_ROLE_HOLDERS_READ',
-  ],
-  [RoleName.PlatformUsersAdmin]: [
-    // The three `Feature ...` roles ONLY — FR-003's one-way rule.
-    'FEATURE_ROLE_ASSIGN',
-    'FEATURE_ROLE_HOLDERS_READ',
-  ],
-  [RoleName.PlatformAuditReader]: ['PLATFORM_ROLE_HOLDERS_READ'],
-};
+const ROLE_SET_POLICY_CONTRACT = contractFor('roleSet');
 
 /**
  * Privileges that belong to exactly one role. Any OTHER role reporting one is
@@ -104,10 +124,15 @@ const SHARED_PRIVILEGES = new Set([
 ]);
 
 /**
- * Roles that correctly report NOTHING on either platform-level policy, because
- * their privileges are anchored on ACCOUNT / SPACE / CALLOUTS-SET policies:
- * `TRANSFER_RESOURCE_*` and `ACCOUNT_LICENSE_MANAGE` @account,
- * `MOVE_CONTRIBUTION` @space.
+ * Roles that correctly report NOTHING on either platform-level policy:
+ *
+ *  - A10 `PlatformResourceAdmin` — `TRANSFER_RESOURCE_OFFER/_ACCEPT` @account
+ *    and @callouts-set, `MOVE_CONTRIBUTION` @space.
+ *  - A11 `PlatformLicenseManager` — `ACCOUNT_LICENSE_MANAGE` @account.
+ *  - A12 `FeatureBetaTester` — no authorization-policy privilege on ANY tree;
+ *    its capability is the ACCOUNT_LICENSE_PLUS licensing entitlement granted
+ *    by `assignPlatformRoleToUser` (server T040a). It is here for a different
+ *    reason from the other two, and `MOVE_CONTRIBUTION` is NOT its privilege.
  *
  * Measured live 2026-08-05 — not derived. Pinned because it is a live trap,
  * not a curiosity: any UI that gates on platform-level privileges alone is
@@ -119,6 +144,26 @@ const NO_PLATFORM_LEVEL_PRIVILEGE: readonly RoleName[] = [
   RoleName.PlatformResourceAdmin,
   RoleName.PlatformLicenseManager,
   RoleName.FeatureBetaTester,
+];
+
+/**
+ * Roles that carry a real platform-ENTITY privilege and add NOTHING on the
+ * role set (A4/A5/A8/A9). The role-set policy is where assignment and
+ * holder-read live; a role that is not in the assignment business must not
+ * pick anything up there.
+ *
+ * This is the direction the contract maps above cannot state: an empty
+ * expected list generates no assertion, so "adds nothing" has to be asserted
+ * as an EQUALITY against a live ordinary user, never as an absence of an
+ * expectation. It is also the concrete guard against the union-widening
+ * failure mode — widening the shared role-set policy would show up here first,
+ * on the four roles that should never have seen it.
+ */
+const PLATFORM_POLICY_ONLY_ROLES: readonly RoleName[] = [
+  RoleName.PlatformSettingsAdmin,
+  RoleName.PlatformOperationsAdmin,
+  RoleName.FeatureVirtualAssistant,
+  RoleName.FeatureOrganizationCreator,
 ];
 
 const ALL_THIRTEEN: readonly RoleName[] = [
@@ -178,39 +223,70 @@ const reportedFor = async (user: TestUser): Promise<Reported> => {
 
 const reported = new Map<RoleName, Reported>();
 
+/**
+ * A live ordinary registered user, holding none of the thirteen — the ONLY
+ * honest baseline for "this role adds nothing here".
+ *
+ * Measured 2026-08-05: platform = ['ACCESS_INTERACTIVE_GUIDANCE',
+ * 'READ_USERS'], roleSet = [], myRoles = ['REGISTERED']. Measured rather than
+ * hardcoded on purpose: those two platform privileges are whatever the
+ * platform grants every authenticated user, they are not this feature's to
+ * pin, and pinning them would turn an unrelated platform change into a
+ * platform-roles failure.
+ */
+let ordinaryBaseline: Reported;
+
+/**
+ * `TestUser.NON_SPACE_MEMBER` is `fixtures.ts`'s shared `targetUserId` and is
+ * used by 68+ spec files in this suite. If any of them leaks a grant onto it,
+ * the baseline MOVES — and every "adds nothing" assertion below would happily
+ * follow it, staying green while the thing it guards has broken. So every
+ * consumer of the baseline re-states the fixture's own integrity first, using
+ * the same `myRoles` idiom as the `fixture integrity` block above.
+ */
+const assertBaselineFixtureIsOrdinary = () => {
+  expect(
+    ordinaryBaseline.myRoles,
+    'the NON_SPACE_MEMBER baseline has picked up a platform role — it is the ' +
+      'suite-wide shared target user, and a leaked grant moves the baseline ' +
+      'that every comparison in this block is made against'
+  ).toEqual(['REGISTERED']);
+};
+
 beforeAll(async () => {
   for (const role of ALL_THIRTEEN) {
     reported.set(role, await reportedFor(testUserFor(role)));
   }
+  ordinaryBaseline = await reportedFor(TestUser.NON_SPACE_MEMBER);
 }, 300_000);
 
 describe('role privilege contract — what each role SEES, per policy', () => {
   describe('fixture integrity — these assertions are only sound on single-role users', () => {
-    it.each(ALL_THIRTEEN)('%s holds exactly that role and no legacy credential', role => {
-      const held = reported.get(role)!.myRoles;
+    it.each(ALL_THIRTEEN)(
+      '%s holds exactly that role and no legacy credential',
+      role => {
+        const held = reported.get(role)!.myRoles;
 
-      // `REGISTERED` is the baseline every authenticated user carries — it is
-      // not one of the thirteen and is subtracted, not asserted against.
-      // Verified live 2026-08-05: the subject account reported
-      // `myRoles=['REGISTERED']` before any grant.
-      const platformRoles = held.filter(r => r !== 'REGISTERED');
+        // `REGISTERED` is the baseline every authenticated user carries — it is
+        // not one of the thirteen and is subtracted, not asserted against.
+        // Verified live 2026-08-05: the subject account reported
+        // `myRoles=['REGISTERED']` before any grant.
+        const platformRoles = held.filter(r => r !== 'REGISTERED');
 
-      expect(
-        platformRoles,
-        `${role} fixture should hold exactly one platform role (reported: ${held.join(', ')})`
-      ).toEqual([role]);
-      expect(
-        held.filter(r => r.startsWith('GLOBAL_')),
-        `${role} fixture must hold no legacy GLOBAL_* role, or every denial below passes for the wrong reason`
-      ).toEqual([]);
-    });
+        expect(
+          platformRoles,
+          `${role} fixture should hold exactly one platform role (reported: ${held.join(', ')})`
+        ).toEqual([role]);
+        expect(
+          held.filter(r => r.startsWith('GLOBAL_')),
+          `${role} fixture must hold no legacy GLOBAL_* role, or every denial below passes for the wrong reason`
+        ).toEqual([]);
+      }
+    );
   });
 
   describe('GREEN — the platform entity policy reports the expected privileges', () => {
-    for (const [role, expected] of Object.entries(PLATFORM_POLICY_CONTRACT) as [
-      RoleName,
-      readonly string[],
-    ][]) {
+    for (const [role, expected] of PLATFORM_POLICY_CONTRACT) {
       it(`${role} reports ${expected.join(', ')} on platform.authorization`, () => {
         const actual = reported.get(role)!.platform;
 
@@ -225,10 +301,7 @@ describe('role privilege contract — what each role SEES, per policy', () => {
   });
 
   describe('GREEN — the role set policy reports the expected privileges', () => {
-    for (const [role, expected] of Object.entries(ROLE_SET_POLICY_CONTRACT) as [
-      RoleName,
-      readonly string[],
-    ][]) {
+    for (const [role, expected] of ROLE_SET_POLICY_CONTRACT) {
       it(`${role} reports ${expected.join(', ')} on platform.roleSet.authorization`, () => {
         const actual = reported.get(role)!.roleSet;
 
@@ -247,6 +320,11 @@ describe('role privilege contract — what each role SEES, per policy', () => {
       const others = ALL_THIRTEEN.filter(r => r !== owner);
 
       it.each(others)(`${privilege} is not reported for %s`, role => {
+        // CURRENTLY DEAD, and deliberately kept: no member of
+        // SHARED_PRIVILEGES is a key of EXCLUSIVE_PRIVILEGES, so this never
+        // fires today. It is the guard for the day a privilege moves from
+        // exclusive to shared — without it, that move turns this block into a
+        // wall of false failures and the tempting fix is to delete the rows.
         if (SHARED_PRIVILEGES.has(privilege)) {
           return;
         }
@@ -274,18 +352,58 @@ describe('role privilege contract — what each role SEES, per policy', () => {
     });
   });
 
+  describe('EDGE — the platform-policy-only roles add nothing on the role set', () => {
+    // A4/A5/A8/A9. Each of these four has a genuine platform-entity privilege
+    // asserted in the GREEN block above; what was never stated is the other
+    // half of the row — that the role set gives them nothing. The handover
+    // writes that half as "—", which generates no assertion at all unless it
+    // is turned into an equality against a user who holds no role.
+    it.each(PLATFORM_POLICY_ONLY_ROLES)(
+      '%s reports exactly an ordinary user’s privileges on the ROLE SET policy',
+      role => {
+        assertBaselineFixtureIsOrdinary();
+
+        const { roleSet } = reported.get(role)!;
+
+        expect(
+          [...roleSet].sort(),
+          `${role} reports something on the ROLE SET policy that an ordinary ` +
+            `user does not (reported: ${roleSet.join(', ') || 'none'}) — the ` +
+            'role-set policy is where assignment and holder-read live, and ' +
+            'this role is in neither business'
+        ).toEqual([...ordinaryBaseline.roleSet].sort());
+      }
+    );
+  });
+
   describe('EDGE — the account/space-anchored roles report nothing at platform level', () => {
     it.each(NO_PLATFORM_LEVEL_PRIVILEGE)(
       '%s reports no privilege on either platform-level policy',
       role => {
-        const { platform, roleSet } = reported.get(role)!;
-        const baseline = reported.get(RoleName.FeatureBetaTester)!;
-
-        // Compared against another anchored role rather than against [] — an
+        // Baselined against an ordinary registered user, NOT against another
+        // member of this same list: the previous version compared each role to
+        // `FeatureBetaTester` while iterating a list that CONTAINS it, so the
+        // A12 iteration asserted `expect(x).toEqual(x)` and could never fail.
+        // A10 and A11 were genuinely compared and stay covered; only A12 was
+        // vacuous.
+        //
+        // Still an equality against a live user rather than against `[]` — an
         // authenticated user carries baseline privileges that are nobody's
         // grant, and asserting emptiness outright would pin those too.
-        expect(platform.sort()).toEqual(baseline.platform.sort());
-        expect(roleSet.sort()).toEqual(baseline.roleSet.sort());
+        assertBaselineFixtureIsOrdinary();
+
+        const { platform, roleSet } = reported.get(role)!;
+
+        expect(
+          [...platform].sort(),
+          `${role} reports a PLATFORM policy privilege an ordinary user does not — ` +
+            'its privileges are anchored on the account/space policies, so it ' +
+            'should be indistinguishable from a role-less user here'
+        ).toEqual([...ordinaryBaseline.platform].sort());
+        expect(
+          [...roleSet].sort(),
+          `${role} reports a ROLE SET policy privilege an ordinary user does not`
+        ).toEqual([...ordinaryBaseline.roleSet].sort());
       }
     );
   });
@@ -310,12 +428,69 @@ describe('role privilege contract — what each role SEES, per policy', () => {
     });
 
     it('a Platform Roles Admin is NOT empty-handed on the union of both policies', () => {
-      // Reading only the platform policy reports a single privilege and makes
-      // this role look unprivileged — which is what hid the admin nav entry.
-      const { platform, roleSet } = reported.get(RoleName.PlatformRolesAdmin)!;
+      // Reading only the platform policy reports a single ADDED privilege and
+      // makes this role look unprivileged — which is what hid the admin nav
+      // entry. That is the claim; the count is not.
+      //
+      // The handover's "policy A has exactly 1" is a DELTA over an ordinary
+      // user, not an absolute. Asserting `toHaveLength(1)` was red on the live
+      // server: the real platform set is ['ACCESS_INTERACTIVE_GUIDANCE',
+      // 'READ_USERS', 'SET_SERVICE_PROFILE'] — length 3, because every
+      // authenticated user carries the first two. Stated as a delta the case
+      // says what it meant to say and stops being hostage to a baseline this
+      // feature does not own.
+      assertBaselineFixtureIsOrdinary();
 
-      expect(platform).toHaveLength(1);
-      expect([...platform, ...roleSet].length).toBeGreaterThan(3);
+      const { platform, roleSet } = reported.get(RoleName.PlatformRolesAdmin)!;
+      const platformAdded = platform
+        .filter(privilege => !ordinaryBaseline.platform.includes(privilege))
+        .sort();
+
+      expect(
+        platformAdded,
+        'the platform ENTITY policy adds something other than the service-account ' +
+          `marker for a Roles Admin (reported: ${platform.join(', ') || 'none'})`
+      ).toEqual(['SET_SERVICE_PROFILE']);
+
+      // The union half has to stay SENSITIVE, and `union.size >
+      // baselineUnion.size` was not: measured live the baseline union is 2
+      // ({ACCESS_INTERACTIVE_GUIDANCE, READ_USERS}), so a Roles Admin that had
+      // lost its ENTIRE role-set contribution would still measure 3 > 2 and
+      // pass — surviving the exact defect this case is named after. Asserted
+      // as the EXACT added set on the role-set policy instead, against
+      // `expectedDeltaFor` (the a-row-contract's exact-delta view, legitimate
+      // here because the live baseline is subtracted first).
+      const roleSetAdded = roleSet
+        .filter(privilege => !ordinaryBaseline.roleSet.includes(privilege))
+        .sort();
+
+      expect(
+        roleSetAdded,
+        'the ROLE SET policy no longer carries the Roles Admin assignment ' +
+          `privileges (reported: ${roleSet.join(', ') || 'none'}) — with only ` +
+          'the service-account marker left on the platform policy, every ' +
+          'consumer that reads one policy sees an unprivileged account'
+      ).toEqual(
+        [...expectedDeltaFor(RoleName.PlatformRolesAdmin)!.roleSet].sort()
+      );
+
+      // ...and A1's two policy contributions are DISJOINT — unlike A3/A6,
+      // whose rows double by cascade. If a Roles Admin privilege ever starts
+      // appearing on both policies the union stops being the sum, and that is
+      // a cascade change to look at, not a rounding error.
+      const union = new Set([...platform, ...roleSet]);
+      const baselineUnion = new Set([
+        ...ordinaryBaseline.platform,
+        ...ordinaryBaseline.roleSet,
+      ]);
+
+      expect(
+        union.size - baselineUnion.size,
+        `a Roles Admin adds ${platformAdded.length} platform + ` +
+          `${roleSetAdded.length} role-set privileges but only ` +
+          `${union.size - baselineUnion.size} across the union — the two ` +
+          'policies now overlap (or one contribution vanished)'
+      ).toBe(platformAdded.length + roleSetAdded.length);
     });
   });
 
