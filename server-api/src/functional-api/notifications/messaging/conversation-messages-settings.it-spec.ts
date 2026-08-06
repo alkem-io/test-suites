@@ -13,6 +13,8 @@ import {
 } from '@functional-api/contributor-management/user/user.request.params';
 import {
   delay,
+  digestTestTimeoutMs,
+  digestWindow,
   TestScenarioFactory,
   TestScenarioNoPreCreationConfig,
   TestUser,
@@ -32,6 +34,14 @@ const uniqueId = UniqueIDGenerator.getID();
 const scenarioConfig: TestScenarioNoPreCreationConfig = {
   name: 'conversation-messages-settings',
 };
+
+// US3-AS3's assertion is negative ("no in-app notification is ever created"),
+// so its wait must outlast the DISPATCH path, not the message. Under R4 the
+// dispatch happens at flush time, on whichever direct track is armed for the
+// recipient — email is off for this persona, push is on at its mandated
+// default — so `push:direct` is the track that would carry a leak.
+const directPush = digestWindow('push', 'direct');
+const directEmail = digestWindow('email', 'direct');
 
 const messagingRowsFromNotificationUser = (notificationUser: any) => ({
   direct: notificationUser?.conversationMessageDirect,
@@ -138,46 +148,57 @@ describe('Conversation-message notification settings (US3)', () => {
       );
     });
 
-    test('forcing the stored inApp flag to true via updateUserSettings never produces an in-app notification', async () => {
-      // Arrange — force the platform-enforced-off channel on via the public API
-      const updateRes = await updateConversationMessagingSettings(
-        TestUserManager.users.spaceMember.id,
-        { direct: { inApp: true } },
-        TestUser.SPACE_MEMBER
-      );
-      // The write itself is accepted and round-trips (the stored value is
-      // retained for row-shape symmetry — FR-003 — even though it is never
-      // honored at dispatch time).
-      expect(getUpdatedMessagingSettings(updateRes).direct?.inApp).toBe(true);
+    test(
+      'forcing the stored inApp flag to true via updateUserSettings never produces an in-app notification',
+      async () => {
+        // Arrange — force the platform-enforced-off channel on via the public API
+        const updateRes = await updateConversationMessagingSettings(
+          TestUserManager.users.spaceMember.id,
+          { direct: { inApp: true } },
+          TestUser.SPACE_MEMBER
+        );
+        // The write itself is accepted and round-trips (the stored value is
+        // retained for row-shape symmetry — FR-003 — even though it is never
+        // honored at dispatch time).
+        expect(getUpdatedMessagingSettings(updateRes).direct?.inApp).toBe(true);
 
-      const before = await getConversationMessagingInAppNotificationsCount(
-        TestUser.SPACE_MEMBER
-      );
+        const before = await getConversationMessagingInAppNotificationsCount(
+          TestUser.SPACE_MEMBER
+        );
 
-      const conversationRes = await createDirectConversation(
-        TestUserManager.users.spaceMember.agentId,
-        TestUser.GLOBAL_ADMIN
-      );
-      const conversationId = conversationRes?.data?.createConversation?.id;
-      const roomId = conversationRes?.data?.createConversation?.room?.id;
-      expect(conversationId).toBeDefined();
-      expect(roomId).toBeDefined();
-      if (conversationId) conversationsToCleanup.push(conversationId);
+        const conversationRes = await createDirectConversation(
+          TestUserManager.users.spaceMember.agentId,
+          TestUser.GLOBAL_ADMIN
+        );
+        const conversationId = conversationRes?.data?.createConversation?.id;
+        const roomId = conversationRes?.data?.createConversation?.room?.id;
+        expect(conversationId).toBeDefined();
+        expect(roomId).toBeDefined();
+        if (conversationId) conversationsToCleanup.push(conversationId);
 
-      // Act
-      await sendMessageToRoom(
-        roomId as string,
-        'Hello!',
-        TestUser.GLOBAL_ADMIN
-      );
-      await delay(3_000);
+        // Act
+        await sendMessageToRoom(roomId as string, 'Hello!', TestUser.GLOBAL_ADMIN);
 
-      // Assert — server-enforced: zero in-app notifications regardless of
-      // the stored preference (the client cell is a locked affordance only).
-      const after = await getConversationMessagingInAppNotificationsCount(
-        TestUser.SPACE_MEMBER
-      );
-      expect(after).toBe(before);
-    });
+        // The intent of this assertion is unchanged by R4 — in-app is never
+        // produced on any path — but its TIMING is. Nothing is dispatched on
+        // arrival any more, so the old literal 3s wait would have observed
+        // zero in-app notifications before the pipeline had even decided what
+        // to send: it would have passed on a build that leaked in-app
+        // notifications at flush time. Grace covers the LONGER of the two
+        // direct tracks at its MAX-DELAY bound, so the dispatch this is
+        // asserting the absence of has provably already happened.
+        await delay(
+          Math.max(directPush.maxDelayGraceMs, directEmail.maxDelayGraceMs)
+        );
+
+        // Assert — server-enforced: zero in-app notifications regardless of
+        // the stored preference (the client cell is a locked affordance only).
+        const after = await getConversationMessagingInAppNotificationsCount(
+          TestUser.SPACE_MEMBER
+        );
+        expect(after).toBe(before);
+      },
+      digestTestTimeoutMs([directPush, directEmail])
+    );
   });
 });

@@ -7,9 +7,25 @@
 // channel produces zero emits for that channel while others proceed
 // (US2-AS5). US4-AS1 (VC/guidance-bot sender) is addressed separately below
 // — see the rationale on the skipped test.
+//
+// TIMING (Operator Ruling R4) — READ THIS BEFORE CHANGING ANY WAIT HERE.
+// These assertions are almost all of the form "X receives nothing". Under R4
+// nothing is dispatched on message arrival: each channel is debounced on its
+// own per-(recipient, channel, kind) track and flushed by a sweep later. That
+// makes every negative assertion in this file trivially satisfiable by
+// accident — look too early and of course nothing has arrived. The intent is
+// "nothing will EVER arrive", so each grace period below is `maxDelayGraceMs`
+// for the specific track it names: `max_delay + sweep + settle`, past which
+// even a debounce that kept being reset must have fired. Every wait carries a
+// comment naming its window. Never replace one with a literal, and never
+// shorten one to `quietGraceMs` to save time — that turns the guarantee back
+// into "not yet", which is exactly how this suite would go green while the
+// feature was broken.
 import {
   delay,
   deleteMailSlurperMails,
+  digestTestTimeoutMs,
+  digestWindow,
   getMailsData,
   TestScenarioFactory,
   TestScenarioNoPreCreationConfig,
@@ -38,6 +54,11 @@ import {
 const scenarioConfig: TestScenarioNoPreCreationConfig = {
   name: 'conversation-messages-negative',
 };
+
+// The R4 tracks this matrix waits on.
+const directEmail = digestWindow('email', 'direct');
+const groupEmail = digestWindow('email', 'group');
+const groupPush = digestWindow('push', 'group');
 
 const toAddressesOf = (mailItems: any[]) =>
   mailItems.flatMap(item => item.toAddresses ?? []);
@@ -85,47 +106,64 @@ describe('Conversation-message notifications — negative matrix', () => {
       );
     });
 
-    test('D (never invited) receives nothing while B (a real member) does', async () => {
-      // Arrange — B is a member; D is NOT invited to this conversation, yet
-      // still has the channel enabled (proves absence is membership-driven,
-      // not merely "D never opted in").
-      await updateConversationMessagingSettings(
-        TestUserManager.users.spaceMember.id,
-        { group: { email: true } },
-        TestUser.SPACE_MEMBER
-      );
-      await updateConversationMessagingSettings(
-        TestUserManager.users.nonSpaceMember.id,
-        { group: { email: true } },
-        TestUser.NON_SPACE_MEMBER
-      );
+    test(
+      'D (never invited) receives nothing while B (a real member) does',
+      async () => {
+        // Arrange — B is a member; D is NOT invited to this conversation, yet
+        // still has the channel enabled (proves absence is membership-driven,
+        // not merely "D never opted in").
+        await updateConversationMessagingSettings(
+          TestUserManager.users.spaceMember.id,
+          { group: { email: true } },
+          TestUser.SPACE_MEMBER
+        );
+        await updateConversationMessagingSettings(
+          TestUserManager.users.nonSpaceMember.id,
+          { group: { email: true } },
+          TestUser.NON_SPACE_MEMBER
+        );
 
-      const conversationRes = await createGroupConversation(
-        [TestUserManager.users.spaceMember.agentId],
-        'Negative Matrix - Non-Member',
-        TestUser.GLOBAL_ADMIN
-      );
-      conversationId = conversationRes?.data?.createConversation?.id ?? '';
-      const roomId = conversationRes?.data?.createConversation?.room?.id;
-      expect(roomId).toBeDefined();
+        const conversationRes = await createGroupConversation(
+          [TestUserManager.users.spaceMember.agentId],
+          'Negative Matrix - Non-Member',
+          TestUser.GLOBAL_ADMIN
+        );
+        conversationId = conversationRes?.data?.createConversation?.id ?? '';
+        const roomId = conversationRes?.data?.createConversation?.room?.id;
+        expect(roomId).toBeDefined();
 
-      // Act — settle + re-read (not just first-hit) so a leaked email to D
-      // arriving moments after B's is not missed (corr-test-suites-7).
-      const [mailItems, total] = await expectExactMailsAfter(
-        () =>
-          sendMessageToRoom(roomId as string, 'Hello group', TestUser.GLOBAL_ADMIN),
-        1
-      );
+        // Act — poll bound covers `email:group` quiet + sweep + settle for B's
+        // digest. The SETTLE is the load-bearing part of this test: it runs to
+        // `email:group`'s MAX-DELAY bound, so if D were wrongly armed, D's own
+        // digest (on D's own track, firing on its own schedule) has had every
+        // opportunity to land before the count and address list are read.
+        // Settling for only a few seconds would report "D got nothing" while
+        // D's dispatch was still pending (corr-test-suites-7 under R4).
+        const [mailItems, total] = await expectExactMailsAfter(
+          () =>
+            sendMessageToRoom(
+              roomId as string,
+              'Hello group',
+              TestUser.GLOBAL_ADMIN
+            ),
+          1,
+          {
+            timeout: groupEmail.quietGraceMs,
+            settleMs: groupEmail.maxDelayGraceMs,
+          }
+        );
 
-      // Assert
-      expect(total).toBe(1);
-      expect(toAddressesOf(mailItems)).toContain(
-        TestUserManager.users.spaceMember.email
-      );
-      expect(toAddressesOf(mailItems)).not.toContain(
-        TestUserManager.users.nonSpaceMember.email
-      );
-    });
+        // Assert
+        expect(total).toBe(1);
+        expect(toAddressesOf(mailItems)).toContain(
+          TestUserManager.users.spaceMember.email
+        );
+        expect(toAddressesOf(mailItems)).not.toContain(
+          TestUserManager.users.nonSpaceMember.email
+        );
+      },
+      digestTestTimeoutMs(groupEmail)
+    );
   });
 
   describe('Removed member stops receiving — membership re-read at send time (US2-AS4)', () => {
@@ -144,73 +182,90 @@ describe('Conversation-message notifications — negative matrix', () => {
       );
     });
 
-    test('C receives one email while a member, zero more once removed', async () => {
-      // Arrange — only C has email enabled, to isolate the assertion to C's mailbox.
-      await updateConversationMessagingSettings(
-        TestUserManager.users.spaceAdmin.id,
-        { group: { email: true } },
-        TestUser.SPACE_ADMIN
-      );
+    test(
+      'C receives one email while a member, zero more once removed',
+      async () => {
+        // Arrange — only C has email enabled, to isolate the assertion to C's mailbox.
+        await updateConversationMessagingSettings(
+          TestUserManager.users.spaceAdmin.id,
+          { group: { email: true } },
+          TestUser.SPACE_ADMIN
+        );
 
-      const conversationRes = await createGroupConversation(
-        [
-          TestUserManager.users.spaceMember.agentId,
+        const conversationRes = await createGroupConversation(
+          [
+            TestUserManager.users.spaceMember.agentId,
+            TestUserManager.users.spaceAdmin.agentId,
+          ],
+          'Negative Matrix - Removed Member',
+          TestUser.GLOBAL_ADMIN
+        );
+        conversationId = conversationRes?.data?.createConversation?.id ?? '';
+        const roomId = conversationRes?.data?.createConversation?.room?.id;
+        expect(roomId).toBeDefined();
+
+        // Act 1 — while C is still a member. Poll bound covers `email:group`
+        // quiet + sweep + settle: under R4 this email is NOT immediate, so the
+        // old default 15s poll would have been a coin flip on a slower stack.
+        await sendMessageToRoom(
+          roomId as string,
+          'Message while C is a member',
+          TestUser.GLOBAL_ADMIN
+        );
+        const [, totalWhileMember] = await waitForMailsCountAtLeast(1, {
+          timeout: groupEmail.quietGraceMs,
+        });
+        expect(totalWhileMember).toBe(1);
+        expect(toAddressesOf((await getMailsData())[0])).toContain(
+          TestUserManager.users.spaceAdmin.email
+        );
+
+        // Act 2 — remove C (admin action, not a voluntary leave), then send again.
+        // Membership removal dispatches to Matrix and is applied asynchronously
+        // (room.member.updated -> conversation_membership) — give it a moment
+        // to land before the second message, matching the eventual-consistency
+        // pattern used elsewhere in this suite (conversations.it-spec.ts).
+        await removeConversationMember(
+          conversationId,
           TestUserManager.users.spaceAdmin.agentId,
-        ],
-        'Negative Matrix - Removed Member',
-        TestUser.GLOBAL_ADMIN
-      );
-      conversationId = conversationRes?.data?.createConversation?.id ?? '';
-      const roomId = conversationRes?.data?.createConversation?.room?.id;
-      expect(roomId).toBeDefined();
+          TestUser.GLOBAL_ADMIN
+        );
+        await delay(3_000);
 
-      // Act 1 — while C is still a member
-      await sendMessageToRoom(
-        roomId as string,
-        'Message while C is a member',
-        TestUser.GLOBAL_ADMIN
-      );
-      const [, totalWhileMember] = await waitForMailsCountAtLeast(1);
-      expect(totalWhileMember).toBe(1);
-      expect(
-        toAddressesOf((await getMailsData())[0])
-      ).toContain(TestUserManager.users.spaceAdmin.email);
+        // C still has an active push subscription (beforeAll) and group push
+        // at its default ON — assert the PUSH channel too (qual-test-suites
+        // -r2-2), not only email, so a membership-re-read regression that
+        // affects only the push path (e.g. a stale cached recipient list)
+        // isn't invisible to this test.
+        const pushBaselineAfterRemoval = await getPushQueuePublishedTotal();
+        const pushStatsAfterRemoval = await expectNoPushEmitAfter(
+          () =>
+            sendMessageToRoom(
+              roomId as string,
+              'Message after C left',
+              TestUser.GLOBAL_ADMIN
+            ),
+          // Grace covers `push:group` at its MAX-DELAY bound. A push for C
+          // would be debounced before it ever reached the queue, so anything
+          // shorter than this window would observe zero publishes regardless
+          // of whether C was correctly excluded.
+          groupPush.maxDelayGraceMs
+        );
+        expect(
+          pushStatsAfterRemoval.publishedTotal - pushBaselineAfterRemoval
+        ).toBe(0);
 
-      // Act 2 — remove C (admin action, not a voluntary leave), then send again.
-      // Membership removal dispatches to Matrix and is applied asynchronously
-      // (room.member.updated -> conversation_membership) — give it a moment
-      // to land before the second message, matching the eventual-consistency
-      // pattern used elsewhere in this suite (conversations.it-spec.ts).
-      await removeConversationMember(
-        conversationId,
-        TestUserManager.users.spaceAdmin.agentId,
-        TestUser.GLOBAL_ADMIN
-      );
-      await delay(3_000);
-
-      // C still has an active push subscription (beforeAll) and group push
-      // at its default ON — assert the PUSH channel too (qual-test-suites
-      // -r2-2), not only email, so a membership-re-read regression that
-      // affects only the push path (e.g. a stale cached recipient list)
-      // isn't invisible to this test.
-      const pushBaselineAfterRemoval = await getPushQueuePublishedTotal();
-      const pushStatsAfterRemoval = await expectNoPushEmitAfter(
-        () =>
-          sendMessageToRoom(
-            roomId as string,
-            'Message after C left',
-            TestUser.GLOBAL_ADMIN
-          ),
-        5_000 // grace period — nothing SHOULD arrive for C
-      );
-      expect(pushStatsAfterRemoval.publishedTotal - pushBaselineAfterRemoval).toBe(
-        0
-      );
-
-      // Assert — no NEW email for C (mail count unchanged from step 1)
-      const [, totalAfterRemoval] = await getMailsData();
-      expect(totalAfterRemoval).toBe(totalWhileMember);
-    });
+        // Assert — no NEW email for C. Grace covers `email:group` at its
+        // MAX-DELAY bound, measured from the second message; the push wait
+        // above has already consumed part of it, so this sleeps the remainder.
+        // Note this ALSO exercises the second half of US2-AS4: C had no
+        // pending group digest at removal time, and none is created after it.
+        await delay(groupEmail.maxDelayGraceMs);
+        const [, totalAfterRemoval] = await getMailsData();
+        expect(totalAfterRemoval).toBe(totalWhileMember);
+      },
+      digestTestTimeoutMs([groupEmail, groupPush])
+    );
   });
 
   describe('Sender never notified of their own message (US1-AS4)', () => {
@@ -220,7 +275,9 @@ describe('Conversation-message notifications — negative matrix', () => {
     // self-exclusion proof). Using a persona distinct from the "Email
     // opt-in"/"Hostile message" describes elsewhere in this matrix also
     // avoids colliding with their (globalAdmin, spaceMember/subspaceMember)
-    // DIRECT conversations, which dedupe per actor pair.
+    // DIRECT conversations, which dedupe per actor pair — and, under R4,
+    // avoids their pending direct-email digests, which are per RECIPIENT and
+    // would otherwise merge two scenarios into one email.
     let conversationId = '';
 
     afterAll(async () => {
@@ -241,46 +298,58 @@ describe('Conversation-message notifications — negative matrix', () => {
       );
     });
 
-    test('A (sender, email enabled) never appears as an email recipient', async () => {
-      // Arrange — BOTH the sender (A, self-exclusion under test) and the
-      // recipient (B) have the channel enabled: exactly one email is
-      // expected (B's), and if self-exclusion ever regressed, A would
-      // appear alongside it in `toAddresses` below.
-      await updateConversationMessagingSettings(
-        TestUserManager.users.globalAdmin.id,
-        { direct: { email: true } },
-        TestUser.GLOBAL_ADMIN
-      );
-      await updateConversationMessagingSettings(
-        TestUserManager.users.subspaceAdmin.id,
-        { direct: { email: true } },
-        TestUser.SUBSPACE_ADMIN
-      );
+    test(
+      'A (sender, email enabled) never appears as an email recipient',
+      async () => {
+        // Arrange — BOTH the sender (A, self-exclusion under test) and the
+        // recipient (B) have the channel enabled: exactly one email is
+        // expected (B's), and if self-exclusion ever regressed, A would
+        // appear alongside it in `toAddresses` below.
+        await updateConversationMessagingSettings(
+          TestUserManager.users.globalAdmin.id,
+          { direct: { email: true } },
+          TestUser.GLOBAL_ADMIN
+        );
+        await updateConversationMessagingSettings(
+          TestUserManager.users.subspaceAdmin.id,
+          { direct: { email: true } },
+          TestUser.SUBSPACE_ADMIN
+        );
 
-      const conversationRes = await createDirectConversation(
-        TestUserManager.users.subspaceAdmin.agentId,
-        TestUser.GLOBAL_ADMIN
-      );
-      conversationId = conversationRes?.data?.createConversation?.id ?? '';
-      const roomId = conversationRes?.data?.createConversation?.room?.id;
-      expect(roomId).toBeDefined();
+        const conversationRes = await createDirectConversation(
+          TestUserManager.users.subspaceAdmin.agentId,
+          TestUser.GLOBAL_ADMIN
+        );
+        conversationId = conversationRes?.data?.createConversation?.id ?? '';
+        const roomId = conversationRes?.data?.createConversation?.room?.id;
+        expect(roomId).toBeDefined();
 
-      // Act — settle + re-read so a late, erroneous email to A (self-notify
-      // regression) arriving after B's is not missed (corr-test-suites-7).
-      const [mailItems, total] = await expectExactMailsAfter(
-        () => sendMessageToRoom(roomId as string, 'Hello!', TestUser.GLOBAL_ADMIN),
-        1
-      );
+        // Act — poll bound covers `email:direct` quiet + sweep + settle for
+        // B's digest; the settle then runs to that track's MAX-DELAY bound, so
+        // an erroneous self-notification to A (which would be armed on A's own
+        // track and fire on A's own schedule, not alongside B's) cannot land
+        // after the address list is read.
+        const [mailItems, total] = await expectExactMailsAfter(
+          () =>
+            sendMessageToRoom(roomId as string, 'Hello!', TestUser.GLOBAL_ADMIN),
+          1,
+          {
+            timeout: directEmail.quietGraceMs,
+            settleMs: directEmail.maxDelayGraceMs,
+          }
+        );
 
-      // Assert — exactly B's email, and A never appears as a recipient.
-      expect(total).toBe(1);
-      expect(toAddressesOf(mailItems)).toContain(
-        TestUserManager.users.subspaceAdmin.email
-      );
-      expect(toAddressesOf(mailItems)).not.toContain(
-        TestUserManager.users.globalAdmin.email
-      );
-    });
+        // Assert — exactly B's email, and A never appears as a recipient.
+        expect(total).toBe(1);
+        expect(toAddressesOf(mailItems)).toContain(
+          TestUserManager.users.subspaceAdmin.email
+        );
+        expect(toAddressesOf(mailItems)).not.toContain(
+          TestUserManager.users.globalAdmin.email
+        );
+      },
+      digestTestTimeoutMs(directEmail)
+    );
   });
 
   describe('A disabled channel produces zero emits for that channel while others proceed (US2-AS5)', () => {
@@ -299,37 +368,55 @@ describe('Conversation-message notifications — negative matrix', () => {
       );
     });
 
-    test('B (push disabled) gets no push while C (default) still does', async () => {
-      // Arrange
-      await updateConversationMessagingSettings(
-        TestUserManager.users.spaceMember.id,
-        { group: { push: false } },
-        TestUser.SPACE_MEMBER
-      );
+    test(
+      'B (push disabled) gets no push while C (default) still does',
+      async () => {
+        // Arrange
+        await updateConversationMessagingSettings(
+          TestUserManager.users.spaceMember.id,
+          { group: { push: false } },
+          TestUser.SPACE_MEMBER
+        );
 
-      const conversationRes = await createGroupConversation(
-        [
-          TestUserManager.users.spaceMember.agentId,
-          TestUserManager.users.spaceAdmin.agentId,
-        ],
-        'Negative Matrix - Disabled Push',
-        TestUser.GLOBAL_ADMIN
-      );
-      conversationId = conversationRes?.data?.createConversation?.id ?? '';
-      const roomId = conversationRes?.data?.createConversation?.room?.id;
-      expect(roomId).toBeDefined();
+        const conversationRes = await createGroupConversation(
+          [
+            TestUserManager.users.spaceMember.agentId,
+            TestUserManager.users.spaceAdmin.agentId,
+          ],
+          'Negative Matrix - Disabled Push',
+          TestUser.GLOBAL_ADMIN
+        );
+        conversationId = conversationRes?.data?.createConversation?.id ?? '';
+        const roomId = conversationRes?.data?.createConversation?.room?.id;
+        expect(roomId).toBeDefined();
 
-      // Act — with B disabled, only C (default push ON) can produce a push
-      // emit; the exact +1 delta (rather than +2) IS the proof B got none.
-      const { delta } = await expectPushEmitAfter(
-        () => sendMessageToRoom(roomId as string, 'Hello group', TestUser.GLOBAL_ADMIN),
-        1
-      );
+        // Act — with B disabled, only C (default push ON) can produce a push
+        // emit; the exact +1 delta (rather than +2) IS the proof B got none.
+        // Poll bound covers `push:group` quiet + sweep + settle for C's
+        // digest. The SETTLE is what makes the negative half honest: it runs
+        // to `push:group`'s MAX-DELAY bound, so a leaked push for B — which
+        // would be on B's own track and could fire later than C's — is
+        // observed rather than missed.
+        const { delta } = await expectPushEmitAfter(
+          () =>
+            sendMessageToRoom(
+              roomId as string,
+              'Hello group',
+              TestUser.GLOBAL_ADMIN
+            ),
+          1,
+          {
+            timeout: groupPush.quietGraceMs,
+            settleMs: groupPush.maxDelayGraceMs,
+          }
+        );
 
-      // Assert — EXACT equality: a delta of 2 would mean B's disabled push
-      // leaked through too, which `>=` would have silently let pass.
-      expect(delta).toBe(1);
-    });
+        // Assert — EXACT equality: a delta of 2 would mean B's disabled push
+        // leaked through too, which `>=` would have silently let pass.
+        expect(delta).toBe(1);
+      },
+      digestTestTimeoutMs(groupPush)
+    );
   });
 
   test.skip(

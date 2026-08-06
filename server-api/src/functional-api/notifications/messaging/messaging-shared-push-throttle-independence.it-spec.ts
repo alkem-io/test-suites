@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // 034-messaging-notifications — US4-AS2 / FR-012: a messaging digest push never
 // decrements the SHARED (non-messaging) push throttle bucket.
 //

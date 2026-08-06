@@ -186,14 +186,18 @@ export interface PushEmitResult {
 export const expectPushEmitAfter = async (
   action: () => Promise<unknown>,
   expectedIncrease = 1,
-  { settleMs = 2_000 }: { settleMs?: number } = {}
+  {
+    settleMs = 2_000,
+    timeout = 15_000,
+  }: { settleMs?: number; timeout?: number } = {}
 ): Promise<PushEmitResult> => {
   const baseline = await getPushQueuePublishedTotal();
   await action();
   await waitForQueuePublishIncrease(
     PUSH_NOTIFICATIONS_QUEUE,
     baseline,
-    expectedIncrease
+    expectedIncrease,
+    { timeout }
   );
   await delay(settleMs);
   const stats = await getQueueStats(PUSH_NOTIFICATIONS_QUEUE);
@@ -206,10 +210,16 @@ export const expectPushEmitAfter = async (
  * assert `publishedTotal` is unchanged from their own baseline. A fixed
  * grace delay (rather than a polling wait-for-increase) is deliberate: there
  * is nothing to wait FOR in the negative case.
+ *
+ * `graceMs` is REQUIRED, and MUST come from `digestWindow(...)` — normally
+ * `maxDelayGraceMs` for the push track in question. Under R4 a push is
+ * debounced before it is ever published, so a literal 3s grace would report
+ * "no push" while the dispatch was still comfortably pending: the assertion
+ * would pass because nothing had arrived YET, not because nothing ever will.
  */
 export const expectNoPushEmitAfter = async (
   action: () => Promise<unknown>,
-  graceMs = 3_000
+  graceMs: number
 ): Promise<QueueStats> => {
   await action();
   await delay(graceMs);
@@ -381,7 +391,10 @@ export const sendConversationMessage = async (
   message: string,
   senderRole: TestUser = TestUser.GLOBAL_ADMIN
 ): Promise<string> => {
-  const res: any = await sendMessageToRoom(roomID, message, senderRole);
+  const res = (await sendMessageToRoom(roomID, message, senderRole)) as {
+    data?: { sendMessageToRoom?: { id?: string } };
+    error?: unknown;
+  };
   const messageID = res?.data?.sendMessageToRoom?.id ?? '';
   if (!messageID) {
     throw new Error(
