@@ -4,7 +4,7 @@
 - **Workspace spec:** `specs/029-detect-signup-language/` in `alkem-io/agents-hq` (source of truth for FR/SC ids)
 - **Product code:** [server#6299](https://github.com/alkem-io/server/pull/6299), [client-web#10079](https://github.com/alkem-io/client-web/pull/10079)
 - **Suites:**
-  - UI walks — `client-web/src/functional-e2e/language-offer/`, run with `config/playwright.config.language-offer.ts`
+  - UI walks — `client-web/src/functional-e2e/language-offer/`, run with `config/playwright.config.language-offer.ts` locally, and as the `Language offer` project of the nightly build (`config/playwright.config.nightly.ts`)
   - API contract — `server-api/src/functional-api/language/`, run with `pnpm --filter @alkemio/test-suite-server-api run test:language`
 
 ## How to run
@@ -17,6 +17,11 @@ cd client-web
 ALKEMIO_BASE_URL=http://localhost:3000 \
   pnpm exec playwright test --config=config/playwright.config.language-offer.ts
 ```
+
+In CI these same walks run as part of the nightly Playwright build, where the
+`auth-setup` project is named `Language offer setup` and the walks `Language
+offer`; that config carries its own 90s/15s timeouts because the rest of the
+nightly runs at 30s/5s.
 
 The `auth-setup` project logs the personas in once and persists their sessions to
 `.auth/`; the walks consume those with `test.use({ storageState })`. Browser
