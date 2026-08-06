@@ -10,10 +10,19 @@ import { loginViaCrd } from '../helpers/login.helper';
 import {
   delay,
   deleteMailSlurperMails,
+  digestTestTimeoutMs,
+  digestWindow,
   getMailsData,
   getVerificationLink,
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
+
+// 034 / Operator Ruling R4: nothing is dispatched on message arrival, so the
+// two scenarios below that send a message and then assert on its notification
+// (AS3 negatively, AS4 positively) must be timed against the direct tracks
+// rather than against message propagation.
+const directPush = digestWindow('push', 'direct');
+const directEmail = digestWindow('email', 'direct');
 
 /**
  * Live acceptance walk for workspace#034-messaging-notifications, User Story
@@ -289,7 +298,7 @@ test.describe(
       page,
       browser,
     }) => {
-      test.setTimeout(60000);
+      test.setTimeout(digestTestTimeoutMs([directPush, directEmail]));
       await deleteMailSlurperMails();
       const { displayName: senderDisplayName } = await registerAndVerifyUser(
         page,
@@ -349,14 +358,30 @@ test.describe(
       const probeMessage = `US3-AS3 forced in-app probe ${UniqueIDGenerator.getID()}`;
       await sendDirectMessage(page, recipientDisplayName, probeMessage);
 
-      // Wait for the message to fully propagate to the recipient (their chat
-      // conversation list picks up the sender) before asserting the negative —
-      // this bounds the async notification pipeline without a blind sleep.
+      // Wait for the message to propagate to the recipient (their chat
+      // conversation list picks up the sender). NOTE this bounds the
+      // SUBSCRIPTION path only.
       await recipientPage.goto(`${baseUrl}/home`);
       await recipientPage.getByRole('button', { name: 'Open chat' }).click();
       await expect(
         recipientPage.getByText(senderDisplayName).first()
       ).toBeVisible({ timeout: 15000 });
+
+      // ...and under R4 that is NOT enough to assert the negative. Message
+      // propagation and notification dispatch are now different paths on
+      // different clocks: the message reaches the chat panel immediately,
+      // while any notification is debounced on its track and dispatched by a
+      // later sweep. Asserting zero in-app notifications at propagation time
+      // would therefore have passed on a build that produced them, because
+      // they would not have been produced YET.
+      //
+      // Grace covers the LONGER of the two direct tracks at its MAX-DELAY
+      // bound — the recipient has push at its mandated default ON and email
+      // toggled off — so the dispatch whose in-app side-effect this asserts
+      // the absence of has provably already happened.
+      await delay(
+        Math.max(directPush.maxDelayGraceMs, directEmail.maxDelayGraceMs)
+      );
 
       const notifCount = await gql('query { me { notificationsUnreadCount } }');
       expect(notifCount.data.me.notificationsUnreadCount).toBe(0);
@@ -375,7 +400,7 @@ test.describe(
       page,
       browser,
     }) => {
-      test.setTimeout(60000);
+      test.setTimeout(digestTestTimeoutMs(directEmail));
       await deleteMailSlurperMails();
       await loginViaCrd(page, recipientEmail, password, baseUrl);
       await page.goto(`${baseUrl}/user/me/settings/notifications`);
@@ -405,10 +430,16 @@ test.describe(
       );
       await sendDirectMessage(senderPage, recipientDisplayName, probeMessage);
 
+      // Poll bound covers `email:direct` quiet + sweep + settle, rather than a
+      // fixed 10 x 2s. The email is debounced, so the previous fixed ceiling
+      // would have expired before the digest was ever dispatched on any stack
+      // whose direct-email quiet period exceeded ~18s — including one running
+      // the production default.
       let deliveredToRecipient:
         | { subject: string; toAddresses: string[]; body: string }
         | undefined;
-      for (let attempt = 0; attempt < 10; attempt++) {
+      const pollDeadline = Date.now() + directEmail.quietGraceMs;
+      do {
         const [emailsData] = (await getMailsData()) as [
           Array<{ subject: string; toAddresses: string[]; body: string }>,
           number,
@@ -418,7 +449,7 @@ test.describe(
         );
         if (deliveredToRecipient) break;
         await delay(2000);
-      }
+      } while (Date.now() < pollDeadline);
 
       expect(
         deliveredToRecipient,

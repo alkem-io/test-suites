@@ -10,6 +10,8 @@ import { loginViaCrd } from '../helpers/login.helper';
 import {
   delay,
   deleteMailSlurperMails,
+  digestTestTimeoutMs,
+  digestWindow,
   getMailsData,
   getQueueStats,
   getVerificationLink,
@@ -36,21 +38,34 @@ import {
  *
  * Covers US1-AS1..AS5. Scenarios share one 1:1 conversation (A, B) and run
  * in order — later scenarios depend on earlier ones' state (in particular
- * the email-suppression-window walk in AS3 and the enabled-email state
- * from AS2 carrying into AS4/AS5).
+ * the enabled-email state from AS2 carrying into AS4/AS5).
  *
- * Suppression window: the acceptance stack sets
- * `MESSAGING_EMAIL_SUPPRESSION_WINDOW_SECONDS=30` for walk speed (in-code
- * production default is 300s) — see repos.yaml forge.verification.stack.notes.
+ * TIMING (Operator Ruling R4). Nothing is sent on message arrival. Each
+ * channel is debounced on its own per-(recipient, channel, kind) track and
+ * dispatched by a sweep once that track's quiet period has elapsed, so every
+ * wait here derives from `digestWindow(...)` — including the per-test
+ * timeouts, which the previous revision hard-coded at 60s/90s and which
+ * therefore did NOT scale with the window they were waiting on. The stack
+ * must export the same nine MESSAGING_DIGEST_* variables to both the server
+ * and this harness (see client-web/.env.default); when they are unset the
+ * harness falls back to the PRODUCTION windows rather than the short ones, so
+ * a mis-provisioned stack runs slowly instead of passing vacuously.
+ *
+ * B never reads the conversation in this walk, so no digest is ever cancelled
+ * — the cancellation path is US5's, covered by the server-api read-state
+ * it-spec.
  */
 
 const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const PUSH_NOTIFICATIONS_QUEUE = 'alkemio-push-notifications';
-const SUPPRESSION_WINDOW_MS =
-  (Number(process.env.MESSAGING_EMAIL_SUPPRESSION_WINDOW_SECONDS) || 30) *
-    1000 +
-  5_000; // + buffer past the window edge
+
+// The two direct tracks this walk exercises. Registration/setup steps keep a
+// fixed timeout (they wait on Kratos and the mail catcher, not on a digest);
+// every notification step below derives its timeout from these.
+const directPush = digestWindow('push', 'direct');
+const directEmail = digestWindow('email', 'direct');
+const SETUP_TIMEOUT_MS = 90_000;
 
 /** Registers + email-verifies a brand new user via the real sign-up flow. */
 async function registerAndVerifyUser(
@@ -214,7 +229,7 @@ test.describe('US1 - direct (1:1) message notifications', () => {
   test('setup: register A (sender) with a push subscription', async ({
     page,
   }) => {
-    test.setTimeout(90_000);
+    test.setTimeout(SETUP_TIMEOUT_MS);
     userADisplayName = 'Us1A Sender';
     userAEmail = await registerAndVerifyUser(page, 'us1a', 'Us1A', 'Sender');
     await subscribeToPush(page, 'us1a');
@@ -223,7 +238,7 @@ test.describe('US1 - direct (1:1) message notifications', () => {
   test('setup: register B (recipient) with a push subscription', async ({
     page,
   }) => {
-    test.setTimeout(90_000);
+    test.setTimeout(SETUP_TIMEOUT_MS);
     userBEmail = await registerAndVerifyUser(
       page,
       'us1b',
@@ -234,7 +249,7 @@ test.describe('US1 - direct (1:1) message notifications', () => {
   });
 
   test('setup: A starts a 1:1 conversation with B', async ({ browser }) => {
-    test.setTimeout(60_000);
+    test.setTimeout(SETUP_TIMEOUT_MS);
     ({ context: aContext, page: aPage } = await newContextPage(browser));
     await loginViaCrd(aPage, userAEmail, password, baseUrl);
     await openChatPanel(aPage);
@@ -247,8 +262,8 @@ test.describe('US1 - direct (1:1) message notifications', () => {
     await expect(aPage.getByText('Us1B Recipient').first()).toBeVisible();
   });
 
-  test('US1-AS1: default settings — A sends, B gets a push emit, zero email', async () => {
-    test.setTimeout(60_000);
+  test('US1-AS1: default settings — A sends, B gets a push emit once the quiet period elapses, zero email', async () => {
+    test.setTimeout(digestTestTimeoutMs([directPush, directEmail]));
     await deleteMailSlurperMails();
 
     const baseline = (await getQueueStats(PUSH_NOTIFICATIONS_QUEUE))
@@ -256,14 +271,21 @@ test.describe('US1 - direct (1:1) message notifications', () => {
 
     await sendMessage(aPage, 'US1-AS1 default-settings direct message from A');
 
+    // Poll bound covers `push:direct` quiet + sweep + settle — the push is
+    // debounced, not immediate.
     const stats = await waitForQueuePublishIncrease(
       PUSH_NOTIFICATIONS_QUEUE,
       baseline,
-      1
+      1,
+      { timeout: directPush.quietGraceMs }
     );
     expect(stats.publishedTotal - baseline).toBe(1);
 
-    await delay(3_000);
+    // NEGATIVE half — "zero email" must outlast the EMAIL track, which is much
+    // slower than the push one. Grace covers `email:direct` at its MAX-DELAY
+    // bound; the old literal 3s would have passed on a build that emailed by
+    // default, because that email would not have been sent yet either.
+    await delay(directEmail.maxDelayGraceMs);
     const [, emailTotal] = await getMailsData();
     expect(emailTotal).toBe(0);
   });
@@ -271,7 +293,7 @@ test.describe('US1 - direct (1:1) message notifications', () => {
   test('US1-AS2: B enables direct email — A sends, B receives exactly one email naming A, no content, deep link, settings link', async ({
     browser,
   }) => {
-    test.setTimeout(60_000);
+    test.setTimeout(digestTestTimeoutMs(directEmail));
     await deleteMailSlurperMails();
 
     const { context: bContext, page: bPage } = await newContextPage(browser);
@@ -294,45 +316,77 @@ test.describe('US1 - direct (1:1) message notifications', () => {
     const probeMessage = 'US1-AS2 direct message after B enabled direct email';
     await sendMessage(aPage, probeMessage);
 
-    const [mailItems, total] = await waitForMailsCountAtLeast(1);
+    // Poll bound covers `email:direct` quiet + sweep + settle.
+    const [mailItems, total] = await waitForMailsCountAtLeast(1, {
+      timeout: directEmail.quietGraceMs,
+    });
     expect(total).toBe(1);
 
     const mail = mailItems.find(m => m.toAddresses?.includes(userBEmail));
     expect(mail).toBeDefined();
-    expect(mail!.subject).toBe(`${userADisplayName} sent you a message`);
+    // Single-entry direct digest: A is the only counterpart, so A is named.
+    // The COUNT is deliberately not pinned. These scenarios run serially
+    // against one conversation and B never reads it, so by now B's unread
+    // total also includes AS1's message — under R4 a digest reports what is
+    // still unread at fire time, not what arrived since the last email. What
+    // US1-AS2 actually claims is that the subject names A and no one else.
+    expect(mail!.subject).toMatch(
+      new RegExp(`^${userADisplayName} sent you (a message|\\d+ messages)$`)
+    );
     expect(mail!.body).not.toContain(probeMessage);
     expect(mail!.body).toContain('/settings/notifications');
     // No participant email address disclosed to another participant.
     expect(mail!.body).not.toContain(userAEmail);
   });
 
-  test('US1-AS3: a burst of 5 messages within the suppression window yields exactly one email; after the window elapses, one more message yields one new email', async () => {
-    test.setTimeout(90_000);
+  test('US1-AS3: a burst of 5 messages produces NOTHING during the quiet period, then exactly one digest', async () => {
+    test.setTimeout(digestTestTimeoutMs(directEmail, { cycles: 3 }));
     await deleteMailSlurperMails();
 
     for (let i = 1; i <= 5; i++) {
       await sendMessage(aPage, `US1-AS3 burst message ${i}`);
     }
-    // Give the async pipeline a moment to settle, then assert the COUNT
-    // stays at exactly 1 — not merely "at least 1".
-    await delay(5_000);
-    const [, burstTotal] = await getMailsData();
+
+    // Assert 1 (load-bearing, and the inverse of what this step used to
+    // check). The pre-R4 build emailed on the FIRST message of the burst and
+    // suppressed the rest; R4 sends NOTHING until the quiet period elapses.
+    // Grace stops just short of `email:direct`'s quiet period, measured from
+    // the last message — a sweep can only delay a flush past that point, never
+    // advance it, so any email here means the pipeline sent on arrival.
+    await delay(directEmail.preFireProbeMs);
+    const [, duringWindowTotal] = await getMailsData();
+    expect(duringWindowTotal).toBe(0);
+
+    // Assert 2 — one digest, once the window does elapse.
+    const [, burstTotal] = await waitForMailsCountAtLeast(1, {
+      timeout: directEmail.quietGraceMs,
+    });
     expect(burstTotal).toBe(1);
 
-    await delay(SUPPRESSION_WINDOW_MS);
-    await deleteMailSlurperMails();
-    await sendMessage(aPage, 'US1-AS3 after the suppression window elapsed');
+    // Assert 3 — and only one. Settle to `email:direct`'s MAX-DELAY bound so a
+    // per-message dispatch regression has every chance to reveal itself.
+    await delay(directEmail.maxDelayGraceMs);
+    const [, settledTotal] = await getMailsData();
+    expect(settledTotal).toBe(1);
 
-    const [, afterWindowTotal] = await waitForMailsCountAtLeast(1);
+    // Assert 4 — a fresh message after the digest starts a new cycle. B has
+    // not read the conversation, so its count keeps climbing; the assertion of
+    // interest is that a NEW email arrives at all, not its exact count.
+    await deleteMailSlurperMails();
+    await sendMessage(aPage, 'US1-AS3 after the digest was dispatched');
+    const [, afterWindowTotal] = await waitForMailsCountAtLeast(1, {
+      timeout: directEmail.quietGraceMs,
+    });
     expect(afterWindowTotal).toBe(1);
   });
 
   test('US1-AS4: A never receives any notification for her own message', async () => {
-    test.setTimeout(60_000);
-    // Let the window opened by AS3's last send elapse so this send is not
-    // itself suppressed — the assertion of interest is the recipient set,
-    // not suppression state.
-    await delay(SUPPRESSION_WINDOW_MS);
+    test.setTimeout(digestTestTimeoutMs([directPush, directEmail], { cycles: 3 }));
+    // Drain the tracks AS3's last send armed, so this scenario starts from a
+    // clean slate and its counts are attributable to its own message. Grace
+    // covers `email:direct` at its MAX-DELAY bound — the slower of the two
+    // direct tracks — so both have provably flushed.
+    await delay(directEmail.maxDelayGraceMs);
     await deleteMailSlurperMails();
 
     const baseline = (await getQueueStats(PUSH_NOTIFICATIONS_QUEUE))
@@ -342,21 +396,30 @@ test.describe('US1 - direct (1:1) message notifications', () => {
     // Even though A now HAS an active push subscription (setup step), the
     // publish delta must stay 1 (B only) — proving A is excluded at the
     // candidate-resolution level, not merely lacking a subscription.
+    // Poll bound covers `push:direct` quiet + sweep + settle.
     const stats = await waitForQueuePublishIncrease(
       PUSH_NOTIFICATIONS_QUEUE,
       baseline,
-      1
+      1,
+      { timeout: directPush.quietGraceMs }
     );
     expect(stats.publishedTotal - baseline).toBe(1);
 
-    await delay(3_000);
+    // NEGATIVE — a self-notification to A would be armed on A's OWN track and
+    // fire on A's own schedule, not alongside B's. Grace covers `email:direct`
+    // at its MAX-DELAY bound so that dispatch has provably already happened;
+    // the old literal 3s would have read the mailbox long before it.
+    await delay(directEmail.maxDelayGraceMs);
     const [mailItems] = await getMailsData();
     expect(toAddressesOf(mailItems)).not.toContain(userAEmail);
   });
 
   test('US1-AS5: hostile message content (quotes, newlines, HTML-like markup) never appears in the email subject or body', async () => {
-    test.setTimeout(60_000);
-    await delay(SUPPRESSION_WINDOW_MS);
+    test.setTimeout(digestTestTimeoutMs(directEmail, { cycles: 3 }));
+    // Drain the track AS4's send armed. Grace covers `email:direct` at its
+    // MAX-DELAY bound, so the digest asserted on below carries only this
+    // scenario's hostile message.
+    await delay(directEmail.maxDelayGraceMs);
     await deleteMailSlurperMails();
 
     const marker = `HOSTILE${UniqueIDGenerator.getID()}`;
@@ -366,7 +429,10 @@ test.describe('US1 - direct (1:1) message notifications', () => {
     await messageBox.type("Second line with 'quotes' and <b>bold</b>");
     await messageBox.press('Enter');
 
-    const [mailItems, total] = await waitForMailsCountAtLeast(1);
+    // Poll bound covers `email:direct` quiet + sweep + settle.
+    const [mailItems, total] = await waitForMailsCountAtLeast(1, {
+      timeout: directEmail.quietGraceMs,
+    });
     expect(total).toBe(1);
     const mail = mailItems.find(m => m.toAddresses?.includes(userBEmail));
     expect(mail).toBeDefined();

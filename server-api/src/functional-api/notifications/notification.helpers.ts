@@ -114,8 +114,7 @@ export type PushSubscriptionHandle = { userRole: TestUser; subscriptionId: strin
  * server's `NotificationPushAdapter` no-ops (never publishes to the queue)
  * for a recipient with zero active push subscriptions
  * (notification.push.adapter.ts — `if (subscriptions.length === 0) return;`).
- * Mirrors the pattern in messaging-budget-independence.it-spec.ts's own
- * `beforeAll`. Tear down with `unsubscribeRecipientsFromPush` in `afterAll`.
+ * Tear down with `unsubscribeRecipientsFromPush` in `afterAll`.
  */
 export const subscribeRecipientsToPush = async (
   recipients: PushSubscriptionRecipient[]
@@ -359,27 +358,6 @@ export const expectExactMailsAfter = async (
 // ===========================================================================
 // R4 digest helpers — debounce, cancellation, and negative assertions
 // ===========================================================================
-
-/**
- * Runs `action`, waits out `graceMs`, then reads the mailbox. The email
- * counterpart of `expectNoPushEmitAfter`, and the ONLY correct shape for a
- * "no email ever arrives" assertion under R4: a fixed grace, never a poll,
- * because there is nothing to wait FOR.
- *
- * `graceMs` MUST come from `digestWindow(...)` — normally `maxDelayGraceMs`,
- * the strongest bound the design offers (even a debounce that keeps being
- * reset must have fired by then). Passing anything shorter than the relevant
- * quiet period turns the assertion into "nothing has arrived YET", which is
- * how a suite goes green for the wrong reason.
- */
-export const expectNoMailsAfter = async (
-  action: () => Promise<unknown>,
-  graceMs: number
-): Promise<Awaited<ReturnType<typeof getMailsData>>> => {
-  await action();
-  await delay(graceMs);
-  return getMailsData();
-};
 
 /**
  * Sends a message to a room and returns its message id — needed to mark the
