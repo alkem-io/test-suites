@@ -124,6 +124,16 @@ export interface DigestWindow {
    * so the test cannot pass merely because the dispatch is still pending.
    */
   maxDelayGraceMs: number;
+  /**
+   * How long after the LAST message of a burst it is still guaranteed to be
+   * too early for this track to have fired — `quiet` minus a small margin.
+   * Sound because a sweep can only ever DELAY a flush past `lastMessage +
+   * quiet`, never advance it. Sleep this long and then assert ZERO
+   * notifications to prove the pipeline debounces instead of sending on
+   * arrival (US1-AS3) — the one assertion R4 added that the pre-R4 design
+   * would have failed.
+   */
+  preFireProbeMs: number;
   /** Per-test timeout derived from this window — never a literal. */
   testTimeoutMs: number;
 }
@@ -176,6 +186,10 @@ export const digestWindow = (
     settleMs,
     quietGraceMs,
     maxDelayGraceMs,
+    preFireProbeMs: Math.max(
+      0,
+      quietMs - Math.min(1_000, Math.floor(quietMs / 4))
+    ),
     testTimeoutMs: timeoutFor(maxDelayGraceMs, 2, 60_000),
   };
 };

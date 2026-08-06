@@ -98,6 +98,43 @@ Copy `.env.default` to `.env` in both `server-api/` and `client-web/`. Key varia
 - `MAIL_SLURPER_ENDPOINT` — Email testing service
 - `ALKEMIO_SERVER_WS` — WebSocket endpoint for subscriptions
 - `UI_HEADLESS` — Headless browser mode for Playwright (client-web only)
+- `RABBITMQ_MANAGEMENT_ENDPOINT` / `_USER` / `_PASSWORD` — RabbitMQ management HTTP API, used for EMIT-level assertions on internal queues with no GraphQL surface (`alkemio-push-notifications`)
+
+### Messaging digest windows (034-messaging-notifications)
+
+Messaging notifications are **debounced then digested** per
+`(recipient, channel, kind)` track — never sent on message arrival. The four
+windows are env-overridable so a test stack can run them at seconds scale, and
+the **same nine variables must be set on the SERVER under test and on the
+harness** or every messaging wait will be measured against the wrong window:
+
+| Variable | Test stack | Production in-code default |
+|---|---|---|
+| `MESSAGING_DIGEST_PUSH_DIRECT_QUIET_SECONDS` | 2 | 60 |
+| `MESSAGING_DIGEST_PUSH_DIRECT_MAX_DELAY_SECONDS` | 10 | 300 |
+| `MESSAGING_DIGEST_PUSH_GROUP_QUIET_SECONDS` | 3 | 300 |
+| `MESSAGING_DIGEST_PUSH_GROUP_MAX_DELAY_SECONDS` | 12 | 900 |
+| `MESSAGING_DIGEST_EMAIL_DIRECT_QUIET_SECONDS` | 4 | 300 |
+| `MESSAGING_DIGEST_EMAIL_DIRECT_MAX_DELAY_SECONDS` | 15 | 1800 |
+| `MESSAGING_DIGEST_EMAIL_GROUP_QUIET_SECONDS` | 6 | 1200 |
+| `MESSAGING_DIGEST_EMAIL_GROUP_MAX_DELAY_SECONDS` | 20 | 3600 |
+| `MESSAGING_DIGEST_SWEEP_INTERVAL_SECONDS` | 1 | 10 |
+
+Never hard-code a messaging wait. Derive it from
+`digestWindow(channel, kind)` (`lib/src/utils/messaging-digest-windows.ts`,
+re-exported from `@alkemio/tests-lib`), which returns the sleeps AND the
+per-test timeout:
+
+- `quietGraceMs` = `quiet + sweep + settle` — wait FOR a digest.
+- `maxDelayGraceMs` = `maxDelay + sweep + settle` — the strongest bound; use it
+  for every load-bearing **negative** assertion, so "no email arrived" means
+  "none will ever arrive" rather than "none has arrived *yet*".
+- `testTimeoutMs` / `digestTestTimeoutMs([...])` — per-test timeouts that scale
+  with the windows the test actually waits on.
+
+An unset variable falls back to the **production** default, never to the short
+test value — falling back the other way is how a negative test goes green for
+the wrong reason.
 
 ## Architecture
 
