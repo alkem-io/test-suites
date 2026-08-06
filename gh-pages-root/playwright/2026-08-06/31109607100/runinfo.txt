@@ -1,0 +1,5 @@
+Run ID: 31109607100
+Date: 2026-08-06
+Branch: refs/heads/feat/029-acceptance-specs
+Commit: afc3a3be6814eaa5ecc1fdc91326abd71abb059f
+Playwright outcome: success
