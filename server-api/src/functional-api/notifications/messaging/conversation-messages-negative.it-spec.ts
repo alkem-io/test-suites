@@ -180,6 +180,12 @@ describe('Conversation-message notifications — negative matrix', () => {
         { group: { email: false } },
         TestUser.SPACE_ADMIN
       );
+      // Restore B's mandated default, disabled in the arrange below.
+      await updateConversationMessagingSettings(
+        TestUserManager.users.spaceMember.id,
+        { group: { push: true } },
+        TestUser.SPACE_MEMBER
+      );
     });
 
     test(
@@ -190,6 +196,20 @@ describe('Conversation-message notifications — negative matrix', () => {
           TestUserManager.users.spaceAdmin.id,
           { group: { email: true } },
           TestUser.SPACE_ADMIN
+        );
+        // ...and only C may produce a PUSH. The push assertion below reads
+        // `alkemio-push-notifications`' queue-wide publish counter, which
+        // cannot attribute a publish to a recipient. B stays a member of this
+        // group and was subscribed to push in beforeAll, so with B's group push
+        // at its default ON the post-removal message armed B's push:group track
+        // and the delta was 1 — the assertion failed on a correct build, and
+        // read as "the removed member still got a push". Disabling B's push
+        // makes a non-zero delta attributable to C, which is what US2-AS4 is
+        // actually asserting.
+        await updateConversationMessagingSettings(
+          TestUserManager.users.spaceMember.id,
+          { group: { push: false } },
+          TestUser.SPACE_MEMBER
         );
 
         const conversationRes = await createGroupConversation(
@@ -233,10 +253,11 @@ describe('Conversation-message notifications — negative matrix', () => {
         await delay(3_000);
 
         // C still has an active push subscription (beforeAll) and group push
-        // at its default ON — assert the PUSH channel too (qual-test-suites
-        // -r2-2), not only email, so a membership-re-read regression that
-        // affects only the push path (e.g. a stale cached recipient list)
-        // isn't invisible to this test.
+        // at its default ON, and is now the ONLY member who can produce one
+        // (B's was disabled in the arrange) — assert the PUSH channel too
+        // (qual-test-suites-r2-2), not only email, so a membership-re-read
+        // regression that affects only the push path (e.g. a stale cached
+        // recipient list) isn't invisible to this test.
         const pushBaselineAfterRemoval = await getPushQueuePublishedTotal();
         const pushStatsAfterRemoval = await expectNoPushEmitAfter(
           () =>
