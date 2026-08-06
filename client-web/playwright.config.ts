@@ -14,6 +14,28 @@ dotenv.config({ path: path.resolve(__dirname, '.env') });
 export default defineConfig({
   globalSetup: './config/global-setup.ts',
   testDir: './src/functional-e2e',
+  /* forge-acceptance specs are durable regression cover for /forge acceptance
+   * walks (tag @forge-acceptance). They need a live, seeded acceptance stack
+   * and are not part of the default gate — run explicitly via
+   * `PLAYWRIGHT_INCLUDE_FORGE_ACCEPTANCE=1 playwright test --grep @forge-acceptance`.
+   *
+   * qual-ts-1 (2026-07-30 fix wave, second pass): a plain `testIgnore` drops
+   * matching files at COLLECTION time, before any `--grep` runs, so the
+   * originally-documented `--grep @forge-acceptance` command collected zero
+   * of these specs regardless of what was grepped for. The first attempted
+   * fix — dropping `testIgnore` for a default `grepInvert: /@forge-acceptance/`
+   * on the assumption that an explicit CLI `--grep` replaces it — was ALSO
+   * wrong: verified empirically (`playwright test --list --grep
+   * @forge-acceptance`) that Playwright applies `grep` and `grepInvert`
+   * together (AND), not "last one wins" — with `grepInvert` set in config, an
+   * explicit `--grep` still found ZERO tests. Gating `testIgnore` itself
+   * behind an env var is the one mechanism that actually works: unset (the
+   * default gate) excludes these files at collection exactly as before;
+   * setting the flag lifts the ignore so `--grep @forge-acceptance` can then
+   * select them by tag, verified to return all three files' tests. */
+  testIgnore: process.env.PLAYWRIGHT_INCLUDE_FORGE_ACCEPTANCE
+    ? undefined
+    : '**/*.forge-acceptance.spec.ts',
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */

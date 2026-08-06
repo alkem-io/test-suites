@@ -1,0 +1,9 @@
+query platformRoleSetOrganizationsInRole($role: RoleName!) {
+  platform {
+    roleSet {
+      organizationsInRole(role: $role) {
+        id
+      }
+    }
+  }
+}

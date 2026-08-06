@@ -40,6 +40,20 @@ export default async function setup() {
   // expected pre-seeded in that mode — verify they can authenticate).
   await verifyEnvPrerequisites();
 
+  // workspace#027-platform-role-redesign (qual-ts-14, 2026-07-30 fix wave):
+  // seeding the 027 single-role fixtures (`grantSingleRoleFixtures()`) no
+  // longer lives here. This file is the shared root `globalSetup`, inherited
+  // by ALL 32 vitest projects via `extends: true` — an unconditional call
+  // here (a) hard-fails every UNRELATED suite whenever a single-role fixture
+  // cannot be seeded (e.g. the server does not yet carry the 12 new
+  // `RoleName` values), and (b) used to run AHEAD of the env-prerequisite
+  // gate above, pre-empting the one-clear-message abort it exists to
+  // provide. It now runs from a project-scoped setupFile
+  // (`functional-api/platform-roles/platform-roles.setup.ts`), wired ONLY
+  // into the two `platform-roles`/`platform-roles-canonical` projects
+  // (`vitest.config.ts`) — the only consumers of these fixtures — so no
+  // other project is ever blocked by this feature's own fixture seeding.
+
   // Return a teardown function so Vitest can ensure a clean exit.
   // The GraphQL client is stateless HTTP and WebSocket subscriptions are
   // terminated in per-file afterAll hooks, so no global cleanup is needed.

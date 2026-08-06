@@ -1,0 +1,1445 @@
+import {
+  createInnovationPack,
+  getGraphqlClient,
+  TestScenarioFactory,
+  TestUser,
+  TestUserManager,
+  UniqueIDGenerator,
+} from '@alkemio/tests-lib';
+import { graphqlRequestAuth } from '@alkemio/tests-lib/utils/graphql.request';
+import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import { CalloutContributionType, SpacePrivacyMode } from '@alkemio/client-lib';
+import { TemplateType } from '@alkemio/client-lib';
+import {
+  LicenseEntitlementType,
+  LicensingCredentialBasedCredentialType,
+  LicensingCredentialBasedPlanType,
+  TemplateType as GeneratedTemplateType,
+  VirtualContributorWellKnown,
+} from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { createOrganization } from '@functional-api/contributor-management/organization/organization.request.params';
+import {
+  createUser,
+  deleteUser,
+  registerVerifiedUser,
+} from '@functional-api/contributor-management/user/user.request.params';
+import { createInnovationHub } from '@functional-api/innovation-hub/innovation-hub-params';
+import { createVirtualContributorOnAccountSpaceBased } from '@functional-api/contributor-management/virtual-contributor/vc.request.params';
+import { getLicensePlans } from '@functional-api/license/license.params.request';
+import {
+  createDiscussion,
+  getPlatformForumData,
+} from '@functional-api/communications/communication.params';
+import { createCalloutOnCalloutsSet } from '@functional-api/callout/callouts.request.params';
+import { createSubspaceOrFail } from '@functional-api/journey/subspace/subspace.request.params';
+import {
+  createSpaceBasicDataOrFail,
+  deleteSpace,
+  getSpaceData,
+  updateSpaceSettings,
+} from '@functional-api/journey/space/space.request.params';
+import { TARGET_ROLES } from './role-action-matrix.data';
+
+/**
+ * workspace#027-platform-role-redesign (T007b). The fixture set every
+ * surface-invocation helper closes over — built ONCE per vitest project run
+ * (T009's `beforeAll`), never per cell. Cheap resources (an org, a space, an
+ * innovation pack + one template, one virtual contributor, one platform
+ * discussion, one license plan lookup, one callout contribution) — enough
+ * for every helper to reach its resolver's AUTHORIZATION gate with a
+ * well-formed input, which is the one thing T007b requires ("a helper whose
+ * input fails validation before the gate produces a green denial for the
+ * wrong reason").
+ *
+ * **This has not been exercised against a live stack** — Phase V's job, not
+ * this wave's (gates here are lint + build only, and booting a stack is out
+ * of scope per the standing rules). Built from this repo's existing scenario
+ * factory + already-established request-param helpers, matching their
+ * conventions exactly, so it has a real chance of working unmodified; any
+ * live-run adjustment is expected to be small and local to this file.
+ */
+export interface MatrixFixtures {
+  /** The base scenario — organization + account + L0 space + one Post
+   * callout, built via `TestScenarioFactory`. */
+  readonly base: OrganizationWithSpaceModel;
+  readonly organizationId: string;
+  readonly organizationAccountId: string;
+  /** A second, otherwise-unrelated organization — the A2/A9 "another
+   * account" target (transfer destination, org-target role assignment). */
+  readonly secondOrganizationId: string;
+  readonly secondOrganizationAccountId: string;
+  /** The second organization's OWN role-set — `immediacy.it-spec.ts`
+   * (T013) and `flows/org-inheritance-demotion.it-spec.ts` (T019b) assign
+   * ADMIN/ASSOCIATE on it directly (`AssignRoleToUser`/`RemoveRoleFromUser`)
+   * to exercise organization-standing inheritance, distinct from the
+   * PLATFORM role-set A1/A2 target. */
+  readonly secondOrganizationRoleSetId: string;
+  readonly spaceId: string;
+  readonly spaceCollaborationId: string;
+  readonly calloutId: string;
+  /**
+   * A real `AuthorizationPolicy` id — A3's
+   * `authorizationPolicyResetToGlobalAdminsAccess` target.
+   *
+   * corr-ts-33 (2026-07-31): that helper used to pass `fx.spaceId`. A Space
+   * id is not an AuthorizationPolicy id, so `resetAuthorizationPolicy()`
+   * threw `EntityNotFound` — **after** the gate had already granted access
+   * (`admin.authorization.resolver.mutations.ts` checks
+   * AUTHORIZATION_RESET first, looks the policy up second). The ALLOW cell
+   * therefore reported a failure that had nothing to do with authorization,
+   * which is the exact "post-gate error reads as a denial" class this suite
+   * exists to catch. Both are bare `string` in the SDK, so nothing warned.
+   *
+   * Sourced from the fixture callout's own policy: a real, disposable target
+   * whose reset is bounded to fixture data.
+   */
+  readonly a3AuthorizationPolicyId: string;
+  /** A throwaway Post contribution inside `calloutId` — A8's
+   * `deleteContribution` / A9's `moveContributionToCallout` target. */
+  readonly contributionId: string;
+  /** A second callout in the same space — `moveContributionToCallout`'s
+   * destination. */
+  readonly secondCalloutId: string;
+  readonly innovationPackId: string;
+  readonly templatesSetId: string;
+  /** A throwaway POST template inside `templatesSetId` — A7's
+   * `updateTemplate`/`deleteTemplate` target. */
+  readonly templateId: string;
+  /** A throwaway SPACE template inside `templatesSetId` — A7's
+   * `updateTemplateFromSpace` target, which requires a template carrying a
+   * `contentSpace` + `collaboration` that `templateId` (a post template)
+   * does not have. */
+  readonly a7SpaceTemplateId: string;
+  /** That space template's TemplateContentSpace — A7's
+   * `createTemplateFromContentSpace` target. Its `contentSpaceID` argument is
+   * a TemplateContentSpace id, not a Space id. */
+  readonly a7TemplateContentSpaceId: string;
+  readonly innovationHubId: string;
+  readonly virtualContributorId: string;
+  /**
+   * A9's `convertVirtualContributorToUseKnowledgeBase` source — a DEDICATED,
+   * genuinely SPACE-BASED Virtual Contributor.
+   *
+   * corr-ts-34 (2026-07-31): this used to share `virtualContributorId` with
+   * A9's `transferVirtualContributorToAccount`, and that was two defects in
+   * one line:
+   *
+   *  1. **Ordering.** Both surfaces have an ALLOW cell, and the transfer's
+   *     runs FIRST (census order) — it moves the shared VC to another
+   *     account, so the convert then operated on a VC that is no longer
+   *     where this fixture set thinks it is. `corr-ts-16`'s
+   *     DENY-before-ALLOW ordering cannot help: it orders cells WITHIN one
+   *     surface, and these are two surfaces.
+   *  2. **Body of knowledge.** The shared VC is built with
+   *     `bodyOfKnowledgeType: 'NONE'`, but the mutation converts a
+   *     SPACE-based VC to a knowledge-base-backed one. `surface-invocations.ts`
+   *     flagged this inline as a placeholder pending a live run.
+   *
+   * Created space-based on the base account, and referenced by nothing else.
+   */
+  readonly a9ConvertVcSourceId: string;
+  /**
+   * sec-test-suites-21 (2026-07-31): the platform's CHAT_GUIDANCE well-known
+   * Virtual Contributor mapping AS FOUND, so teardown can put it back.
+   *
+   * A10's `setPlatformWellKnownVirtualContributor` ALLOW cell re-points that
+   * mapping at this fixture's throwaway VC — a platform-wide SINGLETON, on a
+   * SHARED environment, with no restore. Every run left the platform's chat
+   * guidance pointing at a Virtual Contributor that teardown then deleted,
+   * so the mapping dangled until someone noticed.
+   *
+   * `null` when the mapping did not exist before the run (nothing to
+   * restore); `undefined` is never stored, so "unknown" and "absent" stay
+   * distinguishable.
+   */
+  readonly wellKnownChatGuidanceVcIdBefore: string | null;
+  /** The singleton virtual-assistant actor — A11's
+   * `updateAssistantActorCapabilities` target. */
+  readonly virtualAssistantId: string;
+  /** The base space's community — `adminCommunicationEnsureAccessToCommunications`'s target. */
+  readonly communityId: string;
+  /** A licensing-framework plan already on the platform (looked up, not
+   * created — A12's SPACE-scoped assign/revoke target). */
+  readonly licensePlanId: string;
+  /** A12's ACCOUNT-scoped assign/revoke target — a plan created BY this
+   * fixture set with `type: ACCOUNT_PLAN`, never `licensePlanId` above.
+   * `plans[0]` is whatever the platform seeded first (in practice a
+   * `space-feature-flag`), and `admin.licensing.service` rejects any plan
+   * that is not `ACCOUNT_PLAN`/`ACCOUNT_FEATURE_FLAG` with a
+   * `ValidationException` raised AFTER the privilege check — so the account
+   * cells failed for a fixture reason while claiming an authorization
+   * verdict, exactly the hazard this suite exists to prevent. */
+  readonly a12AccountLicensePlanId: string;
+  /** The platform forum + one throwaway discussion — A15's target. */
+  readonly forumId: string;
+  readonly discussionId: string;
+  /** An ordinary registered user, distinct from every single-role fixture —
+   * the generic "target user" for A1/A2/A4/A5/A21's user-directed mutations.
+   * Never granted a `Platform …`/`Feature …` role itself. */
+  readonly targetUserId: string;
+  readonly targetUserEmail: string;
+  /** A syntactically well-formed UUID standing in for a Kratos identity ID —
+   * A5's `adminIdentityDeleteKratosIdentity` only needs to REACH its
+   * authorization gate (`PLATFORM_USERS_ADMIN`), which is checked before any
+   * Kratos-side lookup; a non-existent-but-well-formed ID cannot produce a
+   * false "denial" the way a malformed one could. */
+  readonly kratosIdentityIdPlaceholder: string;
+  /** Same reasoning for the two admin-communication room-ID surfaces. */
+  readonly roomIdPlaceholder: string;
+  /** A9's `moveSpaceL1ToSpaceL0` cross-L0 target — the FR-024/A9 census
+   * entry's authorization gate is only reachable with a genuine L1 space
+   * (see `subspaceId` below) AND a genuinely DIFFERENT L0 to move it under;
+   * passing the base scenario's own top-level space for both parameters
+   * fails `ValidationException: Only L1 spaces can be moved cross-L0`
+   * before authorization is exercised at all (live-verification finding,
+   * 2026-07-29). Built once, cheaply, with no community/collaboration —
+   * a move target only needs to exist and be a real L0. */
+  readonly a9TargetSpaceL0Id: string;
+  /** A real L1 subspace under `spaceId` — the actual MOVE SOURCE for
+   * `moveSpaceL1ToSpaceL0` (same finding as above). */
+  readonly subspaceId: string;
+  /** A5's `deleteUser` disposable target.
+   * Deliberately NOT `targetUserId`: A5's `deleteUser` surface invocation is
+   * genuinely destructive (unlike the read/update surfaces that also target
+   * `targetUserId`), so once an ALLOWED caller exercises it for real, every
+   * OTHER cell/file that still expects `targetUserId` to exist (A1/A2/A4/
+   * A21, `audit-coverage.it-spec.ts`) would start failing with
+   * `EntityNotFoundException` instead of a real authorization signal — the
+   * exact cascade the 2026-07-29 live-verification run hit. This user is
+   * referenced NOWHERE else, so deleting it is inert to the rest of the
+   * suite. */
+  readonly deletableUserId: string;
+  /** A second disposable, freshly-created user — the target for any
+   * Platform-role-exclusivity / negative-assignment probe that only needs
+   * an actor ID (checked via the caller's own admin token), never a login
+   * as the target itself. Deliberately NOT `targetUserId`
+   * (`TestUser.NON_SPACE_MEMBER`): that identity is a long-lived, shared
+   * TestUser fixture reused across every file in this project run (and
+   * every future run), so a probe that grants it a role and then throws
+   * before revoking (or races a concurrently-running file doing the same)
+   * leaves it permanently contaminated — exactly the 2026-07-29
+   * live-verification finding that broke `immediacy.it-spec.ts` and
+   * `flows/rejection-audited.it-spec.ts` (both found `non.space@alkem.io`
+   * already holding an unrelated Platform role from residue). This field
+   * is built fresh per `buildMatrixFixtures()` call — i.e. fresh per FILE
+   * — and referenced by nothing else, so contaminating or even deleting it
+   * mid-test is inert to the rest of the suite. Also A21's target
+   * (corr-ts-8/sec-test-suites-2, 2026-07-29 corrective wave): A21's
+   * `updateUser({serviceProfile: true})` ALLOW cell is a real, permanent
+   * mutation, and setting that marker on the SHARED `targetUserId` would
+   * silently flip `assignment-rules.it-spec.ts`'s rule-3 denial (which
+   * relies on that identity NOT being a service account) for every run
+   * afterwards. */
+  readonly rolesProbeUserId: string;
+  /** A5's `deleteUser` target already has its own `deletableUserId` above;
+   * these two cover the REMAINING two A4/A5 surfaces that mutate a user's
+   * login identity for real and were still pointed at the shared
+   * `targetUserId` (sec-test-suites-2, 2026-07-29 corrective wave):
+   * `adminUserEmailChange` (A4) permanently rewrites the login email of
+   * whatever it targets, and `adminUserAccountDelete` (A5) deletes the
+   * Kratos identity outright. Both would otherwise corrupt the shared
+   * `NON_SPACE_MEMBER` fixture 67 other test files depend on. */
+  readonly emailChangeTargetUserId: string;
+  /** The canonical (as-created) email of `emailChangeTargetUserId` — the
+   * `adminUserEmailChangeDriftResolve` pair's `canonicalEmail` argument, so
+   * that helper resolves drift back to a real, known address rather than a
+   * guess. */
+  readonly emailChangeTargetUserEmail: string;
+  readonly accountDeleteTargetUserId: string;
+  /** A8's five disposable delete targets — distinct from every resource
+   * A7/A9/A12/A13 depend on, so an A8 ALLOW cell's REAL deletion cannot
+   * corrupt the A-rows that run after it in the same file (corr-ts-1,
+   * 2026-07-29 corrective wave). `deleteCallout`/`deleteContribution` live
+   * in DIFFERENT callouts from each other (mirroring the
+   * `secondCalloutId`/`contributionId`-in-`calloutId` split this file
+   * already used, so deleting one never takes the other's container with
+   * it) and neither is `spaceId`, `calloutId`, `secondCalloutId`,
+   * `contributionId`, `innovationPackId` or `innovationHubId` — all of
+   * which A9's transfer/move surfaces (and A7's updates) still need intact
+   * afterwards. */
+  readonly a8DeletableSpaceId: string;
+  readonly a8DeletableCalloutId: string;
+  readonly a8DeletableContributionId: string;
+  readonly a8DeletableInnovationPackId: string;
+  readonly a8DeletableInnovationHubId: string;
+  /** A13's `DeleteLicensePlan` target — a plan created BY this fixture set,
+   * never the platform-seeded `licensePlanId` A12's assign/revoke helpers
+   * read (corr-ts-7, 2026-07-29 corrective wave): the original code deleted
+   * a REAL seeded plan with no recreation, corrupting shared stack state and
+   * A13's own later `UpdateLicensePlan` cell in the same run. */
+  readonly a13DeletableLicensePlanId: string;
+  /** A13's `UpdateLicensePlan` target — a SECOND, separate disposable plan,
+   * distinct from `a13DeletableLicensePlanId`: within one matrix run every
+   * cell of `DeleteLicensePlan` (all 13 roles) executes before any cell of
+   * `UpdateLicensePlan` (census/array order), so if the two rows shared one
+   * plan, the real ALLOW-caller deletion in the first pass would leave
+   * nothing for the second pass's ALLOW caller to update. */
+  readonly a13UpdatableLicensePlanId: string;
+  /** A13's `adminLicensePolicyDeleteCredentialRule` target (corr-ts-23 fix)
+   * — a credential rule created BY this fixture set, never
+   * `a13DeletableLicensePlanId` (a LicensePlan id, not a LicensePolicy
+   * credential-rule id): the two ID spaces are unrelated, and the resolver's
+   * post-gate `credentialRules.findIndex` throws `EntityNotFoundException`
+   * for a plan id, permanently failing the row's ALLOW cell regardless of
+   * authorization correctness. */
+  readonly a13DeletableCredentialRuleId: string;
+  /** A13's `adminLicensePolicyUpdateCredentialRule` target — a SECOND,
+   * separate disposable credential rule, distinct from
+   * `a13DeletableCredentialRuleId` for the same census-order reason as
+   * `a13UpdatableLicensePlanId` above (every Delete cell runs before any
+   * Update cell). */
+  readonly a13UpdatableCredentialRuleId: string;
+  /** A15's condition-gated in-space-support probe target — a PRIVATE space
+   * with `settings.privacy.allowPlatformSupportAsAdmin` explicitly set,
+   * distinct from A16's (corr-ts-4, 2026-07-29 corrective wave). Both rows
+   * used to share `spaceId` and the SAME `spaceReadProbe` query, which is
+   * gated on `READ_ABOUT` — a privilege `platform-content-full-access`
+   * reaches through the ordinary READ->READ_ABOUT mapping regardless of
+   * this condition, so the two rows could not be told apart. This space
+   * isolates the condition: only a caller reaching it via
+   * `allowPlatformSupportAsAdmin` (or genuine plain READ) passes. */
+  readonly a15ConditionSpaceId: string;
+  /** A16's cross-space-read probe target — a PRIVATE space with NO
+   * membership grants, so an ordinary caller has neither READ nor
+   * READ_ABOUT on it and only a role reaching it through a GLOBAL
+   * mechanism (the root cascade's plain READ, `platform-spaces-reader`'s
+   * own grant) can pass (corr-ts-4). Queried via
+   * `spaceCollaborationReadProbe`, which selects `collaboration.id` — a
+   * field gated on plain `READ` (`space.resolver.fields.ts`), unlike
+   * `lookup.space` itself, which is gated on `READ_ABOUT` and would let a
+   * READ_ABOUT-only holder (e.g. A15's condition) through by mistake. */
+  readonly a16PrivateSpaceId: string;
+  /** A6's `deleteOrganization` disposable target — an organization whose
+   * account hosts NOTHING (corr-ts-12): `secondOrganizationId`'s account
+   * hosts `a9TargetSpaceL0Id`, so `deleteOrganization` against it always
+   * fails the server's account-has-resources guard
+   * (`organization.service.ts`), and if that guard were ever relaxed it
+   * would destroy A9's own cross-account transfer/move targets. This
+   * organization is created fresh, never populated with a space, and
+   * referenced nowhere else. */
+  readonly a6DeletableOrganizationId: string;
+  /** The platform's default licensing framework id (corr-ts-13) — A12's
+   * `assignLicensePlanToAccount` / `revokeLicensePlanFromAccount` /
+   * `revokeLicensePlanFromSpace` helpers need the FRAMEWORK id, not a PLAN
+   * id (`fx.licensePlanId`), for their `licensingID` argument. Looked up
+   * once here (already computed for the A13 plan-creation calls above) so
+   * every consumer resolves it the same way. */
+  readonly licensingFrameworkId: string;
+  /** A9's `moveSpaceL1ToSpaceL2` source — a SECOND, fresh L1 under the base
+   * scenario's L0, distinct from `subspaceId` (corr-ts-18): `subspaceId` is
+   * the real move SOURCE for the ALLOW cell of `moveSpaceL1ToSpaceL0`, which
+   * actually promotes it out from under `spaceId` when that cell runs — a
+   * shared target would leave `moveSpaceL1ToSpaceL2` moving a space that is
+   * no longer where this fixture set thinks it is. */
+  readonly a9SecondSubspaceId: string;
+  /**
+   * A9's `moveSpaceL1ToSpaceL2` AND `moveSpaceL2ToSpaceL1` destination — an
+   * L1 under **`a9TargetSpaceL0Id`, a DIFFERENT L0** from every move source.
+   *
+   * corr-ts-32 (2026-07-31): this used to be a sibling L1 under the base
+   * scenario's own L0, which made both mutations reject before authorization
+   * was ever the question. They are cross-L0-only operations
+   * (`conversion.service.ts`): same-L0 hits
+   * `'Source and target are in the same L0; use convertSpaceL1ToSpaceL2
+   * instead'` / `'…same-L0 lateral re-parenting of an L2 is not supported'`.
+   * Both are `ValidationException`s raised AFTER the resolver's
+   * `grantAccessOrFail`, so both ALLOW cells were permanently red for a
+   * fixture reason that looked like an authorization result.
+   */
+  readonly a9L1MoveTargetId: string;
+  /**
+   * A9's `moveSpaceL2ToSpaceL1` source — a real L2, so the mutation's own
+   * level-check is satisfied before authorization is exercised.
+   *
+   * corr-ts-32: created under its own dedicated parent
+   * (`a9L2MoveSourceL1Id`), NOT under `a9SecondSubspaceId`. Two reasons, and
+   * both were live defects: `moveSpaceL1ToSpaceL2` refuses a source that has
+   * L2 children (`'Cannot demote: source L1 has L2 children…'`), so
+   * `a9SecondSubspaceId` had to become childless; and its ALLOW cell runs
+   * FIRST in census order and relocates it to another L0 entirely, which
+   * would move this L2 out from under the next cell's feet.
+   */
+  readonly a9L2Id: string;
+  /** corr-ts-32: the dedicated parent L1 for `a9L2Id`, under the base
+   * scenario's L0. Exists only so `a9SecondSubspaceId` can stay childless —
+   * see the note on `a9L2Id`. */
+  readonly a9L2MoveSourceL1Id: string;
+  /** A9's `convertSpaceL1ToSpaceL0` source (corr-ts-20/qual-ts-17 fix) — a
+   * DEDICATED, fresh L1 under the base scenario's L0, distinct from every
+   * other A9 L1 this fixture set builds: `moveSpaceL1ToSpaceL2`'s ALLOW
+   * cell (which runs FIRST, census order) genuinely re-parents
+   * `a9SecondSubspaceId`, so sharing it here would have this conversion
+   * operate on a space that is no longer where this fixture set thinks it
+   * is. */
+  readonly a9ConvertL1ToL0SourceId: string;
+  /** A9's `convertSpaceL1ToSpaceL2`'s destination parent — a dedicated,
+   * fresh L1 sibling, never itself the SOURCE of a move/convert in this
+   * row (only ever referenced as a `parentSpaceL1ID`), so it stays a
+   * stable L1 for the whole matrix run. Also the parent of
+   * `a9ConvertL2ToL1SourceId` below (an unrelated child, promoting it does
+   * not disturb this space itself). */
+  readonly a9ConvertL1ToL2ParentId: string;
+  /** A9's `convertSpaceL1ToSpaceL2` source — a dedicated, fresh L1 sibling
+   * of `a9ConvertL1ToL2ParentId`, moved to become its L2 child. */
+  readonly a9ConvertL1ToL2SourceId: string;
+  /** A9's `convertSpaceL2ToSpaceL1` source — a real L2, created under
+   * `a9ConvertL1ToL2ParentId` (dedicated, distinct from
+   * `a9ConvertL1ToL2SourceId`), so the mutation's own level-check is
+   * satisfied before authorization is exercised. */
+  readonly a9ConvertL2ToL1SourceId: string;
+  /** A9's `transferCallout` destination CalloutsSet id (corr-ts-22 fix) —
+   * `a9L1MoveTargetId`'s OWN calloutsSet, a genuinely different CalloutsSet
+   * from the one `calloutId` already lives in. Never `spaceCollaborationId`
+   * (that is a Collaboration id, not a CalloutsSet id — the resolver's
+   * `getCalloutsSetOrFail` pre-gate lookup throws `EntityNotFoundException`
+   * for it regardless of authorization) and never the source's own
+   * CalloutsSet (a self-transfer). */
+  readonly a9TransferCalloutTargetCalloutsSetId: string;
+}
+
+const uid = () => UniqueIDGenerator.getID();
+
+export async function buildMatrixFixtures(): Promise<MatrixFixtures> {
+  const runId = uid();
+
+  const base = await TestScenarioFactory.createBaseScenario({
+    name: `platform-roles-matrix-${runId}`,
+    organization: {},
+    space: {
+      collaboration: {
+        addPostCallout: true,
+      },
+    },
+    innovationPack: {
+      useBaseOrganization: true,
+      pack: { displayName: `matrix-pack-${runId}` },
+      templates: [
+        {
+          type: TemplateType.Post,
+          profileDisplayName: `matrix-post-template-${runId}`,
+          postDefaultDescription: 'matrix fixture template',
+        },
+      ],
+    },
+    virtualContributors: {
+      useBaseOrganization: true,
+      virtualContributors: [
+        {
+          profileDisplayName: `matrix-vc-${runId}`,
+          bodyOfKnowledgeType: 'NONE',
+        },
+      ],
+    },
+  });
+
+  // corr-ts-34: A9's convert surface gets its OWN space-based VC — see the
+  // field doc on `a9ConvertVcSourceId`. Space-based (bodyOfKnowledgeID = the
+  // base L0 space) so the conversion has something real to convert, and
+  // dedicated so the transfer cell cannot move it first.
+  // The helper defaults its caller to GLOBAL_BETA_TESTER, which holds no
+  // `create-virtual-contributor` on this account — observed live 2026-07-31
+  // as `FORBIDDEN_POLICY` on every fixture build. GLOBAL_ADMIN builds every
+  // other resource in this file.
+  const a9ConvertVcResult = await createVirtualContributorOnAccountSpaceBased(
+    `matrix-a9-convert-vc-${runId}`,
+    base.organization.accountId,
+    base.space.id,
+    TestUser.GLOBAL_ADMIN
+  );
+  const a9ConvertVcSourceId =
+    a9ConvertVcResult.data?.createVirtualContributor.id ?? '';
+  if (!a9ConvertVcSourceId) {
+    console.error(
+      `[platform-roles fixtures] could not create A9's dedicated convert-source VC — that cell falls back to the shared VC and re-opens corr-ts-34. Cause: ${JSON.stringify(
+        a9ConvertVcResult.error?.errors ?? 'unknown'
+      )}`
+    );
+  }
+
+  const secondOrgResult = await createOrganization(
+    `matrix-org-2-${runId}`,
+    `matrix-org2-${runId}`
+  );
+  const secondOrg = secondOrgResult.data?.createOrganization;
+
+  // A9's `moveSpaceL1ToSpaceL0` needs a real two-level tree AND a genuinely
+  // different L0 to move into (live-verification finding, 2026-07-29): a
+  // real L1 subspace under the base scenario's own L0, plus a second,
+  // unrelated L0 space (hosted on the second organization's account, which
+  // this fixture set already builds) as the cross-L0 move target.
+  const subspaceId = await createSubspaceOrFail(
+    `matrix-l1-${runId}`,
+    `matrixl1${runId}`,
+    base.space.id
+  );
+  const a9TargetSpaceL0Id = await createSpaceBasicDataOrFail(
+    `matrix a9 target ${runId}`,
+    `matrixa9t${runId}`,
+    secondOrg?.account?.id ?? ''
+  );
+
+  // corr-ts-18: `moveSpaceL1ToSpaceL2`/`moveSpaceL2ToSpaceL1` each need their
+  // OWN genuine, level-correct source/target — `subspaceId` above is the
+  // real move SOURCE for `moveSpaceL1ToSpaceL0`'s ALLOW cell, which promotes
+  // it out from under `spaceId` for real when that cell runs, so it cannot
+  // be shared with these two siblings.
+  const a9SecondSubspaceId = await createSubspaceOrFail(
+    `matrix-a9-l1-${runId}`,
+    `matrixa9l1${runId}`,
+    base.space.id
+  );
+  // corr-ts-32: the move target lives under `a9TargetSpaceL0Id` — a
+  // DIFFERENT L0. `moveSpaceL1ToSpaceL2` and `moveSpaceL2ToSpaceL1` are
+  // cross-L0-only; a same-L0 pair is rejected by the service AFTER the
+  // resolver's gate, so both ALLOW cells failed for a fixture reason that
+  // read as an authorization result.
+  const a9L1MoveTargetId = await createSubspaceOrFail(
+    `matrix-a9-l1-target-${runId}`,
+    `matrixa9l1t${runId}`,
+    a9TargetSpaceL0Id
+  );
+  // corr-ts-32: `a9L2Id` gets its OWN parent L1. `a9SecondSubspaceId` must
+  // stay childless — `moveSpaceL1ToSpaceL2` refuses a source with L2
+  // children — and it is relocated to another L0 by its own ALLOW cell,
+  // which runs first.
+  const a9L2MoveSourceL1Id = await createSubspaceOrFail(
+    `matrix-a9-l2-parent-${runId}`,
+    `matrixa9l2p${runId}`,
+    base.space.id
+  );
+  const a9L2Id = await createSubspaceOrFail(
+    `matrix-a9-l2-${runId}`,
+    `matrixa9l2${runId}`,
+    a9L2MoveSourceL1Id
+  );
+
+  // A9's three promote/demote conversions (corr-ts-20/qual-ts-17 fix) — each
+  // gets its OWN dedicated space, never one of the move fixtures above:
+  // `moveSpaceL1ToSpaceL2`'s ALLOW cell (earlier in census order) genuinely
+  // re-parents `a9SecondSubspaceId` under `a9L1MoveTargetId`, so reusing
+  // either here would have a conversion operate on a space this fixture set
+  // no longer accurately describes.
+  const a9ConvertL1ToL0SourceId = await createSubspaceOrFail(
+    `matrix-a9-conv-l0-${runId}`,
+    `matrixa9cl0${runId}`,
+    base.space.id
+  );
+  const a9ConvertL1ToL2ParentId = await createSubspaceOrFail(
+    `matrix-a9-conv-l2p-${runId}`,
+    `matrixa9cl2p${runId}`,
+    base.space.id
+  );
+  const a9ConvertL1ToL2SourceId = await createSubspaceOrFail(
+    `matrix-a9-conv-l2s-${runId}`,
+    `matrixa9cl2s${runId}`,
+    base.space.id
+  );
+  const a9ConvertL2ToL1SourceId = await createSubspaceOrFail(
+    `matrix-a9-conv-l1s-${runId}`,
+    `matrixa9cl1s${runId}`,
+    a9ConvertL1ToL2ParentId
+  );
+
+  // A9's `transferCallout` destination CalloutsSet (corr-ts-22 fix) —
+  // `a9L1MoveTargetId`'s OWN CalloutsSet, genuinely different from the one
+  // `calloutId` already lives in (never `spaceCollaborationId`, a
+  // Collaboration id, not a CalloutsSet id).
+  const a9L1MoveTargetSpaceResult = await getSpaceData(a9L1MoveTargetId);
+  const a9TransferCalloutTargetCalloutsSetId =
+    a9L1MoveTargetSpaceResult.data?.lookup.space?.collaboration?.calloutsSet
+      .id ?? '';
+
+  // corr-ts-12: A6's `deleteOrganization` needs its OWN disposable
+  // organization whose account hosts NOTHING — `secondOrganizationId`'s
+  // account hosts `a9TargetSpaceL0Id` above, so the server's
+  // account-has-resources guard (`organization.service.ts`) always rejects
+  // deleting it, and if that guard were ever relaxed the delete would take
+  // A9's own transfer/move targets down with it.
+  const a6OrgResult = await createOrganization(
+    `matrix-a6-deletable-${runId}`,
+    `matrixa6del${runId}`
+  );
+  const a6DeletableOrganizationId = a6OrgResult.data?.createOrganization?.id ?? '';
+
+  // A5's `deleteUser` disposable target — a throwaway Alkemio user (no
+  // Kratos flow needed for a `createUser`-created account), never
+  // referenced by any other row or file, so the one surface invocation
+  // that actually deletes it cannot take any other cell down with it
+  // (live-verification finding, 2026-07-29: the shared `targetUserId`
+  // fixture was being deleted here, corrupting A1/A2/A4/A21 and
+  // `audit-coverage.it-spec.ts`).
+  const deletableUserResult = await createUser({
+    nameID: `matrixdel${runId}`,
+    email: `matrix-deletable-${runId}@alkem.io`,
+    profileData: { displayName: `matrix deletable user ${runId}` },
+  });
+  const deletableUserId = deletableUserResult.data?.createUser?.id ?? '';
+
+  // A fresh, single-use target for Platform-role-exclusivity/negative probes
+  // (see the `rolesProbeUserId` doc comment above — 2026-07-29
+  // live-verification finding).
+  const rolesProbeUserResult = await createUser({
+    nameID: `matrixprobe${runId}`,
+    email: `matrix-roles-probe-${runId}@alkem.io`,
+    profileData: { displayName: `matrix roles probe user ${runId}` },
+  });
+  const rolesProbeUserId = rolesProbeUserResult.data?.createUser?.id ?? '';
+
+  // A4's `adminUserEmailChange` disposable target — a real, permanent login
+  // email rewrite; never the shared `targetUserId` (sec-test-suites-2).
+  // MUST be a genuinely Kratos-registered identity (`registerVerifiedUser`),
+  // NOT a bare `createUser()` account (live-verification finding,
+  // 2026-07-30): `adminUserEmailChange` loads the subject through the
+  // identity-provider link and throws `EMAIL_CHANGE_SUBJECT_NOT_FOUND` for a
+  // user with no Kratos identity, which the ALLOW cell's caller-succeeded
+  // assertion cannot distinguish from a real authorization failure.
+  const emailChangeTargetUserEmail = `matrix-email-change-${runId}@alkem.io`;
+  const emailChangeTargetUserId = await registerVerifiedUser(
+    emailChangeTargetUserEmail,
+    `matrixemail${runId}`,
+    `target${runId}`
+  );
+
+  // A5's `adminUserAccountDelete` disposable target — deletes the Kratos
+  // identity outright; never the shared `targetUserId` (sec-test-suites-2).
+  // Genuinely Kratos-registered (`registerVerifiedUser`), not a bare
+  // `createUser()` account — same reasoning as `emailChangeTargetUserId`
+  // above: a target with no Kratos identity to delete is not a
+  // representative exercise of this surface's gate (only reachable via the
+  // `platform-roles` full project, canonical picks `deleteUser` for A5, but
+  // fixed proactively for when it runs).
+  const accountDeleteTargetUserId = await registerVerifiedUser(
+    `matrix-account-delete-${runId}@alkem.io`,
+    `matrixacctdel${runId}`,
+    `target${runId}`
+  );
+
+  const innovationHubResult = await createInnovationHub(
+    base.organization.accountId
+  );
+  const innovationHubId = innovationHubResult.data?.createInnovationHub.id;
+
+  const calloutId = base.space.collaboration.calloutPostId;
+
+  // corr-ts-33: a REAL AuthorizationPolicy id for A3's
+  // `authorizationPolicyResetToGlobalAdminsAccess` (see the field doc on
+  // `MatrixFixtures.a3AuthorizationPolicyId`). `CalloutDetails` is used
+  // because its fragment is one of the few that already selects
+  // `authorization { id }` — no codegen change needed.
+  const calloutDetails = await getGraphqlClient().CalloutDetails(
+    { calloutId },
+    {
+      authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}`,
+    }
+  );
+  const a3AuthorizationPolicyId =
+    calloutDetails.data?.lookup.callout?.authorization?.id;
+  if (!a3AuthorizationPolicyId) {
+    // Loud, not silent: an empty id here would put A3's ALLOW cell straight
+    // back into the post-gate-EntityNotFound failure mode corr-ts-33 fixed,
+    // and the cell would once again look like an authorization result.
+    throw new Error(
+      `platform-roles fixtures: could not resolve an AuthorizationPolicy id from callout ${calloutId} — A3's reset target would be empty (corr-ts-33).`
+    );
+  }
+  // Uses a dedicated document (createContributionOnCalloutId.graphql) that
+  // selects the CONTRIBUTION's own `id` — the shared `ContributionsData`
+  // fragment `createPostOnCallout` otherwise uses selects the wrapped
+  // Post's `id`, not the CalloutContribution's, and A8/A9 need the latter.
+  const contributionResult = await getGraphqlClient().createContributionOnCalloutId(
+    {
+      contributionData: {
+        calloutID: calloutId,
+        type: CalloutContributionType.Post,
+        post: {
+          profileData: { displayName: `matrix-post-${runId}` },
+        },
+      },
+    },
+    { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
+  );
+  const contributionId = contributionResult.data?.createContributionOnCallout.id;
+
+  // A second callout in the same space — the move destination.
+  const secondCalloutResult = await createCalloutOnCalloutsSet(
+    base.space.collaboration.calloutsSetId,
+    {
+      framing: {
+        profile: { displayName: `matrix-callout-2-${runId}` },
+      },
+    }
+  );
+  const secondCalloutId = secondCalloutResult.data?.createCalloutOnCalloutsSet?.id;
+
+  const templateResult = await getGraphqlClient().CreateTemplate(
+    {
+      templatesSetId: base.innovationPack!.templatesSetId,
+      profileData: { displayName: `matrix-template-${runId}` },
+      type: GeneratedTemplateType.Post,
+      postDefaultDescription: 'matrix fixture template body',
+    },
+    { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
+  );
+  const templateId = templateResult.data?.createTemplate.id;
+
+  // A7's SPACE-derived template + its content space. `templateId` above is a
+  // POST template, and two A7 surfaces cannot use one:
+  //
+  //   `updateTemplateFromSpace` — `template.service.ts` throws
+  //     `RelationshipNotFoundException` ("not all entities are loaded") unless
+  //     the template has BOTH `contentSpace` and `contentSpace.collaboration`;
+  //     a post template has neither.
+  //   `createTemplateFromContentSpace` — its `contentSpaceID` argument is a
+  //     TemplateContentSpace id, NOT a Space id. Passing `spaceId` made
+  //     `getTemplateContentSpaceOrFail` throw `ENTITY_NOT_FOUND` before the
+  //     read gate, so both cells were red for a fixture reason at every role
+  //     (2026-08-06 live run).
+  // Source is the fixture's L1 subspace, NOT `base.space.id`. The mutation
+  // deep-copies the source space into a TemplateContentSpace, and against the
+  // fully-populated L0 (callouts, contributions, whiteboards, an L1 and an L2
+  // beneath it) the request never returned — the whole `beforeAll` died on a
+  // socket hang-up and took all 2023 cells with it (2026-08-06, reproduced
+  // twice). `space-templates.it-spec.ts` has always sourced its own space
+  // templates from a subspace for the same reason.
+  //
+  // Wrapped: if the copy fails anyway, the two A7 cells below fall back to
+  // failing on empty ids — the state before this fixture existed — rather
+  // than taking the entire matrix down with them.
+  let a7SpaceTemplateId = '';
+  let a7TemplateContentSpaceId = '';
+  try {
+    const a7SpaceTemplateResult =
+      await getGraphqlClient().CreateTemplateFromSpace(
+        {
+          templatesSetId: base.innovationPack!.templatesSetId,
+          profileData: { displayName: `matrix-a7-space-template-${runId}` },
+          spaceId: subspaceId,
+        },
+        {
+          authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}`,
+        }
+      );
+    a7SpaceTemplateId =
+      a7SpaceTemplateResult.data?.createTemplateFromSpace?.id ?? '';
+    a7TemplateContentSpaceId =
+      a7SpaceTemplateResult.data?.createTemplateFromSpace?.contentSpace?.id ??
+      '';
+  } catch {
+    // Deliberately swallowed — see above.
+  }
+
+  const licensePlansResult = await getLicensePlans();
+  const licensePlanId =
+    licensePlansResult.data?.platform.licensingFramework.plans[0]?.id;
+  const licensingFrameworkId =
+    licensePlansResult.data?.platform.licensingFramework.id;
+
+  // A12's ACCOUNT-scoped assign/revoke target. The seeded `licensePlanId`
+  // above is space-scoped, and `AdminLicensingService` rejects a non-account
+  // plan ("License Plan is not for Accounts: space-feature-flag") after the
+  // privilege check has already passed — a fixture red wearing an
+  // authorization verdict. A13's plans below are SPACE_PLAN and cannot stand
+  // in for this one.
+  const a12AccountPlanResult = await getGraphqlClient().CreateLicensePlan(
+    {
+      LicensePlan: {
+        licensingFrameworkID: licensingFrameworkId ?? '',
+        name: `matrix-a12-account-plan-${runId}`,
+        licenseCredential:
+          LicensingCredentialBasedCredentialType.AccountLicensePlus,
+        type: LicensingCredentialBasedPlanType.AccountPlan,
+        enabled: true,
+        isFree: true,
+        assignToNewOrganizationAccounts: false,
+        assignToNewUserAccounts: false,
+        requiresContactSupport: false,
+        requiresPaymentMethod: false,
+        sortOrder: 999,
+        trialEnabled: false,
+      },
+    },
+    { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
+  );
+  const a12AccountLicensePlanId =
+    a12AccountPlanResult.data?.createLicensePlan?.id ?? '';
+
+  // A13's disposable delete/update target — a plan CREATED by this fixture
+  // set, never the platform-seeded `licensePlanId` above (corr-ts-7). A12's
+  // space-scoped assign/revoke helpers keep using the seeded plan; only A13's
+  // Delete/UpdateLicensePlan helpers use this one.
+  const a13LicensePlanResult = await getGraphqlClient().CreateLicensePlan(
+    {
+      LicensePlan: {
+        licensingFrameworkID: licensingFrameworkId ?? '',
+        name: `matrix-a13-plan-${runId}`,
+        licenseCredential: LicensingCredentialBasedCredentialType.SpaceLicensePlus,
+        type: LicensingCredentialBasedPlanType.SpacePlan,
+        enabled: true,
+        isFree: true,
+        assignToNewOrganizationAccounts: false,
+        assignToNewUserAccounts: false,
+        requiresContactSupport: false,
+        requiresPaymentMethod: false,
+        sortOrder: 999,
+        trialEnabled: false,
+      },
+    },
+    { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
+  );
+  const a13DeletableLicensePlanId =
+    a13LicensePlanResult.data?.createLicensePlan?.id ?? '';
+
+  const a13UpdatablePlanResult = await getGraphqlClient().CreateLicensePlan(
+    {
+      LicensePlan: {
+        licensingFrameworkID: licensingFrameworkId ?? '',
+        name: `matrix-a13-updatable-plan-${runId}`,
+        licenseCredential: LicensingCredentialBasedCredentialType.SpaceLicensePlus,
+        type: LicensingCredentialBasedPlanType.SpacePlan,
+        enabled: true,
+        isFree: true,
+        assignToNewOrganizationAccounts: false,
+        assignToNewUserAccounts: false,
+        requiresContactSupport: false,
+        requiresPaymentMethod: false,
+        sortOrder: 999,
+        trialEnabled: false,
+      },
+    },
+    { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
+  );
+  const a13UpdatableLicensePlanId =
+    a13UpdatablePlanResult.data?.createLicensePlan?.id ?? '';
+
+  // A13's `adminLicensePolicyDeleteCredentialRule`/`adminLicensePolicyUpdateCredentialRule`
+  // disposable targets (corr-ts-23 fix) — credential RULES, not license
+  // PLANS: the two id spaces are unrelated and the resolver's post-gate
+  // lookup throws EntityNotFoundException for a plan id regardless of
+  // authorization. Two separate rules, same census-order reasoning as the
+  // two license plans above (every Delete cell runs before any Update
+  // cell).
+  const a13DeletableCredentialRuleResult =
+    await getGraphqlClient().adminLicensePolicyCreateCredentialRule(
+      {
+        createData: {
+          name: `matrix-a13-rule-delete-${runId}`,
+          credentialType: LicensingCredentialBasedCredentialType.SpaceLicensePlus,
+          grantedEntitlements: [
+            { type: LicenseEntitlementType.SpaceFlagSaveAsTemplate, limit: 1 },
+          ],
+        },
+      },
+      { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
+    );
+  const a13DeletableCredentialRuleId =
+    a13DeletableCredentialRuleResult.data?.adminLicensePolicyCreateCredentialRule
+      ?.id ?? '';
+
+  const a13UpdatableCredentialRuleResult =
+    await getGraphqlClient().adminLicensePolicyCreateCredentialRule(
+      {
+        createData: {
+          name: `matrix-a13-rule-update-${runId}`,
+          credentialType: LicensingCredentialBasedCredentialType.SpaceLicensePlus,
+          grantedEntitlements: [
+            { type: LicenseEntitlementType.SpaceFlagSaveAsTemplate, limit: 1 },
+          ],
+        },
+      },
+      { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
+    );
+  const a13UpdatableCredentialRuleId =
+    a13UpdatableCredentialRuleResult.data?.adminLicensePolicyCreateCredentialRule
+      ?.id ?? '';
+
+  // ===== A8's five disposable delete targets (corr-ts-1) =====
+  // A separate callout in the SAME collaboration for `deleteCallout` — never
+  // `secondCalloutId` (A9's move destination) or `calloutId` (A9's
+  // `transferCallout` source, A8's OWN `updateCalloutPublishInfo` target).
+  const a8CalloutResult = await createCalloutOnCalloutsSet(
+    base.space.collaboration.calloutsSetId,
+    {
+      framing: {
+        profile: { displayName: `matrix-a8-callout-${runId}` },
+      },
+    }
+  );
+  const a8DeletableCalloutId =
+    a8CalloutResult.data?.createCalloutOnCalloutsSet?.id ?? '';
+
+  // A separate contribution inside `calloutId` — a DIFFERENT callout from
+  // the one `a8DeletableCalloutId` above deletes, so `deleteCallout` cannot
+  // take this contribution's container down with it, and never
+  // `contributionId` (A9's `moveContributionToCallout` source).
+  const a8ContributionResult = await getGraphqlClient().createContributionOnCalloutId(
+    {
+      contributionData: {
+        calloutID: calloutId,
+        type: CalloutContributionType.Post,
+        post: {
+          profileData: { displayName: `matrix-a8-post-${runId}` },
+        },
+      },
+    },
+    { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
+  );
+  const a8DeletableContributionId =
+    a8ContributionResult.data?.createContributionOnCallout.id ?? '';
+
+  // A separate space — never `spaceId` (every other A-row's shared target).
+  const a8DeletableSpaceId = await createSpaceBasicDataOrFail(
+    `matrix a8 space ${runId}`,
+    `matrixa8sp${runId}`,
+    base.organization.accountId
+  );
+
+  // A separate innovation pack — never `innovationPackId` (A7's
+  // update target, A9's `TransferInnovationPackToAccount` target).
+  const a8PackResult = await createInnovationPack(
+    base.organization.accountId,
+    `matrix a8 pack ${runId}`,
+    `matrixa8pk${runId}`
+  );
+  const a8DeletableInnovationPackId =
+    a8PackResult.data?.createInnovationPack?.id ?? '';
+
+  // A separate innovation hub — never `innovationHubId` (A7's update
+  // target, A9's `transferInnovationHubToAccount` target).
+  const a8HubResult = await createInnovationHub(base.organization.accountId);
+  const a8DeletableInnovationHubId =
+    a8HubResult.data?.createInnovationHub.id ?? '';
+
+  // ===== A15/A16's dedicated probe spaces (corr-ts-4) =====
+  // A15: PRIVATE + `allowPlatformSupportAsAdmin: true` — isolates the
+  // condition-gated READ_ABOUT grant from plain READ.
+  const a15ConditionSpaceId = await createSpaceBasicDataOrFail(
+    `matrix a15 condition ${runId}`,
+    `matrixa15c${runId}`,
+    base.organization.accountId
+  );
+  await updateSpaceSettings(
+    a15ConditionSpaceId,
+    { privacy: { mode: SpacePrivacyMode.Private, allowPlatformSupportAsAdmin: true } },
+    TestUser.GLOBAL_ADMIN
+  );
+
+  // A16: PRIVATE, no condition set — isolates plain READ reached only
+  // through a GLOBAL mechanism (root cascade / platform-spaces-reader's
+  // own grant), never through space membership or the A15 condition.
+  const a16PrivateSpaceId = await createSpaceBasicDataOrFail(
+    `matrix a16 private ${runId}`,
+    `matrixa16p${runId}`,
+    base.organization.accountId
+  );
+  await updateSpaceSettings(
+    a16PrivateSpaceId,
+    { privacy: { mode: SpacePrivacyMode.Private, allowPlatformSupportAsAdmin: false } },
+    TestUser.GLOBAL_ADMIN
+  );
+
+  // A16's `platform-spaces-reader` READ grant is computed into each space's
+  // OWN authorization policy (`createPlatformRolesAccess`,
+  // `space.service.platform.roles.access.ts`) — recompute it platform-wide
+  // right after creating these two fresh spaces so their policies reflect
+  // that grant before the matrix reads them (live-verification finding,
+  // 2026-07-30: a freshly-created space's `platformRolesAccess` grants were
+  // observed not yet reflected in its authorization policy at read time).
+  await getGraphqlClient().authorizationPlatformRolesAccessReset(
+    {},
+    { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
+  );
+
+  const forumResult = await getPlatformForumData();
+  const forumId = forumResult.data?.platform.forum.id;
+  const discussionResult = await createDiscussion(
+    forumId ?? '',
+    `matrix-discussion-${runId}`
+  );
+  const discussionId = discussionResult.data?.createDiscussion.id;
+
+  // corr-ts-36 (2026-07-31): `discussionId` was stored as `discussionId ?? ''`
+  // with no signal, and `createDiscussion` fails on EVERY fixture build
+  // (7/7 observed) against a server without alkem-io/server#6321 — a null
+  // `user.profile` makes the forum-discussion notification payload throw at
+  // `notification.external.adapter.ts:1255`, and the mutation returns that
+  // as a GraphQL error. A15's target was therefore the empty string in every
+  // run of every spec in this directory.
+  //
+  // Not thrown, deliberately: today that would red nine currently-green spec
+  // files for a defect that is neither theirs nor this feature's, and which
+  // #6321 already fixes on `develop`. Warn loudly instead, so the fixture
+  // stops being silent about handing out an id that cannot resolve. **Turn
+  // this into a throw once #6321 has merged** — at that point a failure here
+  // is a real regression, and `?? ''` is exactly the "wrong kind of id past
+  // the gate" class this suite keeps rediscovering.
+  if (!discussionId) {
+    console.error(
+      `[platform-roles fixtures] createDiscussion FAILED — A15's forum target will be an empty id, so any A15 cell that dereferences it fails POST-GATE and looks like an authorization result. Cause (expected until alkem-io/server#6321 lands): ${JSON.stringify(
+        discussionResult.error?.errors ?? discussionResult.error ?? 'unknown'
+      )}`
+    );
+  }
+
+  // The generic target user — nonSpaceMember never holds any
+  // `Platform …`/`Feature …` role, so it is safe as the object of every
+  // user-directed admin mutation without perturbing the matrix's own
+  // fixtures (test.user.ts, T003).
+  const targetUser = TestUserManager.getUserModelByType(
+    TestUser.NON_SPACE_MEMBER
+  );
+
+  // HARDENING (2026-07-29 live-verification finding): `targetUser` is a
+  // long-lived, shared TestUser fixture — a probe elsewhere in this run (or
+  // an earlier run against this same environment) can leave it holding a
+  // stray Platform-family role if it granted one and threw before revoking.
+  // `immediacy.it-spec.ts`'s grant/revoke round trip needs the target to
+  // start role-free to prove FR-031 (a real residual role there produces an
+  // exclusivity rejection that looks like — but is not — the property under
+  // test). Best-effort, one call per target role: a revoke of a role never
+  // held is expected to no-op or error harmlessly either way.
+  const rolesAdminTokenForCleanup = TestUserManager.getUserModelByType(
+    TestUser.PLATFORM_ROLES_ADMIN
+  ).authToken;
+  for (const role of TARGET_ROLES) {
+    try {
+      await getGraphqlClient().removePlatformRoleFromUser(
+        { roleData: { actorID: targetUser.id, role } },
+        { authorization: `Bearer ${rolesAdminTokenForCleanup}` }
+      );
+    } catch {
+      // best-effort — the role was most likely never held
+    }
+  }
+
+  // sec-test-suites-21: snapshot the platform's CHAT_GUIDANCE well-known VC
+  // BEFORE any A10 cell runs, so teardown can put it back. Read through the
+  // raw request helper rather than the generated SDK: `platform.
+  // wellKnownVirtualContributors` has no codegen'd query in this repo, and
+  // regenerating the SDK to restore one field is a far larger change than
+  // the leak it fixes.
+  let wellKnownChatGuidanceVcIdBefore: string | null = null;
+  try {
+    const wellKnownResponse = await graphqlRequestAuth(
+      {
+        query:
+          'query { platform { wellKnownVirtualContributors { mappings { wellKnown virtualContributorID } } } }',
+      },
+      TestUser.GLOBAL_ADMIN
+    );
+    const mappings =
+      wellKnownResponse.body?.data?.platform?.wellKnownVirtualContributors
+        ?.mappings ?? [];
+    wellKnownChatGuidanceVcIdBefore =
+      mappings.find(
+        (mapping: { wellKnown?: string }) =>
+          mapping.wellKnown === 'CHAT_GUIDANCE'
+      )?.virtualContributorID ?? null;
+  } catch {
+    // Leave it null — teardown then restores nothing, which is strictly
+    // better than restoring a value we never actually observed.
+  }
+
+  const virtualAssistantResult = await getGraphqlClient().platformAdminVirtualAssistant(
+    {},
+    { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
+  );
+  const virtualAssistantId =
+    virtualAssistantResult.data?.platformAdmin.virtualAssistant.id;
+
+  return {
+    base,
+    organizationId: base.organization.id,
+    organizationAccountId: base.organization.accountId,
+    secondOrganizationId: secondOrg?.id ?? '',
+    secondOrganizationAccountId: secondOrg?.account?.id ?? '',
+    secondOrganizationRoleSetId: secondOrg?.roleSet?.id ?? '',
+    spaceId: base.space.id,
+    spaceCollaborationId: base.space.collaboration.id,
+    calloutId,
+    a3AuthorizationPolicyId,
+    contributionId: contributionId ?? '',
+    secondCalloutId: secondCalloutId ?? '',
+    innovationPackId: base.innovationPack?.id ?? '',
+    templatesSetId: base.innovationPack?.templatesSetId ?? '',
+    templateId: templateId ?? '',
+    a7SpaceTemplateId,
+    a7TemplateContentSpaceId,
+    innovationHubId: innovationHubId ?? '',
+    virtualContributorId: base.virtualContributors?.[0]?.id ?? '',
+    a9ConvertVcSourceId:
+      a9ConvertVcSourceId || (base.virtualContributors?.[0]?.id ?? ''),
+    virtualAssistantId: virtualAssistantId ?? '',
+    wellKnownChatGuidanceVcIdBefore,
+    communityId: base.space.community.id,
+    licensePlanId: licensePlanId ?? '',
+    a12AccountLicensePlanId,
+    forumId: forumId ?? '',
+    discussionId: discussionId ?? '',
+    targetUserId: targetUser.id,
+    targetUserEmail: targetUser.email,
+    kratosIdentityIdPlaceholder: '00000000-0000-4000-8000-000000000000',
+    roomIdPlaceholder: '00000000-0000-4000-8000-000000000001',
+    a9TargetSpaceL0Id,
+    subspaceId,
+    deletableUserId,
+    rolesProbeUserId,
+    emailChangeTargetUserId,
+    emailChangeTargetUserEmail,
+    accountDeleteTargetUserId,
+    a8DeletableSpaceId,
+    a8DeletableCalloutId,
+    a8DeletableContributionId,
+    a8DeletableInnovationPackId,
+    a8DeletableInnovationHubId,
+    a13DeletableLicensePlanId,
+    a13UpdatableLicensePlanId,
+    a13DeletableCredentialRuleId,
+    a13UpdatableCredentialRuleId,
+    a15ConditionSpaceId,
+    a16PrivateSpaceId,
+    a6DeletableOrganizationId,
+    licensingFrameworkId: licensingFrameworkId ?? '',
+    a9SecondSubspaceId,
+    a9L1MoveTargetId,
+    a9L2Id,
+    a9L2MoveSourceL1Id,
+    a9ConvertL1ToL0SourceId,
+    a9ConvertL1ToL2ParentId,
+    a9ConvertL1ToL2SourceId,
+    a9ConvertL2ToL1SourceId,
+    a9TransferCalloutTargetCalloutsSetId,
+  };
+}
+
+/**
+ * qual-ts-27 (2026-07-31): teardown's organization deletes were bare
+ * `try {} catch {}`, so a failure left an orphan organization + its account
+ * on a SHARED environment and said nothing. Observed 7/7 runs of the rules
+ * suite failing with *"Unable to delete Organization: account contain one or
+ * more resources"* — one per spec file, silently, every run, accumulating.
+ *
+ * The leak is not fixed by ignoring it harder. Deleting an organization
+ * requires its account to be empty, and which resource is still hosted
+ * depends on which ALLOW cells ran (several MOVE resources between accounts,
+ * which is the point of them). So this reports the blocking server error
+ * with the organization it belongs to, turning a silent leak into an
+ * actionable line in the log.
+ *
+ * Still non-fatal: T017's completeness check is what must be trustworthy,
+ * and failing a green suite on ordinary cleanup would hide real signal.
+ *
+ * @param expectAlreadyDeleted suppresses the report for fixtures an ALLOW
+ *   cell is SUPPOSED to have deleted — there, failure is the success case.
+ */
+async function deleteOrganizationOrReport(
+  organizationId: string,
+  label: string,
+  options: { expectAlreadyDeleted?: boolean } = {}
+): Promise<void> {
+  if (!organizationId) {
+    return;
+  }
+  const result = await getGraphqlClient()
+    .deleteOrganization(
+      { deleteData: { ID: organizationId } },
+      { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
+    )
+    .then(
+      () => undefined,
+      (error: unknown) => error
+    );
+  if (!result || options.expectAlreadyDeleted) {
+    return;
+  }
+  console.error(
+    `[platform-roles fixtures] LEAKED organization ${label} (${organizationId}) — it and its account remain on this environment. Cause: ${
+      result instanceof Error ? result.message : JSON.stringify(result)
+    }`
+  );
+}
+
+export async function teardownMatrixFixtures(
+  fixtures: MatrixFixtures
+): Promise<void> {
+  // sec-test-suites-21 (2026-07-31): restore the platform-wide CHAT_GUIDANCE
+  // mapping FIRST, before this teardown deletes the fixture VC that A10's
+  // ALLOW cell re-pointed it at. Ordering is the whole fix: restoring after
+  // the delete would leave the window open anyway, and doing neither left
+  // the platform's chat guidance pointing at a deleted entity after every
+  // single run of this suite on a shared environment.
+  //
+  // Note the other half of sec-test-suites-21 is NOT a defect:
+  // A10's `updatePlatformSettings({ settingsData: {} })` is a MERGE
+  // (`platform.settings.service.ts` only assigns keys present on
+  // `updateData.integration`), so an empty input changes nothing. Verified
+  // by reading the service, 2026-07-31 — left as-is deliberately.
+  if (fixtures.wellKnownChatGuidanceVcIdBefore) {
+    try {
+      await getGraphqlClient().setPlatformWellKnownVirtualContributor(
+        {
+          mappingData: {
+            virtualContributorID: fixtures.wellKnownChatGuidanceVcIdBefore,
+            wellKnown: VirtualContributorWellKnown.ChatGuidance,
+          },
+        },
+        {
+          authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}`,
+        }
+      );
+    } catch (error) {
+      console.error(
+        `[platform-roles fixtures] FAILED to restore the platform CHAT_GUIDANCE well-known Virtual Contributor to ${fixtures.wellKnownChatGuidanceVcIdBefore} — the platform-wide mapping may now point at a deleted fixture VC. Cause: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
+  }
+
+  // `subspaceId` is not tracked on `fixtures.base` (it was created ad hoc,
+  // outside `TestScenarioFactory`'s own subspace bookkeeping), so it must be
+  // torn down explicitly and BEFORE the parent space below — deletion here
+  // does not cascade to children. Best-effort: an ALLOW-cell run may have
+  // already moved it out from under `spaceId` (that is the point of the A9
+  // fixture), but `deleteSpace` takes it by ID regardless of current parent.
+  try {
+    await deleteSpace(fixtures.subspaceId);
+  } catch {
+    // best-effort cleanup
+  }
+
+  // corr-ts-34: A9's dedicated convert-source VC. Best-effort — the convert
+  // ALLOW cell may have already changed its body-of-knowledge kind, which
+  // does not prevent deletion, and a denial-only run may never have created
+  // it.
+  if (fixtures.a9ConvertVcSourceId) {
+    try {
+      await getGraphqlClient().DeleteVirtualContributorOnAccount(
+        { virtualContributorData: { ID: fixtures.a9ConvertVcSourceId } },
+        {
+          authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}`,
+        }
+      );
+    } catch {
+      // best-effort cleanup
+    }
+  }
+
+  // corr-ts-18's dedicated A9 L1/L2 tree — same reasoning as `subspaceId`
+  // above (not tracked by `TestScenarioFactory`, best-effort, order-
+  // independent of current parent). Deepest first, then the L1s.
+  // corr-ts-32 added `a9L2MoveSourceL1Id`; after the ALLOW cells run, both
+  // `a9SecondSubspaceId` and `a9L2Id` live under `a9L1MoveTargetId` in the
+  // OTHER L0, so that one is deleted last.
+  try {
+    await deleteSpace(fixtures.a9L2Id);
+  } catch {
+    // best-effort cleanup
+  }
+  try {
+    await deleteSpace(fixtures.a9L2MoveSourceL1Id);
+  } catch {
+    // best-effort cleanup
+  }
+  try {
+    await deleteSpace(fixtures.a9SecondSubspaceId);
+  } catch {
+    // best-effort cleanup
+  }
+  try {
+    await deleteSpace(fixtures.a9L1MoveTargetId);
+  } catch {
+    // best-effort cleanup
+  }
+
+  // corr-ts-20/qual-ts-17's dedicated A9 conversion tree — same reasoning
+  // (not tracked by `TestScenarioFactory`, best-effort, order-independent
+  // of current level/parent). The L2 first, then its L1s.
+  try {
+    await deleteSpace(fixtures.a9ConvertL2ToL1SourceId);
+  } catch {
+    // best-effort cleanup
+  }
+  try {
+    await deleteSpace(fixtures.a9ConvertL1ToL2SourceId);
+  } catch {
+    // best-effort cleanup
+  }
+  try {
+    await deleteSpace(fixtures.a9ConvertL1ToL2ParentId);
+  } catch {
+    // best-effort cleanup
+  }
+  try {
+    await deleteSpace(fixtures.a9ConvertL1ToL0SourceId);
+  } catch {
+    // best-effort cleanup
+  }
+
+  // corr-ts-31 fix: every resource still hosted on `base.organization`'s
+  // account MUST be torn down BEFORE `cleanUpBaseScenario` below, whose last
+  // step is `deleteOrganization(base.organization.id)` — the server's
+  // account-has-resources guard rejects that delete while ANY of these
+  // still exist, and `cleanUpBaseScenario` swallows the resulting error
+  // (TestScenarioFactory.ts), so the organization + its account + this
+  // innovation hub leaked silently on every previous run. Best-effort: a
+  // denial-only run may not have created every optional resource, and an
+  // ALLOW cell may already have deleted one of these for real (the whole
+  // point of the disposable fixture) — never fail the suite on ordinary
+  // cleanup, T017's completeness check is what must be trustworthy.
+  try {
+    await deleteSpace(fixtures.a8DeletableSpaceId);
+  } catch {
+    // best-effort cleanup
+  }
+  try {
+    await deleteSpace(fixtures.a15ConditionSpaceId);
+  } catch {
+    // best-effort cleanup
+  }
+  try {
+    await deleteSpace(fixtures.a16PrivateSpaceId);
+  } catch {
+    // best-effort cleanup
+  }
+  try {
+    await getGraphqlClient().DeleteInnovationHub(
+      { input: { ID: fixtures.innovationHubId } },
+      { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
+    );
+  } catch {
+    // best-effort cleanup
+  }
+
+  await TestScenarioFactory.cleanUpBaseScenario(fixtures.base);
+
+  // A13's two credential rules (fixtures.ts's `adminLicensePolicyCreate/
+  // UpdateCredentialRule` calls, corr-ts-31 fix) — unlike the two license
+  // PLANS above (already cleaned up), these had no teardown entry at all,
+  // so every run added at least one live rule to the platform LicensePolicy,
+  // changing entitlement computation for every other suite on the stack.
+  // Best-effort: `adminLicensePolicyDeleteCredentialRule` (A13's own ALLOW
+  // cell) may already have deleted `a13DeletableCredentialRuleId` for real.
+  try {
+    await getGraphqlClient().adminLicensePolicyDeleteCredentialRule(
+      { deleteData: { ID: fixtures.a13DeletableCredentialRuleId } },
+      { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
+    );
+  } catch {
+    // best-effort cleanup
+  }
+  try {
+    await getGraphqlClient().adminLicensePolicyDeleteCredentialRule(
+      { deleteData: { ID: fixtures.a13UpdatableCredentialRuleId } },
+      { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
+    );
+  } catch {
+    // best-effort cleanup
+  }
+
+  // best-effort — a denial-only run may not have created every optional
+  // resource; failures here must never fail the suite (T017's completeness
+  // check, not fixture teardown, is what must be trustworthy).
+  try {
+    await deleteSpace(fixtures.a9TargetSpaceL0Id);
+  } catch {
+    // best-effort cleanup
+  }
+  try {
+    await deleteUser(fixtures.deletableUserId);
+  } catch {
+    // best-effort — the ALLOW cell (platform-users-admin's deleteUser) may
+    // already have deleted it for real; that is the intended, single use.
+  }
+  try {
+    await deleteUser(fixtures.rolesProbeUserId);
+  } catch {
+    // best-effort cleanup
+  }
+  try {
+    await deleteUser(fixtures.emailChangeTargetUserId);
+  } catch {
+    // best-effort cleanup
+  }
+  try {
+    await deleteUser(fixtures.accountDeleteTargetUserId);
+  } catch {
+    // best-effort — the ALLOW cell (A5's adminUserAccountDelete) may
+    // already have deleted it for real; that is the intended, single use.
+  }
+  await deleteOrganizationOrReport(
+    fixtures.secondOrganizationId,
+    'secondOrganization (hosts a9TargetSpaceL0Id + the A9 move targets)'
+  );
+  // corr-ts-12's dedicated A6 delete target — the whole point of this
+  // fixture is that the ALLOW cell (platform-support's `deleteOrganization`)
+  // may already have deleted it for real, so an "already gone" failure here
+  // is EXPECTED and is not reported.
+  await deleteOrganizationOrReport(
+    fixtures.a6DeletableOrganizationId,
+    "a6DeletableOrganization (A6's disposable delete target)",
+    { expectAlreadyDeleted: true }
+  );
+
+  // A8's disposable delete targets (corr-ts-1) — best-effort: the whole
+  // point of these fixtures is that an ALLOW cell may already have deleted
+  // one of them for real. `a8DeletableSpaceId` itself is torn down ABOVE,
+  // before `cleanUpBaseScenario` (corr-ts-31 fix — it lives on the base
+  // organization's account).
+  try {
+    await getGraphqlClient().deleteCallout(
+      { calloutId: fixtures.a8DeletableCalloutId },
+      { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
+    );
+  } catch {
+    // best-effort cleanup
+  }
+  try {
+    await getGraphqlClient().deleteInnovationPack(
+      { innovationPackId: fixtures.a8DeletableInnovationPackId },
+      { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
+    );
+  } catch {
+    // best-effort cleanup
+  }
+  try {
+    await getGraphqlClient().DeleteInnovationHub(
+      { input: { ID: fixtures.a8DeletableInnovationHubId } },
+      { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
+    );
+  } catch {
+    // best-effort cleanup
+  }
+
+  // A12's disposable account-scoped plan.
+  try {
+    await getGraphqlClient().DeleteLicensePlan(
+      { LicensePlan: { ID: fixtures.a12AccountLicensePlanId } },
+      { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
+    );
+  } catch {
+    // best-effort cleanup
+  }
+
+  // A13's disposable license plans (corr-ts-7).
+  try {
+    await getGraphqlClient().DeleteLicensePlan(
+      { LicensePlan: { ID: fixtures.a13DeletableLicensePlanId } },
+      { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
+    );
+  } catch {
+    // best-effort — the ALLOW cell (A13's DeleteLicensePlan) may already
+    // have deleted it for real; that is the intended, single use.
+  }
+  try {
+    await getGraphqlClient().DeleteLicensePlan(
+      { LicensePlan: { ID: fixtures.a13UpdatableLicensePlanId } },
+      { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
+    );
+  } catch {
+    // best-effort cleanup
+  }
+
+  // A15/A16's dedicated probe spaces (corr-ts-4) are torn down ABOVE, before
+  // `cleanUpBaseScenario` (corr-ts-31 fix — both live on the base
+  // organization's account).
+}

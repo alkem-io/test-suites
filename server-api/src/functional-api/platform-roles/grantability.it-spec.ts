@@ -1,0 +1,663 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { getGraphqlClient, TestUser, TestUserManager } from '@alkemio/tests-lib';
+import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
+import type { GraphQLReturnType } from '@alkemio/tests-lib/utils/graphql.wrapper';
+import { buildMatrixFixtures, teardownMatrixFixtures } from './fixtures';
+import type { MatrixFixtures } from './fixtures';
+import { TARGET_ROLES } from './role-action-matrix.data';
+import { isAuthorizationDenial } from './surface-invocations';
+
+/**
+ * workspace#027-platform-role-redesign — [US4/US3].
+ *
+ * T012 (SC-009): every role in the target model is grantable AND revocable
+ * through the platform's own assignment surface to the holder kinds its set
+ * allows, and a freshly-granted holder actually receives the capability.
+ * The service-account boot path and the "seeding is not a bypass" negative
+ * case (FR-013) are asserted at the end of that describe block. They were
+ * originally deferred to Phase V as "needs a fresh stack start" (research
+ * D25); spec-ts-23 retired that blocker on 2026-07-31 — bootstrap's seeding
+ * is durable, so its result is a pure READ on any running stack. See the
+ * comment on that test for why the holder lists, not `user.credentials`,
+ * are the surface used.
+ *
+ * T018/T018a (FR-032/SC-017): holder-list read partitioning by role SET —
+ * `Platform …` lists readable by `platform-roles-admin` +
+ * `platform-audit-reader` only; `Feature …` lists ALSO readable by
+ * `platform-users-admin`; a MIXED list naming both a `feature-*` and a
+ * `platform-*` role is rejected wholesale (fail-closed), never a partial
+ * Feature-only result.
+ *
+ * T019 (FR-028/SC-014): the audit trail is readable by `platform-audit-reader`
+ * alone — denied to every other role, INCLUDING Platform Roles Admin (the
+ * D23 capability withdrawal). All three A19 surfaces: the MCP tool
+ * (no client wired in this repo — Phase V, same gap noted in T007b) and the
+ * two GraphQL fields, asserted here.
+ */
+
+let fixtures: MatrixFixtures;
+
+beforeAll(async () => {
+  fixtures = await buildMatrixFixtures();
+}, 300_000);
+
+afterAll(async () => {
+  if (fixtures) {
+    await teardownMatrixFixtures(fixtures);
+  }
+});
+
+const asUser = <TData>(
+  fn: (authToken: string | undefined) => GraphQLReturnType<TData>,
+  user: TestUser
+) => graphqlErrorWrapper(fn, user);
+
+const FEATURE_ROLES: readonly RoleName[] = [
+  RoleName.FeatureBetaTester,
+  RoleName.FeatureOrganizationCreator,
+  RoleName.FeatureVirtualAssistant,
+];
+
+describe('grantability (T012, SC-009) — every target role is grantable + revocable through the platform surface', () => {
+  it('every one of the 13 target roles round-trips: grant -> holder list shows it -> revoke -> holder list no longer shows it', async () => {
+    const rolesAdminToken = TestUserManager.getUserModelByType(
+      TestUser.PLATFORM_ROLES_ADMIN
+    ).authToken;
+
+    // sec-test-suites-18 fix: EVERY role in this loop targets the
+    // disposable, per-file-fresh `fixtures.rolesProbeUserId` — never
+    // `fixtures.targetUserId` (`TestUser.NON_SPACE_MEMBER`, a long-lived
+    // identity 68+ other spec files across this project run authenticate
+    // as, several asserting it is DENIED various privileges). The FIRST
+    // role in `TARGET_ROLES` is `platform-roles-admin` — the authority to
+    // grant every one of the 13 platform roles to anybody — so a thrown
+    // assertion (a flaky holder-list read, live-verification's documented
+    // grant/read propagation lag) between grant and revoke must never be
+    // able to leave that on the shared fixture.
+    for (const role of TARGET_ROLES) {
+      const targetId = fixtures.rolesProbeUserId;
+      const isSpacesReader = role === RoleName.PlatformSpacesReader;
+
+      if (isSpacesReader) {
+        // `platform-spaces-reader` is the one role `evaluateOrFail()` rule 3
+        // rejects for any holder whose `serviceProfile` is not `true`
+        // (corr-ts-2). `updateUserServiceProfile`, not the heavy
+        // `updateUser` — see `surface-invocations.ts`'s A21 helper for why:
+        // the full `UserData` fragment echoes the target's private
+        // `settings`, independently privilege-gated, and failing THAT read
+        // must not read as this write being rejected.
+        const markerSet = await getGraphqlClient().updateUserServiceProfile(
+          { userData: { ID: targetId, serviceProfile: true } },
+          { authorization: `Bearer ${rolesAdminToken}` }
+        );
+        expect(
+          markerSet.errors,
+          'setting serviceProfile on the disposable spaces-reader target should succeed'
+        ).toBeUndefined();
+      }
+
+      const grant = await getGraphqlClient().assignPlatformRoleToUser(
+        { roleData: { actorID: targetId, role } },
+        { authorization: `Bearer ${rolesAdminToken}` }
+      );
+      expect(grant.errors, `grant of ${role} should succeed`).toBeUndefined();
+
+      // sec-test-suites-18 fix: try/finally around the post-grant assertion
+      // + the meaningful revoke assertion, mirroring the two-person-path
+      // test below — a thrown `holders` assertion still triggers a
+      // best-effort revoke, so the loop's NEXT iteration (and every other
+      // file authenticating as this identity) never observes a residual
+      // grant. Guarded by `revoked` so the finally block never double-fires
+      // the (already-asserted) revoke on the happy path.
+      let revoked = false;
+      try {
+        const holders = await getGraphqlClient().platformRoleSetUsersInRole(
+          { role },
+          { authorization: `Bearer ${rolesAdminToken}` }
+        );
+        expect(
+          holders.data?.platform.roleSet.usersInRole.some(
+            u => u.id === targetId
+          ),
+          `freshly-granted holder should appear in ${role}'s holder list`
+        ).toBe(true);
+
+        const revoke = await getGraphqlClient().removePlatformRoleFromUser(
+          { roleData: { actorID: targetId, role } },
+          { authorization: `Bearer ${rolesAdminToken}` }
+        );
+        expect(
+          revoke.errors,
+          `revoke of ${role} should succeed`
+        ).toBeUndefined();
+        revoked = true;
+      } finally {
+        if (!revoked) {
+          await getGraphqlClient()
+            .removePlatformRoleFromUser(
+              { roleData: { actorID: targetId, role } },
+              { authorization: `Bearer ${rolesAdminToken}` }
+            )
+            .catch(() => {
+              // best-effort cleanup — the failed assertion above is the
+              // real test failure; this only prevents the residue from
+              // poisoning every later iteration/file.
+            });
+        }
+      }
+    }
+  });
+
+  it('each `feature-*` role is grantable and revocable to an ORGANIZATION holder', async () => {
+    const rolesAdminToken = TestUserManager.getUserModelByType(
+      TestUser.PLATFORM_ROLES_ADMIN
+    ).authToken;
+
+    for (const role of FEATURE_ROLES) {
+      const grant = await getGraphqlClient().assignPlatformRoleToOrganization(
+        {
+          roleData: { actorID: fixtures.secondOrganizationId, role },
+        },
+        { authorization: `Bearer ${rolesAdminToken}` }
+      );
+      expect(
+        grant.errors,
+        `organization-target grant of ${role} should succeed`
+      ).toBeUndefined();
+
+      // sec-test-suites-18 fix: same try/finally discipline as the
+      // user-target loop above — `fixtures.secondOrganizationId` is reused
+      // by other tests in this file, so a thrown assertion here must not
+      // leave it holding a `feature-*` role into a later, unrelated test.
+      let revoked = false;
+      try {
+        const revoke =
+          await getGraphqlClient().removePlatformRoleFromOrganization(
+            {
+              roleData: { actorID: fixtures.secondOrganizationId, role },
+            },
+            { authorization: `Bearer ${rolesAdminToken}` }
+          );
+        expect(
+          revoke.errors,
+          `organization-target revoke of ${role} should succeed`
+        ).toBeUndefined();
+        revoked = true;
+      } finally {
+        if (!revoked) {
+          await getGraphqlClient()
+            .removePlatformRoleFromOrganization(
+              {
+                roleData: { actorID: fixtures.secondOrganizationId, role },
+              },
+              { authorization: `Bearer ${rolesAdminToken}` }
+            )
+            .catch(() => {
+              // best-effort cleanup
+            });
+        }
+      }
+      // The organization-subject audit row (FR-026) is Phase-V-only — no
+      // generic audit-read surface exists in this repo (see file header).
+    }
+  });
+
+  // spec-ts-23 (2026-07-31): this half of SC-009/FR-013 was cut with the
+  // blocker "needs a fresh stack start (research D25)". **That blocker is
+  // not real.** The bootstrap seeds `spaces-reader@alkem.io` ONCE, at first
+  // boot, and the result is durable — so the seeded state is observable on
+  // any already-running stack, through the very holder-list query this file
+  // already calls. Nothing here boots, restarts or mutates anything; it is
+  // a pure read of what bootstrap left behind, which is what the assertion
+  // was always about.
+  //
+  // Deliberately NOT asserted via `user.credentials`: `serviceProfile` has
+  // no GraphQL read (spec-ts-2), and the `users` query is unusable on a
+  // long-lived environment (observed 2026-07-31: one accumulated user row
+  // with no authorization policy fails the whole list with
+  // ENTITY_NOT_INITIALIZED). The holder lists are the supported surface and
+  // they answer both halves of FR-013 directly.
+  it('the bootstrap-seeded service account holds its seeded role — and ONLY that role (FR-013: seeding is not a bypass)', async () => {
+    const admin = TestUserManager.getUserModelByType(
+      TestUser.PLATFORM_ROLES_ADMIN
+    );
+
+    // `spaces-reader` is the nameID derived from `spaces-reader@alkem.io` in
+    // the server's `platform-template-definitions/user/users.json`. This is
+    // the SEEDED service account — distinct from the `platform.spacesreader`
+    // TEST fixture that `grant-single-role-fixtures.ts` creates, which also
+    // holds platform-spaces-reader and would mask a seeding regression if
+    // the two were conflated.
+    const seeded = await getGraphqlClient().GetUserByNameId(
+      { nameId: 'spaces-reader' },
+      { authorization: `Bearer ${admin.authToken}` }
+    );
+    const seededId = seeded.data?.lookupByName.user;
+    expect(
+      seededId,
+      'bootstrap seeded no `spaces-reader` service account — the service-account boot path did not run, or users.json changed'
+    ).toBeTruthy();
+
+    // T018a: a MIXED `Platform …` + `Feature …` call is rejected wholesale,
+    // so the two sets must be read separately — not a stylistic choice.
+    const platformRoles = TARGET_ROLES.filter(
+      role => !FEATURE_ROLES.includes(role)
+    );
+    const [platformHolders, featureHolders] = await Promise.all([
+      getGraphqlClient().platformRoleSetUsersInRoles(
+        { roles: [...platformRoles] },
+        { authorization: `Bearer ${admin.authToken}` }
+      ),
+      getGraphqlClient().platformRoleSetUsersInRoles(
+        { roles: [...FEATURE_ROLES] },
+        { authorization: `Bearer ${admin.authToken}` }
+      ),
+    ]);
+
+    const rolesHeldBySeeded = [
+      ...(platformHolders.data?.platform.roleSet.usersInRoles ?? []),
+      ...(featureHolders.data?.platform.roleSet.usersInRoles ?? []),
+    ]
+      .filter(entry => entry.users.some(u => u.id === seededId))
+      .map(entry => entry.role);
+
+    // Half 1 — the service-account boot path actually granted the seeded role.
+    expect(
+      rolesHeldBySeeded,
+      'the seeded service account does not hold platform-spaces-reader — the boot path granted nothing'
+    ).toContain(RoleName.PlatformSpacesReader);
+
+    // Half 2 — "seeding is not a bypass": bootstrap is a grant path like any
+    // other, not a back door. If it ever hands a service account a second
+    // platform role (platform-roles-admin above all), the platform has a
+    // god-mode account nobody assigned and no audit row explains.
+    expect(
+      rolesHeldBySeeded,
+      `the seeded service account holds MORE than its seeded role (${rolesHeldBySeeded.join(
+        ', '
+      )}) — bootstrap has become a privilege-escalation path`
+    ).toEqual([RoleName.PlatformSpacesReader]);
+  });
+});
+
+describe('self-assignment denial (T012a, spec-ts-9, FR-015)', () => {
+  // Rule 6 (self-assignment, ninth clarification pass) shipped server-side
+  // and enforced FIRST in `evaluate()`, but had ZERO coverage anywhere in
+  // this repo — nothing would notice a regression that dropped
+  // `checkSelfAssignment()` entirely. Live at stage A (the block is
+  // enforced by the rule engine itself, not by the absence of a legacy
+  // grant, so it is not one of D18's meaningless-before-Slice-B denials).
+  const rolesAdmin = () =>
+    TestUserManager.getUserModelByType(TestUser.PLATFORM_ROLES_ADMIN);
+
+  it('a Platform Roles Admin cannot grant itself a Platform role — rejected with the separation-of-duties error, and the grant does not take effect', async () => {
+    const admin = rolesAdmin();
+    const res = await asUser(
+      token =>
+        getGraphqlClient().assignPlatformRoleToUser(
+          {
+            roleData: { actorID: admin.id, role: RoleName.PlatformSupport },
+          },
+          { authorization: `Bearer ${token}` }
+        ),
+      TestUser.PLATFORM_ROLES_ADMIN
+    );
+    // spec-ts-10/qual-ts-18 fix: assert the server's literal, contiguous
+    // phrase (`platform.role.assignment.rules.service.ts`'s rejection message)
+    // rather than two separate substrings — the split form is satisfied by
+    // any message containing both fragments anywhere, which is weaker than
+    // (and desynchronized from) `matrix-completeness.it-spec.ts`'s T017d rule
+    // inventory, which greps covering specs for this exact phrase.
+    expect(res.error?.errors?.[0]?.message).toContain(
+      'self-assignment of role'
+    );
+
+    const holders = await getGraphqlClient().platformRoleSetUsersInRole(
+      { role: RoleName.PlatformSupport },
+      { authorization: `Bearer ${admin.authToken}` }
+    );
+    expect(
+      holders.data?.platform.roleSet.usersInRole.some(u => u.id === admin.id),
+      'the self-grant must not have taken effect'
+    ).toBe(false);
+  });
+
+  it('a Platform Roles Admin cannot grant itself a Feature role either', async () => {
+    const admin = rolesAdmin();
+    const res = await asUser(
+      token =>
+        getGraphqlClient().assignPlatformRoleToUser(
+          {
+            roleData: { actorID: admin.id, role: RoleName.FeatureBetaTester },
+          },
+          { authorization: `Bearer ${token}` }
+        ),
+      TestUser.PLATFORM_ROLES_ADMIN
+    );
+    // spec-ts-10/qual-ts-18 fix: assert the server's literal, contiguous
+    // phrase (`platform.role.assignment.rules.service.ts`'s rejection message)
+    // rather than two separate substrings — the split form is satisfied by
+    // any message containing both fragments anywhere, which is weaker than
+    // (and desynchronized from) `matrix-completeness.it-spec.ts`'s T017d rule
+    // inventory, which greps covering specs for this exact phrase.
+    expect(res.error?.errors?.[0]?.message).toContain(
+      'self-assignment of role'
+    );
+
+    const holders = await getGraphqlClient().platformRoleSetUsersInRole(
+      { role: RoleName.FeatureBetaTester },
+      { authorization: `Bearer ${admin.authToken}` }
+    );
+    expect(
+      holders.data?.platform.roleSet.usersInRole.some(u => u.id === admin.id)
+    ).toBe(false);
+  });
+
+  it('a Platform Roles Admin cannot revoke its OWN platform-roles-admin role via self-revocation', async () => {
+    const admin = rolesAdmin();
+    const res = await asUser(
+      token =>
+        getGraphqlClient().removePlatformRoleFromUser(
+          {
+            roleData: { actorID: admin.id, role: RoleName.PlatformRolesAdmin },
+          },
+          { authorization: `Bearer ${token}` }
+        ),
+      TestUser.PLATFORM_ROLES_ADMIN
+    );
+    // spec-ts-10/qual-ts-18 fix: assert the server's literal, contiguous
+    // phrase (`platform.role.assignment.rules.service.ts`'s rejection message)
+    // rather than two separate substrings — the split form is satisfied by
+    // any message containing both fragments anywhere, which is weaker than
+    // (and desynchronized from) `matrix-completeness.it-spec.ts`'s T017d rule
+    // inventory, which greps covering specs for this exact phrase.
+    expect(res.error?.errors?.[0]?.message).toContain(
+      'self-assignment of role'
+    );
+
+    const holders = await getGraphqlClient().platformRoleSetUsersInRole(
+      { role: RoleName.PlatformRolesAdmin },
+      { authorization: `Bearer ${admin.authToken}` }
+    );
+    expect(
+      holders.data?.platform.roleSet.usersInRole.some(u => u.id === admin.id),
+      'the fixture must still hold platform-roles-admin — self-revoke must not have taken effect'
+    ).toBe(true);
+  });
+
+  it('the two-person path works: a Platform Roles Admin CAN grant platform-roles-admin to a DIFFERENT person', async () => {
+    // Not the bootstrap-seed path (FR-013b is exempt by design and out of
+    // scope here — this repo cannot restart the stack, research D25) — an
+    // ordinary, live grant from one Roles Admin to a genuinely different
+    // target, which rule 6 must NOT block.
+    const admin = rolesAdmin();
+    const probeId = fixtures.rolesProbeUserId;
+    const grant = await getGraphqlClient().assignPlatformRoleToUser(
+      { roleData: { actorID: probeId, role: RoleName.PlatformRolesAdmin } },
+      { authorization: `Bearer ${admin.authToken}` }
+    );
+    try {
+      expect(
+        grant.errors,
+        'a non-self grant of the same role the tests above block for self must succeed'
+      ).toBeUndefined();
+      const holders = await getGraphqlClient().platformRoleSetUsersInRole(
+        { role: RoleName.PlatformRolesAdmin },
+        { authorization: `Bearer ${admin.authToken}` }
+      );
+      expect(
+        holders.data?.platform.roleSet.usersInRole.some(u => u.id === probeId)
+      ).toBe(true);
+    } finally {
+      await getGraphqlClient()
+        .removePlatformRoleFromUser(
+          { roleData: { actorID: probeId, role: RoleName.PlatformRolesAdmin } },
+          { authorization: `Bearer ${admin.authToken}` }
+        )
+        .catch(() => {
+          // best-effort cleanup
+        });
+    }
+  });
+});
+
+describe('holder-list read partitioning (T018/T018a, FR-032/SC-017)', () => {
+  it('`Platform …` holder lists: readable by platform-roles-admin', async () => {
+    const res = await asUser(
+      token =>
+        getGraphqlClient().platformRoleSetUsersInRole(
+          { role: RoleName.PlatformSupport },
+          { authorization: `Bearer ${token}` }
+        ),
+      TestUser.PLATFORM_ROLES_ADMIN
+    );
+    expect(res.error).toBeUndefined();
+  });
+
+  it('`Platform …` holder lists: readable by platform-audit-reader', async () => {
+    const res = await asUser(
+      token =>
+        getGraphqlClient().platformRoleSetUsersInRole(
+          { role: RoleName.PlatformSupport },
+          { authorization: `Bearer ${token}` }
+        ),
+      TestUser.PLATFORM_AUDIT_READER
+    );
+    expect(res.error).toBeUndefined();
+  });
+
+  it('`Platform …` holder lists: denied to platform-users-admin', async () => {
+    const res = await asUser(
+      token =>
+        getGraphqlClient().platformRoleSetUsersInRole(
+          { role: RoleName.PlatformSupport },
+          { authorization: `Bearer ${token}` }
+        ),
+      TestUser.PLATFORM_USERS_ADMIN
+    );
+    // sec-test-suites-3: assert an AUTHORIZATION denial specifically
+    // (FORBIDDEN/FORBIDDEN_POLICY), not merely "any error" — a bare
+    // failure passes identically against a validation/not-found error.
+    expect(isAuthorizationDenial(res.error?.errors)).toBe(true);
+  });
+
+  it('`Platform …` holder lists: denied to every other role (representative: platform-support)', async () => {
+    const res = await asUser(
+      token =>
+        getGraphqlClient().platformRoleSetUsersInRole(
+          { role: RoleName.PlatformSupport },
+          { authorization: `Bearer ${token}` }
+        ),
+      TestUser.PLATFORM_SUPPORT
+    );
+    // sec-test-suites-3: assert an AUTHORIZATION denial specifically
+    // (FORBIDDEN/FORBIDDEN_POLICY), not merely "any error" — a bare
+    // failure passes identically against a validation/not-found error.
+    expect(isAuthorizationDenial(res.error?.errors)).toBe(true);
+  });
+
+  it('`Feature …` holder lists: readable by platform-roles-admin, platform-audit-reader AND platform-users-admin', async () => {
+    for (const caller of [
+      TestUser.PLATFORM_ROLES_ADMIN,
+      TestUser.PLATFORM_AUDIT_READER,
+      TestUser.PLATFORM_USERS_ADMIN,
+    ]) {
+      const res = await asUser(
+        token =>
+          getGraphqlClient().platformRoleSetUsersInRole(
+            { role: RoleName.FeatureBetaTester },
+            { authorization: `Bearer ${token}` }
+          ),
+        caller
+      );
+      expect(res.error, `${caller} should read the Feature holder list`).toBeUndefined();
+    }
+  });
+
+  it('`Feature …` holder lists: still reachable, not accidentally broken by the re-anchoring', async () => {
+    const res = await asUser(
+      token =>
+        getGraphqlClient().platformRoleSetUsersInRoles(
+          { roles: [RoleName.FeatureBetaTester] },
+          { authorization: `Bearer ${token}` }
+        ),
+      TestUser.PLATFORM_USERS_ADMIN
+    );
+    expect(res.error).toBeUndefined();
+  });
+
+  it('all four holder-list fields are covered (usersInRole/usersInRoles/organizationsInRole/organizationsInRoles) — Platform payload', async () => {
+    const token = TestUserManager.getUserModelByType(TestUser.PLATFORM_ROLES_ADMIN)
+      .authToken;
+    const [usersInRole, usersInRoles, orgsInRole, orgsInRoles] =
+      await Promise.all([
+        getGraphqlClient().platformRoleSetUsersInRole(
+          { role: RoleName.PlatformSupport },
+          { authorization: `Bearer ${token}` }
+        ),
+        getGraphqlClient().platformRoleSetUsersInRoles(
+          { roles: [RoleName.PlatformSupport] },
+          { authorization: `Bearer ${token}` }
+        ),
+        getGraphqlClient().platformRoleSetOrganizationsInRole(
+          { role: RoleName.FeatureOrganizationCreator },
+          { authorization: `Bearer ${token}` }
+        ),
+        getGraphqlClient().platformRoleSetOrganizationsInRoles(
+          { roles: [RoleName.FeatureOrganizationCreator] },
+          { authorization: `Bearer ${token}` }
+        ),
+      ]);
+    expect(usersInRole.errors).toBeUndefined();
+    expect(usersInRoles.errors).toBeUndefined();
+    expect(orgsInRole.errors).toBeUndefined();
+    expect(orgsInRoles.errors).toBeUndefined();
+  });
+
+  it('T018a: a MIXED usersInRoles call (one feature-* + one platform-*) is rejected wholesale, not partially satisfied', async () => {
+    const res = await asUser(
+      token =>
+        getGraphqlClient().platformRoleSetUsersInRoles(
+          {
+            roles: [RoleName.FeatureBetaTester, RoleName.PlatformSupport],
+          },
+          { authorization: `Bearer ${token}` }
+        ),
+      TestUser.PLATFORM_USERS_ADMIN
+    );
+    // Assert on the DATA, not only the error — a partial-result
+    // implementation would pass an error-only assertion identically.
+    // sec-test-suites-3: assert an AUTHORIZATION denial specifically
+    // (FORBIDDEN/FORBIDDEN_POLICY), not merely "any error" — a bare
+    // failure passes identically against a validation/not-found error.
+    expect(isAuthorizationDenial(res.error?.errors)).toBe(true);
+    expect(res.data?.platform.roleSet.usersInRoles ?? []).toEqual([]);
+  });
+
+  it('T018a: a MIXED organizationsInRoles call is rejected wholesale too', async () => {
+    const res = await asUser(
+      token =>
+        getGraphqlClient().platformRoleSetOrganizationsInRoles(
+          {
+            roles: [
+              RoleName.FeatureOrganizationCreator,
+              RoleName.PlatformSupport,
+            ],
+          },
+          { authorization: `Bearer ${token}` }
+        ),
+      TestUser.PLATFORM_USERS_ADMIN
+    );
+    // sec-test-suites-3: assert an AUTHORIZATION denial specifically
+    // (FORBIDDEN/FORBIDDEN_POLICY), not merely "any error" — a bare
+    // failure passes identically against a validation/not-found error.
+    expect(isAuthorizationDenial(res.error?.errors)).toBe(true);
+    expect(res.data?.platform.roleSet.organizationsInRoles ?? []).toEqual([]);
+  });
+});
+
+describe('audit-read (T019, FR-028/SC-014)', () => {
+  it('platform-audit-reader can read latestUserEmailChangeAuditEntry', async () => {
+    const res = await asUser(
+      token =>
+        getGraphqlClient().latestUserEmailChangeAuditEntry(
+          { userID: fixtures.targetUserId },
+          { authorization: `Bearer ${token}` }
+        ),
+      TestUser.PLATFORM_AUDIT_READER
+    );
+    expect(res.error).toBeUndefined();
+  });
+
+  it('platform-audit-reader can read userEmailChangeAuditEntries', async () => {
+    const res = await asUser(
+      token =>
+        getGraphqlClient().userEmailChangeAuditEntries(
+          { userID: fixtures.targetUserId },
+          { authorization: `Bearer ${token}` }
+        ),
+      TestUser.PLATFORM_AUDIT_READER
+    );
+    expect(res.error).toBeUndefined();
+  });
+
+  it('platform-users-admin is DENIED latestUserEmailChangeAuditEntry — the D23 capability withdrawal', async () => {
+    const res = await asUser(
+      token =>
+        getGraphqlClient().latestUserEmailChangeAuditEntry(
+          { userID: fixtures.targetUserId },
+          { authorization: `Bearer ${token}` }
+        ),
+      TestUser.PLATFORM_USERS_ADMIN
+    );
+    // sec-test-suites-3: assert an AUTHORIZATION denial specifically
+    // (FORBIDDEN/FORBIDDEN_POLICY), not merely "any error" — a bare
+    // failure passes identically against a validation/not-found error.
+    expect(isAuthorizationDenial(res.error?.errors)).toBe(true);
+  });
+
+  it('platform-users-admin is DENIED userEmailChangeAuditEntries too', async () => {
+    const res = await asUser(
+      token =>
+        getGraphqlClient().userEmailChangeAuditEntries(
+          { userID: fixtures.targetUserId },
+          { authorization: `Bearer ${token}` }
+        ),
+      TestUser.PLATFORM_USERS_ADMIN
+    );
+    // sec-test-suites-3: assert an AUTHORIZATION denial specifically
+    // (FORBIDDEN/FORBIDDEN_POLICY), not merely "any error" — a bare
+    // failure passes identically against a validation/not-found error.
+    expect(isAuthorizationDenial(res.error?.errors)).toBe(true);
+  });
+
+  it('platform-roles-admin is DENIED both audit-read GraphQL fields too — audit read belongs to platform-audit-reader ALONE', async () => {
+    const [a, b] = await Promise.all([
+      asUser(
+        token =>
+          getGraphqlClient().latestUserEmailChangeAuditEntry(
+            { userID: fixtures.targetUserId },
+            { authorization: `Bearer ${token}` }
+          ),
+        TestUser.PLATFORM_ROLES_ADMIN
+      ),
+      asUser(
+        token =>
+          getGraphqlClient().userEmailChangeAuditEntries(
+            { userID: fixtures.targetUserId },
+            { authorization: `Bearer ${token}` }
+          ),
+        TestUser.PLATFORM_ROLES_ADMIN
+      ),
+    ]);
+    expect(isAuthorizationDenial(a.error?.errors)).toBe(true);
+    expect(isAuthorizationDenial(b.error?.errors)).toBe(true);
+  });
+
+  // The third A19 surface — the MCP `audit-log-analyze` tool — has no
+  // client wired in this repo (T007b's `surface-invocations.ts` header;
+  // Phase V). The trail's PII-masking and unwritable-from-outside
+  // properties are likewise not independently verifiable from this repo's
+  // GraphQL-only vantage point.
+});

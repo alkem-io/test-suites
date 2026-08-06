@@ -1,0 +1,7 @@
+mutation setPlatformWellKnownVirtualContributor($mappingData: SetPlatformWellKnownVirtualContributorInput!) {
+  setPlatformWellKnownVirtualContributor(mappingData: $mappingData) {
+    mappings {
+      wellKnown
+    }
+  }
+}

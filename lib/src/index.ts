@@ -21,6 +21,7 @@ export * from "./scenario/registration/register-in-kratos-or-fail";
 export * from "./scenario/registration/send-kratos-flow";
 export * from "./scenario/registration/verify-in-kratos-or-fail";
 export * from "./scenario/registration/register-test-user";
+export * from "./scenario/registration/grant-single-role-fixtures";
 export * from "./scenario/registration/verify-env-prerequisites";
 export * from "./scenario/registration/provision-test-identities";
 export * from "./config/test.configuration";
