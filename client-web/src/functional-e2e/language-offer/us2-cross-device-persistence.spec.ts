@@ -14,7 +14,7 @@ import { test, expect, Page, Browser } from '@playwright/test';
 import {
   BASE_URL,
   footerLanguageDutch,
-  languageOfferBanner,
+  expectNoLanguageOffer,
   readLanguageStorage,
   gql,
 } from './helpers';
@@ -114,8 +114,10 @@ test.describe('US2 — cross-device / cross-session persistence', () => {
       const page2 = await device2.newPage();
       await page2.goto(`${BASE_URL}/home`);
       await expect(footerLanguageDutch(page2)).toBeVisible({ timeout: 20_000 });
-      // Stored preference wins => no new language offer banner.
-      await expect(languageOfferBanner(page2)).toHaveCount(0);
+      // Stored preference wins => no new language offer banner. Use the explicit
+      // negative wait: the offer gate opens only after config + reconciliation
+      // resolve, so an immediate count would pass before a late banner renders.
+      await expectNoLanguageOffer(page2, 'a stored account preference must suppress the offer');
 
       // The account is the ONLY carrier: this device has no language in browser storage.
       const storage = await readLanguageStorage(page2);
@@ -145,7 +147,10 @@ test.describe('US2 — cross-device / cross-session persistence', () => {
       const page2 = await germanDevice.newPage();
       await page2.goto(`${BASE_URL}/home`);
       await expect(footerLanguageDutch(page2)).toBeVisible({ timeout: 20_000 });
-      await expect(languageOfferBanner(page2)).toHaveCount(0);
+      await expectNoLanguageOffer(
+        page2,
+        'a stored preference must win over the browser language, with no offer made'
+      );
       await page2.screenshot({ path: testInfo.outputPath('us2-as3-stored-wins.png') });
     } finally {
       await germanDevice.close();

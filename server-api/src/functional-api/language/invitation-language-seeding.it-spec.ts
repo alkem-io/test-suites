@@ -77,11 +77,16 @@ const scenarioConfig: TestScenarioConfig = {
  */
 const inviteeEmail = (label: string) => `lang029-${label}-${uniqueId}@alkemio.test`;
 
-/** Invite a not-yet-registered email and remember the PlatformInvitation for cleanup. */
+/**
+ * Invite a not-yet-registered email and remember the PlatformInvitation for
+ * cleanup. Returns the outcome as well as the invitation, because inviting the
+ * same address twice on one role set is a no-op that reports
+ * ALREADY_INVITED_TO_PLATFORM_AND_ROLE_SET and hands back the original.
+ */
 const inviteNewEmail = async (
   email: string,
   suggestedLanguage?: string
-): Promise<PlatformInvitationLanguage> => {
+): Promise<{ result: InviteResult; platformInvitation: PlatformInvitationLanguage }> => {
   const response = await inviteWithSuggestedLanguage({
     roleSetID: roleSetId,
     invitedUserEmails: [email],
@@ -93,8 +98,12 @@ const inviteNewEmail = async (
   if (!platformInvitation) {
     throw new Error(`no PlatformInvitation was created for ${email}`);
   }
-  createdPlatformInvitationIds.push(platformInvitation.id);
-  return platformInvitation;
+  // Inviting an already-invited email returns the EXISTING invitation, so guard
+  // against recording the same id twice (a double delete in teardown).
+  if (!createdPlatformInvitationIds.includes(platformInvitation.id)) {
+    createdPlatformInvitationIds.push(platformInvitation.id);
+  }
+  return { result: results[0], platformInvitation };
 };
 
 /** Register the invitee (the seeding path) and remember the user for cleanup. */
@@ -114,20 +123,43 @@ beforeAll(async () => {
   const language = config.body.data.platform.configuration.language;
   eligible = language.eligible;
   defaultLanguage = language.default;
-  eligibleLanguage = eligible.find(code => code !== defaultLanguage) ?? eligible[0];
+  // `?? ''` matters: on an EMPTY eligible set (the documented R-8 kill switch)
+  // both `find` and `[0]` are undefined, and the walks would then send an absent
+  // language and assert against a persisted null — a confusing failure instead of
+  // the honest "this environment has offers switched off". The walks below skip
+  // themselves in that case.
+  eligibleLanguage = eligible.find(code => code !== defaultLanguage) ?? eligible[0] ?? '';
 });
 
 afterAll(async () => {
-  for (const id of createdUserIds) {
-    await deleteUser(id);
+  // Each delete is isolated: registration CONSUMES a pending PlatformInvitation,
+  // so deleting one afterwards legitimately rejects. In a bare loop that first
+  // rejection would abort teardown and leak every later fixture — including the
+  // organization and space, which is why cleanUpBaseScenario runs in `finally`.
+  const remove = async (what: string, id: string, del: (id: string) => Promise<unknown>) => {
+    try {
+      await del(id);
+    } catch (error) {
+      console.error(`[teardown] could not delete ${what} ${id}: ${error}`);
+    }
+  };
+
+  try {
+    for (const id of createdUserIds) {
+      await remove('user', id, deleteUser);
+    }
+    for (const id of createdPlatformInvitationIds) {
+      await remove('platformInvitation', id, deletePlatformInvitationById);
+    }
+  } finally {
+    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   }
-  for (const id of createdPlatformInvitationIds) {
-    await deletePlatformInvitationById(id);
-  }
-  await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
 describe('029 — language suggested on an invitation is seeded onto the new account', () => {
+  /** Nothing can be suggested when the platform offers no eligible language. */
+  const offersDisabled = () => eligibleLanguage === '';
+
   // The platform must advertise an eligible set for any of this to apply; an
   // empty set is the documented kill switch (R-8) and would make the rest moot.
   test('platform advertises an eligible language set and a default (US1/US5 precondition)', async () => {
@@ -143,9 +175,12 @@ describe('029 — language suggested on an invitation is seeded onto the new acc
   });
 
   // US4 / US5-AS2/AS3/AS4 — THE headline scenario of alkem-io/alkemio#2017.
-  test('US4 — a new user invited with a suggested language registers already set to it', async () => {
+  test('US4 — a new user invited with a suggested language registers already set to it', async ctx => {
+    if (offersDisabled()) {
+      ctx.skip('no eligible languages configured — proactive offers are switched off here (R-8)');
+    }
     const email = inviteeEmail('seeded');
-    const platformInvitation = await inviteNewEmail(email, eligibleLanguage);
+    const { platformInvitation } = await inviteNewEmail(email, eligibleLanguage);
 
     // FR-014a: the suggestion is recorded on the invitation...
     expect(platformInvitation.suggestedLanguage).toEqual(eligibleLanguage);
@@ -172,7 +207,7 @@ describe('029 — language suggested on an invitation is seeded onto the new acc
   // clean slate and is still eligible for the one-time offer (FR-015).
   test('US5-AS6 — an invitation with no suggested language seeds nothing', async () => {
     const email = inviteeEmail('nolang');
-    const platformInvitation = await inviteNewEmail(email);
+    const { platformInvitation } = await inviteNewEmail(email);
     expect(platformInvitation.suggestedLanguage).toBeNull();
 
     const user = await registerInvitee(email, 'NoLang');
@@ -183,15 +218,33 @@ describe('029 — language suggested on an invitation is seeded onto the new acc
     ).toBe(false);
   });
 
-  // The seeding rule is "latest-created invitation THAT CARRIES an eligible
-  // suggestion wins" — a later invitation without one must not erase an earlier
-  // suggestion.
-  test('US4 — a later invitation without a suggestion does not cancel an earlier one', async () => {
-    const email = inviteeEmail('twoinvites');
-    await inviteNewEmail(email, eligibleLanguage);
-    await inviteNewEmail(email);
+  // Re-inviting the same address on the same role set does NOT create a second
+  // invitation — the server reports ALREADY_INVITED_TO_PLATFORM_AND_ROLE_SET and
+  // returns the original, suggestion intact. That matters for the seeding rule:
+  // a well-meant "re-invite without a language" cannot quietly strip a
+  // suggestion the invitee was already given.
+  //
+  // NOTE: this is deliberately NOT a precedence test. The real rule — "the
+  // latest-created invitation carrying an ELIGIBLE suggestion wins" — needs two
+  // distinct invitations for one address, which requires a second role set (and,
+  // to be distinguishable, a second eligible language). See the gap table in
+  // language-offer-test-plan.md; server unit tests cover the ordering.
+  test('US4 — re-inviting the same address preserves the original suggestion', async ctx => {
+    if (offersDisabled()) {
+      ctx.skip('no eligible languages configured — proactive offers are switched off here (R-8)');
+    }
+    const email = inviteeEmail('reinvite');
+    const first = await inviteNewEmail(email, eligibleLanguage);
+    expect(first.result.type).toEqual('INVITED_TO_PLATFORM_AND_ROLE_SET');
 
-    const user = await registerInvitee(email, 'TwoInvites');
+    const second = await inviteNewEmail(email);
+    expect(second.result.type).toEqual('ALREADY_INVITED_TO_PLATFORM_AND_ROLE_SET');
+    // Same invitation, not a new one — and the language survived the re-invite.
+    expect(second.platformInvitation.id).toEqual(first.platformInvitation.id);
+    expect(second.platformInvitation.suggestedLanguage).toEqual(eligibleLanguage);
+
+    // The invitee still registers into the suggested language.
+    const user = await registerInvitee(email, 'Reinvite');
     expect(user.settings.language).toEqual(eligibleLanguage);
     expect(user.settings.languageOfferAnswered).toBe(true);
   });
@@ -199,7 +252,10 @@ describe('029 — language suggested on an invitation is seeded onto the new acc
   // US5-AS7 — one batch call, two invitation kinds: an existing user takes the
   // Invitation path and a new email takes the PlatformInvitation path. Both must
   // carry the suggestion.
-  test('US5-AS7 — the suggestion fans out onto both Invitation and PlatformInvitation', async () => {
+  test('US5-AS7 — the suggestion fans out onto both Invitation and PlatformInvitation', async ctx => {
+    if (offersDisabled()) {
+      ctx.skip('no eligible languages configured — proactive offers are switched off here (R-8)');
+    }
     const existingUserId = TestUserManager.getUserModelByType(TestUser.NON_SPACE_MEMBER).id;
     const newEmail = inviteeEmail('fanout');
 

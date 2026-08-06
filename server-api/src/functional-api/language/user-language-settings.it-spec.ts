@@ -76,8 +76,10 @@ beforeAll(async () => {
   const language = config.body.data.platform.configuration.language;
   defaultLanguage = language.default;
   // Prefer an eligible language that is not the platform fallback.
+  // `?? ''` guards the empty eligible set (R-8 kill switch) — see the walks
+  // below, which skip themselves rather than sending an undefined language.
   eligibleLanguage =
-    language.eligible.find((code: string) => code !== defaultLanguage) ?? language.eligible[0];
+    language.eligible.find((code: string) => code !== defaultLanguage) ?? language.eligible[0] ?? '';
   languageIsDistinguishableFromDefault = eligibleLanguage !== defaultLanguage;
 });
 
@@ -98,7 +100,10 @@ describe('029 — language is a per-user account setting', () => {
 
   // US1-AS2 / US3 accept: recording a language also records that the offer was
   // answered, so it is never made twice.
-  test('US1-AS2 — accepting: writing a language latches languageOfferAnswered', async () => {
+  test('US1-AS2 — accepting: writing a language latches languageOfferAnswered', async ctx => {
+    if (eligibleLanguage === '') {
+      ctx.skip('no eligible languages configured — nothing to write (R-8 kill switch)');
+    }
     const user = await createThrowawayUser('accept');
 
     const response = await updateUserLanguageSettings(user.id, { language: eligibleLanguage });
@@ -137,7 +142,10 @@ describe('029 — language is a per-user account setting', () => {
 
   // One-way latch: the offer cannot be re-armed, so a user who answered is never
   // re-offered (the invariant behind "one-time offer").
-  test('languageOfferAnswered is a one-way latch — it cannot be set back to false', async () => {
+  test('languageOfferAnswered is a one-way latch — it cannot be set back to false', async ctx => {
+    if (eligibleLanguage === '') {
+      ctx.skip('no eligible languages configured — nothing to write (R-8 kill switch)');
+    }
     const user = await createThrowawayUser('latch');
     await updateUserLanguageSettings(user.id, { language: eligibleLanguage });
 
@@ -150,7 +158,10 @@ describe('029 — language is a per-user account setting', () => {
   // Documented no-op: `language: null` means "leave it alone", not "clear it".
   // Asserted explicitly so a future change to clearing semantics is caught here
   // rather than surfacing as a mysterious UI regression.
-  test('language: null is a no-op — a stored language is not cleared', async () => {
+  test('language: null is a no-op — a stored language is not cleared', async ctx => {
+    if (eligibleLanguage === '') {
+      ctx.skip('no eligible languages configured — nothing to write (R-8 kill switch)');
+    }
     const user = await createThrowawayUser('nullnoop');
     await updateUserLanguageSettings(user.id, { language: eligibleLanguage });
 
@@ -178,7 +189,10 @@ describe('029 — language is a per-user account setting', () => {
   });
 
   // The setting is personal: another (non-admin) user must not be able to write it.
-  test('a different user cannot write this account language', async () => {
+  test('a different user cannot write this account language', async ctx => {
+    if (eligibleLanguage === '') {
+      ctx.skip('no eligible languages configured — nothing to write (R-8 kill switch)');
+    }
     const user = await createThrowawayUser('foreign');
 
     const response = await updateUserLanguageSettings(
