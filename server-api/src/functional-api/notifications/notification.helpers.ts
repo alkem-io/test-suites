@@ -10,6 +10,7 @@ import {
 } from '@alkemio/tests-lib';
 import { UpdateUserSettingsNotificationUserInput } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { graphqlRequestAuth } from '@alkemio/tests-lib/utils/graphql.request';
+import { sendMessageToRoom } from '@functional-api/communications/communication.params';
 import { createConversation } from '@functional-api/communications/conversations/conversation.request.params';
 import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
 import {
@@ -250,15 +251,51 @@ export const getConversationMessagingInAppNotificationsCount = async (
   return response.body?.data?.me?.notifications?.total ?? 0;
 };
 
-/** Subject line of the direct-message email (must stay in sync with notifications/service/src/email-templates/user.conversation.message.direct.js). */
-export const conversationMessageDirectSubject = (senderDisplayName: string) =>
-  `${senderDisplayName} sent you a message`;
+// ---------------------------------------------------------------------------
+// Digest email subjects (R4) — data-model.md §9.1.
+//
+// Both templates render a LIST of entries, never a single sender, so the
+// subject depends on how many entries the digest carries and on the total
+// message count across them. These MUST stay in sync with
+// notifications/service/src/email-templates/user.conversation.message.{direct,group}.js.
+// ---------------------------------------------------------------------------
 
-/** Subject line of the group-message email (must stay in sync with notifications/service/src/email-templates/user.conversation.message.group.js). */
-export const conversationMessageGroupSubject = (
+/**
+ * Direct digest, ONE entry (one counterpart). `count === 1` deliberately
+ * renders identically to the pre-R4 single-message subject.
+ */
+export const conversationMessageDirectSubject = (
   senderDisplayName: string,
-  conversationDisplayName: string
-) => `${senderDisplayName} sent a message in ${conversationDisplayName}`;
+  count = 1
+) =>
+  count === 1
+    ? `${senderDisplayName} sent you a message`
+    : `${senderDisplayName} sent you ${count} messages`;
+
+/** Direct digest, MULTIPLE entries (US1-AS8) — no single sender to name. */
+export const conversationMessageDirectDigestSubject = (
+  totalMessages: number,
+  senderCount: number
+) => `${totalMessages} new messages from ${senderCount} people`;
+
+/**
+ * Group digest, ONE entry (one conversation). Note this differs from the
+ * pre-R4 copy (`{sender} sent a message in {group}`): a group digest reports
+ * conversations, not senders, so there is no single sender to name.
+ */
+export const conversationMessageGroupSubject = (
+  conversationDisplayName: string,
+  count = 1
+) =>
+  count === 1
+    ? `New message in ${conversationDisplayName}`
+    : `${count} new messages in ${conversationDisplayName}`;
+
+/** Group digest, MULTIPLE entries (US2-AS6). */
+export const conversationMessageGroupDigestSubject = (
+  totalMessages: number,
+  conversationCount: number
+) => `${totalMessages} new messages in ${conversationCount} conversations`;
 
 /**
  * Polls Mailslurper until at least `expectedCount` mails are present, or the
@@ -307,4 +344,91 @@ export const expectExactMailsAfter = async (
   await waitForMailsCountAtLeast(expectedCount, { timeout, interval });
   await delay(settleMs);
   return getMailsData();
+};
+
+// ===========================================================================
+// R4 digest helpers — debounce, cancellation, and negative assertions
+// ===========================================================================
+
+/**
+ * Runs `action`, waits out `graceMs`, then reads the mailbox. The email
+ * counterpart of `expectNoPushEmitAfter`, and the ONLY correct shape for a
+ * "no email ever arrives" assertion under R4: a fixed grace, never a poll,
+ * because there is nothing to wait FOR.
+ *
+ * `graceMs` MUST come from `digestWindow(...)` — normally `maxDelayGraceMs`,
+ * the strongest bound the design offers (even a debounce that keeps being
+ * reset must have fired by then). Passing anything shorter than the relevant
+ * quiet period turns the assertion into "nothing has arrived YET", which is
+ * how a suite goes green for the wrong reason.
+ */
+export const expectNoMailsAfter = async (
+  action: () => Promise<unknown>,
+  graceMs: number
+): Promise<Awaited<ReturnType<typeof getMailsData>>> => {
+  await action();
+  await delay(graceMs);
+  return getMailsData();
+};
+
+/**
+ * Sends a message to a room and returns its message id — needed to mark the
+ * conversation read via `markConversationRead` (the cancellation path under
+ * test in US1-AS6 / US5).
+ */
+export const sendConversationMessage = async (
+  roomID: string,
+  message: string,
+  senderRole: TestUser = TestUser.GLOBAL_ADMIN
+): Promise<string> => {
+  const res: any = await sendMessageToRoom(roomID, message, senderRole);
+  const messageID = res?.data?.sendMessageToRoom?.id ?? '';
+  if (!messageID) {
+    throw new Error(
+      `sendMessageToRoom returned no message id for room ${roomID}: ${JSON.stringify(
+        res?.error ?? res
+      )}`
+    );
+  }
+  return messageID;
+};
+
+/**
+ * Marks a message (and therefore everything up to it) as read in a room, AS
+ * `readerRole` — the very same `markMessageAsReadInRoom` mutation the chat
+ * panel issues when the user opens a conversation with the tab focused.
+ *
+ * This is what makes the R4 cancellation path testable from an API-only
+ * harness: the flush re-derives unread counts at fire time
+ * (`batchGetUnreadCounts`), so advancing the read receipt before the timer
+ * fires must cancel the pending digest outright rather than delay it
+ * (US1-AS6, US5-AS4, SC-008).
+ *
+ * Raw query rather than a committed `.graphql` document: the mutation returns
+ * a bare Boolean, so there is no fragment to share.
+ */
+export const markConversationRead = async (
+  roomID: string,
+  messageID: string,
+  readerRole: TestUser
+): Promise<boolean> => {
+  const requestParams = {
+    operationName: 'MarkMessageAsReadInRoom',
+    query: `
+      mutation MarkMessageAsReadInRoom($messageData: RoomMarkMessageReadInput!) {
+        markMessageAsReadInRoom(messageData: $messageData)
+      }
+    `,
+    variables: { messageData: { roomID, messageID } },
+  };
+
+  const response = await graphqlRequestAuth(requestParams, readerRole);
+  if (response.body?.errors) {
+    throw new Error(
+      `markMessageAsReadInRoom failed for room ${roomID}: ${JSON.stringify(
+        response.body.errors
+      )}`
+    );
+  }
+  return response.body?.data?.markMessageAsReadInRoom ?? false;
 };
