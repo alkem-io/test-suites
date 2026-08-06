@@ -13,6 +13,8 @@ import { VirtualContributorWellKnown } from '@alkemio/tests-lib/core/generated/a
 import { CredentialType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { AuthorizationCredential } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { AuthorizationPrivilege } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { TemplateType as GeneratedTemplateType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { createOrganization } from '@functional-api/contributor-management/organization/organization.request.params';
 import {
   A_ROW_SURFACES,
   type ARowId,
@@ -127,7 +129,7 @@ export function isAuthorizationDenial(
 }
 
 /**
- * A9's three cross-hierarchy space-move mutations (`moveSpaceL1ToSpaceL0`,
+ * A9's cross-hierarchy space MOVES (`moveSpaceL1ToSpaceL0`,
  * `moveSpaceL1ToSpaceL2`, `moveSpaceL2ToSpaceL1`) all return the shared
  * `SpaceData` fragment, which also requests `Space.account` and
  * `Space.templatesManager` — fields gated behind plain Space `READ`, a
@@ -139,18 +141,35 @@ export function isAuthorizationDenial(
  * with a separate, intentionally-narrower privilege (2026-07-29
  * live-verification finding).
  *
- * The correct fix is a leaner query for these three operations, but that
- * needs regenerating the SDK against a live schema (`lib/codegen.ts`
- * introspects `localhost:3000`) — not available to this fix pass. Until
- * then, this wrapper tolerates ONLY errors on those two named fields and
- * still reports every other error (including a genuine denial of the move
- * mutation itself) as a real failure — it narrows the assertion to the
- * move-privilege gate without touching the shared, widely-used
- * `moveSpaceL1ToSpaceL0.graphql` et al. or `graphql.wrapper.ts`.
+ * The 2026-08-06 live run showed the same collateral hitting three A9
+ * surfaces this wrapper did NOT cover, each red on a sub-field its own
+ * document selects while its mutation gate passed:
+ *
+ *   `convertSpaceL2ToSpaceL1`   → `...SpaceData` (so `Space.templatesManager`)
+ *   `transferSpaceToAccount`    → `account { id }`  (`Space.account`)
+ *   `convertVirtualContributorToUseKnowledgeBase`
+ *                               → `knowledgeBase { … }` (`KnowledgeBase ReadAbout`)
+ *
+ * `convertSpaceL1ToSpaceL2` selects only `id/nameID/level` and
+ * `convertSpaceL1ToSpaceL0` — despite also spreading `SpaceData` — is green,
+ * because promotion to L0 recomputes the space's own policy before the
+ * response is resolved. Neither needs the wrapper; both are left on plain
+ * `invoke` so the tolerance stays as narrow as the evidence.
+ *
+ * The correct fix is a leaner query for these operations, but that needs
+ * regenerating the SDK against a live schema (`lib/codegen.ts` introspects
+ * `localhost:3000`) — not available to this fix pass. Until then, this
+ * wrapper tolerates ONLY errors naming one of the fields below and still
+ * reports every other error (including a genuine denial of the mutation
+ * itself, which names a different entity) as a real failure.
  */
-const A9_COLLATERAL_READ_FIELDS = ['Space.account', 'Space.templatesManager'] as const;
+const A9_COLLATERAL_READ_FIELDS = [
+  'Space.account',
+  'Space.templatesManager',
+  'KnowledgeBase ReadAbout',
+] as const;
 
-async function invokeMove<T>(
+async function invokeToleratingCollateralReads<T>(
   fn: (authToken: string | undefined) => GraphQLReturnType<T>,
   caller: TestUser
 ): Promise<InvocationOutcome> {
@@ -171,6 +190,56 @@ async function invokeMove<T>(
 const bearer = (token: string | undefined) => ({
   authorization: `Bearer ${token}`,
 });
+
+/**
+ * A single-use target that RENEWS itself once consumed.
+ *
+ * corr-ts-16 ordered every surface's ALLOW cell(s) after its DENY cells, so a
+ * real destructive invocation can never run ahead of a denial for the SAME
+ * surface. That fixes the DENY hazard completely — but it silently assumes
+ * each surface has exactly ONE ALLOW cell. 28 of the 100 surfaces with an
+ * ALLOW cell have more than one, and where the surface is destructive the
+ * FIRST allowed role consumes the shared disposable target and every later
+ * allowed role is then guaranteed red for a not-found reason. The 2026-08-06
+ * live run caught all three instances at once:
+ *
+ *   A6 `deleteOrganization`               SUPPORT ✔ → CONTENT_FULL_ACCESS ✘ ENTITY_NOT_FOUND
+ *   A7 `deleteTemplate`                   SUPPORT ✔ → CONTENT_FULL_ACCESS ✘ ENTITY_NOT_FOUND
+ *   A2 `removePlatformRoleFromOrganization`
+ *                                         ROLES_ADMIN ✔ → USERS_ADMIN ✘ min-limit 0
+ *
+ * The last one is the same defect wearing a different error code: the grant,
+ * not a row, is the consumable.
+ *
+ * Rather than classify surfaces as "destructive" (a list that goes stale the
+ * moment the census grows), this observes CONSUMPTION: an invocation that
+ * returned `ok` is the only thing that can have spent the target, so the next
+ * caller of that surface re-provisions first. DENY cells never mutate, so
+ * they never trigger a re-provision, and a surface whose ALLOW cell is
+ * non-destructive simply re-provisions a target nobody consumed — wasteful by
+ * one create, never wrong.
+ *
+ * `provision` runs as GLOBAL_ADMIN, never as the cell's caller: it is fixture
+ * setup, not part of the assertion.
+ */
+function renewableTarget<TId>(
+  initial: TId,
+  provision: () => Promise<TId>
+): (use: (target: TId) => Promise<InvocationOutcome>) => Promise<InvocationOutcome> {
+  let current = initial;
+  let spent = false;
+  return async use => {
+    if (spent) {
+      current = await provision();
+      spent = false;
+    }
+    const outcome = await use(current);
+    if (outcome.ok) {
+      spent = true;
+    }
+    return outcome;
+  };
+}
 
 /** Absent for a normal, currently-live-at-A surface; excludes A1's
  * `{retiredIn: 'B'}` entries (no helper, per T007b) and A17's
@@ -208,6 +277,58 @@ export function buildSurfaceInvocations(
     }
     eligible.forEach((surface, i) => map.set(surface, invocations[i]));
   }
+
+  const adminAuth = () => ({
+    authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}`,
+  });
+
+  // The three consumable targets — see `renewableTarget`. Declared here, once
+  // per fixture set, so the renewal state lives as long as the invocation map
+  // the matrix iterates.
+  const withDeletableOrganization = renewableTarget(
+    fx.a6DeletableOrganizationId,
+    async () => {
+      const created = await createOrganization(
+        `matrix-a6-deletable-${UniqueIDGenerator.getID()}`,
+        `matrixa6del${UniqueIDGenerator.getID()}`
+      );
+      return created.data?.createOrganization?.id ?? '';
+    }
+  );
+
+  const withDeletableTemplate = renewableTarget(fx.templateId, async () => {
+    const created = await client().CreateTemplate(
+      {
+        templatesSetId: fx.templatesSetId,
+        profileData: {
+          displayName: `matrix-a7-tpl-${UniqueIDGenerator.getID()}`,
+        },
+        type: GeneratedTemplateType.Post,
+        postDefaultDescription: 'matrix fixture template body',
+      },
+      adminAuth()
+    );
+    return created.data?.createTemplate.id ?? '';
+  });
+
+  // Here the consumable is the GRANT, not a row: re-assigning the role to the
+  // same organization restores exactly what the previous allowed remover took
+  // away, so `min limit … cannot remove` can never be a later cell's verdict.
+  const withOrganizationRoleGrant = renewableTarget(
+    fx.secondOrganizationId,
+    async () => {
+      await client().assignPlatformRoleToOrganization(
+        {
+          roleData: {
+            actorID: fx.secondOrganizationId,
+            role: RoleName.FeatureOrganizationCreator,
+          },
+        },
+        adminAuth()
+      );
+      return fx.secondOrganizationId;
+    }
+  );
 
   // ===== A1 — assign/revoke a PLATFORM role (6 helper-eligible; the 4
   // FR-022 credential mutations are `{retiredIn: 'B'}`, no helper) =====
@@ -371,18 +492,20 @@ export function buildSurfaceInvocations(
         caller
       ),
     caller =>
-      invoke(
-        token =>
-          client().removePlatformRoleFromOrganization(
-            {
-              roleData: {
-                actorID: fx.secondOrganizationId,
-                role: RoleName.FeatureOrganizationCreator,
+      withOrganizationRoleGrant(organizationId =>
+        invoke(
+          token =>
+            client().removePlatformRoleFromOrganization(
+              {
+                roleData: {
+                  actorID: organizationId,
+                  role: RoleName.FeatureOrganizationCreator,
+                },
               },
-            },
-            bearer(token)
-          ),
-        caller
+              bearer(token)
+            ),
+          caller
+        )
       ),
   ]);
 
@@ -633,14 +756,19 @@ export function buildSurfaceInvocations(
     // server's account-has-resources guard (`organization.service.ts`)
     // always rejects deleting it, and if that guard were ever relaxed the
     // delete would take A9's own transfer/move targets down with it.
+    //
+    // Two roles hold ALLOW here, and the row is single-use — see
+    // `renewableTarget`.
     caller =>
-      invoke(
-        token =>
-          client().deleteOrganization(
-            { deleteData: { ID: fx.a6DeletableOrganizationId } },
-            bearer(token)
-          ),
-        caller
+      withDeletableOrganization(deletableOrganizationId =>
+        invoke(
+          token =>
+            client().deleteOrganization(
+              { deleteData: { ID: deletableOrganizationId } },
+              bearer(token)
+            ),
+          caller
+        )
       ),
   ]);
 
@@ -702,7 +830,8 @@ export function buildSurfaceInvocations(
           client().createTemplateFromContentSpace(
             {
               templateData: {
-                contentSpaceID: fx.spaceId,
+                // A TemplateContentSpace id, NOT a Space id — see the fixture.
+                contentSpaceID: fx.a7TemplateContentSpaceId,
                 templatesSetID: fx.templatesSetId,
                 profileData: { displayName: `matrix-a7-content-tpl-${Date.now()}` },
               },
@@ -729,17 +858,25 @@ export function buildSurfaceInvocations(
         token =>
           client().updateTemplateFromSpace(
             {
-              updateData: { templateID: fx.templateId, spaceID: fx.spaceId },
+              // The SPACE template, not the post one: the resolver requires
+              // `contentSpace` + `collaboration` to be loadable.
+              updateData: {
+                templateID: fx.a7SpaceTemplateId,
+                spaceID: fx.spaceId,
+              },
             },
             bearer(token)
           ),
         caller
       ),
+    // Two roles hold ALLOW here, and the row is single-use — see
+    // `renewableTarget`.
     caller =>
-      invoke(
-        token =>
-          client().deleteTemplate({ templateId: fx.templateId }, bearer(token)),
-        caller
+      withDeletableTemplate(templateId =>
+        invoke(
+          token => client().deleteTemplate({ templateId }, bearer(token)),
+          caller
+        )
       ),
   ]);
 
@@ -819,7 +956,7 @@ export function buildSurfaceInvocations(
   // authorization-model claim.
   registerRow('A9', [
     caller =>
-      invokeMove(
+      invokeToleratingCollateralReads(
         token =>
           client().MoveSpaceL1ToSpaceL0(
             {
@@ -838,7 +975,7 @@ export function buildSurfaceInvocations(
     // moved…`) before authorization was ever exercised. `a9SecondSubspaceId`
     // (a real L1) moves under `a9L1MoveTargetId` (a different, genuine L1).
     caller =>
-      invokeMove(
+      invokeToleratingCollateralReads(
         token =>
           client().MoveSpaceL1ToSpaceL2(
             {
@@ -854,7 +991,7 @@ export function buildSurfaceInvocations(
     // `a9L2Id` (a real L2, created under `a9SecondSubspaceId`) is promoted
     // to L1 under `a9L1MoveTargetId`.
     caller =>
-      invokeMove(
+      invokeToleratingCollateralReads(
         token =>
           client().MoveSpaceL2ToSpaceL1(
             {
@@ -869,11 +1006,16 @@ export function buildSurfaceInvocations(
       ),
     // spec-server-10 fix (corr-ts-20/qual-ts-17 re-sync): the three
     // promote/demote conversions ride the SAME resolver-local synthetic
-    // policy as the three cross-L0 moves above — `invokeMove` tolerates the
-    // same A9_COLLATERAL_READ_FIELDS plain-READ denial these share via the
-    // `SpaceData`-shaped fragment... except these three use a MINIMAL,
-    // hand-added selection (no `Space.account`/`Space.templatesManager`), so
-    // `invoke` (not `invokeMove`) is correct and sufficient here.
+    // policy as the three cross-L0 moves above.
+    //
+    // 2026-08-06 live run: the claim that all three use a MINIMAL selection
+    // was only true of `ConvertSpaceL1ToSpaceL2` (`id/nameID/level`). The
+    // other two spread `...SpaceData`, so they carry the same
+    // `Space.account`/`Space.templatesManager` collateral the moves do.
+    // `ConvertSpaceL1ToSpaceL0` is nonetheless green — promotion to L0
+    // recomputes the space's own policy before the response resolves — so
+    // only `ConvertSpaceL2ToSpaceL1` needs the tolerant wrapper, and it gets
+    // it rather than a blanket application to the row.
     caller =>
       invoke(
         token =>
@@ -884,7 +1026,7 @@ export function buildSurfaceInvocations(
         caller
       ),
     caller =>
-      invoke(
+      invokeToleratingCollateralReads(
         token =>
           client().ConvertSpaceL2ToSpaceL1(
             { convertData: { spaceL2ID: fx.a9ConvertL2ToL1SourceId } },
@@ -916,8 +1058,11 @@ export function buildSurfaceInvocations(
     // Two surfaces, two ALLOW cells, one single-use fixture; corr-ts-16's
     // DENY-before-ALLOW ordering orders cells WITHIN a surface and cannot
     // help across two.
+    // Tolerant wrapper: this document selects `knowledgeBase { … }`, whose
+    // `read-about` gate `PLATFORM_RESOURCE_ADMIN` does not hold — collateral
+    // on the response, not a denial of the conversion (2026-08-06 live run).
     caller =>
-      invoke(
+      invokeToleratingCollateralReads(
         token =>
           client().convertVirtualContributorToUseKnowledgeBase(
             {
@@ -974,8 +1119,11 @@ export function buildSurfaceInvocations(
           ),
         caller
       ),
+    // Tolerant wrapper: this document selects `account { id }`, gated behind
+    // plain Space READ — the same collateral the moves carry, on a surface
+    // whose own transfer gate passes (2026-08-06 live run).
     caller =>
-      invoke(
+      invokeToleratingCollateralReads(
         token =>
           client().TransferSpaceToAccount(
             {
@@ -1192,7 +1340,11 @@ export function buildSurfaceInvocations(
         token =>
           client().AssignLicensePlanToAccount(
             {
-              licensePlanId: fx.licensePlanId,
+              // An ACCOUNT-scoped plan, not the seeded `fx.licensePlanId`
+              // (space-scoped): `AdminLicensingService` rejects a non-account
+              // plan type AFTER the privilege check, so the seeded plan reds
+              // this ALLOW cell for a fixture reason.
+              licensePlanId: fx.a12AccountLicensePlanId,
               accountId: fx.organizationAccountId,
               // corr-ts-13: MUST be the LicensingFramework id, not a
               // LicensePlan id — the server resolves this before the
@@ -1224,7 +1376,8 @@ export function buildSurfaceInvocations(
           client().RevokeLicensePlanFromAccount(
             {
               accountId: fx.organizationAccountId,
-              licensePlanId: fx.licensePlanId,
+              // ACCOUNT-scoped — see the AssignLicensePlanToAccount helper.
+              licensePlanId: fx.a12AccountLicensePlanId,
               // corr-ts-13: the framework id, not the plan id — see the
               // AssignLicensePlanToAccount helper above.
               licensingId: fx.licensingFrameworkId,

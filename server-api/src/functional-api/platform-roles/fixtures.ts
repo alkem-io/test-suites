@@ -102,9 +102,18 @@ export interface MatrixFixtures {
   readonly secondCalloutId: string;
   readonly innovationPackId: string;
   readonly templatesSetId: string;
-  /** A throwaway template inside `templatesSetId` — A7's
+  /** A throwaway POST template inside `templatesSetId` — A7's
    * `updateTemplate`/`deleteTemplate` target. */
   readonly templateId: string;
+  /** A throwaway SPACE template inside `templatesSetId` — A7's
+   * `updateTemplateFromSpace` target, which requires a template carrying a
+   * `contentSpace` + `collaboration` that `templateId` (a post template)
+   * does not have. */
+  readonly a7SpaceTemplateId: string;
+  /** That space template's TemplateContentSpace — A7's
+   * `createTemplateFromContentSpace` target. Its `contentSpaceID` argument is
+   * a TemplateContentSpace id, not a Space id. */
+  readonly a7TemplateContentSpaceId: string;
   readonly innovationHubId: string;
   readonly virtualContributorId: string;
   /**
@@ -150,8 +159,17 @@ export interface MatrixFixtures {
   /** The base space's community — `adminCommunicationEnsureAccessToCommunications`'s target. */
   readonly communityId: string;
   /** A licensing-framework plan already on the platform (looked up, not
-   * created — A12/A13's target). */
+   * created — A12's SPACE-scoped assign/revoke target). */
   readonly licensePlanId: string;
+  /** A12's ACCOUNT-scoped assign/revoke target — a plan created BY this
+   * fixture set with `type: ACCOUNT_PLAN`, never `licensePlanId` above.
+   * `plans[0]` is whatever the platform seeded first (in practice a
+   * `space-feature-flag`), and `admin.licensing.service` rejects any plan
+   * that is not `ACCOUNT_PLAN`/`ACCOUNT_FEATURE_FLAG` with a
+   * `ValidationException` raised AFTER the privilege check — so the account
+   * cells failed for a fixture reason while claiming an authorization
+   * verdict, exactly the hazard this suite exists to prevent. */
+  readonly a12AccountLicensePlanId: string;
   /** The platform forum + one throwaway discussion — A15's target. */
   readonly forumId: string;
   readonly discussionId: string;
@@ -664,15 +682,90 @@ export async function buildMatrixFixtures(): Promise<MatrixFixtures> {
   );
   const templateId = templateResult.data?.createTemplate.id;
 
+  // A7's SPACE-derived template + its content space. `templateId` above is a
+  // POST template, and two A7 surfaces cannot use one:
+  //
+  //   `updateTemplateFromSpace` — `template.service.ts` throws
+  //     `RelationshipNotFoundException` ("not all entities are loaded") unless
+  //     the template has BOTH `contentSpace` and `contentSpace.collaboration`;
+  //     a post template has neither.
+  //   `createTemplateFromContentSpace` — its `contentSpaceID` argument is a
+  //     TemplateContentSpace id, NOT a Space id. Passing `spaceId` made
+  //     `getTemplateContentSpaceOrFail` throw `ENTITY_NOT_FOUND` before the
+  //     read gate, so both cells were red for a fixture reason at every role
+  //     (2026-08-06 live run).
+  // Source is the fixture's L1 subspace, NOT `base.space.id`. The mutation
+  // deep-copies the source space into a TemplateContentSpace, and against the
+  // fully-populated L0 (callouts, contributions, whiteboards, an L1 and an L2
+  // beneath it) the request never returned — the whole `beforeAll` died on a
+  // socket hang-up and took all 2023 cells with it (2026-08-06, reproduced
+  // twice). `space-templates.it-spec.ts` has always sourced its own space
+  // templates from a subspace for the same reason.
+  //
+  // Wrapped: if the copy fails anyway, the two A7 cells below fall back to
+  // failing on empty ids — the state before this fixture existed — rather
+  // than taking the entire matrix down with them.
+  let a7SpaceTemplateId = '';
+  let a7TemplateContentSpaceId = '';
+  try {
+    const a7SpaceTemplateResult =
+      await getGraphqlClient().CreateTemplateFromSpace(
+        {
+          templatesSetId: base.innovationPack!.templatesSetId,
+          profileData: { displayName: `matrix-a7-space-template-${runId}` },
+          spaceId: subspaceId,
+        },
+        {
+          authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}`,
+        }
+      );
+    a7SpaceTemplateId =
+      a7SpaceTemplateResult.data?.createTemplateFromSpace?.id ?? '';
+    a7TemplateContentSpaceId =
+      a7SpaceTemplateResult.data?.createTemplateFromSpace?.contentSpace?.id ??
+      '';
+  } catch {
+    // Deliberately swallowed — see above.
+  }
+
   const licensePlansResult = await getLicensePlans();
   const licensePlanId =
     licensePlansResult.data?.platform.licensingFramework.plans[0]?.id;
   const licensingFrameworkId =
     licensePlansResult.data?.platform.licensingFramework.id;
 
+  // A12's ACCOUNT-scoped assign/revoke target. The seeded `licensePlanId`
+  // above is space-scoped, and `AdminLicensingService` rejects a non-account
+  // plan ("License Plan is not for Accounts: space-feature-flag") after the
+  // privilege check has already passed — a fixture red wearing an
+  // authorization verdict. A13's plans below are SPACE_PLAN and cannot stand
+  // in for this one.
+  const a12AccountPlanResult = await getGraphqlClient().CreateLicensePlan(
+    {
+      LicensePlan: {
+        licensingFrameworkID: licensingFrameworkId ?? '',
+        name: `matrix-a12-account-plan-${runId}`,
+        licenseCredential:
+          LicensingCredentialBasedCredentialType.AccountLicensePlus,
+        type: LicensingCredentialBasedPlanType.AccountPlan,
+        enabled: true,
+        isFree: true,
+        assignToNewOrganizationAccounts: false,
+        assignToNewUserAccounts: false,
+        requiresContactSupport: false,
+        requiresPaymentMethod: false,
+        sortOrder: 999,
+        trialEnabled: false,
+      },
+    },
+    { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
+  );
+  const a12AccountLicensePlanId =
+    a12AccountPlanResult.data?.createLicensePlan?.id ?? '';
+
   // A13's disposable delete/update target — a plan CREATED by this fixture
   // set, never the platform-seeded `licensePlanId` above (corr-ts-7). A12's
-  // assign/revoke helpers keep using the seeded plan; only A13's
+  // space-scoped assign/revoke helpers keep using the seeded plan; only A13's
   // Delete/UpdateLicensePlan helpers use this one.
   const a13LicensePlanResult = await getGraphqlClient().CreateLicensePlan(
     {
@@ -969,6 +1062,8 @@ export async function buildMatrixFixtures(): Promise<MatrixFixtures> {
     innovationPackId: base.innovationPack?.id ?? '',
     templatesSetId: base.innovationPack?.templatesSetId ?? '',
     templateId: templateId ?? '',
+    a7SpaceTemplateId,
+    a7TemplateContentSpaceId,
     innovationHubId: innovationHubId ?? '',
     virtualContributorId: base.virtualContributors?.[0]?.id ?? '',
     a9ConvertVcSourceId:
@@ -977,6 +1072,7 @@ export async function buildMatrixFixtures(): Promise<MatrixFixtures> {
     wellKnownChatGuidanceVcIdBefore,
     communityId: base.space.community.id,
     licensePlanId: licensePlanId ?? '',
+    a12AccountLicensePlanId,
     forumId: forumId ?? '',
     discussionId: discussionId ?? '',
     targetUserId: targetUser.id,
@@ -1308,6 +1404,16 @@ export async function teardownMatrixFixtures(
   try {
     await getGraphqlClient().DeleteInnovationHub(
       { input: { ID: fixtures.a8DeletableInnovationHubId } },
+      { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
+    );
+  } catch {
+    // best-effort cleanup
+  }
+
+  // A12's disposable account-scoped plan.
+  try {
+    await getGraphqlClient().DeleteLicensePlan(
+      { LicensePlan: { ID: fixtures.a12AccountLicensePlanId } },
       { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
     );
   } catch {

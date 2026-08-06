@@ -49,9 +49,17 @@ const stage = platformRolesStage();
 const cells = activeMatrix(stage);
 
 /**
- * Surfaces whose resolver body calls an EXTERNAL service that is absent from
- * a developer/CI environment. Both were observed red in the 2026-07-31
- * canonical re-run, for reasons that have nothing to do with authorization:
+ * Surfaces whose ALLOW cell can only assert "was NOT refused by
+ * authorization" — the resolver is reached, the privilege gate passes, and
+ * what fails afterwards is environmental rather than a verdict. Two reasons
+ * qualify a name for this set: an EXTERNAL service absent from a
+ * developer/CI environment (the original two, below), or a POST-gate
+ * precondition that cannot be staged from this repo (the two added
+ * 2026-08-06). Nothing else belongs here — a fixture that CAN be built is a
+ * fixture bug, and weakening its assertion would hide it.
+ *
+ * The first two were observed red in the 2026-07-31 canonical re-run, for
+ * reasons that have nothing to do with authorization:
  *
  *   `cleanupCollections`    → `TypeError: fetch failed` in
  *                             `ChromaClient.listCollections` (no Chroma)
@@ -76,6 +84,26 @@ const cells = activeMatrix(stage);
 const EXTERNAL_DEPENDENCY_SURFACES: ReadonlySet<string> = new Set([
   'cleanupCollections',
   'createWingbackAccount',
+  // 2026-08-06 live run — same shape, different reason: the resolver is
+  // reachable and the gate passes, but its POST-gate precondition cannot be
+  // staged from this repo, so full success is not assertable.
+  //
+  //   `adminCommunicationUpdateRoomState` → `getRoom` on a Matrix room id.
+  //     `fixtures.roomIdPlaceholder` is a deliberate placeholder (a synthetic
+  //     UUID), and the adapter answers `MATRIX_ENTITY_NOT_FOUND_ERROR`. Its
+  //     sibling `adminCommunicationRemoveOrphanedRoom` takes the same
+  //     placeholder and is green only because removing a room that is not
+  //     there is a no-op — an accident of that resolver, not a fixture that
+  //     works.
+  //   `adminUserEmailChangeDriftResolve` → requires an OUTSTANDING drift
+  //     between Alkemio and Kratos. Manufacturing one means desynchronising
+  //     the identity store on purpose; staging it here would leave the shared
+  //     stack in the broken state this mutation exists to repair.
+  //
+  // Both keep asserting the thing this matrix is actually about — that the
+  // caller was NOT refused by authorization.
+  'adminCommunicationUpdateRoomState',
+  'adminUserEmailChangeDriftResolve',
 ]);
 
 const invocationFor = (surface: SurfaceRef): SurfaceInvocation => {
