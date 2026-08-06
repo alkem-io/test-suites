@@ -34,6 +34,7 @@ import {
 } from '@alkemio/tests-lib';
 import { sendMessageToRoom } from '@functional-api/communications/communication.params';
 import {
+  getMeConversations,
   leaveConversation,
   removeConversationMember,
 } from '@functional-api/communications/conversations/conversation.request.params';
@@ -62,6 +63,50 @@ const groupPush = digestWindow('push', 'group');
 
 const toAddressesOf = (mailItems: any[]) =>
   mailItems.flatMap(item => item.toAddresses ?? []);
+
+/**
+ * Ceiling for the membership-propagation POLL below — a bound on how long we
+ * are willing to wait, not a sleep, so this is not the "hard-coded messaging
+ * wait" the digest rule forbids. It is deliberately not derived from
+ * `digestWindow(...)`: what is being waited on is Matrix's
+ * `room.member.updated` reaching `conversation_membership`, which has nothing
+ * to do with the digest windows.
+ */
+const MEMBERSHIP_PROPAGATION_TIMEOUT_MS = 30_000;
+
+/**
+ * Blocks until `removedUser` genuinely no longer sees `conversationId`.
+ *
+ * Membership removal dispatches to Matrix and is applied asynchronously, so
+ * the next message must not be sent until the row is actually gone. This used
+ * to be a flat `delay(3_000)`: too long on a fast stack, and on a loaded CI
+ * runner too SHORT — the removed member was still resolved as a recipient, a
+ * digest was armed for them, and the test failed reporting a membership
+ * re-read regression that did not exist.
+ */
+const waitForRemovalToLand = async (
+  conversationId: string,
+  removedUser: TestUser
+): Promise<void> => {
+  const deadlineMs = Date.now() + MEMBERSHIP_PROPAGATION_TIMEOUT_MS;
+  for (;;) {
+    const response = await getMeConversations(removedUser);
+    const stillAMember = (
+      response?.data?.me?.conversations?.conversations ?? []
+    ).some((conversation: { id: string }) => conversation.id === conversationId);
+    if (!stillAMember) {
+      return;
+    }
+    if (Date.now() >= deadlineMs) {
+      throw new Error(
+        `Membership removal did not propagate within ${MEMBERSHIP_PROPAGATION_TIMEOUT_MS}ms — ` +
+          'the removed member still sees the conversation, so the assertions below would ' +
+          'be measuring an un-applied removal rather than recipient re-read.'
+      );
+    }
+    await delay(250);
+  }
+};
 
 let pushSubscriptions: PushSubscriptionHandle[] = [];
 
@@ -242,15 +287,14 @@ describe('Conversation-message notifications — negative matrix', () => {
 
         // Act 2 — remove C (admin action, not a voluntary leave), then send again.
         // Membership removal dispatches to Matrix and is applied asynchronously
-        // (room.member.updated -> conversation_membership) — give it a moment
-        // to land before the second message, matching the eventual-consistency
-        // pattern used elsewhere in this suite (conversations.it-spec.ts).
+        // (room.member.updated -> conversation_membership), so POLL until the
+        // removal has actually landed rather than sleeping a literal.
         await removeConversationMember(
           conversationId,
           TestUserManager.users.spaceAdmin.agentId,
           TestUser.GLOBAL_ADMIN
         );
-        await delay(3_000);
+        await waitForRemovalToLand(conversationId, TestUser.SPACE_ADMIN);
 
         // C still has an active push subscription (beforeAll) and group push
         // at its default ON, and is now the ONLY member who can produce one

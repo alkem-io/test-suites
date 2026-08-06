@@ -125,15 +125,25 @@ export interface DigestWindow {
    */
   maxDelayGraceMs: number;
   /**
-   * How long after the LAST message of a burst it is still guaranteed to be
-   * too early for this track to have fired — `quiet` minus a small margin.
-   * Sound because a sweep can only ever DELAY a flush past `lastMessage +
-   * quiet`, never advance it. Sleep this long and then assert ZERO
-   * notifications to prove the pipeline debounces instead of sending on
-   * arrival (US1-AS3) — the one assertion R4 added that the pre-R4 design
-   * would have failed.
+   * How long after a message it is still guaranteed to be too early for this
+   * track to have fired — `quiet` minus a small margin.
+   *
+   * SOUND ONLY FOR A TRACK ARMED ONCE. The claim "a sweep can only DELAY a
+   * flush past `lastMessage + quiet`, never advance it" holds for a single
+   * message, but not for a burst: the real fire time is
+   * `min(lastMessage + quiet, firstMessage + maxDelay)`, so once a burst has
+   * run for longer than `maxDelay - quiet` the FR-011b cap wins and the digest
+   * fires BEFORE `lastMessage + quiet`. With the shipped `email:direct` values
+   * (quiet 4s, maxDelay 15s) any burst lasting over 11s trips it — reachable
+   * for a handful of sequential sends on a loaded runner, and it shows up as a
+   * debounce regression that isn't one.
+   *
+   * For a burst, use {@link preFireProbeAfterBurstMs}, which accounts for the
+   * cap and refuses to hand back an unsound bound.
    */
   preFireProbeMs: number;
+  /** The env var that sets this track's max delay — quoted in diagnostics. */
+  maxDelayEnvVar: string;
   /** Per-test timeout derived from this window — never a literal. */
   testTimeoutMs: number;
 }
@@ -190,8 +200,45 @@ export const digestWindow = (
       0,
       quietMs - Math.min(1_000, Math.floor(quietMs / 4))
     ),
+    maxDelayEnvVar: spec.maxDelayEnvVar,
     testTimeoutMs: timeoutFor(maxDelayGraceMs, 2, 60_000),
   };
+};
+
+/**
+ * Cap-aware pre-fire probe, for a track armed by a BURST rather than a single
+ * message.
+ *
+ * The fire time is `min(lastMessage + quiet, firstMessage + maxDelay)`.
+ * `preFireProbeMs` only models the first term, so after a long burst it can
+ * sleep straight PAST the flush and the following "assert zero" then fails on
+ * a correct build. This returns the largest sleep that is still guaranteed to
+ * land before EITHER term, measured from `firstMessageAtMs`.
+ *
+ * If the cap has already been reached, no sound probe exists — the digest may
+ * legitimately have fired already — so this THROWS rather than returning a
+ * bound the caller would use to assert something untrue. That converts an
+ * intermittent, misattributed red into one actionable message.
+ */
+export const preFireProbeAfterBurstMs = (
+  window: DigestWindow,
+  firstMessageAtMs: number,
+  nowMs: number = Date.now()
+): number => {
+  const margin = Math.min(1_000, Math.floor(window.quietMs / 4));
+  const capProbeMs = firstMessageAtMs + window.maxDelayMs - margin - nowMs;
+  if (capProbeMs <= 0) {
+    const burstMs = nowMs - firstMessageAtMs;
+    throw new Error(
+      `messaging-digest-windows: arming the ${window.track} burst took ${burstMs}ms, ` +
+        `which has already reached its max-delay cap of ${window.maxDelayMs}ms. ` +
+        'The FR-011b cap fires the digest BEFORE lastMessage + quiet, so there is no ' +
+        'sound "too early to have fired" bound left and a zero-notifications assertion ' +
+        `here would be testing nothing. Shorten the burst, or raise ${window.maxDelayEnvVar} ` +
+        'on BOTH the server under test and this harness.'
+    );
+  }
+  return Math.max(0, Math.min(window.preFireProbeMs, capProbeMs));
 };
 
 /**

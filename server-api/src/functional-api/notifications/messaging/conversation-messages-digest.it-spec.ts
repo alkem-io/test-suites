@@ -37,6 +37,7 @@ import {
   deleteMailSlurperMails,
   digestTestTimeoutMs,
   digestWindow,
+  preFireProbeAfterBurstMs,
   getMailsData,
   TestScenarioFactory,
   TestScenarioNoPreCreationConfig,
@@ -153,7 +154,10 @@ describe('Conversation-message notifications — debounce & digest (R4)', () => 
         await deleteMailSlurperMails();
 
         // Act — 5 messages spaced far closer together than the quiet period,
-        // so each one resets the debounce.
+        // so each one resets the debounce. The burst start is recorded because
+        // the probe below must respect the FR-011b cap, which is measured from
+        // the FIRST message and can fire the digest before the quiet period.
+        const burstStartedAtMs = Date.now();
         for (let i = 1; i <= 5; i++) {
           await sendInto(
             roomId,
@@ -163,12 +167,11 @@ describe('Conversation-message notifications — debounce & digest (R4)', () => 
         }
 
         // Assert 1 (LOAD-BEARING, new in R4) — nothing has been sent yet.
-        // Grace covers `email:direct` up to just SHORT of its quiet period,
-        // measured from the last message of the burst; a sweep can only delay
-        // a flush past that point, never advance it, so any email observed
-        // here means the pipeline sent on arrival instead of debouncing. The
-        // pre-R4 build emailed on the FIRST message and would fail here.
-        await delay(directEmail.preFireProbeMs);
+        // The bound is the earlier of `lastMessage + quiet` and the FR-011b
+        // cap, so any email observed here means the pipeline sent on arrival
+        // instead of debouncing. The pre-R4 build emailed on the FIRST message
+        // and would fail here.
+        await delay(preFireProbeAfterBurstMs(directEmail, burstStartedAtMs));
         const [, totalBeforeQuietElapsed] = await getMailsData();
         expect(totalBeforeQuietElapsed).toBe(0);
 
@@ -243,6 +246,7 @@ describe('Conversation-message notifications — debounce & digest (R4)', () => 
         await deleteMailSlurperMails();
 
         // Act — 2 messages from A and 3 from C, all inside one quiet period.
+        const burstStartedAtMs = Date.now();
         for (let i = 1; i <= 2; i++) {
           await sendInto(roomAId, `From A ${i}`, TestUser.GLOBAL_ADMIN);
         }
@@ -250,9 +254,10 @@ describe('Conversation-message notifications — debounce & digest (R4)', () => 
           await sendInto(roomCId, `From C ${i}`, TestUser.SPACE_ADMIN);
         }
 
-        // Assert — still nothing before the window elapses (grace covers
-        // `email:direct` quiet, measured from the last message).
-        await delay(directEmail.preFireProbeMs);
+        // Assert — still nothing before the window elapses (the earlier of
+        // `email:direct` quiet from the last message and the FR-011b cap from
+        // the first).
+        await delay(preFireProbeAfterBurstMs(directEmail, burstStartedAtMs));
         const [, totalBeforeQuietElapsed] = await getMailsData();
         expect(totalBeforeQuietElapsed).toBe(0);
 
@@ -329,6 +334,7 @@ describe('Conversation-message notifications — debounce & digest (R4)', () => 
       async () => {
         await deleteMailSlurperMails();
 
+        const burstStartedAtMs = Date.now();
         await sendInto(group1RoomId, 'Group one message', TestUser.GLOBAL_ADMIN);
         for (let i = 1; i <= 2; i++) {
           await sendInto(
@@ -338,9 +344,9 @@ describe('Conversation-message notifications — debounce & digest (R4)', () => 
           );
         }
 
-        // Grace covers `email:group` quiet (the longer of the two email
-        // tracks), measured from the last message.
-        await delay(groupEmail.preFireProbeMs);
+        // The earlier of `email:group` quiet from the last message and the
+        // FR-011b cap from the first.
+        await delay(preFireProbeAfterBurstMs(groupEmail, burstStartedAtMs));
         const [, totalBeforeQuietElapsed] = await getMailsData();
         expect(totalBeforeQuietElapsed).toBe(0);
 
