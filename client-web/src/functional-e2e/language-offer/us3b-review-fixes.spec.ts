@@ -51,9 +51,7 @@ test.describe("US3b — Phase V' review-fix regressions", () => {
   // (session-only stores nothing; the in-memory choice survives client-side
   // navigation only while the hoisted provider stays mounted, which a full reload
   // deliberately tears down).
-  test('corr-client-4 — anon decline is session-only / in-memory (re-offered after a full reload)', async ({
-    page,
-  }) => {
+  test('corr-client-4 — anon decline is session-only / in-memory (re-offered after a full reload)', async ({ page }, testInfo) => {
     await landAnonymously(page, '/home');
     await consentAcceptCookies(page); // answer the cookie banner so the language offer can appear
 
@@ -81,7 +79,7 @@ test.describe("US3b — Phase V' review-fix regressions", () => {
     const afterReload = await readLanguageStorage(page);
     expect(afterReload.languageOffer, 'still nothing persisted after reload').toBeNull();
 
-    await page.screenshot({ path: 'us3b-corr-client-4-inmemory-only.png', fullPage: false });
+    await page.screenshot({ path: testInfo.outputPath('us3b-corr-client-4-inmemory-only.png'), fullPage: false });
   });
 
   // corr-client-4 — LIVE client-side-navigation form of the scenario.
@@ -112,7 +110,7 @@ test.describe("US3b — Phase V' review-fix regressions", () => {
   // and is therefore true. Nothing JSON-parses the raw value anymore (the anonymous
   // choice is session-only, so LanguageOfferProvider no longer reads the cookie). The
   // load-bearing assertion is only that nothing crashes on the unparseable value.
-  test('corr-client-2 — non-JSON consent cookie does not crash the app', async ({ page, context }) => {
+  test('corr-client-2 — non-JSON consent cookie does not crash the app', async ({ page, context }, testInfo) => {
     const url = new URL(BASE_URL);
     await context.addCookies([
       {
@@ -144,6 +142,6 @@ test.describe("US3b — Phase V' review-fix regressions", () => {
     // cookie is truthy so the consent Accept-All button is NOT expected to show.
     await expect(cookieConsentAcceptAll(page)).toHaveCount(0);
 
-    await page.screenshot({ path: 'us3b-corr-client-2-bad-cookie-no-crash.png', fullPage: false });
+    await page.screenshot({ path: testInfo.outputPath('us3b-corr-client-2-bad-cookie-no-crash.png'), fullPage: false });
   });
 });

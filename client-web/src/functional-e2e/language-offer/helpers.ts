@@ -14,21 +14,51 @@
 //   test.use({ locale: 'nl-NL' })  -> sets navigator.languages, which is exactly
 //   what detectBrowserLanguage() (navigator.languages[0], primary-subtag) reads.
 
-import { Page, expect, Locator } from '@playwright/test';
+import { Page, expect, Locator, APIRequestContext } from '@playwright/test';
 
 export const BASE_URL = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
-export const GRAPHQL_URL = process.env.ALKEMIO_GRAPHQL || 'http://localhost:3000/graphql';
+export const GRAPHQL_URL = process.env.ALKEMIO_GRAPHQL || `${BASE_URL}/graphql`;
+
+/**
+ * Run a GraphQL operation on the caller's session. Pass `page.request` (or any
+ * context's `request`) so the browser's cookies authenticate the call — the
+ * walks use this to check the SERVER-side outcome of a UI action rather than
+ * trusting on-screen feedback.
+ */
+export async function gql(
+  api: APIRequestContext,
+  query: string,
+  variables?: Record<string, unknown>
+): Promise<Record<string, any>> {
+  const response = await api.post(GRAPHQL_URL, { data: { query, variables } });
+  const body = await response.json();
+  expect(body.errors, `GraphQL errors: ${JSON.stringify(body.errors)}`).toBeUndefined();
+  return body.data;
+}
+
+/**
+ * The platform's eligible language set + default, straight from the Config query
+ * the feature itself reads (anonymous-readable). Tests assert against this rather
+ * than hard-coding 'nl', so an environment that widens the eligible set fails
+ * loudly instead of silently under-asserting.
+ */
+export async function languageConfig(api: APIRequestContext): Promise<{ eligible: string[]; default: string }> {
+  const data = await gql(api, '{ platform { configuration { language { eligible default } } } }');
+  return data.platform.configuration.language;
+}
 
 // --- Selectors (from the real implementation) ---
 // LanguageOfferBanner.tsx: <header data-testid="language-offer-banner" data-language="nl">
 export const languageOfferBanner = (page: Page): Locator => page.getByTestId('language-offer-banner');
 
-// CookieConsentBanner.tsx (crd-layout keys) — button labels are the same across
-// locales for Accept-All (it is not re-translated in the nl file? verify), so we
-// anchor the landing wait on it. If localised, the settings/confirm still work by
-// role within the banner.
+// CookieConsentBanner.tsx (crd-layout `cookies.acceptAll`). The label IS
+// localised, so the locator lists every supported rendering and the landing wait
+// stays locale-independent. (In practice an unanswered anonymous visitor sees the
+// platform default — English — per the FR-004/SC-005 invariant the walks assert.)
 export const cookieConsentAcceptAll = (page: Page): Locator =>
-  page.getByRole('button', { name: /Accept All Cookies|Alle cookies accepteren/i });
+  page.getByRole('button', {
+    name: /Accept All Cookies|Accepteer Alle Cookies|Alle Cookies akzeptieren|Accepter tous les Cookies|Aceptar todas las cookies|Приеми всички бисквитки/i,
+  });
 // NOTE (2026-07-28): the `preference`/functional cookie category was removed. The
 // anonymous language choice is session-only (in-memory), never written to the
 // browser, so there is no per-category consent to grant. The cookie banner keeps
@@ -77,6 +107,20 @@ export async function activeDisplayLanguage(page: Page, timeout = 20_000): Promi
   if (await footerLanguageDutch(page).isVisible().catch(() => false)) return 'nl';
   if (await footerLanguageEnglish(page).isVisible().catch(() => false)) return 'en';
   return 'unknown';
+}
+
+/**
+ * Assert that no language offer is made. Waits up to `window` ms for the banner
+ * to appear and fails if it ever does — an explicit negative wait rather than a
+ * fixed sleep followed by a one-shot count, so a banner that renders late (the
+ * gate opens only after config + reconciliation resolve) is still caught.
+ */
+export async function expectNoLanguageOffer(page: Page, reason: string, window = 3_000): Promise<void> {
+  const appeared = await languageOfferBanner(page)
+    .waitFor({ state: 'visible', timeout: window })
+    .then(() => true)
+    .catch(() => false);
+  expect(appeared, reason).toBe(false);
 }
 
 /**

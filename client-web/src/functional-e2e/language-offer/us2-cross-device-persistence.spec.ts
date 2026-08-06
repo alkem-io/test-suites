@@ -1,18 +1,24 @@
-// Feature 029-detect-signup-language — US2: language preference follows the user
-// across browsers/devices (R-1 / FR-008 / FR-009 / FR-011). This is the
+// Feature 029-detect-signup-language — US2: the language preference follows the
+// USER across browsers/devices (R-1 / FR-008 / FR-009 / FR-011). This is the
 // server-persistence half — the switcher/settings path, no detection needed.
 //
-// Uses seeded user non.space@alkem.io / password, authenticating through the
-// Kratos browser UI (non-interactive-login is disabled on this stack). Each test
-// performs multiple full UI logins across fresh contexts, so timeouts are raised.
+// "Device 2" is a brand-new browser context restored from the persona's `.auth/`
+// session (see authState.ts): fresh cookie jar, empty localStorage, no in-memory
+// state — the ONLY channel that can carry the preference is the account itself.
+// Each walk asserts that explicitly (nothing language-related in browser storage)
+// so the proof does not rest on the absence of a login step.
 //
 // spec source: specs/029-detect-signup-language/repos.yaml -> tracks (US2)
 
-import { test, expect, Page } from '@playwright/test';
-import { BASE_URL, footerLanguageDutch, languageOfferBanner } from './helpers';
-import { uiLogin } from './loginHelper';
-
-const USER_EMAIL = 'non.space@alkem.io';
+import { test, expect, Page, Browser } from '@playwright/test';
+import {
+  BASE_URL,
+  footerLanguageDutch,
+  languageOfferBanner,
+  readLanguageStorage,
+  gql,
+} from './helpers';
+import { MEMBER_STATE } from './authState';
 
 // Settings language Select (UserSettingsTabView.tsx): SelectTrigger aria-label is
 // the localised "Interface language" (en) / "Interfacetaal" (nl) /
@@ -40,84 +46,109 @@ async function gotoLanguageSettings(page: Page): Promise<void> {
   await expect(languageSelectTrigger(page)).toBeVisible({ timeout: 20_000 });
 }
 
+/**
+ * Pick a language in the settings switcher and wait for the persisting mutation
+ * to come back OK — no fixed sleep, and a failed write fails the test here rather
+ * than as a confusing assertion further down.
+ */
 async function setLanguageViaSettings(page: Page, endonym: string): Promise<void> {
   await languageSelectTrigger(page).click();
-  await page.getByRole('option', { name: endonym, exact: true }).click();
-  // Give the updateUserSettings mutation time to persist.
-  await page.waitForTimeout(2500);
+  const [response] = await Promise.all([
+    page.waitForResponse(
+      async res => res.url().includes('/graphql') && res.request().postData()?.includes('updateUserSettings') === true,
+      { timeout: 20_000 }
+    ),
+    page.getByRole('option', { name: endonym, exact: true }).click(),
+  ]);
+  const body = await response.json();
+  expect(body.errors, `updateUserSettings failed: ${JSON.stringify(body.errors)}`).toBeUndefined();
+}
+
+/**
+ * Reset the account back to English over the API so runs are idempotent.
+ * Deliberately NOT swallowed: a failed reset leaves the persona in Dutch and
+ * would contaminate later scenarios, so it must fail loudly.
+ */
+async function resetAccountLanguageToEnglish(browser: Browser): Promise<void> {
+  const ctx = await browser.newContext({ storageState: MEMBER_STATE });
+  try {
+    const me = await gql(ctx.request, '{ me { user { id settings { language } } } }');
+    const user = me?.me?.user;
+    expect(user?.id, 'could not resolve the authenticated user for the language reset').toBeTruthy();
+    if (user.settings?.language === 'en') return;
+    await gql(
+      ctx.request,
+      `mutation ResetLanguage($userID: UUID!) {
+         updateUserSettings(settingsData: { userID: $userID, settings: { language: "en" } }) {
+           id settings { language }
+         }
+       }`,
+      { userID: user.id }
+    );
+  } finally {
+    await ctx.close();
+  }
 }
 
 test.describe('US2 — cross-device / cross-session persistence', () => {
-  // Reset the user back to English at the end of each test so runs are idempotent.
+  // Session comes from the `auth-setup` project (.auth/ storage state).
+  test.use({ storageState: MEMBER_STATE });
+
   test.afterEach(async ({ browser }) => {
-    const ctx = await browser.newContext({ locale: 'en-US' });
-    const page = await ctx.newPage();
-    try {
-      await uiLogin(page, USER_EMAIL);
-      await gotoLanguageSettings(page);
-      const current = (await languageSelectTrigger(page).textContent())?.trim();
-      if (current && current !== 'English') {
-        await setLanguageViaSettings(page, 'English');
-      }
-    } catch {
-      /* best-effort reset */
-    } finally {
-      await ctx.close();
-    }
+    await resetAccountLanguageToEnglish(browser);
   });
 
-  // US2-AS5: change language in settings -> persists on a fresh re-login (a second
-  // "device" = a brand-new context with cleared storage). FR-008/FR-009/FR-011.
-  test('US2-AS5 — settings language change persists across a fresh-context re-login', async ({
-    browser,
-  }) => {
-    test.setTimeout(220_000);
-    // Device 1 (en-US browser): log in, switch to Dutch via settings.
-    const ctx1 = await browser.newContext({ locale: 'en-US' });
-    const page1 = await ctx1.newPage();
-    await uiLogin(page1, USER_EMAIL);
-    await gotoLanguageSettings(page1);
-    await setLanguageViaSettings(page1, 'Nederlands');
-    // Immediate effect on device 1.
-    await expect(footerLanguageDutch(page1)).toBeVisible({ timeout: 15_000 });
-    await page1.screenshot({ path: 'us2-as5-device1-dutch.png', fullPage: false });
-    await ctx1.close();
+  // US2-AS5: change the language in settings on device 1 -> a second device
+  // (fresh context, same account) shows Dutch with zero re-selection.
+  // FR-008/FR-009/FR-011.
+  test('US2-AS5 — settings language change is served to a fresh device', async ({ page, browser }, testInfo) => {
+    // Device 1 (en-US browser): switch to Dutch via settings.
+    await gotoLanguageSettings(page);
+    await setLanguageViaSettings(page, 'Nederlands');
+    await expect(footerLanguageDutch(page)).toBeVisible({ timeout: 15_000 });
+    await page.screenshot({ path: testInfo.outputPath('us2-as5-device1-dutch.png') });
 
-    // Device 2 (fresh context, still en-US browser): log in again — Dutch persists
-    // with zero re-selection, proving it is a user-account setting not a browser one.
-    const ctx2 = await browser.newContext({ locale: 'en-US' });
-    const page2 = await ctx2.newPage();
-    await uiLogin(page2, USER_EMAIL);
-    await page2.goto(`${BASE_URL}/home`);
-    await expect(footerLanguageDutch(page2)).toBeVisible({ timeout: 20_000 });
-    // Stored preference wins => no new language offer banner.
-    await expect(languageOfferBanner(page2)).toHaveCount(0);
-    await page2.screenshot({ path: 'us2-as5-device2-dutch-persisted.png', fullPage: false });
-    await ctx2.close();
+    // Device 2: brand-new context, still an en-US browser.
+    const device2 = await browser.newContext({ storageState: MEMBER_STATE, locale: 'en-US' });
+    try {
+      const page2 = await device2.newPage();
+      await page2.goto(`${BASE_URL}/home`);
+      await expect(footerLanguageDutch(page2)).toBeVisible({ timeout: 20_000 });
+      // Stored preference wins => no new language offer banner.
+      await expect(languageOfferBanner(page2)).toHaveCount(0);
+
+      // The account is the ONLY carrier: this device has no language in browser storage.
+      const storage = await readLanguageStorage(page2);
+      expect(storage.languageOffer, 'device 2 must not be reading a stored browser preference').toBeNull();
+      expect(storage.legacyI18n, 'device 2 must not be reading a legacy i18nextLng value').toBeNull();
+
+      await page2.screenshot({ path: testInfo.outputPath('us2-as5-device2-dutch-persisted.png') });
+    } finally {
+      await device2.close();
+    }
   });
 
   // US2-AS3: stored Dutch + a de-DE browser -> stored preference wins, no offer.
   test('US2-AS3 — stored preference wins over a differing browser language; no offer', async ({
+    page,
     browser,
-  }) => {
-    test.setTimeout(220_000);
+  }, testInfo) => {
     // Seed Dutch on the account (en-US device).
-    const ctx1 = await browser.newContext({ locale: 'en-US' });
-    const page1 = await ctx1.newPage();
-    await uiLogin(page1, USER_EMAIL);
-    await gotoLanguageSettings(page1);
-    await setLanguageViaSettings(page1, 'Nederlands');
-    await expect(footerLanguageDutch(page1)).toBeVisible({ timeout: 15_000 });
-    await ctx1.close();
+    await gotoLanguageSettings(page);
+    await setLanguageViaSettings(page, 'Nederlands');
+    await expect(footerLanguageDutch(page)).toBeVisible({ timeout: 15_000 });
 
-    // Sign in from a de-DE browser: account Dutch must win, and NO offer banner.
-    const ctx2 = await browser.newContext({ locale: 'de-DE' });
-    const page2 = await ctx2.newPage();
-    await uiLogin(page2, USER_EMAIL);
-    await page2.goto(`${BASE_URL}/home`);
-    await expect(footerLanguageDutch(page2)).toBeVisible({ timeout: 20_000 });
-    await expect(languageOfferBanner(page2)).toHaveCount(0);
-    await page2.screenshot({ path: 'us2-as3-stored-wins.png', fullPage: false });
-    await ctx2.close();
+    // Same account from a de-DE browser: the account preference must win, and the
+    // visitor must NOT be offered anything.
+    const germanDevice = await browser.newContext({ storageState: MEMBER_STATE, locale: 'de-DE' });
+    try {
+      const page2 = await germanDevice.newPage();
+      await page2.goto(`${BASE_URL}/home`);
+      await expect(footerLanguageDutch(page2)).toBeVisible({ timeout: 20_000 });
+      await expect(languageOfferBanner(page2)).toHaveCount(0);
+      await page2.screenshot({ path: testInfo.outputPath('us2-as3-stored-wins.png') });
+    } finally {
+      await germanDevice.close();
+    }
   });
 });

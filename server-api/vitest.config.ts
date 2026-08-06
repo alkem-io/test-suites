@@ -115,6 +115,7 @@ export default defineConfig({
       project('graphql-guard', [
         'src/functional-api/graphql-guard/**/*.it-spec.ts',
       ]),
+      project('language', ['src/functional-api/language/**/*.it-spec.ts']),
       project('nightly', [
         'src/functional-api/account/**/*.it-spec.ts',
         'src/functional-api/roleset/**/*.it-spec.ts',
@@ -128,6 +129,7 @@ export default defineConfig({
         'src/functional-api/templates/**/*.it-spec.ts',
         'src/functional-api/calendar/**/*.it-spec.ts',
         'src/functional-api/push-notifications/**/*.it-spec.ts',
+        'src/functional-api/language/**/*.it-spec.ts',
       ]),
     ],
   },

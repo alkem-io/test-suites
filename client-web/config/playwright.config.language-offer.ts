@@ -2,15 +2,23 @@ import { defineConfig, devices } from '@playwright/test';
 import dotenv from 'dotenv';
 import path from 'path';
 
-// Forge verifier config for feature 029-detect-signup-language.
-// Deliberately has NO globalSetup: the default global-setup calls
-// registerAllTestUsers() which requires the server's non-interactive-login
-// endpoint — DISABLED on this stack. These specs authenticate through the
-// Kratos browser UI instead, and the anonymous specs need no auth at all.
+// Runner config for feature 029-detect-signup-language.
+//
+// The suite mixes anonymous walks (no auth at all — each test needs a virgin
+// cookie jar) with authenticated ones, and drives a different browser `locale`
+// per file, so authentication cannot come from a project-wide `storageState`.
+// Instead an `auth-setup` project logs each persona in ONCE and persists the
+// session to `.auth/`; the authenticated specs opt in with
+// `test.use({ storageState })` (see authState.ts).
+//
+// globalSetup (registerAllTestUsers) is intentionally not run here: these walks
+// use seeded personas only and never create harness users.
 dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 
+const testDirectory = path.resolve(__dirname, '..', 'src', 'functional-e2e', 'language-offer');
+
 export default defineConfig({
-  testDir: path.resolve(__dirname, '..', 'src', 'functional-e2e', 'language-offer'),
+  testDir: testDirectory,
   fullyParallel: false,
   forbidOnly: false,
   retries: 0,
@@ -28,7 +36,19 @@ export default defineConfig({
   expect: { timeout: 15_000 },
   projects: [
     {
+      name: 'auth-setup',
+      testMatch: /auth\.setup\.ts/,
+      // Every spec depends on this project, so a single flaky sign-in would skip
+      // the whole suite. The Kratos flow occasionally stalls at "Preparing secure
+      // sign-in…" (the flow-init request never resolves) — retry rather than lose
+      // the run. Only the sign-in is retried; the walks themselves stay at 0.
+      retries: 2,
+      use: { ...devices['Desktop Chrome'], channel: 'chrome' },
+    },
+    {
       name: 'Google Chrome',
+      testIgnore: /auth\.setup\.ts/,
+      dependencies: ['auth-setup'],
       use: { ...devices['Desktop Chrome'], channel: 'chrome', viewport: { width: 1440, height: 900 } },
     },
   ],

@@ -14,6 +14,10 @@ dotenv.config({ path: path.resolve(__dirname, '.env') });
 export default defineConfig({
   globalSetup: './config/global-setup.ts',
   testDir: './src/functional-e2e',
+  /* The 029 language-offer acceptance walks need their own runner settings
+     (longer timeouts, per-file locales) and are run via
+     config/playwright.config.language-offer.ts, not this default suite. */
+  testIgnore: '**/language-offer/**',
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
