@@ -1,418 +1,182 @@
-import { test, expect, type Browser, type BrowserContext, type Page, type Locator } from '@playwright/test';
-import fs from 'fs';
-import os from 'os';
-import path from 'path';
-import zlib from 'zlib';
-import { getMails, UniqueIDGenerator } from '@alkemio/tests-lib';
+import { expect, test } from '@playwright/test';
+import { UniqueIDGenerator } from '@alkemio/tests-lib';
+import {
+  avatarCellCount,
+  avatarComposite,
+  composer,
+  conversationRow,
+  createConversation,
+  ensureConversationList,
+  openChatPanel,
+  openConversation,
+  panelHeader,
+  registerAccounts,
+  registerAndSignIn,
+  setGroupPhoto,
+  teardownAccounts,
+  type TestAccount,
+  type TestPerson,
+} from './chat-avatars.helpers';
 
 /**
- * @forge-acceptance — workspace#033-chat-avatars, User Story 2 (P1)
+ * workspace#033-chat-avatars — User Story 2 (P1)
  *
- * "Recognize the group conversation from the thread header": the thread
+ * "Recognize the group conversation from the thread header": the open thread's
  * header shows the same visual identity the conversation list row shows for
- * that group — the custom photo when set, otherwise the composite of up to
- * four participant avatars — and it updates the same way the list does when
- * the photo changes.
+ * that group — the custom photo when one is set, otherwise the composite of up
+ * to four participant avatars — and it updates the same way the list does.
  *
- * Mirrors specs/033-chat-avatars/spec.md User Story 2, scenario-for-scenario
- * (US2-AS1..AS4). Self-contained: registers fresh users through the real
- * sign-up + email-verification flow and builds group conversations through
- * the chat UI itself — no API seeding.
+ * Covers spec.md US2 AS1–AS4. Every registered user is deleted in afterAll.
  */
-
-const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
-const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'ChatAvatars!Test2026';
 
 test.describe.configure({ mode: 'serial' });
 
-/** Fetches the most recent verification email for `email` (scoped by recipient
- * and sorted by send date, unlike the package's unscoped `getVerificationLink`,
- * which returns the first "verify"-subject email in the mailbox — a real hazard
- * when several registrations are in flight against a shared MailSlurper inbox). */
-async function getVerificationLinkFor(email: string): Promise<string | undefined> {
-  const response = await getMails();
-  const items = response.body.mailItems as Array<{ subject: string; body: string; toAddresses?: string[]; dateSent: string }>;
-  const matches = items
-    .filter(
-      item =>
-        item.subject === '[Alkemio] Please verify your email address!' &&
-        item.toAddresses?.some(addr => addr.toLowerCase() === email.toLowerCase())
-    )
-    .sort((a, b) => new Date(b.dateSent).getTime() - new Date(a.dateSent).getTime());
-  const mail = matches[0];
-  if (!mail) return undefined;
-  const linkMatch = mail.body.match(/https?:\/\/[^\s"<]+self-service\/verification[^\s"<]*/);
-  return linkMatch ? linkMatch[0].replace(/&amp;/g, '&') : undefined;
-}
-
-async function acceptCookiesIfPresent(page: Page): Promise<void> {
-  const acceptButton = page.getByRole('button', { name: 'Accept All Cookies', exact: true });
-  if (await acceptButton.isVisible({ timeout: 3000 }).catch(() => false)) {
-    await acceptButton.click();
-  }
-}
-
-/**
- * Registers a brand-new user through the real sign-up + email-verification
- * flow, then signs in.
- *
- * NOTE (defect, filed separately — not a re-implementation of app logic):
- * the accept-terms checkbox is only ticked ONCE, on the `/sign_up` step. The
- * `/registration` (password) step reuses the SAME Kratos flow id, so the
- * checkbox's `true` value already carries over via the
- * `crd-auth-accepted-terms-<flowId>` sessionStorage key
- * (`src/main/crdPages/auth/SignUpCrdRoute.tsx`). Ticking it again there
- * toggles it back to `false` and permanently disables "Next" (the two steps
- * no longer get independent flow ids, unlike the persistence comment on that
- * component still assumes) — a real, reproducible defect, filed in this
- * verification's report, distinct from the chat-avatars story under test.
- */
-async function registerAndSignIn(
-  browser: Browser,
-  email: string,
-  firstName: string,
-  lastName: string
-): Promise<{ context: BrowserContext; page: Page }> {
-  const context = await browser.newContext();
-  const page = await context.newPage();
-
-  await page.goto(`${baseUrl}/sign_up`);
-  await acceptCookiesIfPresent(page);
-  await page.getByRole('checkbox').click();
-  await page.getByLabel('E-Mail *').fill(email);
-  await page.getByLabel('First Name *').fill(firstName);
-  await page.getByLabel('Last Name *').fill(lastName);
-  await page.getByRole('button', { name: 'Next' }).click();
-
-  await expect(page).toHaveURL(/\/registration/, { timeout: 15000 });
-  // Do NOT re-click the accept-terms checkbox here — see the defect note above.
-  await page.getByLabel('Password *').fill(password);
-  const passwordNextButton = page.getByRole('button', { name: 'Next', exact: true });
-  await expect(passwordNextButton).toBeEnabled({ timeout: 10000 });
-  await passwordNextButton.click();
-
-  await expect(page).toHaveURL(/registration\/success/, { timeout: 15000 });
-
-  let verificationLink: string | undefined;
-  await expect
-    .poll(
-      async () => {
-        verificationLink = await getVerificationLinkFor(email);
-        return verificationLink;
-      },
-      { timeout: 30000, intervals: [1000, 1000, 2000] }
-    )
-    .toBeTruthy();
-
-  await page.goto(verificationLink as string);
-  await expect(page.getByText('You successfully verified your email address.')).toBeVisible({ timeout: 10000 });
-
-  await page.goto(baseUrl);
-  await acceptCookiesIfPresent(page);
-  await page.getByRole('link', { name: /log in/i }).click();
-  await expect(page).toHaveURL(/\/login/, { timeout: 15000 });
-  await page.getByLabel('E-Mail *').fill(email);
-  await page.getByLabel('Password *').fill(password);
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await expect(page).toHaveURL(`${baseUrl}/home`, { timeout: 20000 });
-
-  return { context, page };
-}
-
-/** Writes a small, distinctly-colored valid PNG fixture and returns its path.
- * `variant` shifts the color so two successive uploads are visually distinguishable. */
-function createPngFixture(variant: 'a' | 'b' = 'a'): string {
-  function chunk(tag: string, data: Buffer): Buffer {
-    const tagBuf = Buffer.from(tag, 'ascii');
-    const lengthBuf = Buffer.alloc(4);
-    lengthBuf.writeUInt32BE(data.length, 0);
-    const crcBuf = Buffer.alloc(4);
-    crcBuf.writeUInt32BE(zlib.crc32(Buffer.concat([tagBuf, data])) >>> 0, 0);
-    return Buffer.concat([lengthBuf, tagBuf, data, crcBuf]);
-  }
-
-  const width = 64;
-  const height = 64;
-  const signature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
-  const ihdrData = Buffer.alloc(13);
-  ihdrData.writeUInt32BE(width, 0);
-  ihdrData.writeUInt32BE(height, 4);
-  ihdrData.writeUInt8(8, 8);
-  ihdrData.writeUInt8(2, 9);
-  const ihdr = chunk('IHDR', ihdrData);
-
-  const rows: Buffer[] = [];
-  for (let y = 0; y < height; y++) {
-    const row = Buffer.alloc(1 + width * 3);
-    row[0] = 0;
-    for (let x = 0; x < width; x++) {
-      const isStripe = (x + y) % 16 < 8;
-      if (variant === 'a') {
-        row[1 + x * 3] = isStripe ? 20 : 220;
-        row[1 + x * 3 + 1] = isStripe ? 160 : 20;
-        row[1 + x * 3 + 2] = isStripe ? 220 : 20;
-      } else {
-        row[1 + x * 3] = isStripe ? 240 : 10;
-        row[1 + x * 3 + 1] = isStripe ? 200 : 90;
-        row[1 + x * 3 + 2] = isStripe ? 10 : 240;
-      }
-    }
-    rows.push(row);
-  }
-  const idat = chunk('IDAT', zlib.deflateSync(Buffer.concat(rows)));
-  const iend = chunk('IEND', Buffer.alloc(0));
-
-  const png = Buffer.concat([signature, ihdr, idat, iend]);
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'chat-avatars-group-photo-'));
-  const filePath = path.join(dir, `group-${variant}.png`);
-  fs.writeFileSync(filePath, png);
-  return filePath;
-}
-
-async function openChatPanel(page: Page): Promise<void> {
-  await acceptCookiesIfPresent(page);
-  await page.getByRole('button', { name: 'Open chat' }).click();
-  await expect(page.getByRole('dialog', { name: 'Chat' })).toBeVisible();
-}
-
-/** Locates a group-thread list row by requiring ALL given participant names, order-independent. */
-function groupRowByNames(page: Page, names: string[]): Locator {
-  let locator = page.getByRole('button');
-  for (const name of names) {
-    locator = locator.filter({ hasText: name });
-  }
-  return locator;
-}
-
-async function createGroupChat(viewerPage: Page, names: string[]): Promise<void> {
-  await viewerPage.getByRole('button', { name: 'New message' }).click();
-  const search = viewerPage.getByPlaceholder(/Search people/);
-  for (const name of names) {
-    await search.fill(name);
-    await viewerPage.getByRole('button', { name: new RegExp(name, 'i') }).click();
-  }
-  await viewerPage.getByRole('button', { name: 'Start group chat' }).click();
-}
-
-async function goBackToList(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Back to conversations' }).click();
-}
-
-/** Extracts the avatar composition (image srcs + fallback-initials texts, in DOM order)
- * from a scoped locator, using the CRD avatar primitives' stable `data-slot` markers. */
-async function avatarComposite(scope: Locator): Promise<{ imgSrcs: string[]; fallbackTexts: string[] }> {
-  const imgSrcs = await scope
-    .locator('[data-slot="avatar-image"]')
-    .evaluateAll(nodes => nodes.map(node => (node as HTMLImageElement).getAttribute('src') ?? ''));
-  const fallbackTexts = await scope
-    .locator('[data-slot="avatar-fallback"]')
-    .evaluateAll(nodes => nodes.map(node => node.textContent?.trim() ?? ''));
-  return { imgSrcs, fallbackTexts };
-}
-
-function headerAvatarScope(page: Page): Locator {
-  // Scope to the ChatPanel's own header — `page.locator('header')` alone also
-  // matches the app's global site-nav `<header>` (which has its own user-menu
-  // avatar), double-counting avatars across both surfaces.
-  return page.locator('[role="dialog"] > header');
-}
-
-test.describe('US2 — group thread header identity', { tag: ['@forge-acceptance'] }, () => {
-  let browser: Browser;
-  let viewerCtx: BrowserContext, bCtx: BrowserContext, cCtx: BrowserContext;
-  let viewerPage: Page;
-  let extraCtxs: BrowserContext[] = [];
-  let bName: string, cName: string;
+test.describe('US2 — group thread header identity', { tag: ['@chat-avatars'] }, () => {
+  let viewer: TestPerson;
+  /**
+   * The other participants exist only to be found in the people picker and to
+   * appear in the group's avatar composite — this walk never drives them, so
+   * they get accounts but no browser session (see `registerAccount`).
+   */
+  let members: TestAccount[] = [];
   let uid: string;
 
-  test.beforeAll(async ({ browser: b }) => {
-    test.setTimeout(240000);
-    browser = b;
+  test.beforeAll(async ({ browser }) => {
+    test.setTimeout(900000);
     uid = UniqueIDGenerator.getID();
 
-    const viewer = await registerAndSignIn(browser, `chatavatars2-viewer-${uid}@alkem.io`, `Viewer2${uid}`, 'Reader');
-    viewerCtx = viewer.context;
-    viewerPage = viewer.page;
+    // Two "other" participants for AS1–AS3, three more for the >4 cap in AS4.
+    // The viewer's session and all five accounts are created concurrently.
+    const memberSpecs = [
+      ['b', `Bella2${uid}`],
+      ['c', `Charlie2${uid}`],
+      ['d', `Dana2${uid}`],
+      ['e', `Eli2${uid}`],
+      ['f', `Fran2${uid}`],
+    ].map(([slot, firstName]) => ({
+      email: `chatavatars2-${slot}-${uid}@alkem.io`,
+      firstName,
+      lastName: 'Member',
+    }));
 
-    const b1 = await registerAndSignIn(browser, `chatavatars2-b-${uid}@alkem.io`, `Bella2${uid}`, 'Sender');
-    bCtx = b1.context;
-    bName = `Bella2${uid} Sender`;
+    [viewer, members] = await Promise.all([
+      registerAndSignIn(browser, {
+        email: `chatavatars2-viewer-${uid}@alkem.io`,
+        firstName: `Viewer2${uid}`,
+        lastName: 'Reader',
+      }),
+      registerAccounts(browser, memberSpecs),
+    ]);
 
-    const c1 = await registerAndSignIn(browser, `chatavatars2-c-${uid}@alkem.io`, `Charlie2${uid}`, 'NoAvatar');
-    cCtx = c1.context;
-    cName = `Charlie2${uid} NoAvatar`;
-
-    // Viewer creates the group conversation with B and C via the chat UI (no API seeding).
-    await openChatPanel(viewerPage);
-    await createGroupChat(viewerPage, [bName, cName]);
-    await expect(viewerPage.getByPlaceholder(/Add a comment/i)).toBeVisible({ timeout: 15000 });
+    await openChatPanel(viewer.page);
+    await createConversation(viewer.page, [members[0].displayName, members[1].displayName]);
   });
 
   test.afterAll(async () => {
-    await viewerCtx?.close();
-    await bCtx?.close();
-    await cCtx?.close();
-    for (const ctx of extraCtxs) {
-      await ctx.close();
-    }
+    await teardownAccounts([viewer, ...members]);
   });
 
-  test('US2-AS1: a group with no custom photo shows the same avatar composite in the header as in the list row', async () => {
-    await goBackToList(viewerPage);
-    const row = groupRowByNames(viewerPage, [bName, cName]);
-    await expect(row).toBeVisible({ timeout: 10000 });
+  test('US2-AS1: with no custom photo the header shows the list row’s composite', async ({}, testInfo) => {
+    await ensureConversationList(viewer.page);
+    const row = conversationRow(viewer.page, [members[0].displayName, members[1].displayName]);
+    await expect(row).toHaveCount(1, { timeout: 20000 });
 
     const listComposite = await avatarComposite(row);
-    // Two "other" participants (B, C) → a composite of exactly 2 avatar cells
-    // (each rendered as either a real image or an initials fallback, depending
-    // on whether the platform has assigned that account a profile picture —
-    // either way, a composite, never the group's single-photo branch).
+    // Two other participants (the viewer is excluded from the composite) → two
+    // cells, each an image or an initials tile depending on that account's photo.
     expect(listComposite.imgSrcs.length + listComposite.fallbackTexts.length).toBe(2);
-    await viewerPage.screenshot({ path: 'test-results/us2-manual-evidence/US2-AS1-list-row-reference.png' });
+    await viewer.page.screenshot({ path: testInfo.outputPath('us2-as1-list-row.png') });
 
     await row.click();
-    await expect(viewerPage.getByPlaceholder(/Add a comment/i)).toBeVisible({ timeout: 10000 });
+    await expect(composer(viewer.page)).toBeVisible({ timeout: 20000 });
 
-    const headerComposite = await avatarComposite(headerAvatarScope(viewerPage));
-    // Header ≡ list row: same avatars, same fallback texts, same order.
+    // Header ≡ list row: same images, same fallbacks, same order.
+    const headerComposite = await avatarComposite(panelHeader(viewer.page));
     expect(headerComposite.imgSrcs).toEqual(listComposite.imgSrcs);
     expect(headerComposite.fallbackTexts).toEqual(listComposite.fallbackTexts);
-    expect(headerComposite.imgSrcs.length + headerComposite.fallbackTexts.length).toBe(2);
-
-    await viewerPage.screenshot({ path: 'test-results/us2-manual-evidence/US2-AS1.png' });
+    await viewer.page.screenshot({ path: testInfo.outputPath('us2-as1-header.png') });
   });
 
-  test('US2-AS2: setting a group photo makes the header show the photo — not the composite — exactly as the list row', async () => {
-    await viewerPage.getByRole('button', { name: 'Group settings' }).click();
-    await expect(viewerPage.getByRole('heading', { name: 'Group settings' })).toBeVisible();
+  test('US2-AS2: a custom photo replaces the composite, in the header and the list alike', async ({}, testInfo) => {
+    test.setTimeout(180000);
+    // Open the thread this scenario acts on rather than inheriting whichever
+    // view the previous test left behind.
+    await openConversation(viewer.page, [members[0].displayName, members[1].displayName]);
+    await setGroupPhoto(viewer.page, 'a');
 
-    const fixturePath = createPngFixture('a');
-    await viewerPage.getByRole('button', { name: 'Change photo' }).click();
-    await viewerPage.locator('input[type="file"]').setInputFiles(fixturePath);
-    await expect(viewerPage.getByRole('heading', { name: 'Crop photo' })).toBeVisible({ timeout: 10000 });
-
-    const cropImg = viewerPage.getByAltText('Crop preview');
-    await expect(cropImg).toBeVisible({ timeout: 10000 });
-    const box = await cropImg.boundingBox();
-    if (!box) throw new Error('Crop preview image has no bounding box');
-    await viewerPage.mouse.move(box.x + box.width * 0.15, box.y + box.height * 0.15);
-    await viewerPage.mouse.down();
-    await viewerPage.mouse.move(box.x + box.width * 0.85, box.y + box.height * 0.85, { steps: 10 });
-    await viewerPage.mouse.up();
-
-    await viewerPage.getByRole('button', { name: 'Save', exact: true }).click(); // crop dialog save (uploads eagerly)
-    await expect(viewerPage.getByRole('heading', { name: 'Crop photo' })).toHaveCount(0, { timeout: 15000 });
-
-    await viewerPage.getByRole('button', { name: 'Save', exact: true }).click(); // group settings save (persists avatarUrl)
-    await expect(viewerPage.getByRole('heading', { name: 'Group settings' })).toHaveCount(0, { timeout: 15000 });
-
-    // Header: single photo avatar, not the composite.
-    const headerComposite = await avatarComposite(headerAvatarScope(viewerPage));
+    // Wait for the header to settle on the single-photo branch BEFORE reading it —
+    // reading first and polling afterwards would assert on the pre-upload snapshot.
     await expect
-      .poll(async () => (await avatarComposite(headerAvatarScope(viewerPage))).imgSrcs.length, { timeout: 15000 })
+      .poll(async () => avatarCellCount(panelHeader(viewer.page)), { timeout: 30000 })
       .toBe(1);
-    expect(headerComposite.fallbackTexts).toHaveLength(0);
-    await viewerPage.screenshot({ path: 'test-results/us2-manual-evidence/US2-AS2.png' });
 
-    const headerImgSrc = (await avatarComposite(headerAvatarScope(viewerPage))).imgSrcs[0];
+    const header = await avatarComposite(panelHeader(viewer.page));
+    expect(header.imgSrcs).toHaveLength(1);
+    expect(header.fallbackTexts).toHaveLength(0);
+    await viewer.page.screenshot({ path: testInfo.outputPath('us2-as2-header.png') });
 
-    await goBackToList(viewerPage);
-    const row = groupRowByNames(viewerPage, [bName, cName]);
-    await expect(row).toBeVisible({ timeout: 10000 });
+    await ensureConversationList(viewer.page);
+    const row = conversationRow(viewer.page, [members[0].displayName, members[1].displayName]);
+    await expect(row).toHaveCount(1, { timeout: 20000 });
     const listComposite = await avatarComposite(row);
-    expect(listComposite.imgSrcs).toEqual([headerImgSrc]);
+    expect(listComposite.imgSrcs).toEqual(header.imgSrcs);
     expect(listComposite.fallbackTexts).toHaveLength(0);
-    await viewerPage.screenshot({ path: 'test-results/us2-manual-evidence/US2-AS2-list-row-reference.png' });
+    await viewer.page.screenshot({ path: testInfo.outputPath('us2-as2-list-row.png') });
 
     await row.click();
-    await expect(viewerPage.getByPlaceholder(/Add a comment/i)).toBeVisible({ timeout: 10000 });
+    await expect(composer(viewer.page)).toBeVisible({ timeout: 20000 });
   });
 
-  test('US2-AS3: changing the group photo updates the header the same way it updates the list', async () => {
-    const beforeImgSrc = (await avatarComposite(headerAvatarScope(viewerPage))).imgSrcs[0];
+  test('US2-AS3: changing the photo updates the header the same way it updates the list', async ({}, testInfo) => {
+    test.setTimeout(240000);
+    await openConversation(viewer.page, [members[0].displayName, members[1].displayName]);
 
-    await viewerPage.getByRole('button', { name: 'Group settings' }).click();
-    await expect(viewerPage.getByRole('heading', { name: 'Group settings' })).toBeVisible();
+    // This scenario is about CHANGING an existing photo, so it needs one to be
+    // there. Set it here when AS2 did not run (filtered run, shard, retry)
+    // instead of failing on a precondition another test happens to own.
+    if ((await avatarComposite(panelHeader(viewer.page))).imgSrcs.length === 0) {
+      await setGroupPhoto(viewer.page, 'a');
+      await expect.poll(async () => avatarCellCount(panelHeader(viewer.page)), { timeout: 30000 }).toBe(1);
+    }
+    const before = (await avatarComposite(panelHeader(viewer.page))).imgSrcs[0];
+    expect(before, 'the group should have a photo before this scenario changes it').toBeTruthy();
 
-    const fixturePath = createPngFixture('b');
-    await viewerPage.getByRole('button', { name: 'Change photo' }).click();
-    await viewerPage.locator('input[type="file"]').setInputFiles(fixturePath);
-    await expect(viewerPage.getByRole('heading', { name: 'Crop photo' })).toBeVisible({ timeout: 10000 });
-
-    const cropImg = viewerPage.getByAltText('Crop preview');
-    await expect(cropImg).toBeVisible({ timeout: 10000 });
-    const box = await cropImg.boundingBox();
-    if (!box) throw new Error('Crop preview image has no bounding box');
-    await viewerPage.mouse.move(box.x + box.width * 0.1, box.y + box.height * 0.3);
-    await viewerPage.mouse.down();
-    await viewerPage.mouse.move(box.x + box.width * 0.7, box.y + box.height * 0.9, { steps: 10 });
-    await viewerPage.mouse.up();
-
-    await viewerPage.getByRole('button', { name: 'Save', exact: true }).click();
-    await expect(viewerPage.getByRole('heading', { name: 'Crop photo' })).toHaveCount(0, { timeout: 15000 });
-    await viewerPage.getByRole('button', { name: 'Save', exact: true }).click();
-    await expect(viewerPage.getByRole('heading', { name: 'Group settings' })).toHaveCount(0, { timeout: 15000 });
+    await setGroupPhoto(viewer.page, 'b');
 
     await expect
-      .poll(
-        async () => {
-          const composite = await avatarComposite(headerAvatarScope(viewerPage));
-          return composite.imgSrcs[0];
-        },
-        { timeout: 15000 }
-      )
-      .not.toBe(beforeImgSrc);
+      .poll(async () => (await avatarComposite(panelHeader(viewer.page))).imgSrcs[0], { timeout: 30000 })
+      .not.toBe(before);
 
-    const headerImgSrc = (await avatarComposite(headerAvatarScope(viewerPage))).imgSrcs[0];
-    await viewerPage.screenshot({ path: 'test-results/us2-manual-evidence/US2-AS3.png' });
+    const header = await avatarComposite(panelHeader(viewer.page));
+    await viewer.page.screenshot({ path: testInfo.outputPath('us2-as3-header.png') });
 
-    await goBackToList(viewerPage);
-    const row = groupRowByNames(viewerPage, [bName, cName]);
-    await expect(row).toBeVisible({ timeout: 10000 });
-    const listComposite = await avatarComposite(row);
-    expect(listComposite.imgSrcs).toEqual([headerImgSrc]);
-    await viewerPage.screenshot({ path: 'test-results/us2-manual-evidence/US2-AS3-list-row-reference.png' });
-
-    await row.click();
-    await expect(viewerPage.getByPlaceholder(/Add a comment/i)).toBeVisible({ timeout: 10000 });
+    await ensureConversationList(viewer.page);
+    const row = conversationRow(viewer.page, [members[0].displayName, members[1].displayName]);
+    await expect(row).toHaveCount(1, { timeout: 20000 });
+    expect((await avatarComposite(row)).imgSrcs).toEqual(header.imgSrcs);
+    await viewer.page.screenshot({ path: testInfo.outputPath('us2-as3-list-row.png') });
   });
 
-  test('US2-AS4: a group with more than four other participants shows the same 4-avatar subset in the header as in the list row', async () => {
-    test.setTimeout(300000);
-    // Three more participants beyond B and C → 5 "other" participants total (> 4).
-    const names: string[] = [bName, cName];
-    for (const letter of ['d', 'e', 'f']) {
-      const first = `${letter.toUpperCase()}${letter}${uid}`;
-      const email = `chatavatars2-${letter}-${uid}@alkem.io`;
-      const { context } = await registerAndSignIn(browser, email, first, 'Extra');
-      extraCtxs.push(context);
-      names.push(`${first} Extra`);
-    }
-    expect(names).toHaveLength(5);
+  test('US2-AS4: with more than four other participants both surfaces show the same 4-avatar subset', async ({}, testInfo) => {
+    test.setTimeout(180000);
+    const names = members.map(member => member.displayName);
+    expect(names, 'AS4 needs five other participants').toHaveLength(5);
 
-    await goBackToList(viewerPage);
-    await viewerPage.getByRole('button', { name: 'New message' }).click();
-    const search = viewerPage.getByPlaceholder(/Search people/);
-    for (const name of names) {
-      await search.fill(name);
-      await viewerPage.getByRole('button', { name: new RegExp(name, 'i') }).click();
-    }
-    await viewerPage.getByRole('button', { name: 'Start group chat' }).click();
-    await expect(viewerPage.getByPlaceholder(/Add a comment/i)).toBeVisible({ timeout: 15000 });
+    await createConversation(viewer.page, names);
 
-    const headerComposite = await avatarComposite(headerAvatarScope(viewerPage));
-    // GroupAvatar caps the composite at 4, regardless of the 5 other participants.
-    expect(headerComposite.fallbackTexts.length + headerComposite.imgSrcs.length).toBe(4);
-    await viewerPage.screenshot({ path: 'test-results/us2-manual-evidence/US2-AS4.png' });
+    const header = await avatarComposite(panelHeader(viewer.page));
+    // GroupAvatar caps the composite at four cells regardless of member count.
+    expect(header.imgSrcs.length + header.fallbackTexts.length).toBe(4);
+    await viewer.page.screenshot({ path: testInfo.outputPath('us2-as4-header.png') });
 
-    await goBackToList(viewerPage);
-    const row = groupRowByNames(viewerPage, names);
-    await expect(row).toBeVisible({ timeout: 10000 });
+    await ensureConversationList(viewer.page);
+    const row = conversationRow(viewer.page, names);
+    await expect(row).toHaveCount(1, { timeout: 20000 });
     const listComposite = await avatarComposite(row);
-    await viewerPage.screenshot({ path: 'test-results/us2-manual-evidence/US2-AS4-list-row-reference.png' });
+    await viewer.page.screenshot({ path: testInfo.outputPath('us2-as4-list-row.png') });
 
-    // Same subset, same order, in both surfaces (header ≡ list by construction).
-    expect(headerComposite.fallbackTexts).toEqual(listComposite.fallbackTexts);
-    expect(headerComposite.imgSrcs).toEqual(listComposite.imgSrcs);
+    // Same subset, same order, on both surfaces.
+    expect(listComposite.imgSrcs).toEqual(header.imgSrcs);
+    expect(listComposite.fallbackTexts).toEqual(header.fallbackTexts);
   });
 });

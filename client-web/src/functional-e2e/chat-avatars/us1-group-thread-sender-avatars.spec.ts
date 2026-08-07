@@ -1,348 +1,257 @@
-import { test, expect, type Browser, type BrowserContext, type Page, type Locator } from '@playwright/test';
-import fs from 'fs';
-import os from 'os';
-import path from 'path';
-import zlib from 'zlib';
-import { deleteMailSlurperMails, getVerificationLink, UniqueIDGenerator } from '@alkemio/tests-lib';
+import { expect, test } from '@playwright/test';
+import { UniqueIDGenerator } from '@alkemio/tests-lib';
+import {
+  addReaction,
+  avatarComposite,
+  createConversation,
+  expectMessageReceived,
+  expectVisuallyHidden,
+  gutterAvatar,
+  gutterRow,
+  messageColumn,
+  openChatPanel,
+  openConversation,
+  panelHeader,
+  reactionPills,
+  registerAndSignInAll,
+  sendMessage,
+  srOnlyAuthorName,
+  teardownAccounts,
+  uploadProfileAvatar,
+  visibleAuthorName,
+  type TestPerson,
+} from './chat-avatars.helpers';
 
 /**
- * @forge-acceptance — workspace#033-chat-avatars, User Story 1 (P1)
+ * workspace#033-chat-avatars — User Story 1 (P1)
  *
- * "Identify who sent each message in a group chat": in a group conversation,
- * every message from another participant shows that participant's avatar +
- * name on the first message of a consecutive-sender run; run continuations
- * are indented, avatar/name-free, but keep the sender exposed to assistive
- * technology. Own messages are unaffected.
+ * "Identify who sent each message in a group chat": in a group conversation
+ * every message from another participant shows that participant's avatar and
+ * name on the FIRST message of a consecutive-sender run; continuations are
+ * indented, avatar/name-free, but keep the sender exposed to assistive
+ * technology. The viewer's own messages are untouched.
  *
- * Mirrors specs/033-chat-avatars/spec.md User Story 1, scenario-for-scenario
- * (US1-AS1..AS8). Self-contained: registers three fresh users (viewer, B, C)
- * through the real sign-up + email-verification flow and builds the group
- * conversation through the chat UI itself — no API seeding.
+ * Covers spec.md US1 AS1–AS8 scenario-for-scenario. Self-contained: registers
+ * three fresh users through the real sign-up + email-verification flow and
+ * builds the group through the chat UI itself — no API seeding. Every user is
+ * deleted again in afterAll.
+ *
+ * Each scenario establishes its OWN run state (see `breakRun` below) rather
+ * than inheriting the thread from the scenario before it, so `--grep`, shards,
+ * retries and single-test debugging all behave.
  */
-
-const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
-const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'ChatAvatars!Test2026';
 
 test.describe.configure({ mode: 'serial' });
 
-async function acceptCookiesIfPresent(page: Page): Promise<void> {
-  const acceptButton = page.getByRole('button', { name: 'Accept All Cookies', exact: true });
-  if (await acceptButton.isVisible({ timeout: 3000 }).catch(() => false)) {
-    await acceptButton.click();
-  }
-}
+/** Same rule as `initials.ts`: first letter of the first two words, uppercased. */
+const initialsOf = (name: string) =>
+  name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map(word => [...word][0]?.toUpperCase() ?? '')
+    .join('');
 
-/** Registers a brand-new user through the real sign-up + email-verification flow, then signs in. */
-async function registerAndSignIn(
-  browser: Browser,
-  email: string,
-  firstName: string,
-  lastName: string
-): Promise<{ context: BrowserContext; page: Page }> {
-  const context = await browser.newContext();
-  const page = await context.newPage();
+test.describe('US1 — group thread sender avatars', { tag: ['@chat-avatars'] }, () => {
+  let viewer: TestPerson, bella: TestPerson, charlie: TestPerson;
+  let bellaAvatarSrc: string;
 
-  await deleteMailSlurperMails();
-
-  await page.goto(`${baseUrl}/sign_up`);
-  await acceptCookiesIfPresent(page);
-  await page.getByRole('checkbox').click();
-  await page.getByLabel('E-Mail *').fill(email);
-  await page.getByLabel('First Name *').fill(firstName);
-  await page.getByLabel('Last Name *').fill(lastName);
-  await page.getByRole('button', { name: 'Next' }).click();
-
-  await expect(page).toHaveURL(/\/registration/, { timeout: 15000 });
-  await page.getByRole('checkbox').click();
-  await page.getByLabel('Password *').fill(password);
-  const passwordNextButton = page.getByRole('button', { name: 'Next', exact: true });
-  await expect(passwordNextButton).toBeEnabled({ timeout: 10000 });
-  await passwordNextButton.click();
-
-  await expect(page).toHaveURL(/registration\/success/, { timeout: 15000 });
-
-  let verificationLink: string | undefined;
-  await expect
-    .poll(
-      async () => {
-        verificationLink = await getVerificationLink();
-        return verificationLink;
-      },
-      { timeout: 30000, intervals: [1000, 1000, 2000] }
-    )
-    .toBeTruthy();
-
-  await page.goto(verificationLink as string);
-  await expect(page.getByText('You successfully verified your email address.')).toBeVisible({ timeout: 10000 });
-
-  // Sign in explicitly rather than relying on the "Continue" affordance, which
-  // completes an OIDC hop whose target is environment-dependent.
-  await page.goto(baseUrl);
-  await acceptCookiesIfPresent(page);
-  await page.getByRole('link', { name: /log in/i }).click();
-  await expect(page).toHaveURL(/\/login/, { timeout: 15000 });
-  await page.getByLabel('E-Mail *').fill(email);
-  await page.getByLabel('Password *').fill(password);
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await expect(page).toHaveURL(`${baseUrl}/home`, { timeout: 20000 });
-
-  return { context, page };
-}
-
-/** Writes a tiny valid PNG fixture to a temp file and returns its path. */
-function createPngFixture(): string {
-  function chunk(tag: string, data: Buffer): Buffer {
-    const tagBuf = Buffer.from(tag, 'ascii');
-    const lengthBuf = Buffer.alloc(4);
-    lengthBuf.writeUInt32BE(data.length, 0);
-    const crcBuf = Buffer.alloc(4);
-    crcBuf.writeUInt32BE(zlib.crc32(Buffer.concat([tagBuf, data])) >>> 0, 0);
-    return Buffer.concat([lengthBuf, tagBuf, data, crcBuf]);
-  }
-
-  const width = 64;
-  const height = 64;
-  const signature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
-  const ihdrData = Buffer.alloc(13);
-  ihdrData.writeUInt32BE(width, 0);
-  ihdrData.writeUInt32BE(height, 4);
-  ihdrData.writeUInt8(8, 8); // bit depth
-  ihdrData.writeUInt8(2, 9); // color type: RGB
-  const ihdr = chunk('IHDR', ihdrData);
-
-  const rows: Buffer[] = [];
-  for (let y = 0; y < height; y++) {
-    const row = Buffer.alloc(1 + width * 3);
-    row[0] = 0; // no filter
-    for (let x = 0; x < width; x++) {
-      const isStripe = (x + y) % 16 < 8;
-      row[1 + x * 3] = isStripe ? 255 : 30;
-      row[1 + x * 3 + 1] = isStripe ? 120 : 30;
-      row[1 + x * 3 + 2] = isStripe ? 30 : 255;
-    }
-    rows.push(row);
-  }
-  const idat = chunk('IDAT', zlib.deflateSync(Buffer.concat(rows)));
-  const iend = chunk('IEND', Buffer.alloc(0));
-
-  const png = Buffer.concat([signature, ihdr, idat, iend]);
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'chat-avatars-fixture-'));
-  const filePath = path.join(dir, 'avatar.png');
-  fs.writeFileSync(filePath, png);
-  return filePath;
-}
-
-/** Uploads and saves a profile avatar for the currently signed-in user (must be on /user/<id>/settings/profile or reachable via My Account). */
-async function uploadProfileAvatar(page: Page): Promise<void> {
-  await page.getByRole('link', { name: 'My Account' }).click();
-  const profileTab = page.getByRole('tab', { name: 'Profile' }).or(page.getByRole('link', { name: 'Profile', exact: true }));
-  if (await profileTab.isVisible({ timeout: 3000 }).catch(() => false)) {
-    await profileTab.click();
-  }
-  await page.getByRole('button', { name: 'Change Avatar' }).click();
-  const fixturePath = createPngFixture();
-  await page.locator('input[type="file"]').setInputFiles(fixturePath);
-  await expect(page.getByRole('button', { name: 'Save', exact: true })).toBeVisible({ timeout: 10000 });
-  await page.getByRole('button', { name: 'Save', exact: true }).click();
-  // The dialog closes and the avatar image replaces the initials fallback.
-  await expect(page.getByRole('button', { name: 'Change Avatar' })).toBeVisible({ timeout: 15000 });
-}
-
-async function openChatPanel(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Open chat' }).click();
-  await expect(page.getByRole('heading', { name: 'Chat' })).toBeVisible();
-}
-
-/** Locates the group-thread row by requiring BOTH participant display names, order-independent. */
-function groupThreadRow(page: Page, nameA: string, nameB: string): Locator {
-  return page.getByRole('button').filter({ hasText: nameA }).filter({ hasText: nameB });
-}
-
-async function sendMessage(page: Page, text: string): Promise<void> {
-  const input = page.getByPlaceholder(/Add a comment/i);
-  await input.fill(text);
-  await page.keyboard.press('Enter');
-  await expect(page.getByText(text, { exact: true })).toBeVisible({ timeout: 10000 });
-}
-
-/** Scopes to the single message bubble's column (the `showAuthor`/sr-only siblings live here) by its unique text. */
-function messageColumn(page: Page, messageText: string): Locator {
-  return page.locator('div.group').filter({ hasText: messageText });
-}
-
-test.describe('US1 — group thread sender avatars', { tag: ['@forge-acceptance'] }, () => {
-  let browser: Browser;
-  let viewerCtx: BrowserContext, bCtx: BrowserContext, cCtx: BrowserContext;
-  let viewerPage: Page, bPage: Page, cPage: Page;
-  let bName: string, cName: string;
-
-  test.beforeAll(async ({ browser: b }) => {
-    test.setTimeout(180000);
-    browser = b;
+  test.beforeAll(async ({ browser }) => {
+    test.setTimeout(600000);
     const uid = UniqueIDGenerator.getID();
 
-    const viewer = await registerAndSignIn(browser, `chatavatars-viewer-${uid}@alkem.io`, `Viewer${uid}`, 'Reader');
-    viewerCtx = viewer.context;
-    viewerPage = viewer.page;
+    // All three drive the UI, so all three need a session — created concurrently.
+    [viewer, bella, charlie] = await registerAndSignInAll(browser, [
+      { email: `chatavatars1-viewer-${uid}@alkem.io`, firstName: `Viewer${uid}`, lastName: 'Reader' },
+      { email: `chatavatars1-bella-${uid}@alkem.io`, firstName: `Bella${uid}`, lastName: 'Sender' },
+      { email: `chatavatars1-charlie-${uid}@alkem.io`, firstName: `Charlie${uid}`, lastName: 'NoAvatar' },
+    ]);
 
-    const b1 = await registerAndSignIn(browser, `chatavatars-b-${uid}@alkem.io`, `Bella${uid}`, 'Sender');
-    bCtx = b1.context;
-    bPage = b1.page;
-    bName = `Bella${uid} Sender`;
-    await uploadProfileAvatar(bPage);
-    await bPage.goto(`${baseUrl}/home`);
+    // Bella uploads a profile picture; Charlie keeps the one the platform
+    // assigns every new account (AS1 vs AS5).
+    bellaAvatarSrc = await uploadProfileAvatar(bella);
 
-    const c1 = await registerAndSignIn(browser, `chatavatars-c-${uid}@alkem.io`, `Charlie${uid}`, 'NoAvatar');
-    cCtx = c1.context;
-    cPage = c1.page;
-    cName = `Charlie${uid} NoAvatar`;
+    await openChatPanel(viewer.page);
+    await createConversation(viewer.page, [bella.displayName, charlie.displayName]);
 
-    // Viewer creates the group conversation with B and C via the chat UI (no API seeding).
-    await openChatPanel(viewerPage);
-    await viewerPage.getByRole('button', { name: 'New message' }).click();
-    const search = viewerPage.getByPlaceholder(/Search people/);
-    await search.fill(bName);
-    await viewerPage.getByRole('button', { name: new RegExp(bName, 'i') }).click();
-    await search.fill(cName);
-    await viewerPage.getByRole('button', { name: new RegExp(cName, 'i') }).click();
-    await viewerPage.getByRole('button', { name: 'Start group chat' }).click();
-    await expect(groupThreadRow(viewerPage, bName, cName)).toHaveCount(0); // panel switched to the thread view, list row not present here
-    await expect(viewerPage.getByPlaceholder(/Add a comment/i)).toBeVisible({ timeout: 15000 });
-
-    // B and C open the panel too (needed so the thread appears in their lists for later sends).
-    await openChatPanel(bPage);
-    await openChatPanel(cPage);
+    // Both senders open the thread now and keep it open for the whole file, so
+    // every later send exercises the live room rather than a fresh page load.
+    for (const person of [bella, charlie]) {
+      await openChatPanel(person.page);
+      await openConversation(person.page, [uid]);
+    }
   });
 
   test.afterAll(async () => {
-    await viewerCtx?.close();
-    await bCtx?.close();
-    await cCtx?.close();
+    await teardownAccounts([viewer, bella, charlie]);
   });
+
+  /**
+   * Closes whatever run is currently open so the next incoming message is
+   * guaranteed to be a run head.
+   *
+   * An own message always breaks a run (`computeMessageRunFlags`: a previous
+   * message with `isOwn` makes the next one first-of-run), which makes this the
+   * cheapest reliable reset. Without it every scenario would depend on the
+   * message the PREVIOUS scenario happened to leave at the bottom of the
+   * thread — so skipping or filtering one test would fail the next for an
+   * unrelated reason.
+   */
+  async function breakRun(label: string): Promise<void> {
+    await sendMessage(viewer.page, `reset before ${label}`);
+  }
+
+  /** Sends `texts` from `sender` and waits for each to reach the viewer. */
+  async function sendAndReceive(sender: TestPerson, texts: string[]): Promise<void> {
+    for (const text of texts) {
+      await sendMessage(sender.page, text);
+      await expectMessageReceived(viewer.page, text);
+    }
+  }
 
   test('US1-AS1: a single message from another participant shows their avatar and name', async () => {
-    await bPage.getByRole('button').filter({ hasText: bName }).filter({ hasText: cName }).click();
-    await sendMessage(bPage, 'US1-AS1 hello from Bella');
+    await breakRun('AS1');
+    await sendAndReceive(bella, ['AS1 a single hello']);
 
-    await viewerPage.bringToFront();
-    await expect(viewerPage.getByText('US1-AS1 hello from Bella', { exact: true })).toBeVisible({ timeout: 15000 });
+    await expect(visibleAuthorName(messageColumn(viewer.page, 'AS1 a single hello'))).toHaveText(bella.displayName);
 
-    const column = messageColumn(viewerPage, 'US1-AS1 hello from Bella');
-    await expect(column.locator('span:not(.sr-only)', { hasText: bName })).toBeVisible();
-    // Avatar renders in the sibling gutter, immediately preceding the message column.
-    const row = viewerPage.locator('div.flex.items-start.gap-2').filter({ has: column });
-    await expect(row.locator('img, [class*="Fallback"], span').first()).toBeVisible();
+    const avatar = gutterAvatar(gutterRow(viewer.page, 'AS1 a single hello'));
+    await expect(avatar).toHaveCount(1);
+    // ...and it is Bella's OWN picture — the exact image she uploaded in setup,
+    // not merely "some avatar rendered here".
+    await expect(avatar.locator('[data-slot="avatar-image"]')).toHaveAttribute('src', bellaAvatarSrc, {
+      timeout: 20000,
+    });
   });
 
-  test('US1-AS2: three consecutive messages from the same sender show avatar/name once', async () => {
-    for (const text of ['US1-AS2 run message A', 'US1-AS2 run message B', 'US1-AS2 run message C']) {
-      await sendMessage(bPage, text);
+  test('US1-AS2: consecutive messages from one sender carry exactly one avatar and one name', async () => {
+    await breakRun('AS2');
+    const head = 'AS2 head of the run';
+    const continuations = ['AS2 second in the run', 'AS2 third in the run', 'AS2 fourth in the run'];
+    await sendAndReceive(bella, [head, ...continuations]);
+
+    // The run head carries exactly one avatar and one name...
+    await expect(visibleAuthorName(messageColumn(viewer.page, head))).toHaveCount(1);
+    await expect(gutterAvatar(gutterRow(viewer.page, head))).toHaveCount(1);
+
+    // ...and no continuation repeats either (SC-002: exactly one per run, any N).
+    for (const text of continuations) {
+      await expect(visibleAuthorName(messageColumn(viewer.page, text))).toHaveCount(0);
+      await expect(gutterAvatar(gutterRow(viewer.page, text))).toHaveCount(0);
     }
+  });
 
-    await viewerPage.bringToFront();
-    for (const text of ['US1-AS2 run message A', 'US1-AS2 run message B', 'US1-AS2 run message C']) {
-      await expect(viewerPage.getByText(text, { exact: true })).toBeVisible({ timeout: 15000 });
+  test('US1-AS3: alternating senders each restart a run', async () => {
+    await breakRun('AS3');
+    await sendAndReceive(charlie, ['AS3 charlie takes over']);
+    await sendAndReceive(bella, ['AS3 bella takes it back']);
+
+    const charlieColumn = messageColumn(viewer.page, 'AS3 charlie takes over');
+    await expect(visibleAuthorName(charlieColumn)).toHaveText(charlie.displayName);
+    await expect(gutterAvatar(gutterRow(viewer.page, 'AS3 charlie takes over'))).toHaveCount(1);
+
+    const bellaColumn = messageColumn(viewer.page, 'AS3 bella takes it back');
+    await expect(visibleAuthorName(bellaColumn)).toHaveText(bella.displayName);
+    await expect(gutterAvatar(gutterRow(viewer.page, 'AS3 bella takes it back'))).toHaveCount(1);
+  });
+
+  test("US1-AS4: the viewer's own messages are unchanged — no avatar, no name, no gutter", async () => {
+    await sendMessage(viewer.page, 'AS4 my own message');
+
+    const column = messageColumn(viewer.page, 'AS4 my own message');
+    await expect(column).toHaveClass(/items-end/); // still right-aligned
+    await expect(visibleAuthorName(column)).toHaveCount(0);
+    // Not even screen-reader attribution: own messages are outside the feature.
+    await expect(srOnlyAuthorName(column)).toHaveCount(0);
+    await expect(gutterRow(viewer.page, 'AS4 my own message')).toHaveCount(0);
+  });
+
+  /**
+   * NOTE on the pure initials fallback: this environment assigns every new
+   * account a generated avatar at registration, and the UI offers no way to
+   * remove a profile picture — so `avatarUrl === undefined`, the condition that
+   * makes `AvatarFallback` render, is not reachable through the product.
+   * That DOM branch is covered by the client-web unit tests
+   * (`ChatMessageBubble.test.tsx`, `ConversationAvatar.test.tsx`). What IS
+   * reachable end to end — and what FR-009 actually asserts — is that a sender
+   * who never uploaded a picture gets the SAME treatment in the message gutter
+   * as in the conversation identity. That is what this walk checks.
+   */
+  test('US1-AS5: a sender who never uploaded a picture gets the same treatment as in the list', async () => {
+    await breakRun('AS5');
+    await sendAndReceive(charlie, ['AS5 charlie never uploaded']);
+
+    const gutter = gutterAvatar(gutterRow(viewer.page, 'AS5 charlie never uploaded'));
+    await expect(gutter).toHaveCount(1);
+    const charlieAvatar = await avatarComposite(gutter);
+    // Exactly one avatar cell — an image or an initials tile, never an empty gutter.
+    expect(charlieAvatar.imgSrcs.length + charlieAvatar.fallbackTexts.length).toBe(1);
+
+    const identity = await avatarComposite(panelHeader(viewer.page));
+    if (charlieAvatar.imgSrcs.length === 1) {
+      // The group header composite renders the same avatar for this member...
+      expect(identity.imgSrcs).toContain(charlieAvatar.imgSrcs[0]);
+      // ...and it is Charlie's own, not Bella's uploaded picture.
+      expect(charlieAvatar.imgSrcs[0]).not.toBe(bellaAvatarSrc);
+    } else {
+      expect(charlieAvatar.fallbackTexts).toEqual([initialsOf(charlie.displayName)]);
+      expect(identity.fallbackTexts).toContain(charlieAvatar.fallbackTexts[0]);
     }
-
-    // Continuations: no visible (non-sr-only) author name in their own column.
-    for (const text of ['US1-AS2 run message A', 'US1-AS2 run message B', 'US1-AS2 run message C']) {
-      const column = messageColumn(viewerPage, text);
-      await expect(column.locator('span:not(.sr-only)', { hasText: bName })).toHaveCount(0);
-    }
   });
 
-  test('US1-AS3: alternating senders (B, C, B) each restart a run', async () => {
-    await cPage.bringToFront();
-    await cPage.getByRole('button').filter({ hasText: bName }).filter({ hasText: cName }).click();
-    await sendMessage(cPage, 'US1-AS3 charlie alternates');
+  test('US1-AS6: a run continuation still exposes the sender to assistive technology', async () => {
+    await breakRun('AS6');
+    // Charlie opens a run, then continues it — the second message is the one
+    // under test, and this scenario creates both itself.
+    await sendAndReceive(charlie, ['AS6 charlie opens the run', 'AS6 charlie carries on']);
 
-    await bPage.bringToFront();
-    await sendMessage(bPage, 'US1-AS3 bella alternates back');
-
-    await viewerPage.bringToFront();
-    await expect(viewerPage.getByText('US1-AS3 charlie alternates', { exact: true })).toBeVisible({ timeout: 15000 });
-    await expect(viewerPage.getByText('US1-AS3 bella alternates back', { exact: true })).toBeVisible({ timeout: 15000 });
-
-    const charlieColumn = messageColumn(viewerPage, 'US1-AS3 charlie alternates');
-    await expect(charlieColumn.locator('span:not(.sr-only)', { hasText: cName })).toBeVisible();
-
-    const bellaColumn = messageColumn(viewerPage, 'US1-AS3 bella alternates back');
-    await expect(bellaColumn.locator('span:not(.sr-only)', { hasText: bName })).toBeVisible();
+    const column = messageColumn(viewer.page, 'AS6 charlie carries on');
+    // Visually omitted...
+    await expect(visibleAuthorName(column)).toHaveCount(0);
+    await expect(gutterAvatar(gutterRow(viewer.page, 'AS6 charlie carries on'))).toHaveCount(0);
+    // ...but still announced (FR-008).
+    const srOnly = srOnlyAuthorName(column);
+    await expect(srOnly).toHaveText(charlie.displayName);
+    await expectVisuallyHidden(srOnly);
   });
 
-  test('US1-AS4: the viewer\'s own messages remain unchanged (no avatar, no name)', async () => {
-    await sendMessage(viewerPage, 'US1-AS4 my own message');
+  test('US1-AS7: a reaction stays attached to its own bubble inside an indented run', async () => {
+    await breakRun('AS7');
+    await sendAndReceive(charlie, ['AS7 charlie opens the run', 'AS7 charlie carries on']);
 
-    const column = messageColumn(viewerPage, 'US1-AS4 my own message');
-    // No sr-only or visible author name at all for own messages.
-    await expect(column.locator('.sr-only')).toHaveCount(0);
-    // Own messages render without the avatar-gutter wrapper.
-    await expect(viewerPage.locator('div.flex.items-start.gap-2').filter({ has: column })).toHaveCount(0);
+    // React on the CONTINUATION bubble — the one with no avatar or name of its own.
+    const column = messageColumn(viewer.page, 'AS7 charlie carries on');
+    const runHead = messageColumn(viewer.page, 'AS7 charlie opens the run');
+    await expect(gutterAvatar(gutterRow(viewer.page, 'AS7 charlie carries on'))).toHaveCount(0);
+    await expect(reactionPills(column)).toHaveCount(0);
+
+    await addReaction(viewer.page, column);
+
+    await expect(reactionPills(column)).toHaveCount(1, { timeout: 20000 });
+    // The pill belongs to this bubble alone — the run head above it is untouched.
+    await expect(reactionPills(runHead)).toHaveCount(0);
+    // The timestamp stays inside the same column too (FR-012).
+    await expect(column.locator('span.text-caption').last()).toBeVisible();
   });
 
-  test('US1-AS5: a participant without a profile picture gets the initials fallback', async () => {
-    await sendMessage(cPage, 'US1-AS5 charlie no avatar message');
+  test('US1-AS8: a live message joins the open run; a different sender starts a new one', async () => {
+    await breakRun('AS8');
+    // No reload or navigation on the viewer from here on — every assertion below
+    // waits only on the room subscription pushing into the already-open thread.
+    await sendAndReceive(charlie, ['AS8 charlie opens the run']);
+    await expect(visibleAuthorName(messageColumn(viewer.page, 'AS8 charlie opens the run'))).toHaveText(
+      charlie.displayName
+    );
 
-    await viewerPage.bringToFront();
-    await expect(viewerPage.getByText('US1-AS5 charlie no avatar message', { exact: true })).toBeVisible({
-      timeout: 15000,
-    });
-    const column = messageColumn(viewerPage, 'US1-AS5 charlie no avatar message');
-    const row = viewerPage.locator('div.flex.items-start.gap-2').filter({ has: column });
-    // Charlie has no avatarUrl — the fallback renders initials text, not an <img>.
-    await expect(row.locator('img')).toHaveCount(0);
-  });
+    await sendAndReceive(charlie, ['AS8 charlie joins the run']);
+    const joining = messageColumn(viewer.page, 'AS8 charlie joins the run');
+    await expect(visibleAuthorName(joining)).toHaveCount(0);
+    await expect(gutterAvatar(gutterRow(viewer.page, 'AS8 charlie joins the run'))).toHaveCount(0);
+    await expect(srOnlyAuthorName(joining)).toHaveText(charlie.displayName);
 
-  test('US1-AS6: a run continuation still exposes the sender name to assistive technology', async () => {
-    await sendMessage(cPage, 'US1-AS6 charlie continuation');
-
-    await viewerPage.bringToFront();
-    await expect(viewerPage.getByText('US1-AS6 charlie continuation', { exact: true })).toBeVisible({
-      timeout: 15000,
-    });
-    const column = messageColumn(viewerPage, 'US1-AS6 charlie continuation');
-    // Visually omitted (continuation of Charlie's AS5 message)...
-    await expect(column.locator('span:not(.sr-only)', { hasText: cName })).toHaveCount(0);
-    // ...but still present, sr-only, for screen readers (FR-008).
-    const srOnly = column.locator('span.sr-only', { hasText: cName });
-    await expect(srOnly).toHaveCount(1);
-    await expect(srOnly).not.toBeVisible(); // present in DOM, not on screen
-  });
-
-  test('US1-AS7: reactions and timestamps stay attached to their own bubble in an indented run', async () => {
-    // React to "US1-AS2 run message C" — a continuation bubble (no avatar/name of its own).
-    const column = messageColumn(viewerPage, 'US1-AS2 run message C');
-    await column.hover();
-    await column.getByRole('button', { name: 'Add reaction' }).click();
-    const picker = viewerPage.locator('.EmojiPickerReact, aside.epr-main').first();
-    await expect(picker).toBeVisible({ timeout: 5000 });
-    await viewerPage.locator('.epr-emoji-img').first().click();
-
-    // The reaction pill renders inside this exact message's column, not on any neighboring bubble.
-    await expect(column.locator('[aria-label*="reaction" i], button', { hasText: '1' }).first()).toBeVisible({
-      timeout: 10000,
-    });
-  });
-
-  test('US1-AS8: a real-time message joins the current run; a different sender starts a new one', async () => {
-    // No reload/navigation on viewerPage — the thread is already open; the
-    // assertions below wait only on the room subscription push.
-    await sendMessage(bPage, 'US1-AS8 bella realtime continuation');
-    await viewerPage.bringToFront();
-    await expect(viewerPage.getByText('US1-AS8 bella realtime continuation', { exact: true })).toBeVisible({
-      timeout: 15000,
-    });
-    let column = messageColumn(viewerPage, 'US1-AS8 bella realtime continuation');
-    // Joins Bella's still-open run from AS3 (no repeated name/avatar) — the
-    // last incoming sender before this message was Bella herself.
-    await expect(column.locator('span:not(.sr-only)', { hasText: bName })).toHaveCount(0);
-
-    await sendMessage(cPage, 'US1-AS8 charlie starts new run');
-    await viewerPage.bringToFront();
-    await expect(viewerPage.getByText('US1-AS8 charlie starts new run', { exact: true })).toBeVisible({
-      timeout: 15000,
-    });
-    column = messageColumn(viewerPage, 'US1-AS8 charlie starts new run');
-    await expect(column.locator('span:not(.sr-only)', { hasText: cName })).toBeVisible();
+    await sendAndReceive(bella, ['AS8 bella starts a new run']);
+    const restarting = messageColumn(viewer.page, 'AS8 bella starts a new run');
+    await expect(visibleAuthorName(restarting)).toHaveText(bella.displayName);
+    await expect(gutterAvatar(gutterRow(viewer.page, 'AS8 bella starts a new run'))).toHaveCount(1);
   });
 });
