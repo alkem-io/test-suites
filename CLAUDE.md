@@ -119,7 +119,7 @@ Key abstractions:
 
 ### Server API Tests (`server-api/src/functional-api/`)
 
-Vitest integration tests organized by domain: `communications/`, `search/`, `account/`, `callout/`, `templates/`, `documents/`, `preferences/`, `roleset/`, `subscriptions/`, `innovation/`, etc.
+Vitest integration tests organized by domain: `communications/`, `search/`, `account/`, `callout/`, `templates/`, `documents/`, `preferences/`, `roleset/`, `subscriptions/`, `innovation/`, `language/`, etc.
 
 Path aliases: `@generated/*`, `@utils/*`, `@functional-api/*`, `@src/*`, `@common/*` — resolved via `resolve.alias` in `vitest.config.ts`.
 
@@ -129,7 +129,9 @@ Test timeout is 30 minutes (1,800,000 ms) for long-running integration tests.
 
 ### Client Web Tests (`client-web/src/functional-e2e/`)
 
-Playwright E2E tests organized by feature area: `explore-platform/`, `authentication/`, `my-dashboard/`, `memberships/`, `applications/`, `templates/`, `public-space/`, `user-profile/`, `support-navigation/`.
+Playwright E2E tests organized by feature area: `applications/`, `authentication/`, `callouts/`, `contributors-callout/`, `default-template/`, `explore-platform/`, `identity-flows/`, `language-offer/`, `memberships/`, `my-dashboard/`, `public-space/`, `space/`, `support-navigation/`, `templates/`, `templates-CRD/`, `user-profile/`. Shared code lives in `fixtures/` and `helpers/`.
+
+A new feature area is added by creating its directory alongside these and listing it here, with a `<area>-test-plan.md` **inside that directory** mapping business scenarios to the specs that cover them. Existing plans are split across three locations for historical reasons — `plans/`, the feature directory, and the `functional-e2e/` root — so look in all three before concluding an area has none; new plans go in the feature directory.
 
 - Chrome only (branded channel, not Chromium)
 - Session-based auth fixtures with storage state persistence in `.auth/`

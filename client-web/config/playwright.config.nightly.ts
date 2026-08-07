@@ -135,6 +135,35 @@ export default defineConfig({
       name: 'Timeline',
       testMatch: ['/timeline/*.spec.ts'],
     },
+    {
+      // Feature 029 (detect signup language) — sign-in project for the walks
+      // below. The suite mixes anonymous tests (each needs a virgin cookie jar)
+      // with authenticated ones and drives a different `locale` per file, so
+      // authentication cannot come from a project-wide `storageState`. This
+      // project logs each persona in ONCE and persists the session to `.auth/`;
+      // the specs opt in with `test.use({ storageState })`.
+      // Kept in sync with config/playwright.config.language-offer.ts, the
+      // standalone runner used to develop the suite.
+      name: 'Language offer setup',
+      testMatch: ['/language-offer/auth.setup.ts'],
+      // The Kratos flow occasionally stalls at "Preparing secure sign-in…";
+      // the sign-in needs the same headroom as the walks themselves.
+      timeout: 90_000,
+      expect: { timeout: 15_000 },
+    },
+    {
+      // The detection walks drive Config + session GraphQL through Traefik, so
+      // they need far more headroom than the 30s/5s this config gives everything
+      // else — the offer gate waits on config load plus reconciliation.
+      // Viewport is pinned to the resolution the suite was validated at rather
+      // than inheriting the global 1920×1080.
+      name: 'Language offer',
+      testMatch: ['/language-offer/*.spec.ts'],
+      dependencies: ['Language offer setup'],
+      timeout: 90_000,
+      expect: { timeout: 15_000 },
+      use: { viewport: { width: 1440, height: 900 } },
+    },
   ],
   // % or number of the available CPUs
   // workers: '100%',

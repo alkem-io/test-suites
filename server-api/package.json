@@ -53,6 +53,7 @@
     "test:preferences": "vitest run --project preferences --poolOptions.threads.maxThreads=3",
     "test:pagination": "vitest run --project pagination --fileParallelism=false",
     "test:roleset": "vitest run --project roleset --fileParallelism=false",
+    "test:language": "vitest run --project language --fileParallelism=false",
     "test:subscriptions": "vitest run --project subscriptions --fileParallelism=false",
     "test:templates": "vitest run --project templates --fileParallelism=false",
     "test:innovation": "vitest run --project innovation --fileParallelism=false",

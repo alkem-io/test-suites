@@ -68,3 +68,6 @@ web_modules/
 
 # Authentication state files (contain session tokens)
 .auth/
+
+# 029 language-offer acceptance run report (throwaway)
+config/playwright-report-language-offer/
