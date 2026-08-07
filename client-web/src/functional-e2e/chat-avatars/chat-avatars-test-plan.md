@@ -18,6 +18,19 @@ UI_HEADLESS=true pnpm exec playwright test src/functional-e2e/chat-avatars --wor
 `--workers=1` is a convenience, not a requirement — the files are independent and
 safe to run in parallel (see *Isolation* below).
 
+In CI these run as the **`Chat avatars`** project of the nightly client build
+(`config/playwright.config.nightly.ts`, executed by `nightly-client-tests.yml`
+via `pnpm --filter @alkemio/test-suite-client-web run test:nightly`). That
+project carries its own `120s / 15s` timeouts because the rest of the nightly
+runs at `30s / 5s`, and every scenario here is a multi-user round trip through
+the live chat room. It needs no setup project and no shared persona state — each
+file creates and removes its own accounts — so it can also be run on its own:
+
+```bash
+pnpm exec playwright test --config=config/playwright.config.nightly.ts \
+  --project="Chat avatars"
+```
+
 ### Every scenario stands on its own
 
 The files are `mode: 'serial'` because they share one expensive fixture (the
