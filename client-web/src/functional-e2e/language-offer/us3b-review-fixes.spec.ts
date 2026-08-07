@@ -38,7 +38,6 @@ import {
   dutchDeclineButton,
   readLanguageStorage,
   footerLanguageEnglish,
-  cookieConsentAcceptAll,
 } from './helpers';
 
 test.use({ locale: 'nl-NL' });
@@ -138,10 +137,78 @@ test.describe("US3b — Phase V' review-fix regressions", () => {
       'corr-client-2: malformed accepted_cookies must not raise an uncaught error'
     ).toEqual([]);
 
-    // Reference the imported helper so lint does not flag it unused; the malformed
-    // cookie is truthy so the consent Accept-All button is NOT expected to show.
-    await expect(cookieConsentAcceptAll(page)).toHaveCount(0);
+    // The crash this guards against is caught by React's error boundary, which
+    // means it raises NO uncaught pageerror — the assertion above cannot see it.
+    // Assert the boundary's own output is absent instead. (Verified on acc: a
+    // wrong-shape cookie renders exactly this screen with pageErrors === 0.)
+    await expect(
+      page.getByText(/something went wrong/i),
+      'corr-client-2: malformed accepted_cookies must not trip the error boundary'
+    ).toHaveCount(0);
+
+    // NOTE: deliberately NO assertion on the cookie-consent banner. Whether an
+    // unreadable consent value re-asks for consent is environment-dependent —
+    // the deployed acc build re-shows the banner, which is the SAFER behaviour,
+    // so pinning it to "not shown" would lock in the worse one. Out of scope for
+    // this scenario, which is about not crashing.
 
     await page.screenshot({ path: testInfo.outputPath('us3b-corr-client-2-bad-cookie-no-crash.png'), fullPage: false });
+  });
+
+  // corr-client-2b — the sibling case corr-client-2 never exercised, and a REAL
+  // defect on the deployed build.
+  //
+  // `accepted_cookies` holds a JSON ARRAY of accepted categories (the live value
+  // is ["technical","analysis"]). A value that is valid JSON but the WRONG SHAPE
+  // parses cleanly and then reaches a `.includes(...)` call on a non-array:
+  //
+  //   TypeError: s.includes is not a function
+  //
+  // React's error boundary catches it, so there is NO uncaught pageerror — the
+  // whole app is replaced by the "Looks like something went wrong" screen and the
+  // user cannot proceed. Clearing the cookie is the only way out, which an
+  // ordinary user has no way to discover.
+  //
+  // Reproduced on acc (2026-08-07) with both `true` and `{"a":1}`; the unparseable
+  // string in corr-client-2 does NOT trigger it (it never parses, so nothing calls
+  // .includes).
+  //
+  // Crash site: core/analytics/apm/useApmInit.ts `useGetOrSetApmCookie`, which
+  // types the value `const acceptedCookies: string` — react-cookie JSON-parses
+  // it, so at runtime it is a string[]. Arrays and strings both have .includes,
+  // which is why the annotation has never bitten; a boolean/number/object has not.
+  //
+  // PRECONDITION — the browser must hold NO `apm` tracking cookie. That function
+  // early-returns on it BEFORE reading the consent value, so a visitor who has
+  // already accepted analysis cookies never reaches the .includes call. It is the
+  // apm cookie that gates this, not the consent-migration localStorage flag.
+  //
+  // LIKELIHOOD — low. Every client-web release since #2267 (2022) has written this
+  // cookie as JSON.stringify of an array, so no shipped build produces a crashing
+  // shape, and truncation/corruption is safe (unparseable => raw string => .includes
+  // works). The open vector is welcome.alkem.io, which writes this cookie at the
+  // same apex domain from a different codebase — unverified here.
+  //
+  // fixme: product defect, not a test defect — un-fixme once the consent read
+  // shape-guards its parsed value. Tracked in language-offer-test-plan.md.
+  test.fixme('corr-client-2b — wrong-shape consent cookie must not break the app', async ({
+    page,
+    context,
+  }) => {
+    const url = new URL(BASE_URL);
+    await context.addCookies([
+      { name: 'accepted_cookies', value: 'true', domain: `.${url.hostname}`, path: '/' },
+    ]);
+
+    await page.goto(`${BASE_URL}/home`);
+
+    // Order matters: assert the app RENDERED first. A bare toHaveCount(0) here
+    // would pass vacuously against the empty DOM right after goto, before the
+    // boundary has had a chance to render.
+    await expect(page.getByRole('contentinfo')).toBeVisible({ timeout: 30_000 });
+    await expect(
+      page.getByText(/something went wrong/i),
+      'a wrong-shape consent cookie must not trip the error boundary'
+    ).toHaveCount(0);
   });
 });

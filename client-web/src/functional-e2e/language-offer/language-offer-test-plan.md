@@ -80,6 +80,7 @@ problems that the component unit tests could not see:
 | "latest-created eligible suggestion wins" (full form) | Needs **two different** eligible languages; environments currently configure a single eligible language (`nl`), so the ordering rule cannot be distinguished end-to-end. The partial form (a later invitation *without* a suggestion does not cancel an earlier one) **is** covered | Server unit tests (`registration.service.spec.ts`); re-check here if a second eligible language is ever configured |
 | "a non-fresh account is never re-seeded" | Not reachable through the API — seeding only runs during registration finalization, and an account cannot be registered twice | Server unit tests (`registration.service.spec.ts`) |
 | corr-client-4 (client-side navigation form) | The anonymous surface exposes no SPA-internal cross-route-group link — every anonymous navigation is a full document load | Kept as an explicit `test.skip` recording why; the fix is verified structurally in `App.tsx` |
+| corr-client-2b (wrong-shape consent cookie) | **Open product defect**, not a test gap — a valid-JSON non-array `accepted_cookies` crashes the app into its error boundary via `useApmInit`'s unguarded `.includes`. Written as `test.fixme` so it is tracked without reddening the nightly | Un-`fixme` once the consent read shape-guards its parsed value |
 
 The story's headline — *"the language would need to be stored per user, not just
 per web client"* — is now proven end to end at the API layer: invite an address
