@@ -132,15 +132,55 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  // Each delete is isolated: registration CONSUMES a pending PlatformInvitation,
-  // so deleting one afterwards legitimately rejects. In a bare loop that first
-  // rejection would abort teardown and leak every later fixture — including the
-  // organization and space, which is why cleanUpBaseScenario runs in `finally`.
-  const remove = async (what: string, id: string, del: (id: string) => Promise<unknown>) => {
+  // Teardown contract: attempt EVERY delete, tolerate only the one outcome that is
+  // legitimate, and fail loudly on anything else — a suite that passes while leaking
+  // fixtures into the shared environment is worse than one that fails.
+  //
+  // Two traps here:
+  //  1. Neither helper THROWS on a GraphQL error. `graphqlRequestAuth` resolves with
+  //     the response (errors in `body.errors`) and `graphqlErrorWrapper` resolves with
+  //     `{ error: { errors } }`. A bare try/catch around these catches nothing, so the
+  //     results have to be inspected.
+  //  2. The not-found tolerance below is DEFENSIVE, not observed. The review premise
+  //     was that registration consumes a pending PlatformInvitation so a later delete
+  //     reports not-found — measured against acc on 2026-08-07 that does not happen:
+  //     all seven deletes (users and invitations, consumed ones included) return
+  //     cleanly. The branch is kept so a server that does start reporting not-found
+  //     cannot fail teardown over a fixture that is already gone; if it ever fires,
+  //     that is the signal the contract changed.
+  const failures: string[] = [];
+
+  /** Pull GraphQL errors out of either helper's return shape. */
+  const errorsOf = (result: unknown): Array<Record<string, unknown>> => {
+    const r = result as {
+      body?: { errors?: Array<Record<string, unknown>> };
+      error?: { errors?: Array<Record<string, unknown>> };
+    };
+    return r?.body?.errors ?? r?.error?.errors ?? [];
+  };
+
+  const isNotFound = (errors: Array<Record<string, unknown>>) =>
+    errors.every(e => {
+      const message = String(e.message ?? '');
+      const code = String((e.extensions as { code?: string } | undefined)?.code ?? '');
+      return /unable to find|not found|does not exist/i.test(message) || code === 'ENTITY_NOT_FOUND';
+    });
+
+  const remove = async (
+    what: string,
+    id: string,
+    del: (id: string) => Promise<unknown>,
+    tolerateNotFound = false
+  ) => {
     try {
-      await del(id);
+      const errors = errorsOf(await del(id));
+      if (errors.length === 0) return;
+      // A consumed invitation is expected to be gone; anything else is a real leak.
+      if (tolerateNotFound && isNotFound(errors)) return;
+      failures.push(`${what} ${id}: ${JSON.stringify(errors)}`);
     } catch (error) {
-      console.error(`[teardown] could not delete ${what} ${id}: ${error}`);
+      // Transport/auth failures still reject — record rather than abort the loop.
+      failures.push(`${what} ${id}: ${error}`);
     }
   };
 
@@ -149,10 +189,18 @@ afterAll(async () => {
       await remove('user', id, deleteUser);
     }
     for (const id of createdPlatformInvitationIds) {
-      await remove('platformInvitation', id, deletePlatformInvitationById);
+      await remove('platformInvitation', id, deletePlatformInvitationById, true);
     }
   } finally {
+    // Runs regardless, so a failed delete above cannot leak the organization and space.
     await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  }
+
+  if (failures.length > 0) {
+    throw new Error(
+      `[teardown] ${failures.length} fixture(s) left behind in the shared environment:\n` +
+        failures.join('\n')
+    );
   }
 });
 

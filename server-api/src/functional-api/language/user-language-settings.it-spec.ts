@@ -84,8 +84,29 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  // Attempt every delete, then fail loudly if any leaked. `deleteUser` goes through
+  // graphqlErrorWrapper, which RESOLVES with `{ error: { errors } }` on a GraphQL
+  // failure instead of throwing — so a bare loop neither aborts nor reports, it just
+  // silently leaves users behind in the shared environment.
+  const failures: string[] = [];
+
   for (const id of createdUserIds) {
-    await deleteUser(id);
+    try {
+      const result = (await deleteUser(id)) as { error?: { errors?: unknown[] } };
+      const errors = result?.error?.errors ?? [];
+      if (errors.length > 0) {
+        failures.push(`user ${id}: ${JSON.stringify(errors)}`);
+      }
+    } catch (error) {
+      failures.push(`user ${id}: ${error}`);
+    }
+  }
+
+  if (failures.length > 0) {
+    throw new Error(
+      `[teardown] ${failures.length} user(s) left behind in the shared environment:\n` +
+        failures.join('\n')
+    );
   }
 });
 
