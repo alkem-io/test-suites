@@ -211,20 +211,50 @@ export default defineConfig({
           fileParallelism: false,
         },
       },
-      project('nightly', [
-        'src/functional-api/account/**/*.it-spec.ts',
-        'src/functional-api/roleset/**/*.it-spec.ts',
-        'src/functional-api/contributor-management/**/*.it-spec.ts',
-        'src/functional-api/callout/**/*.it-spec.ts',
-        'src/functional-api/communications/**/*.it-spec.ts',
-        'src/functional-api/activity-logs/**/*.it-spec.ts',
-        'src/functional-api/journey/**/*.it-spec.ts',
-        'src/functional-api/storage/**/*.it-spec.ts',
-        'src/functional-api/entitlements/**/*.it-spec.ts',
-        'src/functional-api/templates/**/*.it-spec.ts',
-        'src/functional-api/calendar/**/*.it-spec.ts',
-        'src/functional-api/push-notifications/**/*.it-spec.ts',
-      ]),
+      // workspace#027-platform-role-redesign: the nightly is written out as a
+      // full project rather than via `project()` because the platform-role
+      // specs cannot run on include alone — they need
+      // `platform-roles.setup.ts` (which seeds the 13 single-role fixtures)
+      // and `PLATFORM_ROLES_MATRIX_SCOPE`, neither of which the helper
+      // carries. Declaring them here keeps `--project nightly` sufficient:
+      // one project, no extra CLI flags, and CI's existing `test:nightly`
+      // invocation picks up the role coverage unchanged.
+      //
+      // `setupFiles` RE-LISTS the root `setupTests.ts`: a project-level
+      // `setupFiles` REPLACES the inherited value rather than merging, so
+      // omitting it would silently drop the shared setup from all 104
+      // pre-existing nightly files.
+      //
+      // Scope is `full` — the complete matrix cross-product. The nightly is
+      // where that belongs; the cheap canonical scope stays with the
+      // `platform-roles-canonical` PR inner loop.
+      {
+        extends: true as const,
+        test: {
+          name: 'nightly',
+          include: [
+            'src/functional-api/account/**/*.it-spec.ts',
+            'src/functional-api/roleset/**/*.it-spec.ts',
+            'src/functional-api/contributor-management/**/*.it-spec.ts',
+            'src/functional-api/callout/**/*.it-spec.ts',
+            'src/functional-api/communications/**/*.it-spec.ts',
+            'src/functional-api/activity-logs/**/*.it-spec.ts',
+            'src/functional-api/journey/**/*.it-spec.ts',
+            'src/functional-api/storage/**/*.it-spec.ts',
+            'src/functional-api/entitlements/**/*.it-spec.ts',
+            'src/functional-api/templates/**/*.it-spec.ts',
+            'src/functional-api/calendar/**/*.it-spec.ts',
+            'src/functional-api/push-notifications/**/*.it-spec.ts',
+            'src/functional-api/platform-roles/**/*.it-spec.ts',
+          ],
+          env: { PLATFORM_ROLES_MATRIX_SCOPE: 'full' },
+          setupFiles: [
+            './src/setupTests.ts',
+            './src/functional-api/platform-roles/platform-roles.setup.ts',
+          ],
+          fileParallelism: false,
+        },
+      },
     ],
   },
 });
