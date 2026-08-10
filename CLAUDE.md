@@ -129,7 +129,7 @@ Test timeout is 30 minutes (1,800,000 ms) for long-running integration tests.
 
 ### Client Web Tests (`client-web/src/functional-e2e/`)
 
-Playwright E2E tests organized by feature area: `applications/`, `authentication/`, `callouts/`, `contributors-callout/`, `default-template/`, `explore-platform/`, `identity-flows/`, `language-offer/`, `memberships/`, `my-dashboard/`, `public-space/`, `space/`, `support-navigation/`, `templates/`, `templates-CRD/`, `user-profile/`. Shared code lives in `fixtures/` and `helpers/`.
+Playwright E2E tests organized by feature area: `applications/`, `authentication/`, `callouts/`, `chat-avatars/`, `contributors-callout/`, `default-template/`, `explore-platform/`, `identity-flows/`, `language-offer/`, `memberships/`, `my-dashboard/`, `public-space/`, `space/`, `support-navigation/`, `templates/`, `templates-CRD/`, `user-profile/`. Shared code lives in `fixtures/` and `helpers/`.
 
 A new feature area is added by creating its directory alongside these and listing it here, with a `<area>-test-plan.md` **inside that directory** mapping business scenarios to the specs that cover them. Existing plans are split across three locations for historical reasons — `plans/`, the feature directory, and the `functional-e2e/` root — so look in all three before concluding an area has none; new plans go in the feature directory.
 

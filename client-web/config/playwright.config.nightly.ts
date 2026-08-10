@@ -164,6 +164,23 @@ export default defineConfig({
       expect: { timeout: 15_000 },
       use: { viewport: { width: 1440, height: 900 } },
     },
+    {
+      // Feature 033 (chat avatars) — the US1/US2/US3 acceptance walks.
+      //
+      // No setup project and no shared persona state: each file registers the
+      // accounts it needs, and deletes every one of them again in afterAll (by
+      // the id captured at registration). A failed run therefore leaves the
+      // environment as it found it, and a retry starts from a clean slate.
+      //
+      // Needs more headroom than the 30s/5s the rest of this config gives:
+      // every scenario is a multi-user round trip through the live chat room —
+      // send on one session, wait for the subscription push on another — and
+      // US2 uploads and crops group photos on top of that.
+      name: 'Chat avatars',
+      testMatch: ['/chat-avatars/*.spec.ts'],
+      timeout: 120_000,
+      expect: { timeout: 15_000 },
+    },
   ],
   // % or number of the available CPUs
   // workers: '100%',
