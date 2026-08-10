@@ -89,9 +89,24 @@ export async function getVerificationLinkFor(email: string): Promise<string | un
   return link ? link[0].replace(/&amp;/g, '&') : undefined;
 }
 
+const CONSENT_COOKIE_NAME = 'accepted_cookies';
+
+/**
+ * Answers the cookie banner, waiting for it to appear the first time.
+ *
+ * `locator.isVisible({ timeout })` does NOT wait — the option is inert, so the
+ * old form was an immediate check that silently no-ops if the SPA has not
+ * rendered the banner yet, leaving it to intercept a later click. This waits
+ * explicitly, but only while the consent cookie is absent, so contexts that
+ * already answered pay nothing.
+ */
 export async function acceptCookiesIfPresent(page: Page): Promise<void> {
+  const answered = (await page.context().cookies()).some(cookie => cookie.name === CONSENT_COOKIE_NAME);
+  if (answered) return;
+
   const accept = page.getByRole('button', { name: 'Accept All Cookies', exact: true });
-  if (await accept.isVisible({ timeout: 3000 }).catch(() => false)) {
+  await accept.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined);
+  if (await accept.isVisible()) {
     await accept.click();
     await expect(accept).toHaveCount(0, { timeout: 10000 });
   }
@@ -168,6 +183,29 @@ async function readSettingsSlug(page: Page): Promise<string> {
 }
 
 /**
+ * Everything this file creates is recorded the moment it exists.
+ *
+ * Setup failures are exactly when leaks happen: a batch registration that
+ * rejects part-way leaves the caller with no reference to the accounts that DID
+ * get created, so a teardown driven by the caller's variables silently skips
+ * them. The registry makes teardown independent of what the caller managed to
+ * receive.
+ */
+const createdAccounts: TestAccount[] = [];
+const openContexts = new Set<BrowserContext>();
+
+async function trackedContext(browser: Browser): Promise<BrowserContext> {
+  const context = await browser.newContext();
+  openContexts.add(context);
+  return context;
+}
+
+async function closeTracked(context: BrowserContext): Promise<void> {
+  openContexts.delete(context);
+  await context.close().catch(() => undefined);
+}
+
+/**
  * Creates a verified account and throws its browser away again.
  *
  * For participants a walk never drives — people who only need to be findable in
@@ -175,35 +213,45 @@ async function readSettingsSlug(page: Page): Promise<string> {
  * no long-lived context and no session round trip per such user.
  */
 export async function registerAccount(browser: Browser, spec: PersonSpec): Promise<TestAccount> {
-  const context = await browser.newContext();
+  const context = await trackedContext(browser);
   try {
     await completeSignUp(await context.newPage(), spec);
-    return {
+    const account: TestAccount = {
       email: spec.email,
       displayName: `${spec.firstName} ${spec.lastName}`,
       // Authenticating once materialises the Alkemio user server-side and hands
       // back the id, so cleanup can delete by id instead of searching.
       id: await registerInAlkemioOrFail(spec.firstName, spec.lastName, spec.email),
     };
+    createdAccounts.push(account);
+    return account;
   } finally {
-    await context.close();
+    await closeTracked(context);
   }
 }
 
 /** Creates a verified account and keeps it signed in, for a walk that drives it. */
 export async function registerAndSignIn(browser: Browser, spec: PersonSpec): Promise<TestPerson> {
-  const context = await browser.newContext();
-  const page = await context.newPage();
-  await completeSignUp(page, spec);
-  await signInThroughUi(page, spec.email);
-  return {
-    email: spec.email,
-    displayName: `${spec.firstName} ${spec.lastName}`,
-    id: await registerInAlkemioOrFail(spec.firstName, spec.lastName, spec.email),
-    context,
-    page,
-    slug: await readSettingsSlug(page),
-  };
+  const context = await trackedContext(browser);
+  try {
+    const page = await context.newPage();
+    await completeSignUp(page, spec);
+    await signInThroughUi(page, spec.email);
+
+    // Record the account BEFORE the last fallible step: once the server has
+    // materialised the user it must be deletable even if reading the slug fails.
+    const account: TestAccount = {
+      email: spec.email,
+      displayName: `${spec.firstName} ${spec.lastName}`,
+      id: await registerInAlkemioOrFail(spec.firstName, spec.lastName, spec.email),
+    };
+    createdAccounts.push(account);
+
+    return { ...account, context, page, slug: await readSettingsSlug(page) };
+  } catch (error) {
+    await closeTracked(context);
+    throw error;
+  }
 }
 
 /**
@@ -400,7 +448,9 @@ export function chatPanel(page: Page): Locator {
  */
 export async function openChatPanel(page: Page): Promise<void> {
   await acceptCookiesIfPresent(page);
-  if (await chatPanel(page).isVisible({ timeout: 2000 }).catch(() => false)) {
+  // Instantaneous by design — this asks whether the panel is open right now,
+  // so no wait is wanted (and `isVisible`'s timeout option would not wait anyway).
+  if (await chatPanel(page).isVisible().catch(() => false)) {
     return;
   }
   await page.getByRole('button', { name: 'Open chat' }).click();
@@ -425,7 +475,8 @@ export function panelHeader(page: Page): Locator {
  */
 export async function ensureConversationList(page: Page): Promise<void> {
   const back = chatPanel(page).getByRole('button', { name: 'Back to conversations' });
-  if (await back.isVisible({ timeout: 2000 }).catch(() => false)) {
+  // Instantaneous by design — which view are we in right now?
+  if (await back.isVisible().catch(() => false)) {
     await back.click();
   }
   await expect(conversationRows(page).first()).toBeVisible({ timeout: 15000 });
@@ -579,6 +630,31 @@ export async function avatarComposite(scope: Locator): Promise<{ imgSrcs: string
   return { imgSrcs, fallbackTexts };
 }
 
+/**
+ * `avatarComposite`, read once the composition has stopped changing.
+ *
+ * Radix swaps `AvatarFallback` for `AvatarImage` only once the image loads, so a
+ * composite read too early reports an initials tile where the settled DOM shows
+ * a picture. Comparing a list row captured before a click with a header captured
+ * after it can therefore differ for timing reasons alone. Two identical
+ * consecutive reads mean the swap is done.
+ */
+export async function settledAvatarComposite(scope: Locator): Promise<{ imgSrcs: string[]; fallbackTexts: string[] }> {
+  let previous = JSON.stringify(await avatarComposite(scope));
+  await expect
+    .poll(
+      async () => {
+        const current = JSON.stringify(await avatarComposite(scope));
+        const stable = current === previous;
+        previous = current;
+        return stable;
+      },
+      { timeout: 20000, intervals: [250, 250, 500] }
+    )
+    .toBe(true);
+  return JSON.parse(previous);
+}
+
 /** Total avatar cells (image or initials) rendered inside `scope`. */
 export async function avatarCellCount(scope: Locator): Promise<number> {
   const { imgSrcs, fallbackTexts } = await avatarComposite(scope);
@@ -622,11 +698,19 @@ export async function deleteTestUsers(accounts: TestAccount[]): Promise<void> {
   }
 }
 
-/** Closes any browser sessions, then removes the accounts they belong to. */
-export async function teardownAccounts(accounts: Array<TestAccount | TestPerson | undefined>): Promise<void> {
-  const present = accounts.filter((account): account is TestAccount | TestPerson => Boolean(account));
-  await Promise.all(
-    present.map(account => ('context' in account ? (account as TestPerson).context.close() : Promise.resolve()))
-  );
-  await deleteTestUsers(present);
+/**
+ * Closes every browser session this file opened and deletes every account it
+ * created.
+ *
+ * Takes no arguments on purpose — see the registry above: cleanup must not
+ * depend on which objects the caller managed to receive. Contexts are closed
+ * with `allSettled` so one failing close cannot skip the deletion that follows;
+ * a leftover account is environment drift, a leftover context is not.
+ */
+export async function teardownAccounts(): Promise<void> {
+  const contexts = [...openContexts];
+  openContexts.clear();
+  await Promise.allSettled(contexts.map(context => context.close()));
+
+  await deleteTestUsers(createdAccounts.splice(0));
 }

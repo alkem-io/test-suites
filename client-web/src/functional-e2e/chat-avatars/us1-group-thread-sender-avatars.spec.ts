@@ -8,12 +8,14 @@ import {
   expectVisuallyHidden,
   gutterAvatar,
   gutterRow,
+  conversationRow,
+  ensureConversationList,
   messageColumn,
   openChatPanel,
   openConversation,
-  panelHeader,
   reactionPills,
   registerAndSignInAll,
+  settledAvatarComposite,
   sendMessage,
   srOnlyAuthorName,
   teardownAccounts,
@@ -83,7 +85,7 @@ test.describe('US1 — group thread sender avatars', { tag: ['@chat-avatars'] },
   });
 
   test.afterAll(async () => {
-    await teardownAccounts([viewer, bella, charlie]);
+    await teardownAccounts();
   });
 
   /**
@@ -187,16 +189,26 @@ test.describe('US1 — group thread sender avatars', { tag: ['@chat-avatars'] },
     // Exactly one avatar cell — an image or an initials tile, never an empty gutter.
     expect(charlieAvatar.imgSrcs.length + charlieAvatar.fallbackTexts.length).toBe(1);
 
-    const identity = await avatarComposite(panelHeader(viewer.page));
+    // The scenario names the CONVERSATION LIST, so compare against the list row
+    // itself — not the thread header. The two are equal by construction, but
+    // that equality is US2-AS1's claim to prove, not this scenario's to assume.
+    await ensureConversationList(viewer.page);
+    const listRow = conversationRow(viewer.page, [bella.displayName, charlie.displayName]);
+    await expect(listRow).toHaveCount(1, { timeout: 20000 });
+    const listComposite = await settledAvatarComposite(listRow);
+
     if (charlieAvatar.imgSrcs.length === 1) {
-      // The group header composite renders the same avatar for this member...
-      expect(identity.imgSrcs).toContain(charlieAvatar.imgSrcs[0]);
+      // The list row renders the same avatar for this member...
+      expect(listComposite.imgSrcs).toContain(charlieAvatar.imgSrcs[0]);
       // ...and it is Charlie's own, not Bella's uploaded picture.
       expect(charlieAvatar.imgSrcs[0]).not.toBe(bellaAvatarSrc);
     } else {
       expect(charlieAvatar.fallbackTexts).toEqual([initialsOf(charlie.displayName)]);
-      expect(identity.fallbackTexts).toContain(charlieAvatar.fallbackTexts[0]);
+      expect(listComposite.fallbackTexts).toContain(charlieAvatar.fallbackTexts[0]);
     }
+
+    // Leave the thread open for the scenarios that follow.
+    await openConversation(viewer.page, [bella.displayName, charlie.displayName]);
   });
 
   test('US1-AS6: a run continuation still exposes the sender to assistive technology', async () => {

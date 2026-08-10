@@ -1,7 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';
 import {
-  avatarComposite,
   composer,
   conversationRow,
   createConversation,
@@ -13,6 +12,7 @@ import {
   openConversation,
   panelHeader,
   registerAndSignInAll,
+  settledAvatarComposite,
   sendMessage,
   srOnlyAuthorName,
   teardownAccounts,
@@ -70,20 +70,20 @@ test.describe('US3 — direct (1:1) thread header identity', { tag: ['@chat-avat
   });
 
   test.afterAll(async () => {
-    await teardownAccounts([viewer, pictured, plain]);
+    await teardownAccounts();
   });
 
   test("US3-AS1: the header shows the other person's profile picture, exactly as their list row does", async ({}, testInfo) => {
     await ensureConversationList(viewer.page);
     const row = conversationRow(viewer.page, [pictured.displayName]);
     await expect(row).toHaveCount(1, { timeout: 20000 });
-    const listComposite = await avatarComposite(row);
+    const listComposite = await settledAvatarComposite(row);
     expect(listComposite.imgSrcs, 'the list row should show the uploaded picture').toEqual([picturedAvatarSrc]);
 
     await row.click();
     await expect(composer(viewer.page)).toBeVisible({ timeout: 20000 });
 
-    const header = await avatarComposite(panelHeader(viewer.page));
+    const header = await settledAvatarComposite(panelHeader(viewer.page));
     expect(header.imgSrcs).toEqual(listComposite.imgSrcs);
     expect(header.fallbackTexts).toHaveLength(0);
     // The title stays next to it — the avatar is added, nothing is replaced.
@@ -104,7 +104,7 @@ test.describe('US3 — direct (1:1) thread header identity', { tag: ['@chat-avat
     const row = conversationRow(viewer.page, [plain.displayName]);
     await expect(row).toHaveCount(1, { timeout: 20000 });
 
-    const listComposite = await avatarComposite(row);
+    const listComposite = await settledAvatarComposite(row);
     // Exactly one avatar cell — the platform-assigned image, or an initials tile.
     expect(listComposite.imgSrcs.length + listComposite.fallbackTexts.length).toBe(1);
     if (listComposite.fallbackTexts.length === 1) {
@@ -114,7 +114,7 @@ test.describe('US3 — direct (1:1) thread header identity', { tag: ['@chat-avat
     await row.click();
     await expect(composer(viewer.page)).toBeVisible({ timeout: 20000 });
 
-    const header = await avatarComposite(panelHeader(viewer.page));
+    const header = await settledAvatarComposite(panelHeader(viewer.page));
     expect(header.imgSrcs).toEqual(listComposite.imgSrcs);
     expect(header.fallbackTexts).toEqual(listComposite.fallbackTexts);
     // ...and it is this person's identity, not the picture AS1's contact uploaded.

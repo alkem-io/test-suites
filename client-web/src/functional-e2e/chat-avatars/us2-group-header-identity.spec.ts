@@ -12,6 +12,7 @@ import {
   panelHeader,
   registerAccounts,
   registerAndSignIn,
+  settledAvatarComposite,
   setGroupPhoto,
   teardownAccounts,
   type TestAccount,
@@ -73,7 +74,7 @@ test.describe('US2 — group thread header identity', { tag: ['@chat-avatars'] }
   });
 
   test.afterAll(async () => {
-    await teardownAccounts([viewer, ...members]);
+    await teardownAccounts();
   });
 
   test('US2-AS1: with no custom photo the header shows the list row’s composite', async ({}, testInfo) => {
@@ -81,7 +82,7 @@ test.describe('US2 — group thread header identity', { tag: ['@chat-avatars'] }
     const row = conversationRow(viewer.page, [members[0].displayName, members[1].displayName]);
     await expect(row).toHaveCount(1, { timeout: 20000 });
 
-    const listComposite = await avatarComposite(row);
+    const listComposite = await settledAvatarComposite(row);
     // Two other participants (the viewer is excluded from the composite) → two
     // cells, each an image or an initials tile depending on that account's photo.
     expect(listComposite.imgSrcs.length + listComposite.fallbackTexts.length).toBe(2);
@@ -91,7 +92,7 @@ test.describe('US2 — group thread header identity', { tag: ['@chat-avatars'] }
     await expect(composer(viewer.page)).toBeVisible({ timeout: 20000 });
 
     // Header ≡ list row: same images, same fallbacks, same order.
-    const headerComposite = await avatarComposite(panelHeader(viewer.page));
+    const headerComposite = await settledAvatarComposite(panelHeader(viewer.page));
     expect(headerComposite.imgSrcs).toEqual(listComposite.imgSrcs);
     expect(headerComposite.fallbackTexts).toEqual(listComposite.fallbackTexts);
     await viewer.page.screenshot({ path: testInfo.outputPath('us2-as1-header.png') });
@@ -143,17 +144,33 @@ test.describe('US2 — group thread header identity', { tag: ['@chat-avatars'] }
 
     await setGroupPhoto(viewer.page, 'b');
 
+    // Wait for the settled NEW state, not merely for the old src to stop being
+    // there: polling `imgSrcs[0] !== before` alone goes green the instant the
+    // old image unmounts, even if no new one ever arrives (undefined !== before).
     await expect
-      .poll(async () => (await avatarComposite(panelHeader(viewer.page))).imgSrcs[0], { timeout: 30000 })
-      .not.toBe(before);
+      .poll(
+        async () => {
+          const composite = await avatarComposite(panelHeader(viewer.page));
+          return (
+            composite.imgSrcs.length === 1 && composite.fallbackTexts.length === 0 && composite.imgSrcs[0] !== before
+          );
+        },
+        { timeout: 30000 }
+      )
+      .toBe(true);
 
     const header = await avatarComposite(panelHeader(viewer.page));
+    expect(header.imgSrcs).toHaveLength(1);
+    expect(header.fallbackTexts).toHaveLength(0);
+    expect(header.imgSrcs[0]).not.toBe(before);
     await viewer.page.screenshot({ path: testInfo.outputPath('us2-as3-header.png') });
 
     await ensureConversationList(viewer.page);
     const row = conversationRow(viewer.page, [members[0].displayName, members[1].displayName]);
     await expect(row).toHaveCount(1, { timeout: 20000 });
-    expect((await avatarComposite(row)).imgSrcs).toEqual(header.imgSrcs);
+    const listComposite = await avatarComposite(row);
+    expect(listComposite.imgSrcs).toEqual(header.imgSrcs);
+    expect(listComposite.fallbackTexts).toHaveLength(0);
     await viewer.page.screenshot({ path: testInfo.outputPath('us2-as3-list-row.png') });
   });
 
@@ -164,7 +181,7 @@ test.describe('US2 — group thread header identity', { tag: ['@chat-avatars'] }
 
     await createConversation(viewer.page, names);
 
-    const header = await avatarComposite(panelHeader(viewer.page));
+    const header = await settledAvatarComposite(panelHeader(viewer.page));
     // GroupAvatar caps the composite at four cells regardless of member count.
     expect(header.imgSrcs.length + header.fallbackTexts.length).toBe(4);
     await viewer.page.screenshot({ path: testInfo.outputPath('us2-as4-header.png') });
@@ -172,7 +189,7 @@ test.describe('US2 — group thread header identity', { tag: ['@chat-avatars'] }
     await ensureConversationList(viewer.page);
     const row = conversationRow(viewer.page, names);
     await expect(row).toHaveCount(1, { timeout: 20000 });
-    const listComposite = await avatarComposite(row);
+    const listComposite = await settledAvatarComposite(row);
     await viewer.page.screenshot({ path: testInfo.outputPath('us2-as4-list-row.png') });
 
     // Same subset, same order, on both surfaces.
