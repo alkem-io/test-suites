@@ -7,7 +7,7 @@
  *   account host, settings, subspaces, community roleSet members/leads/admins.
  * - Calendar events and community updates are preserved after conversion.
  * - Profile URLs (#6020): about URL points to the promoted L0 root; account host org URL is
- *   unchanged; innovationFlow URL points to the promoted L0 root (skipped — client-web#9481).
+ *   unchanged; innovationFlow URL points to the promoted L0 root.
  * - License (#6022): parent L0 seeded with Plus; promoted L0 has a Free license and does NOT
  *   inherit the parent's Plus license.
  * - Collaboration preserved excluding profile URLs (skipped — client-web#9528).
@@ -148,7 +148,8 @@ describe('Convert L1 to L0 - basic', () => {
     expect(subspaceAfter?.level).toEqual(SpaceLevel.L0);
   });
 
-  // Skipped until bug is fixed: BUG: Converted L1 to L0 sets flow states to defaults for Space, instead of moving the flow states from L1#9528
+  // Still failing on the caching fix: converting L1 to L0 resets the flow states to the
+  // L0 defaults instead of moving the L1 flow states over — alkem-io/client-web#9528.
   test.skip('collaboration is preserved (excluding profile urls)', () => {
     expect(stripProfileUrls(subspaceAfter?.collaboration)).toEqual(
       stripProfileUrls(subspaceBefore.data?.lookup.space?.collaboration)
@@ -171,12 +172,11 @@ describe('Convert L1 to L0 - basic', () => {
     const aboutBefore = subspaceBefore.data?.lookup.space?.about;
 
     // profile: id and displayName preserved, url points to new hierarchy
-    // Skip url check: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
     expect(subspaceAfter?.about.profile).toEqual(
       expect.objectContaining({
         id: aboutBefore?.profile?.id,
         displayName: aboutBefore?.profile?.displayName,
-        // url: `${ALKEMIO_BASE_URL}/${baseScenario.subspace.nameId}`,
+        url: `${ALKEMIO_BASE_URL}/${baseScenario.subspace.nameId}`,
       })
     );
 
@@ -203,9 +203,7 @@ describe('Convert L1 to L0 - basic', () => {
     );
   });
 
-  // alkem-io/client-web#9481 — innovationFlow url is not rebased: it still points to the
-  // old L1 path (.../challenges/<l1nameid>) instead of the promoted L0 root. Unskip when fixed.
-  test.skip('innovationFlow profile url points to the promoted L0 root after promotion', () => {
+  test('innovationFlow profile url points to the promoted L0 root after promotion', () => {
     expect(subspaceAfter?.collaboration.innovationFlow.profile.url).toEqual(
       promotedSpaceUrl()
     );

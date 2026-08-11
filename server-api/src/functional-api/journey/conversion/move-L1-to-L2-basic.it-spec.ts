@@ -140,7 +140,7 @@ describe('Move L1 to L2 - basic', () => {
         id: aboutBefore?.profile?.id,
         displayName: aboutBefore?.profile?.displayName,
         description: aboutBefore?.profile?.description,
-        // url: `${ALKEMIO_BASE_URL}/${targetScenario.space.nameId}/challenges/${targetScenario.subspace.nameId}/opportunities/${sourceScenario.subspace.nameId}`,
+        url: `${ALKEMIO_BASE_URL}/${targetScenario.space.nameId}/challenges/${targetScenario.subspace.nameId}/opportunities/${sourceScenario.subspace.nameId}`,
         references: aboutBefore?.profile?.references,
         tagline: aboutBefore?.profile?.tagline,
         tagsets: aboutBefore?.profile?.tagsets,
@@ -163,8 +163,7 @@ describe('Move L1 to L2 - basic', () => {
     expect(movedSpace?.about.why).toEqual(aboutBefore?.why);
   });
 
-  // InnovationFlowDataFragmentDoc.profile.url - doesn't get updated to the new subsubspace url
-  test.skip('all entity profile urls reflect the new L2 hierarchy after cross-L0 move', () => {
+  test('all entity profile urls reflect the new L2 hierarchy after cross-L0 move', () => {
     const urlsBefore = collectProfileUrls(subspaceBefore.data?.lookup.space);
     const urlsAfter = collectProfileUrls(movedSpace);
 
