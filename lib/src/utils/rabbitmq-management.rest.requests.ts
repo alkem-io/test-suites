@@ -1,5 +1,5 @@
-import request from 'supertest';
-import { testConfiguration } from '..';
+import request from "supertest";
+import { testConfiguration } from "..";
 
 /**
  * Thin client over the RabbitMQ management HTTP API (compose publishes
@@ -28,7 +28,7 @@ export interface QueueStats {
 
 const authHeader = (): string => {
   const { user, password } = testConfiguration.endPoints.rabbitMqManagement;
-  const token = Buffer.from(`${user}:${password}`).toString('base64');
+  const token = Buffer.from(`${user}:${password}`).toString("base64");
   return `Basic ${token}`;
 };
 
@@ -37,21 +37,37 @@ const authHeader = (): string => {
  * throwing) when the queue does not exist yet (e.g. no message has ever
  * been published) — RabbitMQ's management API 404s on an unknown queue,
  * which is a valid "nothing published yet" baseline for this harness.
+ *
+ * Any OTHER non-2xx status throws. 404 is the only status that means
+ * "nothing has been published"; 401/403/5xx mean the harness cannot see the
+ * queue at all, and silently reporting `publishedTotal: 0` for those would
+ * make every NEGATIVE push assertion pass on a misconfigured or unreachable
+ * management API — the same false-green failure mode the digest windows
+ * exist to prevent.
  */
 export const getQueueStats = async (
   queueName: string,
-  vhost = '/'
+  vhost = "/",
 ): Promise<QueueStats> => {
   const { url } = testConfiguration.endPoints.rabbitMqManagement;
   const encodedVhost = encodeURIComponent(vhost);
 
   const response = await request(url)
     .get(`/api/queues/${encodedVhost}/${queueName}`)
-    .set('Authorization', authHeader())
-    .set('Accept', 'application/json');
+    .set("Authorization", authHeader())
+    .set("Accept", "application/json");
 
   if (response.status === 404) {
     return { messagesReady: 0, messagesUnacknowledged: 0, publishedTotal: 0 };
+  }
+
+  if (response.status < 200 || response.status >= 300) {
+    throw new Error(
+      `RabbitMQ management API returned HTTP ${response.status} for queue ` +
+        `"${queueName}" (vhost "${vhost}") at ${url}. Check ` +
+        "RABBITMQ_MANAGEMENT_ENDPOINT/_USER/_PASSWORD — a push assertion " +
+        'must never read this as "nothing was published".',
+    );
   }
 
   const body = response.body ?? {};
@@ -73,7 +89,10 @@ export const waitForQueuePublishIncrease = async (
   queueName: string,
   baseline: number,
   expectedIncrease = 1,
-  { timeout = 15_000, interval = 1_000 }: { timeout?: number; interval?: number } = {}
+  {
+    timeout = 15_000,
+    interval = 1_000,
+  }: { timeout?: number; interval?: number } = {},
 ): Promise<QueueStats> => {
   const start = Date.now();
   let last = await getQueueStats(queueName);
@@ -82,7 +101,7 @@ export const waitForQueuePublishIncrease = async (
     last.publishedTotal < baseline + expectedIncrease &&
     Date.now() - start < timeout
   ) {
-    await new Promise(resolve => setTimeout(resolve, interval));
+    await new Promise((resolve) => setTimeout(resolve, interval));
     last = await getQueueStats(queueName);
   }
 

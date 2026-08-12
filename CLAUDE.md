@@ -166,7 +166,9 @@ Test timeout is 30 minutes (1,800,000 ms) for long-running integration tests.
 
 ### Client Web Tests (`client-web/src/functional-e2e/`)
 
-Playwright E2E tests organized by feature area: `explore-platform/`, `authentication/`, `my-dashboard/`, `memberships/`, `applications/`, `templates/`, `public-space/`, `user-profile/`, `support-navigation/`.
+Playwright E2E tests organized by feature area: `explore-platform/`, `authentication/`, `my-dashboard/`, `memberships/`, `applications/`, `templates/`, `public-space/`, `user-profile/`, `support-navigation/`, `messaging-notifications/`.
+
+`messaging-notifications/` is the one area that does **not** use the session-based auth fixtures: its walks register every persona inline through the real sign-up flow, because they assert on notification-settings defaults for a brand-new account and on digest tracks that must start empty. Its shared fixtures live in `messaging-notifications/messaging.helpers.ts`.
 
 - Chrome only (branded channel, not Chromium)
 - Session-based auth fixtures with storage state persistence in `.auth/`

@@ -1,11 +1,4 @@
-import { test, expect, Page, Browser } from '@playwright/test';
-import { navigateToRegistrationFromSignUpFillFormAndContinue } from '../authentication/login-page-objects';
-import { fillUpSignUpPasswordElements } from '../identity-flows/registration-page-objects';
-import {
-  fillUpSignInPageElements,
-  pressSignInButtonSignInPage,
-} from '../identity-flows/signin-page-objects';
-import { nextButton } from '../authentication/common-authentication-page-elements';
+import { test, expect, Page } from '@playwright/test';
 import { loginViaCrd } from '../helpers/login.helper';
 import {
   delay,
@@ -13,11 +6,23 @@ import {
   digestTestTimeoutMs,
   digestWindow,
   getMailsData,
-  getQueueStats,
-  getVerificationLink,
   UniqueIDGenerator,
-  waitForQueuePublishIncrease,
 } from '@alkemio/tests-lib';
+import {
+  baseUrl,
+  newContextPage,
+  openChatPanel,
+  openConversationByName,
+  password,
+  pushPublishedTotal,
+  registerAndVerifyUser,
+  sendMessage,
+  SETUP_TIMEOUT_MS,
+  settledPushDelta,
+  subscribeToPush,
+  toAddressesOf,
+  waitForMailsCountAtLeast,
+} from './messaging.helpers';
 
 /**
  * @forge-acceptance
@@ -48,97 +53,25 @@ import {
  * Nobody reads the group conversation during this walk, so no digest is ever
  * cancelled — the cancellation path is US5's, covered by the server-api
  * read-state it-spec.
+ *
+ * Personas are registered INLINE through the real sign-up flow rather than
+ * reusing the repo's session-based storage-state fixtures in `.auth/` — see
+ * `messaging.helpers.ts`, which holds that rationale and every fixture this
+ * walk shares with US1/US3.
  */
 
-const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
-const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
-const PUSH_NOTIFICATIONS_QUEUE = 'alkemio-push-notifications';
 const EVIDENCE_DIR = process.env.FORGE_EVIDENCE_DIR;
 
 // The two group tracks this walk exercises. Registration/setup steps keep a
 // fixed timeout (they wait on Kratos and the mail catcher, not on a digest).
 const groupPush = digestWindow('push', 'group');
 const groupEmail = digestWindow('email', 'group');
-const SETUP_TIMEOUT_MS = 90_000;
 
 async function snap(page: Page, name: string) {
   if (!EVIDENCE_DIR) return;
-  await page.screenshot({ path: `${EVIDENCE_DIR}/${name}.png`, fullPage: true }).catch(() => {});
-}
-
-/** Registers + email-verifies a brand new user via the real sign-up flow. */
-async function registerAndVerifyUser(
-  page: Page,
-  emailLocalPart: string,
-  firstName: string,
-  lastName: string
-): Promise<string> {
-  const uniqueId = UniqueIDGenerator.getID();
-  const userEmail = `test+${emailLocalPart}${uniqueId}@alkem.io`;
-
-  await navigateToRegistrationFromSignUpFillFormAndContinue(
-    baseUrl,
-    page,
-    userEmail,
-    firstName,
-    lastName
-  );
-  await fillUpSignUpPasswordElements(password, page);
-  // Clear the mailbox immediately before triggering the verification email
-  // so getVerificationLink() below can't pick up a STALE token from a
-  // previously-registered user (Mailslurper is a shared inbox across all
-  // registrations in this run).
-  await deleteMailSlurperMails();
-  await nextButton(page).click();
-
-  await expect(
-    page.getByRole('heading', { name: 'Verify your email' })
-  ).toBeVisible();
-
-  let verificationLink: string | undefined;
-  for (let attempt = 0; attempt < 10; attempt++) {
-    verificationLink = await getVerificationLink();
-    if (verificationLink) break;
-    await delay(2000);
-  }
-  if (verificationLink === undefined) {
-    throw new Error('Verification link from email is missing!');
-  }
-
-  await page.goto(verificationLink);
-  await expect(page.getByText('You successfully verified')).toBeVisible({
-    timeout: 10000,
-  });
-  const continueLink = page.getByRole('link', { name: 'Continue' });
-  if (await continueLink.isVisible({ timeout: 5000 }).catch(() => false)) {
-    await continueLink.click();
-  }
-
-  await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible({
-    timeout: 10000,
-  });
-
-  await fillUpSignInPageElements(userEmail, password, page);
-  await pressSignInButtonSignInPage(page);
-
-  return userEmail;
-}
-
-async function openChatPanel(page: Page) {
-  await page.goto(`${baseUrl}/home`);
-  await page.getByRole('button', { name: 'Open chat' }).click();
-}
-
-async function openConversationByName(page: Page, name: string) {
-  await openChatPanel(page);
-  await page.getByRole('button', { name }).first().click();
-}
-
-async function sendMessage(page: Page, text: string) {
-  const messageBox = page.getByRole('textbox', { name: 'Add a comment...' });
-  await messageBox.fill(text);
-  await messageBox.press('Enter');
-  await expect(page.getByText(text)).toBeVisible();
+  await page
+    .screenshot({ path: `${EVIDENCE_DIR}/${name}.png`, fullPage: true })
+    .catch(() => {});
 }
 
 function groupEmailToggle(page: Page) {
@@ -151,72 +84,6 @@ function groupPushToggle(page: Page) {
   return page.locator(
     '[aria-label="Toggle Push notification for: Receive a notification when someone posts in a group chat I am a member of"]'
   );
-}
-
-const toAddressesOf = (mailItems: { toAddresses?: string[] }[]) =>
-  mailItems.flatMap(item => item.toAddresses ?? []);
-
-/** Polls Mailslurper until at least `expectedCount` mails are present. */
-async function waitForMailsCountAtLeast(
-  expectedCount: number,
-  { timeout = 15_000, interval = 1_000 }: { timeout?: number; interval?: number } = {}
-): Promise<[{ toAddresses?: string[]; subject?: string; body?: string }[], number]> {
-  const start = Date.now();
-
-  let [mailItems, total] = (await getMailsData()) as [any[], number];
-  while (total < expectedCount && Date.now() - start < timeout) {
-    await delay(interval);
-    [mailItems, total] = (await getMailsData()) as [any[], number];
-  }
-  return [mailItems, total];
-}
-
-async function newContextPage(browser: Browser) {
-  const context = await browser.newContext();
-  const page = await context.newPage();
-  return { context, page };
-}
-
-/**
- * Registers a synthetic (fake) push subscription for the CURRENTLY logged-in
- * user via an authenticated same-origin GraphQL call — the push ADAPTER
- * no-ops for a recipient with zero active subscriptions (Operator Ruling
- * 3c / test-suites precondition pattern), so this is required before any
- * push-emit assertion can observe a publish for that recipient. Mirrors
- * test-suites/server-api's generateFakePushSubscription +
- * subscribeToPushNotifications helpers.
- */
-async function subscribeToPush(page: Page, label: string) {
-  const uniqueId = `${label}-${Date.now()}`;
-  const subscriptionData = {
-    endpoint: `https://fcm.googleapis.com/fcm/send/${uniqueId}`,
-    p256dh: `BNcRdreALRFXTkOOUHK1EtK2wtaz5Ry4YfYCA_0QTpQtUbVlUls0VJXg7A8u-Ts1XbjhazAkj7I99e8p8REfXPQ-${uniqueId}`,
-    auth: `tBHItJI5svbpC7htN-${uniqueId.slice(0, 8)}`,
-  };
-  const result = await page.evaluate(
-    async ({ subscriptionData }) => {
-      const res = await fetch('/api/private/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          query: `
-            mutation SubscribeToPushNotifications($subscriptionData: SubscribeToPushNotificationsInput!) {
-              subscribeToPushNotifications(subscriptionData: $subscriptionData) { id status }
-            }
-          `,
-          variables: { subscriptionData },
-        }),
-      });
-      return res.json();
-    },
-    { subscriptionData }
-  );
-  if (result.errors) {
-    throw new Error(
-      `subscribeToPushNotifications failed: ${JSON.stringify(result.errors)}`
-    );
-  }
 }
 
 test.describe('US2 - group message notifications', () => {
@@ -241,14 +108,32 @@ test.describe('US2 - group message notifications', () => {
   // CONVERSATION, not the sender (data-model 9.1), so the subject carries G's
   // name rather than A's.
 
-  test('setup: register A (sender)', async ({ page }) => {
+  test('setup: register A (sender) with a push subscription', async ({
+    page,
+  }) => {
     test.setTimeout(SETUP_TIMEOUT_MS);
-    userAEmail = await registerAndVerifyUser(page, 'us2a', nameA, 'Sender');
+    ({ email: userAEmail } = await registerAndVerifyUser(
+      page,
+      'us2a',
+      nameA,
+      'Sender'
+    ));
+    // A is the SENDER and must never be notified — but that only means
+    // something if A could have been. Give A a subscription too (as US1 does),
+    // so AS1's "delta is exactly 2" is a real candidate-resolution assertion
+    // (B and C, never A) rather than an accidental pass on "A has no
+    // subscription for the adapter to publish to anyway".
+    await subscribeToPush(page, 'us2a');
   });
 
   test('setup: register B (member)', async ({ page }) => {
     test.setTimeout(SETUP_TIMEOUT_MS);
-    userBEmail = await registerAndVerifyUser(page, 'us2b', nameB, 'Member');
+    ({ email: userBEmail } = await registerAndVerifyUser(
+      page,
+      'us2b',
+      nameB,
+      'Member'
+    ));
     await subscribeToPush(page, 'us2b');
   });
 
@@ -260,7 +145,12 @@ test.describe('US2 - group message notifications', () => {
 
   test('setup: register D (non-member)', async ({ page }) => {
     test.setTimeout(SETUP_TIMEOUT_MS);
-    userDEmail = await registerAndVerifyUser(page, 'us2d', nameD, 'NonMember');
+    ({ email: userDEmail } = await registerAndVerifyUser(
+      page,
+      'us2d',
+      nameD,
+      'NonMember'
+    ));
   });
 
   test('US2-AS1: group G (A,B,C) default settings — A sends, B+C get a push emit each, zero email', async ({
@@ -274,9 +164,15 @@ test.describe('US2 - group message notifications', () => {
     await page.getByRole('button', { name: 'New message' }).click();
     const search = page.getByRole('textbox', { name: 'Search people…' });
     await search.fill(`${nameB} Member`);
-    await page.getByRole('button', { name: `${nameB} Member` }).first().click();
+    await page
+      .getByRole('button', { name: `${nameB} Member` })
+      .first()
+      .click();
     await search.fill(`${nameC} Member`);
-    await page.getByRole('button', { name: `${nameC} Member` }).first().click();
+    await page
+      .getByRole('button', { name: `${nameC} Member` })
+      .first()
+      .click();
     await page.getByRole('button', { name: 'Start group chat' }).click();
 
     // Rename the group to a unique, findable name via the group-settings dialog.
@@ -287,30 +183,27 @@ test.describe('US2 - group message notifications', () => {
       timeout: 10_000,
     });
 
-    const baseline = (await getQueueStats(PUSH_NOTIFICATIONS_QUEUE))
-      .publishedTotal;
+    const baseline = await pushPublishedTotal();
 
     await sendMessage(page, 'US2-AS1 default-settings group message from A');
 
     // B and C each have their own `push:group` track, but the same message
     // armed both, so both flush within one quiet period. Poll bound covers
     // `push:group` quiet + sweep + settle — the pushes are debounced, not
-    // immediate.
-    const stats = await waitForQueuePublishIncrease(
-      PUSH_NOTIFICATIONS_QUEUE,
-      baseline,
-      2,
-      { timeout: groupPush.quietGraceMs }
-    );
-    const delta = stats.publishedTotal - baseline;
+    // immediate. The settle then covers `email:group` at its MAX-DELAY bound,
+    // the slowest of the four tracks, so ONE wait serves both halves: the
+    // delta is asserted to be EXACTLY 2 against a stable counter (read at the
+    // moment it first reached 2, a third publish — an over-broad recipient
+    // set, or A wrongly notified about her own message — would never be
+    // observed), and "zero email" is measured past the point at which a
+    // default-on email would provably have been dispatched.
+    const delta = await settledPushDelta(baseline, 2, {
+      pollTimeoutMs: groupPush.quietGraceMs,
+      settleMs: groupEmail.maxDelayGraceMs,
+    });
     await snap(page, 'US2-AS1-after-send');
     expect(delta).toBe(2);
 
-    // NEGATIVE half — "zero email" must outlast the EMAIL track, the slowest
-    // of the four. Grace covers `email:group` at its MAX-DELAY bound; the old
-    // literal 3s would have passed on a build that emailed by default,
-    // because that email would not have been dispatched yet either.
-    await delay(groupEmail.maxDelayGraceMs);
     const [, emailTotal] = await getMailsData();
     expect(emailTotal).toBe(0);
   });
@@ -334,11 +227,20 @@ test.describe('US2 - group message notifications', () => {
     const { context: aContext, page: aPage } = await newContextPage(browser);
     await loginViaCrd(aPage, userAEmail, password, baseUrl);
     await openConversationByName(aPage, groupName);
-    await sendMessage(aPage, 'US2-AS2 group message after B enabled group email');
+    await sendMessage(
+      aPage,
+      'US2-AS2 group message after B enabled group email'
+    );
 
-    // Poll bound covers `email:group` quiet + sweep + settle.
+    // Poll bound covers `email:group` quiet + sweep + settle; the settle then
+    // re-reads at the MAX-DELAY bound so "exactly one" is read from a stable
+    // inbox. Without it this would prove only "at least one, sampled at the
+    // first poll that saw it" — a second, wrongly-addressed digest (C, or A
+    // for her own message) sits on that recipient's own track and can land
+    // long after B's.
     const [mailItems, total] = await waitForMailsCountAtLeast(1, {
       timeout: groupEmail.quietGraceMs,
+      settleMs: groupEmail.maxDelayGraceMs,
     });
     expect(total).toBe(1);
 
@@ -352,7 +254,9 @@ test.describe('US2 - group message notifications', () => {
     // what is still unread at fire time. What US2-AS2 claims is that the
     // subject names G.
     expect(mail!.subject).toMatch(
-      new RegExp(`^(New message in ${groupName}|\\d+ new messages in ${groupName})$`)
+      new RegExp(
+        `^(New message in ${groupName}|\\d+ new messages in ${groupName})$`
+      )
     );
     expect(mail!.body).not.toContain(
       'US2-AS2 group message after B enabled group email'
@@ -458,27 +362,26 @@ test.describe('US2 - group message notifications', () => {
     await loginViaCrd(aPage, userAEmail, password, baseUrl);
     await openConversationByName(aPage, groupName);
 
-    const baselineBeforeRemoval = (
-      await getQueueStats(PUSH_NOTIFICATIONS_QUEUE)
-    ).publishedTotal;
+    const baselineBeforeRemoval = await pushPublishedTotal();
     await sendMessage(aPage, 'US2-AS4 baseline before removing C');
     // Poll bound covers `push:group` quiet + sweep + settle. Each recipient
     // has their own track but the same message armed both, so they flush on
-    // the same sweep tick — the extra settle below is what turns "at least
-    // one arrived" into a STABLE recipient count. Without it the baseline
-    // could be read as 1 while a second publish was microseconds away, and
-    // the post-removal assertion would then be comparing against the wrong
-    // number.
-    await waitForQueuePublishIncrease(
-      PUSH_NOTIFICATIONS_QUEUE,
+    // the same sweep tick — the settle is what turns "at least one arrived"
+    // into a STABLE recipient count. Without it the baseline could be read as
+    // 1 while a second publish was still pending, and the assertion at the end
+    // of this test would then compare against a count that is too low and fail
+    // even though removal worked. The settle is the `push:group` MAX-DELAY
+    // bound, not the shorter pipeline slack: a recipient whose track happened
+    // to be armed earlier flushes on their own cap, not on this message's
+    // quiet period.
+    const memberCountBeforeRemoval = await settledPushDelta(
       baselineBeforeRemoval,
       1,
-      { timeout: groupPush.quietGraceMs }
+      {
+        pollTimeoutMs: groupPush.quietGraceMs,
+        settleMs: groupPush.maxDelayGraceMs,
+      }
     );
-    await delay(groupPush.settleMs);
-    const memberCountBeforeRemoval =
-      (await getQueueStats(PUSH_NOTIFICATIONS_QUEUE)).publishedTotal -
-      baselineBeforeRemoval;
     // Sanity: with defaults from AS1-AS3 (B email-only, C untouched default
     // push-on), C should still be a current push recipient.
     expect(memberCountBeforeRemoval).toBeGreaterThanOrEqual(1);
@@ -501,9 +404,7 @@ test.describe('US2 - group message notifications', () => {
     // to close and the client cache to settle).
     await delay(3_000);
 
-    const baselineAfterRemoval = (
-      await getQueueStats(PUSH_NOTIFICATIONS_QUEUE)
-    ).publishedTotal;
+    const baselineAfterRemoval = await pushPublishedTotal();
     await sendMessage(aPage, 'US2-AS4 after removing C from the group');
     // Wait out a grace period rather than polling for an increase — the
     // acceptance criterion is that C's removal REDUCES the recipient count
@@ -513,8 +414,8 @@ test.describe('US2 - group message notifications', () => {
     // the previous literal 6s could have read the counter while C's wrongly
     // armed dispatch was still comfortably pending.
     await delay(groupPush.maxDelayGraceMs);
-    const statsAfter = await getQueueStats(PUSH_NOTIFICATIONS_QUEUE);
-    const deltaAfterRemoval = statsAfter.publishedTotal - baselineAfterRemoval;
+    const deltaAfterRemoval =
+      (await pushPublishedTotal()) - baselineAfterRemoval;
 
     // Acceptance criterion (US2-AS4): removing C must reduce the recipient
     // count for subsequent messages by exactly one (C stops receiving
@@ -553,8 +454,7 @@ test.describe('US2 - group message notifications', () => {
     await loginViaCrd(aPage, userAEmail, password, baseUrl);
     await openConversationByName(aPage, groupName);
 
-    const baselineBefore = (await getQueueStats(PUSH_NOTIFICATIONS_QUEUE))
-      .publishedTotal;
+    const baselineBefore = await pushPublishedTotal();
     await sendMessage(aPage, 'US2-AS5 first send after B disabled group push');
     // Grace covers `push:group` at its MAX-DELAY bound. This is a NEGATIVE
     // measurement — the expectation is that no push is produced at all — so a
@@ -564,14 +464,12 @@ test.describe('US2 - group message notifications', () => {
     // the baseline itself). It therefore reported "no push" before the
     // pipeline had even had a chance to debounce one.
     await delay(groupPush.maxDelayGraceMs);
-    const statsFirst = await getQueueStats(PUSH_NOTIFICATIONS_QUEUE);
-    const deltaFirst = statsFirst.publishedTotal - baselineBefore;
+    const totalFirst = await pushPublishedTotal();
+    const deltaFirst = totalFirst - baselineBefore;
 
-    const baselineSecond = statsFirst.publishedTotal;
     await sendMessage(aPage, 'US2-AS5 second send, B still disabled');
     await delay(groupPush.maxDelayGraceMs);
-    const statsSecond = await getQueueStats(PUSH_NOTIFICATIONS_QUEUE);
-    const deltaSecond = statsSecond.publishedTotal - baselineSecond;
+    const deltaSecond = (await pushPublishedTotal()) - totalFirst;
 
     await snap(aPage, 'US2-AS5-after-second-send');
     // B is the only non-sender member left (see the scope note above), and B

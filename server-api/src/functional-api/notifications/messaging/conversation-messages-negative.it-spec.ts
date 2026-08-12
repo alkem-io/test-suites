@@ -93,7 +93,9 @@ const waitForRemovalToLand = async (
     const response = await getMeConversations(removedUser);
     const stillAMember = (
       response?.data?.me?.conversations?.conversations ?? []
-    ).some((conversation: { id: string }) => conversation.id === conversationId);
+    ).some(
+      (conversation: { id: string }) => conversation.id === conversationId
+    );
     if (!stillAMember) {
       return;
     }
@@ -396,7 +398,11 @@ describe('Conversation-message notifications — negative matrix', () => {
         // after the address list is read.
         const [mailItems, total] = await expectExactMailsAfter(
           () =>
-            sendMessageToRoom(roomId as string, 'Hello!', TestUser.GLOBAL_ADMIN),
+            sendMessageToRoom(
+              roomId as string,
+              'Hello!',
+              TestUser.GLOBAL_ADMIN
+            ),
           1,
           {
             timeout: directEmail.quietGraceMs,
@@ -484,24 +490,21 @@ describe('Conversation-message notifications — negative matrix', () => {
     );
   });
 
-  test.skip(
-    'VC/guidance-bot sender produces zero notifications (US4-AS1) — delegated, not fabricated here',
-    () => {
-      // Rationale for skipping rather than fabricating a synthetic pass:
-      // Triggering a REAL virtual-contributor reply requires the VC engine
-      // round trip (server -> virtual-contributor-engine-*), which is not
-      // part of this feature's verification stack (repos.yaml
-      // forge.verification.stack.services lists only server, notifications
-      // and client-web + Postgres/Redis/RabbitMQ/Kratos/Mailslurper — no VC
-      // engine). Without the real engine, "the human sends a message and we
-      // wait for a VC reply that never arrives" would pass vacuously (zero
-      // notifications observed because no VC message was ever produced, not
-      // because the sender guard fired) — a false-confidence test.
-      // Coverage for this scenario lives at:
-      //  - server unit level: conversation.notification.service.spec.ts
-      //    ("produces zero notifications for a VIRTUAL_CONTRIBUTOR sender").
-      //  - acceptance level: repos.yaml verification.tracks[type=acceptance]
-      //    US4-AS1, using the platform's real guidance-bot conversation.
-    }
-  );
+  test.skip('VC/guidance-bot sender produces zero notifications (US4-AS1) — delegated, not fabricated here', () => {
+    // Rationale for skipping rather than fabricating a synthetic pass:
+    // Triggering a REAL virtual-contributor reply requires the VC engine
+    // round trip (server -> virtual-contributor-engine-*), which is not
+    // part of this feature's verification stack (repos.yaml
+    // forge.verification.stack.services lists only server, notifications
+    // and client-web + Postgres/Redis/RabbitMQ/Kratos/Mailslurper — no VC
+    // engine). Without the real engine, "the human sends a message and we
+    // wait for a VC reply that never arrives" would pass vacuously (zero
+    // notifications observed because no VC message was ever produced, not
+    // because the sender guard fired) — a false-confidence test.
+    // Coverage for this scenario lives at:
+    //  - server unit level: conversation.notification.service.spec.ts
+    //    ("produces zero notifications for a VIRTUAL_CONTRIBUTOR sender").
+    //  - acceptance level: repos.yaml verification.tracks[type=acceptance]
+    //    US4-AS1, using the platform's real guidance-bot conversation.
+  });
 });

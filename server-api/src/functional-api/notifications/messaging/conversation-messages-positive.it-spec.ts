@@ -113,7 +113,11 @@ describe('Conversation-message notifications — positive matrix', () => {
         // publish a chance to show up before the exact-equality assertion.
         const { delta } = await expectPushEmitAfter(
           () =>
-            sendMessageToRoom(roomId as string, 'Hello!', TestUser.GLOBAL_ADMIN),
+            sendMessageToRoom(
+              roomId as string,
+              'Hello!',
+              TestUser.GLOBAL_ADMIN
+            ),
           1,
           { timeout: directPush.quietGraceMs, settleMs: directPush.settleMs }
         );
@@ -289,7 +293,9 @@ describe('Conversation-message notifications — positive matrix', () => {
         // R4 group digests report CONVERSATIONS, not senders — there is no
         // single sender to name once a digest can span several (data-model
         // 9.1). This is a deliberate copy change from the pre-R4 subject.
-        expect(mail.subject).toBe(conversationMessageGroupSubject(groupName, 1));
+        expect(mail.subject).toBe(
+          conversationMessageGroupSubject(groupName, 1)
+        );
         expect(mail.body).not.toContain('Hello group, opted-in!');
         expect(mail.body).toContain(`/?chat=${conversationId}`);
       },

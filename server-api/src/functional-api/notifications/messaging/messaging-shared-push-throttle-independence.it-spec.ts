@@ -90,26 +90,29 @@ afterAll(async () => {
 describe('Messaging digests never decrement the shared push throttle (US4-AS2, FR-012)', () => {
   let roomId = '';
 
-  beforeAll(async () => {
-    const res = await createDirectConversation(
-      recipient().agentId,
-      TestUser.GLOBAL_ADMIN
-    );
-    roomId = res?.data?.createConversation?.room?.id ?? '';
-    expect(roomId).toBeTruthy();
+  beforeAll(
+    async () => {
+      const res = await createDirectConversation(
+        recipient().agentId,
+        TestUser.GLOBAL_ADMIN
+      );
+      roomId = res?.data?.createConversation?.room?.id ?? '';
+      expect(roomId).toBeTruthy();
 
-    // Zero the unread baseline — a DIRECT conversation is deduped per actor
-    // pair and cannot be left, so it can carry a previous run's backlog, and a
-    // digest is only produced for conversations that are still unread at fire
-    // time.
-    const drainId = await sendConversationMessage(
-      roomId,
-      'Shared-throttle baseline drain',
-      TestUser.GLOBAL_ADMIN
-    );
-    await markConversationRead(roomId, drainId, RECIPIENT_ROLE);
-    await delay(directPush.maxDelayGraceMs);
-  }, digestTestTimeoutMs(directPush, { cycles: 1 }));
+      // Zero the unread baseline — a DIRECT conversation is deduped per actor
+      // pair and cannot be left, so it can carry a previous run's backlog, and a
+      // digest is only produced for conversations that are still unread at fire
+      // time.
+      const drainId = await sendConversationMessage(
+        roomId,
+        'Shared-throttle baseline drain',
+        TestUser.GLOBAL_ADMIN
+      );
+      await markConversationRead(roomId, drainId, RECIPIENT_ROLE);
+      await delay(directPush.maxDelayGraceMs);
+    },
+    digestTestTimeoutMs(directPush, { cycles: 1 })
+  );
 
   test(
     'after a messaging digest push, a non-messaging push for the same user still publishes',

@@ -106,7 +106,10 @@ export const updateConversationMessagingSettings = async (
 };
 
 export type PushSubscriptionRecipient = { userRole: TestUser; label: string };
-export type PushSubscriptionHandle = { userRole: TestUser; subscriptionId: string };
+export type PushSubscriptionHandle = {
+  userRole: TestUser;
+  subscriptionId: string;
+};
 
 /**
  * Subscribes each given recipient to push with a fake (non-delivering)
@@ -115,6 +118,11 @@ export type PushSubscriptionHandle = { userRole: TestUser; subscriptionId: strin
  * for a recipient with zero active push subscriptions
  * (notification.push.adapter.ts — `if (subscriptions.length === 0) return;`).
  * Tear down with `unsubscribeRecipientsFromPush` in `afterAll`.
+ *
+ * THROWS if any subscription is not created. A missing subscription is not a
+ * degraded precondition, it is an inverted one: the adapter then no-ops for
+ * that recipient, so every positive push assertion fails for a reason that
+ * looks like a product bug, and every NEGATIVE one passes vacuously.
  */
 export const subscribeRecipientsToPush = async (
   recipients: PushSubscriptionRecipient[]
@@ -129,23 +137,54 @@ export const subscribeRecipientsToPush = async (
       userRole,
       `${label}-test`
     );
-    const subscriptionId =
-      res.body?.data?.subscribeToPushNotifications?.id ?? '';
+    const subscriptionId = res.body?.data?.subscribeToPushNotifications?.id;
+    if (!subscriptionId) {
+      throw new Error(
+        'subscribeToPushNotifications returned no subscription id for ' +
+          `"${label}" (${userRole}) — push-emit assertions for this recipient ` +
+          `would be meaningless: ${JSON.stringify(
+            res.body?.errors ?? res.body ?? {}
+          )}`
+      );
+    }
     handles.push({ userRole, subscriptionId });
   }
   return handles;
 };
 
-/** Tears down subscriptions created by `subscribeRecipientsToPush`. */
+/**
+ * Tears down subscriptions created by `subscribeRecipientsToPush`. Every
+ * handle is attempted even if an earlier one fails, but the failures are
+ * REPORTED rather than swallowed: a subscription that outlives its spec keeps
+ * attracting publishes and inflates the queue deltas of every later spec in
+ * the (sequential) run, which surfaces as an unattributable failure elsewhere.
+ */
 export const unsubscribeRecipientsFromPush = async (
   handles: PushSubscriptionHandle[]
 ): Promise<void> => {
+  const failures: string[] = [];
   for (const { userRole, subscriptionId } of handles) {
-    if (subscriptionId) {
-      await unsubscribeFromPushNotifications(subscriptionId, userRole).catch(
-        () => {}
+    if (!subscriptionId) continue;
+    try {
+      const res = await unsubscribeFromPushNotifications(
+        subscriptionId,
+        userRole
       );
+      if (res.body?.errors) {
+        failures.push(
+          `${userRole}/${subscriptionId}: ${JSON.stringify(res.body.errors)}`
+        );
+      }
+    } catch (error) {
+      failures.push(`${userRole}/${subscriptionId}: ${String(error)}`);
     }
+  }
+  if (failures.length > 0) {
+    throw new Error(
+      `Failed to unsubscribe ${failures.length} push subscription(s); they ` +
+        'will keep attracting publishes and skew later specs\' queue deltas:\n' +
+        failures.join('\n')
+    );
   }
 };
 
@@ -233,6 +272,10 @@ export const expectNoPushEmitAfter = async (
  * the stored `inApp` flag has been forced to `true` (US3-AS3). Uses a raw
  * query (rather than a committed `.graphql` document) because it only reads
  * `total`, not the polymorphic per-event-type payload union.
+ *
+ * THROWS on a GraphQL error or a missing/non-numeric `total` rather than
+ * defaulting to 0. This helper only ever feeds "in-app was never produced"
+ * assertions, so a swallowed contract failure would read as a pass.
  */
 export const getConversationMessagingInAppNotificationsCount = async (
   userRole: TestUser
@@ -257,7 +300,23 @@ export const getConversationMessagingInAppNotificationsCount = async (
   };
 
   const response = await graphqlRequestAuth(requestParams, userRole);
-  return response.body?.data?.me?.notifications?.total ?? 0;
+  if (response.body?.errors) {
+    throw new Error(
+      `me.notifications query failed for ${userRole}: ${JSON.stringify(
+        response.body.errors
+      )}`
+    );
+  }
+
+  const total = response.body?.data?.me?.notifications?.total;
+  if (typeof total !== 'number') {
+    throw new Error(
+      `me.notifications returned no numeric total for ${userRole}: ${JSON.stringify(
+        response.body ?? {}
+      )}`
+    );
+  }
+  return total;
 };
 
 // ---------------------------------------------------------------------------
@@ -316,7 +375,10 @@ export const conversationMessageGroupDigestSubject = (
  */
 export const waitForMailsCountAtLeast = async (
   expectedCount: number,
-  { timeout = 15_000, interval = 1_000 }: { timeout?: number; interval?: number } = {}
+  {
+    timeout = 15_000,
+    interval = 1_000,
+  }: { timeout?: number; interval?: number } = {}
 ): Promise<Awaited<ReturnType<typeof getMailsData>>> => {
   const start = Date.now();
   let last = await getMailsData();

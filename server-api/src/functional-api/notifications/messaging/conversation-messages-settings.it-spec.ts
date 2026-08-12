@@ -100,6 +100,19 @@ describe('Conversation-message notification settings (US3)', () => {
   });
 
   describe('Settings merge field-by-field (FR-017)', () => {
+    // Restore in a hook, not at the end of the test body: an assertion failure
+    // aborts the test, and qaUser's direct email row would then stay ON for
+    // the rest of the (sequential) run — every later spec that asserts an
+    // exact email delta for a shared persona would pick up stray digests and
+    // fail somewhere unrelated to the actual defect.
+    afterAll(async () => {
+      await updateConversationMessagingSettings(
+        TestUserManager.users.qaUser.id,
+        { direct: { email: false } },
+        TestUser.GLOBAL_ADMIN
+      );
+    });
+
     test('updating the direct row leaves the group row (and other user-notification rows) untouched', async () => {
       // Arrange — capture the group row before the update
       const before = await getUserData(
@@ -123,13 +136,6 @@ describe('Conversation-message notification settings (US3)', () => {
       const { direct, group } = getUserMessagingSettings(after);
       expect(direct?.email).toBe(true);
       expect(group).toEqual(groupBefore);
-
-      // Cleanup — restore the mandated default
-      await updateConversationMessagingSettings(
-        TestUserManager.users.qaUser.id,
-        { direct: { email: false } },
-        TestUser.GLOBAL_ADMIN
-      );
     });
   });
 
@@ -177,7 +183,11 @@ describe('Conversation-message notification settings (US3)', () => {
         if (conversationId) conversationsToCleanup.push(conversationId);
 
         // Act
-        await sendMessageToRoom(roomId as string, 'Hello!', TestUser.GLOBAL_ADMIN);
+        await sendMessageToRoom(
+          roomId as string,
+          'Hello!',
+          TestUser.GLOBAL_ADMIN
+        );
 
         // The intent of this assertion is unchanged by R4 — in-app is never
         // produced on any path — but its TIMING is. Nothing is dispatched on

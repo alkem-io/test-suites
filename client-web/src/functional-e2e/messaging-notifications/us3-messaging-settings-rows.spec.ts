@@ -1,11 +1,4 @@
 import { test, expect, Page } from '@playwright/test';
-import { navigateToRegistrationFromSignUpFillFormAndContinue } from '../authentication/login-page-objects';
-import { fillUpSignUpPasswordElements } from '../identity-flows/registration-page-objects';
-import {
-  fillUpSignInPageElements,
-  pressSignInButtonSignInPage,
-} from '../identity-flows/signin-page-objects';
-import { nextButton } from '../authentication/common-authentication-page-elements';
 import { loginViaCrd } from '../helpers/login.helper';
 import {
   delay,
@@ -13,9 +6,14 @@ import {
   digestTestTimeoutMs,
   digestWindow,
   getMailsData,
-  getVerificationLink,
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
+import {
+  baseUrl,
+  password,
+  registerAndVerifyUser,
+  SETUP_TIMEOUT_MS,
+} from './messaging.helpers';
 
 // 034 / Operator Ruling R4: nothing is dispatched on message arrival, so the
 // two scenarios below that send a message and then assert on its notification
@@ -55,11 +53,15 @@ const directEmail = digestWindow('email', 'direct');
  * "Chat messages already appear live in the chat panel, so in-app
  * notifications aren't sent for this row" (contributorSettings.en.json
  * `user.notifications.inAppLockedChat`).
+ *
+ * Personas are registered INLINE through the real sign-up flow rather than
+ * reusing the repo's session-based storage-state fixtures in `.auth/` — which
+ * matters most here, since AS1 asserts the mandated DEFAULTS a brand-new
+ * account gets and a reused session would carry settings from an earlier run.
+ * See `messaging.helpers.ts` for that rationale and the shared fixtures.
  */
 
-const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
 const adminEmail = process.env.AUTH_TEST_HARNESS_EMAIL || 'admin@alkem.io';
-const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
 const IN_APP_LOCKED_CAPTION =
   "Chat messages already appear live in the chat panel, so in-app notifications aren't sent for this row";
@@ -113,64 +115,24 @@ function directRowEmailToggle(page: Page) {
 }
 
 /**
- * Registers + email-verifies a brand new user via the real sign-up flow.
- * The last name is uniquified with the same id as the email
+ * Registers a persona through the shared helper, uniquifying the LAST NAME
  * (corr-test-suites-10) — otherwise every run leaves another same-named user
  * on the platform, and the people-picker lookups below (which locate a
  * button by exact display name) degrade into a Playwright strict-mode
  * violation from the second run onward.
  */
-async function registerAndVerifyUser(
+async function registerUniquePersona(
   page: Page,
   emailLocalPart: string,
   firstName: string,
   lastName: string
-): Promise<{ email: string; displayName: string }> {
-  const uniqueId = UniqueIDGenerator.getID();
-  const userEmail = `test+${emailLocalPart}${uniqueId}@alkem.io`;
-  const uniqueLastName = `${lastName}${uniqueId}`;
-
-  await navigateToRegistrationFromSignUpFillFormAndContinue(
-    baseUrl,
+) {
+  return registerAndVerifyUser(
     page,
-    userEmail,
+    emailLocalPart,
     firstName,
-    uniqueLastName
+    `${lastName}${UniqueIDGenerator.getID()}`
   );
-  await fillUpSignUpPasswordElements(password, page);
-  await nextButton(page).click();
-
-  await expect(
-    page.getByRole('heading', { name: 'Verify your email' })
-  ).toBeVisible();
-
-  let verificationLink: string | undefined;
-  for (let attempt = 0; attempt < 10; attempt++) {
-    verificationLink = await getVerificationLink();
-    if (verificationLink) break;
-    await delay(2000);
-  }
-  if (verificationLink === undefined) {
-    throw new Error('Verification link from email is missing!');
-  }
-
-  await page.goto(verificationLink);
-  await expect(page.getByText('You successfully verified')).toBeVisible({
-    timeout: 10000,
-  });
-  const continueLink = page.getByRole('link', { name: 'Continue' });
-  if (await continueLink.isVisible({ timeout: 5000 }).catch(() => false)) {
-    await continueLink.click();
-  }
-
-  await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible({
-    timeout: 10000,
-  });
-
-  await fillUpSignInPageElements(userEmail, password, page);
-  await pressSignInButtonSignInPage(page);
-
-  return { email: userEmail, displayName: `${firstName} ${uniqueLastName}` };
 }
 
 /** Starts (or resumes) a 1:1 chat from `fromPage` to `toDisplayName` and sends `message`. */
@@ -207,13 +169,25 @@ test.describe(
     let recipientEmail: string;
     let recipientDisplayName: string;
 
+    /**
+     * AS3/AS4/AS5 all message or sign in as the recipient AS1 registers.
+     * Playwright's serial mode skips the rest of the block when an earlier
+     * test fails, but it does NOT protect a `--grep`'d single-scenario run:
+     * without this, those runs fail deep inside a people-picker lookup for
+     * `undefined` instead of saying what is actually missing.
+     */
+    const requireRecipientFromAS1 = () => {
+      expect(recipientEmail, 'US3-AS1 must run first').toBeTruthy();
+      expect(recipientDisplayName, 'US3-AS1 must run first').toBeTruthy();
+    };
+
     test('US3-AS1: a freshly registered user sees both messaging rows at the mandated defaults', async ({
       page,
     }) => {
-      test.setTimeout(90000);
+      test.setTimeout(SETUP_TIMEOUT_MS);
       await deleteMailSlurperMails();
       ({ email: recipientEmail, displayName: recipientDisplayName } =
-        await registerAndVerifyUser(page, 'us3recipient', 'Us3', 'Recipient'));
+        await registerUniquePersona(page, 'us3recipient', 'Us3', 'Recipient'));
 
       await page.goto(`${baseUrl}/user/me/settings/notifications`);
       await expect(
@@ -226,9 +200,7 @@ test.describe(
           'Receive a notification when someone posts in a group chat I am a member of'
         )
       ).toBeVisible();
-      await expect(
-        page.getByText(IN_APP_LOCKED_CAPTION).first()
-      ).toBeVisible();
+      await expect(page.getByText(IN_APP_LOCKED_CAPTION).first()).toBeVisible();
 
       for (const rowFragment of [
         'direct (1:1) chat message',
@@ -299,8 +271,9 @@ test.describe(
       browser,
     }) => {
       test.setTimeout(digestTestTimeoutMs([directPush, directEmail]));
+      requireRecipientFromAS1();
       await deleteMailSlurperMails();
-      const { displayName: senderDisplayName } = await registerAndVerifyUser(
+      const { displayName: senderDisplayName } = await registerUniquePersona(
         page,
         'us3sender',
         'Us3',
@@ -315,8 +288,16 @@ test.describe(
       const recipientPage = await recipientContext.newPage();
       await loginViaCrd(recipientPage, recipientEmail, password, baseUrl);
 
-      const gql = (query: string, variables?: Record<string, unknown>) =>
-        recipientPage.evaluate(
+      // Every caller below reads straight into `.data.…`, so a GraphQL error
+      // would surface as an opaque TypeError on an undefined property — and
+      // the in-app COUNT assertions further down would happily read a missing
+      // field as "no notifications", i.e. pass for the wrong reason. Assert
+      // the contract here, once, with the errors in the message.
+      const gql = async (
+        query: string,
+        variables?: Record<string, unknown>
+      ) => {
+        const result = await recipientPage.evaluate(
           async ({ query, variables }) => {
             const res = await fetch('/api/private/graphql', {
               method: 'POST',
@@ -328,6 +309,14 @@ test.describe(
           },
           { query, variables }
         );
+        expect(
+          result.errors,
+          `GraphQL errors for ${query.trim().slice(0, 60)}: ${JSON.stringify(
+            result.errors
+          )}`
+        ).toBeUndefined();
+        return result;
+      };
 
       const me = await gql('query { me { user { id } } }');
       const userID = me.data.me.user.id;
@@ -401,6 +390,7 @@ test.describe(
       browser,
     }) => {
       test.setTimeout(digestTestTimeoutMs(directEmail));
+      requireRecipientFromAS1();
       await deleteMailSlurperMails();
       await loginViaCrd(page, recipientEmail, password, baseUrl);
       await page.goto(`${baseUrl}/user/me/settings/notifications`);
@@ -422,7 +412,7 @@ test.describe(
       const senderContext = await browser.newContext();
       const senderPage = await senderContext.newPage();
       const probeMessage = `US3-AS4 email-honored probe ${UniqueIDGenerator.getID()}`;
-      const { displayName: as4SenderDisplayName } = await registerAndVerifyUser(
+      const { displayName: as4SenderDisplayName } = await registerUniquePersona(
         senderPage,
         'us3as4sender',
         'Us3As4',
@@ -464,6 +454,7 @@ test.describe(
     test("US3-AS5: the chat panel's settings shortcut lands on notification settings with both rows visible", async ({
       page,
     }) => {
+      requireRecipientFromAS1();
       await loginViaCrd(page, recipientEmail, password, baseUrl);
       await page.goto(`${baseUrl}/home`);
 

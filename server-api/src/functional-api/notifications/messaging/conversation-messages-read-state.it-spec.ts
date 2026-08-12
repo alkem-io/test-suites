@@ -90,7 +90,10 @@ beforeAll(async () => {
 afterAll(async () => {
   await updateConversationMessagingSettings(
     recipient().id,
-    { direct: { email: false, push: true }, group: { email: false, push: true } },
+    {
+      direct: { email: false, push: true },
+      group: { email: false, push: true },
+    },
     RECIPIENT_ROLE
   );
   await unsubscribeRecipientsFromPush(pushSubscriptions);
@@ -100,27 +103,30 @@ describe('Conversation-message notifications — read state cancels the digest (
   describe('US1-AS6 / SC-008: reading before the timer fires cancels every channel', () => {
     let roomId = '';
 
-    beforeAll(async () => {
-      const res = await createDirectConversation(
-        recipient().agentId,
-        TestUser.GLOBAL_ADMIN
-      );
-      roomId = res?.data?.createConversation?.room?.id ?? '';
-      expect(roomId).toBeTruthy();
+    beforeAll(
+      async () => {
+        const res = await createDirectConversation(
+          recipient().agentId,
+          TestUser.GLOBAL_ADMIN
+        );
+        roomId = res?.data?.createConversation?.room?.id ?? '';
+        expect(roomId).toBeTruthy();
 
-      // Zero the unread baseline: a DIRECT conversation is deduped per actor
-      // pair and cannot be left, so it can carry unread messages from an
-      // earlier run. An unrelated unread message would keep the digest alive
-      // after this test reads its own, turning a real cancellation failure
-      // into an indistinguishable pass/fail.
-      const drainId = await sendConversationMessage(
-        roomId,
-        'Read-state baseline drain',
-        TestUser.GLOBAL_ADMIN
-      );
-      await markConversationRead(roomId, drainId, RECIPIENT_ROLE);
-      await delay(directAnyChannelGraceMs);
-    }, digestTestTimeoutMs([directEmail, directPush], { cycles: 1 }));
+        // Zero the unread baseline: a DIRECT conversation is deduped per actor
+        // pair and cannot be left, so it can carry unread messages from an
+        // earlier run. An unrelated unread message would keep the digest alive
+        // after this test reads its own, turning a real cancellation failure
+        // into an indistinguishable pass/fail.
+        const drainId = await sendConversationMessage(
+          roomId,
+          'Read-state baseline drain',
+          TestUser.GLOBAL_ADMIN
+        );
+        await markConversationRead(roomId, drainId, RECIPIENT_ROLE);
+        await delay(directAnyChannelGraceMs);
+      },
+      digestTestTimeoutMs([directEmail, directPush], { cycles: 1 })
+    );
 
     test(
       'send, read before the quiet period elapses, then zero emails AND zero push publishes',
@@ -194,7 +200,8 @@ describe('Conversation-message notifications — read state cancels the digest (
 
     afterAll(async () => {
       for (const id of groupIds) {
-        if (id) await leaveConversation(id, TestUser.GLOBAL_ADMIN).catch(() => {});
+        if (id)
+          await leaveConversation(id, TestUser.GLOBAL_ADMIN).catch(() => {});
       }
     }, 120_000);
 

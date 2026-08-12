@@ -7,7 +7,6 @@ export * from "./utils/mailslurper.rest.requests";
 export * from "./utils/rabbitmq-management.rest.requests";
 export * from "./utils/messaging-digest-windows";
 export * from "./utils/graphqlClient";
-export * from "./utils/mailslurper.rest.requests";
 export * from "./utils/subscriptions";
 export * from "./utils/graphql.authorization.header";
 export * from "./utils/get.document";

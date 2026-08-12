@@ -1,11 +1,4 @@
 import { test, expect, Page, Browser } from '@playwright/test';
-import { navigateToRegistrationFromSignUpFillFormAndContinue } from '../authentication/login-page-objects';
-import { fillUpSignUpPasswordElements } from '../identity-flows/registration-page-objects';
-import {
-  fillUpSignInPageElements,
-  pressSignInButtonSignInPage,
-} from '../identity-flows/signin-page-objects';
-import { nextButton } from '../authentication/common-authentication-page-elements';
 import { loginViaCrd } from '../helpers/login.helper';
 import {
   delay,
@@ -13,11 +6,22 @@ import {
   digestTestTimeoutMs,
   digestWindow,
   getMailsData,
-  getQueueStats,
-  getVerificationLink,
   UniqueIDGenerator,
-  waitForQueuePublishIncrease,
 } from '@alkemio/tests-lib';
+import {
+  baseUrl,
+  newContextPage,
+  openChatPanel,
+  password,
+  pushPublishedTotal,
+  registerAndVerifyUser,
+  sendMessage,
+  SETUP_TIMEOUT_MS,
+  settledPushDelta,
+  subscribeToPush,
+  toAddressesOf,
+  waitForMailsCountAtLeast,
+} from './messaging.helpers';
 
 /**
  * @forge-acceptance
@@ -54,128 +58,18 @@ import {
  * B never reads the conversation in this walk, so no digest is ever cancelled
  * — the cancellation path is US5's, covered by the server-api read-state
  * it-spec.
+ *
+ * Personas are registered INLINE through the real sign-up flow rather than
+ * reusing the repo's session-based storage-state fixtures in `.auth/` — see
+ * `messaging.helpers.ts`, which holds that rationale and every fixture this
+ * walk shares with US2/US3.
  */
-
-const password = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
-const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
-const PUSH_NOTIFICATIONS_QUEUE = 'alkemio-push-notifications';
 
 // The two direct tracks this walk exercises. Registration/setup steps keep a
 // fixed timeout (they wait on Kratos and the mail catcher, not on a digest);
 // every notification step below derives its timeout from these.
 const directPush = digestWindow('push', 'direct');
 const directEmail = digestWindow('email', 'direct');
-const SETUP_TIMEOUT_MS = 90_000;
-
-/** Registers + email-verifies a brand new user via the real sign-up flow. */
-async function registerAndVerifyUser(
-  page: Page,
-  emailLocalPart: string,
-  firstName: string,
-  lastName: string
-): Promise<string> {
-  const uniqueId = UniqueIDGenerator.getID();
-  const userEmail = `test+${emailLocalPart}${uniqueId}@alkem.io`;
-
-  await navigateToRegistrationFromSignUpFillFormAndContinue(
-    baseUrl,
-    page,
-    userEmail,
-    firstName,
-    lastName
-  );
-  await fillUpSignUpPasswordElements(password, page);
-  // Clear the mailbox immediately before triggering the verification email
-  // so getVerificationLink() below can't pick up a STALE token from a
-  // previously-registered user (Mailslurper is a shared inbox across all
-  // registrations in this run).
-  await deleteMailSlurperMails();
-  await nextButton(page).click();
-
-  await expect(
-    page.getByRole('heading', { name: 'Verify your email' })
-  ).toBeVisible();
-
-  let verificationLink: string | undefined;
-  for (let attempt = 0; attempt < 10; attempt++) {
-    verificationLink = await getVerificationLink();
-    if (verificationLink) break;
-    await delay(2000);
-  }
-  if (verificationLink === undefined) {
-    throw new Error('Verification link from email is missing!');
-  }
-
-  await page.goto(verificationLink);
-  await expect(page.getByText('You successfully verified')).toBeVisible({
-    timeout: 10000,
-  });
-  const continueLink = page.getByRole('link', { name: 'Continue' });
-  if (await continueLink.isVisible({ timeout: 5000 }).catch(() => false)) {
-    await continueLink.click();
-  }
-
-  await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible({
-    timeout: 10000,
-  });
-
-  await fillUpSignInPageElements(userEmail, password, page);
-  await pressSignInButtonSignInPage(page);
-
-  return userEmail;
-}
-
-/**
- * Registers a synthetic (fake) push subscription for the CURRENTLY logged-in
- * user via an authenticated same-origin GraphQL call — the push ADAPTER
- * no-ops for a recipient with zero active subscriptions (Operator Ruling
- * 3c / test-suites precondition pattern), so this is required before any
- * push-emit assertion can observe a publish for that recipient.
- */
-async function subscribeToPush(page: Page, label: string) {
-  const uniqueId = `${label}-${Date.now()}`;
-  const subscriptionData = {
-    endpoint: `https://fcm.googleapis.com/fcm/send/${uniqueId}`,
-    p256dh: `BNcRdreALRFXTkOOUHK1EtK2wtaz5Ry4YfYCA_0QTpQtUbVlUls0VJXg7A8u-Ts1XbjhazAkj7I99e8p8REfXPQ-${uniqueId}`,
-    auth: `tBHItJI5svbpC7htN-${uniqueId.slice(0, 8)}`,
-  };
-  const result = await page.evaluate(
-    async ({ subscriptionData }) => {
-      const res = await fetch('/api/private/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          query: `
-            mutation SubscribeToPushNotifications($subscriptionData: SubscribeToPushNotificationsInput!) {
-              subscribeToPushNotifications(subscriptionData: $subscriptionData) { id status }
-            }
-          `,
-          variables: { subscriptionData },
-        }),
-      });
-      return res.json();
-    },
-    { subscriptionData }
-  );
-  if (result.errors) {
-    throw new Error(
-      `subscribeToPushNotifications failed: ${JSON.stringify(result.errors)}`
-    );
-  }
-}
-
-async function openChatPanel(page: Page) {
-  await page.goto(`${baseUrl}/home`);
-  await page.getByRole('button', { name: 'Open chat' }).click();
-}
-
-async function sendMessage(page: Page, text: string) {
-  const messageBox = page.getByRole('textbox', { name: 'Add a comment...' });
-  await messageBox.fill(text);
-  await messageBox.press('Enter');
-  await expect(page.getByText(text)).toBeVisible();
-}
 
 function directEmailToggle(page: Page) {
   return page.locator(
@@ -189,40 +83,23 @@ function directInAppToggle(page: Page) {
   );
 }
 
-const toAddressesOf = (mailItems: { toAddresses?: string[] }[]) =>
-  mailItems.flatMap(item => item.toAddresses ?? []);
-
-/** Polls Mailslurper until at least `expectedCount` mails are present. */
-async function waitForMailsCountAtLeast(
-  expectedCount: number,
-  {
-    timeout = 15_000,
-    interval = 1_000,
-  }: { timeout?: number; interval?: number } = {}
-): Promise<
-  [{ toAddresses?: string[]; subject?: string; body?: string }[], number]
-> {
-  const start = Date.now();
-  let [mailItems, total] = (await getMailsData()) as [any[], number];
-  while (total < expectedCount && Date.now() - start < timeout) {
-    await delay(interval);
-    [mailItems, total] = (await getMailsData()) as [any[], number];
-  }
-  return [mailItems, total];
-}
-
-async function newContextPage(browser: Browser) {
-  const context = await browser.newContext();
-  const page = await context.newPage();
-  return { context, page };
-}
-
 test.describe('US1 - direct (1:1) message notifications', () => {
   test.describe.configure({ mode: 'serial' });
 
+  // A run-unique suffix on every persona's first name — not just their email
+  // — so repeated local runs against the same never-reset dev stack can never
+  // resolve the user-picker search below to a STALE same-named persona from
+  // an earlier run (display names, unlike emails, are otherwise identical
+  // across runs, and Playwright's role-based locators match on accessible
+  // name, so `.first()` would silently pick the wrong B and every email
+  // assertion against `userBEmail` would then fail for an unrelated reason).
+  const runSuffix = UniqueIDGenerator.getID();
+  const nameA = `Us1A${runSuffix}`;
+  const nameB = `Us1B${runSuffix}`;
+  const userADisplayName = `${nameA} Sender`;
+  const userBDisplayName = `${nameB} Recipient`;
   let userAEmail: string;
   let userBEmail: string;
-  let userADisplayName: string;
   let aContext: Awaited<ReturnType<Browser['newContext']>>;
   let aPage: Page;
 
@@ -230,8 +107,12 @@ test.describe('US1 - direct (1:1) message notifications', () => {
     page,
   }) => {
     test.setTimeout(SETUP_TIMEOUT_MS);
-    userADisplayName = 'Us1A Sender';
-    userAEmail = await registerAndVerifyUser(page, 'us1a', 'Us1A', 'Sender');
+    ({ email: userAEmail } = await registerAndVerifyUser(
+      page,
+      'us1a',
+      nameA,
+      'Sender'
+    ));
     await subscribeToPush(page, 'us1a');
   });
 
@@ -239,12 +120,12 @@ test.describe('US1 - direct (1:1) message notifications', () => {
     page,
   }) => {
     test.setTimeout(SETUP_TIMEOUT_MS);
-    userBEmail = await registerAndVerifyUser(
+    ({ email: userBEmail } = await registerAndVerifyUser(
       page,
       'us1b',
-      'Us1B',
+      nameB,
       'Recipient'
-    );
+    ));
     await subscribeToPush(page, 'us1b');
   });
 
@@ -256,36 +137,34 @@ test.describe('US1 - direct (1:1) message notifications', () => {
     await aPage.getByRole('button', { name: 'New message' }).click();
     await aPage
       .getByRole('textbox', { name: 'Search people…' })
-      .fill('Us1B Recipient');
-    await aPage.getByRole('button', { name: 'Us1B Recipient' }).first().click();
+      .fill(userBDisplayName);
+    await aPage.getByRole('button', { name: userBDisplayName }).first().click();
     await aPage.getByRole('button', { name: 'Start chat' }).click();
-    await expect(aPage.getByText('Us1B Recipient').first()).toBeVisible();
+    await expect(aPage.getByText(userBDisplayName).first()).toBeVisible();
   });
 
   test('US1-AS1: default settings — A sends, B gets a push emit once the quiet period elapses, zero email', async () => {
     test.setTimeout(digestTestTimeoutMs([directPush, directEmail]));
     await deleteMailSlurperMails();
 
-    const baseline = (await getQueueStats(PUSH_NOTIFICATIONS_QUEUE))
-      .publishedTotal;
+    const baseline = await pushPublishedTotal();
 
     await sendMessage(aPage, 'US1-AS1 default-settings direct message from A');
 
     // Poll bound covers `push:direct` quiet + sweep + settle — the push is
-    // debounced, not immediate.
-    const stats = await waitForQueuePublishIncrease(
-      PUSH_NOTIFICATIONS_QUEUE,
-      baseline,
-      1,
-      { timeout: directPush.quietGraceMs }
-    );
-    expect(stats.publishedTotal - baseline).toBe(1);
+    // debounced, not immediate. The settle then covers `email:direct` at its
+    // MAX-DELAY bound, which is the LONGER of the two direct tracks, so ONE
+    // wait serves both halves of this scenario: the exact push delta is read
+    // from a stable counter rather than at the first observation that reached
+    // 1 (a second, wrong publish lands on its own recipient's track and can
+    // arrive well after B's), and the "zero email" half is measured past the
+    // point at which a default-on email would provably have been dispatched.
+    const pushDelta = await settledPushDelta(baseline, 1, {
+      pollTimeoutMs: directPush.quietGraceMs,
+      settleMs: directEmail.maxDelayGraceMs,
+    });
+    expect(pushDelta).toBe(1);
 
-    // NEGATIVE half — "zero email" must outlast the EMAIL track, which is much
-    // slower than the push one. Grace covers `email:direct` at its MAX-DELAY
-    // bound; the old literal 3s would have passed on a build that emailed by
-    // default, because that email would not have been sent yet either.
-    await delay(directEmail.maxDelayGraceMs);
     const [, emailTotal] = await getMailsData();
     expect(emailTotal).toBe(0);
   });
@@ -316,9 +195,14 @@ test.describe('US1 - direct (1:1) message notifications', () => {
     const probeMessage = 'US1-AS2 direct message after B enabled direct email';
     await sendMessage(aPage, probeMessage);
 
-    // Poll bound covers `email:direct` quiet + sweep + settle.
+    // Poll bound covers `email:direct` quiet + sweep + settle; the settle then
+    // re-reads at `email:direct`'s MAX-DELAY bound so "exactly one" is read
+    // from a stable inbox. Without it this would only prove "at least one,
+    // sampled at the first poll that saw it" — a second, wrongly-addressed
+    // digest sits on its own recipient's track and can land much later.
     const [mailItems, total] = await waitForMailsCountAtLeast(1, {
       timeout: directEmail.quietGraceMs,
+      settleMs: directEmail.maxDelayGraceMs,
     });
     expect(total).toBe(1);
 
@@ -381,7 +265,9 @@ test.describe('US1 - direct (1:1) message notifications', () => {
   });
 
   test('US1-AS4: A never receives any notification for her own message', async () => {
-    test.setTimeout(digestTestTimeoutMs([directPush, directEmail], { cycles: 3 }));
+    test.setTimeout(
+      digestTestTimeoutMs([directPush, directEmail], { cycles: 3 })
+    );
     // Drain the tracks AS3's last send armed, so this scenario starts from a
     // clean slate and its counts are attributable to its own message. Grace
     // covers `email:direct` at its MAX-DELAY bound — the slower of the two
@@ -389,27 +275,26 @@ test.describe('US1 - direct (1:1) message notifications', () => {
     await delay(directEmail.maxDelayGraceMs);
     await deleteMailSlurperMails();
 
-    const baseline = (await getQueueStats(PUSH_NOTIFICATIONS_QUEUE))
-      .publishedTotal;
+    const baseline = await pushPublishedTotal();
     await sendMessage(aPage, 'US1-AS4 A sends, A must get nothing at all');
 
     // Even though A now HAS an active push subscription (setup step), the
     // publish delta must stay 1 (B only) — proving A is excluded at the
     // candidate-resolution level, not merely lacking a subscription.
-    // Poll bound covers `push:direct` quiet + sweep + settle.
-    const stats = await waitForQueuePublishIncrease(
-      PUSH_NOTIFICATIONS_QUEUE,
-      baseline,
-      1,
-      { timeout: directPush.quietGraceMs }
-    );
-    expect(stats.publishedTotal - baseline).toBe(1);
+    //
+    // The claim here is that the delta STAYS 1, so it cannot be read at the
+    // moment the delta first reaches 1: a self-notification to A would be
+    // armed on A's OWN track and fire on A's own schedule, not alongside B's.
+    // Poll bound covers `push:direct` quiet + sweep + settle; the settle then
+    // covers `email:direct` at its MAX-DELAY bound — the longer of the two
+    // direct tracks — so BOTH the second-publish check and the mailbox read
+    // below happen after every dispatch this scenario could have armed.
+    const pushDelta = await settledPushDelta(baseline, 1, {
+      pollTimeoutMs: directPush.quietGraceMs,
+      settleMs: directEmail.maxDelayGraceMs,
+    });
+    expect(pushDelta).toBe(1);
 
-    // NEGATIVE — a self-notification to A would be armed on A's OWN track and
-    // fire on A's own schedule, not alongside B's. Grace covers `email:direct`
-    // at its MAX-DELAY bound so that dispatch has provably already happened;
-    // the old literal 3s would have read the mailbox long before it.
-    await delay(directEmail.maxDelayGraceMs);
     const [mailItems] = await getMailsData();
     expect(toAddressesOf(mailItems)).not.toContain(userAEmail);
   });
@@ -426,12 +311,21 @@ test.describe('US1 - direct (1:1) message notifications', () => {
     const messageBox = aPage.getByRole('textbox', { name: 'Add a comment...' });
     await messageBox.fill(`${marker} Quote" test <script>alert(1)</script>`);
     await messageBox.press('Shift+Enter');
-    await messageBox.type("Second line with 'quotes' and <b>bold</b>");
+    // pressSequentially, not fill: the point is to APPEND a second line to the
+    // multi-line draft the Shift+Enter above started, which fill() would
+    // replace wholesale. (`locator.type()` does the same thing but is
+    // deprecated.)
+    await messageBox.pressSequentially(
+      "Second line with 'quotes' and <b>bold</b>"
+    );
     await messageBox.press('Enter');
 
-    // Poll bound covers `email:direct` quiet + sweep + settle.
+    // Poll bound covers `email:direct` quiet + sweep + settle; the settle
+    // re-reads at the MAX-DELAY bound so "exactly one" is read from a stable
+    // inbox rather than at the first poll that saw an email.
     const [mailItems, total] = await waitForMailsCountAtLeast(1, {
       timeout: directEmail.quietGraceMs,
+      settleMs: directEmail.maxDelayGraceMs,
     });
     expect(total).toBe(1);
     const mail = mailItems.find(m => m.toAddresses?.includes(userBEmail));

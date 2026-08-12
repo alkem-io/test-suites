@@ -140,7 +140,11 @@ describe('Conversation-message notifications — debounce & digest (R4)', () => 
       // carry unread messages from an earlier run (a DIRECT conversation is
       // deduped per pair and cannot be left), which would inflate the count
       // this test asserts on.
-      await sendInto(roomId, 'Digest spec baseline drain', TestUser.GLOBAL_ADMIN);
+      await sendInto(
+        roomId,
+        'Digest spec baseline drain',
+        TestUser.GLOBAL_ADMIN
+      );
       await drainRecipientUnread();
     }, directEmail.testTimeoutMs + groupEmail.maxDelayGraceMs);
 
@@ -231,8 +235,16 @@ describe('Conversation-message notifications — debounce & digest (R4)', () => 
       expect(roomAId).toBeTruthy();
       expect(roomCId).toBeTruthy();
 
-      await sendInto(roomAId, 'Aggregation baseline drain A', TestUser.GLOBAL_ADMIN);
-      await sendInto(roomCId, 'Aggregation baseline drain C', TestUser.SPACE_ADMIN);
+      await sendInto(
+        roomAId,
+        'Aggregation baseline drain A',
+        TestUser.GLOBAL_ADMIN
+      );
+      await sendInto(
+        roomCId,
+        'Aggregation baseline drain C',
+        TestUser.SPACE_ADMIN
+      );
       await drainRecipientUnread();
     }, directEmail.testTimeoutMs + groupEmail.maxDelayGraceMs);
 
@@ -283,7 +295,9 @@ describe('Conversation-message notifications — debounce & digest (R4)', () => 
         expect(mail.body).toContain(
           TestUserManager.users.globalAdmin.displayName
         );
-        expect(mail.body).toContain(TestUserManager.users.spaceAdmin.displayName);
+        expect(mail.body).toContain(
+          TestUserManager.users.spaceAdmin.displayName
+        );
         expect(mail.body).not.toContain('From A 1');
         expect(mail.body).not.toContain('From C 1');
       },
@@ -325,7 +339,8 @@ describe('Conversation-message notifications — debounce & digest (R4)', () => 
     afterAll(async () => {
       await drainRecipientUnread();
       for (const id of groupIds) {
-        if (id) await leaveConversation(id, TestUser.GLOBAL_ADMIN).catch(() => {});
+        if (id)
+          await leaveConversation(id, TestUser.GLOBAL_ADMIN).catch(() => {});
       }
     }, groupEmail.maxDelayGraceMs + 60_000);
 
@@ -335,7 +350,11 @@ describe('Conversation-message notifications — debounce & digest (R4)', () => 
         await deleteMailSlurperMails();
 
         const burstStartedAtMs = Date.now();
-        await sendInto(group1RoomId, 'Group one message', TestUser.GLOBAL_ADMIN);
+        await sendInto(
+          group1RoomId,
+          'Group one message',
+          TestUser.GLOBAL_ADMIN
+        );
         for (let i = 1; i <= 2; i++) {
           await sendInto(
             group2RoomId,
@@ -421,7 +440,11 @@ describe('Conversation-message notifications — debounce & digest (R4)', () => 
 
         await deleteMailSlurperMails();
 
-        await sendInto(groupRoomId, 'Independence group message', TestUser.GLOBAL_ADMIN);
+        await sendInto(
+          groupRoomId,
+          'Independence group message',
+          TestUser.GLOBAL_ADMIN
+        );
         await sendInto(
           directRoomId,
           'Independence direct message',
@@ -457,7 +480,9 @@ describe('Conversation-message notifications — debounce & digest (R4)', () => 
             1
           )
         );
-        expect(subjects).toContain(conversationMessageGroupSubject(groupName, 1));
+        expect(subjects).toContain(
+          conversationMessageGroupSubject(groupName, 1)
+        );
       },
       // Waits on BOTH email tracks in sequence — timeout derived from both.
       digestTestTimeoutMs([directEmail, groupEmail])
@@ -475,7 +500,11 @@ describe('Conversation-message notifications — debounce & digest (R4)', () => 
       roomId = res?.data?.createConversation?.room?.id ?? '';
       expect(roomId).toBeTruthy();
 
-      await sendInto(roomId, 'Max-delay baseline drain', TestUser.SUBSPACE_MEMBER);
+      await sendInto(
+        roomId,
+        'Max-delay baseline drain',
+        TestUser.SUBSPACE_MEMBER
+      );
       await drainRecipientUnread();
     }, directEmail.testTimeoutMs + groupEmail.maxDelayGraceMs);
 
