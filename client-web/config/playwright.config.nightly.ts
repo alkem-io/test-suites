@@ -135,6 +135,52 @@ export default defineConfig({
       name: 'Timeline',
       testMatch: ['/timeline/*.spec.ts'],
     },
+    {
+      // Feature 029 (detect signup language) — sign-in project for the walks
+      // below. The suite mixes anonymous tests (each needs a virgin cookie jar)
+      // with authenticated ones and drives a different `locale` per file, so
+      // authentication cannot come from a project-wide `storageState`. This
+      // project logs each persona in ONCE and persists the session to `.auth/`;
+      // the specs opt in with `test.use({ storageState })`.
+      // Kept in sync with config/playwright.config.language-offer.ts, the
+      // standalone runner used to develop the suite.
+      name: 'Language offer setup',
+      testMatch: ['/language-offer/auth.setup.ts'],
+      // The Kratos flow occasionally stalls at "Preparing secure sign-in…";
+      // the sign-in needs the same headroom as the walks themselves.
+      timeout: 90_000,
+      expect: { timeout: 15_000 },
+    },
+    {
+      // The detection walks drive Config + session GraphQL through Traefik, so
+      // they need far more headroom than the 30s/5s this config gives everything
+      // else — the offer gate waits on config load plus reconciliation.
+      // Viewport is pinned to the resolution the suite was validated at rather
+      // than inheriting the global 1920×1080.
+      name: 'Language offer',
+      testMatch: ['/language-offer/*.spec.ts'],
+      dependencies: ['Language offer setup'],
+      timeout: 90_000,
+      expect: { timeout: 15_000 },
+      use: { viewport: { width: 1440, height: 900 } },
+    },
+    {
+      // Feature 033 (chat avatars) — the US1/US2/US3 acceptance walks.
+      //
+      // No setup project and no shared persona state: each file registers the
+      // accounts it needs, and deletes every one of them again in afterAll (by
+      // the id captured at registration). A failed run therefore leaves the
+      // environment as it found it, and a retry starts from a clean slate.
+      //
+      // Needs more headroom than the 30s/5s the rest of this config gives:
+      // every scenario is a multi-user round trip through the live chat room —
+      // send on one session, wait for the subscription push on another — and
+      // US2 uploads and crops group photos on top of that.
+      name: 'Chat avatars',
+      testMatch: ['/chat-avatars/*.spec.ts'],
+      timeout: 120_000,
+      expect: { timeout: 15_000 },
+    },
   ],
   // % or number of the available CPUs
   // workers: '100%',

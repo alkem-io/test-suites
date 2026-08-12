@@ -182,7 +182,7 @@ export const unsubscribeRecipientsFromPush = async (
   if (failures.length > 0) {
     throw new Error(
       `Failed to unsubscribe ${failures.length} push subscription(s); they ` +
-        'will keep attracting publishes and skew later specs\' queue deltas:\n' +
+        "will keep attracting publishes and skew later specs' queue deltas:\n" +
         failures.join('\n')
     );
   }

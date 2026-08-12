@@ -10,7 +10,6 @@ import { stripProfileUrls, collectProfileUrls } from '@utils/array.matcher';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { SpaceLevel } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- used once alkem-io/client-web#9481 is fixed
 const { ALKEMIO_BASE_URL } = process.env;
 
 let sourceScenario: OrganizationWithSpaceModel;
@@ -143,13 +142,12 @@ describe('Move L1 to L0 - basic', () => {
     expect(movedSpace?.about.authorization).toEqual(aboutBefore?.authorization);
 
     // profile: id, displayName, and structural fields preserved; only L0 prefix in url changes
-    // Skip url check: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
     expect(movedSpace?.about.profile).toEqual(
       expect.objectContaining({
         id: aboutBefore?.profile?.id,
         displayName: aboutBefore?.profile?.displayName,
         description: aboutBefore?.profile?.description,
-        // url: `${ALKEMIO_BASE_URL}/${targetScenario.space.nameId}/challenges/${sourceScenario.subspace.nameId}`,
+        url: `${ALKEMIO_BASE_URL}/${targetScenario.space.nameId}/challenges/${sourceScenario.subspace.nameId}`,
         references: aboutBefore?.profile?.references,
         tagline: aboutBefore?.profile?.tagline,
         tagsets: aboutBefore?.profile?.tagsets,
@@ -199,44 +197,37 @@ describe('Move L1 to L0 - basic', () => {
       'account.host.profile.url should point at target organization'
     ).toBe(`${ALKEMIO_BASE_URL}/organization/${targetOrgNameId}`);
 
-    // Skip: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
     // about URL reflects target L0 nameId, moved space stays L1 under /challenges/
-    // expect(
-    //   after.get('about.profile.url'),
-    //   'about.profile.url should rebase to target L0 nameId'
-    // ).toBe(expectedEntityUrl);
+    expect(
+      after.get('about.profile.url'),
+      'about.profile.url should rebase to target L0 nameId'
+    ).toBe(expectedEntityUrl);
 
-    // Skip: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
     // innovation flow URL shares the same entity prefix
-    // expect(
-    //   after.get('collaboration.innovationFlow.profile.url'),
-    //   'innovationFlow.profile.url should rebase to target L0 nameId'
-    // ).toBe(expectedEntityUrl);
+    expect(
+      after.get('collaboration.innovationFlow.profile.url'),
+      'innovationFlow.profile.url should rebase to target L0 nameId'
+    ).toBe(expectedEntityUrl);
 
-    // Skip: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
     // callout URLs: only the L0 prefix changes, trailing slug preserved
-    // for (const [path, urlAfter] of after.entries()) {
-    //   if (
-    //     !path.startsWith('collaboration.calloutsSet.callouts[') ||
-    //     !path.endsWith('.framing.profile.url')
-    //   ) {
-    //     continue;
-    //   }
-    //   const urlBefore = before.get(path);
-    //   const slug = urlBefore?.split('/collaboration/')[1];
-    //   expect(
-    //     slug,
-    //     `could not extract callout slug from before-url ${path}`
-    //   ).toBeTruthy();
-    //   expect(
-    //     urlAfter,
-    //     `${path} should rebase to target L0 nameId with preserved slug "${slug}"`
-    //   ).toBe(`${expectedEntityUrl}/collaboration/${slug}`);
-    // }
-
-    // Suppress unused warnings until #9481 is fixed and the assertions above are uncommented.
-    void before;
-    void expectedEntityUrl;
+    for (const [path, urlAfter] of after.entries()) {
+      if (
+        !path.startsWith('collaboration.calloutsSet.callouts[') ||
+        !path.endsWith('.framing.profile.url')
+      ) {
+        continue;
+      }
+      const urlBefore = before.get(path);
+      const slug = urlBefore?.split('/collaboration/')[1];
+      expect(
+        slug,
+        `could not extract callout slug from before-url ${path}`
+      ).toBeTruthy();
+      expect(
+        urlAfter,
+        `${path} should rebase to target L0 nameId with preserved slug "${slug}"`
+      ).toBe(`${expectedEntityUrl}/collaboration/${slug}`);
+    }
   });
 
   test('L2 descendant entity profile urls rebase to target L0 nameId after cross-L0 move', async () => {
@@ -268,44 +259,37 @@ describe('Move L1 to L0 - basic', () => {
       'account.host.profile.url should point at target organization'
     ).toBe(`${ALKEMIO_BASE_URL}/organization/${targetOrgNameId}`);
 
-    // Skip: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
     // about URL reflects target L0 nameId; L2 path under /opportunities/ preserved
-    // expect(
-    //   after.get('about.profile.url'),
-    //   'about.profile.url should rebase to target L0 nameId'
-    // ).toBe(expectedL2EntityUrl);
+    expect(
+      after.get('about.profile.url'),
+      'about.profile.url should rebase to target L0 nameId'
+    ).toBe(expectedL2EntityUrl);
 
-    // Skip: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
     // innovation flow URL shares the same entity prefix
-    // expect(
-    //   after.get('collaboration.innovationFlow.profile.url'),
-    //   'innovationFlow.profile.url should rebase to target L0 nameId'
-    // ).toBe(expectedL2EntityUrl);
+    expect(
+      after.get('collaboration.innovationFlow.profile.url'),
+      'innovationFlow.profile.url should rebase to target L0 nameId'
+    ).toBe(expectedL2EntityUrl);
 
-    // Skip: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
     // callout URLs: only the L0 prefix changes, trailing slug preserved
-    // for (const [path, urlAfter] of after.entries()) {
-    //   if (
-    //     !path.startsWith('collaboration.calloutsSet.callouts[') ||
-    //     !path.endsWith('.framing.profile.url')
-    //   ) {
-    //     continue;
-    //   }
-    //   const urlBefore = before.get(path);
-    //   const slug = urlBefore?.split('/collaboration/')[1];
-    //   expect(
-    //     slug,
-    //     `could not extract callout slug from before-url ${path}`
-    //   ).toBeTruthy();
-    //   expect(
-    //     urlAfter,
-    //     `${path} should rebase to target L0 nameId with preserved slug "${slug}"`
-    //   ).toBe(`${expectedL2EntityUrl}/collaboration/${slug}`);
-    // }
-
-    // Suppress unused warnings until #9481 is fixed and the assertions above are uncommented.
-    void before;
-    void expectedL2EntityUrl;
+    for (const [path, urlAfter] of after.entries()) {
+      if (
+        !path.startsWith('collaboration.calloutsSet.callouts[') ||
+        !path.endsWith('.framing.profile.url')
+      ) {
+        continue;
+      }
+      const urlBefore = before.get(path);
+      const slug = urlBefore?.split('/collaboration/')[1];
+      expect(
+        slug,
+        `could not extract callout slug from before-url ${path}`
+      ).toBeTruthy();
+      expect(
+        urlAfter,
+        `${path} should rebase to target L0 nameId with preserved slug "${slug}"`
+      ).toBe(`${expectedL2EntityUrl}/collaboration/${slug}`);
+    }
   });
 
   test('visibility/privacy is preserved', () => {
