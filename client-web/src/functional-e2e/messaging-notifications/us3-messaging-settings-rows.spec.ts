@@ -1,5 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { loginViaCrd } from '../helpers/login.helper';
+import { acceptCookiesIfVisible } from '../helpers/cookies.helper';
 import {
   delay,
   deleteMailSlurperMails,
@@ -142,6 +143,12 @@ async function sendDirectMessage(
   message: string
 ) {
   await fromPage.goto(`${baseUrl}/home`);
+  // A context that has never dismissed the consent banner keeps it pinned to
+  // the bottom of the viewport at z-1500, where it intercepts the chat FAB's
+  // pointer events — the click then retries until the test times out rather
+  // than failing on anything to do with messaging. AS4 is the case that hits
+  // this, because it is the only scenario that drives a brand-new context.
+  await acceptCookiesIfVisible(fromPage);
   await fromPage.getByRole('button', { name: 'Open chat' }).click();
   await fromPage.getByRole('button', { name: 'New message' }).click();
   await fromPage

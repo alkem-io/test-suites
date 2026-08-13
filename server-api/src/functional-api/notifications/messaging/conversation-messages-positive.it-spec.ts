@@ -47,7 +47,9 @@ import {
   createGroupConversation,
   expectExactMailsAfter,
   expectPushEmitAfter,
+  markConversationRead,
   PushSubscriptionHandle,
+  sendConversationMessage,
   subscribeRecipientsToPush,
   unsubscribeRecipientsFromPush,
   updateConversationMessagingSettings,
@@ -208,6 +210,31 @@ describe('Conversation-message notifications — positive matrix', () => {
         const roomId = conversationRes?.data?.createConversation?.room?.id;
         expect(roomId).toBeDefined();
 
+        // Zero the unread baseline before measuring. A DIRECT conversation is
+        // deduped per actor pair and cannot be left, so `createDirectConversation`
+        // returns the SAME room this file already used for US1-AS1 (and that a
+        // previous run may have left messages in). The digest reports what is
+        // unread at fire time (FR-018a), so without this drain the subject
+        // reports the accumulated total and the `count = 1` assertion below
+        // fails on a correct build — observed as "sent you 3 messages".
+        // Same pattern as the read-state matrix's baseline drain.
+        const drainId = await sendConversationMessage(
+          roomId as string,
+          'US1-AS2 baseline drain',
+          TestUser.GLOBAL_ADMIN
+        );
+        await markConversationRead(
+          roomId as string,
+          drainId,
+          TestUser.SPACE_MEMBER
+        );
+        // Past `email:direct` max-delay + sweep + settle, so the track the
+        // drain armed has been swept and found nothing unread. Waiting only
+        // `quietGraceMs` here would let that flush land inside the measured
+        // window below and break the "exactly one" count.
+        await delay(directEmail.maxDelayGraceMs);
+        await deleteMailSlurperMails();
+
         // Poll bound covers `email:direct` quiet + sweep + settle; the settle
         // then runs to that track's MAX-DELAY bound so a leaked second email
         // cannot slip past the "exactly one" assertion (corr-test-suites-7).
@@ -242,7 +269,9 @@ describe('Conversation-message notifications — positive matrix', () => {
         expect(mail.body).toContain(`/?chat=${conversationId}`);
         expect(mail.body).toContain('/settings/notifications');
       },
-      digestTestTimeoutMs(directEmail)
+      // Three cycles, not the default two: the baseline drain above spends a
+      // full `email:direct` max-delay grace before the measured window starts.
+      digestTestTimeoutMs(directEmail, { cycles: 3 })
     );
 
     test(
@@ -314,9 +343,14 @@ describe('Conversation-message notifications — positive matrix', () => {
     // about the wrong shape entirely. A separate recipient gives this scenario
     // its own track.
     //
-    // Separately: the recipient here has no unread backlog to clear, because
-    // subspaceMember's direct-email channel is off outside this test, so no
-    // earlier digest could have been armed for them.
+    // A separate recipient does NOT, however, mean a clean unread baseline.
+    // Whether a digest was ever armed for subspaceMember is irrelevant: under
+    // FR-018a the count in the subject comes from the fire-time unread signal,
+    // which accumulates whatever this room was left holding regardless of any
+    // notification setting. `createDirectConversation` is deduped per actor
+    // pair, so every run adds one more never-read message here — this test
+    // passed at "a message" on a fresh stack and failed at "2 messages" on the
+    // very next run. Hence the same drain the opt-in scenario above performs.
     let conversationId = '';
     const hostileMessage =
       'Say "hi" to <script>alert(1)</script>\nline two <b>bold</b> & "quoted"';
@@ -352,6 +386,20 @@ describe('Conversation-message notifications — positive matrix', () => {
         const roomId = conversationRes?.data?.createConversation?.room?.id;
         expect(roomId).toBeDefined();
 
+        // Zero this room's unread baseline — see the describe comment above.
+        const drainId = await sendConversationMessage(
+          roomId as string,
+          'US1-AS5 baseline drain',
+          TestUser.GLOBAL_ADMIN
+        );
+        await markConversationRead(
+          roomId as string,
+          drainId,
+          TestUser.SUBSPACE_MEMBER
+        );
+        await delay(directEmail.maxDelayGraceMs);
+        await deleteMailSlurperMails();
+
         // Poll bound covers `email:direct` quiet + sweep + settle.
         const [mailItems, total] = await expectExactMailsAfter(
           () =>
@@ -383,7 +431,9 @@ describe('Conversation-message notifications — positive matrix', () => {
         expect(mail.body).not.toContain('line two');
         expect(mail.body).not.toContain('quoted');
       },
-      digestTestTimeoutMs(directEmail)
+      // Three cycles: the baseline drain spends a full `email:direct`
+      // max-delay grace before the measured window starts.
+      digestTestTimeoutMs(directEmail, { cycles: 3 })
     );
   });
 });

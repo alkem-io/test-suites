@@ -42,6 +42,7 @@ import {
   TestUserManager,
 } from '@alkemio/tests-lib';
 import { sendMessageToUser } from '@functional-api/communications/communication.params';
+import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
 import {
   createDirectConversation,
   getPushQueuePublishedTotal,
@@ -79,6 +80,18 @@ beforeAll(async () => {
   await updateConversationMessagingSettings(
     recipient().id,
     { direct: { email: false, push: true } },
+    RECIPIENT_ROLE
+  );
+  // Required precondition for Act 2. The non-messaging leg drives
+  // `sendMessageToUsers`, which the server gates on the recipient's EMAIL
+  // contact consent — a different flag from `allowOtherUsersToSendMessages`
+  // (chat), and off by default. Without it the mutation throws
+  // MessagingNotEnabledException, no USER_MESSAGE notification is ever
+  // emitted, and the shared-throttle assertion fails on a missing trigger
+  // rather than on the independence property it exists to prove.
+  await updateUserSettings(
+    recipient().id,
+    { communication: { allowOtherUsersToContactViaEmail: true } },
     RECIPIENT_ROLE
   );
 }, 300_000);

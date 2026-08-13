@@ -146,6 +146,9 @@ that from breaking the next run. Worth fixing if this suite joins the nightly.
 | Exact digest **counts** in the walks | The walks run serially against one conversation and nobody reads it, so unread totals accumulate across scenarios — a digest reports what is unread at fire time, not what arrived since the last email. The walks assert the subject *shape* (both single-entry forms) instead | The it-specs, where read state is drained between describes |
 | Real browser push delivery | No VAPID keys in the acceptance overlay (risk R-10) | Emit/queue boundary only, per Operator Ruling 3c |
 | US3-AS2's actual backfill migration | Proving it needs a destructive `migration:revert` + `migration:run` cycle over the whole table — not appropriate in a repeatable regression spec | The walk guards the observable symptom (no non-nullable-field error, rows at backfilled defaults); the migration cycle itself is a manual acceptance step |
+| **US2-AS4's second clause** — a conversation the recipient has lost access to is dropped from an **already-pending** digest | Not covered anywhere, in this repo or upstream. The negative matrix sets up the opposite case and says so at the assertion: C had *no* pending group digest when removed. Reaching the real case needs a message → removal inside one quiet period, then a flush | **Nothing.** This is a genuine hole, not a delegation — the pruning path is unverified |
+| US4-AS1 (bot sender), US4-AS3 (legacy-room classification), US4-AS4 (redelivery idempotency), US5-AS5 (unread signal unavailable → fail open) | Not reachable from a black-box, API-only harness: no VC engine in the verification stack, no way to create an untyped legacy room through the public API, no way to force a broker redelivery or an unread-signal outage | `server`: `conversation.notification.service.spec.ts`, `conversation.notification.classification.spec.ts`, `conversation.notification.dedupe.service.spec.ts`, `conversation.digest.flush.service.spec.ts` |
+| US4-AS5 — bounded redelivery on total delivery failure | Lives in the delivery service, which this harness does not drive directly | `notifications`: `notification.service.ts` + `notification.service.spec.ts` |
 
 ## Notes for whoever maintains this
 
@@ -172,3 +175,34 @@ that from breaking the next run. Worth fixing if this suite joins the nightly.
 4. **The queue counter never resets.** Always assert on a *delta* against a
    baseline captured before the action. Asserting the raw `publishedTotal`
    against a literal passes the moment anything has ever published to the queue.
+
+5. **Never assert an exact digest count on a direct conversation without
+   draining its unread state first.** R4 introduced a second axis of shared
+   state besides timing, and it bites differently: `createDirectConversation`
+   is deduped per actor pair and a DIRECT conversation cannot be left, so the
+   same room comes back on every call and on every *run*. Under FR-018a the
+   count in the subject comes from the fire-time unread signal, which
+   accumulates whatever that room is holding — regardless of notification
+   settings, and regardless of whether a digest was ever armed. The failure
+   mode is nastier than an ordering bug: the suite is **green on a fresh stack
+   and red on the second run**, so it survives review and breaks nightly on day
+   two. Observed exactly that way — `sent you a message` on run one,
+   `sent you 2 messages` on run two.
+
+   Drain by sending a throwaway message, `markConversationRead`-ing it as the
+   recipient, then waiting `maxDelayGraceMs` so the track the drain armed has
+   been swept and found nothing unread. Waiting only `quietGraceMs` lets that
+   flush land inside the measured window and break the "exactly one" count. Add
+   a cycle to the test timeout (`digestTestTimeoutMs(w, { cycles: 3 })`) to pay
+   for the extra wait. `conversation-messages-digest.it-spec.ts` factors this
+   into a `drainRecipientUnread()` helper — copy that shape rather than the
+   inline version.
+
+6. **A person-to-person email path needs `allowOtherUsersToContactViaEmail`,
+   not `allowOtherUsersToSendMessages`.** `sendMessageToUsers` gates on the
+   email-consent flag, which is off by default and is a different setting from
+   the chat one. Without it the mutation throws `MessagingNotEnabledException`,
+   no notification is ever emitted, and any assertion downstream fails on a
+   missing trigger rather than on the property under test — which is how the
+   shared-push-throttle independence check (US4-AS2/FR-012) spent its whole
+   life failing without ever exercising a throttle.
