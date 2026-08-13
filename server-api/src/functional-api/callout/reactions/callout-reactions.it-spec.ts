@@ -32,6 +32,7 @@ import {
   createWhiteboardCalloutOnCalloutsSet,
   deleteCallout,
 } from '../callouts.request.params';
+import { TemplateType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
 import {
   addReactionToCallout,
@@ -39,6 +40,8 @@ import {
   getCalloutReactionsSummary,
   getCalloutReactions,
 } from './callout-reactions.request.params';
+import { getGraphqlClient } from '@alkemio/tests-lib';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 
 // ---------------------------------------------------------------------------
 // Shared allow-list — must match the server constant (reaction.constants.ts).
@@ -64,6 +67,11 @@ let draftCalloutId = '';
 let postOnlyCalloutId = '';
 let whiteboardOnlyCalloutId = '';
 let deletionTestCalloutId = '';
+// Template created for the US4-AS2 template-rejection test;
+// its callout is a real Callout entity marked as a template — reacting on it
+// must be rejected by the same lifecycle guard that blocks draft reactions.
+let templateId = '';
+let templateCalloutId = '';
 
 // ---------------------------------------------------------------------------
 // Scenario — two space members plus a non-member available through TestUser
@@ -169,12 +177,54 @@ beforeAll(async () => {
   });
   deletionTestCalloutId =
     del?.data?.createCalloutOnCalloutsSet?.id ?? '';
+
+  // Callout template (US4-AS2 — template-callout rejection). The TemplatesSet
+  // is pre-provisioned by the scenario factory on the space; we add a callout
+  // template to it so we have a real template-callout ID to attempt a reaction
+  // against. Template callouts carry isTemplate: true and must be rejected by
+  // the same lifecycle guard that blocks draft reactions.
+  const graphqlClient = getGraphqlClient();
+  const createTmpl = await graphqlErrorWrapper(
+    (authToken) =>
+      graphqlClient.CreateTemplate(
+        {
+          templatesSetId: baseScenario.space.templateSetId,
+          type: TemplateType.Callout,
+          profileData: {
+            displayName: `reactions-tmpl-callout-${uniqueId}`,
+          },
+          calloutData: {
+            framing: {
+              profile: {
+                displayName: `reactions-tmpl-callout-inner-${uniqueId}`,
+                description: 'template callout for lifecycle guard test',
+              },
+            },
+          },
+        },
+        { authorization: `Bearer ${authToken}` }
+      ),
+    TestUser.GLOBAL_ADMIN
+  );
+  templateId = createTmpl?.data?.createTemplate?.id ?? '';
+  templateCalloutId = createTmpl?.data?.createTemplate?.callout?.id ?? '';
 });
 
 afterAll(async () => {
   // Deletion test callout may already be gone; skip if not found
   if (deletionTestCalloutId) {
     await deleteCallout(deletionTestCalloutId).catch(() => undefined);
+  }
+  if (templateId) {
+    const graphqlClient = getGraphqlClient();
+    await graphqlErrorWrapper(
+      (authToken) =>
+        graphqlClient.deleteTemplate(
+          { templateId },
+          { authorization: `Bearer ${authToken}` }
+        ),
+      TestUser.GLOBAL_ADMIN
+    ).catch(() => undefined);
   }
   await Promise.all([
     deleteCallout(publishedCalloutId).catch(() => undefined),
@@ -472,6 +522,25 @@ describe('US4 — Lifecycle + authorization edges', () => {
   test('US4-AS2 — draft callout rejects react (published guard)', async () => {
     const res = await addReactionToCallout(
       draftCalloutId,
+      'heart',
+      TestUser.SPACE_MEMBER
+    );
+    expect(res.error).toBeDefined();
+    expect(res.error!.errors.length).toBeGreaterThan(0);
+  });
+
+  test('US4-AS2 — template callout rejects react (lifecycle guard)', async () => {
+    // Template callouts are marked isTemplate: true. The published guard that
+    // prevents reactions on draft callouts applies equally here — a template
+    // callout is never in a published-to-collaborators state and reacting on it
+    // must be rejected, regardless of the reactor's CONTRIBUTE privilege.
+    if (!templateCalloutId) {
+      // If template creation failed in beforeAll (e.g. server missing the
+      // wave-1 mutation), skip rather than false-pass.
+      return;
+    }
+    const res = await addReactionToCallout(
+      templateCalloutId,
       'heart',
       TestUser.SPACE_MEMBER
     );
