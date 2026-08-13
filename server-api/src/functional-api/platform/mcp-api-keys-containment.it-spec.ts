@@ -69,6 +69,24 @@ const ADMIN_REVOKE_MUTATION = `
   }
 `;
 
+/**
+ * Fail loudly when a cleanup revoke did not take. An already-revoked key is an
+ * accepted outcome (a scenario may have revoked it first); anything else means
+ * a live MCP credential was left behind in a shared environment.
+ */
+const assertCleanupSucceeded = (
+  response: { body?: { errors?: { message?: string }[] } },
+  keyId: string
+) => {
+  const errors = response?.body?.errors;
+  if (!errors?.length) return;
+  const message = String(errors[0]?.message ?? '');
+  if (/not found/i.test(message)) return; // already revoked — fine
+  throw new Error(
+    `Cleanup failed to revoke MCP key ${keyId}; a live credential may remain: ${message}`
+  );
+};
+
 /** Mint a key as a given TestUser and return both the plaintext and its id. */
 const mintKeyAs = async (
   userRole: TestUser,
@@ -163,9 +181,12 @@ describe('MCP API key containment (US3, workspace#038-mcp-api-key-management)', 
   });
 
   afterAll(async () => {
-    // Best-effort cleanup via the owning user's own credentials; ignore
-    // failure if a scenario already revoked it.
-    await graphqlRequestAuth(
+    // Cleanup via the owning user's own credentials. Already-revoked is fine
+    // (a scenario may have revoked it) — but any OTHER GraphQL failure must be
+    // surfaced, not swallowed: silently leaving an ACTIVE MCP key behind in a
+    // shared integration environment is exactly the outcome this suite exists
+    // to prevent.
+    const cleanup = await graphqlRequestAuth(
       {
         operationName: 'RevokeMcpApiKey',
         query: REVOKE_MUTATION,
@@ -173,6 +194,7 @@ describe('MCP API key containment (US3, workspace#038-mcp-api-key-management)', 
       },
       TestUser.NON_SPACE_MEMBER
     );
+    assertCleanupSucceeded(cleanup, leakedKeyId);
   });
 
   test('US3-AS1: a caller authenticated only by an MCP key cannot mint another key', async () => {
@@ -304,11 +326,21 @@ describe('MCP API key containment (US3, workspace#038-mcp-api-key-management)', 
     expect(ownKey?.status).toBe('REVOKED');
   });
 
-  test('US3-AS6: a platform administrator cannot list or revoke keys through a non-user (system-actor) userID', async () => {
-    // A random UUID that is not any user's id models an actor-bound
-    // (system-actor) subject: the admin surface's `userId IS NOT NULL`
-    // predicate on `mcp_api_key.userId` makes such a subject structurally
-    // unreachable regardless of whether a row happens to exist for it.
+  test('US3-AS6: a platform administrator cannot reach keys through a userID that owns none', async () => {
+    // SCOPE, stated honestly (CodeRabbit, PR #604): this uses a UUID that is
+    // not any user's id, so it proves the admin surface handles an unknown
+    // subject — it does NOT prove that a key belonging to a real system actor
+    // is unreachable. Doing that needs an actor-bound row, which is minted by
+    // the server's bootstrap trust-anchor path and has no test-facing API;
+    // manufacturing one from a suite would mean writing an actor-bound
+    // credential into a shared environment.
+    //
+    // The actor-key firewall itself is covered where it can be asserted
+    // directly: `mcp-api-key.service.spec.ts` asserts `listUserKeysForAdmin`
+    // builds the `userId IS NOT NULL` predicate, which is the mechanism that
+    // makes actor-bound rows structurally unreachable through this surface.
+    // A live actor-bound assertion is follow-up work needing a harness that
+    // can seed one.
     const nonUserSubject = '00000000-0000-4000-8000-000000000000';
 
     const listResponse = await graphqlRequestAuth(
@@ -389,7 +421,7 @@ describe('MCP API key containment (US3, workspace#038-mcp-api-key-management)', 
       );
       expect(stillActive?.status).toBe('ACTIVE');
     } finally {
-      await graphqlRequestAuth(
+      const cleanup = await graphqlRequestAuth(
         {
           operationName: 'RevokeMcpApiKey',
           query: REVOKE_MUTATION,
@@ -397,6 +429,7 @@ describe('MCP API key containment (US3, workspace#038-mcp-api-key-management)', 
         },
         TestUser.GLOBAL_ADMIN
       );
+      assertCleanupSucceeded(cleanup, target.keyId);
     }
   });
 });

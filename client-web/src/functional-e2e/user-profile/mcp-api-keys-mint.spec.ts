@@ -20,7 +20,7 @@ import { test, expect } from '@playwright/test';
 import {
   acceptAllCookiesButton,
   logInHeaderLink,
-} from './authentication/common-authentication-page-elements';
+} from '../authentication/common-authentication-page-elements';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const adminEmail = process.env.AUTH_ADMIN_EMAIL || 'admin@alkem.io';
@@ -207,6 +207,17 @@ test.describe(
         page.getByRole('button', { name: /never expires/i })
       ).toHaveCount(0);
 
+      // Capture the date the picker actually selected, so the row assertion
+      // below proves the chosen expiry is DISPLAYED — `not.toContainText(
+      // 'Never expires')` alone would also pass if the row showed no expiry
+      // at all, which is the regression most worth catching here.
+      const selectedExpiry = (
+        await page
+          .getByRole('button', { name: /expiry \(optional\)/i })
+          .innerText()
+      ).trim();
+      expect(selectedExpiry).not.toMatch(/never expires/i);
+
       await page.getByRole('button', { name: 'Create key' }).click();
       await page.getByRole('button', { name: 'Done', exact: true }).last().click();
 
@@ -215,6 +226,7 @@ test.describe(
         .first()
         .locator('xpath=ancestor::li');
       await expect(row).not.toContainText('Never expires');
+      await expect(row).toContainText(selectedExpiry);
     });
 
     test('US1-AS6: submitting with no operation selected is refused client-side, with no key created', async ({
@@ -224,6 +236,20 @@ test.describe(
 
       const rowsBefore = await page.locator('ul[role="list"] li').count();
 
+      // The test name claims "refused CLIENT-side", so prove it: watch for a
+      // mintMcpApiKey operation on the wire. Without this the test also passes
+      // when the client sends the mutation and the server rejects it — which
+      // is a materially different (and slower, and noisier) behaviour.
+      let mintRequestSent = false;
+      page.on('request', request => {
+        if (
+          request.method() === 'POST' &&
+          (request.postData() ?? '').includes('mintMcpApiKey')
+        ) {
+          mintRequestSent = true;
+        }
+      });
+
       await page.getByRole('button', { name: 'Create API key' }).click();
       await page.getByLabel('Name').fill(keyName);
       // Deliberately leave both operation checkboxes unchecked.
@@ -232,6 +258,7 @@ test.describe(
       await expect(
         page.getByText(/choose at least one operation/i)
       ).toBeVisible();
+      expect(mintRequestSent).toBe(false);
 
       // The dialog is still open — the mutation never fired.
       await expect(page.getByRole('dialog')).toBeVisible();

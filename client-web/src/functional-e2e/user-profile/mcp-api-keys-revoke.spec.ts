@@ -5,7 +5,8 @@
 // lists name/operations/created/expiry/last-used-time/last-used-address/status
 // for every key including revoked and expired ones (US2-AS1), shows an
 // explanatory empty state with a create action when the user holds no keys
-// (US2-AS1a), collapses an expired-AND-revoked key to a single "revoked"
+// (US2-AS1a — covered by the McpApiKeysCard component test, see the note
+// below), collapses an expired-AND-revoked key to a single "revoked"
 // status with expiry only as a secondary detail (US2-AS1b), never renders a
 // key value anywhere in the list (US2-AS2), revoking an active key via the
 // named confirmation moves it to revoked while its last-used history stays
@@ -19,7 +20,7 @@ import { test, expect } from '@playwright/test';
 import {
   acceptAllCookiesButton,
   logInHeaderLink,
-} from './authentication/common-authentication-page-elements';
+} from '../authentication/common-authentication-page-elements';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 // Local dev: the Traefik edge on ALKEMIO_BASE_URL does not route `/rest/mcp`
@@ -122,37 +123,18 @@ test.describe(
       await expect(row).toContainText('Never used');
     });
 
-    test('US2-AS1a: a user with no keys sees an explanatory empty state with a create action, not a bare empty list', async ({
-      page,
-    }) => {
-      // Revoke every currently-active key so the card empties out for this
-      // walk, then assert the empty state — mirrors the manual verification
-      // walk against a freshly registered user with zero keys.
-      const activeRevokeButtons = page.getByRole('button', { name: '^Revoke$' });
-      let remaining = await page
-        .locator('ul[role="list"] li')
-        .filter({ has: page.getByRole('button', { name: 'Revoke', exact: true }) })
-        .count();
-      while (remaining > 0) {
-        const target = page
-          .locator('ul[role="list"] li')
-          .filter({ has: page.getByRole('button', { name: 'Revoke', exact: true }) })
-          .first();
-        await target.getByRole('button', { name: 'Revoke', exact: true }).click();
-        await page.getByRole('button', { name: /^revoke key$/i }).click();
-        await page.waitForTimeout(500);
-        remaining = await page
-          .locator('ul[role="list"] li')
-          .filter({ has: page.getByRole('button', { name: 'Revoke', exact: true }) })
-          .count();
-      }
-      void activeRevokeButtons;
-
-      await expect(page.getByText(/no api keys yet/i)).toBeVisible();
-      await expect(
-        page.getByRole('button', { name: 'Create API key' })
-      ).toBeVisible();
-    });
+    // US2-AS1a (empty state) is covered by the component test
+    // `McpApiKeysCard.test.tsx`, not here. The browser walk cannot honestly
+    // assert it: this suite runs as the shared platform administrator, and
+    // the only way to empty the card in-session is to revoke every key —
+    // which does NOT empty it, because revoked keys remain listed by design
+    // (US2-AS3 asserts exactly that). The original version of this test
+    // therefore passed only when the admin happened to hold zero keys, and it
+    // destroyed shared fixture state for whatever ran next.
+    //
+    // Restoring it here needs a per-run registered user with no keys. That is
+    // a harness change (a fixture that registers and tears down its own
+    // account), not a spec tweak — raised as follow-up rather than faked.
 
     test('US2-AS2: no key value appears anywhere in the listed entries', async ({
       page,
@@ -206,7 +188,14 @@ test.describe(
 
       await expect(row).toContainText('Revoked');
       // Last-used history is retained after revocation (FR-009 / US2-AS3).
+      // Assert BOTH retained fields positively: `not.toContainText('Never
+      // used')` alone still passes if the UI drops one of them, and the point
+      // of AS3 is that the forensic trail survives revocation intact.
       await expect(row).not.toContainText('Never used');
+      // last-used timestamp (same month-name date form as createdDate)
+      await expect(row).toContainText(/[A-Z][a-z]{2} \d{1,2}, \d{4}/);
+      // last-used source address (loopback in the local harness)
+      await expect(row).toContainText(/(\d{1,3}\.){3}\d{1,3}|::1/);
     });
 
     test('US2-AS4: a revoked key is refused by the MCP endpoint on a fresh request', async ({
