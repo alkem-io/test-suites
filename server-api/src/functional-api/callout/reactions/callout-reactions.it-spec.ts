@@ -29,6 +29,7 @@ import {
 
 import {
   createCalloutOnCalloutsSet,
+  createWhiteboardCalloutOnCalloutsSet,
   deleteCallout,
 } from '../callouts.request.params';
 
@@ -132,21 +133,27 @@ beforeAll(async () => {
   postOnlyCalloutId =
     postOnly?.data?.createCalloutOnCalloutsSet?.id ?? '';
 
-  // Whiteboard-only callout (US1-AS5 / R-2)
-  const whiteboardOnly = await createCalloutOnCalloutsSet(calloutsSetId, {
-    framing: {
-      profile: {
-        displayName: `reactions-whiteboard-only-${uniqueId}`,
-        description: 'whiteboard-only callout for kind-agnostic reaction test',
+  // Whiteboard-only callout (US1-AS5 / R-2). Use the dedicated whiteboard helper,
+  // which seeds the required default whiteboardContent (Excalidraw JSON); the
+  // generic createCalloutOnCalloutsSet does not accept it, so a whiteboard-only
+  // callout created through it returns no id.
+  const whiteboardOnly = await createWhiteboardCalloutOnCalloutsSet(
+    calloutsSetId,
+    {
+      framing: {
+        profile: {
+          displayName: `reactions-whiteboard-only-${uniqueId}`,
+          description: 'whiteboard-only callout for kind-agnostic reaction test',
+        },
       },
-    },
-    settings: {
-      visibility: CalloutVisibility.Published,
-      contribution: {
-        allowedTypes: [CalloutContributionType.Whiteboard],
+      settings: {
+        visibility: CalloutVisibility.Published,
+        contribution: {
+          allowedTypes: [CalloutContributionType.Whiteboard],
+        },
       },
-    },
-  });
+    }
+  );
   whiteboardOnlyCalloutId =
     whiteboardOnly?.data?.createCalloutOnCalloutsSet?.id ?? '';
 
@@ -481,14 +488,16 @@ describe('US4 — Lifecycle + authorization edges', () => {
     );
     expect(beforeSummary?.data?.lookup?.callout?.reactionsSummary?.total).toBe(1);
 
-    // Delete the callout
-    await deleteCallout(deletionTestCalloutId);
+    // Delete the callout — preserve its REAL id so we can prove its reactions are gone
+    const deletedCalloutId = deletionTestCalloutId;
+    await deleteCallout(deletedCalloutId);
     deletionTestCalloutId = ''; // mark as already deleted for afterAll guard
 
-    // Attempting to query the deleted callout should return null or not-found
+    // Querying the deleted callout by its real id resolves to null — a valid UUID
+    // for a deleted entity returns null through the lookup resolver, confirming
+    // no orphan reaction rows surface.
     const afterSummary = await getCalloutReactionsSummary(
-      // Use a placeholder that will resolve to null/not-found after deletion
-      'nonexistent-callout-id-after-deletion',
+      deletedCalloutId,
       TestUser.GLOBAL_ADMIN
     );
     // The callout is gone; null result confirms no orphan record surface
