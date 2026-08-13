@@ -1,0 +1,11 @@
+mutation AddReactionToCallout($reactionData: AddReactionToCalloutInput!) {
+  addReactionToCallout(reactionData: $reactionData) {
+    id
+    reactionsSummary {
+      total
+      emojis
+      myReactionEmoji
+      allowedEmojis
+    }
+  }
+}
