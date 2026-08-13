@@ -27,6 +27,12 @@
  * as that admin, and deletes the whole scenario in afterAll — so it runs in
  * isolation or alongside the other nightly projects without shared state.
  *
+ * Authentication: the walk logs in once in beforeAll using the browser fixture
+ * and retains the authenticated BrowserContext for the full file. Each test
+ * receives a page from that context (or reuses the shared page) rather than
+ * Playwright's default anonymous page fixture, so the session cookies are
+ * present for all three assertions.
+ *
  * Scope note on US1-AS3: the two-distinct-reactors visual (two people → two
  * chips + combined total 2) is asserted here as the structural anti-gamification
  * guarantee — the ticket's core constraint, verified at the contract level (the
@@ -43,7 +49,7 @@
  *     --project="Callout reactions"
  */
 
-import { expect, test, type Locator, type Page } from '@playwright/test';
+import { expect, test, type BrowserContext, type Locator, type Page } from '@playwright/test';
 import { TestScenarioFactory, createCalloutOnCalloutsSet, delay } from '@alkemio/tests-lib';
 import { CalloutVisibility } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
@@ -81,6 +87,11 @@ test.describe('Callout emoji reactions — US1 P1 acceptance walk', { tag: ['@ca
   let spaceNameId: string;
   let calloutDisplayName: string;
 
+  // Authenticated browser context and its page — created once in beforeAll and
+  // reused across every serial test so session cookies are always present.
+  let authContext: BrowserContext;
+  let authPage: Page;
+
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(120_000);
 
@@ -103,11 +114,12 @@ test.describe('Callout emoji reactions — US1 P1 acceptance walk', { tag: ['@ca
     expect(calloutId, 'seed: published post callout should be created').toBeTruthy();
 
     // Drive the UI as the admin (a member of the seeded space → holds CONTRIBUTE
-    // → may react; FR-009). Sign in once for the whole file; the session is
-    // persisted per browser context so each test's page inherits it.
-    const page = await browser.newPage();
-    await loginViaCrd(page, ADMIN_EMAIL);
-    await page.close();
+    // → may react; FR-009). Sign in once for the whole file; the authenticated
+    // BrowserContext is retained so every subsequent page from it inherits the
+    // session cookies.
+    authContext = await browser.newContext();
+    authPage = await authContext.newPage();
+    await loginViaCrd(authPage, ADMIN_EMAIL);
   });
 
   test.afterAll(async ({ browser }) => {
@@ -115,24 +127,27 @@ test.describe('Callout emoji reactions — US1 P1 acceptance walk', { tag: ['@ca
     // then delete the whole scenario (which also removes the callout + its
     // reactions). Neither failure should mask a test verdict.
     try {
-      const page = await browser.newPage();
-      await loginViaCrd(page, ADMIN_EMAIL);
-      await page.goto(`${BASE_URL}/${spaceNameId}`);
-      const heading = page.getByRole('heading', { name: calloutDisplayName });
+      const cleanupPage = await browser.newPage();
+      await loginViaCrd(cleanupPage, ADMIN_EMAIL);
+      await cleanupPage.goto(`${BASE_URL}/${spaceNameId}`);
+      const heading = cleanupPage.getByRole('heading', { name: calloutDisplayName });
       if (await heading.isVisible({ timeout: 10_000 }).catch(() => false)) {
-        const card = page.locator('div').filter({ has: heading }).last();
+        const card = cleanupPage.locator('div').filter({ has: heading }).last();
         await card.getByRole('button', { name: 'Add reaction' }).hover();
-        const picker = page.getByRole('listbox', { name: 'Emoji reaction picker' });
+        const picker = cleanupPage.getByRole('listbox', { name: 'Emoji reaction picker' });
         if (await picker.isVisible().catch(() => false)) {
           const own = picker.getByRole('option', { selected: true });
           if (await own.count()) await own.first().click(); // clicking own = remove (no dialog)
           await delay(500);
         }
       }
-      await page.close();
+      await cleanupPage.close();
     } catch {
       // best-effort only.
     }
+
+    // Close the authenticated context so the browser can be fully released.
+    await authContext?.close().catch(() => undefined);
 
     if (scenario) {
       await TestScenarioFactory.cleanUpBaseScenario(scenario);
@@ -177,20 +192,18 @@ test.describe('Callout emoji reactions — US1 P1 acceptance walk', { tag: ['@ca
     await expect(page.getByRole('heading', { name: calloutDisplayName })).toBeVisible({ timeout: 30_000 });
   }
 
-  test('US1-AS1: reacting shows the chosen emoji chip, a total of 1, and a primary-tinted own reaction', async ({
-    page,
-  }) => {
-    await loadSpacePage(page);
+  test('US1-AS1: reacting shows the chosen emoji chip, a total of 1, and a primary-tinted own reaction', async () => {
+    await loadSpacePage(authPage);
 
     // No reactions yet: the add-reaction affordance is present, no total pill.
-    await expect(addReactionTrigger(page)).toBeVisible();
-    await expect(totalPill(page)).toHaveCount(0);
+    await expect(addReactionTrigger(authPage)).toBeVisible();
+    await expect(totalPill(authPage)).toHaveCount(0);
 
-    const picker = await openPicker(page);
+    const picker = await openPicker(authPage);
     await picker.getByRole('option', { name: 'heart' }).click();
 
     // A single combined total appears, tinted as the viewer's own reaction.
-    const pill = totalPill(page);
+    const pill = totalPill(authPage);
     await expect(pill).toBeVisible();
     await expect(pill).toHaveAttribute('aria-pressed', 'true'); // primary tint
     await expect(pill).toHaveAccessibleName(/^1 person reacted$/);
@@ -198,9 +211,9 @@ test.describe('Callout emoji reactions — US1 P1 acceptance walk', { tag: ['@ca
     await expect(pill).toContainText(GLYPH.heart); // the distinct emoji chip
   });
 
-  test('US1-AS2: the picker offers exactly the 7 predefined slugs — no search, no full catalog', async ({ page }) => {
-    await loadSpacePage(page);
-    const picker = await openPicker(page);
+  test('US1-AS2: the picker offers exactly the 7 predefined slugs — no search, no full catalog', async () => {
+    await loadSpacePage(authPage);
+    const picker = await openPicker(authPage);
 
     const options = picker.getByRole('option');
     await expect(options).toHaveCount(EXPECTED_SLUGS.length);
@@ -216,10 +229,10 @@ test.describe('Callout emoji reactions — US1 P1 acceptance walk', { tag: ['@ca
     await expect(picker.getByRole('searchbox')).toHaveCount(0);
   });
 
-  test('US1-AS3: exactly one combined total and no per-emoji number (R-1 anti-gamification)', async ({ page }) => {
-    await loadSpacePage(page);
+  test('US1-AS3: exactly one combined total and no per-emoji number (R-1 anti-gamification)', async () => {
+    await loadSpacePage(authPage);
 
-    const pill = totalPill(page);
+    const pill = totalPill(authPage);
     await expect(pill).toBeVisible();
 
     // The pill exposes exactly ONE number — the combined total — and it is not
@@ -233,7 +246,7 @@ test.describe('Callout emoji reactions — US1 P1 acceptance walk', { tag: ['@ca
     // The who-reacted list, opened on demand, shows person + emoji + when and
     // carries no per-emoji count / grouped tally (US2-AS2 shares this guarantee).
     await pill.click();
-    const list = page.getByRole('list').filter({ hasText: 'admin' });
+    const list = authPage.getByRole('list').filter({ hasText: 'admin' });
     await expect(list.getByRole('listitem')).toHaveCount(1);
     const listDigits = (await list.innerText()).match(/\d+/g) ?? [];
     expect(listDigits, 'the who-reacted list must show no numeric tallies').toEqual([]);

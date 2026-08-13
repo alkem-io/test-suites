@@ -529,15 +529,18 @@ describe('US4 — Lifecycle + authorization edges', () => {
     expect(res.error!.errors.length).toBeGreaterThan(0);
   });
 
-  test('US4-AS2 — template callout rejects react (lifecycle guard)', async () => {
+  test('US4-AS2 — template callout rejects react (lifecycle guard)', async (ctx) => {
     // Template callouts are marked isTemplate: true. The published guard that
     // prevents reactions on draft callouts applies equally here — a template
     // callout is never in a published-to-collaborators state and reacting on it
     // must be rejected, regardless of the reactor's CONTRIBUTE privilege.
+
+    // If template seeding in beforeAll produced no callout id (e.g. the server
+    // mutation is missing in this wave), surface a SKIPPED result rather than a
+    // silent green pass — a bare return would make this test vacuously pass and
+    // mask any regression where a template callout becomes reactable.
     if (!templateCalloutId) {
-      // If template creation failed in beforeAll (e.g. server missing the
-      // wave-1 mutation), skip rather than false-pass.
-      return;
+      ctx.skip();
     }
     const res = await addReactionToCallout(
       templateCalloutId,
