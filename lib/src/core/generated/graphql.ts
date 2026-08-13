@@ -115764,6 +115764,70 @@ export const UpdateCalloutVisibilityDocument = gql`
   }
   ${CalloutDataFragmentDoc}
 `;
+export const AddReactionToCalloutDocument = gql`
+  mutation AddReactionToCallout($reactionData: AddReactionToCalloutInput!) {
+    addReactionToCallout(reactionData: $reactionData) {
+      id
+      reactionsSummary {
+        total
+        emojis
+        myReactionEmoji
+        allowedEmojis
+      }
+    }
+  }
+`;
+export const RemoveReactionFromCalloutDocument = gql`
+  mutation RemoveReactionFromCallout(
+    $reactionData: RemoveReactionFromCalloutInput!
+  ) {
+    removeReactionFromCallout(reactionData: $reactionData) {
+      id
+      reactionsSummary {
+        total
+        emojis
+        myReactionEmoji
+        allowedEmojis
+      }
+    }
+  }
+`;
+export const GetCalloutReactionsSummaryDocument = gql`
+  query GetCalloutReactionsSummary($calloutId: UUID!) {
+    lookup {
+      callout(ID: $calloutId) {
+        id
+        reactionsSummary {
+          total
+          emojis
+          myReactionEmoji
+          allowedEmojis
+        }
+      }
+    }
+  }
+`;
+export const GetCalloutReactionsDocument = gql`
+  query GetCalloutReactions($calloutId: UUID!) {
+    lookup {
+      callout(ID: $calloutId) {
+        id
+        reactions {
+          id
+          emoji
+          updatedDate
+          user {
+            id
+            nameID
+            profile {
+              displayName
+            }
+          }
+        }
+      }
+    }
+  }
+`;
 export const CreateContributionOnCalloutDocument = gql`
   mutation CreateContributionOnCallout(
     $contributionData: CreateContributionOnCalloutInput!
@@ -118635,6 +118699,14 @@ const UpdateCalloutDocumentString = print(UpdateCalloutDocument);
 const UpdateCalloutVisibilityDocumentString = print(
   UpdateCalloutVisibilityDocument
 );
+const AddReactionToCalloutDocumentString = print(AddReactionToCalloutDocument);
+const RemoveReactionFromCalloutDocumentString = print(
+  RemoveReactionFromCalloutDocument
+);
+const GetCalloutReactionsSummaryDocumentString = print(
+  GetCalloutReactionsSummaryDocument
+);
+const GetCalloutReactionsDocumentString = print(GetCalloutReactionsDocument);
 const CreateContributionOnCalloutDocumentString = print(
   CreateContributionOnCalloutDocument
 );
@@ -119623,6 +119695,94 @@ export function getSdk(
           ),
         "UpdateCalloutVisibility",
         "mutation",
+        variables
+      );
+    },
+    AddReactionToCallout(
+      variables: SchemaTypes.AddReactionToCalloutMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AddReactionToCalloutMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AddReactionToCalloutMutation>(
+            AddReactionToCalloutDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "AddReactionToCallout",
+        "mutation",
+        variables
+      );
+    },
+    RemoveReactionFromCallout(
+      variables: SchemaTypes.RemoveReactionFromCalloutMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.RemoveReactionFromCalloutMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.RemoveReactionFromCalloutMutation>(
+            RemoveReactionFromCalloutDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "RemoveReactionFromCallout",
+        "mutation",
+        variables
+      );
+    },
+    GetCalloutReactionsSummary(
+      variables: SchemaTypes.GetCalloutReactionsSummaryQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.GetCalloutReactionsSummaryQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.GetCalloutReactionsSummaryQuery>(
+            GetCalloutReactionsSummaryDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "GetCalloutReactionsSummary",
+        "query",
+        variables
+      );
+    },
+    GetCalloutReactions(
+      variables: SchemaTypes.GetCalloutReactionsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.GetCalloutReactionsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.GetCalloutReactionsQuery>(
+            GetCalloutReactionsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "GetCalloutReactions",
+        "query",
         variables
       );
     },

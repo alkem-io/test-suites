@@ -1,139 +1,5 @@
-import { TestUser, testConfiguration } from '@alkemio/tests-lib';
+import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
-import { GraphQLClient } from 'graphql-request';
-
-const graphqlClient = new GraphQLClient(
-  testConfiguration.endPoints.graphql.private
-);
-
-// --- Response type shapes -----------------------------------------------
-
-export interface CalloutReactionsSummary {
-  total: number;
-  emojis: string[];
-  myReactionEmoji: string | null;
-  allowedEmojis: string[];
-}
-
-export interface CalloutReactionUser {
-  id: string;
-  nameID: string;
-  profile: { displayName: string };
-}
-
-export interface CalloutReactionItem {
-  id: string;
-  emoji: string;
-  updatedDate: string;
-  user?: CalloutReactionUser | null;
-}
-
-interface AddReactionResponse {
-  addReactionToCallout: {
-    id: string;
-    reactionsSummary: CalloutReactionsSummary;
-  };
-}
-
-interface RemoveReactionResponse {
-  removeReactionFromCallout: {
-    id: string;
-    reactionsSummary: CalloutReactionsSummary;
-  };
-}
-
-interface GetSummaryResponse {
-  lookup: {
-    callout: {
-      id: string;
-      reactionsSummary: CalloutReactionsSummary;
-    } | null;
-  };
-}
-
-interface GetReactionsResponse {
-  lookup: {
-    callout: {
-      id: string;
-      reactions: CalloutReactionItem[];
-    } | null;
-  };
-}
-
-// --- GraphQL document strings -------------------------------------------
-
-const ADD_REACTION_MUTATION = /* GraphQL */ `
-  mutation AddReactionToCallout($reactionData: AddReactionToCalloutInput!) {
-    addReactionToCallout(reactionData: $reactionData) {
-      id
-      reactionsSummary {
-        total
-        emojis
-        myReactionEmoji
-        allowedEmojis
-      }
-    }
-  }
-`;
-
-const REMOVE_REACTION_MUTATION = /* GraphQL */ `
-  mutation RemoveReactionFromCallout($reactionData: RemoveReactionFromCalloutInput!) {
-    removeReactionFromCallout(reactionData: $reactionData) {
-      id
-      reactionsSummary {
-        total
-        emojis
-        myReactionEmoji
-        allowedEmojis
-      }
-    }
-  }
-`;
-
-const GET_SUMMARY_QUERY = /* GraphQL */ `
-  query GetCalloutReactionsSummary($calloutId: UUID!) {
-    lookup {
-      callout(ID: $calloutId) {
-        id
-        reactionsSummary {
-          total
-          emojis
-          myReactionEmoji
-          allowedEmojis
-        }
-      }
-    }
-  }
-`;
-
-const GET_REACTIONS_QUERY = /* GraphQL */ `
-  query GetCalloutReactions($calloutId: UUID!) {
-    lookup {
-      callout(ID: $calloutId) {
-        id
-        reactions {
-          id
-          emoji
-          updatedDate
-          user {
-            id
-            nameID
-            profile {
-              displayName
-            }
-          }
-        }
-      }
-    }
-  }
-`;
-
-// --- Helper to build auth headers --------------------------------------
-
-const authHeaders = (authToken: string | undefined) =>
-  authToken ? { authorization: `Bearer ${authToken}` } : undefined;
-
-// --- Exported request helpers ------------------------------------------
 
 /**
  * Adds or swaps the authenticated user's reaction on a callout.
@@ -145,11 +11,11 @@ export const addReactionToCallout = (
   emoji: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
+  const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.rawRequest<AddReactionResponse>(
-      ADD_REACTION_MUTATION,
+    graphqlClient.AddReactionToCallout(
       { reactionData: { calloutID, emoji } },
-      authHeaders(authToken)
+      { authorization: `Bearer ${authToken}` }
     );
   return graphqlErrorWrapper(callback, userRole);
 };
@@ -162,11 +28,11 @@ export const removeReactionFromCallout = (
   calloutID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
+  const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.rawRequest<RemoveReactionResponse>(
-      REMOVE_REACTION_MUTATION,
+    graphqlClient.RemoveReactionFromCallout(
       { reactionData: { calloutID } },
-      authHeaders(authToken)
+      { authorization: `Bearer ${authToken}` }
     );
   return graphqlErrorWrapper(callback, userRole);
 };
@@ -180,11 +46,11 @@ export const getCalloutReactionsSummary = (
   calloutId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
+  const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.rawRequest<GetSummaryResponse>(
-      GET_SUMMARY_QUERY,
+    graphqlClient.GetCalloutReactionsSummary(
       { calloutId },
-      authHeaders(authToken)
+      { authorization: `Bearer ${authToken}` }
     );
   return graphqlErrorWrapper(callback, userRole);
 };
@@ -197,12 +63,11 @@ export const getCalloutReactions = (
   calloutId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
+  const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
-    graphqlClient.rawRequest<GetReactionsResponse>(
-      GET_REACTIONS_QUERY,
+    graphqlClient.GetCalloutReactions(
       { calloutId },
-      authHeaders(authToken)
+      { authorization: `Bearer ${authToken}` }
     );
   return graphqlErrorWrapper(callback, userRole);
 };
-
