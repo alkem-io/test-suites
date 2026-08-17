@@ -42,6 +42,7 @@
     "test:lifecycle": "vitest run --project lifecycle --fileParallelism=false",
     "test:account": "vitest run --project account --fileParallelism=false",
     "test:callouts": "vitest run --project callouts --fileParallelism=false",
+    "test:collabora": "vitest run --project collabora --fileParallelism=false",
     "test:integration-parallel": "vitest run --project integration --poolOptions.threads.maxThreads=4",
     "test:organization": "vitest run --project organization --poolOptions.threads.maxThreads=6",
     "test:entitlements": "vitest run --project entitlements --fileParallelism=false",

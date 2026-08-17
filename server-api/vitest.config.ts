@@ -49,6 +49,7 @@ export default defineConfig({
         'src/functional-api/activity-logs/**/*.it-spec.ts',
       ]),
       project('callouts', ['src/functional-api/callout/**/*.it-spec.ts']),
+      project('collabora', ['src/functional-api/collabora/**/*.it-spec.ts']),
       project('communication', [
         'src/functional-api/communications/**/*.it-spec.ts',
       ]),
