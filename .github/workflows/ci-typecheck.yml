@@ -32,6 +32,13 @@ jobs:
       - name: Native TS7 typecheck — server-api (workspace#019-typescript-7-upgrade)
         run: pnpm --filter @alkemio/test-suite-server-api run typecheck:native
 
+      # PR-time drift gate for the nightly two-lane split: proves the
+      # parallel/serial partition and that no promoted file trips a hazard
+      # rule, so lane-membership drift is caught at review time rather than
+      # surfacing as a flaky nightly.
+      - name: Nightly lane guard
+        run: pnpm --filter @alkemio/test-suite-server-api run lanes:validate
+
       - name: Native TS7 typecheck — client-web (workspace#019-typescript-7-upgrade)
         run: pnpm --filter @alkemio/test-suite-client-web run typecheck:native
 
