@@ -39,7 +39,7 @@ set -euo pipefail
 
 LOCK_NAME="test-cluster-deploy-lock"
 LOCK_NS="default"
-LOCK_TTL_SECONDS="${LOCK_TTL_SECONDS:-3600}"   # 60 min: reclaim a crashed holder
+LOCK_TTL_SECONDS="${LOCK_TTL_SECONDS:-10800}"  # 180 min: reclaim a crashed holder — longest archived nightly hold is ~105 min test execution + cleanup/migrations, with margin
 POLL_SECONDS="${POLL_SECONDS:-15}"
 
 now() { date +%s; }
