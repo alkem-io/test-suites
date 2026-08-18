@@ -22,7 +22,6 @@ let targetScenario: OrganizationWithSpaceModel;
 const sourceConfig: TestScenarioConfig = {
   name: 'move-l1-l2-auth-src',
   space: {
-    collaboration: { addPostCallout: true },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [
@@ -33,7 +32,6 @@ const sourceConfig: TestScenarioConfig = {
       ],
     },
     subspace: {
-      collaboration: { addPostCallout: true },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
         members: [TestUser.SUBSPACE_MEMBER, TestUser.SUBSPACE_ADMIN],
@@ -46,7 +44,6 @@ const sourceConfig: TestScenarioConfig = {
 const sourceWithL2Config: TestScenarioConfig = {
   name: 'move-l1-l2-auth-l2-src',
   space: {
-    collaboration: { addPostCallout: true },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [
@@ -56,13 +53,11 @@ const sourceWithL2Config: TestScenarioConfig = {
       ],
     },
     subspace: {
-      collaboration: { addPostCallout: true },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
         members: [TestUser.SUBSPACE_MEMBER, TestUser.SUBSUBSPACE_MEMBER],
       },
       subspace: {
-        collaboration: { addPostCallout: true },
         community: {
           admins: [TestUser.SUBSUBSPACE_ADMIN],
           members: [TestUser.SUBSUBSPACE_MEMBER],
@@ -75,7 +70,6 @@ const sourceWithL2Config: TestScenarioConfig = {
 const targetConfig: TestScenarioConfig = {
   name: 'move-l1-l2-auth-tgt',
   space: {
-    collaboration: { addPostCallout: true },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [
@@ -85,7 +79,6 @@ const targetConfig: TestScenarioConfig = {
       ],
     },
     subspace: {
-      collaboration: { addPostCallout: true },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
         members: [TestUser.SUBSPACE_MEMBER, TestUser.SUBSPACE_ADMIN],
@@ -95,8 +88,11 @@ const targetConfig: TestScenarioConfig = {
 };
 
 beforeAll(async () => {
-  sourceScenario = await TestScenarioFactory.createBaseScenario(sourceConfig);
-  targetScenario = await TestScenarioFactory.createBaseScenario(targetConfig);
+  // Independent scenarios (distinct names, no shared state) — build concurrently.
+  [sourceScenario, targetScenario] = await Promise.all([
+    TestScenarioFactory.createBaseScenario(sourceConfig),
+    TestScenarioFactory.createBaseScenario(targetConfig),
+  ]);
 });
 
 afterAll(async () => {
@@ -134,14 +130,16 @@ describe('Move L1 to L2 - unauthorized roles', () => {
   let authTargetScenario: OrganizationWithSpaceModel;
 
   beforeAll(async () => {
-    authSourceScenario = await TestScenarioFactory.createBaseScenario({
-      ...sourceConfig,
-      name: 'move-l1-l2-unauth-src',
-    });
-    authTargetScenario = await TestScenarioFactory.createBaseScenario({
-      ...targetConfig,
-      name: 'move-l1-l2-unauth-tgt',
-    });
+    [authSourceScenario, authTargetScenario] = await Promise.all([
+      TestScenarioFactory.createBaseScenario({
+        ...sourceConfig,
+        name: 'move-l1-l2-unauth-src',
+      }),
+      TestScenarioFactory.createBaseScenario({
+        ...targetConfig,
+        name: 'move-l1-l2-unauth-tgt',
+      }),
+    ]);
   });
 
   afterAll(async () => {
@@ -189,18 +187,21 @@ describe('Move L1 to L2 - validation errors', () => {
   let valSourceScenario: OrganizationWithSpaceModel;
 
   beforeAll(async () => {
-    valSourceWithL2 = await TestScenarioFactory.createBaseScenario({
-      ...sourceWithL2Config,
-      name: 'move-l1-l2-val-l2-src',
-    });
-    valTargetScenario = await TestScenarioFactory.createBaseScenario({
-      ...targetConfig,
-      name: 'move-l1-l2-val-tgt',
-    });
-    valSourceScenario = await TestScenarioFactory.createBaseScenario({
-      ...sourceConfig,
-      name: 'move-l1-l2-val-src',
-    });
+    [valSourceWithL2, valTargetScenario, valSourceScenario] =
+      await Promise.all([
+        TestScenarioFactory.createBaseScenario({
+          ...sourceWithL2Config,
+          name: 'move-l1-l2-val-l2-src',
+        }),
+        TestScenarioFactory.createBaseScenario({
+          ...targetConfig,
+          name: 'move-l1-l2-val-tgt',
+        }),
+        TestScenarioFactory.createBaseScenario({
+          ...sourceConfig,
+          name: 'move-l1-l2-val-src',
+        }),
+      ]);
   });
 
   afterAll(async () => {
@@ -293,7 +294,6 @@ const anonymousSpacePrivileges = async (spaceId: string) => {
 const privacyPublicSourceConfig: TestScenarioConfig = {
   name: 'move-l1-l2-priv-src',
   space: {
-    collaboration: { addPostCallout: true },
     settings: {
       privacy: { mode: SpacePrivacyMode.Public },
       membership: { policy: CommunityMembershipPolicy.Applications },
@@ -308,7 +308,6 @@ const privacyPublicSourceConfig: TestScenarioConfig = {
       ],
     },
     subspace: {
-      collaboration: { addPostCallout: true },
       settings: { privacy: { mode: SpacePrivacyMode.Public } },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
@@ -327,14 +326,12 @@ describe('Move L1 to L2 - privacy recompute (platform-level anonymous access)', 
     const privateTargetConfig: TestScenarioConfig = {
       name: 'move-l1-l2-pub2priv-tgt',
       space: {
-        collaboration: { addPostCallout: true },
         settings: { privacy: { mode: SpacePrivacyMode.Private } },
         community: {
           admins: [TestUser.SPACE_ADMIN],
           members: [TestUser.SPACE_MEMBER],
         },
         subspace: {
-          collaboration: { addPostCallout: true },
           settings: { privacy: { mode: SpacePrivacyMode.Private } },
           community: {
             admins: [TestUser.SUBSPACE_ADMIN],
@@ -345,12 +342,13 @@ describe('Move L1 to L2 - privacy recompute (platform-level anonymous access)', 
     };
 
     beforeAll(async () => {
-      sourceScenario = await TestScenarioFactory.createBaseScenario({
-        ...privacyPublicSourceConfig,
-        name: 'move-l1-l2-pub2priv-src',
-      });
-      targetScenario =
-        await TestScenarioFactory.createBaseScenario(privateTargetConfig);
+      [sourceScenario, targetScenario] = await Promise.all([
+        TestScenarioFactory.createBaseScenario({
+          ...privacyPublicSourceConfig,
+          name: 'move-l1-l2-pub2priv-src',
+        }),
+        TestScenarioFactory.createBaseScenario(privateTargetConfig),
+      ]);
     });
 
     afterAll(async () => {
@@ -407,14 +405,12 @@ describe('Move L1 to L2 - privacy recompute (platform-level anonymous access)', 
     const publicTargetConfig: TestScenarioConfig = {
       name: 'move-l1-l2-priv2pub-tgt',
       space: {
-        collaboration: { addPostCallout: true },
         settings: { privacy: { mode: SpacePrivacyMode.Public } },
         community: {
           admins: [TestUser.SPACE_ADMIN],
           members: [TestUser.SPACE_MEMBER],
         },
         subspace: {
-          collaboration: { addPostCallout: true },
           settings: { privacy: { mode: SpacePrivacyMode.Public } },
           community: {
             admins: [TestUser.SUBSPACE_ADMIN],
@@ -425,10 +421,10 @@ describe('Move L1 to L2 - privacy recompute (platform-level anonymous access)', 
     };
 
     beforeAll(async () => {
-      sourceScenario =
-        await TestScenarioFactory.createBaseScenario(privateSourceConfig);
-      targetScenario =
-        await TestScenarioFactory.createBaseScenario(publicTargetConfig);
+      [sourceScenario, targetScenario] = await Promise.all([
+        TestScenarioFactory.createBaseScenario(privateSourceConfig),
+        TestScenarioFactory.createBaseScenario(publicTargetConfig),
+      ]);
     });
 
     afterAll(async () => {
