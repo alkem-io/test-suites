@@ -17,6 +17,7 @@
  *         count/exclusivity/position
  *      6. platform-role REVOCATION/toggle on shared users
  *      7. assertion on a shared user's platform-role state
+ *      8. assertion on a shared user's roleSet-membership state
  *    Rules 1, 2, 3 and 6 are symbol-level and transitive: a manifest file is
  *    flagged if it — or any file reachable through its import graph — both
  *    imports and calls a hazard symbol (rule 3 additionally requires
@@ -27,9 +28,14 @@
  *    concurrent ordering and is not flagged; see the `guardWindowRe`
  *    docstring on `HazardRule` for the source-level proof this is built on.
  *    Rule 6 (revocation) has no such exemption — undoing a role is never
- *    convergent. Rules 4, 5 and 7 are a direct content scan of the manifest
- *    file's own source, since they describe how the *file itself* shapes
- *    its assertions, not a transitively-inherited hazard.
+ *    convergent. Rules 4, 5, 7 and 8 are a direct content scan of the
+ *    manifest file's own source, since they describe how the *file itself*
+ *    shapes its assertions, not a transitively-inherited hazard. Rule 8 is
+ *    rule 7's counterpart one layer up the stack: rule 7 catches a shared
+ *    user's PLATFORM role state read as ground truth (`.RoleNames`), rule 8
+ *    catches the same shared identity's roleSet-level MEMBER state read the
+ *    same way (`isUserMemberOfRoleSet` / `getRoleSetUsersInMemberRole`),
+ *    both gated on shared-user evidence in the same file.
  *
  * New spec files are safe by construction: they can only ever land in the
  * complement (the serial lane), never in the reviewed manifest.
@@ -147,7 +153,7 @@ const HAZARD_RULES: HazardRule[] = [
 const SHARED_USER_EVIDENCE_RE = /\bTestUser\.|\bTestUserManager\.users\b/;
 
 interface ContentRule {
-  id: 4 | 5 | 7;
+  id: 4 | 5 | 7 | 8;
   name: string;
   pattern: RegExp;
   requiresSharedUserEvidence?: boolean;
@@ -165,7 +171,23 @@ const CONTENT_RULES: ContentRule[] = [
     // `myPushSubscriptions` reads/asserts a shared pool user's (GLOBAL_ADMIN)
     // own subscription collection by exact count/emptiness — the same
     // shared-identity-aggregate shape as `communityApplications` et al.
-    pattern: /communityApplications|communityInvitations|rolesUser\.|myMemberships|myPushSubscriptions/,
+    //
+    // Case-INSENSITIVE (`i` flag) since the 2026-08-18 nightly run: the
+    // repo's own wrapper around the `CommunityApplicationsInvitations`
+    // GraphQL operation is named `getCommunityApplicationsInvitations` —
+    // capital C — which the previous case-sensitive pattern never matched.
+    // `move-L1-to-L2-auto-invite.it-spec.ts` called exactly that wrapper,
+    // asserted an exact invitation count over `TestUser.SPACE_ADMIN` /
+    // `SPACE_MEMBER` / `SUBSPACE_ADMIN` / `SUBSPACE_MEMBER` overlap with a
+    // concurrently-mutable target community, and failed under concurrency
+    // (interference, not a pre-existing defect) while passing serially —
+    // see server-api/html-report/{results,serial-confirm-raw}.json from
+    // that run. Verified against real repo call sites: the same wrapper is
+    // also called by move-L1-to-L0-auto-invite.it-spec.ts,
+    // move-L2-to-L1-auto-invite.it-spec.ts, convert-L1-to-L0.it-spec.ts,
+    // convert-L1-to-L0-with-L2-to-L1.it-spec.ts and convert-L2-to-L1.it-spec.ts
+    // — all now caught by the same fix rather than a one-off demotion.
+    pattern: /communityApplications|communityInvitations|rolesUser\.|myMemberships|myPushSubscriptions/i,
   },
   {
     id: 7,
@@ -183,27 +205,51 @@ const CONTENT_RULES: ContentRule[] = [
       /expect\([^)]*\.RoleNames\b[^)]*\)|\.RoleNames\)\s*\.\s*(?:not\.)?(?:toContain|toHaveLength|toEqual|toBe|toContainEqual)\(/,
     requiresSharedUserEvidence: true,
   },
+  {
+    id: 8,
+    name: "assertion on a shared user's roleSet-membership state",
+    // A fourth hazard shape, added from the same 2026-08-18 nightly run:
+    // `join-hierarchy-parity.it-spec.ts` asserted (both `true` and `false`)
+    // whether `TestUser.NON_SPACE_MEMBER` (`TestUserManager.users.nonSpaceMember`)
+    // is a MEMBER of a roleSet, via the `isUserMemberOfRoleSet` /
+    // `getRoleSetUsersInMemberRole` helper shape. The roleSet id itself can
+    // be file-owned and unique — that part is genuinely scoped — but the
+    // SUBJECT of the boolean/list check is a shared pool identity reused by
+    // dozens of concurrent files (every other hierarchy-parity sibling uses
+    // the identical `TestUser.NON_SPACE_MEMBER` actor), so a concurrent
+    // grant or removal targeting that same shared user elsewhere is not
+    // excluded by the roleSet id being unique. Confirmed failing under
+    // concurrency, passing serially — see
+    // server-api/html-report/{results,serial-confirm-raw}.json. Gated on
+    // shared-user evidence (same discipline as rule 7) so a file checking
+    // membership of its OWN uniquely-created, non-pool contributor is not
+    // flagged.
+    pattern: /\bisUserMemberOfRoleSet\b|\bgetRoleSetUsersInMemberRole\b/,
+    requiresSharedUserEvidence: true,
+  },
 ];
 
 interface Exemption {
   file: string;
-  ruleId: 4 | 5 | 7;
+  ruleId: 4 | 5 | 7 | 8;
   justification: string;
 }
 
 // Reviewed, in-code waivers for content-rule matches that are actually safe.
 // Each entry is a deliberate, justified exception — not a blanket suppression.
-const EXEMPTIONS: Exemption[] = [
-  {
-    file: 'src/functional-api/roleset/user/user2.it-spec.ts',
-    ruleId: 5,
-    justification:
-      'rolesUser reads here are always narrowed with .find(...)/array-scoped ' +
-      "lookups keyed on this file's own uniquely-generated space nameIDs — " +
-      'never a raw count/exclusivity/position assertion over the shared ' +
-      "identity's whole aggregate.",
-  },
-];
+//
+// The `user2.it-spec.ts` / rule 5 exemption that used to live here is
+// REMOVED, not narrowed: the 2026-08-18 nightly run empirically disproved
+// its justification ("rolesUser reads here are always narrowed
+// with .find(...)/array-scoped lookups... never a raw count/exclusivity/
+// position assertion") — the file failed under concurrency on exactly a
+// `rolesUser`-sourced assertion
+// (`expect(scenarioSpace?.subspaces).toEqual(expect.arrayContaining(...))`,
+// sourced from `TestUserManager.users.nonSpaceMember`'s global `rolesUser`
+// aggregate) and passed serially. See
+// server-api/html-report/{results,serial-confirm-raw}.json. No replacement
+// exemption is warranted — the file now correctly trips rule 5 unexempted.
+const EXEMPTIONS: Exemption[] = [];
 
 // ── Small filesystem / parsing helpers ──────────────────────────────────────
 

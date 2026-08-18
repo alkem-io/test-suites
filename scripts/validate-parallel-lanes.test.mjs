@@ -196,6 +196,26 @@ test('(p) an assertion reading a shared user\'s platform-role state trips rule 7
   assert.match(combined, /rule 7/);
 });
 
+// 2026-08-18 nightly run (workspace#040): a real two-lane run found three
+// files the guard had certified parallel-safe actually interfere under
+// concurrency. Root-caused to two rule gaps, both fixed as generalised
+// rules rather than per-file demotions — these two fixtures prove each
+// fix actually fires on the shape that was missed.
+
+test('(q) a capitalized community-invitations wrapper name trips rule 5 (case-insensitive fix)', () => {
+  const { status, combined } = runGuard('content-rule-case-hazard');
+  assert.notEqual(status, 0, combined);
+  assert.match(combined, /risky\.it-spec\.ts/);
+  assert.match(combined, /rule 5/);
+});
+
+test('(r) an assertion reading a shared user\'s roleSet-membership state trips the new rule 8', () => {
+  const { status, combined } = runGuard('roleset-membership-assertion-hazard');
+  assert.notEqual(status, 0, combined);
+  assert.match(combined, /risky\.it-spec\.ts/);
+  assert.match(combined, /rule 8/);
+});
+
 test('(e) parseNightlyWorkers edge cases', () => {
   const cases = [
     { raw: undefined, expect: { ok: true, result: 1 } },

@@ -63,11 +63,35 @@ export const NIGHTLY_INCLUDE = [
  * reachable from a promoted file, and a new rule 7 catches assertions that
  * read a shared user's role state. Result: this list is, byte-for-byte,
  * the same 89 files as before either taint-analysis fix — now arrived at
- * soundly instead of by omission. The 17 files NOT in this list each trip
- * an independent, real hazard (unguarded platform-role grant/revocation
+ * soundly instead of by omission.
+ *
+ * Third pass (2026-08-18, post-empirical): a real two-lane nightly run at
+ * NIGHTLY_MAX_WORKERS=4 (89 parallel / 17 serial — the prior derivation)
+ * produced three genuine interference failures the guard had certified
+ * parallel-safe — `move-L1-to-L2-auto-invite.it-spec.ts`,
+ * `join-hierarchy-parity.it-spec.ts`, and (its rule-5 exemption now
+ * REMOVED as disproven) `user2.it-spec.ts` — confirmed by re-running every
+ * failed file serially (all three then passed; see
+ * `server-api/html-report/{results,serial-confirm-raw}.json` from that run
+ * for the raw evidence). Root-caused to two rule gaps, both generalised
+ * rather than patched per-file:
+ *   - rule 5's content pattern was case-SENSITIVE and missed the repo's own
+ *     `getCommunityApplicationsInvitations` wrapper (capital C) around the
+ *     `CommunityApplicationsInvitations` GraphQL operation — fixed with an
+ *     `i` flag.
+ *   - a new rule 8 covers assertions on a shared pool user's roleSet-level
+ *     MEMBER state (`isUserMemberOfRoleSet` / `getRoleSetUsersInMemberRole`),
+ *     the roleSet-membership counterpart of rule 7's platform-role-state
+ *     check — previously uncovered by any rule.
+ * Both extensions caught every file in the same call shape, not just the
+ * three that happened to fail in this particular run — 13 additional files
+ * newly flagged and moved to serial as a result (see
+ * `validate-parallel-lanes.ts` rule 5/8 docstrings for the full list and
+ * per-file reasoning). The 33 files NOT in this list each trip an
+ * independent, real hazard (unguarded platform-role grant/revocation
  * outside the guarded factory path, direct settings mutation, mailbox
- * access, or a global-aggregate assertion) — see the guard's own audit
- * output for the per-file rule and hop path.
+ * access, or a global/shared-identity aggregate or membership assertion) —
+ * see the guard's own audit output for the per-file rule and hop path.
  */
 export const PARALLEL_MANIFEST: string[] = [
   'src/functional-api/activity-logs/activity-log-on-transfer-conversion.it-spec.ts',
@@ -102,27 +126,18 @@ export const PARALLEL_MANIFEST: string[] = [
   'src/functional-api/contributor-management/virtual-contributor/vc.it-spec.ts',
   'src/functional-api/entitlements/organization-entitlements.it-spec.ts',
   'src/functional-api/journey/conversion/convert-L1-to-L0-basic.it-spec.ts',
-  'src/functional-api/journey/conversion/convert-L1-to-L0.it-spec.ts',
   'src/functional-api/journey/conversion/convert-L1-to-L0-url-resolver.it-spec.ts',
-  'src/functional-api/journey/conversion/convert-L1-to-L0-with-L2-to-L1.it-spec.ts',
-  'src/functional-api/journey/conversion/convert-L2-to-L1.it-spec.ts',
   'src/functional-api/journey/conversion/move-L1-to-L0-applications-invitations.it-spec.ts',
   'src/functional-api/journey/conversion/move-L1-to-L0-authorization.it-spec.ts',
-  'src/functional-api/journey/conversion/move-L1-to-L0-auto-invite.it-spec.ts',
   'src/functional-api/journey/conversion/move-L1-to-L0-basic.it-spec.ts',
-  'src/functional-api/journey/conversion/move-L1-to-L0-community.it-spec.ts',
   'src/functional-api/journey/conversion/move-L1-to-L0-rooms.it-spec.ts',
   'src/functional-api/journey/conversion/move-L1-to-L2-applications-invitations.it-spec.ts',
   'src/functional-api/journey/conversion/move-L1-to-L2-authorization.it-spec.ts',
-  'src/functional-api/journey/conversion/move-L1-to-L2-auto-invite.it-spec.ts',
   'src/functional-api/journey/conversion/move-L1-to-L2-basic.it-spec.ts',
-  'src/functional-api/journey/conversion/move-L1-to-L2-community.it-spec.ts',
   'src/functional-api/journey/conversion/move-L1-to-L2-rooms.it-spec.ts',
   'src/functional-api/journey/conversion/move-L2-to-L1-applications-invitations.it-spec.ts',
   'src/functional-api/journey/conversion/move-L2-to-L1-authorization.it-spec.ts',
-  'src/functional-api/journey/conversion/move-L2-to-L1-auto-invite.it-spec.ts',
   'src/functional-api/journey/conversion/move-L2-to-L1-basic.it-spec.ts',
-  'src/functional-api/journey/conversion/move-L2-to-L1-community.it-spec.ts',
   'src/functional-api/journey/conversion/move-L2-to-L1-rooms.it-spec.ts',
   'src/functional-api/journey/conversion/move-vs-convert-comparison.it-spec.ts',
   'src/functional-api/journey/space/space.it-spec.ts',
@@ -135,18 +150,11 @@ export const PARALLEL_MANIFEST: string[] = [
   'src/functional-api/language/invitation-language-seeding.it-spec.ts',
   'src/functional-api/language/user-language-settings.it-spec.ts',
   'src/functional-api/roleset/application/application-lifecycle.it-spec.ts',
-  'src/functional-api/roleset/hierarchy-parity/actor-reachability.it-spec.ts',
-  'src/functional-api/roleset/hierarchy-parity/application-hierarchy-parity.it-spec.ts',
-  'src/functional-api/roleset/hierarchy-parity/invitation-hierarchy-parity.it-spec.ts',
-  'src/functional-api/roleset/hierarchy-parity/join-hierarchy-parity.it-spec.ts',
-  'src/functional-api/roleset/hierarchy-parity/removal-cascade.it-spec.ts',
   'src/functional-api/roleset/organization/organization2.it-spec.ts',
   'src/functional-api/roleset/organization/organization-edge.it-spec.ts',
   'src/functional-api/roleset/organization/organization.it-spec.ts',
-  'src/functional-api/roleset/user/user2.it-spec.ts',
   'src/functional-api/roleset/user/user-edge2.it-spec.ts',
   'src/functional-api/roleset/user/user-edge.it-spec.ts',
-  'src/functional-api/roleset/user/user.it-spec.ts',
   'src/functional-api/storage/auth/organization-document-auth.it-spec.ts',
   'src/functional-api/storage/auth/private-space-document-auth.it-spec.ts',
   'src/functional-api/storage/auth/private-space-private-ch-document-auth.it-spec.ts',

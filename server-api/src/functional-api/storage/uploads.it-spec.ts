@@ -350,7 +350,7 @@ describe('Upload visual tests', () => {
 
   test('upload visual', async () => {
     const res = await uploadImageOnVisual(
-      path.join(__dirname, 'files-to-upload', '190-410.jpg'),
+      path.join(__dirname, 'files-to-upload', 'avatar-square.jpg'),
       visualId
     );
     documentEndPoint = res.data?.uploadImageOnVisual?.uri || 'not found';
@@ -361,12 +361,12 @@ describe('Upload visual tests', () => {
 
   test('upload same visual twice', async () => {
     await uploadImageOnVisual(
-      path.join(__dirname, 'files-to-upload', '190-410.jpg'),
+      path.join(__dirname, 'files-to-upload', 'avatar-square.jpg'),
       visualId
     );
 
     const res = await uploadImageOnVisual(
-      path.join(__dirname, 'files-to-upload', '190-410.jpg'),
+      path.join(__dirname, 'files-to-upload', 'avatar-square.jpg'),
       visualId
     );
     documentEndPoint = res?.data?.uploadImageOnVisual?.uri || 'not found';
@@ -398,7 +398,7 @@ describe('Upload visual tests', () => {
   if (!isCI) {
     test('read uploaded visual', async () => {
       const res = await uploadImageOnVisual(
-        path.join(__dirname, 'files-to-upload', '190-410.jpg'),
+        path.join(__dirname, 'files-to-upload', 'avatar-square.jpg'),
         visualId,
         TestUser.GLOBAL_ADMIN
       );
@@ -414,7 +414,7 @@ describe('Upload visual tests', () => {
   } else {
     test.skip('read uploaded visual', async () => {
       const res = await uploadImageOnVisual(
-        path.join(__dirname, 'files-to-upload', '190-410.jpg'),
+        path.join(__dirname, 'files-to-upload', 'avatar-square.jpg'),
         visualId,
         TestUser.GLOBAL_ADMIN
       );
