@@ -104772,3 +104772,91 @@ export type ConversationEventsSubscription = {
     readReceiptUpdated?: { roomId: string; lastReadEventId: any } | undefined;
   };
 };
+
+// --- Callout emoji reactions (wave-1 server feature) ---------------------
+// These types mirror the operations in
+//   lib/src/scenario/graphql/mutations/callout/callout/reactions/
+//   lib/src/scenario/graphql/queries/callout/reactions/
+// They are authored here to match what the code generator would emit once
+// the wave-1 server schema is included in the introspection target.
+
+export type AddReactionToCalloutInput = {
+  calloutID: string;
+  emoji: string;
+};
+
+export type RemoveReactionFromCalloutInput = {
+  calloutID: string;
+};
+
+export type CalloutReactionsSummaryData = {
+  total: number;
+  emojis: Array<string>;
+  myReactionEmoji?: string | undefined;
+  allowedEmojis: Array<string>;
+};
+
+export type CalloutReactionUserData = {
+  id: string;
+  nameID: string;
+  profile: { displayName: string };
+};
+
+export type CalloutReactionItemData = {
+  id: string;
+  emoji: string;
+  updatedDate: Date;
+  user?: CalloutReactionUserData | undefined;
+};
+
+export type AddReactionToCalloutMutationVariables = Exact<{
+  reactionData: AddReactionToCalloutInput;
+}>;
+
+export type AddReactionToCalloutMutation = {
+  addReactionToCallout: {
+    id: string;
+    reactionsSummary: CalloutReactionsSummaryData;
+  };
+};
+
+export type RemoveReactionFromCalloutMutationVariables = Exact<{
+  reactionData: RemoveReactionFromCalloutInput;
+}>;
+
+export type RemoveReactionFromCalloutMutation = {
+  removeReactionFromCallout: {
+    id: string;
+    reactionsSummary: CalloutReactionsSummaryData;
+  };
+};
+
+export type GetCalloutReactionsSummaryQueryVariables = Exact<{
+  calloutId: string;
+}>;
+
+export type GetCalloutReactionsSummaryQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          reactionsSummary: CalloutReactionsSummaryData;
+        }
+      | undefined;
+  };
+};
+
+export type GetCalloutReactionsQueryVariables = Exact<{
+  calloutId: string;
+}>;
+
+export type GetCalloutReactionsQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          reactions: Array<CalloutReactionItemData>;
+        }
+      | undefined;
+  };
+};
