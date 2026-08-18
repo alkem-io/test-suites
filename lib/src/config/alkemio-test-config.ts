@@ -16,6 +16,16 @@ export interface AlkemioTestConfig {
        * empty when unavailable (local dev falls back to self-registration). */
       admin: string;
     };
+    /** RabbitMQ management HTTP API (compose publishes 15672). Used for
+     * emit-level assertions on internal queues (e.g. `alkemio-push-notifications`)
+     * when there is no GraphQL surface to observe a dispatch — see workspace
+     * feature 034-messaging-notifications, Operator Ruling 3c (push verified
+     * to the emit/payload boundary only, never real browser delivery). */
+    rabbitMqManagement: {
+      url: string;
+      user: string;
+      password: string;
+    };
   };
   identities: {
     admin: {
