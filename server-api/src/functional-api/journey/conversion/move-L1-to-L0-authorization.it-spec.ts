@@ -50,11 +50,9 @@ const targetConfig: TestScenarioConfig = {
 };
 
 beforeAll(async () => {
-  // Independent scenarios (distinct names, no shared state) — build concurrently.
-  [sourceScenario, targetScenario] = await Promise.all([
-    TestScenarioFactory.createBaseScenario(sourceConfig),
-    TestScenarioFactory.createBaseScenario(targetConfig),
-  ]);
+  // Built sequentially: concurrent scenario creation across workers overloaded the server and destabilised three consecutive nightly runs (71/5/4 failures).
+  sourceScenario = await TestScenarioFactory.createBaseScenario(sourceConfig);
+  targetScenario = await TestScenarioFactory.createBaseScenario(targetConfig);
 });
 
 afterAll(async () => {
@@ -92,16 +90,14 @@ describe('Move L1 to L0 - unauthorized roles', () => {
   let authTargetScenario: OrganizationWithSpaceModel;
 
   beforeAll(async () => {
-    [authSourceScenario, authTargetScenario] = await Promise.all([
-      TestScenarioFactory.createBaseScenario({
-        ...sourceConfig,
-        name: 'move-l1-l0-unauth-src',
-      }),
-      TestScenarioFactory.createBaseScenario({
-        ...targetConfig,
-        name: 'move-l1-l0-unauth-tgt',
-      }),
-    ]);
+    authSourceScenario = await TestScenarioFactory.createBaseScenario({
+      ...sourceConfig,
+      name: 'move-l1-l0-unauth-src',
+    });
+    authTargetScenario = await TestScenarioFactory.createBaseScenario({
+      ...targetConfig,
+      name: 'move-l1-l0-unauth-tgt',
+    });
   });
 
   afterAll(async () => {
@@ -148,16 +144,14 @@ describe('Move L1 to L0 - validation errors', () => {
   let valTargetScenario: OrganizationWithSpaceModel;
 
   beforeAll(async () => {
-    [valSourceScenario, valTargetScenario] = await Promise.all([
-      TestScenarioFactory.createBaseScenario({
-        ...sourceConfig,
-        name: 'move-l1-l0-val-src',
-      }),
-      TestScenarioFactory.createBaseScenario({
-        ...targetConfig,
-        name: 'move-l1-l0-val-tgt',
-      }),
-    ]);
+    valSourceScenario = await TestScenarioFactory.createBaseScenario({
+      ...sourceConfig,
+      name: 'move-l1-l0-val-src',
+    });
+    valTargetScenario = await TestScenarioFactory.createBaseScenario({
+      ...targetConfig,
+      name: 'move-l1-l0-val-tgt',
+    });
   });
 
   afterAll(async () => {
@@ -277,13 +271,12 @@ describe('Move L1 to L0 - privacy recompute (platform-level anonymous access)', 
     };
 
     beforeAll(async () => {
-      [sourceScenario, targetScenario] = await Promise.all([
-        TestScenarioFactory.createBaseScenario({
-          ...privacyPublicSourceConfig,
-          name: 'move-l1-l0-pub2priv-src',
-        }),
-        TestScenarioFactory.createBaseScenario(privateTargetConfig),
-      ]);
+      sourceScenario = await TestScenarioFactory.createBaseScenario({
+        ...privacyPublicSourceConfig,
+        name: 'move-l1-l0-pub2priv-src',
+      });
+      targetScenario =
+        await TestScenarioFactory.createBaseScenario(privateTargetConfig);
     });
 
     afterAll(async () => {
@@ -349,10 +342,10 @@ describe('Move L1 to L0 - privacy recompute (platform-level anonymous access)', 
     };
 
     beforeAll(async () => {
-      [sourceScenario, targetScenario] = await Promise.all([
-        TestScenarioFactory.createBaseScenario(privateSourceConfig),
-        TestScenarioFactory.createBaseScenario(publicTargetConfig),
-      ]);
+      sourceScenario =
+        await TestScenarioFactory.createBaseScenario(privateSourceConfig);
+      targetScenario =
+        await TestScenarioFactory.createBaseScenario(publicTargetConfig);
     });
 
     afterAll(async () => {

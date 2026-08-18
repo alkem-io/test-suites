@@ -78,17 +78,15 @@ describe('Same-L0 vs Cross-L0 demotion comparison', () => {
     let urlBefore: string;
 
     beforeAll(async () => {
-      // Independent scenarios (distinct names, no shared state) — build concurrently.
-      [crossL0Source, crossL0Target] = await Promise.all([
-        TestScenarioFactory.createBaseScenario({
-          ...sourceConfig,
-          name: 'compare-cross-src',
-        }),
-        TestScenarioFactory.createBaseScenario({
-          ...targetConfig,
-          name: 'compare-cross-tgt',
-        }),
-      ]);
+      // Built sequentially: concurrent scenario creation across workers overloaded the server and destabilised three consecutive nightly runs (71/5/4 failures).
+      crossL0Source = await TestScenarioFactory.createBaseScenario({
+        ...sourceConfig,
+        name: 'compare-cross-src',
+      });
+      crossL0Target = await TestScenarioFactory.createBaseScenario({
+        ...targetConfig,
+        name: 'compare-cross-tgt',
+      });
 
       // Capture URL before move
       const dataBefore = await getSpaceData(crossL0Source.subspace.id);
@@ -146,17 +144,15 @@ describe('Same-L0 vs Cross-L0 demotion comparison', () => {
     let roomTarget: OrganizationWithSpaceModel;
 
     beforeAll(async () => {
-      // Independent scenarios (distinct names, no shared state) — build concurrently.
-      [roomSource, roomTarget] = await Promise.all([
-        TestScenarioFactory.createBaseScenario({
-          ...sourceConfig,
-          name: 'compare-room-src',
-        }),
-        TestScenarioFactory.createBaseScenario({
-          ...targetConfig,
-          name: 'compare-room-tgt',
-        }),
-      ]);
+      // Built sequentially: concurrent scenario creation across workers overloaded the server and destabilised three consecutive nightly runs (71/5/4 failures).
+      roomSource = await TestScenarioFactory.createBaseScenario({
+        ...sourceConfig,
+        name: 'compare-room-src',
+      });
+      roomTarget = await TestScenarioFactory.createBaseScenario({
+        ...targetConfig,
+        name: 'compare-room-tgt',
+      });
 
       // Send messages to updates room before move
       const msgRes = await sendMessageToRoom(

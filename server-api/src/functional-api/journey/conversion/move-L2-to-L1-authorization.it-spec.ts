@@ -116,16 +116,14 @@ describe('Move L2 to L1 - platform-admin gate (FR-012 / S9)', () => {
   let targetScenario: OrganizationWithSpaceModel;
 
   beforeAll(async () => {
-    [sourceScenario, targetScenario] = await Promise.all([
-      TestScenarioFactory.createBaseScenario({
-        ...publicSourceConfig,
-        name: 'move-l2-l1-gate-src',
-      }),
-      TestScenarioFactory.createBaseScenario({
-        ...publicTargetConfig,
-        name: 'move-l2-l1-gate-tgt',
-      }),
-    ]);
+    sourceScenario = await TestScenarioFactory.createBaseScenario({
+      ...publicSourceConfig,
+      name: 'move-l2-l1-gate-src',
+    });
+    targetScenario = await TestScenarioFactory.createBaseScenario({
+      ...publicTargetConfig,
+      name: 'move-l2-l1-gate-tgt',
+    });
   });
 
   afterAll(async () => {
@@ -207,13 +205,12 @@ describe('Move L2 to L1 - privacy recompute (FR-006 / US2-AS4 / SC-003 / S7)', (
     };
 
     beforeAll(async () => {
-      [sourceScenario, targetScenario] = await Promise.all([
-        TestScenarioFactory.createBaseScenario({
-          ...publicSourceConfig,
-          name: 'move-l2-l1-pub2priv-src',
-        }),
-        TestScenarioFactory.createBaseScenario(privateTargetConfig),
-      ]);
+      sourceScenario = await TestScenarioFactory.createBaseScenario({
+        ...publicSourceConfig,
+        name: 'move-l2-l1-pub2priv-src',
+      });
+      targetScenario =
+        await TestScenarioFactory.createBaseScenario(privateTargetConfig);
     });
 
     afterAll(async () => {
@@ -273,13 +270,12 @@ describe('Move L2 to L1 - privacy recompute (FR-006 / US2-AS4 / SC-003 / S7)', (
     };
 
     beforeAll(async () => {
-      [sourceScenario, targetScenario] = await Promise.all([
-        TestScenarioFactory.createBaseScenario(privateSourceConfig),
-        TestScenarioFactory.createBaseScenario({
-          ...publicTargetConfig,
-          name: 'move-l2-l1-priv2pub-tgt',
-        }),
-      ]);
+      sourceScenario =
+        await TestScenarioFactory.createBaseScenario(privateSourceConfig);
+      targetScenario = await TestScenarioFactory.createBaseScenario({
+        ...publicTargetConfig,
+        name: 'move-l2-l1-priv2pub-tgt',
+      });
     });
 
     afterAll(async () => {

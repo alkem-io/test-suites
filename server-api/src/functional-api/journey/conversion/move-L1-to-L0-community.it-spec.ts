@@ -60,11 +60,9 @@ const targetConfig: TestScenarioConfig = {
 };
 
 beforeAll(async () => {
-  // Independent scenarios (distinct names, no shared state) — build concurrently.
-  [sourceScenario, targetScenario] = await Promise.all([
-    TestScenarioFactory.createBaseScenario(sourceConfig),
-    TestScenarioFactory.createBaseScenario(targetConfig),
-  ]);
+  // Built sequentially: concurrent scenario creation across workers overloaded the server and destabilised three consecutive nightly runs (71/5/4 failures).
+  sourceScenario = await TestScenarioFactory.createBaseScenario(sourceConfig);
+  targetScenario = await TestScenarioFactory.createBaseScenario(targetConfig);
 
   // Execute cross-L0 move
   await moveSpaceL1ToSpaceL0(

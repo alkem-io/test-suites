@@ -54,11 +54,9 @@ const targetConfig: TestScenarioConfig = {
 };
 
 beforeAll(async () => {
-  // Independent scenarios (distinct names, no shared state) — build concurrently.
-  [sourceScenario, targetScenario] = await Promise.all([
-    TestScenarioFactory.createBaseScenario(sourceConfig),
-    TestScenarioFactory.createBaseScenario(targetConfig),
-  ]);
+  // Built sequentially: concurrent scenario creation across workers overloaded the server and destabilised three consecutive nightly runs (71/5/4 failures).
+  sourceScenario = await TestScenarioFactory.createBaseScenario(sourceConfig);
+  targetScenario = await TestScenarioFactory.createBaseScenario(targetConfig);
 });
 
 afterAll(async () => {
@@ -91,17 +89,15 @@ describe('Move L1 to L2 - auto-invite enabled', () => {
   let targetScenario2: OrganizationWithSpaceModel;
 
   beforeAll(async () => {
-    // Independent scenarios (distinct names, no shared state) — build concurrently.
-    [sourceScenario2, targetScenario2] = await Promise.all([
-      TestScenarioFactory.createBaseScenario({
-        ...sourceConfig,
-        name: 'move-l1-l2-inv-auto-src2',
-      }),
-      TestScenarioFactory.createBaseScenario({
-        ...targetConfig,
-        name: 'move-l1-l2-inv-auto-tgt2',
-      }),
-    ]);
+    // Built sequentially: concurrent scenario creation across workers overloaded the server and destabilised three consecutive nightly runs (71/5/4 failures).
+    sourceScenario2 = await TestScenarioFactory.createBaseScenario({
+      ...sourceConfig,
+      name: 'move-l1-l2-inv-auto-src2',
+    });
+    targetScenario2 = await TestScenarioFactory.createBaseScenario({
+      ...targetConfig,
+      name: 'move-l1-l2-inv-auto-tgt2',
+    });
 
     await moveSpaceL1ToSpaceL2(
       sourceScenario2.subspace.id,
