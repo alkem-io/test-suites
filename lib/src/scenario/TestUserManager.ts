@@ -4,6 +4,18 @@ import { getUserToken } from "./registration/get-user-token";
 import { TestUser } from "../common/enums/test.user";
 import { getGraphqlClient } from "../utils/graphqlClient";
 
+/**
+ * The wire shape `TestUserManager.serialize()` hands to `globalSetup`'s
+ * `project.provide('alkemioUserModels', …)` and every worker rehydrates via
+ * `inject('alkemioUserModels')` — the vitest-provided-context transport for
+ * the once-per-run mint hoist.
+ */
+export interface SerializedTestUserModels {
+  emailEntries: [string, UserModel][];
+  typeEntries: [string, UserModel][];
+  users: TestUserModels;
+}
+
 export class TestUserManager {
   private static userModelMapEmail: Map<string, UserModel>;
   private static userModelMapType: Map<string, UserModel>;
@@ -51,6 +63,32 @@ export class TestUserManager {
     this.populated = true;
 
     // logElapsedTime('populateUserModels', start);
+  }
+
+  /**
+   * Snapshots the cached user models for the `globalSetup` -> worker
+   * hand-off. Only ever called after `populateUserModelMap()` has minted —
+   * a worker that hydrates from this never mints its own tokens.
+   */
+  public static serialize(): SerializedTestUserModels {
+    return {
+      emailEntries: [...this.userModelMapEmail.entries()],
+      typeEntries: [...this.userModelMapType.entries()],
+      users: this.users,
+    };
+  }
+
+  /**
+   * Restores the cached user models from the data `globalSetup` provided,
+   * without minting anything. Idempotent — safe to call from every worker's
+   * `beforeAll` even though the underlying module state is a per-worker
+   * singleton (`pool: 'threads'`, `isolate: false`) that only needs it once.
+   */
+  public static hydrateFromProvided(data: SerializedTestUserModels): void {
+    this.userModelMapEmail = new Map(data.emailEntries);
+    this.userModelMapType = new Map(data.typeEntries);
+    this.users = data.users;
+    this.populated = true;
   }
 
   private static createEmptyUserModel(

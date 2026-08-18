@@ -55,6 +55,11 @@ export const getUserToken = async (userEmail: string): Promise<string> => {
         `non-interactive-login returned no api_token for ${userEmail}`
       );
     }
+    // Deterministic, console-guaranteed (not LogManager, whose console
+    // transport defaults to error-only) evidence line for the nightly's
+    // mint-count assertion — must total exactly 13 per run regardless of
+    // worker count.
+    console.log(`[auth] minted token for ${userEmail}`);
     return apiToken;
   } catch (e) {
     const message = describeFailure(e, url);
