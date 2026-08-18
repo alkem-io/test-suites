@@ -165,9 +165,29 @@ jobs:
             echo "::error::results.json reports ${RESULT_COUNT} file results, expected ${EXPECTED_TOTAL} (parallel+serial from the guard's partition)"
             exit 1
           fi
-          MINT_COUNT=$(grep -c '\[auth\] minted token for' /tmp/nightly-run.log || true)
-          if [ "$MINT_COUNT" -ne 13 ]; then
-            echo "::error::expected exactly 13 token mints regardless of worker count, found ${MINT_COUNT}"
+          # The invariant is "the shared pool mints exactly once per run"
+          # (the Kratos-429 guard, test-suites#563/#579) — NOT "the pool has
+          # a specific number of members". The expected count is therefore
+          # derived from the pool's own declared size, `[auth] pool size: N`
+          # (printed once by TestUserManager.populateUserModelMap(), straight
+          # from `Object.keys(TestUser).length`), never hardcoded here. That
+          # way growing/shrinking the TestUser pool never requires touching
+          # this gate, while a duplicate mint still fails it — the size line
+          # is unaffected by a duplicate mint, but the counted (pool) lines
+          # below are.
+          EXPECTED_POOL_MINTS=$(grep -oP '(?<=\[auth\] pool size: )\d+' /tmp/nightly-run.log | head -n1 || true)
+          if [ -z "$EXPECTED_POOL_MINTS" ]; then
+            echo "::error::no '[auth] pool size: N' line found in the run log — cannot derive the expected mint count"
+            exit 1
+          fi
+          # Counts only the (pool)-tagged mints — the shared-pool users
+          # minted once by TestUserManager.populateUserModelMap(). (prereq)-
+          # tagged mints (verifyEnvPrerequisites) and (ad-hoc)-tagged mints
+          # (per-scenario registration/refresh) are a different, independent
+          # cadence and are deliberately excluded from this count.
+          MINT_COUNT=$(grep -c '\[auth\] minted token for .* (pool)' /tmp/nightly-run.log || true)
+          if [ "$MINT_COUNT" -ne "$EXPECTED_POOL_MINTS" ]; then
+            echo "::error::expected exactly ${EXPECTED_POOL_MINTS} shared-pool token mints (the pool's own declared size, minted once) regardless of worker count, found ${MINT_COUNT}"
             exit 1
           fi
           echo "assert-config OK: parallel=${PARALLEL_N} serial=${SERIAL_M} maxWorkers=${W} results=${RESULT_COUNT} mints=${MINT_COUNT}"

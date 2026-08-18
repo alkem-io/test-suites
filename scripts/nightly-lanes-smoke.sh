@@ -4,7 +4,9 @@
 # sibling `server/` clone). Verifies, in one invocation:
 #   - a single globalSetup (one "[globalSetup] Starting global test setup..."
 #     line) regardless of the parallel lane's worker count
-#   - exactly 13 token-mint log lines
+#   - the shared user pool mints exactly once, regardless of worker count —
+#     the mint count must equal the pool's own declared size ([auth] pool
+#     size: N), not a fixed number (the pool is free to grow)
 #   - the "[nightly] lanes: ..." line matches the requested worker count
 #   - one merged html-report/ + results.json covering every requested file
 #
@@ -43,12 +45,27 @@ echo "== assertions =="
 SETUP_COUNT=$(grep -c '\[globalSetup\] Starting global test setup\.\.\.' "$LOG_FILE" || true)
 echo "globalSetup invocations logged: ${SETUP_COUNT} (expect exactly 1 to have done real work — repeats after the first are the inherited-per-project no-op)"
 
-MINT_COUNT=$(grep -c '\[auth\] minted token for' "$LOG_FILE" || true)
-if [ "$MINT_COUNT" -ne 13 ]; then
-  echo "FAIL: expected exactly 13 mint lines, found ${MINT_COUNT}"
+# The invariant is "the shared pool mints exactly once per run", not "the
+# pool has exactly N members" — the expected count is derived from the
+# pool's own declared size ([auth] pool size: N, printed once by
+# TestUserManager.populateUserModelMap() from Object.keys(TestUser).length),
+# never hardcoded here, so growing the pool never requires touching this
+# assertion while a duplicate mint still fails it.
+EXPECTED_POOL_MINTS=$(grep -oP '(?<=\[auth\] pool size: )\d+' "$LOG_FILE" | head -n1 || true)
+if [ -z "$EXPECTED_POOL_MINTS" ]; then
+  echo "FAIL: no '[auth] pool size: N' line found in the run log"
   exit 1
 fi
-echo "OK: 13 token mints"
+
+# Counts only the (pool)-tagged mints — the shared-pool users minted once by
+# populateUserModelMap(). (prereq)/(ad-hoc)-tagged mints are a separate,
+# independent cadence and are deliberately excluded.
+MINT_COUNT=$(grep -c '\[auth\] minted token for .* (pool)' "$LOG_FILE" || true)
+if [ "$MINT_COUNT" -ne "$EXPECTED_POOL_MINTS" ]; then
+  echo "FAIL: expected exactly ${EXPECTED_POOL_MINTS} shared-pool mint lines (the pool's own declared size, minted once), found ${MINT_COUNT}"
+  exit 1
+fi
+echo "OK: ${MINT_COUNT} shared-pool token mints (matches declared pool size)"
 
 if ! grep -q '\[nightly\] lanes: ' "$LOG_FILE"; then
   echo "FAIL: no [nightly] lanes: log line found"

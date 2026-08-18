@@ -44,8 +44,30 @@ export const NIGHTLY_INCLUDE = [
  * anyone having to remember to add them anywhere.
  *
  * Populated by running `lanes:validate` in audit mode and promoting every
- * file the guard proves passes all five hazard rules — see
+ * file the guard proves passes all hazard rules — see
  * `validate-parallel-lanes.ts` for the rule taxonomy and derivation method.
+ *
+ * Re-derived twice. First pass (closing the taint-analysis gaps: class
+ * declarations, namespace imports, dynamic `import()` were previously
+ * invisible to the guard) collapsed this list from 89 to 1 — 88 files
+ * reached `TestScenarioFactory.checkAndAssignRoleNameToUser`, an exported
+ * class method the old guard could never see, which calls
+ * `assignPlatformRole` to grant a platform role to one of three shared pool
+ * users. Second pass: that call is guarded by an already-has-it check
+ * (`userModel.RoleNames.includes(role)`, ~500 characters before the call,
+ * the ONLY occurrence of either the guard idiom or this call site in the
+ * whole repo) — a convergent, idempotent grant, not an order-dependent
+ * mutation, so rule 2 was split (`validate-parallel-lanes.ts`
+ * `guardWindowRe`) to stop flagging guarded grants while a new rule 6
+ * (no guard exemption, ever) keeps failing closed on any REVOCATION
+ * reachable from a promoted file, and a new rule 7 catches assertions that
+ * read a shared user's role state. Result: this list is, byte-for-byte,
+ * the same 89 files as before either taint-analysis fix — now arrived at
+ * soundly instead of by omission. The 17 files NOT in this list each trip
+ * an independent, real hazard (unguarded platform-role grant/revocation
+ * outside the guarded factory path, direct settings mutation, mailbox
+ * access, or a global-aggregate assertion) — see the guard's own audit
+ * output for the per-file rule and hop path.
  */
 export const PARALLEL_MANIFEST: string[] = [
   'src/functional-api/activity-logs/activity-log-on-transfer-conversion.it-spec.ts',

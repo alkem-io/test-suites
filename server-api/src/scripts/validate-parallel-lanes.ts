@@ -7,21 +7,29 @@
  *    subset of the nightly file set with no duplicates; the serial lane is
  *    exactly its complement; the serial lane is never empty.
  *
- * 2. Soundness: no file in `PARALLEL_MANIFEST` trips any of the five hazard
- *    rule families —
+ * 2. Soundness: no file in `PARALLEL_MANIFEST` trips any of the hazard rule
+ *    families —
  *      1. shared-mailbox access
- *      2. platform-role mutation on shared users
+ *      2. unguarded platform-role GRANT on shared users
  *      3. shared-user settings/profile mutation
  *      4. unscoped global list/count/positional assertions
  *      5. global aggregates keyed on a shared identity, asserted by
  *         count/exclusivity/position
- *    Rules 1-3 are symbol-level and transitive: a manifest file is flagged
- *    if it — or any file reachable through its import graph — both imports
- *    and calls a hazard symbol (rule 3 additionally requires evidence the
- *    call targets a shared pool user: a `TestUser.` / `TestUserManager.users`
- *    reference in the same file). Rules 4-5 are a direct content scan of the
- *    manifest file's own source, since they describe how the *file itself*
- *    shapes its assertions, not a transitively-inherited hazard.
+ *      6. platform-role REVOCATION/toggle on shared users
+ *      7. assertion on a shared user's platform-role state
+ *    Rules 1, 2, 3 and 6 are symbol-level and transitive: a manifest file is
+ *    flagged if it — or any file reachable through its import graph — both
+ *    imports and calls a hazard symbol (rule 3 additionally requires
+ *    evidence the call targets a shared pool user: a `TestUser.` /
+ *    `TestUserManager.users` reference in the same file). Rule 2 is further
+ *    narrowed to only the UNGUARDED occurrences of a grant call — an
+ *    idempotent, already-has-it-guarded grant converges regardless of
+ *    concurrent ordering and is not flagged; see the `guardWindowRe`
+ *    docstring on `HazardRule` for the source-level proof this is built on.
+ *    Rule 6 (revocation) has no such exemption — undoing a role is never
+ *    convergent. Rules 4, 5 and 7 are a direct content scan of the manifest
+ *    file's own source, since they describe how the *file itself* shapes
+ *    its assertions, not a transitively-inherited hazard.
  *
  * New spec files are safe by construction: they can only ever land in the
  * complement (the serial lane), never in the reviewed manifest.
@@ -60,7 +68,7 @@ interface Context {
 // from the taxonomy.
 
 interface HazardRule {
-  id: 1 | 2 | 3;
+  id: 1 | 2 | 3 | 6;
   name: string;
   symbols: string[];
   /**
@@ -69,7 +77,34 @@ interface HazardRule {
    * hazardous when it targets a shared pool user, not a file-local one.
    */
   requiresSharedUserEvidence?: boolean;
+  /**
+   * When set, a call to one of this rule's symbols is a hazard ONLY IF that
+   * specific call site has no occurrence of `guardWindowRe` within the
+   * preceding `guardWindowChars` characters — i.e. it fires per OCCURRENCE,
+   * not per file/declaration, and defaults to "hazard" (fail-closed) unless
+   * local guard evidence is actually found next to THAT call.
+   *
+   * This encodes the convergent-setup proof for rule 2: concurrent,
+   * identical, idempotent grants converge to the same end state and no
+   * file's verdict depends on another file NOT having granted yet — but
+   * only when the call site is actually guarded by an already-has-it check.
+   * The evidence is real, not assumed: `assignPlatformRole` has exactly ONE
+   * call site in the whole repo (`TestScenarioFactory.checkAndAssignRoleNameToUser`,
+   * lib/src/scenario/TestScenarioFactory.ts:607), and `.RoleNames.includes(`
+   * — the guard idiom below — has exactly ONE occurrence in the whole repo,
+   * ~500 characters earlier in that SAME method (line 596). Every OTHER
+   * `assignPlatformRole` call site in the repo (8, all in entitlements/
+   * spec files and none currently promoted) has no such guard nearby and
+   * stays flagged. `removePlatformRole` is deliberately a separate rule (6)
+   * with no guard exemption at all: a revocation is never convergent —
+   * unlike a monotonic grant, undoing a role can invalidate a concurrent
+   * file's assumption regardless of how it's guarded.
+   */
+  guardWindowRe?: RegExp;
+  guardWindowChars?: number;
 }
+
+const IDEMPOTENT_GRANT_GUARD_RE = /\.RoleNames\.includes\(/;
 
 const HAZARD_RULES: HazardRule[] = [
   {
@@ -79,8 +114,10 @@ const HAZARD_RULES: HazardRule[] = [
   },
   {
     id: 2,
-    name: 'platform-role mutation on shared users',
-    symbols: ['assignPlatformRole', 'removePlatformRole'],
+    name: 'unguarded platform-role grant on shared users',
+    symbols: ['assignPlatformRole'],
+    guardWindowRe: IDEMPOTENT_GRANT_GUARD_RE,
+    guardWindowChars: 800,
   },
   {
     id: 3,
@@ -92,14 +129,28 @@ const HAZARD_RULES: HazardRule[] = [
     symbols: ['updateUserSettings', 'updateUser', 'updateUserSettingsWithPush'],
     requiresSharedUserEvidence: true,
   },
+  {
+    id: 6,
+    name: 'platform-role revocation/toggle on shared users',
+    // No `guardWindowRe`: a revocation is never convergent, guarded or not
+    // — undoing a role can invalidate a concurrent file's assumption no
+    // matter how carefully it's gated. This is the fail-closed safety net:
+    // if a future change makes any promoted file transitively reach a
+    // revocation/toggle path (even through a class method, a namespace
+    // import, or a dynamic `import()` — the same sound taint machinery
+    // that catches rule 2/3 catches this too), the guard fails the run
+    // instead of silently certifying it clean.
+    symbols: ['removePlatformRole'],
+  },
 ];
 
 const SHARED_USER_EVIDENCE_RE = /\bTestUser\.|\bTestUserManager\.users\b/;
 
 interface ContentRule {
-  id: 4 | 5;
+  id: 4 | 5 | 7;
   name: string;
   pattern: RegExp;
+  requiresSharedUserEvidence?: boolean;
 }
 
 const CONTENT_RULES: ContentRule[] = [
@@ -116,11 +167,27 @@ const CONTENT_RULES: ContentRule[] = [
     // shared-identity-aggregate shape as `communityApplications` et al.
     pattern: /communityApplications|communityInvitations|rolesUser\.|myMemberships|myPushSubscriptions/,
   },
+  {
+    id: 7,
+    name: "assertion on a shared user's platform-role state",
+    // The third hazard shape the convergent-grant proof does NOT cover: a
+    // file that reads a shared pool user's role membership as a correctness
+    // assertion (an exact set, an absence, a count) rather than as a
+    // one-way idempotent setup guard. A concurrent grant elsewhere could
+    // flip such an assertion regardless of how sound rule 2's own taint
+    // analysis is — this is a content scan, same family as rules 4/5, and
+    // shares their limitation (see the docstring on CONTENT_RULES usage in
+    // findContentViolations): it is a pattern blocklist, not a structural
+    // proof that no other assertion phrasing exists.
+    pattern:
+      /expect\([^)]*\.RoleNames\b[^)]*\)|\.RoleNames\)\s*\.\s*(?:not\.)?(?:toContain|toHaveLength|toEqual|toBe|toContainEqual)\(/,
+    requiresSharedUserEvidence: true,
+  },
 ];
 
 interface Exemption {
   file: string;
-  ruleId: 4 | 5;
+  ruleId: 4 | 5 | 7;
   justification: string;
 }
 
@@ -199,25 +266,47 @@ function readFileSafe(absPath: string): string | undefined {
   }
 }
 
+/** One name brought into scope by an import/re-export/dynamic-import edge. */
+interface NamedBinding {
+  /** The name as exported by the source module (pre-alias). */
+  original: string;
+  /** The identifier this file actually binds it to — what call sites use. */
+  local: string;
+}
+
 interface ImportEdge {
-  /** The imported names as written at the import site (pre-alias). */
-  names: string[];
-  /** True for `import * as ns from '...'` — treated as importing every name. */
+  /** Named/default bindings this edge brings in (empty for namespace edges). */
+  named: NamedBinding[];
+  /** True for `import * as ns from '...'` / `export * from '...'` / a
+   * dynamic `const ns = await import(...)` — treated as importing every
+   * name the target module exports. */
   isNamespace: boolean;
+  /** The local identifier bound to the namespace object — set only when
+   * `isNamespace` AND the edge actually binds a local name (a bare
+   * `export * from` re-export has none). Call sites reach members through
+   * this identifier: `nsLocal.someExport(...)`. */
+  namespaceLocal?: string;
   specifier: string;
 }
 
 /**
- * Regex-based import/re-export parser. Deliberately not a full TS parser —
- * this codebase's import style (named/default/namespace imports, `export *
- * from`/`export {...} from` re-exports) is simple and consistent enough that
- * a dependency-free regex pass is sufficient.
+ * Regex-based import/re-export/dynamic-import parser. Deliberately not a
+ * full TS parser — this codebase's import style (named/default/namespace
+ * static imports, `export *`/`export {...} from` re-exports, and
+ * `await import(...)` with destructured or namespace-style bindings) is
+ * simple and consistent enough that a dependency-free regex pass is
+ * sufficient.
  */
 function parseImportEdges(source: string): ImportEdge[] {
   const edges: ImportEdge[] = [];
 
+  // Anchored to line start (`^` + `m` flag): un-anchored, a comment
+  // mentioning the word "import" ahead of a real import statement would get
+  // captured INTO the clause (the non-greedy body has to extend past it to
+  // reach the next `from`), silently losing the real edge — a false
+  // negative in exactly the direction this guard must not have.
   const namedOrDefaultRe =
-    /import\s+(?:type\s+)?([^;'"]*?)\s+from\s+['"]([^'"]+)['"]/g;
+    /^[ \t]*import\s+(?:type\s+)?([^;'"]*?)\s+from\s+['"]([^'"]+)['"]/gm;
   let m: RegExpExecArray | null;
   while ((m = namedOrDefaultRe.exec(source))) {
     const clause = m[1].trim();
@@ -226,44 +315,100 @@ function parseImportEdges(source: string): ImportEdge[] {
   }
 
   const exportFromRe =
-    /export\s+(?:type\s+)?(\*|\{[^}]*\})\s+from\s+['"]([^'"]+)['"]/g;
+    /^[ \t]*export\s+(?:type\s+)?(\*|\{[^}]*\})\s+from\s+['"]([^'"]+)['"]/gm;
   while ((m = exportFromRe.exec(source))) {
     const clause = m[1].trim();
     const specifier = m[2];
     if (clause === '*') {
-      edges.push({ names: [], isNamespace: true, specifier });
+      edges.push({ named: [], isNamespace: true, specifier });
     } else {
       edges.push(...parseClause(clause, specifier));
     }
   }
 
+  edges.push(...parseDynamicImportEdges(source));
+
   return edges;
 }
 
 function parseClause(clause: string, specifier: string): ImportEdge[] {
-  const nsMatch = clause.match(/^\*\s+as\s+\w+$/);
+  const nsMatch = clause.match(/^\*\s+as\s+(\w+)$/);
   if (nsMatch) {
-    return [{ names: [], isNamespace: true, specifier }];
+    return [{ named: [], isNamespace: true, namespaceLocal: nsMatch[1], specifier }];
   }
 
-  const names: string[] = [];
+  const named: NamedBinding[] = [];
   const braceMatch = clause.match(/\{([^}]*)\}/);
   if (braceMatch) {
     for (const part of braceMatch[1].split(',')) {
       const trimmed = part.replace(/^type\s+/, '').trim();
       if (!trimmed) continue;
-      // `Original as Local` — the ORIGINAL (exported) name is what we key
-      // hazard-symbol matching on, not the local alias.
-      const original = trimmed.split(/\s+as\s+/)[0].trim();
-      if (original) names.push(original);
+      // `Original as Local` — both matter now: `original` is what hazard
+      // symbols/declarations are keyed by (the exported name), `local` is
+      // what actually appears at call sites in THIS file's source.
+      const pieces = trimmed.split(/\s+as\s+/);
+      const original = pieces[0].trim();
+      const local = (pieces[1] ?? pieces[0]).trim();
+      if (original && local) named.push({ original, local });
     }
   }
-  // A leading default-import identifier before `, {...}` or alone. Default
-  // imports are never how this codebase's request-param helpers are consumed
-  // (everything is named-exported), so we don't need to resolve what the
-  // default name maps to for hazard purposes — skip it.
+  // A leading default-import identifier before `, {...}` or alone —
+  // `import Foo from '...'` / `import Foo, { bar } from '...'`. Bound under
+  // the synthetic original name `default`.
+  if (!clause.startsWith('{') && !clause.startsWith('*')) {
+    const defaultMatch = clause.match(/^([A-Za-z_$][\w$]*)/);
+    if (defaultMatch) named.push({ original: 'default', local: defaultMatch[1] });
+  }
 
-  return [{ names, isNamespace: false, specifier }];
+  return [{ named, isNamespace: false, specifier }];
+}
+
+/**
+ * `const { a, b: c } = await import('spec')` and
+ * `const ns = await import('spec')` (namespace-object binding). The `await`
+ * is optional in the regex — a top-level-await-free `import('spec').then(...)`
+ * chain without a binding is not covered (rare in this codebase's synchronous
+ * test-file style, and it carries no name into scope for us to taint anyway).
+ */
+function parseDynamicImportEdges(source: string): ImportEdge[] {
+  const edges: ImportEdge[] = [];
+  const dynamicRe =
+    /(?:const|let|var)\s+(\{[^}]*\}|[A-Za-z_$][\w$]*)\s*=\s*(?:await\s+)?import\(\s*['"]([^'"]+)['"]\s*\)/g;
+  let m: RegExpExecArray | null;
+  while ((m = dynamicRe.exec(source))) {
+    const binding = m[1].trim();
+    const specifier = m[2];
+    if (binding.startsWith('{')) {
+      edges.push({
+        named: parseDestructurePattern(binding.slice(1, -1)),
+        isNamespace: false,
+        specifier,
+      });
+    } else {
+      edges.push({ named: [], isNamespace: true, namespaceLocal: binding, specifier });
+    }
+  }
+  return edges;
+}
+
+/** `{ a, b: c, d = defaultVal }` destructuring — key is the ORIGINAL export
+ * name (the object property), value after `:` is the local binding. */
+function parseDestructurePattern(inner: string): NamedBinding[] {
+  const bindings: NamedBinding[] = [];
+  for (const part of splitTopLevel(inner)) {
+    const trimmed = part.trim();
+    if (!trimmed) continue;
+    const colonIdx = trimmed.indexOf(':');
+    if (colonIdx === -1) {
+      const key = trimmed.split('=')[0].trim();
+      if (key) bindings.push({ original: key, local: key });
+    } else {
+      const original = trimmed.slice(0, colonIdx).trim();
+      const local = trimmed.slice(colonIdx + 1).split('=')[0].trim();
+      if (original && local) bindings.push({ original, local });
+    }
+  }
+  return bindings;
 }
 
 // ── Module resolution (aliases per package, relative paths, extension probing) ──
@@ -399,24 +544,93 @@ interface Tainted {
   chain: string[];
 }
 
-function fileCallsHazardSymbol(text: string, symbol: string): boolean {
-  return new RegExp(`\\b${symbol}\\s*\\(`).test(text);
+/**
+ * Occurrence-aware hazard-call check: when `rule` carries a
+ * `guardWindowRe`, a call site only counts as a hazard if THAT SPECIFIC
+ * occurrence has no guard evidence within the preceding `guardWindowChars`
+ * characters — an unguarded occurrence anywhere still trips the rule (the
+ * whole point is per-occurrence, fail-closed unless proven safe), but an
+ * all-occurrences-guarded declaration does not. When `rule.guardWindowRe` is
+ * unset this degrades to the plain "any call at all" check every other rule
+ * still uses.
+ */
+function hasQualifyingHazardCall(
+  text: string,
+  localName: string,
+  rule: HazardRule
+): boolean {
+  const callRe = new RegExp(`\\b${localName}\\s*\\(`, 'g');
+  let m: RegExpExecArray | null;
+  while ((m = callRe.exec(text))) {
+    if (rule.guardWindowRe) {
+      const windowStart = Math.max(0, m.index - (rule.guardWindowChars ?? 800));
+      if (rule.guardWindowRe.test(text.slice(windowStart, m.index))) continue;
+    }
+    return true;
+  }
+  return false;
 }
 
-/** Named (non-namespace) import of `symbol`, by its ORIGINAL exported name. */
-function fileImportsName(edges: ImportEdge[], symbol: string): boolean {
-  return edges.some(e => !e.isNamespace && e.names.includes(symbol));
+/**
+ * Fail-closed replacement for the old `fileImportsName`: decides whether
+ * `file`'s own import edges bring `symbol` into scope — for a named/default
+ * edge that's a straightforward original-name match; for a NAMESPACE edge
+ * (`import * as ns` / `export * from` / `const ns = await import(...)`) it
+ * resolves whether the target module transitively exports `symbol` at all
+ * (rather than refusing to look, which is what let namespace-imported
+ * hazard calls like `hz.assignPlatformRole(...)` go undetected). Returns
+ * true only if the resolved binding's call form is actually present in
+ * `text` (per `hasQualifyingHazardCall`, so a rule with a `guardWindowRe`
+ * is honored regardless of which import shape carried the symbol in): the
+ * LOCAL name for named/default edges (so an aliased import,
+ * `import { assignPlatformRole as apr }`, is matched on `apr(`, not the
+ * unused original name), or the qualified `nsLocal.symbol(` / bare
+ * `symbol(` form for namespace edges (both patterns match the same regex,
+ * since `\b` also anchors after a `.`).
+ */
+function fileHasHazardCall(
+  ctx: Context,
+  fromAbsFile: string,
+  text: string,
+  edges: ImportEdge[],
+  rule: HazardRule,
+  symbol: string
+): boolean {
+  for (const edge of edges) {
+    if (!edge.isNamespace) {
+      const binding = edge.named.find(n => n.original === symbol);
+      if (binding && hasQualifyingHazardCall(text, binding.local, rule)) return true;
+    } else {
+      const resolved = resolveNameToDefiningFile(ctx, symbol, fromAbsFile, edge.specifier);
+      if (resolved && hasQualifyingHazardCall(text, symbol, rule)) return true;
+    }
+  }
+  return false;
 }
 
-/** Every top-level `export const NAME = ...` / `export (async )function NAME` declaration, with its source span as `body`. */
+/**
+ * Every top-level `export const NAME = ...`, `export (async )function NAME`,
+ * and `export (default )class NAME` declaration, with its source span as
+ * `body`. Class bodies are captured too (previously only const/function
+ * were recognized here, so an exported class's methods — e.g.
+ * `TestScenarioFactory`'s static factory methods — were never taint-seeded
+ * even though a direct-declaration regex elsewhere already resolved calls
+ * INTO a class by name). A `default` export is recorded under the synthetic
+ * name `default`, matching the synthetic `original` used for default import
+ * bindings in `parseClause`.
+ */
 function extractExportedDeclarations(
   text: string
 ): { name: string; body: string }[] {
-  const declRe = /export\s+(?:async\s+)?(?:const|function)\s+(\w+)/g;
+  const declRe =
+    /export\s+(?:default\s+)?(?:async\s+)?(?:const|function|class)\s+(\w+)?/g;
   const matches: { name: string; index: number }[] = [];
   let m: RegExpExecArray | null;
   while ((m = declRe.exec(text))) {
-    matches.push({ name: m[1], index: m.index });
+    const isDefault = /^export\s+default\b/.test(m[0]);
+    const name = isDefault ? 'default' : m[1];
+    if (!name) continue;
+    matches.push({ name, index: m.index });
   }
   return matches.map((match, i) => ({
     name: match.name,
@@ -427,20 +641,33 @@ function extractExportedDeclarations(
   }));
 }
 
-/** Bare `identifier(` call sites — cheap over-approximation; only acted on when the name is also an imported binding. */
+/**
+ * Bare `identifier(` call sites, PLUS the qualifier of any member-expression
+ * call `identifier.member(` — cheap over-approximations; only acted on when
+ * the name is also an imported/bound binding. The qualifier form is what
+ * lets propagation see through a static-factory call shape like
+ * `TestScenarioFactory.createBaseScenario(...)`: the bare-call pass alone
+ * only ever captures the method name (`createBaseScenario`), which is never
+ * itself an imported binding — the CLASS name is.
+ */
 function extractCalledNames(text: string): string[] {
   const names = new Set<string>();
-  const callRe = /\b([A-Za-z_$][\w$]*)\s*\(/g;
+  const bareCallRe = /\b([A-Za-z_$][\w$]*)\s*\(/g;
   let m: RegExpExecArray | null;
-  while ((m = callRe.exec(text))) names.add(m[1]);
+  while ((m = bareCallRe.exec(text))) names.add(m[1]);
+
+  const qualifiedCallRe = /\b([A-Za-z_$][\w$]*)\.[A-Za-z_$][\w$]*\s*\(/g;
+  while ((m = qualifiedCallRe.exec(text))) names.add(m[1]);
+
   return [...names];
 }
 
 /**
  * Resolves where `name` is actually exported from, starting at `specifier`
  * as seen from `fromAbsFile` — following `export * from` / `export {name}
- * from` re-export chains (e.g. through the `@alkemio/tests-lib` barrel)
- * until a file that directly declares/exports `name` is found.
+ * from` re-export chains (e.g. through the `@alkemio/tests-lib` barrel),
+ * dynamic-import edges, and namespace edges, until a file that directly
+ * declares/exports `name` is found.
  */
 function resolveNameToDefiningFile(
   ctx: Context,
@@ -455,16 +682,20 @@ function resolveNameToDefiningFile(
   const text = readFileSafe(resolvedFile);
   if (!text) return undefined;
 
-  const directDeclRe = new RegExp(
-    `export\\s+(?:async\\s+)?(?:const|function|class)\\s+${name}\\b`
-  );
-  const directListRe = new RegExp(
-    `export\\s*\\{[^}]*\\b${name}\\b[^}]*\\}(?!\\s*from)`
-  );
-  if (directDeclRe.test(text) || directListRe.test(text)) return resolvedFile;
+  if (name === 'default') {
+    if (/export\s+default\b/.test(text)) return resolvedFile;
+  } else {
+    const directDeclRe = new RegExp(
+      `export\\s+(?:async\\s+)?(?:const|function|class)\\s+${name}\\b`
+    );
+    const directListRe = new RegExp(
+      `export\\s*\\{[^}]*\\b${name}\\b[^}]*\\}(?!\\s*from)`
+    );
+    if (directDeclRe.test(text) || directListRe.test(text)) return resolvedFile;
+  }
 
   for (const edge of parseImportEdges(text)) {
-    if (edge.isNamespace || edge.names.includes(name)) {
+    if (edge.isNamespace || edge.named.some(n => n.original === name)) {
       const found = resolveNameToDefiningFile(
         ctx,
         name,
@@ -474,6 +705,35 @@ function resolveNameToDefiningFile(
       );
       if (found) return found;
     }
+  }
+  return undefined;
+}
+
+/**
+ * Resolves a call-site name (as it literally appears in source — a bare call
+ * or the qualifier of a member call) back to the ORIGINAL exported name and
+ * defining file, via the calling file's own import edges. Needed because
+ * declarations are keyed by their original exported name (what
+ * `extractExportedDeclarations` records), while a call site may use an
+ * aliased local name (`import { Foo as Bar }` → `Bar.method(...)`).
+ */
+function resolveCalledBinding(
+  ctx: Context,
+  fromAbsFile: string,
+  edges: ImportEdge[],
+  called: string
+): { original: string; file: string } | undefined {
+  for (const edge of edges) {
+    if (edge.isNamespace) continue;
+    const binding = edge.named.find(n => n.local === called);
+    if (!binding) continue;
+    const resolvedFile = resolveNameToDefiningFile(
+      ctx,
+      binding.original,
+      fromAbsFile,
+      edge.specifier
+    );
+    if (resolvedFile) return { original: binding.original, file: resolvedFile };
   }
   return undefined;
 }
@@ -511,8 +771,7 @@ function computeHelperTaint(
       const hits: Tainted[] = [];
       for (const rule of HAZARD_RULES) {
         for (const symbol of rule.symbols) {
-          if (!fileCallsHazardSymbol(decl.body, symbol)) continue;
-          if (!fileImportsName(data.edges, symbol)) continue;
+          if (!fileHasHazardCall(ctx, file, decl.body, data.edges, rule, symbol)) continue;
           if (
             rule.requiresSharedUserEvidence &&
             !SHARED_USER_EVIDENCE_RE.test(decl.body)
@@ -536,18 +795,10 @@ function computeHelperTaint(
       for (const decl of data.decls) {
         const calledNames = extractCalledNames(decl.body);
         for (const called of calledNames) {
-          const edge = data.edges.find(
-            e => !e.isNamespace && e.names.includes(called)
-          );
-          if (!edge) continue;
-          const resolvedFile = resolveNameToDefiningFile(
-            ctx,
-            called,
-            file,
-            edge.specifier
-          );
-          if (!resolvedFile) continue;
-          const targetHits = taint.get(resolvedFile)?.get(called);
+          const binding = resolveCalledBinding(ctx, file, data.edges, called);
+          if (!binding) continue;
+          const resolvedFile = binding.file;
+          const targetHits = taint.get(resolvedFile)?.get(binding.original);
           if (!targetHits || targetHits.length === 0) continue;
 
           if (!taint.has(file)) taint.set(file, new Map());
@@ -612,8 +863,7 @@ function findHazardViolations(
 
   for (const rule of HAZARD_RULES) {
     for (const symbol of rule.symbols) {
-      if (!fileCallsHazardSymbol(text, symbol)) continue;
-      if (!fileImportsName(edges, symbol)) continue;
+      if (!fileHasHazardCall(ctx, startAbsPath, text, edges, rule, symbol)) continue;
       if (rule.requiresSharedUserEvidence && !SHARED_USER_EVIDENCE_RE.test(text)) {
         continue;
       }
@@ -622,16 +872,10 @@ function findHazardViolations(
   }
 
   for (const called of extractCalledNames(text)) {
-    const edge = edges.find(e => !e.isNamespace && e.names.includes(called));
-    if (!edge) continue;
-    const resolvedFile = resolveNameToDefiningFile(
-      ctx,
-      called,
-      startAbsPath,
-      edge.specifier
-    );
-    if (!resolvedFile) continue;
-    const hits = helperTaint.get(resolvedFile)?.get(called);
+    const binding = resolveCalledBinding(ctx, startAbsPath, edges, called);
+    if (!binding) continue;
+    const resolvedFile = binding.file;
+    const hits = helperTaint.get(resolvedFile)?.get(binding.original);
     if (!hits) continue;
     for (const hit of hits) {
       record(hit.ruleId, hit.ruleName, hit.symbol, [
@@ -653,6 +897,9 @@ function findContentViolations(
   const found: { rule: ContentRule; exempted: boolean }[] = [];
   for (const rule of CONTENT_RULES) {
     if (!rule.pattern.test(text)) continue;
+    if (rule.requiresSharedUserEvidence && !SHARED_USER_EVIDENCE_RE.test(text)) {
+      continue;
+    }
     const exempted = EXEMPTIONS.some(
       e => e.file === relFile && e.ruleId === rule.id
     );

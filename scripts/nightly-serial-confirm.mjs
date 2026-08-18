@@ -216,6 +216,32 @@ function main() {
   const mainResults = readJson(path.resolve(process.cwd(), args.results));
   const mainVerdicts = parseFileVerdicts(mainResults, serverApiRoot);
 
+  // Fail-closed: the main run's own reporter-level verdict said the run
+  // failed (an unhandled rejection, a teardown failure, or anything else
+  // vitest attaches to the run rather than to a specific file), but not one
+  // file in the per-file breakdown is attributable as failing. Deriving the
+  // exit code purely from per-file verdicts would silently publish a green
+  // nightly for a run vitest itself declared failed — mirror the missing
+  // lanes.json fail-closed branch above instead of trusting the file set.
+  const mainRunReportedFailure =
+    mainResults.success === false ||
+    (typeof mainResults.numFailedTestSuites === 'number' &&
+      mainResults.numFailedTestSuites > 0) ||
+    (typeof mainResults.numFailedTests === 'number' &&
+      mainResults.numFailedTests > 0);
+  const anyAttributableFileFailure = [...mainVerdicts.values()].some(
+    v => v === 'fail'
+  );
+  const unattributableRunFailure =
+    mainRunReportedFailure && !anyAttributableFileFailure;
+  if (unattributableRunFailure) {
+    console.error(
+      '[serial-confirm] FATAL: the main run reported a failure (results.json success=false / ' +
+        'a non-zero failed-suite or failed-test count) but no per-file verdict is attributable ' +
+        '— an unhandled error or teardown failure outside any test file. Fail-closed.'
+    );
+  }
+
   const serialFailures = [];
   const rerunCandidates = [];
   for (const [file, verdict] of mainVerdicts) {
@@ -316,7 +342,12 @@ function main() {
 
   const anyRerunFailure = Object.values(verdictPerFile).some(v => v === 'fail');
   const finalExitVerdict =
-    serialFailures.length > 0 || anyRerunFailure || crashed ? 'fail' : 'pass';
+    serialFailures.length > 0 ||
+    anyRerunFailure ||
+    crashed ||
+    unattributableRunFailure
+      ? 'fail'
+      : 'pass';
 
   fs.mkdirSync(htmlReportDir, { recursive: true });
 
@@ -349,6 +380,8 @@ function main() {
         serialFailures,
         finalExitVerdict,
         crashed,
+        unattributableRunFailure,
+        reason: unattributableRunFailure ? 'unattributable-run-failure' : null,
         demotionDue,
       },
       null,
@@ -372,6 +405,7 @@ function main() {
     `- Interference (fail parallel / pass serial): ${interferenceEntries.length}${interferenceEntries.length ? ` — ${interferenceEntries.map(e => e.file).join(', ')}` : ''}`,
     `- Demotion due (>=2 interference entries in trailing 7 nights): ${demotionDue.length ? demotionDue.join(', ') : 'none'}`,
     `- Re-run crashed: ${crashed}`,
+    `- Unattributable main-run failure (fail-closed): ${unattributableRunFailure}`,
     `- **Final verdict: ${finalExitVerdict.toUpperCase()}**`,
   ].join('\n');
   console.log('\n' + summaryLines);

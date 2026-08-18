@@ -2,7 +2,13 @@ import WebSocket from 'ws';
 import { inject } from 'vitest';
 import { LogManager, TestUserManager } from '@alkemio/tests-lib';
 import './utils/array.matcher';
-import './vitest-provide';
+// The `declare module 'vitest'` augmentation that types `inject`/`provide`
+// for the `alkemioUserModels` key lives in `./vitest-provide.d.ts`. It is
+// picked up by the TypeScript program automatically (this tsconfig has no
+// `include`, so every `.d.ts` under the project root is already compiled in)
+// and must NOT be imported here at runtime — `.d.ts` is not one of Vite's
+// `resolve.extensions`, so a runtime `import './vitest-provide'` fails to
+// resolve and breaks every test file that loads this setup file.
 
 // define websocket as a global, because it will fail with ReferenceError: WebSocket is not defined
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

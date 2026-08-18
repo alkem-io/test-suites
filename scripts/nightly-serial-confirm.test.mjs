@@ -188,6 +188,38 @@ test('rerun-crash — the confirm re-run itself crashing is treated as failure (
   assert.equal(outcome.verdictPerFile['src/functional-api/x/crashy.it-spec.ts'], 'fail');
 });
 
+test('unattributable run failure — main run reported failure but every file passed, fails closed (sec-test-suites-2)', () => {
+  const root = makeRoot();
+  const results = path.join(root, 'results.json');
+  const lanes = path.join(root, 'lanes.json');
+  // An unhandled rejection / teardown failure outside any test file: vitest
+  // exits non-zero and the json reporter's run-level `success` is false,
+  // but every per-file entry still reports 'passed'. Deriving the verdict
+  // from `verdictPerFile` alone (the pre-fix behaviour) would find nothing
+  // to re-run and report a green nightly for a run vitest itself failed.
+  writeJson(results, {
+    success: false,
+    numFailedTestSuites: 0,
+    numFailedTests: 0,
+    testResults: [
+      { name: 'src/functional-api/x/a.it-spec.ts', status: 'passed' },
+      { name: 'src/functional-api/x/b.it-spec.ts', status: 'passed' },
+    ],
+  });
+  writeJson(lanes, {
+    parallel: ['src/functional-api/x/a.it-spec.ts'],
+    serial: ['src/functional-api/x/b.it-spec.ts'],
+  });
+
+  const result = run(root, results, lanes);
+  assert.notEqual(result.status, 0, result.stdout + result.stderr);
+  const outcome = readOutcome(root);
+  assert.equal(outcome.finalExitVerdict, 'fail');
+  assert.equal(outcome.unattributableRunFailure, true);
+  assert.equal(outcome.reason, 'unattributable-run-failure');
+  assert.deepEqual(outcome.rerunFiles, []);
+});
+
 test('missing lanes.json — fails closed rather than assuming a pass', () => {
   const root = makeRoot();
   const results = path.join(root, 'results.json');

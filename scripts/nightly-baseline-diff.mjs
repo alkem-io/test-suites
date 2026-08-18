@@ -58,6 +58,35 @@ function normalizeFile(rawPath, serverApiRoot) {
   return toPosix(path.relative(serverApiRoot, abs));
 }
 
+/**
+ * Normalizes an archived-run file path to the same server-api-relative form
+ * `normalizeFile` produces for the current run. Archived paths come from
+ * whichever machine published that night (a GitHub Actions runner's
+ * `/home/runner/_work/...` checkout, not this one), so a plain
+ * `path.relative(serverApiRoot, abs)` against the LOCAL server-api root
+ * produces nonsense (`../../../home/runner/...`) instead of throwing —
+ * detected here by the `..`-prefixed result, falling back to anchoring on
+ * the `server-api/` path segment every checkout shares regardless of the
+ * root above it.
+ */
+function normalizeArchivedFile(rawPath, serverApiRoot) {
+  if (!rawPath) return 'unknown-file';
+  const posixRaw = toPosix(rawPath);
+  if (!path.isAbsolute(rawPath)) {
+    return posixRaw;
+  }
+  const rel = toPosix(path.relative(serverApiRoot, rawPath));
+  if (!rel.startsWith('..')) {
+    return rel;
+  }
+  const marker = '/server-api/';
+  const idx = posixRaw.indexOf(marker);
+  if (idx !== -1) {
+    return posixRaw.slice(idx + marker.length);
+  }
+  return posixRaw;
+}
+
 /** Parses the current run's vitest `json` reporter output into `{ caseKey -> 'pass'|'fail' }`. */
 function parseCurrentRun(reportJson, serverApiRoot) {
   const verdicts = new Map();
@@ -66,6 +95,9 @@ function parseCurrentRun(reportJson, serverApiRoot) {
     if (!rawPath) continue;
     const file = normalizeFile(rawPath, serverApiRoot);
     for (const assertion of entry.assertionResults ?? []) {
+      // vitest's json reporter joins ancestorTitles + title with a single
+      // space in `fullName` — match that join here so archived and current
+      // case keys land in the same key space (see walkTaskTree below).
       const caseKey = `${file} > ${assertion.fullName ?? assertion.title ?? 'unnamed test'}`;
       verdicts.set(caseKey, assertion.status === 'passed' ? 'pass' : 'fail');
     }
@@ -80,13 +112,15 @@ function parseCurrentRun(reportJson, serverApiRoot) {
  * archived nights are read-only historical data we must never crash on.
  * `isFileTopLevel` skips folding the top-level File task's own name (which
  * is the file path/basename, not a describe block) into the case path — only
- * genuinely nested suite ("describe") names accumulate, matching the shape
- * of the current run's `assertionResults[].fullName`.
+ * genuinely nested suite ("describe") names accumulate. Names are joined
+ * with a single space, not ' > ', to match vitest's json reporter, whose
+ * `assertionResults[].fullName` is `ancestorTitles.concat(title).join(' ')`
+ * — the current run's key space `parseCurrentRun` builds above.
  */
 function walkTaskTree(task, filePath, namePath, out, isFileTopLevel) {
   if (!task) return;
   if (task.type === 'test' || task.type === 'custom') {
-    const fullName = namePath ? `${namePath} > ${task.name}` : task.name ?? '';
+    const fullName = namePath ? `${namePath} ${task.name}` : task.name ?? '';
     const state = task.result?.state;
     if (state === 'pass' || state === 'fail') {
       out.set(`${filePath} > ${fullName}`, state);
@@ -96,14 +130,14 @@ function walkTaskTree(task, filePath, namePath, out, isFileTopLevel) {
   const nextNamePath = isFileTopLevel
     ? namePath
     : namePath
-      ? `${namePath} > ${task.name ?? ''}`
+      ? `${namePath} ${task.name ?? ''}`
       : (task.name ?? '');
   for (const child of task.tasks ?? []) {
     walkTaskTree(child, filePath, nextNamePath, out, false);
   }
 }
 
-function parseArchivedRun(gzPath) {
+function parseArchivedRun(gzPath, serverApiRoot) {
   const compressed = fs.readFileSync(gzPath);
   const json = zlib.gunzipSync(compressed).toString('utf8');
   // The html reporter serializes with `flatted` (handles the circular task
@@ -112,7 +146,11 @@ function parseArchivedRun(gzPath) {
   const result = parse(json);
   const verdicts = new Map();
   for (const file of result.files ?? []) {
-    walkTaskTree(file, file.filepath ?? file.name ?? 'unknown-file', '', verdicts, true);
+    const filePath = normalizeArchivedFile(
+      file.filepath ?? file.name,
+      serverApiRoot
+    );
+    walkTaskTree(file, filePath, '', verdicts, true);
   }
   return verdicts;
 }
@@ -155,13 +193,13 @@ function listArchivedRuns(archiveDir, trailingNights) {
 }
 
 /** always-pass / intermittent / always-fail per case, over every readable archived run. */
-function buildBaseline(runs) {
+function buildBaseline(runs, serverApiRoot) {
   const perCase = new Map(); // caseKey -> {pass: n, fail: n}
   let readableRuns = 0;
   for (const run of runs) {
     let verdicts;
     try {
-      verdicts = parseArchivedRun(run.gzPath);
+      verdicts = parseArchivedRun(run.gzPath, serverApiRoot);
     } catch (e) {
       console.error(
         `[baseline-diff] skipping unreadable archived run ${run.date}/${run.runId}: ${e.message}`
@@ -207,7 +245,10 @@ async function main() {
   );
   const archiveDir = path.resolve(process.cwd(), args.archive);
   const runs = listArchivedRuns(archiveDir, args.trailingNights);
-  const { classes, readableRuns, totalCases } = buildBaseline(runs);
+  const { classes, readableRuns, totalCases } = buildBaseline(
+    runs,
+    serverApiRoot
+  );
 
   const currentReport = readJson(path.resolve(process.cwd(), args.current));
   const current = parseCurrentRun(currentReport, serverApiRoot);

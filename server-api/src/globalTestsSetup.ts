@@ -13,27 +13,35 @@ import { countNightlyFiles, parseNightlyWorkers } from './scripts/nightly-lanes'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type MinimalProject = { provide: (key: string, value: any) => void };
 
-// Process-level (not per-project) cache: `_initializeGlobalSetup` runs once
-// PER vitest project instance even when every project shares this file via
-// root `extends: true` — the `__alkemioGlobalSetupDone` guard below stops
-// the actual provisioning/mint work from repeating, but `project.provide`
-// itself is scoped to whichever project instance calls it (verified against
-// the installed vitest: a project's provided context does NOT propagate to
-// sibling projects). So the mint happens once, into this module-scope cache,
-// and EVERY project's setup() call — guarded or not — re-provides the same
-// cached value onto its own project instance, which is what makes
-// `inject('alkemioUserModels')` resolve identically from either lane.
-let cachedUserModels: SerializedTestUserModels | undefined;
+type AlkemioGlobalState = typeof globalThis & {
+  __alkemioGlobalSetupDone?: boolean;
+  __alkemioUserModels?: SerializedTestUserModels;
+};
+
+// `_initializeGlobalSetup` runs once PER vitest project instance — every
+// project (nightly-parallel, nightly-serial, and the root project vitest
+// always adds even when only a subset is requested via `--project`) gets its
+// own `ServerModuleRunner` and therefore its own fresh module instance of
+// THIS file. A module-scope variable is consequently per-project, not
+// per-process, and can never be relied on to survive between calls: the
+// `__alkemioGlobalSetupDone` guard below IS process-scoped (it lives on
+// `globalThis`), so the second and third calls skip the mint, but a
+// module-scope cache would still be `undefined` in their own fresh module
+// instance, tripping the fallback below and re-minting all 13 tokens per
+// extra project. The minted snapshot is therefore held on `globalThis`
+// itself, right next to the guard flag, so every project's setup() call —
+// guarded or not — reads and re-provides the same process-wide value onto
+// its own project instance, which is what makes `inject('alkemioUserModels')`
+// resolve identically from every lane without ever minting twice.
+const globalState = globalThis as AlkemioGlobalState;
 
 export default async function setup(project: MinimalProject) {
   console.log('[globalSetup] Starting global test setup...');
 
   // Guard against duplicate invocations when Vitest projects inherit
   // globalSetup from root config via extends: true (array merge semantics).
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if (!(globalThis as any).__alkemioGlobalSetupDone) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (globalThis as any).__alkemioGlobalSetupDone = true;
+  if (!globalState.__alkemioGlobalSetupDone) {
+    globalState.__alkemioGlobalSetupDone = true;
 
     LogManager.getLogger().info(
       `\nLaunching tests using configuration: ${stringifyConfig(testConfiguration)}`
@@ -62,7 +70,7 @@ export default async function setup(project: MinimalProject) {
     // once here, regardless of worker count. Workers never mint their own —
     // they hydrate from the provided context below.
     await TestUserManager.populateUserModelMap();
-    cachedUserModels = TestUserManager.serialize();
+    globalState.__alkemioUserModels = TestUserManager.serialize();
 
     const workers = parseNightlyWorkers(process.env.NIGHTLY_MAX_WORKERS);
     const lanes = countNightlyFiles();
@@ -76,13 +84,17 @@ export default async function setup(project: MinimalProject) {
 
   // Fallback for the (should-be-unreachable) case where the guard above was
   // already tripped by an earlier project in this same process but the mint
-  // itself never completed — defensive, not the primary path.
-  if (!cachedUserModels) {
+  // itself crashed before the snapshot was written to `globalState` — the
+  // ONLY legitimate reason `__alkemioUserModels` can still be unset once the
+  // guard is true. This must never fire on a normal run: with the snapshot
+  // now held on `globalThis`, every project after the first reads the same
+  // value written here and never re-mints.
+  if (!globalState.__alkemioUserModels) {
     await TestUserManager.populateUserModelMap();
-    cachedUserModels = TestUserManager.serialize();
+    globalState.__alkemioUserModels = TestUserManager.serialize();
   }
 
-  project.provide('alkemioUserModels', cachedUserModels);
+  project.provide('alkemioUserModels', globalState.__alkemioUserModels);
 
   // Return a teardown function so Vitest can ensure a clean exit.
   // The GraphQL client is stateless HTTP and WebSocket subscriptions are

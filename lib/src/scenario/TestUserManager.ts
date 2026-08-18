@@ -33,6 +33,14 @@ export class TestUserManager {
    * tokens live 4h — far longer than a run — so a single mint per user is safe.
    * The `populated` flag flips only after a full pass, so a partial failure
    * (e.g. an early rate-limit) is retried in full rather than left incomplete.
+   *
+   * The invariant the nightly CI gate protects is "the pool mints exactly
+   * once per run", not "the pool has exactly N members" — the `TestUser`
+   * enum is free to grow (per-worker/per-scenario identities are on the
+   * roadmap). The `[auth] pool size: N` line below is the single source of
+   * truth CI derives its expected mint count from, so growing the pool never
+   * requires touching the CI assertion, while a duplicate mint still fails
+   * it (the printed size never changes, but the counted mint lines would).
    */
   public static async populateUserModelMap() {
     if (this.populated) {
@@ -41,14 +49,23 @@ export class TestUserManager {
     this.userModelMapEmail = new Map<string, UserModel>();
     this.userModelMapType = new Map<string, UserModel>();
 
-    for (const user of Object.keys(TestUser)) {
+    const poolUsers = Object.keys(TestUser);
+    // Deliberately console.log, not LogManager (console transport defaults
+    // to error-only in CI) — read back by the nightly's mint-count gate as
+    // the expected pool size, derived from the actual pool definition
+    // (`TestUser`) rather than hardcoded in the workflow.
+    console.log(`[auth] pool size: ${poolUsers.length}`);
+
+    for (const user of poolUsers) {
       const userValue = TestUser[user as keyof typeof TestUser];
       // Create a user model for each test user
       const email = this.buildIdentifier(userValue);
       const userModel = this.createEmptyUserModel(email, userValue);
 
-      // Populate the authentication token
-      userModel.authToken = await getUserToken(userModel.email);
+      // Populate the authentication token. Tagged 'pool' — these are the
+      // shared-user mints the nightly's mint-count invariant counts (must
+      // equal the `[auth] pool size: N` line above, exactly once per run).
+      userModel.authToken = await getUserToken(userModel.email, 'pool');
 
       // Populate the user model with details from the api
       await this.populateUserModelFromApi(userModel);
@@ -155,7 +172,9 @@ export class TestUserManager {
     if (!userModel) {
       throw new Error(`UserModel with email ${email} not found`);
     }
-    userModel.authToken = await getUserToken(email);
+    // Ad-hoc re-mint after a delete/re-register — outside the shared pool,
+    // not counted by the nightly's 'pool' mint-count invariant.
+    userModel.authToken = await getUserToken(email, 'ad-hoc');
     await this.populateUserModelFromApi(userModel);
     return userModel;
   }

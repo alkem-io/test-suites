@@ -39,6 +39,14 @@ jobs:
       - name: Nightly lane guard
         run: pnpm --filter @alkemio/test-suite-server-api run lanes:validate
 
+      # Self-tests for the nightly-parallel harness's own scripts (lane
+      # guard, mint-hoist smoke helpers, serial-confirm and baseline-diff
+      # verdict logic). Pure Node — no live stack needed — so there is no
+      # excuse for these regressing silently between nightlies; run them
+      # every PR.
+      - name: Nightly harness script self-tests
+        run: node --test scripts/
+
       - name: Native TS7 typecheck — client-web (workspace#019-typescript-7-upgrade)
         run: pnpm --filter @alkemio/test-suite-client-web run typecheck:native
 

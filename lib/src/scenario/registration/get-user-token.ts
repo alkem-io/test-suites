@@ -30,7 +30,25 @@ type NonInteractiveLoginResponse = {
   token_type: 'Bearer';
 };
 
-export const getUserToken = async (userEmail: string): Promise<string> => {
+/**
+ * Distinguishes WHY a token is being minted, so the mint-count evidence line
+ * below can be attributed to its source instead of lumping every caller of
+ * `getUserToken` into one undifferentiated count. The nightly's mint-count
+ * invariant — the shared `pool` mints exactly once per run, regardless of
+ * worker count — is about the shared-user pool mint specifically; `prereq`
+ * (the env-prerequisite probe) and `ad-hoc` (per-scenario
+ * registration/refresh calls) mint on their own, independent cadence and
+ * must not be folded into that count. The pool's SIZE is not part of the
+ * invariant and is free to change — CI derives its expected count from the
+ * `[auth] pool size: N` line `populateUserModelMap` prints, not from a
+ * number written into this file or the workflow.
+ */
+export type TokenMintSource = 'pool' | 'prereq' | 'ad-hoc';
+
+export const getUserToken = async (
+  userEmail: string,
+  source: TokenMintSource = 'ad-hoc'
+): Promise<string> => {
   const server = testConfiguration.endPoints.server;
 
   if (!server) {
@@ -56,10 +74,13 @@ export const getUserToken = async (userEmail: string): Promise<string> => {
       );
     }
     // Deterministic, console-guaranteed (not LogManager, whose console
-    // transport defaults to error-only) evidence line for the nightly's
-    // mint-count assertion — must total exactly 13 per run regardless of
-    // worker count.
-    console.log(`[auth] minted token for ${userEmail}`);
+    // transport defaults to error-only) evidence line. The nightly's
+    // mint-count assertion counts only the `(pool)`-tagged lines — the
+    // shared-pool users minted once by `populateUserModelMap` — against the
+    // pool's own declared size (`[auth] pool size: N`), and must match
+    // exactly regardless of worker count. `(prereq)` and `(ad-hoc)` mints
+    // are diagnostics, not part of that invariant.
+    console.log(`[auth] minted token for ${userEmail} (${source})`);
     return apiToken;
   } catch (e) {
     const message = describeFailure(e, url);
