@@ -10,6 +10,7 @@
  * other.
  */
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -170,6 +171,38 @@ export const PARALLEL_MANIFEST: string[] = [
 ];
 
 /**
+ * Explicit, reviewed exclusion list — files removed from BOTH nightly lanes
+ * (parallel and serial) regardless of `NIGHTLY_INCLUDE` membership or
+ * `PARALLEL_MANIFEST` promotion. This is a lane-scope decision expressed in
+ * config, never a `.skip` inside the spec file itself: the test still
+ * exists and can still be run explicitly (`vitest run <path>`), it is
+ * simply out of nightly's scope until someone re-includes it.
+ *
+ * What belongs here: a spec that is in nightly's glob scope but must not run
+ * tonight — e.g. a genuinely flaky-under-investigation file, or one whose
+ * dependency (server API, fixture data, infra) is known broken right now.
+ * It is deliberately NOT the place to park a spec just because it's newly
+ * merged or unfamiliar — a failing nightly run is itself useful signal, and
+ * exclusion should follow an actual, stated reason to distrust the file,
+ * not mere unfamiliarity.
+ *
+ * Every entry MUST carry an inline comment giving the reason and the date
+ * it was excluded, so an exclusion can never quietly rot into an invisible,
+ * unexplained permanent gap. Entries are expected to be temporary — added
+ * with a plan to re-include once the reason is resolved, not a permanent
+ * parking lot. `validate-parallel-lanes.ts` fails the guard, by design, if
+ * an entry here no longer matches any file on disk — a stale exclusion
+ * (e.g. after the file is renamed or deleted) must be noticed and cleaned
+ * up, not silently dropped. `countNightlyFiles()` below folds the exclusion
+ * into the reported total, and `globalTestsSetup.ts` logs the excluded
+ * count (`excluded=N`) at run time, so a shrinking nightly suite is always
+ * visible in the CI run log — not just in this file.
+ *
+ * Empty by default: nothing is currently excluded.
+ */
+export const NIGHTLY_EXCLUDE: string[] = [];
+
+/**
  * Parses the feature-owned worker-count pin.
  *
  * Deliberately NOT the vitest built-in `VITEST_MAX_WORKERS` — that variable
@@ -196,6 +229,94 @@ export function parseNightlyWorkers(raw: string | undefined): number {
   return parsed;
 }
 
+/** The `NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT` default when unset/empty. */
+export const DEFAULT_CPU_CAP_PERCENT = 75;
+
+/**
+ * Parses the CPU-percentage safety-ceiling variable.
+ *
+ * Same validation discipline as `parseNightlyWorkers`: GitHub renders an
+ * unset repository variable as an empty string, so unset/`""` both default
+ * to `DEFAULT_CPU_CAP_PERCENT` rather than being treated as invalid. Any
+ * other non-integer, or an integer outside `[1, 100]`, throws naming the
+ * variable — this is a percentage of the machine, so 0 or negative would
+ * make every run un-runnable and >100 has no meaning.
+ */
+export function parseCpuCapPercent(raw: string | undefined): number {
+  if (raw === undefined || raw === '') {
+    return DEFAULT_CPU_CAP_PERCENT;
+  }
+  const parsed = Number(raw);
+  if (!Number.isInteger(parsed) || parsed < 1 || parsed > 100) {
+    throw new Error(
+      `NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT must be an integer between 1 and 100; got ${JSON.stringify(raw)}. ` +
+        `Unset (or empty) defaults to ${DEFAULT_CPU_CAP_PERCENT}.`
+    );
+  }
+  return parsed;
+}
+
+/**
+ * `os.availableParallelism()` (Node ≥19.4/18.15) reports the CPU count the
+ * runtime can actually schedule onto — cgroup CPU quota aware, unlike
+ * `os.cpus().length`. Falls back to `os.cpus().length` on older runtimes
+ * where the function is absent.
+ */
+function detectAvailableParallelism(): number {
+  const maybeFn = (os as unknown as { availableParallelism?: () => number })
+    .availableParallelism;
+  return typeof maybeFn === 'function' ? maybeFn() : os.cpus().length;
+}
+
+/** The resolved nightly-parallel worker count, plus the inputs that produced it. */
+export interface NightlyWorkerResolution {
+  /** `NIGHTLY_MAX_WORKERS` after defaulting/validation — the explicit intent. */
+  requested: number;
+  /** `floor(cpus * capPercent / 100)`, never below 1 — the safety ceiling. */
+  cpuCap: number;
+  /** The CPU count the ceiling was derived from. */
+  cpus: number;
+  /** `clamp(1, min(requested, cpuCap))` — what actually gets passed to vitest. */
+  effective: number;
+  /** True when the ceiling reduced the requested value (`cpuCap < requested`). */
+  capped: boolean;
+}
+
+/**
+ * Resolves `nightly-parallel`'s `maxWorkers` from a hybrid rule: an
+ * explicit, reproducible INTENT (`NIGHTLY_MAX_WORKERS`) capped by a CPU
+ * PERCENTAGE safety ceiling (`NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT`).
+ *
+ * These solve two different problems and neither one alone is enough.
+ * Empirically the real bottleneck for this suite is SERVER throughput, not
+ * client CPU — on a 1-replica local server, W=5 took 21.4 min but W=6 took
+ * 29.0 min (SLOWER: the server saturates, workers just queue behind it).
+ * That means the worker count must stay an explicit, humanly-chosen,
+ * reproducible decision — a pure percentage-of-CPU value would silently
+ * shift every time the runner's core count changes, making a slow night
+ * unexplainable. But a pure explicit number has no floor against reality:
+ * pointed at a small/shared runner, an explicit value chosen for a beefy
+ * box would thrash it. The percentage is therefore only a CEILING that
+ * protects the runner, never the primary signal — `effective` is always
+ * `<= requested`, never derived FROM `cpuCap` when `cpuCap >= requested`.
+ * `NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT` is resolved via vitest's own
+ * percentage-string support (`os.availableParallelism()`-based) — but
+ * resolved to a concrete number HERE rather than handed to vitest as a
+ * percentage string, so the effective value is knowable, loggable, and
+ * assertable instead of being an opaque internal computation.
+ */
+export function resolveNightlyWorkers(
+  requestedRaw: string | undefined,
+  cpuCapPercentRaw: string | undefined,
+  cpus: number = detectAvailableParallelism()
+): NightlyWorkerResolution {
+  const requested = parseNightlyWorkers(requestedRaw);
+  const capPercent = parseCpuCapPercent(cpuCapPercentRaw);
+  const cpuCap = Math.max(1, Math.floor(cpus * (capPercent / 100)));
+  const effective = Math.max(1, Math.min(requested, cpuCap));
+  return { requested, cpuCap, cpus, effective, capped: cpuCap < requested };
+}
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // src/scripts -> server-api
 const SERVER_API_ROOT = path.resolve(__dirname, '..', '..');
@@ -214,29 +335,39 @@ function walkItSpecFiles(absDir: string): string[] {
 
 /**
  * Resolves `NIGHTLY_INCLUDE` against the real filesystem to report the exact
- * (parallel, serial, total) file counts — used only for the `[nightly]
- * lanes: …` run-time log line the CI assert-config step reads back (contract
- * C2). The guard (`validate-parallel-lanes.ts`) has its own root-aware
- * version of this walk so its fixture self-tests can point it at a throwaway
- * tree instead; this one always resolves against the real repo layout.
+ * (parallel, serial, total, excluded) file counts — used only for the
+ * `[nightly] lanes: …` run-time log line the CI assert-config step reads
+ * back (contract C2). `total` already has `NIGHTLY_EXCLUDE` folded out, so
+ * `parallel + serial === total` continues to hold with exclusions in play.
+ * The guard (`validate-parallel-lanes.ts`) has its own root-aware version of
+ * this walk (and its own, independently fail-closed proof of the same
+ * partition) so its fixture self-tests can point it at a throwaway tree
+ * instead; this one always resolves against the real repo layout.
  */
 export function countNightlyFiles(): {
   total: number;
   parallel: number;
   serial: number;
+  excluded: number;
 } {
   const manifestSet = new Set(PARALLEL_MANIFEST);
-  let total = 0;
+  const excludeSet = new Set(NIGHTLY_EXCLUDE);
+  const files: string[] = [];
   for (const glob of NIGHTLY_INCLUDE) {
     const baseDir = path.join(
       SERVER_API_ROOT,
       glob.replace(/\/\*\*\/\*\.it-spec\.ts$/, '')
     );
-    total += walkItSpecFiles(baseDir).length;
+    for (const abs of walkItSpecFiles(baseDir)) {
+      files.push(path.relative(SERVER_API_ROOT, abs).split(path.sep).join('/'));
+    }
   }
+  const excluded = files.filter(f => excludeSet.has(f)).length;
+  const total = files.length - excluded;
   return {
     total,
     parallel: manifestSet.size,
     serial: total - manifestSet.size,
+    excluded,
   };
 }

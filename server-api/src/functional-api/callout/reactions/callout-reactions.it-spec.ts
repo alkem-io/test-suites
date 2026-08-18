@@ -565,14 +565,20 @@ describe('US4 — Lifecycle + authorization edges', () => {
     await deleteCallout(deletedCalloutId);
     deletionTestCalloutId = ''; // mark as already deleted for afterAll guard
 
-    // Querying the deleted callout by its real id resolves to null — a valid UUID
-    // for a deleted entity returns null through the lookup resolver, confirming
-    // no orphan reaction rows surface.
+    // Querying the deleted callout by its real id: the lookup resolver's
+    // "...OrFail" service call rejects a nonexistent ID with an ENTITY_NOT_FOUND
+    // error rather than resolving the field to null (true of every lookup.*
+    // field, not specific to reactions). No data is returned in that case, so
+    // asserting the explicit error — rather than a null field — is what proves
+    // the callout, and with it any reaction data, is unreachable: no orphan
+    // rows are observable.
     const afterSummary = await getCalloutReactionsSummary(
       deletedCalloutId,
       TestUser.GLOBAL_ADMIN
     );
-    // The callout is gone; null result confirms no orphan record surface
-    expect(afterSummary?.data?.lookup?.callout).toBeNull();
+    expect(afterSummary?.data?.lookup?.callout).toBeUndefined();
+    expect(
+      (afterSummary?.error?.errors?.[0]?.extensions as { code?: string })?.code
+    ).toBe('ENTITY_NOT_FOUND');
   });
 });

@@ -54,8 +54,11 @@ const targetConfig: TestScenarioConfig = {
 };
 
 beforeAll(async () => {
-  sourceScenario = await TestScenarioFactory.createBaseScenario(sourceConfig);
-  targetScenario = await TestScenarioFactory.createBaseScenario(targetConfig);
+  // Independent scenarios (distinct names, no shared state) — build concurrently.
+  [sourceScenario, targetScenario] = await Promise.all([
+    TestScenarioFactory.createBaseScenario(sourceConfig),
+    TestScenarioFactory.createBaseScenario(targetConfig),
+  ]);
 });
 
 afterAll(async () => {
@@ -88,14 +91,17 @@ describe('Move L1 to L2 - auto-invite enabled', () => {
   let targetScenario2: OrganizationWithSpaceModel;
 
   beforeAll(async () => {
-    sourceScenario2 = await TestScenarioFactory.createBaseScenario({
-      ...sourceConfig,
-      name: 'move-l1-l2-inv-auto-src2',
-    });
-    targetScenario2 = await TestScenarioFactory.createBaseScenario({
-      ...targetConfig,
-      name: 'move-l1-l2-inv-auto-tgt2',
-    });
+    // Independent scenarios (distinct names, no shared state) — build concurrently.
+    [sourceScenario2, targetScenario2] = await Promise.all([
+      TestScenarioFactory.createBaseScenario({
+        ...sourceConfig,
+        name: 'move-l1-l2-inv-auto-src2',
+      }),
+      TestScenarioFactory.createBaseScenario({
+        ...targetConfig,
+        name: 'move-l1-l2-inv-auto-tgt2',
+      }),
+    ]);
 
     await moveSpaceL1ToSpaceL2(
       sourceScenario2.subspace.id,

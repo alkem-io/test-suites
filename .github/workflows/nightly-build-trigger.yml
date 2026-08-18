@@ -121,6 +121,10 @@ jobs:
           # Feature-owned worker-count pin for the nightly-parallel project —
           # unset/empty ⇒ config default of 1 (behaviour-identical rollback).
           NIGHTLY_MAX_WORKERS: ${{ vars.NIGHTLY_MAX_WORKERS }}
+          # Safety ceiling only — never the primary signal. Unset/empty ⇒
+          # config default of 75 (see resolveNightlyWorkers in
+          # src/scripts/nightly-lanes.ts).
+          NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT: ${{ vars.NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT }}
         run: |
           set -uo pipefail
           # kratos-admin is ClusterIP (network-isolated); reach it via a
@@ -147,16 +151,77 @@ jobs:
         if: ${{ always() }}
         env:
           NIGHTLY_MAX_WORKERS: ${{ vars.NIGHTLY_MAX_WORKERS }}
+          NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT: ${{ vars.NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT }}
         run: |
           set -euo pipefail
-          W="${NIGHTLY_MAX_WORKERS:-1}"
-          [ -z "$W" ] && W=1
           PARALLEL_N=$(jq '.parallel | length' server-api/lanes.json)
           SERIAL_M=$(jq '.serial | length' server-api/lanes.json)
-          EXPECTED_LINE="[nightly] lanes: parallel=${PARALLEL_N} serial=${SERIAL_M} maxWorkers=${W}"
+
+          LANE_LOG_LINE=$(grep "\[nightly\] lanes:" /tmp/nightly-run.log | head -n1 || true)
+          if [ -z "$LANE_LOG_LINE" ]; then
+            echo "::error::no '[nightly] lanes:' line present in the run log"
+            exit 1
+          fi
+          echo "$LANE_LOG_LINE"
+
+          # The hybrid worker resolution (explicit NIGHTLY_MAX_WORKERS intent,
+          # capped by a NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT safety ceiling —
+          # resolveNightlyWorkers in src/scripts/nightly-lanes.ts) means
+          # maxWorkers=N in the log is the EFFECTIVE value, not necessarily the
+          # requested one. Assert the effective value while still recovering
+          # and checking the requested one, deriving the expectation from
+          # this SAME log line's own reported cpus/cpuCap rather than
+          # independently re-deriving the CPU count (`nproc` can disagree
+          # with Node's cgroup-aware `os.availableParallelism()`) — this
+          # still fails closed on any arithmetic, requested-value, or
+          # CAPPED-marker inconsistency.
+          if [[ ! "$LANE_LOG_LINE" =~ maxWorkers=([0-9]+)\ \(requested=([0-9]+)\ cpuCap=([0-9]+)\ of\ ([0-9]+)\ cpus(,\ CAPPED)?\) ]]; then
+            echo "::error::[nightly] lanes line does not match the expected 'maxWorkers=N (requested=R cpuCap=C of P cpus[, CAPPED])' shape: $LANE_LOG_LINE"
+            exit 1
+          fi
+          EFFECTIVE="${BASH_REMATCH[1]}"
+          REQUESTED="${BASH_REMATCH[2]}"
+          CPU_CAP="${BASH_REMATCH[3]}"
+          CPUS="${BASH_REMATCH[4]}"
+          CAPPED_MARKER="${BASH_REMATCH[5]:-}"
+
+          EXPECTED_REQUESTED="${NIGHTLY_MAX_WORKERS:-1}"
+          [ -z "$EXPECTED_REQUESTED" ] && EXPECTED_REQUESTED=1
+          if [ "$REQUESTED" -ne "$EXPECTED_REQUESTED" ]; then
+            echo "::error::log reports requested=${REQUESTED}, expected ${EXPECTED_REQUESTED} from NIGHTLY_MAX_WORKERS"
+            exit 1
+          fi
+
+          CAP_PERCENT="${NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT:-75}"
+          [ -z "$CAP_PERCENT" ] && CAP_PERCENT=75
+          EXPECTED_CPU_CAP=$(( (CPUS * CAP_PERCENT) / 100 ))
+          [ "$EXPECTED_CPU_CAP" -lt 1 ] && EXPECTED_CPU_CAP=1
+          if [ "$CPU_CAP" -ne "$EXPECTED_CPU_CAP" ]; then
+            echo "::error::log reports cpuCap=${CPU_CAP} for ${CPUS} cpus at ${CAP_PERCENT}%, expected ${EXPECTED_CPU_CAP}"
+            exit 1
+          fi
+
+          EXPECTED_EFFECTIVE=$REQUESTED
+          [ "$CPU_CAP" -lt "$EXPECTED_EFFECTIVE" ] && EXPECTED_EFFECTIVE=$CPU_CAP
+          [ "$EXPECTED_EFFECTIVE" -lt 1 ] && EXPECTED_EFFECTIVE=1
+          if [ "$EFFECTIVE" -ne "$EXPECTED_EFFECTIVE" ]; then
+            echo "::error::log reports maxWorkers=${EFFECTIVE}, expected effective ${EXPECTED_EFFECTIVE} = clamp(1, min(requested=${REQUESTED}, cpuCap=${CPU_CAP}))"
+            exit 1
+          fi
+
+          if [ "$CPU_CAP" -lt "$REQUESTED" ]; then
+            if [ -z "$CAPPED_MARKER" ]; then
+              echo "::error::cpuCap (${CPU_CAP}) < requested (${REQUESTED}) but the log line is missing the CAPPED marker"
+              exit 1
+            fi
+          elif [ -n "$CAPPED_MARKER" ]; then
+            echo "::error::cpuCap (${CPU_CAP}) >= requested (${REQUESTED}) but the log line carries an unexpected CAPPED marker"
+            exit 1
+          fi
+
+          EXPECTED_LINE="[nightly] lanes: parallel=${PARALLEL_N} serial=${SERIAL_M} maxWorkers=${EFFECTIVE}"
           if ! grep -qF "$EXPECTED_LINE" /tmp/nightly-run.log; then
             echo "::error::expected run log line not found: $EXPECTED_LINE"
-            grep "\[nightly\] lanes:" /tmp/nightly-run.log || echo "no [nightly] lanes: line present in the run log"
             exit 1
           fi
           RESULT_COUNT=$(jq '[.testResults[].name] | length' server-api/html-report/results.json)
@@ -190,7 +255,7 @@ jobs:
             echo "::error::expected exactly ${EXPECTED_POOL_MINTS} shared-pool token mints (the pool's own declared size, minted once) regardless of worker count, found ${MINT_COUNT}"
             exit 1
           fi
-          echo "assert-config OK: parallel=${PARALLEL_N} serial=${SERIAL_M} maxWorkers=${W} results=${RESULT_COUNT} mints=${MINT_COUNT}"
+          echo "assert-config OK: parallel=${PARALLEL_N} serial=${SERIAL_M} maxWorkers=${EFFECTIVE} (requested=${REQUESTED} cpuCap=${CPU_CAP} of ${CPUS} cpus${CAPPED_MARKER}) results=${RESULT_COUNT} mints=${MINT_COUNT}"
 
       # The structural exit-code gate: re-runs only the parallel-lane failures
       # serially and derives the build's verdict from serial results alone. A

@@ -2,9 +2,10 @@ import { defineConfig } from 'vitest/config';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import {
+  NIGHTLY_EXCLUDE,
   NIGHTLY_INCLUDE,
   PARALLEL_MANIFEST,
-  parseNightlyWorkers,
+  resolveNightlyWorkers,
 } from './src/scripts/nightly-lanes';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -158,8 +159,22 @@ export default defineConfig({
         test: {
           name: 'nightly-parallel',
           include: [...PARALLEL_MANIFEST],
+          // Explicit, documented lane-scope exclusions (src/scripts/nightly-lanes.ts)
+          // — never promoted files, but excluded here too so a stale/mistaken
+          // manifest entry still can't slip an excluded file into the run.
+          exclude: [...NIGHTLY_EXCLUDE],
           sequence: { groupOrder: 0 },
-          maxWorkers: parseNightlyWorkers(process.env.NIGHTLY_MAX_WORKERS),
+          // Hybrid resolution (src/scripts/nightly-lanes.ts
+          // resolveNightlyWorkers): NIGHTLY_MAX_WORKERS is the explicit,
+          // reproducible intent; NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT is only
+          // a safety ceiling against a small/shared runner. Resolved to a
+          // concrete number here (not handed to vitest as a percentage
+          // string) so the effective value is knowable, loggable, and
+          // assertable — see globalTestsSetup.ts for the run-time log line.
+          maxWorkers: resolveNightlyWorkers(
+            process.env.NIGHTLY_MAX_WORKERS,
+            process.env.NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT
+          ).effective,
           retry: 0,
         },
       },
@@ -168,7 +183,7 @@ export default defineConfig({
         test: {
           name: 'nightly-serial',
           include: [...NIGHTLY_INCLUDE],
-          exclude: [...PARALLEL_MANIFEST],
+          exclude: [...PARALLEL_MANIFEST, ...NIGHTLY_EXCLUDE],
           sequence: { groupOrder: 1 },
           maxWorkers: 1,
           retry: 0,

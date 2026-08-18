@@ -55,8 +55,11 @@ const targetConfig: TestScenarioConfig = {
 };
 
 beforeAll(async () => {
-  sourceScenario = await TestScenarioFactory.createBaseScenario(sourceConfig);
-  targetScenario = await TestScenarioFactory.createBaseScenario(targetConfig);
+  // Independent scenarios (distinct names, no shared state) — build concurrently.
+  [sourceScenario, targetScenario] = await Promise.all([
+    TestScenarioFactory.createBaseScenario(sourceConfig),
+    TestScenarioFactory.createBaseScenario(targetConfig),
+  ]);
 
   // Create calendar event on the subspace before move
   const calendarRes = await getSpaceCalendarId(sourceScenario.subspace.id);

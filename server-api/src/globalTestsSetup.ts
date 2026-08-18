@@ -8,7 +8,7 @@ import {
   TestUserManager,
   type SerializedTestUserModels,
 } from '@alkemio/tests-lib';
-import { countNightlyFiles, parseNightlyWorkers } from './scripts/nightly-lanes';
+import { countNightlyFiles, resolveNightlyWorkers } from './scripts/nightly-lanes';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type MinimalProject = { provide: (key: string, value: any) => void };
@@ -72,13 +72,26 @@ export default async function setup(project: MinimalProject) {
     await TestUserManager.populateUserModelMap();
     globalState.__alkemioUserModels = TestUserManager.serialize();
 
-    const workers = parseNightlyWorkers(process.env.NIGHTLY_MAX_WORKERS);
+    const resolution = resolveNightlyWorkers(
+      process.env.NIGHTLY_MAX_WORKERS,
+      process.env.NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT
+    );
     const lanes = countNightlyFiles();
     // Deliberately console.log, not LogManager: the console transport
     // defaults to error-only (LOG_LEVEL unset/'warn' in CI), and this line
     // is read back from the captured run log by the CI assert-config step.
+    //
+    // Visibility is the point: a silently reduced worker count would make a
+    // slow run inexplicable. The parenthetical always reports both the
+    // requested intent and the CPU-percentage ceiling it was checked
+    // against, and carries an explicit `CAPPED` marker whenever the ceiling
+    // actually reduced the requested value — the resolution rule itself
+    // lives in src/scripts/nightly-lanes.ts (resolveNightlyWorkers).
+    const resolutionNote =
+      `(requested=${resolution.requested} cpuCap=${resolution.cpuCap} of ${resolution.cpus} cpus` +
+      `${resolution.capped ? ', CAPPED' : ''})`;
     console.log(
-      `[nightly] lanes: parallel=${lanes.parallel} serial=${lanes.serial} maxWorkers=${workers}`
+      `[nightly] lanes: parallel=${lanes.parallel} serial=${lanes.serial} maxWorkers=${resolution.effective} ${resolutionNote} excluded=${lanes.excluded}`
     );
   }
 

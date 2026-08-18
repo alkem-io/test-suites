@@ -34,7 +34,6 @@ let targetScenario: OrganizationWithSpaceModel;
 const sourceConfig: TestScenarioConfig = {
   name: 'move-l2-to-l1-src',
   space: {
-    collaboration: { addPostCallout: true },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [
@@ -47,7 +46,6 @@ const sourceConfig: TestScenarioConfig = {
       ],
     },
     subspace: {
-      collaboration: { addPostCallout: true },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
         members: [
@@ -59,7 +57,6 @@ const sourceConfig: TestScenarioConfig = {
       },
       subspace: {
         collaboration: {
-          addPostCallout: true,
           addPostCollectionCallout: true,
           addWhiteboardCallout: true,
         },
@@ -76,7 +73,6 @@ const sourceConfig: TestScenarioConfig = {
 const targetConfig: TestScenarioConfig = {
   name: 'move-l2-to-l1-tgt',
   space: {
-    collaboration: { addPostCallout: true },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [
@@ -87,7 +83,6 @@ const targetConfig: TestScenarioConfig = {
       ],
     },
     subspace: {
-      collaboration: { addPostCallout: true },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
         members: [TestUser.SUBSPACE_MEMBER, TestUser.SUBSPACE_ADMIN],
@@ -104,8 +99,11 @@ let movedSpace:
   | undefined;
 
 beforeAll(async () => {
-  sourceScenario = await TestScenarioFactory.createBaseScenario(sourceConfig);
-  targetScenario = await TestScenarioFactory.createBaseScenario(targetConfig);
+  // Independent scenarios (distinct names, no shared state) — build concurrently.
+  [sourceScenario, targetScenario] = await Promise.all([
+    TestScenarioFactory.createBaseScenario(sourceConfig),
+    TestScenarioFactory.createBaseScenario(targetConfig),
+  ]);
 
   // Capture state before move
   subsubspaceBefore = await getSpaceData(sourceScenario.subsubspace.id);
@@ -246,14 +244,17 @@ describe('Move L2 to L1 - rejections and authorization', () => {
   let rejTarget: OrganizationWithSpaceModel;
 
   beforeAll(async () => {
-    rejSource = await TestScenarioFactory.createBaseScenario({
-      ...sourceConfig,
-      name: 'move-l2-l1-rej-src',
-    });
-    rejTarget = await TestScenarioFactory.createBaseScenario({
-      ...targetConfig,
-      name: 'move-l2-l1-rej-tgt',
-    });
+    // Independent scenarios (distinct names, no shared state) — build concurrently.
+    [rejSource, rejTarget] = await Promise.all([
+      TestScenarioFactory.createBaseScenario({
+        ...sourceConfig,
+        name: 'move-l2-l1-rej-src',
+      }),
+      TestScenarioFactory.createBaseScenario({
+        ...targetConfig,
+        name: 'move-l2-l1-rej-tgt',
+      }),
+    ]);
   });
 
   afterAll(async () => {

@@ -62,7 +62,6 @@ const scenarioConfig: TestScenarioConfig = {
   name: 'convert-l2-to-l1',
   space: {
     collaboration: {
-      addPostCallout: true,
       addPostCollectionCallout: true,
       addWhiteboardCallout: true,
     },
@@ -79,7 +78,6 @@ const scenarioConfig: TestScenarioConfig = {
     },
     subspace: {
       collaboration: {
-        addPostCallout: true,
         addPostCollectionCallout: true,
         addWhiteboardCallout: true,
       },
@@ -94,7 +92,6 @@ const scenarioConfig: TestScenarioConfig = {
       },
       subspace: {
         collaboration: {
-          addPostCallout: true,
           addPostCollectionCallout: true,
           addWhiteboardCallout: true,
         },

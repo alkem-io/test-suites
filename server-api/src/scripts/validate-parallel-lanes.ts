@@ -4,8 +4,13 @@
  * Two independent proofs, both fail-closed:
  *
  * 1. Partition: `PARALLEL_MANIFEST` (src/scripts/nightly-lanes.ts) is a
- *    subset of the nightly file set with no duplicates; the serial lane is
- *    exactly its complement; the serial lane is never empty.
+ *    subset of the nightly file set — NIGHTLY_INCLUDE minus the explicit,
+ *    documented `NIGHTLY_EXCLUDE` list — with no duplicates; the serial
+ *    lane is exactly its complement within that same excluded-out set; the
+ *    serial lane is never empty. An excluded file counts as neither
+ *    promoted nor serial, can never also appear in `PARALLEL_MANIFEST`, and
+ *    an exclusion entry that matches no file on disk fails the guard
+ *    (fail-closed staleness, same discipline as the hazard symbols below).
  *
  * 2. Soundness: no file in `PARALLEL_MANIFEST` trips any of the hazard rule
  *    families —
@@ -1046,12 +1051,14 @@ interface AuditResult {
   nightlyCount: number;
   parallelCount: number;
   serialFiles: string[];
+  excludedCount: number;
 }
 
 function runAudit(
   ctx: Context,
   nightlyInclude: readonly string[],
-  parallelManifest: readonly string[]
+  parallelManifest: readonly string[],
+  nightlyExclude: readonly string[]
 ): AuditResult {
   const errors: string[] = [];
 
@@ -1060,7 +1067,35 @@ function runAudit(
     errors.push(`stale hazard symbol — ${s} no longer resolves to an export`);
   }
 
-  const nightlyFiles = enumerateNightlyFiles(ctx, nightlyInclude);
+  // `rawNightlyFiles` is the full glob match — before NIGHTLY_EXCLUDE is
+  // folded out. `NIGHTLY_EXCLUDE` entries are validated against this raw set
+  // (existence + nightly-glob membership), fail-closed: an entry that
+  // matches no file on disk (renamed/deleted) fails the guard rather than
+  // silently becoming a no-op.
+  const rawNightlyFiles = enumerateNightlyFiles(ctx, nightlyInclude);
+  const rawNightlySet = new Set(rawNightlyFiles);
+
+  const excludeSeen = new Set<string>();
+  for (const entry of nightlyExclude) {
+    if (excludeSeen.has(entry)) {
+      errors.push(`NIGHTLY_EXCLUDE: duplicate entry "${entry}"`);
+    }
+    excludeSeen.add(entry);
+    if (!fs.existsSync(path.join(ctx.serverApiRoot, entry))) {
+      errors.push(`NIGHTLY_EXCLUDE: "${entry}" does not exist on disk`);
+    }
+    if (!rawNightlySet.has(entry)) {
+      errors.push(
+        `NIGHTLY_EXCLUDE: "${entry}" does not match any nightly glob`
+      );
+    }
+  }
+
+  // The partition the two lanes must exactly cover is (NIGHTLY_INCLUDE minus
+  // NIGHTLY_EXCLUDE) — an excluded file is removed from consideration here,
+  // before either lane is derived, so it can end up in neither.
+  const excludeSet = new Set(nightlyExclude);
+  const nightlyFiles = rawNightlyFiles.filter(f => !excludeSet.has(f));
   const nightlySet = new Set(nightlyFiles);
 
   const manifestSeen = new Set<string>();
@@ -1072,7 +1107,11 @@ function runAudit(
     if (!fs.existsSync(path.join(ctx.serverApiRoot, entry))) {
       errors.push(`PARALLEL_MANIFEST: "${entry}" does not exist on disk`);
     }
-    if (!nightlySet.has(entry)) {
+    if (excludeSet.has(entry)) {
+      errors.push(
+        `PARALLEL_MANIFEST: "${entry}" is also present in NIGHTLY_EXCLUDE — a file cannot be both promoted and excluded`
+      );
+    } else if (!nightlySet.has(entry)) {
       errors.push(
         `PARALLEL_MANIFEST: "${entry}" does not match any nightly glob`
       );
@@ -1124,6 +1163,7 @@ function runAudit(
     nightlyCount: nightlyFiles.length,
     parallelCount: manifestSet.size,
     serialFiles,
+    excludedCount: rawNightlyFiles.length - nightlyFiles.length,
   };
 }
 
@@ -1146,19 +1186,24 @@ async function main() {
   const lanesModuleUrl = pathToFileURL(
     path.join(serverApiRoot, 'src', 'scripts', 'nightly-lanes.ts')
   ).href;
-  const { NIGHTLY_INCLUDE, PARALLEL_MANIFEST } = (await import(
-    lanesModuleUrl
-  )) as {
+  const lanesModule = (await import(lanesModuleUrl)) as {
     NIGHTLY_INCLUDE: readonly string[];
     PARALLEL_MANIFEST: readonly string[];
+    // Optional so pre-existing fixture trees that predate the exclusion
+    // mechanism (no `NIGHTLY_EXCLUDE` export at all) keep working unchanged
+    // — absent is treated as "no exclusions", not a guard crash.
+    NIGHTLY_EXCLUDE?: readonly string[];
   };
+  const { NIGHTLY_INCLUDE, PARALLEL_MANIFEST } = lanesModule;
+  const NIGHTLY_EXCLUDE = lanesModule.NIGHTLY_EXCLUDE ?? [];
 
-  const audit = runAudit(ctx, NIGHTLY_INCLUDE, PARALLEL_MANIFEST);
+  const audit = runAudit(ctx, NIGHTLY_INCLUDE, PARALLEL_MANIFEST, NIGHTLY_EXCLUDE);
 
   console.log('[lanes:validate] nightly lane audit');
   console.log(`  nightly total:  ${audit.nightlyCount}`);
   console.log(`  parallel lane:  ${audit.parallelCount}`);
   console.log(`  serial lane:    ${audit.serialFiles.length}`);
+  console.log(`  excluded:       ${audit.excludedCount}`);
   console.log('  derived serial files:');
   for (const f of audit.serialFiles) console.log(`    - ${f}`);
 

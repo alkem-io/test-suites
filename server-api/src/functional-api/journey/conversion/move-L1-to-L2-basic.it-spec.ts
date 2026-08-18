@@ -20,7 +20,6 @@ const sourceConfig: TestScenarioConfig = {
   name: 'move-l1-to-l2-src',
   space: {
     collaboration: {
-      addPostCallout: true,
       addPostCollectionCallout: true,
       addWhiteboardCallout: true,
     },
@@ -35,7 +34,6 @@ const sourceConfig: TestScenarioConfig = {
     },
     subspace: {
       collaboration: {
-        addPostCallout: true,
         addPostCollectionCallout: true,
         addWhiteboardCallout: true,
       },
@@ -52,7 +50,6 @@ const sourceConfig: TestScenarioConfig = {
 const targetConfig: TestScenarioConfig = {
   name: 'move-l1-to-l2-tgt',
   space: {
-    collaboration: { addPostCallout: true },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [
@@ -63,7 +60,6 @@ const targetConfig: TestScenarioConfig = {
       ],
     },
     subspace: {
-      collaboration: { addPostCallout: true },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
         members: [TestUser.SUBSPACE_MEMBER, TestUser.SUBSPACE_ADMIN],
@@ -80,8 +76,11 @@ let movedSpace:
   | undefined;
 
 beforeAll(async () => {
-  sourceScenario = await TestScenarioFactory.createBaseScenario(sourceConfig);
-  targetScenario = await TestScenarioFactory.createBaseScenario(targetConfig);
+  // Independent scenarios (distinct names, no shared state) — build concurrently.
+  [sourceScenario, targetScenario] = await Promise.all([
+    TestScenarioFactory.createBaseScenario(sourceConfig),
+    TestScenarioFactory.createBaseScenario(targetConfig),
+  ]);
 
   // Capture state before move
   subspaceBefore = await getSpaceData(sourceScenario.subspace.id);

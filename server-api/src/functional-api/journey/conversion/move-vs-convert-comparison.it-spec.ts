@@ -33,7 +33,6 @@ import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/O
 const sourceConfig: TestScenarioConfig = {
   name: 'compare-src',
   space: {
-    collaboration: { addPostCallout: true },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [
@@ -44,7 +43,6 @@ const sourceConfig: TestScenarioConfig = {
       ],
     },
     subspace: {
-      collaboration: { addPostCallout: true },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
         members: [TestUser.SUBSPACE_MEMBER, TestUser.SUBSPACE_ADMIN],
@@ -56,7 +54,6 @@ const sourceConfig: TestScenarioConfig = {
 const targetConfig: TestScenarioConfig = {
   name: 'compare-tgt',
   space: {
-    collaboration: { addPostCallout: true },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [
@@ -66,7 +63,6 @@ const targetConfig: TestScenarioConfig = {
       ],
     },
     subspace: {
-      collaboration: { addPostCallout: true },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
         members: [TestUser.SUBSPACE_MEMBER, TestUser.SUBSPACE_ADMIN],
@@ -82,14 +78,17 @@ describe('Same-L0 vs Cross-L0 demotion comparison', () => {
     let urlBefore: string;
 
     beforeAll(async () => {
-      crossL0Source = await TestScenarioFactory.createBaseScenario({
-        ...sourceConfig,
-        name: 'compare-cross-src',
-      });
-      crossL0Target = await TestScenarioFactory.createBaseScenario({
-        ...targetConfig,
-        name: 'compare-cross-tgt',
-      });
+      // Independent scenarios (distinct names, no shared state) — build concurrently.
+      [crossL0Source, crossL0Target] = await Promise.all([
+        TestScenarioFactory.createBaseScenario({
+          ...sourceConfig,
+          name: 'compare-cross-src',
+        }),
+        TestScenarioFactory.createBaseScenario({
+          ...targetConfig,
+          name: 'compare-cross-tgt',
+        }),
+      ]);
 
       // Capture URL before move
       const dataBefore = await getSpaceData(crossL0Source.subspace.id);
@@ -147,14 +146,17 @@ describe('Same-L0 vs Cross-L0 demotion comparison', () => {
     let roomTarget: OrganizationWithSpaceModel;
 
     beforeAll(async () => {
-      roomSource = await TestScenarioFactory.createBaseScenario({
-        ...sourceConfig,
-        name: 'compare-room-src',
-      });
-      roomTarget = await TestScenarioFactory.createBaseScenario({
-        ...targetConfig,
-        name: 'compare-room-tgt',
-      });
+      // Independent scenarios (distinct names, no shared state) — build concurrently.
+      [roomSource, roomTarget] = await Promise.all([
+        TestScenarioFactory.createBaseScenario({
+          ...sourceConfig,
+          name: 'compare-room-src',
+        }),
+        TestScenarioFactory.createBaseScenario({
+          ...targetConfig,
+          name: 'compare-room-tgt',
+        }),
+      ]);
 
       // Send messages to updates room before move
       const msgRes = await sendMessageToRoom(
