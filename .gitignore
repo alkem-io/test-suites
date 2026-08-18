@@ -6,6 +6,10 @@ client-web/dist
 server-api/html-report
 server-api/dist
 
+# Nightly lane guard's emitted membership snapshot (server-api/lanes.json) —
+# transient per-run output, not the source of truth (nightly-lanes.ts is).
+server-api/lanes.json
+
 # dependencies
 node_modules/
 lib/node_modules

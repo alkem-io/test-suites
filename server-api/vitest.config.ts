@@ -1,6 +1,11 @@
 import { defineConfig } from 'vitest/config';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import {
+  NIGHTLY_INCLUDE,
+  PARALLEL_MANIFEST,
+  parseNightlyWorkers,
+} from './src/scripts/nightly-lanes';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const resolve = (...segments: string[]) => path.resolve(__dirname, ...segments);
@@ -39,9 +44,15 @@ export default defineConfig({
     hookTimeout: 120_000, // beforeAll hooks create multiple entities via API, so they need more headroom
     globalSetup: './src/globalTestsSetup.ts',
     setupFiles: ['./src/setupTests.ts'],
-    reporters: ['default', 'html'],
+    // 'json' adds a machine-readable per-test verdict record alongside the
+    // existing html report — it lands inside html-report/ so the untouched
+    // scripts/publish-report.sh (which cp -r's the whole directory) publishes
+    // it with zero script changes. Consumed by nightly-serial-confirm.mjs and
+    // nightly-baseline-diff.mjs.
+    reporters: ['default', 'html', 'json'],
     outputFile: {
       html: './html-report/index.html',
+      json: './html-report/results.json',
     },
     projects: [
       project('account', ['src/functional-api/account/**/*.it-spec.ts']),
@@ -132,6 +143,37 @@ export default defineConfig({
         'src/functional-api/push-notifications/**/*.it-spec.ts',
         'src/functional-api/language/**/*.it-spec.ts',
       ]),
+      // nightly-parallel / nightly-serial — the two-lane split of the nightly
+      // scope. Membership is derived from the single source in
+      // `src/scripts/nightly-lanes.ts` so this config and the lane guard's
+      // proof cannot drift apart. Distinct `sequence.groupOrder` values are
+      // mandatory: vitest runs groups sequentially (parallel lane first — a
+      // serial-lane file crashing mid-file can leak shared-state mutations,
+      // and running serial last keeps that leak out of the same night's
+      // concurrent pass) and throws at startup if two projects in the
+      // same group have different `maxWorkers` — that throw is the fail-closed
+      // misconfiguration check for this split.
+      {
+        extends: true as const,
+        test: {
+          name: 'nightly-parallel',
+          include: [...PARALLEL_MANIFEST],
+          sequence: { groupOrder: 0 },
+          maxWorkers: parseNightlyWorkers(process.env.NIGHTLY_MAX_WORKERS),
+          retry: 0,
+        },
+      },
+      {
+        extends: true as const,
+        test: {
+          name: 'nightly-serial',
+          include: [...NIGHTLY_INCLUDE],
+          exclude: [...PARALLEL_MANIFEST],
+          sequence: { groupOrder: 1 },
+          maxWorkers: 1,
+          retry: 0,
+        },
+      },
     ],
   },
 });
