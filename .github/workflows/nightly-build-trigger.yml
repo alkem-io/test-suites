@@ -74,6 +74,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # PR-time drift gate, run again here so a nightly can never start on an
+      # unsound lane split even if a merge slipped through: proves the
+      # parallel/serial partition and hazard-rule soundness, and emits the
+      # authoritative lane membership the serial-confirm step reads.
+      - name: Nightly lane guard
+        run: pnpm --filter @alkemio/test-suite-server-api run lanes:validate -- --emit-lanes lanes.json
+
       - name: Install Kubectl
         uses: azure/setup-kubectl@v5.1.0
         with:
@@ -111,6 +118,9 @@ jobs:
           # retried-after-commit createSubspace failures behind cryptic
           # 'nameID already taken' errors (2026-07-15 nightly, #563).
           LOG_LEVEL: warn
+          # Feature-owned worker-count pin for the nightly-parallel project —
+          # unset/empty ⇒ config default of 1 (behaviour-identical rollback).
+          NIGHTLY_MAX_WORKERS: ${{ vars.NIGHTLY_MAX_WORKERS }}
         run: |
           set -uo pipefail
           # kratos-admin is ClusterIP (network-isolated); reach it via a
@@ -125,7 +135,97 @@ jobs:
           if ! grep -q "Forwarding from" /tmp/kratos-admin-pf.log; then
             echo "kratos-admin port-forward failed"; cat /tmp/kratos-admin-pf.log; exit 1
           fi
-          pnpm --filter @alkemio/test-suite-server-api run test:nightly
+          set -o pipefail
+          pnpm --filter @alkemio/test-suite-server-api run test:nightly 2>&1 | tee /tmp/nightly-run.log
+
+      # Always verifies the run's own evidence — lane counts, mint count —
+      # regardless of pass/fail, since a green night with a silently wrong
+      # partition or a login storm is exactly the failure mode this feature
+      # exists to prevent. Deliberately NOT continue-on-error: a mismatch here
+      # is a harness/config defect, not a flaky test, and should hard-fail.
+      - name: Assert nightly config
+        if: ${{ always() }}
+        env:
+          NIGHTLY_MAX_WORKERS: ${{ vars.NIGHTLY_MAX_WORKERS }}
+        run: |
+          set -euo pipefail
+          W="${NIGHTLY_MAX_WORKERS:-1}"
+          [ -z "$W" ] && W=1
+          PARALLEL_N=$(jq '.parallel | length' server-api/lanes.json)
+          SERIAL_M=$(jq '.serial | length' server-api/lanes.json)
+          EXPECTED_LINE="[nightly] lanes: parallel=${PARALLEL_N} serial=${SERIAL_M} maxWorkers=${W}"
+          if ! grep -qF "$EXPECTED_LINE" /tmp/nightly-run.log; then
+            echo "::error::expected run log line not found: $EXPECTED_LINE"
+            grep "\[nightly\] lanes:" /tmp/nightly-run.log || echo "no [nightly] lanes: line present in the run log"
+            exit 1
+          fi
+          RESULT_COUNT=$(jq '[.testResults[].name] | length' server-api/html-report/results.json)
+          EXPECTED_TOTAL=$((PARALLEL_N + SERIAL_M))
+          if [ "$RESULT_COUNT" -ne "$EXPECTED_TOTAL" ]; then
+            echo "::error::results.json reports ${RESULT_COUNT} file results, expected ${EXPECTED_TOTAL} (parallel+serial from the guard's partition)"
+            exit 1
+          fi
+          MINT_COUNT=$(grep -c '\[auth\] minted token for' /tmp/nightly-run.log || true)
+          if [ "$MINT_COUNT" -ne 13 ]; then
+            echo "::error::expected exactly 13 token mints regardless of worker count, found ${MINT_COUNT}"
+            exit 1
+          fi
+          echo "assert-config OK: parallel=${PARALLEL_N} serial=${SERIAL_M} maxWorkers=${W} results=${RESULT_COUNT} mints=${MINT_COUNT}"
+
+      # The structural exit-code gate: re-runs only the parallel-lane failures
+      # serially and derives the build's verdict from serial results alone. A
+      # file that fails concurrently but passes alone is interference, not a
+      # build failure — it lands in the published ledger for triage instead.
+      - name: Serial-confirm re-run
+        id: serial-confirm
+        if: ${{ always() && steps.server-api-tests.outcome == 'failure' }}
+        continue-on-error: true
+        env:
+          ALKEMIO_SERVER: ${{ vars.ALKEMIO_SERVER }}
+          ALKEMIO_SERVER_URL: ${{ vars.ALKEMIO_SERVER_URL }}
+          ALKEMIO_BASE_URL: ${{ vars.ALKEMIO_BASE_URL }}
+          ALKEMIO_SERVER_WS: ${{ vars.ALKEMIO_SERVER_WS }}
+          ALKEMIO_SERVER_REST: ${{ vars.ALKEMIO_SERVER_REST }}
+          KRATOS_ENDPOINT: ${{ vars.KRATOS_ENDPOINT }}
+          MAIL_SLURPER_ENDPOINT: ${{ vars.MAIL_SLURPER_ENDPOINT }}
+          AUTH_TEST_HARNESS_PASSWORD: ${{ secrets.AUTH_TEST_HARNESS_PASSWORD }}
+          KRATOS_ADMIN_URL: http://localhost:4434
+          LOG_LEVEL: warn
+        run: |
+          set -uo pipefail
+          # A fresh contingency invocation needs its own port-forward — the
+          # main test step's trap already tore its own down on exit.
+          kubectl port-forward -n default svc/kratos-admin 4434:80 > /tmp/kratos-admin-pf-confirm.log 2>&1 &
+          PF_PID=$!
+          trap 'kill $PF_PID 2>/dev/null || true' EXIT
+          for i in $(seq 1 20); do
+            grep -q "Forwarding from" /tmp/kratos-admin-pf-confirm.log && break
+            sleep 1
+          done
+          if ! grep -q "Forwarding from" /tmp/kratos-admin-pf-confirm.log; then
+            echo "kratos-admin port-forward failed"; cat /tmp/kratos-admin-pf-confirm.log; exit 1
+          fi
+          node scripts/nightly-serial-confirm.mjs \
+            --results server-api/html-report/results.json \
+            --lanes server-api/lanes.json \
+            --run-id "${RUN_ID}" \
+            --run-date "${RUN_DATE}" \
+            --ledger-archive out/gh-pages-root/server-api
+
+      # Non-gating by default: publishes a per-test diff against the trailing
+      # 14 archived nights so a real regression stands out even while a
+      # known-failing case keeps the raw exit code busy. Always runs — it
+      # reports the same known-failing/known-intermittent facts on a green
+      # night too.
+      - name: Nightly baseline diff
+        if: ${{ always() }}
+        env:
+          BASELINE_DIFF_ENFORCE: ${{ vars.BASELINE_DIFF_ENFORCE }}
+        run: |
+          node scripts/nightly-baseline-diff.mjs \
+            --archive out/gh-pages-root/server-api \
+            --current server-api/html-report/results.json \
+            --out server-api/html-report/baseline-diff.json
 
       - name: Publish report to GitHub Pages
         if: ${{ always() }}
@@ -139,9 +239,22 @@ jobs:
             "server-api/html-report" \
             "${{ steps.server-api-tests.outcome }}"
 
-      - name: Fail job if server API tests failed
-        if: ${{ steps.server-api-tests.outcome == 'failure' }}
-        run: exit 1
+      # The exit code is the serial verdict, not the raw main-run outcome: a
+      # parallel-lane failure that passed its serial re-run must NOT fail the
+      # build. Fails closed if the main run failed and serial-confirm didn't
+      # produce a verdict at all (skipped, cancelled, or itself crashed).
+      - name: Fail job if the nightly's serial verdict is a failure
+        if: ${{ always() }}
+        run: |
+          if [ "${{ steps.server-api-tests.outcome }}" = "failure" ]; then
+            if [ "${{ steps.serial-confirm.outcome }}" != "success" ]; then
+              echo "::error::nightly serial verdict is FAIL (or serial-confirm did not complete) — see the serial-confirm step summary"
+              exit 1
+            fi
+            echo "serial-confirm verdict: PASS — parallel-lane failures were interference, not confirmed regressions"
+          else
+            echo "main test step succeeded — nothing to confirm"
+          fi
 
   deploy:
     if: ${{ always() }}
@@ -152,7 +265,7 @@ jobs:
       path: gh-pages-root
 
   # Always release the lock after e2e — even on failure — so the next nightly or
-  # deploy isn't blocked until the stale-TTL reclaim (60 min). The gh-pages
+  # deploy isn't blocked until the stale-TTL reclaim. The gh-pages
   # `deploy` job doesn't touch the test cluster, so it runs unlocked in parallel.
   release-lock:
     needs: [acquire-lock, run-e2e-tests]
