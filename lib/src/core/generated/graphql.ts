@@ -45,18 +45,28 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean };
   Int: { input: number; output: number };
   Float: { input: number; output: number };
+  /** A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format. */
   DateTime: { input: Date; output: Date };
+  /** An Emoji. */
   Emoji: { input: any; output: any };
+  /** A representation of a Lifecycle Definition, based on XState. It is serialized JSON. */
   LifecycleDefinition: { input: any; output: any };
+  /** A markdown string. */
   Markdown: { input: any; output: any };
+  /** An identifier that originates from the underlying messaging platform. */
   MessageID: { input: any; output: any };
+  /** A human readable identifier, 3 <= length <= 28. Used for URL paths in clients. Characters allowed: a-z,A-Z,0-9. */
   NameID: { input: string; output: string };
+  /** Cursor used for paginating search results. */
   SearchCursor: { input: any; output: any };
+  /** A uuid identifier. Length 36 characters. */
   UUID: { input: string; output: string };
+  /** The `Upload` scalar type represents a file upload. */
   Upload: {
     input: import("graphql-upload").FileUpload;
     output: import("graphql-upload").FileUpload;
   };
+  /** Content of a Whiteboard, as JSON. */
   WhiteboardContent: { input: any; output: any };
 };
 
@@ -881,6 +891,7 @@ export enum AuthorizationCredential {
   OrganizationAdmin = "ORGANIZATION_ADMIN",
   OrganizationAssociate = "ORGANIZATION_ASSOCIATE",
   OrganizationOwner = "ORGANIZATION_OWNER",
+  PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
   SpaceAdmin = "SPACE_ADMIN",
   SpaceLead = "SPACE_LEAD",
   SpaceMember = "SPACE_MEMBER",
@@ -1001,6 +1012,7 @@ export enum AuthorizationPrivilege {
   MoveContribution = "MOVE_CONTRIBUTION",
   MovePost = "MOVE_POST",
   PlatformAdmin = "PLATFORM_ADMIN",
+  PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
   PlatformSettingsAdmin = "PLATFORM_SETTINGS_ADMIN",
   PublicShare = "PUBLIC_SHARE",
   Read = "READ",
@@ -1680,6 +1692,8 @@ export type Config = {
   featureFlags: Array<PlatformFeatureFlag>;
   /** Integration with a 3rd party Geo information service */
   geo: Geo;
+  /** Language configuration: eligible set for proactive offers and the platform default. */
+  language: LanguageConfig;
   /** Platform related locations. */
   locations: PlatformLocations;
   /** Sentry (client monitoring) related configuration. */
@@ -2744,6 +2758,7 @@ export enum CredentialType {
   OrganizationAdmin = "ORGANIZATION_ADMIN",
   OrganizationAssociate = "ORGANIZATION_ASSOCIATE",
   OrganizationOwner = "ORGANIZATION_OWNER",
+  PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
   SpaceAdmin = "SPACE_ADMIN",
   SpaceFeatureMemoMultiUser = "SPACE_FEATURE_MEMO_MULTI_USER",
   SpaceFeatureOfficeDocuments = "SPACE_FEATURE_OFFICE_DOCUMENTS",
@@ -3625,6 +3640,8 @@ export type Invitation = {
   nextEvents: Array<Scalars["String"]["output"]>;
   /** The current state of this Lifecycle. */
   state: Scalars["String"]["output"];
+  /** Optional language the inviter expects the invitee to prefer; recorded per invitation. */
+  suggestedLanguage?: Maybe<Scalars["String"]["output"]>;
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
   welcomeMessage?: Maybe<Scalars["String"]["output"]>;
@@ -3642,6 +3659,8 @@ export type InviteForEntryRoleOnRoleSetInput = {
   invitedActorIDs: Array<Scalars["UUID"]["input"]>;
   invitedUserEmails: Array<Scalars["String"]["input"]>;
   roleSetID: Scalars["UUID"]["input"];
+  /** Optional language the inviter expects the invitees to prefer (single value for the whole batch). Must be in the eligible set at compose time. Recorded per-invitation so per-invitee granularity later is a UI change, not a migration. */
+  suggestedLanguage?: InputMaybe<Scalars["String"]["input"]>;
   /** The welcome message to send */
   welcomeMessage?: InputMaybe<Scalars["String"]["input"]>;
 };
@@ -3680,6 +3699,13 @@ export type KratosIdentity = {
   lastName?: Maybe<Scalars["String"]["output"]>;
   /** The current verification status of the email address. */
   verificationStatus: Scalars["String"]["output"];
+};
+
+export type LanguageConfig = {
+  /** The platform-wide default interface language. */
+  default: Scalars["String"]["output"];
+  /** Languages the platform proactively detects, offers, and allows as invitation suggestions — subset of the supported set; empty = all proactive offers disabled. */
+  eligible: Array<Scalars["String"]["output"]>;
 };
 
 export type LatestReleaseDiscussion = {
@@ -4995,7 +5021,7 @@ export type Mutation = {
   unsubscribeFromPushNotifications: PushSubscription;
   /** Update the Application Form used by this RoleSet. */
   updateApplicationFormOnRoleSet: RoleSet;
-  /** Set the admin per-capability grant on the virtual-assistant actor, governing what it may do system-invoked (default read-only). Requires platform-admin. */
+  /** Set the admin per-capability grant on the virtual-assistant actor, governing what it may do system-invoked (default read-only). Requires the platform-operations-admin privilege. */
   updateAssistantActorCapabilities: VirtualAssistant;
   /** Update the baseline License Plan on the specified Account. */
   updateBaselineLicensePlanOnAccount: Account;
@@ -5999,6 +6025,8 @@ export enum NotificationEvent {
   SpaceCommunityInvitationUserPlatform = "SPACE_COMMUNITY_INVITATION_USER_PLATFORM",
   SpaceLeadCommunicationMessage = "SPACE_LEAD_COMMUNICATION_MESSAGE",
   UserCommentReply = "USER_COMMENT_REPLY",
+  UserConversationMessageDirect = "USER_CONVERSATION_MESSAGE_DIRECT",
+  UserConversationMessageGroup = "USER_CONVERSATION_MESSAGE_GROUP",
   UserEmailChangeGlobalAdminNotification = "USER_EMAIL_CHANGE_GLOBAL_ADMIN_NOTIFICATION",
   UserEmailChangeNewAddressNotification = "USER_EMAIL_CHANGE_NEW_ADDRESS_NOTIFICATION",
   UserEmailChangeSecuritySignal = "USER_EMAIL_CHANGE_SECURITY_SIGNAL",
@@ -6084,6 +6112,8 @@ export type NotificationRecipientsInput = {
   triggeredBy?: InputMaybe<Scalars["UUID"]["input"]>;
   /** The ID of the specific user recipient for user-related notifications (e.g., invitations, mentions). */
   userID?: InputMaybe<Scalars["UUID"]["input"]>;
+  /** Plural recipient user IDs (e.g. conversation-message events) — resolved via a single OR-combined credentials query. Bounded to at most 100 entries; larger conversations must be fanned out by the caller in bounded batches. */
+  userIDs?: InputMaybe<Array<Scalars["UUID"]["input"]>>;
   /** The ID of the Virtual Contributor to use to determine recipients. */
   virtualContributorID?: InputMaybe<Scalars["UUID"]["input"]>;
 };
@@ -6481,6 +6511,8 @@ export type PlatformInvitation = {
   roleSetExtraRoles: Array<RoleName>;
   /** Whether to also add the invited user to the parent community. */
   roleSetInvitedToParent: Scalars["Boolean"]["output"];
+  /** Optional language the inviter expects the invitee to prefer; recorded per invitation. */
+  suggestedLanguage?: Maybe<Scalars["String"]["output"]>;
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
   welcomeMessage?: Maybe<Scalars["String"]["output"]>;
@@ -7406,6 +7438,7 @@ export enum RoleName {
   Owner = "OWNER",
   PlatformAssistantAccess = "PLATFORM_ASSISTANT_ACCESS",
   PlatformBetaTester = "PLATFORM_BETA_TESTER",
+  PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
   PlatformVcCampaign = "PLATFORM_VC_CAMPAIGN",
   Registered = "REGISTERED",
 }
@@ -9345,6 +9378,10 @@ export type UpdateUserSettingsEntityInput = {
   designVersion?: InputMaybe<Scalars["Int"]["input"]>;
   /** Settings related to Home Space. */
   homeSpace?: InputMaybe<UpdateUserSettingsHomeSpaceInput>;
+  /** Set the user's interface language preference. Must be a value from the supported languages set. Any language write also latches languageOfferAnswered=true. */
+  language?: InputMaybe<Scalars["String"]["input"]>;
+  /** Mark that this User has answered the one-time language offer. One-way latch: setting false is rejected. */
+  languageOfferAnswered?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** Settings related to this users Notifications preferences. */
   notification?: InputMaybe<UpdateUserSettingsNotificationInput>;
   /** Settings related to Privacy. */
@@ -9457,6 +9494,10 @@ export type UpdateUserSettingsNotificationSpaceInput = {
 export type UpdateUserSettingsNotificationUserInput = {
   /** Receive a notification when someone replies to a comment I made. */
   commentReply?: InputMaybe<NotificationSettingInput>;
+  /** Receive a notification when someone sends me a direct (1:1) chat message. Note: the inApp channel is permanently OFF regardless of the stored value. */
+  conversationMessageDirect?: InputMaybe<NotificationSettingInput>;
+  /** Receive a notification when someone posts in a group chat I am a member of. Note: the inApp channel is permanently OFF regardless of the stored value. */
+  conversationMessageGroup?: InputMaybe<NotificationSettingInput>;
   /** Settings related to User Membership Notifications. */
   membership?: InputMaybe<UpdateUserSettingsNotificationUserMembershipInput>;
   /** Receive a notification you are mentioned */
@@ -9852,6 +9893,10 @@ export type UserSettings = {
   homeSpace: UserSettingsHomeSpace;
   /** The ID of the entity */
   id: Scalars["UUID"]["output"];
+  /** The interface language chosen by this User. Null = the User has never chosen a language (distinct from having chosen the platform default). */
+  language?: Maybe<Scalars["String"]["output"]>;
+  /** Whether this User has answered the one-time language offer (global across all languages). Latched true by any language write. */
+  languageOfferAnswered: Scalars["Boolean"]["output"];
   /** The notification settings for this User. */
   notification: UserSettingsNotification;
   /** The privacy settings for this User */
@@ -9980,6 +10025,10 @@ export type UserSettingsNotificationSpaceAdmin = {
 export type UserSettingsNotificationUser = {
   /** Receive a notification when someone replies to a comment I made. */
   commentReply: UserSettingsNotificationChannels;
+  /** Receive a notification when someone sends me a direct (1:1) chat message. The inApp channel is permanently OFF (enforced platform-wide) — the stored value is retained for row-shape symmetry only. */
+  conversationMessageDirect: UserSettingsNotificationChannels;
+  /** Receive a notification when someone posts in a group chat I am a member of. The inApp channel is permanently OFF (enforced platform-wide) — the stored value is retained for row-shape symmetry only. */
+  conversationMessageGroup: UserSettingsNotificationChannels;
   /** The notifications settings for membership events for this User */
   membership: UserSettingsNotificationUserMembership;
   /** Receive a notification you are mentioned */
@@ -11614,6 +11663,7 @@ export type ResolversTypes = {
     }
   >;
   KratosIdentity: ResolverTypeWrapper<SchemaTypes.KratosIdentity>;
+  LanguageConfig: ResolverTypeWrapper<SchemaTypes.LanguageConfig>;
   LatestReleaseDiscussion: ResolverTypeWrapper<SchemaTypes.LatestReleaseDiscussion>;
   LeaveConversationInput: SchemaTypes.LeaveConversationInput;
   Library: ResolverTypeWrapper<
@@ -13194,6 +13244,7 @@ export type ResolversParentTypes = {
     profile: ResolversParentTypes["Profile"];
   };
   KratosIdentity: SchemaTypes.KratosIdentity;
+  LanguageConfig: SchemaTypes.LanguageConfig;
   LatestReleaseDiscussion: SchemaTypes.LatestReleaseDiscussion;
   LeaveConversationInput: SchemaTypes.LeaveConversationInput;
   Library: Omit<
@@ -15585,6 +15636,11 @@ export type ConfigResolvers<
     ContextType
   >;
   geo?: Resolver<ResolversTypes["Geo"], ParentType, ContextType>;
+  language?: Resolver<
+    ResolversTypes["LanguageConfig"],
+    ParentType,
+    ContextType
+  >;
   locations?: Resolver<
     ResolversTypes["PlatformLocations"],
     ParentType,
@@ -17516,6 +17572,11 @@ export type InvitationResolvers<
     ContextType
   >;
   state?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  suggestedLanguage?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
   updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   welcomeMessage?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["String"]>,
@@ -17569,6 +17630,15 @@ export type KratosIdentityResolvers<
     ParentType,
     ContextType
   >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type LanguageConfigResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["LanguageConfig"] = ResolversParentTypes["LanguageConfig"]
+> = {
+  default?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  eligible?: Resolver<Array<ResolversTypes["String"]>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -20954,6 +21024,11 @@ export type PlatformInvitationResolvers<
     ParentType,
     ContextType
   >;
+  suggestedLanguage?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
   updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   welcomeMessage?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["String"]>,
@@ -23920,6 +23995,16 @@ export type UserSettingsResolvers<
     ContextType
   >;
   id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  language?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
+  languageOfferAnswered?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
   notification?: Resolver<
     ResolversTypes["UserSettingsNotification"],
     ParentType,
@@ -24206,6 +24291,16 @@ export type UserSettingsNotificationUserResolvers<
   ParentType extends ResolversParentTypes["UserSettingsNotificationUser"] = ResolversParentTypes["UserSettingsNotificationUser"]
 > = {
   commentReply?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  conversationMessageDirect?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  conversationMessageGroup?: Resolver<
     ResolversTypes["UserSettingsNotificationChannels"],
     ParentType,
     ContextType
@@ -24837,6 +24932,7 @@ export type Resolvers<ContextType = any> = {
   Invitation?: InvitationResolvers<ContextType>;
   KnowledgeBase?: KnowledgeBaseResolvers<ContextType>;
   KratosIdentity?: KratosIdentityResolvers<ContextType>;
+  LanguageConfig?: LanguageConfigResolvers<ContextType>;
   LatestReleaseDiscussion?: LatestReleaseDiscussionResolvers<ContextType>;
   Library?: LibraryResolvers<ContextType>;
   License?: LicenseResolvers<ContextType>;
@@ -46793,6 +46889,18 @@ export type UserDataFragment = {
           inApp: boolean;
           push: boolean;
         };
+        conversationMessageDirect: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+          push: boolean;
+        };
+        conversationMessageGroup: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+          push: boolean;
+        };
       };
       virtualContributor: {
         __typename: "UserSettingsNotificationVirtualContributor";
@@ -47015,6 +47123,18 @@ export type UserSettingsFragmentFragment = {
         push: boolean;
       };
       messageReceived: {
+        __typename: "UserSettingsNotificationChannels";
+        email: boolean;
+        inApp: boolean;
+        push: boolean;
+      };
+      conversationMessageDirect: {
+        __typename: "UserSettingsNotificationChannels";
+        email: boolean;
+        inApp: boolean;
+        push: boolean;
+      };
+      conversationMessageGroup: {
         __typename: "UserSettingsNotificationChannels";
         email: boolean;
         inApp: boolean;
@@ -47665,6 +47785,18 @@ export type AssignRoleToUserMutation = {
             inApp: boolean;
             push: boolean;
           };
+          conversationMessageDirect: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          conversationMessageGroup: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
         };
         virtualContributor: {
           __typename: "UserSettingsNotificationVirtualContributor";
@@ -48048,6 +48180,18 @@ export type AssignRoleToUserExtendedDataMutation = {
             push: boolean;
           };
           messageReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          conversationMessageDirect: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          conversationMessageGroup: {
             __typename: "UserSettingsNotificationChannels";
             email: boolean;
             inApp: boolean;
@@ -48851,6 +48995,18 @@ export type RemoveRoleFromUserMutation = {
             inApp: boolean;
             push: boolean;
           };
+          conversationMessageDirect: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          conversationMessageGroup: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
         };
         virtualContributor: {
           __typename: "UserSettingsNotificationVirtualContributor";
@@ -49235,6 +49391,18 @@ export type RemoveRoleFromUserExtendedDataMutation = {
             push: boolean;
           };
           messageReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          conversationMessageDirect: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          conversationMessageGroup: {
             __typename: "UserSettingsNotificationChannels";
             email: boolean;
             inApp: boolean;
@@ -88046,6 +88214,18 @@ export type CreateUserMutation = {
             inApp: boolean;
             push: boolean;
           };
+          conversationMessageDirect: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          conversationMessageGroup: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
         };
         virtualContributor: {
           __typename: "UserSettingsNotificationVirtualContributor";
@@ -88440,6 +88620,18 @@ export type UpdateUserMutation = {
             inApp: boolean;
             push: boolean;
           };
+          conversationMessageDirect: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          conversationMessageGroup: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
         };
         virtualContributor: {
           __typename: "UserSettingsNotificationVirtualContributor";
@@ -88659,6 +88851,18 @@ export type UpdateUserSettingsMutation = {
             push: boolean;
           };
           messageReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          conversationMessageDirect: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          conversationMessageGroup: {
             __typename: "UserSettingsNotificationChannels";
             email: boolean;
             inApp: boolean;
@@ -97141,6 +97345,18 @@ export type UsersPaginatedQuery = {
               push: boolean;
             };
             messageReceived: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            conversationMessageDirect: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            conversationMessageGroup: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -112412,6 +112628,18 @@ export type GetUserDataQuery = {
             inApp: boolean;
             push: boolean;
           };
+          conversationMessageDirect: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          conversationMessageGroup: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
         };
         virtualContributor: {
           __typename: "UserSettingsNotificationVirtualContributor";
@@ -112817,6 +113045,18 @@ export type GetUsersDataQuery = {
             push: boolean;
           };
           messageReceived: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          conversationMessageDirect: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
+          conversationMessageGroup: {
             __typename: "UserSettingsNotificationChannels";
             email: boolean;
             inApp: boolean;
@@ -114916,6 +115156,18 @@ export const UserSettingsFragmentFragmentDoc = gql`
           push
           __typename
         }
+        conversationMessageDirect {
+          email
+          inApp
+          push
+          __typename
+        }
+        conversationMessageGroup {
+          email
+          inApp
+          push
+          __typename
+        }
         __typename
       }
       virtualContributor {
@@ -115763,6 +116015,70 @@ export const UpdateCalloutVisibilityDocument = gql`
     }
   }
   ${CalloutDataFragmentDoc}
+`;
+export const AddReactionToCalloutDocument = gql`
+  mutation AddReactionToCallout($reactionData: AddReactionToCalloutInput!) {
+    addReactionToCallout(reactionData: $reactionData) {
+      id
+      reactionsSummary {
+        total
+        emojis
+        myReactionEmoji
+        allowedEmojis
+      }
+    }
+  }
+`;
+export const RemoveReactionFromCalloutDocument = gql`
+  mutation RemoveReactionFromCallout(
+    $reactionData: RemoveReactionFromCalloutInput!
+  ) {
+    removeReactionFromCallout(reactionData: $reactionData) {
+      id
+      reactionsSummary {
+        total
+        emojis
+        myReactionEmoji
+        allowedEmojis
+      }
+    }
+  }
+`;
+export const GetCalloutReactionsSummaryDocument = gql`
+  query GetCalloutReactionsSummary($calloutId: UUID!) {
+    lookup {
+      callout(ID: $calloutId) {
+        id
+        reactionsSummary {
+          total
+          emojis
+          myReactionEmoji
+          allowedEmojis
+        }
+      }
+    }
+  }
+`;
+export const GetCalloutReactionsDocument = gql`
+  query GetCalloutReactions($calloutId: UUID!) {
+    lookup {
+      callout(ID: $calloutId) {
+        id
+        reactions {
+          id
+          emoji
+          updatedDate
+          user {
+            id
+            nameID
+            profile {
+              displayName
+            }
+          }
+        }
+      }
+    }
+  }
 `;
 export const CreateContributionOnCalloutDocument = gql`
   mutation CreateContributionOnCallout(
@@ -118635,6 +118951,14 @@ const UpdateCalloutDocumentString = print(UpdateCalloutDocument);
 const UpdateCalloutVisibilityDocumentString = print(
   UpdateCalloutVisibilityDocument
 );
+const AddReactionToCalloutDocumentString = print(AddReactionToCalloutDocument);
+const RemoveReactionFromCalloutDocumentString = print(
+  RemoveReactionFromCalloutDocument
+);
+const GetCalloutReactionsSummaryDocumentString = print(
+  GetCalloutReactionsSummaryDocument
+);
+const GetCalloutReactionsDocumentString = print(GetCalloutReactionsDocument);
 const CreateContributionOnCalloutDocumentString = print(
   CreateContributionOnCalloutDocument
 );
@@ -119623,6 +119947,94 @@ export function getSdk(
           ),
         "UpdateCalloutVisibility",
         "mutation",
+        variables
+      );
+    },
+    AddReactionToCallout(
+      variables: SchemaTypes.AddReactionToCalloutMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AddReactionToCalloutMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AddReactionToCalloutMutation>(
+            AddReactionToCalloutDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "AddReactionToCallout",
+        "mutation",
+        variables
+      );
+    },
+    RemoveReactionFromCallout(
+      variables: SchemaTypes.RemoveReactionFromCalloutMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.RemoveReactionFromCalloutMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.RemoveReactionFromCalloutMutation>(
+            RemoveReactionFromCalloutDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "RemoveReactionFromCallout",
+        "mutation",
+        variables
+      );
+    },
+    GetCalloutReactionsSummary(
+      variables: SchemaTypes.GetCalloutReactionsSummaryQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.GetCalloutReactionsSummaryQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.GetCalloutReactionsSummaryQuery>(
+            GetCalloutReactionsSummaryDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "GetCalloutReactionsSummary",
+        "query",
+        variables
+      );
+    },
+    GetCalloutReactions(
+      variables: SchemaTypes.GetCalloutReactionsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.GetCalloutReactionsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.GetCalloutReactionsQuery>(
+            GetCalloutReactionsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "GetCalloutReactions",
+        "query",
         variables
       );
     },
