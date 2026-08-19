@@ -1,5 +1,6 @@
 import {
   LogManager,
+  provisionPoolPlatformRoles,
   provisionTestIdentities,
   registerAllTestUsers,
   stringifyConfig,
@@ -40,6 +41,18 @@ export default async function setup(project: MinimalProject) {
 
   // Guard against duplicate invocations when Vitest projects inherit
   // globalSetup from root config via extends: true (array merge semantics).
+  // Resolved up front (env-var only, no side effects) so BOTH the mint step
+  // below and the run-time log line use the exact same number — the pool
+  // grows to one full role set PER worker slot `nightly-parallel` will
+  // actually run with (see TestUserManager.populateUserModelMap and
+  // pool-identity.ts), and `resolveNightlyWorkers` is the single source of
+  // truth for that worker count regardless of which project's setup() call
+  // happens to run first.
+  const resolution = resolveNightlyWorkers(
+    process.env.NIGHTLY_MAX_WORKERS,
+    process.env.NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT
+  );
+
   if (!globalState.__alkemioGlobalSetupDone) {
     globalState.__alkemioGlobalSetupDone = true;
 
@@ -51,11 +64,12 @@ export default async function setup(project: MinimalProject) {
     // reachable (CI, via an in-cluster port-forward → KRATOS_ADMIN_URL) upsert the
     // identities deterministically through it — no self-service policy/HIBP checks,
     // no "already exists" no-op, always the correct password. Otherwise (local dev,
-    // no admin access) fall back to self-service registration.
+    // no admin access) fall back to self-service registration. Both paths provision
+    // `resolution.effective` full role sets — one per worker slot.
     if (testConfiguration.endPoints.kratos.admin) {
-      await provisionTestIdentities();
+      await provisionTestIdentities(resolution.effective);
     } else if (testConfiguration.registerUsers) {
-      await registerAllTestUsers();
+      await registerAllTestUsers(resolution.effective);
     }
 
     // Env-prerequisite gate: prove the auth prerequisite
@@ -63,19 +77,29 @@ export default async function setup(project: MinimalProject) {
     // broken env (e.g. Kratos admin provisioned with a mismatched password) then
     // aborts here with one clear message instead of cascading into every scenario
     // failing 40+ minutes in. Runs even when registration is skipped (users are
-    // expected pre-seeded in that mode — verify they can authenticate).
+    // expected pre-seeded in that mode — verify they can authenticate). Only
+    // probes worker-index 0's (unsuffixed) identities — a representative
+    // sanity check, not a per-worker-slot sweep.
     await verifyEnvPrerequisites();
 
-    // Mint hoist: all 13 shared-user logins mint exactly
-    // once here, regardless of worker count. Workers never mint their own —
-    // they hydrate from the provided context below.
-    await TestUserManager.populateUserModelMap();
+    // Mint hoist: every worker slot's shared-user logins mint exactly
+    // once here, regardless of ACTUAL worker count at run time (a project
+    // with fewer files than `resolution.effective` simply never spawns
+    // enough workers to use the extra slots — see TestUserManager for why
+    // that is harmless, not wasted). Workers never mint their own — they
+    // hydrate from the provided context below.
+    await TestUserManager.populateUserModelMap(resolution.effective);
+
+    // Platform-role parity across worker slots. `admin@alkem.io`'s
+    // GLOBAL_ADMIN comes from the SERVER's bootstrap, so `admin+wN` would
+    // otherwise be an ordinary user and every scenario setup that worker
+    // runs would fail its first privileged call. Must run after the mint
+    // (it needs the resolved user ids + current roles) and before
+    // serialize() (so workers hydrate the updated roles).
+    await provisionPoolPlatformRoles(resolution.effective);
+
     globalState.__alkemioUserModels = TestUserManager.serialize();
 
-    const resolution = resolveNightlyWorkers(
-      process.env.NIGHTLY_MAX_WORKERS,
-      process.env.NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT
-    );
     const lanes = countNightlyFiles();
     // Deliberately console.log, not LogManager: the console transport
     // defaults to error-only (LOG_LEVEL unset/'warn' in CI), and this line
@@ -103,7 +127,8 @@ export default async function setup(project: MinimalProject) {
   // now held on `globalThis`, every project after the first reads the same
   // value written here and never re-mints.
   if (!globalState.__alkemioUserModels) {
-    await TestUserManager.populateUserModelMap();
+    await TestUserManager.populateUserModelMap(resolution.effective);
+    await provisionPoolPlatformRoles(resolution.effective);
     globalState.__alkemioUserModels = TestUserManager.serialize();
   }
 

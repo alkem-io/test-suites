@@ -3,25 +3,58 @@ import { TestUserModels } from "./models/TestUserModels";
 import { getUserToken } from "./registration/get-user-token";
 import { TestUser } from "../common/enums/test.user";
 import { getGraphqlClient } from "../utils/graphqlClient";
+import { buildPoolIdentifierEmail } from "./pool-identity";
 
 /**
  * The wire shape `TestUserManager.serialize()` hands to `globalSetup`'s
  * `project.provide('alkemioUserModels', …)` and every worker rehydrates via
  * `inject('alkemioUserModels')` — the vitest-provided-context transport for
  * the once-per-run mint hoist.
+ *
+ * Only the flat email→model matrix crosses the wire — it holds every
+ * worker's identities, minted once by whichever process actually ran
+ * `populateUserModelMap()`. `typeEntries`/`users` are NOT part of the
+ * payload: they are this-worker's VIEW over that matrix (see
+ * `resolveForCurrentWorker`) and must be recomputed locally by each worker
+ * from its own `VITEST_POOL_ID`, never transported — the process that mints
+ * (Vitest's main/orchestrator process) has no pool id of its own, so a
+ * transported view would silently be worker-0's view on every worker.
  */
 export interface SerializedTestUserModels {
   emailEntries: [string, UserModel][];
-  typeEntries: [string, UserModel][];
-  users: TestUserModels;
 }
 
 export class TestUserManager {
   private static userModelMapEmail: Map<string, UserModel>;
-  private static userModelMapType: Map<string, UserModel>;
+  private static userModelMapType: Map<TestUser, UserModel>;
   private static populated = false;
 
   public static users: TestUserModels;
+
+  /**
+   * Resolves the identity pool slot this OS thread owns, so concurrently
+   * running files (different Vitest worker threads under `pool: 'threads'`)
+   * never resolve `TestUserManager.users`/`getUserModelByType` to the same
+   * underlying Kratos identity — the root cause of the nightly's cross-file
+   * interference class (test-suites parallel-nightly hardening).
+   *
+   * `VITEST_POOL_ID` (NOT `VITEST_WORKER_ID`) is the stable slot id: verified
+   * empirically against the installed vitest 4.0.18 — under `pool: 'threads'`
+   * with `maxWorkers: N`, `VITEST_POOL_ID` cycles `1..N` (one value per
+   * underlying OS thread, stable across every file that thread executes),
+   * while `VITEST_WORKER_ID` is a monotonically increasing per-TASK counter
+   * (unbounded, a fresh value per file regardless of which thread ran it) —
+   * unusable as a pool-slot key. 1-based; subtract 1 for a 0-based index.
+   * Unset outside a worker (e.g. the main/orchestrator process running
+   * `globalSetup`, or `maxWorkers: 1`) defaults to slot 1 → index 0, which
+   * is deliberately the UNSUFFIXED identity set (see `buildIdentifier`) so
+   * `NIGHTLY_MAX_WORKERS=1` (today's default everywhere outside the nightly
+   * job) is byte-for-byte identical to pre-per-worker-pool behaviour.
+   */
+  private static getCurrentWorkerIndex(): number {
+    const raw = Number(process.env.VITEST_POOL_ID);
+    return Number.isFinite(raw) && raw > 0 ? raw - 1 : 0;
+  }
 
   /**
    * Mints each core test user's token ONCE per run and caches it (the class is a
@@ -34,47 +67,59 @@ export class TestUserManager {
    * The `populated` flag flips only after a full pass, so a partial failure
    * (e.g. an early rate-limit) is retried in full rather than left incomplete.
    *
+   * `workerCount` grows the pool to `TestUser` × `workerCount` distinct
+   * identities — one full 13-role set PER concurrent Vitest worker slot, so
+   * no two files that can run concurrently (different worker threads) ever
+   * share an identity. Defaults to 1 (today's single shared pool) for any
+   * caller outside `globalTestsSetup.ts` (there are none post-hoist — see
+   * that file's own comment — but the default keeps this method safe to
+   * call standalone, e.g. from a future ad-hoc script).
+   *
    * The invariant the nightly CI gate protects is "the pool mints exactly
-   * once per run", not "the pool has exactly N members" — the `TestUser`
-   * enum is free to grow (per-worker/per-scenario identities are on the
-   * roadmap). The `[auth] pool size: N` line below is the single source of
-   * truth CI derives its expected mint count from, so growing the pool never
+   * once per run", not "the pool has exactly N members" — the printed
+   * `[auth] pool size: N` line (N = `TestUser` size × `workerCount`) is the
+   * single source of truth CI derives its expected mint count from, so
+   * growing the pool (by adding a `TestUser` or raising `workerCount`) never
    * requires touching the CI assertion, while a duplicate mint still fails
-   * it (the printed size never changes, but the counted mint lines would).
+   * it (the printed size is unaffected by a duplicate mint, but the counted
+   * mint lines would be).
    */
-  public static async populateUserModelMap() {
+  public static async populateUserModelMap(workerCount = 1) {
     if (this.populated) {
       return;
     }
     this.userModelMapEmail = new Map<string, UserModel>();
-    this.userModelMapType = new Map<string, UserModel>();
 
     const poolUsers = Object.keys(TestUser);
     // Deliberately console.log, not LogManager (console transport defaults
     // to error-only in CI) — read back by the nightly's mint-count gate as
     // the expected pool size, derived from the actual pool definition
-    // (`TestUser`) rather than hardcoded in the workflow.
-    console.log(`[auth] pool size: ${poolUsers.length}`);
+    // (`TestUser` × `workerCount`) rather than hardcoded in the workflow.
+    console.log(`[auth] pool size: ${poolUsers.length * workerCount}`);
 
-    for (const user of poolUsers) {
-      const userValue = TestUser[user as keyof typeof TestUser];
-      // Create a user model for each test user
-      const email = this.buildIdentifier(userValue);
-      const userModel = this.createEmptyUserModel(email, userValue);
+    for (let workerIndex = 0; workerIndex < workerCount; workerIndex++) {
+      for (const user of poolUsers) {
+        const userValue = TestUser[user as keyof typeof TestUser];
+        // Create a user model for each test user
+        const email = this.buildIdentifier(userValue, workerIndex);
+        const userModel = this.createEmptyUserModel(email, userValue);
 
-      // Populate the authentication token. Tagged 'pool' — these are the
-      // shared-user mints the nightly's mint-count invariant counts (must
-      // equal the `[auth] pool size: N` line above, exactly once per run).
-      userModel.authToken = await getUserToken(userModel.email, 'pool');
+        // Populate the authentication token. Tagged 'pool' — these are the
+        // shared-user mints the nightly's mint-count invariant counts (must
+        // equal the `[auth] pool size: N` line above, exactly once per run).
+        userModel.authToken = await getUserToken(userModel.email, 'pool');
 
-      // Populate the user model with details from the api
-      await this.populateUserModelFromApi(userModel);
+        // Populate the user model with details from the api
+        await this.populateUserModelFromApi(userModel);
 
-      this.userModelMapEmail.set(userModel.email, userModel);
-      this.userModelMapType.set(userModel.type, userModel);
+        this.userModelMapEmail.set(userModel.email, userModel);
+      }
     }
-    // Finally ensure the exposed users field is populated
-    this.populateUsers();
+    // Derive this process's own view (userModelMapType + users) over the
+    // full matrix. The process that mints is Vitest's main/orchestrator
+    // process, which has no pool id — it resolves to worker-index 0, same
+    // as every other caller with no worker context.
+    this.resolveForCurrentWorker();
 
     // Cache is complete — subsequent scenario setups reuse these tokens.
     this.populated = true;
@@ -90,8 +135,6 @@ export class TestUserManager {
   public static serialize(): SerializedTestUserModels {
     return {
       emailEntries: [...this.userModelMapEmail.entries()],
-      typeEntries: [...this.userModelMapType.entries()],
-      users: this.users,
     };
   }
 
@@ -100,12 +143,38 @@ export class TestUserManager {
    * without minting anything. Idempotent — safe to call from every worker's
    * `beforeAll` even though the underlying module state is a per-worker
    * singleton (`pool: 'threads'`, `isolate: false`) that only needs it once.
+   *
+   * Every worker hydrates the SAME full email matrix (all workers' identities)
+   * but then derives its OWN `userModelMapType`/`users` view from it, keyed
+   * by ITS OWN `VITEST_POOL_ID` — see `resolveForCurrentWorker`.
    */
   public static hydrateFromProvided(data: SerializedTestUserModels): void {
     this.userModelMapEmail = new Map(data.emailEntries);
-    this.userModelMapType = new Map(data.typeEntries);
-    this.users = data.users;
+    this.resolveForCurrentWorker();
     this.populated = true;
+  }
+
+  /**
+   * Builds this worker's `userModelMapType` and `users` (the
+   * role-name-keyed view most tests actually consume) by selecting, for
+   * each `TestUser` role, THIS worker's own identity out of the full
+   * email matrix — never worker-0's, never another worker's. This is what
+   * makes `TestUserManager.users.spaceAdmin` (etc.) resolve differently in
+   * concurrently-running files without any spec needing to change.
+   */
+  private static resolveForCurrentWorker(): void {
+    const workerIndex = this.getCurrentWorkerIndex();
+    this.userModelMapType = new Map<TestUser, UserModel>();
+
+    for (const user of Object.keys(TestUser)) {
+      const userValue = TestUser[user as keyof typeof TestUser];
+      const email = this.buildIdentifier(userValue, workerIndex);
+      const userModel = this.userModelMapEmail.get(email);
+      if (userModel) {
+        this.userModelMapType.set(userValue, userModel);
+      }
+    }
+    this.populateUsers();
   }
 
   private static createEmptyUserModel(
@@ -129,35 +198,39 @@ export class TestUserManager {
 
   private static populateUsers() {
     this.users = {
-      globalAdmin: TestUserManager.getUserModelByEmail("admin@alkem.io"),
-      globalSupportAdmin: TestUserManager.getUserModelByEmail(
-        "global.support@alkem.io"
+      globalAdmin: TestUserManager.getUserModelByType(TestUser.GLOBAL_ADMIN),
+      globalSupportAdmin: TestUserManager.getUserModelByType(
+        TestUser.GLOBAL_SUPPORT_ADMIN
       ),
-      globalLicenseAdmin: TestUserManager.getUserModelByEmail(
-        "global.license@alkem.io"
+      globalLicenseAdmin: TestUserManager.getUserModelByType(
+        TestUser.GLOBAL_LICENSE_ADMIN
       ),
-      spaceAdmin: TestUserManager.getUserModelByEmail("space.admin@alkem.io"),
-      spaceMember: TestUserManager.getUserModelByEmail("space.member@alkem.io"),
-      subspaceAdmin: TestUserManager.getUserModelByEmail(
-        "subspace.admin@alkem.io"
+      spaceAdmin: TestUserManager.getUserModelByType(TestUser.SPACE_ADMIN),
+      spaceMember: TestUserManager.getUserModelByType(TestUser.SPACE_MEMBER),
+      subspaceAdmin: TestUserManager.getUserModelByType(
+        TestUser.SUBSPACE_ADMIN
       ),
-      subspaceMember: TestUserManager.getUserModelByEmail(
-        "subspace.member@alkem.io"
+      subspaceMember: TestUserManager.getUserModelByType(
+        TestUser.SUBSPACE_MEMBER
       ),
-      subsubspaceAdmin: TestUserManager.getUserModelByEmail(
-        "subsubspace.admin@alkem.io"
+      subsubspaceAdmin: TestUserManager.getUserModelByType(
+        TestUser.SUBSUBSPACE_ADMIN
       ),
-      subsubspaceMember: TestUserManager.getUserModelByEmail(
-        "subsubspace.member@alkem.io"
+      subsubspaceMember: TestUserManager.getUserModelByType(
+        TestUser.SUBSUBSPACE_MEMBER
       ),
-      qaUser: TestUserManager.getUserModelByEmail("qa.user@alkem.io"),
-      // notificationsAdmin: TestUserManager.getUserModelByEmail(
-      //   "notifications@alkem.io"
+      qaUser: TestUserManager.getUserModelByType(TestUser.QA_USER),
+      // notificationsAdmin: TestUserManager.getUserModelByType(
+      //   TestUser.NOTIFICATIONS_ADMIN
       // ),
-      nonSpaceMember: TestUserManager.getUserModelByEmail("non.space@alkem.io"),
-      betaTester: TestUserManager.getUserModelByEmail("beta.tester@alkem.io"),
-      organizationAdmin: TestUserManager.getUserModelByEmail(
-        "organization.admin@alkem.io"
+      nonSpaceMember: TestUserManager.getUserModelByType(
+        TestUser.NON_SPACE_MEMBER
+      ),
+      betaTester: TestUserManager.getUserModelByType(
+        TestUser.GLOBAL_BETA_TESTER
+      ),
+      organizationAdmin: TestUserManager.getUserModelByType(
+        TestUser.ORGANIZATION_ADMIN
       ),
     };
   }
@@ -196,6 +269,39 @@ export class TestUserManager {
     return userModel;
   }
 
+  /**
+   * Resolves a pool role to THIS worker's own real email address — e.g.
+   * `TestUser.GLOBAL_BETA_TESTER` -> `beta.tester@alkem.io` on worker-index 0,
+   * `beta.tester+w3@alkem.io` on worker-index 3. Exposed for the rare
+   * legacy call site that deletes-and-recreates a shared pool identity by a
+   * literal base email (`reregisterUser`/`createUser` in
+   * `contributor-management/user/user.request.params.ts`) — recreating the
+   * SAME identity the current worker actually owns, not worker-0's, is what
+   * keeps that path from reintroducing cross-worker interference by the
+   * back door.
+   */
+  public static emailForCurrentWorker(user: TestUser): string {
+    return this.buildIdentifier(user, this.getCurrentWorkerIndex());
+  }
+
+  /**
+   * If `email`'s local-part matches a known pool role (e.g.
+   * `beta.tester@alkem.io`), re-resolves it to THIS worker's own real
+   * address for that role. Any other email (a test-generated one-off
+   * address, `user-email-<uniqueId>@alkem.io`) passes through unchanged —
+   * this only ever rewrites the small, closed set of literal pool-role
+   * emails a couple of legacy call sites still hardcode.
+   */
+  public static resolvePoolEmailForCurrentWorker(email: string): string {
+    const localPart = email.slice(0, email.indexOf('@'));
+    const match = (Object.values(TestUser) as string[]).find(
+      value => value === localPart
+    );
+    return match
+      ? this.emailForCurrentWorker(match as TestUser)
+      : email;
+  }
+
   private static async populateUserModelFromApi(
     userModel: UserModel
   ): Promise<void> {
@@ -223,9 +329,7 @@ export class TestUserManager {
     return result;
   }
 
-  private static buildIdentifier(user: string) {
-    const userUpn = `${user}@alkem.io`;
-
-    return userUpn;
+  private static buildIdentifier(user: TestUser, workerIndex = 0) {
+    return buildPoolIdentifierEmail(user, workerIndex);
   }
 }

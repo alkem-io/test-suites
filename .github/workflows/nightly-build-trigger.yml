@@ -234,12 +234,14 @@ jobs:
           # (the Kratos-429 guard, test-suites#563/#579) — NOT "the pool has
           # a specific number of members". The expected count is therefore
           # derived from the pool's own declared size, `[auth] pool size: N`
-          # (printed once by TestUserManager.populateUserModelMap(), straight
-          # from `Object.keys(TestUser).length`), never hardcoded here. That
-          # way growing/shrinking the TestUser pool never requires touching
-          # this gate, while a duplicate mint still fails it — the size line
-          # is unaffected by a duplicate mint, but the counted (pool) lines
-          # below are.
+          # (printed once by TestUserManager.populateUserModelMap(), as
+          # `Object.keys(TestUser).length` × the resolved worker count —
+          # the pool is now one full role set PER worker slot, so that N
+          # scales with NIGHTLY_MAX_WORKERS by design), never hardcoded
+          # here. That way growing/shrinking the TestUser pool OR changing
+          # the worker count never requires touching this gate, while a
+          # duplicate mint still fails it — the size line is unaffected by a
+          # duplicate mint, but the counted (pool) lines below are.
           EXPECTED_POOL_MINTS=$(grep -oP '(?<=\[auth\] pool size: )\d+' /tmp/nightly-run.log | head -n1 || true)
           if [ -z "$EXPECTED_POOL_MINTS" ]; then
             echo "::error::no '[auth] pool size: N' line found in the run log — cannot derive the expected mint count"

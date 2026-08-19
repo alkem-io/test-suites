@@ -572,6 +572,20 @@ export class TestScenarioFactory {
     }
   }
 
+  /**
+   * Ensures the three platform roles the pool's global-role identities are
+   * expected to hold. Reads `TestUserManager.users.*`, which resolves to the
+   * CURRENT worker's own identities, so a worker grants roles to its own
+   * pool members and never to another worker's.
+   *
+   * Normally a no-op now: `provisionPoolPlatformRoles` (called once from
+   * `globalTestsSetup`) grants these — plus GLOBAL_ADMIN, which only the
+   * server's bootstrap used to provide — for every worker slot up front, and
+   * updates the `RoleNames` workers hydrate, so the idempotence check below
+   * short-circuits. It is deliberately kept as the fallback for any entry
+   * point that never went through that global setup, and because a grant
+   * that has already happened costs one array lookup.
+   */
   private static async populateGlobalRoles(): Promise<void> {
     await this.checkAndAssignRoleNameToUser(
       TestUserManager.users.globalLicenseAdmin,

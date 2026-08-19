@@ -2,6 +2,7 @@ import { UiText } from '@ory/kratos-client';
 import { registerInKratosOrFail } from './register-in-kratos-or-fail';
 import { verifyInKratosOrFail } from './verify-in-kratos-or-fail';
 import { TestUser } from '../../common/enums/test.user';
+import { buildPoolIdentifierEmail } from '../pool-identity';
 
 const parseUserName = (userName: string): [string, string] => {
   const parts = userName.split('.');
@@ -16,10 +17,18 @@ const parseUserName = (userName: string): [string, string] => {
  *
  * Gracefully handles "user already exists" (Kratos error 4000007).
  * Verification is best-effort — failures are logged but not thrown.
+ *
+ * `workerIndex` (default 0, today's single shared pool) selects which
+ * worker-slot identity gets registered — see `pool-identity.ts`. Name
+ * traits stay derived from the role name alone; only the email varies by
+ * worker.
  */
-export const registerTestUser = async (userName: string): Promise<void> => {
+export const registerTestUser = async (
+  userName: TestUser,
+  workerIndex = 0
+): Promise<void> => {
   const [firstName, lastName] = parseUserName(userName);
-  const email = `${userName}@alkem.io`;
+  const email = buildPoolIdentifierEmail(userName, workerIndex);
   let verificationFlowId: string | undefined;
 
   try {
@@ -67,19 +76,25 @@ export const registerTestUser = async (userName: string): Promise<void> => {
 };
 
 /**
- * Registers all predefined test users sequentially.
+ * Registers all predefined test users, for every worker slot 0..workerCount-1,
+ * sequentially.
  *
  * Sequential execution is required — parallel registration causes Kratos
- * flow override errors.
+ * flow override errors. This is the local-dev fallback path (no Kratos admin
+ * API reachable); CI always has admin access and provisions via
+ * `provisionTestIdentities` instead, so `workerCount`× more self-service
+ * registrations here only slows down a developer's own machine, never CI.
  */
-export const registerAllTestUsers = async (): Promise<void> => {
+export const registerAllTestUsers = async (workerCount = 1): Promise<void> => {
   const userNames = Object.values(TestUser);
 
-  for (const username of userNames) {
-    try {
-      await registerTestUser(username);
-    } catch (error) {
-      console.error(`Unable to register user ${username}: ${error}`);
+  for (let workerIndex = 0; workerIndex < workerCount; workerIndex++) {
+    for (const username of userNames) {
+      try {
+        await registerTestUser(username, workerIndex);
+      } catch (error) {
+        console.error(`Unable to register user ${username} (worker ${workerIndex}): ${error}`);
+      }
     }
   }
 };
