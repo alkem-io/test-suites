@@ -249,6 +249,26 @@ test('(s) an excluded file lands in neither lane, and the partition still proves
   );
 });
 
+// 040-parallel-nightly-server-api, fourth pass: a real two-lane run found
+// two more files the guard had certified parallel-safe that actually
+// interfere under concurrency. Root-caused to two more content-rule gaps —
+// these two fixtures prove each new rule actually fires on the shape that
+// was missed.
+
+test('(ab) a roleSet member/lead/admin list read off a conversion mutation trips the new rule 9', () => {
+  const { status, combined } = runGuard('roleset-aggregate-post-conversion-hazard');
+  assert.notEqual(status, 0, combined);
+  assert.match(combined, /risky\.it-spec\.ts/);
+  assert.match(combined, /rule 9/);
+});
+
+test('(ac) a DDT table asserting a privileged mutation succeeds for a shared pool user trips the new rule 10', () => {
+  const { status, combined } = runGuard('ddt-privileged-success-hazard');
+  assert.notEqual(status, 0, combined);
+  assert.match(combined, /risky\.it-spec\.ts/);
+  assert.match(combined, /rule 10/);
+});
+
 test('(t) a NIGHTLY_EXCLUDE entry matching no file on disk fails the guard closed', () => {
   const { status, combined } = runGuard('exclude-stale-entry');
   assert.notEqual(status, 0);

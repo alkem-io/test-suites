@@ -88,11 +88,44 @@ export const NIGHTLY_INCLUDE = [
  * three that happened to fail in this particular run — 13 additional files
  * newly flagged and moved to serial as a result (see
  * `validate-parallel-lanes.ts` rule 5/8 docstrings for the full list and
- * per-file reasoning). The 33 files NOT in this list each trip an
- * independent, real hazard (unguarded platform-role grant/revocation
- * outside the guarded factory path, direct settings mutation, mailbox
- * access, or a global/shared-identity aggregate or membership assertion) —
- * see the guard's own audit output for the per-file rule and hop path.
+ * per-file reasoning).
+ *
+ * Fourth pass: a real two-lane nightly run at W=5 on a freshly recreated DB
+ * produced two more genuine interference failures the guard had certified
+ * parallel-safe — `callouts.it-spec.ts` (four DDT rows: a shared pool user
+ * expected to succeed at updating/deleting a callout got an Authorization
+ * error instead) and `convert-L1-to-L0-basic.it-spec.ts` (three "roleSet
+ * members/leads/admins are preserved" assertions came back empty instead
+ * of the expected preserved set) — confirmed by re-running both files
+ * serially (both passed). Root-caused to two more content-rule gaps, both
+ * generalised:
+ *   - a new rule 9 covers a roleSet's member/lead/admin user list read
+ *     straight off (or immediately around) a `convertSpace*`/`moveSpace*`
+ *     structural mutation — the server's own conversion service removes
+ *     and re-assigns that roleSet's role credentials as part of the move,
+ *     and the read can observe the window before that settles.
+ *   - a new rule 10 covers the DDT idiom this suite uses to assert a
+ *     privileged mutation SUCCEEDS for a named shared-pool role
+ *     (`${TestUser.X} | ${'"data":{"someMutation"'}`) — the server's
+ *     actor-authorization cache is keyed only by actor ID, so it can be
+ *     transiently stale for that shared identity whenever ANY concurrent
+ *     file changes one of that same identity's credentials anywhere on
+ *     the platform.
+ * Rule 9 additionally flagged `move-vs-convert-comparison.it-spec.ts`;
+ * rule 10 additionally flagged `close-state-callouts.it-spec.ts` — both
+ * were promoted and are now demoted alongside the two files that actually
+ * failed. See `validate-parallel-lanes.ts` rule 9/10 docstrings for the
+ * server-side evidence and an explicit statement of what rule 10 does NOT
+ * cover (it matches one specific DDT success-message idiom, not every
+ * possible phrasing of "assert this shared user's privileged action
+ * succeeded" — a real, stated residual-risk gap).
+ *
+ * The files NOT in this list each trip an independent, real hazard
+ * (unguarded platform-role grant/revocation outside the guarded factory
+ * path, direct settings mutation, mailbox access, a global/shared-identity
+ * aggregate or membership assertion, a post-conversion roleSet aggregate
+ * read, or a DDT privileged-success assertion on a shared pool user) — see
+ * the guard's own audit output for the per-file rule and hop path.
  */
 export const PARALLEL_MANIFEST: string[] = [
   'src/functional-api/activity-logs/activity-log-on-transfer-conversion.it-spec.ts',
@@ -101,8 +134,6 @@ export const PARALLEL_MANIFEST: string[] = [
   'src/functional-api/activity-logs/space-activity-logs.it-spec.ts',
   'src/functional-api/calendar/calendar-event.it-spec.ts',
   'src/functional-api/calendar/calendar-event-wholeday-timezone.it-spec.ts',
-  'src/functional-api/callout/callouts.it-spec.ts',
-  'src/functional-api/callout/lock-state/close-state-callouts.it-spec.ts',
   'src/functional-api/callout/post/post-on-callout.it-spec.ts',
   'src/functional-api/callout/transfer/transfer-callout-changed-flow.it-spec.ts',
   'src/functional-api/callout/transfer/transfer-callout-flow-state.it-spec.ts',
@@ -126,7 +157,6 @@ export const PARALLEL_MANIFEST: string[] = [
   'src/functional-api/contributor-management/virtual-contributor/vc-access.it-spec.ts',
   'src/functional-api/contributor-management/virtual-contributor/vc.it-spec.ts',
   'src/functional-api/entitlements/organization-entitlements.it-spec.ts',
-  'src/functional-api/journey/conversion/convert-L1-to-L0-basic.it-spec.ts',
   'src/functional-api/journey/conversion/convert-L1-to-L0-url-resolver.it-spec.ts',
   'src/functional-api/journey/conversion/move-L1-to-L0-applications-invitations.it-spec.ts',
   'src/functional-api/journey/conversion/move-L1-to-L0-authorization.it-spec.ts',
@@ -140,7 +170,6 @@ export const PARALLEL_MANIFEST: string[] = [
   'src/functional-api/journey/conversion/move-L2-to-L1-authorization.it-spec.ts',
   'src/functional-api/journey/conversion/move-L2-to-L1-basic.it-spec.ts',
   'src/functional-api/journey/conversion/move-L2-to-L1-rooms.it-spec.ts',
-  'src/functional-api/journey/conversion/move-vs-convert-comparison.it-spec.ts',
   'src/functional-api/journey/space/space.it-spec.ts',
   'src/functional-api/journey/subspace/create-subspace.it-spec.ts',
   'src/functional-api/journey/subspace/flows-subspace.it-spec.ts',

@@ -23,6 +23,10 @@
  *      6. platform-role REVOCATION/toggle on shared users
  *      7. assertion on a shared user's platform-role state
  *      8. assertion on a shared user's roleSet-membership state
+ *      9. roleSet member/lead/admin aggregate asserted straight off a
+ *         structural space conversion/move mutation's own response
+ *     10. a DDT table asserting a privileged mutation SUCCEEDS for a shared
+ *         pool user
  *    Rules 1, 2, 3 and 6 are symbol-level and transitive: a manifest file is
  *    flagged if it — or any file reachable through its import graph — both
  *    imports and calls a hazard symbol (rule 3 additionally requires
@@ -33,14 +37,30 @@
  *    concurrent ordering and is not flagged; see the `guardWindowRe`
  *    docstring on `HazardRule` for the source-level proof this is built on.
  *    Rule 6 (revocation) has no such exemption — undoing a role is never
- *    convergent. Rules 4, 5, 7 and 8 are a direct content scan of the
+ *    convergent. Rules 4, 5, 7, 8, 9 and 10 are a direct content scan of the
  *    manifest file's own source, since they describe how the *file itself*
  *    shapes its assertions, not a transitively-inherited hazard. Rule 8 is
  *    rule 7's counterpart one layer up the stack: rule 7 catches a shared
  *    user's PLATFORM role state read as ground truth (`.RoleNames`), rule 8
  *    catches the same shared identity's roleSet-level MEMBER state read the
  *    same way (`isUserMemberOfRoleSet` / `getRoleSetUsersInMemberRole`),
- *    both gated on shared-user evidence in the same file.
+ *    both gated on shared-user evidence in the same file. Rules 9 and 10 are
+ *    a second empirically-driven pair, same discipline: rule 9 catches a
+ *    roleSet's member/lead/admin USER LIST read as ground truth immediately
+ *    around a `convertSpace*`/`moveSpace*` structural mutation — the
+ *    space-hierarchy service performs its own remove-then-reassign cycle on
+ *    that roleSet's role credentials as part of the conversion, and that
+ *    cycle's completion is not guaranteed settled by the time a nested
+ *    resolver field reads the aggregate back, a window that widens under
+ *    concurrent host load; see the `CONTENT_RULES` id-9 docstring for the
+ *    server-side evidence. Rule 10 catches the DDT idiom this whole suite
+ *    uses to assert a privileged mutation's SUCCESS for a named role
+ *    (`${TestUser.X} | ${'"data":{"someMutation"'}`) — the server's
+ *    actor-authorization cache is keyed only by actor ID, not by
+ *    (actor, resource), so it is invalidated for that ACTOR wholesale
+ *    whenever ANY of that shared identity's credentials change anywhere on
+ *    the platform; see the id-10 docstring for the source-level evidence
+ *    and the honest limits of this pattern's coverage.
  *
  * New spec files are safe by construction: they can only ever land in the
  * complement (the serial lane), never in the reviewed manifest.
@@ -158,7 +178,7 @@ const HAZARD_RULES: HazardRule[] = [
 const SHARED_USER_EVIDENCE_RE = /\bTestUser\.|\bTestUserManager\.users\b/;
 
 interface ContentRule {
-  id: 4 | 5 | 7 | 8;
+  id: 4 | 5 | 7 | 8 | 9 | 10;
   name: string;
   pattern: RegExp;
   requiresSharedUserEvidence?: boolean;
@@ -230,6 +250,84 @@ const CONTENT_RULES: ContentRule[] = [
     // membership of its OWN uniquely-created, non-pool contributor is not
     // flagged.
     pattern: /\bisUserMemberOfRoleSet\b|\bgetRoleSetUsersInMemberRole\b/,
+    requiresSharedUserEvidence: true,
+  },
+  {
+    id: 9,
+    name: 'roleSet member/lead/admin aggregate asserted off a structural conversion/move mutation',
+    // A fifth hazard shape, found diagnosing convert-L1-to-L0-basic.it-spec.ts:
+    // three of its assertions ("community roleSet members/leads/admins are
+    // preserved") compared the roleSet's member/lead/admin USER LISTS from
+    // BEFORE the conversion against the SAME lists read off the
+    // `convertSpaceL1ToSpaceL0` mutation's own response, and got back an
+    // empty array where 2-5 users were expected — while a serial re-run of
+    // the identical file passed outright (interference, not a product
+    // defect in what the lists eventually settle to).
+    //
+    // Reading the server's own conversion service
+    // (src/services/api/conversion/conversion.service.ts,
+    // convertSpaceL1ToSpaceL0OrFail) shows why: the method reads the
+    // roleSet's current ADMIN users, explicitly REMOVES each of them from
+    // the ADMIN role, performs the rest of the structural move (several
+    // awaited steps — nameID allocation, entity field rewrites, a `save`,
+    // license-plan assignment), and only THEN re-assigns them back — a
+    // real, non-instantaneous window during which this exact roleSet's own
+    // role membership is incomplete. Nothing in the test file is wrong by
+    // itself; the hazard is that its assertions read the mutation's
+    // response (or a field resolved immediately off it) as ground truth
+    // for a completion that is not guaranteed to have settled yet, and
+    // that window is only wide enough to lose under concurrent host load —
+    // which is exactly the failure mode observed (parallel: fails,
+    // serial/idle: passes). This is a content scan, same family as rules
+    // 4/5/7/8: it does not attempt to prove the mutation call and the
+    // aggregate read are the same statement, only that both shapes are
+    // present in a file whose scenario is built on shared pool users.
+    pattern: /\.roleSet\.(memberUsers|leadUsers|adminUsers)\b/,
+    requiresSharedUserEvidence: true,
+  },
+  {
+    id: 10,
+    name: 'DDT table asserting a privileged mutation succeeds for a shared pool user',
+    // A sixth hazard shape, found diagnosing callouts.it-spec.ts: four
+    // assertions ("who intend to update/delete callout", subspace and
+    // subsubspace level) expected `TestUser.SUBSPACE_ADMIN` to successfully
+    // update/delete a callout in a space where the scenario's OWN
+    // beforeAll had granted that exact user the admin role — and got an
+    // Authorization error back instead, while a serial re-run of the same
+    // file passed outright.
+    //
+    // Unlike rule 9, nothing in THIS file mutates a roleSet or reads one as
+    // an aggregate — the file only acts AS the shared user and checks
+    // whether the action was allowed. The most plausible mechanism, from
+    // the server's own actor-authorization cache
+    // (src/core/actor-context/actor.context.cache.service.ts): the cached
+    // ActorContext — the credential list an authorization check actually
+    // reads — is keyed ONLY by actorID, not by (actorID, resource), and is
+    // invalidated (deleted, forcing a full reload) by
+    // ActorService.grantCredentialOrFail/revokeCredential on EVERY
+    // credential change for that actor anywhere on the platform. With a
+    // small pool of shared identities reused by nearly every nightly file,
+    // that cache is under continuous concurrent invalidate/repopulate
+    // pressure for these specific actors, which is the shape of a classic
+    // delete-then-repopulate race: a repopulating read that started before
+    // a concurrent grant/revoke committed can still win the write race and
+    // leave the cache holding a stale, pre-grant credential snapshot until
+    // the next invalidation.
+    //
+    // This mechanism is a property of the shared authorization cache, not
+    // of anything specific to callouts — so it is NOT scoped to update/
+    // delete-callout DDT tables, and this pattern is only a narrow,
+    // empirically-grounded proxy for it: the literal
+    // `${'"data":{"<mutation>"'}` DDT success-message idiom, matched
+    // together with shared-user evidence in the same file. Every other DDT
+    // table found using this exact idiom repo-wide was inspected by hand;
+    // both files that use it are demoted by this rule. A privilege-success
+    // assertion phrased differently (a direct `expect(res.data...)`, a
+    // boolean flag, a GraphQL response shape check) is NOT caught by this
+    // pattern and is a known, stated gap — see the guard's own module
+    // docstring and this feature's diagnosis report for the residual-risk
+    // disclosure.
+    pattern: /\$\{'"data":\{/,
     requiresSharedUserEvidence: true,
   },
 ];
