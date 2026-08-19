@@ -635,16 +635,29 @@ describe('Settings gating (US2)', () => {
 // ===========================================================================
 
 describe('Volume control — email suppression (US3)', () => {
-  // A dedicated callout for all volume-control email tests. Each describe that
-  // asserts on email behaviour owns its own callout so the per-(recipient,
-  // callout) suppression marker cannot leak between describe blocks.
+  // Each test that asserts on leading-edge email behaviour owns a dedicated
+  // callout so the per-(recipient, callout) Redis suppression marker from one
+  // test cannot bleed into another's assertion window. This matches the
+  // isolation strategy already applied for Settings-gating and Bounded-redelivery.
+  //
+  // suppressionCalloutId    — US3-AS1 and US3-AS7 (burst within one window)
+  // suppressionCalloutId2   — US3-AS2 (window-expiry check, distinct marker key)
+  // suppressionCalloutIdA   — US3-AS3 first callout (per-callout key isolation)
+  // suppressionCalloutIdB   — US3-AS3 second callout (per-callout key isolation)
   let suppressionCalloutId = '';
   let suppressionCalloutDisplayName = '';
+  let suppressionCalloutId2 = '';
+  let suppressionCalloutId2DisplayName = '';
+  let suppressionCalloutIdA = '';
+  let suppressionCalloutIdADisplayName = '';
+  let suppressionCalloutIdB = '';
+  let suppressionCalloutIdBDisplayName = '';
 
   beforeAll(async () => {
     const calloutsSetId = baseScenario.space.collaboration.calloutsSetId;
+
     suppressionCalloutDisplayName = `callout-reaction-notif-suppression-${uniqueId}`;
-    const c = await createCalloutOnCalloutsSet(calloutsSetId, {
+    const c1 = await createCalloutOnCalloutsSet(calloutsSetId, {
       framing: {
         profile: {
           displayName: suppressionCalloutDisplayName,
@@ -653,15 +666,65 @@ describe('Volume control — email suppression (US3)', () => {
       },
       settings: { visibility: CalloutVisibility.Published },
     });
-    suppressionCalloutId = c?.data?.createCalloutOnCalloutsSet?.id ?? '';
+    suppressionCalloutId = c1?.data?.createCalloutOnCalloutsSet?.id ?? '';
     if (!suppressionCalloutId) {
-      throw new Error('Volume-control: failed to create dedicated suppression test callout');
+      throw new Error('Volume-control: failed to create dedicated suppression callout (US3-AS1/AS7)');
+    }
+
+    suppressionCalloutId2DisplayName = `callout-reaction-notif-suppression2-${uniqueId}`;
+    const c2 = await createCalloutOnCalloutsSet(calloutsSetId, {
+      framing: {
+        profile: {
+          displayName: suppressionCalloutId2DisplayName,
+          description: CALLOUT_DESCRIPTION,
+        },
+      },
+      settings: { visibility: CalloutVisibility.Published },
+    });
+    suppressionCalloutId2 = c2?.data?.createCalloutOnCalloutsSet?.id ?? '';
+    if (!suppressionCalloutId2) {
+      throw new Error('Volume-control: failed to create dedicated suppression callout (US3-AS2)');
+    }
+
+    suppressionCalloutIdADisplayName = `callout-reaction-notif-isolation-a-${uniqueId}`;
+    const cA = await createCalloutOnCalloutsSet(calloutsSetId, {
+      framing: {
+        profile: {
+          displayName: suppressionCalloutIdADisplayName,
+          description: CALLOUT_DESCRIPTION,
+        },
+      },
+      settings: { visibility: CalloutVisibility.Published },
+    });
+    suppressionCalloutIdA = cA?.data?.createCalloutOnCalloutsSet?.id ?? '';
+    if (!suppressionCalloutIdA) {
+      throw new Error('Volume-control: failed to create dedicated suppression callout A (US3-AS3)');
+    }
+
+    suppressionCalloutIdBDisplayName = `callout-reaction-notif-isolation-b-${uniqueId}`;
+    const cB = await createCalloutOnCalloutsSet(calloutsSetId, {
+      framing: {
+        profile: {
+          displayName: suppressionCalloutIdBDisplayName,
+          description: CALLOUT_DESCRIPTION,
+        },
+      },
+      settings: { visibility: CalloutVisibility.Published },
+    });
+    suppressionCalloutIdB = cB?.data?.createCalloutOnCalloutsSet?.id ?? '';
+    if (!suppressionCalloutIdB) {
+      throw new Error('Volume-control: failed to create dedicated suppression callout B (US3-AS3)');
     }
   });
 
   afterAll(async () => {
-    if (suppressionCalloutId) {
-      await deleteCallout(suppressionCalloutId).catch(() => undefined);
+    for (const id of [
+      suppressionCalloutId,
+      suppressionCalloutId2,
+      suppressionCalloutIdA,
+      suppressionCalloutIdB,
+    ]) {
+      if (id) await deleteCallout(id).catch(() => undefined);
     }
   });
 
@@ -676,13 +739,18 @@ describe('Volume control — email suppression (US3)', () => {
   });
 
   afterEach(async () => {
-    // Clean up reactions between tests.
-    await removeReactionFromCallout(suppressionCalloutId, REACTOR_A).catch(
-      () => undefined
-    );
-    await removeReactionFromCallout(suppressionCalloutId, REACTOR_B).catch(
-      () => undefined
-    );
+    // Clean up reactions between tests for all volume-control callouts.
+    for (const id of [
+      suppressionCalloutId,
+      suppressionCalloutId2,
+      suppressionCalloutIdA,
+      suppressionCalloutIdB,
+    ]) {
+      if (id) {
+        await removeReactionFromCallout(id, REACTOR_A).catch(() => undefined);
+        await removeReactionFromCallout(id, REACTOR_B).catch(() => undefined);
+      }
+    }
   });
 
   test(
@@ -736,10 +804,12 @@ describe('Volume control — email suppression (US3)', () => {
   test(
     'US3-AS2 — after the window elapses, a new reaction produces a new leading email',
     async () => {
-      // Leading reaction sets the marker.
+      // Uses a dedicated callout so US3-AS1's suppression marker (keyed per
+      // (recipient, callout)) cannot collide with this test regardless of how
+      // quickly the suite advances.
       await expectExactMailsAfter(
         () =>
-          addReactionToCallout(suppressionCalloutId, 'heart', REACTOR_A),
+          addReactionToCallout(suppressionCalloutId2, 'heart', REACTOR_A),
         1,
         { timeout: 20_000, settleMs: 2_000 }
       );
@@ -747,20 +817,52 @@ describe('Volume control — email suppression (US3)', () => {
       // Wait for the suppression window to expire.
       await delay((SUPPRESSION_WINDOW_SECONDS + 5) * 1_000);
       await deleteMailSlurperMails();
-      await removeReactionFromCallout(suppressionCalloutId, REACTOR_B).catch(
+      await removeReactionFromCallout(suppressionCalloutId2, REACTOR_B).catch(
         () => undefined
       );
 
       // New reaction after expiry opens a fresh window and sends a new email.
       const [mailsAfter] = await expectExactMailsAfter(
         () =>
-          addReactionToCallout(suppressionCalloutId, 'rocket', REACTOR_B),
+          addReactionToCallout(suppressionCalloutId2, 'rocket', REACTOR_B),
         1,
         { timeout: 20_000, settleMs: 2_000 }
       );
       expect(mailsAfter.length).toBe(1);
     },
     (SUPPRESSION_WINDOW_SECONDS + 60) * 1_000
+  );
+
+  test(
+    'US3-AS3 — per-callout key isolation: two callouts in-window each produce exactly one email',
+    async () => {
+      // Verifies that the email suppression marker is keyed per (recipient,
+      // callout), not per recipient alone. When the publisher has already
+      // received a leading-edge email for callout A, a genuine leading reaction
+      // on callout B (a different callout with no prior marker) must still
+      // produce a second email. A cross-callout suppression regression would
+      // make the second assertion fail.
+      const [mailsForA] = await expectExactMailsAfter(
+        () =>
+          addReactionToCallout(suppressionCalloutIdA, 'heart', REACTOR_A),
+        1,
+        { timeout: 20_000, settleMs: 2_000 }
+      );
+      // Leading-edge email for callout A.
+      expect(mailsForA.length).toBe(1);
+      await deleteMailSlurperMails();
+
+      // Callout B has its own (recipient, calloutB) key — no marker is set for
+      // it yet, so the reaction must produce a fresh leading-edge email.
+      const [mailsForB] = await expectExactMailsAfter(
+        () =>
+          addReactionToCallout(suppressionCalloutIdB, 'rocket', REACTOR_B),
+        1,
+        { timeout: 20_000, settleMs: 2_000 }
+      );
+      expect(mailsForB.length).toBe(1);
+    },
+    70_000
   );
 
   test(
