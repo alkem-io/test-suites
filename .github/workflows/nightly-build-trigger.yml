@@ -121,10 +121,18 @@ jobs:
           # Feature-owned worker-count pin for the nightly-parallel project —
           # unset/empty ⇒ config default of 1 (behaviour-identical rollback).
           NIGHTLY_MAX_WORKERS: ${{ vars.NIGHTLY_MAX_WORKERS }}
-          # Safety ceiling only — never the primary signal. Unset/empty ⇒
-          # config default of 75 (see resolveNightlyWorkers in
-          # src/scripts/nightly-lanes.ts).
+          # CPU sanity-check budget only — never the primary signal, never a
+          # silent reducer. Unset/empty ⇒ config default of 75 (see
+          # resolveNightlyWorkers in src/scripts/nightly-lanes.ts). If
+          # NIGHTLY_MAX_WORKERS exceeds the derived budget, resolution THROWS
+          # (a misconfigured runner) unless the opt-out below is set.
           NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT: ${{ vars.NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT }}
+          # Deliberate, explicit opt-in to run NIGHTLY_MAX_WORKERS above the
+          # detected CPU budget — normally unset. Never set as a habitual
+          # default; see resolveNightlyWorkers's error message for when it's
+          # actually appropriate (an IO-bound suite whose bottleneck is the
+          # server, not local CPU).
+          NIGHTLY_ALLOW_CPU_OVERSUBSCRIPTION: ${{ vars.NIGHTLY_ALLOW_CPU_OVERSUBSCRIPTION }}
         run: |
           set -uo pipefail
           # kratos-admin is ClusterIP (network-isolated); reach it via a
@@ -152,6 +160,7 @@ jobs:
         env:
           NIGHTLY_MAX_WORKERS: ${{ vars.NIGHTLY_MAX_WORKERS }}
           NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT: ${{ vars.NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT }}
+          NIGHTLY_ALLOW_CPU_OVERSUBSCRIPTION: ${{ vars.NIGHTLY_ALLOW_CPU_OVERSUBSCRIPTION }}
         run: |
           set -euo pipefail
           PARALLEL_N=$(jq '.parallel | length' server-api/lanes.json)
@@ -164,26 +173,24 @@ jobs:
           fi
           echo "$LANE_LOG_LINE"
 
-          # The hybrid worker resolution (explicit NIGHTLY_MAX_WORKERS intent,
-          # capped by a NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT safety ceiling —
-          # resolveNightlyWorkers in src/scripts/nightly-lanes.ts) means
-          # maxWorkers=N in the log is the EFFECTIVE value, not necessarily the
-          # requested one. Assert the effective value while still recovering
-          # and checking the requested one, deriving the expectation from
-          # this SAME log line's own reported cpus/cpuCap rather than
-          # independently re-deriving the CPU count (`nproc` can disagree
-          # with Node's cgroup-aware `os.availableParallelism()`) — this
-          # still fails closed on any arithmetic, requested-value, or
-          # CAPPED-marker inconsistency.
-          if [[ ! "$LANE_LOG_LINE" =~ maxWorkers=([0-9]+)\ \(requested=([0-9]+)\ cpuCap=([0-9]+)\ of\ ([0-9]+)\ cpus(,\ CAPPED)?\) ]]; then
-            echo "::error::[nightly] lanes line does not match the expected 'maxWorkers=N (requested=R cpuCap=C of P cpus[, CAPPED])' shape: $LANE_LOG_LINE"
+          # NIGHTLY_MAX_WORKERS is the ONLY source of maxWorkers=N in the log
+          # (resolveNightlyWorkers in src/scripts/nightly-lanes.ts never
+          # clamps it against CPU) — so this now asserts EFFECTIVE ALWAYS
+          # EQUALS REQUESTED, deriving the expectation from this SAME log
+          # line's own reported cpus/cpuCap rather than independently
+          # re-deriving the CPU count (`nproc` can disagree with Node's
+          # cgroup-aware `os.availableParallelism()`). If requested exceeded
+          # the CPU budget, the run must only have proceeded via the
+          # documented, explicit oversubscription opt-out — never silently.
+          if [[ ! "$LANE_LOG_LINE" =~ maxWorkers=([0-9]+)\ \(requested=([0-9]+)\ cpuCap=([0-9]+)\ of\ ([0-9]+)\ cpus(,\ OVERSUBSCRIBED)?\) ]]; then
+            echo "::error::[nightly] lanes line does not match the expected 'maxWorkers=N (requested=R cpuCap=C of P cpus[, OVERSUBSCRIBED])' shape: $LANE_LOG_LINE"
             exit 1
           fi
           EFFECTIVE="${BASH_REMATCH[1]}"
           REQUESTED="${BASH_REMATCH[2]}"
           CPU_CAP="${BASH_REMATCH[3]}"
           CPUS="${BASH_REMATCH[4]}"
-          CAPPED_MARKER="${BASH_REMATCH[5]:-}"
+          OVERSUB_MARKER="${BASH_REMATCH[5]:-}"
 
           EXPECTED_REQUESTED="${NIGHTLY_MAX_WORKERS:-1}"
           [ -z "$EXPECTED_REQUESTED" ] && EXPECTED_REQUESTED=1
@@ -201,21 +208,28 @@ jobs:
             exit 1
           fi
 
-          EXPECTED_EFFECTIVE=$REQUESTED
-          [ "$CPU_CAP" -lt "$EXPECTED_EFFECTIVE" ] && EXPECTED_EFFECTIVE=$CPU_CAP
-          [ "$EXPECTED_EFFECTIVE" -lt 1 ] && EXPECTED_EFFECTIVE=1
-          if [ "$EFFECTIVE" -ne "$EXPECTED_EFFECTIVE" ]; then
-            echo "::error::log reports maxWorkers=${EFFECTIVE}, expected effective ${EXPECTED_EFFECTIVE} = clamp(1, min(requested=${REQUESTED}, cpuCap=${CPU_CAP}))"
+          # The worker count is NEVER silently reduced: the effective value
+          # must always equal the requested one. If resolution had refused
+          # (requested over budget, no opt-out) the process would have
+          # crashed before this log line was ever written, so simply
+          # reaching this point with EFFECTIVE != REQUESTED is itself a
+          # harness defect, not a possible legitimate state.
+          if [ "$EFFECTIVE" -ne "$REQUESTED" ]; then
+            echo "::error::log reports maxWorkers=${EFFECTIVE} but requested=${REQUESTED} — the effective worker count must always equal the requested value, never silently reduced"
             exit 1
           fi
 
-          if [ "$CPU_CAP" -lt "$REQUESTED" ]; then
-            if [ -z "$CAPPED_MARKER" ]; then
-              echo "::error::cpuCap (${CPU_CAP}) < requested (${REQUESTED}) but the log line is missing the CAPPED marker"
+          if [ "$REQUESTED" -gt "$CPU_CAP" ]; then
+            if [ -z "$OVERSUB_MARKER" ]; then
+              echo "::error::requested (${REQUESTED}) exceeds cpuCap (${CPU_CAP}) but the log line is missing the OVERSUBSCRIBED marker — a run must never proceed over budget silently"
               exit 1
             fi
-          elif [ -n "$CAPPED_MARKER" ]; then
-            echo "::error::cpuCap (${CPU_CAP}) >= requested (${REQUESTED}) but the log line carries an unexpected CAPPED marker"
+            if [ "${NIGHTLY_ALLOW_CPU_OVERSUBSCRIPTION:-}" != "yes-i-understand-the-risk" ]; then
+              echo "::error::log reports OVERSUBSCRIBED but this job's own NIGHTLY_ALLOW_CPU_OVERSUBSCRIPTION was not set to the documented opt-out value"
+              exit 1
+            fi
+          elif [ -n "$OVERSUB_MARKER" ]; then
+            echo "::error::cpuCap (${CPU_CAP}) >= requested (${REQUESTED}) but the log line carries an unexpected OVERSUBSCRIBED marker"
             exit 1
           fi
 
@@ -257,7 +271,7 @@ jobs:
             echo "::error::expected exactly ${EXPECTED_POOL_MINTS} shared-pool token mints (the pool's own declared size, minted once) regardless of worker count, found ${MINT_COUNT}"
             exit 1
           fi
-          echo "assert-config OK: parallel=${PARALLEL_N} serial=${SERIAL_M} maxWorkers=${EFFECTIVE} (requested=${REQUESTED} cpuCap=${CPU_CAP} of ${CPUS} cpus${CAPPED_MARKER}) results=${RESULT_COUNT} mints=${MINT_COUNT}"
+          echo "assert-config OK: parallel=${PARALLEL_N} serial=${SERIAL_M} maxWorkers=${EFFECTIVE} (requested=${REQUESTED} cpuCap=${CPU_CAP} of ${CPUS} cpus${OVERSUB_MARKER}) results=${RESULT_COUNT} mints=${MINT_COUNT}"
 
       # The structural exit-code gate: re-runs only the parallel-lane failures
       # serially and derives the build's verdict from serial results alone. A

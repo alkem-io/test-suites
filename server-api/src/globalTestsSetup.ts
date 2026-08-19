@@ -58,7 +58,8 @@ export default async function setup(project: MinimalProject) {
   // happens to run first.
   const resolution = resolveNightlyWorkers(
     process.env.NIGHTLY_MAX_WORKERS,
-    process.env.NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT
+    process.env.NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT,
+    process.env.NIGHTLY_ALLOW_CPU_OVERSUBSCRIPTION
   );
 
   if (!globalState.__alkemioGlobalSetupDone) {
@@ -113,15 +114,17 @@ export default async function setup(project: MinimalProject) {
     // defaults to error-only (LOG_LEVEL unset/'warn' in CI), and this line
     // is read back from the captured run log by the CI assert-config step.
     //
-    // Visibility is the point: a silently reduced worker count would make a
-    // slow run inexplicable. The parenthetical always reports both the
-    // requested intent and the CPU-percentage ceiling it was checked
-    // against, and carries an explicit `CAPPED` marker whenever the ceiling
-    // actually reduced the requested value — the resolution rule itself
-    // lives in src/scripts/nightly-lanes.ts (resolveNightlyWorkers).
+    // `maxWorkers` here is always the requested value — resolveNightlyWorkers
+    // (src/scripts/nightly-lanes.ts) throws before setup ever reaches this
+    // line if NIGHTLY_MAX_WORKERS exceeds the CPU sanity-check budget and no
+    // deliberate oversubscription opt-out was set, so there is never a
+    // silent reduction left to imply. The parenthetical still reports the
+    // requested intent and the CPU budget it was checked against, and
+    // carries an explicit `OVERSUBSCRIBED` marker on the (opted-in) rare
+    // occasions the requested value exceeded that budget anyway.
     const resolutionNote =
       `(requested=${resolution.requested} cpuCap=${resolution.cpuCap} of ${resolution.cpus} cpus` +
-      `${resolution.capped ? ', CAPPED' : ''})`;
+      `${resolution.oversubscribed ? ', OVERSUBSCRIBED' : ''})`;
     console.log(
       `[nightly] lanes: parallel=${lanes.parallel} serial=${lanes.serial} maxWorkers=${resolution.effective} ${resolutionNote} excluded=${lanes.excluded}`
     );

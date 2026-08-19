@@ -310,13 +310,17 @@ test('(e) parseNightlyWorkers edge cases', () => {
   }
 });
 
-// resolveNightlyWorkers — the hybrid explicit-intent/CPU-percentage-ceiling
-// rule (040-parallel-nightly-server-api). `cpus` is always pinned via
-// NIGHTLY_TEST_CPUS so these assertions never depend on the host machine's
-// real core count.
+// resolveNightlyWorkers — NIGHTLY_MAX_WORKERS is the ONLY source of the
+// effective worker count; NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT only derives a
+// CPU sanity-check budget that FAILS FAST when exceeded, unless the
+// deliberate NIGHTLY_ALLOW_CPU_OVERSUBSCRIPTION opt-out is set
+// (040-parallel-nightly-server-api, fail-loud revision). `cpus` is always
+// pinned via NIGHTLY_TEST_CPUS so these assertions never depend on the host
+// machine's real core count.
 const RESOLVE_CLI = path.join(FIXTURES, 'resolve-workers-cli.mjs');
+const OVERSUBSCRIBE_OPT_OUT_VALUE = 'yes-i-understand-the-risk';
 
-function runResolve(requested, capPercent, cpus) {
+function runResolve(requested, capPercent, cpus, optOut) {
   const env = { ...process.env };
   if (requested === undefined) delete env.NIGHTLY_MAX_WORKERS_TEST_INPUT;
   else env.NIGHTLY_MAX_WORKERS_TEST_INPUT = requested;
@@ -324,6 +328,8 @@ function runResolve(requested, capPercent, cpus) {
   else env.NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT_TEST_INPUT = capPercent;
   if (cpus === undefined) delete env.NIGHTLY_TEST_CPUS;
   else env.NIGHTLY_TEST_CPUS = String(cpus);
+  if (optOut === undefined) delete env.NIGHTLY_ALLOW_CPU_OVERSUBSCRIPTION_TEST_INPUT;
+  else env.NIGHTLY_ALLOW_CPU_OVERSUBSCRIPTION_TEST_INPUT = optOut;
 
   const result = spawnSync('pnpm', ['exec', 'tsx', RESOLVE_CLI, REPO_ROOT], {
     cwd: path.join(REPO_ROOT, 'server-api'),
@@ -334,7 +340,7 @@ function runResolve(requested, capPercent, cpus) {
   return { ...parsed, stderr: result.stderr ?? '' };
 }
 
-test('(u) resolveNightlyWorkers: requested < cap — cap does not bind', () => {
+test('(u) resolveNightlyWorkers: requested within budget — effective equals requested, no throw', () => {
   // 8 cpus @ 75% -> cpuCap = floor(8*0.75) = 6
   const { ok, result } = runResolve('5', '75', 8);
   assert.equal(ok, true);
@@ -343,20 +349,41 @@ test('(u) resolveNightlyWorkers: requested < cap — cap does not bind', () => {
     cpuCap: 6,
     cpus: 8,
     effective: 5,
-    capped: false,
+    overBudget: false,
+    oversubscribed: false,
   });
 });
 
-test('(v) resolveNightlyWorkers: requested > cap — cap binds, effective=cap, CAPPED', () => {
-  const { ok, result } = runResolve('99', '75', 8); // cpuCap = 6
-  assert.equal(ok, true);
+test('(v) resolveNightlyWorkers: requested exceeds the CPU budget — FAILS FAST naming NIGHTLY_MAX_WORKERS, the requested value, the detected cpus, and the budget (no silent reduction)', () => {
+  const { ok, message } = runResolve('99', '75', 8); // cpuCap = 6
+  assert.equal(ok, false);
+  assert.match(message, /NIGHTLY_MAX_WORKERS=99/);
+  assert.match(message, /budget of 6/);
+  assert.match(message, /8 schedulable CPUs/);
+  assert.match(message, /75%/);
+  assert.match(message, /NIGHTLY_ALLOW_CPU_OVERSUBSCRIPTION=yes-i-understand-the-risk/);
+});
+
+test('(v2) resolveNightlyWorkers: the wrong opt-out value still fails over budget', () => {
+  const { ok, message } = runResolve('99', '75', 8, 'yes');
+  assert.equal(ok, false);
+  assert.match(message, /NIGHTLY_MAX_WORKERS=99/);
+});
+
+test('(v3) resolveNightlyWorkers: the documented opt-out permits oversubscription and logs loudly', () => {
+  const { ok, result, stderr } = runResolve('99', '75', 8, OVERSUBSCRIBE_OPT_OUT_VALUE);
+  assert.equal(ok, true, stderr);
   assert.deepEqual(result, {
     requested: 99,
     cpuCap: 6,
     cpus: 8,
-    effective: 6,
-    capped: true,
+    effective: 99,
+    overBudget: true,
+    oversubscribed: true,
   });
+  assert.match(stderr, /NIGHTLY_ALLOW_CPU_OVERSUBSCRIPTION=yes-i-understand-the-risk/);
+  assert.match(stderr, /BYPASSING the CPU budget check/);
+  assert.match(stderr, /NIGHTLY_MAX_WORKERS=99/);
 });
 
 test('(w) resolveNightlyWorkers: cap percent unset defaults to 75', () => {
@@ -373,7 +400,7 @@ test('(x) resolveNightlyWorkers: empty string for either var is treated as unset
   const capEmpty = runResolve('5', '', 8);
   assert.equal(capEmpty.ok, true);
   assert.equal(capEmpty.result.cpuCap, 6); // default 75%
-  assert.equal(capEmpty.result.capped, false);
+  assert.equal(capEmpty.result.overBudget, false);
 });
 
 test('(y) resolveNightlyWorkers: invalid values throw naming the offending variable', () => {
@@ -397,18 +424,19 @@ test('(y) resolveNightlyWorkers: invalid values throw naming the offending varia
   }
 });
 
-test('(z) resolveNightlyWorkers: effective is never 0 or negative even at tiny cpu counts / tiny percentages', () => {
+test('(z) resolveNightlyWorkers: cpuCap is never 0 or negative even at tiny cpu counts / tiny percentages, and never reduces effective', () => {
   // 1 cpu @ 1% -> cpuCap = max(1, floor(1*0.01)) = max(1, 0) = 1
-  const tinyPercent = runResolve('50', '1', 1);
+  const tinyPercent = runResolve('1', '1', 1);
   assert.equal(tinyPercent.ok, true);
   assert.equal(tinyPercent.result.cpuCap, 1);
   assert.equal(tinyPercent.result.effective, 1);
-  assert.ok(tinyPercent.result.effective >= 1);
+  assert.equal(tinyPercent.result.overBudget, false);
 
-  // requested itself at the floor, cap generous — still >= 1, never 0.
-  const tinyRequested = runResolve('1', '100', 1);
-  assert.equal(tinyRequested.ok, true);
-  assert.equal(tinyRequested.result.effective, 1);
+  // requested above that tiny budget without the opt-out — still fails fast,
+  // never silently clamped to the cpuCap floor.
+  const tinyRequestedOverBudget = runResolve('50', '1', 1);
+  assert.equal(tinyRequestedOverBudget.ok, false);
+  assert.match(tinyRequestedOverBudget.message, /NIGHTLY_MAX_WORKERS=50/);
 });
 
 test('(aa) vitest.config.ts: serial lane maxWorkers stays hard-pinned at 1, independent of both env vars, with a distinct groupOrder from the parallel lane', () => {

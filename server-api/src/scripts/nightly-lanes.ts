@@ -262,7 +262,21 @@ export function parseNightlyWorkers(raw: string | undefined): number {
 export const DEFAULT_CPU_CAP_PERCENT = 75;
 
 /**
- * Parses the CPU-percentage safety-ceiling variable.
+ * The env var that deliberately opts a run into oversubscribing the
+ * detected CPU budget (`NIGHTLY_MAX_WORKERS` exceeds `cpuCap`). Named and
+ * shaped after `ALLOW_UNAPPROVED_TEST_TARGET` in
+ * `lib/src/config/environment-guard.ts`: an allowlist-style, non-boolean
+ * value so setting it reads as a considered act, never something flipped by
+ * habit or inherited from an unrelated "enable everything" env block. Kept
+ * textually distinct from that guard's own opt-out value on purpose — this
+ * protects a different, unrelated hazard, and copying one enable-everything
+ * block should never silently enable both.
+ */
+export const CPU_OVERSUBSCRIBE_OPT_OUT_ENV_VAR = 'NIGHTLY_ALLOW_CPU_OVERSUBSCRIPTION';
+export const CPU_OVERSUBSCRIBE_OPT_OUT_VALUE = 'yes-i-understand-the-risk';
+
+/**
+ * Parses the CPU-percentage sanity-check variable.
  *
  * Same validation discipline as `parseNightlyWorkers`: GitHub renders an
  * unset repository variable as an empty string, so unset/`""` both default
@@ -299,51 +313,93 @@ function detectAvailableParallelism(): number {
 
 /** The resolved nightly-parallel worker count, plus the inputs that produced it. */
 export interface NightlyWorkerResolution {
-  /** `NIGHTLY_MAX_WORKERS` after defaulting/validation — the explicit intent. */
+  /** `NIGHTLY_MAX_WORKERS` after defaulting/validation — the ONLY source of the effective worker count. */
   requested: number;
-  /** `floor(cpus * capPercent / 100)`, never below 1 — the safety ceiling. */
+  /** `floor(cpus * capPercent / 100)`, never below 1 — a sanity-check budget `requested` is compared against. Never used to reduce `effective`. */
   cpuCap: number;
-  /** The CPU count the ceiling was derived from. */
+  /** The CPU count the budget was derived from. */
   cpus: number;
-  /** `clamp(1, min(requested, cpuCap))` — what actually gets passed to vitest. */
+  /** Always equal to `requested`. Kept as its own field because it is what callers (vitest config, the run-time log line) actually consume. */
   effective: number;
-  /** True when the ceiling reduced the requested value (`cpuCap < requested`). */
-  capped: boolean;
+  /** True when `requested > cpuCap` — a misconfigured runner, UNLESS `oversubscribed` is also true. */
+  overBudget: boolean;
+  /** True when `overBudget` was true and the deliberate oversubscription opt-out was set — the run proceeds, loudly logged. */
+  oversubscribed: boolean;
 }
 
 /**
- * Resolves `nightly-parallel`'s `maxWorkers` from a hybrid rule: an
- * explicit, reproducible INTENT (`NIGHTLY_MAX_WORKERS`) capped by a CPU
- * PERCENTAGE safety ceiling (`NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT`).
+ * Resolves `nightly-parallel`'s `maxWorkers`. `NIGHTLY_MAX_WORKERS` is the
+ * ONLY source of the effective worker count — full stop, no `min()`, no
+ * clamping against CPU. `NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT` derives a CPU
+ * SANITY-CHECK budget the requested value is compared against, never a
+ * silent reducer of it.
  *
- * These solve two different problems and neither one alone is enough.
- * Empirically the real bottleneck for this suite is SERVER throughput, not
- * client CPU — on a 1-replica local server, W=5 took 21.4 min but W=6 took
- * 29.0 min (SLOWER: the server saturates, workers just queue behind it).
- * That means the worker count must stay an explicit, humanly-chosen,
- * reproducible decision — a pure percentage-of-CPU value would silently
- * shift every time the runner's core count changes, making a slow night
- * unexplainable. But a pure explicit number has no floor against reality:
- * pointed at a small/shared runner, an explicit value chosen for a beefy
- * box would thrash it. The percentage is therefore only a CEILING that
- * protects the runner, never the primary signal — `effective` is always
- * `<= requested`, never derived FROM `cpuCap` when `cpuCap >= requested`.
- * `NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT` is resolved via vitest's own
- * percentage-string support (`os.availableParallelism()`-based) — but
- * resolved to a concrete number HERE rather than handed to vitest as a
- * percentage string, so the effective value is knowable, loggable, and
- * assertable instead of being an opaque internal computation.
+ * Why a pinned variable in the first place: the real bottleneck for this
+ * suite is empirically SERVER throughput, not client CPU — on a 1-replica
+ * local server, W=5 took 21.4 min but W=6 took 29.0 min (SLOWER: the server
+ * saturates, workers just queue behind it). That means the worker count
+ * must stay an explicit, humanly-chosen, reproducible decision — a pure
+ * percentage-of-CPU value would silently shift every time the runner's core
+ * count changes, making a slow night unexplainable — an explicitly reviewed
+ * design requirement, including a recorded architect dissent that rejected
+ * pinning this from the runner's own native worker-count mechanism for
+ * exactly this reason.
+ *
+ * Why the CPU figure still exists: pointed at a small/shared runner, an
+ * explicit value chosen for a beefy box would thrash it. A prior revision of
+ * this function used the CPU figure as a silent `min(requested, cpuCap)`
+ * ceiling — that inverted the failure mode: an under-provisioned runner
+ * produced a quiet, unannounced single-worker run instead of a loud one, and
+ * a CI assert step that recomputed the same formula from the same log line
+ * could never catch it. The correct shape is a FAIL-FAST comparison: when
+ * `requested > cpuCap`, this throws, naming the requested value, the
+ * detected CPU count, the derived budget, and how to resolve it (lower
+ * `NIGHTLY_MAX_WORKERS`, or use a bigger runner) — UNLESS the deliberate
+ * `CPU_OVERSUBSCRIBE_OPT_OUT_ENV_VAR` opt-out is set, for the case where
+ * oversubscription is genuinely intended (this suite is arguably exactly
+ * that case: the bottleneck above is the server, not local CPU). The
+ * opt-out is honored loudly (`console.warn`), never silently.
  */
 export function resolveNightlyWorkers(
   requestedRaw: string | undefined,
   cpuCapPercentRaw: string | undefined,
+  optOutRaw: string | undefined = process.env[CPU_OVERSUBSCRIBE_OPT_OUT_ENV_VAR],
   cpus: number = detectAvailableParallelism()
 ): NightlyWorkerResolution {
   const requested = parseNightlyWorkers(requestedRaw);
   const capPercent = parseCpuCapPercent(cpuCapPercentRaw);
   const cpuCap = Math.max(1, Math.floor(cpus * (capPercent / 100)));
-  const effective = Math.max(1, Math.min(requested, cpuCap));
-  return { requested, cpuCap, cpus, effective, capped: cpuCap < requested };
+  const overBudget = requested > cpuCap;
+  const oversubscribed = overBudget && optOutRaw === CPU_OVERSUBSCRIBE_OPT_OUT_VALUE;
+
+  if (overBudget && !oversubscribed) {
+    throw new Error(
+      `\nNIGHTLY_MAX_WORKERS=${requested} exceeds the detected CPU budget of ${cpuCap} ` +
+        `(${cpus} schedulable CPUs at ${capPercent}% via NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT).\n\n` +
+        'Refusing to silently reduce the worker count — that would flatten nightly\'s parallel ' +
+        'lane into an unannounced, effectively single-worker run.\n\n' +
+        'To resolve, either:\n' +
+        `  - lower NIGHTLY_MAX_WORKERS to <= ${cpuCap}, or\n` +
+        '  - run on a runner with more CPU, or\n' +
+        '  - if this suite\'s bottleneck is genuinely the server (not local CPU) and deliberate ' +
+        'oversubscription is intended, opt in explicitly by setting\n' +
+        `      ${CPU_OVERSUBSCRIBE_OPT_OUT_ENV_VAR}=${CPU_OVERSUBSCRIBE_OPT_OUT_VALUE}\n` +
+        '    in the run\'s own environment (never commit it, never set it as a default).\n'
+    );
+  }
+
+  if (oversubscribed) {
+    console.warn(
+      `\n[nightly] *** ${CPU_OVERSUBSCRIBE_OPT_OUT_ENV_VAR}=${CPU_OVERSUBSCRIBE_OPT_OUT_VALUE} is set — ` +
+        'BYPASSING the CPU budget check. ***\n' +
+        `[nightly] Proceeding with NIGHTLY_MAX_WORKERS=${requested} against a detected budget of ` +
+        `${cpuCap} (${cpus} schedulable CPUs at ${capPercent}%).\n` +
+        '[nightly] This was a deliberate override for a suite whose bottleneck is the server, not ' +
+        `local CPU. If you did not intend it, unset ${CPU_OVERSUBSCRIBE_OPT_OUT_ENV_VAR} and re-run.\n`
+    );
+  }
+
+  return { requested, cpuCap, cpus, effective: requested, overBudget, oversubscribed };
 }
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

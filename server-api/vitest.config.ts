@@ -164,16 +164,16 @@ export default defineConfig({
           // manifest entry still can't slip an excluded file into the run.
           exclude: [...NIGHTLY_EXCLUDE],
           sequence: { groupOrder: 0 },
-          // Hybrid resolution (src/scripts/nightly-lanes.ts
-          // resolveNightlyWorkers): NIGHTLY_MAX_WORKERS is the explicit,
-          // reproducible intent; NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT is only
-          // a safety ceiling against a small/shared runner. Resolved to a
-          // concrete number here (not handed to vitest as a percentage
-          // string) so the effective value is knowable, loggable, and
-          // assertable — see globalTestsSetup.ts for the run-time log line.
+          // NIGHTLY_MAX_WORKERS is the ONLY source of `effective` (src/scripts/nightly-lanes.ts
+          // resolveNightlyWorkers) — never clamped against CPU.
+          // NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT only derives a sanity-check budget: when the
+          // requested value exceeds it, resolution THROWS at config-load time (a misconfigured
+          // runner) unless NIGHTLY_ALLOW_CPU_OVERSUBSCRIPTION is deliberately set — see
+          // globalTestsSetup.ts for the run-time log line.
           maxWorkers: resolveNightlyWorkers(
             process.env.NIGHTLY_MAX_WORKERS,
-            process.env.NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT
+            process.env.NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT,
+            process.env.NIGHTLY_ALLOW_CPU_OVERSUBSCRIPTION
           ).effective,
           retry: 0,
         },
