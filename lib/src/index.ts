@@ -11,6 +11,7 @@ export * from "./utils/subscriptions";
 export * from "./utils/graphql.authorization.header";
 export * from "./utils/get.document";
 export * from "./scenario/TestScenarioFactory";
+export * from "./scenario/TeardownLeakTracker";
 export * from "./scenario/baseFunctions";
 export * from "./scenario/TestSetupUtils";
 export * from "./scenario/LogManager";

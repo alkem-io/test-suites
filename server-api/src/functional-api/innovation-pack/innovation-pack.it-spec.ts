@@ -1,7 +1,13 @@
-import { createOrganization } from '@functional-api/contributor-management/organization/organization.request.params';
+import {
+  createOrganization,
+  deleteOrganization,
+} from '@functional-api/contributor-management/organization/organization.request.params';
 import { UniqueIDGenerator } from '@alkemio/tests-lib';;
 const uniqueId = UniqueIDGenerator.getID();
-import { createInnovationPack } from './innovation_pack.request.params';
+import {
+  createInnovationPack,
+  deleteInnovationPack,
+} from './innovation_pack.request.params';
 import {
   whiteboardTemplateValues1,
   whiteboardTemplateValues2,
@@ -19,13 +25,19 @@ describe('Organization', () => {
   const packName = `Default Innovation Pack Name ${uniqueId}`;
   const packNameId = `pack-nameid-${uniqueId}`;
   let orgId = '';
+  let packId = '';
   beforeAll(async () => {
     await authorizationPolicyResetOnPlatform();
 
     const res = await createOrganization(organizationName, hostNameId);
     orgId = res?.data?.createOrganization.id ?? '';
   });
-  // afterAll(async () => await deleteOrganization(orgId));
+  afterAll(async () => {
+    if (packId) {
+      await deleteInnovationPack(packId).catch(() => {});
+    }
+    await deleteOrganization(orgId).catch(() => {});
+  });
 
   describe('Innovation pack library', () => {
     test('Create', async () => {
@@ -34,6 +46,7 @@ describe('Organization', () => {
         packNameId,
         orgId
       );
+      packId = packData?.data?.createInnovationPack?.id ?? '';
       const templateSetId =
         packData?.data?.createInnovationPack?.templatesSet?.id ?? '';
 

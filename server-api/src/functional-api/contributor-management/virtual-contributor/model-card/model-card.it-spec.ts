@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import {
   TestScenarioConfig,
   TestScenarioFactory,
@@ -72,6 +72,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await deleteVirtualContributorOnAccount(vcId).catch();
   await deleteSpace(vcSpaceId).catch();
+  await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 describe('Virtual Contributor Model Card', () => {
   it('should create a virtual contributor with a model card', async () => {
