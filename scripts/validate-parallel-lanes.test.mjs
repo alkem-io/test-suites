@@ -50,8 +50,8 @@ test('(b) transitive hazard through a two-hop helper chain — exit != 0, names 
   const { status, combined } = runGuard('transitive-hazard');
   assert.notEqual(status, 0);
   assert.match(combined, /risky\.it-spec\.ts/);
-  assert.match(combined, /rule 1/);
-  assert.match(combined, /getMails/);
+  assert.match(combined, /rule 2/);
+  assert.match(combined, /assignPlatformRole/);
   // Hop path must show BOTH intermediate helpers — proving this isn't just a
   // direct-import check.
   assert.match(combined, /helper1\.ts/);
@@ -97,28 +97,28 @@ test('(f) hazard call inside an exported CLASS method (the real TestScenarioFact
   const { status, combined } = runGuard('class-hazard');
   assert.notEqual(status, 0, combined);
   assert.match(combined, /risky\.it-spec\.ts/);
-  assert.match(combined, /rule 1/);
-  assert.match(combined, /getMails/);
+  assert.match(combined, /rule 2/);
+  assert.match(combined, /assignPlatformRole/);
   // Hop path must show the class's own file — proving the class body itself
   // (not just its file) was taint-seeded and the qualified call
   // `RiskyClass.doRiskyThing()` was resolved back to it.
   assert.match(combined, /risky-class\.ts/);
 });
 
-test('(g) hazard reached through `const { getMails } = await import(...)`', () => {
+test('(g) hazard reached through `const { assignPlatformRole } = await import(...)`', () => {
   const { status, combined } = runGuard('dynamic-import-hazard');
   assert.notEqual(status, 0, combined);
   assert.match(combined, /risky\.it-spec\.ts/);
-  assert.match(combined, /rule 1/);
-  assert.match(combined, /getMails/);
+  assert.match(combined, /rule 2/);
+  assert.match(combined, /assignPlatformRole/);
 });
 
 test('(h) hazard reached through `import * as hz` used inside a helper', () => {
   const { status, combined } = runGuard('namespace-helper-hazard');
   assert.notEqual(status, 0, combined);
   assert.match(combined, /risky\.it-spec\.ts/);
-  assert.match(combined, /rule 1/);
-  assert.match(combined, /getMails/);
+  assert.match(combined, /rule 2/);
+  assert.match(combined, /assignPlatformRole/);
   assert.match(combined, /helper\.ts/);
 });
 
@@ -126,56 +126,95 @@ test('(i) the manifest file itself calls the hazard symbol via a namespace impor
   const { status, combined } = runGuard('namespace-direct-hazard');
   assert.notEqual(status, 0, combined);
   assert.match(combined, /risky\.it-spec\.ts/);
-  assert.match(combined, /rule 1/);
-  assert.match(combined, /getMails/);
+  assert.match(combined, /rule 2/);
+  assert.match(combined, /assignPlatformRole/);
 });
 
-// qual-test-suites-4: rules 4/5 (content scans catching false-green
-// vacuous-pass assertions) previously had NO self-test at all, so a
-// typo'd or narrowed CONTENT_RULES pattern would silently pass every
-// fixture and the real tree alike. Rule 5's fixture was rewritten in place
-// (040-parallel-nightly-server-api, fifth pass) when the rule itself was
-// renarrowed off "shared-identity aggregate" (neutralised by per-worker
-// identity pools) onto "exact non-zero count off the async autoInvite
-// flow" (a load-timing hazard the pools don't touch) — same test name/id,
-// different mechanism.
-test('(j) an exact non-zero count off the async autoInvite flow trips rule 5', () => {
+// qual-test-suites-4: rules 4/5 (the content scan for unscoped global
+// aggregates keyed on a shared identity — the guard's only answer to R-2,
+// a false-green vacuous-pass assertion) previously had NO self-test at all,
+// so a typo'd or narrowed CONTENT_RULES pattern would silently pass every
+// fixture and the real tree alike.
+test('(j) a global aggregate keyed on a shared identity, asserted by count, trips rule 5', () => {
   const { status, combined } = runGuard('content-rule-hazard');
   assert.notEqual(status, 0, combined);
   assert.match(combined, /risky\.it-spec\.ts/);
   assert.match(combined, /rule 5/);
 });
 
-// Rule 2's convergent-setup / order-dependent-mutation split (an idempotent,
-// already-has-it-guarded grant converges regardless of concurrent ordering,
-// so was ACCEPTED into the parallel lane; a revocation never converges, so
-// was REJECTED regardless of import shape) had five fixtures/tests here:
-// (k) guarded-grant-safe, (l) revoke-direct-hazard, (m) revoke-class-hazard,
-// (n) revoke-namespace-hazard, (o) revoke-dynamic-import-hazard. Rules 2 and
-// 6 are REMOVED (040-parallel-nightly-server-api, fifth pass — per-worker
-// identity pools eliminate the shared-identity premise both rules existed
-// to catch; see validate-parallel-lanes.ts's module docstring), so all five
-// are removed with them rather than kept testing a mechanism that no longer
-// exists.
-//
-// Rule 7 (assertion on a shared user's platform-role state) had test (p)
-// role-assertion-hazard; rule 8 (assertion on a shared user's
-// roleSet-membership state) had test (r) roleset-membership-assertion-hazard.
-// Both rules are REMOVED for the same reason — removed with their fixtures.
-//
-// Rule 5's old case-insensitivity fix (test (q)
-// content-rule-case-hazard, 2026-08-18) proved the guard caught
-// `getCommunityApplicationsInvitations` via a capitalized-substring match on
-// the old `communityApplications|...` pattern. Rule 5 is RENARROWED (not
-// removed) to a completely different pattern (an exact non-zero count off
-// the async `autoInvite` flow — see test (j) content-rule-hazard, updated
-// in place) that has nothing to do with case sensitivity, so this fixture
-// no longer proves anything about the rule as it now stands and is removed
-// rather than kept as a test of dead behaviour.
-//
-// Rule 10 (the DDT privileged-success idiom) had test (ac)
-// ddt-privileged-success-hazard. Removed for the same shared-identity
-// reason as rules 2/6/7/8.
+// The convergent-setup / order-dependent-mutation split of rule 2: an
+// idempotent, already-has-it-guarded grant (the REAL TestScenarioFactory
+// shape) converges regardless of concurrent ordering and must be ACCEPTED
+// into the parallel lane — while a revocation is never convergent and must
+// be REJECTED regardless of import shape (direct, class method, namespace
+// import, dynamic import) or how guarded it looks.
+
+test('(k) a grant guarded by an already-has-it check converges — ACCEPTED into the parallel lane', () => {
+  const { status, combined } = runGuard('guarded-grant-safe');
+  assert.equal(status, 0, combined);
+  assert.match(combined, /OK — partition proven/);
+});
+
+test('(l) a revocation called directly trips the new fail-closed rule 6', () => {
+  const { status, combined } = runGuard('revoke-direct-hazard');
+  assert.notEqual(status, 0, combined);
+  assert.match(combined, /risky\.it-spec\.ts/);
+  assert.match(combined, /rule 6/);
+  assert.match(combined, /removePlatformRole/);
+});
+
+test('(m) a revocation inside an exported CLASS method trips rule 6 even when guard text is nearby', () => {
+  const { status, combined } = runGuard('revoke-class-hazard');
+  assert.notEqual(status, 0, combined);
+  assert.match(combined, /risky\.it-spec\.ts/);
+  assert.match(combined, /rule 6/);
+  assert.match(combined, /removePlatformRole/);
+  assert.match(combined, /risky-class\.ts/);
+});
+
+test('(n) a revocation reached through a namespace import trips rule 6', () => {
+  const { status, combined } = runGuard('revoke-namespace-hazard');
+  assert.notEqual(status, 0, combined);
+  assert.match(combined, /risky\.it-spec\.ts/);
+  assert.match(combined, /rule 6/);
+  assert.match(combined, /removePlatformRole/);
+  assert.match(combined, /helper\.ts/);
+});
+
+test('(o) a revocation reached through a dynamic import trips rule 6', () => {
+  const { status, combined } = runGuard('revoke-dynamic-import-hazard');
+  assert.notEqual(status, 0, combined);
+  assert.match(combined, /risky\.it-spec\.ts/);
+  assert.match(combined, /rule 6/);
+  assert.match(combined, /removePlatformRole/);
+});
+
+test('(p) an assertion reading a shared user\'s platform-role state trips rule 7', () => {
+  const { status, combined } = runGuard('role-assertion-hazard');
+  assert.notEqual(status, 0, combined);
+  assert.match(combined, /risky\.it-spec\.ts/);
+  assert.match(combined, /rule 7/);
+});
+
+// 2026-08-18 nightly run (workspace#040): a real two-lane run found three
+// files the guard had certified parallel-safe actually interfere under
+// concurrency. Root-caused to two rule gaps, both fixed as generalised
+// rules rather than per-file demotions — these two fixtures prove each
+// fix actually fires on the shape that was missed.
+
+test('(q) a capitalized community-invitations wrapper name trips rule 5 (case-insensitive fix)', () => {
+  const { status, combined } = runGuard('content-rule-case-hazard');
+  assert.notEqual(status, 0, combined);
+  assert.match(combined, /risky\.it-spec\.ts/);
+  assert.match(combined, /rule 5/);
+});
+
+test('(r) an assertion reading a shared user\'s roleSet-membership state trips the new rule 8', () => {
+  const { status, combined } = runGuard('roleset-membership-assertion-hazard');
+  assert.notEqual(status, 0, combined);
+  assert.match(combined, /risky\.it-spec\.ts/);
+  assert.match(combined, /rule 8/);
+});
 
 // The exclusion mechanism (workspace#040): NIGHTLY_EXCLUDE is an explicit,
 // documented lane-scope removal — a file listed there must land in NEITHER
@@ -211,17 +250,23 @@ test('(s) an excluded file lands in neither lane, and the partition still proves
 });
 
 // 040-parallel-nightly-server-api, fourth pass: a real two-lane run found
-// a file the guard had certified parallel-safe that actually interferes
-// under concurrency. Root-caused to a content-rule gap — rule 9 survives
-// the fifth pass's per-worker-identity re-derivation unchanged (the
-// roleSet conversion window is a real server-side race independent of
-// identity sharing), so this fixture still proves it fires.
+// two more files the guard had certified parallel-safe that actually
+// interfere under concurrency. Root-caused to two more content-rule gaps —
+// these two fixtures prove each new rule actually fires on the shape that
+// was missed.
 
 test('(ab) a roleSet member/lead/admin list read off a conversion mutation trips the new rule 9', () => {
   const { status, combined } = runGuard('roleset-aggregate-post-conversion-hazard');
   assert.notEqual(status, 0, combined);
   assert.match(combined, /risky\.it-spec\.ts/);
   assert.match(combined, /rule 9/);
+});
+
+test('(ac) a DDT table asserting a privileged mutation succeeds for a shared pool user trips the new rule 10', () => {
+  const { status, combined } = runGuard('ddt-privileged-success-hazard');
+  assert.notEqual(status, 0, combined);
+  assert.match(combined, /risky\.it-spec\.ts/);
+  assert.match(combined, /rule 10/);
 });
 
 test('(t) a NIGHTLY_EXCLUDE entry matching no file on disk fails the guard closed', () => {

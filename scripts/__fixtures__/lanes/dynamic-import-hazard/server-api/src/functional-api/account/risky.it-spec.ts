@@ -3,7 +3,7 @@
 // static-import-only regex (`import ... from '...'`) never produced an edge
 // for.
 test('looks safe from here', async () => {
-  const { getMails } = await import('../../hazard-symbols');
-  await getMails();
+  const { assignPlatformRole } = await import('../../hazard-symbols');
+  await assignPlatformRole('space-id', 'user-id', 'GLOBAL_ADMIN');
   expect(1).toBe(1);
 });

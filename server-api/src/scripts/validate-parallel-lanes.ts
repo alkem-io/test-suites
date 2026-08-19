@@ -15,65 +15,52 @@
  * 2. Soundness: no file in `PARALLEL_MANIFEST` trips any of the hazard rule
  *    families —
  *      1. shared-mailbox access
+ *      2. unguarded platform-role GRANT on shared users
+ *      3. shared-user settings/profile mutation
  *      4. unscoped global list/count/positional assertions
- *      5. an exact, non-zero count asserted off the async `autoInvite`
- *         background flow, gated only by a fixed sleep
+ *      5. global aggregates keyed on a shared identity, asserted by
+ *         count/exclusivity/position
+ *      6. platform-role REVOCATION/toggle on shared users
+ *      7. assertion on a shared user's platform-role state
+ *      8. assertion on a shared user's roleSet-membership state
  *      9. roleSet member/lead/admin aggregate asserted straight off a
  *         structural space conversion/move mutation's own response
- *    Rule 1 is symbol-level and transitive: a manifest file is flagged if
- *    it — or any file reachable through its import graph — both imports and
- *    calls a hazard symbol (`deleteMailSlurperMails` / `getMailsData` /
- *    `getMails`), regardless of import shape (direct call, an exported
- *    class's method, a namespace import, or a dynamic `import()`). Rules 4,
- *    5 and 9 are a direct content scan of the manifest file's own source,
- *    since they describe how the *file itself* shapes its assertions, not a
- *    transitively-inherited hazard. Rule 9 catches a roleSet's
- *    member/lead/admin USER LIST read as ground truth immediately around a
- *    `convertSpace*`/`moveSpace*` structural mutation — the space-hierarchy
- *    service performs its own remove-then-reassign cycle on that roleSet's
- *    role credentials as part of the conversion, and that cycle's
- *    completion is not guaranteed settled by the time a nested resolver
- *    field reads the aggregate back, a window that widens under concurrent
- *    host load; see the `CONTENT_RULES` id-9 docstring for the server-side
- *    evidence. Rule 5 catches an exact `toHaveLength(N)` (N > 0) asserted
- *    off the roleSet's invitations after an `autoInvite: true` conversion
- *    mutation, bounded only by a fixed `delay(...)` — the invite creation
- *    itself is an async background flow with no explicit completion signal
- *    the test can await, so the assertion's reliability is a function of
- *    how loaded the server is at the moment the fixed delay expires; see
- *    the `CONTENT_RULES` id-5 docstring for why this is a LOAD-timing
- *    hazard, not an identity-sharing one, and is therefore not fixed by
- *    per-worker identity pools.
- *
- * Six rule families that used to live here — unguarded platform-role GRANT,
- * shared-user settings/profile mutation, platform-role REVOCATION, an
- * assertion on a shared user's platform-role state, an assertion on a
- * shared user's roleSet-membership state, and the DDT-privileged-success
- * idiom — are gone, not merely relaxed. Every one of them existed to catch
- * two DIFFERENT files racing on the SAME shared pool identity
- * (`TestUserManager.users.X` resolving to one Kratos user every
- * concurrently-running file could reach). Per-worker identity pools
- * (aa691544) removed that premise structurally: each vitest worker now
- * mints its own 13-identity pool, keyed by `VITEST_POOL_ID`
- * (`TestUserManager.resolveForCurrentWorker`), and under `pool: 'threads'`
- * a worker runs one file at a time — so two files that can run
- * CONCURRENTLY can never resolve the same identity. Every historical trip
- * site for these six rules was checked by hand against this premise (see
- * `nightly-lanes.ts`'s "Fifth pass" comment for the file-by-file
- * verification) and targets a shared pool identity, never a file-local
- * unique one — so the rule's hazard is gone, not just harder to prove.
- * Rule 5 survived this same audit only partly: its old pattern (an exact
- * count off `me.communityApplications` / `me.communityInvitations` /
- * `rolesUser(userID)` / `myPushSubscriptions` — all actor-ID-scoped at the
- * server, confirmed by reading `me.resolver.fields.ts` /
- * `roles.resolver.queries.ts` / `push.subscription.resolver.queries.ts`) is
- * neutralised by the same argument, but a real, unrelated hazard was hiding
- * under the same rule via an accidental case-insensitive substring match
- * on the `getCommunityApplicationsInvitations` wrapper name — so rule 5 is
- * NARROWED to that surviving shape rather than removed. Do not reinstate
- * any of the six removed rules, or widen rule 5 back to its old pattern,
- * without first disproving the per-worker-identity argument above for the
- * specific case in hand.
+ *     10. a DDT table asserting a privileged mutation SUCCEEDS for a shared
+ *         pool user
+ *    Rules 1, 2, 3 and 6 are symbol-level and transitive: a manifest file is
+ *    flagged if it — or any file reachable through its import graph — both
+ *    imports and calls a hazard symbol (rule 3 additionally requires
+ *    evidence the call targets a shared pool user: a `TestUser.` /
+ *    `TestUserManager.users` reference in the same file). Rule 2 is further
+ *    narrowed to only the UNGUARDED occurrences of a grant call — an
+ *    idempotent, already-has-it-guarded grant converges regardless of
+ *    concurrent ordering and is not flagged; see the `guardWindowRe`
+ *    docstring on `HazardRule` for the source-level proof this is built on.
+ *    Rule 6 (revocation) has no such exemption — undoing a role is never
+ *    convergent. Rules 4, 5, 7, 8, 9 and 10 are a direct content scan of the
+ *    manifest file's own source, since they describe how the *file itself*
+ *    shapes its assertions, not a transitively-inherited hazard. Rule 8 is
+ *    rule 7's counterpart one layer up the stack: rule 7 catches a shared
+ *    user's PLATFORM role state read as ground truth (`.RoleNames`), rule 8
+ *    catches the same shared identity's roleSet-level MEMBER state read the
+ *    same way (`isUserMemberOfRoleSet` / `getRoleSetUsersInMemberRole`),
+ *    both gated on shared-user evidence in the same file. Rules 9 and 10 are
+ *    a second empirically-driven pair, same discipline: rule 9 catches a
+ *    roleSet's member/lead/admin USER LIST read as ground truth immediately
+ *    around a `convertSpace*`/`moveSpace*` structural mutation — the
+ *    space-hierarchy service performs its own remove-then-reassign cycle on
+ *    that roleSet's role credentials as part of the conversion, and that
+ *    cycle's completion is not guaranteed settled by the time a nested
+ *    resolver field reads the aggregate back, a window that widens under
+ *    concurrent host load; see the `CONTENT_RULES` id-9 docstring for the
+ *    server-side evidence. Rule 10 catches the DDT idiom this whole suite
+ *    uses to assert a privileged mutation's SUCCESS for a named role
+ *    (`${TestUser.X} | ${'"data":{"someMutation"'}`) — the server's
+ *    actor-authorization cache is keyed only by actor ID, not by
+ *    (actor, resource), so it is invalidated for that ACTOR wholesale
+ *    whenever ANY of that shared identity's credentials change anywhere on
+ *    the platform; see the id-10 docstring for the source-level evidence
+ *    and the honest limits of this pattern's coverage.
  *
  * New spec files are safe by construction: they can only ever land in the
  * complement (the serial lane), never in the reviewed manifest.
@@ -112,38 +99,86 @@ interface Context {
 // from the taxonomy.
 
 interface HazardRule {
-  id: 1;
+  id: 1 | 2 | 3 | 6;
   name: string;
   symbols: string[];
+  /**
+   * Extra per-file evidence required alongside "imports and calls a hazard
+   * symbol" before the rule fires. Rule 3 only: settings/profile mutation is
+   * hazardous when it targets a shared pool user, not a file-local one.
+   */
+  requiresSharedUserEvidence?: boolean;
+  /**
+   * When set, a call to one of this rule's symbols is a hazard ONLY IF that
+   * specific call site has no occurrence of `guardWindowRe` within the
+   * preceding `guardWindowChars` characters — i.e. it fires per OCCURRENCE,
+   * not per file/declaration, and defaults to "hazard" (fail-closed) unless
+   * local guard evidence is actually found next to THAT call.
+   *
+   * This encodes the convergent-setup proof for rule 2: concurrent,
+   * identical, idempotent grants converge to the same end state and no
+   * file's verdict depends on another file NOT having granted yet — but
+   * only when the call site is actually guarded by an already-has-it check.
+   * The evidence is real, not assumed: `assignPlatformRole` has exactly ONE
+   * call site in the whole repo (`TestScenarioFactory.checkAndAssignRoleNameToUser`,
+   * lib/src/scenario/TestScenarioFactory.ts:607), and `.RoleNames.includes(`
+   * — the guard idiom below — has exactly ONE occurrence in the whole repo,
+   * ~500 characters earlier in that SAME method (line 596). Every OTHER
+   * `assignPlatformRole` call site in the repo (8, all in entitlements/
+   * spec files and none currently promoted) has no such guard nearby and
+   * stays flagged. `removePlatformRole` is deliberately a separate rule (6)
+   * with no guard exemption at all: a revocation is never convergent —
+   * unlike a monotonic grant, undoing a role can invalidate a concurrent
+   * file's assumption regardless of how it's guarded.
+   */
+  guardWindowRe?: RegExp;
+  guardWindowChars?: number;
 }
 
-// Rules 2 (unguarded platform-role grant), 3 (settings/profile mutation) and
-// 6 (revocation/toggle) — all symbol-level and transitive like rule 1 below
-// — used to live here. Removed outright (040-parallel-nightly-server-api,
-// fifth pass), not narrowed: every one of them existed only to catch two
-// DIFFERENT files racing to grant/revoke/mutate the SAME shared pool
-// identity, and per-worker identity pools (aa691544) removed that shared
-// subject structurally — see this file's module docstring for the full
-// argument and `nightly-lanes.ts`'s "Fifth pass" comment for the per-file
-// verification that every historical trip site targeted
-// `TestUserManager.users.*` and none targeted a file-local unique user. The
-// convergent-setup exemption rule 2 used to need (an idempotent,
-// already-has-it-guarded grant converges regardless of concurrent ordering)
-// no longer has anything to guard now that the rule itself is gone; do not
-// resurrect that mechanism without first re-deriving why a NEW symbol-level
-// rule is needed at all.
+const IDEMPOTENT_GRANT_GUARD_RE = /\.RoleNames\.includes\(/;
+
 const HAZARD_RULES: HazardRule[] = [
   {
     id: 1,
     name: 'shared-mailbox access',
     symbols: ['deleteMailSlurperMails', 'getMailsData', 'getMails'],
   },
+  {
+    id: 2,
+    name: 'unguarded platform-role grant on shared users',
+    symbols: ['assignPlatformRole'],
+    guardWindowRe: IDEMPOTENT_GRANT_GUARD_RE,
+    guardWindowChars: 800,
+  },
+  {
+    id: 3,
+    name: 'shared-user settings/profile mutation',
+    // `updateUserSettingsWithPush` is the push-notifications area's own
+    // wrapper around the same `updateUserSettings` mutation (it builds the
+    // GraphQL query string itself rather than calling the JS symbol) —
+    // reviewed in and included here so the rule still catches it.
+    symbols: ['updateUserSettings', 'updateUser', 'updateUserSettingsWithPush'],
+    requiresSharedUserEvidence: true,
+  },
+  {
+    id: 6,
+    name: 'platform-role revocation/toggle on shared users',
+    // No `guardWindowRe`: a revocation is never convergent, guarded or not
+    // — undoing a role can invalidate a concurrent file's assumption no
+    // matter how carefully it's gated. This is the fail-closed safety net:
+    // if a future change makes any promoted file transitively reach a
+    // revocation/toggle path (even through a class method, a namespace
+    // import, or a dynamic `import()` — the same sound taint machinery
+    // that catches rule 2/3 catches this too), the guard fails the run
+    // instead of silently certifying it clean.
+    symbols: ['removePlatformRole'],
+  },
 ];
 
 const SHARED_USER_EVIDENCE_RE = /\bTestUser\.|\bTestUserManager\.users\b/;
 
 interface ContentRule {
-  id: 4 | 5 | 9;
+  id: 4 | 5 | 7 | 8 | 9 | 10;
   name: string;
   pattern: RegExp;
   requiresSharedUserEvidence?: boolean;
@@ -157,55 +192,65 @@ const CONTENT_RULES: ContentRule[] = [
   },
   {
     id: 5,
-    name: 'exact non-zero count asserted off the async autoInvite background flow',
-    // RENARROWED, not the same rule it used to be (040-parallel-nightly-
-    // server-api, fifth pass). The old pattern
-    // (`communityApplications|communityInvitations|rolesUser\.|myMemberships|
-    // myPushSubscriptions`, case-insensitive) targeted `me`-scoped fields —
-    // `me.communityApplications` / `me.communityInvitations` (actor-scoped:
-    // `getCommunityApplicationsForUser(actorContext.actorID)` /
-    // `getCommunityInvitationsForUser(actorContext.actorID)`, confirmed by
-    // reading server/src/services/api/me/me.{resolver.fields,service}.ts),
-    // `rolesUser(rolesData: {userID})` (explicit-userID-scoped, confirmed by
-    // reading roles.resolver.queries.ts), and `myPushSubscriptions`
-    // (`getUserSubscriptions(actorContext.actorID)`, confirmed by reading
-    // push.subscription.resolver.queries.ts). Every one of those is scoped
-    // to an actor/user ID the caller controls, which per-worker identity
-    // pools now make exclusive to one worker under concurrency — so that
-    // shape is neutralised, same argument as the removed rules (see this
-    // file's module docstring). Every real trip site for the OLD pattern
-    // was re-verified against this argument file-by-file (see
-    // `nightly-lanes.ts`'s "Fifth pass" comment) and found actor-scoped,
-    // EXCEPT one: the case-insensitive `i` flag added on 2026-08-18 to catch
-    // `me.communityInvitations`'s capitalized sibling actually matched a
-    // DIFFERENT, unrelated wrapper by substring accident —
-    // `getCommunityApplicationsInvitations(roleSetId)` (the
-    // `CommunityApplicationsInvitations` GraphQL operation, scoped by
-    // roleSetId — a file's own unique space, not a shared identity at all).
-    // `move-L1-to-L2-auto-invite.it-spec.ts` and its two siblings
-    // (move-L1-to-L0-auto-invite, move-L2-to-L1-auto-invite) call that
-    // wrapper after a `moveSpaceL*ToSpaceL*(..., { autoInvite: true, ... })`
-    // conversion, wait a FIXED `delay(5000)`, then assert
-    // `.invitations).toHaveLength(3)` — an exact count off an async
-    // background flow (the auto-invite logic) with no completion signal the
-    // test can await, bounded only by that fixed sleep. That is a
-    // LOAD-TIMING hazard: heavier concurrent server load makes the fixed
-    // delay less likely to be enough, not more, and per-worker identity
-    // pools do nothing to fix it — the roleSet these three files read is
-    // already unique per file, so this was never actually an
-    // identity-sharing bug, just caught by one via an accidental name
-    // collision. Original empirical evidence unchanged: this exact call
-    // shape failed under concurrency and passed serially — see
-    // server-api/html-report/{results,serial-confirm-raw}.json from the
-    // 2026-08-18 nightly run. `convert-L1-to-L0.it-spec.ts`,
-    // `convert-L1-to-L0-with-L2-to-L1.it-spec.ts` and
-    // `convert-L2-to-L1.it-spec.ts` also call the same
-    // `getCommunityApplicationsInvitations` wrapper but only ever assert
-    // `not.toContain(oneSpecificId)` on it (never `autoInvite`, never a
-    // non-zero exact count) — that shape is unaffected by server load and
-    // does not match this narrowed pattern; two of those three files stay
-    // serial anyway via rule 9.
-    pattern: /\bautoInvite\s*:\s*true\b[\s\S]*?\btoHaveLength\((?!0\))/,
+    name: 'global aggregate keyed on a shared identity, asserted by count/exclusivity/position',
+    // `myPushSubscriptions` reads/asserts a shared pool user's (GLOBAL_ADMIN)
+    // own subscription collection by exact count/emptiness — the same
+    // shared-identity-aggregate shape as `communityApplications` et al.
+    //
+    // Case-INSENSITIVE (`i` flag) since the 2026-08-18 nightly run: the
+    // repo's own wrapper around the `CommunityApplicationsInvitations`
+    // GraphQL operation is named `getCommunityApplicationsInvitations` —
+    // capital C — which the previous case-sensitive pattern never matched.
+    // `move-L1-to-L2-auto-invite.it-spec.ts` called exactly that wrapper,
+    // asserted an exact invitation count over `TestUser.SPACE_ADMIN` /
+    // `SPACE_MEMBER` / `SUBSPACE_ADMIN` / `SUBSPACE_MEMBER` overlap with a
+    // concurrently-mutable target community, and failed under concurrency
+    // (interference, not a pre-existing defect) while passing serially —
+    // see server-api/html-report/{results,serial-confirm-raw}.json from
+    // that run. Verified against real repo call sites: the same wrapper is
+    // also called by move-L1-to-L0-auto-invite.it-spec.ts,
+    // move-L2-to-L1-auto-invite.it-spec.ts, convert-L1-to-L0.it-spec.ts,
+    // convert-L1-to-L0-with-L2-to-L1.it-spec.ts and convert-L2-to-L1.it-spec.ts
+    // — all now caught by the same fix rather than a one-off demotion.
+    pattern: /communityApplications|communityInvitations|rolesUser\.|myMemberships|myPushSubscriptions/i,
+  },
+  {
+    id: 7,
+    name: "assertion on a shared user's platform-role state",
+    // The third hazard shape the convergent-grant proof does NOT cover: a
+    // file that reads a shared pool user's role membership as a correctness
+    // assertion (an exact set, an absence, a count) rather than as a
+    // one-way idempotent setup guard. A concurrent grant elsewhere could
+    // flip such an assertion regardless of how sound rule 2's own taint
+    // analysis is — this is a content scan, same family as rules 4/5, and
+    // shares their limitation (see the docstring on CONTENT_RULES usage in
+    // findContentViolations): it is a pattern blocklist, not a structural
+    // proof that no other assertion phrasing exists.
+    pattern:
+      /expect\([^)]*\.RoleNames\b[^)]*\)|\.RoleNames\)\s*\.\s*(?:not\.)?(?:toContain|toHaveLength|toEqual|toBe|toContainEqual)\(/,
+    requiresSharedUserEvidence: true,
+  },
+  {
+    id: 8,
+    name: "assertion on a shared user's roleSet-membership state",
+    // A fourth hazard shape, added from the same 2026-08-18 nightly run:
+    // `join-hierarchy-parity.it-spec.ts` asserted (both `true` and `false`)
+    // whether `TestUser.NON_SPACE_MEMBER` (`TestUserManager.users.nonSpaceMember`)
+    // is a MEMBER of a roleSet, via the `isUserMemberOfRoleSet` /
+    // `getRoleSetUsersInMemberRole` helper shape. The roleSet id itself can
+    // be file-owned and unique — that part is genuinely scoped — but the
+    // SUBJECT of the boolean/list check is a shared pool identity reused by
+    // dozens of concurrent files (every other hierarchy-parity sibling uses
+    // the identical `TestUser.NON_SPACE_MEMBER` actor), so a concurrent
+    // grant or removal targeting that same shared user elsewhere is not
+    // excluded by the roleSet id being unique. Confirmed failing under
+    // concurrency, passing serially — see
+    // server-api/html-report/{results,serial-confirm-raw}.json. Gated on
+    // shared-user evidence (same discipline as rule 7) so a file checking
+    // membership of its OWN uniquely-created, non-pool contributor is not
+    // flagged.
+    pattern: /\bisUserMemberOfRoleSet\b|\bgetRoleSetUsersInMemberRole\b/,
+    requiresSharedUserEvidence: true,
   },
   {
     id: 9,
@@ -233,49 +278,80 @@ const CONTENT_RULES: ContentRule[] = [
     // for a completion that is not guaranteed to have settled yet, and
     // that window is only wide enough to lose under concurrent host load —
     // which is exactly the failure mode observed (parallel: fails,
-    // serial/idle: passes). This is a content scan, same family as rule 4/5:
-    // it does not attempt to prove the mutation call and the aggregate read
-    // are the same statement, only that both shapes are present in a file
-    // whose scenario is built on shared pool users.
+    // serial/idle: passes). This is a content scan, same family as rules
+    // 4/5/7/8: it does not attempt to prove the mutation call and the
+    // aggregate read are the same statement, only that both shapes are
+    // present in a file whose scenario is built on shared pool users.
     pattern: /\.roleSet\.(memberUsers|leadUsers|adminUsers)\b/,
+    requiresSharedUserEvidence: true,
+  },
+  {
+    id: 10,
+    name: 'DDT table asserting a privileged mutation succeeds for a shared pool user',
+    // A sixth hazard shape, found diagnosing callouts.it-spec.ts: four
+    // assertions ("who intend to update/delete callout", subspace and
+    // subsubspace level) expected `TestUser.SUBSPACE_ADMIN` to successfully
+    // update/delete a callout in a space where the scenario's OWN
+    // beforeAll had granted that exact user the admin role — and got an
+    // Authorization error back instead, while a serial re-run of the same
+    // file passed outright.
+    //
+    // Unlike rule 9, nothing in THIS file mutates a roleSet or reads one as
+    // an aggregate — the file only acts AS the shared user and checks
+    // whether the action was allowed. The most plausible mechanism, from
+    // the server's own actor-authorization cache
+    // (src/core/actor-context/actor.context.cache.service.ts): the cached
+    // ActorContext — the credential list an authorization check actually
+    // reads — is keyed ONLY by actorID, not by (actorID, resource), and is
+    // invalidated (deleted, forcing a full reload) by
+    // ActorService.grantCredentialOrFail/revokeCredential on EVERY
+    // credential change for that actor anywhere on the platform. With a
+    // small pool of shared identities reused by nearly every nightly file,
+    // that cache is under continuous concurrent invalidate/repopulate
+    // pressure for these specific actors, which is the shape of a classic
+    // delete-then-repopulate race: a repopulating read that started before
+    // a concurrent grant/revoke committed can still win the write race and
+    // leave the cache holding a stale, pre-grant credential snapshot until
+    // the next invalidation.
+    //
+    // This mechanism is a property of the shared authorization cache, not
+    // of anything specific to callouts — so it is NOT scoped to update/
+    // delete-callout DDT tables, and this pattern is only a narrow,
+    // empirically-grounded proxy for it: the literal
+    // `${'"data":{"<mutation>"'}` DDT success-message idiom, matched
+    // together with shared-user evidence in the same file. Every other DDT
+    // table found using this exact idiom repo-wide was inspected by hand;
+    // both files that use it are demoted by this rule. A privilege-success
+    // assertion phrased differently (a direct `expect(res.data...)`, a
+    // boolean flag, a GraphQL response shape check) is NOT caught by this
+    // pattern and is a known, stated gap — see the guard's own module
+    // docstring and this feature's diagnosis report for the residual-risk
+    // disclosure.
+    pattern: /\$\{'"data":\{/,
     requiresSharedUserEvidence: true,
   },
 ];
 
-// Rules 7 (assertion on a shared user's platform-role state), 8 (assertion
-// on a shared user's roleSet-membership state) and 10 (the DDT
-// privileged-success idiom, keyed on the server's actor-authorization
-// cache) — all content-scan rules like 4/5/9 above — are REMOVED, not
-// narrowed (040-parallel-nightly-server-api, fifth pass): all three existed
-// to catch a concurrent grant/revoke/credential-change on a shared pool
-// identity flipping a correctness assertion in a DIFFERENT file. Per-worker
-// identity pools remove the shared subject structurally — see this file's
-// module docstring for the full argument and `nightly-lanes.ts`'s "Fifth
-// pass" comment for the per-file verification.
-
 interface Exemption {
   file: string;
-  ruleId: 4 | 5 | 9;
+  ruleId: 4 | 5 | 7 | 8;
   justification: string;
 }
 
 // Reviewed, in-code waivers for content-rule matches that are actually safe.
-// Each entry is a deliberate, justified exception — not a blanket
-// suppression. Empty by default: nothing currently needs one. The
-// `user2.it-spec.ts` / rule 5 history is worth recording since it inverted
-// twice: an exemption here ("rolesUser reads here are always narrowed...
-// never a raw count/exclusivity/position assertion") was REMOVED on
-// 2026-08-18 after the file failed under concurrency on exactly a
+// Each entry is a deliberate, justified exception — not a blanket suppression.
+//
+// The `user2.it-spec.ts` / rule 5 exemption that used to live here is
+// REMOVED, not narrowed: the 2026-08-18 nightly run empirically disproved
+// its justification ("rolesUser reads here are always narrowed
+// with .find(...)/array-scoped lookups... never a raw count/exclusivity/
+// position assertion") — the file failed under concurrency on exactly a
 // `rolesUser`-sourced assertion
 // (`expect(scenarioSpace?.subspaces).toEqual(expect.arrayContaining(...))`,
 // sourced from `TestUserManager.users.nonSpaceMember`'s global `rolesUser`
-// aggregate) — see server-api/html-report/{results,serial-confirm-raw}.json.
-// That failure was cross-FILE races on the shared `nonSpaceMember` identity,
-// which per-worker identity pools (aa691544) eliminate structurally; rule 5
-// itself was subsequently renarrowed off the `rolesUser`/`communityApplications`
-// shape entirely (see its docstring above), so the file is promoted again —
-// this time because the rule that used to catch it no longer describes a
-// real hazard for this call shape, not because of a waiver.
+// aggregate) and passed serially. See
+// server-api/html-report/{results,serial-confirm-raw}.json. No replacement
+// exemption is warranted — the file now correctly trips rule 5 unexempted.
 const EXEMPTIONS: Exemption[] = [];
 
 // ── Small filesystem / parsing helpers ──────────────────────────────────────
@@ -618,15 +694,30 @@ interface Tainted {
 }
 
 /**
- * Does `text` contain a call to `localName` at all? Was occurrence-aware
- * (per-call-site guard-window checking) back when rule 2's convergent-grant
- * exemption needed it; that rule is gone (040-parallel-nightly-server-api,
- * fifth pass — see this file's module docstring) and `HazardRule` no longer
- * carries anything to check a window against, so this is now the plain
- * "any call at all" test every hazard rule uses.
+ * Occurrence-aware hazard-call check: when `rule` carries a
+ * `guardWindowRe`, a call site only counts as a hazard if THAT SPECIFIC
+ * occurrence has no guard evidence within the preceding `guardWindowChars`
+ * characters — an unguarded occurrence anywhere still trips the rule (the
+ * whole point is per-occurrence, fail-closed unless proven safe), but an
+ * all-occurrences-guarded declaration does not. When `rule.guardWindowRe` is
+ * unset this degrades to the plain "any call at all" check every other rule
+ * still uses.
  */
-function hasQualifyingHazardCall(text: string, localName: string): boolean {
-  return new RegExp(`\\b${localName}\\s*\\(`).test(text);
+function hasQualifyingHazardCall(
+  text: string,
+  localName: string,
+  rule: HazardRule
+): boolean {
+  const callRe = new RegExp(`\\b${localName}\\s*\\(`, 'g');
+  let m: RegExpExecArray | null;
+  while ((m = callRe.exec(text))) {
+    if (rule.guardWindowRe) {
+      const windowStart = Math.max(0, m.index - (rule.guardWindowChars ?? 800));
+      if (rule.guardWindowRe.test(text.slice(windowStart, m.index))) continue;
+    }
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -636,27 +727,31 @@ function hasQualifyingHazardCall(text: string, localName: string): boolean {
  * (`import * as ns` / `export * from` / `const ns = await import(...)`) it
  * resolves whether the target module transitively exports `symbol` at all
  * (rather than refusing to look, which is what let namespace-imported
- * hazard calls go undetected). Returns true only if the resolved binding's
- * call form is actually present in `text`: the LOCAL name for named/default
- * edges (so an aliased import, `import { getMails as gm }`, is matched on
- * `gm(`, not the unused original name), or the qualified `nsLocal.symbol(` /
- * bare `symbol(` form for namespace edges (both patterns match the same
- * regex, since `\b` also anchors after a `.`).
+ * hazard calls like `hz.assignPlatformRole(...)` go undetected). Returns
+ * true only if the resolved binding's call form is actually present in
+ * `text` (per `hasQualifyingHazardCall`, so a rule with a `guardWindowRe`
+ * is honored regardless of which import shape carried the symbol in): the
+ * LOCAL name for named/default edges (so an aliased import,
+ * `import { assignPlatformRole as apr }`, is matched on `apr(`, not the
+ * unused original name), or the qualified `nsLocal.symbol(` / bare
+ * `symbol(` form for namespace edges (both patterns match the same regex,
+ * since `\b` also anchors after a `.`).
  */
 function fileHasHazardCall(
   ctx: Context,
   fromAbsFile: string,
   text: string,
   edges: ImportEdge[],
+  rule: HazardRule,
   symbol: string
 ): boolean {
   for (const edge of edges) {
     if (!edge.isNamespace) {
       const binding = edge.named.find(n => n.original === symbol);
-      if (binding && hasQualifyingHazardCall(text, binding.local)) return true;
+      if (binding && hasQualifyingHazardCall(text, binding.local, rule)) return true;
     } else {
       const resolved = resolveNameToDefiningFile(ctx, symbol, fromAbsFile, edge.specifier);
-      if (resolved && hasQualifyingHazardCall(text, symbol)) return true;
+      if (resolved && hasQualifyingHazardCall(text, symbol, rule)) return true;
     }
   }
   return false;
@@ -825,7 +920,13 @@ function computeHelperTaint(
       const hits: Tainted[] = [];
       for (const rule of HAZARD_RULES) {
         for (const symbol of rule.symbols) {
-          if (!fileHasHazardCall(ctx, file, decl.body, data.edges, symbol)) continue;
+          if (!fileHasHazardCall(ctx, file, decl.body, data.edges, rule, symbol)) continue;
+          if (
+            rule.requiresSharedUserEvidence &&
+            !SHARED_USER_EVIDENCE_RE.test(decl.body)
+          ) {
+            continue;
+          }
           hits.push({ ruleId: rule.id, ruleName: rule.name, symbol, chain: [] });
         }
       }
@@ -911,7 +1012,10 @@ function findHazardViolations(
 
   for (const rule of HAZARD_RULES) {
     for (const symbol of rule.symbols) {
-      if (!fileHasHazardCall(ctx, startAbsPath, text, edges, symbol)) continue;
+      if (!fileHasHazardCall(ctx, startAbsPath, text, edges, rule, symbol)) continue;
+      if (rule.requiresSharedUserEvidence && !SHARED_USER_EVIDENCE_RE.test(text)) {
+        continue;
+      }
       record(rule.id, rule.name, symbol, []);
     }
   }
