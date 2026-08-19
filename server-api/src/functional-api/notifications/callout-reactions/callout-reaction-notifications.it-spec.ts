@@ -236,6 +236,11 @@ const PUBLISHER = TestUser.GLOBAL_ADMIN;
 const REACTOR_A = TestUser.SPACE_MEMBER;
 const REACTOR_B = TestUser.QA_USER;
 
+// Display name seeded for the shared callout — used in email content assertions
+// to verify the callout name is present and the description is absent.
+const CALLOUT_DISPLAY_NAME_PREFIX = `callout-reaction-notif-${uniqueId}`;
+const CALLOUT_DESCRIPTION = 'callout for reaction notification tests';
+
 beforeAll(async () => {
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
   const calloutsSetId = baseScenario.space.collaboration.calloutsSetId;
@@ -243,8 +248,8 @@ beforeAll(async () => {
   const pub = await createCalloutOnCalloutsSet(calloutsSetId, {
     framing: {
       profile: {
-        displayName: `callout-reaction-notif-${uniqueId}`,
-        description: 'callout for reaction notification tests',
+        displayName: CALLOUT_DISPLAY_NAME_PREFIX,
+        description: CALLOUT_DESCRIPTION,
       },
     },
     settings: { visibility: CalloutVisibility.Published },
@@ -319,11 +324,17 @@ describe('Emission invariants (US1/US4)', () => {
       const countAfter = await getCalloutReactionInAppCount(PUBLISHER);
       expect(countAfter - countBefore).toBe(1);
 
-      // R-5 single-recipient invariant: REACTOR_A and REACTOR_B get nothing.
+      // R-5 single-recipient invariant: the reactors and a space admin who is
+      // not the publisher must each receive nothing — audience-fanout must not
+      // spread to non-publisher space members or space admins.
       const reactorACount = await getCalloutReactionInAppCount(REACTOR_A);
       expect(reactorACount).toBe(0);
       const reactorBCount = await getCalloutReactionInAppCount(REACTOR_B);
       expect(reactorBCount).toBe(0);
+      const spaceAdminCount = await getCalloutReactionInAppCount(
+        TestUser.SPACE_ADMIN
+      );
+      expect(spaceAdminCount).toBe(0);
     }
   );
 
@@ -462,6 +473,34 @@ describe('Push emission (US1, FR-012)', () => {
 // ===========================================================================
 
 describe('Settings gating (US2)', () => {
+  // A dedicated callout used exclusively for email-emitting gating tests.
+  // Isolating the email suppression key (keyed per recipient + callout) ensures
+  // that a leading-email reaction in one gating test cannot suppress the next.
+  let emailGatingCalloutId = '';
+
+  beforeAll(async () => {
+    const calloutsSetId = baseScenario.space.collaboration.calloutsSetId;
+    const c = await createCalloutOnCalloutsSet(calloutsSetId, {
+      framing: {
+        profile: {
+          displayName: `callout-reaction-notif-gating-${uniqueId}`,
+          description: CALLOUT_DESCRIPTION,
+        },
+      },
+      settings: { visibility: CalloutVisibility.Published },
+    });
+    emailGatingCalloutId = c?.data?.createCalloutOnCalloutsSet?.id ?? '';
+    if (!emailGatingCalloutId) {
+      throw new Error('Settings-gating: failed to create dedicated email test callout');
+    }
+  });
+
+  afterAll(async () => {
+    if (emailGatingCalloutId) {
+      await deleteCallout(emailGatingCalloutId).catch(() => undefined);
+    }
+  });
+
   test(
     'US2-AS1 — defaults for globalAdmin: email ON (set in beforeAll), inApp ON, push ON',
     async () => {
@@ -481,7 +520,7 @@ describe('Settings gating (US2)', () => {
     async () => {
       await updateCalloutReactionSettings(
         TestUserManager.users.globalAdmin.id,
-        { inApp: false },
+        { email: false, inApp: false },
         TestUser.GLOBAL_ADMIN
       );
 
@@ -493,10 +532,10 @@ describe('Settings gating (US2)', () => {
       const countAfter = await getCalloutReactionInAppCount(PUBLISHER);
       expect(countAfter).toBe(countBefore);
 
-      // Restore
+      // Restore both channels so the next test starts clean.
       await updateCalloutReactionSettings(
         TestUserManager.users.globalAdmin.id,
-        { inApp: true },
+        { email: true, inApp: true },
         TestUser.GLOBAL_ADMIN
       );
     }
@@ -505,14 +544,19 @@ describe('Settings gating (US2)', () => {
   test(
     'US2-AS3 — email ON: genuine reaction sends email to publisher',
     async () => {
-      // Publisher already has email=true from beforeAll. Delete prior mails
-      // (beforeEach already does this, but explicit for clarity).
+      // Uses the isolated email callout so this test's leading-email reaction
+      // cannot bleed into the suppression window of later email tests.
+      await updateCalloutReactionSettings(
+        TestUserManager.users.globalAdmin.id,
+        { email: true, inApp: true, push: true },
+        TestUser.GLOBAL_ADMIN
+      );
       await deleteMailSlurperMails();
 
       const [mails] = await expectExactMailsAfter(
         () =>
           addReactionToCallout(
-            publishedCalloutId,
+            emailGatingCalloutId,
             'check-mark',
             REACTOR_A
           ),
@@ -520,6 +564,13 @@ describe('Settings gating (US2)', () => {
         { timeout: 20_000, settleMs: 3_000 }
       );
       expect(mails.length).toBeGreaterThan(0);
+      // Confirm the email reached the publisher, not any other persona.
+      const publisherMail = (mails as any[]).find((m: any) =>
+        (m.toAddresses as string[])?.includes(
+          TestUserManager.users.globalAdmin.email
+        )
+      );
+      expect(publisherMail).toBeDefined();
     }
   );
 
@@ -536,16 +587,17 @@ describe('Settings gating (US2)', () => {
       const pushBaseline = await getPushQueuePublishedTotal();
 
       await addReactionToCallout(publishedCalloutId, 'rocket', REACTOR_A);
-      await delay(4_000);
 
+      // Use the full positive delivery bound as the negative grace so "no email"
+      // means "none will ever arrive" rather than "none has arrived yet".
+      const [, mailTotal] = await waitForMailsCountAtLeast(1, {
+        timeout: 20_000,
+      });
       const countAfter = await getCalloutReactionInAppCount(PUBLISHER);
       const pushStats = await getQueueStats(PUSH_NOTIFICATIONS_QUEUE);
 
       expect(countAfter).toBe(countBefore);
       expect(pushStats.publishedTotal - pushBaseline).toBe(0);
-      const [, mailTotal] = await waitForMailsCountAtLeast(1, {
-        timeout: 2_000,
-      });
       expect(mailTotal).toBe(0);
 
       // Restore
@@ -554,7 +606,8 @@ describe('Settings gating (US2)', () => {
         { email: true, inApp: true, push: true },
         TestUser.GLOBAL_ADMIN
       );
-    }
+    },
+    30_000
   );
 
   test(
@@ -582,6 +635,36 @@ describe('Settings gating (US2)', () => {
 // ===========================================================================
 
 describe('Volume control — email suppression (US3)', () => {
+  // A dedicated callout for all volume-control email tests. Each describe that
+  // asserts on email behaviour owns its own callout so the per-(recipient,
+  // callout) suppression marker cannot leak between describe blocks.
+  let suppressionCalloutId = '';
+  let suppressionCalloutDisplayName = '';
+
+  beforeAll(async () => {
+    const calloutsSetId = baseScenario.space.collaboration.calloutsSetId;
+    suppressionCalloutDisplayName = `callout-reaction-notif-suppression-${uniqueId}`;
+    const c = await createCalloutOnCalloutsSet(calloutsSetId, {
+      framing: {
+        profile: {
+          displayName: suppressionCalloutDisplayName,
+          description: CALLOUT_DESCRIPTION,
+        },
+      },
+      settings: { visibility: CalloutVisibility.Published },
+    });
+    suppressionCalloutId = c?.data?.createCalloutOnCalloutsSet?.id ?? '';
+    if (!suppressionCalloutId) {
+      throw new Error('Volume-control: failed to create dedicated suppression test callout');
+    }
+  });
+
+  afterAll(async () => {
+    if (suppressionCalloutId) {
+      await deleteCallout(suppressionCalloutId).catch(() => undefined);
+    }
+  });
+
   // Ensure email is on for the publisher throughout this describe block.
   beforeEach(async () => {
     await updateCalloutReactionSettings(
@@ -594,10 +677,10 @@ describe('Volume control — email suppression (US3)', () => {
 
   afterEach(async () => {
     // Clean up reactions between tests.
-    await removeReactionFromCallout(publishedCalloutId, REACTOR_A).catch(
+    await removeReactionFromCallout(suppressionCalloutId, REACTOR_A).catch(
       () => undefined
     );
-    await removeReactionFromCallout(publishedCalloutId, REACTOR_B).catch(
+    await removeReactionFromCallout(suppressionCalloutId, REACTOR_B).catch(
       () => undefined
     );
   });
@@ -608,22 +691,46 @@ describe('Volume control — email suppression (US3)', () => {
       // REACTOR_A's reaction triggers the leading edge email + sets the marker.
       const [mailsA] = await expectExactMailsAfter(
         () =>
-          addReactionToCallout(publishedCalloutId, 'heart', REACTOR_A),
+          addReactionToCallout(suppressionCalloutId, 'heart', REACTOR_A),
         1,
         { timeout: 20_000, settleMs: 2_000 }
       );
       expect(mailsA.length).toBe(1);
+
+      // Content assertions (T005 / contract §2):
+      //   • email reaches the publisher, not any other persona
+      //   • subject/body names the reactor display name
+      //   • body names the callout display name
+      //   • body does NOT contain the callout description (privacy invariant)
+      const leadingMail = (mailsA as any[])[0];
+      expect(leadingMail).toBeDefined();
+      expect(
+        (leadingMail.toAddresses as string[])?.includes(
+          TestUserManager.users.globalAdmin.email
+        )
+      ).toBe(true);
+      // The reactor's display name must appear somewhere in the mail (subject or body).
+      const mailText = `${leadingMail.subject ?? ''} ${leadingMail.body ?? ''}`;
+      expect(mailText).toContain(
+        TestUserManager.users.spaceMember.displayName
+      );
+      // The callout display name must appear so the recipient knows which post was reacted to.
+      expect(mailText).toContain(suppressionCalloutDisplayName);
+      // The callout description must NOT appear — it is body/content, excluded by contract §2.
+      expect(leadingMail.body ?? '').not.toContain(CALLOUT_DESCRIPTION);
+
       await deleteMailSlurperMails();
 
-      // REACTOR_B reacts within the window — suppressed; no new email.
-      await addReactionToCallout(publishedCalloutId, 'rocket', REACTOR_B);
-      await delay(6_000); // Generous wait; email travels through RabbitMQ + notifications service.
+      // REACTOR_B reacts within the window — suppressed; no new email arrives.
+      // The wait uses the full positive-path delivery bound (≥20s) so "no email"
+      // means "none will ever arrive" rather than "none has arrived yet".
+      await addReactionToCallout(suppressionCalloutId, 'rocket', REACTOR_B);
       const [, afterBTotal] = await waitForMailsCountAtLeast(1, {
-        timeout: 3_000,
+        timeout: 22_000,
       });
       expect(afterBTotal).toBe(0);
     },
-    60_000
+    70_000
   );
 
   test(
@@ -632,7 +739,7 @@ describe('Volume control — email suppression (US3)', () => {
       // Leading reaction sets the marker.
       await expectExactMailsAfter(
         () =>
-          addReactionToCallout(publishedCalloutId, 'heart', REACTOR_A),
+          addReactionToCallout(suppressionCalloutId, 'heart', REACTOR_A),
         1,
         { timeout: 20_000, settleMs: 2_000 }
       );
@@ -640,14 +747,14 @@ describe('Volume control — email suppression (US3)', () => {
       // Wait for the suppression window to expire.
       await delay((SUPPRESSION_WINDOW_SECONDS + 5) * 1_000);
       await deleteMailSlurperMails();
-      await removeReactionFromCallout(publishedCalloutId, REACTOR_B).catch(
+      await removeReactionFromCallout(suppressionCalloutId, REACTOR_B).catch(
         () => undefined
       );
 
       // New reaction after expiry opens a fresh window and sends a new email.
       const [mailsAfter] = await expectExactMailsAfter(
         () =>
-          addReactionToCallout(publishedCalloutId, 'rocket', REACTOR_B),
+          addReactionToCallout(suppressionCalloutId, 'rocket', REACTOR_B),
         1,
         { timeout: 20_000, settleMs: 2_000 }
       );
@@ -661,9 +768,9 @@ describe('Volume control — email suppression (US3)', () => {
     async () => {
       const countBefore = await getCalloutReactionInAppCount(PUBLISHER);
 
-      await addReactionToCallout(publishedCalloutId, 'heart', REACTOR_A);
+      await addReactionToCallout(suppressionCalloutId, 'heart', REACTOR_A);
       await delay(300);
-      await addReactionToCallout(publishedCalloutId, 'rocket', REACTOR_B);
+      await addReactionToCallout(suppressionCalloutId, 'rocket', REACTOR_B);
       await delay(1_500);
 
       const countAfter = await getCalloutReactionInAppCount(PUBLISHER);
@@ -732,6 +839,33 @@ describe('Bounded redelivery (R-2 mitigation)', () => {
   // service test). From this black-box harness we assert only that the event
   // can be consumed at least once (happy path), which confirms the handler
   // registration is active and the routing key is wired.
+  //
+  // A dedicated callout is used so this test's leading-email reaction cannot
+  // collide with other describe blocks' suppression markers.
+  let redeliveryCalloutId = '';
+
+  beforeAll(async () => {
+    const calloutsSetId = baseScenario.space.collaboration.calloutsSetId;
+    const c = await createCalloutOnCalloutsSet(calloutsSetId, {
+      framing: {
+        profile: {
+          displayName: `callout-reaction-notif-redelivery-${uniqueId}`,
+          description: CALLOUT_DESCRIPTION,
+        },
+      },
+      settings: { visibility: CalloutVisibility.Published },
+    });
+    redeliveryCalloutId = c?.data?.createCalloutOnCalloutsSet?.id ?? '';
+    if (!redeliveryCalloutId) {
+      throw new Error('R-2 mitigation: failed to create dedicated redelivery test callout');
+    }
+  });
+
+  afterAll(async () => {
+    if (redeliveryCalloutId) {
+      await deleteCallout(redeliveryCalloutId).catch(() => undefined);
+    }
+  });
 
   test(
     'R-2 — happy-path consumption: a genuine reaction is received by the notifications service (email arrives)',
@@ -746,7 +880,7 @@ describe('Bounded redelivery (R-2 mitigation)', () => {
 
       const [mails] = await expectExactMailsAfter(
         () =>
-          addReactionToCallout(publishedCalloutId, 'check-mark', REACTOR_A),
+          addReactionToCallout(redeliveryCalloutId, 'check-mark', REACTOR_A),
         1,
         { timeout: 20_000, settleMs: 3_000 }
       );
