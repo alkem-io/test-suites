@@ -516,6 +516,24 @@ describe('Settings gating (US2)', () => {
   );
 
   test(
+    'US2-AS1 — FR-007 default triple for an unmodified user: email OFF, inApp ON, push ON',
+    async () => {
+      // QA_USER reacts in this suite but its own notification settings are
+      // never mutated, so it still carries the registration defaults. This is
+      // the email-OFF default the globalAdmin case cannot assert (its email is
+      // forced ON in beforeAll), closing the FR-007 / SC-004 default clause.
+      const settings = await getCalloutReactionSettings(
+        TestUserManager.users.qaUser.id,
+        TestUser.QA_USER
+      );
+      expect(settings).toBeDefined();
+      expect(settings?.email).toBe(false);
+      expect(settings?.inApp).toBe(true);
+      expect(settings?.push).toBe(true);
+    }
+  );
+
+  test(
     'US2-AS2 — inApp OFF: genuine reaction creates no in-app row for publisher',
     async () => {
       await updateCalloutReactionSettings(
