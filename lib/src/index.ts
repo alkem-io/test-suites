@@ -29,6 +29,7 @@ export * from "./scenario/registration/provision-pool-platform-roles";
 export * from "./config/test.configuration";
 export * from "./config/alkemio-test-config";
 export * from "./config/create-config-using-envvars";
+export * from "./config/environment-guard";
 export {
   ConversationCreationType,
   ActorType,

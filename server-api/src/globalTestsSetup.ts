@@ -1,4 +1,5 @@
 import {
+  assertApprovedTestTarget,
   LogManager,
   provisionPoolPlatformRoles,
   provisionTestIdentities,
@@ -37,6 +38,13 @@ type AlkemioGlobalState = typeof globalThis & {
 const globalState = globalThis as AlkemioGlobalState;
 
 export default async function setup(project: MinimalProject) {
+  // Fail-fast environment guard: must run before ANY provisioning,
+  // registration, minting, or role-granting step below — those are what
+  // would actually create/upgrade identities on whatever host is
+  // configured. See lib/src/config/environment-guard.ts for the allowlist
+  // and the opt-out escape hatch.
+  assertApprovedTestTarget(testConfiguration);
+
   console.log('[globalSetup] Starting global test setup...');
 
   // Guard against duplicate invocations when Vitest projects inherit
