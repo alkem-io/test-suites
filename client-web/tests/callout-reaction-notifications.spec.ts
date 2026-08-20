@@ -132,9 +132,11 @@ test.describe(
     let reactorEmail: string;
     let reactorDisplayName: string;
     let reactorToken: string;
+    let reactorId: string;
 
     // Recipient B — the platform admin; drives the browser.
     let adminToken: string;
+    let adminDisplayName: string;
 
     // Authenticated browser context for B, reused across every serial test.
     let authContext: BrowserContext;
@@ -172,7 +174,7 @@ test.describe(
       const firstName = `Reactor${uid}`;
       const lastName = 'A';
       reactorDisplayName = `${firstName} ${lastName}`;
-      const reactorId = await registerVerifiedMember(reactorEmail, firstName, lastName);
+      reactorId = await registerVerifiedMember(reactorEmail, firstName, lastName);
       expect(reactorId, 'seed: reactor A should register').toBeTruthy();
 
       await assignRoleToUser(
@@ -184,6 +186,28 @@ test.describe(
       reactorToken = await getUserToken(reactorEmail);
       adminToken = await getUserToken(ADMIN_EMAIL);
 
+      // Capture the recipient's own display name so the self-notification
+      // defence (AS4) can scope to a row attributed to the admin, rather than
+      // counting every reaction row (the shared admin persona accumulates rows
+      // from other suites/runs). Mirrors how TestUserManager resolves it via me.
+      const meClient = getGraphqlClient() as unknown as {
+        getMyUserInfo: (
+          v: Record<string, never>,
+          h: { authorization: string }
+        ) => Promise<{
+          data?: { me?: { user?: { profile?: { displayName?: string } } } };
+        }>;
+      };
+      const adminInfo = await meClient.getMyUserInfo(
+        {},
+        { authorization: `Bearer ${adminToken}` }
+      );
+      adminDisplayName = adminInfo?.data?.me?.user?.profile?.displayName ?? '';
+      expect(
+        adminDisplayName,
+        'seed: admin display name should resolve'
+      ).toBeTruthy();
+
       // Sign the recipient B into the browser once; retain the context so every
       // page inherits the session cookies for the in-app notification centre.
       authContext = await browser.newContext();
@@ -193,6 +217,27 @@ test.describe(
 
     test.afterAll(async () => {
       await authContext?.close().catch(() => undefined);
+
+      // Remove reactor A — Kratos identity AND Alkemio user — before scenario
+      // cleanup. The library `deleteUser` helper is not index-exported and
+      // defaults to deleteIdentity:false, so issue the mutation directly with
+      // deleteIdentity:true (mirrors the chat-avatars teardown). Caught so
+      // scenario cleanup still runs if the delete fails.
+      if (reactorId) {
+        const sdk = getGraphqlClient() as unknown as {
+          deleteUser: (
+            v: { deleteData: { ID: string; deleteIdentity: boolean } },
+            h: { authorization: string }
+          ) => Promise<unknown>;
+        };
+        await sdk
+          .deleteUser(
+            { deleteData: { ID: reactorId, deleteIdentity: true } },
+            { authorization: `Bearer ${adminToken}` }
+          )
+          .catch(() => undefined);
+      }
+
       if (scenario) {
         await TestScenarioFactory.cleanUpBaseScenario(scenario);
       }
@@ -202,7 +247,7 @@ test.describe(
     //   NotificationsBell   → header button, accessible name "Notifications".
     //   NotificationsPanel  → dialog with heading "Notifications".
     //   NotificationItem    → a button per row; its accessible name is the
-    //     rendered subject text, e.g. "«Reactor» reacted to your Post with ❤️",
+    //     rendered subject text, e.g. "«Reactor» reacted to your post with ❤️",
     //     with the reactor name in a <strong>.
 
     function bell(page: Page) {
@@ -218,7 +263,7 @@ test.describe(
     /** All reaction rows addressed to B for THIS walk's reactor, by copy. */
     function reactionRows(page: Page) {
       return panel(page).getByRole('button', {
-        name: new RegExp(`${reactorDisplayName} reacted to your Post with`),
+        name: new RegExp(`${reactorDisplayName} reacted to your post with`),
       });
     }
 
@@ -238,9 +283,13 @@ test.describe(
     /**
      * Polls the in-app centre until the recipient shows exactly `expected`
      * reaction rows for this reactor. The panel refetches on open, so we
-     * re-open across attempts rather than trusting a single snapshot. Used both
-     * to WAIT for a row (expected≥1) and to hold a NEGATIVE bound (expected
-     * stable across the settle window).
+     * re-open across attempts rather than trusting a single snapshot.
+     *
+     * POSITIVE wait only: `expect.poll` resolves as soon as one sample matches,
+     * so it cannot hold a negative bound — a row that appears AFTER the first
+     * matching sample would be missed. For negative assertions use
+     * `assertReactionRowCountStable`, which requires EVERY sample across a fixed
+     * window to match.
      */
     async function waitForReactionRowCount(page: Page, expected: number) {
       await expect
@@ -256,6 +305,29 @@ test.describe(
         .toBe(expected);
     }
 
+    /**
+     * Holds a NEGATIVE bound: re-reads the reaction-row count several times
+     * across a fixed window and fails if ANY sample deviates from `expected`.
+     * Unlike `expect.poll` (which resolves on the first matching sample), this
+     * catches a row that materialises late — a self-notification or a duplicate
+     * that lands after the initial settle.
+     */
+    async function assertReactionRowCountStable(page: Page, expected: number) {
+      const samples = 4;
+      for (let i = 0; i < samples; i++) {
+        await openBell(page);
+        const n = await reactionRows(page).count();
+        await closeBellIfOpen(page);
+        expect(
+          n,
+          `reaction-row count must stay ${expected} across the settle window`
+        ).toBe(expected);
+        if (i < samples - 1) {
+          await delay(2_000);
+        }
+      }
+    }
+
     test('US1-AS1: a member reaction surfaces as exactly one row naming the reactor with the emoji GLYPH', async () => {
       // A genuinely reacts to B's published callout with ❤️.
       await reactAs(reactorToken, calloutId, 'heart');
@@ -269,7 +341,7 @@ test.describe(
       const row = reactionRows(authPage).first();
       await expect(row).toBeVisible();
       await expect(row).toHaveAccessibleName(
-        new RegExp(`^${reactorDisplayName} reacted to your Post with ${GLYPH.heart}$`)
+        new RegExp(`^${reactorDisplayName} reacted to your post with ${GLYPH.heart}$`)
       );
       await expect(row.locator('strong')).toHaveText(reactorDisplayName); // bold reactor
       await expect(row).toContainText(GLYPH.heart); // glyph rendered
@@ -303,16 +375,21 @@ test.describe(
       await reactAs(adminToken, calloutId, 'clapping-hands');
 
       // Give any (erroneous) self-notification the full settle window to appear,
-      // then assert the reactor-row count is unchanged: no self-row was added.
+      // then assert the reactor-row count is unchanged across a fixed window: no
+      // self-row was added, and none appears late.
       await delay(3_000);
-      await waitForReactionRowCount(authPage, before);
+      await assertReactionRowCountStable(authPage, before);
 
-      // Defence: no row anywhere in the panel is attributed to the admin's own
-      // self-reaction ("admin ... reacted to your Post").
+      // Defence: no row is attributed to the admin's OWN self-reaction. Scope to
+      // the admin's display name and assert ABSENCE — the shared admin persona
+      // accumulates reaction rows from other suites, so an absolute total would
+      // be flaky.
       await openBell(authPage);
       await expect(
-        panel(authPage).getByRole('button', { name: /reacted to your Post/ })
-      ).toHaveCount(before);
+        panel(authPage).getByRole('button', {
+          name: new RegExp(`^${adminDisplayName} reacted to your post with`),
+        })
+      ).toHaveCount(0);
       await closeBellIfOpen(authPage);
     });
 
@@ -321,7 +398,7 @@ test.describe(
       await openBell(authPage);
       const rowBefore = reactionRows(authPage).first();
       await expect(rowBefore).toHaveAccessibleName(
-        new RegExp(`reacted to your Post with ${GLYPH.heart}$`)
+        new RegExp(`reacted to your post with ${GLYPH.heart}$`)
       );
       await closeBellIfOpen(authPage);
 
@@ -330,13 +407,13 @@ test.describe(
 
       // No additional row for B; the count stays at 1 across the settle window.
       await delay(3_000);
-      await waitForReactionRowCount(authPage, 1);
+      await assertReactionRowCountStable(authPage, 1);
 
       // The surviving row is the ORIGINAL event: still ❤️, an immutable record
       // rather than a live mirror of A's now-🚀 reaction.
       await openBell(authPage);
       await expect(reactionRows(authPage).first()).toHaveAccessibleName(
-        new RegExp(`reacted to your Post with ${GLYPH.heart}$`)
+        new RegExp(`reacted to your post with ${GLYPH.heart}$`)
       );
       await expect(reactionRows(authPage).first()).not.toContainText(GLYPH.rocket);
       await closeBellIfOpen(authPage);

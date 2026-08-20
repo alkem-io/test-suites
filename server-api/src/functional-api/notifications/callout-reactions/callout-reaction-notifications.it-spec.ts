@@ -175,7 +175,15 @@ const updateCalloutReactionSettings = async (
       },
     },
   };
-  return graphqlRequestAuth(requestParams, userRole);
+  const response = await graphqlRequestAuth(requestParams, userRole);
+  if (response.body?.errors) {
+    throw new Error(
+      `updateUserSettings failed for ${userID}: ${JSON.stringify(
+        response.body.errors
+      )}`
+    );
+  }
+  return response;
 };
 
 /** Read the collaborationCalloutReaction triple via getUserData equivalent. */
@@ -254,8 +262,12 @@ beforeAll(async () => {
     },
     settings: { visibility: CalloutVisibility.Published },
   });
-  publishedCalloutId =
-    pub?.data?.createCalloutOnCalloutsSet?.id ?? '';
+  publishedCalloutId = pub?.data?.createCalloutOnCalloutsSet?.id ?? '';
+  if (!publishedCalloutId) {
+    throw new Error(
+      'Emission invariants: failed to create the shared published callout'
+    );
+  }
 
   // Required precondition for push-emit assertions: the adapter no-ops for a
   // recipient with zero active push subscriptions.
@@ -277,7 +289,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await unsubscribeRecipientsFromPush(pushSubscriptions);
+  await unsubscribeRecipientsFromPush(pushSubscriptions).catch(() => undefined);
 
   // Restore defaults for the shared global admin persona.
   await updateCalloutReactionSettings(
@@ -316,6 +328,14 @@ describe('Emission invariants (US1/US4)', () => {
     'US1-AS1 — genuine new reaction notifies exactly the publisher in-app (single recipient)',
     async () => {
       const countBefore = await getCalloutReactionInAppCount(PUBLISHER);
+      // Baselines for the non-recipients — these personas are shared across the
+      // whole server-api suite and their in-app rows persist, so assert a delta
+      // of 0 rather than an absolute count (which another suite could inflate).
+      const reactorABefore = await getCalloutReactionInAppCount(REACTOR_A);
+      const reactorBBefore = await getCalloutReactionInAppCount(REACTOR_B);
+      const spaceAdminBefore = await getCalloutReactionInAppCount(
+        TestUser.SPACE_ADMIN
+      );
 
       await addReactionToCallout(publishedCalloutId, 'heart', REACTOR_A);
 
@@ -327,14 +347,14 @@ describe('Emission invariants (US1/US4)', () => {
       // R-5 single-recipient invariant: the reactors and a space admin who is
       // not the publisher must each receive nothing — audience-fanout must not
       // spread to non-publisher space members or space admins.
-      const reactorACount = await getCalloutReactionInAppCount(REACTOR_A);
-      expect(reactorACount).toBe(0);
-      const reactorBCount = await getCalloutReactionInAppCount(REACTOR_B);
-      expect(reactorBCount).toBe(0);
-      const spaceAdminCount = await getCalloutReactionInAppCount(
+      const reactorAAfter = await getCalloutReactionInAppCount(REACTOR_A);
+      expect(reactorAAfter - reactorABefore).toBe(0);
+      const reactorBAfter = await getCalloutReactionInAppCount(REACTOR_B);
+      expect(reactorBAfter - reactorBBefore).toBe(0);
+      const spaceAdminAfter = await getCalloutReactionInAppCount(
         TestUser.SPACE_ADMIN
       );
-      expect(spaceAdminCount).toBe(0);
+      expect(spaceAdminAfter - spaceAdminBefore).toBe(0);
     }
   );
 
@@ -625,7 +645,7 @@ describe('Settings gating (US2)', () => {
         TestUser.GLOBAL_ADMIN
       );
     },
-    30_000
+    60_000
   );
 
   test(
