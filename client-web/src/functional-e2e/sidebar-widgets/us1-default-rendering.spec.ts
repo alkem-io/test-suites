@@ -48,10 +48,18 @@ test.describe('@forge-acceptance US1 — default sidebar rendering (per-tab widg
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(180_000);
 
-    await TestScenarioFactory.createBaseScenarioEmpty({ name: 'us1-sidebar-widgets' });
+    await TestScenarioFactory.createBaseScenarioEmpty({
+      name: 'us1-sidebar-widgets',
+    });
 
-    await admin.setupAuthentication(browser, TestUserManager.users.globalAdmin.email);
-    await member.setupAuthentication(browser, TestUserManager.users.qaUser.email);
+    await admin.setupAuthentication(
+      browser,
+      TestUserManager.users.globalAdmin.email
+    );
+    await member.setupAuthentication(
+      browser,
+      TestUserManager.users.qaUser.email
+    );
 
     const adminPage = admin.getSharedPage();
     const uniqueId = Date.now().toString().slice(-6);
@@ -77,10 +85,16 @@ test.describe('@forge-acceptance US1 — default sidebar rendering (per-tab widg
     await adminPage.goto(`${baseUrl}/${spaceUrl}/subspaces`);
     await acceptCookiesIfVisible(adminPage);
     await adminPage.getByRole('button', { name: 'CREATE SUBSPACE' }).click();
-    const subspaceDialog = adminPage.getByRole('dialog', { name: 'Create new Subspace' });
+    const subspaceDialog = adminPage.getByRole('dialog', {
+      name: 'Create new Subspace',
+    });
     await subspaceDialog.getByRole('textbox', { name: 'Name' }).fill('Sub One');
-    await subspaceDialog.getByRole('button', { name: 'CREATE SUBSPACE' }).click();
-    await expect(adminPage.getByText('Sub One')).toBeVisible({ timeout: 15_000 });
+    await subspaceDialog
+      .getByRole('button', { name: 'CREATE SUBSPACE' })
+      .click();
+    await expect(adminPage.getByText('Sub One')).toBeVisible({
+      timeout: 15_000,
+    });
 
     // --- Future calendar event (feeds events on tab 1) ----------------------
     await adminPage.goto(`${baseUrl}/${spaceUrl}`);
@@ -88,7 +102,9 @@ test.describe('@forge-acceptance US1 — default sidebar rendering (per-tab widg
     const homeSidebar = adminPage.locator('#crd-space-sidebar-desktop');
     await homeSidebar.getByRole('button', { name: 'Add event' }).click();
     const eventDialog = adminPage.getByRole('dialog', { name: 'Add event' });
-    await eventDialog.getByRole('textbox', { name: 'Title' }).fill('Future Kickoff Call');
+    await eventDialog
+      .getByRole('textbox', { name: 'Title' })
+      .fill('Future Kickoff Call');
     await eventDialog.getByRole('button', { name: /Start date/ }).click();
     // Jump to next month so every visible day cell is unambiguously future —
     // no risk of colliding with a same-numbered cell from the current or
@@ -108,21 +124,31 @@ test.describe('@forge-acceptance US1 — default sidebar rendering (per-tab widg
     await adminPage.goto(`${baseUrl}/${spaceUrl}/settings/updates`);
     await acceptCookiesIfVisible(adminPage);
     await adminPage.getByRole('button', { name: 'NEW UPDATE' }).click();
-    await adminPage.getByRole('textbox', { name: 'Write your update…' }).click();
+    await adminPage
+      .getByRole('textbox', { name: 'Write your update…' })
+      .click();
     await adminPage.keyboard.type('We shipped the first milestone this week!');
     await adminPage.getByRole('button', { name: 'Publish' }).click();
-    await expect(adminPage.getByText('We shipped the first milestone this week!')).toBeVisible({
+    await expect(
+      adminPage.getByText('We shipped the first milestone this week!')
+    ).toBeVisible({
       timeout: 10_000,
     });
 
     // --- Community guidelines (feeds guidelines on tab 2) --------------------
-    await adminPage.goto(`${baseUrl}/${spaceUrl}/settings/community#guidelines`);
+    await adminPage.goto(
+      `${baseUrl}/${spaceUrl}/settings/community#guidelines`
+    );
     await acceptCookiesIfVisible(adminPage);
-    await adminPage.getByRole('textbox', { name: 'Title' }).fill(`${spaceName} Guidelines`);
+    await adminPage
+      .getByRole('textbox', { name: 'Title' })
+      .fill(`${spaceName} Guidelines`);
     await adminPage.locator('[contenteditable="true"]').first().click();
     await adminPage.keyboard.type('Be respectful and collaborative.');
     await adminPage.getByRole('button', { name: 'SAVE GUIDELINES' }).click();
-    await expect(adminPage.getByText('Community guidelines updated successfully.')).toBeVisible({
+    await expect(
+      adminPage.getByText('Community guidelines updated successfully.')
+    ).toBeVisible({
       timeout: 10_000,
     });
 
@@ -130,24 +156,34 @@ test.describe('@forge-acceptance US1 — default sidebar rendering (per-tab widg
     await adminPage.goto(`${baseUrl}/${spaceUrl}/settings/layout`);
     await acceptCookiesIfVisible(adminPage);
     await adminPage.getByRole('button', { name: 'ADD TAB' }).click();
-    const addTabDialog = adminPage.getByRole('dialog', { name: 'Add a new tab' });
+    const addTabDialog = adminPage.getByRole('dialog', {
+      name: 'Add a new tab',
+    });
     await addTabDialog.getByRole('textbox', { name: 'Tab name' }).fill('Extra');
     await addTabDialog.getByRole('button', { name: 'Add tab' }).click();
-    await expect(adminPage.getByRole('heading', { name: 'Extra', level: 3 })).toBeVisible({
+    await expect(
+      adminPage.getByRole('heading', { name: 'Extra', level: 3 })
+    ).toBeVisible({
       timeout: 10_000,
     });
 
     // --- Invite the member persona (admin is already the auto-assigned lead) -
     await adminPage.goto(`${baseUrl}/${spaceUrl}/settings/community`);
     await acceptCookiesIfVisible(adminPage);
-    await adminPage.getByRole('button', { name: 'Invite', exact: true }).click();
-    const inviteDialog = adminPage.getByRole('dialog', { name: /Invite others/ });
+    await adminPage
+      .getByRole('button', { name: 'Invite', exact: true })
+      .click();
+    const inviteDialog = adminPage.getByRole('dialog', {
+      name: /Invite others/,
+    });
     await inviteDialog
       .getByRole('textbox', { name: 'Search for users by name or email' })
       .fill(TestUserManager.users.qaUser.email);
     await inviteDialog.getByRole('button', { name: /qa/i }).click();
     await inviteDialog.getByRole('button', { name: 'Send' }).click();
-    await expect(inviteDialog.getByText('Invitation sent')).toBeVisible({ timeout: 10_000 });
+    await expect(inviteDialog.getByText('Invitation sent')).toBeVisible({
+      timeout: 10_000,
+    });
     await inviteDialog.getByRole('button', { name: 'Close' }).click();
 
     // --- Member accepts the invitation --------------------------------------
@@ -156,7 +192,9 @@ test.describe('@forge-acceptance US1 — default sidebar rendering (per-tab widg
     await acceptCookiesIfVisible(memberPage);
     await memberPage.getByRole('link', { name: 'Invitations' }).click();
     await memberPage.getByRole('button', { name: 'ACCEPT' }).click();
-    await expect(memberPage.getByText(spaceName)).toBeVisible({ timeout: 15_000 });
+    await expect(memberPage.getByText(spaceName)).toBeVisible({
+      timeout: 15_000,
+    });
   });
 
   test.afterAll(async () => {
@@ -180,13 +218,23 @@ test.describe('@forge-acceptance US1 — default sidebar rendering (per-tab widg
 
     const sidebar = memberPage.locator('#crd-space-sidebar-desktop');
     await expect(sidebar.getByText('Space Lead')).toBeVisible();
-    await expect(sidebar.getByRole('button', { name: 'About this Space' })).toBeVisible();
-    await expect(sidebar.getByRole('heading', { name: 'Subspaces' })).toBeVisible();
+    await expect(
+      sidebar.getByRole('button', { name: 'About this Space' })
+    ).toBeVisible();
+    await expect(
+      sidebar.getByRole('heading', { name: 'Subspaces' })
+    ).toBeVisible();
     await expect(sidebar.getByText('Sub One')).toBeVisible();
-    await expect(sidebar.getByRole('heading', { name: 'Events' })).toBeVisible();
+    await expect(
+      sidebar.getByRole('heading', { name: 'Events' })
+    ).toBeVisible();
     await expect(sidebar.getByText('Future Kickoff Call')).toBeVisible();
-    await expect(sidebar.getByRole('heading', { name: 'Updates' })).toBeVisible();
-    await expect(sidebar.getByText('We shipped the first milestone this week!')).toBeVisible();
+    await expect(
+      sidebar.getByRole('heading', { name: 'Updates' })
+    ).toBeVisible();
+    await expect(
+      sidebar.getByText('We shipped the first milestone this week!')
+    ).toBeVisible();
 
     // Order: Intention&Leads -> About -> Subspaces -> Events -> Updates
     const sidebarText = await sidebar.innerText();
@@ -208,19 +256,27 @@ test.describe('@forge-acceptance US1 — default sidebar rendering (per-tab widg
 
     const sidebar = memberPage.locator('#crd-space-sidebar-desktop');
     await expect(sidebar.getByText('Space Lead')).toBeVisible();
-    await expect(sidebar.getByRole('button', { name: 'Contact Leads' })).toBeVisible();
+    await expect(
+      sidebar.getByRole('button', { name: 'Contact Leads' })
+    ).toBeVisible();
     await expect(sidebar.getByText(`${spaceName} Guidelines`)).toBeVisible();
 
     // A plain member has neither invite permission nor VC entitlement by
     // default in this fixture — FR-012 says a configured-but-inapplicable
     // widget renders nothing, so neither should appear for this persona.
-    await expect(sidebar.getByRole('button', { name: 'Invite', exact: true })).toHaveCount(0);
-    await expect(sidebar.getByRole('heading', { name: 'Virtual Contributors' })).toHaveCount(0);
+    await expect(
+      sidebar.getByRole('button', { name: 'Invite', exact: true })
+    ).toHaveCount(0);
+    await expect(
+      sidebar.getByRole('heading', { name: 'Virtual Contributors' })
+    ).toHaveCount(0);
 
     const sidebarText = await sidebar.innerText();
-    const order = ['Space Lead', 'Contact Leads', `${spaceName} Guidelines`].map(marker =>
-      sidebarText.indexOf(marker)
-    );
+    const order = [
+      'Space Lead',
+      'Contact Leads',
+      `${spaceName} Guidelines`,
+    ].map(marker => sidebarText.indexOf(marker));
     expect(order.every(i => i >= 0)).toBe(true);
     expect(order).toEqual([...order].sort((a, b) => a - b));
   });
@@ -232,10 +288,18 @@ test.describe('@forge-acceptance US1 — default sidebar rendering (per-tab widg
 
     const sidebar = memberPage.locator('#crd-space-sidebar-desktop');
     await expect(sidebar.getByText('Space Lead')).toBeVisible();
-    await expect(sidebar.getByRole('button', { name: 'About this Space' })).toHaveCount(0);
-    await expect(sidebar.getByRole('heading', { name: 'Events' })).toHaveCount(0);
-    await expect(sidebar.getByRole('heading', { name: 'Updates' })).toHaveCount(0);
-    await expect(sidebar.getByRole('button', { name: 'Post Index' })).toHaveCount(0);
+    await expect(
+      sidebar.getByRole('button', { name: 'About this Space' })
+    ).toHaveCount(0);
+    await expect(sidebar.getByRole('heading', { name: 'Events' })).toHaveCount(
+      0
+    );
+    await expect(sidebar.getByRole('heading', { name: 'Updates' })).toHaveCount(
+      0
+    );
+    await expect(
+      sidebar.getByRole('button', { name: 'Post Index' })
+    ).toHaveCount(0);
   });
 
   test('US1-AS4 — tab 4 (Knowledge) and tab "Extra" render Intention&Leads + Post Index, dialog opens', async () => {
@@ -247,16 +311,26 @@ test.describe('@forge-acceptance US1 — default sidebar rendering (per-tab widg
 
       const sidebar = memberPage.locator('#crd-space-sidebar-desktop');
       await expect(sidebar.getByText('Space Lead')).toBeVisible();
-      const postIndexButton = sidebar.getByRole('button', { name: 'Post Index' });
+      const postIndexButton = sidebar.getByRole('button', {
+        name: 'Post Index',
+      });
       await expect(postIndexButton).toBeVisible();
 
       // Nothing from the other variants should have leaked onto this tab.
-      await expect(sidebar.getByRole('button', { name: 'About this Space' })).toHaveCount(0);
-      await expect(sidebar.getByRole('heading', { name: 'Events' })).toHaveCount(0);
-      await expect(sidebar.getByRole('heading', { name: 'Updates' })).toHaveCount(0);
+      await expect(
+        sidebar.getByRole('button', { name: 'About this Space' })
+      ).toHaveCount(0);
+      await expect(
+        sidebar.getByRole('heading', { name: 'Events' })
+      ).toHaveCount(0);
+      await expect(
+        sidebar.getByRole('heading', { name: 'Updates' })
+      ).toHaveCount(0);
 
       await postIndexButton.click();
-      const postIndexDialog = memberPage.getByRole('dialog', { name: 'Post Index' });
+      const postIndexDialog = memberPage.getByRole('dialog', {
+        name: 'Post Index',
+      });
       await expect(postIndexDialog).toBeVisible();
       await memberPage.keyboard.press('Escape');
       await expect(postIndexDialog).toBeHidden();
