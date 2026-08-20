@@ -11,7 +11,14 @@ import {
   createTemplateFromSpace,
   getSpaceTemplatesCountForSpace,
   updateSpaceTemplate,
+  updateCollaborationFromSpaceTemplate,
 } from './space-template.request.params';
+import {
+  getCollaborationFlowStates,
+  getTemplateContentSpaceFlowStates,
+  updateInnovationFlowStateSidebar,
+  SidebarWidgetWire,
+} from './innovation-flow.request.params';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 
 let templateId = '';
@@ -147,5 +154,98 @@ describe('Subspace templates - CRUD', () => {
         description: templateInfoUpdate.description,
       })
     );
+  });
+});
+
+describe('innovation flow state sidebar round-trip', () => {
+  let sidebarTemplateId = '';
+
+  afterEach(async () => {
+    if (sidebarTemplateId) {
+      await deleteTemplate(sidebarTemplateId);
+      sidebarTemplateId = '';
+    }
+  });
+
+  test('save-as-template then apply-from-template carries the sidebar verbatim, content and order, including empty', async () => {
+    // Arrange: customize the sidebar on two states of the base space, leave the rest
+    // untouched.
+    const before = await getCollaborationFlowStates(baseScenario.space.id);
+    const beforeStates =
+      before?.data?.lookup?.space?.collaboration?.innovationFlow?.states ?? [];
+    expect(beforeStates.length).toBeGreaterThanOrEqual(2);
+
+    const [firstState, secondState, ...untouchedStates] = beforeStates;
+
+    const customSidebar: SidebarWidgetWire[] = [
+      'EVENTS',
+      'GUIDELINES',
+      'INTENT',
+    ];
+    const emptySidebar: SidebarWidgetWire[] = [];
+
+    const firstUpdate = await updateInnovationFlowStateSidebar(
+      firstState.id,
+      customSidebar,
+      TestUser.SPACE_ADMIN
+    );
+    const secondUpdate = await updateInnovationFlowStateSidebar(
+      secondState.id,
+      emptySidebar,
+      TestUser.SPACE_ADMIN
+    );
+
+    expect(
+      firstUpdate?.data?.updateInnovationFlowState.settings.sidebar
+    ).toEqual(customSidebar);
+    expect(
+      secondUpdate?.data?.updateInnovationFlowState.settings.sidebar
+    ).toEqual(emptySidebar);
+
+    // Untouched-states default: states never customized still carry a non-null
+    // sidebar array (backfill/create default), independent of its exact content.
+    untouchedStates.forEach(state => {
+      expect(Array.isArray(state.settings.sidebar)).toBe(true);
+    });
+
+    // Act (save fidelity): save the base space as a template and read the template's
+    // content-space flow states back.
+    const createRes = await createTemplateFromSpace(
+      baseScenario.space.id,
+      baseScenario.space.templateSetId,
+      'Sidebar round-trip template'
+    );
+    sidebarTemplateId = createRes?.data?.createTemplateFromSpace?.id ?? '';
+    expect(sidebarTemplateId).not.toEqual('');
+
+    const templateRead =
+      await getTemplateContentSpaceFlowStates(sidebarTemplateId);
+    const templateStates =
+      templateRead?.data?.lookup?.template?.contentSpace?.collaboration
+        ?.innovationFlow?.states ?? [];
+
+    expect(templateStates.length).toEqual(beforeStates.length);
+    expect(templateStates[0].settings.sidebar).toEqual(customSidebar);
+    expect(templateStates[1].settings.sidebar).toEqual(emptySidebar);
+
+    // Act (apply fidelity): apply the template onto the scenario subspace's
+    // collaboration — L1, wholesale replace, no fixed-tab interference.
+    await updateCollaborationFromSpaceTemplate(
+      baseScenario.subspace.collaboration.id,
+      sidebarTemplateId
+    );
+
+    const applied = await getCollaborationFlowStates(baseScenario.subspace.id);
+    const appliedStates =
+      applied?.data?.lookup?.space?.collaboration?.innovationFlow?.states ?? [];
+
+    expect(appliedStates.length).toEqual(templateStates.length);
+    appliedStates.forEach((state, index) => {
+      expect(state.settings.sidebar).toEqual(
+        templateStates[index].settings.sidebar
+      );
+    });
+    expect(appliedStates[0].settings.sidebar).toEqual(customSidebar);
+    expect(appliedStates[1].settings.sidebar).toEqual(emptySidebar);
   });
 });
