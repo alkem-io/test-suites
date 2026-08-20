@@ -156,6 +156,9 @@ jobs:
             branch="${repo_branches[$repo]}"
             echo "Triggering workflow in repository: $repo (branch: $branch)"
 
+            # Record epoch seconds before dispatching so we can identify the new run
+            triggered_epoch=$(date -u +%s)
+
             response=$(curl -X POST \
               -H "Accept: application/vnd.github.v3+json" \
               -H "Authorization: token $GITHUB_TOKEN" \
@@ -167,16 +170,27 @@ jobs:
               echo "Failed to trigger workflow in $repo"; cat response.json; exit 1;
             fi
 
-            sleep 5
-
-            run_id=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-              "https://api.github.com/repos/alkem-io/$repo/actions/runs?branch=$branch&event=workflow_dispatch&per_page=1" | jq -r '.workflow_runs[0].id')
+            # Poll until a run created at or after triggered_epoch appears (up to 60 s)
+            run_id=""
+            for attempt in $(seq 1 12); do
+              echo "  Waiting for new run to appear in $repo (attempt $attempt/12)..."
+              sleep 5
+              run_id=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+                "https://api.github.com/repos/alkem-io/$repo/actions/runs?branch=$branch&event=workflow_dispatch&per_page=5" \
+                | jq -r --argjson epoch "$triggered_epoch" \
+                    '.workflow_runs[] | select((.created_at | strptime("%Y-%m-%dT%H:%M:%SZ") | mktime) >= $epoch) | .id' \
+                | head -n1)
+              if [ -n "$run_id" ] && [ "$run_id" != "null" ]; then
+                break
+              fi
+            done
 
             if [ -z "$run_id" ] || [ "$run_id" == "null" ]; then
-              echo "Failed to retrieve run_id for $repo"
+              echo "Failed to retrieve run_id for $repo after triggering dispatch"
               exit 1
             fi
 
+            echo "  Captured run_id $run_id for $repo"
             run_repo_map+=("$repo=$run_id")
           done
 
