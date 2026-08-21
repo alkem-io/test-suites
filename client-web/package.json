@@ -22,6 +22,7 @@
     "codegen": "graphql-codegen --config codegen.ts",
     "stop-process": "fuser 4000/tcp -k",
     "test:auth-playwright": "playwright test",
+    "test:classifications": "playwright test --config=config/playwright.config.classifications.ts",
     "test:nightly": "playwright test --config=config/playwright.config.nightly.ts"
   },
   "dependencies": {

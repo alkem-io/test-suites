@@ -71,3 +71,6 @@ web_modules/
 
 # 029 language-offer acceptance run report (throwaway)
 config/playwright-report-language-offer/
+
+# 024 classifications acceptance run report (throwaway)
+config/playwright-report-classifications/
