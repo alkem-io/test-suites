@@ -154,6 +154,23 @@ export default defineConfig({
       // concurrent pass) and throws at startup if two projects in the
       // same group have different `maxWorkers` — that throw is the fail-closed
       // misconfiguration check for this split.
+      //
+      // The orders are 2/3, NOT 0/1, and that is load-bearing: vitest
+      // resolves an omitted `sequence.groupOrder` to 0 (see
+      // `resolved.sequence.groupOrder ??= 0`) and an omitted `maxWorkers` to
+      // `availableParallelism() - 1`. Every one of the ~35 area projects
+      // above omits both, so they all land in group 0 with a CPU-derived
+      // worker count. Putting `nightly-parallel` (maxWorkers =
+      // NIGHTLY_MAX_WORKERS, 1 by default) in group 0 alongside them made the
+      // package's own `vitest run` — i.e. `pnpm test`, no `--project` —
+      // throw `Projects "…" and "nightly-parallel" have different
+      // 'maxWorkers' but same 'sequence.groupOrder'` at startup on any host
+      // with >=3 CPUs. Starting the lanes at 2 keeps them in groups of their
+      // own without disturbing the untouched legacy projects, and preserves
+      // parallel-before-serial. Empty leading groups are harmless — the
+      // runner skips array holes (`for (const group of groups) if (!group)
+      // continue`), so `--project nightly-parallel --project nightly-serial`
+      // behaves exactly as it did at 0/1.
       {
         extends: true as const,
         test: {
@@ -163,7 +180,7 @@ export default defineConfig({
           // — never promoted files, but excluded here too so a stale/mistaken
           // manifest entry still can't slip an excluded file into the run.
           exclude: [...NIGHTLY_EXCLUDE],
-          sequence: { groupOrder: 0 },
+          sequence: { groupOrder: 2 },
           // NIGHTLY_MAX_WORKERS is the ONLY source of `effective` (src/scripts/nightly-lanes.ts
           // resolveNightlyWorkers) — never clamped against CPU.
           // NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT only derives a sanity-check budget: when the
@@ -184,7 +201,7 @@ export default defineConfig({
           name: 'nightly-serial',
           include: [...NIGHTLY_INCLUDE],
           exclude: [...PARALLEL_MANIFEST, ...NIGHTLY_EXCLUDE],
-          sequence: { groupOrder: 1 },
+          sequence: { groupOrder: 3 },
           maxWorkers: 1,
           retry: 0,
         },

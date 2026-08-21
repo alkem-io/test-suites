@@ -213,7 +213,32 @@ function main() {
   const parallelSet = new Set(lanes.parallel ?? []);
   const serialSet = new Set(lanes.serial ?? []);
 
-  const mainResults = readJson(path.resolve(process.cwd(), args.results));
+  // Fail-closed, symmetric with the lanes.json branch above: no readable
+  // main-run report, no verdict — AND an artifact saying so. Without this
+  // branch the throw propagated uncaught. The gate still held (the process
+  // exits non-zero either way, and the workflow keys off the step outcome,
+  // not this file), but no `serial-confirm.json` was written at all — so the
+  // ledger and any dashboard reading it would silently show the PREVIOUS
+  // run's verdict, which is the one shape of "stale but plausible" output
+  // this script exists to never produce.
+  let mainResults;
+  try {
+    mainResults = readJson(path.resolve(process.cwd(), args.results));
+  } catch (e) {
+    console.error(
+      `[serial-confirm] FATAL: could not read the main run's results.json (${args.results}) — fail-closed: ${e.message}`
+    );
+    fs.mkdirSync(htmlReportDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(htmlReportDir, 'serial-confirm.json'),
+      JSON.stringify(
+        { rerunFiles: [], verdictPerFile: {}, finalExitVerdict: 'fail', crashed: true, reason: 'missing results.json' },
+        null,
+        2
+      )
+    );
+    process.exit(1);
+  }
   const mainVerdicts = parseFileVerdicts(mainResults, serverApiRoot);
 
   // Fail-closed: the main run's own reporter-level verdict said the run

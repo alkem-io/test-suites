@@ -36,7 +36,10 @@ export const registerVerifiedUser = async (
  * concurrently in use by worker 0), reintroducing the exact cross-worker
  * interference this pooling change exists to eliminate. Any email that
  * isn't a known pool role (a test-generated one-off address) passes through
- * unchanged.
+ * unchanged, as does any address outside the pool domain (`@alkem.io`) —
+ * `resolvePoolEmailForCurrentWorker` matches the whole address, not just the
+ * local part, so a one-off like `beta.tester@example.com` is never rewritten
+ * into a real pool identity.
  */
 export const reregisterUser = async (
   email: string,
@@ -97,7 +100,9 @@ export const createUser = async (
   // a literal base pool-role email. Unresolved, that would recreate
   // worker-0's identity from a worker that doesn't own it, reintroducing
   // cross-worker interference. Any other email (the common case — a
-  // test-generated one-off address) passes through unchanged.
+  // test-generated one-off address) passes through unchanged, as does any
+  // address outside the pool domain (`@alkem.io`): the resolver matches the
+  // whole address, not just the local part.
   const resolvedOptions = options?.email
     ? {
         ...options,

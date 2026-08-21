@@ -307,10 +307,30 @@ function runAudit(
 
 // ── Main ─────────────────────────────────────────────────────────────────
 
+/**
+ * `--root` must fail closed. Its only caller is the fixture self-test suite,
+ * which points the guard at a synthetic tree; if the flag is passed without a
+ * value (or misspelled so `indexOf` lands on the last argument), an
+ * unvalidated `argv[rootIdx + 1]` is `undefined` and `main()` silently falls
+ * back to `DEFAULT_SERVER_API_ROOT`. The self-test would then audit the REAL
+ * repository tree, pass for reasons that have nothing to do with its fixture,
+ * and report OK — a guard's self-test proving the wrong thing is worse than
+ * one that does not run. Reject the missing value instead.
+ */
 function parseArgs(argv: string[]): { root?: string } {
   const out: { root?: string } = {};
   const rootIdx = argv.indexOf('--root');
-  if (rootIdx !== -1) out.root = argv[rootIdx + 1];
+  if (rootIdx !== -1) {
+    const value = argv[rootIdx + 1];
+    if (!value || value.startsWith('--')) {
+      throw new Error(
+        '--root requires a directory path (got none). Refusing to fall back to the ' +
+          'default server-api root: that would audit the real tree while the caller ' +
+          'believes it is auditing the one it named.'
+      );
+    }
+    out.root = value;
+  }
   return out;
 }
 

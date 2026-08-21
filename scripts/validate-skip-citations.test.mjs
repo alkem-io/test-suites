@@ -122,3 +122,29 @@ test('the real functional-api tree passes with exactly the 23 grandfathered entr
   assert.equal(result.status, 0, combined);
   assert.match(combined, /grandfathered:\s*23/);
 });
+
+// `--root` must fail closed. Every fixture self-test above depends on the
+// guard auditing the tree it was POINTED at. An unvalidated
+// `argv[rootIdx + 1]` is `undefined` when the flag is passed last (or
+// misspelled such that `indexOf` lands on the final argument), and the guard
+// then silently falls back to the real server-api root — so a fixture
+// expecting a failure would instead audit the real tree, find it clean, and
+// report OK. That is a self-test proving something other than what it
+// claims, which is strictly worse than one that errors.
+test('--root without a value fails closed instead of silently auditing the real tree', () => {
+  for (const argv of [['--root'], ['--root', '--something-else']]) {
+    const result = spawnSync('pnpm', ['exec', 'tsx', GUARD, ...argv], {
+      cwd: path.join(REPO_ROOT, 'server-api'),
+      encoding: 'utf8',
+    });
+    const combined = `${result.stdout ?? ''}\n${result.stderr ?? ''}`;
+    assert.notEqual(
+      result.status,
+      0,
+      `--root ${JSON.stringify(argv)} must be rejected, not defaulted: ${combined}`
+    );
+    assert.match(combined, /--root requires a directory path/);
+    // And crucially: it must NOT have audited anything.
+    assert.doesNotMatch(combined, /OK — every unconditional skip is cited or grandfathered/);
+  }
+});

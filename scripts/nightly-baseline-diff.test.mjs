@@ -333,3 +333,73 @@ test('a run with 50 skipped and 9 todo cases produces zero regression candidates
   assert.deepEqual(diff.newFail, []);
   assert.equal(diff.enforced, true);
 });
+
+// A malformed `--trailing-nights` used to be swallowed: `Number('fourteen')`
+// is NaN, `slice(0, NaN)` returns [], the baseline is built from zero
+// archived nights, and every current case lands in `newCases` rather than
+// `newFail`. The job then reports no regressions BECAUSE it read no history
+// — the worst possible failure mode for a regression detector. It must now
+// fail loud, with a diagnostic line (not a bare unhandled rejection).
+test('a non-integer --trailing-nights fails loudly instead of silently emptying the baseline', () => {
+  const archiveDir = makeArchive();
+  const workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'baseline-badnights-'));
+  const currentResults = path.join(workDir, 'results.json');
+  const out = path.join(workDir, 'baseline-diff.json');
+  fs.writeFileSync(
+    currentResults,
+    JSON.stringify({
+      testResults: [
+        {
+          name: 'src/functional-api/x/a.it-spec.ts',
+          assertionResults: [{ fullName: 'steady works', status: 'passed' }],
+        },
+      ],
+    })
+  );
+
+  for (const bad of ['fourteen', '0', '-1', '2.5', '']) {
+    const result = spawnSync(
+      'node',
+      [
+        SCRIPT,
+        '--archive',
+        archiveDir,
+        '--current',
+        currentResults,
+        '--out',
+        out,
+        '--server-api-root',
+        path.join(REPO_ROOT, 'server-api'),
+        '--trailing-nights',
+        bad,
+      ],
+      { cwd: REPO_ROOT, encoding: 'utf8' }
+    );
+    assert.notEqual(
+      result.status,
+      0,
+      `--trailing-nights ${JSON.stringify(bad)} must not be accepted`
+    );
+    assert.match(
+      result.stderr,
+      /\[baseline-diff\] FAILED:/,
+      'the rejection must be reported through the labelled main() catch, not as a bare unhandled rejection'
+    );
+    assert.match(result.stderr, /--trailing-nights must be an integer >= 1/);
+  }
+});
+
+// `flatted` is imported dynamically at run time by the script. It must be a
+// DECLARED root devDependency, not a transitive of `@vitest/ui` that the
+// hoisted linker happens to place at the workspace root — otherwise a
+// dependency bump elsewhere can remove it and break the nightly's regression
+// diff with an import error.
+test('flatted is a declared root devDependency, not an accidentally hoisted transitive', () => {
+  const rootPkg = JSON.parse(
+    fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf8')
+  );
+  assert.ok(
+    rootPkg.devDependencies?.flatted,
+    'scripts/nightly-baseline-diff.mjs imports flatted at run time, so the root manifest must declare it'
+  );
+});

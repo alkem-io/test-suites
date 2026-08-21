@@ -17,6 +17,27 @@ import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
 
+/**
+ * `--trailing-nights` must fail loud, not silently. `Number(...)` accepts any
+ * text, so a typo yields `NaN`, `listArchivedRuns` then calls
+ * `slice(0, NaN)` — which returns an EMPTY list — and the baseline is built
+ * from zero archived nights. Nothing crashes: every current case simply has
+ * no baseline class, lands in `newCases`, and `newFail` is empty forever. The
+ * regression detector reports a clean bill of health precisely because it
+ * read nothing. Reject anything that is not a positive integer.
+ */
+function parseTrailingNights(raw) {
+  const parsed = Number(raw);
+  if (!Number.isInteger(parsed) || parsed < 1) {
+    throw new Error(
+      `--trailing-nights must be an integer >= 1; got ${JSON.stringify(raw)}. ` +
+        'Refusing to continue with an unreadable value: it would silently produce ' +
+        'an empty baseline, in which no regression can ever be detected.'
+    );
+  }
+  return parsed;
+}
+
 function parseArgs(argv) {
   const out = { trailingNights: 14 };
   for (let i = 0; i < argv.length; i++) {
@@ -31,7 +52,7 @@ function parseArgs(argv) {
         out.out = argv[++i];
         break;
       case '--trailing-nights':
-        out.trailingNights = Number(argv[++i]);
+        out.trailingNights = parseTrailingNights(argv[++i]);
         break;
       case '--server-api-root':
         out.serverApiRoot = argv[++i];
@@ -360,4 +381,12 @@ async function main() {
   process.exit(0);
 }
 
-main();
+// `main()` is async: without this, a throw inside it (a malformed
+// `--trailing-nights`, an unreadable `--current` report, a failed dynamic
+// `flatted` import) surfaces as a bare unhandled-rejection dump. The exit
+// code is non-zero either way, but the operator reading a nightly log gets a
+// labelled line instead of a raw stack from an anonymous promise.
+main().catch(err => {
+  console.error('[baseline-diff] FAILED:', err?.stack ?? err);
+  process.exit(1);
+});

@@ -86,11 +86,32 @@ export const provisionPoolPlatformRoles = async (
         if (userModel.RoleNames.includes(platformRole)) {
           continue;
         }
-        await assignPlatformRole(
+        const result = await assignPlatformRole(
           userModel.id,
           platformRole,
           TestUser.GLOBAL_ADMIN
         );
+        // `assignPlatformRole` goes through `graphqlErrorWrapper`, which
+        // never rejects — it RESOLVES with `{ error: { errors: [...] } }` for
+        // GraphQL errors and for connection-level failures alike. So the
+        // result has to be inspected explicitly: an unchecked call would
+        // fall straight through to the push below and record a role the
+        // platform did not actually grant. That poisoned snapshot is then
+        // what every worker hydrates, and
+        // `TestScenarioFactory.populateGlobalRoles()`'s already-has-the-role
+        // check would skip the real grant on the strength of it — the exact
+        // "silently leaving a worker slot under-privileged" failure the
+        // empty-id guard above already refuses to allow, arriving by a
+        // different door. Fail here instead, while the cause is still legible.
+        const errors = result?.error?.errors;
+        if (errors && errors.length > 0) {
+          throw new Error(
+            `Failed to grant platform role '${platformRole}' to '${email}' (id ${userModel.id}): ` +
+              `${JSON.stringify(errors)}. ` +
+              'Aborting rather than recording a grant the platform did not make, ' +
+              'which would make every worker hydrate a snapshot claiming a role it does not hold.'
+          );
+        }
         // Keep the in-memory model in step with what the platform now
         // believes, so the snapshot workers hydrate is accurate and the
         // factory's idempotence check does not re-grant per scenario.

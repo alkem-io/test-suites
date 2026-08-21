@@ -2,11 +2,12 @@
 # Durable regression runner for the two-lane nightly split, meant to run
 # against a live local stack (quickstart services + `pnpm start:dev` in the
 # sibling `server/` clone). Verifies, in one invocation:
-#   - a single globalSetup (one "[globalSetup] Starting global test setup..."
-#     line) regardless of the parallel lane's worker count
 #   - the shared user pool mints exactly once, regardless of worker count —
 #     the mint count must equal the pool's own declared size ([auth] pool
-#     size: N), not a fixed number (the pool is free to grow)
+#     size: N), not a fixed number (the pool is free to grow). This IS the
+#     single-globalSetup proof: the mint lives inside globalTestsSetup.ts's
+#     `__alkemioGlobalSetupDone` guard, so a duplicated global setup that did
+#     real work would mint the pool twice and fail this assertion.
 #   - the "[nightly] lanes: ..." line matches the requested worker count
 #   - one merged html-report/ + results.json covering every requested file
 #
@@ -42,8 +43,21 @@ fi
 echo
 echo "== assertions =="
 
+# INFORMATIONAL, deliberately not asserted against a fixed number. The
+# "[globalSetup] Starting global test setup..." line is printed OUTSIDE
+# globalTestsSetup.ts's `__alkemioGlobalSetupDone` guard, and vitest
+# instantiates globalSetup once per project — including the root project it
+# adds even when a single lane is requested via `--project`. A count > 1 is
+# therefore the normal, correct state, and pinning it to 1 here would fail a
+# healthy run. What actually needs proving — that only ONE of those
+# invocations did real work — is proven by the mint-count assertion below,
+# which counts an effect that only happens inside the guard.
 SETUP_COUNT=$(grep -c '\[globalSetup\] Starting global test setup\.\.\.' "$LOG_FILE" || true)
-echo "globalSetup invocations logged: ${SETUP_COUNT} (expect exactly 1 to have done real work — repeats after the first are the inherited-per-project no-op)"
+if [ "$SETUP_COUNT" -lt 1 ]; then
+  echo "FAIL: no '[globalSetup] Starting global test setup...' line found — globalSetup never ran"
+  exit 1
+fi
+echo "globalSetup invocations logged: ${SETUP_COUNT} (informational — one per vitest project; the 'did real work exactly once' invariant is the mint-count assertion below)"
 
 # The invariant is "the shared pool mints exactly once per run", not "the
 # pool has exactly N members" — the expected count is derived from the

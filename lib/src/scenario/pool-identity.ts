@@ -19,8 +19,12 @@ import { TestUser } from '../common/enums/test.user';
  * `TestUser`-as-single-source-of-truth discipline elsewhere in this package
  * already guards against.
  */
+export const POOL_IDENTITY_DOMAIN = 'alkem.io';
+
 export const buildPoolIdentifierEmail = (
   user: TestUser,
   workerIndex = 0
 ): string =>
-  workerIndex === 0 ? `${user}@alkem.io` : `${user}+w${workerIndex}@alkem.io`;
+  workerIndex === 0
+    ? `${user}@${POOL_IDENTITY_DOMAIN}`
+    : `${user}+w${workerIndex}@${POOL_IDENTITY_DOMAIN}`;

@@ -3,7 +3,10 @@ import { TestUserModels } from "./models/TestUserModels";
 import { getUserToken } from "./registration/get-user-token";
 import { TestUser } from "../common/enums/test.user";
 import { getGraphqlClient } from "../utils/graphqlClient";
-import { buildPoolIdentifierEmail } from "./pool-identity";
+import {
+  buildPoolIdentifierEmail,
+  POOL_IDENTITY_DOMAIN,
+} from "./pool-identity";
 
 /**
  * The wire shape `TestUserManager.serialize()` hands to `globalSetup`'s
@@ -285,15 +288,33 @@ export class TestUserManager {
   }
 
   /**
-   * If `email`'s local-part matches a known pool role (e.g.
-   * `beta.tester@alkem.io`), re-resolves it to THIS worker's own real
-   * address for that role. Any other email (a test-generated one-off
-   * address, `user-email-<uniqueId>@alkem.io`) passes through unchanged —
-   * this only ever rewrites the small, closed set of literal pool-role
-   * emails a couple of legacy call sites still hardcode.
+   * If `email` is a literal pool-role address (e.g. `beta.tester@alkem.io`),
+   * re-resolves it to THIS worker's own real address for that role. Any
+   * other email (a test-generated one-off address,
+   * `user-email-<uniqueId>@alkem.io`) passes through unchanged — this only
+   * ever rewrites the small, closed set of literal pool-role emails a couple
+   * of legacy call sites still hardcode.
+   *
+   * BOTH halves are matched, not just the local part. `buildPoolIdentifierEmail`
+   * only ever mints pool identities at `@alkem.io`, so a local-part-only
+   * match would let an unrelated address that merely happens to share a
+   * local part — `beta.tester@example.com`, `admin@somewhere.test` — get
+   * silently rewritten to a real pool identity on a REGISTER or CREATE path.
+   * That is a rewrite the caller never asked for, against an identity it
+   * does not own, which is precisely what this helper exists to prevent.
+   * Requiring the pool domain makes the "small, closed set" above actually
+   * closed.
    */
   public static resolvePoolEmailForCurrentWorker(email: string): string {
-    const localPart = email.slice(0, email.indexOf('@'));
+    const atIndex = email.indexOf('@');
+    if (atIndex === -1) {
+      return email;
+    }
+    const localPart = email.slice(0, atIndex);
+    const domain = email.slice(atIndex + 1);
+    if (domain.toLowerCase() !== POOL_IDENTITY_DOMAIN) {
+      return email;
+    }
     const match = (Object.values(TestUser) as string[]).find(
       value => value === localPart
     );

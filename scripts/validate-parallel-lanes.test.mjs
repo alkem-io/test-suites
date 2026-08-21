@@ -422,4 +422,34 @@ test('(aa) vitest.config.ts: serial lane maxWorkers stays hard-pinned at 1, inde
     serialGroupOrder[1],
     'nightly-parallel and nightly-serial must keep different sequence.groupOrder values'
   );
+
+  // Neither lane may sit in group 0. Vitest resolves an omitted
+  // `sequence.groupOrder` to 0 and an omitted `maxWorkers` to
+  // `availableParallelism() - 1`, and every one of the ~35 untouched area
+  // projects omits both — so a lane in group 0 shares that group with them
+  // while carrying its own explicit `maxWorkers`, which makes vitest throw
+  // `different 'maxWorkers' but same 'sequence.groupOrder'` at startup for
+  // the package's own `vitest run` (`pnpm test`, no `--project`) on any host
+  // with >=3 CPUs. Regression test for that startup failure.
+  const parallelOrder = Number(parallelGroupOrder[1]);
+  const serialOrder = Number(serialGroupOrder[1]);
+  assert.notEqual(
+    parallelOrder,
+    0,
+    "nightly-parallel must not use groupOrder 0 — that is the default group every maxWorkers-less area project lands in, and sharing it makes a full `vitest run` throw at startup"
+  );
+  assert.notEqual(
+    serialOrder,
+    0,
+    'nightly-serial must not use groupOrder 0 — same default-group collision as nightly-parallel'
+  );
+
+  // Ordering invariant: vitest runs groups in ascending order, and the
+  // parallel lane must run BEFORE the serial one — a serial-lane file
+  // crashing mid-file can leak shared-state mutations, and running serial
+  // last keeps that leak out of the same night's concurrent pass.
+  assert.ok(
+    parallelOrder < serialOrder,
+    `nightly-parallel (groupOrder ${parallelOrder}) must run before nightly-serial (groupOrder ${serialOrder})`
+  );
 });
