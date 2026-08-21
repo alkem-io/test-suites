@@ -1,7 +1,18 @@
 name: Manual Clean Up Environment and Trigger Tests
+run-name: Manual e2e (tests @ ${{ inputs.test-ref || github.ref_name }})
 
 on:
   workflow_dispatch:
+    inputs:
+      test-ref:
+        description: >-
+          Git ref of the TEST CODE to run in the e2e job (branch/tag/SHA).
+          Dispatch from develop and point test-ref at a feature branch: the
+          workflow definition stays develop's, which is what the
+          arc-e2e-linux-x64 runner group's workflow allowlist matches on.
+          Empty = the dispatched ref itself.
+        required: false
+        default: ""
 
 jobs:
   cleanup-db:
@@ -14,7 +25,11 @@ jobs:
     needs: cleanup-db
     runs-on: arc-e2e-linux-x64
     steps:
+      # The code under test — honors the test-ref dispatch input so a feature
+      # branch's tests can run under develop's reviewed workflow definition.
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.test-ref || github.ref }}
 
       - uses: pnpm/action-setup@v4
 

@@ -1,4 +1,8 @@
 name: Nightly Clean Up Environment and Trigger Tests
+# Surface which test code a run actually exercised — dispatches with a
+# test-ref would otherwise be indistinguishable from plain nightlies in the
+# run list.
+run-name: Nightly (tests @ ${{ inputs.test-ref || github.ref_name }})
 
 on:
   schedule:
@@ -6,6 +10,17 @@ on:
   # Allow on-demand runs (verify a fix, reproduce a failure) — same pipeline,
   # including the shared test-cluster deploy lock.
   workflow_dispatch:
+    inputs:
+      test-ref:
+        description: >-
+          Git ref of the TEST CODE to run in the e2e job (branch/tag/SHA).
+          Dispatch this workflow from develop and point test-ref at a feature
+          branch: the workflow definition — secret exposure, lock handling,
+          runner-group routing — stays develop's, which is what the
+          arc-e2e-linux-x64 runner group's workflow allowlist matches on.
+          Empty = the dispatched ref itself.
+        required: false
+        default: ""
 
 jobs:
   deploy-all-services:
@@ -61,7 +76,15 @@ jobs:
     permissions:
       contents: write
     steps:
+      # The code under test — honors the test-ref dispatch input so a feature
+      # branch's tests (and their harness scripts, which are inseparable from
+      # them) can run under develop's reviewed workflow definition. The lock
+      # jobs deliberately do NOT honor test-ref: test-cluster-lock.sh always
+      # comes from the dispatched (trusted) ref. `inputs` is empty on schedule
+      # events, so nightlies fall through to their own ref.
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.test-ref || github.ref }}
 
       # Pull the existing GitHub Pages site so we can append this run's report
       # and keep a full history (incremental runs) across deployments.
