@@ -120,44 +120,124 @@ export const NIGHTLY_INCLUDE = [
  * possible phrasing of "assert this shared user's privileged action
  * succeeded" — a real, stated residual-risk gap).
  *
- * The files NOT in this list each trip an independent, real hazard
- * (unguarded platform-role grant/revocation outside the guarded factory
- * path, direct settings mutation, mailbox access, a global/shared-identity
- * aggregate or membership assertion, a post-conversion roleSet aggregate
- * read, or a DDT privileged-success assertion on a shared pool user) — see
- * the guard's own audit output for the per-file rule and hop path.
+ * Fifth pass (per-worker identity pools, aa691544): every rule above except
+ * 1 (mailbox), 4 (genuinely platform-wide aggregates) and 9 (the roleSet
+ * conversion window) existed to catch two files racing on the SAME shared
+ * pool identity — `TestUserManager.users.X` resolving to one Kratos user
+ * shared by every concurrently-running file. That premise no longer holds:
+ * each vitest worker now mints its own 13-identity pool
+ * (`TestUserManager.resolveForCurrentWorker`, keyed by `VITEST_POOL_ID`),
+ * and under `pool: 'threads'` a worker runs one file at a time — so two
+ * FILES THAT CAN RUN CONCURRENTLY can never resolve the same identity. That
+ * is a structural guarantee, not a heuristic, and it is sound regardless of
+ * import shape (direct call, class method, namespace import, dynamic
+ * import) because it removes the shared SUBJECT the taint engine was
+ * tracking calls onto, not the calls themselves. Rules 2 (grant), 3
+ * (settings mutation), 6 (revocation), 7 (platform-role assertion), 8
+ * (roleSet-membership assertion) and 10 (DDT privileged-success, the
+ * ActorContext-cache race) are REMOVED outright — verified per-file, not
+ * assumed: every one of their historical trip sites targets
+ * `TestUserManager.users.*` / `TestUser.*`, never a file-local unique user
+ * (see `validate-parallel-lanes.ts` for the removal rationale and the
+ * verification evidence per rule). Rule 5 is NARROWED rather than removed:
+ * its old shared-identity-aggregate shape (`me.communityApplications` /
+ * `me.communityInvitations` / `rolesUser(userID)` / `myPushSubscriptions`)
+ * is actor-ID-scoped at the server (confirmed by reading
+ * `me.resolver.fields.ts` / `roles.resolver.queries.ts` /
+ * `push.subscription.resolver.queries.ts`) and is neutralised by the same
+ * per-worker argument — but a DIFFERENT, real hazard was hiding under the
+ * same rule via an accidental case-insensitive substring match on
+ * `getCommunityApplicationsInvitations`: the three `*-auto-invite.it-spec.ts`
+ * files assert an exact, non-zero `toHaveLength` on invitations an async
+ * `autoInvite` background flow creates, gated only by a fixed `delay(5000)`
+ * — a load-timing hazard, not an identity-sharing one, and per-worker
+ * identity pools do nothing to fix it (heavier concurrent server load makes
+ * the fixed delay LESS likely to be enough, not more). Rule 5 now targets
+ * exactly that shape; see `validate-parallel-lanes.ts` for the pattern and
+ * per-file confirmation that every other rule-5 trip site was the
+ * neutralised, actor-scoped kind. Net effect: 25 files promoted
+ * (`account/transfer-innovation-pack-to-account`, the five `entitlements/
+ * *-functional-entitlements` files plus `roleset/user/user.authorization`
+ * that only ever grant/revoke a platform role on `nonSpaceMember` inside
+ * their own beforeAll/afterAll, `callout/callouts` and
+ * `callout/lock-state/close-state-callouts` — the DDT rule-10 files, all
+ * five `roleset/hierarchy-parity/*` files and `roleset/user/user.it-spec.ts`
+ * — the rule-8 roleSet-membership-assertion files,
+ * `contributor-management/user/update-user` and
+ * `push-notifications/push-notifications-settings` — the rule-3 settings
+ * files, `journey/conversion/convert-L1-to-L0` (asserts a specific
+ * invitation/application ID is gone, not a count — the rule-9 window does
+ * NOT apply, it never reads a roleSet member/lead/admin aggregate),
+ * `journey/space/space-platform-settings`, both `push-subscriptions-*`
+ * files, `roleset/application/application`,
+ * `roleset/invitations/invitation-contributors`, `roleset/user/user2` — the
+ * remaining rule-5 files whose aggregate is genuinely actor-scoped — and
+ * `callout/reactions/callout-reactions.it-spec.ts`, which never tripped any
+ * rule at all and was simply never audited into the manifest before now).
+ * 14 files stay serial: 4 mailbox files (rule 1 — `organization-settings`,
+ * `invitation-external`, `invitation-subspace-admin`, and
+ * `deleted-user-session-orphan.it-spec.ts`, newly identified: it transitively
+ * re-registers a deleted user through `me-degradation.request.params.ts` ->
+ * `registerVerifiedUser` -> `verifyInKratosOrFail` -> the global mailbox,
+ * a real hop the third/fourth passes' manifest never happened to audit for
+ * rule 1), 7 conversion-window files (rule 9 —
+ * `convert-L1-to-L0-basic`, `convert-L1-to-L0-with-L2-to-L1`,
+ * `convert-L2-to-L1`, `move-vs-convert-comparison`, and all three
+ * `move-L*-community.it-spec.ts` files, which read the SAME post-conversion
+ * roleSet aggregate as `convert-L1-to-L0-basic` and were never distinguished
+ * from it), and the 3 `*-auto-invite.it-spec.ts` files (the narrowed rule 5
+ * — a load-timing hazard this repo's own conventions forbid fixing here,
+ * since only lane assignment may change, never the test's fixed delay).
+ *
+ * The files NOT in this list each trip an independent, real hazard —
+ * shared-mailbox access, a genuinely platform-wide aggregate assertion, a
+ * load-timing-sensitive exact count off the async auto-invite flow, or a
+ * post-conversion roleSet aggregate read inside the server's own
+ * remove-then-reassign window — see the guard's own audit output for the
+ * per-file rule and hop path.
  */
 export const PARALLEL_MANIFEST: string[] = [
+  'src/functional-api/account/transfer-innovation-pack-to-account.it-spec.ts',
   'src/functional-api/activity-logs/activity-log-on-transfer-conversion.it-spec.ts',
   'src/functional-api/activity-logs/challenge-activity-logs.it-spec.ts',
   'src/functional-api/activity-logs/opportunity-activity-logs.it-spec.ts',
   'src/functional-api/activity-logs/space-activity-logs.it-spec.ts',
-  'src/functional-api/calendar/calendar-event.it-spec.ts',
   'src/functional-api/calendar/calendar-event-wholeday-timezone.it-spec.ts',
+  'src/functional-api/calendar/calendar-event.it-spec.ts',
+  'src/functional-api/callout/callouts.it-spec.ts',
+  'src/functional-api/callout/lock-state/close-state-callouts.it-spec.ts',
   'src/functional-api/callout/post/post-on-callout.it-spec.ts',
+  'src/functional-api/callout/reactions/callout-reactions.it-spec.ts',
   'src/functional-api/callout/transfer/transfer-callout-changed-flow.it-spec.ts',
   'src/functional-api/callout/transfer/transfer-callout-flow-state.it-spec.ts',
   'src/functional-api/callout/transfer/transfer-callout-template-flow.it-spec.ts',
   'src/functional-api/communications/community-updates/updates.it-spec.ts',
   'src/functional-api/communications/conversations/conversation-message-subscriptions.it-spec.ts',
-  'src/functional-api/communications/conversations/conversations.it-spec.ts',
   'src/functional-api/communications/conversations/conversation-subscriptions.it-spec.ts',
+  'src/functional-api/communications/conversations/conversations.it-spec.ts',
   'src/functional-api/communications/conversations/delete-conversation.it-spec.ts',
   'src/functional-api/communications/forum-discussions/platform-discussions.it-spec.ts',
   'src/functional-api/communications/reactions/reactions.it-spec.ts',
   'src/functional-api/communications/replies/reply.it-spec.ts',
-  'src/functional-api/contributor-management/organization/organization.it-spec.ts',
   'src/functional-api/contributor-management/organization/organization-owner.it-spec.ts',
   'src/functional-api/contributor-management/organization/organization-verification.it-spec.ts',
+  'src/functional-api/contributor-management/organization/organization.it-spec.ts',
   'src/functional-api/contributor-management/user/create-user.it-spec.ts',
   'src/functional-api/contributor-management/user/delete-user.it-spec.ts',
+  'src/functional-api/contributor-management/user/update-user.it-spec.ts',
   'src/functional-api/contributor-management/virtual-contributor/knowledge-base-access.it-spec.ts',
   'src/functional-api/contributor-management/virtual-contributor/model-card/engine-types.it-spec.ts',
   'src/functional-api/contributor-management/virtual-contributor/model-card/model-card.it-spec.ts',
   'src/functional-api/contributor-management/virtual-contributor/vc-access.it-spec.ts',
   'src/functional-api/contributor-management/virtual-contributor/vc.it-spec.ts',
+  'src/functional-api/entitlements/innovation-packs-functional-entitlements.it-spec.ts',
+  'src/functional-api/entitlements/licenses-functional-entitlements.it-spec.ts',
   'src/functional-api/entitlements/organization-entitlements.it-spec.ts',
+  'src/functional-api/entitlements/space-functional-entitlements.it-spec.ts',
+  'src/functional-api/entitlements/user-entitlements.it-spec.ts',
+  'src/functional-api/entitlements/vc-functional-entitlements.it-spec.ts',
   'src/functional-api/journey/conversion/convert-L1-to-L0-url-resolver.it-spec.ts',
+  'src/functional-api/journey/conversion/convert-L1-to-L0.it-spec.ts',
   'src/functional-api/journey/conversion/move-L1-to-L0-applications-invitations.it-spec.ts',
   'src/functional-api/journey/conversion/move-L1-to-L0-authorization.it-spec.ts',
   'src/functional-api/journey/conversion/move-L1-to-L0-basic.it-spec.ts',
@@ -170,21 +250,35 @@ export const PARALLEL_MANIFEST: string[] = [
   'src/functional-api/journey/conversion/move-L2-to-L1-authorization.it-spec.ts',
   'src/functional-api/journey/conversion/move-L2-to-L1-basic.it-spec.ts',
   'src/functional-api/journey/conversion/move-L2-to-L1-rooms.it-spec.ts',
+  'src/functional-api/journey/space/space-platform-settings.it-spec.ts',
   'src/functional-api/journey/space/space.it-spec.ts',
   'src/functional-api/journey/subspace/create-subspace.it-spec.ts',
   'src/functional-api/journey/subspace/flows-subspace.it-spec.ts',
   'src/functional-api/journey/subspace/query-subspace-data.it-spec.ts',
   'src/functional-api/journey/subspace/subspace-sorting-and-pinning.it-spec.ts',
-  'src/functional-api/journey/subsubspace/subsubspace_authorization.it-spec.ts',
   'src/functional-api/journey/subsubspace/subsubspace.it-spec.ts',
+  'src/functional-api/journey/subsubspace/subsubspace_authorization.it-spec.ts',
   'src/functional-api/language/invitation-language-seeding.it-spec.ts',
   'src/functional-api/language/user-language-settings.it-spec.ts',
+  'src/functional-api/push-notifications/push-notifications-settings.it-spec.ts',
+  'src/functional-api/push-notifications/push-subscriptions-lifecycle.it-spec.ts',
+  'src/functional-api/push-notifications/push-subscriptions-security.it-spec.ts',
   'src/functional-api/roleset/application/application-lifecycle.it-spec.ts',
-  'src/functional-api/roleset/organization/organization2.it-spec.ts',
+  'src/functional-api/roleset/application/application.it-spec.ts',
+  'src/functional-api/roleset/hierarchy-parity/actor-reachability.it-spec.ts',
+  'src/functional-api/roleset/hierarchy-parity/application-hierarchy-parity.it-spec.ts',
+  'src/functional-api/roleset/hierarchy-parity/invitation-hierarchy-parity.it-spec.ts',
+  'src/functional-api/roleset/hierarchy-parity/join-hierarchy-parity.it-spec.ts',
+  'src/functional-api/roleset/hierarchy-parity/removal-cascade.it-spec.ts',
+  'src/functional-api/roleset/invitations/invitation-contributors.it-spec.ts',
   'src/functional-api/roleset/organization/organization-edge.it-spec.ts',
   'src/functional-api/roleset/organization/organization.it-spec.ts',
-  'src/functional-api/roleset/user/user-edge2.it-spec.ts',
+  'src/functional-api/roleset/organization/organization2.it-spec.ts',
   'src/functional-api/roleset/user/user-edge.it-spec.ts',
+  'src/functional-api/roleset/user/user-edge2.it-spec.ts',
+  'src/functional-api/roleset/user/user.authorization.it-spec.ts',
+  'src/functional-api/roleset/user/user.it-spec.ts',
+  'src/functional-api/roleset/user/user2.it-spec.ts',
   'src/functional-api/storage/auth/organization-document-auth.it-spec.ts',
   'src/functional-api/storage/auth/private-space-document-auth.it-spec.ts',
   'src/functional-api/storage/auth/private-space-private-ch-document-auth.it-spec.ts',

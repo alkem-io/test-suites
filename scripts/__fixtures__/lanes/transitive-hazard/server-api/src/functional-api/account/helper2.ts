@@ -1,5 +1,5 @@
-import { assignPlatformRole } from '../../hazard-symbols';
+import { getMails } from '../../hazard-symbols';
 
 export const doEvenRiskierThing = async () => {
-  await assignPlatformRole('space-id', 'user-id', 'GLOBAL_ADMIN');
+  await getMails();
 };

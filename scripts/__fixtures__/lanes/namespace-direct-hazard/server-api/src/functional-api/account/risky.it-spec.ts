@@ -5,6 +5,6 @@
 import * as hz from '../../hazard-symbols';
 
 test('looks safe from here', async () => {
-  await hz.assignPlatformRole('space-id', 'user-id', 'GLOBAL_ADMIN');
+  await hz.getMails();
   expect(1).toBe(1);
 });
