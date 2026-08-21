@@ -1,5 +1,12 @@
 name: Database cleanup
 
+# Post-cleanup replica counts (server_replicas, notifications_replicas) are
+# workflow inputs, not hardcoded, because this workflow used to silently
+# reset every service to 1 replica regardless of capacity an operator had
+# manually provisioned to stabilise the environment — flattening it on every
+# nightly run. The server and the notifications pipeline are the suite's
+# throughput ceiling, so those two are exposed; every input still defaults
+# to 1 so a caller that passes nothing gets today's behaviour unchanged.
 on:
   workflow_call:
     inputs:
@@ -8,6 +15,16 @@ on:
         required: false
         type: string
         default: alkemio
+      server_replicas:
+        description: Replica count to restore alkemio-server-deployment to after cleanup
+        required: false
+        type: string
+        default: "1"
+      notifications_replicas:
+        description: Replica count to restore alkemio-notifications-deployment to after cleanup
+        required: false
+        type: string
+        default: "1"
   workflow_dispatch:
     inputs:
       postgres_db:
@@ -15,6 +32,16 @@ on:
         required: false
         type: string
         default: alkemio
+      server_replicas:
+        description: Replica count to restore alkemio-server-deployment to after cleanup
+        required: false
+        type: string
+        default: "1"
+      notifications_replicas:
+        description: Replica count to restore alkemio-notifications-deployment to after cleanup
+        required: false
+        type: string
+        default: "1"
 
 jobs:
   cleanup-db:
@@ -118,6 +145,21 @@ jobs:
           mkdir -p $HOME/.kube  # Ensure the .kube directory exists
           echo "${{ secrets.KUBECONFIG_SECRET_HETZNER_TEST }}" > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
+
+      # Fail loudly rather than let a bad kubectl scale silently no-op or
+      # error deep inside a later step (server_replicas/notifications_replicas
+      # are caller-supplied, e.g. from repository variables).
+      - name: Validate replica-count inputs
+        run: |
+          set -euo pipefail
+          for pair in "server_replicas=${{ inputs.server_replicas }}" "notifications_replicas=${{ inputs.notifications_replicas }}"; do
+            name="${pair%%=*}"
+            value="${pair#*=}"
+            if [ -z "$value" ] || ! [[ "$value" =~ ^[0-9]+$ ]]; then
+              echo "::error::Invalid $name '$value' — must be a non-negative integer"
+              exit 1
+            fi
+          done
       # run Kratos migration on the fresh database, then restart the deployment
       - name: Migrate and restart Kratos
         run: |
@@ -239,7 +281,10 @@ jobs:
           kubectl rollout status deployment/synapse-deployment --timeout=600s
 
           kubectl scale deployment/alkemio-matrix-adapter-deployment --replicas=1
-          kubectl scale deployment/alkemio-notifications-deployment --replicas=1
+          # Notifications is one of the suite's two throughput-limiting
+          # services (with the server) — configurable so a manually
+          # provisioned capacity level survives the nightly wipe.
+          kubectl scale deployment/alkemio-notifications-deployment --replicas=${{ inputs.notifications_replicas }}
           kubectl scale deployment/alkemio-file-service-deployment --replicas=1
           # Restore oidc-service (scaled to 0 before the wipe)
           kubectl scale deployment/oidc-service --replicas=1 || true
@@ -274,10 +319,14 @@ jobs:
           fi
 
           echo "Migration job completed successfully."
-        # Scale server back up so it picks up the new database state and bootstraps
+        # Scale server back up so it picks up the new database state and
+        # bootstraps. Configurable (server_replicas) — the server is one of
+        # the suite's two throughput-limiting services, and hardcoding this
+        # to 1 previously reset any capacity an operator had manually
+        # provisioned to stabilise the environment.
       - name: Start server deployment
         run: |
-          kubectl scale deployment/alkemio-server-deployment --replicas=1
+          kubectl scale deployment/alkemio-server-deployment --replicas=${{ inputs.server_replicas }}
           kubectl rollout status deployment/alkemio-server-deployment --timeout=600s
 
       # `rollout status` returning does NOT mean the API is answering: on a fresh
