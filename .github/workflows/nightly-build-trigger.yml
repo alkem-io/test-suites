@@ -271,6 +271,27 @@ jobs:
             echo "::error::expected exactly ${EXPECTED_POOL_MINTS} shared-pool token mints (the pool's own declared size, minted once) regardless of worker count, found ${MINT_COUNT}"
             exit 1
           fi
+          # Independent ceiling — the equality check above derives its
+          # expectation from `[auth] pool size: N`, but that line is printed
+          # by the SAME code path (TestUserManager.populateUserModelMap)
+          # this gate exists to police. If that path ever mints the pool
+          # twice, both the actual mint count and the declared size move
+          # together and the equality check above cannot see it. This
+          # ceiling is computed WITHOUT reading anything the run itself
+          # printed: 13 is the pool's role count (`TestUser` in
+          # lib/src/common/enums/test.user.ts — a workflow-level constant,
+          # update both together if that role set ever changes) and
+          # EXPECTED_REQUESTED comes only from this job's own
+          # NIGHTLY_MAX_WORKERS variable (validated above). A duplicate
+          # mint — the Kratos login-storm failure mode this gate exists to
+          # catch — pushes MINT_COUNT over this ceiling even when the
+          # (circular) equality check agrees with it.
+          POOL_SIZE_PER_WORKER=13
+          MAX_EXPECTED_MINTS=$((POOL_SIZE_PER_WORKER * EXPECTED_REQUESTED))
+          if [ "$MINT_COUNT" -gt "$MAX_EXPECTED_MINTS" ]; then
+            echo "::error::${MINT_COUNT} shared-pool token mints exceeds the absolute ceiling of ${MAX_EXPECTED_MINTS} (= ${POOL_SIZE_PER_WORKER} roles x ${EXPECTED_REQUESTED} requested workers, computed independently of this run's own log) — the shared pool must mint exactly once per run"
+            exit 1
+          fi
           echo "assert-config OK: parallel=${PARALLEL_N} serial=${SERIAL_M} maxWorkers=${EFFECTIVE} (requested=${REQUESTED} cpuCap=${CPU_CAP} of ${CPUS} cpus${OVERSUB_MARKER}) results=${RESULT_COUNT} mints=${MINT_COUNT}"
 
       # The structural exit-code gate: re-runs only the parallel-lane failures

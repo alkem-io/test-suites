@@ -87,7 +87,24 @@ function normalizeArchivedFile(rawPath, serverApiRoot) {
   return posixRaw;
 }
 
-/** Parses the current run's vitest `json` reporter output into `{ caseKey -> 'pass'|'fail' }`. */
+/**
+ * Parses the current run's vitest `json` reporter output into
+ * `{ caseKey -> 'pass'|'fail'|'skip' }`.
+ *
+ * vitest's json reporter emits `assertionResults[].status` as one of
+ * `passed`/`failed`/`skipped`/`todo` (confirmed against a real nightly
+ * `results.json`, not assumed) — mirror the archive walk's own rule below
+ * (`walkTaskTree` only records `task.result.state` 'pass'/'fail'; a skipped
+ * or todo task has no `result.state` at all, so it is silently excluded
+ * from the baseline). A skipped/todo case did not run this night — it is
+ * neither a pass nor a fail — so classifying it as anything but its own
+ * 'skip' bucket turns a routine `.skip`/`.todo` (a nightly run carries
+ * roughly 50 skipped + 9 todo cases) into a phantom regression the moment a
+ * previously-passing case picks one up. THIS BUCKET MUST NEVER GATE THE
+ * BUILD: skipped and todo cases are never `newFail` and must never reach
+ * the enforcement exit code, by explicit operator ruling — do not fold them
+ * back into 'fail' while "simplifying" this later.
+ */
 function parseCurrentRun(reportJson, serverApiRoot) {
   const verdicts = new Map();
   for (const entry of reportJson.testResults ?? []) {
@@ -99,7 +116,11 @@ function parseCurrentRun(reportJson, serverApiRoot) {
       // space in `fullName` — match that join here so archived and current
       // case keys land in the same key space (see walkTaskTree below).
       const caseKey = `${file} > ${assertion.fullName ?? assertion.title ?? 'unnamed test'}`;
-      verdicts.set(caseKey, assertion.status === 'passed' ? 'pass' : 'fail');
+      let verdict;
+      if (assertion.status === 'passed') verdict = 'pass';
+      else if (assertion.status === 'failed') verdict = 'fail';
+      else verdict = 'skip';
+      verdicts.set(caseKey, verdict);
     }
   }
   return verdicts;
@@ -258,11 +279,26 @@ async function main() {
   const stillFailingKnown = [];
   const intermittent = [];
   const newCases = [];
+  // Informational only — see below. NEVER read by the enforcement check and
+  // never merged into `newFail`.
+  const newSkipInfo = [];
 
   for (const [caseKey, verdict] of current) {
     const cls = classes.get(caseKey);
     if (cls === undefined) {
       newCases.push(caseKey);
+      continue;
+    }
+    if (verdict === 'skip') {
+      // A case that reliably passed in the baseline and is now skipped or
+      // todo is worth surfacing — that is how coverage quietly erodes — but
+      // it is NOT a regression: nothing failed, so per explicit operator
+      // ruling it must never gate the job, never count as a `newFail`, and
+      // never be read by the enforcement path below. Only the unambiguous
+      // pass -> skip case is reported; an already-flaky (`intermittent`) or
+      // already-known-failing (`always-fail`) case going quiet is not a new
+      // fact worth a line, so it is deliberately not reported here.
+      if (cls === 'always-pass') newSkipInfo.push(caseKey);
       continue;
     }
     if (cls === 'always-pass' && verdict === 'fail') newFail.push(caseKey);
@@ -282,6 +318,12 @@ async function main() {
     stillFailingKnown,
     intermittent,
     newCases,
+    // Informational only — a previously always-passing case that is now
+    // skipped/todo. Deliberately NOT named `newSkipFail` or anything that
+    // could read as a failure bucket: this list is never consulted by the
+    // enforcement check a few lines down and must never affect the exit
+    // code, in any configuration, including BASELINE_DIFF_ENFORCE=true.
+    newSkipInformational: newSkipInfo,
     enforced: enforce,
   };
 
@@ -303,6 +345,7 @@ async function main() {
     `- Still-failing known cases: ${stillFailingKnown.length}`,
     `- Intermittent cases: ${intermittent.length}`,
     `- New (not in baseline) cases: ${newCases.length}`,
+    `- Newly skipped/todo (was always-pass) — INFORMATIONAL ONLY, never gates: ${newSkipInfo.length}${newSkipInfo.length ? ` — ${newSkipInfo.slice(0, 10).join('; ')}` : ''}`,
     `- Gating: ${enforce ? 'ENFORCED (BASELINE_DIFF_ENFORCE=true)' : 'non-gating'}`,
   ].join('\n');
   console.log('\n' + summaryLines);

@@ -244,3 +244,92 @@ test('BASELINE_DIFF_ENFORCE=true fails the process on an unexplained new failure
   const diff = JSON.parse(fs.readFileSync(out, 'utf8'));
   assert.equal(diff.enforced, true);
 });
+
+// Regression tests for the skip/todo-as-fail defect: a case that did not run
+// this night (vitest json reporter status 'skipped' or 'todo' — confirmed
+// against a real nightly results.json, not assumed) is neither a pass nor a
+// fail. Recording it as 'fail' turned an ordinary `.skip`/`.todo` on a
+// previously always-passing case into a phantom `newFail`, and — the
+// operator's explicit ruling — a skipped/todo case must NEVER, under any
+// circumstance (including BASELINE_DIFF_ENFORCE=true), contribute to a
+// build failure.
+
+test('a previously always-passing case that is now skipped is reported informationally, never as newFail', () => {
+  const archiveDir = makeArchive();
+  const workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'baseline-work-'));
+  const currentResults = path.join(workDir, 'results.json');
+  const out = path.join(workDir, 'baseline-diff.json');
+
+  fs.writeFileSync(
+    currentResults,
+    JSON.stringify({
+      testResults: [
+        {
+          // Always-pass in the 3-night baseline — now skipped, not failed.
+          name: 'src/functional-api/x/a.it-spec.ts',
+          assertionResults: [{ fullName: 'steady works', status: 'skipped' }],
+        },
+      ],
+    })
+  );
+
+  const result = runDiff(archiveDir, currentResults, out, {
+    BASELINE_DIFF_ENFORCE: 'true',
+  });
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  const diff = JSON.parse(fs.readFileSync(out, 'utf8'));
+  assert.deepEqual(diff.newFail, []);
+  assert.deepEqual(diff.newSkipInformational, [
+    'src/functional-api/x/a.it-spec.ts > steady works',
+  ]);
+});
+
+test('a run with 50 skipped and 9 todo cases produces zero regression candidates and does not gate the build even with enforcement enabled', () => {
+  const archiveDir = makeArchive();
+  const workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'baseline-work-'));
+  const currentResults = path.join(workDir, 'results.json');
+  const out = path.join(workDir, 'baseline-diff.json');
+
+  // Mirrors a real nightly's shape: ~50 skipped + 9 todo cases, spread
+  // across files not otherwise in this fixture's 3-night baseline (matching
+  // how long-standing `.skip`/`.todo` cases never accumulate a baseline
+  // classification at all — see `walkTaskTree`'s own pass/fail-only rule).
+  const assertionResults = [];
+  for (let i = 0; i < 50; i++) {
+    assertionResults.push({ fullName: `skipped case ${i}`, status: 'skipped' });
+  }
+  for (let i = 0; i < 9; i++) {
+    assertionResults.push({ fullName: `todo case ${i}`, status: 'todo' });
+  }
+
+  fs.writeFileSync(
+    currentResults,
+    JSON.stringify({
+      testResults: [
+        {
+          name: 'src/functional-api/x/quarantined.it-spec.ts',
+          assertionResults,
+        },
+        // One real, always-passing case still runs and passes — proves the
+        // skip/todo cases aren't just silently dropped from the whole run,
+        // only from the regression-candidate accounting.
+        {
+          name: 'src/functional-api/x/a.it-spec.ts',
+          assertionResults: [{ fullName: 'steady works', status: 'passed' }],
+        },
+      ],
+    })
+  );
+
+  const result = runDiff(archiveDir, currentResults, out, {
+    BASELINE_DIFF_ENFORCE: 'true',
+  });
+  assert.equal(
+    result.status,
+    0,
+    `expected a clean exit with 59 skipped/todo cases present; got: ${result.stdout}${result.stderr}`
+  );
+  const diff = JSON.parse(fs.readFileSync(out, 'utf8'));
+  assert.deepEqual(diff.newFail, []);
+  assert.equal(diff.enforced, true);
+});

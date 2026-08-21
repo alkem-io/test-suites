@@ -64,7 +64,8 @@
     "test:graphql-guard:ui": "vitest --project graphql-guard --fileParallelism=false --ui",
     "innovation-pack-with-templates": "tsx ./src/functional-api/innovation-pack/innovation-pack-with-templates.ts",
     "validate-scenario-setup": "tsx ./src/scripts/validate-scenario-setup.ts",
-    "lanes:validate": "tsx ./src/scripts/validate-parallel-lanes.ts"
+    "lanes:validate": "tsx ./src/scripts/validate-parallel-lanes.ts",
+    "skips:validate": "tsx ./src/scripts/validate-skip-citations.ts"
   },
   "dependencies": {
     "@alkemio/client-lib": "^0.36.0",
