@@ -45,13 +45,14 @@ jobs:
     uses: ./.github/workflows/cleanup-database.yml
     with:
       postgres_db: alkemio
-      # Repo-variable-driven so an operator's manually provisioned capacity
-      # (the server and the notifications pipeline are the suite's
-      # throughput ceiling) survives the nightly wipe instead of being
-      # silently flattened back to 1 replica. Unset ⇒ '1' — behaviour-
-      # identical to before these inputs existed.
-      server_replicas: ${{ vars.NIGHTLY_SERVER_REPLICAS || '1' }}
-      notifications_replicas: ${{ vars.NIGHTLY_NOTIFICATIONS_REPLICAS || '1' }}
+      # cleanup-database.yml restores each deployment to the replica count
+      # it actually captured live before scaling it to 0 — these inputs are
+      # only the FALLBACK for when that capture is unusable. Defaults match
+      # the dev-orchestration test-overlay manifests (server=4,
+      # notifications=3) so an unset repo variable can't reintroduce the
+      # flattening bug either.
+      server_replicas: ${{ vars.NIGHTLY_SERVER_REPLICAS || '4' }}
+      notifications_replicas: ${{ vars.NIGHTLY_NOTIFICATIONS_REPLICAS || '3' }}
     secrets: inherit
 
   run-e2e-tests:

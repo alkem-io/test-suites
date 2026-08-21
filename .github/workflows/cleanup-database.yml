@@ -1,12 +1,18 @@
 name: Database cleanup
 
-# Post-cleanup replica counts (server_replicas, notifications_replicas) are
-# workflow inputs, not hardcoded, because this workflow used to silently
-# reset every service to 1 replica regardless of capacity an operator had
-# manually provisioned to stabilise the environment — flattening it on every
-# nightly run. The server and the notifications pipeline are the suite's
-# throughput ceiling, so those two are exposed; every input still defaults
-# to 1 so a caller that passes nothing gets today's behaviour unchanged.
+# Replica counts are restored by CAPTURING what each deployment was actually
+# running right before this job scales it to 0, and restoring that same
+# number afterwards — never a hardcoded or configured constant. The GitOps
+# manifests (dev-orchestration overlays) are the source of truth for how many
+# replicas a service should run; this cleanup step has no opinion about
+# capacity and must not silently flatten whatever was deployed.
+#
+# server_replicas / notifications_replicas exist ONLY as a fallback for when
+# the live capture is unusable — empty, "0", or non-numeric, which happens if
+# a previous run died mid-cleanup and left a deployment scaled to 0. Restoring
+# a captured "0" would leave the environment dead, so the fallback steps in
+# instead. Defaults match the current manifests (server=4, notifications=3)
+# so an unset override can't reintroduce the flattening bug either.
 on:
   workflow_call:
     inputs:
@@ -16,15 +22,15 @@ on:
         type: string
         default: alkemio
       server_replicas:
-        description: Replica count to restore alkemio-server-deployment to after cleanup
+        description: Fallback replica count for alkemio-server-deployment, used only when the live replica count can't be captured before cleanup
         required: false
         type: string
-        default: "1"
+        default: "4"
       notifications_replicas:
-        description: Replica count to restore alkemio-notifications-deployment to after cleanup
+        description: Fallback replica count for alkemio-notifications-deployment, used only when the live replica count can't be captured before cleanup
         required: false
         type: string
-        default: "1"
+        default: "3"
   workflow_dispatch:
     inputs:
       postgres_db:
@@ -33,19 +39,28 @@ on:
         type: string
         default: alkemio
       server_replicas:
-        description: Replica count to restore alkemio-server-deployment to after cleanup
+        description: Fallback replica count for alkemio-server-deployment, used only when the live replica count can't be captured before cleanup
         required: false
         type: string
-        default: "1"
+        default: "4"
       notifications_replicas:
-        description: Replica count to restore alkemio-notifications-deployment to after cleanup
+        description: Fallback replica count for alkemio-notifications-deployment, used only when the live replica count can't be captured before cleanup
         required: false
         type: string
-        default: "1"
+        default: "3"
 
 jobs:
   cleanup-db:
     runs-on: ubuntu-latest
+    outputs:
+      server_replicas_restore: ${{ steps.scale-down.outputs.server_replicas_restore }}
+      matrix_adapter_replicas_restore: ${{ steps.scale-down.outputs.matrix_adapter_replicas_restore }}
+      synapse_replicas_restore: ${{ steps.scale-down.outputs.synapse_replicas_restore }}
+      kratos_replicas_restore: ${{ steps.scale-down.outputs.kratos_replicas_restore }}
+      kratos_courier_replicas_restore: ${{ steps.scale-down.outputs.kratos_courier_replicas_restore }}
+      hydra_replicas_restore: ${{ steps.scale-down.outputs.hydra_replicas_restore }}
+      oidc_service_replicas_restore: ${{ steps.scale-down.outputs.oidc_service_replicas_restore }}
+      notifications_replicas_restore: ${{ steps.scale-down.outputs.notifications_replicas_restore }}
     steps:
       - name: Install Kubectl
         uses: azure/setup-kubectl@v5.1.0
@@ -63,8 +78,58 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
 
       - name: Scale down services that hold database connections
+        id: scale-down
         run: |
           set -euo pipefail
+
+          # Capture the CURRENT live replica count for a resource before we
+          # touch it. The manifests + whatever is actually deployed are the
+          # source of truth for capacity, not this workflow — so we read it
+          # back, not decide it. Defensive by design: `kubectl get` is
+          # allowed to fail (missing resource, API hiccup) without aborting
+          # the job under `set -e`, and the result is validated before use.
+          # Falls back only when the live read is unusable — empty, "0" (a
+          # deployment left at 0 by a previous run dying mid-cleanup), or
+          # non-numeric — so a dead capture can never "restore" the
+          # environment back into a dead state.
+          capture_replicas() {
+            local resource="$1" fallback="$2" value
+            value=$(kubectl get "$resource" -o jsonpath='{.spec.replicas}' 2>/dev/null || true)
+            if [[ "$value" =~ ^[0-9]+$ ]] && [ "$value" -gt 0 ]; then
+              echo "$value"
+            else
+              echo "$fallback"
+            fi
+          }
+
+          echo "Capturing replica counts to restore after cleanup..."
+          # notifications-deployment is never scaled to 0 below (it doesn't
+          # hold blocking DB connections during the wipe), but the later
+          # migrate/restart job still force-sets its replica count — so it
+          # gets the same capture-then-restore treatment as everything else,
+          # captured here before anything can change it.
+          SERVER_RESTORE=$(capture_replicas deployment/alkemio-server-deployment "${{ inputs.server_replicas }}")
+          MATRIX_ADAPTER_RESTORE=$(capture_replicas deployment/alkemio-matrix-adapter-deployment "1")
+          SYNAPSE_RESTORE=$(capture_replicas deployment/synapse-deployment "1")
+          KRATOS_RESTORE=$(capture_replicas deployment/kratos "1")
+          KRATOS_COURIER_RESTORE=$(capture_replicas statefulset/kratos-courier "1")
+          HYDRA_RESTORE=$(capture_replicas deployment/hydra "1")
+          OIDC_SERVICE_RESTORE=$(capture_replicas deployment/oidc-service "1")
+          NOTIFICATIONS_RESTORE=$(capture_replicas deployment/alkemio-notifications-deployment "${{ inputs.notifications_replicas }}")
+
+          echo "server=$SERVER_RESTORE matrix-adapter=$MATRIX_ADAPTER_RESTORE synapse=$SYNAPSE_RESTORE kratos=$KRATOS_RESTORE kratos-courier=$KRATOS_COURIER_RESTORE hydra=$HYDRA_RESTORE oidc-service=$OIDC_SERVICE_RESTORE notifications=$NOTIFICATIONS_RESTORE"
+
+          {
+            echo "server_replicas_restore=$SERVER_RESTORE"
+            echo "matrix_adapter_replicas_restore=$MATRIX_ADAPTER_RESTORE"
+            echo "synapse_replicas_restore=$SYNAPSE_RESTORE"
+            echo "kratos_replicas_restore=$KRATOS_RESTORE"
+            echo "kratos_courier_replicas_restore=$KRATOS_COURIER_RESTORE"
+            echo "hydra_replicas_restore=$HYDRA_RESTORE"
+            echo "oidc_service_replicas_restore=$OIDC_SERVICE_RESTORE"
+            echo "notifications_replicas_restore=$NOTIFICATIONS_RESTORE"
+          } >> "$GITHUB_OUTPUT"
+
           echo "Scaling down services that hold database connections..."
           kubectl scale deployment/alkemio-server-deployment --replicas=0
           kubectl scale deployment/alkemio-matrix-adapter-deployment --replicas=0
@@ -147,12 +212,23 @@ jobs:
           chmod 600 $HOME/.kube/config
 
       # Fail loudly rather than let a bad kubectl scale silently no-op or
-      # error deep inside a later step (server_replicas/notifications_replicas
-      # are caller-supplied, e.g. from repository variables).
+      # error deep inside a later step. These are the RESOLVED restore
+      # targets from the cleanup-db job (captured live count, or its
+      # fallback input when the capture was unusable) — validating them here
+      # catches a bad fallback value too, not just a bad capture.
       - name: Validate replica-count inputs
         run: |
           set -euo pipefail
-          for pair in "server_replicas=${{ inputs.server_replicas }}" "notifications_replicas=${{ inputs.notifications_replicas }}"; do
+          for pair in \
+            "server_replicas=${{ needs.cleanup-db.outputs.server_replicas_restore }}" \
+            "matrix_adapter_replicas=${{ needs.cleanup-db.outputs.matrix_adapter_replicas_restore }}" \
+            "synapse_replicas=${{ needs.cleanup-db.outputs.synapse_replicas_restore }}" \
+            "kratos_replicas=${{ needs.cleanup-db.outputs.kratos_replicas_restore }}" \
+            "kratos_courier_replicas=${{ needs.cleanup-db.outputs.kratos_courier_replicas_restore }}" \
+            "hydra_replicas=${{ needs.cleanup-db.outputs.hydra_replicas_restore }}" \
+            "oidc_service_replicas=${{ needs.cleanup-db.outputs.oidc_service_replicas_restore }}" \
+            "notifications_replicas=${{ needs.cleanup-db.outputs.notifications_replicas_restore }}" \
+          ; do
             name="${pair%%=*}"
             value="${pair#*=}"
             if [ -z "$value" ] || ! [[ "$value" =~ ^[0-9]+$ ]]; then
@@ -197,9 +273,11 @@ jobs:
 
           kubectl wait --for=condition=complete job/$KRATOS_MIGRATION_JOB --timeout=600s
 
-          # Scale back up (was scaled to 0 during DB cleanup)
-          kubectl scale deployment/kratos --replicas=1
-          kubectl scale statefulset/kratos-courier --replicas=1
+          # Scale back up to the count captured before cleanup scaled it to 0
+          # (or its fallback) — never a hardcoded constant. See "Scale down
+          # services..." in the cleanup-db job for why.
+          kubectl scale deployment/kratos --replicas=${{ needs.cleanup-db.outputs.kratos_replicas_restore }}
+          kubectl scale statefulset/kratos-courier --replicas=${{ needs.cleanup-db.outputs.kratos_courier_replicas_restore }}
           kubectl rollout status deployment/kratos --timeout=600s
           kubectl rollout status statefulset/kratos-courier --timeout=600s
 
@@ -246,8 +324,9 @@ jobs:
 
           kubectl wait --for=condition=complete job/$HYDRA_MIGRATION_JOB --timeout=600s
 
-          # Scale back up (was scaled to 0 during DB cleanup)
-          kubectl scale deployment/hydra --replicas=1
+          # Scale back up to the count captured before cleanup scaled it to 0
+          # (or its fallback) — never a hardcoded constant.
+          kubectl scale deployment/hydra --replicas=${{ needs.cleanup-db.outputs.hydra_replicas_restore }}
           kubectl rollout status deployment/hydra --timeout=600s
 
       # Wiping the hydra DB drops its OAuth2 client rows. hydra-maester only
@@ -277,17 +356,22 @@ jobs:
       # Scale up dependencies before server migration: Synapse + matrix adapter
       - name: Start Synapse and supporting services
         run: |
-          kubectl scale deployment/synapse-deployment --replicas=1
+          # Every restore below uses the count captured before cleanup-db
+          # scaled the deployment to 0 (or its fallback), never a hardcoded
+          # or configured constant — the GitOps manifests are the source of
+          # truth for capacity and this workflow must not have an opinion.
+          kubectl scale deployment/synapse-deployment --replicas=${{ needs.cleanup-db.outputs.synapse_replicas_restore }}
           kubectl rollout status deployment/synapse-deployment --timeout=600s
 
-          kubectl scale deployment/alkemio-matrix-adapter-deployment --replicas=1
-          # Notifications is one of the suite's two throughput-limiting
-          # services (with the server) — configurable so a manually
-          # provisioned capacity level survives the nightly wipe.
-          kubectl scale deployment/alkemio-notifications-deployment --replicas=${{ inputs.notifications_replicas }}
+          kubectl scale deployment/alkemio-matrix-adapter-deployment --replicas=${{ needs.cleanup-db.outputs.matrix_adapter_replicas_restore }}
+          # notifications-deployment is never scaled to 0 (see cleanup-db),
+          # but this step still force-sets its count, so it gets the same
+          # captured-count restore as everything else rather than a
+          # hardcoded/configured number.
+          kubectl scale deployment/alkemio-notifications-deployment --replicas=${{ needs.cleanup-db.outputs.notifications_replicas_restore }}
           kubectl scale deployment/alkemio-file-service-deployment --replicas=1
           # Restore oidc-service (scaled to 0 before the wipe)
-          kubectl scale deployment/oidc-service --replicas=1 || true
+          kubectl scale deployment/oidc-service --replicas=${{ needs.cleanup-db.outputs.oidc_service_replicas_restore }} || true
           kubectl rollout status deployment/alkemio-matrix-adapter-deployment --timeout=600s
           kubectl rollout status deployment/alkemio-notifications-deployment --timeout=600s
           kubectl rollout status deployment/alkemio-file-service-deployment --timeout=600s
@@ -320,13 +404,13 @@ jobs:
 
           echo "Migration job completed successfully."
         # Scale server back up so it picks up the new database state and
-        # bootstraps. Configurable (server_replicas) — the server is one of
-        # the suite's two throughput-limiting services, and hardcoding this
-        # to 1 previously reset any capacity an operator had manually
-        # provisioned to stabilise the environment.
+        # bootstraps, restoring the count captured before cleanup-db scaled
+        # it to 0 (or its fallback) — never a hardcoded or configured
+        # constant, so a manually or GitOps-provisioned capacity level
+        # survives the nightly wipe instead of being flattened.
       - name: Start server deployment
         run: |
-          kubectl scale deployment/alkemio-server-deployment --replicas=${{ inputs.server_replicas }}
+          kubectl scale deployment/alkemio-server-deployment --replicas=${{ needs.cleanup-db.outputs.server_replicas_restore }}
           kubectl rollout status deployment/alkemio-server-deployment --timeout=600s
 
       # `rollout status` returning does NOT mean the API is answering: on a fresh
