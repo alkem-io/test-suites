@@ -1,0 +1,20 @@
+{
+  "rerunFiles": [
+    "src/functional-api/entitlements/organization-entitlements.it-spec.ts",
+    "src/functional-api/communications/forum-discussions/platform-discussions.it-spec.ts",
+    "src/functional-api/communications/reactions/reactions.it-spec.ts",
+    "src/functional-api/communications/replies/reply.it-spec.ts"
+  ],
+  "verdictPerFile": {
+    "src/functional-api/entitlements/organization-entitlements.it-spec.ts": "fail",
+    "src/functional-api/communications/forum-discussions/platform-discussions.it-spec.ts": "fail",
+    "src/functional-api/communications/reactions/reactions.it-spec.ts": "fail",
+    "src/functional-api/communications/replies/reply.it-spec.ts": "fail"
+  },
+  "serialFailures": [],
+  "finalExitVerdict": "fail",
+  "crashed": false,
+  "unattributableRunFailure": false,
+  "reason": null,
+  "demotionDue": []
+}
