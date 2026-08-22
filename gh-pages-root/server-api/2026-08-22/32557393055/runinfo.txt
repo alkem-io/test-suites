@@ -1,0 +1,5 @@
+Run ID: 32557393055
+Date: 2026-08-22
+Branch: refs/heads/feat/040-parallel-nightly-server-api
+Commit: b4e169a00729cb5584a1ebfb1267d4e33af8b900
+Server API outcome: failure
