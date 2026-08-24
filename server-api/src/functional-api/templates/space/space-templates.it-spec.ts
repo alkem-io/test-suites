@@ -248,4 +248,88 @@ describe('innovation flow state sidebar round-trip', () => {
     expect(appliedStates[0].settings.sidebar).toEqual(customSidebar);
     expect(appliedStates[1].settings.sidebar).toEqual(emptySidebar);
   });
+
+  test('apply-from-template onto an existing top-level Space honors the template sidebar on the fixed tabs, not the pre-apply target values', async () => {
+    // Arrange: the base space is itself a top-level (L0) Space whose states already
+    // exist with an established identity — the fixed-tab-preservation branch only
+    // engages against an EXISTING top-level target, unlike the create-from-template
+    // path exercised by the L1 case above. Give every state a distinctive
+    // "template-source" sidebar and save it as a template.
+    const before = await getCollaborationFlowStates(baseScenario.space.id);
+    const beforeStates =
+      before?.data?.lookup?.space?.collaboration?.innovationFlow?.states ?? [];
+    expect(beforeStates.length).toBeGreaterThanOrEqual(2);
+
+    const templateSourceSidebars: SidebarWidgetWire[][] = beforeStates.map(
+      (_, index) =>
+        index % 2 === 0 ? ['UPDATES', 'CONTACT_LEADS'] : ['ADD_USER']
+    );
+    await Promise.all(
+      beforeStates.map((state, index) =>
+        updateInnovationFlowStateSidebar(
+          state.id,
+          templateSourceSidebars[index],
+          TestUser.SPACE_ADMIN
+        )
+      )
+    );
+
+    const createRes = await createTemplateFromSpace(
+      baseScenario.space.id,
+      baseScenario.space.templateSetId,
+      'Fixed-tab apply template'
+    );
+    const fixedTabTemplateId = createRes?.data?.createTemplateFromSpace?.id ?? '';
+    expect(fixedTabTemplateId).not.toEqual('');
+
+    // Give the (still the same) target space its OWN, different pre-apply sidebar per
+    // state — proof that a post-apply match to the template is not a false positive.
+    const targetPreApplySidebars: SidebarWidgetWire[][] = beforeStates.map(
+      () => ['GUIDELINES']
+    );
+    await Promise.all(
+      beforeStates.map((state, index) =>
+        updateInnovationFlowStateSidebar(
+          state.id,
+          targetPreApplySidebars[index],
+          TestUser.SPACE_ADMIN
+        )
+      )
+    );
+
+    const preApply = await getCollaborationFlowStates(baseScenario.space.id);
+    const preApplyStates =
+      preApply?.data?.lookup?.space?.collaboration?.innovationFlow?.states ??
+      [];
+    preApplyStates.forEach((state, index) => {
+      expect(state.settings.sidebar).toEqual(targetPreApplySidebars[index]);
+      expect(state.settings.sidebar).not.toEqual(
+        templateSourceSidebars[index]
+      );
+    });
+
+    // Act: apply the template onto the base space's OWN collaboration — the L0
+    // fixed-tab-preservation branch, since the target already has established states.
+    await updateCollaborationFromSpaceTemplate(
+      baseScenario.space.collaboration.id,
+      fixedTabTemplateId
+    );
+
+    const applied = await getCollaborationFlowStates(baseScenario.space.id);
+    const appliedStates =
+      applied?.data?.lookup?.space?.collaboration?.innovationFlow?.states ??
+      [];
+
+    // Assert: tab identity (id, count, order) is preserved, while every tab's
+    // sidebar now carries the incoming template's list verbatim — the target's own
+    // pre-apply values must not have survived the apply.
+    expect(appliedStates.map(state => state.id)).toEqual(
+      preApplyStates.map(state => state.id)
+    );
+    appliedStates.forEach((state, index) => {
+      expect(state.settings.sidebar).toEqual(templateSourceSidebars[index]);
+    });
+
+    await deleteTemplate(fixedTabTemplateId);
+  });
 });
