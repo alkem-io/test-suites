@@ -197,17 +197,18 @@ test.describe('@forge-acceptance US2 — admin sidebar configuration (Space Sett
     const spacesRes = await request.post(graphqlUrl, {
       data: {
         query:
-          'query Us2VerifySpaceId($url: String!) { spaces(filter: {}) { id about { profile { url } } } }',
-        variables: { url: spaceUrl },
+          'query Us2VerifySpaceId { spaces(filter: {}) { id about { profile { url } } } }',
       },
     });
     const spacesBody = await spacesRes.json();
     const found = (
-      spacesBody.data.spaces as {
-        id: string;
-        about: { profile: { url: string } };
-      }[]
-    ).find(s => s.about.profile.url.includes(spaceUrl));
+      spacesBody?.data?.spaces as
+        | {
+            id: string;
+            about: { profile: { url: string } };
+          }[]
+        | undefined
+    )?.find(s => s.about.profile.url.includes(spaceUrl));
     if (!found) throw new Error(`Could not resolve spaceId for ${spaceUrl}`);
     spaceId = found.id;
 
