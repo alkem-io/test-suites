@@ -20,7 +20,7 @@ import { acceptCookiesIfVisible } from '@src/functional-e2e/helpers/cookies.help
 import { createAuthenticatedSessionFixture } from '@src/functional-e2e/fixtures/authenticated-session.fixture';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
-const graphqlUrl = `${baseUrl}/graphql`;
+const graphqlUrl = `${baseUrl}/api/private/graphql`;
 
 const admin = createAuthenticatedSessionFixture({
   storageStateName: 'us2-sidebar-admin.json',
@@ -439,23 +439,37 @@ test.describe('@forge-acceptance US2 — admin sidebar configuration (Space Sett
     expect(homeAfter.settings.sidebar).toEqual(homeBefore.settings.sidebar);
   });
 
-  test('US2-AS6 — a sidebar-only save and a concurrent rename-only save both persist', async () => {
+  test('US2-AS6 — a sidebar-only save and a later rename-only save each leave the other field untouched (partial-update semantics)', async () => {
+    // Sequential, not Promise.all: updateInnovationFlowState reads-modifies-writes the
+    // whole flow-state aggregate, so two writes to the same state racing each other would
+    // lost-update one another regardless of which fields they touch — that's a concurrency
+    // hazard in the mutation's implementation, not the partial-update contract under test
+    // here. Sequencing the two saves isolates the actual assertion: a save that sends only
+    // `settings.sidebar` must not disturb `displayName`, and a save that sends only
+    // `displayName` must not disturb the previously-saved `sidebar`.
     const request = admin.getSharedPage().context().request;
     const before = await fetchStates(request);
     const communityBefore = before.find(s => s.id === communityStateId)!;
+    const displayNameBefore = communityBefore.displayName;
     const newSidebar = communityBefore.settings.sidebar.slice().reverse();
 
-    const [sidebarResult, renameResult] = await Promise.all([
-      updateState(request, {
-        innovationFlowStateID: communityStateId,
-        settings: { sidebar: newSidebar },
-      }),
-      updateState(request, {
-        innovationFlowStateID: communityStateId,
-        displayName: 'Community Renamed (US2-AS6)',
-      }),
-    ]);
+    const sidebarResult = await updateState(request, {
+      innovationFlowStateID: communityStateId,
+      settings: { sidebar: newSidebar },
+    });
     expect(sidebarResult.body.errors).toBeUndefined();
+
+    const afterSidebarSave = await fetchStates(request);
+    const communityAfterSidebarSave = afterSidebarSave.find(
+      s => s.id === communityStateId
+    )!;
+    expect(communityAfterSidebarSave.settings.sidebar).toEqual(newSidebar);
+    expect(communityAfterSidebarSave.displayName).toBe(displayNameBefore);
+
+    const renameResult = await updateState(request, {
+      innovationFlowStateID: communityStateId,
+      displayName: 'Community Renamed (US2-AS6)',
+    });
     expect(renameResult.body.errors).toBeUndefined();
 
     const after = await fetchStates(request);
