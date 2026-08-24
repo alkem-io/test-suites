@@ -264,15 +264,16 @@ describe('innovation flow state sidebar round-trip', () => {
       (_, index) =>
         index % 2 === 0 ? ['UPDATES', 'CONTACT_LEADS'] : ['ADD_USER']
     );
-    await Promise.all(
-      beforeStates.map((state, index) =>
-        updateInnovationFlowStateSidebar(
-          state.id,
-          templateSourceSidebars[index],
-          TestUser.SPACE_ADMIN
-        )
-      )
-    );
+    // Sequential, not Promise.all: updateInnovationFlowState reads-modifies-writes the
+    // whole flow aggregate, so concurrent sibling updates lost-update each other. This
+    // arrange is not testing concurrency — it just needs each state set deterministically.
+    for (let index = 0; index < beforeStates.length; index++) {
+      await updateInnovationFlowStateSidebar(
+        beforeStates[index].id,
+        templateSourceSidebars[index],
+        TestUser.SPACE_ADMIN
+      );
+    }
 
     const createRes = await createTemplateFromSpace(
       baseScenario.space.id,
@@ -287,15 +288,13 @@ describe('innovation flow state sidebar round-trip', () => {
     const targetPreApplySidebars: SidebarWidgetWire[][] = beforeStates.map(
       () => ['GUIDELINES']
     );
-    await Promise.all(
-      beforeStates.map((state, index) =>
-        updateInnovationFlowStateSidebar(
-          state.id,
-          targetPreApplySidebars[index],
-          TestUser.SPACE_ADMIN
-        )
-      )
-    );
+    for (let index = 0; index < beforeStates.length; index++) {
+      await updateInnovationFlowStateSidebar(
+        beforeStates[index].id,
+        targetPreApplySidebars[index],
+        TestUser.SPACE_ADMIN
+      );
+    }
 
     const preApply = await getCollaborationFlowStates(baseScenario.space.id);
     const preApplyStates =
@@ -320,11 +319,13 @@ describe('innovation flow state sidebar round-trip', () => {
       applied?.data?.lookup?.space?.collaboration?.innovationFlow?.states ??
       [];
 
-    // Assert: tab identity (id, count, order) is preserved, while every tab's
-    // sidebar now carries the incoming template's list verbatim — the target's own
-    // pre-apply values must not have survived the apply.
-    expect(appliedStates.map(state => state.id)).toEqual(
-      preApplyStates.map(state => state.id)
+    // Assert: tab identity is preserved by COUNT and POSITION (sortOrder), NOT by id —
+    // the L0 apply path deletes and recreates states, regenerating ids by design while
+    // preserving the fixed tabs' identity and order. Every tab's sidebar now carries the
+    // template's list verbatim, overwriting the target's own pre-apply values.
+    expect(appliedStates.length).toEqual(preApplyStates.length);
+    expect(appliedStates.map(state => state.sortOrder)).toEqual(
+      preApplyStates.map(state => state.sortOrder)
     );
     appliedStates.forEach((state, index) => {
       expect(state.settings.sidebar).toEqual(templateSourceSidebars[index]);
