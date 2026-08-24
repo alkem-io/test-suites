@@ -27,6 +27,13 @@ on:
         default: gh-pages-root
         type: string
 
+# Pages accepts one deployment at a time. The nightly schedule and ad-hoc
+# branch runs both call this workflow, so queue them instead of racing —
+# `cancel-in-progress: false` keeps an in-flight report publish alive.
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
