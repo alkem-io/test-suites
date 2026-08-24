@@ -26,6 +26,11 @@ export const createConfigUsingEnvVars = (): AlkemioTestConfig => {
         private: process.env.KRATOS_PRIVATE_API_URL ?? 'http://localhost:4434',
         admin: process.env.KRATOS_ADMIN_URL ?? '',
       },
+      rabbitMqManagement: {
+        url: process.env.RABBITMQ_MANAGEMENT_ENDPOINT ?? 'http://localhost:15672',
+        user: process.env.RABBITMQ_MANAGEMENT_USER ?? 'alkemio-admin',
+        password: process.env.RABBITMQ_MANAGEMENT_PASSWORD ?? 'alkemio!',
+      },
     },
     identities: {
       admin: {
@@ -76,6 +81,10 @@ const validateEndpointSchemes = (config: AlkemioTestConfig): void => {
     ['MAIL_SLURPER_ENDPOINT (mailSlurper)', config.endPoints.mailSlurper],
     ['KRATOS_ENDPOINT (kratos.public)', config.endPoints.kratos.public],
     ['KRATOS_PRIVATE_API_URL (kratos.private)', config.endPoints.kratos.private],
+    [
+      'RABBITMQ_MANAGEMENT_ENDPOINT (rabbitMqManagement.url)',
+      config.endPoints.rabbitMqManagement.url,
+    ],
   ];
 
   const offenders = named.filter(([, url]) => isInsecureRemote(url));
