@@ -1,14 +1,38 @@
-import { test as base, Browser, BrowserContext, Page } from '@playwright/test';
+import {
+  test as base,
+  request,
+  Browser,
+  BrowserContext,
+  Page,
+} from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 import { LoginPage } from '@src/functional-e2e/space/pages';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
+const kratosPublicUrl =
+  process.env.KRATOS_ENDPOINT || `${baseUrl}/ory/kratos/public`;
 
 export interface AuthenticatedSessionOptions {
   storageStateName: string;
   /** Clean up storage state file after tests complete. Default: false (keep for debugging) */
   cleanupAfterTests?: boolean;
+}
+
+export interface PersonaSessionOptions {
+  /**
+   * Require the persona's Kratos session to have been AUTHENTICATED within
+   * this many seconds — not merely to still be alive. Kratos gates privileged
+   * self-service operations (password change, credential unlink) behind
+   * `privileged_session_max_age` (15m in dev-orchestration's
+   * 01-base-kratos-values.yml); a live-but-stale cached session makes such a
+   * submit redirect to a re-authentication screen instead of returning the
+   * expected settings-flow response. Specs performing privileged operations
+   * set this to a value comfortably below 15m (minus their own runtime) so a
+   * cached session that is too old is re-minted via a fresh login before the
+   * test starts.
+   */
+  maxSessionAgeSeconds?: number;
 }
 
 let sharedContext: BrowserContext;
@@ -48,6 +72,44 @@ async function dismissNewDesignDialog(page: Page): Promise<void> {
 }
 
 /**
+ * True when the storage-state file at `statePath` still holds a live Kratos
+ * session — verified against `GET /sessions/whoami` with the saved cookies.
+ * This is what makes reusing a persona file from a PREVIOUS run safe: a stale
+ * or revoked session (expired cookie, reset Kratos store) answers 401 and the
+ * caller falls through to a fresh login instead of failing mid-test on a
+ * surprise redirect to the sign-in page.
+ *
+ * With `maxAuthAgeSeconds`, liveness is not enough: the session's
+ * `authenticated_at` (from the whoami body) must also be within the window.
+ * This is the privileged-session check — whoami proves a session is alive for
+ * its whole lifespan, but Kratos only honours privileged operations while
+ * `now - authenticated_at < privileged_session_max_age`.
+ */
+async function isPersonaStateValid(
+  statePath: string,
+  maxAuthAgeSeconds?: number
+): Promise<boolean> {
+  try {
+    const ctx = await request.newContext({ storageState: statePath });
+    try {
+      const res = await ctx.get(`${kratosPublicUrl}/sessions/whoami`);
+      if (!res.ok()) return false;
+      if (maxAuthAgeSeconds === undefined) return true;
+      const session = (await res.json()) as { authenticated_at?: string };
+      const authenticatedAt = Date.parse(session.authenticated_at ?? '');
+      if (Number.isNaN(authenticatedAt)) return false;
+      return Date.now() - authenticatedAt < maxAuthAgeSeconds * 1000;
+    } finally {
+      await ctx.dispose();
+    }
+  } catch {
+    // Unreadable/corrupt state file or unreachable Kratos — treat as invalid
+    // and let the login path produce the real, attributable error.
+    return false;
+  }
+}
+
+/**
  * Log a persona in once and persist its Kratos session to disk, returning the
  * storage-state path. Cached in-process for the rest of the run. The login form
  * is retried a few times so the single per-persona login is resilient to a slow
@@ -56,21 +118,38 @@ async function dismissNewDesignDialog(page: Page): Promise<void> {
  */
 export async function ensurePersonaState(
   browser: Browser,
-  email: string
+  email: string,
+  options: PersonaSessionOptions = {}
 ): Promise<string> {
   const statePath = personaStatePath(email);
+  const { maxSessionAgeSeconds } = options;
 
-  // Fast path: already logged in this worker process.
+  // Fast path: already logged in this worker process. When a freshness bound
+  // is requested this shortcut is NOT enough — a session minted earlier in the
+  // run stays live (and thus in-process cached) long after it stops being
+  // privileged — so freshness-requiring callers always go through the whoami
+  // + authenticated_at check below.
   const cached = personaStatePaths.get(email);
-  if (cached && fs.existsSync(cached)) return cached;
+  if (cached && fs.existsSync(cached) && maxSessionAgeSeconds === undefined) {
+    return cached;
+  }
 
-  // Survive worker restarts: Playwright recycles the worker process (e.g. after
-  // a failure), which wipes the in-memory cache above. A persona file on disk is
-  // from THIS run — global-setup deletes stale files at the start of every run —
-  // so a fresh worker adopts it instead of driving the login form again. Without
-  // this, a cold login runs inside the next spec's beforeAll and can blow its
-  // (often 30s) budget, timing out the hook and cascading the whole serial file.
-  if (fs.existsSync(statePath)) {
+  // Survive worker restarts AND whole-run restarts: a persona file on disk may
+  // come from this run (another worker, or global-setup's serial warm-up) or
+  // from a previous run. It is adopted only after a live `whoami` check proves
+  // the saved Kratos session is still valid — so cross-run reuse is safe, and
+  // a reset Kratos store or expired cookie routes to a fresh login instead of
+  // failing mid-test. Without this, a cold login runs inside the next spec's
+  // beforeAll and can blow its (often 30s) budget, timing out the hook and
+  // cascading the whole serial file. With `maxSessionAgeSeconds` the same
+  // check additionally proves the session is fresh enough for privileged
+  // Kratos operations; a live-but-stale session falls through to a fresh
+  // login (the re-mint overwrites the shared file atomically, which is safe —
+  // every persona session is equivalent and the new one is strictly fresher).
+  if (
+    fs.existsSync(statePath) &&
+    (await isPersonaStateValid(statePath, maxSessionAgeSeconds))
+  ) {
     personaStatePaths.set(email, statePath);
     return statePath;
   }
@@ -134,10 +213,13 @@ export async function ensurePersonaState(
  * test('...', async ({ page }) => { await page.goto(...); }); // already logged in
  * ```
  */
-export function createPersonaTest(email: string) {
+export function createPersonaTest(
+  email: string,
+  options: PersonaSessionOptions = {}
+) {
   return base.extend({
     storageState: async ({ browser }, use) => {
-      await use(await ensurePersonaState(browser, email));
+      await use(await ensurePersonaState(browser, email, options));
     },
   });
 }
