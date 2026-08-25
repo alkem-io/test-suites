@@ -202,10 +202,25 @@ describe('innovation flow state sidebar round-trip', () => {
       secondUpdate?.data?.updateInnovationFlowState.settings.sidebar
     ).toEqual(emptySidebar);
 
-    // Untouched-states default: states never customized still carry a non-null
-    // sidebar array (backfill/create default), independent of its exact content.
-    untouchedStates.forEach(state => {
-      expect(Array.isArray(state.settings.sidebar)).toBe(true);
+    // Untouched-states default: the scenario space is an L0 Space created from the
+    // platform default template, so states never customized carry the exact FR-009
+    // positional defaults — 3rd tab (Subspaces) the third-tab list, 4th+ tabs the
+    // generic default. Every default list starts [CREATE_POST, APPLICATION_BUTTON].
+    const thirdTabDefault: SidebarWidgetWire[] = [
+      'CREATE_POST',
+      'APPLICATION_BUTTON',
+      'INTENT',
+    ];
+    const genericDefault: SidebarWidgetWire[] = [
+      'CREATE_POST',
+      'APPLICATION_BUTTON',
+      'INTENT',
+      'INDEX',
+    ];
+    untouchedStates.forEach((state, index) => {
+      expect(state.settings.sidebar).toEqual(
+        index === 0 ? thirdTabDefault : genericDefault
+      );
     });
 
     // Act (save fidelity): save the base space as a template and read the template's

@@ -16,6 +16,8 @@ const graphqlClient = new GraphQLClient(
 export type SidebarWidgetWire =
   | 'INTENT'
   | 'ABOUT'
+  | 'CREATE_POST'
+  | 'APPLICATION_BUTTON'
   | 'SUBSPACE_LINKS'
   | 'EVENTS'
   | 'UPDATES'
