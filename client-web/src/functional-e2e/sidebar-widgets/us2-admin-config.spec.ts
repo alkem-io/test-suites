@@ -359,17 +359,33 @@ test.describe('@forge-acceptance US2 — admin sidebar configuration (Space Sett
     await dialog
       .getByRole('checkbox', { name: 'Toggle Upcoming Events' })
       .click();
-    // Move the newly-selected Events row (now last of the selected rows) to the top.
-    const eventsRow = dialog
-      .locator('li')
-      .filter({ hasText: 'Upcoming Events' });
-    for (let i = 0; i < 5; i++) {
-      const moveUp = eventsRow.getByRole('button', {
-        name: 'Move Upcoming Events up',
-      });
-      if (await moveUp.isDisabled().catch(() => true)) break;
-      await moveUp.click();
+    // Move the newly-selected Events row (appended last among the selected rows) to
+    // the top with the dialog's real reorder control: each selected row renders a
+    // drag handle ('Reorder <widget>') wired to dnd-kit's KeyboardSensor with
+    // sortableKeyboardCoordinates, so keyboard reordering is first-class — focus the
+    // handle, lift with Space, step up with ArrowUp, drop with Space. No catch:
+    // a missing handle must fail the walk loudly, not silently no-op the reorder.
+    const dragHandle = dialog.getByRole('button', {
+      name: 'Reorder Upcoming Events',
+    });
+    await expect(dragHandle).toBeVisible();
+    const selectedCount = await dialog
+      .getByRole('button', { name: /^Reorder / })
+      .count();
+    await dragHandle.focus();
+    await adminPage.keyboard.press('Space'); // lift
+    for (let i = 0; i < selectedCount - 1; i++) {
+      // Brief pause lets dnd-kit re-measure droppable rects between keyboard moves.
+      await adminPage.waitForTimeout(100);
+      await adminPage.keyboard.press('ArrowUp');
     }
+    await adminPage.waitForTimeout(100);
+    await adminPage.keyboard.press('Space'); // drop
+    // Prove the reorder landed in the dialog before saving: the first selected row
+    // (first item of the sortable list) is now Upcoming Events.
+    await expect(
+      dialog.locator('[role="list"]').first().locator('li').first()
+    ).toContainText('Upcoming Events');
     await dialog.getByRole('button', { name: 'Save' }).click();
     await expect(dialog).toBeHidden({ timeout: 10_000 });
 
