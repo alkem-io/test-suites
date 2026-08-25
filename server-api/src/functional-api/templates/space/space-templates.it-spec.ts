@@ -208,14 +208,14 @@ describe('innovation flow state sidebar round-trip', () => {
     // 2026-08-25 RULING starts with CREATE_SUBSPACE), 4th+ tabs the generic default.
     const thirdTabDefault: SidebarWidgetWire[] = [
       'CREATE_SUBSPACE',
+      'INTENT',
       'CREATE_POST',
       'APPLICATION_BUTTON',
-      'INTENT',
     ];
     const genericDefault: SidebarWidgetWire[] = [
+      'INTENT',
       'CREATE_POST',
       'APPLICATION_BUTTON',
-      'INTENT',
       'INDEX',
     ];
     untouchedStates.forEach((state, index) => {
