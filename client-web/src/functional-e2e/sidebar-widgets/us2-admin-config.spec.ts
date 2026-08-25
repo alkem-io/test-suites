@@ -55,8 +55,23 @@ async function fetchStates(request: APIRequestContext): Promise<FlowState[]> {
   const res = await request.post(graphqlUrl, {
     data: { query, variables: { spaceId: [spaceId] } },
   });
+  // Guard the transport before parsing — a 401/502 here should name itself
+  // instead of surfacing as a TypeError on `body.data`.
+  if (!res.ok()) {
+    throw new Error(
+      `fetchStates: HTTP ${res.status()} from ${graphqlUrl}: ${await res.text()}`
+    );
+  }
   const body = await res.json();
-  return body.data.spaces[0].collaboration.innovationFlow.states;
+  const states = body?.data?.spaces?.[0]?.collaboration?.innovationFlow?.states;
+  if (!states) {
+    throw new Error(
+      `fetchStates: no states in GraphQL payload: ${JSON.stringify(
+        body?.errors ?? body
+      )}`
+    );
+  }
+  return states;
 }
 
 async function updateState(
@@ -72,6 +87,9 @@ async function updateState(
   `;
   const res = await request.post(graphqlUrl, {
     data: { query: mutation, variables: { stateData } },
+    // Negative scenarios (AS5/AS7) assert on the error payload — never throw on
+    // a non-2xx status; callers inspect the returned `status`/`body` instead.
+    failOnStatusCode: false,
   });
   return { status: res.status(), body: await res.json() };
 }
@@ -316,22 +334,27 @@ test.describe('@forge-acceptance US2 — admin sidebar configuration (Space Sett
         eventsRequestFired = true;
       }
     };
-    memberPage.on('request', onRequest);
-    await memberPage.goto(`${baseUrl}/${spaceUrl}`);
-    await acceptCookiesIfVisible(memberPage);
-
     const sidebar = memberPage.locator('#crd-space-sidebar-desktop');
-    await expect(sidebar.getByText('Space Lead')).toBeVisible();
-    await expect(sidebar.getByRole('heading', { name: 'Events' })).toHaveCount(
-      0
-    );
-    await expect(sidebar.getByText('US2 Kickoff Call')).toHaveCount(0);
-    // Other Home widgets untouched.
-    await expect(
-      sidebar.getByRole('button', { name: 'About this Space' })
-    ).toBeVisible();
-    await expect(sidebar.getByText('US2 Sub One')).toBeVisible();
-    memberPage.off('request', onRequest);
+    memberPage.on('request', onRequest);
+    try {
+      await memberPage.goto(`${baseUrl}/${spaceUrl}`);
+      await acceptCookiesIfVisible(memberPage);
+
+      await expect(sidebar.getByText('Space Lead')).toBeVisible();
+      await expect(
+        sidebar.getByRole('heading', { name: 'Events' })
+      ).toHaveCount(0);
+      await expect(sidebar.getByText('US2 Kickoff Call')).toHaveCount(0);
+      // Other Home widgets untouched.
+      await expect(
+        sidebar.getByRole('button', { name: 'About this Space' })
+      ).toBeVisible();
+      await expect(sidebar.getByText('US2 Sub One')).toBeVisible();
+    } finally {
+      // Always detach — a failed assertion must not leave the listener attached
+      // to the shared member page for later tests.
+      memberPage.off('request', onRequest);
+    }
     expect(eventsRequestFired).toBe(false);
 
     // Other tab (Community) unaffected by the Home-tab edit.

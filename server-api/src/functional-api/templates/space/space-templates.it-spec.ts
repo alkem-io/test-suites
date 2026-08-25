@@ -295,8 +295,10 @@ describe('innovation flow state sidebar round-trip', () => {
       baseScenario.space.templateSetId,
       'Fixed-tab apply template'
     );
-    const fixedTabTemplateId = createRes?.data?.createTemplateFromSpace?.id ?? '';
-    expect(fixedTabTemplateId).not.toEqual('');
+    // Register in the describe-scoped cleanup slot immediately, so the afterEach
+    // deletes the template even when a later assertion in this test fails.
+    sidebarTemplateId = createRes?.data?.createTemplateFromSpace?.id ?? '';
+    expect(sidebarTemplateId).not.toEqual('');
 
     // Give the (still the same) target space its OWN, different pre-apply sidebar per
     // state — proof that a post-apply match to the template is not a false positive.
@@ -326,7 +328,7 @@ describe('innovation flow state sidebar round-trip', () => {
     // fixed-tab-preservation branch, since the target already has established states.
     await updateCollaborationFromSpaceTemplate(
       baseScenario.space.collaboration.id,
-      fixedTabTemplateId
+      sidebarTemplateId
     );
 
     const applied = await getCollaborationFlowStates(baseScenario.space.id);
@@ -345,7 +347,6 @@ describe('innovation flow state sidebar round-trip', () => {
     appliedStates.forEach((state, index) => {
       expect(state.settings.sidebar).toEqual(templateSourceSidebars[index]);
     });
-
-    await deleteTemplate(fixedTabTemplateId);
+    // No explicit delete here — the describe-level afterEach owns the cleanup.
   });
 });
