@@ -248,12 +248,14 @@ test.describe('@forge-acceptance US2 — admin sidebar configuration (Space Sett
     const dialog = adminPage.getByRole('dialog', { name: 'Layout: Home' });
     await expect(dialog).toBeVisible();
 
-    // Full vocabulary — all 11 widgets, localized labels (FR-001/FR-014; `Add Post`
-    // is the operator-requested createPost widget added after the initial spec).
+    // Full vocabulary — all 12 widgets, localized labels (FR-001/FR-014; `Add Post`
+    // (createPost) and `Apply / Join` (applicationButton) are operator-requested
+    // widgets added after the initial spec).
     const widgetLabels = [
       'Intention & Leads',
       'About this Space',
       'Add Post',
+      'Apply / Join',
       'Subspaces',
       'Upcoming Events',
       'Latest Update',
@@ -267,14 +269,14 @@ test.describe('@forge-acceptance US2 — admin sidebar configuration (Space Sett
       await expect(dialog.getByText(label, { exact: true })).toBeAttached();
     }
 
-    // Current selection pre-filled — the FR-009 Home default has 6 checked widgets
-    // (createPost raised it from 5): intent, about, createPost, subspaceLinks, events, updates.
+    // Current selection pre-filled — the FR-009 Home default has 7 checked widgets:
+    // intent, about, createPost, applicationButton, subspaceLinks, events, updates.
     const checkedBoxes = dialog.locator('[role="list"] li').filter({
       has: adminPage.locator(
         'button[aria-checked="true"], [data-state="checked"]'
       ),
     });
-    await expect(checkedBoxes).toHaveCount(6);
+    await expect(checkedBoxes).toHaveCount(7);
     await expect(
       dialog.getByText('Upcoming Events', { exact: true })
     ).toBeVisible();
