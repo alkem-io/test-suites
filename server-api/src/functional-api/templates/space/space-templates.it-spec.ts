@@ -205,10 +205,10 @@ describe('innovation flow state sidebar round-trip', () => {
     // Untouched-states default: the scenario space is an L0 Space created from the
     // platform default template, so states never customized carry the exact FR-009
     // positional defaults — 3rd tab (Subspaces) the third-tab list (which per the
-    // 2026-08-25 RULING starts with CREATE_SUBSPACE), 4th+ tabs the generic default.
+    // 2026-08-26 RULING places CREATE_SUBSPACE right after INTENT), 4th+ tabs the generic default.
     const thirdTabDefault: SidebarWidgetWire[] = [
-      'CREATE_SUBSPACE',
       'INTENT',
+      'CREATE_SUBSPACE',
       'CREATE_POST',
       'APPLICATION_BUTTON',
     ];
