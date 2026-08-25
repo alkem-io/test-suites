@@ -266,14 +266,15 @@ test.describe('@forge-acceptance US2 — admin sidebar configuration (Space Sett
     const dialog = adminPage.getByRole('dialog', { name: 'Layout: Home' });
     await expect(dialog).toBeVisible();
 
-    // Full vocabulary — all 12 widgets, localized labels (FR-001/FR-014; `Add Post`
-    // (createPost) and `Apply / Join` (applicationButton) are operator-requested
-    // widgets added after the initial spec).
+    // Full vocabulary — all 13 widgets, localized labels (FR-001/FR-014; `Add Post`
+    // (createPost), `Apply / Join` (applicationButton) and `Create Subspace`
+    // (createSubspace) are operator-requested widgets added after the initial spec).
     const widgetLabels = [
       'Intention & Leads',
       'About this Space',
       'Add Post',
       'Apply / Join',
+      'Create Subspace',
       'Subspaces',
       'Upcoming Events',
       'Latest Update',
@@ -542,6 +543,9 @@ test.describe('@forge-acceptance US2 — admin sidebar configuration (Space Sett
     const vocabulary = [
       'INTENT',
       'ABOUT',
+      'CREATE_POST',
+      'APPLICATION_BUTTON',
+      'CREATE_SUBSPACE',
       'SUBSPACE_LINKS',
       'EVENTS',
       'UPDATES',

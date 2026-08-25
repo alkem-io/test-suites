@@ -18,6 +18,7 @@ export type SidebarWidgetWire =
   | 'ABOUT'
   | 'CREATE_POST'
   | 'APPLICATION_BUTTON'
+  | 'CREATE_SUBSPACE'
   | 'SUBSPACE_LINKS'
   | 'EVENTS'
   | 'UPDATES'

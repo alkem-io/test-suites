@@ -281,6 +281,10 @@ test.describe('@forge-acceptance US1 — default sidebar rendering (per-tab widg
     expect(order).toEqual([...order].sort((a, b) => a - b));
   });
 
+  // The stored 3rd-tab default is [createSubspace, createPost, applicationButton,
+  // intent] (2026-08-25 RULING promoted Create Subspace to lead it), but the three
+  // action widgets are privilege/applicability-gated and render nothing for a plain
+  // member (FR-012) — so the member-visible sidebar is still Intention&Leads only.
   test('US1-AS3 — Subspaces tab (tab 3) sidebar renders Intention&Leads only', async () => {
     const memberPage = member.getSharedPage();
     await memberPage.goto(`${baseUrl}/${spaceUrl}/?tab=3`);
