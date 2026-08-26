@@ -48,9 +48,8 @@
  *   cd client-web
  *   pnpm exec playwright test --config=config/playwright.config.nightly.ts \
  *     --project="Callout reaction notifications"
- *   # (project wiring is intentionally NOT added here; forge-verify emits the
- *   #  file only. Add a project entry in config/playwright.config.nightly.ts
- *   #  mirroring the 038 "Callout reactions" project to schedule it in CI.)
+ *   # (wired as a project in config/playwright.config.nightly.ts with its own
+ *   #  testDir — testMatch alone cannot reach outside src/functional-e2e/.)
  */
 
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
@@ -147,8 +146,11 @@ test.describe(
 
       // Seed: org + space, then a PUBLISHED post callout on the space's calloutsSet,
       // owned by the admin B (the publisher → the reaction recipient, FR-005).
+      // The `space` key must be present: the factory creates no space (and
+      // leaves calloutsSetId/roleSetId empty) for a name-only config.
       scenario = await TestScenarioFactory.createBaseScenario({
         name: `reaction-notif-p1-${Date.now()}`,
+        space: { collaboration: { addTutorialCallouts: false } },
       });
 
       calloutDisplayName = `Reaction-notif P1 post ${Date.now()}`;
@@ -247,7 +249,7 @@ test.describe(
     //   NotificationsBell   → header button, accessible name "Notifications".
     //   NotificationsPanel  → dialog with heading "Notifications".
     //   NotificationItem    → a button per row; its accessible name is the
-    //     rendered subject text, e.g. "«Reactor» reacted to your post with ❤️",
+    //     rendered subject text, e.g. "«Reactor» reacted to your Post with ❤️",
     //     with the reactor name in a <strong>.
 
     function bell(page: Page) {
@@ -263,7 +265,7 @@ test.describe(
     /** All reaction rows addressed to B for THIS walk's reactor, by copy. */
     function reactionRows(page: Page) {
       return panel(page).getByRole('button', {
-        name: new RegExp(`${reactorDisplayName} reacted to your post with`),
+        name: new RegExp(`${reactorDisplayName} reacted to your Post with`),
       });
     }
 
@@ -341,7 +343,7 @@ test.describe(
       const row = reactionRows(authPage).first();
       await expect(row).toBeVisible();
       await expect(row).toHaveAccessibleName(
-        new RegExp(`^${reactorDisplayName} reacted to your post with ${GLYPH.heart}$`)
+        new RegExp(`^${reactorDisplayName} reacted to your Post with ${GLYPH.heart}$`)
       );
       await expect(row.locator('strong')).toHaveText(reactorDisplayName); // bold reactor
       await expect(row).toContainText(GLYPH.heart); // glyph rendered
@@ -361,9 +363,11 @@ test.describe(
       await expect(authPage).toHaveURL(
         new RegExp(`/${scenario.space.nameId}/collaboration/`)
       );
-      // And the destination renders the callout we reacted to.
+      // And the destination renders the callout we reacted to. The click-through
+      // opens the callout dialog over the collaboration page, so the title
+      // renders twice (page h1 + dialog h2) — assert the first, not a unique hit.
       await expect(
-        authPage.getByRole('heading', { name: calloutDisplayName })
+        authPage.getByRole('heading', { name: calloutDisplayName }).first()
       ).toBeVisible({ timeout: 30_000 });
     });
 
@@ -387,7 +391,7 @@ test.describe(
       await openBell(authPage);
       await expect(
         panel(authPage).getByRole('button', {
-          name: new RegExp(`^${adminDisplayName} reacted to your post with`),
+          name: new RegExp(`^${adminDisplayName} reacted to your Post with`),
         })
       ).toHaveCount(0);
       await closeBellIfOpen(authPage);
@@ -398,7 +402,7 @@ test.describe(
       await openBell(authPage);
       const rowBefore = reactionRows(authPage).first();
       await expect(rowBefore).toHaveAccessibleName(
-        new RegExp(`reacted to your post with ${GLYPH.heart}$`)
+        new RegExp(`reacted to your Post with ${GLYPH.heart}$`)
       );
       await closeBellIfOpen(authPage);
 
@@ -413,7 +417,7 @@ test.describe(
       // rather than a live mirror of A's now-🚀 reaction.
       await openBell(authPage);
       await expect(reactionRows(authPage).first()).toHaveAccessibleName(
-        new RegExp(`reacted to your post with ${GLYPH.heart}$`)
+        new RegExp(`reacted to your Post with ${GLYPH.heart}$`)
       );
       await expect(reactionRows(authPage).first()).not.toContainText(GLYPH.rocket);
       await closeBellIfOpen(authPage);
