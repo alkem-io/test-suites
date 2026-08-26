@@ -566,13 +566,16 @@ describe('Settings gating (US2)', () => {
   // Restore the suite baseline (set in the file-level beforeAll) even when an
   // assertion fails mid-test: an in-body restore never runs after a failed
   // expect, leaving the shared globalAdmin persona with channels OFF for every
-  // later test and for other suites sharing the persona.
+  // later test and for other suites sharing the persona. Deliberately NOT
+  // caught: a failed restore poisons every downstream test the same way, so
+  // it must fail loud here, where the cause is visible, not later as an
+  // unrelated red (or a vacuous green) in whatever runs next.
   afterEach(async () => {
     await updateCalloutReactionSettings(
       TestUserManager.users.globalAdmin.id,
       { email: true, inApp: true, push: true },
       TestUser.GLOBAL_ADMIN
-    ).catch(() => undefined);
+    );
   });
 
   test(

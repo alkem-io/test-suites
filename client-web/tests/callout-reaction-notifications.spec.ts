@@ -318,6 +318,17 @@ test.describe(
       const samples = 4;
       for (let i = 0; i < samples; i++) {
         await openBell(page);
+        if (expected > 0) {
+          // The dialog reports visible before its rows finish loading, so an
+          // immediate count on a not-yet-loaded panel samples 0 and fails the
+          // stability check spuriously. Grace-wait for the first row; a
+          // GENUINE drop to zero still fails — the wait times out and the
+          // count below reads the real (empty) state.
+          await reactionRows(page)
+            .first()
+            .waitFor({ state: 'visible', timeout: 5_000 })
+            .catch(() => undefined);
+        }
         const n = await reactionRows(page).count();
         await closeBellIfOpen(page);
         expect(
@@ -363,11 +374,13 @@ test.describe(
       await expect(authPage).toHaveURL(
         new RegExp(`/${scenario.space.nameId}/collaboration/`)
       );
-      // And the destination renders the callout we reacted to. The click-through
-      // opens the callout dialog over the collaboration page, so the title
-      // renders twice (page h1 + dialog h2) — assert the first, not a unique hit.
+      // And the destination renders the callout we reacted to — specifically
+      // the opened callout dialog, not merely the page. Scoping via
+      // getByRole('dialog') is NOT enough: the destination page itself carries
+      // a dialog role (its h1 lives inside it), so two dialogs match. The
+      // callout dialog's own title is the sole level-2 heading with this name.
       await expect(
-        authPage.getByRole('heading', { name: calloutDisplayName }).first()
+        authPage.getByRole('heading', { level: 2, name: calloutDisplayName })
       ).toBeVisible({ timeout: 30_000 });
     });
 
