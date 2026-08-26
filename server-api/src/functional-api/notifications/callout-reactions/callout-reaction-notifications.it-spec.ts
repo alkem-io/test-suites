@@ -50,12 +50,13 @@ import {
 import {
   expectExactMailsAfter,
   expectPushEmitAfter,
-  getPushQueuePublishedTotal,
+  getActivePushSubscriptionCount,
   PUSH_NOTIFICATIONS_QUEUE,
   PushSubscriptionHandle,
   subscribeRecipientsToPush,
   unsubscribeRecipientsFromPush,
   waitForMailsCountAtLeast,
+  waitForPushQueueQuiet,
 } from '../notification.helpers';
 import {
   getQueueStats,
@@ -460,31 +461,46 @@ describe('Emission invariants (US1/US4)', () => {
 
 describe('Push emission (US1, FR-012)', () => {
   test(
-    'genuine new reaction publishes exactly one push to the queue for the publisher',
+    'genuine new reaction publishes exactly one push per active subscription of the publisher',
     async () => {
+      // The adapter fans out ONE queue message per ACTIVE subscription, so
+      // the expected delta is the publisher's active-subscription count, not
+      // a literal 1. Read it immediately before the action: on a shared stack
+      // the publisher persona can also carry a real browser subscription, and
+      // a hardcoded 1 would fail there for a purely environmental reason.
+      const activeSubscriptions =
+        await getActivePushSubscriptionCount(PUBLISHER);
+      expect(activeSubscriptions).toBeGreaterThan(0);
+
+      const baseline = await waitForPushQueueQuiet();
       const result = await expectPushEmitAfter(
         () =>
           addReactionToCallout(publishedCalloutId, 'clapping-hands', REACTOR_A),
-        1,
-        { timeout: 10_000, settleMs: 2_000 }
+        activeSubscriptions,
+        { timeout: 15_000, settleMs: 3_000, baseline }
       );
-      expect(result.delta).toBe(1);
-    }
+      expect(result.delta).toBe(activeSubscriptions);
+    },
+    90_000
   );
 
   test(
     'swap does NOT publish a push (R-1 invariant holds for push channel)',
     async () => {
       await addReactionToCallout(publishedCalloutId, 'heart', REACTOR_A);
-      await delay(2_000);
-      const baselinePush = await getPushQueuePublishedTotal();
+      // Anchor on a QUIET queue: the leading reaction above fans out one
+      // publish per active subscription and those can straggle. Without this
+      // the swap's window inherits them and the negative assertion goes red
+      // for the previous action's traffic.
+      const baselinePush = await waitForPushQueueQuiet();
 
       await addReactionToCallout(publishedCalloutId, 'rocket', REACTOR_A);
-      await delay(3_000);
+      await delay(5_000);
       const statsAfterSwap = await getQueueStats(PUSH_NOTIFICATIONS_QUEUE);
 
       expect(statsAfterSwap.publishedTotal - baselinePush).toBe(0);
-    }
+    },
+    90_000
   );
 });
 
@@ -622,7 +638,9 @@ describe('Settings gating (US2)', () => {
       );
 
       const countBefore = await getCalloutReactionInAppCount(PUBLISHER);
-      const pushBaseline = await getPushQueuePublishedTotal();
+      // Quiet-queue anchor, same reason as the swap spec: an in-flight
+      // publish from an earlier spec must not be attributed to this one.
+      const pushBaseline = await waitForPushQueueQuiet();
 
       await addReactionToCallout(publishedCalloutId, 'rocket', REACTOR_A);
 
