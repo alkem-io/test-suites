@@ -15,6 +15,7 @@ import { createConversation } from '@functional-api/communications/conversations
 import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
 import {
   generateFakePushSubscription,
+  getMyPushSubscriptions,
   subscribeToPushNotifications,
   unsubscribeFromPushNotifications,
 } from '@functional-api/push-notifications/push-notifications.request.params';
@@ -194,6 +195,85 @@ export const getPushQueuePublishedTotal = async (): Promise<number> => {
   return stats.publishedTotal;
 };
 
+/**
+ * Number of ACTIVE push subscriptions the calling user currently has.
+ *
+ * This is the FAN-OUT FACTOR of every push emit for that recipient: the
+ * server's push adapter publishes ONE queue message PER ACTIVE SUBSCRIPTION
+ * (notification.push.adapter.ts `publishToSubscriptions` — `for (const
+ * subscription of subscriptions)`), not one per recipient. A spec that
+ * hardcodes `expect(delta).toBe(1)` is therefore only correct on a stack
+ * where the recipient happens to have exactly one active subscription, and
+ * goes red on any stack where a real browser (or a previous run) left
+ * another one behind — a stack artifact that reads exactly like a product
+ * bug. Positive push-emit assertions must scale the expected delta by this
+ * count instead.
+ *
+ * THROWS on a GraphQL error: a failed query that silently read as 0 would
+ * make a positive assertion expect no publish at all.
+ */
+export const getActivePushSubscriptionCount = async (
+  userRole: TestUser
+): Promise<number> => {
+  const res = await getMyPushSubscriptions(userRole);
+  if (res.body?.errors) {
+    throw new Error(
+      `myPushSubscriptions query failed for ${userRole}: ${JSON.stringify(
+        res.body.errors
+      )}`
+    );
+  }
+  const subscriptions = res.body?.data?.myPushSubscriptions;
+  if (!Array.isArray(subscriptions)) {
+    throw new Error(
+      `myPushSubscriptions returned no list for ${userRole}: ${JSON.stringify(
+        res.body ?? {}
+      )}`
+    );
+  }
+  return subscriptions.filter(
+    (s: { status?: string }) => s?.status === 'ACTIVE'
+  ).length;
+};
+
+/**
+ * Waits until the push queue's cumulative publish counter has stopped moving
+ * for `quietMs`, then returns that settled total.
+ *
+ * Use it to take the BASELINE of any push assertion that must not inherit the
+ * previous spec's stragglers. `expectPushEmitAfter` returns as soon as the
+ * expected increase is visible plus a short settle, so a publish that was
+ * already in flight (a slower subscription in the same fan-out, a retry) can
+ * land a second or two later — inside the NEXT spec's measurement window,
+ * where it presents as an unexplained extra publish. Anchoring on a quiet
+ * queue makes each spec's delta attributable to its own action.
+ */
+export const waitForPushQueueQuiet = async ({
+  quietMs = 3_000,
+  timeout = 30_000,
+}: { quietMs?: number; timeout?: number } = {}): Promise<number> => {
+  const deadline = Date.now() + timeout;
+  let last = await getPushQueuePublishedTotal();
+  let stableSince = Date.now();
+
+  for (;;) {
+    await delay(500);
+    const current = await getPushQueuePublishedTotal();
+    if (current !== last) {
+      last = current;
+      stableSince = Date.now();
+    } else if (Date.now() - stableSince >= quietMs) {
+      return current;
+    }
+    if (Date.now() > deadline) {
+      // Deliberately non-fatal: a queue that never goes quiet is reported by
+      // the assertion that follows (as an unexpected delta), with the actual
+      // numbers, rather than as an opaque timeout here.
+      return current;
+    }
+  }
+};
+
 export interface PushEmitResult {
   /** `publishedTotal` observed immediately before `action` ran. */
   baseline: number;
@@ -227,9 +307,13 @@ export const expectPushEmitAfter = async (
   {
     settleMs = 2_000,
     timeout = 15_000,
-  }: { settleMs?: number; timeout?: number } = {}
+    baseline: providedBaseline,
+  }: { settleMs?: number; timeout?: number; baseline?: number } = {}
 ): Promise<PushEmitResult> => {
-  const baseline = await getPushQueuePublishedTotal();
+  // A caller that has already anchored on a QUIET queue
+  // (`waitForPushQueueQuiet`) passes that total in, so a straggler from the
+  // previous spec cannot be counted as this one's publish.
+  const baseline = providedBaseline ?? (await getPushQueuePublishedTotal());
   await action();
   await waitForQueuePublishIncrease(
     PUSH_NOTIFICATIONS_QUEUE,
