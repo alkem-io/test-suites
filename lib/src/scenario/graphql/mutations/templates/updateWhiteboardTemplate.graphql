@@ -16,7 +16,6 @@ mutation UpdateWhiteboardTemplate(
       profile {
         displayName
       }
-      content
     }
   }
 }

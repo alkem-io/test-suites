@@ -39,28 +39,18 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean };
   Int: { input: number; output: number };
   Float: { input: number; output: number };
-  /** A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format. */
   DateTime: { input: Date; output: Date };
-  /** An Emoji. */
   Emoji: { input: any; output: any };
-  /** A representation of a Lifecycle Definition, based on XState. It is serialized JSON. */
   LifecycleDefinition: { input: any; output: any };
-  /** A markdown string. */
   Markdown: { input: any; output: any };
-  /** An identifier that originates from the underlying messaging platform. */
   MessageID: { input: any; output: any };
-  /** A human readable identifier, 3 <= length <= 28. Used for URL paths in clients. Characters allowed: a-z,A-Z,0-9. */
   NameID: { input: string; output: string };
-  /** Cursor used for paginating search results. */
   SearchCursor: { input: any; output: any };
-  /** A uuid identifier. Length 36 characters. */
   UUID: { input: string; output: string };
-  /** The `Upload` scalar type represents a file upload. */
   Upload: {
     input: import("graphql-upload").FileUpload;
     output: import("graphql-upload").FileUpload;
   };
-  /** Content of a Whiteboard, as JSON. */
   WhiteboardContent: { input: any; output: any };
 };
 
@@ -627,9 +617,25 @@ export enum ActorType {
   VirtualContributor = "VIRTUAL_CONTRIBUTOR",
 }
 
+export type AddClassificationEntryFromTemplateInput = {
+  /** Override for the entry's display label. Defaults to the source template's display name. */
+  displayLabel?: InputMaybe<Scalars["String"]["input"]>;
+  /** The Space to add the Classification to. */
+  spaceID: Scalars["UUID"]["input"];
+  /** The Classification Template to copy the vocabulary from. */
+  templateID: Scalars["UUID"]["input"];
+};
+
 export type AddPollOptionInput = {
   pollID: Scalars["UUID"]["input"];
   text: Scalars["String"]["input"];
+};
+
+export type AddReactionToCalloutInput = {
+  /** The ID of the Callout to react to. */
+  calloutID: Scalars["UUID"]["input"];
+  /** Must be one of the platform allowed emoji slugs; validated server-side (ValidationException on miss). */
+  emoji: Scalars["String"]["input"];
 };
 
 export type AddVisualToMediaGalleryInput = {
@@ -639,6 +645,12 @@ export type AddVisualToMediaGalleryInput = {
   sortOrder?: InputMaybe<Scalars["Float"]["input"]>;
   /** The type of visual to add (e.g. MEDIA_GALLERY_IMAGE, MEDIA_GALLERY_VIDEO). */
   visualType: VisualType;
+};
+
+export type AdminRevokeMcpApiKeyInput = {
+  keyID: Scalars["UUID"]["input"];
+  /** Owner of the key. Required — it scopes the revoke and the audit subject. */
+  userID: Scalars["UUID"]["input"];
 };
 
 export type AdminUserEmailChangeDriftResolveInput = {
@@ -730,6 +742,8 @@ export type Application = {
   state: Scalars["String"]["output"];
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
+  /** The User who submitted this Application. */
+  user?: Maybe<User>;
 };
 
 export type ApplicationEventInput = {
@@ -1005,6 +1019,7 @@ export enum AuthorizationPrivilege {
   LicenseReset = "LICENSE_RESET",
   MoveContribution = "MOVE_CONTRIBUTION",
   MovePost = "MOVE_POST",
+  MoveTask = "MOVE_TASK",
   PlatformAdmin = "PLATFORM_ADMIN",
   PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
   PlatformSettingsAdmin = "PLATFORM_SETTINGS_ADMIN",
@@ -1136,10 +1151,16 @@ export type Callout = {
   publishedBy?: Maybe<User>;
   /** The Date of the publishing of this Callout. */
   publishedDate?: Maybe<Scalars["DateTime"]["output"]>;
+  /** Who reacted (tier-2). Bounded: 100 most recent by last change, descending. Fetch only on demand. */
+  reactions: Array<CalloutReaction>;
+  /** Cheap always-shown summary (tier-1). Dataloader-batched; safe to select on feeds. */
+  reactionsSummary: CalloutReactionsSummary;
   /** The Callout Settings associated with this Callout. */
   settings: CalloutSettings;
   /** The sorting order for this Callout. */
   sortOrder: Scalars["Float"]["output"];
+  /** Per-column task counts for a Tasks board callout, in the board-defined column order and zero-filled; null when the callout is not a Tasks board. */
+  taskColumnCounts?: Maybe<Array<TaskColumnCount>>;
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
 };
@@ -1159,6 +1180,8 @@ export enum CalloutAllowedActors {
 export type CalloutContribution = {
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
+  /** The Classification of this Contribution, present only for a task on a Tasks board (carries the task column). */
+  classification?: Maybe<Classification>;
   /** The CollaboraDocument that was contributed. */
   collaboraDocument?: Maybe<CollaboraDocument>;
   /** The user that created this Document */
@@ -1217,6 +1240,15 @@ export type CalloutContributionsCountOutput = {
   whiteboard: Scalars["Float"]["output"];
 };
 
+export type CalloutContributorsMapView = {
+  /** Map center latitude. Finite, within [-90, 90]. */
+  latitude: Scalars["Float"]["output"];
+  /** Map center longitude. Finite, within [-180, 180]. */
+  longitude: Scalars["Float"]["output"];
+  /** Map zoom level. Finite, within [0, 22]. */
+  zoom: Scalars["Float"]["output"];
+};
+
 export type CalloutContributorsSettings = {
   /** The contributor types included in this contributor-collection callout. At least one. */
   contributorTypes: Array<ActorType>;
@@ -1224,6 +1256,8 @@ export type CalloutContributorsSettings = {
   defaultContributorType: ActorType;
   /** The default display mode (list or map). */
   defaultView: ContributorCollectionView;
+  /** Admin-fixed initial map view. Absent/null ⇒ automatic framing (fit to plotted contributors; Europe fallback). */
+  mapView?: Maybe<CalloutContributorsMapView>;
 };
 
 export enum CalloutDescriptionDisplayMode {
@@ -1289,6 +1323,28 @@ export type CalloutPostCreated = {
   post: Post;
   /** The sorting order for this Contribution. */
   sortOrder: Scalars["Float"]["output"];
+};
+
+export type CalloutReaction = {
+  /** Allow-list slug (e.g. "heart"). */
+  emoji: Scalars["String"]["output"];
+  /** The unique identifier. */
+  id: Scalars["UUID"]["output"];
+  /** When this person's reaction was made or last changed (a swap updates this). */
+  updatedDate: Scalars["DateTime"]["output"];
+  /** The reactor. Null only in the deletion race window; clients skip null users. */
+  user?: Maybe<User>;
+};
+
+export type CalloutReactionsSummary = {
+  /** The emoji slugs a user may react with on this Callout. */
+  allowedEmojis: Array<Scalars["String"]["output"]>;
+  /** Distinct emoji slugs currently in use, in allow-list order. Never carries counts. */
+  emojis: Array<Scalars["String"]["output"]>;
+  /** The requesting user's current reaction slug; null when none or unauthenticated. */
+  myReactionEmoji?: Maybe<Scalars["String"]["output"]>;
+  /** Number of distinct people currently holding a reaction on this Callout. */
+  total: Scalars["Int"]["output"];
 };
 
 /** The selection mode for a collection callout (Contributors or Subspaces). AUTO (default) returns the full computed set; CUSTOM restricts to the admin-curated selectedIds list. */
@@ -1402,6 +1458,49 @@ export type ClassificationTagsetArgs = {
   tagsetName: TagsetReservedName;
 };
 
+export enum ClassificationCardinality {
+  MultiSelect = "MULTI_SELECT",
+  SingleSelect = "SINGLE_SELECT",
+}
+
+/** One vocabulary group on a host entity — the spec's 'a Classification'. */
+export type ClassificationEntry = {
+  /** Whether one or several values may be selected. */
+  cardinality: ClassificationCardinality;
+  /** The date at which the entity was created. */
+  createdDate: Scalars["DateTime"]["output"];
+  /** Render-only: false means 'not shown on the Space page'. NOT an access control. */
+  display: Scalars["Boolean"]["output"];
+  /** Per-instance display label; defaults to the source template's, overridable to resolve a conflict. */
+  displayLabel: Scalars["String"]["output"];
+  /** The ID of the entity */
+  id: Scalars["UUID"]["output"];
+  /** Ids of the currently selected values. */
+  selectedValueIDs: Array<Scalars["String"]["output"]>;
+  /** The selected values resolved against `values`, in authored order. */
+  selectedValues: Array<ClassificationValue>;
+  /** Render order on the host entity — order of addition, oldest first. */
+  sortOrder: Scalars["Float"]["output"];
+  /** The date at which the entity was last updated. */
+  updatedDate: Scalars["DateTime"]["output"];
+  /** The snapshot vocabulary, in authored order. Never re-sorted. */
+  values: Array<ClassificationValue>;
+};
+
+/** Cardinality + value set of a Classification Template. Null unless type == CLASSIFICATION. */
+export type ClassificationTemplateContent = {
+  cardinality: ClassificationCardinality;
+  values: Array<ClassificationValue>;
+};
+
+/** One selectable option in a classification's vocabulary. */
+export type ClassificationValue = {
+  /** Stable identifier — aggregation key. Copied verbatim into every snapshot; never re-derived on rename. */
+  id: Scalars["String"]["output"];
+  /** Human-readable, single-language label. */
+  label: Scalars["String"]["output"];
+};
+
 export type CollaboraDocument = {
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
@@ -1421,6 +1520,7 @@ export type CollaboraDocument = {
 
 export enum CollaboraDocumentType {
   Drawing = "DRAWING",
+  Pdf = "PDF",
   Presentation = "PRESENTATION",
   Spreadsheet = "SPREADSHEET",
   Wordprocessing = "WORDPROCESSING",
@@ -1452,6 +1552,20 @@ export type Collaboration = {
   timeline: Timeline;
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
+};
+
+export type CollaborationMigrationIssue = {
+  id: Scalars["String"]["output"];
+  reason: Scalars["String"]["output"];
+};
+
+export type CollaborationMigrationResult = {
+  failed: Scalars["Int"]["output"];
+  failedDocuments: Array<CollaborationMigrationIssue>;
+  flagged: Scalars["Int"]["output"];
+  flaggedDocuments: Array<CollaborationMigrationIssue>;
+  migrated: Scalars["Int"]["output"];
+  total: Scalars["Int"]["output"];
 };
 
 export type Communication = {
@@ -1928,6 +2042,8 @@ export type CreateCalloutContributionData = {
   post?: Maybe<CreatePostData>;
   /** The sort order to assign to this Contribution. */
   sortOrder?: Maybe<Scalars["Float"]["output"]>;
+  /** The Tasks board column this task starts in. Only valid when the parent Callout is a Tasks board; defaults to the first column. */
+  taskColumn?: Maybe<Scalars["String"]["output"]>;
   type: CalloutContributionType;
   whiteboard?: Maybe<CreateWhiteboardData>;
 };
@@ -1955,8 +2071,28 @@ export type CreateCalloutContributionInput = {
   post?: InputMaybe<CreatePostInput>;
   /** The sort order to assign to this Contribution. */
   sortOrder?: InputMaybe<Scalars["Float"]["input"]>;
+  /** The Tasks board column this task starts in. Only valid when the parent Callout is a Tasks board; defaults to the first column. */
+  taskColumn?: InputMaybe<Scalars["String"]["input"]>;
   type: CalloutContributionType;
   whiteboard?: InputMaybe<CreateWhiteboardInput>;
+};
+
+export type CreateCalloutContributorsMapViewData = {
+  /** Map center latitude. Finite, within [-90, 90]. MapLibre throws on values outside this range. */
+  latitude: Scalars["Float"]["output"];
+  /** Map center longitude. Finite, within [-180, 180]. */
+  longitude: Scalars["Float"]["output"];
+  /** Map zoom level. Finite, within [0, 22]. */
+  zoom: Scalars["Float"]["output"];
+};
+
+export type CreateCalloutContributorsMapViewInput = {
+  /** Map center latitude. Finite, within [-90, 90]. MapLibre throws on values outside this range. */
+  latitude: Scalars["Float"]["input"];
+  /** Map center longitude. Finite, within [-180, 180]. */
+  longitude: Scalars["Float"]["input"];
+  /** Map zoom level. Finite, within [0, 22]. */
+  zoom: Scalars["Float"]["input"];
 };
 
 export type CreateCalloutContributorsSettingsData = {
@@ -1966,6 +2102,8 @@ export type CreateCalloutContributorsSettingsData = {
   defaultContributorType?: Maybe<ActorType>;
   /** The default display mode. Defaults to LIST; MAP requires a locatable contributor type. */
   defaultView?: Maybe<ContributorCollectionView>;
+  /** Admin-fixed initial map view. When omitted, the callout opens on automatic framing. */
+  mapView?: Maybe<CreateCalloutContributorsMapViewData>;
 };
 
 export type CreateCalloutContributorsSettingsInput = {
@@ -1975,6 +2113,8 @@ export type CreateCalloutContributorsSettingsInput = {
   defaultContributorType?: InputMaybe<ActorType>;
   /** The default display mode. Defaults to LIST; MAP requires a locatable contributor type. */
   defaultView?: InputMaybe<ContributorCollectionView>;
+  /** Admin-fixed initial map view. When omitted, the callout opens on automatic framing. */
+  mapView?: InputMaybe<CreateCalloutContributorsMapViewInput>;
 };
 
 export type CreateCalloutData = {
@@ -1990,6 +2130,8 @@ export type CreateCalloutData = {
   settings?: Maybe<CreateCalloutSettingsData>;
   /** The sort order to assign to this Callout. */
   sortOrder?: Maybe<Scalars["Float"]["output"]>;
+  /** When present, creates this Callout as a Tasks board. Requires a POST-only contribution type. */
+  taskBoard?: Maybe<CreateCalloutTaskBoardData>;
 };
 
 export type CreateCalloutFramingData = {
@@ -2033,6 +2175,8 @@ export type CreateCalloutInput = {
   settings?: InputMaybe<CreateCalloutSettingsInput>;
   /** The sort order to assign to this Callout. */
   sortOrder?: InputMaybe<Scalars["Float"]["input"]>;
+  /** When present, creates this Callout as a Tasks board. Requires a POST-only contribution type. */
+  taskBoard?: InputMaybe<CreateCalloutTaskBoardInput>;
 };
 
 export type CreateCalloutOnCalloutsSetInput = {
@@ -2049,6 +2193,8 @@ export type CreateCalloutOnCalloutsSetInput = {
   settings?: InputMaybe<CreateCalloutSettingsInput>;
   /** The sort order to assign to this Callout. */
   sortOrder?: InputMaybe<Scalars["Float"]["input"]>;
+  /** When present, creates this Callout as a Tasks board. Requires a POST-only contribution type. */
+  taskBoard?: InputMaybe<CreateCalloutTaskBoardInput>;
 };
 
 export type CreateCalloutSelectionSettingsData = {
@@ -2119,6 +2265,16 @@ export type CreateCalloutSettingsInput = {
   visibility?: InputMaybe<CalloutVisibility>;
 };
 
+export type CreateCalloutTaskBoardData = {
+  /** The ordered columns of the Tasks board. The first is the default column. Omit to seed the default set. */
+  columns?: Maybe<Array<Scalars["String"]["output"]>>;
+};
+
+export type CreateCalloutTaskBoardInput = {
+  /** The ordered columns of the Tasks board. The first is the default column. Omit to seed the default set. */
+  columns?: InputMaybe<Array<Scalars["String"]["input"]>>;
+};
+
 export type CreateCalloutsSetData = {
   /** The Callouts to add to this Collaboration. */
   calloutsData?: Maybe<Array<CreateCalloutData>>;
@@ -2133,8 +2289,29 @@ export type CreateClassificationData = {
   tagsets: Array<CreateTagsetData>;
 };
 
+export type CreateClassificationEntryInput = {
+  cardinality: ClassificationCardinality;
+  displayLabel: Scalars["String"]["input"];
+  /** Optional selection to apply in the same write. Omitted -> selectedValueIDs: []. */
+  selectedValueIDs?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  /** The Space to add the Classification to. */
+  spaceID: Scalars["UUID"]["input"];
+  values: Array<CreateClassificationValueInput>;
+};
+
 export type CreateClassificationInput = {
   tagsets: Array<CreateTagsetInput>;
+};
+
+export type CreateClassificationTemplateContentInput = {
+  cardinality: ClassificationCardinality;
+  values: Array<CreateClassificationValueInput>;
+};
+
+export type CreateClassificationValueInput = {
+  /** Optional explicit stable id. Omitted -> slugified from `label` once, at authoring time. */
+  id?: InputMaybe<Scalars["String"]["input"]>;
+  label: Scalars["String"]["input"];
 };
 
 export type CreateCollaboraDocumentData = {
@@ -2192,6 +2369,8 @@ export type CreateContributionOnCalloutInput = {
   post?: InputMaybe<CreatePostInput>;
   /** The sort order to assign to this Contribution. */
   sortOrder?: InputMaybe<Scalars["Float"]["input"]>;
+  /** The Tasks board column this task starts in. Only valid when the parent Callout is a Tasks board; defaults to the first column. */
+  taskColumn?: InputMaybe<Scalars["String"]["input"]>;
   type: CalloutContributionType;
   whiteboard?: InputMaybe<CreateWhiteboardInput>;
 };
@@ -2201,7 +2380,7 @@ export type CreateConversationInput = {
   avatarUrl?: InputMaybe<Scalars["String"]["input"]>;
   /** Optional display name for GROUP conversations. Ignored for DIRECT conversations (Synapse uses the other member name automatically). */
   displayName?: InputMaybe<Scalars["String"]["input"]>;
-  /** IDs of members to add. For DIRECT: exactly 1 ID. For GROUP: 1+ IDs. Creator is auto-included. */
+  /** IDs of members to add. For DIRECT: exactly 1 ID. For GROUP: 1+ IDs, up to 100. Creator is auto-included. */
   memberIDs: Array<Scalars["UUID"]["input"]>;
   /** The type of conversation to create: DIRECT for 1-on-1, GROUP for multi-party. */
   type: ConversationCreationType;
@@ -2244,6 +2423,8 @@ export type CreateInnovationFlowStateSettingsData = {
   descriptionDisplayMode?: Maybe<CalloutDescriptionDisplayMode>;
   /** Optional. Whether Posts in this State show publish details in the feed. Defaults to true when omitted. */
   showPublishDetails?: Maybe<Scalars["Boolean"]["output"]>;
+  /** Optional. Ordered sidebar widgets; defaults to [INTENT, CREATE_POST, APPLICATION_BUTTON, INDEX] when omitted. */
+  sidebar?: Maybe<Array<SidebarWidget>>;
   /** Optional. Whether the phase is shown in member-facing navigation. Defaults to true when omitted. */
   visible?: Maybe<Scalars["Boolean"]["output"]>;
 };
@@ -2255,6 +2436,8 @@ export type CreateInnovationFlowStateSettingsInput = {
   descriptionDisplayMode?: InputMaybe<CalloutDescriptionDisplayMode>;
   /** Optional. Whether Posts in this State show publish details in the feed. Defaults to true when omitted. */
   showPublishDetails?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Optional. Ordered sidebar widgets; defaults to [INTENT, CREATE_POST, APPLICATION_BUTTON, INDEX] when omitted. */
+  sidebar?: InputMaybe<Array<SidebarWidget>>;
   /** Optional. Whether the phase is shown in member-facing navigation. Defaults to true when omitted. */
   visible?: InputMaybe<Scalars["Boolean"]["input"]>;
 };
@@ -2569,6 +2752,13 @@ export type CreateTagsetOnProfileInput = {
   type?: InputMaybe<TagsetType>;
 };
 
+export type CreateTaskColumnOnCalloutInput = {
+  /** The Tasks board Callout to add a column to. */
+  calloutID: Scalars["UUID"]["input"];
+  /** The name of the new column. Appended after the last column. */
+  name: Scalars["String"]["input"];
+};
+
 export type CreateTemplateContentSpaceInput = {
   about: CreateSpaceAboutInput;
   collaborationData: CreateCollaborationInput;
@@ -2603,6 +2793,8 @@ export type CreateTemplateFromSpaceOnTemplatesSetInput = {
 export type CreateTemplateOnTemplatesSetInput = {
   /** The Callout to associate with this template. */
   calloutData?: InputMaybe<CreateCalloutInput>;
+  /** The cardinality and value set for a Classification Template. */
+  classificationData?: InputMaybe<CreateClassificationTemplateContentInput>;
   /** The Community guidelines to associate with this template. */
   communityGuidelinesData?: InputMaybe<CreateCommunityGuidelinesInput>;
   /** The Template Content for a Space to associate with this template. */
@@ -2675,6 +2867,8 @@ export type CreateWhiteboardData = {
   /** The preview settings for the whiteboard. */
   previewSettings?: Maybe<CreateWhiteboardPreviewSettingsData>;
   profile?: Maybe<CreateProfileData>;
+  /** Seed the new Whiteboard from the stored content of an existing Whiteboard (server-side copy). Mutually exclusive with `content` — supply exactly one. */
+  sourceWhiteboardID?: Maybe<Scalars["UUID"]["output"]>;
 };
 
 export type CreateWhiteboardInput = {
@@ -2684,6 +2878,8 @@ export type CreateWhiteboardInput = {
   /** The preview settings for the whiteboard. */
   previewSettings?: InputMaybe<CreateWhiteboardPreviewSettingsInput>;
   profile?: InputMaybe<CreateProfileInput>;
+  /** Seed the new Whiteboard from the stored content of an existing Whiteboard (server-side copy). Mutually exclusive with `content` — supply exactly one. */
+  sourceWhiteboardID?: InputMaybe<Scalars["UUID"]["input"]>;
 };
 
 export type CreateWhiteboardPreviewSettingsData = {
@@ -2788,6 +2984,10 @@ export type DeleteCalloutInput = {
   ID: Scalars["UUID"]["input"];
 };
 
+export type DeleteClassificationEntryInput = {
+  ID: Scalars["UUID"]["input"];
+};
+
 export type DeleteCollaboraDocumentInput = {
   /** The ID of the CollaboraDocument to delete. */
   ID: Scalars["UUID"]["input"];
@@ -2864,6 +3064,13 @@ export type DeleteStateOnInnovationFlowInput = {
 
 export type DeleteStorageBuckeetInput = {
   ID: Scalars["UUID"]["input"];
+};
+
+export type DeleteTaskColumnOnCalloutInput = {
+  /** The Tasks board Callout to remove a column from. */
+  calloutID: Scalars["UUID"]["input"];
+  /** The column to remove. Matched case-insensitively. The first (default) column cannot be removed; removing any other column reflows its tasks onto the first column. */
+  name: Scalars["String"]["input"];
 };
 
 export type DeleteTemplateInput = {
@@ -3335,6 +3542,18 @@ export type InAppNotificationPayloadSpaceCollaborationCalloutPostComment =
     type: NotificationEventPayload;
   };
 
+export type InAppNotificationPayloadSpaceCollaborationCalloutReaction =
+  InAppNotificationPayload & {
+    /** The Callout that was reacted to. */
+    callout: Callout;
+    /** The emoji slug from the platform allow-list. Clients own slug-to-glyph rendering. */
+    emoji: Scalars["String"]["output"];
+    /** The Space where the reaction was made. */
+    space: Space;
+    /** The payload type. */
+    type: NotificationEventPayload;
+  };
+
 export type InAppNotificationPayloadSpaceCollaborationPoll =
   InAppNotificationPayload & {
     /** The Callout that contains the poll. */
@@ -3500,6 +3719,8 @@ export type InnovationFlowStateSettings = {
   descriptionDisplayMode: CalloutDescriptionDisplayMode;
   /** Whether Posts in this State show publish details (publisher, publish date, avatar) in the feed. Presentation only — does not restrict access to publisher data. Default true. */
   showPublishDetails: Scalars["Boolean"]["output"];
+  /** Ordered widgets shown in the Space sidepanel for this State. May be empty. */
+  sidebar: Array<SidebarWidget>;
   /** Whether this State/phase is shown in the member-facing navigation. Default true. UI-affordance only: it does NOT gate access to the phase content. */
   visible: Scalars["Boolean"]["output"];
 };
@@ -4436,6 +4657,44 @@ export type LookupQueryResultsWhiteboardArgs = {
   ID: Scalars["UUID"]["input"];
 };
 
+/** Metadata for one MCP API key. The key value itself is never exposed here. */
+export type McpApiKey = {
+  createdDate: Scalars["DateTime"]["output"];
+  /** Optional expiry chosen at mint. */
+  expiresAt?: Maybe<Scalars["DateTime"]["output"]>;
+  id: Scalars["UUID"]["output"];
+  /** When this key last authenticated a request. */
+  lastUsedAt?: Maybe<Scalars["DateTime"]["output"]>;
+  /** Source address of the last request this key authenticated. */
+  lastUsedFromIp?: Maybe<Scalars["String"]["output"]>;
+  /** User-supplied label. Not unique. */
+  name: Scalars["String"]["output"];
+  /** Granted operations, flattened from the stored scope. */
+  operations: Array<McpApiKeyOperation>;
+  status: McpApiKeyStatus;
+};
+
+/** Result of minting a key. The only place the plaintext is ever returned. */
+export type McpApiKeyMintResult = {
+  /** The plaintext key. Returned EXACTLY ONCE — it is not stored and cannot be re-derived. */
+  apiKey: Scalars["String"]["output"];
+  /** Metadata for the key just created. */
+  key: McpApiKey;
+};
+
+/** Operations an MCP API key may perform. */
+export enum McpApiKeyOperation {
+  Read = "READ",
+  Tools = "TOOLS",
+}
+
+/** Lifecycle status of an MCP API key. REVOKED takes precedence over EXPIRED. */
+export enum McpApiKeyStatus {
+  Active = "ACTIVE",
+  Expired = "EXPIRED",
+  Revoked = "REVOKED",
+}
+
 export type MeConversationsResult = {
   /** All conversations (direct and group) for the current authenticated user. Client handles categorization by room type and member actor types. */
   conversations: Array<Conversation>;
@@ -4452,6 +4711,8 @@ export type MeQueryResults = {
   conversations: MeConversationsResult;
   /** The query id */
   id: Scalars["String"]["output"];
+  /** The current user's MCP API keys, newest first. Includes revoked and expired keys so last-used evidence survives revocation. */
+  mcpApiKeys: Array<McpApiKey>;
   /** The Spaces I am contributing to */
   mySpaces: Array<MySpaceResults>;
   /** Get all notifications for the logged in user. */
@@ -4513,8 +4774,6 @@ export type MediaGallery = {
 export type Memo = {
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
-  /** The last saved binary stateV2 of the Yjs document, used to collaborate on the Memo, represented in base64. */
-  content?: Maybe<Scalars["String"]["output"]>;
   /** The policy governing who can update the Memo content. */
   contentUpdatePolicy: ContentUpdatePolicy;
   /** The user that created this Memo */
@@ -4625,6 +4884,15 @@ export enum MimeType {
   Xpng = "XPNG",
 }
 
+export type MintMcpApiKeyInput = {
+  /** Optional expiry. MUST be in the future when supplied. */
+  expiresAt?: InputMaybe<Scalars["DateTime"]["input"]>;
+  /** Label for the key. 1..128 characters after trimming. */
+  name: Scalars["String"]["input"];
+  /** At least one operation. Duplicates are removed; order is not significant. */
+  operations: Array<McpApiKeyOperation>;
+};
+
 export type ModelCardAiEngineResult = {
   /** Access to detailed information on the underlying models specifications */
   additionalTechnicalDetails: Scalars["String"]["output"];
@@ -4694,13 +4962,24 @@ export type MoveSpaceL2ToSpaceL1Input = {
   targetSpaceL1ID: Scalars["UUID"]["input"];
 };
 
+export type MoveTaskToColumnInput = {
+  /** The destination column on the Tasks board. Matched case-insensitively to an existing column. */
+  column: Scalars["String"]["input"];
+  /** The task (Callout Contribution) to move. */
+  contributionID: Scalars["UUID"]["input"];
+};
+
 export type Mutation = {
+  /** Adds a Classification to a Space by copying a Classification Template (Step A). */
+  addClassificationEntryFromTemplate: ClassificationEntry;
   /** Adds an Iframe Allowed URL to the Platform Settings */
   addIframeAllowedURL: Array<Scalars["String"]["output"]>;
   /** Adds a full email address to the platform notification blacklist */
   addNotificationEmailToBlacklist: Array<Scalars["String"]["output"]>;
   /** Add a new option to a Poll. Requires UPDATE privilege, or CONTRIBUTE privilege when the poll setting allowContributorsAddOptions is enabled. The new option is appended with the next available sort order. */
   addPollOption: Poll;
+  /** Adds or swaps the requesting user's single reaction on a Callout. Requires CONTRIBUTE on the Callout. The Callout must be published and not a template. The emoji must be on the platform allow-list. */
+  addReactionToCallout: Callout;
   /** Add a reaction to a message from the specified Room. */
   addReactionToMessageInRoom: Reaction;
   /** Adds a new visual to the specified media gallery. */
@@ -4725,6 +5004,8 @@ export type Mutation = {
   adminLicensePolicyDeleteCredentialRule: LicensingCredentialBasedPolicyCredentialRule;
   /** Updates a CredentialRule on the LicensePolicy. */
   adminLicensePolicyUpdateCredentialRule: LicensingCredentialBasedPolicyCredentialRule;
+  /** Platform admin: revoke a named user's MCP API key. Idempotent. */
+  adminRevokeMcpApiKey: McpApiKey;
   /** Ingests new data into Elasticsearch from scratch. This will delete all existing data and ingest new data from the source. This is an admin only operation. */
   adminSearchIngestFromScratch: Scalars["String"]["output"];
   /** Update the Avatar on the Profile with the spedified profileID to be stored as a Document. */
@@ -4797,6 +5078,8 @@ export type Mutation = {
   convertVirtualContributorToUseKnowledgeBase: VirtualContributor;
   /** Create a new Callout on the CalloutsSet. When `file` is supplied alongside a COLLABORA_DOCUMENT framing, the new callout is framed with a Collabora document populated from the uploaded bytes (file-service-go sniffs MIME, validates format and size, and derives the document type; any documentType in the input is ignored on the upload path; displayName defaults from the filename when absent). When `file` is omitted, the existing blank-create behaviour applies and framing.collaboraDocument must specify both displayName and documentType. */
   createCalloutOnCalloutsSet: Callout;
+  /** Creates a Classification on a Space ad hoc, without a Template (API-only). */
+  createClassificationEntry: ClassificationEntry;
   /** Create a new Contribution on the Callout. */
   createContributionOnCallout: CalloutContribution;
   /** Create a new Conversation. Use type DIRECT for 1-on-1, GROUP for multi-party. */
@@ -4827,6 +5110,8 @@ export type Mutation = {
   createSubspace: Space;
   /** Creates a new Tagset on the specified Profile */
   createTagsetOnProfile: Tagset;
+  /** Add a column to a Tasks board Callout. */
+  createTaskColumnOnCallout: Callout;
   /** Creates a new Template on the specified TemplatesSet. */
   createTemplate: Template;
   /** Creates a new Template on the specified TemplatesSet using the provided ContentSpace as content. */
@@ -4845,6 +5130,8 @@ export type Mutation = {
   deleteCalendarEvent: CalendarEvent;
   /** Delete a Callout. */
   deleteCallout: Callout;
+  /** Permanently removes a Classification from a Space. No template and no other Space is affected. */
+  deleteClassificationEntry: ClassificationEntry;
   /** Deletes the specified CollaboraDocument. */
   deleteCollaboraDocument: CollaboraDocument;
   /** Deletes a contribution. */
@@ -4881,6 +5168,8 @@ export type Mutation = {
   deleteStateOnInnovationFlow: InnovationFlowState;
   /** Deletes a Storage Bucket */
   deleteStorageBucket: StorageBucket;
+  /** Remove a column from a Tasks board Callout. */
+  deleteTaskColumnOnCallout: Callout;
   /** Deletes the specified Template. */
   deleteTemplate: Template;
   /** Deletes the specified User. */
@@ -4913,7 +5202,7 @@ export type Mutation = {
   inviteForEntryRoleOnRoleSet: Array<RoleSetInvitationResult>;
   /** Join the specified RoleSet using the entry Role, without going through an approval process. */
   joinRoleSet: RoleSet;
-  /** Leave a group conversation. Returns true when the RPC is sent. Actual membership change arrives via MEMBER_REMOVED subscription event. If the last member leaves, the conversation is auto-deleted and a CONVERSATION_DELETED event follows. */
+  /** Leave a group conversation. Awaits the Matrix kick rather than reporting success merely because the RPC was sent: true means the kick was accepted, and the membership is then removed asynchronously — observe MEMBER_REMOVED for completion. If Matrix rejects the kick this still returns true, because Alkemio is authoritative for its own membership and applies the removal locally instead; on that path the Matrix-side room membership may diverge until an operator reconciles it. If the last member leaves, the conversation is auto-deleted and a CONVERSATION_DELETED event follows. */
   leaveConversation: Scalars["Boolean"]["output"];
   /** Reset the License with Entitlements on the specified Account. */
   licenseResetOnAccount: Account;
@@ -4923,6 +5212,12 @@ export type Mutation = {
   markNotificationsAsRead: Scalars["Boolean"]["output"];
   /** Mark notifications as unread. If no filter is provided, marks all user notifications as unread. If filter with types is provided, marks only those notification types as unread. */
   markNotificationsAsUnread: Scalars["Boolean"]["output"];
+  /** Migrates all pending legacy memo content. Idempotent: repeated calls process only rows whose migrated marker is false. */
+  migrateLegacyMemoContent: CollaborationMigrationResult;
+  /** Migrates all pending legacy whiteboard content. Idempotent: repeated calls process only rows whose migrated marker is false. */
+  migrateLegacyWhiteboardContent: CollaborationMigrationResult;
+  /** Mint a new MCP API key for the current user. Returns the plaintext exactly once. */
+  mintMcpApiKey: McpApiKeyMintResult;
   /** Moves the specified Contribution to another Callout. */
   moveContributionToCallout: CalloutContribution;
   /** Move an L1 subspace to a different L0 space. The subspace remains at level 1       but changes parent. All content moves with it. All community memberships are cleared.       Requires platform admin privileges. */
@@ -4931,13 +5226,15 @@ export type Mutation = {
   moveSpaceL1ToSpaceL2: Space;
   /** Move an L2 sub-subspace to become an L2 subspace under a target L1 in a different L0 space.       The subspace stays at level 2 but changes both its parent L1 and its top-level L0.       All community roles (including admins) are cleared and pending invitations dropped.       Platform access rules are recomputed from the new parent hierarchy.       Requires platform admin privileges. */
   moveSpaceL2ToSpaceL1: Space;
+  /** Moves a task to another column on its Tasks board. Authorized as MOVE_TASK on the parent Callout, so a board member can move any task. */
+  moveTaskToColumn: CalloutContribution;
   /** Refresh the Bodies of Knowledge on All VCs */
   refreshAllBodiesOfKnowledge: Scalars["Boolean"]["output"];
   /** Triggers a request to the backing AI Service to refresh the knowledge that is available to it. */
   refreshVirtualContributorBodyOfKnowledge: Scalars["Boolean"]["output"];
   /** Empties the CommunityGuidelines. */
   removeCommunityGuidelinesContent: CommunityGuidelines;
-  /** Remove a member from a group conversation. Returns true when the RPC is sent. Actual membership change arrives via MEMBER_REMOVED subscription event. */
+  /** Remove a member from a group conversation. Awaits the Matrix kick rather than reporting success merely because the RPC was sent: true means the kick was accepted, and the membership is then removed asynchronously — observe MEMBER_REMOVED for completion. If Matrix rejects the kick (e.g. insufficient permissions) this still returns true, because Alkemio is authoritative for its own membership and applies the removal locally instead; on that path the Matrix-side room membership may diverge until an operator reconciles it. */
   removeConversationMember: Scalars["Boolean"]["output"];
   /** Remove the default callout template from an InnovationFlowState. */
   removeDefaultCalloutTemplateOnInnovationFlowState: InnovationFlowState;
@@ -4953,6 +5250,8 @@ export type Mutation = {
   removePollOption: Poll;
   /** Remove the current user vote from a Poll. Requires CONTRIBUTE privilege on the Poll. If the user has not voted, returns a validation error. */
   removePollVote: Poll;
+  /** Removes the requesting user's reaction from a Callout. Idempotent — no error when no reaction exists. Self-scoped; requires only authentication (not CONTRIBUTE). Returns the Callout only when the caller retains READ access on it. */
+  removeReactionFromCallout: Callout;
   /** Remove a reaction on a message from the specified Room. */
   removeReactionToMessageInRoom: Scalars["Boolean"]["output"];
   /** Removes an Actor (User, Organization, or Virtual Contributor) from a role in the specified RoleSet. */
@@ -4983,6 +5282,8 @@ export type Mutation = {
   revokeLicensePlanFromAccount: Account;
   /** Revokes the specified LicensePlan on a Space. */
   revokeLicensePlanFromSpace: Space;
+  /** Revoke one of the current user's own MCP API keys. Idempotent. */
+  revokeMcpApiKey: McpApiKey;
   /** Send a private (1:1) chat message to each of the given Users individually. Does NOT create a group conversation. Each recipient is processed independently and reported on; partial success is possible. */
   sendDirectMessageToUsers: Array<DirectMessageDeliveryResult>;
   /** Sends a reply to a message from the specified Room. */
@@ -5029,6 +5330,12 @@ export type Mutation = {
   updateCalloutVisibility: Callout;
   /** Update the sortOrder field of the supplied Callouts to increase as per the order that they are provided in. */
   updateCalloutsSortOrder: Array<Callout>;
+  /** Updates a Classification's definition — label, cardinality and/or value set (API-only). */
+  updateClassificationEntry: ClassificationEntry;
+  /** Toggles a Classification's shown/hidden state on the Space's About page. */
+  updateClassificationEntryDisplay: ClassificationEntry;
+  /** Replaces the selected values of a Classification (Step B). */
+  updateClassificationEntrySelection: ClassificationEntry;
   /** Updates a Tagset on a Classification. */
   updateClassificationTagset: Tagset;
   /** Updates the specified CollaboraDocument. */
@@ -5095,6 +5402,10 @@ export type Mutation = {
   updateSubspacesSortOrder: Array<Space>;
   /** Updates the specified Tagset. */
   updateTagset: Tagset;
+  /** Rename a column on a Tasks board Callout. */
+  updateTaskColumnOnCallout: Callout;
+  /** Reorder the columns of a Tasks board Callout. */
+  updateTaskColumnsSortOrderOnCallout: Callout;
   /** Updates the specified Template. */
   updateTemplate: Template;
   /** Updates the TemplateContentSpace. */
@@ -5117,7 +5428,7 @@ export type Mutation = {
   updateVirtualContributorPlatformSettings: VirtualContributor;
   /** Updates one of the Setting on an Virtual Contributor */
   updateVirtualContributorSettings: VirtualContributor;
-  /** Updates the image URI for the specified Visual. */
+  /** Updates the image URI, alternative text and/or display aspect ratio for the specified Visual. */
   updateVisual: Visual;
   /** Updates the specified Whiteboard. */
   updateWhiteboard: Whiteboard;
@@ -5133,6 +5444,10 @@ export type Mutation = {
   uploadImageOnVisual: Visual;
 };
 
+export type MutationAddClassificationEntryFromTemplateArgs = {
+  classificationData: AddClassificationEntryFromTemplateInput;
+};
+
 export type MutationAddIframeAllowedUrlArgs = {
   whitelistedURL: Scalars["String"]["input"];
 };
@@ -5143,6 +5458,10 @@ export type MutationAddNotificationEmailToBlacklistArgs = {
 
 export type MutationAddPollOptionArgs = {
   optionData: AddPollOptionInput;
+};
+
+export type MutationAddReactionToCalloutArgs = {
+  reactionData: AddReactionToCalloutInput;
 };
 
 export type MutationAddReactionToMessageInRoomArgs = {
@@ -5179,6 +5498,10 @@ export type MutationAdminLicensePolicyDeleteCredentialRuleArgs = {
 
 export type MutationAdminLicensePolicyUpdateCredentialRuleArgs = {
   updateData: UpdateLicensePolicyCredentialRuleInput;
+};
+
+export type MutationAdminRevokeMcpApiKeyArgs = {
+  revokeData: AdminRevokeMcpApiKeyInput;
 };
 
 export type MutationAdminUpdateContributorAvatarsArgs = {
@@ -5294,6 +5617,10 @@ export type MutationCreateCalloutOnCalloutsSetArgs = {
   file?: InputMaybe<Scalars["Upload"]["input"]>;
 };
 
+export type MutationCreateClassificationEntryArgs = {
+  classificationData: CreateClassificationEntryInput;
+};
+
 export type MutationCreateContributionOnCalloutArgs = {
   contributionData: CreateContributionOnCalloutInput;
 };
@@ -5354,6 +5681,10 @@ export type MutationCreateTagsetOnProfileArgs = {
   tagsetData: CreateTagsetOnProfileInput;
 };
 
+export type MutationCreateTaskColumnOnCalloutArgs = {
+  columnData: CreateTaskColumnOnCalloutInput;
+};
+
 export type MutationCreateTemplateArgs = {
   templateData: CreateTemplateOnTemplatesSetInput;
 };
@@ -5388,6 +5719,10 @@ export type MutationDeleteCalendarEventArgs = {
 
 export type MutationDeleteCalloutArgs = {
   deleteData: DeleteCalloutInput;
+};
+
+export type MutationDeleteClassificationEntryArgs = {
+  classificationData: DeleteClassificationEntryInput;
 };
 
 export type MutationDeleteCollaboraDocumentArgs = {
@@ -5460,6 +5795,10 @@ export type MutationDeleteStateOnInnovationFlowArgs = {
 
 export type MutationDeleteStorageBucketArgs = {
   deleteData: DeleteStorageBuckeetInput;
+};
+
+export type MutationDeleteTaskColumnOnCalloutArgs = {
+  columnData: DeleteTaskColumnOnCalloutInput;
 };
 
 export type MutationDeleteTemplateArgs = {
@@ -5549,6 +5888,10 @@ export type MutationMarkNotificationsAsUnreadArgs = {
   filter?: InputMaybe<NotificationEventsFilterInput>;
 };
 
+export type MutationMintMcpApiKeyArgs = {
+  mintData: MintMcpApiKeyInput;
+};
+
 export type MutationMoveContributionToCalloutArgs = {
   moveContributionData: MoveCalloutContributionInput;
 };
@@ -5563,6 +5906,10 @@ export type MutationMoveSpaceL1ToSpaceL2Args = {
 
 export type MutationMoveSpaceL2ToSpaceL1Args = {
   moveData: MoveSpaceL2ToSpaceL1Input;
+};
+
+export type MutationMoveTaskToColumnArgs = {
+  moveData: MoveTaskToColumnInput;
 };
 
 export type MutationRefreshVirtualContributorBodyOfKnowledgeArgs = {
@@ -5603,6 +5950,10 @@ export type MutationRemovePollOptionArgs = {
 
 export type MutationRemovePollVoteArgs = {
   voteData: RemovePollVoteInput;
+};
+
+export type MutationRemoveReactionFromCalloutArgs = {
+  reactionData: RemoveReactionFromCalloutInput;
 };
 
 export type MutationRemoveReactionToMessageInRoomArgs = {
@@ -5662,6 +6013,10 @@ export type MutationRevokeLicensePlanFromAccountArgs = {
 
 export type MutationRevokeLicensePlanFromSpaceArgs = {
   planData: RevokeLicensePlanFromSpace;
+};
+
+export type MutationRevokeMcpApiKeyArgs = {
+  revokeData: RevokeMcpApiKeyInput;
 };
 
 export type MutationSendDirectMessageToUsersArgs = {
@@ -5754,6 +6109,18 @@ export type MutationUpdateCalloutVisibilityArgs = {
 
 export type MutationUpdateCalloutsSortOrderArgs = {
   sortOrderData: UpdateCalloutsSortOrderInput;
+};
+
+export type MutationUpdateClassificationEntryArgs = {
+  classificationData: UpdateClassificationEntryInput;
+};
+
+export type MutationUpdateClassificationEntryDisplayArgs = {
+  classificationData: UpdateClassificationEntryDisplayInput;
+};
+
+export type MutationUpdateClassificationEntrySelectionArgs = {
+  classificationData: UpdateClassificationEntrySelectionInput;
 };
 
 export type MutationUpdateClassificationTagsetArgs = {
@@ -5888,6 +6255,14 @@ export type MutationUpdateTagsetArgs = {
   updateData: UpdateTagsetInput;
 };
 
+export type MutationUpdateTaskColumnOnCalloutArgs = {
+  columnData: UpdateTaskColumnOnCalloutInput;
+};
+
+export type MutationUpdateTaskColumnsSortOrderOnCalloutArgs = {
+  sortOrderData: UpdateTaskColumnsSortOrderOnCalloutInput;
+};
+
 export type MutationUpdateTemplateArgs = {
   updateData: UpdateTemplateInput;
 };
@@ -6009,6 +6384,7 @@ export enum NotificationEvent {
   SpaceCollaborationCalloutContribution = "SPACE_COLLABORATION_CALLOUT_CONTRIBUTION",
   SpaceCollaborationCalloutPostContributionComment = "SPACE_COLLABORATION_CALLOUT_POST_CONTRIBUTION_COMMENT",
   SpaceCollaborationCalloutPublished = "SPACE_COLLABORATION_CALLOUT_PUBLISHED",
+  SpaceCollaborationCalloutReaction = "SPACE_COLLABORATION_CALLOUT_REACTION",
   SpaceCollaborationPollModifiedOnPollIVotedOn = "SPACE_COLLABORATION_POLL_MODIFIED_ON_POLL_I_VOTED_ON",
   SpaceCollaborationPollVoteAffectedByOptionChange = "SPACE_COLLABORATION_POLL_VOTE_AFFECTED_BY_OPTION_CHANGE",
   SpaceCollaborationPollVoteCastOnOwnPoll = "SPACE_COLLABORATION_POLL_VOTE_CAST_ON_OWN_POLL",
@@ -6061,6 +6437,7 @@ export enum NotificationEventPayload {
   SpaceCollaborationCallout = "SPACE_COLLABORATION_CALLOUT",
   SpaceCollaborationCalloutComment = "SPACE_COLLABORATION_CALLOUT_COMMENT",
   SpaceCollaborationCalloutPostComment = "SPACE_COLLABORATION_CALLOUT_POST_COMMENT",
+  SpaceCollaborationCalloutReaction = "SPACE_COLLABORATION_CALLOUT_REACTION",
   SpaceCollaborationPoll = "SPACE_COLLABORATION_POLL",
   SpaceCommunicationMessageDirect = "SPACE_COMMUNICATION_MESSAGE_DIRECT",
   SpaceCommunicationUpdate = "SPACE_COMMUNICATION_UPDATE",
@@ -6400,6 +6777,8 @@ export type PlatformAdminQueryResults = {
   innovationPacks: Array<InnovationPack>;
   /** The most recent email-change audit entry for the named subject user. Returns null if no audit entry exists. */
   latestUserEmailChangeAuditEntry?: Maybe<UserEmailChangeAuditEntry>;
+  /** MCP API keys belonging to the named user. Platform admins only. Keys bound to a system actor are never returned. */
+  mcpApiKeys: Array<McpApiKey>;
   /** Retrieve all Organizations on the Platform. This is only available to Platform Admins. */
   organizations: PaginatedOrganization;
   /** Retrieve all Spaces on the Platform. This is only available to Platform Admins. */
@@ -6419,6 +6798,10 @@ export type PlatformAdminQueryResultsInnovationPacksArgs = {
 };
 
 export type PlatformAdminQueryResultsLatestUserEmailChangeAuditEntryArgs = {
+  userID: Scalars["UUID"]["input"];
+};
+
+export type PlatformAdminQueryResultsMcpApiKeysArgs = {
   userID: Scalars["UUID"]["input"];
 };
 
@@ -7215,6 +7598,8 @@ export type RelayPaginatedSpace = ActorFull & {
   account: Account;
   /** The "highest" subscription active for this Space. */
   activeSubscription?: Maybe<SpaceSubscription>;
+  /** Count of visible activity events on this Space over the last 7 days, across all actors (excludes whiteboard-content-modified). Used to rank Spaces on the dashboard. */
+  activityScore: Scalars["Int"]["output"];
   /** The Actor representing this Space. */
   actor: Actor;
   /** The authorization rules for the Actor */
@@ -7333,6 +7718,11 @@ export type RemovePollVoteInput = {
   pollID: Scalars["UUID"]["input"];
 };
 
+export type RemoveReactionFromCalloutInput = {
+  /** The ID of the Callout to remove the reaction from. */
+  calloutID: Scalars["UUID"]["input"];
+};
+
 export type RemoveRoleOnRoleSetInput = {
   actorID: Scalars["UUID"]["input"];
   role: RoleName;
@@ -7380,6 +7770,10 @@ export type RevokeLicensePlanFromSpace = {
   licensingID?: InputMaybe<Scalars["UUID"]["input"]>;
   /** The ID of the Space to assign the LicensePlan to. */
   spaceID: Scalars["UUID"]["input"];
+};
+
+export type RevokeMcpApiKeyInput = {
+  keyID: Scalars["UUID"]["input"];
 };
 
 export type RevokeOrganizationAuthorizationCredentialInput = {
@@ -8021,6 +8415,23 @@ export type SetPlatformWellKnownVirtualContributorInput = {
   wellKnown: VirtualContributorWellKnown;
 };
 
+/** The widgets available for the Space sidepanel, per InnovationFlow state (tab). */
+export enum SidebarWidget {
+  About = "ABOUT",
+  AddUser = "ADD_USER",
+  ApplicationButton = "APPLICATION_BUTTON",
+  ContactLeads = "CONTACT_LEADS",
+  CreatePost = "CREATE_POST",
+  CreateSubspace = "CREATE_SUBSPACE",
+  Events = "EVENTS",
+  Guidelines = "GUIDELINES",
+  Index = "INDEX",
+  Intent = "INTENT",
+  SubspaceLinks = "SUBSPACE_LINKS",
+  Updates = "UPDATES",
+  VirtualContributors = "VIRTUAL_CONTRIBUTORS",
+}
+
 export type Space = ActorFull & {
   /** About this space. */
   about: SpaceAbout;
@@ -8028,6 +8439,8 @@ export type Space = ActorFull & {
   account: Account;
   /** The "highest" subscription active for this Space. */
   activeSubscription?: Maybe<SpaceSubscription>;
+  /** Count of visible activity events on this Space over the last 7 days, across all actors (excludes whiteboard-content-modified). Used to rank Spaces on the dashboard. */
+  activityScore: Scalars["Int"]["output"];
   /** The Actor representing this Space. */
   actor: Actor;
   /** The authorization rules for the Actor */
@@ -8103,6 +8516,8 @@ export type SpaceSubspacesArgs = {
 export type SpaceAbout = {
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
+  /** The classification entries on this About, in sortOrder. Empty array when none exist — never null, never an error. */
+  classifications: Array<ClassificationEntry>;
   /** The date at which the entity was created. */
   createdDate: Scalars["DateTime"]["output"];
   /** The guidelines for members of this Community. */
@@ -8459,6 +8874,7 @@ export enum TagsetReservedName {
   FlowState = "FLOW_STATE",
   Keywords = "KEYWORDS",
   Skills = "SKILLS",
+  Task = "TASK",
 }
 
 export type TagsetTemplate = {
@@ -8506,6 +8922,13 @@ export type Task = {
   type?: Maybe<Scalars["String"]["output"]>;
 };
 
+export type TaskColumnCount = {
+  /** The Tasks board column, in the board-defined order. */
+  column: Scalars["String"]["output"];
+  /** The number of tasks currently in this column. */
+  count: Scalars["Int"]["output"];
+};
+
 /** The current status of the task */
 export enum TaskStatus {
   Completed = "COMPLETED",
@@ -8518,6 +8941,8 @@ export type Template = {
   authorization?: Maybe<Authorization>;
   /** The Callout for this Template. */
   callout?: Maybe<Callout>;
+  /** The classification vocabulary; null unless this Template is of type CLASSIFICATION — and never null when it is. */
+  classification?: Maybe<ClassificationTemplateContent>;
   /** The Community Guidelines for this Template. */
   communityGuidelines?: Maybe<CommunityGuidelines>;
   /** The Space for this Template. */
@@ -8595,6 +9020,7 @@ export type TemplateResult = {
 
 export enum TemplateType {
   Callout = "CALLOUT",
+  Classification = "CLASSIFICATION",
   CommunityGuidelines = "COMMUNITY_GUIDELINES",
   Post = "POST",
   Space = "SPACE",
@@ -8623,6 +9049,10 @@ export type TemplatesSet = {
   calloutTemplates: Array<Template>;
   /** The total number of CalloutTemplates in this TemplatesSet. */
   calloutTemplatesCount: Scalars["Float"]["output"];
+  /** The Classification Templates in this TemplatesSet. */
+  classificationTemplates: Array<Template>;
+  /** The total number of Classification Templates in this TemplatesSet. */
+  classificationTemplatesCount: Scalars["Float"]["output"];
   /** The CommunityGuidelines in this TemplatesSet. */
   communityGuidelinesTemplates: Array<Template>;
   /** The total number of CommunityGuidelinesTemplates in this TemplatesSet. */
@@ -8771,6 +9201,8 @@ export type UpdateCalloutContributorsSettingsInput = {
   defaultContributorType?: InputMaybe<ActorType>;
   /** The default display mode. Defaults to LIST; MAP requires a locatable contributor type. */
   defaultView?: InputMaybe<ContributorCollectionView>;
+  /** Admin-fixed initial map view. Omitted ⇒ stored view unchanged; explicit null ⇒ clear to automatic framing. */
+  mapView?: InputMaybe<CreateCalloutContributorsMapViewInput>;
 };
 
 export type UpdateCalloutEntityInput = {
@@ -8859,6 +9291,24 @@ export type UpdateCalloutsSortOrderInput = {
   /** The IDs of the callouts to update the sort order on */
   calloutIDs: Array<Scalars["UUID"]["input"]>;
   calloutsSetID: Scalars["UUID"]["input"];
+};
+
+export type UpdateClassificationEntryDisplayInput = {
+  classificationEntryID: Scalars["UUID"]["input"];
+  display: Scalars["Boolean"]["input"];
+};
+
+export type UpdateClassificationEntryInput = {
+  cardinality?: InputMaybe<ClassificationCardinality>;
+  classificationEntryID: Scalars["UUID"]["input"];
+  displayLabel?: InputMaybe<Scalars["String"]["input"]>;
+  values?: InputMaybe<Array<CreateClassificationValueInput>>;
+};
+
+export type UpdateClassificationEntrySelectionInput = {
+  classificationEntryID: Scalars["UUID"]["input"];
+  /** The complete set of selected value ids. An empty list clears the selection. */
+  selectedValueIDs: Array<Scalars["String"]["input"]>;
 };
 
 export type UpdateClassificationInput = {
@@ -8977,6 +9427,8 @@ export type UpdateInnovationFlowStateSettingsInput = {
   descriptionDisplayMode?: InputMaybe<CalloutDescriptionDisplayMode>;
   /** Optional. Sets whether Posts in this State show publish details (publisher, publish date, avatar) in the feed; omission leaves the stored value unchanged. */
   showPublishDetails?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Optional. Ordered sidebar widgets for this State; omission leaves the stored value unchanged. Duplicates rejected; max 20 entries. */
+  sidebar?: InputMaybe<Array<SidebarWidget>>;
   /** Optional. Sets whether the phase is shown in member-facing navigation; omission leaves the stored value unchanged. */
   visible?: InputMaybe<Scalars["Boolean"]["input"]>;
 };
@@ -9290,6 +9742,22 @@ export type UpdateTagsetInput = {
   tags: Array<Scalars["String"]["input"]>;
 };
 
+export type UpdateTaskColumnOnCalloutInput = {
+  /** The Tasks board Callout whose column is being renamed. */
+  calloutID: Scalars["UUID"]["input"];
+  /** The current column name. Matched case-insensitively to an existing column. */
+  currentName: Scalars["String"]["input"];
+  /** The new column name. Tasks in the column follow the rename. */
+  newName: Scalars["String"]["input"];
+};
+
+export type UpdateTaskColumnsSortOrderOnCalloutInput = {
+  /** The Tasks board Callout whose columns are being reordered. */
+  calloutID: Scalars["UUID"]["input"];
+  /** Every existing column exactly once, in the new left-to-right order. Matched case-insensitively. */
+  columnNames: Array<Scalars["String"]["input"]>;
+};
+
 export type UpdateTemplateContentSpaceInput = {
   ID: Scalars["UUID"]["input"];
   /** Update the TemplateContentSpace About information. */
@@ -9316,6 +9784,8 @@ export type UpdateTemplateFromSpaceInput = {
 
 export type UpdateTemplateInput = {
   ID: Scalars["UUID"]["input"];
+  /** The cardinality and value set for a Classification Template. */
+  classificationData?: InputMaybe<CreateClassificationTemplateContentInput>;
   /** The default description to be pre-filled when users create Posts based on this template. */
   postDefaultDescription?: InputMaybe<Scalars["Markdown"]["input"]>;
   /** The Profile of the Template. */
@@ -9363,11 +9833,18 @@ export type UpdateUserSettingsCommunicationInput = {
   allowOtherUsersToSendMessages?: InputMaybe<Scalars["Boolean"]["input"]>;
 };
 
+export type UpdateUserSettingsDashboardInput = {
+  /** Whether the activity-feed view is shown on the home dashboard (true) or the non-activity Spaces view (false). */
+  activityView?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
 export type UpdateUserSettingsEntityInput = {
   /** Settings related to the AI assistant authority for this User. */
   assistant?: InputMaybe<UpdateUserSettingsAssistantInput>;
   /** Settings related to this users Communication preferences. */
   communication?: InputMaybe<UpdateUserSettingsCommunicationInput>;
+  /** Settings related to the home dashboard view. */
+  dashboard?: InputMaybe<UpdateUserSettingsDashboardInput>;
   /** Update the user's design version. Any integer accepted (1 = legacy design generation, deprecated and scheduled for removal; 2 = current default design generation; 3+ reserved for future generations). */
   designVersion?: InputMaybe<Scalars["Int"]["input"]>;
   /** Settings related to Home Space. */
@@ -9423,7 +9900,7 @@ export type UpdateUserSettingsNotificationPlatformAdminInput = {
   spaceCreated?: InputMaybe<NotificationSettingInput>;
   /** [Admin] Receive a notification when a user changes their login email address */
   userEmailChanged?: InputMaybe<NotificationSettingInput>;
-  /** [Admin] Receive a notification user is assigned or removed from a global role */
+  /** [Admin] Receive a notification when a user is assigned to or removed from a global role */
   userGlobalRoleChanged?: InputMaybe<NotificationSettingInput>;
   /** [Admin] Receive notification when a new user signs up */
   userProfileCreated?: InputMaybe<NotificationSettingInput>;
@@ -9471,6 +9948,8 @@ export type UpdateUserSettingsNotificationSpaceInput = {
   collaborationCalloutPostContributionComment?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification when a callout is published */
   collaborationCalloutPublished?: InputMaybe<NotificationSettingInput>;
+  /** Receive a notification when someone reacts to a callout you published */
+  collaborationCalloutReaction?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification when a poll you voted on is modified */
   collaborationPollModifiedOnPollIVotedOn?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification when a poll option you voted for is changed or removed */
@@ -9565,6 +10044,8 @@ export type UpdateVirtualContributorSettingsPrivacyInput = {
 
 export type UpdateVisualInput = {
   alternativeText?: InputMaybe<Scalars["String"]["input"]>;
+  /** The width / height ratio to display this visual at. Must fall within the visual type’s minAspectRatio - maxAspectRatio range; types with a fixed shape accept only their single allowed value. */
+  aspectRatio?: InputMaybe<Scalars["Float"]["input"]>;
   uri: Scalars["String"]["input"];
   visualID: Scalars["String"]["input"];
 };
@@ -9881,6 +10362,8 @@ export type UserSettings = {
   communication: UserSettingsCommunication;
   /** The date at which the entity was created. */
   createdDate: Scalars["DateTime"]["output"];
+  /** The home-dashboard view settings for this User. */
+  dashboard: UserSettingsDashboard;
   /** The design version this User has selected (1 = legacy design generation, deprecated and scheduled for removal; 2 = current default design generation; 3+ reserved for future generations). */
   designVersion: Scalars["Int"]["output"];
   /** The home space settings for this User. */
@@ -9909,6 +10392,11 @@ export type UserSettingsCommunication = {
   allowOtherUsersToContactViaEmail: Scalars["Boolean"]["output"];
   /** Allow Users to send messages to this User. */
   allowOtherUsersToSendMessages: Scalars["Boolean"]["output"];
+};
+
+export type UserSettingsDashboard = {
+  /** Whether the activity-feed view is shown on the home dashboard (true) or the non-activity Spaces view (false). Default true preserves the historical behaviour. */
+  activityView: Scalars["Boolean"]["output"];
 };
 
 export type UserSettingsHomeSpace = {
@@ -9989,6 +10477,8 @@ export type UserSettingsNotificationSpace = {
   collaborationCalloutPostContributionComment: UserSettingsNotificationChannels;
   /** Receive a notification when a callout is published */
   collaborationCalloutPublished: UserSettingsNotificationChannels;
+  /** Receive a notification when someone reacts to a callout you published */
+  collaborationCalloutReaction: UserSettingsNotificationChannels;
   /** Receive a notification when a poll you voted on is modified */
   collaborationPollModifiedOnPollIVotedOn: UserSettingsNotificationChannels;
   /** Receive a notification when a poll option you voted for is changed or removed */
@@ -10267,10 +10757,14 @@ export type VisualConstraints = {
   allowedTypes: Array<Scalars["String"]["output"]>;
   /** Dimensions ratio width / height. */
   aspectRatio: Scalars["Float"]["output"];
+  /** Maximum dimensions ratio width / height that this visual may be set to. Equal to minAspectRatio when the shape is fixed. */
+  maxAspectRatio: Scalars["Float"]["output"];
   /** Maximum height resolution. */
   maxHeight: Scalars["Float"]["output"];
   /** Maximum width resolution. */
   maxWidth: Scalars["Float"]["output"];
+  /** Minimum dimensions ratio width / height that this visual may be set to. Equal to maxAspectRatio when the shape is fixed. */
+  minAspectRatio: Scalars["Float"]["output"];
   /** Minimum height resolution. */
   minHeight: Scalars["Float"]["output"];
   /** Minimum width resolution. */
@@ -10295,8 +10789,6 @@ export type VisualUploadImageInput = {
 export type Whiteboard = {
   /** The authorization rules for the entity */
   authorization?: Maybe<Authorization>;
-  /** The visual content of the Whiteboard. */
-  content: Scalars["WhiteboardContent"]["output"];
   /** The policy governing who can update the Whiteboard content. */
   contentUpdatePolicy: ContentUpdatePolicy;
   /** The user that created this Whiteboard */
@@ -10751,6 +11243,10 @@ export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> =
           "callout" | "space"
         > & { callout: _RefType["Callout"]; space: _RefType["Space"] })
       | (Omit<
+          InAppNotificationPayloadSpaceCollaborationCalloutReaction,
+          "callout" | "space"
+        > & { callout: _RefType["Callout"]; space: _RefType["Space"] })
+      | (Omit<
           InAppNotificationPayloadSpaceCollaborationPoll,
           "callout" | "space"
         > & { callout: _RefType["Callout"]; space: _RefType["Space"] })
@@ -11006,15 +11502,21 @@ export type ResolversTypes = {
   ActorRolePolicy: ResolverTypeWrapper<ActorRolePolicy>;
   ActorRoles: ResolverTypeWrapper<ActorRoles>;
   ActorType: ActorType;
+  AddClassificationEntryFromTemplateInput: AddClassificationEntryFromTemplateInput;
   AddPollOptionInput: AddPollOptionInput;
+  AddReactionToCalloutInput: AddReactionToCalloutInput;
   AddVisualToMediaGalleryInput: AddVisualToMediaGalleryInput;
+  AdminRevokeMcpApiKeyInput: AdminRevokeMcpApiKeyInput;
   AdminUserEmailChangeDriftResolveInput: AdminUserEmailChangeDriftResolveInput;
   AdminUserEmailChangeInput: AdminUserEmailChangeInput;
   AiPersona: ResolverTypeWrapper<AiPersona>;
   AiPersonaEngine: AiPersonaEngine;
   AiServer: ResolverTypeWrapper<AiServer>;
   Application: ResolverTypeWrapper<
-    Omit<Application, "actor"> & { actor: ResolversTypes["Actor"] }
+    Omit<Application, "actor" | "user"> & {
+      actor: ResolversTypes["Actor"];
+      user?: Maybe<ResolversTypes["User"]>;
+    }
   >;
   ApplicationEventInput: ApplicationEventInput;
   ApplyForEntryRoleOnRoleSetInput: ApplyForEntryRoleOnRoleSetInput;
@@ -11083,6 +11585,7 @@ export type ResolversTypes = {
   CalloutContributionDefaults: ResolverTypeWrapper<CalloutContributionDefaults>;
   CalloutContributionType: CalloutContributionType;
   CalloutContributionsCountOutput: ResolverTypeWrapper<CalloutContributionsCountOutput>;
+  CalloutContributorsMapView: ResolverTypeWrapper<CalloutContributorsMapView>;
   CalloutContributorsSettings: ResolverTypeWrapper<CalloutContributorsSettings>;
   CalloutDescriptionDisplayMode: CalloutDescriptionDisplayMode;
   CalloutFraming: ResolverTypeWrapper<
@@ -11094,6 +11597,10 @@ export type ResolversTypes = {
   >;
   CalloutFramingType: CalloutFramingType;
   CalloutPostCreated: ResolverTypeWrapper<CalloutPostCreated>;
+  CalloutReaction: ResolverTypeWrapper<
+    Omit<CalloutReaction, "user"> & { user?: Maybe<ResolversTypes["User"]> }
+  >;
+  CalloutReactionsSummary: ResolverTypeWrapper<CalloutReactionsSummary>;
   CalloutSelectionMode: CalloutSelectionMode;
   CalloutSelectionSettings: ResolverTypeWrapper<CalloutSelectionSettings>;
   CalloutSettings: ResolverTypeWrapper<CalloutSettings>;
@@ -11108,6 +11615,10 @@ export type ResolversTypes = {
   CalloutsSetType: CalloutsSetType;
   CastPollVoteInput: CastPollVoteInput;
   Classification: ResolverTypeWrapper<Classification>;
+  ClassificationCardinality: ClassificationCardinality;
+  ClassificationEntry: ResolverTypeWrapper<ClassificationEntry>;
+  ClassificationTemplateContent: ResolverTypeWrapper<ClassificationTemplateContent>;
+  ClassificationValue: ResolverTypeWrapper<ClassificationValue>;
   CollaboraDocument: ResolverTypeWrapper<
     Omit<CollaboraDocument, "createdBy" | "profile"> & {
       createdBy?: Maybe<ResolversTypes["User"]>;
@@ -11119,6 +11630,8 @@ export type ResolversTypes = {
   Collaboration: ResolverTypeWrapper<
     Omit<Collaboration, "timeline"> & { timeline: ResolversTypes["Timeline"] }
   >;
+  CollaborationMigrationIssue: ResolverTypeWrapper<CollaborationMigrationIssue>;
+  CollaborationMigrationResult: ResolverTypeWrapper<CollaborationMigrationResult>;
   Communication: ResolverTypeWrapper<Communication>;
   CommunicationAdminEnsureAccessInput: CommunicationAdminEnsureAccessInput;
   CommunicationAdminMembershipInput: CommunicationAdminMembershipInput;
@@ -11236,6 +11749,8 @@ export type ResolversTypes = {
   CreateCalloutContributionDefaultsData: ResolverTypeWrapper<CreateCalloutContributionDefaultsData>;
   CreateCalloutContributionDefaultsInput: CreateCalloutContributionDefaultsInput;
   CreateCalloutContributionInput: CreateCalloutContributionInput;
+  CreateCalloutContributorsMapViewData: ResolverTypeWrapper<CreateCalloutContributorsMapViewData>;
+  CreateCalloutContributorsMapViewInput: CreateCalloutContributorsMapViewInput;
   CreateCalloutContributorsSettingsData: ResolverTypeWrapper<CreateCalloutContributorsSettingsData>;
   CreateCalloutContributorsSettingsInput: CreateCalloutContributorsSettingsInput;
   CreateCalloutData: ResolverTypeWrapper<CreateCalloutData>;
@@ -11251,10 +11766,15 @@ export type ResolversTypes = {
   CreateCalloutSettingsFramingData: ResolverTypeWrapper<CreateCalloutSettingsFramingData>;
   CreateCalloutSettingsFramingInput: CreateCalloutSettingsFramingInput;
   CreateCalloutSettingsInput: CreateCalloutSettingsInput;
+  CreateCalloutTaskBoardData: ResolverTypeWrapper<CreateCalloutTaskBoardData>;
+  CreateCalloutTaskBoardInput: CreateCalloutTaskBoardInput;
   CreateCalloutsSetData: ResolverTypeWrapper<CreateCalloutsSetData>;
   CreateCalloutsSetInput: CreateCalloutsSetInput;
   CreateClassificationData: ResolverTypeWrapper<CreateClassificationData>;
+  CreateClassificationEntryInput: CreateClassificationEntryInput;
   CreateClassificationInput: CreateClassificationInput;
+  CreateClassificationTemplateContentInput: CreateClassificationTemplateContentInput;
+  CreateClassificationValueInput: CreateClassificationValueInput;
   CreateCollaboraDocumentData: ResolverTypeWrapper<CreateCollaboraDocumentData>;
   CreateCollaboraDocumentInput: CreateCollaboraDocumentInput;
   CreateCollaborationData: ResolverTypeWrapper<CreateCollaborationData>;
@@ -11304,6 +11824,7 @@ export type ResolversTypes = {
   CreateTagsetData: ResolverTypeWrapper<CreateTagsetData>;
   CreateTagsetInput: CreateTagsetInput;
   CreateTagsetOnProfileInput: CreateTagsetOnProfileInput;
+  CreateTaskColumnOnCalloutInput: CreateTaskColumnOnCalloutInput;
   CreateTemplateContentSpaceInput: CreateTemplateContentSpaceInput;
   CreateTemplateFromContentSpaceOnTemplatesSetInput: CreateTemplateFromContentSpaceOnTemplatesSetInput;
   CreateTemplateFromSpaceOnTemplatesSetInput: CreateTemplateFromSpaceOnTemplatesSetInput;
@@ -11325,6 +11846,7 @@ export type ResolversTypes = {
   DeleteApplicationInput: DeleteApplicationInput;
   DeleteCalendarEventInput: DeleteCalendarEventInput;
   DeleteCalloutInput: DeleteCalloutInput;
+  DeleteClassificationEntryInput: DeleteClassificationEntryInput;
   DeleteCollaboraDocumentInput: DeleteCollaboraDocumentInput;
   DeleteContributionInput: DeleteContributionInput;
   DeleteConversationInput: DeleteConversationInput;
@@ -11344,6 +11866,7 @@ export type ResolversTypes = {
   DeleteSpaceInput: DeleteSpaceInput;
   DeleteStateOnInnovationFlowInput: DeleteStateOnInnovationFlowInput;
   DeleteStorageBuckeetInput: DeleteStorageBuckeetInput;
+  DeleteTaskColumnOnCalloutInput: DeleteTaskColumnOnCalloutInput;
   DeleteTemplateInput: DeleteTemplateInput;
   DeleteUserGroupInput: DeleteUserGroupInput;
   DeleteUserInput: DeleteUserInput;
@@ -11466,6 +11989,12 @@ export type ResolversTypes = {
   InAppNotificationPayloadSpaceCollaborationCalloutPostComment: ResolverTypeWrapper<
     Omit<
       InAppNotificationPayloadSpaceCollaborationCalloutPostComment,
+      "callout" | "space"
+    > & { callout: ResolversTypes["Callout"]; space: ResolversTypes["Space"] }
+  >;
+  InAppNotificationPayloadSpaceCollaborationCalloutReaction: ResolverTypeWrapper<
+    Omit<
+      InAppNotificationPayloadSpaceCollaborationCalloutReaction,
       "callout" | "space"
     > & { callout: ResolversTypes["Callout"]; space: ResolversTypes["Space"] }
   >;
@@ -11684,6 +12213,10 @@ export type ResolversTypes = {
     }
   >;
   Markdown: ResolverTypeWrapper<Scalars["Markdown"]["output"]>;
+  McpApiKey: ResolverTypeWrapper<McpApiKey>;
+  McpApiKeyMintResult: ResolverTypeWrapper<McpApiKeyMintResult>;
+  McpApiKeyOperation: McpApiKeyOperation;
+  McpApiKeyStatus: McpApiKeyStatus;
   MeConversationsResult: ResolverTypeWrapper<
     Omit<MeConversationsResult, "conversations"> & {
       conversations: Array<ResolversTypes["Conversation"]>;
@@ -11736,6 +12269,7 @@ export type ResolversTypes = {
   Metadata: ResolverTypeWrapper<Metadata>;
   MigrateEmbeddings: ResolverTypeWrapper<MigrateEmbeddings>;
   MimeType: MimeType;
+  MintMcpApiKeyInput: MintMcpApiKeyInput;
   ModelCardAiEngineResult: ResolverTypeWrapper<ModelCardAiEngineResult>;
   ModelCardMonitoringResult: ResolverTypeWrapper<ModelCardMonitoringResult>;
   ModelCardSpaceUsageResult: ResolverTypeWrapper<ModelCardSpaceUsageResult>;
@@ -11743,6 +12277,7 @@ export type ResolversTypes = {
   MoveSpaceL1ToSpaceL0Input: MoveSpaceL1ToSpaceL0Input;
   MoveSpaceL1ToSpaceL2Input: MoveSpaceL1ToSpaceL2Input;
   MoveSpaceL2ToSpaceL1Input: MoveSpaceL2ToSpaceL1Input;
+  MoveTaskToColumnInput: MoveTaskToColumnInput;
   Mutation: ResolverTypeWrapper<{}>;
   MutationType: MutationType;
   MySpaceResults: ResolverTypeWrapper<
@@ -11973,6 +12508,7 @@ export type ResolversTypes = {
   RemovePlatformRoleInput: RemovePlatformRoleInput;
   RemovePollOptionInput: RemovePollOptionInput;
   RemovePollVoteInput: RemovePollVoteInput;
+  RemoveReactionFromCalloutInput: RemoveReactionFromCalloutInput;
   RemoveRoleOnRoleSetInput: RemoveRoleOnRoleSetInput;
   RemoveUserGroupMemberInput: RemoveUserGroupMemberInput;
   ReorderPollOptionsInput: ReorderPollOptionsInput;
@@ -11980,6 +12516,7 @@ export type ResolversTypes = {
   RevokeAuthorizationCredentialInput: RevokeAuthorizationCredentialInput;
   RevokeLicensePlanFromAccount: RevokeLicensePlanFromAccount;
   RevokeLicensePlanFromSpace: RevokeLicensePlanFromSpace;
+  RevokeMcpApiKeyInput: RevokeMcpApiKeyInput;
   RevokeOrganizationAuthorizationCredentialInput: RevokeOrganizationAuthorizationCredentialInput;
   Role: ResolverTypeWrapper<Role>;
   RoleName: RoleName;
@@ -12083,6 +12620,7 @@ export type ResolversTypes = {
   ServiceMetadata: ResolverTypeWrapper<ServiceMetadata>;
   SetDefaultCalloutTemplateOnInnovationFlowStateInput: SetDefaultCalloutTemplateOnInnovationFlowStateInput;
   SetPlatformWellKnownVirtualContributorInput: SetPlatformWellKnownVirtualContributorInput;
+  SidebarWidget: SidebarWidget;
   Space: ResolverTypeWrapper<
     Omit<
       Space,
@@ -12172,6 +12710,7 @@ export type ResolversTypes = {
   TagsetTemplate: ResolverTypeWrapper<TagsetTemplate>;
   TagsetType: TagsetType;
   Task: ResolverTypeWrapper<Task>;
+  TaskColumnCount: ResolverTypeWrapper<TaskColumnCount>;
   TaskStatus: TaskStatus;
   Template: ResolverTypeWrapper<
     Omit<
@@ -12213,6 +12752,7 @@ export type ResolversTypes = {
     Omit<
       TemplatesSet,
       | "calloutTemplates"
+      | "classificationTemplates"
       | "communityGuidelinesTemplates"
       | "postTemplates"
       | "spaceTemplates"
@@ -12220,6 +12760,7 @@ export type ResolversTypes = {
       | "whiteboardTemplates"
     > & {
       calloutTemplates: Array<ResolversTypes["Template"]>;
+      classificationTemplates: Array<ResolversTypes["Template"]>;
       communityGuidelinesTemplates: Array<ResolversTypes["Template"]>;
       postTemplates: Array<ResolversTypes["Template"]>;
       spaceTemplates: Array<ResolversTypes["Template"]>;
@@ -12252,6 +12793,9 @@ export type ResolversTypes = {
   UpdateCalloutSettingsInput: UpdateCalloutSettingsInput;
   UpdateCalloutVisibilityInput: UpdateCalloutVisibilityInput;
   UpdateCalloutsSortOrderInput: UpdateCalloutsSortOrderInput;
+  UpdateClassificationEntryDisplayInput: UpdateClassificationEntryDisplayInput;
+  UpdateClassificationEntryInput: UpdateClassificationEntryInput;
+  UpdateClassificationEntrySelectionInput: UpdateClassificationEntrySelectionInput;
   UpdateClassificationInput: UpdateClassificationInput;
   UpdateClassificationSelectTagsetValueInput: UpdateClassificationSelectTagsetValueInput;
   UpdateCollaboraDocumentInput: UpdateCollaboraDocumentInput;
@@ -12304,6 +12848,8 @@ export type ResolversTypes = {
   UpdateSubspacePinnedInput: UpdateSubspacePinnedInput;
   UpdateSubspacesSortOrderInput: UpdateSubspacesSortOrderInput;
   UpdateTagsetInput: UpdateTagsetInput;
+  UpdateTaskColumnOnCalloutInput: UpdateTaskColumnOnCalloutInput;
+  UpdateTaskColumnsSortOrderOnCalloutInput: UpdateTaskColumnsSortOrderOnCalloutInput;
   UpdateTemplateContentSpaceInput: UpdateTemplateContentSpaceInput;
   UpdateTemplateDefaultTemplateInput: UpdateTemplateDefaultTemplateInput;
   UpdateTemplateFromSpaceInput: UpdateTemplateFromSpaceInput;
@@ -12313,6 +12859,7 @@ export type ResolversTypes = {
   UpdateUserPlatformSettingsInput: UpdateUserPlatformSettingsInput;
   UpdateUserSettingsAssistantInput: UpdateUserSettingsAssistantInput;
   UpdateUserSettingsCommunicationInput: UpdateUserSettingsCommunicationInput;
+  UpdateUserSettingsDashboardInput: UpdateUserSettingsDashboardInput;
   UpdateUserSettingsEntityInput: UpdateUserSettingsEntityInput;
   UpdateUserSettingsHomeSpaceInput: UpdateUserSettingsHomeSpaceInput;
   UpdateUserSettingsInput: UpdateUserSettingsInput;
@@ -12379,6 +12926,7 @@ export type ResolversTypes = {
   UserSettings: ResolverTypeWrapper<UserSettings>;
   UserSettingsAssistant: ResolverTypeWrapper<UserSettingsAssistant>;
   UserSettingsCommunication: ResolverTypeWrapper<UserSettingsCommunication>;
+  UserSettingsDashboard: ResolverTypeWrapper<UserSettingsDashboard>;
   UserSettingsHomeSpace: ResolverTypeWrapper<UserSettingsHomeSpace>;
   UserSettingsNotification: ResolverTypeWrapper<UserSettingsNotification>;
   UserSettingsNotificationChannels: ResolverTypeWrapper<UserSettingsNotificationChannels>;
@@ -12601,14 +13149,18 @@ export type ResolversParentTypes = {
   ActorFull: ResolversInterfaceTypes<ResolversParentTypes>["ActorFull"];
   ActorRolePolicy: ActorRolePolicy;
   ActorRoles: ActorRoles;
+  AddClassificationEntryFromTemplateInput: AddClassificationEntryFromTemplateInput;
   AddPollOptionInput: AddPollOptionInput;
+  AddReactionToCalloutInput: AddReactionToCalloutInput;
   AddVisualToMediaGalleryInput: AddVisualToMediaGalleryInput;
+  AdminRevokeMcpApiKeyInput: AdminRevokeMcpApiKeyInput;
   AdminUserEmailChangeDriftResolveInput: AdminUserEmailChangeDriftResolveInput;
   AdminUserEmailChangeInput: AdminUserEmailChangeInput;
   AiPersona: AiPersona;
   AiServer: AiServer;
-  Application: Omit<Application, "actor"> & {
+  Application: Omit<Application, "actor" | "user"> & {
     actor: ResolversParentTypes["Actor"];
+    user?: Maybe<ResolversParentTypes["User"]>;
   };
   ApplicationEventInput: ApplicationEventInput;
   ApplyForEntryRoleOnRoleSetInput: ApplyForEntryRoleOnRoleSetInput;
@@ -12655,6 +13207,7 @@ export type ResolversParentTypes = {
   };
   CalloutContributionDefaults: CalloutContributionDefaults;
   CalloutContributionsCountOutput: CalloutContributionsCountOutput;
+  CalloutContributorsMapView: CalloutContributorsMapView;
   CalloutContributorsSettings: CalloutContributorsSettings;
   CalloutFraming: Omit<
     CalloutFraming,
@@ -12665,6 +13218,10 @@ export type ResolversParentTypes = {
     subspaces: Array<ResolversParentTypes["Space"]>;
   };
   CalloutPostCreated: CalloutPostCreated;
+  CalloutReaction: Omit<CalloutReaction, "user"> & {
+    user?: Maybe<ResolversParentTypes["User"]>;
+  };
+  CalloutReactionsSummary: CalloutReactionsSummary;
   CalloutSelectionSettings: CalloutSelectionSettings;
   CalloutSettings: CalloutSettings;
   CalloutSettingsContribution: CalloutSettingsContribution;
@@ -12674,6 +13231,9 @@ export type ResolversParentTypes = {
   };
   CastPollVoteInput: CastPollVoteInput;
   Classification: Classification;
+  ClassificationEntry: ClassificationEntry;
+  ClassificationTemplateContent: ClassificationTemplateContent;
+  ClassificationValue: ClassificationValue;
   CollaboraDocument: Omit<CollaboraDocument, "createdBy" | "profile"> & {
     createdBy?: Maybe<ResolversParentTypes["User"]>;
     profile: ResolversParentTypes["Profile"];
@@ -12682,6 +13242,8 @@ export type ResolversParentTypes = {
   Collaboration: Omit<Collaboration, "timeline"> & {
     timeline: ResolversParentTypes["Timeline"];
   };
+  CollaborationMigrationIssue: CollaborationMigrationIssue;
+  CollaborationMigrationResult: CollaborationMigrationResult;
   Communication: Communication;
   CommunicationAdminEnsureAccessInput: CommunicationAdminEnsureAccessInput;
   CommunicationAdminMembershipInput: CommunicationAdminMembershipInput;
@@ -12790,6 +13352,8 @@ export type ResolversParentTypes = {
   CreateCalloutContributionDefaultsData: CreateCalloutContributionDefaultsData;
   CreateCalloutContributionDefaultsInput: CreateCalloutContributionDefaultsInput;
   CreateCalloutContributionInput: CreateCalloutContributionInput;
+  CreateCalloutContributorsMapViewData: CreateCalloutContributorsMapViewData;
+  CreateCalloutContributorsMapViewInput: CreateCalloutContributorsMapViewInput;
   CreateCalloutContributorsSettingsData: CreateCalloutContributorsSettingsData;
   CreateCalloutContributorsSettingsInput: CreateCalloutContributorsSettingsInput;
   CreateCalloutData: CreateCalloutData;
@@ -12805,10 +13369,15 @@ export type ResolversParentTypes = {
   CreateCalloutSettingsFramingData: CreateCalloutSettingsFramingData;
   CreateCalloutSettingsFramingInput: CreateCalloutSettingsFramingInput;
   CreateCalloutSettingsInput: CreateCalloutSettingsInput;
+  CreateCalloutTaskBoardData: CreateCalloutTaskBoardData;
+  CreateCalloutTaskBoardInput: CreateCalloutTaskBoardInput;
   CreateCalloutsSetData: CreateCalloutsSetData;
   CreateCalloutsSetInput: CreateCalloutsSetInput;
   CreateClassificationData: CreateClassificationData;
+  CreateClassificationEntryInput: CreateClassificationEntryInput;
   CreateClassificationInput: CreateClassificationInput;
+  CreateClassificationTemplateContentInput: CreateClassificationTemplateContentInput;
+  CreateClassificationValueInput: CreateClassificationValueInput;
   CreateCollaboraDocumentData: CreateCollaboraDocumentData;
   CreateCollaboraDocumentInput: CreateCollaboraDocumentInput;
   CreateCollaborationData: CreateCollaborationData;
@@ -12858,6 +13427,7 @@ export type ResolversParentTypes = {
   CreateTagsetData: CreateTagsetData;
   CreateTagsetInput: CreateTagsetInput;
   CreateTagsetOnProfileInput: CreateTagsetOnProfileInput;
+  CreateTaskColumnOnCalloutInput: CreateTaskColumnOnCalloutInput;
   CreateTemplateContentSpaceInput: CreateTemplateContentSpaceInput;
   CreateTemplateFromContentSpaceOnTemplatesSetInput: CreateTemplateFromContentSpaceOnTemplatesSetInput;
   CreateTemplateFromSpaceOnTemplatesSetInput: CreateTemplateFromSpaceOnTemplatesSetInput;
@@ -12878,6 +13448,7 @@ export type ResolversParentTypes = {
   DeleteApplicationInput: DeleteApplicationInput;
   DeleteCalendarEventInput: DeleteCalendarEventInput;
   DeleteCalloutInput: DeleteCalloutInput;
+  DeleteClassificationEntryInput: DeleteClassificationEntryInput;
   DeleteCollaboraDocumentInput: DeleteCollaboraDocumentInput;
   DeleteContributionInput: DeleteContributionInput;
   DeleteConversationInput: DeleteConversationInput;
@@ -12897,6 +13468,7 @@ export type ResolversParentTypes = {
   DeleteSpaceInput: DeleteSpaceInput;
   DeleteStateOnInnovationFlowInput: DeleteStateOnInnovationFlowInput;
   DeleteStorageBuckeetInput: DeleteStorageBuckeetInput;
+  DeleteTaskColumnOnCalloutInput: DeleteTaskColumnOnCalloutInput;
   DeleteTemplateInput: DeleteTemplateInput;
   DeleteUserGroupInput: DeleteUserGroupInput;
   DeleteUserInput: DeleteUserInput;
@@ -13004,6 +13576,13 @@ export type ResolversParentTypes = {
   };
   InAppNotificationPayloadSpaceCollaborationCalloutPostComment: Omit<
     InAppNotificationPayloadSpaceCollaborationCalloutPostComment,
+    "callout" | "space"
+  > & {
+    callout: ResolversParentTypes["Callout"];
+    space: ResolversParentTypes["Space"];
+  };
+  InAppNotificationPayloadSpaceCollaborationCalloutReaction: Omit<
+    InAppNotificationPayloadSpaceCollaborationCalloutReaction,
     "callout" | "space"
   > & {
     callout: ResolversParentTypes["Callout"];
@@ -13195,6 +13774,8 @@ export type ResolversParentTypes = {
     user?: Maybe<ResolversParentTypes["User"]>;
   };
   Markdown: Scalars["Markdown"]["output"];
+  McpApiKey: McpApiKey;
+  McpApiKeyMintResult: McpApiKeyMintResult;
   MeConversationsResult: Omit<MeConversationsResult, "conversations"> & {
     conversations: Array<ResolversParentTypes["Conversation"]>;
   };
@@ -13242,6 +13823,7 @@ export type ResolversParentTypes = {
   Messaging: Messaging;
   Metadata: Metadata;
   MigrateEmbeddings: MigrateEmbeddings;
+  MintMcpApiKeyInput: MintMcpApiKeyInput;
   ModelCardAiEngineResult: ModelCardAiEngineResult;
   ModelCardMonitoringResult: ModelCardMonitoringResult;
   ModelCardSpaceUsageResult: ModelCardSpaceUsageResult;
@@ -13249,6 +13831,7 @@ export type ResolversParentTypes = {
   MoveSpaceL1ToSpaceL0Input: MoveSpaceL1ToSpaceL0Input;
   MoveSpaceL1ToSpaceL2Input: MoveSpaceL1ToSpaceL2Input;
   MoveSpaceL2ToSpaceL1Input: MoveSpaceL2ToSpaceL1Input;
+  MoveTaskToColumnInput: MoveTaskToColumnInput;
   Mutation: {};
   MySpaceResults: Omit<MySpaceResults, "latestActivity" | "space"> & {
     latestActivity?: Maybe<ResolversParentTypes["ActivityLogEntry"]>;
@@ -13437,6 +14020,7 @@ export type ResolversParentTypes = {
   RemovePlatformRoleInput: RemovePlatformRoleInput;
   RemovePollOptionInput: RemovePollOptionInput;
   RemovePollVoteInput: RemovePollVoteInput;
+  RemoveReactionFromCalloutInput: RemoveReactionFromCalloutInput;
   RemoveRoleOnRoleSetInput: RemoveRoleOnRoleSetInput;
   RemoveUserGroupMemberInput: RemoveUserGroupMemberInput;
   ReorderPollOptionsInput: ReorderPollOptionsInput;
@@ -13444,6 +14028,7 @@ export type ResolversParentTypes = {
   RevokeAuthorizationCredentialInput: RevokeAuthorizationCredentialInput;
   RevokeLicensePlanFromAccount: RevokeLicensePlanFromAccount;
   RevokeLicensePlanFromSpace: RevokeLicensePlanFromSpace;
+  RevokeMcpApiKeyInput: RevokeMcpApiKeyInput;
   RevokeOrganizationAuthorizationCredentialInput: RevokeOrganizationAuthorizationCredentialInput;
   Role: Role;
   RoleSet: Omit<
@@ -13604,6 +14189,7 @@ export type ResolversParentTypes = {
   TagsetArgs: TagsetArgs;
   TagsetTemplate: TagsetTemplate;
   Task: Task;
+  TaskColumnCount: TaskColumnCount;
   Template: Omit<
     Template,
     "callout" | "communityGuidelines" | "contentSpace" | "profile"
@@ -13634,6 +14220,7 @@ export type ResolversParentTypes = {
   TemplatesSet: Omit<
     TemplatesSet,
     | "calloutTemplates"
+    | "classificationTemplates"
     | "communityGuidelinesTemplates"
     | "postTemplates"
     | "spaceTemplates"
@@ -13641,6 +14228,7 @@ export type ResolversParentTypes = {
     | "whiteboardTemplates"
   > & {
     calloutTemplates: Array<ResolversParentTypes["Template"]>;
+    classificationTemplates: Array<ResolversParentTypes["Template"]>;
     communityGuidelinesTemplates: Array<ResolversParentTypes["Template"]>;
     postTemplates: Array<ResolversParentTypes["Template"]>;
     spaceTemplates: Array<ResolversParentTypes["Template"]>;
@@ -13672,6 +14260,9 @@ export type ResolversParentTypes = {
   UpdateCalloutSettingsInput: UpdateCalloutSettingsInput;
   UpdateCalloutVisibilityInput: UpdateCalloutVisibilityInput;
   UpdateCalloutsSortOrderInput: UpdateCalloutsSortOrderInput;
+  UpdateClassificationEntryDisplayInput: UpdateClassificationEntryDisplayInput;
+  UpdateClassificationEntryInput: UpdateClassificationEntryInput;
+  UpdateClassificationEntrySelectionInput: UpdateClassificationEntrySelectionInput;
   UpdateClassificationInput: UpdateClassificationInput;
   UpdateClassificationSelectTagsetValueInput: UpdateClassificationSelectTagsetValueInput;
   UpdateCollaboraDocumentInput: UpdateCollaboraDocumentInput;
@@ -13724,6 +14315,8 @@ export type ResolversParentTypes = {
   UpdateSubspacePinnedInput: UpdateSubspacePinnedInput;
   UpdateSubspacesSortOrderInput: UpdateSubspacesSortOrderInput;
   UpdateTagsetInput: UpdateTagsetInput;
+  UpdateTaskColumnOnCalloutInput: UpdateTaskColumnOnCalloutInput;
+  UpdateTaskColumnsSortOrderOnCalloutInput: UpdateTaskColumnsSortOrderOnCalloutInput;
   UpdateTemplateContentSpaceInput: UpdateTemplateContentSpaceInput;
   UpdateTemplateDefaultTemplateInput: UpdateTemplateDefaultTemplateInput;
   UpdateTemplateFromSpaceInput: UpdateTemplateFromSpaceInput;
@@ -13733,6 +14326,7 @@ export type ResolversParentTypes = {
   UpdateUserPlatformSettingsInput: UpdateUserPlatformSettingsInput;
   UpdateUserSettingsAssistantInput: UpdateUserSettingsAssistantInput;
   UpdateUserSettingsCommunicationInput: UpdateUserSettingsCommunicationInput;
+  UpdateUserSettingsDashboardInput: UpdateUserSettingsDashboardInput;
   UpdateUserSettingsEntityInput: UpdateUserSettingsEntityInput;
   UpdateUserSettingsHomeSpaceInput: UpdateUserSettingsHomeSpaceInput;
   UpdateUserSettingsInput: UpdateUserSettingsInput;
@@ -13790,6 +14384,7 @@ export type ResolversParentTypes = {
   UserSettings: UserSettings;
   UserSettingsAssistant: UserSettingsAssistant;
   UserSettingsCommunication: UserSettingsCommunication;
+  UserSettingsDashboard: UserSettingsDashboard;
   UserSettingsHomeSpace: UserSettingsHomeSpace;
   UserSettingsNotification: UserSettingsNotification;
   UserSettingsNotificationChannels: UserSettingsNotificationChannels;
@@ -14469,6 +15064,7 @@ export type ApplicationResolvers<
   >;
   state?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  user?: Resolver<Maybe<ResolversTypes["User"]>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -14737,12 +15333,27 @@ export type CalloutResolvers<
     ParentType,
     ContextType
   >;
+  reactions?: Resolver<
+    Array<ResolversTypes["CalloutReaction"]>,
+    ParentType,
+    ContextType
+  >;
+  reactionsSummary?: Resolver<
+    ResolversTypes["CalloutReactionsSummary"],
+    ParentType,
+    ContextType
+  >;
   settings?: Resolver<
     ResolversTypes["CalloutSettings"],
     ParentType,
     ContextType
   >;
   sortOrder?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  taskColumnCounts?: Resolver<
+    Maybe<Array<ResolversTypes["TaskColumnCount"]>>,
+    ParentType,
+    ContextType
+  >;
   updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -14753,6 +15364,11 @@ export type CalloutContributionResolvers<
 > = {
   authorization?: Resolver<
     Maybe<ResolversTypes["Authorization"]>,
+    ParentType,
+    ContextType
+  >;
+  classification?: Resolver<
+    Maybe<ResolversTypes["Classification"]>,
     ParentType,
     ContextType
   >;
@@ -14818,6 +15434,16 @@ export type CalloutContributionsCountOutputResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type CalloutContributorsMapViewResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CalloutContributorsMapView"] = ResolversParentTypes["CalloutContributorsMapView"]
+> = {
+  latitude?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  longitude?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  zoom?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type CalloutContributorsSettingsResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["CalloutContributorsSettings"] = ResolversParentTypes["CalloutContributorsSettings"]
@@ -14834,6 +15460,11 @@ export type CalloutContributorsSettingsResolvers<
   >;
   defaultView?: Resolver<
     ResolversTypes["ContributorCollectionView"],
+    ParentType,
+    ContextType
+  >;
+  mapView?: Resolver<
+    Maybe<ResolversTypes["CalloutContributorsMapView"]>,
     ParentType,
     ContextType
   >;
@@ -14899,6 +15530,36 @@ export type CalloutPostCreatedResolvers<
   contributionID?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   post?: Resolver<ResolversTypes["Post"], ParentType, ContextType>;
   sortOrder?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CalloutReactionResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CalloutReaction"] = ResolversParentTypes["CalloutReaction"]
+> = {
+  emoji?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  user?: Resolver<Maybe<ResolversTypes["User"]>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CalloutReactionsSummaryResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CalloutReactionsSummary"] = ResolversParentTypes["CalloutReactionsSummary"]
+> = {
+  allowedEmojis?: Resolver<
+    Array<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
+  emojis?: Resolver<Array<ResolversTypes["String"]>, ParentType, ContextType>;
+  myReactionEmoji?: Resolver<
+    Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
+  total?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -15041,6 +15702,65 @@ export type ClassificationResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type ClassificationEntryResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["ClassificationEntry"] = ResolversParentTypes["ClassificationEntry"]
+> = {
+  cardinality?: Resolver<
+    ResolversTypes["ClassificationCardinality"],
+    ParentType,
+    ContextType
+  >;
+  createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  display?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  displayLabel?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  selectedValueIDs?: Resolver<
+    Array<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
+  selectedValues?: Resolver<
+    Array<ResolversTypes["ClassificationValue"]>,
+    ParentType,
+    ContextType
+  >;
+  sortOrder?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  values?: Resolver<
+    Array<ResolversTypes["ClassificationValue"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type ClassificationTemplateContentResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["ClassificationTemplateContent"] = ResolversParentTypes["ClassificationTemplateContent"]
+> = {
+  cardinality?: Resolver<
+    ResolversTypes["ClassificationCardinality"],
+    ParentType,
+    ContextType
+  >;
+  values?: Resolver<
+    Array<ResolversTypes["ClassificationValue"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type ClassificationValueResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["ClassificationValue"] = ResolversParentTypes["ClassificationValue"]
+> = {
+  id?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  label?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type CollaboraDocumentResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["CollaboraDocument"] = ResolversParentTypes["CollaboraDocument"]
@@ -15097,6 +15817,36 @@ export type CollaborationResolvers<
   license?: Resolver<ResolversTypes["License"], ParentType, ContextType>;
   timeline?: Resolver<ResolversTypes["Timeline"], ParentType, ContextType>;
   updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CollaborationMigrationIssueResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CollaborationMigrationIssue"] = ResolversParentTypes["CollaborationMigrationIssue"]
+> = {
+  id?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  reason?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CollaborationMigrationResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CollaborationMigrationResult"] = ResolversParentTypes["CollaborationMigrationResult"]
+> = {
+  failed?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  failedDocuments?: Resolver<
+    Array<ResolversTypes["CollaborationMigrationIssue"]>,
+    ParentType,
+    ContextType
+  >;
+  flagged?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  flaggedDocuments?: Resolver<
+    Array<ResolversTypes["CollaborationMigrationIssue"]>,
+    ParentType,
+    ContextType
+  >;
+  migrated?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  total?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -15593,6 +16343,11 @@ export type CreateCalloutContributionDataResolvers<
     ContextType
   >;
   sortOrder?: Resolver<Maybe<ResolversTypes["Float"]>, ParentType, ContextType>;
+  taskColumn?: Resolver<
+    Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
   type?: Resolver<
     ResolversTypes["CalloutContributionType"],
     ParentType,
@@ -15628,6 +16383,16 @@ export type CreateCalloutContributionDefaultsDataResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type CreateCalloutContributorsMapViewDataResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CreateCalloutContributorsMapViewData"] = ResolversParentTypes["CreateCalloutContributorsMapViewData"]
+> = {
+  latitude?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  longitude?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  zoom?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type CreateCalloutContributorsSettingsDataResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["CreateCalloutContributorsSettingsData"] = ResolversParentTypes["CreateCalloutContributorsSettingsData"]
@@ -15644,6 +16409,11 @@ export type CreateCalloutContributorsSettingsDataResolvers<
   >;
   defaultView?: Resolver<
     Maybe<ResolversTypes["ContributorCollectionView"]>,
+    ParentType,
+    ContextType
+  >;
+  mapView?: Resolver<
+    Maybe<ResolversTypes["CreateCalloutContributorsMapViewData"]>,
     ParentType,
     ContextType
   >;
@@ -15686,6 +16456,11 @@ export type CreateCalloutDataResolvers<
     ContextType
   >;
   sortOrder?: Resolver<Maybe<ResolversTypes["Float"]>, ParentType, ContextType>;
+  taskBoard?: Resolver<
+    Maybe<ResolversTypes["CreateCalloutTaskBoardData"]>,
+    ParentType,
+    ContextType
+  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -15820,6 +16595,18 @@ export type CreateCalloutSettingsFramingDataResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type CreateCalloutTaskBoardDataResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["CreateCalloutTaskBoardData"] = ResolversParentTypes["CreateCalloutTaskBoardData"]
+> = {
+  columns?: Resolver<
+    Maybe<Array<ResolversTypes["String"]>>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type CreateCalloutsSetDataResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["CreateCalloutsSetData"] = ResolversParentTypes["CreateCalloutsSetData"]
@@ -15942,6 +16729,11 @@ export type CreateInnovationFlowStateSettingsDataResolvers<
   >;
   showPublishDetails?: Resolver<
     Maybe<ResolversTypes["Boolean"]>,
+    ParentType,
+    ContextType
+  >;
+  sidebar?: Resolver<
+    Maybe<Array<ResolversTypes["SidebarWidget"]>>,
     ParentType,
     ContextType
   >;
@@ -16127,6 +16919,11 @@ export type CreateWhiteboardDataResolvers<
   >;
   profile?: Resolver<
     Maybe<ResolversTypes["CreateProfileData"]>,
+    ParentType,
+    ContextType
+  >;
+  sourceWhiteboardID?: Resolver<
+    Maybe<ResolversTypes["UUID"]>,
     ParentType,
     ContextType
   >;
@@ -16513,6 +17310,7 @@ export type InAppNotificationPayloadResolvers<
     | "InAppNotificationPayloadSpaceCollaborationCallout"
     | "InAppNotificationPayloadSpaceCollaborationCalloutComment"
     | "InAppNotificationPayloadSpaceCollaborationCalloutPostComment"
+    | "InAppNotificationPayloadSpaceCollaborationCalloutReaction"
     | "InAppNotificationPayloadSpaceCollaborationPoll"
     | "InAppNotificationPayloadSpaceCommunicationMessageDirect"
     | "InAppNotificationPayloadSpaceCommunicationUpdate"
@@ -16703,6 +17501,21 @@ export type InAppNotificationPayloadSpaceCollaborationCalloutPostCommentResolver
     ParentType,
     ContextType
   >;
+  space?: Resolver<ResolversTypes["Space"], ParentType, ContextType>;
+  type?: Resolver<
+    ResolversTypes["NotificationEventPayload"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type InAppNotificationPayloadSpaceCollaborationCalloutReactionResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadSpaceCollaborationCalloutReaction"] = ResolversParentTypes["InAppNotificationPayloadSpaceCollaborationCalloutReaction"]
+> = {
+  callout?: Resolver<ResolversTypes["Callout"], ParentType, ContextType>;
+  emoji?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   space?: Resolver<ResolversTypes["Space"], ParentType, ContextType>;
   type?: Resolver<
     ResolversTypes["NotificationEventPayload"],
@@ -16979,6 +17792,11 @@ export type InnovationFlowStateSettingsResolvers<
   >;
   showPublishDetails?: Resolver<
     ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
+  sidebar?: Resolver<
+    Array<ResolversTypes["SidebarWidget"]>,
     ParentType,
     ContextType
   >;
@@ -17975,6 +18793,46 @@ export interface MarkdownScalarConfig
   name: "Markdown";
 }
 
+export type McpApiKeyResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["McpApiKey"] = ResolversParentTypes["McpApiKey"]
+> = {
+  createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  expiresAt?: Resolver<
+    Maybe<ResolversTypes["DateTime"]>,
+    ParentType,
+    ContextType
+  >;
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  lastUsedAt?: Resolver<
+    Maybe<ResolversTypes["DateTime"]>,
+    ParentType,
+    ContextType
+  >;
+  lastUsedFromIp?: Resolver<
+    Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
+  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  operations?: Resolver<
+    Array<ResolversTypes["McpApiKeyOperation"]>,
+    ParentType,
+    ContextType
+  >;
+  status?: Resolver<ResolversTypes["McpApiKeyStatus"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type McpApiKeyMintResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["McpApiKeyMintResult"] = ResolversParentTypes["McpApiKeyMintResult"]
+> = {
+  apiKey?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  key?: Resolver<ResolversTypes["McpApiKey"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type MeConversationsResultResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["MeConversationsResult"] = ResolversParentTypes["MeConversationsResult"]
@@ -18015,6 +18873,11 @@ export type MeQueryResultsResolvers<
     ContextType
   >;
   id?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  mcpApiKeys?: Resolver<
+    Array<ResolversTypes["McpApiKey"]>,
+    ParentType,
+    ContextType
+  >;
   mySpaces?: Resolver<
     Array<ResolversTypes["MySpaceResults"]>,
     ParentType,
@@ -18082,7 +18945,6 @@ export type MemoResolvers<
     ParentType,
     ContextType
   >;
-  content?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
   contentUpdatePolicy?: Resolver<
     ResolversTypes["ContentUpdatePolicy"],
     ParentType,
@@ -18251,6 +19113,15 @@ export type MutationResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["Mutation"] = ResolversParentTypes["Mutation"]
 > = {
+  addClassificationEntryFromTemplate?: Resolver<
+    ResolversTypes["ClassificationEntry"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      MutationAddClassificationEntryFromTemplateArgs,
+      "classificationData"
+    >
+  >;
   addIframeAllowedURL?: Resolver<
     Array<ResolversTypes["String"]>,
     ParentType,
@@ -18268,6 +19139,12 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationAddPollOptionArgs, "optionData">
+  >;
+  addReactionToCallout?: Resolver<
+    ResolversTypes["Callout"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationAddReactionToCalloutArgs, "reactionData">
   >;
   addReactionToMessageInRoom?: Resolver<
     ResolversTypes["Reaction"],
@@ -18358,6 +19235,12 @@ export type MutationResolvers<
       MutationAdminLicensePolicyUpdateCredentialRuleArgs,
       "updateData"
     >
+  >;
+  adminRevokeMcpApiKey?: Resolver<
+    ResolversTypes["McpApiKey"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationAdminRevokeMcpApiKeyArgs, "revokeData">
   >;
   adminSearchIngestFromScratch?: Resolver<
     ResolversTypes["String"],
@@ -18588,6 +19471,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationCreateCalloutOnCalloutsSetArgs, "calloutData">
   >;
+  createClassificationEntry?: Resolver<
+    ResolversTypes["ClassificationEntry"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationCreateClassificationEntryArgs, "classificationData">
+  >;
   createContributionOnCallout?: Resolver<
     ResolversTypes["CalloutContribution"],
     ParentType,
@@ -18678,6 +19567,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationCreateTagsetOnProfileArgs, "tagsetData">
   >;
+  createTaskColumnOnCallout?: Resolver<
+    ResolversTypes["Callout"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationCreateTaskColumnOnCalloutArgs, "columnData">
+  >;
   createTemplate?: Resolver<
     ResolversTypes["Template"],
     ParentType,
@@ -18734,6 +19629,12 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationDeleteCalloutArgs, "deleteData">
+  >;
+  deleteClassificationEntry?: Resolver<
+    ResolversTypes["ClassificationEntry"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationDeleteClassificationEntryArgs, "classificationData">
   >;
   deleteCollaboraDocument?: Resolver<
     ResolversTypes["CollaboraDocument"],
@@ -18842,6 +19743,12 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationDeleteStorageBucketArgs, "deleteData">
+  >;
+  deleteTaskColumnOnCallout?: Resolver<
+    ResolversTypes["Callout"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationDeleteTaskColumnOnCalloutArgs, "columnData">
   >;
   deleteTemplate?: Resolver<
     ResolversTypes["Template"],
@@ -18975,6 +19882,22 @@ export type MutationResolvers<
     ContextType,
     Partial<MutationMarkNotificationsAsUnreadArgs>
   >;
+  migrateLegacyMemoContent?: Resolver<
+    ResolversTypes["CollaborationMigrationResult"],
+    ParentType,
+    ContextType
+  >;
+  migrateLegacyWhiteboardContent?: Resolver<
+    ResolversTypes["CollaborationMigrationResult"],
+    ParentType,
+    ContextType
+  >;
+  mintMcpApiKey?: Resolver<
+    ResolversTypes["McpApiKeyMintResult"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationMintMcpApiKeyArgs, "mintData">
+  >;
   moveContributionToCallout?: Resolver<
     ResolversTypes["CalloutContribution"],
     ParentType,
@@ -18998,6 +19921,12 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationMoveSpaceL2ToSpaceL1Args, "moveData">
+  >;
+  moveTaskToColumn?: Resolver<
+    ResolversTypes["CalloutContribution"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationMoveTaskToColumnArgs, "moveData">
   >;
   refreshAllBodiesOfKnowledge?: Resolver<
     ResolversTypes["Boolean"],
@@ -19072,6 +20001,12 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationRemovePollVoteArgs, "voteData">
+  >;
+  removeReactionFromCallout?: Resolver<
+    ResolversTypes["Callout"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationRemoveReactionFromCalloutArgs, "reactionData">
   >;
   removeReactionToMessageInRoom?: Resolver<
     ResolversTypes["Boolean"],
@@ -19167,6 +20102,12 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationRevokeLicensePlanFromSpaceArgs, "planData">
+  >;
+  revokeMcpApiKey?: Resolver<
+    ResolversTypes["McpApiKey"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationRevokeMcpApiKeyArgs, "revokeData">
   >;
   sendDirectMessageToUsers?: Resolver<
     Array<ResolversTypes["DirectMessageDeliveryResult"]>,
@@ -19320,6 +20261,30 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationUpdateCalloutsSortOrderArgs, "sortOrderData">
+  >;
+  updateClassificationEntry?: Resolver<
+    ResolversTypes["ClassificationEntry"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationUpdateClassificationEntryArgs, "classificationData">
+  >;
+  updateClassificationEntryDisplay?: Resolver<
+    ResolversTypes["ClassificationEntry"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      MutationUpdateClassificationEntryDisplayArgs,
+      "classificationData"
+    >
+  >;
+  updateClassificationEntrySelection?: Resolver<
+    ResolversTypes["ClassificationEntry"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      MutationUpdateClassificationEntrySelectionArgs,
+      "classificationData"
+    >
   >;
   updateClassificationTagset?: Resolver<
     ResolversTypes["Tagset"],
@@ -19533,6 +20498,21 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationUpdateTagsetArgs, "updateData">
+  >;
+  updateTaskColumnOnCallout?: Resolver<
+    ResolversTypes["Callout"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationUpdateTaskColumnOnCalloutArgs, "columnData">
+  >;
+  updateTaskColumnsSortOrderOnCallout?: Resolver<
+    ResolversTypes["Callout"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      MutationUpdateTaskColumnsSortOrderOnCalloutArgs,
+      "sortOrderData"
+    >
   >;
   updateTemplate?: Resolver<
     ResolversTypes["Template"],
@@ -20138,6 +21118,12 @@ export type PlatformAdminQueryResultsResolvers<
       PlatformAdminQueryResultsLatestUserEmailChangeAuditEntryArgs,
       "userID"
     >
+  >;
+  mcpApiKeys?: Resolver<
+    Array<ResolversTypes["McpApiKey"]>,
+    ParentType,
+    ContextType,
+    RequireFields<PlatformAdminQueryResultsMcpApiKeysArgs, "userID">
   >;
   organizations?: Resolver<
     ResolversTypes["PaginatedOrganization"],
@@ -21077,6 +22063,7 @@ export type RelayPaginatedSpaceResolvers<
     ParentType,
     ContextType
   >;
+  activityScore?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   actor?: Resolver<ResolversTypes["Actor"], ParentType, ContextType>;
   authorization?: Resolver<
     Maybe<ResolversTypes["Authorization"]>,
@@ -21751,6 +22738,7 @@ export type SpaceResolvers<
     ParentType,
     ContextType
   >;
+  activityScore?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   actor?: Resolver<ResolversTypes["Actor"], ParentType, ContextType>;
   authorization?: Resolver<
     Maybe<ResolversTypes["Authorization"]>,
@@ -21842,6 +22830,11 @@ export type SpaceAboutResolvers<
 > = {
   authorization?: Resolver<
     Maybe<ResolversTypes["Authorization"]>,
+    ParentType,
+    ContextType
+  >;
+  classifications?: Resolver<
+    Array<ResolversTypes["ClassificationEntry"]>,
     ParentType,
     ContextType
   >;
@@ -22340,6 +23333,15 @@ export type TaskResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type TaskColumnCountResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["TaskColumnCount"] = ResolversParentTypes["TaskColumnCount"]
+> = {
+  column?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  count?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type TemplateResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["Template"] = ResolversParentTypes["Template"]
@@ -22350,6 +23352,11 @@ export type TemplateResolvers<
     ContextType
   >;
   callout?: Resolver<Maybe<ResolversTypes["Callout"]>, ParentType, ContextType>;
+  classification?: Resolver<
+    Maybe<ResolversTypes["ClassificationTemplateContent"]>,
+    ParentType,
+    ContextType
+  >;
   communityGuidelines?: Resolver<
     Maybe<ResolversTypes["CommunityGuidelines"]>,
     ParentType,
@@ -22490,6 +23497,16 @@ export type TemplatesSetResolvers<
     ContextType
   >;
   calloutTemplatesCount?: Resolver<
+    ResolversTypes["Float"],
+    ParentType,
+    ContextType
+  >;
+  classificationTemplates?: Resolver<
+    Array<ResolversTypes["Template"]>,
+    ParentType,
+    ContextType
+  >;
+  classificationTemplatesCount?: Resolver<
     ResolversTypes["Float"],
     ParentType,
     ContextType
@@ -23002,6 +24019,11 @@ export type UserSettingsResolvers<
     ContextType
   >;
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  dashboard?: Resolver<
+    ResolversTypes["UserSettingsDashboard"],
+    ParentType,
+    ContextType
+  >;
   designVersion?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   homeSpace?: Resolver<
     ResolversTypes["UserSettingsHomeSpace"],
@@ -23055,6 +24077,14 @@ export type UserSettingsCommunicationResolvers<
     ParentType,
     ContextType
   >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type UserSettingsDashboardResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["UserSettingsDashboard"] = ResolversParentTypes["UserSettingsDashboard"]
+> = {
+  activityView?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -23223,6 +24253,11 @@ export type UserSettingsNotificationSpaceResolvers<
     ContextType
   >;
   collaborationCalloutPublished?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  collaborationCalloutReaction?: Resolver<
     ResolversTypes["UserSettingsNotificationChannels"],
     ParentType,
     ContextType
@@ -23667,8 +24702,10 @@ export type VisualConstraintsResolvers<
     ContextType
   >;
   aspectRatio?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  maxAspectRatio?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   maxHeight?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   maxWidth?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  minAspectRatio?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   minHeight?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   minWidth?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -23680,11 +24717,6 @@ export type WhiteboardResolvers<
 > = {
   authorization?: Resolver<
     Maybe<ResolversTypes["Authorization"]>,
-    ParentType,
-    ContextType
-  >;
-  content?: Resolver<
-    ResolversTypes["WhiteboardContent"],
     ParentType,
     ContextType
   >;
@@ -23798,18 +24830,26 @@ export type Resolvers<ContextType = any> = {
   CalloutContribution?: CalloutContributionResolvers<ContextType>;
   CalloutContributionDefaults?: CalloutContributionDefaultsResolvers<ContextType>;
   CalloutContributionsCountOutput?: CalloutContributionsCountOutputResolvers<ContextType>;
+  CalloutContributorsMapView?: CalloutContributorsMapViewResolvers<ContextType>;
   CalloutContributorsSettings?: CalloutContributorsSettingsResolvers<ContextType>;
   CalloutFraming?: CalloutFramingResolvers<ContextType>;
   CalloutPostCreated?: CalloutPostCreatedResolvers<ContextType>;
+  CalloutReaction?: CalloutReactionResolvers<ContextType>;
+  CalloutReactionsSummary?: CalloutReactionsSummaryResolvers<ContextType>;
   CalloutSelectionSettings?: CalloutSelectionSettingsResolvers<ContextType>;
   CalloutSettings?: CalloutSettingsResolvers<ContextType>;
   CalloutSettingsContribution?: CalloutSettingsContributionResolvers<ContextType>;
   CalloutSettingsFraming?: CalloutSettingsFramingResolvers<ContextType>;
   CalloutsSet?: CalloutsSetResolvers<ContextType>;
   Classification?: ClassificationResolvers<ContextType>;
+  ClassificationEntry?: ClassificationEntryResolvers<ContextType>;
+  ClassificationTemplateContent?: ClassificationTemplateContentResolvers<ContextType>;
+  ClassificationValue?: ClassificationValueResolvers<ContextType>;
   CollaboraDocument?: CollaboraDocumentResolvers<ContextType>;
   CollaboraEditorUrlResult?: CollaboraEditorUrlResultResolvers<ContextType>;
   Collaboration?: CollaborationResolvers<ContextType>;
+  CollaborationMigrationIssue?: CollaborationMigrationIssueResolvers<ContextType>;
+  CollaborationMigrationResult?: CollaborationMigrationResultResolvers<ContextType>;
   Communication?: CommunicationResolvers<ContextType>;
   CommunicationAdminMembershipResult?: CommunicationAdminMembershipResultResolvers<ContextType>;
   CommunicationAdminMigrateRoomsResult?: CommunicationAdminMigrateRoomsResultResolvers<ContextType>;
@@ -23839,6 +24879,7 @@ export type Resolvers<ContextType = any> = {
   ConversationUpdatedEvent?: ConversationUpdatedEventResolvers<ContextType>;
   CreateCalloutContributionData?: CreateCalloutContributionDataResolvers<ContextType>;
   CreateCalloutContributionDefaultsData?: CreateCalloutContributionDefaultsDataResolvers<ContextType>;
+  CreateCalloutContributorsMapViewData?: CreateCalloutContributorsMapViewDataResolvers<ContextType>;
   CreateCalloutContributorsSettingsData?: CreateCalloutContributorsSettingsDataResolvers<ContextType>;
   CreateCalloutData?: CreateCalloutDataResolvers<ContextType>;
   CreateCalloutFramingData?: CreateCalloutFramingDataResolvers<ContextType>;
@@ -23846,6 +24887,7 @@ export type Resolvers<ContextType = any> = {
   CreateCalloutSettingsContributionData?: CreateCalloutSettingsContributionDataResolvers<ContextType>;
   CreateCalloutSettingsData?: CreateCalloutSettingsDataResolvers<ContextType>;
   CreateCalloutSettingsFramingData?: CreateCalloutSettingsFramingDataResolvers<ContextType>;
+  CreateCalloutTaskBoardData?: CreateCalloutTaskBoardDataResolvers<ContextType>;
   CreateCalloutsSetData?: CreateCalloutsSetDataResolvers<ContextType>;
   CreateClassificationData?: CreateClassificationDataResolvers<ContextType>;
   CreateCollaboraDocumentData?: CreateCollaboraDocumentDataResolvers<ContextType>;
@@ -23897,6 +24939,7 @@ export type Resolvers<ContextType = any> = {
   InAppNotificationPayloadSpaceCollaborationCallout?: InAppNotificationPayloadSpaceCollaborationCalloutResolvers<ContextType>;
   InAppNotificationPayloadSpaceCollaborationCalloutComment?: InAppNotificationPayloadSpaceCollaborationCalloutCommentResolvers<ContextType>;
   InAppNotificationPayloadSpaceCollaborationCalloutPostComment?: InAppNotificationPayloadSpaceCollaborationCalloutPostCommentResolvers<ContextType>;
+  InAppNotificationPayloadSpaceCollaborationCalloutReaction?: InAppNotificationPayloadSpaceCollaborationCalloutReactionResolvers<ContextType>;
   InAppNotificationPayloadSpaceCollaborationPoll?: InAppNotificationPayloadSpaceCollaborationPollResolvers<ContextType>;
   InAppNotificationPayloadSpaceCommunicationMessageDirect?: InAppNotificationPayloadSpaceCommunicationMessageDirectResolvers<ContextType>;
   InAppNotificationPayloadSpaceCommunicationUpdate?: InAppNotificationPayloadSpaceCommunicationUpdateResolvers<ContextType>;
@@ -23936,6 +24979,8 @@ export type Resolvers<ContextType = any> = {
   LookupMyPrivilegesQueryResults?: LookupMyPrivilegesQueryResultsResolvers<ContextType>;
   LookupQueryResults?: LookupQueryResultsResolvers<ContextType>;
   Markdown?: GraphQLScalarType;
+  McpApiKey?: McpApiKeyResolvers<ContextType>;
+  McpApiKeyMintResult?: McpApiKeyMintResultResolvers<ContextType>;
   MeConversationsResult?: MeConversationsResultResolvers<ContextType>;
   MeQueryResults?: MeQueryResultsResolvers<ContextType>;
   MediaGallery?: MediaGalleryResolvers<ContextType>;
@@ -24057,6 +25102,7 @@ export type Resolvers<ContextType = any> = {
   Tagset?: TagsetResolvers<ContextType>;
   TagsetTemplate?: TagsetTemplateResolvers<ContextType>;
   Task?: TaskResolvers<ContextType>;
+  TaskColumnCount?: TaskColumnCountResolvers<ContextType>;
   Template?: TemplateResolvers<ContextType>;
   TemplateContentSpace?: TemplateContentSpaceResolvers<ContextType>;
   TemplateDefault?: TemplateDefaultResolvers<ContextType>;
@@ -24087,6 +25133,7 @@ export type Resolvers<ContextType = any> = {
   UserSettings?: UserSettingsResolvers<ContextType>;
   UserSettingsAssistant?: UserSettingsAssistantResolvers<ContextType>;
   UserSettingsCommunication?: UserSettingsCommunicationResolvers<ContextType>;
+  UserSettingsDashboard?: UserSettingsDashboardResolvers<ContextType>;
   UserSettingsHomeSpace?: UserSettingsHomeSpaceResolvers<ContextType>;
   UserSettingsNotification?: UserSettingsNotificationResolvers<ContextType>;
   UserSettingsNotificationChannels?: UserSettingsNotificationChannelsResolvers<ContextType>;
@@ -25163,7 +26210,6 @@ export type CalloutContributionDataFragment = {
     | {
         id: string;
         nameID: string;
-        content: any;
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
@@ -25397,7 +26443,6 @@ export type CalloutDataFragment = {
       | {
           id: string;
           nameID: string;
-          content: any;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -25858,7 +26903,6 @@ export type CalloutDetailsFragment = {
       | {
           id: string;
           nameID: string;
-          content: any;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -26241,7 +27285,6 @@ export type ContributionsDataFragment = {
     | {
         id: string;
         nameID: string;
-        content: any;
         authorization?:
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
@@ -26650,7 +27693,6 @@ export type WhiteboardCalloutWithStorageConfigFragment = {
 export type WhiteboardDataFragment = {
   id: string;
   nameID: string;
-  content: any;
   authorization?:
     | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
     | undefined;
@@ -26899,7 +27941,6 @@ export type CollaborationDataFragment = {
           | {
               id: string;
               nameID: string;
-              content: any;
               authorization?:
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
@@ -29541,7 +30582,6 @@ export type SubspaceL1DataFragment = {
               | {
                   id: string;
                   nameID: string;
-                  content: any;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -31198,7 +32238,6 @@ export type SubspaceL1DataFragment = {
             | {
                 id: string;
                 nameID: string;
-                content: any;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -32840,7 +33879,6 @@ export type SubspaceL2DataFragment = {
               | {
                   id: string;
                   nameID: string;
-                  content: any;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -34497,7 +35535,6 @@ export type SubspaceL2DataFragment = {
             | {
                 id: string;
                 nameID: string;
-                content: any;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -37319,7 +38356,6 @@ export type SpaceDataFragment = {
             | {
                 id: string;
                 nameID: string;
-                content: any;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -37899,7 +38935,6 @@ export type SpaceDataFragment = {
               | {
                   id: string;
                   nameID: string;
-                  content: any;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -39554,7 +40589,6 @@ export type SpaceDataFragment = {
                 whiteboard?:
                   | {
                       id: string;
-                      content: any;
                       profile: {
                         id: string;
                         displayName: string;
@@ -40142,7 +41176,6 @@ export type SubspaceDataFragment = {
             | {
                 id: string;
                 nameID: string;
-                content: any;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
@@ -41774,7 +42807,6 @@ export type TemplatesManagerDataFragment = {
           whiteboard?:
             | {
                 id: string;
-                content: any;
                 profile: {
                   id: string;
                   displayName: string;
@@ -42307,7 +43339,6 @@ export type TemplatesSetDataFragment = {
     whiteboard?:
       | {
           id: string;
-          content: any;
           profile: {
             id: string;
             displayName: string;
@@ -42550,7 +43581,6 @@ export type WhiteboardTemplateDataFragment = {
   whiteboard?:
     | {
         id: string;
-        content: any;
         profile: {
           id: string;
           displayName: string;
@@ -45657,7 +46687,6 @@ export type CreateCalloutOnCalloutsSetMutation = {
         | {
             id: string;
             nameID: string;
-            content: any;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -45850,6 +46879,38 @@ export type DeleteWhiteboardMutationVariables = Exact<{
 }>;
 
 export type DeleteWhiteboardMutation = { deleteWhiteboard: { id: string } };
+
+export type AddReactionToCalloutMutationVariables = Exact<{
+  reactionData: AddReactionToCalloutInput;
+}>;
+
+export type AddReactionToCalloutMutation = {
+  addReactionToCallout: {
+    id: string;
+    reactionsSummary: {
+      total: number;
+      emojis: Array<string>;
+      myReactionEmoji?: string | undefined;
+      allowedEmojis: Array<string>;
+    };
+  };
+};
+
+export type RemoveReactionFromCalloutMutationVariables = Exact<{
+  reactionData: RemoveReactionFromCalloutInput;
+}>;
+
+export type RemoveReactionFromCalloutMutation = {
+  removeReactionFromCallout: {
+    id: string;
+    reactionsSummary: {
+      total: number;
+      emojis: Array<string>;
+      myReactionEmoji?: string | undefined;
+      allowedEmojis: Array<string>;
+    };
+  };
+};
 
 export type UpdateCalloutMutationVariables = Exact<{
   calloutData: UpdateCalloutEntityInput;
@@ -46122,7 +47183,6 @@ export type UpdateCalloutMutation = {
         | {
             id: string;
             nameID: string;
-            content: any;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -46481,7 +47541,6 @@ export type UpdateCalloutVisibilityMutation = {
         | {
             id: string;
             nameID: string;
-            content: any;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -46856,7 +47915,6 @@ export type CreateContributionOnCalloutMutation = {
       | {
           id: string;
           nameID: string;
-          content: any;
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
@@ -48854,7 +49912,6 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
               | {
                   id: string;
                   nameID: string;
-                  content: any;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -49448,7 +50505,6 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                 | {
                     id: string;
                     nameID: string;
-                    content: any;
                     authorization?:
                       | {
                           myPrivileges?:
@@ -51185,7 +52241,6 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
                   whiteboard?:
                     | {
                         id: string;
-                        content: any;
                         profile: {
                           id: string;
                           displayName: string;
@@ -52962,7 +54017,6 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
               | {
                   id: string;
                   nameID: string;
-                  content: any;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -53556,7 +54610,6 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                 | {
                     id: string;
                     nameID: string;
-                    content: any;
                     authorization?:
                       | {
                           myPrivileges?:
@@ -55293,7 +56346,6 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
                   whiteboard?:
                     | {
                         id: string;
-                        content: any;
                         profile: {
                           id: string;
                           displayName: string;
@@ -57070,7 +58122,6 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
               | {
                   id: string;
                   nameID: string;
-                  content: any;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -57664,7 +58715,6 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
                 | {
                     id: string;
                     nameID: string;
-                    content: any;
                     authorization?:
                       | {
                           myPrivileges?:
@@ -59401,7 +60451,6 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
                   whiteboard?:
                     | {
                         id: string;
-                        content: any;
                         profile: {
                           id: string;
                           displayName: string;
@@ -61178,7 +62227,6 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
               | {
                   id: string;
                   nameID: string;
-                  content: any;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -61772,7 +62820,6 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
                 | {
                     id: string;
                     nameID: string;
-                    content: any;
                     authorization?:
                       | {
                           myPrivileges?:
@@ -63509,7 +64556,6 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
                   whiteboard?:
                     | {
                         id: string;
-                        content: any;
                         profile: {
                           id: string;
                           displayName: string;
@@ -65286,7 +66332,6 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
               | {
                   id: string;
                   nameID: string;
-                  content: any;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -65880,7 +66925,6 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
                 | {
                     id: string;
                     nameID: string;
-                    content: any;
                     authorization?:
                       | {
                           myPrivileges?:
@@ -67617,7 +68661,6 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
                   whiteboard?:
                     | {
                         id: string;
-                        content: any;
                         profile: {
                           id: string;
                           displayName: string;
@@ -69412,7 +70455,6 @@ export type UpdateSpaceMutation = {
               | {
                   id: string;
                   nameID: string;
-                  content: any;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -70006,7 +71048,6 @@ export type UpdateSpaceMutation = {
                 | {
                     id: string;
                     nameID: string;
-                    content: any;
                     authorization?:
                       | {
                           myPrivileges?:
@@ -71743,7 +72784,6 @@ export type UpdateSpaceMutation = {
                   whiteboard?:
                     | {
                         id: string;
-                        content: any;
                         profile: {
                           id: string;
                           displayName: string;
@@ -72362,7 +73402,6 @@ export type CreateSubspaceMutation = {
                 | {
                     id: string;
                     nameID: string;
-                    content: any;
                     authorization?:
                       | {
                           myPrivileges?:
@@ -74097,7 +75136,6 @@ export type CreateSubspaceMutation = {
               | {
                   id: string;
                   nameID: string;
-                  content: any;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -75783,7 +76821,6 @@ export type UpdateSubspaceMutation = {
                 | {
                     id: string;
                     nameID: string;
-                    content: any;
                     authorization?:
                       | {
                           myPrivileges?:
@@ -77518,7 +78555,6 @@ export type UpdateSubspaceMutation = {
               | {
                   id: string;
                   nameID: string;
-                  content: any;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -79753,9 +80789,7 @@ export type CreateWhiteboardTemplateMutation = {
     authorization?:
       | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
       | undefined;
-    whiteboard?:
-      | { id: string; content: any; profile: { displayName: string } }
-      | undefined;
+    whiteboard?: { id: string; profile: { displayName: string } } | undefined;
   };
 };
 
@@ -79923,7 +80957,6 @@ export type UpdateTemplateMutation = {
     whiteboard?:
       | {
           id: string;
-          content: any;
           profile: {
             id: string;
             displayName: string;
@@ -79998,9 +81031,7 @@ export type UpdateWhiteboardTemplateMutation = {
     authorization?:
       | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
       | undefined;
-    whiteboard?:
-      | { id: string; content: any; profile: { displayName: string } }
-      | undefined;
+    whiteboard?: { id: string; profile: { displayName: string } } | undefined;
   };
 };
 
@@ -82015,7 +83046,6 @@ export type SpaceCalloutQuery = {
                     | {
                         id: string;
                         nameID: string;
-                        content: any;
                         authorization?:
                           | {
                               myPrivileges?:
@@ -82519,7 +83549,6 @@ export type CalloutDetailsQuery = {
               | {
                   id: string;
                   nameID: string;
-                  content: any;
                   authorization?:
                     | {
                         myPrivileges?:
@@ -83361,6 +84390,52 @@ export type WhiteboardCalloutStorageConfigQuery = {
                   };
                 }
               | undefined;
+          };
+        }
+      | undefined;
+  };
+};
+
+export type GetCalloutReactionsQueryVariables = Exact<{
+  calloutId: Scalars["UUID"]["input"];
+}>;
+
+export type GetCalloutReactionsQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          reactions: Array<{
+            id: string;
+            emoji: string;
+            updatedDate: Date;
+            user?:
+              | {
+                  id: string;
+                  nameID: string;
+                  profile?: { displayName: string } | undefined;
+                }
+              | undefined;
+          }>;
+        }
+      | undefined;
+  };
+};
+
+export type GetCalloutReactionsSummaryQueryVariables = Exact<{
+  calloutId: Scalars["UUID"]["input"];
+}>;
+
+export type GetCalloutReactionsSummaryQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          reactionsSummary: {
+            total: number;
+            emojis: Array<string>;
+            myReactionEmoji?: string | undefined;
+            allowedEmojis: Array<string>;
           };
         }
       | undefined;
@@ -90980,7 +92055,6 @@ export type GetSpaceDataQuery = {
                     | {
                         id: string;
                         nameID: string;
-                        content: any;
                         authorization?:
                           | {
                               myPrivileges?:
@@ -91628,7 +92702,6 @@ export type GetSpaceDataQuery = {
                       | {
                           id: string;
                           nameID: string;
-                          content: any;
                           authorization?:
                             | {
                                 myPrivileges?:
@@ -93493,7 +94566,6 @@ export type GetSpaceDataQuery = {
                         whiteboard?:
                           | {
                               id: string;
-                              content: any;
                               profile: {
                                 id: string;
                                 displayName: string;
@@ -94169,7 +95241,6 @@ export type GetSubspacePageQuery = {
                       | {
                           id: string;
                           nameID: string;
-                          content: any;
                           authorization?:
                             | {
                                 myPrivileges?:
@@ -96049,7 +97120,6 @@ export type GetSubspacePageQuery = {
                     | {
                         id: string;
                         nameID: string;
-                        content: any;
                         authorization?:
                           | {
                               myPrivileges?:
@@ -97906,7 +98976,6 @@ export type GetSpaceAboutDetailsQuery = {
                     | {
                         id: string;
                         nameID: string;
-                        content: any;
                         authorization?:
                           | {
                               myPrivileges?:
@@ -99785,7 +100854,6 @@ export type GetSubspacesDataQuery = {
                         | {
                             id: string;
                             nameID: string;
-                            content: any;
                             authorization?:
                               | {
                                   myPrivileges?:
@@ -101681,7 +102749,6 @@ export type GetSubspacesDataQuery = {
                       | {
                           id: string;
                           nameID: string;
-                          content: any;
                           authorization?:
                             | {
                                 myPrivileges?:
@@ -104770,93 +105837,5 @@ export type ConversationEventsSubscription = {
       | undefined;
     messageRemoved?: { roomId: string; messageId: any } | undefined;
     readReceiptUpdated?: { roomId: string; lastReadEventId: any } | undefined;
-  };
-};
-
-// --- Callout emoji reactions (wave-1 server feature) ---------------------
-// These types mirror the operations in
-//   lib/src/scenario/graphql/mutations/callout/callout/reactions/
-//   lib/src/scenario/graphql/queries/callout/reactions/
-// They are authored here to match what the code generator would emit once
-// the wave-1 server schema is included in the introspection target.
-
-export type AddReactionToCalloutInput = {
-  calloutID: string;
-  emoji: string;
-};
-
-export type RemoveReactionFromCalloutInput = {
-  calloutID: string;
-};
-
-export type CalloutReactionsSummaryData = {
-  total: number;
-  emojis: Array<string>;
-  myReactionEmoji?: string | undefined;
-  allowedEmojis: Array<string>;
-};
-
-export type CalloutReactionUserData = {
-  id: string;
-  nameID: string;
-  profile: { displayName: string };
-};
-
-export type CalloutReactionItemData = {
-  id: string;
-  emoji: string;
-  updatedDate: Date;
-  user?: CalloutReactionUserData | undefined;
-};
-
-export type AddReactionToCalloutMutationVariables = Exact<{
-  reactionData: AddReactionToCalloutInput;
-}>;
-
-export type AddReactionToCalloutMutation = {
-  addReactionToCallout: {
-    id: string;
-    reactionsSummary: CalloutReactionsSummaryData;
-  };
-};
-
-export type RemoveReactionFromCalloutMutationVariables = Exact<{
-  reactionData: RemoveReactionFromCalloutInput;
-}>;
-
-export type RemoveReactionFromCalloutMutation = {
-  removeReactionFromCallout: {
-    id: string;
-    reactionsSummary: CalloutReactionsSummaryData;
-  };
-};
-
-export type GetCalloutReactionsSummaryQueryVariables = Exact<{
-  calloutId: string;
-}>;
-
-export type GetCalloutReactionsSummaryQuery = {
-  lookup: {
-    callout?:
-      | {
-          id: string;
-          reactionsSummary: CalloutReactionsSummaryData;
-        }
-      | undefined;
-  };
-};
-
-export type GetCalloutReactionsQueryVariables = Exact<{
-  calloutId: string;
-}>;
-
-export type GetCalloutReactionsQuery = {
-  lookup: {
-    callout?:
-      | {
-          id: string;
-          reactions: Array<CalloutReactionItemData>;
-        }
-      | undefined;
   };
 };
