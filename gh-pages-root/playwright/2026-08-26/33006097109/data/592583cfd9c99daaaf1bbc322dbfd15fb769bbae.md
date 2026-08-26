@@ -1,0 +1,221 @@
+# Page snapshot
+
+```yaml
+- generic:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - link:
+            - /url: "#crd-main-content"
+            - text: Skip to content
+          - banner:
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - link:
+                      - /url: /home
+                      - generic:
+                        - img
+                    - generic:
+                      - navigation:
+                        - list:
+                          - listitem:
+                            - generic: L
+                            - link:
+                              - /url: https://test-alkem.io/default-template-p-59dd0
+                              - text: l0-default-template-p-59dd0
+                          - listitem:
+                            - img
+                          - listitem:
+                            - link:
+                              - /url: https://test-alkem.io/default-template-p-59dd0/settings
+                              - text: Settings
+                          - listitem:
+                            - img
+                          - listitem:
+                            - generic: Layout
+                  - navigation:
+                    - button:
+                      - img
+                    - button:
+                      - img
+                    - button:
+                      - img
+                      - generic: 9 unread notifications
+                    - button:
+                      - img
+                    - button:
+                      - generic:
+                        - generic:
+                          - img
+          - main:
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - heading [level=1]:
+                          - link:
+                            - /url: https://test-alkem.io/default-template-p-59dd0
+                            - text: l0-default-template-p-59dd0
+                        - paragraph: A home to go from here to there, together!
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - tablist:
+                        - tab:
+                          - img
+                          - generic: About
+                        - tab [selected]:
+                          - img
+                          - generic: Layout
+                        - tab:
+                          - img
+                          - generic: Community
+                        - tab:
+                          - img
+                          - generic: Updates
+                        - tab:
+                          - img
+                          - generic: Subspaces
+                        - tab:
+                          - img
+                          - generic: Templates
+                        - tab:
+                          - img
+                          - generic: Storage
+                        - tab:
+                          - img
+                          - generic: Settings
+                        - tab:
+                          - img
+                          - generic: Account
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - heading [level=2]: Layout
+                              - paragraph: Customise your Space's navigation tabs. Rename, reorder, and manage Post assignments.
+                            - generic:
+                              - button:
+                                - img
+                                - text: Add tab
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic: Home
+                                    - button:
+                                      - img
+                                  - generic:
+                                    - generic:
+                                      - img
+                                      - text: Active phase
+                                  - generic:
+                                    - paragraph: 🔍 A journey of discovery! Gather insights through research and observation.
+                                - generic:
+                                  - generic:
+                                    - button:
+                                      - img
+                                    - generic:
+                                      - generic: 👋 Welcome to your space!
+                                    - button:
+                                      - img
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic: Community
+                                    - button:
+                                      - img
+                                  - generic:
+                                    - paragraph: 🔍 The contributors to this Space!
+                                - generic:
+                                  - generic:
+                                    - button:
+                                      - img
+                                    - generic:
+                                      - generic: Contributors
+                                    - button:
+                                      - img
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic: Subspaces
+                                    - button:
+                                      - img
+                                  - generic:
+                                    - paragraph: 🔍 Here you can explore the hosted Subspaces. Filter by key words to show just the topics you care about.
+                                - generic:
+                                  - generic:
+                                    - button:
+                                      - img
+                                    - generic:
+                                      - generic: Subspaces
+                                    - button:
+                                      - img
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic: Knowledge
+                                    - button:
+                                      - img
+                                  - generic:
+                                    - paragraph: 🔍 In the Knowledge Base you will find relevant documents, insights and other materials about the topic. The leads of the Space can provide the content, but also community members can contribute.
+                                - generic:
+                                  - generic: No callouts in this column yet.
+                            - status
+                            - generic:
+                              - button "Discard Changes" [disabled]:
+                                - img
+                                - text: Discard Changes
+                              - button "Save Changes" [disabled]:
+                                - img
+                                - text: Save Changes
+          - contentinfo:
+            - generic:
+              - generic:
+                - generic:
+                  - img
+                - generic: © 2026 Alkemio B.V.
+              - navigation:
+                - link:
+                  - /url: https://welcome.alkem.io/legal/terms/
+                  - text: Terms
+                - link:
+                  - /url: https://welcome.alkem.io/legal/privacy
+                  - text: Privacy
+                - link:
+                  - /url: https://welcome.alkem.io/legal/security
+                  - text: Security
+                - button: Support
+                - link:
+                  - /url: https://welcome.alkem.io
+                  - text: About
+              - generic:
+                - button:
+                  - img
+                  - generic: English
+    - region "Notifications alt+T"
+    - button:
+      - img
+  - dialog "Use a template" [active] [ref=e2]:
+    - heading "Use a template" [level=2] [ref=e4]
+    - generic [ref=e5]:
+      - paragraph [ref=e9]: No templates available.
+      - complementary [ref=e10]:
+        - paragraph [ref=e12]: Select a template to preview it.
+    - generic [ref=e13]:
+      - button "No template — start blank" [ref=e14] [cursor=pointer]:
+        - img
+        - text: No template — start blank
+      - button "Close" [ref=e15] [cursor=pointer]
+    - button [ref=e16] [cursor=pointer]:
+      - img
+```
