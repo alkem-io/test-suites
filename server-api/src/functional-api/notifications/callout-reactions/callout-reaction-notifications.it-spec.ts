@@ -42,6 +42,7 @@ import { CalloutVisibility } from '@alkemio/tests-lib/core/generated/alkemio-sch
 import {
   createCalloutOnCalloutsSet,
   deleteCallout,
+  updateCalloutVisibility,
 } from '@functional-api/callout/callouts.request.params';
 import {
   addReactionToCallout,
@@ -302,7 +303,12 @@ afterAll(async () => {
   if (publishedCalloutId) {
     await deleteCallout(publishedCalloutId).catch(() => undefined);
   }
-  await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  // Guard: when beforeAll fails before the scenario exists, afterAll still
+  // runs — an unguarded cleanUpBaseScenario(undefined) throws a TypeError
+  // that masks the real setup failure.
+  if (baseScenario) {
+    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  }
 });
 
 beforeEach(async () => {
@@ -513,6 +519,12 @@ describe('Settings gating (US2)', () => {
   // Isolating the email suppression key (keyed per recipient + callout) ensures
   // that a leading-email reaction in one gating test cannot suppress the next.
   let emailGatingCalloutId = '';
+  // A second dedicated callout for the all-channels-OFF negative (US2-AS5).
+  // It must carry NO prior suppression marker: on a callout that recently sent
+  // a leading email (the shared callout via the push tests, or the gating
+  // callout via US2-AS3), "no email arrived" could mean "suppressed", not
+  // "settings-gated" — a regression in the settings gate would stay green.
+  let allOffCalloutId = '';
 
   beforeAll(async () => {
     const calloutsSetId = baseScenario.space.collaboration.calloutsSetId;
@@ -529,12 +541,38 @@ describe('Settings gating (US2)', () => {
     if (!emailGatingCalloutId) {
       throw new Error('Settings-gating: failed to create dedicated email test callout');
     }
+
+    const cOff = await createCalloutOnCalloutsSet(calloutsSetId, {
+      framing: {
+        profile: {
+          displayName: `callout-reaction-notif-alloff-${uniqueId}`,
+          description: CALLOUT_DESCRIPTION,
+        },
+      },
+      settings: { visibility: CalloutVisibility.Published },
+    });
+    allOffCalloutId = cOff?.data?.createCalloutOnCalloutsSet?.id ?? '';
+    if (!allOffCalloutId) {
+      throw new Error('Settings-gating: failed to create dedicated all-off test callout');
+    }
   });
 
   afterAll(async () => {
-    if (emailGatingCalloutId) {
-      await deleteCallout(emailGatingCalloutId).catch(() => undefined);
+    for (const id of [emailGatingCalloutId, allOffCalloutId]) {
+      if (id) await deleteCallout(id).catch(() => undefined);
     }
+  });
+
+  // Restore the suite baseline (set in the file-level beforeAll) even when an
+  // assertion fails mid-test: an in-body restore never runs after a failed
+  // expect, leaving the shared globalAdmin persona with channels OFF for every
+  // later test and for other suites sharing the persona.
+  afterEach(async () => {
+    await updateCalloutReactionSettings(
+      TestUserManager.users.globalAdmin.id,
+      { email: true, inApp: true, push: true },
+      TestUser.GLOBAL_ADMIN
+    ).catch(() => undefined);
   });
 
   test(
@@ -585,13 +623,7 @@ describe('Settings gating (US2)', () => {
 
       const countAfter = await getCalloutReactionInAppCount(PUBLISHER);
       expect(countAfter).toBe(countBefore);
-
-      // Restore both channels so the next test starts clean.
-      await updateCalloutReactionSettings(
-        TestUserManager.users.globalAdmin.id,
-        { email: true, inApp: true },
-        TestUser.GLOBAL_ADMIN
-      );
+      // Channel restore happens in afterEach, so it also runs on failure.
     }
   );
 
@@ -629,7 +661,7 @@ describe('Settings gating (US2)', () => {
   );
 
   test(
-    'US2-AS4 — all channels OFF: genuine reaction produces nothing anywhere',
+    'US2-AS5 — all channels OFF: genuine reaction produces nothing anywhere, and the reaction itself succeeds',
     async () => {
       await updateCalloutReactionSettings(
         TestUserManager.users.globalAdmin.id,
@@ -642,7 +674,18 @@ describe('Settings gating (US2)', () => {
       // publish from an earlier spec must not be attributed to this one.
       const pushBaseline = await waitForPushQueueQuiet();
 
-      await addReactionToCallout(publishedCalloutId, 'rocket', REACTOR_A);
+      // The dedicated callout has never emailed the publisher, so no
+      // suppression marker exists for its (recipient, callout) key — the
+      // email-negative below can only mean "settings-gated", never
+      // "suppressed by an earlier test's leading email".
+      const result = await addReactionToCallout(
+        allOffCalloutId,
+        'rocket',
+        REACTOR_A
+      );
+      // US2-AS5's second clause: the reaction itself still succeeds.
+      expect(result.error).toBeUndefined();
+      expect(result.data?.addReactionToCallout).toBeDefined();
 
       // Use the full positive delivery bound as the negative grace so "no email"
       // means "none will ever arrive" rather than "none has arrived yet".
@@ -655,13 +698,7 @@ describe('Settings gating (US2)', () => {
       expect(countAfter).toBe(countBefore);
       expect(pushStats.publishedTotal - pushBaseline).toBe(0);
       expect(mailTotal).toBe(0);
-
-      // Restore
-      await updateCalloutReactionSettings(
-        TestUserManager.users.globalAdmin.id,
-        { email: true, inApp: true, push: true },
-        TestUser.GLOBAL_ADMIN
-      );
+      // Channel restore happens in afterEach, so it also runs on failure.
     },
     60_000
   );
@@ -943,9 +980,11 @@ describe('Volume control — email suppression (US3)', () => {
 // ===========================================================================
 
 describe('Publisher-resolution chain (US4/FR-002)', () => {
-  // These tests require creating a new callout and mutating publishedBy /
-  // createdBy to NULL via the live API. Since test-suites has no direct DB
-  // access, we rely on the server's existing API surface:
+  // US4-AS1 (republish switches the recipient) is fully representable through
+  // the public API: updateCalloutVisibility DRAFT→PUBLISHED as another admin
+  // updates publishedBy to the acting user (callout.resolver.mutations →
+  // updateCalloutPublishInfo), and the emit path re-reads the callout at
+  // reaction time. The AS2/AS3 NULL-field arms are NOT representable:
   //
   //   • US4-AS2 (publishedBy NULL → createdBy notified): not representable
   //     from a black-box API harness — no public mutation clears publishedBy.
@@ -961,6 +1000,63 @@ describe('Publisher-resolution chain (US4/FR-002)', () => {
   // This limitation is documented as a deviation: the API-only harness cannot
   // manufacture the NULL-publisher state, so US4-AS2/AS3 are server-unit
   // covered only, as repos.yaml acceptance track prescribes for these cases.
+
+  test(
+    'US4-AS1 — republish by another admin switches the recipient to the new publisher',
+    async () => {
+      // B (globalAdmin) creates AND publishes: publishedBy = createdBy = B.
+      const calloutsSetId = baseScenario.space.collaboration.calloutsSetId;
+      const c = await createCalloutOnCalloutsSet(calloutsSetId, {
+        framing: {
+          profile: {
+            displayName: `callout-reaction-notif-republish-${uniqueId}`,
+            description: CALLOUT_DESCRIPTION,
+          },
+        },
+        settings: { visibility: CalloutVisibility.Published },
+      });
+      const republishCalloutId = c?.data?.createCalloutOnCalloutsSet?.id ?? '';
+      expect(republishCalloutId).toBeTruthy();
+
+      try {
+        // C (spaceAdmin) unpublishes then republishes — the same mutation the
+        // web client fires. The publish transition stamps publishedBy = C.
+        await updateCalloutVisibility(
+          republishCalloutId,
+          CalloutVisibility.Draft,
+          TestUser.SPACE_ADMIN,
+          false
+        );
+        await updateCalloutVisibility(
+          republishCalloutId,
+          CalloutVisibility.Published,
+          TestUser.SPACE_ADMIN,
+          false
+        );
+
+        const publisherBefore = await getCalloutReactionInAppCount(PUBLISHER);
+        const republisherBefore = await getCalloutReactionInAppCount(
+          TestUser.SPACE_ADMIN
+        );
+
+        // A reacts AFTER the republish — FR-002: the recipient is resolved at
+        // emit time, so C (current publisher), never B (creator / original
+        // publisher), must be notified.
+        await addReactionToCallout(republishCalloutId, 'heart', REACTOR_A);
+        await delay(1_500);
+
+        const publisherAfter = await getCalloutReactionInAppCount(PUBLISHER);
+        const republisherAfter = await getCalloutReactionInAppCount(
+          TestUser.SPACE_ADMIN
+        );
+
+        expect(republisherAfter - republisherBefore).toBe(1);
+        expect(publisherAfter - publisherBefore).toBe(0);
+      } finally {
+        await deleteCallout(republishCalloutId).catch(() => undefined);
+      }
+    }
+  );
 
   test(
     'US4-AS4 — reaction mutation succeeds even if notification infrastructure is unreachable (fire-and-forget)',
