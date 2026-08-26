@@ -194,9 +194,27 @@ export default defineConfig({
       // and tears them down in afterAll, so it can run in isolation or alongside
       // the other nightly projects without shared state.
       name: 'Callout reactions',
-      testMatch: [path.resolve(__dirname, '../tests/callout-reactions.spec.ts')],
+      // testMatch alone cannot reach outside the top-level testDir
+      // (src/functional-e2e), so the project needs its own testDir. Without it
+      // this project collected ZERO tests and the nightly silently skipped it.
+      testDir: path.resolve(__dirname, '../tests'),
+      testMatch: ['callout-reactions.spec.ts'],
       timeout: 60_000,
       expect: { timeout: 10_000 },
+    },
+    {
+      // Feature 041 (callout reaction NOTIFICATIONS) — persisted P1 acceptance
+      // walk, same forge-verify shape as 038: machine-generated file in tests/,
+      // self-seeding, torn down in afterAll. Needs more headroom than 038: the
+      // negative assertions (AS4 self-suppression, AS2 swap) each hold a
+      // multi-sample settle window on top of the positive 30s poll.
+      name: 'Callout reaction notifications',
+      // testMatch alone cannot reach outside the top-level testDir
+      // (src/functional-e2e), so the project needs its own testDir.
+      testDir: path.resolve(__dirname, '../tests'),
+      testMatch: ['callout-reaction-notifications.spec.ts'],
+      timeout: 120_000,
+      expect: { timeout: 15_000 },
     },
   ],
   // % or number of the available CPUs
