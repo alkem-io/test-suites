@@ -58,7 +58,24 @@ export const mintBffSession = async (
     testConfiguration.oidc;
 
   const sessionId = randomUUID();
+  // Matches `main.server.ts`'s real session middleware cookie config
+  // (`httpOnly: true, path: '/', maxAge: idleTtlS * 1000`) closely enough to
+  // satisfy `express-session`'s own deserializer
+  // (`Store.prototype.createSession`), which dereferences `cookie.expires` /
+  // `cookie.originalMaxAge` on every read — see the `BffSessionCookie`
+  // doc-comment in `harness-redis.client.ts`. `secure`/`sameSite`/`domain`
+  // only ever govern the BROWSER's handling of the cookie the server issues;
+  // they play no part in the server's own read-back of a session it did not
+  // set the `Set-Cookie` header for, so the harness omits them, mirroring
+  // `session-store.redis.ts`'s own tombstone fallback shape.
+  const cookieMaxAgeMs = idleTtlS * 1000;
   const payload: BffSessionPayload = {
+    cookie: {
+      originalMaxAge: cookieMaxAgeMs,
+      expires: new Date(Date.now() + cookieMaxAgeMs).toISOString(),
+      httpOnly: true,
+      path: '/',
+    },
     access_token: `harness-fabricated-access-token-${sessionId}`,
     id_token: `harness-fabricated-id-token-${sessionId}`,
     refresh_token: `harness-fabricated-refresh-token-${sessionId}`,

@@ -32,7 +32,30 @@ const getHarnessRedisClient = (): Redis => {
   return redisClient;
 };
 
+/**
+ * The `express-session` cookie sub-object every stored session (real or
+ * fabricated) MUST carry. `Store.prototype.createSession`
+ * (`express-session/session/store.js`) dereferences `sess.cookie.expires`
+ * and `sess.cookie.originalMaxAge` on EVERY request that presents this
+ * session's cookie — BEFORE any Passport strategy runs — so a payload
+ * written without one throws `TypeError: Cannot read properties of
+ * undefined (reading 'expires')` inside the session middleware itself and
+ * 500s the request. `server/src/core/auth/oidc/session-store.redis.ts`
+ * documents the identical failure mode for its own tombstone fallback and
+ * carries this same shape; mirrored here for the same reason mint-bff-
+ * session.ts mirrors the rest of `AlkemioSessionPayload` — the harness has
+ * no dependency on the server's source tree.
+ */
+export type BffSessionCookie = {
+  originalMaxAge: number;
+  /** ISO-8601 — `express-session` re-hydrates this into a `Date` on read. */
+  expires: string;
+  httpOnly: boolean;
+  path: string;
+};
+
 export type BffSessionPayload = {
+  cookie: BffSessionCookie;
   access_token: string;
   id_token: string;
   refresh_token: string;
