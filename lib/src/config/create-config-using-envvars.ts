@@ -38,6 +38,41 @@ export const createConfigUsingEnvVars = (): AlkemioTestConfig => {
         password: process.env.AUTH_TEST_HARNESS_PASSWORD ?? 'not set',
       },
     },
+    redis: {
+      // server/quickstart-services.yml publishes `redis` on a docker-assigned
+      // random host port (no fixed `host:container` mapping) — resolve it with
+      // `docker compose port redis 6379` and set REDIS_PORT, or run a local
+      // Redis on the default 6379.
+      host: process.env.REDIS_HOST ?? 'localhost',
+      port: Number(process.env.REDIS_PORT ?? '6379'),
+    },
+    postgres: {
+      // Same caveat as `redis` above — `server/quickstart-services.yml`
+      // publishes postgres on a random host port; resolve with
+      // `docker compose port postgres 5432` and set POSTGRES_PORT.
+      host: process.env.POSTGRES_HOST ?? 'localhost',
+      port: Number(process.env.POSTGRES_PORT ?? '5432'),
+      database: process.env.POSTGRES_DB ?? 'alkemio',
+      // `server/.env.docker` provisions every compose-stack database
+      // (POSTGRES_MULTIPLE_DATABASES, including `alkemio`) under the same
+      // POSTGRES_USER/POSTGRES_PASSWORD pair.
+      user: process.env.POSTGRES_USER ?? 'synapse',
+      password: process.env.POSTGRES_PASSWORD ?? 'synapse',
+    },
+    oidc: {
+      sessionCookieName: process.env.OIDC_SESSION_COOKIE_NAME ?? 'alkemio_session',
+      // Matches `server/alkemio.yml`'s `identity.authentication.providers.oidc.session_signing_key`
+      // committed local-dev placeholder default. MUST be overridden with the
+      // real SESSION_SIGNING_KEY value for any stack that sets one.
+      sessionSigningKey:
+        process.env.SESSION_SIGNING_KEY ??
+        'placeholder-session-signing-key-change-me',
+      webClientId: process.env.ALKEMIO_WEB_CLIENT_ID ?? 'alkemio-web',
+      idleTtlS: Number(process.env.OIDC_SESSION_COOKIE_IDLE_TTL_S ?? '1209600'),
+      absoluteTtlS: Number(
+        process.env.OIDC_SESSION_COOKIE_ABSOLUTE_TTL_S ?? '2592000'
+      ),
+    },
   };
   validateEndpointSchemes(config);
   return config;
