@@ -13,13 +13,16 @@
 // that did not originate from a real sign-in.
 //
 // One subject (`staleSubject`) carries the whole flow on a single
-// continuously authenticated page, in fixed order: attempt deletion on the
-// aged session (refused, nothing deleted) → the client auto-routes to
-// Kratos's `?refresh=true` "confirm it's you" prompt → a REAL re-login
-// completes it → back on the Security tab the confirm dialog re-opens with
-// the typed-name field cleared (never auto-executed) → re-type and confirm
-// → deletion succeeds on the now-fresh session — hence `serial` mode for
-// this file, the same reason us1/us2 use it.
+// continuously authenticated page, in fixed order: clicking "Delete
+// account" on the aged session never reaches the confirm dialog at all —
+// the freshness check runs in the pre-flight, BEFORE either dialog opens
+// (data-model.md §9), so the client routes straight to the identity
+// provider's real re-authentication round trip via the OIDC BFF login route
+// (nothing is deleted) → a REAL re-login completes it → back on the
+// Security tab the confirm dialog auto-opens with the typed-name field
+// cleared (never auto-executed) → type and confirm → deletion succeeds on
+// the now-fresh session — hence `serial` mode for this file, the same
+// reason us1/us2 use it.
 //
 // US3-AS4 (SSO-only identities never see a password prompt) and AS5/AS6
 // (fail-closed on missing/unparseable `created_at`, silent-refresh does not
@@ -39,6 +42,7 @@ import {
   deleteAccountTriggerButton,
   deleteUserQuietly,
   DisposableSubject,
+  getAuditRowsFor,
   harnessPassword,
   loginAsSubject,
   logInHeaderLink,
@@ -74,25 +78,31 @@ const ageCurrentBrowserSessionFor = async (
 };
 
 /**
- * Completes the identity provider's real re-authentication round trip. The
- * `?refresh=true` Kratos flow may present the identity's email pre-filled
- * and read-only (a "confirm it's you" prompt) or as a normal editable
- * field depending on flow configuration — filling it only when present
- * keeps this robust to either shape rather than asserting one.
+ * Completes the identity provider's real re-authentication round trip.
+ * `useDeleteAccount`'s `redirectToReauth` sends the browser through the OIDC
+ * BFF login route (`/api/auth/oidc/login`, `prompt: 'login'`) rather than
+ * any Kratos-native `?refresh=true` settings-flow redirect — that mechanism
+ * belongs to the Settings flow's own privileged-session handling and is
+ * explicitly not what this hook uses. The round trip may hop through more
+ * than one intermediate URL before landing on the sign-in form, so this
+ * waits on the form's own locator rather than any particular URL shape; the
+ * identity's email may arrive pre-filled and read-only (a "confirm it's
+ * you" prompt) or as a normal editable field depending on flow
+ * configuration — filling it only when present keeps this robust to either
+ * shape rather than asserting one.
  */
 const completeReauthenticationPrompt = async (
   page: Page,
   subject: DisposableSubject
 ): Promise<void> => {
-  await page.waitForURL(/refresh=true/i, { timeout: 20_000 });
+  const passwordField = page.getByRole('textbox', { name: 'Password *' });
+  await expect(passwordField).toBeVisible({ timeout: 20_000 });
 
   const emailField = page.getByRole('textbox', { name: 'E-Mail *' });
   if (await emailField.isVisible().catch(() => false)) {
     await emailField.fill(subject.email);
   }
-  await page
-    .getByRole('textbox', { name: 'Password *' })
-    .fill(harnessPassword);
+  await passwordField.fill(harnessPassword);
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
 };
 
@@ -127,16 +137,24 @@ test.describe(
     test('US3-AS1/AS2: a stale session is refused, nothing is deleted, and the client routes to real re-authentication', async () => {
       test.setTimeout(60_000);
 
+      // Freshness routing happens BEFORE either dialog ever opens
+      // (data-model.md §9): the pre-flight's `sessionFresh` flag sends a
+      // stale session straight to the OIDC BFF login route, so the confirm
+      // dialog's typed-name field never mounts here — asserting the
+      // departure from the Security tab, not any dialog content, is the
+      // only signal the shipped connector actually produces.
       await deleteAccountTriggerButton(stalePage).click();
-      await typedNameField(stalePage).fill(staleSubject.displayName);
-      const confirmButton = confirmDeleteButton(stalePage);
-      await expect(confirmButton).toBeEnabled();
-      await confirmButton.click();
+      await stalePage.waitForURL(
+        url => !url.pathname.endsWith('/settings/security'),
+        { timeout: 20_000 }
+      );
 
-      // The distinct "session refresh required" signal surfaces as the
-      // client auto-routing to the identity provider's real re-
-      // authentication round trip — never a silent success, never the
-      // dialog's own generic failure text.
+      // Nothing was deleted: no primary audit row for this subject yet.
+      const rowsBeforeReauth = await getAuditRowsFor(staleSubject.userId);
+      expect(
+        rowsBeforeReauth.filter(row => row.outcome === 'account_deleted')
+      ).toHaveLength(0);
+
       await completeReauthenticationPrompt(stalePage, staleSubject);
 
       // Back on the Security tab: the confirm dialog auto-reopens with the
