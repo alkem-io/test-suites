@@ -1,5 +1,6 @@
 import { Pool, type QueryResultRow } from 'pg';
 import { testConfiguration } from '../config/test.configuration';
+import { assertLoopbackInternal } from '../config/loopback-guard';
 
 /**
  * Direct Postgres access to the compose `alkemio` database, for assertions
@@ -21,6 +22,7 @@ let pool: Pool | undefined;
 const getHarnessDbPool = (): Pool => {
   if (!pool) {
     const { host, port, database, user, password } = testConfiguration.postgres;
+    assertLoopbackInternal('Harness Postgres (POSTGRES_HOST)', { host });
     pool = new Pool({
       host,
       port,

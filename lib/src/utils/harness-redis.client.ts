@@ -1,5 +1,6 @@
 import Redis from 'ioredis';
 import { testConfiguration } from '../config/test.configuration';
+import { assertLoopbackInternal } from '../config/loopback-guard';
 
 /**
  * Direct Redis access to the server's BFF session store, used only by the
@@ -20,6 +21,7 @@ let redisClient: Redis | undefined;
 const getHarnessRedisClient = (): Redis => {
   if (!redisClient) {
     const { host, port } = testConfiguration.redis;
+    assertLoopbackInternal('Harness Redis (REDIS_HOST)', { host });
     redisClient = new Redis({
       host,
       port,
@@ -148,6 +150,44 @@ export const ageBffSessionCreatedAt = async (
     ...payload,
     created_at: createdAtEpochS,
   }));
+
+/**
+ * Finds the sessionId of the most-recently-created BFF session belonging to
+ * Kratos identity `sub` — the lookup a walk needs to age a REAL, browser-
+ * created session (e.g. the US3 re-authentication acceptance walk) without
+ * ever reading the browser's own signed cookie. `KEYS` (not `SCAN`) is
+ * deliberate: this only ever runs against a small local/CI compose Redis
+ * (`assertLoopbackInternal` in `getHarnessRedisClient` already refuses
+ * anything else), where a full key scan is instant and the simplicity is
+ * worth more than the eviction-safety `SCAN` buys on a production-sized
+ * keyspace.
+ */
+export const findBffSessionIdBySub = async (
+  sub: string
+): Promise<string> => {
+  const client = getHarnessRedisClient();
+  const keys = await client.keys(`${BFF_SESSION_KEY_PREFIX}*`);
+  let newest: { sessionId: string; createdAt: number } | undefined;
+
+  for (const key of keys) {
+    const raw = await client.get(key);
+    if (raw === null) continue;
+    const payload = JSON.parse(raw) as Partial<BffSessionPayload>;
+    if (payload.sub !== sub) continue;
+    const createdAt =
+      typeof payload.created_at === 'number' ? payload.created_at : 0;
+    if (!newest || createdAt > newest.createdAt) {
+      newest = { sessionId: key.slice(BFF_SESSION_KEY_PREFIX.length), createdAt };
+    }
+  }
+
+  if (!newest) {
+    throw new Error(
+      `findBffSessionIdBySub: no BFF session found in Redis for Kratos sub '${sub}' — was the subject logged in through a real browser session first?`
+    );
+  }
+  return newest.sessionId;
+};
 
 export const deleteBffSession = async (sessionId: string): Promise<void> => {
   await getHarnessRedisClient().del(sessionKey(sessionId));

@@ -132,10 +132,17 @@ const validateEndpointSchemes = (config: AlkemioTestConfig): void => {
 };
 
 export const stringifyConfig = (config: AlkemioTestConfig): string => {
-  const fieldsToMask = ['password'];
+  // Pattern rather than an exact-name list: `sessionSigningKey` is exactly
+  // the material that makes BFF session fabrication (`mint-bff-session.ts`)
+  // exploitable if it ever leaked into CI logs / published reports, and an
+  // exact-name mask silently misses the next secret-shaped field too.
+  const sensitiveKeyPattern = /password|secret|key|token/i;
   return JSON.stringify(
     config,
-    (key, value) => (fieldsToMask.includes(key) ? `**${value.length}**` : value),
+    (key, value) =>
+      sensitiveKeyPattern.test(key) && typeof value === 'string'
+        ? `**${value.length}**`
+        : value,
     2 // Indentation for pretty output
   );
 };

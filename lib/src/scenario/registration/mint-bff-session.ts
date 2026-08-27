@@ -1,6 +1,7 @@
 import { sign as signCookieValue } from 'cookie-signature';
 import { randomUUID } from 'crypto';
 import { testConfiguration } from '../../config/test.configuration';
+import { assertLoopbackInternal } from '../../config/loopback-guard';
 import { decodeJwtPayloadUnsafe } from '../../utils/decode-jwt-unsafe';
 import {
   type BffSessionPayload,
@@ -52,6 +53,13 @@ export const mintBffSession = async (
   alkemioActorId: string,
   options?: { createdAtEpochS?: number }
 ): Promise<MintedBffSession> => {
+  // Writing directly into the session store is equivalent to minting a
+  // valid login for ANY actor id the caller supplies, with no audit trail —
+  // refuse unless the target stack is loopback (see `loopback-guard.ts`).
+  assertLoopbackInternal('BFF session fabrication (ALKEMIO_BASE_URL)', {
+    url: testConfiguration.endPoints.server,
+  });
+
   const nowS = Math.floor(Date.now() / 1000);
   const createdAtEpochS = options?.createdAtEpochS ?? nowS;
   const { sessionCookieName, sessionSigningKey, webClientId, idleTtlS, absoluteTtlS } =
