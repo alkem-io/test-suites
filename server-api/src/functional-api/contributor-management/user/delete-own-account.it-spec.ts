@@ -38,6 +38,7 @@ import {
   deleteUserAsSelf,
   DisposableSelfUser,
   getMeAccountDeletion,
+  getOrganizationOwnerIds,
   getPlatformAuditRowsForUser,
   mintAgedSessionFor,
   mintFreshSessionFor,
@@ -93,6 +94,12 @@ describe('delete-own-account — US1 happy path', () => {
       [user.userId]
     );
     expect(remainingUser).toHaveLength(0);
+
+    const remainingAccount = await queryHarnessDb<{ id: string }>(
+      'SELECT id FROM account WHERE id = $1',
+      [user.accountId]
+    );
+    expect(remainingAccount).toHaveLength(0);
 
     const auditRows = await getPlatformAuditRowsForUser(user.userId);
     const primaryRows = auditRows.filter(r => r.outcome === 'account_deleted');
@@ -190,7 +197,9 @@ describe('delete-own-account — US2 per-kind blocker equivalence', () => {
 describe('delete-own-account — US4 sole organization owner', () => {
   test('a sole owner is blocked on self, unblocked once a second owner exists, and an admin can delete a sole owner directly', async () => {
     const user = await tracked('us4-sole-owner');
-    const { roleSetId } = await seedSoleOrganizationOwner(user.userId);
+    const { organizationId, roleSetId } = await seedSoleOrganizationOwner(
+      user.userId
+    );
     const session = await mintFreshSessionFor(user);
 
     const blockedPreflight = await getMeAccountDeletion(session);
@@ -215,6 +224,16 @@ describe('delete-own-account — US4 sole organization owner', () => {
         b => b.kind === 'SOLE_ORGANIZATION_OWNER'
       )
     ).toBe(false);
+
+    // Closes both directions of R-10: the blocker disappearing is not
+    // itself proof deletion actually proceeds (false positive), and the
+    // organization must still have an owner afterwards — never orphaned
+    // down to zero (false negative) — the departing user is not among them.
+    const finalDeletion = await deleteUserAsSelf(user.userId, session);
+    expect(finalDeletion.body.errors).toBeUndefined();
+
+    const remainingOwnerIds = await getOrganizationOwnerIds(organizationId);
+    expect(remainingOwnerIds).toEqual([secondOwner.userId]);
   });
 
   test('the admin branch deletes a sole organization owner directly (support-route pass-through, FR-023)', async () => {

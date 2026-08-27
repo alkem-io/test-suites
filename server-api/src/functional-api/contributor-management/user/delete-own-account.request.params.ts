@@ -229,8 +229,11 @@ export const addSecondOrganizationOwner = async (
 
 /** No selection in `OrganizationData` parameterises `usersInRole` by role
  * (it is fixed to `ASSOCIATE`), so this is a small standalone raw query
- * rather than the codegen'd `getOrganizationData` helper. */
-const getOrganizationOwnerIds = async (
+ * rather than the codegen'd `getOrganizationData` helper. Exported so the
+ * US4 it-spec can close the loop on both directions of R-10 (false-positive
+ * block, orphaned org) by reading the owner list back after a deletion, not
+ * just observing the blocker disappear. */
+export const getOrganizationOwnerIds = async (
   organizationId: string
 ): Promise<string[]> => {
   const bearerToken = TestUserManager.getUserModelByType(
