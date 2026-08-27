@@ -1,6 +1,7 @@
 // spec: client-web/src/functional-e2e/public-space/public-space-non-member-navigation-test-plan.md
 // seed: client-web/src/functional-e2e/seed-public-space.spec.ts
 
+import { aboutThisSpaceButton } from '../helpers/space-navigation.helper';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
 import { test, expect } from '@playwright/test';
@@ -75,7 +76,7 @@ test.describe('Public Space Discovery and Access', () => {
     // Verify Login/Sign Up option remains available (user not logged in).
     // CRD moved the apply affordance out of the dashboard and into the About
     // dialog; open it to surface the "Sign in to apply" button.
-    await page.getByRole('button', { name: 'About this Space' }).click();
+    await aboutThisSpaceButton(page).click();
     await expect(
       page.getByRole('dialog').getByRole('button', { name: 'Sign in to apply' })
     ).toBeVisible();
