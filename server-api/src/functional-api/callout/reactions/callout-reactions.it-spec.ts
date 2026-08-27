@@ -141,10 +141,10 @@ beforeAll(async () => {
   postOnlyCalloutId =
     postOnly?.data?.createCalloutOnCalloutsSet?.id ?? '';
 
-  // Whiteboard-only callout (US1-AS5 / R-2). Use the dedicated whiteboard helper,
-  // which seeds the required default whiteboardContent (Excalidraw JSON); the
-  // generic createCalloutOnCalloutsSet does not accept it, so a whiteboard-only
-  // callout created through it returns no id.
+  // Whiteboard-only callout (US1-AS5 / R-2). Use the dedicated whiteboard
+  // helper, which sets up whiteboard contribution settings; since server#6399
+  // the default whiteboard content is server-internal (empty unless seeded
+  // via sourceWhiteboardID / sourceCalloutID).
   const whiteboardOnly = await createWhiteboardCalloutOnCalloutsSet(
     calloutsSetId,
     {

@@ -51,7 +51,6 @@ export type Scalars = {
     input: import("graphql-upload").FileUpload;
     output: import("graphql-upload").FileUpload;
   };
-  WhiteboardContent: { input: any; output: any };
 };
 
 export type Apm = {
@@ -1215,8 +1214,8 @@ export type CalloutContributionDefaults = {
   postDescription?: Maybe<Scalars["Markdown"]["output"]>;
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
-  /** The default whiteboard content for whiteboard responses. */
-  whiteboardContent?: Maybe<Scalars["WhiteboardContent"]["output"]>;
+  /** Whether this Callout has a non-empty default for Whiteboard contributions. */
+  whiteboardContentAvailable: Scalars["Boolean"]["output"];
 };
 
 export enum CalloutContributionType {
@@ -1566,6 +1565,8 @@ export type CollaborationMigrationResult = {
   flaggedDocuments: Array<CollaborationMigrationIssue>;
   migrated: Scalars["Int"]["output"];
   total: Scalars["Int"]["output"];
+  /** Legacy Whiteboard contribution defaults without a complete owning Callout path. */
+  unattached: Scalars["Int"]["output"];
 };
 
 export type Communication = {
@@ -2053,7 +2054,10 @@ export type CreateCalloutContributionDefaultsData = {
   defaultDisplayName?: Maybe<Scalars["String"]["output"]>;
   /** The default description to use for new Post contributions. */
   postDescription?: Maybe<Scalars["Markdown"]["output"]>;
-  whiteboardContent?: Maybe<Scalars["WhiteboardContent"]["output"]>;
+  /** Copy the internal Whiteboard contribution default from this source Callout. Mutually exclusive with sourceWhiteboardID. */
+  sourceCalloutID?: Maybe<Scalars["UUID"]["output"]>;
+  /** Seed the default from an existing Whiteboard. The server copies its content and media into the owning Callout bucket; the source id is not persisted. */
+  sourceWhiteboardID?: Maybe<Scalars["UUID"]["output"]>;
 };
 
 export type CreateCalloutContributionDefaultsInput = {
@@ -2061,7 +2065,10 @@ export type CreateCalloutContributionDefaultsInput = {
   defaultDisplayName?: InputMaybe<Scalars["String"]["input"]>;
   /** The default description to use for new Post contributions. */
   postDescription?: InputMaybe<Scalars["Markdown"]["input"]>;
-  whiteboardContent?: InputMaybe<Scalars["WhiteboardContent"]["input"]>;
+  /** Copy the internal Whiteboard contribution default from this source Callout. Mutually exclusive with sourceWhiteboardID. */
+  sourceCalloutID?: InputMaybe<Scalars["UUID"]["input"]>;
+  /** Seed the default from an existing Whiteboard. The server copies its content and media into the owning Callout bucket; the source id is not persisted. */
+  sourceWhiteboardID?: InputMaybe<Scalars["UUID"]["input"]>;
 };
 
 export type CreateCalloutContributionInput = {
@@ -2861,24 +2868,22 @@ export type CreateVisualOnProfileInput = {
 };
 
 export type CreateWhiteboardData = {
-  content?: Maybe<Scalars["WhiteboardContent"]["output"]>;
   /** A readable identifier, unique within the containing scope. */
   nameID?: Maybe<Scalars["NameID"]["output"]>;
   /** The preview settings for the whiteboard. */
   previewSettings?: Maybe<CreateWhiteboardPreviewSettingsData>;
   profile?: Maybe<CreateProfileData>;
-  /** Seed the new Whiteboard from the stored content of an existing Whiteboard (server-side copy). Mutually exclusive with `content` — supply exactly one. */
+  /** Seed the new Whiteboard from the stored content of an existing Whiteboard through a server-side authorized copy. Omission creates an empty Whiteboard. */
   sourceWhiteboardID?: Maybe<Scalars["UUID"]["output"]>;
 };
 
 export type CreateWhiteboardInput = {
-  content?: InputMaybe<Scalars["WhiteboardContent"]["input"]>;
   /** A readable identifier, unique within the containing scope. */
   nameID?: InputMaybe<Scalars["NameID"]["input"]>;
   /** The preview settings for the whiteboard. */
   previewSettings?: InputMaybe<CreateWhiteboardPreviewSettingsInput>;
   profile?: InputMaybe<CreateProfileInput>;
-  /** Seed the new Whiteboard from the stored content of an existing Whiteboard (server-side copy). Mutually exclusive with `content` — supply exactly one. */
+  /** Seed the new Whiteboard from the stored content of an existing Whiteboard through a server-side authorized copy. Omission creates an empty Whiteboard. */
   sourceWhiteboardID?: InputMaybe<Scalars["UUID"]["input"]>;
 };
 
@@ -5214,7 +5219,7 @@ export type Mutation = {
   markNotificationsAsUnread: Scalars["Boolean"]["output"];
   /** Migrates all pending legacy memo content. Idempotent: repeated calls process only rows whose migrated marker is false. */
   migrateLegacyMemoContent: CollaborationMigrationResult;
-  /** Migrates all pending legacy whiteboard content. Idempotent: repeated calls process only rows whose migrated marker is false. */
+  /** Migrates pending legacy Whiteboard documents and independently normalizes every legacy Whiteboard contribution default, including defaults stored by Callout templates. Idempotent: repeated calls process only unmigrated documents and non-canonical defaults. */
   migrateLegacyWhiteboardContent: CollaborationMigrationResult;
   /** Mint a new MCP API key for the current user. Returns the plaintext exactly once. */
   mintMcpApiKey: McpApiKeyMintResult;
@@ -5268,6 +5273,8 @@ export type Mutation = {
   reorderPollOptions: Poll;
   /** Replace the backing file of an existing CollaboraDocument in place, preserving its identity. Requires UPDATE on the document. The replacement must be an allowed OfficeDocs format, within the size cap, and the SAME document type as the current file. Refused while the document is being edited. */
   replaceCollaboraDocument: CollaboraDocument;
+  /** Replace a Whiteboard from another Whiteboard through the live collaboration room. Content and media are copied server-side; snapshot bytes never pass through GraphQL. */
+  replaceWhiteboardContentFromSource: Whiteboard;
   /** Resets the interaction with the VC by recreating the room. */
   resetConversationVc: Conversation;
   /** Reset all license plans on Accounts */
@@ -5987,6 +5994,10 @@ export type MutationReorderPollOptionsArgs = {
 export type MutationReplaceCollaboraDocumentArgs = {
   file: Scalars["Upload"]["input"];
   replaceData: ReplaceCollaboraDocumentInput;
+};
+
+export type MutationReplaceWhiteboardContentFromSourceArgs = {
+  input: ReplaceWhiteboardContentFromSourceInput;
 };
 
 export type MutationResetConversationVcArgs = {
@@ -7746,6 +7757,13 @@ export type ReplaceCollaboraDocumentInput = {
   displayName?: InputMaybe<Scalars["String"]["input"]>;
 };
 
+export type ReplaceWhiteboardContentFromSourceInput = {
+  /** The Whiteboard whose content and media are copied into the target. */
+  sourceWhiteboardID: Scalars["UUID"]["input"];
+  /** The Whiteboard whose content is replaced. */
+  targetWhiteboardID: Scalars["UUID"]["input"];
+};
+
 export type RevokeAuthorizationCredentialInput = {
   /** The resource to which access is being removed. */
   resourceID: Scalars["String"]["input"];
@@ -9186,12 +9204,16 @@ export type UpdateCalendarEventInput = {
 };
 
 export type UpdateCalloutContributionDefaultsInput = {
+  /** Remove the stored Whiteboard contribution default. Mutually exclusive with sourceWhiteboardID and sourceCalloutID. */
+  clearWhiteboardContent?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** The default title to use for new contributions. */
   defaultDisplayName?: InputMaybe<Scalars["String"]["input"]>;
   /** The default description to use for new Post contributions. */
   postDescription?: InputMaybe<Scalars["Markdown"]["input"]>;
-  /** The default description to use for new Whiteboard contributions. */
-  whiteboardContent?: InputMaybe<Scalars["WhiteboardContent"]["input"]>;
+  /** Copy the internal Whiteboard contribution default from this source Callout. Mutually exclusive with sourceWhiteboardID and clearWhiteboardContent. */
+  sourceCalloutID?: InputMaybe<Scalars["UUID"]["input"]>;
+  /** Replace the default from an existing Whiteboard. The server copies its content and media into the owning Callout bucket; the source id is not persisted. */
+  sourceWhiteboardID?: InputMaybe<Scalars["UUID"]["input"]>;
 };
 
 export type UpdateCalloutContributorsSettingsInput = {
@@ -9229,10 +9251,10 @@ export type UpdateCalloutFramingInput = {
   poll?: InputMaybe<UpdatePollInput>;
   /** The Profile of the Template. */
   profile?: InputMaybe<UpdateProfileInput>;
+  /** Replace the framing Whiteboard from another Whiteboard through a server-side authorized copy. */
+  sourceWhiteboardID?: InputMaybe<Scalars["UUID"]["input"]>;
   /** The type of additional content attached to the framing of the callout. */
   type?: InputMaybe<CalloutFramingType>;
-  /** The new content to be used. */
-  whiteboardContent?: InputMaybe<Scalars["WhiteboardContent"]["input"]>;
   /** The new preview settings for the Whiteboard. */
   whiteboardPreviewSettings?: InputMaybe<UpdateWhiteboardPreviewSettingsInput>;
 };
@@ -9790,8 +9812,8 @@ export type UpdateTemplateInput = {
   postDefaultDescription?: InputMaybe<Scalars["Markdown"]["input"]>;
   /** The Profile of the Template. */
   profile?: InputMaybe<UpdateProfileInput>;
-  /** The new content to be used. */
-  whiteboardContent?: InputMaybe<Scalars["WhiteboardContent"]["input"]>;
+  /** Replace this Whiteboard Template from an existing Whiteboard through a server-side authorized copy. */
+  sourceWhiteboardID?: InputMaybe<Scalars["UUID"]["input"]>;
 };
 
 export type UpdateUserGroupInput = {
@@ -12513,6 +12535,7 @@ export type ResolversTypes = {
   RemoveUserGroupMemberInput: RemoveUserGroupMemberInput;
   ReorderPollOptionsInput: ReorderPollOptionsInput;
   ReplaceCollaboraDocumentInput: ReplaceCollaboraDocumentInput;
+  ReplaceWhiteboardContentFromSourceInput: ReplaceWhiteboardContentFromSourceInput;
   RevokeAuthorizationCredentialInput: RevokeAuthorizationCredentialInput;
   RevokeLicensePlanFromAccount: RevokeLicensePlanFromAccount;
   RevokeLicensePlanFromSpace: RevokeLicensePlanFromSpace;
@@ -12994,9 +13017,6 @@ export type ResolversTypes = {
       createdBy?: Maybe<ResolversTypes["User"]>;
       profile: ResolversTypes["Profile"];
     }
-  >;
-  WhiteboardContent: ResolverTypeWrapper<
-    Scalars["WhiteboardContent"]["output"]
   >;
   WhiteboardPreviewCoordinates: ResolverTypeWrapper<WhiteboardPreviewCoordinates>;
   WhiteboardPreviewCoordinatesData: ResolverTypeWrapper<WhiteboardPreviewCoordinatesData>;
@@ -14025,6 +14045,7 @@ export type ResolversParentTypes = {
   RemoveUserGroupMemberInput: RemoveUserGroupMemberInput;
   ReorderPollOptionsInput: ReorderPollOptionsInput;
   ReplaceCollaboraDocumentInput: ReplaceCollaboraDocumentInput;
+  ReplaceWhiteboardContentFromSourceInput: ReplaceWhiteboardContentFromSourceInput;
   RevokeAuthorizationCredentialInput: RevokeAuthorizationCredentialInput;
   RevokeLicensePlanFromAccount: RevokeLicensePlanFromAccount;
   RevokeLicensePlanFromSpace: RevokeLicensePlanFromSpace;
@@ -14437,7 +14458,6 @@ export type ResolversParentTypes = {
     createdBy?: Maybe<ResolversParentTypes["User"]>;
     profile: ResolversParentTypes["Profile"];
   };
-  WhiteboardContent: Scalars["WhiteboardContent"]["output"];
   WhiteboardPreviewCoordinates: WhiteboardPreviewCoordinates;
   WhiteboardPreviewCoordinatesData: WhiteboardPreviewCoordinatesData;
   WhiteboardPreviewCoordinatesInput: WhiteboardPreviewCoordinatesInput;
@@ -15410,8 +15430,8 @@ export type CalloutContributionDefaultsResolvers<
     ContextType
   >;
   updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
-  whiteboardContent?: Resolver<
-    Maybe<ResolversTypes["WhiteboardContent"]>,
+  whiteboardContentAvailable?: Resolver<
+    ResolversTypes["Boolean"],
     ParentType,
     ContextType
   >;
@@ -15847,6 +15867,7 @@ export type CollaborationMigrationResultResolvers<
   >;
   migrated?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   total?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  unattached?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -16375,8 +16396,13 @@ export type CreateCalloutContributionDefaultsDataResolvers<
     ParentType,
     ContextType
   >;
-  whiteboardContent?: Resolver<
-    Maybe<ResolversTypes["WhiteboardContent"]>,
+  sourceCalloutID?: Resolver<
+    Maybe<ResolversTypes["UUID"]>,
+    ParentType,
+    ContextType
+  >;
+  sourceWhiteboardID?: Resolver<
+    Maybe<ResolversTypes["UUID"]>,
     ParentType,
     ContextType
   >;
@@ -16906,11 +16932,6 @@ export type CreateWhiteboardDataResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["CreateWhiteboardData"] = ResolversParentTypes["CreateWhiteboardData"]
 > = {
-  content?: Resolver<
-    Maybe<ResolversTypes["WhiteboardContent"]>,
-    ParentType,
-    ContextType
-  >;
   nameID?: Resolver<Maybe<ResolversTypes["NameID"]>, ParentType, ContextType>;
   previewSettings?: Resolver<
     Maybe<ResolversTypes["CreateWhiteboardPreviewSettingsData"]>,
@@ -20055,6 +20076,12 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationReplaceCollaboraDocumentArgs, "file" | "replaceData">
+  >;
+  replaceWhiteboardContentFromSource?: Resolver<
+    ResolversTypes["Whiteboard"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationReplaceWhiteboardContentFromSourceArgs, "input">
   >;
   resetConversationVc?: Resolver<
     ResolversTypes["Conversation"],
@@ -24745,11 +24772,6 @@ export type WhiteboardResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export interface WhiteboardContentScalarConfig
-  extends GraphQLScalarTypeConfig<ResolversTypes["WhiteboardContent"], any> {
-  name: "WhiteboardContent";
-}
-
 export type WhiteboardPreviewCoordinatesResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["WhiteboardPreviewCoordinates"] = ResolversParentTypes["WhiteboardPreviewCoordinates"]
@@ -25161,7 +25183,6 @@ export type Resolvers<ContextType = any> = {
   Visual?: VisualResolvers<ContextType>;
   VisualConstraints?: VisualConstraintsResolvers<ContextType>;
   Whiteboard?: WhiteboardResolvers<ContextType>;
-  WhiteboardContent?: GraphQLScalarType;
   WhiteboardPreviewCoordinates?: WhiteboardPreviewCoordinatesResolvers<ContextType>;
   WhiteboardPreviewCoordinatesData?: WhiteboardPreviewCoordinatesDataResolvers<ContextType>;
   WhiteboardPreviewSettings?: WhiteboardPreviewSettingsResolvers<ContextType>;
@@ -26743,7 +26764,7 @@ export type CalloutDetailsFragment = {
     id: string;
     defaultDisplayName?: string | undefined;
     postDescription?: any | undefined;
-    whiteboardContent?: any | undefined;
+    whiteboardContentAvailable: boolean;
   };
   contributions: Array<{
     authorization?:
@@ -46519,7 +46540,7 @@ export type CreateCalloutOnCalloutsSetMutation = {
       id: string;
       defaultDisplayName?: string | undefined;
       postDescription?: any | undefined;
-      whiteboardContent?: any | undefined;
+      whiteboardContentAvailable: boolean;
     };
     contributions: Array<{
       authorization?:
@@ -47015,7 +47036,7 @@ export type UpdateCalloutMutation = {
       id: string;
       defaultDisplayName?: string | undefined;
       postDescription?: any | undefined;
-      whiteboardContent?: any | undefined;
+      whiteboardContentAvailable: boolean;
     };
     contributions: Array<{
       authorization?:
@@ -82844,7 +82865,7 @@ export type SpaceCalloutQuery = {
                   id: string;
                   defaultDisplayName?: string | undefined;
                   postDescription?: any | undefined;
-                  whiteboardContent?: any | undefined;
+                  whiteboardContentAvailable: boolean;
                 };
                 contributions: Array<{
                   authorization?:
@@ -83351,7 +83372,7 @@ export type CalloutDetailsQuery = {
             id: string;
             defaultDisplayName?: string | undefined;
             postDescription?: any | undefined;
-            whiteboardContent?: any | undefined;
+            whiteboardContentAvailable: boolean;
           };
           contributions: Array<{
             authorization?:

@@ -65,10 +65,9 @@ export const defaultWhiteboard = {
     },
     framing: { commentsEnabled: true },
   },
-  contributionDefaults: {
-    whiteboardContent:
-      '{"type":"excalidraw","version":2,"source":"https://excalidraw.com","elements":[],"appState":{"gridSize":null,"viewBackgroundColor":"#ffffff"}}',
-  },
+  // Since server#6399 whiteboardContent is server-internal: contribution
+  // defaults can only be seeded via sourceWhiteboardID / sourceCalloutID,
+  // omission gives an empty default whiteboard.
 };
 
 export const createCalloutOnCalloutsSet = async (
@@ -188,7 +187,8 @@ export const createWhiteboardCalloutOnCalloutsSet = async (
       framing?: { commentsEnabled: true };
     };
     contributionDefaults?: {
-      whiteboardContent?: string;
+      sourceWhiteboardID?: string;
+      sourceCalloutID?: string;
     };
   },
   userRole: TestUser = TestUser.GLOBAL_ADMIN
