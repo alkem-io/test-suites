@@ -1,0 +1,5 @@
+Run ID: 33085428275
+Date: 2026-08-27
+Branch: refs/heads/fix/server-6399-whiteboard-content-internal
+Commit: 97ef7c7bc4f27b8c6763de8ec1ba9bec630af14a
+Playwright outcome: failure
