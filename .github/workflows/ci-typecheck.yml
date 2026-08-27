@@ -32,6 +32,31 @@ jobs:
       - name: Native TS7 typecheck — server-api (workspace#019-typescript-7-upgrade)
         run: pnpm --filter @alkemio/test-suite-server-api run typecheck:native
 
+      # PR-time drift gate for the nightly two-lane split: proves the
+      # parallel/serial partition and that no promoted file trips a hazard
+      # rule, so lane-membership drift is caught at review time rather than
+      # surfacing as a flaky nightly.
+      - name: Nightly lane guard
+        run: pnpm --filter @alkemio/test-suite-server-api run lanes:validate
+
+      # PR-time accountability gate: every unconditional skip
+      # (test.skip/it.skip/describe.skip and their .each/xit/xdescribe
+      # forms) in the functional-api suite must cite a bug or issue within a
+      # few lines above it, or be a grandfathered pre-existing entry in
+      # UNDOCUMENTED_SKIPS — a closed, shrinking allowlist. Fails closed on
+      # a new undocumented skip and on a stale allowlist entry alike, same
+      # discipline as the lane guard above.
+      - name: Skip-citation guard
+        run: pnpm --filter @alkemio/test-suite-server-api run skips:validate
+
+      # Self-tests for the nightly-parallel harness's own scripts (lane
+      # guard, skip-citation guard, mint-hoist smoke helpers, serial-confirm
+      # and baseline-diff verdict logic). Pure Node — no live stack needed —
+      # so there is no excuse for these regressing silently between
+      # nightlies; run them every PR.
+      - name: Nightly harness script self-tests
+        run: node --test scripts/
+
       - name: Native TS7 typecheck — client-web (workspace#019-typescript-7-upgrade)
         run: pnpm --filter @alkemio/test-suite-client-web run typecheck:native
 

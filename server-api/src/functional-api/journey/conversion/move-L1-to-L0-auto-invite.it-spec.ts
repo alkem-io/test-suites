@@ -48,10 +48,9 @@ const targetConfig: TestScenarioConfig = {
 };
 
 beforeAll(async () => {
-  sourceScenario =
-    await TestScenarioFactory.createBaseScenario(sourceConfig);
-  targetScenario =
-    await TestScenarioFactory.createBaseScenario(targetConfig);
+  // Built sequentially: concurrent scenario creation across workers overloaded the server and destabilised three consecutive nightly runs (71/5/4 failures).
+  sourceScenario = await TestScenarioFactory.createBaseScenario(sourceConfig);
+  targetScenario = await TestScenarioFactory.createBaseScenario(targetConfig);
 });
 
 afterAll(async () => {
@@ -84,6 +83,7 @@ describe('Move L1 to L0 - auto-invite enabled', () => {
   let targetScenario2: OrganizationWithSpaceModel;
 
   beforeAll(async () => {
+    // Built sequentially: concurrent scenario creation across workers overloaded the server and destabilised three consecutive nightly runs (71/5/4 failures).
     sourceScenario2 = await TestScenarioFactory.createBaseScenario({
       ...sourceConfig,
       name: 'move-l1-l0-invite-src2',

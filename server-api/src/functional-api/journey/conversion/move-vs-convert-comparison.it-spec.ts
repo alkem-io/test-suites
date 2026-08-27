@@ -33,7 +33,6 @@ import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/O
 const sourceConfig: TestScenarioConfig = {
   name: 'compare-src',
   space: {
-    collaboration: { addPostCallout: true },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [
@@ -44,7 +43,6 @@ const sourceConfig: TestScenarioConfig = {
       ],
     },
     subspace: {
-      collaboration: { addPostCallout: true },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
         members: [TestUser.SUBSPACE_MEMBER, TestUser.SUBSPACE_ADMIN],
@@ -56,7 +54,6 @@ const sourceConfig: TestScenarioConfig = {
 const targetConfig: TestScenarioConfig = {
   name: 'compare-tgt',
   space: {
-    collaboration: { addPostCallout: true },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [
@@ -66,7 +63,6 @@ const targetConfig: TestScenarioConfig = {
       ],
     },
     subspace: {
-      collaboration: { addPostCallout: true },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
         members: [TestUser.SUBSPACE_MEMBER, TestUser.SUBSPACE_ADMIN],
@@ -82,6 +78,7 @@ describe('Same-L0 vs Cross-L0 demotion comparison', () => {
     let urlBefore: string;
 
     beforeAll(async () => {
+      // Built sequentially: concurrent scenario creation across workers overloaded the server and destabilised three consecutive nightly runs (71/5/4 failures).
       crossL0Source = await TestScenarioFactory.createBaseScenario({
         ...sourceConfig,
         name: 'compare-cross-src',
@@ -147,6 +144,7 @@ describe('Same-L0 vs Cross-L0 demotion comparison', () => {
     let roomTarget: OrganizationWithSpaceModel;
 
     beforeAll(async () => {
+      // Built sequentially: concurrent scenario creation across workers overloaded the server and destabilised three consecutive nightly runs (71/5/4 failures).
       roomSource = await TestScenarioFactory.createBaseScenario({
         ...sourceConfig,
         name: 'compare-room-src',

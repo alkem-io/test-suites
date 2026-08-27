@@ -16,11 +16,16 @@ import {
   CalloutAllowedActors,
   CalloutVisibility,
   RoleName,
+  SpaceLevel,
 } from "../core/generated/alkemio-schema";
 import { TestUser } from "../common/enums/test.user";
 import { UniqueIDGenerator } from "../utils/uniqueId";
 import { describeError, isEnvFailure } from "../utils/env-failure";
 import { delay } from "../utils/delay";
+import {
+  TeardownEntityType,
+  TeardownLeakTracker,
+} from "./TeardownLeakTracker";
 import {
   assignPlatformRole,
   assignRoleToUser,
@@ -47,6 +52,7 @@ import {
   getPlatformForumId,
   deletePlatformDiscussion,
   deleteInnovationPack,
+  getOrganizationAccountHostedResources,
 } from "./baseFunctions";
 import {
   CalloutContributionType,
@@ -572,6 +578,20 @@ export class TestScenarioFactory {
     }
   }
 
+  /**
+   * Ensures the three platform roles the pool's global-role identities are
+   * expected to hold. Reads `TestUserManager.users.*`, which resolves to the
+   * CURRENT worker's own identities, so a worker grants roles to its own
+   * pool members and never to another worker's.
+   *
+   * Normally a no-op now: `provisionPoolPlatformRoles` (called once from
+   * `globalTestsSetup`) grants these — plus GLOBAL_ADMIN, which only the
+   * server's bootstrap used to provide — for every worker slot up front, and
+   * updates the `RoleNames` workers hydrate, so the idempotence check below
+   * short-circuits. It is deliberately kept as the fallback for any entry
+   * point that never went through that global setup, and because a grant
+   * that has already happened costs one array lookup.
+   */
   private static async populateGlobalRoles(): Promise<void> {
     await this.checkAndAssignRoleNameToUser(
       TestUserManager.users.globalLicenseAdmin,
@@ -608,47 +628,315 @@ export class TestScenarioFactory {
     }
   }
 
+  /**
+   * Tears down one entity of a base scenario in isolation, so a failure on
+   * one delete can never skip the deletes that follow it — the defect this
+   * replaces was a single try/catch around the WHOLE sequence, where the
+   * first failing delete left every remaining entity (and everything still
+   * nested under it) leaked, silently.
+   *
+   * Classification of the outcome is deliberately conservative: a delete
+   * that resolves (never throws — `graphqlErrorWrapper` catches GraphQL and
+   * connection-level errors alike and returns them) is benign only when
+   * EVERY returned error carries `extensions.code === 'ENTITY_NOT_FOUND'`
+   * (verified live against the running server for deleteSpace/
+   * deleteOrganization/deleteVirtualContributor/deleteDiscussion on an
+   * already-deleted id — the server's `EntityNotFoundException` always maps
+   * to that code; message text varies per entity type and is never used for
+   * classification). That is the shape of "a parent's cascade already
+   * removed this child" — expected, not a leak. Anything else (a different
+   * error code, a thrown exception from the delete call itself, e.g. an
+   * auth/env failure before the GraphQL round trip) is recorded as a real
+   * leak; unknown/unparseable outcomes count as leaks too, never as benign,
+   * per the same conservative rule.
+   */
+  private static async teardownEntity(
+    scenarioName: string,
+    entityType: TeardownEntityType,
+    entityId: string,
+    deleteFn: () => Promise<{
+      error?: { errors: Array<Record<string, unknown>> };
+    }>,
+  ): Promise<void> {
+    try {
+      const result = await deleteFn();
+      const errors = result?.error?.errors;
+      if (errors && errors.length > 0) {
+        const allNotFound = errors.every(
+          (e) => e.code === "ENTITY_NOT_FOUND",
+        );
+        if (allNotFound) {
+          TeardownLeakTracker.recordBenignNotFound(
+            scenarioName,
+            entityType,
+            entityId,
+          );
+        } else {
+          const message = errors
+            .map((e) => (typeof e.message === "string" ? e.message : JSON.stringify(e)))
+            .join("; ");
+          TeardownLeakTracker.recordLeak(
+            scenarioName,
+            entityType,
+            entityId,
+            message,
+          );
+        }
+      }
+    } catch (e) {
+      // The delete call itself threw (bypassing graphqlErrorWrapper's own
+      // catch-all — e.g. an auth-token lookup failing before the request is
+      // even sent). Recorded as a real leak; deliberately NOT rethrown and
+      // NOT process.exit, so the entities after this one still get their own
+      // teardown attempt.
+      TeardownLeakTracker.recordLeak(
+        scenarioName,
+        entityType,
+        entityId,
+        describeError(e),
+      );
+    }
+  }
+
+  /**
+   * Deletes an Organization robustly: `deleteOrganization` fails with
+   * `FORBIDDEN`/"account contain one or more resources" while its Account
+   * hosts anything at all, and a base scenario's own tracked ids are not a
+   * complete inventory (a test body can create ad hoc spaces/VCs/packs
+   * under the same account without the scenario model ever learning their
+   * ids — verified live: an organization delete attempted while its account
+   * still held one untracked space failed with exactly that FORBIDDEN
+   * error, and succeeded immediately once the space was deleted first).
+   *
+   * Enumerates what the Account actually still hosts right before deleting
+   * the organization, and clears it first — spaces deepest-level-first
+   * (L2, then L1, then L0; deleting a child before its parent matches the
+   * ordering the rest of this class already uses), then virtual
+   * contributors, then innovation packs.
+   *
+   * `alreadyAttemptedIds` — every entity id this SAME `cleanUpBaseScenario`
+   * call has already run through `teardownEntity`, whatever the outcome —
+   * is consulted to avoid double-counting: an id in that set is skipped
+   * here rather than retried, because if it is STILL hosted, the earlier
+   * call already recorded why (a leak) or it does not need re-recording (a
+   * benign not-found, which by definition means it is no longer hosted and
+   * would not appear in this enumeration anyway). If the account still
+   * hosts anything after this cleanup — either a fresh failure just above,
+   * or an old one being skipped as a duplicate — the organization delete is
+   * NOT attempted: it would only fail for a cause already on record, and
+   * calling it anyway would record that one root cause as a second,
+   * misleading leak. A warning names the organization so a human can still
+   * find it, without inflating the leak count.
+   *
+   * Falls back to a direct, unconditional delete attempt (the pre-fix
+   * behaviour) if the enumeration query itself fails — an env/GraphQL
+   * failure on the lookup is not evidence the account is empty, but darkness
+   * here must never block the organization delete outright.
+   */
+  private static async teardownOrganizationAccount(
+    scenarioName: string,
+    organizationId: string,
+    alreadyAttemptedIds: Set<string>,
+  ): Promise<void> {
+    const lookup = await getOrganizationAccountHostedResources(organizationId);
+    const hosted = lookup?.data?.organization?.account;
+
+    if (lookup?.error || !hosted) {
+      if (lookup?.error?.errors?.length) {
+        LogManager.getLogger().warn(
+          `[teardown] scenario='${scenarioName}' could not enumerate hosted resources for organization ${organizationId} (${lookup.error.errors
+            .map((e) => (typeof e.message === "string" ? e.message : JSON.stringify(e)))
+            .join("; ")}) — falling back to a direct delete attempt`,
+        );
+      }
+      await this.teardownEntity(
+        scenarioName,
+        "Organization",
+        organizationId,
+        () => deleteOrganization(organizationId),
+      );
+      return;
+    }
+
+    // Snapshot BEFORE this method adds anything of its own — used below to
+    // tell "already hosted only because an EARLIER step in this same
+    // teardown failed to delete it" apart from "hosted because deleting it
+    // just now, in this method, failed" (the latter is already covered by
+    // `newLeaksFromHostedCleanup`; conflating the two would make every
+    // hosted id this method itself just deleted look like a pre-existing
+    // failure, since it gets added to `alreadyAttemptedIds` as it is
+    // attempted).
+    const preExistingAttemptedIds = new Set(alreadyAttemptedIds);
+
+    const levelOrder: Record<string, number> = {
+      [SpaceLevel.L2]: 0,
+      [SpaceLevel.L1]: 1,
+      [SpaceLevel.L0]: 2,
+    };
+    const spacesToDelete = hosted.spaces
+      .filter((s) => !preExistingAttemptedIds.has(s.id))
+      .sort((a, b) => (levelOrder[a.level] ?? 99) - (levelOrder[b.level] ?? 99));
+    const vcsToDelete = hosted.virtualContributors.filter(
+      (vc) => !preExistingAttemptedIds.has(vc.id),
+    );
+    const packsToDelete = hosted.innovationPacks.filter(
+      (p) => !preExistingAttemptedIds.has(p.id),
+    );
+
+    const leaksBefore = TeardownLeakTracker.getSummary().leakCount;
+
+    for (const space of spacesToDelete) {
+      alreadyAttemptedIds.add(space.id);
+      await this.teardownEntity(scenarioName, "Space", space.id, () =>
+        deleteSpace(space.id),
+      );
+    }
+    for (const vc of vcsToDelete) {
+      alreadyAttemptedIds.add(vc.id);
+      await this.teardownEntity(
+        scenarioName,
+        "VirtualContributor",
+        vc.id,
+        () => deleteVirtualContributor(vc.id),
+      );
+    }
+    for (const pack of packsToDelete) {
+      alreadyAttemptedIds.add(pack.id);
+      await this.teardownEntity(
+        scenarioName,
+        "InnovationPack",
+        pack.id,
+        () => deleteInnovationPack(pack.id),
+      );
+    }
+
+    const newLeaksFromHostedCleanup =
+      TeardownLeakTracker.getSummary().leakCount > leaksBefore;
+    // Anything still hosted that we deliberately did NOT just attempt above
+    // (because it was already attempted earlier in this same teardown, and
+    // is therefore still hosted only because that earlier attempt failed)
+    // also blocks the organization delete.
+    const stillHostedAndPreviouslyAttempted =
+      hosted.spaces.some((s) => preExistingAttemptedIds.has(s.id)) ||
+      hosted.virtualContributors.some((vc) =>
+        preExistingAttemptedIds.has(vc.id),
+      ) ||
+      hosted.innovationPacks.some((p) => preExistingAttemptedIds.has(p.id));
+
+    if (newLeaksFromHostedCleanup || stillHostedAndPreviouslyAttempted) {
+      LogManager.getLogger().warn(
+        `[teardown] scenario='${scenarioName}' organization ${organizationId} left in place — its account still hosts resources that failed to delete (see [teardown-leak] lines above); not double-counting the organization itself as a separate leak`,
+      );
+      return;
+    }
+
+    alreadyAttemptedIds.add(organizationId);
+    await this.teardownEntity(
+      scenarioName,
+      "Organization",
+      organizationId,
+      () => deleteOrganization(organizationId),
+    );
+  }
+
   public static async cleanUpBaseScenario(
     baseScenario: OrganizationWithSpaceModel,
   ): Promise<void> {
+    TeardownLeakTracker.recordScenarioAttempt();
+    const scenarioName = baseScenario.name;
+    // Every entity id this call attempts a delete on, whatever the outcome —
+    // consulted by `teardownOrganizationAccount` so a resource that already
+    // failed to delete earlier in THIS sequence (e.g. the tracked space,
+    // above) is not retried-and-recounted a second time when it turns up
+    // again in that organization's account enumeration; see that method's
+    // doc for why.
+    const attemptedIds = new Set<string>();
     try {
       // Delete platform discussion if created
       if (baseScenario.platformDiscussionId) {
-        await deletePlatformDiscussion(baseScenario.platformDiscussionId);
+        const platformDiscussionId = baseScenario.platformDiscussionId;
+        attemptedIds.add(platformDiscussionId);
+        await this.teardownEntity(
+          scenarioName,
+          "PlatformDiscussion",
+          platformDiscussionId,
+          () => deletePlatformDiscussion(platformDiscussionId),
+        );
       }
 
+      // Deletion order below follows the platform's own hosting
+      // constraint, confirmed live: an Organization cannot be deleted while
+      // its Account hosts ANY resource, and a Space tree must come apart
+      // child-first (L2, then L1, then L0) before its Account-level
+      // siblings (virtual contributors, innovation packs) and finally the
+      // Organization itself.
       if (baseScenario.subsubspace && baseScenario.subsubspace.id.length > 0) {
-        await deleteSpace(baseScenario.subsubspace.id);
+        attemptedIds.add(baseScenario.subsubspace.id);
+        await this.teardownEntity(
+          scenarioName,
+          "Space",
+          baseScenario.subsubspace.id,
+          () => deleteSpace(baseScenario.subsubspace.id),
+        );
       }
       if (baseScenario.subspace && baseScenario.subspace.id.length > 0) {
-        await deleteSpace(baseScenario.subspace.id);
+        attemptedIds.add(baseScenario.subspace.id);
+        await this.teardownEntity(
+          scenarioName,
+          "Space",
+          baseScenario.subspace.id,
+          () => deleteSpace(baseScenario.subspace.id),
+        );
       }
       if (baseScenario.space && baseScenario.space.id.length > 0) {
-        await deleteSpace(baseScenario.space.id);
+        attemptedIds.add(baseScenario.space.id);
+        await this.teardownEntity(
+          scenarioName,
+          "Space",
+          baseScenario.space.id,
+          () => deleteSpace(baseScenario.space.id),
+        );
       }
 
       // Delete virtual contributors before removing any organizations
       if (baseScenario.virtualContributors?.length) {
         for (const vc of baseScenario.virtualContributors) {
           if (vc.id) {
-            await deleteVirtualContributor(vc.id);
+            attemptedIds.add(vc.id);
+            await this.teardownEntity(
+              scenarioName,
+              "VirtualContributor",
+              vc.id,
+              () => deleteVirtualContributor(vc.id),
+            );
           }
         }
       }
 
       // Delete innovation pack after spaces are removed, before any org deletions
       if (baseScenario.innovationPack?.id) {
-        await deleteInnovationPack(baseScenario.innovationPack.id);
+        const innovationPackId = baseScenario.innovationPack.id;
+        attemptedIds.add(innovationPackId);
+        await this.teardownEntity(
+          scenarioName,
+          "InnovationPack",
+          innovationPackId,
+          () => deleteInnovationPack(innovationPackId),
+        );
       }
 
-      // Delete VC host organization if it is separate
+      // Delete VC host organization if it is separate. Routed through
+      // `teardownOrganizationAccount`, not a direct `deleteOrganization`
+      // call — see that method's doc for why a direct call is unreliable.
       if (
         baseScenario.virtualContributorsHostOrganizationId &&
         baseScenario.virtualContributorsHostOrganizationId !==
           baseScenario.organization.id
       ) {
-        await deleteOrganization(
+        await this.teardownOrganizationAccount(
+          scenarioName,
           baseScenario.virtualContributorsHostOrganizationId,
+          attemptedIds,
         );
       }
 
@@ -658,15 +946,21 @@ export class TestScenarioFactory {
         baseScenario.innovationPack.providerOrganizationId !==
           baseScenario.organization.id
       ) {
-        await deleteOrganization(
+        await this.teardownOrganizationAccount(
+          scenarioName,
           baseScenario.innovationPack.providerOrganizationId,
+          attemptedIds,
         );
       }
       if (
         baseScenario.organization &&
         baseScenario.organization.id.length > 0
       ) {
-        await deleteOrganization(baseScenario.organization.id);
+        await this.teardownOrganizationAccount(
+          scenarioName,
+          baseScenario.organization.id,
+          attemptedIds,
+        );
       }
     } catch (e) {
       LogManager.getLogger().error(
@@ -674,7 +968,17 @@ export class TestScenarioFactory {
       );
       // Log-and-continue: a teardown failure must neither kill the worker
       // (process.exit) nor replace the in-flight test error (throw) — the
-      // test outcome is the signal; leaked fixtures are logged above.
+      // test outcome is the signal; leaked fixtures are logged above. Each
+      // delete above already has its own try/catch via teardownEntity, so
+      // this outer catch is now a last-resort net for a failure BETWEEN
+      // deletes (e.g. a guard-condition property access), not the routine
+      // path it used to be.
+    } finally {
+      // Printed inline, unconditionally, every time — see
+      // TeardownLeakTracker's class doc for why relying on a process/thread
+      // exit hook alone does not reliably surface this under this repo's
+      // vitest worker-thread pool.
+      TeardownLeakTracker.printSummary();
     }
   }
 

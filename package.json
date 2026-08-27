@@ -10,6 +10,7 @@
     "reinstall": "rm -rf node_modules && pnpm install; cd server-api && rm -rf node_modules && pnpm install; cd ../client-web && rm -rf node_modules && pnpm install; cd ../lib && rm -rf node_modules && pnpm install && pnpm run build ; cd .."
   },
   "devDependencies": {
+    "flatted": "^3.3.3",
     "husky": "^9.1.7",
     "lint-staged": "^15.4.2"
   },

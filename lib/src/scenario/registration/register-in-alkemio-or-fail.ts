@@ -12,7 +12,7 @@ export const registerInAlkemioOrFail = async (
   _lastName: string,
   email: string
 ) => {
-  const userToken = await getUserToken(email);
+  const userToken = await getUserToken(email, 'ad-hoc');
 
   const response = await request(testConfiguration.endPoints.graphql.private)
     .post('')

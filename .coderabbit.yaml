@@ -10,6 +10,7 @@ reviews:
     - "!**/.github/workflows/*"
     - "!**/.specify/**"
     - "!**/.github/prompts/*" # Exclude Prompt files
+    - "!**/scripts/__fixtures__/**" # Guard self-test fixtures: synthetic trees covered by the guards own tests
   path_instructions:
     - path: "**/*"
       instructions: |

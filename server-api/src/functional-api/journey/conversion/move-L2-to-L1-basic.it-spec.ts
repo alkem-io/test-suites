@@ -34,7 +34,6 @@ let targetScenario: OrganizationWithSpaceModel;
 const sourceConfig: TestScenarioConfig = {
   name: 'move-l2-to-l1-src',
   space: {
-    collaboration: { addPostCallout: true },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [
@@ -47,7 +46,6 @@ const sourceConfig: TestScenarioConfig = {
       ],
     },
     subspace: {
-      collaboration: { addPostCallout: true },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
         members: [
@@ -59,7 +57,6 @@ const sourceConfig: TestScenarioConfig = {
       },
       subspace: {
         collaboration: {
-          addPostCallout: true,
           addPostCollectionCallout: true,
           addWhiteboardCallout: true,
         },
@@ -76,7 +73,6 @@ const sourceConfig: TestScenarioConfig = {
 const targetConfig: TestScenarioConfig = {
   name: 'move-l2-to-l1-tgt',
   space: {
-    collaboration: { addPostCallout: true },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [
@@ -87,7 +83,6 @@ const targetConfig: TestScenarioConfig = {
       ],
     },
     subspace: {
-      collaboration: { addPostCallout: true },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
         members: [TestUser.SUBSPACE_MEMBER, TestUser.SUBSPACE_ADMIN],
@@ -104,6 +99,7 @@ let movedSpace:
   | undefined;
 
 beforeAll(async () => {
+  // Built sequentially: concurrent scenario creation across workers overloaded the server and destabilised three consecutive nightly runs (71/5/4 failures).
   sourceScenario = await TestScenarioFactory.createBaseScenario(sourceConfig);
   targetScenario = await TestScenarioFactory.createBaseScenario(targetConfig);
 
@@ -246,6 +242,7 @@ describe('Move L2 to L1 - rejections and authorization', () => {
   let rejTarget: OrganizationWithSpaceModel;
 
   beforeAll(async () => {
+    // Built sequentially: concurrent scenario creation across workers overloaded the server and destabilised three consecutive nightly runs (71/5/4 failures).
     rejSource = await TestScenarioFactory.createBaseScenario({
       ...sourceConfig,
       name: 'move-l2-l1-rej-src',

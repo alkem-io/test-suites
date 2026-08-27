@@ -81,6 +81,7 @@ const targetConfig: TestScenarioConfig = {
 };
 
 beforeAll(async () => {
+  // Built sequentially: concurrent scenario creation across workers overloaded the server and destabilised three consecutive nightly runs (71/5/4 failures).
   sourceScenario = await TestScenarioFactory.createBaseScenario(sourceConfig);
   targetScenario = await TestScenarioFactory.createBaseScenario(targetConfig);
 });
@@ -115,6 +116,7 @@ describe('Move L2 to L1 - auto-invite enabled (US4-AS1)', () => {
   let targetScenario2: OrganizationWithSpaceModel;
 
   beforeAll(async () => {
+    // Built sequentially: concurrent scenario creation across workers overloaded the server and destabilised three consecutive nightly runs (71/5/4 failures).
     sourceScenario2 = await TestScenarioFactory.createBaseScenario({
       ...sourceConfig,
       name: 'move-l2-l1-inv-auto-src2',

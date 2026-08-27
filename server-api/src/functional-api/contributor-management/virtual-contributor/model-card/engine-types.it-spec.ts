@@ -166,6 +166,7 @@ afterAll(async () => {
   await deleteVirtualContributorOnAccount(genericOpenAiVcId).catch();
   await deleteVirtualContributorOnAccount(guidanceVcId).catch();
   await deleteSpace(vcSpaceId).catch();
+  await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 describe('Virtual Contributor Engine Types Model Card', () => {
   test('should create virtual contributors with different engine types', async () => {

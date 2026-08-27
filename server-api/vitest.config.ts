@@ -1,6 +1,12 @@
 import { defineConfig } from 'vitest/config';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import {
+  NIGHTLY_EXCLUDE,
+  NIGHTLY_INCLUDE,
+  PARALLEL_MANIFEST,
+  resolveNightlyWorkers,
+} from './src/scripts/nightly-lanes';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const resolve = (...segments: string[]) => path.resolve(__dirname, ...segments);
@@ -39,9 +45,15 @@ export default defineConfig({
     hookTimeout: 120_000, // beforeAll hooks create multiple entities via API, so they need more headroom
     globalSetup: './src/globalTestsSetup.ts',
     setupFiles: ['./src/setupTests.ts'],
-    reporters: ['default', 'html'],
+    // 'json' adds a machine-readable per-test verdict record alongside the
+    // existing html report — it lands inside html-report/ so the untouched
+    // scripts/publish-report.sh (which cp -r's the whole directory) publishes
+    // it with zero script changes. Consumed by nightly-serial-confirm.mjs and
+    // nightly-baseline-diff.mjs.
+    reporters: ['default', 'html', 'json'],
     outputFile: {
       html: './html-report/index.html',
+      json: './html-report/results.json',
     },
     projects: [
       project('account', ['src/functional-api/account/**/*.it-spec.ts']),
@@ -135,6 +147,68 @@ export default defineConfig({
         'src/functional-api/push-notifications/**/*.it-spec.ts',
         'src/functional-api/language/**/*.it-spec.ts',
       ]),
+      // nightly-parallel / nightly-serial — the two-lane split of the nightly
+      // scope. Membership is derived from the single source in
+      // `src/scripts/nightly-lanes.ts` so this config and the lane guard's
+      // proof cannot drift apart. Distinct `sequence.groupOrder` values are
+      // mandatory: vitest runs groups sequentially (parallel lane first — a
+      // serial-lane file crashing mid-file can leak shared-state mutations,
+      // and running serial last keeps that leak out of the same night's
+      // concurrent pass) and throws at startup if two projects in the
+      // same group have different `maxWorkers` — that throw is the fail-closed
+      // misconfiguration check for this split.
+      //
+      // The orders are 2/3, NOT 0/1, and that is load-bearing: vitest
+      // resolves an omitted `sequence.groupOrder` to 0 (see
+      // `resolved.sequence.groupOrder ??= 0`) and an omitted `maxWorkers` to
+      // `availableParallelism() - 1`. Every one of the ~35 area projects
+      // above omits both, so they all land in group 0 with a CPU-derived
+      // worker count. Putting `nightly-parallel` (maxWorkers =
+      // NIGHTLY_MAX_WORKERS, 1 by default) in group 0 alongside them made the
+      // package's own `vitest run` — i.e. `pnpm test`, no `--project` —
+      // throw `Projects "…" and "nightly-parallel" have different
+      // 'maxWorkers' but same 'sequence.groupOrder'` at startup on any host
+      // with >=3 CPUs. Starting the lanes at 2 keeps them in groups of their
+      // own without disturbing the untouched legacy projects, and preserves
+      // parallel-before-serial. Empty leading groups are harmless — the
+      // runner skips array holes (`for (const group of groups) if (!group)
+      // continue`), so `--project nightly-parallel --project nightly-serial`
+      // behaves exactly as it did at 0/1.
+      {
+        extends: true as const,
+        test: {
+          name: 'nightly-parallel',
+          include: [...PARALLEL_MANIFEST],
+          // Explicit, documented lane-scope exclusions (src/scripts/nightly-lanes.ts)
+          // — never promoted files, but excluded here too so a stale/mistaken
+          // manifest entry still can't slip an excluded file into the run.
+          exclude: [...NIGHTLY_EXCLUDE],
+          sequence: { groupOrder: 2 },
+          // NIGHTLY_MAX_WORKERS is the ONLY source of `effective` (src/scripts/nightly-lanes.ts
+          // resolveNightlyWorkers) — never clamped against CPU.
+          // NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT only derives a sanity-check budget: when the
+          // requested value exceeds it, resolution THROWS at config-load time (a misconfigured
+          // runner) unless NIGHTLY_ALLOW_CPU_OVERSUBSCRIPTION is deliberately set — see
+          // globalTestsSetup.ts for the run-time log line.
+          maxWorkers: resolveNightlyWorkers(
+            process.env.NIGHTLY_MAX_WORKERS,
+            process.env.NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT,
+            process.env.NIGHTLY_ALLOW_CPU_OVERSUBSCRIPTION
+          ).effective,
+          retry: 0,
+        },
+      },
+      {
+        extends: true as const,
+        test: {
+          name: 'nightly-serial',
+          include: [...NIGHTLY_INCLUDE],
+          exclude: [...PARALLEL_MANIFEST, ...NIGHTLY_EXCLUDE],
+          sequence: { groupOrder: 3 },
+          maxWorkers: 1,
+          retry: 0,
+        },
+      },
     ],
   },
 });

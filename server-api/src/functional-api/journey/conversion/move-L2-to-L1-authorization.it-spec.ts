@@ -51,7 +51,6 @@ const anonymousSpacePrivileges = async (spaceId: string) => {
 const publicSourceConfig: TestScenarioConfig = {
   name: 'move-l2-l1-auth-src',
   space: {
-    collaboration: { addPostCallout: true },
     settings: {
       privacy: { mode: SpacePrivacyMode.Public },
       membership: { policy: CommunityMembershipPolicy.Applications },
@@ -68,7 +67,6 @@ const publicSourceConfig: TestScenarioConfig = {
       ],
     },
     subspace: {
-      collaboration: { addPostCallout: true },
       settings: { privacy: { mode: SpacePrivacyMode.Public } },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
@@ -80,7 +78,6 @@ const publicSourceConfig: TestScenarioConfig = {
         ],
       },
       subspace: {
-        collaboration: { addPostCallout: true },
         settings: { privacy: { mode: SpacePrivacyMode.Public } },
         community: {
           admins: [TestUser.SUBSUBSPACE_ADMIN],
@@ -95,7 +92,6 @@ const publicSourceConfig: TestScenarioConfig = {
 const publicTargetConfig: TestScenarioConfig = {
   name: 'move-l2-l1-auth-tgt',
   space: {
-    collaboration: { addPostCallout: true },
     settings: { privacy: { mode: SpacePrivacyMode.Public } },
     community: {
       admins: [TestUser.SPACE_ADMIN],
@@ -106,7 +102,6 @@ const publicTargetConfig: TestScenarioConfig = {
       ],
     },
     subspace: {
-      collaboration: { addPostCallout: true },
       settings: { privacy: { mode: SpacePrivacyMode.Public } },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],

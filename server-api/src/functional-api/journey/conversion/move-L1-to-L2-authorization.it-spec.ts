@@ -22,7 +22,6 @@ let targetScenario: OrganizationWithSpaceModel;
 const sourceConfig: TestScenarioConfig = {
   name: 'move-l1-l2-auth-src',
   space: {
-    collaboration: { addPostCallout: true },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [
@@ -33,7 +32,6 @@ const sourceConfig: TestScenarioConfig = {
       ],
     },
     subspace: {
-      collaboration: { addPostCallout: true },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
         members: [TestUser.SUBSPACE_MEMBER, TestUser.SUBSPACE_ADMIN],
@@ -46,7 +44,6 @@ const sourceConfig: TestScenarioConfig = {
 const sourceWithL2Config: TestScenarioConfig = {
   name: 'move-l1-l2-auth-l2-src',
   space: {
-    collaboration: { addPostCallout: true },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [
@@ -56,13 +53,11 @@ const sourceWithL2Config: TestScenarioConfig = {
       ],
     },
     subspace: {
-      collaboration: { addPostCallout: true },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
         members: [TestUser.SUBSPACE_MEMBER, TestUser.SUBSUBSPACE_MEMBER],
       },
       subspace: {
-        collaboration: { addPostCallout: true },
         community: {
           admins: [TestUser.SUBSUBSPACE_ADMIN],
           members: [TestUser.SUBSUBSPACE_MEMBER],
@@ -75,7 +70,6 @@ const sourceWithL2Config: TestScenarioConfig = {
 const targetConfig: TestScenarioConfig = {
   name: 'move-l1-l2-auth-tgt',
   space: {
-    collaboration: { addPostCallout: true },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [
@@ -85,7 +79,6 @@ const targetConfig: TestScenarioConfig = {
       ],
     },
     subspace: {
-      collaboration: { addPostCallout: true },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
         members: [TestUser.SUBSPACE_MEMBER, TestUser.SUBSPACE_ADMIN],
@@ -95,6 +88,7 @@ const targetConfig: TestScenarioConfig = {
 };
 
 beforeAll(async () => {
+  // Built sequentially: concurrent scenario creation across workers overloaded the server and destabilised three consecutive nightly runs (71/5/4 failures).
   sourceScenario = await TestScenarioFactory.createBaseScenario(sourceConfig);
   targetScenario = await TestScenarioFactory.createBaseScenario(targetConfig);
 });
@@ -293,7 +287,6 @@ const anonymousSpacePrivileges = async (spaceId: string) => {
 const privacyPublicSourceConfig: TestScenarioConfig = {
   name: 'move-l1-l2-priv-src',
   space: {
-    collaboration: { addPostCallout: true },
     settings: {
       privacy: { mode: SpacePrivacyMode.Public },
       membership: { policy: CommunityMembershipPolicy.Applications },
@@ -308,7 +301,6 @@ const privacyPublicSourceConfig: TestScenarioConfig = {
       ],
     },
     subspace: {
-      collaboration: { addPostCallout: true },
       settings: { privacy: { mode: SpacePrivacyMode.Public } },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
@@ -327,14 +319,12 @@ describe('Move L1 to L2 - privacy recompute (platform-level anonymous access)', 
     const privateTargetConfig: TestScenarioConfig = {
       name: 'move-l1-l2-pub2priv-tgt',
       space: {
-        collaboration: { addPostCallout: true },
         settings: { privacy: { mode: SpacePrivacyMode.Private } },
         community: {
           admins: [TestUser.SPACE_ADMIN],
           members: [TestUser.SPACE_MEMBER],
         },
         subspace: {
-          collaboration: { addPostCallout: true },
           settings: { privacy: { mode: SpacePrivacyMode.Private } },
           community: {
             admins: [TestUser.SUBSPACE_ADMIN],
@@ -407,14 +397,12 @@ describe('Move L1 to L2 - privacy recompute (platform-level anonymous access)', 
     const publicTargetConfig: TestScenarioConfig = {
       name: 'move-l1-l2-priv2pub-tgt',
       space: {
-        collaboration: { addPostCallout: true },
         settings: { privacy: { mode: SpacePrivacyMode.Public } },
         community: {
           admins: [TestUser.SPACE_ADMIN],
           members: [TestUser.SPACE_MEMBER],
         },
         subspace: {
-          collaboration: { addPostCallout: true },
           settings: { privacy: { mode: SpacePrivacyMode.Public } },
           community: {
             admins: [TestUser.SUBSPACE_ADMIN],

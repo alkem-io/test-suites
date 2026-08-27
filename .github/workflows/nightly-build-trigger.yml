@@ -1,4 +1,8 @@
 name: Nightly Clean Up Environment and Trigger Tests
+# Surface which test code a run actually exercised — dispatches with a
+# test-ref would otherwise be indistinguishable from plain nightlies in the
+# run list.
+run-name: Nightly (tests @ ${{ inputs.test-ref || github.ref_name }})
 
 on:
   schedule:
@@ -6,6 +10,17 @@ on:
   # Allow on-demand runs (verify a fix, reproduce a failure) — same pipeline,
   # including the shared test-cluster deploy lock.
   workflow_dispatch:
+    inputs:
+      test-ref:
+        description: >-
+          Git ref of the TEST CODE to run in the e2e job (branch/tag/SHA).
+          Dispatch this workflow from develop and point test-ref at a feature
+          branch: the workflow definition — secret exposure, lock handling,
+          runner-group routing — stays develop's, which is what the
+          arc-e2e-linux-x64 runner group's workflow allowlist matches on.
+          Empty = the dispatched ref itself.
+        required: false
+        default: ""
 
 jobs:
   deploy-all-services:
@@ -45,6 +60,14 @@ jobs:
     uses: ./.github/workflows/cleanup-database.yml
     with:
       postgres_db: alkemio
+      # cleanup-database.yml restores each deployment to the replica count
+      # it actually captured live before scaling it to 0 — these inputs are
+      # only the FALLBACK for when that capture is unusable. Defaults match
+      # the dev-orchestration test-overlay manifests (server=4,
+      # notifications=3) so an unset repo variable can't reintroduce the
+      # flattening bug either.
+      server_replicas: ${{ vars.NIGHTLY_SERVER_REPLICAS || '4' }}
+      notifications_replicas: ${{ vars.NIGHTLY_NOTIFICATIONS_REPLICAS || '3' }}
     secrets: inherit
 
   run-e2e-tests:
@@ -53,7 +76,15 @@ jobs:
     permissions:
       contents: write
     steps:
+      # The code under test — honors the test-ref dispatch input so a feature
+      # branch's tests (and their harness scripts, which are inseparable from
+      # them) can run under develop's reviewed workflow definition. The lock
+      # jobs deliberately do NOT honor test-ref: test-cluster-lock.sh always
+      # comes from the dispatched (trusted) ref. `inputs` is empty on schedule
+      # events, so nightlies fall through to their own ref.
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.test-ref || github.ref }}
 
       # Pull the existing GitHub Pages site so we can append this run's report
       # and keep a full history (incremental runs) across deployments.
@@ -73,6 +104,13 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      # PR-time drift gate, run again here so a nightly can never start on an
+      # unsound lane split even if a merge slipped through: proves the
+      # parallel/serial partition and hazard-rule soundness, and emits the
+      # authoritative lane membership the serial-confirm step reads.
+      - name: Nightly lane guard
+        run: pnpm --filter @alkemio/test-suite-server-api run lanes:validate -- --emit-lanes lanes.json
 
       - name: Install Kubectl
         uses: azure/setup-kubectl@v5.1.0
@@ -111,6 +149,21 @@ jobs:
           # retried-after-commit createSubspace failures behind cryptic
           # 'nameID already taken' errors (2026-07-15 nightly, #563).
           LOG_LEVEL: warn
+          # Feature-owned worker-count pin for the nightly-parallel project —
+          # unset/empty ⇒ config default of 1 (behaviour-identical rollback).
+          NIGHTLY_MAX_WORKERS: ${{ vars.NIGHTLY_MAX_WORKERS }}
+          # CPU sanity-check budget only — never the primary signal, never a
+          # silent reducer. Unset/empty ⇒ config default of 75 (see
+          # resolveNightlyWorkers in src/scripts/nightly-lanes.ts). If
+          # NIGHTLY_MAX_WORKERS exceeds the derived budget, resolution THROWS
+          # (a misconfigured runner) unless the opt-out below is set.
+          NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT: ${{ vars.NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT }}
+          # Deliberate, explicit opt-in to run NIGHTLY_MAX_WORKERS above the
+          # detected CPU budget — normally unset. Never set as a habitual
+          # default; see resolveNightlyWorkers's error message for when it's
+          # actually appropriate (an IO-bound suite whose bottleneck is the
+          # server, not local CPU).
+          NIGHTLY_ALLOW_CPU_OVERSUBSCRIPTION: ${{ vars.NIGHTLY_ALLOW_CPU_OVERSUBSCRIPTION }}
         run: |
           set -uo pipefail
           # kratos-admin is ClusterIP (network-isolated); reach it via a
@@ -125,7 +178,207 @@ jobs:
           if ! grep -q "Forwarding from" /tmp/kratos-admin-pf.log; then
             echo "kratos-admin port-forward failed"; cat /tmp/kratos-admin-pf.log; exit 1
           fi
-          pnpm --filter @alkemio/test-suite-server-api run test:nightly
+          set -o pipefail
+          pnpm --filter @alkemio/test-suite-server-api run test:nightly 2>&1 | tee /tmp/nightly-run.log
+
+      # Always verifies the run's own evidence — lane counts, mint count —
+      # regardless of pass/fail, since a green night with a silently wrong
+      # partition or a login storm is exactly the failure mode this feature
+      # exists to prevent. Deliberately NOT continue-on-error: a mismatch here
+      # is a harness/config defect, not a flaky test, and should hard-fail.
+      - name: Assert nightly config
+        if: ${{ always() }}
+        env:
+          NIGHTLY_MAX_WORKERS: ${{ vars.NIGHTLY_MAX_WORKERS }}
+          NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT: ${{ vars.NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT }}
+          NIGHTLY_ALLOW_CPU_OVERSUBSCRIPTION: ${{ vars.NIGHTLY_ALLOW_CPU_OVERSUBSCRIPTION }}
+        run: |
+          set -euo pipefail
+          PARALLEL_N=$(jq '.parallel | length' server-api/lanes.json)
+          SERIAL_M=$(jq '.serial | length' server-api/lanes.json)
+
+          LANE_LOG_LINE=$(grep "\[nightly\] lanes:" /tmp/nightly-run.log | head -n1 || true)
+          if [ -z "$LANE_LOG_LINE" ]; then
+            echo "::error::no '[nightly] lanes:' line present in the run log"
+            exit 1
+          fi
+          echo "$LANE_LOG_LINE"
+
+          # NIGHTLY_MAX_WORKERS is the ONLY source of maxWorkers=N in the log
+          # (resolveNightlyWorkers in src/scripts/nightly-lanes.ts never
+          # clamps it against CPU) — so this now asserts EFFECTIVE ALWAYS
+          # EQUALS REQUESTED, deriving the expectation from this SAME log
+          # line's own reported cpus/cpuCap rather than independently
+          # re-deriving the CPU count (`nproc` can disagree with Node's
+          # cgroup-aware `os.availableParallelism()`). If requested exceeded
+          # the CPU budget, the run must only have proceeded via the
+          # documented, explicit oversubscription opt-out — never silently.
+          if [[ ! "$LANE_LOG_LINE" =~ maxWorkers=([0-9]+)\ \(requested=([0-9]+)\ cpuCap=([0-9]+)\ of\ ([0-9]+)\ cpus(,\ OVERSUBSCRIBED)?\) ]]; then
+            echo "::error::[nightly] lanes line does not match the expected 'maxWorkers=N (requested=R cpuCap=C of P cpus[, OVERSUBSCRIBED])' shape: $LANE_LOG_LINE"
+            exit 1
+          fi
+          EFFECTIVE="${BASH_REMATCH[1]}"
+          REQUESTED="${BASH_REMATCH[2]}"
+          CPU_CAP="${BASH_REMATCH[3]}"
+          CPUS="${BASH_REMATCH[4]}"
+          OVERSUB_MARKER="${BASH_REMATCH[5]:-}"
+
+          EXPECTED_REQUESTED="${NIGHTLY_MAX_WORKERS:-1}"
+          [ -z "$EXPECTED_REQUESTED" ] && EXPECTED_REQUESTED=1
+          if [ "$REQUESTED" -ne "$EXPECTED_REQUESTED" ]; then
+            echo "::error::log reports requested=${REQUESTED}, expected ${EXPECTED_REQUESTED} from NIGHTLY_MAX_WORKERS"
+            exit 1
+          fi
+
+          CAP_PERCENT="${NIGHTLY_MAX_WORKERS_CPU_CAP_PERCENT:-75}"
+          [ -z "$CAP_PERCENT" ] && CAP_PERCENT=75
+          EXPECTED_CPU_CAP=$(( (CPUS * CAP_PERCENT) / 100 ))
+          [ "$EXPECTED_CPU_CAP" -lt 1 ] && EXPECTED_CPU_CAP=1
+          if [ "$CPU_CAP" -ne "$EXPECTED_CPU_CAP" ]; then
+            echo "::error::log reports cpuCap=${CPU_CAP} for ${CPUS} cpus at ${CAP_PERCENT}%, expected ${EXPECTED_CPU_CAP}"
+            exit 1
+          fi
+
+          # The worker count is NEVER silently reduced: the effective value
+          # must always equal the requested one. If resolution had refused
+          # (requested over budget, no opt-out) the process would have
+          # crashed before this log line was ever written, so simply
+          # reaching this point with EFFECTIVE != REQUESTED is itself a
+          # harness defect, not a possible legitimate state.
+          if [ "$EFFECTIVE" -ne "$REQUESTED" ]; then
+            echo "::error::log reports maxWorkers=${EFFECTIVE} but requested=${REQUESTED} — the effective worker count must always equal the requested value, never silently reduced"
+            exit 1
+          fi
+
+          if [ "$REQUESTED" -gt "$CPU_CAP" ]; then
+            if [ -z "$OVERSUB_MARKER" ]; then
+              echo "::error::requested (${REQUESTED}) exceeds cpuCap (${CPU_CAP}) but the log line is missing the OVERSUBSCRIBED marker — a run must never proceed over budget silently"
+              exit 1
+            fi
+            if [ "${NIGHTLY_ALLOW_CPU_OVERSUBSCRIPTION:-}" != "yes-i-understand-the-risk" ]; then
+              echo "::error::log reports OVERSUBSCRIBED but this job's own NIGHTLY_ALLOW_CPU_OVERSUBSCRIPTION was not set to the documented opt-out value"
+              exit 1
+            fi
+          elif [ -n "$OVERSUB_MARKER" ]; then
+            echo "::error::cpuCap (${CPU_CAP}) >= requested (${REQUESTED}) but the log line carries an unexpected OVERSUBSCRIBED marker"
+            exit 1
+          fi
+
+          EXPECTED_LINE="[nightly] lanes: parallel=${PARALLEL_N} serial=${SERIAL_M} maxWorkers=${EFFECTIVE}"
+          if ! grep -qF "$EXPECTED_LINE" /tmp/nightly-run.log; then
+            echo "::error::expected run log line not found: $EXPECTED_LINE"
+            exit 1
+          fi
+          RESULT_COUNT=$(jq '[.testResults[].name] | length' server-api/html-report/results.json)
+          EXPECTED_TOTAL=$((PARALLEL_N + SERIAL_M))
+          if [ "$RESULT_COUNT" -ne "$EXPECTED_TOTAL" ]; then
+            echo "::error::results.json reports ${RESULT_COUNT} file results, expected ${EXPECTED_TOTAL} (parallel+serial from the guard's partition)"
+            exit 1
+          fi
+          # The invariant is "the shared pool mints exactly once per run"
+          # (the Kratos-429 guard, test-suites#563/#579) — NOT "the pool has
+          # a specific number of members". The expected count is therefore
+          # derived from the pool's own declared size, `[auth] pool size: N`
+          # (printed once by TestUserManager.populateUserModelMap(), as
+          # `Object.keys(TestUser).length` × the resolved worker count —
+          # the pool is now one full role set PER worker slot, so that N
+          # scales with NIGHTLY_MAX_WORKERS by design), never hardcoded
+          # here. That way growing/shrinking the TestUser pool OR changing
+          # the worker count never requires touching this gate, while a
+          # duplicate mint still fails it — the size line is unaffected by a
+          # duplicate mint, but the counted (pool) lines below are.
+          EXPECTED_POOL_MINTS=$(grep -oP '(?<=\[auth\] pool size: )\d+' /tmp/nightly-run.log | head -n1 || true)
+          if [ -z "$EXPECTED_POOL_MINTS" ]; then
+            echo "::error::no '[auth] pool size: N' line found in the run log — cannot derive the expected mint count"
+            exit 1
+          fi
+          # Counts only the (pool)-tagged mints — the shared-pool users
+          # minted once by TestUserManager.populateUserModelMap(). (prereq)-
+          # tagged mints (verifyEnvPrerequisites) and (ad-hoc)-tagged mints
+          # (per-scenario registration/refresh) are a different, independent
+          # cadence and are deliberately excluded from this count.
+          MINT_COUNT=$(grep -c '\[auth\] minted token for .* (pool)' /tmp/nightly-run.log || true)
+          if [ "$MINT_COUNT" -ne "$EXPECTED_POOL_MINTS" ]; then
+            echo "::error::expected exactly ${EXPECTED_POOL_MINTS} shared-pool token mints (the pool's own declared size, minted once) regardless of worker count, found ${MINT_COUNT}"
+            exit 1
+          fi
+          # Independent ceiling — the equality check above derives its
+          # expectation from `[auth] pool size: N`, but that line is printed
+          # by the SAME code path (TestUserManager.populateUserModelMap)
+          # this gate exists to police. If that path ever mints the pool
+          # twice, both the actual mint count and the declared size move
+          # together and the equality check above cannot see it. This
+          # ceiling is computed WITHOUT reading anything the run itself
+          # printed: 13 is the pool's role count (`TestUser` in
+          # lib/src/common/enums/test.user.ts — a workflow-level constant,
+          # update both together if that role set ever changes) and
+          # EXPECTED_REQUESTED comes only from this job's own
+          # NIGHTLY_MAX_WORKERS variable (validated above). A duplicate
+          # mint — the Kratos login-storm failure mode this gate exists to
+          # catch — pushes MINT_COUNT over this ceiling even when the
+          # (circular) equality check agrees with it.
+          POOL_SIZE_PER_WORKER=13
+          MAX_EXPECTED_MINTS=$((POOL_SIZE_PER_WORKER * EXPECTED_REQUESTED))
+          if [ "$MINT_COUNT" -gt "$MAX_EXPECTED_MINTS" ]; then
+            echo "::error::${MINT_COUNT} shared-pool token mints exceeds the absolute ceiling of ${MAX_EXPECTED_MINTS} (= ${POOL_SIZE_PER_WORKER} roles x ${EXPECTED_REQUESTED} requested workers, computed independently of this run's own log) — the shared pool must mint exactly once per run"
+            exit 1
+          fi
+          echo "assert-config OK: parallel=${PARALLEL_N} serial=${SERIAL_M} maxWorkers=${EFFECTIVE} (requested=${REQUESTED} cpuCap=${CPU_CAP} of ${CPUS} cpus${OVERSUB_MARKER}) results=${RESULT_COUNT} mints=${MINT_COUNT}"
+
+      # The structural exit-code gate: re-runs only the parallel-lane failures
+      # serially and derives the build's verdict from serial results alone. A
+      # file that fails concurrently but passes alone is interference, not a
+      # build failure — it lands in the published ledger for triage instead.
+      - name: Serial-confirm re-run
+        id: serial-confirm
+        if: ${{ always() && steps.server-api-tests.outcome == 'failure' }}
+        continue-on-error: true
+        env:
+          ALKEMIO_SERVER: ${{ vars.ALKEMIO_SERVER }}
+          ALKEMIO_SERVER_URL: ${{ vars.ALKEMIO_SERVER_URL }}
+          ALKEMIO_BASE_URL: ${{ vars.ALKEMIO_BASE_URL }}
+          ALKEMIO_SERVER_WS: ${{ vars.ALKEMIO_SERVER_WS }}
+          ALKEMIO_SERVER_REST: ${{ vars.ALKEMIO_SERVER_REST }}
+          KRATOS_ENDPOINT: ${{ vars.KRATOS_ENDPOINT }}
+          MAIL_SLURPER_ENDPOINT: ${{ vars.MAIL_SLURPER_ENDPOINT }}
+          AUTH_TEST_HARNESS_PASSWORD: ${{ secrets.AUTH_TEST_HARNESS_PASSWORD }}
+          KRATOS_ADMIN_URL: http://localhost:4434
+          LOG_LEVEL: warn
+        run: |
+          set -uo pipefail
+          # A fresh contingency invocation needs its own port-forward — the
+          # main test step's trap already tore its own down on exit.
+          kubectl port-forward -n default svc/kratos-admin 4434:80 > /tmp/kratos-admin-pf-confirm.log 2>&1 &
+          PF_PID=$!
+          trap 'kill $PF_PID 2>/dev/null || true' EXIT
+          for i in $(seq 1 20); do
+            grep -q "Forwarding from" /tmp/kratos-admin-pf-confirm.log && break
+            sleep 1
+          done
+          if ! grep -q "Forwarding from" /tmp/kratos-admin-pf-confirm.log; then
+            echo "kratos-admin port-forward failed"; cat /tmp/kratos-admin-pf-confirm.log; exit 1
+          fi
+          node scripts/nightly-serial-confirm.mjs \
+            --results server-api/html-report/results.json \
+            --lanes server-api/lanes.json \
+            --run-id "${RUN_ID}" \
+            --run-date "${RUN_DATE}" \
+            --ledger-archive out/gh-pages-root/server-api
+
+      # Non-gating by default: publishes a per-test diff against the trailing
+      # 14 archived nights so a real regression stands out even while a
+      # known-failing case keeps the raw exit code busy. Always runs — it
+      # reports the same known-failing/known-intermittent facts on a green
+      # night too.
+      - name: Nightly baseline diff
+        if: ${{ always() }}
+        env:
+          BASELINE_DIFF_ENFORCE: ${{ vars.BASELINE_DIFF_ENFORCE }}
+        run: |
+          node scripts/nightly-baseline-diff.mjs \
+            --archive out/gh-pages-root/server-api \
+            --current server-api/html-report/results.json \
+            --out server-api/html-report/baseline-diff.json
 
       - name: Publish report to GitHub Pages
         if: ${{ always() }}
@@ -139,9 +392,22 @@ jobs:
             "server-api/html-report" \
             "${{ steps.server-api-tests.outcome }}"
 
-      - name: Fail job if server API tests failed
-        if: ${{ steps.server-api-tests.outcome == 'failure' }}
-        run: exit 1
+      # The exit code is the serial verdict, not the raw main-run outcome: a
+      # parallel-lane failure that passed its serial re-run must NOT fail the
+      # build. Fails closed if the main run failed and serial-confirm didn't
+      # produce a verdict at all (skipped, cancelled, or itself crashed).
+      - name: Fail job if the nightly's serial verdict is a failure
+        if: ${{ always() }}
+        run: |
+          if [ "${{ steps.server-api-tests.outcome }}" = "failure" ]; then
+            if [ "${{ steps.serial-confirm.outcome }}" != "success" ]; then
+              echo "::error::nightly serial verdict is FAIL (or serial-confirm did not complete) — see the serial-confirm step summary"
+              exit 1
+            fi
+            echo "serial-confirm verdict: PASS — parallel-lane failures were interference, not confirmed regressions"
+          else
+            echo "main test step succeeded — nothing to confirm"
+          fi
 
   deploy:
     if: ${{ always() }}
@@ -152,7 +418,7 @@ jobs:
       path: gh-pages-root
 
   # Always release the lock after e2e — even on failure — so the next nightly or
-  # deploy isn't blocked until the stale-TTL reclaim (60 min). The gh-pages
+  # deploy isn't blocked until the stale-TTL reclaim. The gh-pages
   # `deploy` job doesn't touch the test cluster, so it runs unlocked in parallel.
   release-lock:
     needs: [acquire-lock, run-e2e-tests]

@@ -19,7 +19,6 @@ const sourceScenarioConfig: TestScenarioConfig = {
   name: 'move-l1-to-l0-source',
   space: {
     collaboration: {
-      addPostCallout: true,
       addPostCollectionCallout: true,
       addWhiteboardCallout: true,
     },
@@ -36,7 +35,6 @@ const sourceScenarioConfig: TestScenarioConfig = {
     },
     subspace: {
       collaboration: {
-        addPostCallout: true,
         addPostCollectionCallout: true,
         addWhiteboardCallout: true,
       },
@@ -51,7 +49,6 @@ const sourceScenarioConfig: TestScenarioConfig = {
       },
       subspace: {
         collaboration: {
-          addPostCallout: true,
           addPostCollectionCallout: true,
           addWhiteboardCallout: true,
         },
@@ -67,9 +64,6 @@ const sourceScenarioConfig: TestScenarioConfig = {
 const targetScenarioConfig: TestScenarioConfig = {
   name: 'move-l1-to-l0-target',
   space: {
-    collaboration: {
-      addPostCallout: true,
-    },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [TestUser.SPACE_MEMBER, TestUser.SPACE_ADMIN],
@@ -86,6 +80,7 @@ let movedSpace:
   | undefined;
 
 beforeAll(async () => {
+  // Built sequentially: concurrent scenario creation across workers overloaded the server and destabilised three consecutive nightly runs (71/5/4 failures).
   sourceScenario =
     await TestScenarioFactory.createBaseScenario(sourceScenarioConfig);
   targetScenario =

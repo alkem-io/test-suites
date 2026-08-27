@@ -31,7 +31,7 @@
     "stop-process": "fuser 4000/tcp -k",
     "test:watch": "vitest",
     "test:debug": "vitest run --inspect-brk --fileParallelism=false",
-    "test:nightly": "vitest run --project nightly --fileParallelism=false",
+    "test:nightly": "vitest run --project nightly-parallel --project nightly-serial",
     "test:nightly:ui": "vitest --project nightly --fileParallelism=false --ui",
     "test:search:ui": "vitest --project search --fileParallelism=false --ui",
     "test:communications": "vitest run --project communication --fileParallelism=false",
@@ -64,7 +64,9 @@
     "test:push-notifications": "vitest run --project push-notifications --fileParallelism=false",
     "test:graphql-guard:ui": "vitest --project graphql-guard --fileParallelism=false --ui",
     "innovation-pack-with-templates": "tsx ./src/functional-api/innovation-pack/innovation-pack-with-templates.ts",
-    "validate-scenario-setup": "tsx ./src/scripts/validate-scenario-setup.ts"
+    "validate-scenario-setup": "tsx ./src/scripts/validate-scenario-setup.ts",
+    "lanes:validate": "tsx ./src/scripts/validate-parallel-lanes.ts",
+    "skips:validate": "tsx ./src/scripts/validate-skip-citations.ts"
   },
   "dependencies": {
     "@alkemio/client-lib": "^0.36.0",

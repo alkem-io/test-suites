@@ -44,7 +44,7 @@ export const verifyEnvPrerequisites = async (): Promise<void> => {
   for (const user of CRITICAL_USERS) {
     const email = emailOf(user);
     try {
-      const token = await getUserToken(email);
+      const token = await getUserToken(email, 'prereq');
       if (!token) {
         throw new Error('non-interactive-login returned an empty token');
       }
@@ -62,7 +62,7 @@ export const verifyEnvPrerequisites = async (): Promise<void> => {
   for (const user of REPRESENTATIVE_USERS) {
     const email = emailOf(user);
     try {
-      await getUserToken(email);
+      await getUserToken(email, 'prereq');
       logger.info?.(`[env-prereq] auth OK for ${email}`);
     } catch (e) {
       const detail = e instanceof Error ? e.message : String(e);

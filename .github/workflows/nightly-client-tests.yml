@@ -61,6 +61,34 @@ jobs:
           AUTH_TEST_HARNESS_PASSWORD: ${{ secrets.AUTH_TEST_HARNESS_PASSWORD }}
         run: pnpm --filter @alkemio/test-suite-client-web run test:nightly
 
+      # gh-pages is a PUBLIC GitHub Pages site. Playwright trace bundles
+      # (data/*.zip) and videos (data/*.webm) record full network traffic,
+      # including live test-environment session cookies and request bodies —
+      # publishing them leaks live auth material. Pull them out into a
+      # private, retention-limited artifact before the report is published;
+      # screenshots and the report UI/summary are untouched.
+      - name: Quarantine Playwright trace/video attachments before publish
+        if: ${{ always() }}
+        run: |
+          STAGE="client-web/pw-private-attachments"
+          REPORT_DIR="client-web/playwright-report"
+          mkdir -p "$STAGE"
+          if [ -d "$REPORT_DIR/data" ]; then
+            find "$REPORT_DIR/data" -maxdepth 1 \( -name '*.zip' -o -name '*.webm' \) -exec mv {} "$STAGE/" \;
+          fi
+          # The bundled trace-viewer app is only useful alongside the trace
+          # .zip files it renders, which are gone now — drop it too.
+          rm -rf "$REPORT_DIR/trace"
+
+      - name: Upload trace/video attachments (private, debug-only)
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-trace-bundles-${{ github.run_id }}
+          path: client-web/pw-private-attachments
+          if-no-files-found: ignore
+          retention-days: 14
+
       - name: Publish report to GitHub Pages
         if: ${{ always() }}
         env:

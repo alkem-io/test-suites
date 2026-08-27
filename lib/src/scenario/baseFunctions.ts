@@ -354,6 +354,65 @@ export const createOrganization = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
+export type AccountHostedResources = {
+  spaces: Array<{ id: string; level: SpaceLevel }>;
+  virtualContributors: Array<{ id: string }>;
+  innovationPacks: Array<{ id: string }>;
+};
+
+/**
+ * Enumerates what an Organization's Account still hosts, straight from the
+ * server — `deleteOrganization` fails with `FORBIDDEN`/"account contain one
+ * or more resources" while its Account hosts ANYTHING, and a base
+ * scenario's own tracked ids are not a complete inventory of an account (a
+ * test body can create ad hoc spaces/VCs/packs under the same account
+ * without the scenario model ever learning their ids). Keyed by
+ * organizationId (not accountId) so it works uniformly for every
+ * organization a base scenario tears down — the main organization, and the
+ * separate VC-host/innovation-pack-provider organizations, none of which
+ * carry their accountId in the scenario model, only their organization id.
+ *
+ * Deliberately a hand-authored `rawRequest` (the same pattern
+ * `updateInnovationPackVisibility` above already uses) rather than a
+ * generated SDK method: this repo's checked-in `core/generated/*` snapshot
+ * is materially behind the live server's current schema (regenerating
+ * pulled in ~1400 unrelated lines from features shipped since the last
+ * codegen run), so adding a new generated operation for this one query
+ * would have meant either committing that whole unrelated drift or
+ * hand-trimming a codegen diff — both far riskier than one small typed raw
+ * query. Verified live (2026-08-19) against the running server, including
+ * that `account.spaces[].level` resolves.
+ */
+export const getOrganizationAccountHostedResources = async (
+  organizationId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+) => {
+  const graphqlClient = new GraphQLClient(
+    testConfiguration.endPoints.graphql.private,
+  );
+  const query = `
+    query GetOrganizationAccountHostedResources($organizationId: UUID!) {
+      organization(ID: $organizationId) {
+        account {
+          spaces { id level }
+          virtualContributors { id }
+          innovationPacks { id }
+        }
+      }
+    }
+  `;
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.rawRequest<{
+      organization: { account?: AccountHostedResources };
+    }>(
+      query,
+      { organizationId },
+      authToken ? { authorization: `Bearer ${authToken}` } : undefined,
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
 export const deleteOrganization = async (
   organizationId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN,

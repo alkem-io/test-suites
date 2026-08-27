@@ -18,7 +18,6 @@ let targetScenario: OrganizationWithSpaceModel;
 const sourceConfig: TestScenarioConfig = {
   name: 'move-l1-l0-community-src',
   space: {
-    collaboration: { addPostCallout: true },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [
@@ -31,7 +30,6 @@ const sourceConfig: TestScenarioConfig = {
       ],
     },
     subspace: {
-      collaboration: { addPostCallout: true },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
         members: [
@@ -42,7 +40,6 @@ const sourceConfig: TestScenarioConfig = {
         ],
       },
       subspace: {
-        collaboration: { addPostCallout: true },
         community: {
           admins: [TestUser.SUBSUBSPACE_ADMIN],
           members: [TestUser.SUBSUBSPACE_MEMBER, TestUser.SUBSUBSPACE_ADMIN],
@@ -55,7 +52,6 @@ const sourceConfig: TestScenarioConfig = {
 const targetConfig: TestScenarioConfig = {
   name: 'move-l1-l0-community-tgt',
   space: {
-    collaboration: { addPostCallout: true },
     community: {
       admins: [TestUser.SPACE_ADMIN],
       members: [TestUser.SPACE_MEMBER],
@@ -64,10 +60,9 @@ const targetConfig: TestScenarioConfig = {
 };
 
 beforeAll(async () => {
-  sourceScenario =
-    await TestScenarioFactory.createBaseScenario(sourceConfig);
-  targetScenario =
-    await TestScenarioFactory.createBaseScenario(targetConfig);
+  // Built sequentially: concurrent scenario creation across workers overloaded the server and destabilised three consecutive nightly runs (71/5/4 failures).
+  sourceScenario = await TestScenarioFactory.createBaseScenario(sourceConfig);
+  targetScenario = await TestScenarioFactory.createBaseScenario(targetConfig);
 
   // Execute cross-L0 move
   await moveSpaceL1ToSpaceL0(
