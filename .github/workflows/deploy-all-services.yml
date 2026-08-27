@@ -55,10 +55,6 @@ on:
         required: false
         type: string
         default: develop
-      alkemio_collaboration_service_branch:
-        required: false
-        type: string
-        default: develop
   workflow_dispatch:
     inputs:
       server_branch:
@@ -126,11 +122,6 @@ on:
         required: false
         type: string
         default: develop
-      alkemio_collaboration_service_branch:
-        description: "Branch for alkemio-collaboration-service-deployment"
-        required: false
-        type: string
-        default: develop
 
 jobs:
   trigger-deployments:
@@ -157,7 +148,6 @@ jobs:
             ["collaborative-document-service"]="${{ inputs.collaborative_document_service_branch }}"
             ["kratos-webhooks"]="${{ inputs.kratos_webhooks_branch }}"
             ["wopi-service"]="${{ inputs.wopi_service_branch }}"
-            ["alkemio-collaboration-service-deployment"]="${{ inputs.alkemio_collaboration_service_branch }}"
           )
 
           run_repo_map=()
