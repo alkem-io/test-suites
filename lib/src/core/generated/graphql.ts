@@ -2058,6 +2058,8 @@ export type CreateCalloutContributionData = {
 export type CreateCalloutContributionDefaultsData = {
   /** The default title to use for new contributions. */
   defaultDisplayName?: Maybe<Scalars["String"]["output"]>;
+  /** Use a server-owned live Whiteboard contribution-default draft. Mutually exclusive with either source field. */
+  draftWhiteboardID?: Maybe<Scalars["UUID"]["output"]>;
   /** The default description to use for new Post contributions. */
   postDescription?: Maybe<Scalars["Markdown"]["output"]>;
   /** Copy the internal Whiteboard contribution default from this source Callout. Mutually exclusive with sourceWhiteboardID. */
@@ -2069,6 +2071,8 @@ export type CreateCalloutContributionDefaultsData = {
 export type CreateCalloutContributionDefaultsInput = {
   /** The default title to use for new contributions. */
   defaultDisplayName?: InputMaybe<Scalars["String"]["input"]>;
+  /** Use a server-owned live Whiteboard contribution-default draft. Mutually exclusive with either source field. */
+  draftWhiteboardID?: InputMaybe<Scalars["UUID"]["input"]>;
   /** The default description to use for new Post contributions. */
   postDescription?: InputMaybe<Scalars["Markdown"]["input"]>;
   /** Copy the internal Whiteboard contribution default from this source Callout. Mutually exclusive with sourceWhiteboardID. */
@@ -2874,6 +2878,8 @@ export type CreateVisualOnProfileInput = {
 };
 
 export type CreateWhiteboardData = {
+  /** Use a server-owned live Whiteboard draft as the trusted source for final materialization. Mutually exclusive with sourceWhiteboardID. */
+  draftWhiteboardID?: Maybe<Scalars["UUID"]["output"]>;
   /** A readable identifier, unique within the containing scope. */
   nameID?: Maybe<Scalars["NameID"]["output"]>;
   /** The preview settings for the whiteboard. */
@@ -2883,7 +2889,21 @@ export type CreateWhiteboardData = {
   sourceWhiteboardID?: Maybe<Scalars["UUID"]["output"]>;
 };
 
+export type CreateWhiteboardDraftOnCalloutsSetInput = {
+  calloutsSetID: Scalars["UUID"]["input"];
+  sourceCalloutID?: InputMaybe<Scalars["UUID"]["input"]>;
+  sourceWhiteboardID?: InputMaybe<Scalars["UUID"]["input"]>;
+};
+
+export type CreateWhiteboardDraftOnTemplatesSetInput = {
+  sourceCalloutID?: InputMaybe<Scalars["UUID"]["input"]>;
+  sourceWhiteboardID?: InputMaybe<Scalars["UUID"]["input"]>;
+  templatesSetID: Scalars["UUID"]["input"];
+};
+
 export type CreateWhiteboardInput = {
+  /** Use a server-owned live Whiteboard draft as the trusted source for final materialization. Mutually exclusive with sourceWhiteboardID. */
+  draftWhiteboardID?: InputMaybe<Scalars["UUID"]["input"]>;
   /** A readable identifier, unique within the containing scope. */
   nameID?: InputMaybe<Scalars["NameID"]["input"]>;
   /** The preview settings for the whiteboard. */
@@ -5133,6 +5153,10 @@ export type Mutation = {
   createUser: User;
   /** Creates a new VirtualContributor on an Account. */
   createVirtualContributor: VirtualContributor;
+  /** Materializes a server-owned live Whiteboard draft for a Callout form. Content remains on the collaboration transport; GraphQL returns identifiers only. */
+  createWhiteboardDraftOnCalloutsSet: Scalars["UUID"]["output"];
+  /** Materializes a server-owned live Whiteboard draft for a Template form. GraphQL returns identifiers only. */
+  createWhiteboardDraftOnTemplatesSet: Scalars["UUID"]["output"];
   /** Creates an account in Wingback */
   createWingbackAccount: Scalars["String"]["output"];
   /** Removes the specified Application. */
@@ -5193,6 +5217,8 @@ export type Mutation = {
   deleteVisualFromMediaGallery: Visual;
   /** Deletes the specified Whiteboard. */
   deleteWhiteboard: Whiteboard;
+  /** Idempotently discards a server-owned live Whiteboard draft through the canonical Whiteboard deletion path. */
+  deleteWhiteboardDraft: Scalars["UUID"]["output"];
   /** Re-enable a previously disabled push notification subscription for the current user. */
   enablePushSubscription: PushSubscription;
   /** Trigger an event on the Application. */
@@ -5718,6 +5744,14 @@ export type MutationCreateVirtualContributorArgs = {
   virtualContributorData: CreateVirtualContributorOnAccountInput;
 };
 
+export type MutationCreateWhiteboardDraftOnCalloutsSetArgs = {
+  draftData: CreateWhiteboardDraftOnCalloutsSetInput;
+};
+
+export type MutationCreateWhiteboardDraftOnTemplatesSetArgs = {
+  draftData: CreateWhiteboardDraftOnTemplatesSetInput;
+};
+
 export type MutationCreateWingbackAccountArgs = {
   accountID: Scalars["UUID"]["input"];
 };
@@ -5836,6 +5870,10 @@ export type MutationDeleteVisualFromMediaGalleryArgs = {
 
 export type MutationDeleteWhiteboardArgs = {
   whiteboardData: DeleteWhiteboardInput;
+};
+
+export type MutationDeleteWhiteboardDraftArgs = {
+  whiteboardID: Scalars["UUID"]["input"];
 };
 
 export type MutationEnablePushSubscriptionArgs = {
@@ -11909,6 +11947,8 @@ export type ResolversTypes = {
   CreateVisualOnProfileData: ResolverTypeWrapper<SchemaTypes.CreateVisualOnProfileData>;
   CreateVisualOnProfileInput: SchemaTypes.CreateVisualOnProfileInput;
   CreateWhiteboardData: ResolverTypeWrapper<SchemaTypes.CreateWhiteboardData>;
+  CreateWhiteboardDraftOnCalloutsSetInput: SchemaTypes.CreateWhiteboardDraftOnCalloutsSetInput;
+  CreateWhiteboardDraftOnTemplatesSetInput: SchemaTypes.CreateWhiteboardDraftOnTemplatesSetInput;
   CreateWhiteboardInput: SchemaTypes.CreateWhiteboardInput;
   CreateWhiteboardPreviewSettingsData: ResolverTypeWrapper<SchemaTypes.CreateWhiteboardPreviewSettingsData>;
   CreateWhiteboardPreviewSettingsInput: SchemaTypes.CreateWhiteboardPreviewSettingsInput;
@@ -13586,6 +13626,8 @@ export type ResolversParentTypes = {
   CreateVisualOnProfileData: SchemaTypes.CreateVisualOnProfileData;
   CreateVisualOnProfileInput: SchemaTypes.CreateVisualOnProfileInput;
   CreateWhiteboardData: SchemaTypes.CreateWhiteboardData;
+  CreateWhiteboardDraftOnCalloutsSetInput: SchemaTypes.CreateWhiteboardDraftOnCalloutsSetInput;
+  CreateWhiteboardDraftOnTemplatesSetInput: SchemaTypes.CreateWhiteboardDraftOnTemplatesSetInput;
   CreateWhiteboardInput: SchemaTypes.CreateWhiteboardInput;
   CreateWhiteboardPreviewSettingsData: SchemaTypes.CreateWhiteboardPreviewSettingsData;
   CreateWhiteboardPreviewSettingsInput: SchemaTypes.CreateWhiteboardPreviewSettingsInput;
@@ -16728,6 +16770,11 @@ export type CreateCalloutContributionDefaultsDataResolvers<
     ParentType,
     ContextType
   >;
+  draftWhiteboardID?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["UUID"]>,
+    ParentType,
+    ContextType
+  >;
   postDescription?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Markdown"]>,
     ParentType,
@@ -17317,6 +17364,11 @@ export type CreateWhiteboardDataResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["CreateWhiteboardData"] = ResolversParentTypes["CreateWhiteboardData"]
 > = {
+  draftWhiteboardID?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["UUID"]>,
+    ParentType,
+    ContextType
+  >;
   nameID?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["NameID"]>,
     ParentType,
@@ -20239,6 +20291,24 @@ export type MutationResolvers<
       "virtualContributorData"
     >
   >;
+  createWhiteboardDraftOnCalloutsSet?: Resolver<
+    ResolversTypes["UUID"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationCreateWhiteboardDraftOnCalloutsSetArgs,
+      "draftData"
+    >
+  >;
+  createWhiteboardDraftOnTemplatesSet?: Resolver<
+    ResolversTypes["UUID"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationCreateWhiteboardDraftOnTemplatesSetArgs,
+      "draftData"
+    >
+  >;
   createWingbackAccount?: Resolver<
     ResolversTypes["String"],
     ParentType,
@@ -20436,6 +20506,12 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<SchemaTypes.MutationDeleteWhiteboardArgs, "whiteboardData">
+  >;
+  deleteWhiteboardDraft?: Resolver<
+    ResolversTypes["UUID"],
+    ParentType,
+    ContextType,
+    RequireFields<SchemaTypes.MutationDeleteWhiteboardDraftArgs, "whiteboardID">
   >;
   enablePushSubscription?: Resolver<
     ResolversTypes["PushSubscription"],
