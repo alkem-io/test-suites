@@ -30,102 +30,24 @@
 
 import { expect, test, type Page, type APIRequestContext } from '@playwright/test';
 import {
-  delay,
   getUserToken,
   postGraphqlRaw,
   queryHarnessDb,
-  registerInKratosOrFail,
   UniqueIDGenerator,
-  verifyInKratosOrFail,
 } from '@alkemio/tests-lib';
-import { acceptCookiesIfVisible } from '../helpers/cookies.helper';
+import {
+  adminEmail,
+  baseUrl,
+  deleteAccountTriggerButton,
+  deleteUserQuietly,
+  DisposableSubject,
+  loginAsSubject,
+  navigateToSecurityTab,
+  provisionSubject,
+} from './delete-account.helpers';
 
-const baseUrl = (
-  process.env.ALKEMIO_BASE_URL || 'http://localhost:3000'
-).replace(/\/$/, '');
 const graphqlUrl = `${baseUrl}/graphql`;
 
-// Same rationale as us1-delete-own-account.spec.ts: mirrors the harness admin
-// password Kratos actually stored for every registered identity.
-const harnessPassword = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
-const adminEmail = process.env.AUTH_ADMIN_EMAIL || 'admin@alkem.io';
-
-interface DisposableSubject {
-  email: string;
-  displayName: string;
-  userId: string;
-  accountId: string;
-}
-
-type SubjectRow = { id: string; accountId: string; displayName: string };
-
-/** Same polling strategy as us1-delete-own-account.spec.ts: the Alkemio
- * User/Account rows are materialized asynchronously by the Kratos
- * verification webhook. */
-const resolveSubjectRow = async (email: string): Promise<SubjectRow> => {
-  for (let attempt = 0; attempt < 20; attempt++) {
-    const rows = await queryHarnessDb<SubjectRow>(
-      `SELECT u.id, u."accountID" AS "accountId", p."displayName" AS "displayName"
-       FROM "user" u
-       JOIN actor a ON a.id = u.id
-       JOIN profile p ON p.id = a."profileId"
-       WHERE u.email = $1`,
-      [email]
-    );
-    if (rows[0]) return rows[0];
-    await delay(500);
-  }
-  throw new Error(
-    `resolveSubjectRow: no Alkemio user row appeared for '${email}' after registration + verification`
-  );
-};
-
-const provisionSubject = async (label: string): Promise<DisposableSubject> => {
-  const uniqueId = UniqueIDGenerator.getID();
-  const email = `del-${label}-${uniqueId}@test.alkem.io`;
-  const firstName = `Del${uniqueId}`;
-  const lastName = `${label}Fixture`;
-
-  const { verificationFlowId } = await registerInKratosOrFail(
-    firstName,
-    lastName,
-    email
-  );
-  await verifyInKratosOrFail(email, verificationFlowId);
-
-  const row = await resolveSubjectRow(email);
-  return {
-    email,
-    displayName: row.displayName,
-    userId: row.id,
-    accountId: row.accountId,
-  };
-};
-
-const loginAsSubject = async (page: Page, email: string): Promise<void> => {
-  await page.goto(baseUrl);
-  await acceptCookiesIfVisible(page);
-  await page.getByRole('link', { name: 'Log in', exact: true }).click();
-  await page.waitForURL(/.*login.*/);
-  await page.getByRole('textbox', { name: 'E-Mail *' }).fill(email);
-  await page
-    .getByRole('textbox', { name: 'Password *' })
-    .fill(harnessPassword);
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await page.waitForURL(/.*home.*/, { timeout: 30_000 });
-};
-
-const navigateToSecurityTab = async (page: Page): Promise<void> => {
-  await page.getByRole('banner').getByRole('button').last().click();
-  await page.getByRole('menuitem', { name: 'My Account' }).click();
-  await page.getByRole('tab', { name: 'Security', exact: true }).click();
-  await expect(
-    page.getByRole('heading', { name: 'Delete account', level: 4 })
-  ).toBeVisible({ timeout: 15_000 });
-};
-
-const deleteAccountTriggerButton = (page: Page) =>
-  page.getByRole('button', { name: 'Delete account', exact: true });
 const blockedDialog = (page: Page) =>
   page.getByRole('dialog', { name: /can.t delete your account yet/i });
 
@@ -182,26 +104,6 @@ const adminDeleteSpace = async (
   );
 };
 
-const adminDeleteUserQuietly = async (
-  adminToken: string,
-  userId?: string
-): Promise<void> => {
-  if (!userId) return;
-  try {
-    await postGraphqlRaw(
-      `mutation Us2DeleteUserTeardown($deleteData: DeleteUserInput!) {
-        deleteUser(deleteData: $deleteData) { id }
-      }`,
-      {
-        bearerToken: adminToken,
-        variables: { deleteData: { ID: userId, deleteIdentity: true } },
-      }
-    );
-  } catch {
-    // Best-effort teardown only.
-  }
-};
-
 /** Raw same-session GraphQL call via the browser's own cookies — the
  * "user bypasses the in-app pre-check" half of AS1. */
 const rawDeleteUserViaBrowserSession = async (
@@ -219,6 +121,12 @@ test.describe(
   'Blocked by resources I still own',
   { tag: '@forge-acceptance' },
   () => {
+    // AS4 clears the blocker AS1/AS2 asserted against and AS5 re-introduces
+    // a fresh one mid-flow (the TOCTOU race) on the SAME `blockedPage` — the
+    // whole file must run in one fixed order, not distributed across
+    // parallel workers each with their own independent `beforeAll` state.
+    test.describe.configure({ mode: 'serial' });
+
     let adminToken: string;
     let blockedSubject: DisposableSubject;
     let blockerSpaceId: string;
@@ -247,7 +155,7 @@ test.describe(
     test.afterAll(async () => {
       await blockedContext?.close().catch(() => {});
       await adminDeleteSpace(adminToken, blockerSpaceId).catch(() => {});
-      await adminDeleteUserQuietly(adminToken, blockedSubject?.userId);
+      await deleteUserQuietly(blockedSubject?.userId, adminToken);
     });
 
     test('US2-AS1: the blocked dialog names the space that blocks deletion; the server refuses even a raw bypass', async () => {
@@ -384,7 +292,7 @@ test.describe(
       for (const id of spaceIds) {
         await adminDeleteSpace(adminToken, id).catch(() => {});
       }
-      await adminDeleteUserQuietly(adminToken, subject?.userId);
+      await deleteUserQuietly(subject?.userId, adminToken);
     });
 
     test('US2-AS3: the blocked dialog shows the 25-item cap, an accurate total, and a truncation indicator', async ({
