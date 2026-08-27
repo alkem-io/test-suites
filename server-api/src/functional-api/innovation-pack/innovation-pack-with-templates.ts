@@ -1,6 +1,5 @@
 import { LogManager, UniqueIDGenerator } from '@alkemio/tests-lib';
 import { createInnovationPack } from './innovation_pack.request.params';
-import { whiteboardTemplateValues1 } from './whiteboard-values-fixed';
 import { createWhiteboardTemplate } from '@functional-api/templates/whiteboard/whiteboard-templates.request.params';
 import { getOrganizations } from '@functional-api/contributor-management/organization/organization.request.params';
 
@@ -8,9 +7,6 @@ const uniqueId = UniqueIDGenerator.getID();
 
 const packName =
   process.env.PACK_NAME || `Default Innovation Pack Name ${uniqueId}`;
-export const whiteboardTemplateValues =
-  process.env.WHITEBOARD_TEMPLATE_VALUE || whiteboardTemplateValues1;
-
 const packNameId = `pack-nameid-${uniqueId}`;
 
 const main = async () => {
@@ -21,7 +17,9 @@ const main = async () => {
   const packData = await createInnovationPack(packName, packNameId, providerId);
   const templateSetId =
     packData?.data?.createInnovationPack.templatesSet?.id ?? '';
-  await createWhiteboardTemplate(templateSetId, whiteboardTemplateValues);
+  // Since server#6399 templates are created with an empty whiteboard
+  // (inline content is server-internal; seed via sourceWhiteboardID).
+  await createWhiteboardTemplate(templateSetId);
 };
 
 main().catch(error => {

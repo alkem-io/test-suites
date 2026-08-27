@@ -562,7 +562,8 @@ describe('US4 — Lifecycle + authorization edges', () => {
 
     // Delete the callout — preserve its REAL id so we can prove its reactions are gone
     const deletedCalloutId = deletionTestCalloutId;
-    await deleteCallout(deletedCalloutId);
+    const deleted = await deleteCallout(deletedCalloutId);
+    expect(deleted?.data?.deleteCallout?.id).toEqual(deletedCalloutId);
     deletionTestCalloutId = ''; // mark as already deleted for afterAll guard
 
     // Querying the deleted callout by its real id fails with ENTITY_NOT_FOUND —
