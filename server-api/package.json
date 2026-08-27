@@ -37,6 +37,7 @@
     "test:communications": "vitest run --project communication --fileParallelism=false",
     "test:notifications:ui": "vitest --project notifications --fileParallelism=false --ui",
     "test:notifications:callouts": "vitest run --project notifications-callouts --fileParallelism=false",
+    "test:notifications:callout-reactions": "vitest run --project notifications-callout-reactions --fileParallelism=false",
     "test:notifications:messaging": "vitest run --project notifications-messaging --fileParallelism=false",
     "test:notifications:community": "vitest run --project notifications-community --fileParallelism=false",
     "test:lifecycle": "vitest run --project lifecycle --fileParallelism=false",

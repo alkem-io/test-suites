@@ -94,6 +94,9 @@ export default defineConfig({
       project('notifications-callouts', [
         'src/functional-api/notifications/callouts/**/*.it-spec.ts',
       ]),
+      project('notifications-callout-reactions', [
+        'src/functional-api/notifications/callout-reactions/**/*.it-spec.ts',
+      ]),
       project('notifications-community', [
         'src/functional-api/notifications/community/**/*.it-spec.ts',
       ]),
