@@ -96,8 +96,12 @@ test.describe('Callout emoji reactions — US1 P1 acceptance walk', { tag: ['@ca
     test.setTimeout(120_000);
 
     // Seed: org + space, then a PUBLISHED post callout on the space's calloutsSet.
+    // The `space` key must be present: the factory creates no space (and
+    // leaves calloutsSetId empty) for a name-only config — the empty UUID then
+    // dies at variable coercion as a sanitized BAD_USER_INPUT.
     scenario = await TestScenarioFactory.createBaseScenario({
       name: `reactions-p1-${Date.now()}`,
+      space: { collaboration: { addTutorialCallouts: false } },
     });
     spaceNameId = scenario.space.nameId;
 

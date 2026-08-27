@@ -25,9 +25,9 @@ export const createWhiteboardCallout = async (
               displayName,
               description: 'Whiteboard callout',
             },
+            // Since server#6399 CreateWhiteboardInput has no inline content;
+            // an empty whiteboard is created (seed via sourceWhiteboardID).
             whiteboard: {
-              content:
-                '{"type":"excalidraw","version":2,"source":"https://excalidraw.com","elements":[],"appState":{"gridSize":null,"viewBackgroundColor":"#ffffff"},"files":{}}',
               profile: {
                 displayName: 'whiteboard',
               },
