@@ -42,10 +42,14 @@ const submitRecoveryAndSetPassword = async (
   // Wait for the recovery email to arrive.
   await delay(3000);
 
-  // Poll for the recovery link and navigate to it.
+  // Poll for the recovery link and navigate to it. Recipient-filtered: the
+  // MailSlurper inbox is shared, and another suite's recovery mail (e.g. the
+  // connected-accounts recovery regression spec's, for a different persona)
+  // arriving mid-poll must never be opened here — completing recovery against
+  // it would set THAT persona's password to this test's temporary value.
   let recoveryLink: string | undefined;
   for (let attempt = 0; attempt < 10; attempt++) {
-    recoveryLink = await getRecoveryLink();
+    recoveryLink = await getRecoveryLink(email);
     if (recoveryLink) break;
     await delay(2000);
   }
