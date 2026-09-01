@@ -126,8 +126,13 @@ test.describe.serial('Whiteboard Templates', () => {
     // Fill the form:
     await fillWhiteboardTemplateForm(page, templateData);
 
-    // Verify the Save button is enabled
-    const saveButton = dialog.getByRole('button', { name: 'Save' });
+    // Opening the drawing materialized the template entity, which converts the
+    // create dialog into the edit dialog (renamed accordingly) — the Save
+    // button now lives there.
+    const editDialog = page.getByRole('dialog', {
+      name: 'Edit whiteboard template',
+    });
+    const saveButton = editDialog.getByRole('button', { name: 'Save' });
     await expect(saveButton).toBeEnabled();
 
     // Click the Save button to save the Whiteboard Template
@@ -135,7 +140,7 @@ test.describe.serial('Whiteboard Templates', () => {
 
     // Verify the dialog closes
     await expect(
-      page.getByRole('heading', { name: 'Create whiteboard template' })
+      page.getByRole('heading', { name: 'Edit whiteboard template' })
     ).not.toBeVisible();
 
     await verifyWhiteboardTemplate(page, templateData);
@@ -212,9 +217,14 @@ test.describe.serial('Whiteboard Templates', () => {
 
     await fillWhiteboardWithWhiteboardTemplate(page, templateData);
 
-    await dialog.getByRole('button', { name: 'Save' }).click();
+    // Opening the drawing materialized the template entity — the create dialog
+    // is now the (renamed) edit dialog; Save lives there.
+    const editDialog = page.getByRole('dialog', {
+      name: 'Edit whiteboard template',
+    });
+    await editDialog.getByRole('button', { name: 'Save' }).click();
     await expect(
-      page.getByRole('heading', { name: 'Create whiteboard template' })
+      page.getByRole('heading', { name: 'Edit whiteboard template' })
     ).not.toBeVisible();
 
     await openWhiteboardTemplate(page, testTemplate);

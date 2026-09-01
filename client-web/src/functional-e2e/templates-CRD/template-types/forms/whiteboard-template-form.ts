@@ -2,6 +2,7 @@ import { Page } from '@playwright/test';
 import { fillTemplateForm } from './template-form';
 import { WhiteboardTemplateForm } from './template-form.models';
 import {
+  closeWhiteboardEditor,
   getWhiteboardEditorDialog,
   openWhiteboardEditor,
   useTemplateInAWhiteboard,
@@ -15,7 +16,8 @@ const editWhiteboardCanvas = async (page: Page, textInWhiteboard: string) => {
 
   await writeTextInWhiteboardDialog(editorDialog, textInWhiteboard);
 
-  await editorDialog.getByRole('button', { name: 'Save' }).click();
+  // The editor autosaves — closing it finalizes the drawing (no Save button).
+  await closeWhiteboardEditor(editorDialog);
 };
 
 export const fillWhiteboardTemplateForm = async (
@@ -36,5 +38,6 @@ export const fillWhiteboardWithWhiteboardTemplate = async (
 
   await useTemplateInAWhiteboard(page, editorDialog, templateData.displayName);
 
-  await editorDialog.getByRole('button', { name: 'Save' }).click();
+  // The editor autosaves — closing it finalizes the drawing (no Save button).
+  await closeWhiteboardEditor(editorDialog);
 };
