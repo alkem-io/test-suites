@@ -7,6 +7,13 @@
 // search, an empty state, and a List/Map view toggle (users & orgs; VCs are
 // list-only). This suite exercises those behaviours end-to-end against a live
 // CRD build.
+//
+// Revised for client feature 025 (callout manual selection, client-web PR
+// #10048): per its FR-012 the type switch derives from the *resolved*
+// collection — segments render only for types with a non-zero count, and the
+// switch is hidden when fewer than two types resolve. This supersedes the
+// original 008 FR-009a configured-types gate the earlier version of this suite
+// asserted (a configured-but-empty type no longer renders a 0-count segment).
 
 import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
@@ -52,6 +59,20 @@ const memberFixture = createAuthenticatedSessionFixture({
 // A single Contributors callout reused across the read-only rendering tests, so
 // exactly one `region "Contributors"` exists on the page at a time.
 const MAIN = `Contributors ${Date.now()}`;
+
+// Tests 1.5–1.7 read the callout test 1.3 creates. Guard against partial runs
+// (--last-failed, -g filters, editor-run subsets) where 1.3 was not selected:
+// create the callout on demand so the later links of the serial chain never
+// depend on an earlier test having run. Callers must already be on the space
+// page.
+const ensureMainCallout = async (cc: ContributorsCalloutPage) => {
+  // count() does not auto-retry — wait for the feed first, or a premature 0
+  // right after navigation would create a duplicate callout.
+  await cc.waitForContentFeed();
+  if ((await cc.calloutCard(MAIN).count()) === 0) {
+    await cc.createContributorsCallout(MAIN);
+  }
+};
 
 adminFixture.test.describe.serial('Contributors Callout - Admin', () => {
   adminFixture.test.beforeAll(async ({ browser }) => {
@@ -113,10 +134,12 @@ adminFixture.test.describe.serial('Contributors Callout - Admin', () => {
     }
   );
 
-  // AC1/AC2 — default settings render users, organizations and virtual
-  // contributors, with a segmented type switch that opens on the default type.
+  // AC1/AC2 as revised by 025 FR-012 — default settings render a segmented
+  // switch derived from the *resolved* collection: one segment per configured
+  // type with a non-zero count. The configured-but-empty Virtual Contributors
+  // type (this space has no VCs) renders no segment.
   adminFixture.test(
-    '1.3 Default settings render all three types with a segmented switch',
+    '1.3 Default settings render a segmented switch of resolved (non-zero) types',
     async ({ page }) => {
       adminFixture.test.setTimeout(45_000);
       const cc = new ContributorsCalloutPage(page, baseUrl);
@@ -128,10 +151,11 @@ adminFixture.test.describe.serial('Contributors Callout - Admin', () => {
       // auto-provisioned default Contributors callout on the same page.
       const col = cc.collection(MAIN);
       await expect(col.region).toBeVisible();
-      // All three type segments present, each carrying its per-type count.
+      // Resolved (non-zero) type segments present, each carrying its count.
       await expect(col.typeSwitchTab('People')).toBeVisible();
       await expect(col.typeSwitchTab('Organizations')).toBeVisible();
-      await expect(col.typeSwitchTab('Virtual Contributors')).toBeVisible();
+      // Configured but resolving to zero → no segment (025 FR-012).
+      await expect(col.typeSwitchTab('Virtual Contributors')).toHaveCount(0);
       // Opens on the configured default type (People / users).
       await expect(col.typeSwitchTab('People')).toHaveAttribute(
         'aria-selected',
@@ -140,25 +164,36 @@ adminFixture.test.describe.serial('Contributors Callout - Admin', () => {
     }
   );
 
-  // AC2/AC7 — switching type scopes the view; the VC segment is list-only and,
-  // with no virtual contributors, shows the empty state (not an error).
+  // 025 FR-012 — the switch requires at least two *resolved* types: a
+  // multi-type callout whose collection resolves to a single non-zero type
+  // (People + the VC-less Virtual Contributors type) renders no switch at all,
+  // while the resolved locatable type keeps its List/Map toggle and cards.
+  // (The pre-025 "VC segment shows an empty state" scenario is unreachable
+  // without a real VC in the community — the empty segment no longer renders.)
   adminFixture.test(
-    '1.4 Virtual Contributors segment is list-only and shows an empty state',
+    '1.4 A multi-type callout resolving to one type renders no switch',
     async ({ page }) => {
-      adminFixture.test.setTimeout(45_000);
+      adminFixture.test.setTimeout(60_000);
       const cc = new ContributorsCalloutPage(page, baseUrl);
       await cc.navigateToSpace(baseScenario.space.nameId);
-      const col = cc.collection(MAIN);
 
-      // On the People segment the List/Map toggle is available (locatable type).
-      await expect(col.typeSwitchTab('People')).toBeVisible();
-      await col.switchType('People');
+      const singleResolved = `Single Resolved ${Date.now()}`;
+      await cc.createContributorsCallout(singleResolved, {
+        types: ['People', 'Virtual Contributors'],
+      });
+
+      const col = cc.collection(singleResolved);
+      await expect(col.region).toBeVisible();
+      // Only People resolves non-zero → no segmented type switch (no tabs).
+      await expect(col.typeSwitchTab('People')).toHaveCount(0);
+      await expect(col.typeSwitchTab('Virtual Contributors')).toHaveCount(0);
+      // The resolved (locatable) type still offers its view toggle and cards.
       await expect(col.viewToggle('Map')).toBeVisible();
+      await expect(col.contributorCard('space admin').first()).toBeVisible();
 
-      // The VC segment hides the Map control and (no VCs) shows the empty state.
-      await col.switchType('Virtual Contributors');
-      await expect(col.viewToggle('Map')).toHaveCount(0);
-      await expect(col.emptyState()).toBeVisible();
+      // Remove it so the later read-only tests keep exactly one multi-segment
+      // callout (MAIN) on the page.
+      await cc.deleteContributorsCallout(singleResolved);
     }
   );
 
@@ -169,6 +204,7 @@ adminFixture.test.describe.serial('Contributors Callout - Admin', () => {
       adminFixture.test.setTimeout(45_000);
       const cc = new ContributorsCalloutPage(page, baseUrl);
       await cc.navigateToSpace(baseScenario.space.nameId);
+      await ensureMainCallout(cc);
       const col = cc.collection(MAIN);
 
       await col.switchType('People');
@@ -185,6 +221,7 @@ adminFixture.test.describe.serial('Contributors Callout - Admin', () => {
       adminFixture.test.setTimeout(45_000);
       const cc = new ContributorsCalloutPage(page, baseUrl);
       await cc.navigateToSpace(baseScenario.space.nameId);
+      await ensureMainCallout(cc);
       const col = cc.collection(MAIN);
 
       await col.switchType('People');
@@ -201,17 +238,22 @@ adminFixture.test.describe.serial('Contributors Callout - Admin', () => {
     }
   );
 
-  // AC6 — editing an existing callout's types persists after save.
+  // AC6 — editing an existing callout's types persists after save. Excluding a
+  // type that actually resolves (Organizations — with no VCs, excluding the VC
+  // type would be invisible) leaves People as the only resolved type, so per
+  // 025 FR-012 the persisted change manifests as the switch disappearing
+  // entirely, with the people cards still rendered and the org card gone.
   adminFixture.test(
     '1.7 Excluding a type on an existing callout persists',
     async ({ page }) => {
       adminFixture.test.setTimeout(45_000);
       const cc = new ContributorsCalloutPage(page, baseUrl);
       await cc.navigateToSpace(baseScenario.space.nameId);
+      await ensureMainCallout(cc);
 
       await cc.openEdit(MAIN);
-      // Exclude Virtual Contributors.
-      await cc.setTypeSelected('Virtual Contributors', false);
+      // Exclude Organizations (the only other resolved type).
+      await cc.setTypeSelected('Organizations', false);
       await cc.saveEditButton.click();
 
       // Reload so the inline collection reflects the persisted settings.
@@ -219,12 +261,16 @@ adminFixture.test.describe.serial('Contributors Callout - Admin', () => {
       const col = cc.collection(MAIN);
       await expect(col.region).toBeVisible();
 
-      // The VC segment is gone; People + Organizations remain.
-      await expect(col.typeSwitchTab('Virtual Contributors')).toHaveCount(0, {
+      // Only People resolves now → the whole switch is gone (025 FR-012).
+      await expect(col.typeSwitchTab('Organizations')).toHaveCount(0, {
         timeout: 15000,
       });
-      await expect(col.typeSwitchTab('People')).toBeVisible();
-      await expect(col.typeSwitchTab('Organizations')).toBeVisible();
+      await expect(col.typeSwitchTab('People')).toHaveCount(0);
+      // The people still render; the organization card does not.
+      await expect(col.contributorCard('space admin').first()).toBeVisible();
+      await expect(
+        col.contributorCard(baseScenario.organization.profile.displayName)
+      ).toHaveCount(0);
     }
   );
 
@@ -236,8 +282,12 @@ adminFixture.test.describe.serial('Contributors Callout - Admin', () => {
       const cc = new ContributorsCalloutPage(page, baseUrl);
       await cc.navigateToSpace(baseScenario.space.nameId);
 
-      // Remove the multi-type callout we created earlier.
-      await cc.deleteContributorsCallout(MAIN);
+      // Remove the multi-type callout if this run created it (a partial run
+      // that skipped 1.3/1.5–1.7 has no MAIN to remove).
+      await cc.waitForContentFeed();
+      if ((await cc.calloutCard(MAIN).count()) > 0) {
+        await cc.deleteContributorsCallout(MAIN);
+      }
 
       const single = `Single Type ${Date.now()}`;
       await cc.createContributorsCallout(single, { types: ['People'] });

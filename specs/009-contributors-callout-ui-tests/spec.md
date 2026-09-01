@@ -39,10 +39,25 @@ existing ones.
 Because the callout's contributor data is seeded via `TestScenarioFactory`
 (admins/members/host organization; no virtual contributors by default), the new
 suite asserts the **deterministic** behaviours — type presence, counts, the
-segmented switch, per-type scoping, the VC empty state, name search, the list/map
-toggle, single-vs-multi-type, admin-only gating, and edit persistence — and treats
-data-rich map-plotting of geocoded contributors as an assumption-bounded edge case
-(see Out of Scope / Assumptions).
+segmented switch, per-type scoping, resolved-type gating of the switch, name
+search, the list/map toggle, single-vs-multi-type, admin-only gating, and edit
+persistence — and treats data-rich map-plotting of geocoded contributors as an
+assumption-bounded edge case (see Out of Scope / Assumptions).
+
+> **Revision (2026-08-31) — client feature 025.** Client feature
+> `025-callout-manual-selection` (client-web PR #10048) revised the rendering
+> contract this spec was written against: per its **FR-012** the type switch and
+> per-type filters derive from the **resolved** collection — segments render
+> only for types with a non-zero count, and the switch is hidden when fewer than
+> two types resolve (superseding 008 FR-009a's configured-types gate). A
+> configured-but-empty type therefore renders **no** segment, so the original
+> "Virtual Contributors segment shows an empty state" scenario is unreachable
+> without a real VC in the community. US2/US3 below are amended accordingly:
+> test `1.3` now asserts the resolved-types switch (VC segment absent), `1.4`
+> covers "multi-type callout resolving to one type renders no switch", and `1.7`
+> excludes **Organizations** (a resolved type) so edit persistence stays
+> observable. Restoring genuine three-segment / VC coverage requires seeding a
+> VC as a community member (see the VC-seeding note under Assumptions).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -82,11 +97,13 @@ create affordance.
 
 The QA engineer verifies the rendered contributor collection. With the default
 settings (all three types) the collection shows a segmented type switch — one
-segment per configured type, each carrying an always-visible per-type count — that
-opens on the configured default type and scopes the view (search, cards) to the
-active type. A type with no contributors shows an empty state (not an error), and
-client-side name search filters the active type with its own no-match empty state.
-A single configured type shows no segmented switch.
+segment per configured type **that resolves to a non-zero count** (025 FR-012),
+each carrying an always-visible per-type count — that opens on the configured
+default type and scopes the view (search, cards) to the active type. A
+configured type with no contributors renders no segment; when fewer than two
+types resolve, no switch renders at all. Client-side name search filters the
+active type with its own no-match empty state. A single configured type shows no
+segmented switch.
 
 **Why this priority**: The rendered collection is the user-facing payoff of the
 feature and encodes the bulk of the acceptance criteria (segmented switch, per-type
@@ -94,18 +111,21 @@ counts, per-type scoping, empty states, name search, single-vs-multi type). It
 depends only on creation (P1).
 
 **Independent Test**: Run tests `1.3`, `1.4`, `1.5`, `1.8`. Default settings render
-People/Organizations/Virtual Contributors segments with counts, opening on People;
-the Virtual Contributors segment (no VCs) shows the empty state; name search yields
-a no-match empty state; a single-type callout shows no segmented switch.
+People/Organizations segments with counts (the VC-less Virtual Contributors type
+renders no segment), opening on People; a multi-type callout resolving to a single
+non-zero type renders no switch; name search yields a no-match empty state; a
+single-type callout shows no segmented switch.
 
 **Acceptance Scenarios**:
 
 1. **Given** a Contributors callout with default settings, **When** it renders,
-   **Then** a segmented switch shows one segment per type, each with its count, and
-   opens on the configured default type (People).
-2. **Given** the segmented switch, **When** the admin selects the Virtual
-   Contributors segment (which has no contributors), **Then** an empty state is
-   shown (not an error).
+   **Then** a segmented switch shows one segment per **resolved (non-zero)** type,
+   each with its count, the configured-but-empty Virtual Contributors type renders
+   no segment, and the view opens on the configured default type (People).
+2. **Given** a callout configured with People and Virtual Contributors (no VCs in
+   the community), **When** it renders, **Then** only People resolves, so no
+   segmented type switch renders at all — just the people cards with their
+   List/Map toggle (025 FR-012).
 3. **Given** the active type, **When** the admin types a non-matching name in the
    search box, **Then** the cards filter to the active type and a no-match empty
    state is shown.
@@ -118,28 +138,32 @@ a no-match empty state; a single-type callout shows no segmented switch.
 
 The QA engineer verifies the map affordance and edit persistence. Users and
 organizations expose a List/Map toggle; switching to Map renders the map region.
-Virtual Contributors are list-only (no Map control on that segment). Editing an
-existing callout to exclude a type (e.g. Virtual Contributors) persists after save —
-that segment disappears from the rendered switch.
+(The VC list-only rule is not directly assertable without a seeded VC — with zero
+VCs the segment never renders per 025 FR-012.) Editing an existing callout to
+exclude a resolved type (Organizations) persists after save — with only People
+left resolving, the switch disappears entirely and the org card is gone.
 
 **Why this priority**: The map toggle and the VC list-only rule are important
 view-shaping behaviours, and edit-persistence proves the settings round-trip through
 the server. They build on the rendered collection (P1/US2).
 
 **Independent Test**: Run tests `1.4`, `1.6`, `1.7`. On the People segment the Map
-control is present and switches to a map region; on the Virtual Contributors segment
-the Map control is absent; excluding Virtual Contributors via edit removes that
-segment after save.
+control is present and switches to a map region; excluding Organizations via edit
+persists — after save only People resolves, so the switch is gone and the org card
+no longer renders.
 
 **Acceptance Scenarios**:
 
 1. **Given** the People segment, **When** the admin toggles to Map, **Then** the map
    region is shown and the Map control is pressed; toggling back returns to the list.
-2. **Given** the Virtual Contributors segment, **When** it is active, **Then** no Map
-   control is offered (list-only).
+2. **Given** a switch-less collection resolving to People only, **When** it renders,
+   **Then** the List/Map toggle is still offered (locatable type), per test `1.4`.
+   *(The original "VC segment is list-only" scenario needs a seeded community VC —
+   deferred; see the VC-seeding note under Assumptions.)*
 3. **Given** an existing Contributors callout with all three types, **When** the
-   admin edits it to exclude Virtual Contributors and saves, **Then** the rendered
-   switch shows only People and Organizations after save (the change persisted).
+   admin edits it to exclude Organizations and saves, **Then** after reload only
+   People resolves — the switch is hidden (025 FR-012), the people cards render,
+   and the organization card is gone (the change persisted).
 
 ---
 
@@ -290,9 +314,23 @@ recorded in the selector contract.
   `CalloutFraming.contributors` / `contributorCounts` and `CalloutSettings.framing.contributors`
   (verified live). If the redesign is behind a flag, it is enabled deterministically.
 - `TestScenarioFactory` seeds a space with a host organization and admin/member users but
-  **no virtual contributors** and **no geocoded coordinates**; therefore the VC segment is
-  reliably empty (drives the empty-state assertion) and precise map-pin plotting is not
-  asserted (only that the map region renders).
+  **no virtual contributors** and **no geocoded coordinates**; therefore the VC type
+  reliably resolves to zero (post-025 this means the VC segment does not render — it
+  drives the resolved-types assertions in `1.3`/`1.4`) and precise map-pin plotting is
+  not asserted (only that the map region renders).
+- **VC seeding (verified feasible 2026-08-31, local env)**: restoring genuine
+  three-segment / VC-list-only coverage requires a VC that is a **community member**
+  of the test space. The scenario config's `virtualContributors` block already creates
+  a VC on the (base or dedicated host) organization's account, but does **not** join it
+  to the space community. The missing step is one mutation the harness has no helper
+  for yet: `assignRoleToVirtualContributor(roleData: { roleSetID, actorID, role: MEMBER })`
+  (cleanup mirror: `removeRoleFromVirtualContributor`). Probed end-to-end against the
+  local server with the harness admin token: create → assign MEMBER → visible in
+  `roleSet.virtualContributorsInRole(role: MEMBER)` → remove → delete, no entitlement
+  blocker. Follow-up: add an `assignRoleToVirtualContributor` mutation helper to
+  `@alkemio/tests-lib` plus a `community.virtualContributors` (or similar) hook in
+  `TestScenarioFactory`, then reinstate the VC-segment scenarios (segment with count,
+  list-only/no Map control, VC empty search state).
 - The default test-environment language is English, so the English accessible names
   ("Contributors", "People", "Organizations", "Virtual Contributors", "List", "Map",
   "Select at least one contributor type.", "No contributors to show.",
