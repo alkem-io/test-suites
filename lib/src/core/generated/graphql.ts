@@ -97019,6 +97019,27 @@ export type PendingMembershipsJourneyProfileFragment = {
   cardBanner?: { id: string; uri: string } | undefined;
 };
 
+export type BannerVisualConstraintsQueryVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type BannerVisualConstraintsQuery = {
+  platform: {
+    configuration: {
+      defaultVisualTypeConstraints: {
+        minWidth: number;
+        minHeight: number;
+        maxWidth: number;
+        maxHeight: number;
+        aspectRatio: number;
+        minAspectRatio: number;
+        maxAspectRatio: number;
+        allowedTypes: Array<string>;
+      };
+    };
+  };
+};
+
 export type ConfigurationQueryVariables = SchemaTypes.Exact<{
   [key: string]: never;
 }>;
@@ -97315,6 +97336,11 @@ export type LookupProfileVisualsQuery = {
             id: string;
             name: SchemaTypes.VisualType;
             uri: string;
+            minWidth: number;
+            minHeight: number;
+            maxWidth: number;
+            maxHeight: number;
+            aspectRatio: number;
             authorization?:
               | {
                   myPrivileges?:
@@ -118864,6 +118890,24 @@ export const PendingMembershipsSpaceDocument = gql`
   }
   ${PendingMembershipsJourneyProfileFragmentDoc}
 `;
+export const BannerVisualConstraintsDocument = gql`
+  query bannerVisualConstraints {
+    platform {
+      configuration {
+        defaultVisualTypeConstraints(type: BANNER) {
+          minWidth
+          minHeight
+          maxWidth
+          maxHeight
+          aspectRatio
+          minAspectRatio
+          maxAspectRatio
+          allowedTypes
+        }
+      }
+    }
+  }
+`;
 export const ConfigurationDocument = gql`
   query configuration {
     platform {
@@ -119112,6 +119156,11 @@ export const LookupProfileVisualsDocument = gql`
           id
           name
           uri
+          minWidth
+          minHeight
+          maxWidth
+          maxHeight
+          aspectRatio
           authorization {
             myPrivileges
           }
@@ -120350,6 +120399,9 @@ const GetSubspaceAvailableMembersDocumentString = print(
 const GetSubspaceCommunityDocumentString = print(GetSubspaceCommunityDocument);
 const PendingMembershipsSpaceDocumentString = print(
   PendingMembershipsSpaceDocument
+);
+const BannerVisualConstraintsDocumentString = print(
+  BannerVisualConstraintsDocument
 );
 const ConfigurationDocumentString = print(ConfigurationDocument);
 const FullConfigurationDocumentString = print(FullConfigurationDocument);
@@ -123556,6 +123608,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "PendingMembershipsSpace",
+        "query",
+        variables
+      );
+    },
+    bannerVisualConstraints(
+      variables?: SchemaTypes.BannerVisualConstraintsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.BannerVisualConstraintsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.BannerVisualConstraintsQuery>(
+            BannerVisualConstraintsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "bannerVisualConstraints",
         "query",
         variables
       );
