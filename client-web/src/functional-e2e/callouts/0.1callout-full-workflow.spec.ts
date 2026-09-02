@@ -5,7 +5,14 @@ import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
-import { delay, TestUserManager } from '@alkemio/tests-lib';
+import {
+  createCalloutOnCalloutsSet,
+  getGraphqlClient,
+  TestUser as LibTestUser,
+  TestUserManager,
+} from '@alkemio/tests-lib';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
+import { CalloutContributionType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { expect, test } from '@playwright/test';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 import { CollaborationPage } from './pages';
@@ -33,7 +40,17 @@ const scenarioConfig: TestScenarioConfig = {
 };
 
 let baseScenario: OrganizationWithSpaceModel;
-const sharedCalloutName = `Full Workflow Callout ${Date.now()}`;
+// Assigned per worker in the hooks below. Module-level `const ... Date.now()`
+// names are poison here: local fullyParallel can place the three fixture
+// describes in separate workers (fresh module eval => fresh timestamp), a
+// retry always gets a fresh worker, and running a single step in isolation
+// never runs the sibling describe that would have created the entity.
+let sharedCalloutName = '';
+// API-seeded published callout every non-Step-1 test can rely on, created in
+// the OUTER beforeAll so it exists for any subset of tests in any worker.
+let workflowCalloutName = '';
+let workflowCalloutId = '';
+let workflowCommentsRoomId = '';
 
 const adminFixture = createAuthenticatedSessionFixture({
   storageStateName: 'callout-workflow-admin.json',
@@ -48,6 +65,30 @@ const memberFixture = createAuthenticatedSessionFixture({
 test.describe.serial('Callout Full Workflow', () => {
   test.beforeAll(async () => {
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
+
+    // Seed the callout the member/moderation walks exercise. The lib default
+    // is Published with Post contributions + comments enabled — exactly the
+    // state Step 2 would produce through the UI.
+    workflowCalloutName = `Full Workflow Callout ${Date.now()}`;
+    const created = await createCalloutOnCalloutsSet(
+      baseScenario.space.collaboration.calloutsSetId,
+      {
+        framing: {
+          profile: {
+            displayName: workflowCalloutName,
+            description: 'Seeded for the member/moderation workflow steps',
+          },
+        },
+      }
+    );
+    workflowCalloutId = created.data?.createCalloutOnCalloutsSet?.id ?? '';
+    workflowCommentsRoomId =
+      created.data?.createCalloutOnCalloutsSet?.comments?.id ?? '';
+    if (!workflowCalloutId) {
+      throw new Error(
+        `[workflow seed] published callout was not created: ${JSON.stringify(created.error ?? created)}`
+      );
+    }
   });
 
   test.afterAll(async () => {
@@ -61,6 +102,9 @@ test.describe.serial('Callout Full Workflow', () => {
     () => {
       adminFixture.test.beforeAll(async ({ browser }) => {
         adminFixture.test.setTimeout(60_000);
+        // Steps 1+2 run serially in one worker; assigning here (not at module
+        // level) keeps the name consistent on a retry's fresh worker too.
+        sharedCalloutName = `Admin UI Callout ${Date.now()}`;
         await adminFixture.setupAuthentication(
           browser,
           TestUserManager.users.spaceAdmin.email
@@ -75,7 +119,7 @@ test.describe.serial('Callout Full Workflow', () => {
       adminFixture.test(
         'Step 1: Admin creates Post Collection callout',
         async ({ page }) => {
-          adminFixture.test.setTimeout(45_000);
+          adminFixture.test.setTimeout(60_000);
           const collaborationPage = new CollaborationPage(page, baseUrl);
 
           await collaborationPage.navigateToSpace(baseScenario.space.nameId);
@@ -96,7 +140,9 @@ test.describe.serial('Callout Full Workflow', () => {
       adminFixture.test(
         'Step 2: Admin publishes the callout',
         async ({ page }) => {
-          adminFixture.test.setTimeout(30_000);
+          // Must exceed clickCallout's 30s hydration wait or a slow feed load
+          // times the whole test out ("Target page closed" on the click).
+          adminFixture.test.setTimeout(60_000);
           const collaborationPage = new CollaborationPage(page, baseUrl);
 
           await collaborationPage.navigateToSpace(baseScenario.space.nameId);
@@ -131,19 +177,21 @@ test.describe.serial('Callout Full Workflow', () => {
     memberFixture.test(
       'Step 3: Member adds post contribution',
       async ({ page }) => {
-        memberFixture.test.setTimeout(45_000);
+        memberFixture.test.setTimeout(60_000);
         const collaborationPage = new CollaborationPage(page, baseUrl);
         const postTitle = `Member Post ${Date.now()}`;
         const postContent = 'This is a contribution from a space member';
 
         await collaborationPage.navigateToSpace(baseScenario.space.nameId);
 
-        await collaborationPage.clickCallout(sharedCalloutName);
+        await collaborationPage.clickCallout(workflowCalloutName);
 
         await collaborationPage.addPostContribution(postTitle, postContent);
-        await delay(1000); // Small delay to allow contribution to render
+        // No fixed delay: poll until the contribution renders — 1s+3s flaked
+        // on the slower local stack while a human (or CI's single worker)
+        // never notices the latency.
         await expect(page.getByText(postTitle).first()).toBeVisible({
-          timeout: 3000,
+          timeout: 15000,
         });
       }
     );
@@ -151,12 +199,12 @@ test.describe.serial('Callout Full Workflow', () => {
     memberFixture.test(
       'Step 4: Member comments on callout',
       async ({ page }) => {
-        memberFixture.test.setTimeout(45_000);
+        memberFixture.test.setTimeout(60_000);
         const collaborationPage = new CollaborationPage(page, baseUrl);
         const commentText = `Member comment ${Date.now()}`;
 
         await collaborationPage.navigateToSpace(baseScenario.space.nameId);
-        await collaborationPage.clickCallout(sharedCalloutName);
+        await collaborationPage.clickCallout(workflowCalloutName);
 
         await expect(collaborationPage.commentInput).toBeVisible();
 
@@ -178,6 +226,51 @@ test.describe.serial('Callout Full Workflow', () => {
   adminModerationFixture.test.describe.serial('Admin Moderation', () => {
     adminModerationFixture.test.beforeAll(async ({ browser }) => {
       adminModerationFixture.test.setTimeout(60_000);
+      // Step 5 asserts contributions > 0 and comments > 0. Seed both via the
+      // API so the assertions hold even when this describe runs in isolation
+      // (or in a different worker than the member steps).
+      const graphqlClient = getGraphqlClient();
+      const contribution = await graphqlErrorWrapper(
+        authToken =>
+          graphqlClient.CreateContributionOnCallout(
+            {
+              contributionData: {
+                calloutID: workflowCalloutId,
+                type: CalloutContributionType.Post,
+                post: {
+                  profileData: {
+                    displayName: `Moderation seed post ${Date.now()}`,
+                  },
+                },
+              },
+            },
+            { authorization: `Bearer ${authToken}` }
+          ),
+        LibTestUser.SPACE_MEMBER
+      );
+      if (!contribution.data?.createContributionOnCallout?.post?.id) {
+        throw new Error(
+          `[moderation seed] contribution was not created: ${JSON.stringify(contribution.error ?? contribution)}`
+        );
+      }
+      const comment = await graphqlErrorWrapper(
+        authToken =>
+          graphqlClient.SendMessageToRoom(
+            {
+              messageData: {
+                roomID: workflowCommentsRoomId,
+                message: `Moderation seed comment ${Date.now()}`,
+              },
+            },
+            { authorization: `Bearer ${authToken}` }
+          ),
+        LibTestUser.SPACE_MEMBER
+      );
+      if (!comment.data?.sendMessageToRoom?.id) {
+        throw new Error(
+          `[moderation seed] comment was not sent: ${JSON.stringify(comment.error ?? comment)}`
+        );
+      }
       await adminModerationFixture.setupAuthentication(
         browser,
         TestUserManager.users.spaceAdmin.email
@@ -192,11 +285,11 @@ test.describe.serial('Callout Full Workflow', () => {
     adminModerationFixture.test(
       'Step 5: Admin moderates content',
       async ({ page }) => {
-        adminModerationFixture.test.setTimeout(45_000);
+        adminModerationFixture.test.setTimeout(60_000);
         const collaborationPage = new CollaborationPage(page, baseUrl);
 
         await collaborationPage.navigateToSpace(baseScenario.space.nameId);
-        await collaborationPage.clickCallout(sharedCalloutName);
+        await collaborationPage.clickCallout(workflowCalloutName);
 
         const contributions = collaborationPage.contributionsList;
         await expect(contributions.first()).toBeVisible();
