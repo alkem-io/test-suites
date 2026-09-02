@@ -56,6 +56,9 @@ const UPLOAD_IMAGE_ON_VISUAL = `
       id
       name
       uri
+      aspectRatio
+      minWidth
+      minHeight
     }
   }
 `;

@@ -14,15 +14,20 @@
 //     answers with the SPA's HTML), so the sign-up FORM is driven instead. See
 //     `completeSignUp`. Only the users a walk actually drives are then signed
 //     in — see `registerAccount` vs `registerAndSignIn`.
-//   - Node 20.9.0 (the Volta-pinned runtime) has no `zlib.crc32`, so the PNG
-//     fixture below carries its own CRC-32 implementation.
+//   - The 64×64 PNG fixture below is a thin wrapper around the shared,
+//     parameterised `createPngFixture` in `@alkemio/tests-lib` (lifted out for
+//     the 10178 space-banner suite, which needs non-square sizes). This keeps
+//     the pre-existing `createPngFixture(variant)` call sites in this file
+//     unchanged.
 
 import { expect, type Browser, type BrowserContext, type Locator, type Page } from '@playwright/test';
-import fs from 'fs';
-import os from 'os';
-import path from 'path';
-import zlib from 'zlib';
-import { getGraphqlClient, getMails, getUserToken, registerInAlkemioOrFail } from '@alkemio/tests-lib';
+import {
+  createPngFixture as createSizedPngFixture,
+  getGraphqlClient,
+  getMails,
+  getUserToken,
+  registerInAlkemioOrFail,
+} from '@alkemio/tests-lib';
 
 export const BASE_URL = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 export const PASSWORD = process.env.AUTH_TEST_HARNESS_PASSWORD || 'ChatAvatars!Test2026';
@@ -271,78 +276,17 @@ export async function registerAndSignInAll(browser: Browser, specs: PersonSpec[]
 
 // ─────────────────────────── image fixtures ───────────────────────────
 
-// Node 20.9.0 has no zlib.crc32; PNG chunks need one, so here it is.
-const CRC_TABLE = (() => {
-  const table = new Uint32Array(256);
-  for (let n = 0; n < 256; n++) {
-    let c = n;
-    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-    table[n] = c >>> 0;
-  }
-  return table;
-})();
-
-function crc32(buffer: Buffer): number {
-  let crc = 0xffffffff;
-  for (const byte of buffer) crc = CRC_TABLE[(crc ^ byte) & 0xff] ^ (crc >>> 8);
-  return (crc ^ 0xffffffff) >>> 0;
-}
-
 /**
- * Writes a small, valid, distinctly-striped PNG and returns its path.
+ * Writes a small, valid, distinctly-striped 64×64 PNG and returns its path.
  * `variant` shifts the palette so two successive uploads are distinguishable.
+ *
+ * Thin wrapper preserving this file's original call shape — the actual PNG
+ * generation (including the hand-rolled CRC-32; Node 20.9.0 has no
+ * `zlib.crc32`) now lives in `@alkemio/tests-lib`'s `createPngFixture`, shared
+ * with the 10178 space-banner suite, which needs non-square sizes.
  */
 export function createPngFixture(variant: 'a' | 'b' = 'a'): string {
-  const chunk = (tag: string, data: Buffer): Buffer => {
-    const tagBuffer = Buffer.from(tag, 'ascii');
-    const length = Buffer.alloc(4);
-    length.writeUInt32BE(data.length, 0);
-    const crc = Buffer.alloc(4);
-    crc.writeUInt32BE(crc32(Buffer.concat([tagBuffer, data])), 0);
-    return Buffer.concat([length, tagBuffer, data, crc]);
-  };
-
-  const size = 64;
-  const signature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
-
-  const ihdrData = Buffer.alloc(13);
-  ihdrData.writeUInt32BE(size, 0);
-  ihdrData.writeUInt32BE(size, 4);
-  ihdrData.writeUInt8(8, 8); // bit depth
-  ihdrData.writeUInt8(2, 9); // colour type: RGB
-
-  const rows: Buffer[] = [];
-  for (let y = 0; y < size; y++) {
-    const row = Buffer.alloc(1 + size * 3);
-    row[0] = 0; // no filter
-    for (let x = 0; x < size; x++) {
-      const stripe = (x + y) % 16 < 8;
-      const [r, g, b] =
-        variant === 'a'
-          ? stripe
-            ? [20, 160, 220]
-            : [220, 20, 20]
-          : stripe
-            ? [240, 200, 10]
-            : [10, 90, 240];
-      row[1 + x * 3] = r;
-      row[2 + x * 3] = g;
-      row[3 + x * 3] = b;
-    }
-    rows.push(row);
-  }
-
-  const png = Buffer.concat([
-    signature,
-    chunk('IHDR', ihdrData),
-    chunk('IDAT', zlib.deflateSync(Buffer.concat(rows))),
-    chunk('IEND', Buffer.alloc(0)),
-  ]);
-
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'chat-avatars-fixture-'));
-  const file = path.join(dir, `avatar-${variant}.png`);
-  fs.writeFileSync(file, png);
-  return file;
+  return createSizedPngFixture({ width: 64, height: 64, variant });
 }
 
 /**
