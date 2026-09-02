@@ -679,7 +679,18 @@ describe('Forum category reorganisation - remove-mutation safe negatives only', 
   });
 
   test('Non-admin cannot call the remove-category mutation, and the active list is unchanged', async () => {
-    // Arrange
+    // Arrange - guarantee OTHER is non-empty via an owned fixture, so that
+    // even a total authorization-gate bypass still cannot commit the
+    // removal (the NOT_EMPTY guard is the second line of defence here)
+    const created = await createDiscussion(
+      platformDiscussionId,
+      'category-reorg-remove-non-admin-negative',
+      ForumDiscussionCategory.Other,
+      TestUser.GLOBAL_ADMIN
+    );
+    fixtureDiscId = created?.data?.createDiscussion?.id ?? '';
+    expect(fixtureDiscId).not.toEqual('');
+
     const before = await getPlatformForumDiscussionCategories();
 
     // Act
