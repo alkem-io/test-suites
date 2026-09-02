@@ -1,6 +1,7 @@
 import { ForumDiscussionCategory } from '@alkemio/client-lib/dist/types/alkemio-schema';
 import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
+import { graphqlRequestAuth } from '@alkemio/tests-lib/utils/graphql.request';
 
 export const sendMessageToRoom = async (
   roomID: string,
@@ -243,4 +244,61 @@ export const updateDiscussion = async (
     );
 
   return graphqlErrorWrapper(callback, userRole);
+};
+
+// The two calls below talk to the raw GraphQL endpoint via `graphqlRequestAuth`
+// (supertest-based) instead of the generated SDK: the checked-in codegen
+// output was generated before the platform forum grew a discussionCategories
+// field and an adminForumRemoveDiscussionCategory mutation, and regenerating
+// it requires a live server. Wire names travel over GraphQL by name, so this
+// is a correct way to exercise both against a server that already has them.
+// See `mcp-api-keys-containment.it-spec.ts` for the same pattern.
+
+const PLATFORM_FORUM_DISCUSSION_CATEGORIES_QUERY = `
+  query PlatformForumDiscussionCategories {
+    platform {
+      forum {
+        id
+        discussionCategories
+      }
+    }
+  }
+`;
+
+export const getPlatformForumDiscussionCategories = async (
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+): Promise<string[] | undefined> => {
+  const response = await graphqlRequestAuth(
+    {
+      operationName: 'PlatformForumDiscussionCategories',
+      query: PLATFORM_FORUM_DISCUSSION_CATEGORIES_QUERY,
+      variables: {},
+    },
+    userRole
+  );
+
+  return response?.body?.data?.platform?.forum?.discussionCategories;
+};
+
+const ADMIN_FORUM_REMOVE_DISCUSSION_CATEGORY_MUTATION = `
+  mutation AdminForumRemoveDiscussionCategory($removeData: ForumRemoveDiscussionCategoryInput!) {
+    adminForumRemoveDiscussionCategory(removeData: $removeData) {
+      id
+      discussionCategories
+    }
+  }
+`;
+
+export const adminRemoveForumDiscussionCategory = async (
+  category: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  return graphqlRequestAuth(
+    {
+      operationName: 'AdminForumRemoveDiscussionCategory',
+      query: ADMIN_FORUM_REMOVE_DISCUSSION_CATEGORY_MUTATION,
+      variables: { removeData: { category } },
+    },
+    userRole
+  );
 };
