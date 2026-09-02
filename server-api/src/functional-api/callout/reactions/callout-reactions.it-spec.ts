@@ -141,10 +141,10 @@ beforeAll(async () => {
   postOnlyCalloutId =
     postOnly?.data?.createCalloutOnCalloutsSet?.id ?? '';
 
-  // Whiteboard-only callout (US1-AS5 / R-2). Use the dedicated whiteboard helper,
-  // which seeds the required default whiteboardContent (Excalidraw JSON); the
-  // generic createCalloutOnCalloutsSet does not accept it, so a whiteboard-only
-  // callout created through it returns no id.
+  // Whiteboard-only callout (US1-AS5 / R-2). Use the dedicated whiteboard
+  // helper, which sets up whiteboard contribution settings; since server#6399
+  // the default whiteboard content is server-internal (empty unless seeded
+  // via sourceWhiteboardID / sourceCalloutID).
   const whiteboardOnly = await createWhiteboardCalloutOnCalloutsSet(
     calloutsSetId,
     {
@@ -562,17 +562,20 @@ describe('US4 — Lifecycle + authorization edges', () => {
 
     // Delete the callout — preserve its REAL id so we can prove its reactions are gone
     const deletedCalloutId = deletionTestCalloutId;
-    await deleteCallout(deletedCalloutId);
+    const deleted = await deleteCallout(deletedCalloutId);
+    expect(deleted?.data?.deleteCallout?.id).toEqual(deletedCalloutId);
     deletionTestCalloutId = ''; // mark as already deleted for afterAll guard
 
-    // Querying the deleted callout by its real id resolves to null — a valid UUID
-    // for a deleted entity returns null through the lookup resolver, confirming
-    // no orphan reaction rows surface.
+    // Querying the deleted callout by its real id fails with ENTITY_NOT_FOUND —
+    // lookup.callout resolves via getCalloutOrFail (the platform-wide lookup
+    // contract), so a deleted entity is unreachable rather than null. The
+    // harness wrapper surfaces that as an error with no data, which confirms
+    // no orphan reaction rows are observable through the summary.
     const afterSummary = await getCalloutReactionsSummary(
       deletedCalloutId,
       TestUser.GLOBAL_ADMIN
     );
-    // The callout is gone; null result confirms no orphan record surface
-    expect(afterSummary?.data?.lookup?.callout).toBeNull();
+    expect(afterSummary?.data).toBeUndefined();
+    expect(afterSummary?.error?.errors?.[0]?.code).toEqual('ENTITY_NOT_FOUND');
   });
 });

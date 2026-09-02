@@ -19,6 +19,7 @@ import { verifyWhiteboardTemplate } from './verify/whiteboard-template-verify';
 import { fillTemplateForm } from './forms/template-form';
 import { verifyOpenedTemplate } from './verify/verify-opened-template';
 import { openWhiteboardTemplate } from './verify/open-template';
+import { sectionAddNewButton } from './section-helpers';
 
 // Create the authenticated fixture with a unique storage state name for this test suite
 const { test, setupAuthentication, teardownAuthentication } =
@@ -111,7 +112,7 @@ test.describe.serial('Whiteboard Templates', () => {
     ).toBeVisible();
 
     // Open the "Add new" menu for the Whiteboard templates section (3rd section)
-    await page.getByRole('button', { name: 'Add new' }).nth(2).click();
+    await sectionAddNewButton(page, /^Whiteboard templates/).click();
     await page.getByRole('menuitem', { name: 'Create new' }).click();
 
     // Wait for the Whiteboard Template creation dialog to appear
@@ -190,7 +191,7 @@ test.describe.serial('Whiteboard Templates', () => {
     ).toBeVisible();
 
     // Open the "Add new" menu for the Whiteboard templates section (3rd section)
-    await page.getByRole('button', { name: 'Add new' }).nth(2).click();
+    await sectionAddNewButton(page, /^Whiteboard templates/).click();
     await page.getByRole('menuitem', { name: 'Create new' }).click();
 
     // Wait for the Whiteboard Template creation dialog to appear

@@ -17,6 +17,7 @@ export * from "./utils/harness-db.client";
 export * from "./scenario/TestScenarioFactory";
 export * from "./scenario/baseFunctions";
 export * from "./scenario/TestSetupUtils";
+export * from "./scenario/fixtures/pngFixture";
 export * from "./scenario/LogManager";
 export * from "./scenario/TestUserManager";
 export * from "./scenario/config/test-scenario-config";

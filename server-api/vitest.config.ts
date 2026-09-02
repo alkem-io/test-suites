@@ -118,6 +118,7 @@ export default defineConfig({
         'src/functional-api/subscriptions/**/*.it-spec.ts',
       ]),
       project('templates', ['src/functional-api/templates/**/*.it-spec.ts']),
+      project('visual', ['src/functional-api/visual/**/*.it-spec.ts']),
       project('calendar', ['src/functional-api/calendar/**/*.it-spec.ts']),
       project('push-notifications', [
         'src/functional-api/push-notifications/**/*.it-spec.ts',
@@ -139,6 +140,7 @@ export default defineConfig({
           'src/functional-api/storage/**/*.it-spec.ts',
           'src/functional-api/entitlements/**/*.it-spec.ts',
           'src/functional-api/templates/**/*.it-spec.ts',
+          'src/functional-api/visual/**/*.it-spec.ts',
           'src/functional-api/calendar/**/*.it-spec.ts',
           'src/functional-api/push-notifications/**/*.it-spec.ts',
           'src/functional-api/language/**/*.it-spec.ts',

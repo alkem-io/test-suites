@@ -151,21 +151,29 @@ describe('Create subspace', () => {
   describe('DDT invalid NameID', () => {
     //Arrange;
     test.each`
-      nameId       | expected
-      ${'d'}       | ${'NameID value format is not valid: d'}
-      ${'vvv,vvd'} | ${'NameID value format is not valid: vvv,vvd'}
-      ${'..-- d'}  | ${'NameID value format is not valid: ..-- d'}
+      nameId
+      ${'d'}
+      ${'vvv,vvd'}
+      ${'..-- d'}
     `(
-      'should throw error: "$expected" for nameId value: "$nameId"',
-      async ({ nameId, expected }) => {
+      'should reject invalid nameId value: "$nameId"',
+      async ({ nameId }) => {
         const response = await createSubspace(
           subspaceName + 'd',
           nameId + 'd',
           baseScenario.space.id
         );
 
-        // Assert
-        expect(JSON.stringify(response)).toContain(expected);
+        // Assert: the NameID scalar rejects the value at variable coercion.
+        // Since server#6399 the response boundary deliberately sanitizes
+        // coercion errors (graphql.error.sanitizer.ts) so user-supplied
+        // content is not reflected back — the specific "NameID value format
+        // is not valid: <value>" message is server-log-only now.
+        const err = response?.error?.errors?.[0];
+        expect(err?.code).toEqual('BAD_USER_INPUT');
+        expect(err?.message).toEqual(
+          'Invalid value supplied for a GraphQL variable'
+        );
       }
     );
   });
