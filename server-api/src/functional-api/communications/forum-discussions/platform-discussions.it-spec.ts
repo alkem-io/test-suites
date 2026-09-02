@@ -546,7 +546,7 @@ describe('Forum category reorganisation - new categories + admin-only gate', () 
 
     // Assert
     expect(res?.data?.createDiscussion).toBeUndefined();
-    expect(res?.error?.errors?.length).toBeGreaterThan(0);
+    expect(res?.error?.errors?.[0]?.code).toEqual('FORBIDDEN_POLICY');
   });
 
   test('Non-admin creating into Releases is refused (gate is now set-driven, not a single literal)', async () => {
@@ -560,7 +560,7 @@ describe('Forum category reorganisation - new categories + admin-only gate', () 
 
     // Assert
     expect(res?.data?.createDiscussion).toBeUndefined();
-    expect(res?.error?.errors?.length).toBeGreaterThan(0);
+    expect(res?.error?.errors?.[0]?.code).toEqual('FORBIDDEN_POLICY');
   });
 
   test('Non-admin creates a discussion in the Tips & Tricks category (public category)', async () => {
@@ -702,7 +702,9 @@ describe('Forum category reorganisation - remove-mutation safe negatives only', 
 
     // Assert
     expect(res?.body?.data?.adminForumRemoveDiscussionCategory).toBeFalsy();
-    expect(res?.body?.errors?.length).toBeGreaterThan(0);
+    expect(res?.body?.errors?.[0]?.extensions?.code).toEqual(
+      'FORBIDDEN_POLICY'
+    );
     expect(after).toEqual(before);
   });
 
