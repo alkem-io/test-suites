@@ -52,7 +52,7 @@ describe('Create User', () => {
 
     // Assert
     expect(user.profile?.displayName).toEqual(userName);
-    expect(user.authorization?.credentialRules).not.toBe('');
+    expect(user.authorization?.credentialRules?.length).toBeGreaterThan(0);
   });
 
   test('should throw error - same user is created twice', async () => {

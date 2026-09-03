@@ -38,10 +38,23 @@ including the Matrix-identity wording), and the three X-1 walks (draft
 whiteboard, in-flight invitation, open conversation — deletions completed, no
 orphans or residual PII observed).
 
-Still open: **M-5** — the local execution of PR #620's loopback-tier suite
-(the only run those 19 tests get until its review closes the pipeline gap) —
-and the TC-17 ruling from the client-web#10231 owner. The final
-blocked → resolve → delete-through was left to automation (PR #620 US2 tail).
+### 2026-09-02 · local compose stack (localhost) · M-5 — PR #620 loopback-tier suite
+
+Branch `feat/054-delete-own-account` at `4f67a6e0` (PR #620 merged with `develop`),
+run from the QA lead's checkout against the local compose stack. #620 has since
+merged into `develop` (2026-09-03, `6f88de23`).
+
+| Check | Result | Evidence |
+|---|---|---|
+| PR #620 API slice via the `test:contributormanagement` lane (the only way the PR routes it: the `nightly` project excludes `delete-own-account*`) | **PASS — 16/16** | `delete-own-account.it-spec.ts` 16 passed (US1 1, US2 5, US4 2, US3 4, US5 4); `delete-own-account.baseline.it-spec.ts` 1 skipped — the T101 falsification gate self-skips on a hardened server, as designed. Lane totals 274 passed / 2 failed / 1 skipped of 277 in 5.7 min; both failures are outside PR #620 (next row). A first attempt with `test:nightly:ui` ran 259 cases but none of PR #620's — that lane excludes them by design |
+| Non-620 lane failures: `deleted-user-session-orphan` SRA-E1 and `delete-user` "should delete created user" | **Environment, not product** | Both fail only when `createUser` runs past the harness's ~5 s connection cut: the wrapper logged 46 `[ENV_FAILURE]` retries all-time, every one on attempt 1, 14 of them on `CreateUser`; the retried create then returns no id and the test's `userId` stays `''`. SRA-E1 passes in isolation (926 ms). Same class as test-suites#563 / server#6258. Hardened on this branch: both specs now create through `createUserOrFail`, which recovers the committed user by nameID after a retry-after-commit (mirrors `createSpaceBasicDataOrFail`) |
+| PR #620 Playwright walks, headless, against the local stack | **PASS — 13/13** | `us1-delete-own-account` 6, `us2-blocked-resources` 5, `us3-reauth-freshness` 2, in 1.1 min. US2-AS4 is the blocked → resolve → delete-through tail left to automation on 2026-09-02 — now executed |
+| PR #620 review finding surfaced by this run | **Fixed on #620 before merge** | `delete-own-account.it-spec.ts` never bootstrapped `TestScenarioFactory`, so `TestUserManager` was populated only when another lane file happened to run first in the same worker; standalone, all 16 cases failed with `TypeError: Cannot read properties of undefined (reading 'get')`. Fixed with the same `beforeAll` every sibling spec uses |
+
+Still open: the TC-17 ruling from the client-web#10231 owner. M-5 is closed above;
+it stays a **manual release gate** until a compose-backed CI job exists, because the
+loopback-tier suite runs in no pipeline (a pipeline-coverage gap by design, not
+pending review).
 
 ---
 
@@ -87,22 +100,21 @@ execution.*
 Needs the local compose stack up.
 
 ```bash
-cd <your test-suites checkout>
-git fetch origin feat/054-delete-own-account
-git switch feat/054-delete-own-account
+cd <your test-suites checkout>   # develop — #620 merged 2026-09-03 (6f88de23)
 pnpm install
 
 # API slice (16 cases + the self-skipping baseline):
 pnpm --filter @alkemio/test-suite-server-api run test:contributormanagement
 
 # The three walks, headless:
-cd client-web && UI_HEADLESS=true pnpm exec playwright test src/functional-e2e/delete-account/
+cd client-web && UI_HEADLESS=true pnpm exec playwright test src/functional-e2e/account-deletion/us
 ```
 
-✅ Record the pass/fail counts. Known risks going in: the harness Postgres
+✅ Record the pass/fail counts — recorded 2026-09-02 in the verification log
+above (API 16/16, walks 13/13). Known risks going in: the harness Postgres
 defaults may be wrong (`synapse`/`synapse` — a connect failure here is itself a
 PR-620 review finding, report it there), and `POSTGRES_*`/Redis vars must point
-at the local compose services. Switch back with `git switch -`.
+at the local compose services.
 
 ## X-1 — exploratory charter (~90 min): deletion with unusual state
 

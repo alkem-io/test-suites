@@ -168,15 +168,19 @@ export const createUserDataOrFail = async (
 
   const response = await createUser(createOptions, userRole);
   if (response.data?.createUser?.id) {
-    return response.data.createUser;
+    const created = response.data.createUser;
+    // The create payload already carries the authorization policy; only if it
+    // came back empty do we wait for it, same as the recovery path below.
+    if ((created.authorization?.credentialRules?.length ?? 0) > 0) {
+      return created;
+    }
+    return waitForUserReady(created.id, nameID, createDetailOf(response), userRole);
   }
 
   const alreadyTaken = response.error?.errors?.some(e =>
     String((e as { message?: unknown }).message ?? '').includes('already taken')
   );
-  const createDetail = response.error
-    ? JSON.stringify(response.error.errors)
-    : 'server returned no createUser.id and no error';
+  const createDetail = createDetailOf(response);
   if (!alreadyTaken) {
     throw new Error(`createUser '${nameID}' failed: ${createDetail}`);
   }
@@ -203,9 +207,27 @@ export const createUserDataOrFail = async (
   }
 
   // Wait for the (still running) first create to finish building the user.
+  return waitForUserReady(recoveredId, nameID, createDetail, userRole);
+};
+
+const createDetailOf = (
+  response: Awaited<ReturnType<typeof createUser>>
+): string =>
+  response.error
+    ? JSON.stringify(response.error.errors)
+    : 'server returned no createUser.id and no error';
+
+/** Polls until the user's authorization policy is applied — a user read
+ * before that fails `deleteUser` with AUTHORIZATION_INVALID_POLICY. */
+const waitForUserReady = async (
+  userId: string,
+  nameID: string,
+  createDetail: string,
+  userRole: TestUser
+): Promise<CreatedUserData> => {
   let lastReadyDetail = '';
   for (let attempt = 1; attempt <= USER_READY_ATTEMPTS; attempt++) {
-    const existing = await getUserData(recoveredId, userRole);
+    const existing = await getUserData(userId, userRole);
     const user = existing.data?.user;
     if (user && (user.authorization?.credentialRules?.length ?? 0) > 0) {
       return user as CreatedUserData;
@@ -218,7 +240,7 @@ export const createUserDataOrFail = async (
     }
   }
   throw new Error(
-    `createUser '${nameID}' was recovered as ${recoveredId} after a retry-after-commit but never read fully built after ${USER_READY_ATTEMPTS} attempts (${lastReadyDetail}); create error: ${createDetail}`
+    `createUser '${nameID}' exists as ${userId} but never read fully built after ${USER_READY_ATTEMPTS} attempts (${lastReadyDetail}); create response: ${createDetail}`
   );
 };
 

@@ -293,14 +293,20 @@ describe('account deletion — portable delta (054)', () => {
 
   // TC-18 -------------------------------------------------------------------
   test('TC-18 — a plain user cannot delete another user (ratified by the QA lead)', async () => {
-    // Register serially — Kratos rejects parallel registration flows.
-    const attacker = await createDisposableVerifiedUser('del-attacker');
-    const victim = await createDisposableVerifiedUser('del-victim');
+    // Register serially — Kratos rejects parallel registration flows. Both
+    // live inside the cleanup scope: if the second registration rejects, the
+    // first must still be torn down.
+    let attacker: Awaited<ReturnType<typeof createDisposableVerifiedUser>> | undefined;
+    let victim: Awaited<ReturnType<typeof createDisposableVerifiedUser>> | undefined;
     try {
+      attacker = await createDisposableVerifiedUser('del-attacker');
+      victim = await createDisposableVerifiedUser('del-victim');
+      const attackerToken = attacker.token;
+      const victimUserId = victim.userId;
       const escalationAttempt = await postGraphqlRaw<DeleteUserRawData>(
         deleteUserRawMutation,
-        attacker.token,
-        { deleteData: { ID: victim.userId, deleteIdentity: true } }
+        attackerToken,
+        { deleteData: { ID: victimUserId, deleteIdentity: true } }
       );
 
       // The distinction here IS the case: a forbidden/authorization refusal,
@@ -341,8 +347,8 @@ describe('account deletion — portable delta (054)', () => {
         true
       );
     } finally {
-      await deleteUserTolerant(attacker.userId);
-      await deleteUserTolerant(victim.userId);
+      if (attacker) await deleteUserTolerant(attacker.userId);
+      if (victim) await deleteUserTolerant(victim.userId);
     }
   });
 });

@@ -11,9 +11,11 @@
 //
 // `signIn` / `goToSecuritySettings` are lifted from
 // `user-profile/mcp-api-keys-mint.spec.ts` — their third copy in this repo.
-// If test-suites#620 merges, its own `delete-account/delete-account.helpers.ts`
-// duplicates the same walk again; reconcile the two directories rather than
-// keeping both.
+// test-suites#620 (merged 2026-09-03) brought `delete-account.helpers.ts`,
+// now beside this file after the directory reconciliation; it carries a fourth
+// copy of the same walk. Deduplicating the two helper files is a follow-up —
+// kept separate here so the loopback-only walks (us1/us2/us3) and the portable
+// nightly walks stay independently runnable.
 
 import { Page } from '@playwright/test';
 import { expect } from '@playwright/test';

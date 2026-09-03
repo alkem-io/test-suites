@@ -10,7 +10,7 @@
 > [client-web#10231](https://github.com/alkem-io/client-web/pull/10231), both merged 2026-09-01
 >
 > **Basis reconciled 2026-09-02 against [test-suites#620](https://github.com/alkem-io/test-suites/pull/620)**
-> (`feat/054-delete-own-account`, open, CI green, unreviewed, **CONFLICTING** vs develop) — the
+> (**merged into `develop` 2026-09-03 as `6f88de23`**; its loopback walks now sit beside this plan under `account-deletion/`, still excluded from the nightly by design — a pipeline-coverage gap, not pending review) — the
 > architect's test-suites slice, which *was* implemented. This plan now scopes the **delta after
 > #620**. My first pass missed #620 because it searched `origin/develop` only, having fetched only
 > that ref; open PRs and other remote heads were never enumerated. Lesson recorded in `harness.md`.
@@ -35,8 +35,8 @@ fields, the sentinel in a real feed, the card's visibility rules, and the escala
 
 ```bash
 pnpm install && pnpm --filter @alkemio/tests-lib run build
-cd server-api  && pnpm exec vitest run src/functional-api/contributor-management/user/account-deletion-portable.it-spec.ts
-cd client-web  && pnpm exec playwright test src/functional-e2e/account-deletion/
+(cd server-api && pnpm exec vitest run src/functional-api/contributor-management/user/account-deletion-portable.it-spec.ts)
+(cd client-web && pnpm exec playwright test src/functional-e2e/account-deletion/)
 ```
 
 Named `account-deletion-portable.it-spec.ts`, not `delete-own-account-portable...` as an earlier
@@ -122,17 +122,17 @@ from `nightly`, so these execute in **no pipeline**. **portable** = runs whereve
 |---|---|---|---|
 | TC-01 Self delete over a bearer refused `SESSION_REFRESH_REQUIRED`, nothing deleted | US3-AS5, FR-011/012, R-a | **built** — `server-api/…/user/account-deletion-portable.it-spec.ts` › *TC-01 — a raw-API self-deletion cannot bypass the session-age gate* | API · portable |
 | TC-02 Preflight answers over a bearer with `sessionFresh:false` (advisory, not gated) | FR-005, FR-010 | **built** — `server-api/…/user/account-deletion-portable.it-spec.ts` › *TC-02 — the preflight answers over a bearer and reports the session as not fresh* | API · portable |
-| TC-03 Blocker matrix over real resources: kind × `selfResolvable` × totals | US2-AS1, US4-AS1, FR-007, R-d | covered by PR #620 (unmerged — pending review/rebase) › `delete-own-account.it-spec.ts` › *US2 per-kind blocker equivalence* | API · loopback |
-| TC-04 Admin deletes a sole org owner — no blocker, no gate (the support route) | FR-014/023, R-d | covered by PR #620 (unmerged) › *the admin branch deletes a sole organization owner directly* | API · loopback |
+| TC-03 Blocker matrix over real resources: kind × `selfResolvable` × totals | US2-AS1, US4-AS1, FR-007, R-d | covered by #620 (merged 2026-09-03) › `delete-own-account.it-spec.ts` › *US2 per-kind blocker equivalence* | API · loopback |
+| TC-04 Admin deletes a sole org owner — no blocker, no gate (the support route) | FR-014/023, R-d | covered by #620 (merged 2026-09-03) › *the admin branch deletes a sole organization owner directly* | API · loopback |
 | TC-05 Admin blocked path keeps the pre-existing `ForbiddenException` | FR-023, R-f | **built** — `server-api/…/user/account-deletion-portable.it-spec.ts` › *TC-05 — the admin blocked path keeps its pre-existing exception shape* (#620 never asserts the admin-branch exception shape) | API · portable |
 | ~~TC-06~~ cookie-vs-bearer `sessionFresh` contrast | FR-010 | **withdrawn** — it was a workaround for having no session control. #620 proves freshness directly by minting and aging sessions; the portable half survives as TC-02 | — |
-| TC-07 Fresh session, no blockers → mutation **resolves**, rows gone, re-login fails | US1-AS3/AS4, FR-017, SC-002 | covered by PR #620 (unmerged) › *US1 happy path* | API · loopback |
-| TC-08 Blocked → resolve the blocker → deletion proceeds, same session | US2-AS1/AS4, SC-003 | covered by PR #620 (unmerged) › per-kind `test.each` tail | API · loopback |
-| TC-09 Sole owner blocked → second owner → proceeds; org keeps its other owner | US4-AS1/AS2/AS3 | covered by PR #620 (unmerged) › *US4 sole organization owner* | API · loopback |
-| TC-10 Resource created after the preflight → confirm refused `ACCOUNT_DELETION_BLOCKED` | US2-AS5, FR-006, R-h | covered by PR #620 (unmerged) › `us2-blocked-resources.spec.ts` › US2-AS5 | E2E · loopback |
-| TC-11 Self-caller's `deleteIdentity:false` overridden — the identity is really erased | FR-016, Fork-1 edge case, R-c | covered by PR #620 (unmerged) › US1 happy path (explicit `deleteIdentity: false` + de-identification) | API · loopback |
-| TC-12 Browser walk: card → typed-name confirm → signed out → cannot sign in again | US1-AS1/AS2/AS3/AS4, SC-001/007 | covered by PR #620 (unmerged) › `us1-delete-own-account.spec.ts` (AS1–AS6) | E2E · loopback |
-| TC-13 Blocked dialog driven by the real server answer; deep link + support side by side | US2-AS1/AS2, SC-003 | covered by PR #620 (unmerged) › `us2-blocked-resources.spec.ts` AS1/AS2 | E2E · loopback |
+| TC-07 Fresh session, no blockers → mutation **resolves**, rows gone, re-login fails | US1-AS3/AS4, FR-017, SC-002 | covered by #620 (merged 2026-09-03) › *US1 happy path* | API · loopback |
+| TC-08 Blocked → resolve the blocker → deletion proceeds, same session | US2-AS1/AS4, SC-003 | covered by #620 (merged 2026-09-03) › per-kind `test.each` tail | API · loopback |
+| TC-09 Sole owner blocked → second owner → proceeds; org keeps its other owner | US4-AS1/AS2/AS3 | covered by #620 (merged 2026-09-03) › *US4 sole organization owner* | API · loopback |
+| TC-10 Resource created after the preflight → confirm refused `ACCOUNT_DELETION_BLOCKED` | US2-AS5, FR-006, R-h | covered by #620 (merged 2026-09-03) › `us2-blocked-resources.spec.ts` › US2-AS5 | E2E · loopback |
+| TC-11 Self-caller's `deleteIdentity:false` overridden — the identity is really erased | FR-016, Fork-1 edge case, R-c | covered by #620 (merged 2026-09-03) › US1 happy path (explicit `deleteIdentity: false` + de-identification) | API · loopback |
+| TC-12 Browser walk: card → typed-name confirm → signed out → cannot sign in again | US1-AS1/AS2/AS3/AS4, SC-001/007 | covered by #620 (merged 2026-09-03) › `us1-delete-own-account.spec.ts` (AS1–AS6) | E2E · loopback |
+| TC-13 Blocked dialog driven by the real server answer; deep link + support side by side | US2-AS1/AS2, SC-003 | covered by #620 (merged 2026-09-03) › `us2-blocked-resources.spec.ts` AS1/AS2 | E2E · loopback |
 | TC-14 Notification centre renders the profile-removed entry: no PII, no blank row | US5-AS4, R-e | **built** — `client-web/…/account-deletion/profile-removed-notification.spec.ts` › *TC-14 — no PII, no blank row, list stays populated*. #620 counts DB rows containing the email; it never renders the notification centre, so the `errorPolicy:'ignore'` blanking risk was untouched by it | E2E · portable |
 | TC-15 Activity feed shows `Former member` and still loads | US5-AS5, SC-009, R-j | **built** — `client-web/…/account-deletion/former-member-activity.spec.ts` › *TC-15 — the activity feed shows Former member and still loads* | E2E · portable |
 | TC-16 The Delete-account card is owner-only | FR-001 scope, R-k | **built** — `client-web/…/account-deletion/account-deletion-visibility.spec.ts` › *TC-16 — the Delete-account card is owner-only*. Confirmed live: the denial is **route-level** (a pre-existing owner-only guard redirects a non-owner — even a platform admin — to `/settings/profile` before the Security tab renders at all, predating this feature); the spec asserts the redirect and the card's absence together | E2E · portable |
@@ -154,12 +154,12 @@ from `nightly`, so these execute in **no pipeline**. **portable** = runs whereve
 
 | Scenario | Why not automated | Where it belongs |
 |---|---|---|
-| D-1 A session genuinely older than 15 min is refused (US3-AS1) | ~~No session-clock control.~~ **Blocker lifted by #620**, which ages the Redis session record directly | **Covered by PR #620 (unmerged)** › *a session older than the privileged window is refused*. Loopback tier |
-| D-2 Re-auth round trip and dialog auto-reopen in a browser (US3-AS2/AS3) | ~~Same blocker.~~ **Lifted by #620** | **Covered by PR #620 (unmerged)** › `us3-reauth-freshness.spec.ts`. Loopback tier |
-| D-3 Exactly one `account_deletion` audit row, `initiator_role: self` (US1-AS5, FR-020) | ~~No DB access and no GraphQL read surface.~~ **#620 adds a loopback-confined Postgres client and asserts the row directly** | **Covered by PR #620 (unmerged)** › US1 happy path + `us1-delete-own-account.spec.ts` AS5. Loopback tier — **so SC-005 is proven only where a compose stack exists, and in no pipeline** |
-| D-4 Active subscription surfaced and audited (US1-AS6 positive) | ~~No seeding path.~~ **#620 seeds `externalSubscriptionID` by direct SQL** | **Covered by PR #620 (unmerged)** › *an active Wingback subscription…*. Loopback tier |
-| D-5 More than 25 blockers truncate with accurate totals (US2-AS3) | Previously declined on cost; #620 built it anyway, at both levels | **Covered by PR #620 (unmerged)** › it-spec truncation case + `us2` AS3. Loopback tier |
-| D-6 Silent refresh / idle renewal does not advance freshness (US3-AS6) | ~~Same as D-1.~~ **Lifted by #620** | **Covered by PR #620 (unmerged)** › *silent token rotation and idle renewal do not count*. Loopback tier |
+| D-1 A session genuinely older than 15 min is refused (US3-AS1) | ~~No session-clock control.~~ **Blocker lifted by #620**, which ages the Redis session record directly | **Covered by #620 (merged 2026-09-03)** › *a session older than the privileged window is refused*. Loopback tier |
+| D-2 Re-auth round trip and dialog auto-reopen in a browser (US3-AS2/AS3) | ~~Same blocker.~~ **Lifted by #620** | **Covered by #620 (merged 2026-09-03)** › `us3-reauth-freshness.spec.ts`. Loopback tier |
+| D-3 Exactly one `account_deletion` audit row, `initiator_role: self` (US1-AS5, FR-020) | ~~No DB access and no GraphQL read surface.~~ **#620 adds a loopback-confined Postgres client and asserts the row directly** | **Covered by #620 (merged 2026-09-03)** › US1 happy path + `us1-delete-own-account.spec.ts` AS5. Loopback tier — **so SC-005 is proven only where a compose stack exists, and in no pipeline** |
+| D-4 Active subscription surfaced and audited (US1-AS6 positive) | ~~No seeding path.~~ **#620 seeds `externalSubscriptionID` by direct SQL** | **Covered by #620 (merged 2026-09-03)** › *an active Wingback subscription…*. Loopback tier |
+| D-5 More than 25 blockers truncate with accurate totals (US2-AS3) | Previously declined on cost; #620 built it anyway, at both levels | **Covered by #620 (merged 2026-09-03)** › it-spec truncation case + `us2` AS3. Loopback tier |
+| D-6 Silent refresh / idle renewal does not advance freshness (US3-AS6) | ~~Same as D-1.~~ **Lifted by #620** | **Covered by #620 (merged 2026-09-03)** › *silent token rotation and idle renewal do not count*. Loopback tier |
 | D-7 A failure at the last primary-store step leaves the account intact (US5-AS1) | Still not covered. `server`'s `delete-user-transaction.spec.ts` proves the same `EntityManager` is threaded and no post-commit legs run — **not that a database rolled back** (the EM is mocked). #620 does not attempt it | **Deferred to `server` CI** |
 | D-8 Forced Kratos / file-service leg failures still resolve successfully (US5-AS2/AS3) | Still not covered. #620 asserts the **success** outcomes (`session_revocation_completed`, `identity_deletion_completed`) but never forces a leg to fail, which is the actual risk | **`server` repo**, already unit-covered there |
 | D-9 File bytes actually leave the object store | No object-store access. No reconciler exists in v1 either | **Deferred** — an operational gap as much as a test gap |
@@ -167,7 +167,7 @@ from `nightly`, so these execute in **no pipeline**. **portable** = runs whereve
 | M-2 Help page describes the real flow, en-US and nl-NL (US6-AS1/AS2) | Editorial truthfulness against shipped behaviour is a human judgement, and the page lives in `documentation` | **Manual**, release checklist. Blocks the app-store URL |
 | M-3 Migration `1788000000000` applied before the client ships | A deploy-order check, not a test | **Manual**, release checklist. The guards detect the failure, but only after the fact |
 | M-4 Matrix chat identity survives deletion (R-4, accepted residual) | Deliberately out of v1 scope | **Manual** — verify the docs *say so*; do not test that it does not happen |
-| **M-5 Run #620's loopback suite against a compose stack before the release ships** | Its 16 API cases and 3 walks execute in no pipeline (excluded from `nightly` by design). Unrun coverage is not coverage | **Manual gate**, release checklist: `pnpm --filter @alkemio/test-suite-server-api run test:contributormanagement` + the `delete-account/` walks, on compose, with the result recorded |
+| **M-5 Run #620's loopback suite against a compose stack before the release ships** | Its 16 API cases and 3 walks execute in no pipeline (excluded from `nightly` by design). Unrun coverage is not coverage | **Manual gate**, release checklist: `pnpm --filter @alkemio/test-suite-server-api run test:contributormanagement` + the `account-deletion/us1-*`/`us2-*`/`us3-*` walks, on compose, with the result recorded. **Executed 2026-09-02, all green — see `account-deletion-manual-verification.md`.** Stays a manual gate until a compose-backed CI job exists: a pipeline-coverage gap, not pending review |
 | X-1 Deletion while holding unusual state (draft whiteboards, in-flight invitations, an open conversation) | Scripted cases would be premature — the blocker set is four resource kinds and nobody has walked the edges | **Exploratory charter**, 90 min, before release sign-off |
 
 **Non-functional, assessed.** *Performance* — the blocker query is capped at 25; the activity-feed
