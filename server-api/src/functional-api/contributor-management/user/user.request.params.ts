@@ -106,6 +106,14 @@ export const createUser = async (
  * BEFORE we create is a genuine duplicate and is rejected up front, so the
  * recovery only ever returns a user this call committed.
  */
+const isOnlyNotFound = (errors: unknown): boolean =>
+  Array.isArray(errors) &&
+  errors.length > 0 &&
+  errors.every(
+    e =>
+      (e as { extensions?: { code?: string } })?.extensions?.code ===
+      'ENTITY_NOT_FOUND'
+  );
 const USER_RECOVERY_LOOKUP_ATTEMPTS = 5;
 const USER_RECOVERY_LOOKUP_DELAY_MS = 2000;
 export const createUserOrFail = async (
@@ -122,7 +130,18 @@ export const createUserOrFail = async (
   },
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ): Promise<string> => {
+  // Fail closed: `lookupByName.user` resolves through
+  // `getUserByNameIdOrFail`, so ENTITY_NOT_FOUND is the normal "free" answer;
+  // any OTHER lookup error means we cannot prove the nameID is free and the
+  // recovery below could hand back a pre-existing user.
   const preflight = await getUserByNameId(options.nameID, userRole);
+  if (preflight.error && !isOnlyNotFound(preflight.error.errors)) {
+    throw new Error(
+      `Cannot verify whether user '${options.nameID}' already exists: ${JSON.stringify(
+        preflight.error.errors
+      )}`
+    );
+  }
   if (preflight.data?.lookupByName?.user) {
     throw new Error(
       `Refusing to create user '${options.nameID}': nameID already exists before creation — genuine duplicate, not a retry-after-commit`
