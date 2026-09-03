@@ -28,7 +28,7 @@ import {
   postGraphqlRaw,
   RawGraphqlResponse,
 } from '@functional-api/graphql-guard/me-degradation.request.params';
-import { createUser, deleteUser } from './user.request.params';
+import { createUserOrFail, deleteUser } from './user.request.params';
 
 const scenarioConfig: TestScenarioNoPreCreationConfig = {
   name: 'deleted-user-orphan',
@@ -116,11 +116,12 @@ describe('deleted user - orphaned bearer', () => {
     const testUniqueId = UniqueIDGenerator.getID();
     // The createUser mutation makes an Alkemio row with no Kratos identity, so
     // authenticationID is NULL and the revocation cascade must be skipped.
-    const created = await createUser({
+    // createUserOrFail recovers the committed user by nameID if the harness's
+    // ~5 s connection cut forces a retry-after-commit (test-suites#563).
+    const userId = await createUserOrFail({
       nameID: `no-identity-${testUniqueId}`,
       email: `no-identity-${testUniqueId}@alkem.io`,
     });
-    const userId = created?.data?.createUser?.id ?? '';
     expect(userId).not.toEqual('');
 
     const response = await deleteUser(userId);

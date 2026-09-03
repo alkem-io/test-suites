@@ -88865,6 +88865,27 @@ export type PendingMembershipsJourneyProfileFragment = {
   cardBanner?: { id: string; uri: string } | undefined;
 };
 
+export type BannerVisualConstraintsQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type BannerVisualConstraintsQuery = {
+  platform: {
+    configuration: {
+      defaultVisualTypeConstraints: {
+        minWidth: number;
+        minHeight: number;
+        maxWidth: number;
+        maxHeight: number;
+        aspectRatio: number;
+        minAspectRatio: number;
+        maxAspectRatio: number;
+        allowedTypes: Array<string>;
+      };
+    };
+  };
+};
+
 export type ConfigurationQueryVariables = Exact<{ [key: string]: never }>;
 
 export type ConfigurationQuery = {
@@ -89126,6 +89147,11 @@ export type LookupProfileVisualsQuery = {
             id: string;
             name: VisualType;
             uri: string;
+            minWidth: number;
+            minHeight: number;
+            maxWidth: number;
+            maxHeight: number;
+            aspectRatio: number;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;

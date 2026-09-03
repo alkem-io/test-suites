@@ -1,0 +1,16 @@
+query bannerVisualConstraints {
+  platform {
+    configuration {
+      defaultVisualTypeConstraints(type: BANNER) {
+        minWidth
+        minHeight
+        maxWidth
+        maxHeight
+        aspectRatio
+        minAspectRatio
+        maxAspectRatio
+        allowedTypes
+      }
+    }
+  }
+}

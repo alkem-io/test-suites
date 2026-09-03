@@ -182,6 +182,42 @@ export default defineConfig({
       expect: { timeout: 15_000 },
     },
     {
+      // Story client-web#10178 (space-banner) — the default 10:1 gradient on
+      // bannerless spaces/subspaces and the first-crop-opens-at-10:1 walk.
+      // Self-seeding via TestScenarioFactory + its own session fixture, torn
+      // down in afterAll; no dependencies. The crop walk uploads a generated
+      // 1200×120 PNG and drives the crop dialog, so it gets more headroom
+      // than the global 30s.
+      name: 'Space banner',
+      testMatch: ['/space-banner/*.spec.ts'],
+      timeout: 60_000,
+      expect: { timeout: 15_000 },
+    },
+    {
+      // Story client-web#10107 / workspace#054 (self-service account
+      // deletion) — the portable delta after test-suites#620: TC-14 (the
+      // notification centre survives the removed
+      // InAppNotificationPayloadPlatformUserProfileRemoved fields), TC-15
+      // (a departed user's activity attributes to the "Former member"
+      // sentinel and the feed still loads) and TC-16 (the Delete-account
+      // card is owner-only). Deliberately does NOT depend on any of #620's
+      // loopback-only primitives (no DB/Redis access, no BFF session
+      // minting) — every case is self-seeding (disposable Kratos identities
+      // registered and deleted within the spec) and independent of shared
+      // TestUserManager persona state, so it runs here alongside the other
+      // nightly projects. TC-01/TC-02/TC-05/TC-18 (the API-level portable
+      // cases) live in server-api's `nightly` vitest project instead —
+      // `contributor-management` already covers that glob.
+      name: 'Account deletion',
+      testMatch: [
+        '/account-deletion/profile-removed-notification.spec.ts',
+        '/account-deletion/former-member-activity.spec.ts',
+        '/account-deletion/account-deletion-visibility.spec.ts',
+      ],
+      timeout: 90_000,
+      expect: { timeout: 15_000 },
+    },
+    {
       // Feature 038 (callout emoji reactions) — persisted P1 acceptance walk.
       //
       // The spec file lives outside the default testDir (src/functional-e2e/) in
