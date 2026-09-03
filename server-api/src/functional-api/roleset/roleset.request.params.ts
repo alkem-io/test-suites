@@ -1,6 +1,8 @@
 import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
 import {
+  ActorType,
   InviteForEntryRoleOnRoleSetMutation,
+  RoleSetInvitationResultNotice,
   RoleSetInvitationResultType,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import {
@@ -114,9 +116,20 @@ export const getSingleInvitationResult = (
 ):
   | {
       type: RoleSetInvitationResultType;
+      notice?: RoleSetInvitationResultNotice;
       invitation?: {
         id: string;
         state: string;
+        extraRoles: string[];
+        invitedToParent: boolean;
+        actor: {
+          id: string;
+          type: ActorType;
+        };
+        spacesToJoinOnAccept: Array<{
+          id: string;
+          profile: { displayName: string };
+        }>;
       };
       platformInvitation?: { id: string };
     }

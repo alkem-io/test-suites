@@ -3,6 +3,10 @@ fragment InvitationData on Invitation {
   state
   nextEvents
   isFinalized
+  createdDate
+  extraRoles
+  invitedToParent
+  welcomeMessage
   lifecycle {
     id
   }
@@ -10,6 +14,14 @@ fragment InvitationData on Invitation {
     ...UserDataLight
   }
   actor {
+    id
+    type
+    profile {
+      id
+      displayName
+    }
+  }
+  spacesToJoinOnAccept {
     id
     profile {
       id

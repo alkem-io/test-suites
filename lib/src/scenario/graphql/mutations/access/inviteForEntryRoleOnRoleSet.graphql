@@ -15,10 +15,23 @@ mutation InviteForEntryRoleOnRoleSet(
     }
   ) {
     type
+    notice
     invitation {
       id
       state
+      extraRoles
+      invitedToParent
       actor {
+        id
+        type
+        profile {
+          id
+          displayName
+          __typename
+        }
+        __typename
+      }
+      spacesToJoinOnAccept {
         id
         profile {
           id

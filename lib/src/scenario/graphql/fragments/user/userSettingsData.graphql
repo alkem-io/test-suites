@@ -64,6 +64,12 @@ fragment userSettingsFragment on UserSettings {
         push
         __typename
       }
+      adminSpaceCommunityInvitation {
+        email
+        inApp
+        push
+        __typename
+      }
       __typename
     }
     space {
