@@ -26,6 +26,8 @@ import {
   deleteVirtualContributor,
   getUserToken,
   queryHarnessDb,
+  TestScenarioFactory,
+  TestScenarioNoPreCreationConfig,
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
 import { deleteInnovationHub } from '@functional-api/innovation-hub/innovation-hub-params';
@@ -54,7 +56,19 @@ import {
 import { deleteUserTolerant } from '@functional-api/graphql-guard/me-degradation.request.params';
 import { deleteUser as deleteUserAsAdmin } from './user.request.params';
 
+const scenarioConfig: TestScenarioNoPreCreationConfig = {
+  name: 'delete-own-account',
+};
+
 const disposableUserIds: string[] = [];
+
+// Populates TestUserManager (admin token etc.) for this worker. Without it the
+// suite only passes when another lane file happens to run first — vitest orders
+// files by cached duration, so this (longest) file runs first once cached and
+// every case fails with `userModelMapType` undefined.
+beforeAll(async () => {
+  await TestScenarioFactory.createBaseScenarioEmpty(scenarioConfig);
+});
 
 afterAll(async () => {
   for (const userId of disposableUserIds) {
