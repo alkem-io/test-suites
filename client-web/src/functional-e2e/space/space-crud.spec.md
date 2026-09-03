@@ -108,7 +108,7 @@ The Alkemio platform provides Space entities as the primary organizational unit 
 2. Open the "Create a new Space" dialog
 3. Fill in required fields (Title, URL)
 4. Click "Upload" button for Page Banner
-5. Upload an image (1536x256 pixels recommended)
+5. Upload an image (1200x120 pixels recommended)
 6. Click "Upload" button for Card Banner
 7. Upload an image (410x256 pixels recommended)
 8. Accept terms and create Space
@@ -519,7 +519,7 @@ The Alkemio platform provides Space entities as the primary organizational unit 
 1. Open the "Create a new Space" dialog
 2. Fill in required fields (Title, URL)
 3. Click "Upload" button for Page Banner
-4. Upload an image (1536x256 pixels recommended)
+4. Upload an image (1200x120 pixels recommended)
 5. Click "Upload" button for Card Banner
 6. Upload an image (410x256 pixels recommended)
 7. Accept terms and create Space
