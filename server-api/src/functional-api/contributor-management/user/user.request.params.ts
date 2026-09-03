@@ -93,6 +93,80 @@ export const createUser = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
+/**
+ * User creation resilient to the ENV_FAILURE retry-after-commit race, mirroring
+ * `createSpaceBasicDataOrFail` (test-suites#563).
+ *
+ * `graphqlErrorWrapper` retries a create after a ~5 s connection cut, but the
+ * first attempt may already have committed (reserving the nameID), so the retry
+ * comes back as `The provided nameID is already taken`. The user DOES exist:
+ * recover its id by nameID instead of failing a test whose create succeeded.
+ *
+ * A preflight lookup establishes provenance: a nameID that already exists
+ * BEFORE we create is a genuine duplicate and is rejected up front, so the
+ * recovery only ever returns a user this call committed.
+ */
+const USER_RECOVERY_LOOKUP_ATTEMPTS = 5;
+const USER_RECOVERY_LOOKUP_DELAY_MS = 2000;
+export const createUserOrFail = async (
+  options: {
+    firstName?: string;
+    lastName?: string;
+    nameID: string;
+    email?: string;
+    phone?: string;
+    profileData?: {
+      displayName: string;
+      description?: string;
+    };
+  },
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+): Promise<string> => {
+  const preflight = await getUserByNameId(options.nameID, userRole);
+  if (preflight.data?.lookupByName?.user) {
+    throw new Error(
+      `Refusing to create user '${options.nameID}': nameID already exists before creation — genuine duplicate, not a retry-after-commit`
+    );
+  }
+
+  const response = await createUser(options, userRole);
+  const id = response.data?.createUser?.id;
+  if (id) {
+    return id;
+  }
+
+  const alreadyTaken = response.error?.errors?.some(e =>
+    String((e as { message?: unknown }).message ?? '').includes('already taken')
+  );
+  const createDetail = response.error
+    ? JSON.stringify(response.error.errors)
+    : 'server returned no createUser.id and no error';
+
+  if (alreadyTaken) {
+    let lastLookupDetail = '';
+    for (let attempt = 1; attempt <= USER_RECOVERY_LOOKUP_ATTEMPTS; attempt++) {
+      const existing = await getUserByNameId(options.nameID, userRole);
+      const recoveredId = existing.data?.lookupByName?.user;
+      if (recoveredId) {
+        return recoveredId;
+      }
+      lastLookupDetail = existing.error
+        ? `lookup failed: ${JSON.stringify(existing.error.errors)}`
+        : 'lookup returned no user';
+      if (attempt < USER_RECOVERY_LOOKUP_ATTEMPTS) {
+        await new Promise(resolve =>
+          setTimeout(resolve, USER_RECOVERY_LOOKUP_DELAY_MS)
+        );
+      }
+    }
+    throw new Error(
+      `createUser '${options.nameID}' reported 'already taken' (retry-after-commit) but the user could not be recovered by nameID after ${USER_RECOVERY_LOOKUP_ATTEMPTS} attempts (${lastLookupDetail}); create error: ${createDetail}`
+    );
+  }
+
+  throw new Error(`createUser '${options.nameID}' failed: ${createDetail}`);
+};
+
 export const updateUser = async (
   updateUserId: string,
   phoneUser: string,
