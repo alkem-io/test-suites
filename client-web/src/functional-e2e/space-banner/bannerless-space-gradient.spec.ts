@@ -22,8 +22,9 @@ const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let baseScenario: OrganizationWithSpaceModel;
 
 // Both spaces this scenario creates get no banner image uploaded — the
-// server stamps a bare BANNER visual row (aspectRatio 6, no uri) on
-// creation, which is exactly the pre-fix trap TC-04 guards against.
+// server stamps a bare BANNER visual row (no uri; aspectRatio 10 since
+// server#6452, 6 before it) on creation, which is exactly the pre-fix trap
+// TC-04 guards against.
 const scenarioConfig: TestScenarioConfig = {
   name: 'space-banner-gradient',
   space: {
