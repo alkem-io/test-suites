@@ -691,7 +691,11 @@ describe('Forum category reorganisation - remove-mutation safe negatives only', 
     fixtureDiscId = created?.data?.createDiscussion?.id ?? '';
     expect(fixtureDiscId).not.toEqual('');
 
+    // Pin the baseline to a successful read: `getPlatformForumDiscussionCategories`
+    // resolves to `undefined` when the query fails, and `undefined === undefined`
+    // would make the unchanged-list assertion below pass vacuously.
     const before = await getPlatformForumDiscussionCategories();
+    expect(before).toContain('OTHER');
 
     // Act
     const res = await adminRemoveForumDiscussionCategory(
