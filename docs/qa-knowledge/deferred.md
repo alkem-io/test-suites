@@ -16,3 +16,30 @@ re-derive it from scratch in a future run.
 ## Cleared
 
 (none yet)
+
+---
+
+## Sidebar search widget (055) — designer notes, 2026-09-03
+
+> Written independently by the 055 design session and merged in as-is when the plan was committed as a record; entries may overlap with the sections above.
+
+Every case a plan deferred, with its **blocker**, the **clearing condition**, and an owner.
+
+**Check this file at the start of every run.** If a blocker has cleared, the case is now
+automatable — reuse it rather than re-deriving it, and move the row to *Cleared* with the date.
+
+### Open
+
+| # | Case | Blocker | Clears when | Owner | Raised |
+|---|---|---|---|---|---|
+| D-01 | A data migration actually rewrote pre-existing rows, at the ruled position, idempotently, skipping the deliberate no-op rows | **No DB access from `test-suites`.** Every entity these suites create is post-migration, so it exercises the application default path, never the SQL | The owning repo gains a real-database migration integration test (a disposable Postgres + fixture matrix, run twice). For 055 that fixture matrix already exists as an uncommitted verification track — promoting it is the whole job | `server` CI | 2026-09-02 (10178) · re-raised 2026-09-03 (055, migration `1788200000000-AddSearchSidebarWidget`) |
+| D-02 | Search backend unreachable → retryable error state, no summary label, typed text retained | **No infra lever from inside a test** — nothing can stop the Elasticsearch container mid-run | The compose harness gains a service-toggle helper a spec can call | test-suites | 2026-09-03 (055, US1-AS14) |
+| D-03 | Six-locale copy: the three summary sentences and their plural forms, plus the "Search" Layout-editor label, in bg/de/en/es/fr/nl | Locale assertions have no home in this repo (standing gap) | A `client-web` unit test asserts the new keys beside the locale files | `client-web` | 2026-09-03 (055, FR-014) |
+| D-04 | p95 / DB cost of the unbounded `calloutsSet.tags` query, now issued on every tab for every viewer including anonymous | **No load/latency harness for GraphQL read paths.** `load-testing/` is a socket/stress tool, not a query profiler | A query-profiling harness exists, or the follow-up lands that pushes the flow-state filter into the tag query (which would change what to measure) | test-suites / `server` | 2026-09-03 (055, release R-12) |
+| D-05 | Screen-reader announcement of a `<output aria-live="polite">` live region; focus order into an always-mounted hidden drawer | **No accessibility harness** — no `axe-core` / `@axe-core/playwright` | An a11y harness is added. Note the drawer focus trap is a known pre-existing 040 defect with its own follow-up, so a test today would pin a bug | test-suites | 2026-09-02 (10178) · re-raised 2026-09-03 (055) |
+| D-06 | A client's mirrored copy of a server constant agrees with the server's published value | **No cross-repo contract harness.** Only the server half is pinnable here | The client consumes the value from config at test time, or a contract harness exists | test-suites | 2026-09-02 (10178) |
+| D-07 | Sidebar drawer (mobile) and desktop column share one search state across open/close | Two viewport contexts plus an always-mounted drawer whose `Menu` / `Close` locators are unverified against this repo's fixtures; Low risk. Cheap to build once the locators are confirmed on a real run | Someone confirms the drawer's open/close accessible names against the running app | test-suites | 2026-09-03 (055, US1-AS11) |
+
+### Cleared
+
+_None yet._ When a blocker clears, move the row here with the date and the plan that reused it.
