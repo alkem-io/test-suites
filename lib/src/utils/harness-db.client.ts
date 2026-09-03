@@ -1,6 +1,7 @@
 import { Pool, type QueryResultRow } from 'pg';
 import { testConfiguration } from '../config/test.configuration';
 import { assertLoopbackInternal } from '../config/loopback-guard';
+import { LogManager } from "../scenario/LogManager";
 
 /**
  * Direct Postgres access to the compose `alkemio` database, for assertions
@@ -31,6 +32,13 @@ const getHarnessDbPool = (): Pool => {
       password,
       max: 5,
       connectionTimeoutMillis: 5_000,
+    });
+    // `pg` emits `error` for failures on idle pooled clients; unhandled, it
+    // terminates the worker instead of failing the next query.
+    pool.on('error', error => {
+      LogManager.getLogger().error(
+        `[harness-db] idle client error: ${String(error)}`
+      );
     });
   }
   return pool;

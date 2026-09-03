@@ -19,6 +19,7 @@ import {
   verifyInKratosOrFail,
 } from '@alkemio/tests-lib';
 import { acceptCookiesIfVisible } from '../helpers/cookies.helper';
+import { testConfiguration } from '@src/config/test.configuration';
 
 export const baseUrl = (
   process.env.ALKEMIO_BASE_URL || 'http://localhost:3000'
@@ -26,10 +27,10 @@ export const baseUrl = (
 
 // `registerInKratosOrFail` submits the harness admin password
 // (`testConfiguration.identities.admin.password`) for every identity it
-// creates — this is that same constant's env-var mirror, so the UI login
-// step below authenticates with the password Kratos actually stored.
-export const harnessPassword =
-  process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
+// creates — read the same config value (not a second env-var mirror with its
+// own fallback) so the UI login step below authenticates with the password
+// Kratos actually stored.
+export const harnessPassword = testConfiguration.identities.admin.password;
 export const adminEmail = process.env.AUTH_ADMIN_EMAIL || 'admin@alkem.io';
 
 /** contracts/deleteuser-self-branch.md §2 — 15-minute privileged window,

@@ -1,6 +1,7 @@
 import Redis from 'ioredis';
 import { testConfiguration } from '../config/test.configuration';
 import { assertLoopbackInternal } from '../config/loopback-guard';
+import { LogManager } from "../scenario/LogManager";
 
 /**
  * Direct Redis access to the server's BFF session store, used only by the
@@ -29,6 +30,14 @@ const getHarnessRedisClient = (): Redis => {
       // hasn't been resolved onto the env vars yet (see config comment).
       maxRetriesPerRequest: 3,
       connectTimeout: 2_000,
+    });
+    // Without a listener an emitted `error` (connection loss, retry
+    // exhaustion) is an unhandled EventEmitter error that kills the worker;
+    // with one, the awaited command rejects and only that test fails.
+    redisClient.on('error', error => {
+      LogManager.getLogger().error(
+        `[harness-redis] client error: ${String(error)}`
+      );
     });
   }
   return redisClient;

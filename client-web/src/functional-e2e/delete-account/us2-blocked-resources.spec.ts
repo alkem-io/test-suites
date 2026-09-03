@@ -46,7 +46,9 @@ import {
   provisionSubject,
 } from './delete-account.helpers';
 
-const graphqlUrl = `${baseUrl}/graphql`;
+// The cookie-authenticated (BFF session) GraphQL route — the same one
+// `session-revocation.helpers.ts` uses for its raw same-session calls.
+const graphqlUrl = `${baseUrl}/api/private/graphql`;
 
 const blockedDialog = (page: Page) =>
   page.getByRole('dialog', { name: /can.t delete your account yet/i });

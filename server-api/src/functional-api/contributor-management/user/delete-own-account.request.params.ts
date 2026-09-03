@@ -251,11 +251,23 @@ export const getOrganizationOwnerIds = async (
     }
   `;
   const response = await postGraphqlRaw<{
-    organization: { roleSet: { usersInRole: Array<{ id: string }> } };
+    organization?: {
+      roleSet?: { usersInRole?: Array<{ id: string }> | null } | null;
+    } | null;
   }>(query, { bearerToken, variables: { organizationId } });
-  return (
-    response.body.data?.organization.roleSet.usersInRole.map(u => u.id) ?? []
-  );
+  // `organization` nulls (with `errors` populated) when it is not found or
+  // field-level authorization fails — surface that as a readable fixture
+  // failure rather than a TypeError on the dereference.
+  const usersInRole =
+    response.body.data?.organization?.roleSet?.usersInRole ?? null;
+  if (!usersInRole) {
+    throw new Error(
+      `getOrganizationOwnerIds: no OWNER role holders resolved for organization '${organizationId}' — ${JSON.stringify(
+        response.body.errors ?? 'no errors reported'
+      )}`
+    );
+  }
+  return usersInRole.map(u => u.id);
 };
 
 /** quickstart.md §4 — no GraphQL mutation exists for
@@ -301,6 +313,11 @@ export const getPlatformAuditRowsForUser = async (
  * platform-wide scan (the deletion may have written a row addressed to an
  * admin, not the subject), keyed by the departed user's email so a caller
  * can assert it appears in zero `details` payloads. */
+/** `_` and `%` are ILIKE wildcards and a generated email can contain `_`;
+ * escape them so the PII scan is an exact substring test. */
+const likePattern = (value: string): string =>
+  `%${value.replace(/([\\%_])/g, '\\$1')}%`;
+
 export const countAuditDetailsContainingEmail = async (
   email: string
 ): Promise<number> => {
@@ -308,7 +325,7 @@ export const countAuditDetailsContainingEmail = async (
     `SELECT count(*)::text AS count
      FROM platform_audit_entry
      WHERE details::text ILIKE $1`,
-    [`%${email}%`]
+    [likePattern(email)]
   );
   return Number(rows[0]?.count ?? '0');
 };
@@ -320,7 +337,7 @@ export const countInAppNotificationPayloadsContainingEmail = async (
     `SELECT count(*)::text AS count
      FROM in_app_notification
      WHERE payload::text ILIKE $1`,
-    [`%${email}%`]
+    [likePattern(email)]
   );
   return Number(rows[0]?.count ?? '0');
 };
