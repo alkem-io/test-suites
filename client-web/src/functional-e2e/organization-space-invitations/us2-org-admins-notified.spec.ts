@@ -163,8 +163,9 @@ async function waitForMailTo(
 
 /** Asserts no mail matching both substrings shows up within the window — used for
  * negative assertions (a muted channel, a plain associate) where "not yet" must mean
- * "never will". */
-async function assertNoMailTo(recipientSubstring: string, subjectSubstring: string, windowMs = 8_000): Promise<void> {
+ * "never will". Defaults to the same bound `waitForMailTo` is given for the positive
+ * path in this file, so a regression that delivers a moment late is still caught. */
+async function assertNoMailTo(recipientSubstring: string, subjectSubstring: string, windowMs = 20_000): Promise<void> {
   const deadline = Date.now() + windowMs;
   while (Date.now() < deadline) {
     const [mailItems] = (await getMailsData()) as [MailItem[], number];
@@ -202,8 +203,13 @@ const scenarioConfig: TestScenarioConfig = {
   space: {
     collaboration: { addTutorialCallouts: false },
     community: {
-      admins: [TestUser.SPACE_ADMIN],
-      members: [TestUser.SPACE_ADMIN],
+      // SUBSPACE_ADMIN drives the AS6 settings-row walk below
+      // (orgAdminSettingsTest, `subspace.admin@alkem.io`), which also sends
+      // an invite through this scenario's own Space community page — it
+      // needs admin standing here too, not just on some other scenario's
+      // subspace.
+      admins: [TestUser.SPACE_ADMIN, TestUser.SUBSPACE_ADMIN],
+      members: [TestUser.SPACE_ADMIN, TestUser.SUBSPACE_ADMIN],
     },
   },
 };
