@@ -64,6 +64,23 @@ beforeAll(async () => {
   await updateSpaceSettings(baseScenario.subspace.id, {
     membership: { allowSubspaceAdminsToInviteMembers: true },
   });
+
+  // baseScenario.organization is the L0 Space's own hosting organization, and
+  // the server auto-grants it Member+Lead on that Space at creation time.
+  // Every test below treats the organization as a fresh invitee into the
+  // whole hierarchy, so strip that auto-grant before the first invite runs —
+  // otherwise the L0 leg of the very first invite resolves to
+  // ALREADY_MEMBER_OF_ROLE_SET instead of a real invitation.
+  await removeRoleFromOrganization(
+    baseScenario.organization.id,
+    baseScenario.space.community.roleSetId,
+    RoleName.Lead
+  ).catch(() => undefined);
+  await removeRoleFromOrganization(
+    baseScenario.organization.id,
+    baseScenario.space.community.roleSetId,
+    RoleName.Member
+  ).catch(() => undefined);
 });
 
 afterAll(async () => {
@@ -71,23 +88,26 @@ afterAll(async () => {
 });
 
 const clearOrgFromHierarchy = async () => {
-  for (const spaceId of [
-    baseScenario.space.id,
-    baseScenario.subspace.id,
-    baseScenario.subsubspace.id,
+  for (const roleSetId of [
+    baseScenario.space.community.roleSetId,
+    baseScenario.subspace.community.roleSetId,
+    baseScenario.subsubspace.community.roleSetId,
   ]) {
     await removeRoleFromOrganization(
       baseScenario.organization.id,
-      spaceId,
+      roleSetId,
       RoleName.Member
     ).catch(() => undefined);
   }
 };
 
-const spaceRolesForOrg = async (spaceId: string) => {
+// rolesOrganization only nests one level: `spaces` holds L0 entries and each
+// L0 entry's `subspaces` is a flat list of every L1 *and* L2 descendant
+// (grouped server-side by levelZeroSpaceID, not by direct parent) — see
+// get.space.roles.for.contributor.query.result.ts in server.
+const orgSpaceRoles = async () => {
   const res = await getRoleName(baseScenario.organization.id);
-  const spaces = res?.data?.rolesOrganization?.spaces ?? [];
-  return spaces.find((s: any) => s.id === spaceId);
+  return (res?.data?.rolesOrganization?.spaces ?? []) as any[];
 };
 
 describe('Organization Space invitations — subspace ancestor chain (invitedToParent, spacesToJoinOnAccept)', () => {
@@ -118,9 +138,9 @@ describe('Organization Space invitations — subspace ancestor chain (invitedToP
       result?.invitation?.spacesToJoinOnAccept ?? []
     ).map((s: any) => s.id);
     expect(joinedSpaceIds).toEqual([
-      baseScenario.space.id,
-      baseScenario.subspace.id,
-      baseScenario.subsubspace.id,
+      baseScenario.space.about.id,
+      baseScenario.subspace.about.id,
+      baseScenario.subsubspace.about.id,
     ]);
 
     await eventOnRoleSetInvitation(
@@ -129,13 +149,23 @@ describe('Organization Space invitations — subspace ancestor chain (invitedToP
       TestUser.ORGANIZATION_ADMIN
     );
 
-    // Assert — member of exactly the three enumerated Spaces, nothing more
-    const l0 = await spaceRolesForOrg(baseScenario.space.id);
-    const l1 = await spaceRolesForOrg(baseScenario.subspace.id);
-    const l2 = await spaceRolesForOrg(baseScenario.subsubspace.id);
-    expect(l0?.roles).toEqual(expect.arrayContaining(['MEMBER']));
-    expect(l1?.roles).toEqual(expect.arrayContaining(['MEMBER']));
-    expect(l2?.roles).toEqual(expect.arrayContaining(['MEMBER']));
+    // Assert — member of exactly the three enumerated Spaces, nothing more:
+    // one top-level (L0) entry, whose `subspaces` list is exactly [L1, L2].
+    const orgSpaces = await orgSpaceRoles();
+    expect(orgSpaces.map((s: any) => s.id)).toEqual([baseScenario.space.id]);
+    const l0 = orgSpaces[0];
+    const l1 = l0?.subspaces?.find(
+      (s: any) => s.id === baseScenario.subspace.id
+    );
+    const l2 = l0?.subspaces?.find(
+      (s: any) => s.id === baseScenario.subsubspace.id
+    );
+    expect(l0?.roles).toEqual(expect.arrayContaining(['member']));
+    expect(l1?.roles).toEqual(expect.arrayContaining(['member']));
+    expect(l2?.roles).toEqual(expect.arrayContaining(['member']));
+    expect((l0?.subspaces ?? []).map((s: any) => s.id).sort()).toEqual(
+      [baseScenario.subspace.id, baseScenario.subsubspace.id].sort()
+    );
   });
 
   test('when the organization already belongs to L0, spacesToJoinOnAccept lists only L1 and L2', async () => {
@@ -161,8 +191,8 @@ describe('Organization Space invitations — subspace ancestor chain (invitedToP
       result?.invitation?.spacesToJoinOnAccept ?? []
     ).map((s: any) => s.id);
     expect(joinedSpaceIds).toEqual([
-      baseScenario.subspace.id,
-      baseScenario.subsubspace.id,
+      baseScenario.subspace.about.id,
+      baseScenario.subsubspace.about.id,
     ]);
   });
 
