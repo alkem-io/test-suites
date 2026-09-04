@@ -126,10 +126,6 @@ export const getSingleInvitationResult = (
           id: string;
           type: ActorType;
         };
-        spacesToJoinOnAccept: Array<{
-          id: string;
-          profile: { displayName: string };
-        }>;
       };
       platformInvitation?: { id: string };
     }

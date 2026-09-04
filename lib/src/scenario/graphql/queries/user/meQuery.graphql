@@ -11,6 +11,16 @@ query MeQuery {
     communityInvitations {
       invitation {
         ...InvitationData
+        # `me` is read as the invited actor's own account admin here, so
+        # (unlike the shared InvitationData fragment) this caller does hold
+        # the server's ROLESET_ENTRY_ROLE_INVITE_ACCEPT privilege for it.
+        spacesToJoinOnAccept {
+          id
+          profile {
+            id
+            displayName
+          }
+        }
       }
       spacePendingMembershipInfo {
         id

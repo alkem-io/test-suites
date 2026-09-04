@@ -26555,10 +26555,6 @@ export type InvitationDataFragment = {
     type: SchemaTypes.ActorType;
     profile?: { id: string; displayName: string } | undefined;
   };
-  spacesToJoinOnAccept: Array<{
-    id: string;
-    profile: { id: string; displayName: string };
-  }>;
   authorization?:
     | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
     | undefined;
@@ -49795,10 +49791,6 @@ export type InvitationStateEventMutation = {
       type: SchemaTypes.ActorType;
       profile?: { id: string; displayName: string } | undefined;
     };
-    spacesToJoinOnAccept: Array<{
-      id: string;
-      profile: { id: string; displayName: string };
-    }>;
     authorization?:
       | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
       | undefined;
@@ -49839,11 +49831,6 @@ export type InviteForEntryRoleOnRoleSetMutation = {
               | { __typename: "Profile"; id: string; displayName: string }
               | undefined;
           };
-          spacesToJoinOnAccept: Array<{
-            __typename: "SpaceAbout";
-            id: string;
-            profile: { __typename: "Profile"; id: string; displayName: string };
-          }>;
         }
       | undefined;
     platformInvitation?:
@@ -90899,10 +90886,6 @@ export type RoleSetApplicationsInvitationsQuery = {
               type: SchemaTypes.ActorType;
               profile?: { id: string; displayName: string } | undefined;
             };
-            spacesToJoinOnAccept: Array<{
-              id: string;
-              profile: { id: string; displayName: string };
-            }>;
             authorization?:
               | {
                   myPrivileges?:
@@ -91125,10 +91108,6 @@ export type GetSpaceInvitationsQuery = {
                   type: SchemaTypes.ActorType;
                   profile?: { id: string; displayName: string } | undefined;
                 };
-                spacesToJoinOnAccept: Array<{
-                  id: string;
-                  profile: { id: string; displayName: string };
-                }>;
                 authorization?:
                   | {
                       myPrivileges?:
@@ -115622,13 +115601,6 @@ export const InvitationDataFragmentDoc = gql`
         displayName
       }
     }
-    spacesToJoinOnAccept {
-      id
-      profile {
-        id
-        displayName
-      }
-    }
     authorization {
       myPrivileges
     }
@@ -117698,15 +117670,6 @@ export const InviteForEntryRoleOnRoleSetDocument = gql`
         actor {
           id
           type
-          profile {
-            id
-            displayName
-            __typename
-          }
-          __typename
-        }
-        spacesToJoinOnAccept {
-          id
           profile {
             id
             displayName
@@ -120398,6 +120361,13 @@ export const MeQueryDocument = gql`
       communityInvitations {
         invitation {
           ...InvitationData
+          spacesToJoinOnAccept {
+            id
+            profile {
+              id
+              displayName
+            }
+          }
         }
         spacePendingMembershipInfo {
           id

@@ -25496,10 +25496,6 @@ export type InvitationDataFragment = {
     type: ActorType;
     profile?: { id: string; displayName: string } | undefined;
   };
-  spacesToJoinOnAccept: Array<{
-    id: string;
-    profile: { id: string; displayName: string };
-  }>;
   authorization?:
     | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
     | undefined;
@@ -45690,10 +45686,6 @@ export type InvitationStateEventMutation = {
       type: ActorType;
       profile?: { id: string; displayName: string } | undefined;
     };
-    spacesToJoinOnAccept: Array<{
-      id: string;
-      profile: { id: string; displayName: string };
-    }>;
     authorization?:
       | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
       | undefined;
@@ -45730,11 +45722,6 @@ export type InviteForEntryRoleOnRoleSetMutation = {
               | { __typename: "Profile"; id: string; displayName: string }
               | undefined;
           };
-          spacesToJoinOnAccept: Array<{
-            __typename: "SpaceAbout";
-            id: string;
-            profile: { __typename: "Profile"; id: string; displayName: string };
-          }>;
         }
       | undefined;
     platformInvitation?:
@@ -82922,10 +82909,6 @@ export type RoleSetApplicationsInvitationsQuery = {
               type: ActorType;
               profile?: { id: string; displayName: string } | undefined;
             };
-            spacesToJoinOnAccept: Array<{
-              id: string;
-              profile: { id: string; displayName: string };
-            }>;
             authorization?:
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
@@ -83134,10 +83117,6 @@ export type GetSpaceInvitationsQuery = {
                   type: ActorType;
                   profile?: { id: string; displayName: string } | undefined;
                 };
-                spacesToJoinOnAccept: Array<{
-                  id: string;
-                  profile: { id: string; displayName: string };
-                }>;
                 authorization?:
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;

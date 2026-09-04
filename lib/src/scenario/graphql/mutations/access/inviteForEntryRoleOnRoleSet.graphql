@@ -1,3 +1,8 @@
+# The inviter (the caller of this mutation) is never the invited actor's
+# account admin, so it deliberately does NOT select `spacesToJoinOnAccept` —
+# the server gates that field to the invited actor's account admins and
+# denies every other caller. Read it separately as the invited actor's own
+# admin (see meQuery.graphql) when a test needs the ancestor-chain list.
 mutation InviteForEntryRoleOnRoleSet(
   $roleSetId: UUID!
   $invitedActorIds: [UUID!]!
@@ -24,15 +29,6 @@ mutation InviteForEntryRoleOnRoleSet(
       actor {
         id
         type
-        profile {
-          id
-          displayName
-          __typename
-        }
-        __typename
-      }
-      spacesToJoinOnAccept {
-        id
         profile {
           id
           displayName

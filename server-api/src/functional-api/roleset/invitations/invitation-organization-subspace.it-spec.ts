@@ -8,7 +8,9 @@ import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/O
 import {
   RoleName,
   RoleSetInvitationResultType,
+  SpacePrivacyMode,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { graphqlRequestAuth } from '@alkemio/tests-lib/utils/graphql.request';
 import {
   deleteInvitation,
   inviteForEntryRoleOnRoleSet,
@@ -20,6 +22,7 @@ import {
   getRoleName,
   removeRoleFromOrganization,
 } from '../roles-request.params';
+import { meQuery } from '../application/application.request.params';
 import { updateSpaceSettings } from '../../journey/space/space.request.params';
 
 const message = 'You would join every ancestor Space too — L2 test';
@@ -110,6 +113,23 @@ const orgSpaceRoles = async () => {
   return (res?.data?.rolesOrganization?.spaces ?? []) as any[];
 };
 
+// `spacesToJoinOnAccept` is gated to ROLESET_ENTRY_ROLE_INVITE_ACCEPT, granted
+// only to account admins of the invited actor — never to the inviting Space
+// admin, so every ancestor-chain assertion below reads it as the invited
+// organization's own admin via `me.communityInvitations`, not from the
+// invite mutation's own result.
+const spacesToJoinOnAcceptForOrgAdmin = async (
+  targetInvitationId: string
+): Promise<string[]> => {
+  const me = await meQuery(TestUser.ORGANIZATION_ADMIN);
+  const seen = me?.data?.me?.communityInvitations?.find(
+    (i: any) => i.invitation?.id === targetInvitationId
+  );
+  return (seen?.invitation?.spacesToJoinOnAccept ?? []).map(
+    (s: any) => s.id
+  );
+};
+
 describe('Organization Space invitations — subspace ancestor chain (invitedToParent, spacesToJoinOnAccept)', () => {
   afterEach(async () => {
     await clearOrgFromHierarchy();
@@ -134,9 +154,9 @@ describe('Organization Space invitations — subspace ancestor chain (invitedToP
     expect(invitationId.length).toEqual(36);
     expect(result?.invitation?.invitedToParent).toEqual(true);
 
-    const joinedSpaceIds = (
-      result?.invitation?.spacesToJoinOnAccept ?? []
-    ).map((s: any) => s.id);
+    const joinedSpaceIds = await spacesToJoinOnAcceptForOrgAdmin(
+      invitationId
+    );
     expect(joinedSpaceIds).toEqual([
       baseScenario.space.about.id,
       baseScenario.subspace.about.id,
@@ -187,9 +207,9 @@ describe('Organization Space invitations — subspace ancestor chain (invitedToP
     invitationId = result?.invitation?.id ?? '';
 
     expect(invitationId.length).toEqual(36);
-    const joinedSpaceIds = (
-      result?.invitation?.spacesToJoinOnAccept ?? []
-    ).map((s: any) => s.id);
+    const joinedSpaceIds = await spacesToJoinOnAcceptForOrgAdmin(
+      invitationId
+    );
     expect(joinedSpaceIds).toEqual([
       baseScenario.subspace.about.id,
       baseScenario.subsubspace.about.id,
@@ -211,5 +231,96 @@ describe('Organization Space invitations — subspace ancestor chain (invitedToP
       RoleSetInvitationResultType.InvitationToParentNotAuthorized
     );
     expect(result?.invitation).toBeFalsy();
+  });
+
+  test('the inviting Space admin cannot select spacesToJoinOnAccept — authorization error, no ancestor data leaked', async () => {
+    const invitationData = await inviteForEntryRoleOnRoleSet(
+      baseScenario.subsubspace.community.roleSetId,
+      [baseScenario.organization.id],
+      [],
+      message,
+      [RoleName.Member],
+      TestUser.SPACE_ADMIN
+    );
+    const result = getSingleInvitationResult(invitationData);
+    invitationId = result?.invitation?.id ?? '';
+    expect(invitationId.length).toEqual(36);
+
+    // The inviter (a Space admin, not the invited organization's account
+    // admin) holds generic READ on the invitation but not
+    // ROLESET_ENTRY_ROLE_INVITE_ACCEPT, so this field must be denied even
+    // though every other invitation field is readable to them.
+    const requestParams = {
+      operationName: 'GetInvitationSpacesToJoinAsInviter',
+      query: `
+        query GetInvitationSpacesToJoinAsInviter($roleSetId: UUID!) {
+          lookup {
+            roleSet(ID: $roleSetId) {
+              id
+              invitations {
+                id
+                spacesToJoinOnAccept {
+                  id
+                }
+              }
+            }
+          }
+        }
+      `,
+      variables: { roleSetId: baseScenario.subsubspace.community.roleSetId },
+    };
+    const response = await graphqlRequestAuth(
+      requestParams,
+      TestUser.SPACE_ADMIN
+    );
+
+    expect(response.body?.errors?.[0]?.message).toContain(
+      "Authorization: unable to grant 'roleset-entry-role-invite-accept' privilege: Invitation.spacesToJoinOnAccept"
+    );
+    // The field is declared non-nullable, so the error nulls the nearest
+    // nullable ancestor (`lookup.roleSet`) rather than leaking a partial list.
+    expect(response.body?.data?.lookup?.roleSet).toBeNull();
+  });
+
+  test('spacesToJoinOnAccept is not filtered per-ancestor: a private L0 root still appears in the invited organization admin\'s own read', async () => {
+    // This is the live counterpart to the mock-only server unit test
+    // (invitation.resolver.fields.spec.ts) that pins the same deliberate
+    // design: the field-level ROLESET_ENTRY_ROLE_INVITE_ACCEPT gate already
+    // confines this whole field to the invited actor's own account admins,
+    // so the resolver does NOT additionally filter individual ancestor
+    // Spaces by that admin's personal READ_ABOUT — the admin is reviewing
+    // what the ORGANIZATION is about to join, not what they themselves can
+    // browse. Filtering here would silently drop a private ancestor and
+    // desync this field from the identical, unfiltered list the same
+    // audience already gets via email and `me.communityInvitations`.
+    await updateSpaceSettings(baseScenario.space.id, {
+      privacy: { mode: SpacePrivacyMode.Private },
+    });
+    try {
+      const invitationData = await inviteForEntryRoleOnRoleSet(
+        baseScenario.subsubspace.community.roleSetId,
+        [baseScenario.organization.id],
+        [],
+        message,
+        [RoleName.Member],
+        TestUser.SPACE_ADMIN
+      );
+      const result = getSingleInvitationResult(invitationData);
+      invitationId = result?.invitation?.id ?? '';
+      expect(invitationId.length).toEqual(36);
+
+      const joinedSpaceIds = await spacesToJoinOnAcceptForOrgAdmin(
+        invitationId
+      );
+      expect(joinedSpaceIds).toEqual([
+        baseScenario.space.about.id,
+        baseScenario.subspace.about.id,
+        baseScenario.subsubspace.about.id,
+      ]);
+    } finally {
+      await updateSpaceSettings(baseScenario.space.id, {
+        privacy: { mode: SpacePrivacyMode.Public },
+      });
+    }
   });
 });
