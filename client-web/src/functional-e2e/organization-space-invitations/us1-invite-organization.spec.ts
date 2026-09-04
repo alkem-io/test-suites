@@ -247,6 +247,30 @@ spaceAdminTest.describe('US1-AS2..AS9 — space admin invite walk', () => {
   );
 
   spaceAdminTest(
+    'US1-AS2 (search exclusion fix): an organization that is already a granted Member of the Space is excluded from the invite dialog\'s organization search results',
+    async ({ page }) => {
+      // Regression test for the defect found in an earlier verification pass:
+      // InviteMembersDialogConnector.tsx called useRoleSetAvailableContributors
+      // for organization candidates without filterCurrentMembers, so an
+      // already-granted-Member organization was still offered as a selectable
+      // search result (the server-side ALREADY_MEMBER_OF_ROLE_SET safety net
+      // caught it on send, but the UI-level exclusion the scenario requires
+      // never happened). orgAS5Member is granted MEMBER directly in beforeAll,
+      // before any test runs, so it is already a current member here.
+      await openMemberOrganizationsSection(page);
+      await page.getByRole('button', { name: 'Invite Organisation' }).click();
+      await expect(page.getByText(/Invite an organisation to join/)).toBeVisible();
+
+      const search = page.getByRole('textbox', { name: 'Search for users by name or email' });
+      await search.fill(orgAS5Member.displayName);
+      await expect(page.getByText(/no matching/i)).toBeVisible();
+      await expect(page.getByRole('button', { name: orgAS5Member.displayName })).toHaveCount(0);
+
+      await page.getByRole('button', { name: 'Close' }).click();
+    }
+  );
+
+  spaceAdminTest(
     'US1-AS3: inviting a 3rd organization as Lead once both Lead slots are granted returns the Lead-limit outcome and creates nothing',
     async ({ page }) => {
       await openMemberOrganizationsSection(page);
