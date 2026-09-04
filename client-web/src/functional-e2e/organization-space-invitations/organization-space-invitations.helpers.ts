@@ -191,5 +191,64 @@ export const getSpaceInvitationIds = async (
   return res.data.lookup.space.community.roleSet.invitations.map(inv => inv.id);
 };
 
+/** Generates unique fake VAPID subscription fields for `subscribeToPushForUser` —
+ * mirrors server-api's `generateFakePushSubscription` one-for-one (not importable
+ * here, same package-boundary reason as the rest of this file). */
+let pushEndpointCounter = 0;
+const generateFakePushSubscription = (prefix: string) => {
+  pushEndpointCounter++;
+  const uniqueId = `${prefix}-${Date.now()}-${pushEndpointCounter}`;
+  return {
+    endpoint: `https://fcm.googleapis.com/fcm/send/${uniqueId}`,
+    p256dh: `BNcRdreALRFXTkOOUHK1EtK2wtaz5Ry4YfYCA_0QTpQtUbVlUls0VJXg7A8u-Ts1XbjhazAkj7I99e8p8REfXPQ-${uniqueId}`,
+    auth: `tBHItJI5svbpC7htN-${uniqueId.slice(0, 8)}`,
+  };
+};
+
+/** Subscribes `userRole` to push with a fake (non-delivering) endpoint. REQUIRED
+ * precondition for any push-emit assertion — the server's push adapter no-ops
+ * (never publishes to the queue) for a recipient with zero active subscriptions.
+ * Returns the subscription id; tear down with `unsubscribeFromPushForUser`. */
+export const subscribeToPushForUser = async (
+  userRole: TestUser,
+  label: string
+): Promise<string> => {
+  const graphqlClient = getGraphqlClient();
+  const sub = generateFakePushSubscription(label);
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.SubscribeToPushNotifications(
+      { subscriptionData: { ...sub, userAgent: `${label}-test` } },
+      { authorization: `Bearer ${authToken}` }
+    );
+  const res = await graphqlErrorWrapper(callback, userRole);
+  const subscriptionId = res.data?.subscribeToPushNotifications?.id;
+  if (res.error || !subscriptionId) {
+    throw new Error(
+      `subscribeToPushForUser failed for "${label}" (${userRole}): ${JSON.stringify(res.error)}`
+    );
+  }
+  return subscriptionId;
+};
+
+/** Tears down a subscription created by `subscribeToPushForUser`. A subscription
+ * left behind keeps attracting publishes and inflates later tests' queue deltas. */
+export const unsubscribeFromPushForUser = async (
+  userRole: TestUser,
+  subscriptionId: string
+): Promise<void> => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.UnsubscribeFromPushNotifications(
+      { subscriptionData: { subscriptionID: subscriptionId } },
+      { authorization: `Bearer ${authToken}` }
+    );
+  const res = await graphqlErrorWrapper(callback, userRole);
+  if (res.error) {
+    throw new Error(
+      `unsubscribeFromPushForUser failed for ${userRole}/${subscriptionId}: ${JSON.stringify(res.error)}`
+    );
+  }
+};
+
 export const runSuffix = UniqueIDGenerator.getID();
 export { TestUserManager, TestUser };

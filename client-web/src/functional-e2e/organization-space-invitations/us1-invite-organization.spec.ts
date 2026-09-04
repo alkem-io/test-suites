@@ -56,6 +56,13 @@ const spaceAdminTest = createPersonaTest('space.admin@alkem.io');
 const platformAdminTest = createPersonaTest('admin@alkem.io');
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
+// This file's `describe` blocks share one beforeAll-created scenario (and its
+// own set of purpose-built organization fixtures): force one worker so
+// `fullyParallel` cannot run them in separate workers, which would trigger
+// `beforeAll` twice (two independent scenarios, doubling every organization
+// created) and race `afterAll`'s cleanup of the first.
+baseTest.describe.configure({ mode: 'serial' });
+
 let baseScenario: OrganizationWithSpaceModel;
 let communityUrl: string;
 
@@ -187,7 +194,12 @@ async function inviteOrganizationViaDialog(
 
   await page.getByRole('button', { name: 'Send' }).click();
 
-  const resultRow = page.locator('li').filter({ hasText: org.displayName });
+  // Scope to the dialog: the pending-invitations list behind it can render
+  // its own <li> for the same organization (already-invited scenarios, or
+  // a background refetch while this dialog is still open), which would
+  // otherwise make this locator resolve to more than one element.
+  const dialog = page.getByRole('dialog');
+  const resultRow = dialog.locator('li').filter({ hasText: org.displayName });
   await expect(resultRow).toBeVisible();
   const resultText = (await resultRow.textContent()) ?? '';
 

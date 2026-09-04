@@ -36,8 +36,10 @@ import {
   assignOrganizationAdmin,
   createTestOrganization,
   OrgFixture,
+  subscribeToPushForUser,
   TestUser,
   TestUserManager,
+  unsubscribeFromPushForUser,
 } from './organization-space-invitations.helpers';
 
 /**
@@ -47,6 +49,15 @@ import {
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const runSuffix = UniqueIDGenerator.getID();
 const PUSH_NOTIFICATIONS_QUEUE = 'alkemio-push-notifications';
+
+// This file's `describe` blocks share one beforeAll-created scenario (and its
+// own set of purpose-built organization fixtures + persona notification
+// settings) so force one worker: `fullyParallel` running two of them in
+// separate workers would trigger `beforeAll` twice (two independent
+// scenarios) and let one worker's setup/mail-drain race another's
+// mid-assertion — see the AS2 test below for the one test that otherwise
+// looks parallel-safe in isolation.
+baseTest.describe.configure({ mode: 'serial' });
 
 // ─── Raw GraphQL escape hatch ────────────────────────────────────────────
 // The generated SDK (`getGraphqlClient()`) only exposes operations that live
@@ -191,6 +202,7 @@ let orgAS4Zero: OrgFixture; // no admins/owners at all — support fallback
 let orgAS5Muted: OrgFixture; // sole admin muted every channel
 let orgAS6: OrgFixture; // settings-row UI walk (render + persist + honored)
 let orgAS7: OrgFixture; // plain associate — nothing on any channel
+let orgAdminAPushSubscriptionId: string; // AS1's push-emit precondition — see beforeAll
 
 const orgAdminAId = () => TestUserManager.getUserModelByType(TestUser.ORGANIZATION_ADMIN).id;
 const orgAdminBId = () => TestUserManager.getUserModelByType(TestUser.NON_SPACE_MEMBER).id;
@@ -243,6 +255,13 @@ baseTest.beforeAll(async () => {
     { email: true, inApp: true, push: true },
     TestUser.ORGANIZATION_ADMIN
   );
+  // AS1's push assertion needs an ACTIVE subscription: the server's push
+  // adapter no-ops (never publishes to the queue) for a recipient with zero
+  // active subscriptions, so without this the emit assertion cannot pass.
+  orgAdminAPushSubscriptionId = await subscribeToPushForUser(
+    TestUser.ORGANIZATION_ADMIN,
+    `us2-as1-${runSuffix}`
+  );
 
   // AS3: non.space@alkem.io is B — ADMIN only, never ASSOCIATE.
   await assignOrganizationAdmin(orgAS3.roleSetId, orgAdminBId());
@@ -284,6 +303,9 @@ baseTest.beforeAll(async () => {
 });
 
 baseTest.afterAll(async () => {
+  if (orgAdminAPushSubscriptionId) {
+    await unsubscribeFromPushForUser(TestUser.ORGANIZATION_ADMIN, orgAdminAPushSubscriptionId);
+  }
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
@@ -311,7 +333,12 @@ async function inviteOrganizationViaDialog(page: Page, org: OrgFixture, message:
 
   await page.getByRole('button', { name: 'Send' }).click();
 
-  const resultRow = page.locator('li').filter({ hasText: org.displayName });
+  // Scope to the dialog: the pending-invitations list behind it can render
+  // its own <li> for the same organization (already-invited scenarios, or
+  // a background refetch while this dialog is still open), which would
+  // otherwise make this locator resolve to more than one element.
+  const dialog = page.getByRole('dialog');
+  const resultRow = dialog.locator('li').filter({ hasText: org.displayName });
   await expect(resultRow).toBeVisible();
   const resultText = (await resultRow.textContent()) ?? '';
 
@@ -364,8 +391,10 @@ spaceAdminTest.describe('US2-AS1/AS2 — org admin A (default settings) is notif
 
 // Self-contained: drives BOTH personas (space admin sends, org admin A
 // clicks) inside one test via two independent browser contexts, so this
-// walk never depends on another test having run first — safe under
-// Playwright's `fullyParallel` local scheduling, not just the CI single-worker mode.
+// walk never depends on another test having run first. It still shares the
+// file-level beforeAll scenario and fixtures with every other test here,
+// so it is NOT safe to schedule across workers on its own — see the
+// `describe.configure({ mode: 'serial' })` near the top of this file.
 baseTest(
   'US2-AS2: clicking the bell then the invitation item navigates to /organization/<nameID>/settings/invitations',
   async ({ browser }) => {
@@ -436,6 +465,9 @@ spaceAdminTest.describe('US2-AS5 — a sole admin who muted every channel gets n
   spaceAdminTest(
     'the muted admin receives no in-app notification and no email reaches support@alkem.io for this org',
     async ({ page }) => {
+      // A full SPA invite walk plus the 20s negative mail window below
+      // exceeds the default config's 30s per-test budget.
+      spaceAdminTest.setTimeout(120_000);
       await inviteOrganizationViaDialog(page, orgAS5Muted, `US2-AS5 message ${runSuffix}`);
 
       const notifications = await getOrgInvitedNotifications(TestUser.SUBSPACE_MEMBER);
@@ -456,6 +488,10 @@ orgAdminSettingsTest.describe('US2-AS6 — the organization notification setting
   orgAdminSettingsTest(
     'the "organisation invited to a Space" row shows with all three channels on; toggling email off persists across reload and suppresses the next email',
     async ({ page }) => {
+      // Two SPA navigations (settings page + reload + the invite dialog's
+      // own navigation) plus the 20s negative mail window below exceeds the
+      // default config's 30s per-test budget.
+      orgAdminSettingsTest.setTimeout(120_000);
       await page.goto(`${baseUrl}/user/me/settings/notifications`);
 
       const rowLabel = page.getByText('Receive a notification when an organisation I administer is invited to join a Space');
@@ -494,6 +530,9 @@ orgAdminSettingsTest.describe('US2-AS6 — the organization notification setting
 
 spaceAdminTest.describe('US2-AS7 — a plain associate (neither admin nor owner) receives nothing on any channel', () => {
   spaceAdminTest('the associate has zero org-invited emails and zero in-app notifications', async ({ page }) => {
+    // A full SPA invite walk plus the 20s negative mail window below
+    // exceeds the default config's 30s per-test budget.
+    spaceAdminTest.setTimeout(120_000);
     await inviteOrganizationViaDialog(page, orgAS7, `US2-AS7 message ${runSuffix}`);
 
     const associateEmail = TestUserManager.getUserModelByType(TestUser.SUBSUBSPACE_MEMBER).email;

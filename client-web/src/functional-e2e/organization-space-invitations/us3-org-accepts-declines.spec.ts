@@ -60,6 +60,13 @@ const orgAdminTest = createPersonaTest(orgAdminEmail);
 const orgAssociateTest = createPersonaTest(orgAssociateEmail);
 const platformAdminTest = createPersonaTest(adminEmail);
 
+// This file's `describe` blocks share one beforeAll-created scenario (and its
+// own set of purpose-built organization fixtures) so force one worker:
+// `fullyParallel` running two of them in separate workers would trigger
+// `beforeAll` twice (two independent scenarios) and race `afterAll`'s
+// cleanup of the first.
+baseTest.describe.configure({ mode: 'serial' });
+
 let baseScenario: OrganizationWithSpaceModel;
 
 // One organization fixture per scenario that needs one.

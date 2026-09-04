@@ -228,6 +228,19 @@ export default defineConfig({
       timeout: 120_000,
       expect: { timeout: 15_000 },
     },
+    {
+      // Feature 061 (organization space invitations) — US1/US2/US3 acceptance
+      // walks. Each file drives a full SPA invite flow (navigate, expand the
+      // Member Organisations section, open the dialog, search, send, read the
+      // result row) and several also hold a negative mail-window poll
+      // (`assertNoMailTo`) on top of that, so the default 30s/5s budget is
+      // not enough headroom — mirrors Chat avatars/Callout reaction
+      // notifications above.
+      name: 'Organization space invitations',
+      testMatch: ['/organization-space-invitations/*.spec.ts'],
+      timeout: 120_000,
+      expect: { timeout: 15_000 },
+    },
   ],
   // % or number of the available CPUs
   // workers: '100%',
