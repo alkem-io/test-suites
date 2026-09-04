@@ -321,7 +321,11 @@ describe('Organization Space invitations — organization admins are notified (U
     // (the delivery pipeline crosses Matrix + the notifications-service
     // RabbitMQ consumer, so a single fixed delay can under-wait) rather than
     // trusting a fixed sleep that either reads too early or wastes time.
-    const [mailItems] = await waitForMailsCountAtLeast(1, { timeout: 6000 });
+    // Use the full positive delivery bound as the negative grace so "no email"
+    // means "none will ever arrive" rather than "none has arrived yet".
+    const [mailItems] = await waitForMailsCountAtLeast(1, {
+      timeout: 18_000,
+    });
     expect(mailItems).toHaveLength(0);
 
     await deleteInvitation(invId);
@@ -538,7 +542,11 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
       TestUser.ORGANIZATION_ADMIN
     );
 
-    const [mailItems] = await waitForMailsCountAtLeast(1, { timeout: 6000 });
+    // Use the full positive delivery bound as the negative grace so "no email"
+    // means "none will ever arrive" rather than "none has arrived yet".
+    const [mailItems] = await waitForMailsCountAtLeast(1, {
+      timeout: 18_000,
+    });
     expect(
       mailItems.filter((m: any) =>
         m.toAddresses?.includes(TestUserManager.users.spaceAdmin.email)
@@ -587,7 +595,11 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
     );
     expect(decline?.error).toBeUndefined();
 
-    const [mailItems] = await waitForMailsCountAtLeast(1, { timeout: 6000 });
+    // Use the full positive delivery bound as the negative grace so "no email"
+    // means "none will ever arrive" rather than "none has arrived yet".
+    const [mailItems] = await waitForMailsCountAtLeast(1, {
+      timeout: 18_000,
+    });
     expect(mailItems).toHaveLength(0);
 
     await assignRoleToUser(
@@ -628,7 +640,11 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
     );
     expect(decline?.error).toBeUndefined();
 
-    const [mailItems] = await waitForMailsCountAtLeast(1, { timeout: 6000 });
+    // Use the full positive delivery bound as the negative grace so "no email"
+    // means "none will ever arrive" rather than "none has arrived yet".
+    const [mailItems] = await waitForMailsCountAtLeast(1, {
+      timeout: 18_000,
+    });
     const declinedMail = mailItems.find((m: any) =>
       m.subject?.includes('declined your invitation')
     );
