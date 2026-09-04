@@ -400,9 +400,22 @@ export class CollaborationPage {
     }
     // CRD: the callout card exposes an "Open {title}" link that opens the
     // callout detail dialog (the heading itself is not the click target).
-    await this.page
-      .getByRole('link', { name: `Open ${name}` })
-      .click({ timeout: 10000 });
+    // A freshly created callout can take a while to surface in the feed —
+    // and for a brand-new DRAFT callout a plain wait is not enough: the feed
+    // rendered at navigation time can simply not include it yet (server-side
+    // visibility/auth caching), so no amount of waiting on THAT page helps.
+    // Poll with reloads: three 10s attempts, reloading between them.
+    const link = this.page.getByRole('link', { name: `Open ${name}` });
+    for (let attempt = 1; ; attempt++) {
+      try {
+        await link.click({ timeout: 10000 });
+        return;
+      } catch (e) {
+        if (attempt >= 3) throw e;
+        await this.page.reload();
+        await this.dismissCookieBanner();
+      }
+    }
   }
 
   async isCalloutVisible(name: string): Promise<boolean> {

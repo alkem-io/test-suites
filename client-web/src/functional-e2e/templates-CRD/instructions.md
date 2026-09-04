@@ -39,11 +39,20 @@ The CRD page is structurally different from the legacy one — most selectors ch
 
 ### Whiteboard editor (used by callout whiteboard framing and whiteboards-response default)
 
-- Editor opens as a nested `dialog` containing a `Drawing canvas` region.
+- Editor opens as a nested `dialog` **named after the whiteboard's display name**
+  (post local-first rework, client#10205/#10207/#10241) — the old `Drawing canvas`
+  text is gone.
 - Open via `openWhiteboardEditor(page)` (clicks `Start drawing` or `Edit drawing`).
-- Get the editor via `getWhiteboardEditorDialog(page)` (filters by the `Drawing canvas` text).
+- Get the editor via `getWhiteboardEditorDialog(page)` (filters by the stable
+  `Close whiteboard` button, since the dialog name varies).
 - Text tool: `editorDialog.getByTitle(/^Text —/).click()` — the radio is hidden behind a `<label>`; clicking the radio does nothing.
-- **Don't press Escape** — it triggers "Discard unsaved changes?". Click the editor's `Save` button instead; clicking outside the canvas blurs the text and commits it.
+- **There is NO Save button.** The editor autosaves over the collaboration
+  channel and finalizes on close ("durable close"): call
+  `closeWhiteboardEditor(editorDialog)` (clicks `Close whiteboard`, waits for
+  the dialog to disappear once content is durable). Don't press Escape — it
+  first de-selects inside Excalidraw and may not close the dialog.
+- "Find Template" moved to the editor **header** and is disabled until the
+  Excalidraw scene initializes (click auto-waits).
 
 ## Callout-specific facts (confirmed in browser)
 

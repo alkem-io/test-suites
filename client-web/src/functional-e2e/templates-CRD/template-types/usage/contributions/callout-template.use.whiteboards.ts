@@ -17,7 +17,7 @@ import { getWhiteboardEditorDialog } from '../../forms/whiteboards/whiteboard-di
  *     whiteboard's Excalidraw editor dialog. The editor aria-hides the feed
  *     region, so the card on the callout can't be located until the editor is
  *     closed (same trap as the memos flow).
- *  4. Editor dialog (located via the shared `Drawing canvas` filter):
+ *  4. Editor dialog (located via the shared `Close whiteboard`-button filter):
  *       - <h2> = whiteboard title (== defaultTitle at open time)
  *       - `Edit title` button toggles an inline title input + `Save title` /
  *         `Cancel editing`

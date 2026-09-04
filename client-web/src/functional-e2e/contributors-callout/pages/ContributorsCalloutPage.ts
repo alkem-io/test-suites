@@ -42,6 +42,17 @@ export class ContributorsCalloutPage {
     await this.dismissCookieBanner();
   }
 
+  /**
+   * Wait until the space content feed (the callout list) has rendered. Needed
+   * before any non-retrying check such as `calloutCard(...).count()`, which
+   * would otherwise race the feed load right after navigation.
+   */
+  async waitForContentFeed() {
+    await this.page
+      .getByRole('region', { name: 'Space content feed' })
+      .waitFor({ state: 'visible', timeout: 15000 });
+  }
+
   private async dismissCookieBanner() {
     const accept = this.page.getByRole('button', {
       name: /accept all cookies/i,

@@ -16,15 +16,36 @@ export const openWhiteboardEditor = async (page: Page): Promise<void> => {
 
 /**
  * Returns the whiteboard editor dialog (the one hosting the Excalidraw canvas).
+ *
+ * The editor shell (client `WhiteboardEditorShell`, post local-first rework —
+ * client#10205/#10207/#10241 era) names the dialog after the whiteboard's
+ * display name, so there is no fixed accessible name to match on and the old
+ * "Drawing canvas" text no longer exists. Identify it by its stable
+ * "Close whiteboard" control instead.
  */
 export const getWhiteboardEditorDialog = async (page: Page): Promise<Locator> => {
   const dialog = page
     .getByRole('dialog')
-    .filter({ has: page.getByText('Drawing canvas') })
+    .filter({ has: page.getByRole('button', { name: 'Close whiteboard' }) })
     .last();
   await expect(dialog).toBeVisible();
 
   return dialog;
+};
+
+/**
+ * Closes the whiteboard editor, persisting the drawing.
+ *
+ * The editor has NO Save button any more: it autosaves over the collaboration
+ * channel and finalizes the content on close ("durable close"), so closing IS
+ * the save action. The dialog only disappears once the content is durable,
+ * hence the generous timeout.
+ */
+export const closeWhiteboardEditor = async (
+  editorDialog: Locator
+): Promise<void> => {
+  await editorDialog.getByRole('button', { name: 'Close whiteboard' }).click();
+  await expect(editorDialog).not.toBeVisible({ timeout: 15_000 });
 };
 
 /**
@@ -72,6 +93,8 @@ export const useTemplateInAWhiteboard = async (
   whiteboardDialog: Locator,
   templateName: string
 ) => {
+  // "Find Template" now lives in the editor header and stays disabled until
+  // the Excalidraw scene has initialized — click() auto-waits for enabled.
   await whiteboardDialog.getByRole('button', { name: 'Find Template' }).click();
 
   // The "Use a template" picker lists templates as list items, each showing the

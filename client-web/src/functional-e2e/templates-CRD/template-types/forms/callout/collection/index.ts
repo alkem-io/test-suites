@@ -11,6 +11,7 @@
 import { Locator, Page, expect } from '@playwright/test';
 import { CalloutTemplateResponseCollection } from '../callout-template-form.models';
 import {
+  closeWhiteboardEditor,
   getWhiteboardEditorDialog,
   writeTextInWhiteboardDialog,
 } from '../../whiteboards/whiteboard-dialog';
@@ -124,8 +125,8 @@ export const selectAndFillCalloutCollection = async (
         .click();
       const editorDialog = await getWhiteboardEditorDialog(page);
       await writeTextInWhiteboardDialog(editorDialog, collection.textInWhiteboard);
-      await editorDialog.getByRole('button', { name: 'Save' }).click();
-      await expect(editorDialog).not.toBeVisible();
+      // The editor autosaves — closing it finalizes the drawing (no Save button).
+      await closeWhiteboardEditor(editorDialog);
       await defaultsDialog.getByRole('button', { name: 'Save' }).click();
       await expect(defaultsDialog).not.toBeVisible();
       return;
