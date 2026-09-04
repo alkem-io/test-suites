@@ -182,7 +182,7 @@ describe('Organization Space invitations — GATE 0 core roleset flow', () => {
     expect(accept?.error).toBeUndefined();
     expect(accept?.data?.eventOnInvitation.state).toContain('accepted');
     const spaceRoles = await spaceRolesForOrg(baseScenario.organization.id);
-    expect(spaceRoles?.roles).toEqual(expect.arrayContaining(['MEMBER']));
+    expect(spaceRoles?.roles).toEqual(expect.arrayContaining(['member']));
   });
 
   test('the org OWNER can also accept on behalf of the organization', async () => {
@@ -200,7 +200,7 @@ describe('Organization Space invitations — GATE 0 core roleset flow', () => {
     expect(accept?.error).toBeUndefined();
     expect(accept?.data?.eventOnInvitation.state).toContain('accepted');
     const spaceRoles = await spaceRolesForOrg(baseScenario.organization.id);
-    expect(spaceRoles?.roles).toEqual(expect.arrayContaining(['MEMBER']));
+    expect(spaceRoles?.roles).toEqual(expect.arrayContaining(['member']));
   });
 
   test('an ADMIN who is not an ASSOCIATE can also accept on behalf of the organization', async () => {
@@ -239,7 +239,7 @@ describe('Organization Space invitations — GATE 0 core roleset flow', () => {
 
     const spaceRoles = await spaceRolesForOrg(baseScenario.organization.id);
     expect(spaceRoles?.roles).toEqual(
-      expect.arrayContaining(['MEMBER', 'LEAD'])
+      expect.arrayContaining(['member', 'lead'])
     );
   });
 
@@ -431,7 +431,10 @@ describe('Organization Space invitations — already member / already invited', 
     expect(secondResult?.type).toEqual(
       RoleSetInvitationResultType.AlreadyInvitedToRoleSet
     );
-    expect(secondResult?.invitation).toBeFalsy();
+    // The generic role-set flow intentionally echoes back the existing open
+    // invitation alongside ALREADY_INVITED_TO_ROLE_SET, rather than omitting it.
+    expect(secondResult?.invitation).toBeDefined();
+    expect(secondResult?.invitation?.id).toEqual(invitationId);
   });
 
   test('inviting an already-member organization returns ALREADY_MEMBER_OF_ROLE_SET', async () => {
@@ -619,8 +622,8 @@ describe('Organization Space invitations — accept-time Lead downgrade', () => 
     );
 
     const spaceRoles = await spaceRolesForOrg(baseScenario.organization.id);
-    expect(spaceRoles?.roles).toEqual(expect.arrayContaining(['MEMBER']));
-    expect(spaceRoles?.roles).not.toEqual(expect.arrayContaining(['LEAD']));
+    expect(spaceRoles?.roles).toEqual(expect.arrayContaining(['member']));
+    expect(spaceRoles?.roles).not.toEqual(expect.arrayContaining(['lead']));
 
     await removeRoleFromOrganization(
       baseScenario.organization.id,
