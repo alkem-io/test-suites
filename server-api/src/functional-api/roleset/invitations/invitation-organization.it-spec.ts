@@ -69,6 +69,22 @@ let invitationId = '';
 beforeAll(async () => {
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
 
+  // baseScenario.organization is the Space's own hosting organization, and
+  // the server auto-grants it Member+Lead on the Space at creation time. Every
+  // test in this file treats the organization as a fresh invitee, so strip
+  // that auto-grant before the first invite runs — otherwise it deterministically
+  // resolves to ALREADY_MEMBER_OF_ROLE_SET instead of a real invitation.
+  await removeRoleFromOrganization(
+    baseScenario.organization.id,
+    baseScenario.space.community.roleSetId,
+    RoleName.Lead
+  ).catch(() => undefined);
+  await removeRoleFromOrganization(
+    baseScenario.organization.id,
+    baseScenario.space.community.roleSetId,
+    RoleName.Member
+  ).catch(() => undefined);
+
   await assignRoleToUser(
     TestUserManager.users.qaUser.id,
     baseScenario.organization.roleSetId,
@@ -128,10 +144,21 @@ const spaceRolesForOrg = async (organizationID: string) => {
   return spaces.find((s: any) => s.id === baseScenario.space.id);
 };
 
-const createTestOrganization = async (label: string) => {
+const createTestOrganization = async (
+  label: string,
+  creatorRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
   const name = `${label}${uniqueId}`;
   const nameID = name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 24);
-  const res = await createOrganization(name, nameID);
+  const res = await createOrganization(
+    name,
+    nameID,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    creatorRole
+  );
   if (!res.data?.createOrganization) {
     throw new Error(
       `Failed to create organization "${label}": ${JSON.stringify(res.error)}`
@@ -261,7 +288,20 @@ describe('Organization Space invitations — GATE 0 core roleset flow', () => {
   });
 
   test('a global admin cannot ACCEPT on the organization behalf, but can revoke the invitation', async () => {
-    const invitationData = await inviteOrg(baseScenario.organization.id);
+    // createOrganization() auto-grants Associate+Admin on the new org to its
+    // CREATING actor (server-side, pre-existing/unrelated behavior). Using
+    // baseScenario.organization here would make TestUser.GLOBAL_ADMIN — the
+    // default createOrganization actor — the org's own admin, so its accept
+    // would legitimately succeed via account-admin credentials rather than
+    // exercising a global-admin bypass. Create a dedicated organization with
+    // a disinterested creator instead, so GLOBAL_ADMIN holds no org-admin
+    // credential on it.
+    const orgNonAdmin = await createTestOrganization(
+      'globalAdminReject',
+      TestUser.SUBSPACE_MEMBER
+    );
+
+    const invitationData = await inviteOrg(orgNonAdmin.id);
     const result = getSingleInvitationResult(invitationData);
     invitationId = result?.invitation?.id ?? '';
     expect(invitationId.length).toEqual(36);
@@ -284,6 +324,8 @@ describe('Organization Space invitations — GATE 0 core roleset flow', () => {
     expect(
       remaining?.data?.lookup?.space?.community?.roleSet.invitations
     ).toHaveLength(0);
+
+    await deleteOrganization(orgNonAdmin.id).catch(() => undefined);
   });
 
   test('REJECT leaves the organization out of the Space', async () => {

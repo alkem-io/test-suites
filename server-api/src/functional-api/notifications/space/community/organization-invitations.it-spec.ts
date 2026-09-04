@@ -36,7 +36,7 @@ import {
   createOrganization,
   deleteOrganization,
 } from '@functional-api/contributor-management/organization/organization.request.params';
-import { notif } from '../../notification.helpers';
+import { notif, waitForMailsCountAtLeast } from '../../notification.helpers';
 
 const uniqueId = UniqueIDGenerator.getID();
 const message = `Please join our community! ${uniqueId}`;
@@ -76,9 +76,31 @@ const scenarioConfig: TestScenarioConfig = {
 
 let invitationId = '';
 
+/**
+ * baseScenario.organization is the Space's own hosting organization, and the
+ * server auto-grants it Member+Lead on the Space at creation time. Every test
+ * in this file treats the organization as a fresh invitee, so this strips
+ * that auto-grant (and any residual grant left by a prior test) — otherwise
+ * the next invite deterministically resolves to ALREADY_MEMBER_OF_ROLE_SET
+ * instead of a real invitation.
+ */
+const clearHostOrgFromSpace = async () => {
+  await removeRoleFromOrganization(
+    baseScenario.organization.id,
+    baseScenario.space.community.roleSetId,
+    RoleName.Lead
+  ).catch(() => undefined);
+  await removeRoleFromOrganization(
+    baseScenario.organization.id,
+    baseScenario.space.community.roleSetId,
+    RoleName.Member
+  ).catch(() => undefined);
+};
+
 beforeAll(async () => {
   await deleteMailSlurperMails();
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
+  await clearHostOrgFromSpace();
 
   await assignRoleToUser(
     TestUserManager.users.qaUser.id,
@@ -336,14 +358,45 @@ describe('Organization Space invitations — organization admins are notified (U
   test('an invitation to L2 lists every ancestor Space in the email body', async () => {
     await deleteMailSlurperMails();
 
+    // baseScenario.organization is the L0 Space's own host and is therefore
+    // already a member of L0 by the time this test runs — the ancestor-chain
+    // list deliberately omits any Space the invitee already belongs to
+    // (FR-013), so inviting it here would only ever show L1+L2, never L0.
+    // Use a dedicated organization with zero pre-existing standing anywhere
+    // in the L0/L1/L2 chain so the "every ancestor Space" claim is actually
+    // exercised.
+    const orgAncestors = await createTestOrganization('l2AncestorsNotify');
+    await assignRoleToUser(
+      TestUserManager.users.organizationAdmin.id,
+      orgAncestors.roleSetId,
+      RoleName.Associate
+    );
+    await assignRoleToUser(
+      TestUserManager.users.organizationAdmin.id,
+      orgAncestors.roleSetId,
+      RoleName.Admin
+    );
+
     const invitationData = await inviteOrgToSpace(
       baseScenario.subsubspace.community.roleSetId,
-      baseScenario.organization.id
+      orgAncestors.id
     );
     const result = getSingleInvitationResult(invitationData);
     invitationId = result?.invitation?.id ?? '';
     expect(invitationId.length).toEqual(36);
     expect(result?.invitation?.invitedToParent).toEqual(true);
+
+    // Same source list the notification body is rendered from
+    // (RoleSetService.getRoleSetsToJoinOnAccept) — assert it directly too, not
+    // just the rendered copy.
+    const joinedSpaceIds = (
+      result?.invitation?.spacesToJoinOnAccept ?? []
+    ).map((s: any) => s.id);
+    expect(joinedSpaceIds).toEqual([
+      baseScenario.space.id,
+      baseScenario.subspace.id,
+      baseScenario.subsubspace.id,
+    ]);
 
     await delay(3000);
     const [mailItems] = await getMailsData();
@@ -361,25 +414,18 @@ describe('Organization Space invitations — organization admins are notified (U
 
     await deleteInvitation(invitationId);
     invitationId = '';
-    await removeRoleFromOrganization(
-      baseScenario.organization.id,
-      baseScenario.subsubspace.community.roleSetId,
-      RoleName.Member
-    ).catch(() => undefined);
-    await removeRoleFromOrganization(
-      baseScenario.organization.id,
-      baseScenario.subspace.community.roleSetId,
-      RoleName.Member
-    ).catch(() => undefined);
-    await removeRoleFromOrganization(
-      baseScenario.organization.id,
-      baseScenario.space.community.roleSetId,
-      RoleName.Member
-    ).catch(() => undefined);
+    await deleteOrganization(orgAncestors.id).catch(() => undefined);
   });
 });
 
 describe('Organization Space invitations — the inviter learns the outcome (US4)', () => {
+  // Do not rely solely on the previous test's afterEach cleanup to leave the
+  // host organization non-member before the FIRST test of this block — strip
+  // it explicitly so every test here starts from a deterministic clean slate.
+  beforeEach(async () => {
+    await clearHostOrgFromSpace();
+  });
+
   afterEach(async () => {
     await removeRoleFromOrganization(
       baseScenario.organization.id,
@@ -495,6 +541,11 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
   });
 
   test('an inviter no longer a Space admin at decline time: mutation succeeds, nobody is notified of the outcome', async () => {
+    // Start from a known-empty inbox so the "wait for the invite's own mail"
+    // poll below counts only what THIS invite produces — a leftover straggler
+    // from the previous test could otherwise satisfy the count prematurely.
+    await deleteMailSlurperMails();
+
     const invitationData = await inviteOrgToSpace(
       baseScenario.space.community.roleSetId,
       baseScenario.organization.id
@@ -503,13 +554,22 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
     invitationId = result?.invitation?.id ?? '';
     expect(invitationId.length).toEqual(36);
 
+    // The invite's own "you've been invited" emails to the org's managers
+    // (organizationAdmin, qaUser, subspaceAdmin — 3 recipients, see the US2
+    // "notified once" test above) are dispatched fire-and-forget (void
+    // promise, role.set.resolver.mutations.membership.ts) and can still be
+    // in flight here. Wait for them to actually land before clearing the
+    // inbox — otherwise they arrive AFTER deleteMailSlurperMails() below and
+    // are misread as stray outcome mail from the decline that follows.
+    await waitForMailsCountAtLeast(3);
+    await deleteMailSlurperMails();
+
     await removeRoleFromUser(
       TestUserManager.users.spaceAdmin.id,
       baseScenario.space.community.roleSetId,
       RoleName.Admin
     );
 
-    await deleteMailSlurperMails();
     const decline = await eventOnRoleSetInvitation(
       invitationId,
       'REJECT',
