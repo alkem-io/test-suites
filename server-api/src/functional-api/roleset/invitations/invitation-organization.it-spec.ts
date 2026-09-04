@@ -298,7 +298,7 @@ describe('Organization Space invitations — GATE 0 core roleset flow', () => {
     // credential on it.
     const orgNonAdmin = await createTestOrganization(
       'globalAdminReject',
-      TestUser.SUBSPACE_MEMBER
+      TestUser.GLOBAL_BETA_TESTER
     );
 
     const invitationData = await inviteOrg(orgNonAdmin.id);

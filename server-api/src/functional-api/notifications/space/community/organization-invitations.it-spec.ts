@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  delay,
   deleteMailSlurperMails,
-  getMailsData,
   NotificationEvent,
   TestScenarioConfig,
   TestScenarioFactory,
@@ -36,7 +34,11 @@ import {
   createOrganization,
   deleteOrganization,
 } from '@functional-api/contributor-management/organization/organization.request.params';
-import { notif, waitForMailsCountAtLeast } from '../../notification.helpers';
+import {
+  expectExactMailsAfter,
+  notif,
+  waitForMailsCountAtLeast,
+} from '../../notification.helpers';
 
 const uniqueId = UniqueIDGenerator.getID();
 const message = `Please join our community! ${uniqueId}`;
@@ -212,10 +214,16 @@ describe('Organization Space invitations — organization admins are notified (U
     invitationId = result?.invitation?.id ?? '';
     expect(invitationId.length).toEqual(36);
 
-    await delay(3000);
-    const [mailItems] = await getMailsData();
-
     const expectedSubject = `Invitation for ${baseScenario.organization.profile.displayName} to join ${baseScenario.space.about.profile.displayName}`;
+
+    // Scope to this invitation's own subject before matching by recipient —
+    // a stray mail with the same recipient address but a different subject
+    // (leaked from another scenario sharing the same fixed test-user email)
+    // must not satisfy these assertions.
+    const [rawMailItems] = await expectExactMailsAfter(async () => undefined, 3);
+    const mailItems = rawMailItems.filter(
+      (m: any) => m.subject === expectedSubject
+    );
 
     const adminAMail = mailItems.find((m: any) =>
       m.toAddresses?.includes(TestUserManager.users.organizationAdmin.email)
@@ -309,8 +317,11 @@ describe('Organization Space invitations — organization admins are notified (U
     const invId = result?.invitation?.id ?? '';
     expect(invId.length).toEqual(36);
 
-    await delay(3000);
-    const [mailItems] = await getMailsData();
+    // Negative assertion: poll up to a generous bound for anything to land
+    // (the delivery pipeline crosses Matrix + the notifications-service
+    // RabbitMQ consumer, so a single fixed delay can under-wait) rather than
+    // trusting a fixed sleep that either reads too early or wastes time.
+    const [mailItems] = await waitForMailsCountAtLeast(1, { timeout: 6000 });
     expect(mailItems).toHaveLength(0);
 
     await deleteInvitation(invId);
@@ -342,8 +353,7 @@ describe('Organization Space invitations — organization admins are notified (U
     const invId = result?.invitation?.id ?? '';
     expect(invId.length).toEqual(36);
 
-    await delay(3000);
-    const [mailItems] = await getMailsData();
+    const [mailItems] = await expectExactMailsAfter(async () => undefined, 1);
     const supportMail = mailItems.find((m: any) =>
       m.toAddresses?.includes(supportEmail)
     );
@@ -393,13 +403,12 @@ describe('Organization Space invitations — organization admins are notified (U
       result?.invitation?.spacesToJoinOnAccept ?? []
     ).map((s: any) => s.id);
     expect(joinedSpaceIds).toEqual([
-      baseScenario.space.id,
-      baseScenario.subspace.id,
-      baseScenario.subsubspace.id,
+      baseScenario.space.about.id,
+      baseScenario.subspace.about.id,
+      baseScenario.subsubspace.about.id,
     ]);
 
-    await delay(3000);
-    const [mailItems] = await getMailsData();
+    const [mailItems] = await waitForMailsCountAtLeast(1);
     const mail = mailItems.find((m: any) =>
       m.toAddresses?.includes(TestUserManager.users.organizationAdmin.email)
     );
@@ -448,14 +457,15 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
     expect(invitationId.length).toEqual(36);
 
     await deleteMailSlurperMails();
-    await eventOnRoleSetInvitation(
-      invitationId,
-      'ACCEPT',
-      TestUser.ORGANIZATION_ADMIN
+    const [mailItems] = await expectExactMailsAfter(
+      () =>
+        eventOnRoleSetInvitation(
+          invitationId,
+          'ACCEPT',
+          TestUser.ORGANIZATION_ADMIN
+        ),
+      2
     );
-
-    await delay(3000);
-    const [mailItems] = await getMailsData();
 
     const acceptedSubject = `${baseScenario.organization.profile.displayName} accepted your invitation`;
     const inviterMails = mailItems.filter((m: any) =>
@@ -492,14 +502,15 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
     expect(invitationId.length).toEqual(36);
 
     await deleteMailSlurperMails();
-    await eventOnRoleSetInvitation(
-      invitationId,
-      'REJECT',
-      TestUser.ORGANIZATION_ADMIN
+    const [mailItems] = await expectExactMailsAfter(
+      () =>
+        eventOnRoleSetInvitation(
+          invitationId,
+          'REJECT',
+          TestUser.ORGANIZATION_ADMIN
+        ),
+      1
     );
-
-    await delay(3000);
-    const [mailItems] = await getMailsData();
     const declinedSubject = `${baseScenario.organization.profile.displayName} declined your invitation`;
     const mail = mailItems.find((m: any) =>
       m.toAddresses?.includes(TestUserManager.users.spaceAdmin.email)
@@ -527,8 +538,7 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
       TestUser.ORGANIZATION_ADMIN
     );
 
-    await delay(3000);
-    const [mailItems] = await getMailsData();
+    const [mailItems] = await waitForMailsCountAtLeast(1, { timeout: 6000 });
     expect(
       mailItems.filter((m: any) =>
         m.toAddresses?.includes(TestUserManager.users.spaceAdmin.email)
@@ -577,8 +587,7 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
     );
     expect(decline?.error).toBeUndefined();
 
-    await delay(3000);
-    const [mailItems] = await getMailsData();
+    const [mailItems] = await waitForMailsCountAtLeast(1, { timeout: 6000 });
     expect(mailItems).toHaveLength(0);
 
     await assignRoleToUser(
@@ -619,8 +628,7 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
     );
     expect(decline?.error).toBeUndefined();
 
-    await delay(3000);
-    const [mailItems] = await getMailsData();
+    const [mailItems] = await waitForMailsCountAtLeast(1, { timeout: 6000 });
     const declinedMail = mailItems.find((m: any) =>
       m.subject?.includes('declined your invitation')
     );
