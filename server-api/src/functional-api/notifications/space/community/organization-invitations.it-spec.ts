@@ -19,6 +19,7 @@ import {
   inviteForEntryRoleOnRoleSet,
 } from '@functional-api/roleset/invitations/invitation.request.params';
 import { getSingleInvitationResult } from '@functional-api/roleset/roleset.request.params';
+import { meQuery } from '@functional-api/roleset/application/application.request.params';
 import { eventOnRoleSetInvitation } from '@functional-api/roleset/roleset-events.request.params';
 import {
   assignRoleToUser,
@@ -104,6 +105,18 @@ beforeAll(async () => {
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
   await clearHostOrgFromSpace();
 
+  // createBaseScenario's default actor (GLOBAL_ADMIN) is auto-granted
+  // ASSOCIATE+ADMIN on the new organization; strip the ADMIN grant so the
+  // organization's manager set is exactly the three documented personas
+  // below (organizationAdmin ADMIN+ASSOCIATE from the factory default, plus
+  // qaUser and subspaceAdmin here) — otherwise every "notified once"/"N
+  // recipients" assertion in this file undercounts by one manager.
+  await removeRoleFromUser(
+    TestUserManager.users.globalAdmin.id,
+    baseScenario.organization.roleSetId,
+    RoleName.Admin
+  );
+
   await assignRoleToUser(
     TestUserManager.users.qaUser.id,
     baseScenario.organization.roleSetId,
@@ -181,6 +194,10 @@ const inAppNotificationsFor = async (
                   invitation { id }
                   space { id }
                 }
+                ... on InAppNotificationPayloadSpaceCommunityActor {
+                  actor { id }
+                  space { id }
+                }
               }
             }
           }
@@ -196,7 +213,12 @@ const inAppNotificationsFor = async (
         inAppNotifications: Array<{
           id: string;
           type: string;
-          payload?: { organization?: { id: string } };
+          payload?: {
+            organization?: { id: string };
+            invitation?: { id: string };
+            actor?: { id: string };
+            space?: { id: string };
+          };
         }>;
       }
     | undefined;
@@ -308,32 +330,40 @@ describe('Organization Space invitations — organization admins are notified (U
       },
     });
 
-    await deleteMailSlurperMails();
-    const invitationData = await inviteOrgToSpace(
-      baseScenario.space.community.roleSetId,
-      orgE.id
-    );
-    const result = getSingleInvitationResult(invitationData);
-    const invId = result?.invitation?.id ?? '';
-    expect(invId.length).toEqual(36);
+    // The mute above is applied to the shared organizationAdmin persona, not
+    // a fixture scoped to this test: restore it even if an assertion below
+    // throws, otherwise every later positive-notification test that relies
+    // on this persona's default settings would silently pass for the wrong
+    // reason (organizationAdmin still muted, not actually notified).
+    try {
+      await deleteMailSlurperMails();
+      const invitationData = await inviteOrgToSpace(
+        baseScenario.space.community.roleSetId,
+        orgE.id
+      );
+      const result = getSingleInvitationResult(invitationData);
+      const invId = result?.invitation?.id ?? '';
+      expect(invId.length).toEqual(36);
 
-    // Negative assertion: poll up to a generous bound for anything to land
-    // (the delivery pipeline crosses Matrix + the notifications-service
-    // RabbitMQ consumer, so a single fixed delay can under-wait) rather than
-    // trusting a fixed sleep that either reads too early or wastes time.
-    // Use the full positive delivery bound as the negative grace so "no email"
-    // means "none will ever arrive" rather than "none has arrived yet".
-    const [mailItems] = await waitForMailsCountAtLeast(1, {
-      timeout: 18_000,
-    });
-    expect(mailItems).toHaveLength(0);
+      // Negative assertion: poll up to a generous bound for anything to land
+      // (the delivery pipeline crosses Matrix + the notifications-service
+      // RabbitMQ consumer, so a single fixed delay can under-wait) rather than
+      // trusting a fixed sleep that either reads too early or wastes time.
+      // Use the full positive delivery bound as the negative grace so "no email"
+      // means "none will ever arrive" rather than "none has arrived yet".
+      const [mailItems] = await waitForMailsCountAtLeast(1, {
+        timeout: 18_000,
+      });
+      expect(mailItems).toHaveLength(0);
 
-    await deleteInvitation(invId);
-    await updateUserSettings(TestUserManager.users.organizationAdmin.id, {
-      notification: {
-        organization: { adminSpaceCommunityInvitation: notif(true) },
-      },
-    });
+      await deleteInvitation(invId);
+    } finally {
+      await updateUserSettings(TestUserManager.users.organizationAdmin.id, {
+        notification: {
+          organization: { adminSpaceCommunityInvitation: notif(true) },
+        },
+      });
+    }
     await deleteOrganization(orgE.id);
   });
 
@@ -402,9 +432,16 @@ describe('Organization Space invitations — organization admins are notified (U
 
     // Same source list the notification body is rendered from
     // (RoleSetService.getRoleSetsToJoinOnAccept) — assert it directly too, not
-    // just the rendered copy.
+    // just the rendered copy. `spacesToJoinOnAccept` is gated to the invited
+    // organization's own account admins, not the inviting Space admin, so
+    // read it via `me.communityInvitations` as organizationAdmin (assigned
+    // above) rather than from the invite mutation's own result.
+    const me = await meQuery(TestUser.ORGANIZATION_ADMIN);
+    const seenInvitation = me?.data?.me?.communityInvitations?.find(
+      (i: any) => i.invitation?.id === invitationId
+    );
     const joinedSpaceIds = (
-      result?.invitation?.spacesToJoinOnAccept ?? []
+      seenInvitation?.invitation?.spacesToJoinOnAccept ?? []
     ).map((s: any) => s.id);
     expect(joinedSpaceIds).toEqual([
       baseScenario.space.about.id,
@@ -489,11 +526,21 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
     const acceptedRows = await inAppNotificationsFor(TestUser.SPACE_ADMIN, [
       NotificationEvent.SpaceAdminOrganizationCommunityInvitationAccepted,
     ]);
-    expect(acceptedRows?.total ?? 0).toBeGreaterThanOrEqual(1);
+    const acceptedRow = acceptedRows?.inAppNotifications.find(
+      n =>
+        n.payload?.actor?.id === baseScenario.organization.id &&
+        n.payload?.space?.id === baseScenario.space.id
+    );
+    expect(acceptedRow).toBeDefined();
     const joinedRows = await inAppNotificationsFor(TestUser.SPACE_ADMIN, [
       NotificationEvent.SpaceAdminCommunityNewMember,
     ]);
-    expect(joinedRows?.total ?? 0).toBeGreaterThanOrEqual(1);
+    const joinedRow = joinedRows?.inAppNotifications.find(
+      n =>
+        n.payload?.actor?.id === baseScenario.organization.id &&
+        n.payload?.space?.id === baseScenario.space.id
+    );
+    expect(joinedRow).toBeDefined();
   });
 
   test('declining notifies the inviter with "declined your invitation"', async () => {
@@ -527,35 +574,41 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
       notification: { space: { admin: { communityNewMember: notif(false) } } },
     });
 
-    const invitationData = await inviteOrgToSpace(
-      baseScenario.space.community.roleSetId,
-      baseScenario.organization.id
-    );
-    const result = getSingleInvitationResult(invitationData);
-    invitationId = result?.invitation?.id ?? '';
-    expect(invitationId.length).toEqual(36);
+    // spaceAdmin is a shared fixed persona: restore its setting even if an
+    // assertion below throws, or the very next test's own negative-mail
+    // assertion for spaceAdmin would pass because the persona is still
+    // muted, not because that test's own removal/deletion actually worked.
+    try {
+      const invitationData = await inviteOrgToSpace(
+        baseScenario.space.community.roleSetId,
+        baseScenario.organization.id
+      );
+      const result = getSingleInvitationResult(invitationData);
+      invitationId = result?.invitation?.id ?? '';
+      expect(invitationId.length).toEqual(36);
 
-    await deleteMailSlurperMails();
-    await eventOnRoleSetInvitation(
-      invitationId,
-      'ACCEPT',
-      TestUser.ORGANIZATION_ADMIN
-    );
+      await deleteMailSlurperMails();
+      await eventOnRoleSetInvitation(
+        invitationId,
+        'ACCEPT',
+        TestUser.ORGANIZATION_ADMIN
+      );
 
-    // Use the full positive delivery bound as the negative grace so "no email"
-    // means "none will ever arrive" rather than "none has arrived yet".
-    const [mailItems] = await waitForMailsCountAtLeast(1, {
-      timeout: 18_000,
-    });
-    expect(
-      mailItems.filter((m: any) =>
-        m.toAddresses?.includes(TestUserManager.users.spaceAdmin.email)
-      )
-    ).toHaveLength(0);
-
-    await updateUserSettings(TestUserManager.users.spaceAdmin.id, {
-      notification: { space: { admin: { communityNewMember: notif(true) } } },
-    });
+      // Use the full positive delivery bound as the negative grace so "no email"
+      // means "none will ever arrive" rather than "none has arrived yet".
+      const [mailItems] = await waitForMailsCountAtLeast(1, {
+        timeout: 18_000,
+      });
+      expect(
+        mailItems.filter((m: any) =>
+          m.toAddresses?.includes(TestUserManager.users.spaceAdmin.email)
+        )
+      ).toHaveLength(0);
+    } finally {
+      await updateUserSettings(TestUserManager.users.spaceAdmin.id, {
+        notification: { space: { admin: { communityNewMember: notif(true) } } },
+      });
+    }
   });
 
   test('an inviter no longer a Space admin at decline time: mutation succeeds, nobody is notified of the outcome', async () => {
@@ -588,25 +641,32 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
       RoleName.Admin
     );
 
-    const decline = await eventOnRoleSetInvitation(
-      invitationId,
-      'REJECT',
-      TestUser.ORGANIZATION_ADMIN
-    );
-    expect(decline?.error).toBeUndefined();
+    // spaceAdmin is the shared inviter persona every other test in this
+    // describe block depends on: re-grant its ADMIN role even if an
+    // assertion below throws, or every later test in this file that invites
+    // as spaceAdmin (via `inviteOrgToSpace`'s default userRole) would start
+    // failing authorization for an unrelated reason.
+    try {
+      const decline = await eventOnRoleSetInvitation(
+        invitationId,
+        'REJECT',
+        TestUser.ORGANIZATION_ADMIN
+      );
+      expect(decline?.error).toBeUndefined();
 
-    // Use the full positive delivery bound as the negative grace so "no email"
-    // means "none will ever arrive" rather than "none has arrived yet".
-    const [mailItems] = await waitForMailsCountAtLeast(1, {
-      timeout: 18_000,
-    });
-    expect(mailItems).toHaveLength(0);
-
-    await assignRoleToUser(
-      TestUserManager.users.spaceAdmin.id,
-      baseScenario.space.community.roleSetId,
-      RoleName.Admin
-    );
+      // Use the full positive delivery bound as the negative grace so "no email"
+      // means "none will ever arrive" rather than "none has arrived yet".
+      const [mailItems] = await waitForMailsCountAtLeast(1, {
+        timeout: 18_000,
+      });
+      expect(mailItems).toHaveLength(0);
+    } finally {
+      await assignRoleToUser(
+        TestUserManager.users.spaceAdmin.id,
+        baseScenario.space.community.roleSetId,
+        RoleName.Admin
+      );
+    }
   });
 
   test('an inviter whose account no longer exists at decline time: mutation succeeds, no outcome email', async () => {
@@ -632,25 +692,31 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
 
     await deleteUser(TestUserManager.users.betaTester.id);
 
-    await deleteMailSlurperMails();
-    const decline = await eventOnRoleSetInvitation(
-      invitationId,
-      'REJECT',
-      TestUser.ORGANIZATION_ADMIN
-    );
-    expect(decline?.error).toBeUndefined();
+    // betaTester is a shared fixed persona (TestUser.GLOBAL_BETA_TESTER):
+    // re-register it even if an assertion below throws, or it stays deleted
+    // for every later spec in the run that depends on that persona existing.
+    try {
+      await deleteMailSlurperMails();
+      const decline = await eventOnRoleSetInvitation(
+        invitationId,
+        'REJECT',
+        TestUser.ORGANIZATION_ADMIN
+      );
+      expect(decline?.error).toBeUndefined();
 
-    // Use the full positive delivery bound as the negative grace so "no email"
-    // means "none will ever arrive" rather than "none has arrived yet".
-    const [mailItems] = await waitForMailsCountAtLeast(1, {
-      timeout: 18_000,
-    });
-    const declinedMail = mailItems.find((m: any) =>
-      m.subject?.includes('declined your invitation')
-    );
-    expect(declinedMail).toBeUndefined();
+      // Use the full positive delivery bound as the negative grace so "no email"
+      // means "none will ever arrive" rather than "none has arrived yet".
+      const [mailItems] = await waitForMailsCountAtLeast(1, {
+        timeout: 18_000,
+      });
+      const declinedMail = mailItems.find((m: any) =>
+        m.subject?.includes('declined your invitation')
+      );
+      expect(declinedMail).toBeUndefined();
 
-    invitationId = '';
-    await reregisterUser('beta.tester@alkem.io', 'beta', 'tester');
+      invitationId = '';
+    } finally {
+      await reregisterUser('beta.tester@alkem.io', 'beta', 'tester');
+    }
   });
 });
