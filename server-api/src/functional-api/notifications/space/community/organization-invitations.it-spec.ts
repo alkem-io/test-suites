@@ -488,7 +488,7 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
     }
   });
 
-  test('accepting notifies the inviter ("accepted") AND every Space admin (generic "joined"), with distinct subjects', async () => {
+  test('accepting notifies the inviter ("accepted") and the organization admins ("has joined"), and NOT the generic "new member" notification', async () => {
     const invitationData = await inviteOrgToSpace(
       baseScenario.space.community.roleSetId,
       baseScenario.organization.id
@@ -508,20 +508,25 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
       2
     );
 
-    const acceptedSubject = `${baseScenario.organization.profile.displayName} accepted your invitation`;
+    const orgName = baseScenario.organization.profile.displayName;
+    const acceptedSubject = `${orgName} accepted your invitation`;
+
+    // The inviter is told exactly once: the outcome notification. The generic
+    // "a new member joined" notification is suppressed for a membership that
+    // came from an invitation, so the inviter is not notified twice.
     const inviterMails = mailItems.filter((m: any) =>
       m.toAddresses?.includes(TestUserManager.users.spaceAdmin.email)
     );
-    expect(inviterMails.length).toBeGreaterThanOrEqual(2);
+    expect(inviterMails).toHaveLength(1);
+    expect(inviterMails[0].subject).toEqual(acceptedSubject);
 
-    const acceptedMail = inviterMails.find(
-      (m: any) => m.subject === acceptedSubject
+    // The organization's admins get the "has joined" welcome so the ones who
+    // did not accept know no action is needed.
+    const orgAdminMails = mailItems.filter((m: any) =>
+      m.toAddresses?.includes(TestUserManager.users.organizationAdmin.email)
     );
-    expect(acceptedMail).toBeDefined();
-    const joinedMail = inviterMails.find(
-      (m: any) => m.subject !== acceptedSubject
-    );
-    expect(joinedMail).toBeDefined();
+    expect(orgAdminMails).toHaveLength(1);
+    expect(orgAdminMails[0].subject).toContain('has joined');
 
     const acceptedRows = await inAppNotificationsFor(TestUser.SPACE_ADMIN, [
       NotificationEvent.SpaceAdminOrganizationCommunityInvitationAccepted,
@@ -532,6 +537,7 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
         n.payload?.space?.id === baseScenario.space.id
     );
     expect(acceptedRow).toBeDefined();
+
     const joinedRows = await inAppNotificationsFor(TestUser.SPACE_ADMIN, [
       NotificationEvent.SpaceAdminCommunityNewMember,
     ]);
@@ -540,7 +546,7 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
         n.payload?.actor?.id === baseScenario.organization.id &&
         n.payload?.space?.id === baseScenario.space.id
     );
-    expect(joinedRow).toBeDefined();
+    expect(joinedRow).toBeUndefined();
   });
 
   test('declining notifies the inviter with "declined your invitation"', async () => {
@@ -569,9 +575,11 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
     expect(mail?.subject).toEqual(declinedSubject);
   });
 
-  test('an inviter who switched off "new member in my Space" receives no outcome email on accept', async () => {
+  test('an inviter who switched off "someone responded to my invitation" receives no outcome email on accept', async () => {
     await updateUserSettings(TestUserManager.users.spaceAdmin.id, {
-      notification: { space: { admin: { communityNewMember: notif(false) } } },
+      notification: {
+        space: { admin: { communityInvitationResponse: notif(false) } },
+      },
     });
 
     // spaceAdmin is a shared fixed persona: restore its setting even if an
@@ -606,7 +614,9 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
       ).toHaveLength(0);
     } finally {
       await updateUserSettings(TestUserManager.users.spaceAdmin.id, {
-        notification: { space: { admin: { communityNewMember: notif(true) } } },
+        notification: {
+          space: { admin: { communityInvitationResponse: notif(true) } },
+        },
       });
     }
   });

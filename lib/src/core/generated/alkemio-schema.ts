@@ -6474,6 +6474,7 @@ export enum NotificationEvent {
   OrganizationAdminMentioned = "ORGANIZATION_ADMIN_MENTIONED",
   OrganizationAdminMessage = "ORGANIZATION_ADMIN_MESSAGE",
   OrganizationAdminSpaceCommunityInvitation = "ORGANIZATION_ADMIN_SPACE_COMMUNITY_INVITATION",
+  OrganizationAdminSpaceCommunityJoined = "ORGANIZATION_ADMIN_SPACE_COMMUNITY_JOINED",
   OrganizationMessageSender = "ORGANIZATION_MESSAGE_SENDER",
   PlatformAdminGlobalRoleChanged = "PLATFORM_ADMIN_GLOBAL_ROLE_CHANGED",
   PlatformAdminSpaceCreated = "PLATFORM_ADMIN_SPACE_CREATED",
@@ -6486,6 +6487,8 @@ export enum NotificationEvent {
   SpaceAdminCommunityNewMember = "SPACE_ADMIN_COMMUNITY_NEW_MEMBER",
   SpaceAdminOrganizationCommunityInvitationAccepted = "SPACE_ADMIN_ORGANIZATION_COMMUNITY_INVITATION_ACCEPTED",
   SpaceAdminOrganizationCommunityInvitationDeclined = "SPACE_ADMIN_ORGANIZATION_COMMUNITY_INVITATION_DECLINED",
+  SpaceAdminUserCommunityInvitationAccepted = "SPACE_ADMIN_USER_COMMUNITY_INVITATION_ACCEPTED",
+  SpaceAdminUserCommunityInvitationDeclined = "SPACE_ADMIN_USER_COMMUNITY_INVITATION_DECLINED",
   SpaceAdminVirtualCommunityInvitationDeclined = "SPACE_ADMIN_VIRTUAL_COMMUNITY_INVITATION_DECLINED",
   SpaceCollaborationCalloutComment = "SPACE_COLLABORATION_CALLOUT_COMMENT",
   SpaceCollaborationCalloutContribution = "SPACE_COLLABORATION_CALLOUT_CONTRIBUTION",
@@ -10066,6 +10069,8 @@ export type UpdateUserSettingsNotificationSpaceAdminInput = {
   communicationMessageReceived?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification when an application is received */
   communityApplicationReceived?: InputMaybe<NotificationSettingInput>;
+  /** Receive a notification when someone responds to an invitation you sent (admin) */
+  communityInvitationResponse?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification when a new member joins the community (admin) */
   communityNewMember?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification when the login email of an admin or lead of a Space I administer is changed (admin) */
@@ -10637,6 +10642,8 @@ export type UserSettingsNotificationSpaceAdmin = {
   communicationMessageReceived: UserSettingsNotificationChannels;
   /** Receive a notification when an application is received */
   communityApplicationReceived: UserSettingsNotificationChannels;
+  /** Receive a notification when someone responds to an invitation you sent (admin) */
+  communityInvitationResponse: UserSettingsNotificationChannels;
   /** Receive a notification when a new member joins the community (admin) */
   communityNewMember: UserSettingsNotificationChannels;
   /** Receive a notification when the login email of an admin or lead of a Space I administer is changed (admin) */
