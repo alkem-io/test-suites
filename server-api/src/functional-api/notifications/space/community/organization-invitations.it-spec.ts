@@ -498,6 +498,10 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
     expect(invitationId.length).toEqual(36);
 
     await deleteMailSlurperMails();
+    // 4 mails: one "accepted" outcome to the Space admin, and one "has joined"
+    // welcome to EACH of the organization's three managers (admin A, admin B and
+    // the owner — the same set the invitation itself reached). Waiting for fewer
+    // settles before the rest arrive and makes the filters below race.
     const [mailItems] = await expectExactMailsAfter(
       () =>
         eventOnRoleSetInvitation(
@@ -505,28 +509,34 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
           'ACCEPT',
           TestUser.ORGANIZATION_ADMIN
         ),
-      2
+      4
     );
 
     const orgName = baseScenario.organization.profile.displayName;
-    const acceptedSubject = `${orgName} accepted your invitation`;
+    const acceptedSubject = `${orgName} accepted the invitation to ${baseScenario.space.about.profile.displayName}`;
 
-    // The inviter is told exactly once: the outcome notification. The generic
+    // The Space admin is told exactly once: the outcome notification. The generic
     // "a new member joined" notification is suppressed for a membership that
-    // came from an invitation, so the inviter is not notified twice.
+    // came from an invitation, so they are not notified twice.
     const inviterMails = mailItems.filter((m: any) =>
       m.toAddresses?.includes(TestUserManager.users.spaceAdmin.email)
     );
     expect(inviterMails).toHaveLength(1);
     expect(inviterMails[0].subject).toEqual(acceptedSubject);
 
-    // The organization's admins get the "has joined" welcome so the ones who
-    // did not accept know no action is needed.
-    const orgAdminMails = mailItems.filter((m: any) =>
-      m.toAddresses?.includes(TestUserManager.users.organizationAdmin.email)
-    );
-    expect(orgAdminMails).toHaveLength(1);
-    expect(orgAdminMails[0].subject).toContain('has joined');
+    // EVERY manager of the organization gets the "has joined" welcome — the
+    // point of R29 is that the ones who did not accept know no action is needed.
+    for (const managerEmail of [
+      TestUserManager.users.organizationAdmin.email,
+      TestUserManager.users.subspaceAdmin.email,
+      TestUserManager.users.qaUser.email,
+    ]) {
+      const managerMails = mailItems.filter((m: any) =>
+        m.toAddresses?.includes(managerEmail)
+      );
+      expect(managerMails).toHaveLength(1);
+      expect(managerMails[0].subject).toContain('has joined');
+    }
 
     const acceptedRows = await inAppNotificationsFor(TestUser.SPACE_ADMIN, [
       NotificationEvent.SpaceAdminOrganizationCommunityInvitationAccepted,
@@ -568,7 +578,7 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
         ),
       1
     );
-    const declinedSubject = `${baseScenario.organization.profile.displayName} declined your invitation`;
+    const declinedSubject = `${baseScenario.organization.profile.displayName} declined the invitation to ${baseScenario.space.about.profile.displayName}`;
     const mail = mailItems.find((m: any) =>
       m.toAddresses?.includes(TestUserManager.users.spaceAdmin.email)
     );
@@ -679,7 +689,7 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
     }
   });
 
-  test('an inviter whose account no longer exists at decline time: mutation succeeds, no outcome email', async () => {
+  test('an inviter whose account no longer exists at decline time: mutation succeeds and the remaining Space admins are still told', async () => {
     await assignRoleToUser(
       TestUserManager.users.betaTester.id,
       baseScenario.space.community.roleSetId,
@@ -714,15 +724,19 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
       );
       expect(decline?.error).toBeUndefined();
 
-      // Use the full positive delivery bound as the negative grace so "no email"
-      // means "none will ever arrive" rather than "none has arrived yet".
+      // The outcome notification is addressed to every Space admin, not to
+      // invitation.createdBy alone, so a deleted inviter does not silence it —
+      // which matters because the generic "a new member joined" notification is
+      // suppressed for invitation-sourced memberships.
       const [mailItems] = await waitForMailsCountAtLeast(1, {
         timeout: 18_000,
       });
-      const declinedMail = mailItems.find((m: any) =>
-        m.subject?.includes('declined your invitation')
+      const declinedMail = mailItems.find(
+        (m: any) =>
+          m.subject?.includes('declined the invitation') &&
+          m.toAddresses?.includes(TestUserManager.users.spaceAdmin.email)
       );
-      expect(declinedMail).toBeUndefined();
+      expect(declinedMail).toBeDefined();
 
       invitationId = '';
     } finally {

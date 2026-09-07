@@ -3919,8 +3919,8 @@ export type Invitation = {
   lifecycle: Lifecycle;
   /** The next events of this Lifecycle. */
   nextEvents: Array<Scalars["String"]["output"]>;
-  /** The Spaces that will be joined if this invitation is accepted, root Space first. */
-  spacesToJoinOnAccept: Array<SpaceAbout>;
+  /** The Spaces that will be joined if this invitation is accepted, root Space first; null when the caller may not answer this invitation on the invited Actor's behalf. */
+  spacesToJoinOnAccept?: Maybe<Array<SpaceAbout>>;
   /** The current state of this Lifecycle. */
   state: Scalars["String"]["output"];
   /** Optional language the inviter expects the invitee to prefer; recorded per invitation. */
@@ -12343,7 +12343,9 @@ export type ResolversTypes = {
     > & {
       actor: ResolversTypes["Actor"];
       createdBy?: SchemaTypes.Maybe<ResolversTypes["User"]>;
-      spacesToJoinOnAccept: Array<ResolversTypes["SpaceAbout"]>;
+      spacesToJoinOnAccept?: SchemaTypes.Maybe<
+        Array<ResolversTypes["SpaceAbout"]>
+      >;
     }
   >;
   InvitationEventInput: SchemaTypes.InvitationEventInput;
@@ -13989,7 +13991,9 @@ export type ResolversParentTypes = {
   > & {
     actor: ResolversParentTypes["Actor"];
     createdBy?: SchemaTypes.Maybe<ResolversParentTypes["User"]>;
-    spacesToJoinOnAccept: Array<ResolversParentTypes["SpaceAbout"]>;
+    spacesToJoinOnAccept?: SchemaTypes.Maybe<
+      Array<ResolversParentTypes["SpaceAbout"]>
+    >;
   };
   InvitationEventInput: SchemaTypes.InvitationEventInput;
   InviteForEntryRoleOnRoleSetInput: SchemaTypes.InviteForEntryRoleOnRoleSetInput;
@@ -18626,7 +18630,7 @@ export type InvitationResolvers<
     ContextType
   >;
   spacesToJoinOnAccept?: Resolver<
-    Array<ResolversTypes["SpaceAbout"]>,
+    SchemaTypes.Maybe<Array<ResolversTypes["SpaceAbout"]>>,
     ParentType,
     ContextType
   >;
@@ -25640,6 +25644,11 @@ export type UserSettingsNotificationSpaceAdminResolvers<
     ContextType
   >;
   communityApplicationReceived?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  communityInvitationResponse?: Resolver<
     ResolversTypes["UserSettingsNotificationChannels"],
     ParentType,
     ContextType
@@ -48463,6 +48472,12 @@ export type UserDataFragment = {
             inApp: boolean;
             push: boolean;
           };
+          communityInvitationResponse: {
+            __typename: "UserSettingsNotificationChannels";
+            email: boolean;
+            inApp: boolean;
+            push: boolean;
+          };
           communityNewMember: {
             __typename: "UserSettingsNotificationChannels";
             email: boolean;
@@ -48703,6 +48718,12 @@ export type UserSettingsFragmentFragment = {
           push: boolean;
         };
         collaborationCalloutContributionCreated: {
+          __typename: "UserSettingsNotificationChannels";
+          email: boolean;
+          inApp: boolean;
+          push: boolean;
+        };
+        communityInvitationResponse: {
           __typename: "UserSettingsNotificationChannels";
           email: boolean;
           inApp: boolean;
@@ -49374,6 +49395,12 @@ export type AssignRoleToUserMutation = {
               inApp: boolean;
               push: boolean;
             };
+            communityInvitationResponse: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
             communityNewMember: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
@@ -49775,6 +49802,12 @@ export type AssignRoleToUserExtendedDataMutation = {
               push: boolean;
             };
             collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            communityInvitationResponse: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -50608,6 +50641,12 @@ export type RemoveRoleFromUserMutation = {
               inApp: boolean;
               push: boolean;
             };
+            communityInvitationResponse: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
             communityNewMember: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
@@ -51010,6 +51049,12 @@ export type RemoveRoleFromUserExtendedDataMutation = {
               push: boolean;
             };
             collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            communityInvitationResponse: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -90377,6 +90422,12 @@ export type CreateUserMutation = {
               inApp: boolean;
               push: boolean;
             };
+            communityInvitationResponse: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
             communityNewMember: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
@@ -90789,6 +90840,12 @@ export type UpdateUserMutation = {
               inApp: boolean;
               push: boolean;
             };
+            communityInvitationResponse: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
             communityNewMember: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
@@ -91026,6 +91083,12 @@ export type UpdateUserSettingsMutation = {
               push: boolean;
             };
             collaborationCalloutContributionCreated: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
+            communityInvitationResponse: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
               inApp: boolean;
@@ -99656,6 +99719,12 @@ export type UsersPaginatedQuery = {
                 push: boolean;
               };
               collaborationCalloutContributionCreated: {
+                __typename: "UserSettingsNotificationChannels";
+                email: boolean;
+                inApp: boolean;
+                push: boolean;
+              };
+              communityInvitationResponse: {
                 __typename: "UserSettingsNotificationChannels";
                 email: boolean;
                 inApp: boolean;
@@ -115147,6 +115216,12 @@ export type GetUserDataQuery = {
               inApp: boolean;
               push: boolean;
             };
+            communityInvitationResponse: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
             communityNewMember: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
@@ -115575,6 +115650,12 @@ export type GetUsersDataQuery = {
               inApp: boolean;
               push: boolean;
             };
+            communityInvitationResponse: {
+              __typename: "UserSettingsNotificationChannels";
+              email: boolean;
+              inApp: boolean;
+              push: boolean;
+            };
             communityNewMember: {
               __typename: "UserSettingsNotificationChannels";
               email: boolean;
@@ -115753,6 +115834,9 @@ export type MeQueryQuery = {
         extraRoles: Array<SchemaTypes.RoleName>;
         invitedToParent: boolean;
         welcomeMessage?: string | undefined;
+        spacesToJoinOnAccept?:
+          | Array<{ id: string; profile: { id: string; displayName: string } }>
+          | undefined;
         lifecycle: { id: string };
         createdBy?:
           | {
@@ -115776,10 +115860,6 @@ export type MeQueryQuery = {
           type: SchemaTypes.ActorType;
           profile?: { id: string; displayName: string } | undefined;
         };
-        spacesToJoinOnAccept: Array<{
-          id: string;
-          profile: { id: string; displayName: string };
-        }>;
         authorization?:
           | {
               myPrivileges?:
@@ -117703,6 +117783,12 @@ export const UserSettingsFragmentFragmentDoc = gql`
             __typename
           }
           collaborationCalloutContributionCreated {
+            email
+            inApp
+            push
+            __typename
+          }
+          communityInvitationResponse {
             email
             inApp
             push

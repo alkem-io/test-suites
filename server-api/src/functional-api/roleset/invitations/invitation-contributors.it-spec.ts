@@ -136,8 +136,15 @@ describe('Invitations', () => {
     }
     expect(invitationId.length).toEqual(36);
 
-    // Reject and Archive Space invitation
-    await eventOnRoleSetInvitation(invitationId, 'REJECT');
+    // Reject as the INVITEE: declining is the invited actor's own consent
+    // decision and requires the invite-accept privilege, which a global admin
+    // (this helper's default persona) does not hold on someone else's
+    // invitation — they can only revoke it. ARCHIVE stays on UPDATE.
+    await eventOnRoleSetInvitation(
+      invitationId,
+      'REJECT',
+      TestUser.NON_SPACE_MEMBER
+    );
     await eventOnRoleSetInvitation(invitationId, 'ARCHIVE');
 
     // Act

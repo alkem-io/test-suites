@@ -27,11 +27,17 @@ export type OrgFixture = {
   roleSetId: string;
 };
 
-const slugify = (name: string) =>
-  name
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, '')
-    .slice(0, 24);
+// The run suffix is what makes a nameID unique across runs, so it must SURVIVE
+// truncation: the label is trimmed to fit, then the suffix is appended. Slugifying
+// `label + suffix` and truncating the result instead cut the suffix off any label
+// at or over the limit — two runs then collided on the same nameID and the whole
+// file failed at fixture setup.
+const NAME_ID_MAX = 24;
+const slug = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, '');
+const slugifyWithSuffix = (label: string, runSuffix: string) => {
+  const suffix = slug(runSuffix);
+  return `${slug(label).slice(0, Math.max(0, NAME_ID_MAX - suffix.length))}${suffix}`;
+};
 
 /** Creates a fresh organization for this walk, returning its id/roleSetId. */
 export const createTestOrganization = async (
@@ -39,7 +45,7 @@ export const createTestOrganization = async (
   runSuffix: string
 ): Promise<OrgFixture> => {
   const displayName = `${label} ${runSuffix}`;
-  const nameID = slugify(`${label}${runSuffix}`);
+  const nameID = slugifyWithSuffix(label, runSuffix);
   const res = await createOrganization(displayName, nameID);
   if (!res.data?.createOrganization) {
     throw new Error(

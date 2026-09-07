@@ -344,6 +344,30 @@ describe('Organization Space invitations — GATE 0 core roleset flow', () => {
     const spaceRoles = await spaceRolesForOrg(baseScenario.organization.id);
     expect(spaceRoles).toBeUndefined();
   });
+
+  test('a global admin cannot REJECT on the organization behalf — only revoke (FR-010)', async () => {
+    const invitationData = await inviteOrg(baseScenario.organization.id);
+    const result = getSingleInvitationResult(invitationData);
+    invitationId = result?.invitation?.id ?? '';
+    expect(invitationId.length).toEqual(36);
+
+    // Declining is a consent decision, so it needs the same invite-accept
+    // privilege ACCEPT does — otherwise a third party could decline and the
+    // Space admins would be emailed that the organization declined, a decision
+    // the organization never made.
+    const reject = await eventOnRoleSetInvitation(
+      invitationId,
+      'REJECT',
+      TestUser.GLOBAL_ADMIN
+    );
+
+    expect(reject?.error).toBeDefined();
+    const state = await getSpaceInvitation(
+      baseScenario.space.id,
+      TestUser.GLOBAL_ADMIN
+    );
+    expect(JSON.stringify(state)).toContain('invited');
+  });
 });
 
 describe('Organization Space invitations — opt-out (allowSpaceInvitations)', () => {

@@ -254,12 +254,16 @@ async function eventOnInvitationRaw(
 ): Promise<{ state?: string; error?: string }> {
   const token = await getUserToken(actorEmail);
   const adminToken = await getUserToken(adminEmail);
-  const data = await rawGql<{ lookup: { roleSet: { invitations: Array<{ id: string; invitedActorID: string }> } } }>(
-    'query($id: UUID!) { lookup { roleSet(ID: $id) { invitations { id invitedActorID } } } }',
+  // `Invitation` exposes the invited actor as the `actor` relation, not a raw
+  // `invitedActorID` scalar — selecting the latter fails the whole query.
+  const data = await rawGql<{
+    lookup: { roleSet: { invitations: Array<{ id: string; actor: { id: string } }> } };
+  }>(
+    'query($id: UUID!) { lookup { roleSet(ID: $id) { invitations { id actor { id } } } } }',
     { id: roleSetID },
     adminToken
   );
-  const invitationID = data.lookup.roleSet.invitations.find(inv => inv.invitedActorID === orgID)?.id;
+  const invitationID = data.lookup.roleSet.invitations.find(inv => inv.actor.id === orgID)?.id;
   if (!invitationID) throw new Error(`No pending invitation for org ${orgID} on roleSet ${roleSetID}`);
   try {
     const result = await rawGql<{ eventOnInvitation: { id: string; state: string } }>(
@@ -308,9 +312,11 @@ orgAdminTest.describe('US3-AS2 — Gate 0: org admin views and accepts a Member 
       await expect(row).toBeVisible();
       await expect(row).toContainText('Member + Lead');
       await expect(row).toContainText(`US3-AS2 ${runSuffix}`);
+      // `profile.url` is absolute (endpoint cluster + '/' + nameID), so match the
+      // suffix rather than a root-relative path.
       await expect(row.getByRole('link', { name: spaceDisplayName })).toHaveAttribute(
         'href',
-        `/${baseScenario.space.nameId}`
+        new RegExp(`/${baseScenario.space.nameId}$`)
       );
 
       await acceptViaTab(page, spaceDisplayName);
@@ -352,7 +358,10 @@ orgAdminTest.describe('US3-AS4 — subspace invitation enumerates every Space th
       await openInvitationsTab(page, orgAS4);
       const row = page.locator('li').filter({ hasText: l2 });
       await expect(row).toBeVisible();
-      await expect(row).toContainText('Accepting also joins:');
+      // "Accepting joins", not "Accepting also joins": the list includes the
+      // invited Space itself, so "also" mislabelled the target as something
+      // additionally joined.
+      await expect(row).toContainText('Accepting joins:');
       await expect(row).toContainText(l0);
       await expect(row).toContainText(l1);
       await expect(row).toContainText(l2);

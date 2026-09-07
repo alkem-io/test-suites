@@ -203,17 +203,24 @@ async function inviteOrganizationViaDialog(
   await expect(resultRow).toBeVisible();
   const resultText = (await resultRow.textContent()) ?? '';
 
-  await page.getByRole('button', { name: 'Close' }).click();
+  // Exact match: the dialog's own dismiss control is labelled "Close invite
+  // dialog", which a substring match would also select, making this locator
+  // resolve to two elements and fail Playwright's strict mode.
+  await page.getByRole('button', { name: 'Close', exact: true }).click();
   return resultText;
 }
 
 spaceAdminTest.describe('US1-AS1 — permission gating (space admin half)', () => {
   spaceAdminTest(
-    'a Space admin who is not a platform admin sees Invite Organisation but not Add Organisation',
+    'a Space admin who is not a platform admin can Invite Organisation; Add Organisation is present but disabled',
     async ({ page }) => {
       await openMemberOrganizationsSection(page);
-      await expect(page.getByRole('button', { name: 'Invite Organisation' })).toBeVisible();
-      await expect(page.getByRole('button', { name: 'Add Organisation' })).toHaveCount(0);
+      await expect(page.getByRole('button', { name: 'Invite Organisation' })).toBeEnabled();
+      // Gated, not hidden: the platform-wide convention (workspace#085) renders
+      // an unavailable action disabled with a reason tooltip rather than
+      // concealing that it exists. `GatedAction` sets the native disabled
+      // attribute, so the control is genuinely inert.
+      await expect(page.getByRole('button', { name: 'Add Organisation' })).toBeDisabled();
     }
   );
 });
@@ -224,7 +231,7 @@ platformAdminTest.describe('US1-AS1 — permission gating (platform admin half)'
     async ({ page }) => {
       await openMemberOrganizationsSection(page);
       await expect(page.getByRole('button', { name: 'Invite Organisation' })).toBeVisible();
-      await expect(page.getByRole('button', { name: 'Add Organisation' })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Add Organisation' })).toBeEnabled();
     }
   );
 });
@@ -278,7 +285,8 @@ spaceAdminTest.describe('US1-AS2..AS9 — space admin invite walk', () => {
       await expect(page.getByText(/no matching/i)).toBeVisible();
       await expect(page.getByRole('button', { name: orgAS5Member.displayName })).toHaveCount(0);
 
-      await page.getByRole('button', { name: 'Close' }).click();
+      // Exact match — see inviteOrganizationViaDialog.
+      await page.getByRole('button', { name: 'Close', exact: true }).click();
     }
   );
 

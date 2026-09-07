@@ -342,7 +342,10 @@ async function inviteOrganizationViaDialog(page: Page, org: OrgFixture, message:
   await expect(resultRow).toBeVisible();
   const resultText = (await resultRow.textContent()) ?? '';
 
-  await page.getByRole('button', { name: 'Close' }).click();
+  // Exact match: the dialog's own dismiss control is labelled "Close invite
+  // dialog", which a substring match would also select, making this locator
+  // resolve to two elements and fail Playwright's strict mode.
+  await page.getByRole('button', { name: 'Close', exact: true }).click();
   return resultText;
 }
 
