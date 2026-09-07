@@ -30173,9 +30173,33 @@ export type CollaborationDataFragment = {
       | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
       | undefined;
     currentState?:
-      | { description?: any | undefined; displayName: string }
+      | {
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SchemaTypes.SidebarWidget>;
+            visible: boolean;
+          };
+        }
       | undefined;
-    states: Array<{ description?: any | undefined; displayName: string }>;
+    states: Array<{
+      id: string;
+      description?: any | undefined;
+      displayName: string;
+      sortOrder: number;
+      settings: {
+        allowNewCallouts: boolean;
+        descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+        showPublishDetails: boolean;
+        sidebar: Array<SchemaTypes.SidebarWidget>;
+        visible: boolean;
+      };
+    }>;
   };
 };
 
@@ -31766,8 +31790,17 @@ export type MemberDataFragment = {
 };
 
 export type InnovationFlowStateDataFragment = {
+  id: string;
   description?: any | undefined;
   displayName: string;
+  sortOrder: number;
+  settings: {
+    allowNewCallouts: boolean;
+    descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+    showPublishDetails: boolean;
+    sidebar: Array<SchemaTypes.SidebarWidget>;
+    visible: boolean;
+  };
 };
 
 export type InnovationFlowDataFragment = {
@@ -31840,9 +31873,33 @@ export type InnovationFlowDataFragment = {
     | { myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined }
     | undefined;
   currentState?:
-    | { description?: any | undefined; displayName: string }
+    | {
+        id: string;
+        description?: any | undefined;
+        displayName: string;
+        sortOrder: number;
+        settings: {
+          allowNewCallouts: boolean;
+          descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+          showPublishDetails: boolean;
+          sidebar: Array<SchemaTypes.SidebarWidget>;
+          visible: boolean;
+        };
+      }
     | undefined;
-  states: Array<{ description?: any | undefined; displayName: string }>;
+  states: Array<{
+    id: string;
+    description?: any | undefined;
+    displayName: string;
+    sortOrder: number;
+    settings: {
+      allowNewCallouts: boolean;
+      descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+      showPublishDetails: boolean;
+      sidebar: Array<SchemaTypes.SidebarWidget>;
+      visible: boolean;
+    };
+  }>;
 };
 
 export type AssignLicensePlanToAccountMutationVariables = SchemaTypes.Exact<{
@@ -33302,9 +33359,33 @@ export type SubspaceL1DataFragment = {
             }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SchemaTypes.SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SchemaTypes.SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     authorization?:
@@ -35182,9 +35263,33 @@ export type SubspaceL1DataFragment = {
           }
         | undefined;
       currentState?:
-        | { description?: any | undefined; displayName: string }
+        | {
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SchemaTypes.SidebarWidget>;
+              visible: boolean;
+            };
+          }
         | undefined;
-      states: Array<{ description?: any | undefined; displayName: string }>;
+      states: Array<{
+        id: string;
+        description?: any | undefined;
+        displayName: string;
+        sortOrder: number;
+        settings: {
+          allowNewCallouts: boolean;
+          descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+          showPublishDetails: boolean;
+          sidebar: Array<SchemaTypes.SidebarWidget>;
+          visible: boolean;
+        };
+      }>;
     };
   };
   authorization?:
@@ -37073,9 +37178,33 @@ export type SubspaceL2DataFragment = {
             }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SchemaTypes.SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SchemaTypes.SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     authorization?:
@@ -38953,9 +39082,33 @@ export type SubspaceL2DataFragment = {
           }
         | undefined;
       currentState?:
-        | { description?: any | undefined; displayName: string }
+        | {
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SchemaTypes.SidebarWidget>;
+              visible: boolean;
+            };
+          }
         | undefined;
-      states: Array<{ description?: any | undefined; displayName: string }>;
+      states: Array<{
+        id: string;
+        description?: any | undefined;
+        displayName: string;
+        sortOrder: number;
+        settings: {
+          allowNewCallouts: boolean;
+          descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+          showPublishDetails: boolean;
+          sidebar: Array<SchemaTypes.SidebarWidget>;
+          visible: boolean;
+        };
+      }>;
     };
   };
   authorization?:
@@ -42220,9 +42373,33 @@ export type SpaceDataFragment = {
           }
         | undefined;
       currentState?:
-        | { description?: any | undefined; displayName: string }
+        | {
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SchemaTypes.SidebarWidget>;
+              visible: boolean;
+            };
+          }
         | undefined;
-      states: Array<{ description?: any | undefined; displayName: string }>;
+      states: Array<{
+        id: string;
+        description?: any | undefined;
+        displayName: string;
+        sortOrder: number;
+        settings: {
+          allowNewCallouts: boolean;
+          descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+          showPublishDetails: boolean;
+          sidebar: Array<SchemaTypes.SidebarWidget>;
+          visible: boolean;
+        };
+      }>;
     };
   };
   subspaces: Array<{
@@ -42879,9 +43056,33 @@ export type SpaceDataFragment = {
             }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SchemaTypes.SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SchemaTypes.SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     authorization?:
@@ -45381,9 +45582,33 @@ export type SubspaceDataFragment = {
           }
         | undefined;
       currentState?:
-        | { description?: any | undefined; displayName: string }
+        | {
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SchemaTypes.SidebarWidget>;
+              visible: boolean;
+            };
+          }
         | undefined;
-      states: Array<{ description?: any | undefined; displayName: string }>;
+      states: Array<{
+        id: string;
+        description?: any | undefined;
+        displayName: string;
+        sortOrder: number;
+        settings: {
+          allowNewCallouts: boolean;
+          descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+          showPublishDetails: boolean;
+          sidebar: Array<SchemaTypes.SidebarWidget>;
+          visible: boolean;
+        };
+      }>;
     };
   };
   authorization?:
@@ -55329,9 +55554,33 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
             }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SchemaTypes.SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SchemaTypes.SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     subspaces: Array<{
@@ -56002,9 +56251,33 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
               }
             | undefined;
           currentState?:
-            | { description?: any | undefined; displayName: string }
+            | {
+                id: string;
+                description?: any | undefined;
+                displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SchemaTypes.SidebarWidget>;
+                  visible: boolean;
+                };
+              }
             | undefined;
-          states: Array<{ description?: any | undefined; displayName: string }>;
+          states: Array<{
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SchemaTypes.SidebarWidget>;
+              visible: boolean;
+            };
+          }>;
         };
       };
       authorization?:
@@ -59869,9 +60142,33 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
             }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SchemaTypes.SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SchemaTypes.SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     subspaces: Array<{
@@ -60542,9 +60839,33 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
               }
             | undefined;
           currentState?:
-            | { description?: any | undefined; displayName: string }
+            | {
+                id: string;
+                description?: any | undefined;
+                displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SchemaTypes.SidebarWidget>;
+                  visible: boolean;
+                };
+              }
             | undefined;
-          states: Array<{ description?: any | undefined; displayName: string }>;
+          states: Array<{
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SchemaTypes.SidebarWidget>;
+              visible: boolean;
+            };
+          }>;
         };
       };
       authorization?:
@@ -64409,9 +64730,33 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
             }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SchemaTypes.SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SchemaTypes.SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     subspaces: Array<{
@@ -65082,9 +65427,33 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
               }
             | undefined;
           currentState?:
-            | { description?: any | undefined; displayName: string }
+            | {
+                id: string;
+                description?: any | undefined;
+                displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SchemaTypes.SidebarWidget>;
+                  visible: boolean;
+                };
+              }
             | undefined;
-          states: Array<{ description?: any | undefined; displayName: string }>;
+          states: Array<{
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SchemaTypes.SidebarWidget>;
+              visible: boolean;
+            };
+          }>;
         };
       };
       authorization?:
@@ -68949,9 +69318,33 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
             }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SchemaTypes.SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SchemaTypes.SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     subspaces: Array<{
@@ -69622,9 +70015,33 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
               }
             | undefined;
           currentState?:
-            | { description?: any | undefined; displayName: string }
+            | {
+                id: string;
+                description?: any | undefined;
+                displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SchemaTypes.SidebarWidget>;
+                  visible: boolean;
+                };
+              }
             | undefined;
-          states: Array<{ description?: any | undefined; displayName: string }>;
+          states: Array<{
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SchemaTypes.SidebarWidget>;
+              visible: boolean;
+            };
+          }>;
         };
       };
       authorization?:
@@ -73489,9 +73906,33 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
             }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SchemaTypes.SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SchemaTypes.SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     subspaces: Array<{
@@ -74162,9 +74603,33 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
               }
             | undefined;
           currentState?:
-            | { description?: any | undefined; displayName: string }
+            | {
+                id: string;
+                description?: any | undefined;
+                displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SchemaTypes.SidebarWidget>;
+                  visible: boolean;
+                };
+              }
             | undefined;
-          states: Array<{ description?: any | undefined; displayName: string }>;
+          states: Array<{
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SchemaTypes.SidebarWidget>;
+              visible: boolean;
+            };
+          }>;
         };
       };
       authorization?:
@@ -78047,9 +78512,33 @@ export type UpdateSpaceMutation = {
             }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SchemaTypes.SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SchemaTypes.SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     subspaces: Array<{
@@ -78720,9 +79209,33 @@ export type UpdateSpaceMutation = {
               }
             | undefined;
           currentState?:
-            | { description?: any | undefined; displayName: string }
+            | {
+                id: string;
+                description?: any | undefined;
+                displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SchemaTypes.SidebarWidget>;
+                  visible: boolean;
+                };
+              }
             | undefined;
-          states: Array<{ description?: any | undefined; displayName: string }>;
+          states: Array<{
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SchemaTypes.SidebarWidget>;
+              visible: boolean;
+            };
+          }>;
         };
       };
       authorization?:
@@ -81277,9 +81790,33 @@ export type CreateSubspaceMutation = {
               }
             | undefined;
           currentState?:
-            | { description?: any | undefined; displayName: string }
+            | {
+                id: string;
+                description?: any | undefined;
+                displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SchemaTypes.SidebarWidget>;
+                  visible: boolean;
+                };
+              }
             | undefined;
-          states: Array<{ description?: any | undefined; displayName: string }>;
+          states: Array<{
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SchemaTypes.SidebarWidget>;
+              visible: boolean;
+            };
+          }>;
         };
       };
       authorization?:
@@ -83187,9 +83724,33 @@ export type CreateSubspaceMutation = {
             }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SchemaTypes.SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SchemaTypes.SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     authorization?:
@@ -85106,9 +85667,33 @@ export type UpdateSubspaceMutation = {
               }
             | undefined;
           currentState?:
-            | { description?: any | undefined; displayName: string }
+            | {
+                id: string;
+                description?: any | undefined;
+                displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SchemaTypes.SidebarWidget>;
+                  visible: boolean;
+                };
+              }
             | undefined;
-          states: Array<{ description?: any | undefined; displayName: string }>;
+          states: Array<{
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SchemaTypes.SidebarWidget>;
+              visible: boolean;
+            };
+          }>;
         };
       };
       authorization?:
@@ -87016,9 +87601,33 @@ export type UpdateSubspaceMutation = {
             }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SchemaTypes.SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SchemaTypes.SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     authorization?:
@@ -97823,7 +98432,12 @@ export type GetInnovationFlowStatesWithIdsQuery = {
           collaboration: {
             innovationFlow: {
               id: string;
-              states: Array<{ id: string; displayName: string }>;
+              states: Array<{
+                id: string;
+                displayName: string;
+                sortOrder: number;
+                settings: { sidebar: Array<SchemaTypes.SidebarWidget> };
+              }>;
             };
           };
         }
@@ -101558,11 +102172,32 @@ export type GetSpaceDataQuery = {
                   }
                 | undefined;
               currentState?:
-                | { description?: any | undefined; displayName: string }
+                | {
+                    id: string;
+                    description?: any | undefined;
+                    displayName: string;
+                    sortOrder: number;
+                    settings: {
+                      allowNewCallouts: boolean;
+                      descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                      showPublishDetails: boolean;
+                      sidebar: Array<SchemaTypes.SidebarWidget>;
+                      visible: boolean;
+                    };
+                  }
                 | undefined;
               states: Array<{
+                id: string;
                 description?: any | undefined;
                 displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SchemaTypes.SidebarWidget>;
+                  visible: boolean;
+                };
               }>;
             };
           };
@@ -102243,11 +102878,32 @@ export type GetSpaceDataQuery = {
                     }
                   | undefined;
                 currentState?:
-                  | { description?: any | undefined; displayName: string }
+                  | {
+                      id: string;
+                      description?: any | undefined;
+                      displayName: string;
+                      sortOrder: number;
+                      settings: {
+                        allowNewCallouts: boolean;
+                        descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                        showPublishDetails: boolean;
+                        sidebar: Array<SchemaTypes.SidebarWidget>;
+                        visible: boolean;
+                      };
+                    }
                   | undefined;
                 states: Array<{
+                  id: string;
                   description?: any | undefined;
                   displayName: string;
+                  sortOrder: number;
+                  settings: {
+                    allowNewCallouts: boolean;
+                    descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                    showPublishDetails: boolean;
+                    sidebar: Array<SchemaTypes.SidebarWidget>;
+                    visible: boolean;
+                  };
                 }>;
               };
             };
@@ -104863,11 +105519,32 @@ export type GetSubspacePageQuery = {
                     }
                   | undefined;
                 currentState?:
-                  | { description?: any | undefined; displayName: string }
+                  | {
+                      id: string;
+                      description?: any | undefined;
+                      displayName: string;
+                      sortOrder: number;
+                      settings: {
+                        allowNewCallouts: boolean;
+                        descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                        showPublishDetails: boolean;
+                        sidebar: Array<SchemaTypes.SidebarWidget>;
+                        visible: boolean;
+                      };
+                    }
                   | undefined;
                 states: Array<{
+                  id: string;
                   description?: any | undefined;
                   displayName: string;
+                  sortOrder: number;
+                  settings: {
+                    allowNewCallouts: boolean;
+                    descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                    showPublishDetails: boolean;
+                    sidebar: Array<SchemaTypes.SidebarWidget>;
+                    visible: boolean;
+                  };
                 }>;
               };
             };
@@ -106799,11 +107476,32 @@ export type GetSubspacePageQuery = {
                   }
                 | undefined;
               currentState?:
-                | { description?: any | undefined; displayName: string }
+                | {
+                    id: string;
+                    description?: any | undefined;
+                    displayName: string;
+                    sortOrder: number;
+                    settings: {
+                      allowNewCallouts: boolean;
+                      descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                      showPublishDetails: boolean;
+                      sidebar: Array<SchemaTypes.SidebarWidget>;
+                      visible: boolean;
+                    };
+                  }
                 | undefined;
               states: Array<{
+                id: string;
                 description?: any | undefined;
                 displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SchemaTypes.SidebarWidget>;
+                  visible: boolean;
+                };
               }>;
             };
           };
@@ -108748,11 +109446,32 @@ export type GetSpaceAboutDetailsQuery = {
                   }
                 | undefined;
               currentState?:
-                | { description?: any | undefined; displayName: string }
+                | {
+                    id: string;
+                    description?: any | undefined;
+                    displayName: string;
+                    sortOrder: number;
+                    settings: {
+                      allowNewCallouts: boolean;
+                      descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                      showPublishDetails: boolean;
+                      sidebar: Array<SchemaTypes.SidebarWidget>;
+                      visible: boolean;
+                    };
+                  }
                 | undefined;
               states: Array<{
+                id: string;
                 description?: any | undefined;
                 displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SchemaTypes.SidebarWidget>;
+                  visible: boolean;
+                };
               }>;
             };
           };
@@ -110713,11 +111432,32 @@ export type GetSubspacesDataQuery = {
                       }
                     | undefined;
                   currentState?:
-                    | { description?: any | undefined; displayName: string }
+                    | {
+                        id: string;
+                        description?: any | undefined;
+                        displayName: string;
+                        sortOrder: number;
+                        settings: {
+                          allowNewCallouts: boolean;
+                          descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                          showPublishDetails: boolean;
+                          sidebar: Array<SchemaTypes.SidebarWidget>;
+                          visible: boolean;
+                        };
+                      }
                     | undefined;
                   states: Array<{
+                    id: string;
                     description?: any | undefined;
                     displayName: string;
+                    sortOrder: number;
+                    settings: {
+                      allowNewCallouts: boolean;
+                      descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                      showPublishDetails: boolean;
+                      sidebar: Array<SchemaTypes.SidebarWidget>;
+                      visible: boolean;
+                    };
                   }>;
                 };
               };
@@ -112655,11 +113395,32 @@ export type GetSubspacesDataQuery = {
                     }
                   | undefined;
                 currentState?:
-                  | { description?: any | undefined; displayName: string }
+                  | {
+                      id: string;
+                      description?: any | undefined;
+                      displayName: string;
+                      sortOrder: number;
+                      settings: {
+                        allowNewCallouts: boolean;
+                        descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                        showPublishDetails: boolean;
+                        sidebar: Array<SchemaTypes.SidebarWidget>;
+                        visible: boolean;
+                      };
+                    }
                   | undefined;
                 states: Array<{
+                  id: string;
                   description?: any | undefined;
                   displayName: string;
+                  sortOrder: number;
+                  settings: {
+                    allowNewCallouts: boolean;
+                    descriptionDisplayMode: SchemaTypes.CalloutDescriptionDisplayMode;
+                    showPublishDetails: boolean;
+                    sidebar: Array<SchemaTypes.SidebarWidget>;
+                    visible: boolean;
+                  };
                 }>;
               };
             };
@@ -116350,8 +117111,17 @@ export const CalloutDataFragmentDoc = gql`
 `;
 export const InnovationFlowStateDataFragmentDoc = gql`
   fragment InnovationFlowStateData on InnovationFlowState {
+    id
     description
     displayName
+    sortOrder
+    settings {
+      allowNewCallouts
+      descriptionDisplayMode
+      showPublishDetails
+      sidebar
+      visible
+    }
   }
 `;
 export const InnovationFlowDataFragmentDoc = gql`
@@ -119777,6 +120547,10 @@ export const GetInnovationFlowStatesWithIdsDocument = gql`
             states {
               id
               displayName
+              sortOrder
+              settings {
+                sidebar
+              }
             }
           }
         }

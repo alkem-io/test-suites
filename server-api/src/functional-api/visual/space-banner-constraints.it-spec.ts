@@ -50,12 +50,13 @@ describe('Space BANNER visual constraints (10178)', () => {
     // not overreach the max bounds.
     expect(banner?.maxWidth).toBe(3840);
     expect(banner?.maxHeight).toBe(640);
-    // Deliberate: the server's row-creation default is still 6 and the
-    // migration never writes this column — the 10:1 default is a
-    // client-side render rule (`resolveBannerAspectRatio`), not a stored
-    // value. Asserted here so a future server-side change to the stored
-    // default is caught rather than silently changing every bannerless page.
-    expect(banner?.aspectRatio).toBe(6);
+    // server#6452 (Release 74) moved the server's row-creation default for a
+    // banner to 10 and re-synced image-less banner rows, so client and server
+    // now agree on 10:1 (release risk R-24 closed). Pinned so any further
+    // change to the stored default is caught rather than silently changing
+    // every bannerless page — this assertion caught the 6 → 10 move on the
+    // 2026-09-03 nightly, as intended.
+    expect(banner?.aspectRatio).toBe(10);
   });
 
   // TC-02 — the 1200px boundary is enforced, not just published (BVA)

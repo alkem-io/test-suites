@@ -18,7 +18,7 @@ import {
   TestUserManager,
 } from '@alkemio/tests-lib';
 import {
-  createUser,
+  createUserDataOrFail,
   deleteUser,
   getUserData,
   getUsersData,
@@ -53,15 +53,15 @@ describe('Update user', () => {
     userEmail = `${userName}@test.com`;
     phoneAfterUpdate = `updatePhone${uniqueId}`;
 
-    const responseCreateUser = await createUser({
+    // Resilient to the harness retry-after-commit race (test-suites#563).
+    userDataCreate = await createUserDataOrFail({
       firstName: userFirstName,
       lastName: userLastName,
       nameID: userName,
       email: userEmail,
       phone: userPhone,
     });
-    userDataCreate = responseCreateUser?.data?.createUser;
-    userId = userDataCreate?.id ?? '';
+    userId = userDataCreate.id;
   });
 
   afterEach(async () => {

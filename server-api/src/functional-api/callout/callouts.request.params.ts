@@ -101,6 +101,13 @@ export const createCalloutOnCalloutsSet = async (
         tagline?: string;
       };
     };
+
+    classification?: {
+      tagsets: {
+        name: TagsetReservedName;
+        tags?: string[];
+      }[];
+    };
   },
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {

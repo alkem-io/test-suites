@@ -28515,9 +28515,33 @@ export type CollaborationDataFragment = {
       | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
       | undefined;
     currentState?:
-      | { description?: any | undefined; displayName: string }
+      | {
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SidebarWidget>;
+            visible: boolean;
+          };
+        }
       | undefined;
-    states: Array<{ description?: any | undefined; displayName: string }>;
+    states: Array<{
+      id: string;
+      description?: any | undefined;
+      displayName: string;
+      sortOrder: number;
+      settings: {
+        allowNewCallouts: boolean;
+        descriptionDisplayMode: CalloutDescriptionDisplayMode;
+        showPublishDetails: boolean;
+        sidebar: Array<SidebarWidget>;
+        visible: boolean;
+      };
+    }>;
   };
 };
 
@@ -29855,8 +29879,17 @@ export type MemberDataFragment = {
 };
 
 export type InnovationFlowStateDataFragment = {
+  id: string;
   description?: any | undefined;
   displayName: string;
+  sortOrder: number;
+  settings: {
+    allowNewCallouts: boolean;
+    descriptionDisplayMode: CalloutDescriptionDisplayMode;
+    showPublishDetails: boolean;
+    sidebar: Array<SidebarWidget>;
+    visible: boolean;
+  };
 };
 
 export type InnovationFlowDataFragment = {
@@ -29911,9 +29944,33 @@ export type InnovationFlowDataFragment = {
     | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
     | undefined;
   currentState?:
-    | { description?: any | undefined; displayName: string }
+    | {
+        id: string;
+        description?: any | undefined;
+        displayName: string;
+        sortOrder: number;
+        settings: {
+          allowNewCallouts: boolean;
+          descriptionDisplayMode: CalloutDescriptionDisplayMode;
+          showPublishDetails: boolean;
+          sidebar: Array<SidebarWidget>;
+          visible: boolean;
+        };
+      }
     | undefined;
-  states: Array<{ description?: any | undefined; displayName: string }>;
+  states: Array<{
+    id: string;
+    description?: any | undefined;
+    displayName: string;
+    sortOrder: number;
+    settings: {
+      allowNewCallouts: boolean;
+      descriptionDisplayMode: CalloutDescriptionDisplayMode;
+      showPublishDetails: boolean;
+      sidebar: Array<SidebarWidget>;
+      visible: boolean;
+    };
+  }>;
 };
 
 export type AssignLicensePlanToAccountMutationVariables = Exact<{
@@ -31200,9 +31257,33 @@ export type SubspaceL1DataFragment = {
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     authorization?:
@@ -32855,9 +32936,33 @@ export type SubspaceL1DataFragment = {
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
       currentState?:
-        | { description?: any | undefined; displayName: string }
+        | {
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SidebarWidget>;
+              visible: boolean;
+            };
+          }
         | undefined;
-      states: Array<{ description?: any | undefined; displayName: string }>;
+      states: Array<{
+        id: string;
+        description?: any | undefined;
+        displayName: string;
+        sortOrder: number;
+        settings: {
+          allowNewCallouts: boolean;
+          descriptionDisplayMode: CalloutDescriptionDisplayMode;
+          showPublishDetails: boolean;
+          sidebar: Array<SidebarWidget>;
+          visible: boolean;
+        };
+      }>;
     };
   };
   authorization?:
@@ -34515,9 +34620,33 @@ export type SubspaceL2DataFragment = {
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     authorization?:
@@ -36170,9 +36299,33 @@ export type SubspaceL2DataFragment = {
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
       currentState?:
-        | { description?: any | undefined; displayName: string }
+        | {
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SidebarWidget>;
+              visible: boolean;
+            };
+          }
         | undefined;
-      states: Array<{ description?: any | undefined; displayName: string }>;
+      states: Array<{
+        id: string;
+        description?: any | undefined;
+        displayName: string;
+        sortOrder: number;
+        settings: {
+          allowNewCallouts: boolean;
+          descriptionDisplayMode: CalloutDescriptionDisplayMode;
+          showPublishDetails: boolean;
+          sidebar: Array<SidebarWidget>;
+          visible: boolean;
+        };
+      }>;
     };
   };
   authorization?:
@@ -39009,9 +39162,33 @@ export type SpaceDataFragment = {
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
       currentState?:
-        | { description?: any | undefined; displayName: string }
+        | {
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SidebarWidget>;
+              visible: boolean;
+            };
+          }
         | undefined;
-      states: Array<{ description?: any | undefined; displayName: string }>;
+      states: Array<{
+        id: string;
+        description?: any | undefined;
+        displayName: string;
+        sortOrder: number;
+        settings: {
+          allowNewCallouts: boolean;
+          descriptionDisplayMode: CalloutDescriptionDisplayMode;
+          showPublishDetails: boolean;
+          sidebar: Array<SidebarWidget>;
+          visible: boolean;
+        };
+      }>;
     };
   };
   subspaces: Array<{
@@ -39598,9 +39775,33 @@ export type SpaceDataFragment = {
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     authorization?:
@@ -41838,9 +42039,33 @@ export type SubspaceDataFragment = {
         | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
         | undefined;
       currentState?:
-        | { description?: any | undefined; displayName: string }
+        | {
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SidebarWidget>;
+              visible: boolean;
+            };
+          }
         | undefined;
-      states: Array<{ description?: any | undefined; displayName: string }>;
+      states: Array<{
+        id: string;
+        description?: any | undefined;
+        displayName: string;
+        sortOrder: number;
+        settings: {
+          allowNewCallouts: boolean;
+          descriptionDisplayMode: CalloutDescriptionDisplayMode;
+          showPublishDetails: boolean;
+          sidebar: Array<SidebarWidget>;
+          visible: boolean;
+        };
+      }>;
     };
   };
   authorization?:
@@ -50653,9 +50878,33 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     subspaces: Array<{
@@ -51258,9 +51507,33 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
           currentState?:
-            | { description?: any | undefined; displayName: string }
+            | {
+                id: string;
+                description?: any | undefined;
+                displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SidebarWidget>;
+                  visible: boolean;
+                };
+              }
             | undefined;
-          states: Array<{ description?: any | undefined; displayName: string }>;
+          states: Array<{
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SidebarWidget>;
+              visible: boolean;
+            };
+          }>;
         };
       };
       authorization?:
@@ -54776,9 +55049,33 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     subspaces: Array<{
@@ -55381,9 +55678,33 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
           currentState?:
-            | { description?: any | undefined; displayName: string }
+            | {
+                id: string;
+                description?: any | undefined;
+                displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SidebarWidget>;
+                  visible: boolean;
+                };
+              }
             | undefined;
-          states: Array<{ description?: any | undefined; displayName: string }>;
+          states: Array<{
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SidebarWidget>;
+              visible: boolean;
+            };
+          }>;
         };
       };
       authorization?:
@@ -58899,9 +59220,33 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     subspaces: Array<{
@@ -59504,9 +59849,33 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
           currentState?:
-            | { description?: any | undefined; displayName: string }
+            | {
+                id: string;
+                description?: any | undefined;
+                displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SidebarWidget>;
+                  visible: boolean;
+                };
+              }
             | undefined;
-          states: Array<{ description?: any | undefined; displayName: string }>;
+          states: Array<{
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SidebarWidget>;
+              visible: boolean;
+            };
+          }>;
         };
       };
       authorization?:
@@ -63022,9 +63391,33 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     subspaces: Array<{
@@ -63627,9 +64020,33 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
           currentState?:
-            | { description?: any | undefined; displayName: string }
+            | {
+                id: string;
+                description?: any | undefined;
+                displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SidebarWidget>;
+                  visible: boolean;
+                };
+              }
             | undefined;
-          states: Array<{ description?: any | undefined; displayName: string }>;
+          states: Array<{
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SidebarWidget>;
+              visible: boolean;
+            };
+          }>;
         };
       };
       authorization?:
@@ -67145,9 +67562,33 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     subspaces: Array<{
@@ -67750,9 +68191,33 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
           currentState?:
-            | { description?: any | undefined; displayName: string }
+            | {
+                id: string;
+                description?: any | undefined;
+                displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SidebarWidget>;
+                  visible: boolean;
+                };
+              }
             | undefined;
-          states: Array<{ description?: any | undefined; displayName: string }>;
+          states: Array<{
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SidebarWidget>;
+              visible: boolean;
+            };
+          }>;
         };
       };
       authorization?:
@@ -71286,9 +71751,33 @@ export type UpdateSpaceMutation = {
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     subspaces: Array<{
@@ -71891,9 +72380,33 @@ export type UpdateSpaceMutation = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
           currentState?:
-            | { description?: any | undefined; displayName: string }
+            | {
+                id: string;
+                description?: any | undefined;
+                displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SidebarWidget>;
+                  visible: boolean;
+                };
+              }
             | undefined;
-          states: Array<{ description?: any | undefined; displayName: string }>;
+          states: Array<{
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SidebarWidget>;
+              visible: boolean;
+            };
+          }>;
         };
       };
       authorization?:
@@ -74254,9 +74767,33 @@ export type CreateSubspaceMutation = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
           currentState?:
-            | { description?: any | undefined; displayName: string }
+            | {
+                id: string;
+                description?: any | undefined;
+                displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SidebarWidget>;
+                  visible: boolean;
+                };
+              }
             | undefined;
-          states: Array<{ description?: any | undefined; displayName: string }>;
+          states: Array<{
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SidebarWidget>;
+              visible: boolean;
+            };
+          }>;
         };
       };
       authorization?:
@@ -75985,9 +76522,33 @@ export type CreateSubspaceMutation = {
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     authorization?:
@@ -77691,9 +78252,33 @@ export type UpdateSubspaceMutation = {
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
           currentState?:
-            | { description?: any | undefined; displayName: string }
+            | {
+                id: string;
+                description?: any | undefined;
+                displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SidebarWidget>;
+                  visible: boolean;
+                };
+              }
             | undefined;
-          states: Array<{ description?: any | undefined; displayName: string }>;
+          states: Array<{
+            id: string;
+            description?: any | undefined;
+            displayName: string;
+            sortOrder: number;
+            settings: {
+              allowNewCallouts: boolean;
+              descriptionDisplayMode: CalloutDescriptionDisplayMode;
+              showPublishDetails: boolean;
+              sidebar: Array<SidebarWidget>;
+              visible: boolean;
+            };
+          }>;
         };
       };
       authorization?:
@@ -79422,9 +80007,33 @@ export type UpdateSubspaceMutation = {
           | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
           | undefined;
         currentState?:
-          | { description?: any | undefined; displayName: string }
+          | {
+              id: string;
+              description?: any | undefined;
+              displayName: string;
+              sortOrder: number;
+              settings: {
+                allowNewCallouts: boolean;
+                descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                showPublishDetails: boolean;
+                sidebar: Array<SidebarWidget>;
+                visible: boolean;
+              };
+            }
           | undefined;
-        states: Array<{ description?: any | undefined; displayName: string }>;
+        states: Array<{
+          id: string;
+          description?: any | undefined;
+          displayName: string;
+          sortOrder: number;
+          settings: {
+            allowNewCallouts: boolean;
+            descriptionDisplayMode: CalloutDescriptionDisplayMode;
+            showPublishDetails: boolean;
+            sidebar: Array<SidebarWidget>;
+            visible: boolean;
+          };
+        }>;
       };
     };
     authorization?:
@@ -89637,7 +90246,12 @@ export type GetInnovationFlowStatesWithIdsQuery = {
           collaboration: {
             innovationFlow: {
               id: string;
-              states: Array<{ id: string; displayName: string }>;
+              states: Array<{
+                id: string;
+                displayName: string;
+                sortOrder: number;
+                settings: { sidebar: Array<SidebarWidget> };
+              }>;
             };
           };
         }
@@ -93081,11 +93695,32 @@ export type GetSpaceDataQuery = {
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
               currentState?:
-                | { description?: any | undefined; displayName: string }
+                | {
+                    id: string;
+                    description?: any | undefined;
+                    displayName: string;
+                    sortOrder: number;
+                    settings: {
+                      allowNewCallouts: boolean;
+                      descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                      showPublishDetails: boolean;
+                      sidebar: Array<SidebarWidget>;
+                      visible: boolean;
+                    };
+                  }
                 | undefined;
               states: Array<{
+                id: string;
                 description?: any | undefined;
                 displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SidebarWidget>;
+                  visible: boolean;
+                };
               }>;
             };
           };
@@ -93735,11 +94370,32 @@ export type GetSpaceDataQuery = {
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
                 currentState?:
-                  | { description?: any | undefined; displayName: string }
+                  | {
+                      id: string;
+                      description?: any | undefined;
+                      displayName: string;
+                      sortOrder: number;
+                      settings: {
+                        allowNewCallouts: boolean;
+                        descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                        showPublishDetails: boolean;
+                        sidebar: Array<SidebarWidget>;
+                        visible: boolean;
+                      };
+                    }
                   | undefined;
                 states: Array<{
+                  id: string;
                   description?: any | undefined;
                   displayName: string;
+                  sortOrder: number;
+                  settings: {
+                    allowNewCallouts: boolean;
+                    descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                    showPublishDetails: boolean;
+                    sidebar: Array<SidebarWidget>;
+                    visible: boolean;
+                  };
                 }>;
               };
             };
@@ -96283,11 +96939,32 @@ export type GetSubspacePageQuery = {
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
                 currentState?:
-                  | { description?: any | undefined; displayName: string }
+                  | {
+                      id: string;
+                      description?: any | undefined;
+                      displayName: string;
+                      sortOrder: number;
+                      settings: {
+                        allowNewCallouts: boolean;
+                        descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                        showPublishDetails: boolean;
+                        sidebar: Array<SidebarWidget>;
+                        visible: boolean;
+                      };
+                    }
                   | undefined;
                 states: Array<{
+                  id: string;
                   description?: any | undefined;
                   displayName: string;
+                  sortOrder: number;
+                  settings: {
+                    allowNewCallouts: boolean;
+                    descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                    showPublishDetails: boolean;
+                    sidebar: Array<SidebarWidget>;
+                    visible: boolean;
+                  };
                 }>;
               };
             };
@@ -98164,11 +98841,32 @@ export type GetSubspacePageQuery = {
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
               currentState?:
-                | { description?: any | undefined; displayName: string }
+                | {
+                    id: string;
+                    description?: any | undefined;
+                    displayName: string;
+                    sortOrder: number;
+                    settings: {
+                      allowNewCallouts: boolean;
+                      descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                      showPublishDetails: boolean;
+                      sidebar: Array<SidebarWidget>;
+                      visible: boolean;
+                    };
+                  }
                 | undefined;
               states: Array<{
+                id: string;
                 description?: any | undefined;
                 displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SidebarWidget>;
+                  visible: boolean;
+                };
               }>;
             };
           };
@@ -100029,11 +100727,32 @@ export type GetSpaceAboutDetailsQuery = {
                 | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                 | undefined;
               currentState?:
-                | { description?: any | undefined; displayName: string }
+                | {
+                    id: string;
+                    description?: any | undefined;
+                    displayName: string;
+                    sortOrder: number;
+                    settings: {
+                      allowNewCallouts: boolean;
+                      descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                      showPublishDetails: boolean;
+                      sidebar: Array<SidebarWidget>;
+                      visible: boolean;
+                    };
+                  }
                 | undefined;
               states: Array<{
+                id: string;
                 description?: any | undefined;
                 displayName: string;
+                sortOrder: number;
+                settings: {
+                  allowNewCallouts: boolean;
+                  descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                  showPublishDetails: boolean;
+                  sidebar: Array<SidebarWidget>;
+                  visible: boolean;
+                };
               }>;
             };
           };
@@ -101927,11 +102646,32 @@ export type GetSubspacesDataQuery = {
                       }
                     | undefined;
                   currentState?:
-                    | { description?: any | undefined; displayName: string }
+                    | {
+                        id: string;
+                        description?: any | undefined;
+                        displayName: string;
+                        sortOrder: number;
+                        settings: {
+                          allowNewCallouts: boolean;
+                          descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                          showPublishDetails: boolean;
+                          sidebar: Array<SidebarWidget>;
+                          visible: boolean;
+                        };
+                      }
                     | undefined;
                   states: Array<{
+                    id: string;
                     description?: any | undefined;
                     displayName: string;
+                    sortOrder: number;
+                    settings: {
+                      allowNewCallouts: boolean;
+                      descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                      showPublishDetails: boolean;
+                      sidebar: Array<SidebarWidget>;
+                      visible: boolean;
+                    };
                   }>;
                 };
               };
@@ -103827,11 +104567,32 @@ export type GetSubspacesDataQuery = {
                   | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
                   | undefined;
                 currentState?:
-                  | { description?: any | undefined; displayName: string }
+                  | {
+                      id: string;
+                      description?: any | undefined;
+                      displayName: string;
+                      sortOrder: number;
+                      settings: {
+                        allowNewCallouts: boolean;
+                        descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                        showPublishDetails: boolean;
+                        sidebar: Array<SidebarWidget>;
+                        visible: boolean;
+                      };
+                    }
                   | undefined;
                 states: Array<{
+                  id: string;
                   description?: any | undefined;
                   displayName: string;
+                  sortOrder: number;
+                  settings: {
+                    allowNewCallouts: boolean;
+                    descriptionDisplayMode: CalloutDescriptionDisplayMode;
+                    showPublishDetails: boolean;
+                    sidebar: Array<SidebarWidget>;
+                    visible: boolean;
+                  };
                 }>;
               };
             };

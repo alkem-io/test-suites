@@ -174,14 +174,19 @@ export type RawGraphqlResponse<TData> = {
 /**
  * POST a document to the private GraphQL endpoint with an arbitrary bearer, or
  * none. Never throws on a non-2xx: the status/body pair *is* the assertion.
+ *
+ * `variables` is optional and additive (test-suites#054 delta) — every
+ * existing 2-arg call site is unaffected; omitting it sends the same body as
+ * before.
  */
 export const postGraphqlRaw = async <TData>(
   query: string,
-  bearerToken?: string
+  bearerToken?: string,
+  variables?: Record<string, unknown>
 ): Promise<RawGraphqlResponse<TData>> => {
   const response = await axios.post(
     testConfiguration.endPoints.graphql.private,
-    { query },
+    { query, ...(variables ? { variables } : {}) },
     {
       headers: {
         'Content-Type': 'application/json',
