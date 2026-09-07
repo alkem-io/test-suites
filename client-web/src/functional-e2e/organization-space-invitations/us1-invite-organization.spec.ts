@@ -7,7 +7,10 @@
 import { expect, Page, test as baseTest } from '@playwright/test';
 import { TestScenarioConfig, TestScenarioFactory } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import {
+  RoleName,
+  RoleSetInvitationResultType,
+} from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
 import {
   assignOrganizationAdmin,
@@ -313,26 +316,82 @@ spaceAdminTest.describe('US1-AS2..AS9 — space admin invite walk', () => {
     }
   );
 
-  spaceAdminTest(
-    'US1-AS5: inviting an already-Member organization returns "already a member"',
-    async ({ page }) => {
-      await openMemberOrganizationsSection(page);
-      const resultText = await inviteOrganizationViaDialog(page, orgAS5Member);
-      expect(resultText).toContain('Already a member of this space');
-    }
-  );
+  // US1-AS5 is a TWO-LAYER scenario, and the two layers cannot both be driven
+  // through the dialog.
+  //
+  // The dialog now excludes both an already-granted Member (via
+  // `filterCurrentMembers`) and an organization with an open invitation (via
+  // `openOrgInvitationIds`) from its search results — that is the AS2 fix, and
+  // the walk below proves it for the already-invited case (AS2's own walk
+  // proves it for the member case). There is therefore NO sequence of UI
+  // actions that reaches the "Already a member" / "Already invited" outcome
+  // rows: an earlier version of this file tried to click those very buttons
+  // and could only ever time out.
+  //
+  // The server-side safety net those outcomes belong to is still required —
+  // the mutation is public API and must stay idempotent for any other caller —
+  // so it is asserted here at the layer where it is actually reachable.
 
   spaceAdminTest(
-    'US1-AS5: inviting an already-invited organization returns "already invited" with no second row',
+    'US1-AS5 (UI layer): an organization with an open invitation is excluded from the invite dialog\'s search results',
     async ({ page }) => {
       await openMemberOrganizationsSection(page);
-      const resultText = await inviteOrganizationViaDialog(page, orgAS5Invited);
-      expect(resultText).toContain('Already invited');
+      await page.getByRole('button', { name: 'Invite Organisation' }).click();
+      await expect(page.getByText(/Invite an organisation to join/)).toBeVisible();
 
-      // Exactly one pending row for this org (the pre-seeded one — no duplicate).
+      const search = page.getByRole('textbox', { name: 'Search for users by name or email' });
+      await search.fill(orgAS5Invited.displayName);
+      await expect(page.getByText(/no matching/i)).toBeVisible();
+      await expect(
+        page.getByRole('button', { name: orgAS5Invited.displayName })
+      ).toHaveCount(0);
+
+      // Exact match — see inviteOrganizationViaDialog.
+      await page.getByRole('button', { name: 'Close', exact: true }).click();
+
+      // The pre-seeded pending row is still there, exactly once — excluding the
+      // organization from the picker must not have disturbed the pending list.
       await expect(
         page.locator('li').filter({ hasText: orgAS5Invited.displayName })
       ).toHaveCount(1);
+    }
+  );
+
+  baseTest(
+    'US1-AS5 (server safety net): re-inviting an already-Member or already-invited organization is idempotent — typed outcome, nothing created',
+    async () => {
+      const roleSetId = baseScenario.space.community.roleSetId;
+
+      const alreadyMember = await inviteOrganizationViaApi(
+        roleSetId,
+        orgAS5Member.id,
+        'AS5 duplicate — already a member'
+      );
+      expect(alreadyMember.data?.inviteForEntryRoleOnRoleSet?.[0]?.type).toEqual(
+        RoleSetInvitationResultType.AlreadyMemberOfRoleSet
+      );
+      expect(
+        alreadyMember.data?.inviteForEntryRoleOnRoleSet?.[0]?.invitation
+      ).toBeFalsy();
+
+      const invitationIdsBefore = await getSpaceInvitationIds(baseScenario.space.id);
+
+      const alreadyInvited = await inviteOrganizationViaApi(
+        roleSetId,
+        orgAS5Invited.id,
+        'AS5 duplicate — already invited'
+      );
+      expect(alreadyInvited.data?.inviteForEntryRoleOnRoleSet?.[0]?.type).toEqual(
+        RoleSetInvitationResultType.AlreadyInvitedToRoleSet
+      );
+      expect(
+        alreadyInvited.data?.inviteForEntryRoleOnRoleSet?.[0]?.invitation
+      ).toBeFalsy();
+
+      // No second invitation row for the organization: the open-invitation
+      // count on the Space is unchanged.
+      const invitationIdsAfter = await getSpaceInvitationIds(baseScenario.space.id);
+      expect(invitationIdsAfter.sort()).toEqual(invitationIdsBefore.sort());
     }
   );
 

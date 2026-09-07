@@ -233,7 +233,7 @@ describe('Organization Space invitations — subspace ancestor chain (invitedToP
     expect(result?.invitation).toBeFalsy();
   });
 
-  test('the inviting Space admin cannot select spacesToJoinOnAccept — authorization error, no ancestor data leaked', async () => {
+  test('the inviting Space admin reads spacesToJoinOnAccept as null — denied without an error, no ancestor data leaked', async () => {
     const invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.subsubspace.community.roleSetId,
       [baseScenario.organization.id],
@@ -250,6 +250,14 @@ describe('Organization Space invitations — subspace ancestor chain (invitedToP
     // admin) holds generic READ on the invitation but not
     // ROLESET_ENTRY_ROLE_INVITE_ACCEPT, so this field must be denied even
     // though every other invitation field is readable to them.
+    //
+    // The denial is an ABSENCE, not an error: the resolver checks the
+    // privilege inline and the field is declared nullable, precisely so the
+    // shared `InvitationData` fragment — spread by the top-bar pending
+    // memberships dialog and the in-app notifications panel — does not
+    // attach a GraphQL error to every notifications fetch (which, under the
+    // non-null `CommunityInvitationResult.invitation`, would null out the
+    // whole `me` query). See `invitation.resolver.fields.ts`.
     const requestParams = {
       operationName: 'GetInvitationSpacesToJoinAsInviter',
       query: `
@@ -274,12 +282,18 @@ describe('Organization Space invitations — subspace ancestor chain (invitedToP
       TestUser.SPACE_ADMIN
     );
 
-    expect(response.body?.errors?.[0]?.message).toContain(
-      "Authorization: unable to grant 'roleset-entry-role-invite-accept' privilege: Invitation.spacesToJoinOnAccept"
+    // No GraphQL error at all — that is the contract.
+    expect(response.body?.errors).toBeUndefined();
+
+    // The rest of the query still resolves; only the gated field is null, so
+    // nothing about the ancestor chain is leaked to the inviter.
+    const roleSet = response.body?.data?.lookup?.roleSet;
+    expect(roleSet).not.toBeNull();
+    const invitation = roleSet?.invitations?.find(
+      (candidate: { id: string }) => candidate.id === invitationId
     );
-    // The field is declared non-nullable, so the error nulls the nearest
-    // nullable ancestor (`lookup.roleSet`) rather than leaking a partial list.
-    expect(response.body?.data?.lookup?.roleSet).toBeNull();
+    expect(invitation).toBeDefined();
+    expect(invitation?.spacesToJoinOnAccept).toBeNull();
   });
 
   test('spacesToJoinOnAccept is not filtered per-ancestor: a private L0 root still appears in the invited organization admin\'s own read', async () => {

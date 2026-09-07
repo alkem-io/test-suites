@@ -132,6 +132,7 @@ export default defineConfig({
         [
           'src/functional-api/account/**/*.it-spec.ts',
           'src/functional-api/roleset/**/*.it-spec.ts',
+          'src/functional-api/notifications/**/*.it-spec.ts',
           'src/functional-api/contributor-management/**/*.it-spec.ts',
           'src/functional-api/callout/**/*.it-spec.ts',
           'src/functional-api/communications/**/*.it-spec.ts',
