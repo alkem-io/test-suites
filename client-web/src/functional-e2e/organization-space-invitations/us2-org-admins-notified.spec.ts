@@ -198,7 +198,7 @@ let communityUrl: string;
 let orgAS1: OrgFixture; // admin A (default settings) — email/in-app/push facts
 let orgAS2Click: OrgFixture; // dedicated fixture for the bell click-through walk (self-contained: sends its own invite)
 let orgAS3: OrgFixture; // admin B, NOT an associate — notified exactly like A
-let orgAS4Zero: OrgFixture; // no admins/owners at all — support fallback
+let orgAS4Zero: OrgFixture; // no ADMINS at all — support fallback (R17b)
 let orgAS5Muted: OrgFixture; // sole admin muted every channel
 let orgAS6: OrgFixture; // settings-row UI walk (render + persist + honored)
 let orgAS7: OrgFixture; // plain associate — nothing on any channel
@@ -266,7 +266,7 @@ baseTest.beforeAll(async () => {
   // AS3: non.space@alkem.io is B — ADMIN only, never ASSOCIATE.
   await assignOrganizationAdmin(orgAS3.roleSetId, orgAdminBId());
 
-  // AS4: zero admins/owners — remove the auto-assigned creator (GLOBAL_ADMIN).
+  // AS4: zero ADMINS — remove the auto-assigned creator (GLOBAL_ADMIN).
   const zeroOrgAdmins = await getRoleSetAdminIds(orgAS4Zero.roleSetId);
   await Promise.all(zeroOrgAdmins.map(id => removeAdmin(orgAS4Zero.roleSetId, id)));
 
@@ -446,7 +446,7 @@ spaceAdminTest.describe('US2-AS3 — org admin B (not an associate) is notified 
 
 // ─── US2-AS4: zero-admin organization — support fallback ─────────────────
 
-spaceAdminTest.describe('US2-AS4 — an organization with no admins/owners still gets an invitation, via the support fallback', () => {
+spaceAdminTest.describe('US2-AS4 — an organization with no admins still gets an invitation, via the support fallback', () => {
   spaceAdminTest(
     'the invite outcome carries the no-administrators notice and support@alkem.io receives exactly one email greeting "Hello,"',
     async ({ page }) => {
@@ -531,7 +531,7 @@ orgAdminSettingsTest.describe('US2-AS6 — the organization notification setting
 
 // ─── US2-AS7: plain associate — nothing on any channel ────────────────────
 
-spaceAdminTest.describe('US2-AS7 — a plain associate (neither admin nor owner) receives nothing on any channel', () => {
+spaceAdminTest.describe('US2-AS7 — a plain associate receives nothing on any channel (an owner who is not an admin likewise — R17b, covered in the it-spec)', () => {
   spaceAdminTest('the associate has zero org-invited emails and zero in-app notifications', async ({ page }) => {
     // A full SPA invite walk plus the 20s negative mail window below
     // exceeds the default config's 30s per-test budget.

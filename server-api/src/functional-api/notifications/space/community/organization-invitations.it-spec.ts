@@ -111,6 +111,9 @@ beforeAll(async () => {
   // below (organizationAdmin ADMIN+ASSOCIATE from the factory default, plus
   // qaUser and subspaceAdmin here) — otherwise every "notified once"/"N
   // recipients" assertion in this file undercounts by one manager.
+  // Notified set = the ADMINS only: organizationAdmin + subspaceAdmin. qaUser
+  // is OWNER+ASSOCIATE and subsubspaceAdmin is ASSOCIATE-only; both are
+  // negative cases (R17b / US2-AS7).
   await removeRoleFromUser(
     TestUserManager.users.globalAdmin.id,
     baseScenario.organization.roleSetId,
@@ -242,7 +245,10 @@ describe('Organization Space invitations — organization admins are notified (U
     // a stray mail with the same recipient address but a different subject
     // (leaked from another scenario sharing the same fixed test-user email)
     // must not satisfy these assertions.
-    const [rawMailItems] = await expectExactMailsAfter(async () => undefined, 3);
+    // TWO recipients: the organization's ADMINS (organizationAdmin, subspaceAdmin).
+    // qaUser is an OWNER but not an ADMIN and is NOT notified (R17b), and
+    // subsubspaceAdmin is associate-only.
+    const [rawMailItems] = await expectExactMailsAfter(async () => undefined, 2);
     const mailItems = rawMailItems.filter(
       (m: any) => m.subject === expectedSubject
     );
@@ -266,24 +272,25 @@ describe('Organization Space invitations — organization admins are notified (U
     expect(adminAMail?.subject).toEqual(expectedSubject);
     expect(adminAMail?.body).toContain(message);
     expect(adminAMail?.body).toContain('settings/invitations');
-    expect(ownerMail?.subject).toEqual(expectedSubject);
     expect(adminBMail?.subject).toEqual(expectedSubject);
+    // US2-AS7 / R17b: an OWNER who is not an ADMIN is not notified, even though
+    // they can still accept on the organization's behalf. Every product source
+    // (story AC, notifications#356, the product email) says "admins".
+    expect(ownerMail).toBeUndefined();
     expect(associateMail).toBeUndefined();
     expect(spaceAdminMail).toBeUndefined();
 
-    const managerAddresses = [
+    const adminAddresses = [
       TestUserManager.users.organizationAdmin.email,
-      TestUserManager.users.qaUser.email,
       TestUserManager.users.subspaceAdmin.email,
     ];
-    const sentToManagers = mailItems.filter((m: any) =>
-      m.toAddresses?.some((a: string) => managerAddresses.includes(a))
+    const sentToAdmins = mailItems.filter((m: any) =>
+      m.toAddresses?.some((a: string) => adminAddresses.includes(a))
     );
-    expect(sentToManagers).toHaveLength(3);
+    expect(sentToAdmins).toHaveLength(2);
 
     for (const userRole of [
       TestUser.ORGANIZATION_ADMIN,
-      TestUser.QA_USER,
       TestUser.SUBSPACE_ADMIN,
     ]) {
       const notifications = await inAppNotificationsFor(userRole, [
@@ -498,10 +505,11 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
     expect(invitationId.length).toEqual(36);
 
     await deleteMailSlurperMails();
-    // 4 mails: one "accepted" outcome to the Space admin, and one "has joined"
-    // welcome to EACH of the organization's three managers (admin A, admin B and
-    // the owner — the same set the invitation itself reached). Waiting for fewer
-    // settles before the rest arrive and makes the filters below race.
+    // 3 mails: one "accepted" outcome to the Space admin, and one "has joined"
+    // welcome to EACH of the organization's two ADMINS (admin A and admin B —
+    // the same set the invitation itself reached; the OWNER is not notified,
+    // R17b). Waiting for fewer settles before the rest arrive and makes the
+    // filters below race.
     const [mailItems] = await expectExactMailsAfter(
       () =>
         eventOnRoleSetInvitation(
@@ -509,7 +517,7 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
           'ACCEPT',
           TestUser.ORGANIZATION_ADMIN
         ),
-      4
+      3
     );
 
     const orgName = baseScenario.organization.profile.displayName;
@@ -524,19 +532,24 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
     expect(inviterMails).toHaveLength(1);
     expect(inviterMails[0].subject).toEqual(acceptedSubject);
 
-    // EVERY manager of the organization gets the "has joined" welcome — the
-    // point of R29 is that the ones who did not accept know no action is needed.
-    for (const managerEmail of [
+    // EVERY ADMIN of the organization gets the "has joined" welcome — the point
+    // of R29 is that the ones who did not accept know no action is needed.
+    for (const adminEmail of [
       TestUserManager.users.organizationAdmin.email,
       TestUserManager.users.subspaceAdmin.email,
-      TestUserManager.users.qaUser.email,
     ]) {
-      const managerMails = mailItems.filter((m: any) =>
-        m.toAddresses?.includes(managerEmail)
+      const adminMails = mailItems.filter((m: any) =>
+        m.toAddresses?.includes(adminEmail)
       );
-      expect(managerMails).toHaveLength(1);
-      expect(managerMails[0].subject).toContain('has joined');
+      expect(adminMails).toHaveLength(1);
+      expect(adminMails[0].subject).toContain('has joined');
     }
+    // …and the OWNER who is not an admin gets nothing (R17b).
+    expect(
+      mailItems.filter((m: any) =>
+        m.toAddresses?.includes(TestUserManager.users.qaUser.email)
+      )
+    ).toHaveLength(0);
 
     const acceptedRows = await inAppNotificationsFor(TestUser.SPACE_ADMIN, [
       NotificationEvent.SpaceAdminOrganizationCommunityInvitationAccepted,
@@ -645,14 +658,15 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
     invitationId = result?.invitation?.id ?? '';
     expect(invitationId.length).toEqual(36);
 
-    // The invite's own "you've been invited" emails to the org's managers
-    // (organizationAdmin, qaUser, subspaceAdmin — 3 recipients, see the US2
-    // "notified once" test above) are dispatched fire-and-forget (void
-    // promise, role.set.resolver.mutations.membership.ts) and can still be
-    // in flight here. Wait for them to actually land before clearing the
-    // inbox — otherwise they arrive AFTER deleteMailSlurperMails() below and
-    // are misread as stray outcome mail from the decline that follows.
-    await waitForMailsCountAtLeast(3);
+    // The invite's own "you've been invited" emails to the org's ADMINS
+    // (organizationAdmin, subspaceAdmin — 2 recipients, see the US2
+    // "notified once" test above; the OWNER is not notified, R17b) are
+    // dispatched fire-and-forget (void promise,
+    // role.set.resolver.mutations.membership.ts) and can still be in flight
+    // here. Wait for them to actually land before clearing the inbox —
+    // otherwise they arrive AFTER deleteMailSlurperMails() below and are
+    // misread as stray outcome mail from the decline that follows.
+    await waitForMailsCountAtLeast(2);
     await deleteMailSlurperMails();
 
     await removeRoleFromUser(
