@@ -495,7 +495,7 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
     }
   });
 
-  test('accepting notifies the inviter ("accepted") and the organization admins ("has joined"), and NOT the generic "new member" notification', async () => {
+  test('accepting notifies the inviter ("accepted") and the OTHER organization admin ("has joined") but never the acceptor, and NOT the generic "new member" notification', async () => {
     const invitationData = await inviteOrgToSpace(
       baseScenario.space.community.roleSetId,
       baseScenario.organization.id
@@ -505,11 +505,13 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
     expect(invitationId.length).toEqual(36);
 
     await deleteMailSlurperMails();
-    // 3 mails: one "accepted" outcome to the Space admin, and one "has joined"
-    // welcome to EACH of the organization's two ADMINS (admin A and admin B —
-    // the same set the invitation itself reached; the OWNER is not notified,
-    // R17b). Waiting for fewer settles before the rest arrive and makes the
-    // filters below race.
+    // 2 mails: one "accepted" outcome to the Space admin, and one "has joined"
+    // welcome to the organization's OTHER admin. The organization has exactly
+    // two ADMINS (organizationAdmin + subspaceAdmin; the OWNER is not notified,
+    // R17b) and organizationAdmin is the one accepting here — the acceptor is
+    // filtered out of the welcome on all three channels (R33), because the
+    // welcome exists to tell the others no action is needed. Waiting for fewer
+    // settles before the rest arrive and makes the filters below race.
     const [mailItems] = await expectExactMailsAfter(
       () =>
         eventOnRoleSetInvitation(
@@ -517,7 +519,7 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
           'ACCEPT',
           TestUser.ORGANIZATION_ADMIN
         ),
-      3
+      2
     );
 
     const orgName = baseScenario.organization.profile.displayName;
@@ -532,18 +534,22 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
     expect(inviterMails).toHaveLength(1);
     expect(inviterMails[0].subject).toEqual(acceptedSubject);
 
-    // EVERY ADMIN of the organization gets the "has joined" welcome — the point
+    // The organization's OTHER admin gets the "has joined" welcome — the point
     // of R29 is that the ones who did not accept know no action is needed.
-    for (const adminEmail of [
-      TestUserManager.users.organizationAdmin.email,
-      TestUserManager.users.subspaceAdmin.email,
-    ]) {
-      const adminMails = mailItems.filter((m: any) =>
-        m.toAddresses?.includes(adminEmail)
-      );
-      expect(adminMails).toHaveLength(1);
-      expect(adminMails[0].subject).toContain('has joined');
-    }
+    const otherAdminMails = mailItems.filter((m: any) =>
+      m.toAddresses?.includes(TestUserManager.users.subspaceAdmin.email)
+    );
+    expect(otherAdminMails).toHaveLength(1);
+    expect(otherAdminMails[0].subject).toContain('has joined');
+
+    // …the admin who accepted gets nothing (R33) — they took the action, so a
+    // welcome addressed to them would report their own click back to them…
+    expect(
+      mailItems.filter((m: any) =>
+        m.toAddresses?.includes(TestUserManager.users.organizationAdmin.email)
+      )
+    ).toHaveLength(0);
+
     // …and the OWNER who is not an admin gets nothing (R17b).
     expect(
       mailItems.filter((m: any) =>
@@ -570,6 +576,28 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
         n.payload?.space?.id === baseScenario.space.id
     );
     expect(joinedRow).toBeUndefined();
+
+    // R33 covers all three channels, not just email: the acceptor has no
+    // in-app welcome row either, while the other admin does.
+    const acceptorWelcome = await inAppNotificationsFor(
+      TestUser.ORGANIZATION_ADMIN,
+      [NotificationEvent.OrganizationAdminSpaceCommunityJoined]
+    );
+    expect(
+      acceptorWelcome?.inAppNotifications.find(
+        (n: any) => n.payload?.space?.id === baseScenario.space.id
+      )
+    ).toBeUndefined();
+
+    const otherAdminWelcome = await inAppNotificationsFor(
+      TestUser.SUBSPACE_ADMIN,
+      [NotificationEvent.OrganizationAdminSpaceCommunityJoined]
+    );
+    expect(
+      otherAdminWelcome?.inAppNotifications.find(
+        (n: any) => n.payload?.space?.id === baseScenario.space.id
+      )
+    ).toBeDefined();
   });
 
   test('declining notifies the inviter with "declined your invitation"', async () => {

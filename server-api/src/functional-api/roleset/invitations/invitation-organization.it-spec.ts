@@ -821,3 +821,116 @@ describe('Organization Space invitations — invitee actor-type validation', () 
     await deleteApplication(applicationId);
   });
 });
+
+/**
+ * R32 / FR-002a. The invite flow is only half a feature if the Space admin who
+ * brought the organization in cannot then manage it. `ROLESET_ENTRY_ROLE_ASSIGN_
+ * ORGANIZATION` gates bringing a NEW organization in (global admins, support and
+ * beta testers only, because a direct add never asks the organization); once the
+ * organization holds the entry role, both mutations need `GRANT` alone, which a
+ * Space admin has.
+ */
+describe('Organization Space invitations — the Space admin can manage the organization afterwards (R32)', () => {
+  beforeEach(async () => {
+    await clearOrgAFromSpace();
+  });
+
+  afterEach(async () => {
+    await clearOrgAFromSpace();
+  });
+
+  const acceptInviteAsOrgAdmin = async () => {
+    const invitationData = await inviteOrg(baseScenario.organization.id);
+    const invitationId =
+      getSingleInvitationResult(invitationData)?.invitation?.id ?? '';
+    expect(invitationId.length).toEqual(36);
+    await eventOnRoleSetInvitation(
+      invitationId,
+      'ACCEPT',
+      TestUser.ORGANIZATION_ADMIN
+    );
+    return invitationId;
+  };
+
+  test('promotes the accepted organization to Lead and demotes it again', async () => {
+    await acceptInviteAsOrgAdmin();
+    expect((await spaceRolesForOrg(baseScenario.organization.id))?.roles).toContain(
+      RoleName.Member
+    );
+
+    const promote = await assignRoleToOrganization(
+      baseScenario.organization.id,
+      baseScenario.space.community.roleSetId,
+      RoleName.Lead,
+      TestUser.SPACE_ADMIN
+    );
+    expect(promote?.error).toBeUndefined();
+    expect((await spaceRolesForOrg(baseScenario.organization.id))?.roles).toContain(
+      RoleName.Lead
+    );
+
+    const demote = await removeRoleFromOrganization(
+      baseScenario.organization.id,
+      baseScenario.space.community.roleSetId,
+      RoleName.Lead,
+      TestUser.SPACE_ADMIN
+    );
+    expect(demote?.error).toBeUndefined();
+    expect(
+      (await spaceRolesForOrg(baseScenario.organization.id))?.roles
+    ).not.toContain(RoleName.Lead);
+  });
+
+  test('removes the accepted organization from the Space', async () => {
+    await acceptInviteAsOrgAdmin();
+
+    const removal = await removeRoleFromOrganization(
+      baseScenario.organization.id,
+      baseScenario.space.community.roleSetId,
+      RoleName.Member,
+      TestUser.SPACE_ADMIN
+    );
+    expect(removal?.error).toBeUndefined();
+    expect(await spaceRolesForOrg(baseScenario.organization.id)).toBeUndefined();
+  });
+
+  test('still cannot ADD an organization that is not already in the Space', async () => {
+    // The consent gate this feature exists to protect: a direct add never asks
+    // the organization, so it stays with platform admins (R6).
+    const orgB = await createTestOrganization('r32addguard');
+
+    const directAdd = await assignRoleToOrganization(
+      orgB.id,
+      baseScenario.space.community.roleSetId,
+      RoleName.Member,
+      TestUser.SPACE_ADMIN
+    );
+    expect(directAdd?.error?.errors?.[0]?.message).toContain('Authorization');
+    expect(await spaceRolesForOrg(orgB.id)).toBeUndefined();
+
+    await deleteOrganization(orgB.id).catch(() => undefined);
+  });
+
+  test('a Space member who is not an admin can do none of it', async () => {
+    await acceptInviteAsOrgAdmin();
+
+    const promote = await assignRoleToOrganization(
+      baseScenario.organization.id,
+      baseScenario.space.community.roleSetId,
+      RoleName.Lead,
+      TestUser.SPACE_MEMBER
+    );
+    expect(promote?.error?.errors?.[0]?.message).toContain('Authorization');
+
+    const removal = await removeRoleFromOrganization(
+      baseScenario.organization.id,
+      baseScenario.space.community.roleSetId,
+      RoleName.Member,
+      TestUser.SPACE_MEMBER
+    );
+    expect(removal?.error?.errors?.[0]?.message).toContain('Authorization');
+    expect((await spaceRolesForOrg(baseScenario.organization.id))?.roles).toContain(
+      RoleName.Member
+    );
+  });
+});
