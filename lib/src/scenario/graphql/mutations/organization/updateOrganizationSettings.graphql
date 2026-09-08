@@ -10,6 +10,7 @@ mutation UpdateOrganizationSettings(
       membership {
         allowUsersMatchingDomainToJoin
         allowSpaceInvitations
+        allowApplications
       }
     }
   }

@@ -1,0 +1,15 @@
+query GetOrganizationAssociateEligibility($organizationId: UUID!) {
+  organization(ID: $organizationId) {
+    id
+    myAssociateEligibility {
+      canApply
+      canJoinDirectly
+      reason
+    }
+    roleSet {
+      id
+      myMembershipStatus
+      myRolesImplicit
+    }
+  }
+}

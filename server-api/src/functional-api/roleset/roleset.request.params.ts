@@ -2,6 +2,7 @@ import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
 import {
   ActorType,
   InviteForEntryRoleOnRoleSetMutation,
+  RoleName,
   RoleSetInvitationResultNotice,
   RoleSetInvitationResultType,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
@@ -109,6 +110,79 @@ export const getRoleSetUsersInLeadRole = async (
   }));
 
   return formattedUsers;
+};
+
+// 062-organization-user-associates: the pending applications/invitations of
+// an organization role set, confidentiality-gated to GRANT (contract §6) —
+// so the caller matters as much as the roleSetId.
+export const getOrganizationRoleSetPending = async (
+  roleSetId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.GetOrganizationRoleSetPending(
+      {
+        roleSetId,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+// The union list this feature ships is ASSOCIATE ∪ ADMIN ∪ OWNER, badged —
+// this is the read that proves an admin who is not an associate is still
+// visible (spec US5-AS2, D-1's discriminating gate).
+export const usersInRoles = async (
+  roleSetId: string,
+  roles: RoleName[],
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.GetRoleSetUsersInRoles(
+      {
+        roleSetId,
+        roles,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const getRoleSetApplicationForm = async (
+  roleSetId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.GetRoleSetApplicationForm(
+      {
+        roleSetId,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+/** The GraphQL error `code` (`AlkemioErrorStatus`) of the first error on a
+ * `graphqlErrorWrapper` response, e.g. `ROLESET_ALREADY_MEMBER`,
+ * `ROLESET_APPLICATIONS_NOT_ACCEPTED`, `ROLESET_JOIN_NOT_ELIGIBLE`. These are
+ * server-internal error codes, not a GraphQL enum, so string comparison is
+ * the contract. */
+export const getErrorCode = (
+  res: { error?: { errors: Array<Record<string, unknown>> } } | undefined
+): string | undefined => {
+  const first = res?.error?.errors?.[0] as
+    | { extensions?: { code?: string } }
+    | undefined;
+  return first?.extensions?.code;
 };
 
 export const getSingleInvitationResult = (

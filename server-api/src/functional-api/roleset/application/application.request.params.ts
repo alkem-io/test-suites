@@ -88,3 +88,54 @@ export const meQuery = async (userRole: TestUser = TestUser.GLOBAL_ADMIN) => {
     );
   return graphqlErrorWrapper(callback, userRole);
 };
+
+// 062-organization-user-associates §5 (`me` query partition): the Space
+// pending surfaces alongside the new organization ones, so a single call
+// proves both — the Space list/count stay exact, the organization rows land
+// only on their own fields.
+export const meOrganizationPending = async (
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.MeOrganizationPending(
+      {},
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+// The organization's seeded application form, relabelled as a single
+// optional message question (FR-011). Passing no message submits the form
+// with no answers, which is exactly what "optional" means.
+export const applyToAssociateWithOrganization = async (
+  roleSetID: string,
+  message?: string,
+  userRole: TestUser = TestUser.QA_USER
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.applyForEntryRole(
+      {
+        applicationData: {
+          roleSetID,
+          questions:
+            message === undefined
+              ? []
+              : [
+                  {
+                    name: 'What makes you want to join?',
+                    value: message,
+                    sortOrder: 1,
+                  },
+                ],
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};

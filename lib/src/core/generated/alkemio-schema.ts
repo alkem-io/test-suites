@@ -3494,6 +3494,32 @@ export type InAppNotificationPayload = {
   type: NotificationEventPayload;
 };
 
+export type InAppNotificationPayloadOrganizationAssociateActor =
+  InAppNotificationPayload & {
+    /** The user who applied, responded to an invitation, or joined. */
+    actor?: Maybe<Actor>;
+    /** The underlying application — set for the three application events. */
+    application?: Maybe<Application>;
+    /** Offered extra roles that could not be granted (set only on the accepted-invitation event). */
+    extraRolesWithheld?: Maybe<Array<RoleName>>;
+    /** The underlying invitation — set for the two response events. */
+    invitation?: Maybe<Invitation>;
+    /** The organization the actor is associated with. */
+    organization?: Maybe<Organization>;
+    /** The payload type. */
+    type: NotificationEventPayload;
+  };
+
+export type InAppNotificationPayloadOrganizationAssociateInvitation =
+  InAppNotificationPayload & {
+    /** The underlying invitation — offered role(s) and message. Null once the invitation record no longer resolves (e.g. the organization was deleted). */
+    invitation?: Maybe<Invitation>;
+    /** The organization the invitation is for. */
+    organization?: Maybe<Organization>;
+    /** The payload type. */
+    type: NotificationEventPayload;
+  };
+
 export type InAppNotificationPayloadOrganizationMessageDirect =
   InAppNotificationPayload & {
     /** The message content. */
@@ -3904,6 +3930,8 @@ export type Invitation = {
   createdDate: Scalars["DateTime"]["output"];
   /** Additional roles to assign to the Actor, in addition to the entry Role. */
   extraRoles: Array<RoleName>;
+  /** Offered extra roles that could not be granted when this invitation was accepted (organizations only, cap consumed in the meantime). Transient: set only on the object returned by the accept mutation, never persisted, and null everywhere else. */
+  extraRolesWithheld?: Maybe<Array<RoleName>>;
   /** The ID of the entity */
   id: Scalars["UUID"]["output"];
   /** Whether to also add the invited actor to the parent community. */
@@ -4799,6 +4827,12 @@ export type MeQueryResults = {
   notifications: PaginatedInAppNotifications;
   /** The total number of unread notifications for the current authenticated user across all notification types. */
   notificationsUnreadCount: Scalars["Float"]["output"];
+  /** The current authenticated user's own pending organization applications. */
+  organizationApplications: Array<OrganizationApplicationResult>;
+  /** The current authenticated user's own pending organization invitations. */
+  organizationInvitations: Array<OrganizationInvitationResult>;
+  /** The number of the current authenticated user's own pending organization invitations. */
+  organizationInvitationsCount: Scalars["Float"]["output"];
   /** The Spaces the current user is a member of as a flat list. */
   spaceMembershipsFlat: Array<CommunityMembershipResult>;
   /** The hierarchy of the Spaces the current user is a member. */
@@ -4829,6 +4863,18 @@ export type MeQueryResultsNotificationsArgs = {
   filter?: InputMaybe<NotificationEventsFilterInput>;
   first?: InputMaybe<Scalars["Int"]["input"]>;
   last?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+export type MeQueryResultsOrganizationApplicationsArgs = {
+  states?: InputMaybe<Array<Scalars["String"]["input"]>>;
+};
+
+export type MeQueryResultsOrganizationInvitationsArgs = {
+  states?: InputMaybe<Array<Scalars["String"]["input"]>>;
+};
+
+export type MeQueryResultsOrganizationInvitationsCountArgs = {
+  states?: InputMaybe<Array<Scalars["String"]["input"]>>;
 };
 
 export type MeQueryResultsSpaceMembershipsHierarchicalArgs = {
@@ -6471,6 +6517,10 @@ export type NotificationEmailAddressInput = {
 };
 
 export enum NotificationEvent {
+  OrganizationAdminAssociateApplication = "ORGANIZATION_ADMIN_ASSOCIATE_APPLICATION",
+  OrganizationAdminAssociateInvitationAccepted = "ORGANIZATION_ADMIN_ASSOCIATE_INVITATION_ACCEPTED",
+  OrganizationAdminAssociateInvitationDeclined = "ORGANIZATION_ADMIN_ASSOCIATE_INVITATION_DECLINED",
+  OrganizationAdminAssociateJoined = "ORGANIZATION_ADMIN_ASSOCIATE_JOINED",
   OrganizationAdminMentioned = "ORGANIZATION_ADMIN_MENTIONED",
   OrganizationAdminMessage = "ORGANIZATION_ADMIN_MESSAGE",
   OrganizationAdminSpaceCommunityInvitation = "ORGANIZATION_ADMIN_SPACE_COMMUNITY_INVITATION",
@@ -6513,6 +6563,9 @@ export enum NotificationEvent {
   UserEmailChangeSpaceAdminNotification = "USER_EMAIL_CHANGE_SPACE_ADMIN_NOTIFICATION",
   UserMentioned = "USER_MENTIONED",
   UserMessage = "USER_MESSAGE",
+  UserOrganizationAssociateApplicationApproved = "USER_ORGANIZATION_ASSOCIATE_APPLICATION_APPROVED",
+  UserOrganizationAssociateApplicationDeclined = "USER_ORGANIZATION_ASSOCIATE_APPLICATION_DECLINED",
+  UserOrganizationAssociateInvitation = "USER_ORGANIZATION_ASSOCIATE_INVITATION",
   UserPasswordChangeSecuritySignal = "USER_PASSWORD_CHANGE_SECURITY_SIGNAL",
   UserSignUpWelcome = "USER_SIGN_UP_WELCOME",
   UserSpaceCommunityApplicationDeclined = "USER_SPACE_COMMUNITY_APPLICATION_DECLINED",
@@ -6538,6 +6591,8 @@ export enum NotificationEventInAppState {
 }
 
 export enum NotificationEventPayload {
+  OrganizationAssociateActor = "ORGANIZATION_ASSOCIATE_ACTOR",
+  OrganizationAssociateInvitation = "ORGANIZATION_ASSOCIATE_INVITATION",
   OrganizationMessageDirect = "ORGANIZATION_MESSAGE_DIRECT",
   OrganizationMessageRoom = "ORGANIZATION_MESSAGE_ROOM",
   PlatformForumDiscussion = "PLATFORM_FORUM_DISCUSSION",
@@ -6655,6 +6710,8 @@ export type Organization = ActorFull &
     legalEntityName?: Maybe<Scalars["String"]["output"]>;
     /** Metrics about the activity within this Organization. */
     metrics?: Maybe<Array<Nvp>>;
+    /** The viewer's eligibility to apply to, or join, this organization as an associate. */
+    myAssociateEligibility: OrganizationAssociateEligibility;
     /** A name identifier of the entity, unique within a given scope. */
     nameID: Scalars["NameID"]["output"];
     /** The profile for this Actor. */
@@ -6678,6 +6735,35 @@ export type OrganizationGroupArgs = {
   ID: Scalars["UUID"]["input"];
 };
 
+export type OrganizationApplicationResult = {
+  /** The application itself */
+  application: Application;
+  /** ID for the pending organization application */
+  id: Scalars["UUID"]["output"];
+  /** The organization the application is for */
+  organization: Organization;
+};
+
+export type OrganizationAssociateEligibility = {
+  /** Whether the viewer may apply to associate with this organization right now. */
+  canApply: Scalars["Boolean"]["output"];
+  /** Whether the viewer may join this organization directly, with one click (domain match). */
+  canJoinDirectly: Scalars["Boolean"]["output"];
+  /** Why the viewer is (or is not) eligible, precedence-ordered. */
+  reason: OrganizationAssociateEligibilityReason;
+};
+
+export enum OrganizationAssociateEligibilityReason {
+  AlreadyAssociate = "ALREADY_ASSOCIATE",
+  ApplicationsNotAccepted = "APPLICATIONS_NOT_ACCEPTED",
+  ApplicationPending = "APPLICATION_PENDING",
+  ApplyNotGranted = "APPLY_NOT_GRANTED",
+  EligibleToApply = "ELIGIBLE_TO_APPLY",
+  EligibleToJoin = "ELIGIBLE_TO_JOIN",
+  InvitationPending = "INVITATION_PENDING",
+  NotAuthenticated = "NOT_AUTHENTICATED",
+}
+
 export type OrganizationAuthorizationResetInput = {
   /** The identifier of the Organization whose Authorization Policy should be reset. */
   organizationID: Scalars["UUID"]["input"];
@@ -6691,6 +6777,15 @@ export type OrganizationFilterInput = {
   website?: InputMaybe<Scalars["String"]["input"]>;
 };
 
+export type OrganizationInvitationResult = {
+  /** ID for the pending organization invitation */
+  id: Scalars["UUID"]["output"];
+  /** The invitation itself */
+  invitation: Invitation;
+  /** The organization the invitation is for */
+  organization: Organization;
+};
+
 export type OrganizationSettings = {
   /** The membership settings for this Organization. */
   membership: OrganizationSettingsMembership;
@@ -6699,6 +6794,8 @@ export type OrganizationSettings = {
 };
 
 export type OrganizationSettingsMembership = {
+  /** Allow registered users to apply to associate with this Organization. */
+  allowApplications: Scalars["Boolean"]["output"];
   /** Allow Spaces to invite this Organization to join them. */
   allowSpaceInvitations: Scalars["Boolean"]["output"];
   /** Allow Users with email addresses matching the domain of this Organization to join. */
@@ -8088,6 +8185,7 @@ export enum RoleSetInvitationResultType {
   AlreadyInvitedToPlatformAndRoleSet = "ALREADY_INVITED_TO_PLATFORM_AND_ROLE_SET",
   AlreadyInvitedToRoleSet = "ALREADY_INVITED_TO_ROLE_SET",
   AlreadyMemberOfRoleSet = "ALREADY_MEMBER_OF_ROLE_SET",
+  ExtraRoleLimitReached = "EXTRA_ROLE_LIMIT_REACHED",
   InvitationToParentNotAuthorized = "INVITATION_TO_PARENT_NOT_AUTHORIZED",
   InvitedToPlatformAndRoleSet = "INVITED_TO_PLATFORM_AND_ROLE_SET",
   InvitedToRoleSet = "INVITED_TO_ROLE_SET",
@@ -9712,6 +9810,8 @@ export type UpdateOrganizationSettingsInput = {
 };
 
 export type UpdateOrganizationSettingsMembershipInput = {
+  /** Allow registered users to apply to associate with this Organization. */
+  allowApplications?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** Allow Spaces to invite this Organization to join them. */
   allowSpaceInvitations?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** Allow Users with email addresses matching the domain of this Organization to join. */
@@ -10034,6 +10134,12 @@ export type UpdateUserSettingsNotificationInput = {
 };
 
 export type UpdateUserSettingsNotificationOrganizationInput = {
+  /** Receive a notification when someone applies to associate with an organisation you administer */
+  adminAssociateApplicationReceived?: InputMaybe<NotificationSettingInput>;
+  /** Receive a notification when someone responds to an invitation to associate with an organisation you administer */
+  adminAssociateInvitationResponse?: InputMaybe<NotificationSettingInput>;
+  /** Receive a notification when someone joins an organisation you administer as an associate */
+  adminAssociateJoined?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification when the organization you are admin of is mentioned */
   adminMentioned?: InputMaybe<NotificationSettingInput>;
   /** Receive notification when the organization you are admin of is messaged */
@@ -10129,6 +10235,10 @@ export type UpdateUserSettingsNotificationUserInput = {
 };
 
 export type UpdateUserSettingsNotificationUserMembershipInput = {
+  /** Receive a notification when an organisation decides on my application to associate */
+  organizationAssociateApplicationDecided?: InputMaybe<NotificationSettingInput>;
+  /** Receive a notification when I am invited to associate with an organisation */
+  organizationAssociateInvitationReceived?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification for community invitation */
   spaceCommunityInvitationReceived?: InputMaybe<NotificationSettingInput>;
   /** Receive a notification when I join a new community or when my application is declined */
@@ -10580,6 +10690,12 @@ export type UserSettingsNotificationChannels = {
 };
 
 export type UserSettingsNotificationOrganization = {
+  /** Receive a notification when someone applies to associate with an organisation you administer */
+  adminAssociateApplicationReceived: UserSettingsNotificationChannels;
+  /** Receive a notification when someone responds to an invitation to associate with an organisation you administer */
+  adminAssociateInvitationResponse: UserSettingsNotificationChannels;
+  /** Receive a notification when someone joins an organisation you administer as an associate */
+  adminAssociateJoined: UserSettingsNotificationChannels;
   /** Receive a notification when the organization you are admin of is mentioned */
   adminMentioned: UserSettingsNotificationChannels;
   /** Receive notification when the organization you are admin of is messaged */
@@ -10675,6 +10791,10 @@ export type UserSettingsNotificationUser = {
 };
 
 export type UserSettingsNotificationUserMembership = {
+  /** Receive a notification when an organisation decides on my application to associate */
+  organizationAssociateApplicationDecided: UserSettingsNotificationChannels;
+  /** Receive a notification when I am invited to associate with an organisation */
+  organizationAssociateInvitationReceived: UserSettingsNotificationChannels;
   /** Receive a notification when I am invited to join a Space community */
   spaceCommunityInvitationReceived: UserSettingsNotificationChannels;
   /** Receive a notification when I join a Space or when my application is declined */
@@ -11363,6 +11483,17 @@ export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> =
           roleSet: _RefType["RoleSet"];
         });
     InAppNotificationPayload:
+      | (Omit<
+          InAppNotificationPayloadOrganizationAssociateActor,
+          "actor" | "organization"
+        > & {
+          actor?: Maybe<_RefType["Actor"]>;
+          organization?: Maybe<_RefType["Organization"]>;
+        })
+      | (Omit<
+          InAppNotificationPayloadOrganizationAssociateInvitation,
+          "organization"
+        > & { organization?: Maybe<_RefType["Organization"]> })
       | (Omit<
           InAppNotificationPayloadOrganizationMessageDirect,
           "organization"
@@ -12104,6 +12235,21 @@ export type ResolversTypes = {
   InAppNotificationPayload: ResolverTypeWrapper<
     ResolversInterfaceTypes<ResolversTypes>["InAppNotificationPayload"]
   >;
+  InAppNotificationPayloadOrganizationAssociateActor: ResolverTypeWrapper<
+    Omit<
+      InAppNotificationPayloadOrganizationAssociateActor,
+      "actor" | "organization"
+    > & {
+      actor?: Maybe<ResolversTypes["Actor"]>;
+      organization?: Maybe<ResolversTypes["Organization"]>;
+    }
+  >;
+  InAppNotificationPayloadOrganizationAssociateInvitation: ResolverTypeWrapper<
+    Omit<
+      InAppNotificationPayloadOrganizationAssociateInvitation,
+      "organization"
+    > & { organization?: Maybe<ResolversTypes["Organization"]> }
+  >;
   InAppNotificationPayloadOrganizationMessageDirect: ResolverTypeWrapper<
     Omit<InAppNotificationPayloadOrganizationMessageDirect, "organization"> & {
       organization?: Maybe<ResolversTypes["Organization"]>;
@@ -12391,6 +12537,8 @@ export type ResolversTypes = {
       | "conversations"
       | "mySpaces"
       | "notifications"
+      | "organizationApplications"
+      | "organizationInvitations"
       | "spaceMembershipsFlat"
       | "spaceMembershipsHierarchical"
       | "user"
@@ -12402,6 +12550,12 @@ export type ResolversTypes = {
       conversations: ResolversTypes["MeConversationsResult"];
       mySpaces: Array<ResolversTypes["MySpaceResults"]>;
       notifications: ResolversTypes["PaginatedInAppNotifications"];
+      organizationApplications: Array<
+        ResolversTypes["OrganizationApplicationResult"]
+      >;
+      organizationInvitations: Array<
+        ResolversTypes["OrganizationInvitationResult"]
+      >;
       spaceMembershipsFlat: Array<ResolversTypes["CommunityMembershipResult"]>;
       spaceMembershipsHierarchical: Array<
         ResolversTypes["CommunityMembershipResult"]
@@ -12489,8 +12643,20 @@ export type ResolversTypes = {
       roleSet: ResolversTypes["RoleSet"];
     }
   >;
+  OrganizationApplicationResult: ResolverTypeWrapper<
+    Omit<OrganizationApplicationResult, "organization"> & {
+      organization: ResolversTypes["Organization"];
+    }
+  >;
+  OrganizationAssociateEligibility: ResolverTypeWrapper<OrganizationAssociateEligibility>;
+  OrganizationAssociateEligibilityReason: OrganizationAssociateEligibilityReason;
   OrganizationAuthorizationResetInput: OrganizationAuthorizationResetInput;
   OrganizationFilterInput: OrganizationFilterInput;
+  OrganizationInvitationResult: ResolverTypeWrapper<
+    Omit<OrganizationInvitationResult, "organization"> & {
+      organization: ResolversTypes["Organization"];
+    }
+  >;
   OrganizationSettings: ResolverTypeWrapper<OrganizationSettings>;
   OrganizationSettingsMembership: ResolverTypeWrapper<OrganizationSettingsMembership>;
   OrganizationSettingsPrivacy: ResolverTypeWrapper<OrganizationSettingsPrivacy>;
@@ -13693,6 +13859,17 @@ export type ResolversParentTypes = {
     triggeredBy?: Maybe<ResolversParentTypes["Actor"]>;
   };
   InAppNotificationPayload: ResolversInterfaceTypes<ResolversParentTypes>["InAppNotificationPayload"];
+  InAppNotificationPayloadOrganizationAssociateActor: Omit<
+    InAppNotificationPayloadOrganizationAssociateActor,
+    "actor" | "organization"
+  > & {
+    actor?: Maybe<ResolversParentTypes["Actor"]>;
+    organization?: Maybe<ResolversParentTypes["Organization"]>;
+  };
+  InAppNotificationPayloadOrganizationAssociateInvitation: Omit<
+    InAppNotificationPayloadOrganizationAssociateInvitation,
+    "organization"
+  > & { organization?: Maybe<ResolversParentTypes["Organization"]> };
   InAppNotificationPayloadOrganizationMessageDirect: Omit<
     InAppNotificationPayloadOrganizationMessageDirect,
     "organization"
@@ -13944,6 +14121,8 @@ export type ResolversParentTypes = {
     | "conversations"
     | "mySpaces"
     | "notifications"
+    | "organizationApplications"
+    | "organizationInvitations"
     | "spaceMembershipsFlat"
     | "spaceMembershipsHierarchical"
     | "user"
@@ -13957,6 +14136,12 @@ export type ResolversParentTypes = {
     conversations: ResolversParentTypes["MeConversationsResult"];
     mySpaces: Array<ResolversParentTypes["MySpaceResults"]>;
     notifications: ResolversParentTypes["PaginatedInAppNotifications"];
+    organizationApplications: Array<
+      ResolversParentTypes["OrganizationApplicationResult"]
+    >;
+    organizationInvitations: Array<
+      ResolversParentTypes["OrganizationInvitationResult"]
+    >;
     spaceMembershipsFlat: Array<
       ResolversParentTypes["CommunityMembershipResult"]
     >;
@@ -14028,8 +14213,17 @@ export type ResolversParentTypes = {
     profile?: Maybe<ResolversParentTypes["Profile"]>;
     roleSet: ResolversParentTypes["RoleSet"];
   };
+  OrganizationApplicationResult: Omit<
+    OrganizationApplicationResult,
+    "organization"
+  > & { organization: ResolversParentTypes["Organization"] };
+  OrganizationAssociateEligibility: OrganizationAssociateEligibility;
   OrganizationAuthorizationResetInput: OrganizationAuthorizationResetInput;
   OrganizationFilterInput: OrganizationFilterInput;
+  OrganizationInvitationResult: Omit<
+    OrganizationInvitationResult,
+    "organization"
+  > & { organization: ResolversParentTypes["Organization"] };
   OrganizationSettings: OrganizationSettings;
   OrganizationSettingsMembership: OrganizationSettingsMembership;
   OrganizationSettingsPrivacy: OrganizationSettingsPrivacy;
@@ -17492,6 +17686,8 @@ export type InAppNotificationPayloadResolvers<
   ParentType extends ResolversParentTypes["InAppNotificationPayload"] = ResolversParentTypes["InAppNotificationPayload"]
 > = {
   __resolveType: TypeResolveFn<
+    | "InAppNotificationPayloadOrganizationAssociateActor"
+    | "InAppNotificationPayloadOrganizationAssociateInvitation"
     | "InAppNotificationPayloadOrganizationMessageDirect"
     | "InAppNotificationPayloadOrganizationMessageRoom"
     | "InAppNotificationPayloadPlatformForumDiscussion"
@@ -17523,6 +17719,61 @@ export type InAppNotificationPayloadResolvers<
     ParentType,
     ContextType
   >;
+};
+
+export type InAppNotificationPayloadOrganizationAssociateActorResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadOrganizationAssociateActor"] = ResolversParentTypes["InAppNotificationPayloadOrganizationAssociateActor"]
+> = {
+  actor?: Resolver<Maybe<ResolversTypes["Actor"]>, ParentType, ContextType>;
+  application?: Resolver<
+    Maybe<ResolversTypes["Application"]>,
+    ParentType,
+    ContextType
+  >;
+  extraRolesWithheld?: Resolver<
+    Maybe<Array<ResolversTypes["RoleName"]>>,
+    ParentType,
+    ContextType
+  >;
+  invitation?: Resolver<
+    Maybe<ResolversTypes["Invitation"]>,
+    ParentType,
+    ContextType
+  >;
+  organization?: Resolver<
+    Maybe<ResolversTypes["Organization"]>,
+    ParentType,
+    ContextType
+  >;
+  type?: Resolver<
+    ResolversTypes["NotificationEventPayload"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type InAppNotificationPayloadOrganizationAssociateInvitationResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["InAppNotificationPayloadOrganizationAssociateInvitation"] = ResolversParentTypes["InAppNotificationPayloadOrganizationAssociateInvitation"]
+> = {
+  invitation?: Resolver<
+    Maybe<ResolversTypes["Invitation"]>,
+    ParentType,
+    ContextType
+  >;
+  organization?: Resolver<
+    Maybe<ResolversTypes["Organization"]>,
+    ParentType,
+    ContextType
+  >;
+  type?: Resolver<
+    ResolversTypes["NotificationEventPayload"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type InAppNotificationPayloadOrganizationMessageDirectResolvers<
@@ -18132,6 +18383,11 @@ export type InvitationResolvers<
   createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   extraRoles?: Resolver<
     Array<ResolversTypes["RoleName"]>,
+    ParentType,
+    ContextType
+  >;
+  extraRolesWithheld?: Resolver<
+    Maybe<Array<ResolversTypes["RoleName"]>>,
     ParentType,
     ContextType
   >;
@@ -19130,6 +19386,24 @@ export type MeQueryResultsResolvers<
     ResolversTypes["Float"],
     ParentType,
     ContextType
+  >;
+  organizationApplications?: Resolver<
+    Array<ResolversTypes["OrganizationApplicationResult"]>,
+    ParentType,
+    ContextType,
+    Partial<MeQueryResultsOrganizationApplicationsArgs>
+  >;
+  organizationInvitations?: Resolver<
+    Array<ResolversTypes["OrganizationInvitationResult"]>,
+    ParentType,
+    ContextType,
+    Partial<MeQueryResultsOrganizationInvitationsArgs>
+  >;
+  organizationInvitationsCount?: Resolver<
+    ResolversTypes["Float"],
+    ParentType,
+    ContextType,
+    Partial<MeQueryResultsOrganizationInvitationsCountArgs>
   >;
   spaceMembershipsFlat?: Resolver<
     Array<ResolversTypes["CommunityMembershipResult"]>,
@@ -20995,6 +21269,11 @@ export type OrganizationResolvers<
     ParentType,
     ContextType
   >;
+  myAssociateEligibility?: Resolver<
+    ResolversTypes["OrganizationAssociateEligibility"],
+    ParentType,
+    ContextType
+  >;
   nameID?: Resolver<ResolversTypes["NameID"], ParentType, ContextType>;
   profile?: Resolver<Maybe<ResolversTypes["Profile"]>, ParentType, ContextType>;
   roleSet?: Resolver<ResolversTypes["RoleSet"], ParentType, ContextType>;
@@ -21019,6 +21298,56 @@ export type OrganizationResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type OrganizationApplicationResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["OrganizationApplicationResult"] = ResolversParentTypes["OrganizationApplicationResult"]
+> = {
+  application?: Resolver<
+    ResolversTypes["Application"],
+    ParentType,
+    ContextType
+  >;
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  organization?: Resolver<
+    ResolversTypes["Organization"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type OrganizationAssociateEligibilityResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["OrganizationAssociateEligibility"] = ResolversParentTypes["OrganizationAssociateEligibility"]
+> = {
+  canApply?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  canJoinDirectly?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
+  reason?: Resolver<
+    ResolversTypes["OrganizationAssociateEligibilityReason"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type OrganizationInvitationResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["OrganizationInvitationResult"] = ResolversParentTypes["OrganizationInvitationResult"]
+> = {
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  invitation?: Resolver<ResolversTypes["Invitation"], ParentType, ContextType>;
+  organization?: Resolver<
+    ResolversTypes["Organization"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type OrganizationSettingsResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["OrganizationSettings"] = ResolversParentTypes["OrganizationSettings"]
@@ -21040,6 +21369,11 @@ export type OrganizationSettingsMembershipResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["OrganizationSettingsMembership"] = ResolversParentTypes["OrganizationSettingsMembership"]
 > = {
+  allowApplications?: Resolver<
+    ResolversTypes["Boolean"],
+    ParentType,
+    ContextType
+  >;
   allowSpaceInvitations?: Resolver<
     ResolversTypes["Boolean"],
     ParentType,
@@ -24428,6 +24762,21 @@ export type UserSettingsNotificationOrganizationResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["UserSettingsNotificationOrganization"] = ResolversParentTypes["UserSettingsNotificationOrganization"]
 > = {
+  adminAssociateApplicationReceived?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  adminAssociateInvitationResponse?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  adminAssociateJoined?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
   adminMentioned?: Resolver<
     ResolversTypes["UserSettingsNotificationChannels"],
     ParentType,
@@ -24658,6 +25007,16 @@ export type UserSettingsNotificationUserMembershipResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["UserSettingsNotificationUserMembership"] = ResolversParentTypes["UserSettingsNotificationUserMembership"]
 > = {
+  organizationAssociateApplicationDecided?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
+  organizationAssociateInvitationReceived?: Resolver<
+    ResolversTypes["UserSettingsNotificationChannels"],
+    ParentType,
+    ContextType
+  >;
   spaceCommunityInvitationReceived?: Resolver<
     ResolversTypes["UserSettingsNotificationChannels"],
     ParentType,
@@ -25215,6 +25574,8 @@ export type Resolvers<ContextType = any> = {
   ISearchResults?: ISearchResultsResolvers<ContextType>;
   InAppNotification?: InAppNotificationResolvers<ContextType>;
   InAppNotificationPayload?: InAppNotificationPayloadResolvers<ContextType>;
+  InAppNotificationPayloadOrganizationAssociateActor?: InAppNotificationPayloadOrganizationAssociateActorResolvers<ContextType>;
+  InAppNotificationPayloadOrganizationAssociateInvitation?: InAppNotificationPayloadOrganizationAssociateInvitationResolvers<ContextType>;
   InAppNotificationPayloadOrganizationMessageDirect?: InAppNotificationPayloadOrganizationMessageDirectResolvers<ContextType>;
   InAppNotificationPayloadOrganizationMessageRoom?: InAppNotificationPayloadOrganizationMessageRoomResolvers<ContextType>;
   InAppNotificationPayloadPlatformForumDiscussion?: InAppNotificationPayloadPlatformForumDiscussionResolvers<ContextType>;
@@ -25289,6 +25650,9 @@ export type Resolvers<ContextType = any> = {
   NameID?: GraphQLScalarType;
   NotificationRecipientResult?: NotificationRecipientResultResolvers<ContextType>;
   Organization?: OrganizationResolvers<ContextType>;
+  OrganizationApplicationResult?: OrganizationApplicationResultResolvers<ContextType>;
+  OrganizationAssociateEligibility?: OrganizationAssociateEligibilityResolvers<ContextType>;
+  OrganizationInvitationResult?: OrganizationInvitationResultResolvers<ContextType>;
   OrganizationSettings?: OrganizationSettingsResolvers<ContextType>;
   OrganizationSettingsMembership?: OrganizationSettingsMembershipResolvers<ContextType>;
   OrganizationSettingsPrivacy?: OrganizationSettingsPrivacyResolvers<ContextType>;
@@ -25856,6 +26220,7 @@ export type MembersAndLeadsDataFragment = {
       membership: {
         allowUsersMatchingDomainToJoin: boolean;
         allowSpaceInvitations: boolean;
+        allowApplications: boolean;
       };
     };
     authorization?:
@@ -26067,6 +26432,7 @@ export type MembersAndLeadsDataFragment = {
       membership: {
         allowUsersMatchingDomainToJoin: boolean;
         allowSpaceInvitations: boolean;
+        allowApplications: boolean;
       };
     };
     authorization?:
@@ -26278,6 +26644,7 @@ export type MembersAndLeadsDataFragment = {
       membership: {
         allowUsersMatchingDomainToJoin: boolean;
         allowSpaceInvitations: boolean;
+        allowApplications: boolean;
       };
     };
     authorization?:
@@ -29054,6 +29421,7 @@ export type CommunityDataFragment = {
         membership: {
           allowUsersMatchingDomainToJoin: boolean;
           allowSpaceInvitations: boolean;
+          allowApplications: boolean;
         };
       };
       authorization?:
@@ -29277,6 +29645,7 @@ export type CommunityDataFragment = {
         membership: {
           allowUsersMatchingDomainToJoin: boolean;
           allowSpaceInvitations: boolean;
+          allowApplications: boolean;
         };
       };
       authorization?:
@@ -29500,6 +29869,7 @@ export type CommunityDataFragment = {
         membership: {
           allowUsersMatchingDomainToJoin: boolean;
           allowSpaceInvitations: boolean;
+          allowApplications: boolean;
         };
       };
       authorization?:
@@ -30539,6 +30909,7 @@ export type OrganizationDataFragment = {
     membership: {
       allowUsersMatchingDomainToJoin: boolean;
       allowSpaceInvitations: boolean;
+      allowApplications: boolean;
     };
   };
   authorization?:
@@ -31832,6 +32203,7 @@ export type SubspaceL1DataFragment = {
             membership: {
               allowUsersMatchingDomainToJoin: boolean;
               allowSpaceInvitations: boolean;
+              allowApplications: boolean;
             };
           };
           authorization?:
@@ -32066,6 +32438,7 @@ export type SubspaceL1DataFragment = {
             membership: {
               allowUsersMatchingDomainToJoin: boolean;
               allowSpaceInvitations: boolean;
+              allowApplications: boolean;
             };
           };
           authorization?:
@@ -32300,6 +32673,7 @@ export type SubspaceL1DataFragment = {
             membership: {
               allowUsersMatchingDomainToJoin: boolean;
               allowSpaceInvitations: boolean;
+              allowApplications: boolean;
             };
           };
           authorization?:
@@ -33499,6 +33873,7 @@ export type SubspaceL1DataFragment = {
           membership: {
             allowUsersMatchingDomainToJoin: boolean;
             allowSpaceInvitations: boolean;
+            allowApplications: boolean;
           };
         };
         authorization?:
@@ -33729,6 +34104,7 @@ export type SubspaceL1DataFragment = {
           membership: {
             allowUsersMatchingDomainToJoin: boolean;
             allowSpaceInvitations: boolean;
+            allowApplications: boolean;
           };
         };
         authorization?:
@@ -33959,6 +34335,7 @@ export type SubspaceL1DataFragment = {
           membership: {
             allowUsersMatchingDomainToJoin: boolean;
             allowSpaceInvitations: boolean;
+            allowApplications: boolean;
           };
         };
         authorization?:
@@ -35195,6 +35572,7 @@ export type SubspaceL2DataFragment = {
             membership: {
               allowUsersMatchingDomainToJoin: boolean;
               allowSpaceInvitations: boolean;
+              allowApplications: boolean;
             };
           };
           authorization?:
@@ -35429,6 +35807,7 @@ export type SubspaceL2DataFragment = {
             membership: {
               allowUsersMatchingDomainToJoin: boolean;
               allowSpaceInvitations: boolean;
+              allowApplications: boolean;
             };
           };
           authorization?:
@@ -35663,6 +36042,7 @@ export type SubspaceL2DataFragment = {
             membership: {
               allowUsersMatchingDomainToJoin: boolean;
               allowSpaceInvitations: boolean;
+              allowApplications: boolean;
             };
           };
           authorization?:
@@ -36862,6 +37242,7 @@ export type SubspaceL2DataFragment = {
           membership: {
             allowUsersMatchingDomainToJoin: boolean;
             allowSpaceInvitations: boolean;
+            allowApplications: boolean;
           };
         };
         authorization?:
@@ -37092,6 +37473,7 @@ export type SubspaceL2DataFragment = {
           membership: {
             allowUsersMatchingDomainToJoin: boolean;
             allowSpaceInvitations: boolean;
+            allowApplications: boolean;
           };
         };
         authorization?:
@@ -37322,6 +37704,7 @@ export type SubspaceL2DataFragment = {
           membership: {
             allowUsersMatchingDomainToJoin: boolean;
             allowSpaceInvitations: boolean;
+            allowApplications: boolean;
           };
         };
         authorization?:
@@ -38127,6 +38510,7 @@ export type SpaceDataFragment = {
           membership: {
             allowUsersMatchingDomainToJoin: boolean;
             allowSpaceInvitations: boolean;
+            allowApplications: boolean;
           };
         };
         authorization?:
@@ -38357,6 +38741,7 @@ export type SpaceDataFragment = {
           membership: {
             allowUsersMatchingDomainToJoin: boolean;
             allowSpaceInvitations: boolean;
+            allowApplications: boolean;
           };
         };
         authorization?:
@@ -38587,6 +38972,7 @@ export type SpaceDataFragment = {
           membership: {
             allowUsersMatchingDomainToJoin: boolean;
             allowSpaceInvitations: boolean;
+            allowApplications: boolean;
           };
         };
         authorization?:
@@ -40350,6 +40736,7 @@ export type SpaceDataFragment = {
             membership: {
               allowUsersMatchingDomainToJoin: boolean;
               allowSpaceInvitations: boolean;
+              allowApplications: boolean;
             };
           };
           authorization?:
@@ -40584,6 +40971,7 @@ export type SpaceDataFragment = {
             membership: {
               allowUsersMatchingDomainToJoin: boolean;
               allowSpaceInvitations: boolean;
+              allowApplications: boolean;
             };
           };
           authorization?:
@@ -40818,6 +41206,7 @@ export type SpaceDataFragment = {
             membership: {
               allowUsersMatchingDomainToJoin: boolean;
               allowSpaceInvitations: boolean;
+              allowApplications: boolean;
             };
           };
           authorization?:
@@ -42602,6 +42991,7 @@ export type SubspaceDataFragment = {
           membership: {
             allowUsersMatchingDomainToJoin: boolean;
             allowSpaceInvitations: boolean;
+            allowApplications: boolean;
           };
         };
         authorization?:
@@ -42832,6 +43222,7 @@ export type SubspaceDataFragment = {
           membership: {
             allowUsersMatchingDomainToJoin: boolean;
             allowSpaceInvitations: boolean;
+            allowApplications: boolean;
           };
         };
         authorization?:
@@ -43062,6 +43453,7 @@ export type SubspaceDataFragment = {
           membership: {
             allowUsersMatchingDomainToJoin: boolean;
             allowSpaceInvitations: boolean;
+            allowApplications: boolean;
           };
         };
         authorization?:
@@ -45071,6 +45463,7 @@ export type AssignRoleToOrganizationMutation = {
       membership: {
         allowUsersMatchingDomainToJoin: boolean;
         allowSpaceInvitations: boolean;
+        allowApplications: boolean;
       };
     };
     authorization?:
@@ -45911,6 +46304,7 @@ export type InvitationStateEventMutationVariables = Exact<{
 
 export type InvitationStateEventMutation = {
   eventOnInvitation: {
+    extraRolesWithheld?: Array<RoleName> | undefined;
     id: string;
     state: string;
     nextEvents: Array<string>;
@@ -46204,6 +46598,7 @@ export type RemoveRoleFromOrganizationMutation = {
       membership: {
         allowUsersMatchingDomainToJoin: boolean;
         allowSpaceInvitations: boolean;
+        allowApplications: boolean;
       };
     };
     authorization?:
@@ -49849,6 +50244,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
             membership: {
               allowUsersMatchingDomainToJoin: boolean;
               allowSpaceInvitations: boolean;
+              allowApplications: boolean;
             };
           };
           authorization?:
@@ -50083,6 +50479,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
             membership: {
               allowUsersMatchingDomainToJoin: boolean;
               allowSpaceInvitations: boolean;
+              allowApplications: boolean;
             };
           };
           authorization?:
@@ -50317,6 +50714,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
             membership: {
               allowUsersMatchingDomainToJoin: boolean;
               allowSpaceInvitations: boolean;
+              allowApplications: boolean;
             };
           };
           authorization?:
@@ -52154,6 +52552,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
               membership: {
                 allowUsersMatchingDomainToJoin: boolean;
                 allowSpaceInvitations: boolean;
+                allowApplications: boolean;
               };
             };
             authorization?:
@@ -52399,6 +52798,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
               membership: {
                 allowUsersMatchingDomainToJoin: boolean;
                 allowSpaceInvitations: boolean;
+                allowApplications: boolean;
               };
             };
             authorization?:
@@ -52644,6 +53044,7 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
               membership: {
                 allowUsersMatchingDomainToJoin: boolean;
                 allowSpaceInvitations: boolean;
+                allowApplications: boolean;
               };
             };
             authorization?:
@@ -54020,6 +54421,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
             membership: {
               allowUsersMatchingDomainToJoin: boolean;
               allowSpaceInvitations: boolean;
+              allowApplications: boolean;
             };
           };
           authorization?:
@@ -54254,6 +54656,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
             membership: {
               allowUsersMatchingDomainToJoin: boolean;
               allowSpaceInvitations: boolean;
+              allowApplications: boolean;
             };
           };
           authorization?:
@@ -54488,6 +54891,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
             membership: {
               allowUsersMatchingDomainToJoin: boolean;
               allowSpaceInvitations: boolean;
+              allowApplications: boolean;
             };
           };
           authorization?:
@@ -56325,6 +56729,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
               membership: {
                 allowUsersMatchingDomainToJoin: boolean;
                 allowSpaceInvitations: boolean;
+                allowApplications: boolean;
               };
             };
             authorization?:
@@ -56570,6 +56975,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
               membership: {
                 allowUsersMatchingDomainToJoin: boolean;
                 allowSpaceInvitations: boolean;
+                allowApplications: boolean;
               };
             };
             authorization?:
@@ -56815,6 +57221,7 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
               membership: {
                 allowUsersMatchingDomainToJoin: boolean;
                 allowSpaceInvitations: boolean;
+                allowApplications: boolean;
               };
             };
             authorization?:
@@ -58191,6 +58598,7 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
             membership: {
               allowUsersMatchingDomainToJoin: boolean;
               allowSpaceInvitations: boolean;
+              allowApplications: boolean;
             };
           };
           authorization?:
@@ -58425,6 +58833,7 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
             membership: {
               allowUsersMatchingDomainToJoin: boolean;
               allowSpaceInvitations: boolean;
+              allowApplications: boolean;
             };
           };
           authorization?:
@@ -58659,6 +59068,7 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
             membership: {
               allowUsersMatchingDomainToJoin: boolean;
               allowSpaceInvitations: boolean;
+              allowApplications: boolean;
             };
           };
           authorization?:
@@ -60496,6 +60906,7 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
               membership: {
                 allowUsersMatchingDomainToJoin: boolean;
                 allowSpaceInvitations: boolean;
+                allowApplications: boolean;
               };
             };
             authorization?:
@@ -60741,6 +61152,7 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
               membership: {
                 allowUsersMatchingDomainToJoin: boolean;
                 allowSpaceInvitations: boolean;
+                allowApplications: boolean;
               };
             };
             authorization?:
@@ -60986,6 +61398,7 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
               membership: {
                 allowUsersMatchingDomainToJoin: boolean;
                 allowSpaceInvitations: boolean;
+                allowApplications: boolean;
               };
             };
             authorization?:
@@ -62362,6 +62775,7 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
             membership: {
               allowUsersMatchingDomainToJoin: boolean;
               allowSpaceInvitations: boolean;
+              allowApplications: boolean;
             };
           };
           authorization?:
@@ -62596,6 +63010,7 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
             membership: {
               allowUsersMatchingDomainToJoin: boolean;
               allowSpaceInvitations: boolean;
+              allowApplications: boolean;
             };
           };
           authorization?:
@@ -62830,6 +63245,7 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
             membership: {
               allowUsersMatchingDomainToJoin: boolean;
               allowSpaceInvitations: boolean;
+              allowApplications: boolean;
             };
           };
           authorization?:
@@ -64667,6 +65083,7 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
               membership: {
                 allowUsersMatchingDomainToJoin: boolean;
                 allowSpaceInvitations: boolean;
+                allowApplications: boolean;
               };
             };
             authorization?:
@@ -64912,6 +65329,7 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
               membership: {
                 allowUsersMatchingDomainToJoin: boolean;
                 allowSpaceInvitations: boolean;
+                allowApplications: boolean;
               };
             };
             authorization?:
@@ -65157,6 +65575,7 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
               membership: {
                 allowUsersMatchingDomainToJoin: boolean;
                 allowSpaceInvitations: boolean;
+                allowApplications: boolean;
               };
             };
             authorization?:
@@ -66533,6 +66952,7 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
             membership: {
               allowUsersMatchingDomainToJoin: boolean;
               allowSpaceInvitations: boolean;
+              allowApplications: boolean;
             };
           };
           authorization?:
@@ -66767,6 +67187,7 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
             membership: {
               allowUsersMatchingDomainToJoin: boolean;
               allowSpaceInvitations: boolean;
+              allowApplications: boolean;
             };
           };
           authorization?:
@@ -67001,6 +67422,7 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
             membership: {
               allowUsersMatchingDomainToJoin: boolean;
               allowSpaceInvitations: boolean;
+              allowApplications: boolean;
             };
           };
           authorization?:
@@ -68838,6 +69260,7 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
               membership: {
                 allowUsersMatchingDomainToJoin: boolean;
                 allowSpaceInvitations: boolean;
+                allowApplications: boolean;
               };
             };
             authorization?:
@@ -69083,6 +69506,7 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
               membership: {
                 allowUsersMatchingDomainToJoin: boolean;
                 allowSpaceInvitations: boolean;
+                allowApplications: boolean;
               };
             };
             authorization?:
@@ -69328,6 +69752,7 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
               membership: {
                 allowUsersMatchingDomainToJoin: boolean;
                 allowSpaceInvitations: boolean;
+                allowApplications: boolean;
               };
             };
             authorization?:
@@ -70722,6 +71147,7 @@ export type UpdateSpaceMutation = {
             membership: {
               allowUsersMatchingDomainToJoin: boolean;
               allowSpaceInvitations: boolean;
+              allowApplications: boolean;
             };
           };
           authorization?:
@@ -70956,6 +71382,7 @@ export type UpdateSpaceMutation = {
             membership: {
               allowUsersMatchingDomainToJoin: boolean;
               allowSpaceInvitations: boolean;
+              allowApplications: boolean;
             };
           };
           authorization?:
@@ -71190,6 +71617,7 @@ export type UpdateSpaceMutation = {
             membership: {
               allowUsersMatchingDomainToJoin: boolean;
               allowSpaceInvitations: boolean;
+              allowApplications: boolean;
             };
           };
           authorization?:
@@ -73027,6 +73455,7 @@ export type UpdateSpaceMutation = {
               membership: {
                 allowUsersMatchingDomainToJoin: boolean;
                 allowSpaceInvitations: boolean;
+                allowApplications: boolean;
               };
             };
             authorization?:
@@ -73272,6 +73701,7 @@ export type UpdateSpaceMutation = {
               membership: {
                 allowUsersMatchingDomainToJoin: boolean;
                 allowSpaceInvitations: boolean;
+                allowApplications: boolean;
               };
             };
             authorization?:
@@ -73517,6 +73947,7 @@ export type UpdateSpaceMutation = {
               membership: {
                 allowUsersMatchingDomainToJoin: boolean;
                 allowSpaceInvitations: boolean;
+                allowApplications: boolean;
               };
             };
             authorization?:
@@ -75414,6 +75845,7 @@ export type CreateSubspaceMutation = {
               membership: {
                 allowUsersMatchingDomainToJoin: boolean;
                 allowSpaceInvitations: boolean;
+                allowApplications: boolean;
               };
             };
             authorization?:
@@ -75659,6 +76091,7 @@ export type CreateSubspaceMutation = {
               membership: {
                 allowUsersMatchingDomainToJoin: boolean;
                 allowSpaceInvitations: boolean;
+                allowApplications: boolean;
               };
             };
             authorization?:
@@ -75904,6 +76337,7 @@ export type CreateSubspaceMutation = {
               membership: {
                 allowUsersMatchingDomainToJoin: boolean;
                 allowSpaceInvitations: boolean;
+                allowApplications: boolean;
               };
             };
             authorization?:
@@ -77133,6 +77567,7 @@ export type CreateSubspaceMutation = {
             membership: {
               allowUsersMatchingDomainToJoin: boolean;
               allowSpaceInvitations: boolean;
+              allowApplications: boolean;
             };
           };
           authorization?:
@@ -77367,6 +77802,7 @@ export type CreateSubspaceMutation = {
             membership: {
               allowUsersMatchingDomainToJoin: boolean;
               allowSpaceInvitations: boolean;
+              allowApplications: boolean;
             };
           };
           authorization?:
@@ -77601,6 +78037,7 @@ export type CreateSubspaceMutation = {
             membership: {
               allowUsersMatchingDomainToJoin: boolean;
               allowSpaceInvitations: boolean;
+              allowApplications: boolean;
             };
           };
           authorization?:
@@ -78899,6 +79336,7 @@ export type UpdateSubspaceMutation = {
               membership: {
                 allowUsersMatchingDomainToJoin: boolean;
                 allowSpaceInvitations: boolean;
+                allowApplications: boolean;
               };
             };
             authorization?:
@@ -79144,6 +79582,7 @@ export type UpdateSubspaceMutation = {
               membership: {
                 allowUsersMatchingDomainToJoin: boolean;
                 allowSpaceInvitations: boolean;
+                allowApplications: boolean;
               };
             };
             authorization?:
@@ -79389,6 +79828,7 @@ export type UpdateSubspaceMutation = {
               membership: {
                 allowUsersMatchingDomainToJoin: boolean;
                 allowSpaceInvitations: boolean;
+                allowApplications: boolean;
               };
             };
             authorization?:
@@ -80618,6 +81058,7 @@ export type UpdateSubspaceMutation = {
             membership: {
               allowUsersMatchingDomainToJoin: boolean;
               allowSpaceInvitations: boolean;
+              allowApplications: boolean;
             };
           };
           authorization?:
@@ -80852,6 +81293,7 @@ export type UpdateSubspaceMutation = {
             membership: {
               allowUsersMatchingDomainToJoin: boolean;
               allowSpaceInvitations: boolean;
+              allowApplications: boolean;
             };
           };
           authorization?:
@@ -81086,6 +81528,7 @@ export type UpdateSubspaceMutation = {
             membership: {
               allowUsersMatchingDomainToJoin: boolean;
               allowSpaceInvitations: boolean;
+              allowApplications: boolean;
             };
           };
           authorization?:
@@ -81282,6 +81725,14 @@ export type UpdateInnovationFlowStateMutationVariables = Exact<{
 
 export type UpdateInnovationFlowStateMutation = {
   updateInnovationFlowState: { id: string; displayName: string };
+};
+
+export type AuthorizationPolicyResetOnOrganizationMutationVariables = Exact<{
+  organizationID: Scalars["UUID"]["input"];
+}>;
+
+export type AuthorizationPolicyResetOnOrganizationMutation = {
+  authorizationPolicyResetOnOrganization: { id: string };
 };
 
 export type CreateOrganizationMutationVariables = Exact<{
@@ -81494,6 +81945,7 @@ export type CreateOrganizationMutation = {
       membership: {
         allowUsersMatchingDomainToJoin: boolean;
         allowSpaceInvitations: boolean;
+        allowApplications: boolean;
       };
     };
     authorization?:
@@ -81718,6 +82170,7 @@ export type UpdateOrganizationMutation = {
       membership: {
         allowUsersMatchingDomainToJoin: boolean;
         allowSpaceInvitations: boolean;
+        allowApplications: boolean;
       };
     };
     authorization?:
@@ -81738,6 +82191,7 @@ export type UpdateOrganizationSettingsMutation = {
       membership: {
         allowUsersMatchingDomainToJoin: boolean;
         allowSpaceInvitations: boolean;
+        allowApplications: boolean;
       };
     };
   };
@@ -83445,6 +83899,53 @@ export type UpdateVirtualContributorSettingsMutation = {
   };
 };
 
+export type GetOrganizationRoleSetPendingQueryVariables = Exact<{
+  roleSetId: Scalars["UUID"]["input"];
+}>;
+
+export type GetOrganizationRoleSetPendingQuery = {
+  lookup: {
+    roleSet?:
+      | {
+          id: string;
+          applications: Array<{
+            id: string;
+            state: string;
+            questions: Array<{ name: string; value: string }>;
+          }>;
+          invitations: Array<{
+            id: string;
+            state: string;
+            extraRoles: Array<RoleName>;
+          }>;
+          platformInvitations: Array<{ id: string }>;
+        }
+      | undefined;
+  };
+};
+
+export type GetRoleSetApplicationFormQueryVariables = Exact<{
+  roleSetId: Scalars["UUID"]["input"];
+}>;
+
+export type GetRoleSetApplicationFormQuery = {
+  lookup: {
+    roleSet?:
+      | {
+          id: string;
+          applicationForm: {
+            id: string;
+            questions: Array<{
+              question: string;
+              required: boolean;
+              sortOrder: number;
+            }>;
+          };
+        }
+      | undefined;
+  };
+};
+
 export type RoleSetAvailableMembersQueryVariables = Exact<{
   roleSetId: Scalars["UUID"]["input"];
   first: Scalars["Int"]["input"];
@@ -83734,6 +84235,25 @@ export type RoleSetUserPrivilegesQuery = {
           authorization?:
             | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
             | undefined;
+        }
+      | undefined;
+  };
+};
+
+export type GetRoleSetUsersInRolesQueryVariables = Exact<{
+  roleSetId: Scalars["UUID"]["input"];
+  roles: Array<RoleName> | RoleName;
+}>;
+
+export type GetRoleSetUsersInRolesQuery = {
+  lookup: {
+    roleSet?:
+      | {
+          id: string;
+          usersInRoles: Array<{
+            role: RoleName;
+            users: Array<{ id: string; nameID: string; email: string }>;
+          }>;
         }
       | undefined;
   };
@@ -86542,6 +87062,7 @@ export type GetSpaceAvailableMembersQuery = {
                   membership: {
                     allowUsersMatchingDomainToJoin: boolean;
                     allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
                   };
                 };
                 authorization?:
@@ -86802,6 +87323,7 @@ export type GetSpaceAvailableMembersQuery = {
                   membership: {
                     allowUsersMatchingDomainToJoin: boolean;
                     allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
                   };
                 };
                 authorization?:
@@ -87062,6 +87584,7 @@ export type GetSpaceAvailableMembersQuery = {
                   membership: {
                     allowUsersMatchingDomainToJoin: boolean;
                     allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
                   };
                 };
                 authorization?:
@@ -87534,6 +88057,7 @@ export type GetSpaceCommunityQuery = {
                   membership: {
                     allowUsersMatchingDomainToJoin: boolean;
                     allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
                   };
                 };
                 authorization?:
@@ -87794,6 +88318,7 @@ export type GetSpaceCommunityQuery = {
                   membership: {
                     allowUsersMatchingDomainToJoin: boolean;
                     allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
                   };
                 };
                 authorization?:
@@ -88054,6 +88579,7 @@ export type GetSpaceCommunityQuery = {
                   membership: {
                     allowUsersMatchingDomainToJoin: boolean;
                     allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
                   };
                 };
                 authorization?:
@@ -88525,6 +89051,7 @@ export type GetSubspaceAvailableMembersQuery = {
                   membership: {
                     allowUsersMatchingDomainToJoin: boolean;
                     allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
                   };
                 };
                 authorization?:
@@ -88785,6 +89312,7 @@ export type GetSubspaceAvailableMembersQuery = {
                   membership: {
                     allowUsersMatchingDomainToJoin: boolean;
                     allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
                   };
                 };
                 authorization?:
@@ -89045,6 +89573,7 @@ export type GetSubspaceAvailableMembersQuery = {
                   membership: {
                     allowUsersMatchingDomainToJoin: boolean;
                     allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
                   };
                 };
                 authorization?:
@@ -89516,6 +90045,7 @@ export type GetSubspaceCommunityQuery = {
                   membership: {
                     allowUsersMatchingDomainToJoin: boolean;
                     allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
                   };
                 };
                 authorization?:
@@ -89776,6 +90306,7 @@ export type GetSubspaceCommunityQuery = {
                   membership: {
                     allowUsersMatchingDomainToJoin: boolean;
                     allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
                   };
                 };
                 authorization?:
@@ -90036,6 +90567,7 @@ export type GetSubspaceCommunityQuery = {
                   membership: {
                     allowUsersMatchingDomainToJoin: boolean;
                     allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
                   };
                 };
                 authorization?:
@@ -90418,6 +90950,26 @@ export type GetOrgVisualUriQuery = {
   };
 };
 
+export type GetOrganizationAssociateEligibilityQueryVariables = Exact<{
+  organizationId: Scalars["UUID"]["input"];
+}>;
+
+export type GetOrganizationAssociateEligibilityQuery = {
+  organization: {
+    id: string;
+    myAssociateEligibility: {
+      canApply: boolean;
+      canJoinDirectly: boolean;
+      reason: OrganizationAssociateEligibilityReason;
+    };
+    roleSet: {
+      id: string;
+      myMembershipStatus?: CommunityMembershipStatus | undefined;
+      myRolesImplicit: Array<RoleSetRoleImplicit>;
+    };
+  };
+};
+
 export type GetOrganizationDataQueryVariables = Exact<{
   organizationId: Scalars["UUID"]["input"];
 }>;
@@ -90628,6 +91180,7 @@ export type GetOrganizationDataQuery = {
       membership: {
         allowUsersMatchingDomainToJoin: boolean;
         allowSpaceInvitations: boolean;
+        allowApplications: boolean;
       };
     };
     authorization?:
@@ -90846,6 +91399,7 @@ export type GetOrganizationsDataQuery = {
       membership: {
         allowUsersMatchingDomainToJoin: boolean;
         allowSpaceInvitations: boolean;
+        allowApplications: boolean;
       };
     };
     authorization?:
@@ -91102,6 +91656,7 @@ export type OrganizationsPaginatedQuery = {
         membership: {
           allowUsersMatchingDomainToJoin: boolean;
           allowSpaceInvitations: boolean;
+          allowApplications: boolean;
         };
       };
       authorization?:
@@ -92607,6 +93162,7 @@ export type GetSpaceDataQuery = {
                   membership: {
                     allowUsersMatchingDomainToJoin: boolean;
                     allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
                   };
                 };
                 authorization?:
@@ -92867,6 +93423,7 @@ export type GetSpaceDataQuery = {
                   membership: {
                     allowUsersMatchingDomainToJoin: boolean;
                     allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
                   };
                 };
                 authorization?:
@@ -93127,6 +93684,7 @@ export type GetSpaceDataQuery = {
                   membership: {
                     allowUsersMatchingDomainToJoin: boolean;
                     allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
                   };
                 };
                 authorization?:
@@ -95095,6 +95653,7 @@ export type GetSpaceDataQuery = {
                     membership: {
                       allowUsersMatchingDomainToJoin: boolean;
                       allowSpaceInvitations: boolean;
+                      allowApplications: boolean;
                     };
                   };
                   authorization?:
@@ -95359,6 +95918,7 @@ export type GetSpaceDataQuery = {
                     membership: {
                       allowUsersMatchingDomainToJoin: boolean;
                       allowSpaceInvitations: boolean;
+                      allowApplications: boolean;
                     };
                   };
                   authorization?:
@@ -95623,6 +96183,7 @@ export type GetSpaceDataQuery = {
                     membership: {
                       allowUsersMatchingDomainToJoin: boolean;
                       allowSpaceInvitations: boolean;
+                      allowApplications: boolean;
                     };
                   };
                   authorization?:
@@ -97664,6 +98225,7 @@ export type GetSubspacePageQuery = {
                     membership: {
                       allowUsersMatchingDomainToJoin: boolean;
                       allowSpaceInvitations: boolean;
+                      allowApplications: boolean;
                     };
                   };
                   authorization?:
@@ -97928,6 +98490,7 @@ export type GetSubspacePageQuery = {
                     membership: {
                       allowUsersMatchingDomainToJoin: boolean;
                       allowSpaceInvitations: boolean;
+                      allowApplications: boolean;
                     };
                   };
                   authorization?:
@@ -98192,6 +98755,7 @@ export type GetSubspacePageQuery = {
                     membership: {
                       allowUsersMatchingDomainToJoin: boolean;
                       allowSpaceInvitations: boolean;
+                      allowApplications: boolean;
                     };
                   };
                   authorization?:
@@ -99550,6 +100114,7 @@ export type GetSubspacePageQuery = {
                   membership: {
                     allowUsersMatchingDomainToJoin: boolean;
                     allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
                   };
                 };
                 authorization?:
@@ -99810,6 +100375,7 @@ export type GetSubspacePageQuery = {
                   membership: {
                     allowUsersMatchingDomainToJoin: boolean;
                     allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
                   };
                 };
                 authorization?:
@@ -100070,6 +100636,7 @@ export type GetSubspacePageQuery = {
                   membership: {
                     allowUsersMatchingDomainToJoin: boolean;
                     allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
                   };
                 };
                 authorization?:
@@ -101436,6 +102003,7 @@ export type GetSpaceAboutDetailsQuery = {
                   membership: {
                     allowUsersMatchingDomainToJoin: boolean;
                     allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
                   };
                 };
                 authorization?:
@@ -101696,6 +102264,7 @@ export type GetSpaceAboutDetailsQuery = {
                   membership: {
                     allowUsersMatchingDomainToJoin: boolean;
                     allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
                   };
                 };
                 authorization?:
@@ -101956,6 +102525,7 @@ export type GetSpaceAboutDetailsQuery = {
                   membership: {
                     allowUsersMatchingDomainToJoin: boolean;
                     allowSpaceInvitations: boolean;
+                    allowApplications: boolean;
                   };
                 };
                 authorization?:
@@ -103371,6 +103941,7 @@ export type GetSubspacesDataQuery = {
                       membership: {
                         allowUsersMatchingDomainToJoin: boolean;
                         allowSpaceInvitations: boolean;
+                        allowApplications: boolean;
                       };
                     };
                     authorization?:
@@ -103635,6 +104206,7 @@ export type GetSubspacesDataQuery = {
                       membership: {
                         allowUsersMatchingDomainToJoin: boolean;
                         allowSpaceInvitations: boolean;
+                        allowApplications: boolean;
                       };
                     };
                     authorization?:
@@ -103899,6 +104471,7 @@ export type GetSubspacesDataQuery = {
                       membership: {
                         allowUsersMatchingDomainToJoin: boolean;
                         allowSpaceInvitations: boolean;
+                        allowApplications: boolean;
                       };
                     };
                     authorization?:
@@ -105292,6 +105865,7 @@ export type GetSubspacesDataQuery = {
                     membership: {
                       allowUsersMatchingDomainToJoin: boolean;
                       allowSpaceInvitations: boolean;
+                      allowApplications: boolean;
                     };
                   };
                   authorization?:
@@ -105556,6 +106130,7 @@ export type GetSubspacesDataQuery = {
                     membership: {
                       allowUsersMatchingDomainToJoin: boolean;
                       allowSpaceInvitations: boolean;
+                      allowApplications: boolean;
                     };
                   };
                   authorization?:
@@ -105820,6 +106395,7 @@ export type GetSubspacesDataQuery = {
                     membership: {
                       allowUsersMatchingDomainToJoin: boolean;
                       allowSpaceInvitations: boolean;
+                      allowApplications: boolean;
                     };
                   };
                   authorization?:
@@ -106860,6 +107436,42 @@ export type GetUsersDataQuery = {
         }
       | undefined;
   }>;
+};
+
+export type MeInAppNotificationsQueryVariables = Exact<{
+  types?: InputMaybe<Array<NotificationEvent> | NotificationEvent>;
+}>;
+
+export type MeInAppNotificationsQuery = {
+  me: {
+    notifications: {
+      total: number;
+      inAppNotifications: Array<{ id: string; type: NotificationEvent }>;
+    };
+  };
+};
+
+export type MeOrganizationPendingQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type MeOrganizationPendingQuery = {
+  me: {
+    communityInvitationsCount: number;
+    organizationInvitationsCount: number;
+    communityInvitations: Array<{ invitation: { id: string } }>;
+    communityApplications: Array<{ application: { id: string } }>;
+    organizationInvitations: Array<{
+      id: string;
+      invitation: { id: string; extraRoles: Array<RoleName> };
+      organization: { id: string; nameID: string };
+    }>;
+    organizationApplications: Array<{
+      id: string;
+      application: { id: string };
+      organization: { id: string; nameID: string };
+    }>;
+  };
 };
 
 export type MeQueryQueryVariables = Exact<{ [key: string]: never }>;
