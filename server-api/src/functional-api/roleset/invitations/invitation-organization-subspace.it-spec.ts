@@ -34,13 +34,26 @@ const scenarioConfig: TestScenarioConfig = {
     collaboration: { addTutorialCallouts: false },
     community: {
       admins: [TestUser.SPACE_ADMIN],
-      members: [TestUser.SPACE_ADMIN],
+      // Every subspace persona is ALSO a member of each ancestor Space.
+      // `assignActorToRole` enforces a parent-membership precondition, so a
+      // user listed only on L2 silently receives neither MEMBER nor ADMIN
+      // there — the assignment fails and the factory logs and continues. The
+      // "admin authorized only at L2" test below then runs as an actor with
+      // no roles at all and gets a blanket FORBIDDEN_POLICY instead of the
+      // typed INVITATION_TO_PARENT_NOT_AUTHORIZED outcome it exists to pin.
+      // Mirrors the user-invitation precedent in
+      // `notifications/space/community/invitations.it-spec.ts`.
+      members: [
+        TestUser.SPACE_ADMIN,
+        TestUser.SUBSPACE_ADMIN,
+        TestUser.SUBSUBSPACE_ADMIN,
+      ],
     },
     subspace: {
       collaboration: { addTutorialCallouts: false },
       community: {
         admins: [TestUser.SUBSPACE_ADMIN],
-        members: [TestUser.SUBSPACE_ADMIN],
+        members: [TestUser.SUBSPACE_ADMIN, TestUser.SUBSUBSPACE_ADMIN],
       },
       subspace: {
         collaboration: { addTutorialCallouts: false },
@@ -90,12 +103,31 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
+// Removing a role the organization does not hold is not a no-op server-side:
+// `validateActorPolicyLimits` compares the CURRENT count against the role
+// policy minimum, so a count of 0 against a minimum of 0 raises
+// `Min limit of organizations reached for role 'member'`. The helper therefore
+// asks which Spaces the organization actually holds a role in first and only
+// removes those — otherwise every teardown emits a burst of errors that hides
+// the real ones (13 of them before this was fixed) and the `.catch()` cannot
+// swallow, because the request wrapper resolves with an error payload rather
+// than rejecting.
 const clearOrgFromHierarchy = async () => {
-  for (const roleSetId of [
-    baseScenario.space.community.roleSetId,
-    baseScenario.subspace.community.roleSetId,
-    baseScenario.subsubspace.community.roleSetId,
-  ]) {
+  const spacesWithRoles = await orgSpaceRoles();
+  const held = new Set<string>();
+  for (const l0 of spacesWithRoles) {
+    if ((l0?.roles ?? []).includes('member')) held.add(l0.id);
+    for (const sub of l0?.subspaces ?? []) {
+      if ((sub?.roles ?? []).includes('member')) held.add(sub.id);
+    }
+  }
+
+  for (const [spaceId, roleSetId] of [
+    [baseScenario.space.id, baseScenario.space.community.roleSetId],
+    [baseScenario.subspace.id, baseScenario.subspace.community.roleSetId],
+    [baseScenario.subsubspace.id, baseScenario.subsubspace.community.roleSetId],
+  ] as const) {
+    if (!held.has(spaceId)) continue;
     await removeRoleFromOrganization(
       baseScenario.organization.id,
       roleSetId,
@@ -217,6 +249,20 @@ describe('Organization Space invitations — subspace ancestor chain (invitedToP
   });
 
   test('an admin authorized only at L2 cannot invite into its parent (unchanged behavior)', async () => {
+    // Invite into L1: this L2 admin IS authorized there (ADMIN of L2 carries
+    // the implicit SPACE_SUBSPACE_ADMIN credential on L1, and L1 has
+    // `allowSubspaceAdminsToInviteMembers` on), but NOT on L1's own parent
+    // L0 — whose same setting grants only L1's admins. The organization is
+    // not a member of L0 either, so the parent leg is refused and the whole
+    // invite resolves to the typed INVITATION_TO_PARENT_NOT_AUTHORIZED
+    // rather than creating anything.
+    //
+    // `expect(error).toBeUndefined()` guards the failure mode this test hit
+    // before the scenario's membership chain was fixed: with the persona
+    // holding no roles, the mutation was rejected outright with
+    // FORBIDDEN_POLICY and `getSingleInvitationResult` returned undefined —
+    // so the assertion below compared undefined against the expected outcome
+    // instead of exercising the parent check at all.
     const invitationData = await inviteForEntryRoleOnRoleSet(
       baseScenario.subspace.community.roleSetId,
       [baseScenario.organization.id],
@@ -227,6 +273,7 @@ describe('Organization Space invitations — subspace ancestor chain (invitedToP
     );
     const result = getSingleInvitationResult(invitationData);
 
+    expect(invitationData?.error).toBeUndefined();
     expect(result?.type).toEqual(
       RoleSetInvitationResultType.InvitationToParentNotAuthorized
     );

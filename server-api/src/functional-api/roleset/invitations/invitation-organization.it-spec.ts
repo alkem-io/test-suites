@@ -346,7 +346,17 @@ describe('Organization Space invitations — GATE 0 core roleset flow', () => {
   });
 
   test('a global admin cannot REJECT on the organization behalf — only revoke (FR-010)', async () => {
-    const invitationData = await inviteOrg(baseScenario.organization.id);
+    // Same trap as the ACCEPT sibling above: createOrganization() auto-grants
+    // Associate+Admin to its CREATING actor, so inviting
+    // baseScenario.organization (created by GLOBAL_ADMIN) would let the
+    // rejection legitimately succeed via account-admin credentials and prove
+    // nothing about the global-admin bypass this test exists to forbid.
+    const orgNonAdmin = await createTestOrganization(
+      'globalAdminRejectFr010',
+      TestUser.GLOBAL_BETA_TESTER
+    );
+
+    const invitationData = await inviteOrg(orgNonAdmin.id);
     const result = getSingleInvitationResult(invitationData);
     invitationId = result?.invitation?.id ?? '';
     expect(invitationId.length).toEqual(36);
@@ -362,11 +372,23 @@ describe('Organization Space invitations — GATE 0 core roleset flow', () => {
     );
 
     expect(reject?.error).toBeDefined();
+
+    // Assert on THIS invitation's own lifecycle state, not on the serialized
+    // blob: `JSON.stringify(state).toContain('invited')` is satisfied by
+    // `invitedToParent` and by the welcome message ("You are cordially
+    // invited!"), so it passes whatever the state actually is.
     const state = await getSpaceInvitation(
       baseScenario.space.id,
       TestUser.GLOBAL_ADMIN
     );
-    expect(JSON.stringify(state)).toContain('invited');
+    const invitation = state?.data?.lookup?.space?.community?.roleSet.invitations?.find(
+      (candidate: any) => candidate.id === invitationId
+    );
+    expect(invitation?.state).toEqual('invited');
+
+    await deleteInvitation(invitationId).catch(() => undefined);
+    invitationId = '';
+    await deleteOrganization(orgNonAdmin.id).catch(() => undefined);
   });
 });
 
@@ -463,7 +485,7 @@ describe('Organization Space invitations — invalid extra role', () => {
     ]);
 
     expect(invitationData?.error?.errors?.[0]?.message).toContain(
-      'An organization cannot be invited with a role its policy forbids'
+      'An invitee cannot be invited with a role its policy forbids'
     );
 
     const after = await getSpaceInvitation(
