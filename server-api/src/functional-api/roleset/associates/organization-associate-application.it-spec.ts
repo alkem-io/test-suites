@@ -1,7 +1,6 @@
-// 062-organization-user-associates — US3: a registered user applies to
-// associate with an organization, the organization decides, and the shared
-// `allowApplications` switch / entry-role normalization contracts this
-// feature depends on (contract §4, §7).
+// A registered user applies to associate with an organization, the
+// organization decides, and the shared `allowApplications` switch /
+// entry-role normalization contracts this feature depends on.
 import {
   TestScenarioConfig,
   TestScenarioFactory,

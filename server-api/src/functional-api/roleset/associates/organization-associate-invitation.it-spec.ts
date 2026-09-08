@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// 062-organization-user-associates — US1/US2: an organization admin or owner
-// invites existing Alkemio users to associate (Associate | +Admin | +Owner),
-// the invitee responds, and the shared contracts this feature depends on
-// (no inviter-role ceiling — R1; the invite-time cap plus the accept-time
-// withheld-role notice — FR-002/FR-003; email invitees rejected — FR-004).
+// An organization admin or owner invites existing Alkemio users to
+// associate (Associate | +Admin | +Owner), the invitee responds, and the
+// shared contracts this feature depends on: no inviter-role ceiling on who
+// may offer which role; an invite-time cap plus a typed accept-time
+// withheld-role notice when the cap is already full; and email invitees are
+// rejected outright for organization role sets.
 //
 // Personas (assignRoleToUser on the organization's own role set, never a
 // Space one): `organizationAdmin` = the org's ASSOCIATE + ADMIN (factory
@@ -481,9 +482,9 @@ describe('Organization associate invitations — the invitee responds (US2)', ()
     );
 
     // Account-admin standing: `myRolesImplicit` for the accepting persona
-    // includes ACCOUNT_ADMIN on this organization's role set (R1's
-    // documented, accepted consequence — not mitigated by an inviter
-    // ceiling).
+    // includes ACCOUNT_ADMIN on this organization's role set — a documented,
+    // accepted consequence of granting ADMIN/OWNER through an invitation,
+    // not mitigated by any inviter-role ceiling.
     const eligibility = await getOrganizationAssociateEligibility(
       baseScenario.organization.id,
       TestUser.SUBSPACE_ADMIN

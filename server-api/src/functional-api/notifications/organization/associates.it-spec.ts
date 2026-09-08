@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// 062-organization-user-associates — the seven wire events on five settings
-// rows, end to end through the notifications worktree service + MailSlurper.
-// Follows `notifications/space/community/organization-invitations.it-spec.ts`
-// (061) and `notification.helpers.ts` for the mail/push/in-app idioms.
+// The seven wire events on five settings rows, end to end through the
+// notifications worktree service + MailSlurper. Follows
+// `notifications/space/community/organization-invitations.it-spec.ts` and
+// `notification.helpers.ts` for the mail/push/in-app idioms.
 //
 // Admins on the scenario organization: `organizationAdmin` (ASSOCIATE+ADMIN,
 // factory default) and `subspaceAdmin` (ASSOCIATE+ADMIN, assigned here) — 2
-// ADMIN recipients. `spaceMember` is ADMIN-not-associate (also notified,
-// FR-013). `qaUser` is OWNER-not-admin — never notified (061 R17b, carried).
+// ADMIN recipients. `spaceMember` is ADMIN-not-associate (also notified).
+// `qaUser` is OWNER-not-admin — never notified.
 import {
   deleteMailSlurperMails,
   NotificationEvent,
@@ -483,7 +483,7 @@ describe('Organization associate applications — the admins are told, the appli
       RoleName.Admin
     );
     // Keep an OWNER so the organization is not orphaned — owners are
-    // irrelevant to the zero-ADMIN count (061 R17b).
+    // irrelevant to the zero-ADMIN count.
     await assignRoleToUser(
       TestUserManager.users.qaUser.id,
       org.roleSet.id,

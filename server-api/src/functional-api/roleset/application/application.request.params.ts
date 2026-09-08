@@ -89,10 +89,9 @@ export const meQuery = async (userRole: TestUser = TestUser.GLOBAL_ADMIN) => {
   return graphqlErrorWrapper(callback, userRole);
 };
 
-// 062-organization-user-associates §5 (`me` query partition): the Space
-// pending surfaces alongside the new organization ones, so a single call
-// proves both — the Space list/count stay exact, the organization rows land
-// only on their own fields.
+// The Space pending surfaces alongside the organization ones, so a single
+// call proves both — the Space list/count stay exact, the organization rows
+// land only on their own fields.
 export const meOrganizationPending = async (
   userRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
@@ -108,8 +107,8 @@ export const meOrganizationPending = async (
 };
 
 // The organization's seeded application form, relabelled as a single
-// optional message question (FR-011). Passing no message submits the form
-// with no answers, which is exactly what "optional" means.
+// optional message question. Passing no message submits the form with no
+// answers, which is exactly what "optional" means.
 export const applyToAssociateWithOrganization = async (
   roleSetID: string,
   message?: string,

@@ -2,7 +2,7 @@ mutation InvitationStateEvent($input: InvitationEventInput!) {
   eventOnInvitation(eventData: $input) {
     ...InvitationData
     # Transient — set only on the object this mutation returns for an ACCEPT
-    # on an organization role set; null everywhere else (062, FR-003).
+    # on an organization role set; null everywhere else.
     extraRolesWithheld
   }
 }

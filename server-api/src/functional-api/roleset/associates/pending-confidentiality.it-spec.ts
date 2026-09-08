@@ -1,6 +1,6 @@
-// 062-organization-user-associates — US7 / contract §6 + §11: the
-// pending-applications/invitations confidentiality narrowing (READ → GRANT
-// on both role-set types, R3) and the R4 authorization-reset runbook proof.
+// The pending-applications/invitations confidentiality narrowing (READ →
+// GRANT on both role-set types) and the authorization-reset runbook proof
+// that restores APPLY visibility on a pre-existing organization afterwards.
 import {
   TestScenarioFactory,
   TestUser,

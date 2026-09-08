@@ -1,10 +1,10 @@
-// 062-organization-user-associates — US7 / contract §5: the `me` query
-// partition. `getCommunityInvitationsForUser`/`getCommunityApplicationsForUser`
-// filter by `RoleSetType.SPACE` at the service layer, so the first
-// organization invitation or application no longer 500s the query behind the
-// top bar — it reads Space rows only, exactly, and the organization rows
-// surface on their own three fields (§5). Also covers the deletion half of
-// FR-023 (US7-AS5) and the in-app cleanup on removal (US7-AS4).
+// The `me` query partition. `getCommunityInvitationsForUser`/
+// `getCommunityApplicationsForUser` filter by `RoleSetType.SPACE` at the
+// service layer, so the first organization invitation or application no
+// longer 500s the query behind the top bar — it reads Space rows only,
+// exactly, and the organization rows surface on their own three fields.
+// Also covers deleting a user or an organization with pending rows still
+// open, and the in-app cleanup on removal.
 import {
   getGraphqlClient,
   getUserToken,
@@ -156,8 +156,8 @@ describe('me query partition (US7-AS1, contract §5)', () => {
       ).toEqual([orgApplicationId]);
       expect(meData?.organizationInvitationsCount).toEqual(1);
 
-      // Deletion (US7-AS5): the user can be deleted with both rows open, and
-      // the rows are gone from an admin read afterwards — the partition
+      // Deletion: the user can be deleted with both rows open, and the rows
+      // are gone from an admin read afterwards — the partition
       // lives above the repository, so the deletion flow still sees and
       // removes every pending row.
       await deleteUser(userId);

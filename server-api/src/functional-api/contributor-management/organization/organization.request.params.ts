@@ -197,9 +197,9 @@ export const verifyOrganizationManually = async (
   await eventOnOrganizationVerification(verificationId, 'MANUALLY_VERIFY');
 };
 
-// R4 — the per-organization authorization reset loop the Release NN runbook
-// (quickstart.md §Runbook) binds the stored APPLY rule with; there is no
-// batch form (`organization.resolver.mutations.ts:116`).
+// The per-organization authorization reset loop the release runbook binds
+// the stored APPLY rule with; there is no batch form
+// (`organization.resolver.mutations.ts:116`).
 export const authorizationPolicyResetOnOrganization = async (
   organizationID: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN

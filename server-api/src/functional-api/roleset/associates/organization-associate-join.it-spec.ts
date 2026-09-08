@@ -1,8 +1,8 @@
-// 062-organization-user-associates — US4: a user whose email domain matches
-// a verified organization with the switch on sees "Join as an associate" and
-// joins with one click; the eligibility signal and the join mutation itself
-// both re-check domain match, verification and the switch (FR-016), and the
-// registration-time auto-join keeps working unchanged (US4-AS5).
+// A user whose email domain matches a verified organization with the switch
+// on sees "Join as an associate" and joins with one click; the eligibility
+// signal and the join mutation itself both re-check domain match,
+// verification and the switch, and the registration-time auto-join keeps
+// working unchanged.
 //
 // A live join call needs a REAL registered, authenticated user whose own
 // email domain matches — none of the fixed `TestUser` personas can, since
@@ -149,8 +149,8 @@ describe('Organization live join door (US4)', () => {
 
   test('US4-AS6: an existing associate sees no join or apply action (ALREADY_ASSOCIATE)', async () => {
     const { email } = await registerDomainUser('as6', verifiedDomain);
-    // Registration-time auto-join already makes them an associate (US4-AS5
-    // path); the eligibility signal reflects it immediately.
+    // Registration-time auto-join already makes them an associate; the
+    // eligibility signal reflects it immediately.
     const eligibility = await eligibilityAsEmail(
       orgVerified.organization.id,
       email

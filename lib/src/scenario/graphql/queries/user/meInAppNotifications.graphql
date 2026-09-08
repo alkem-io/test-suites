@@ -1,5 +1,5 @@
-# US7-AS4: proves that removing an associate deletes their organization
-# in-app notification rows (062-organization-user-associates).
+# Proves that removing an associate deletes their organization in-app
+# notification rows.
 query MeInAppNotifications($types: [NotificationEvent!]) {
   me {
     notifications(filter: { types: $types }) {

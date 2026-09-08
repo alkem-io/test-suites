@@ -112,9 +112,9 @@ export const getRoleSetUsersInLeadRole = async (
   return formattedUsers;
 };
 
-// 062-organization-user-associates: the pending applications/invitations of
-// an organization role set, confidentiality-gated to GRANT (contract §6) —
-// so the caller matters as much as the roleSetId.
+// The pending applications/invitations of an organization role set are
+// confidentiality-gated to GRANT, so the caller matters as much as the
+// roleSetId.
 export const getOrganizationRoleSetPending = async (
   roleSetId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN

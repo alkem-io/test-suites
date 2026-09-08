@@ -1,7 +1,7 @@
-# US7 / §5 (me query partition): reads the user's Space-shaped pending
-# surfaces alongside the new organization-shaped ones in one round trip, so a
-# test can assert the Space count/list stay exact while the organization rows
-# surface only on their own fields (062-organization-user-associates).
+# Reads the user's Space-shaped pending surfaces alongside the
+# organization-shaped ones in one round trip, so a test can assert the Space
+# count/list stay exact while the organization rows surface only on their own
+# fields.
 query MeOrganizationPending {
   me {
     communityInvitations {

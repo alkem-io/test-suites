@@ -143,7 +143,7 @@ export default defineConfig({
           'src/functional-api/notifications/space/community/organization-invitations.it-spec.ts',
           'src/functional-api/notifications/space/community/application-approval-new-member.it-spec.ts',
           'src/functional-api/notifications/space/community/invitations.it-spec.ts',
-          // Feature 062's own notification spec, same rationale as above.
+          // This organization-associates notification spec, same rationale as above.
           'src/functional-api/notifications/organization/associates.it-spec.ts',
           'src/functional-api/contributor-management/**/*.it-spec.ts',
           'src/functional-api/callout/**/*.it-spec.ts',
