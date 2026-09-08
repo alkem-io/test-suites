@@ -16,8 +16,11 @@ export default defineConfig({
   testDir: './src/functional-e2e',
   /* The 029 language-offer acceptance walks need their own runner settings
      (longer timeouts, per-file locales) and are run via
-     config/playwright.config.language-offer.ts, not this default suite. */
-  testIgnore: '**/language-offer/**',
+     config/playwright.config.language-offer.ts, not this default suite.
+     The 024 classifications suites mutate one shared live Space and must run
+     single-worker — config/playwright.config.classifications.ts
+     (pnpm run test:classifications). */
+  testIgnore: ['**/language-offer/**', '**/classifications/**'],
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
