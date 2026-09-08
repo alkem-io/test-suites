@@ -60,12 +60,29 @@ export const getRecoveryCode = async (): Promise<
  * Extracts a recovery link from the recovery email.
  * Searches all emails for one with a recovery-related subject,
  * then extracts the self-service/recovery URL from it.
+ *
+ * Pass `recipientEmail` to only match mail addressed to that account. On the
+ * shared MailSlurper inbox, multiple suites can request recovery links for
+ * different personas concurrently — without the filter, a caller can pick up
+ * another suite's mail and complete recovery for the wrong account, silently
+ * corrupting that persona's harness credential for the rest of the run.
  */
-export const getRecoveryLink = async (): Promise<string | undefined> => {
+export const getRecoveryLink = async (
+  recipientEmail?: string
+): Promise<string | undefined> => {
   const response = await getMails();
-  const items = response.body.mailItems as Array<{ subject: string; body: string }>;
+  const items = response.body.mailItems as Array<{
+    subject: string;
+    body: string;
+    toAddresses?: string[];
+  }>;
   const recoveryEmail = items.find(
-    (item) => item.subject.toLowerCase().includes("recover")
+    (item) =>
+      item.subject.toLowerCase().includes("recover") &&
+      (recipientEmail === undefined ||
+        (item.toAddresses ?? []).some((address) =>
+          address.toLowerCase().includes(recipientEmail.toLowerCase())
+        ))
   );
   if (!recoveryEmail) return undefined;
   return extractKratosLink(recoveryEmail.body, "self-service/recovery");
