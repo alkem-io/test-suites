@@ -3914,7 +3914,7 @@ export type Invitation = {
   /** The next events of this Lifecycle. */
   nextEvents: Array<Scalars["String"]["output"]>;
   /** The Spaces that will be joined if this invitation is accepted, root Space first; null when the caller may not answer this invitation on the invited Actor's behalf. */
-  spacesToJoinOnAccept?: Maybe<Array<SpaceAbout>>;
+  spacesToJoinOnAccept?: Maybe<Array<SpaceJoinPreview>>;
   /** The current state of this Lifecycle. */
   state: Scalars["String"]["output"];
   /** Optional language the inviter expects the invitee to prefer; recorded per invitation. */
@@ -8692,6 +8692,15 @@ export type SpaceFilterInput = {
   visibilities?: InputMaybe<Array<SpaceVisibility>>;
 };
 
+export type SpaceJoinPreview = {
+  /** The display name of the Space that will be joined. */
+  displayName: Scalars["String"]["output"];
+  /** The ID of the Space that will be joined. */
+  id: Scalars["UUID"]["output"];
+  /** The URL of the Space that will be joined. */
+  url: Scalars["String"]["output"];
+};
+
 export enum SpaceLevel {
   L0 = "L0",
   L1 = "L1",
@@ -11424,9 +11433,8 @@ export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> =
         })
       | (Omit<
           InAppNotificationPayloadSpaceCommunityInvitation,
-          "invitation" | "organization" | "space"
+          "organization" | "space"
         > & {
-          invitation?: Maybe<_RefType["Invitation"]>;
           organization?: Maybe<_RefType["Organization"]>;
           space: _RefType["Space"];
         })
@@ -11818,11 +11826,7 @@ export type ResolversTypes = {
   >;
   CommunityInvitationForRoleResult: ResolverTypeWrapper<CommunityInvitationForRoleResult>;
   CommunityInvitationResult: ResolverTypeWrapper<
-    Omit<
-      CommunityInvitationResult,
-      "invitation" | "spacePendingMembershipInfo"
-    > & {
-      invitation: ResolversTypes["Invitation"];
+    Omit<CommunityInvitationResult, "spacePendingMembershipInfo"> & {
       spacePendingMembershipInfo: ResolversTypes["SpacePendingMembershipInfo"];
     }
   >;
@@ -12200,9 +12204,8 @@ export type ResolversTypes = {
   InAppNotificationPayloadSpaceCommunityInvitation: ResolverTypeWrapper<
     Omit<
       InAppNotificationPayloadSpaceCommunityInvitation,
-      "invitation" | "organization" | "space"
+      "organization" | "space"
     > & {
-      invitation?: Maybe<ResolversTypes["Invitation"]>;
       organization?: Maybe<ResolversTypes["Organization"]>;
       space: ResolversTypes["Space"];
     }
@@ -12261,10 +12264,9 @@ export type ResolversTypes = {
   InputCreatorQueryResults: ResolverTypeWrapper<InputCreatorQueryResults>;
   Int: ResolverTypeWrapper<Scalars["Int"]["output"]>;
   Invitation: ResolverTypeWrapper<
-    Omit<Invitation, "actor" | "createdBy" | "spacesToJoinOnAccept"> & {
+    Omit<Invitation, "actor" | "createdBy"> & {
       actor: ResolversTypes["Actor"];
       createdBy?: Maybe<ResolversTypes["User"]>;
-      spacesToJoinOnAccept?: Maybe<Array<ResolversTypes["SpaceAbout"]>>;
     }
   >;
   InvitationEventInput: InvitationEventInput;
@@ -12337,7 +12339,6 @@ export type ResolversTypes = {
       | "document"
       | "innovationHub"
       | "innovationPack"
-      | "invitation"
       | "organization"
       | "profile"
       | "roleSet"
@@ -12360,7 +12361,6 @@ export type ResolversTypes = {
       document?: Maybe<ResolversTypes["Document"]>;
       innovationHub?: Maybe<ResolversTypes["InnovationHub"]>;
       innovationPack?: Maybe<ResolversTypes["InnovationPack"]>;
-      invitation?: Maybe<ResolversTypes["Invitation"]>;
       organization?: Maybe<ResolversTypes["Organization"]>;
       profile?: Maybe<ResolversTypes["Profile"]>;
       roleSet?: Maybe<ResolversTypes["RoleSet"]>;
@@ -12685,12 +12685,8 @@ export type ResolversTypes = {
   RoleSet: ResolverTypeWrapper<
     Omit<
       RoleSet,
-      | "invitations"
-      | "organizationsInRole"
-      | "organizationsInRoles"
-      | "usersInRole"
+      "organizationsInRole" | "organizationsInRoles" | "usersInRole"
     > & {
-      invitations: Array<ResolversTypes["Invitation"]>;
       organizationsInRole: Array<ResolversTypes["Organization"]>;
       organizationsInRoles: Array<
         ResolversTypes["OrganizationsInRolesResponse"]
@@ -12698,11 +12694,7 @@ export type ResolversTypes = {
       usersInRole: Array<ResolversTypes["User"]>;
     }
   >;
-  RoleSetInvitationResult: ResolverTypeWrapper<
-    Omit<RoleSetInvitationResult, "invitation"> & {
-      invitation?: Maybe<ResolversTypes["Invitation"]>;
-    }
-  >;
+  RoleSetInvitationResult: ResolverTypeWrapper<RoleSetInvitationResult>;
   RoleSetInvitationResultNotice: RoleSetInvitationResultNotice;
   RoleSetInvitationResultType: RoleSetInvitationResultType;
   RoleSetRoleImplicit: RoleSetRoleImplicit;
@@ -12825,6 +12817,7 @@ export type ResolversTypes = {
     }
   >;
   SpaceFilterInput: SpaceFilterInput;
+  SpaceJoinPreview: ResolverTypeWrapper<SpaceJoinPreview>;
   SpaceLevel: SpaceLevel;
   SpacePendingMembershipInfo: ResolverTypeWrapper<
     Omit<SpacePendingMembershipInfo, "about" | "communityGuidelines"> & {
@@ -13441,9 +13434,8 @@ export type ResolversParentTypes = {
   CommunityInvitationForRoleResult: CommunityInvitationForRoleResult;
   CommunityInvitationResult: Omit<
     CommunityInvitationResult,
-    "invitation" | "spacePendingMembershipInfo"
+    "spacePendingMembershipInfo"
   > & {
-    invitation: ResolversParentTypes["Invitation"];
     spacePendingMembershipInfo: ResolversParentTypes["SpacePendingMembershipInfo"];
   };
   CommunityMembershipResult: Omit<
@@ -13794,9 +13786,8 @@ export type ResolversParentTypes = {
   };
   InAppNotificationPayloadSpaceCommunityInvitation: Omit<
     InAppNotificationPayloadSpaceCommunityInvitation,
-    "invitation" | "organization" | "space"
+    "organization" | "space"
   > & {
-    invitation?: Maybe<ResolversParentTypes["Invitation"]>;
     organization?: Maybe<ResolversParentTypes["Organization"]>;
     space: ResolversParentTypes["Space"];
   };
@@ -13847,13 +13838,9 @@ export type ResolversParentTypes = {
   InnovationPacksInput: InnovationPacksInput;
   InputCreatorQueryResults: InputCreatorQueryResults;
   Int: Scalars["Int"]["output"];
-  Invitation: Omit<
-    Invitation,
-    "actor" | "createdBy" | "spacesToJoinOnAccept"
-  > & {
+  Invitation: Omit<Invitation, "actor" | "createdBy"> & {
     actor: ResolversParentTypes["Actor"];
     createdBy?: Maybe<ResolversParentTypes["User"]>;
-    spacesToJoinOnAccept?: Maybe<Array<ResolversParentTypes["SpaceAbout"]>>;
   };
   InvitationEventInput: InvitationEventInput;
   InviteForEntryRoleOnRoleSetInput: InviteForEntryRoleOnRoleSetInput;
@@ -13911,7 +13898,6 @@ export type ResolversParentTypes = {
     | "document"
     | "innovationHub"
     | "innovationPack"
-    | "invitation"
     | "organization"
     | "profile"
     | "roleSet"
@@ -13934,7 +13920,6 @@ export type ResolversParentTypes = {
     document?: Maybe<ResolversParentTypes["Document"]>;
     innovationHub?: Maybe<ResolversParentTypes["InnovationHub"]>;
     innovationPack?: Maybe<ResolversParentTypes["InnovationPack"]>;
-    invitation?: Maybe<ResolversParentTypes["Invitation"]>;
     organization?: Maybe<ResolversParentTypes["Organization"]>;
     profile?: Maybe<ResolversParentTypes["Profile"]>;
     roleSet?: Maybe<ResolversParentTypes["RoleSet"]>;
@@ -14207,21 +14192,15 @@ export type ResolversParentTypes = {
   Role: Role;
   RoleSet: Omit<
     RoleSet,
-    | "invitations"
-    | "organizationsInRole"
-    | "organizationsInRoles"
-    | "usersInRole"
+    "organizationsInRole" | "organizationsInRoles" | "usersInRole"
   > & {
-    invitations: Array<ResolversParentTypes["Invitation"]>;
     organizationsInRole: Array<ResolversParentTypes["Organization"]>;
     organizationsInRoles: Array<
       ResolversParentTypes["OrganizationsInRolesResponse"]
     >;
     usersInRole: Array<ResolversParentTypes["User"]>;
   };
-  RoleSetInvitationResult: Omit<RoleSetInvitationResult, "invitation"> & {
-    invitation?: Maybe<ResolversParentTypes["Invitation"]>;
-  };
+  RoleSetInvitationResult: RoleSetInvitationResult;
   RolesActorInput: RolesActorInput;
   RolesResult: RolesResult;
   RolesResultCommunity: RolesResultCommunity;
@@ -14322,6 +14301,7 @@ export type ResolversParentTypes = {
     leadUsers: Array<ResolversParentTypes["User"]>;
   };
   SpaceFilterInput: SpaceFilterInput;
+  SpaceJoinPreview: SpaceJoinPreview;
   SpacePendingMembershipInfo: Omit<
     SpacePendingMembershipInfo,
     "about" | "communityGuidelines"
@@ -18169,7 +18149,7 @@ export type InvitationResolvers<
     ContextType
   >;
   spacesToJoinOnAccept?: Resolver<
-    Maybe<Array<ResolversTypes["SpaceAbout"]>>,
+    Maybe<Array<ResolversTypes["SpaceJoinPreview"]>>,
     ParentType,
     ContextType
   >;
@@ -23184,6 +23164,16 @@ export type SpaceAboutMembershipResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type SpaceJoinPreviewResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["SpaceJoinPreview"] = ResolversParentTypes["SpaceJoinPreview"]
+> = {
+  displayName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  url?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type SpacePendingMembershipInfoResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["SpacePendingMembershipInfo"] = ResolversParentTypes["SpacePendingMembershipInfo"]
@@ -25382,6 +25372,7 @@ export type Resolvers<ContextType = any> = {
   Space?: SpaceResolvers<ContextType>;
   SpaceAbout?: SpaceAboutResolvers<ContextType>;
   SpaceAboutMembership?: SpaceAboutMembershipResolvers<ContextType>;
+  SpaceJoinPreview?: SpaceJoinPreviewResolvers<ContextType>;
   SpacePendingMembershipInfo?: SpacePendingMembershipInfoResolvers<ContextType>;
   SpaceSettings?: SpaceSettingsResolvers<ContextType>;
   SpaceSettingsCollaboration?: SpaceSettingsCollaborationResolvers<ContextType>;
@@ -106904,7 +106895,7 @@ export type MeQueryQuery = {
         invitedToParent: boolean;
         welcomeMessage?: string | undefined;
         spacesToJoinOnAccept?:
-          | Array<{ id: string; profile: { id: string; displayName: string } }>
+          | Array<{ id: string; displayName: string; url: string }>
           | undefined;
         lifecycle: { id: string };
         createdBy?:

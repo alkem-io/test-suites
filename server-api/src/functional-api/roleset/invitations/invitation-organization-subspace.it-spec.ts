@@ -190,9 +190,9 @@ describe('Organization Space invitations — subspace ancestor chain (invitedToP
       invitationId
     );
     expect(joinedSpaceIds).toEqual([
-      baseScenario.space.about.id,
-      baseScenario.subspace.about.id,
-      baseScenario.subsubspace.about.id,
+      baseScenario.space.id,
+      baseScenario.subspace.id,
+      baseScenario.subsubspace.id,
     ]);
 
     await eventOnRoleSetInvitation(
@@ -243,8 +243,8 @@ describe('Organization Space invitations — subspace ancestor chain (invitedToP
       invitationId
     );
     expect(joinedSpaceIds).toEqual([
-      baseScenario.subspace.about.id,
-      baseScenario.subsubspace.about.id,
+      baseScenario.subspace.id,
+      baseScenario.subsubspace.id,
     ]);
   });
 
@@ -374,9 +374,9 @@ describe('Organization Space invitations — subspace ancestor chain (invitedToP
         invitationId
       );
       expect(joinedSpaceIds).toEqual([
-        baseScenario.space.about.id,
-        baseScenario.subspace.about.id,
-        baseScenario.subsubspace.about.id,
+        baseScenario.space.id,
+        baseScenario.subspace.id,
+        baseScenario.subsubspace.id,
       ]);
     } finally {
       await updateSpaceSettings(baseScenario.space.id, {

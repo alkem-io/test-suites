@@ -451,9 +451,9 @@ describe('Organization Space invitations — organization admins are notified (U
       seenInvitation?.invitation?.spacesToJoinOnAccept ?? []
     ).map((s: any) => s.id);
     expect(joinedSpaceIds).toEqual([
-      baseScenario.space.about.id,
-      baseScenario.subspace.about.id,
-      baseScenario.subsubspace.about.id,
+      baseScenario.space.id,
+      baseScenario.subspace.id,
+      baseScenario.subsubspace.id,
     ]);
 
     const [mailItems] = await waitForMailsCountAtLeast(1);
