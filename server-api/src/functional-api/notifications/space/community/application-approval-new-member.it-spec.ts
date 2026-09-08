@@ -20,7 +20,7 @@ import {
 import { eventOnRoleSetApplication } from '@functional-api/roleset/roleset-events.request.params';
 import { removeRoleFromUser } from '@functional-api/roleset/roles-request.params';
 import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
-import { notif } from '../../notification.helpers';
+import { allChannelsOn, notif } from '../../notification.helpers';
 
 /**
  * Ruling **R31** / FR-020a(c) — the discriminating live test for the one
@@ -125,6 +125,26 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  // Hand the shared personas back the way the suite seeded them. All five are
+  // GLOBALLY seeded and outlive this file; `nightly` runs single-threaded
+  // against one database, so anything left muted here silently mutes the specs
+  // that run next — including `organization-invitations.it-spec.ts`, which
+  // asserts exact per-recipient mail counts and sets no notification
+  // preconditions of its own.
+  await Promise.all(
+    [
+      TestUserManager.users.spaceAdmin.id,
+      TestUserManager.users.subspaceAdmin.id,
+      TestUserManager.users.globalAdmin.id,
+      TestUserManager.users.globalSupportAdmin.id,
+      TestUserManager.users.qaUser.id,
+    ].map(userId =>
+      updateUserSettings(userId, allChannelsOn(notificationsOff)).catch(
+        () => undefined
+      )
+    )
+  );
+
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 

@@ -307,6 +307,15 @@ baseTest.afterAll(async () => {
   if (orgAdminAPushSubscriptionId) {
     await unsubscribeFromPushForUser(TestUser.ORGANIZATION_ADMIN, orgAdminAPushSubscriptionId);
   }
+  // AS5 muted subspace.member on every channel. That persona is GLOBALLY
+  // seeded and outlives this file, so leaving it muted silently mutes every
+  // later spec that expects it to receive something — and on an environment
+  // that is not wiped between runs, permanently. Restore the platform default.
+  await setAdminSpaceCommunityInvitationSetting(
+    orgAdminMutedId(),
+    { email: true, inApp: true, push: true },
+    TestUser.SUBSPACE_MEMBER
+  ).catch(() => undefined);
   // Ad-hoc org fixtures first: cleanUpBaseScenario does not know about them,
   // so without this each run leaks every organization this file created.
   await cleanUpTestOrganizations();

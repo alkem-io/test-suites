@@ -27,6 +27,44 @@ export const notif = (v: boolean) => ({ email: v, inApp: v });
 // Extended helper that includes push channel for PWA push notification tests
 export const notifWithPush = (v: boolean) => ({ email: v, inApp: v, push: v });
 
+/**
+ * Return the same notification-settings tree with every channel flag set to
+ * `true`.
+ *
+ * Specs that mute a **globally seeded** persona (spaceAdmin, globalAdmin,
+ * qaUser…) so their own mail counts mean what they say are borrowing shared
+ * state: the personas outlive the file, and the `nightly` project runs
+ * single-threaded with `isolate: false` against ONE database, so whatever a
+ * spec leaves muted is inherited by every spec that runs after it. Negative
+ * assertions then pass for the wrong reason, and on any environment that is
+ * not wiped between runs it is permanent.
+ *
+ * Pass the exact payload that was applied and restore it in `afterAll`. Every
+ * notification setting this touches is on by platform default, so flipping the
+ * same key set back to `true` hands the persona back the way the suite seeded
+ * it — and deriving the restore from the mute payload means the two cannot
+ * drift apart when a key is added to one of them.
+ */
+export const allChannelsOn = <T>(settings: T): T => {
+  if (Array.isArray(settings)) {
+    return settings.map(allChannelsOn) as unknown as T;
+  }
+  if (settings === null || typeof settings !== 'object') {
+    return settings;
+  }
+  const entries = Object.entries(settings as Record<string, unknown>);
+  const isChannelLeaf = entries.every(
+    ([key, value]) =>
+      typeof value === 'boolean' && ['email', 'inApp', 'push'].includes(key)
+  );
+  if (entries.length > 0 && isChannelLeaf) {
+    return Object.fromEntries(entries.map(([key]) => [key, true])) as T;
+  }
+  return Object.fromEntries(
+    entries.map(([key, value]) => [key, allChannelsOn(value)])
+  ) as T;
+};
+
 // Helper for setting push channel independently
 export const notifPush = (emailInApp: boolean, push: boolean) => ({
   email: emailInApp,

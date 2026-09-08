@@ -435,18 +435,28 @@ describe('User notification settings — organisation invited to a Space (US2-AS
         },
       }
     );
-    expect(
-      off?.data?.updateUserSettings.settings.notification.organization
-        .adminSpaceCommunityInvitation
-    ).toEqual(
-      expect.objectContaining({ email: false, inApp: false, push: false })
-    );
+    // Restore in `finally`, never after the assertion: `spaceMember` is a
+    // globally seeded persona and `nightly` runs single-threaded against one
+    // database, so a failure here — a `push` regression is precisely what this
+    // test exists to catch — would otherwise skip the restore and leave the
+    // persona muted for every spec that runs next. The restore itself does not
+    // assert, so it can never mask the failure that triggered it.
+    let on: Awaited<ReturnType<typeof updateUserSettings>> | undefined;
+    try {
+      expect(
+        off?.data?.updateUserSettings.settings.notification.organization
+          .adminSpaceCommunityInvitation
+      ).toEqual(
+        expect.objectContaining({ email: false, inApp: false, push: false })
+      );
+    } finally {
+      on = await updateUserSettings(TestUserManager.users.spaceMember.id, {
+        notification: {
+          organization: { adminSpaceCommunityInvitation: notifWithPush(true) },
+        },
+      }).catch(() => undefined);
+    }
 
-    const on = await updateUserSettings(TestUserManager.users.spaceMember.id, {
-      notification: {
-        organization: { adminSpaceCommunityInvitation: notifWithPush(true) },
-      },
-    });
     expect(
       on?.data?.updateUserSettings.settings.notification.organization
         .adminSpaceCommunityInvitation
