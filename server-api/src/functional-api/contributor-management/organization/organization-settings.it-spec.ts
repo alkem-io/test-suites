@@ -9,12 +9,15 @@ import {
   TestUser,
   TestUserManager,
   UniqueIDGenerator,
+  queryHarnessDb,
 } from '@alkemio/tests-lib';
 import {
   deleteUser,
+  getUserSettings,
   registerVerifiedUser,
   updateUserSettings,
 } from '../user/user.request.params';
+import { allChannelsOn } from '@functional-api/notifications/notification.helpers';
 import { eventOnOrganizationVerification } from './organization-verification.events.request.params';
 import { assignRoleToUser } from '@functional-api/roleset/roles-request.params';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
@@ -463,5 +466,204 @@ describe('User notification settings — organisation invited to a Space (US2-AS
     ).toEqual(
       expect.objectContaining({ email: true, inApp: true, push: true })
     );
+  });
+});
+
+describe('Organization settings — allowApplications (062, US5-AS4/US6-AS1)', () => {
+  test('a fresh organization reads allowApplications as true by default', async () => {
+    const organizationData = await getOrganizationData(
+      baseScenario.organization.id
+    );
+    expect(
+      organizationData?.data?.organization.settings.membership
+        .allowApplications
+    ).toEqual(true);
+  });
+
+  test('allowApplications round-trips false then true', async () => {
+    const off = await updateOrganizationSettings(
+      baseScenario.organization.id,
+      {
+        membership: {
+          allowUsersMatchingDomainToJoin: false,
+          allowApplications: false,
+        },
+      }
+    );
+    expect(
+      off?.data?.updateOrganizationSettings.settings.membership
+        .allowApplications
+    ).toEqual(false);
+
+    const on = await updateOrganizationSettings(baseScenario.organization.id, {
+      membership: {
+        allowUsersMatchingDomainToJoin: false,
+        allowApplications: true,
+      },
+    });
+    expect(
+      on?.data?.updateOrganizationSettings.settings.membership
+        .allowApplications
+    ).toEqual(true);
+  });
+
+  test('an update carrying only allowUsersMatchingDomainToJoin leaves allowApplications unchanged (nullable input)', async () => {
+    await updateOrganizationSettings(baseScenario.organization.id, {
+      membership: {
+        allowUsersMatchingDomainToJoin: false,
+        allowApplications: false,
+      },
+    });
+
+    const res = await updateOrganizationSettings(baseScenario.organization.id, {
+      membership: {
+        allowUsersMatchingDomainToJoin: true,
+      },
+    });
+
+    expect(
+      res?.data?.updateOrganizationSettings.settings.membership
+        .allowUsersMatchingDomainToJoin
+    ).toEqual(true);
+    expect(
+      res?.data?.updateOrganizationSettings.settings.membership
+        .allowApplications
+    ).toEqual(false);
+
+    // Restore defaults for later tests in this file.
+    await updateOrganizationSettings(baseScenario.organization.id, {
+      membership: {
+        allowUsersMatchingDomainToJoin: false,
+        allowApplications: true,
+      },
+    });
+  });
+
+  test('an ASSOCIATE with no manager credential cannot update allowApplications (US5-AS4 API half)', async () => {
+    const res = await updateOrganizationSettings(
+      baseScenario.organization.id,
+      {
+        membership: {
+          allowUsersMatchingDomainToJoin: false,
+          allowApplications: false,
+        },
+      },
+      TestUser.NON_SPACE_MEMBER
+    );
+
+    expect(res?.error?.errors?.[0]?.message).toContain(
+      "Authorization: unable to grant 'update' privilege: organization settings update:"
+    );
+  });
+});
+
+describe('User notification settings — the five new associate rows (062, US6-AS1/AS3)', () => {
+  const fiveRowsAllOn = {
+    notification: {
+      user: {
+        membership: {
+          organizationAssociateInvitationReceived: notifWithPush(true),
+          organizationAssociateApplicationDecided: notifWithPush(true),
+        },
+      },
+      organization: {
+        adminAssociateInvitationResponse: notifWithPush(true),
+        adminAssociateApplicationReceived: notifWithPush(true),
+        adminAssociateJoined: notifWithPush(true),
+      },
+    },
+  };
+
+  test('the five rows read on by default and round-trip off then on', async () => {
+    const before = await getUserSettings(TestUserManager.users.spaceMember.id);
+    const beforeNotification = before?.data?.user.settings.notification;
+    expect(
+      beforeNotification?.user.membership.organizationAssociateInvitationReceived
+    ).toEqual(expect.objectContaining({ email: true, inApp: true, push: true }));
+    expect(
+      beforeNotification?.organization.adminAssociateJoined
+    ).toEqual(expect.objectContaining({ email: true, inApp: true, push: true }));
+
+    const off = {
+      notification: {
+        user: {
+          membership: {
+            organizationAssociateInvitationReceived: notifWithPush(false),
+            organizationAssociateApplicationDecided: notifWithPush(false),
+          },
+        },
+        organization: {
+          adminAssociateInvitationResponse: notifWithPush(false),
+          adminAssociateApplicationReceived: notifWithPush(false),
+          adminAssociateJoined: notifWithPush(false),
+        },
+      },
+    };
+
+    try {
+      const offRes = await updateUserSettings(
+        TestUserManager.users.spaceMember.id,
+        off
+      );
+      const offNotification =
+        offRes?.data?.updateUserSettings.settings.notification;
+      expect(
+        offNotification?.user.membership
+          .organizationAssociateInvitationReceived
+      ).toEqual(
+        expect.objectContaining({ email: false, inApp: false, push: false })
+      );
+      expect(offNotification?.organization.adminAssociateJoined).toEqual(
+        expect.objectContaining({ email: false, inApp: false, push: false })
+      );
+    } finally {
+      const onRes = await updateUserSettings(
+        TestUserManager.users.spaceMember.id,
+        fiveRowsAllOn
+      ).catch(() => undefined);
+      expect(
+        onRes?.data?.updateUserSettings.settings.notification.organization
+          .adminAssociateJoined
+      ).toEqual(
+        expect.objectContaining({ email: true, inApp: true, push: true })
+      );
+    }
+  });
+
+  test('a user row SQL-stripped of the five keys reads all-on (@AfterLoad backstop, US6-AS3)', async () => {
+    await queryHarnessDb(
+      `UPDATE user_settings
+         SET notification = notification
+           #- '{user,membership,organizationAssociateInvitationReceived}'
+           #- '{user,membership,organizationAssociateApplicationDecided}'
+           #- '{organization,adminAssociateInvitationResponse}'
+           #- '{organization,adminAssociateApplicationReceived}'
+           #- '{organization,adminAssociateJoined}'
+       WHERE id = (SELECT "settingsId" FROM "user" WHERE id = $1)`,
+      [TestUserManager.users.subspaceAdmin.id]
+    );
+
+    const after = await getUserSettings(TestUserManager.users.subspaceAdmin.id);
+    const notification = after?.data?.user.settings.notification;
+    expect(
+      notification?.user.membership.organizationAssociateInvitationReceived
+    ).toEqual(expect.objectContaining({ email: true, inApp: true, push: true }));
+    expect(
+      notification?.user.membership.organizationAssociateApplicationDecided
+    ).toEqual(expect.objectContaining({ email: true, inApp: true, push: true }));
+    expect(notification?.organization.adminAssociateInvitationResponse).toEqual(
+      expect.objectContaining({ email: true, inApp: true, push: true })
+    );
+    expect(notification?.organization.adminAssociateApplicationReceived).toEqual(
+      expect.objectContaining({ email: true, inApp: true, push: true })
+    );
+    expect(notification?.organization.adminAssociateJoined).toEqual(
+      expect.objectContaining({ email: true, inApp: true, push: true })
+    );
+
+    await updateUserSettings(
+      TestUserManager.users.subspaceAdmin.id,
+      allChannelsOn(fiveRowsAllOn)
+    ).catch(() => undefined);
   });
 });

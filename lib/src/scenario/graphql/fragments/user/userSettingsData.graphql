@@ -70,6 +70,24 @@ fragment userSettingsFragment on UserSettings {
         push
         __typename
       }
+      adminAssociateInvitationResponse {
+        email
+        inApp
+        push
+        __typename
+      }
+      adminAssociateApplicationReceived {
+        email
+        inApp
+        push
+        __typename
+      }
+      adminAssociateJoined {
+        email
+        inApp
+        push
+        __typename
+      }
       __typename
     }
     space {
@@ -177,6 +195,18 @@ fragment userSettingsFragment on UserSettings {
           __typename
         }
         spaceCommunityJoined {
+          email
+          inApp
+          push
+          __typename
+        }
+        organizationAssociateInvitationReceived {
+          email
+          inApp
+          push
+          __typename
+        }
+        organizationAssociateApplicationDecided {
           email
           inApp
           push
