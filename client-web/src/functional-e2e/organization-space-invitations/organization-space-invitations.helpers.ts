@@ -1,5 +1,6 @@
 import {
   createOrganization,
+  deleteOrganization,
   getGraphqlClient,
   TestUser,
   TestUserManager,
@@ -39,6 +40,14 @@ const slugifyWithSuffix = (label: string, runSuffix: string) => {
   return `${slug(label).slice(0, Math.max(0, NAME_ID_MAX - suffix.length))}${suffix}`;
 };
 
+// Every organization this file creates, so a run can hand them all back.
+// `TestScenarioFactory.cleanUpBaseScenario` only removes the base scenario's
+// own org and Space — the ad-hoc fixtures below are invisible to it, so
+// without this registry each full run left ~26 organizations behind and the
+// platform's per-account organization limit eventually starts failing fixture
+// setup for everyone on that environment.
+const createdOrganizationIds: string[] = [];
+
 /** Creates a fresh organization for this walk, returning its id/roleSetId. */
 export const createTestOrganization = async (
   label: string,
@@ -52,12 +61,26 @@ export const createTestOrganization = async (
       `Failed to create organization "${label}": ${JSON.stringify(res.error)}`
     );
   }
+  createdOrganizationIds.push(res.data.createOrganization.id);
   return {
     id: res.data.createOrganization.id,
     nameID: res.data.createOrganization.nameID,
     displayName,
     roleSetId: res.data.createOrganization.roleSet.id,
   };
+};
+
+/**
+ * Deletes every organization `createTestOrganization` made in this process and
+ * empties the registry. Best-effort per organization: one failure (already
+ * deleted, still referenced) must not stop the rest, and teardown must never
+ * fail a green run.
+ */
+export const cleanUpTestOrganizations = async (): Promise<void> => {
+  const ids = createdOrganizationIds.splice(0, createdOrganizationIds.length);
+  for (const id of ids) {
+    await deleteOrganization(id).catch(() => undefined);
+  }
 };
 
 /** Grants `role` to `org` directly on `roleSetId` (bypasses invite/accept — used to seed

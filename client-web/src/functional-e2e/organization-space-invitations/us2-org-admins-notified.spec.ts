@@ -40,6 +40,7 @@ import {
   TestUser,
   TestUserManager,
   unsubscribeFromPushForUser,
+  cleanUpTestOrganizations,
 } from './organization-space-invitations.helpers';
 
 /**
@@ -306,6 +307,9 @@ baseTest.afterAll(async () => {
   if (orgAdminAPushSubscriptionId) {
     await unsubscribeFromPushForUser(TestUser.ORGANIZATION_ADMIN, orgAdminAPushSubscriptionId);
   }
+  // Ad-hoc org fixtures first: cleanUpBaseScenario does not know about them,
+  // so without this each run leaks every organization this file created.
+  await cleanUpTestOrganizations();
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
@@ -512,19 +516,37 @@ orgAdminSettingsTest.describe('US2-AS6 — the organization notification setting
       await emailToggle.click();
       await expect(emailToggle).not.toBeChecked();
 
-      await page.reload();
-      await expect(
-        page.getByRole('switch', {
+      // The mute is a PERSISTED user setting on a SHARED persona. Left on, it
+      // silently reds the server-api spec that asserts this same
+      // subspace.admin DOES receive the org-invited email
+      // (organization-invitations.it-spec.ts, "the ADMIN and the
+      // ADMIN-not-associate are each notified once"). Restore it whatever
+      // happens below.
+      try {
+        await page.reload();
+        await expect(
+          page.getByRole('switch', {
+            name: 'Toggle Email notification for: Receive a notification when an organisation I administer is invited to join a Space',
+          })
+        ).not.toBeChecked();
+
+        // Honored on the next invite: email suppressed, in-app still produced.
+        await inviteOrganizationViaDialog(page, orgAS6, `US2-AS6 message ${runSuffix}`);
+
+        await assertNoMailTo(TestUserManager.getUserModelByType(TestUser.SUBSPACE_ADMIN).email, orgAS6.displayName);
+        const notifications = await getOrgInvitedNotifications(TestUser.SUBSPACE_ADMIN);
+        expect(notifications.some(n => n.payload.organization?.id === orgAS6.id)).toBe(true);
+      } finally {
+        await page.goto(`${baseUrl}/user/me/settings/notifications`);
+        const restore = page.getByRole('switch', {
           name: 'Toggle Email notification for: Receive a notification when an organisation I administer is invited to join a Space',
-        })
-      ).not.toBeChecked();
-
-      // Honored on the next invite: email suppressed, in-app still produced.
-      await inviteOrganizationViaDialog(page, orgAS6, `US2-AS6 message ${runSuffix}`);
-
-      await assertNoMailTo(TestUserManager.getUserModelByType(TestUser.SUBSPACE_ADMIN).email, orgAS6.displayName);
-      const notifications = await getOrgInvitedNotifications(TestUser.SUBSPACE_ADMIN);
-      expect(notifications.some(n => n.payload.organization?.id === orgAS6.id)).toBe(true);
+        });
+        await expect(restore).toBeVisible();
+        if (!(await restore.isChecked())) {
+          await restore.click();
+          await expect(restore).toBeChecked();
+        }
+      }
     }
   );
 });

@@ -31,6 +31,7 @@ import {
   runSuffix,
   setAllowSpaceInvitations,
   TestUser,
+  cleanUpTestOrganizations,
 } from './organization-space-invitations.helpers';
 
 /**
@@ -165,6 +166,9 @@ baseTest.beforeAll(async () => {
 });
 
 baseTest.afterAll(async () => {
+  // Ad-hoc org fixtures first: cleanUpBaseScenario does not know about them,
+  // so without this each run leaks every organization this file created.
+  await cleanUpTestOrganizations();
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 

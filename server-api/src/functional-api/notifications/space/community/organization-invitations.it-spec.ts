@@ -228,7 +228,7 @@ const inAppNotificationsFor = async (
 };
 
 describe('Organization Space invitations — organization admins are notified (US2)', () => {
-  test('OWNER, ADMIN and an ADMIN-not-associate are each notified once; a plain ASSOCIATE and the space admin get nothing', async () => {
+  test('the ADMIN and the ADMIN-not-associate are each notified once; the OWNER-not-admin, a plain ASSOCIATE and the space admin get nothing (R17b)', async () => {
     await deleteMailSlurperMails();
 
     const invitationData = await inviteOrgToSpace(
