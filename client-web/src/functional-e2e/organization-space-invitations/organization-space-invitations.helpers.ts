@@ -83,6 +83,58 @@ export const cleanUpTestOrganizations = async (): Promise<void> => {
   }
 };
 
+/**
+ * Deletes the platform users a spec registered with `registerTestUser`, by
+ * email. Symmetric with `cleanUpTestOrganizations` above, and it exists for the
+ * same reason: `cleanUpBaseScenario` only knows about the personas IT created,
+ * so a spec that registers its own leaves them behind on the acceptance
+ * environment on EVERY run — and with `retries: 2` each retry registers a fresh
+ * `runSuffix`, so a flaky run leaks three sets rather than one. Accounts
+ * accumulate with profiles, settings and organization credentials.
+ *
+ * Best-effort per user, like the organization teardown: one failure (already
+ * gone, still referenced) must not stop the rest, and teardown must never fail
+ * an otherwise green run.
+ */
+export const cleanUpRegisteredUsers = async (
+  userNames: string[]
+): Promise<void> => {
+  if (userNames.length === 0) return;
+  const graphqlClient = getGraphqlClient();
+  const wanted = new Set(
+    userNames.map(name => `${name}@alkem.io`.toLowerCase())
+  );
+  try {
+    // Resolved by EMAIL, which is what `registerTestUser` deterministically
+    // derives from the user name. `GetUserByNameId` is not usable here: the
+    // nameID is generated from the first/last name split, not from the name we
+    // passed, so it cannot be reconstructed reliably.
+    const all = await graphqlErrorWrapper(
+      (authToken: string | undefined) =>
+        graphqlClient.getUsersData(
+          {},
+          { authorization: `Bearer ${authToken}` }
+        ),
+      TestUser.GLOBAL_ADMIN
+    );
+    const targets = (all.data?.users ?? []).filter(user =>
+      wanted.has(String(user.email).toLowerCase())
+    );
+    for (const target of targets) {
+      await graphqlErrorWrapper(
+        (authToken: string | undefined) =>
+          graphqlClient.deleteUser(
+            { deleteData: { ID: target.id } },
+            { authorization: `Bearer ${authToken}` }
+          ),
+        TestUser.GLOBAL_ADMIN
+      ).catch(() => undefined);
+    }
+  } catch {
+    // Best-effort — see the docblock.
+  }
+};
+
 /** Grants `role` to `org` directly on `roleSetId` (bypasses invite/accept — used to seed
  * pre-existing Member/Lead state, exactly as the direct "add organisation" action would). */
 export const assignOrgRole = async (

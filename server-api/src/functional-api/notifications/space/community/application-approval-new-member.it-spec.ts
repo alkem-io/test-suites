@@ -79,8 +79,7 @@ const notificationsOff = {
 };
 
 // Only `communityNewMember` is on: the application-received notification is
-// muted so the approval's mails are the only ones in the box, and the member
-// welcome is muted so the applicant does not add noise either.
+// muted so the approval's mails are the only ones in the box.
 const newMemberOnly = {
   ...notificationsOff,
   notification: {
@@ -90,6 +89,28 @@ const newMemberOnly = {
       admin: {
         ...notificationsOff.notification.space.admin,
         communityNewMember: notif(true),
+      },
+    },
+  },
+};
+
+// The APPLICANT keeps exactly one setting on: the member-side welcome.
+// R35 suppresses the admin-side "a new member joined" for an approved
+// application; the welcome must survive that, or an approved applicant joins in
+// total silence. Asserting it requires the applicant to be able to receive it —
+// muting `spaceCommunityJoined` here (as `notificationsOff` does for everyone
+// else) would make the assertion pass or fail on this file's own precondition
+// rather than on the product, which is the failure mode this whole file exists
+// to catch.
+const welcomeOnly = {
+  ...notificationsOff,
+  notification: {
+    ...notificationsOff.notification,
+    user: {
+      ...notificationsOff.notification.user,
+      membership: {
+        ...notificationsOff.notification.user.membership,
+        spaceCommunityJoined: notif(true),
       },
     },
   },
@@ -148,9 +169,10 @@ beforeAll(async () => {
     [
       TestUserManager.users.globalAdmin.id,
       TestUserManager.users.globalSupportAdmin.id,
-      TestUserManager.users.qaUser.id,
     ].map(userId => updateUserSettings(userId, notificationsOff))
   );
+  // The applicant is silenced on everything EXCEPT the welcome it must receive.
+  await updateUserSettings(TestUserManager.users.qaUser.id, welcomeOnly);
 });
 
 afterAll(async () => {

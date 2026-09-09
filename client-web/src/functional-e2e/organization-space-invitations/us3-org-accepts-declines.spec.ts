@@ -31,6 +31,7 @@ import {
   runSuffix,
   setAllowSpaceInvitations,
   TestUser,
+  cleanUpRegisteredUsers,
   cleanUpTestOrganizations,
 } from './organization-space-invitations.helpers';
 
@@ -54,8 +55,14 @@ import {
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const adminEmail = process.env.AUTH_TEST_HARNESS_EMAIL || 'admin@alkem.io';
 
-const orgAdminEmail = `orgadmin-us3-${runSuffix}@alkem.io`;
-const orgAssociateEmail = `orgassoc-us3-${runSuffix}@alkem.io`;
+// Single source for the two personas this file registers itself, so the
+// beforeAll that creates them and the afterAll that deletes them cannot drift.
+const REGISTERED_USER_NAMES = [
+  `orgadmin-us3-${runSuffix}`,
+  `orgassoc-us3-${runSuffix}`,
+];
+const orgAdminEmail = `${REGISTERED_USER_NAMES[0]}@alkem.io`;
+const orgAssociateEmail = `${REGISTERED_USER_NAMES[1]}@alkem.io`;
 
 const orgAdminTest = createPersonaTest(orgAdminEmail);
 const orgAssociateTest = createPersonaTest(orgAssociateEmail);
@@ -103,8 +110,8 @@ baseTest.beforeAll(async () => {
 
   // Register the two dynamic personas via the raw Kratos API — no UI, no
   // mailbox polling; the sign-up FLOW itself is not this story's concern.
-  await registerTestUser(`orgadmin-us3-${runSuffix}`);
-  await registerTestUser(`orgassoc-us3-${runSuffix}`);
+  await registerTestUser(REGISTERED_USER_NAMES[0]);
+  await registerTestUser(REGISTERED_USER_NAMES[1]);
 
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
   const spaceRoleSetId = baseScenario.space.community.roleSetId;
@@ -169,6 +176,10 @@ baseTest.afterAll(async () => {
   // Ad-hoc org fixtures first: cleanUpBaseScenario does not know about them,
   // so without this each run leaks every organization this file created.
   await cleanUpTestOrganizations();
+  // The two personas this file registered itself: cleanUpBaseScenario only
+  // removes the ones IT created, so without this every run leaks two real
+  // platform accounts onto the acceptance environment.
+  await cleanUpRegisteredUsers(REGISTERED_USER_NAMES);
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 
