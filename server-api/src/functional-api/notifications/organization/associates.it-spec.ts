@@ -408,7 +408,7 @@ describe('Organization associate applications — the admins are told, the appli
     await deleteApplication(applicationId).catch(() => undefined);
   });
 
-  test('APPROVE tells the applicant ("approved") and the OTHER admins ("joined", approver excluded); REJECT tells the applicant ("declined")', async () => {
+  test('APPROVE tells the applicant ("approved") and NO admin ("joined" is suppressed for an approved application); REJECT tells the applicant ("declined")', async () => {
     const applyApprove = await applyToAssociateWithOrganization(
       baseScenario.organization.roleSetId,
       'note',
@@ -425,7 +425,11 @@ describe('Organization associate applications — the admins are told, the appli
           'APPROVE',
           TestUser.ORGANIZATION_ADMIN
         ),
-      3 // applicant "approved" + the 2 OTHER admins "joined" (approver excluded)
+      // FR-010 / 061 R35: the brief scopes "joined" to memberships with neither
+      // an invitation nor an application step, so approving sends the applicant
+      // their "approved" mail and nothing else. The admins hearing nothing at
+      // all is the known gap owned by alkem-io/server#6476.
+      1
     );
     const applicantMail = approveMails.find((m: any) =>
       m.toAddresses?.includes(TestUserManager.users.betaTester.email)
@@ -440,7 +444,7 @@ describe('Organization associate applications — the admins are told, the appli
     const otherAdminMail = approveMails.find((m: any) =>
       m.toAddresses?.includes(TestUserManager.users.subspaceAdmin.email)
     );
-    expect(otherAdminMail?.subject).toContain('joined');
+    expect(otherAdminMail).toBeUndefined();
 
     await removeRoleFromUser(
       TestUserManager.users.betaTester.id,

@@ -208,8 +208,8 @@ adminATest.describe('US3-AS2 — every ADMIN is told; the pending table lists th
 
 // ─── US3-AS3 ────────────────────────────────────────────────────────────
 
-adminATest.describe('US3-AS3 — approving makes the applicant an associate; only the OTHER admins hear "joined"', () => {
-  adminATest('the row leaves the table; the applicant is told approved; adminOther (not the approver) hears joined', async ({
+adminATest.describe('US3-AS3 — approving makes the applicant an associate; NO admin hears "joined"', () => {
+  adminATest('the row leaves the table; the applicant is told approved; no admin gets a "joined" row', async ({
     page,
   }) => {
     await openAssociatesTab(page, orgO.nameID);
@@ -229,11 +229,15 @@ adminATest.describe('US3-AS3 — approving makes the applicant an associate; onl
       .poll(async () => getInAppNotificationTypes(applicantApproveEmail), { timeout: 20_000 })
       .toEqual(expect.arrayContaining(['USER_ORGANIZATION_ASSOCIATE_APPLICATION_APPROVED']));
 
-    await expect
-      .poll(async () => getInAppNotificationTypes(adminOtherEmail), { timeout: 20_000 })
-      .toEqual(expect.arrayContaining(['ORGANIZATION_ADMIN_ASSOCIATE_JOINED']));
+    // FR-010 / 061 R35: the product brief scopes "joined" to memberships with
+    // neither an invitation nor an application step, so an approved application
+    // suppresses it for EVERY admin — the approver and their co-admins alike.
+    // The applicant's own "approved" notification above is the only one sent.
+    // That the co-admins consequently hear nothing at all is a known gap owned
+    // by alkem-io/server#6476, not something this spec should encode as desired.
+    const adminOtherTypes = await getInAppNotificationTypes(adminOtherEmail);
+    expect(adminOtherTypes).not.toContain('ORGANIZATION_ADMIN_ASSOCIATE_JOINED');
 
-    // The approver (adminA) never gets a "joined" row for their own approval.
     const adminATypes = await getInAppNotificationTypes(adminAEmail);
     expect(adminATypes).not.toContain('ORGANIZATION_ADMIN_ASSOCIATE_JOINED');
   });
