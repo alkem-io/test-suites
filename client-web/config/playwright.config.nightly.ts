@@ -296,7 +296,12 @@ export default defineConfig({
     channel: 'chrome',
     viewport: { width: 1920, height: 1080 },
 
-    headless: true,
+    /* Honours UI_HEADLESS like every other config in this repo
+     * (playwright.config.ts, .language-offer, .planner). This one hardcoded
+     * `true` while its own docblock above advertised the variable, so
+     * `UI_HEADLESS=false` silently did nothing here — the one config where a
+     * developer most often wants to watch a nightly spec run. */
+    headless: process.env.UI_HEADLESS !== 'false',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-all-retries',
