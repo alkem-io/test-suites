@@ -149,7 +149,15 @@ const createTestOrganization = async (
   creatorRole: TestUser = TestUser.GLOBAL_ADMIN
 ) => {
   const name = `${label}${uniqueId}`;
-  const nameID = name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 24);
+  // The run suffix is what makes a nameID unique across runs, so it must SURVIVE
+  // truncation: trim the LABEL to fit, then append the whole suffix. Slugifying
+  // `label + uniqueId` and cutting the result to 24 instead ate into the suffix
+  // for any longer label, so two runs collided on one nameID and organization
+  // creation failed at fixture setup. Same rule as
+  // `client-web/src/functional-e2e/organization-space-invitations/organization-space-invitations.helpers.ts`.
+  const slug = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const suffix = slug(uniqueId);
+  const nameID = `${slug(label).slice(0, Math.max(0, 24 - suffix.length))}${suffix}`;
   const res = await createOrganization(
     name,
     nameID,
@@ -855,7 +863,7 @@ describe('Organization Space invitations — the Space admin can manage the orga
   test('promotes the accepted organization to Lead and demotes it again', async () => {
     await acceptInviteAsOrgAdmin();
     expect((await spaceRolesForOrg(baseScenario.organization.id))?.roles).toContain(
-      RoleName.Member
+      'member'
     );
 
     const promote = await assignRoleToOrganization(
@@ -866,7 +874,7 @@ describe('Organization Space invitations — the Space admin can manage the orga
     );
     expect(promote?.error).toBeUndefined();
     expect((await spaceRolesForOrg(baseScenario.organization.id))?.roles).toContain(
-      RoleName.Lead
+      'lead'
     );
 
     const demote = await removeRoleFromOrganization(
@@ -878,7 +886,7 @@ describe('Organization Space invitations — the Space admin can manage the orga
     expect(demote?.error).toBeUndefined();
     expect(
       (await spaceRolesForOrg(baseScenario.organization.id))?.roles
-    ).not.toContain(RoleName.Lead);
+    ).not.toContain('lead');
   });
 
   test('removes the accepted organization from the Space', async () => {
@@ -930,7 +938,7 @@ describe('Organization Space invitations — the Space admin can manage the orga
     );
     expect(removal?.error?.errors?.[0]?.message).toContain('Authorization');
     expect((await spaceRolesForOrg(baseScenario.organization.id))?.roles).toContain(
-      RoleName.Member
+      'member'
     );
   });
 });

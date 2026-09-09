@@ -8,11 +8,17 @@ import {
   TestUser,
   waitForQueuePublishIncrease,
 } from '@alkemio/tests-lib';
-import { UpdateUserSettingsNotificationUserInput } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import {
+  UpdateUserSettingsEntityInput,
+  UpdateUserSettingsNotificationUserInput,
+} from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { graphqlRequestAuth } from '@alkemio/tests-lib/utils/graphql.request';
 import { sendMessageToRoom } from '@functional-api/communications/communication.params';
 import { createConversation } from '@functional-api/communications/conversations/conversation.request.params';
-import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
+import {
+  getUserData,
+  updateUserSettings,
+} from '@functional-api/contributor-management/user/user.request.params';
 import {
   generateFakePushSubscription,
   getMyPushSubscriptions,
@@ -28,8 +34,27 @@ export const notif = (v: boolean) => ({ email: v, inApp: v });
 export const notifWithPush = (v: boolean) => ({ email: v, inApp: v, push: v });
 
 /**
- * Return the same notification-settings tree with every channel flag set to
- * `true`.
+ * Strip the read-only keys (`id`, `__typename`) that come back on a settings
+ * QUERY but are rejected by the settings MUTATION input, so a snapshot taken
+ * with `getUserData` can be fed straight back to `updateUserSettings`.
+ */
+const stripReadOnlyKeys = (value: unknown): unknown => {
+  if (Array.isArray(value)) {
+    return value.map(stripReadOnlyKeys);
+  }
+  if (value === null || typeof value !== 'object') {
+    return value;
+  }
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>)
+      .filter(([key]) => key !== '__typename' && key !== 'id')
+      .map(([key, entry]) => [key, stripReadOnlyKeys(entry)])
+  );
+};
+
+/**
+ * Snapshot a persona's CURRENT notification settings so a spec can restore
+ * exactly what it found.
  *
  * Specs that mute a **globally seeded** persona (spaceAdmin, globalAdmin,
  * qaUser…) so their own mail counts mean what they say are borrowing shared
@@ -39,30 +64,24 @@ export const notifWithPush = (v: boolean) => ({ email: v, inApp: v, push: v });
  * assertions then pass for the wrong reason, and on any environment that is
  * not wiped between runs it is permanent.
  *
- * Pass the exact payload that was applied and restore it in `afterAll`. Every
- * notification setting this touches is on by platform default, so flipping the
- * same key set back to `true` hands the persona back the way the suite seeded
- * it — and deriving the restore from the mute payload means the two cannot
- * drift apart when a key is added to one of them.
+ * Restore from this snapshot, never from a blanket "turn everything on":
+ * several notification settings ship with `email: false` by platform default
+ * (the callout and comment ones among them), so an all-on restore does not
+ * hand the persona back — it leaves five shared personas permanently noisier
+ * than the suite seeded them, and the next spec that counts mail sees the
+ * extra messages.
  */
-export const allChannelsOn = <T>(settings: T): T => {
-  if (Array.isArray(settings)) {
-    return settings.map(allChannelsOn) as unknown as T;
+export const snapshotNotificationSettings = async (
+  userID: string
+): Promise<UpdateUserSettingsEntityInput> => {
+  const response = await getUserData(userID);
+  const settings = response?.data?.user?.settings;
+  if (!settings) {
+    throw new Error(
+      `Unable to snapshot notification settings for user ${userID}`
+    );
   }
-  if (settings === null || typeof settings !== 'object') {
-    return settings;
-  }
-  const entries = Object.entries(settings as Record<string, unknown>);
-  const isChannelLeaf = entries.every(
-    ([key, value]) =>
-      typeof value === 'boolean' && ['email', 'inApp', 'push'].includes(key)
-  );
-  if (entries.length > 0 && isChannelLeaf) {
-    return Object.fromEntries(entries.map(([key]) => [key, true])) as T;
-  }
-  return Object.fromEntries(
-    entries.map(([key, value]) => [key, allChannelsOn(value)])
-  ) as T;
+  return stripReadOnlyKeys(settings) as UpdateUserSettingsEntityInput;
 };
 
 // Helper for setting push channel independently
@@ -607,3 +626,32 @@ export const markConversationRead = async (
   }
   return response.body?.data?.markMessageAsReadInRoom ?? false;
 };
+
+/**
+ * `graphqlErrorWrapper` RESOLVES a GraphQL failure as `{ error: { errors } }`;
+ * it only rejects on a transport-level error. So the `.catch(() => undefined)`
+ * that teardown hooks wrap around a cleanup call never fires for the failure
+ * mode that actually matters — the server refusing the mutation — and the hook
+ * reports success while leaving state behind.
+ *
+ * That is not cosmetic here. `nightly` runs `--fileParallelism=false` with
+ * `isolate: false` against ONE database: a leaked invitation makes the next
+ * spec's first invite come back ALREADY_INVITED_TO_ROLE_SET, and a settings
+ * restore that silently failed re-opens exactly the shared-persona corruption
+ * `snapshotNotificationSettings` exists to prevent. Both surface as a cascade of
+ * failures in unrelated files, attributed to the wrong spec.
+ *
+ * Use this to make a cleanup call loud. It still tolerates transport hiccups
+ * (the environment, not the product) by rethrowing them the same way — the
+ * point is that NOTHING is swallowed.
+ */
+export const assertCleanupSucceeded = (
+  label: string,
+  result: { error?: { errors?: unknown } } | undefined
+): void => {
+  const errors = result?.error?.errors;
+  if (errors) {
+    throw new Error(`${label} failed during teardown: ${JSON.stringify(errors)}`);
+  }
+};
+
