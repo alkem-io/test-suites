@@ -13,6 +13,8 @@ import {
   updateDiscussion,
   sendMessageToRoom,
   removeMessageOnRoom,
+  getPlatformForumDiscussionCategories,
+  adminRemoveForumDiscussionCategory,
 } from '../communication.params';
 import { delay } from '@alkemio/tests-lib';
 import { ForumDiscussionCategory } from '@alkemio/client-lib/dist/types/alkemio-schema';
@@ -474,5 +476,269 @@ describe('Authorization - Discussion / Messages', () => {
         }
       );
     });
+  });
+});
+
+// The two categories below are not yet in the checked-in generated SDK enum
+// (it predates this delivery's server change), but GraphQL enums travel by
+// wire name, so a plain string cast round-trips correctly against a server
+// that has them. See the note beside the helpers in communication.params.ts.
+const NEWSLETTER = 'NEWSLETTER' as ForumDiscussionCategory;
+const TIPS_AND_TRICKS = 'TIPS_AND_TRICKS' as ForumDiscussionCategory;
+const ALL_EIGHT_CATEGORIES = [
+  'CHALLENGE_CENTRIC',
+  'COMMUNITY_BUILDING',
+  'HELP',
+  'OTHER',
+  'PLATFORM_FUNCTIONALITIES',
+  'RELEASES',
+  'NEWSLETTER',
+  'TIPS_AND_TRICKS',
+];
+
+describe('Forum category reorganisation - new categories + admin-only gate', () => {
+  const createdIds: string[] = [];
+
+  afterAll(async () => {
+    for (const id of createdIds) {
+      await deleteDiscussion(id);
+    }
+  });
+
+  test('Admin creates a discussion in the Newsletter category', async () => {
+    // Act
+    const res = await createDiscussion(
+      platformDiscussionId,
+      'category-reorg-newsletter',
+      NEWSLETTER,
+      TestUser.GLOBAL_ADMIN
+    );
+    const discussion = res?.data?.createDiscussion;
+    if (discussion?.id) createdIds.push(discussion.id);
+
+    // Assert
+    expect(discussion?.category).toEqual('NEWSLETTER');
+  });
+
+  test('Admin creates a discussion in the Tips & Tricks category', async () => {
+    // Act
+    const res = await createDiscussion(
+      platformDiscussionId,
+      'category-reorg-tips-and-tricks-admin',
+      TIPS_AND_TRICKS,
+      TestUser.GLOBAL_ADMIN
+    );
+    const discussion = res?.data?.createDiscussion;
+    if (discussion?.id) createdIds.push(discussion.id);
+
+    // Assert
+    expect(discussion?.category).toEqual('TIPS_AND_TRICKS');
+  });
+
+  test('Non-admin creating into Newsletter is refused', async () => {
+    // Act
+    const res = await createDiscussion(
+      platformDiscussionId,
+      'category-reorg-newsletter-denied',
+      NEWSLETTER,
+      TestUser.QA_USER
+    );
+
+    // Assert
+    expect(res?.data?.createDiscussion).toBeUndefined();
+    expect(res?.error?.errors?.[0]?.code).toEqual('FORBIDDEN_POLICY');
+  });
+
+  test('Non-admin creating into Releases is refused (gate is now set-driven, not a single literal)', async () => {
+    // Act
+    const res = await createDiscussion(
+      platformDiscussionId,
+      'category-reorg-releases-denied',
+      ForumDiscussionCategory.Releases,
+      TestUser.QA_USER
+    );
+
+    // Assert
+    expect(res?.data?.createDiscussion).toBeUndefined();
+    expect(res?.error?.errors?.[0]?.code).toEqual('FORBIDDEN_POLICY');
+  });
+
+  test('Non-admin creates a discussion in the Tips & Tricks category (public category)', async () => {
+    // Act
+    const res = await createDiscussion(
+      platformDiscussionId,
+      'category-reorg-tips-and-tricks-public',
+      TIPS_AND_TRICKS,
+      TestUser.QA_USER
+    );
+    const discussion = res?.data?.createDiscussion;
+    if (discussion?.id) createdIds.push(discussion.id);
+
+    // Assert
+    expect(discussion?.category).toEqual('TIPS_AND_TRICKS');
+  });
+
+  test('The active category list carries all 8 categories', async () => {
+    // Act
+    const categories = await getPlatformForumDiscussionCategories();
+
+    // Assert
+    expect(categories).toEqual(expect.arrayContaining(ALL_EIGHT_CATEGORIES));
+    expect(categories).toHaveLength(ALL_EIGHT_CATEGORIES.length);
+  });
+});
+
+describe('Forum category reorganisation - recategorise an existing post', () => {
+  let discId = '';
+
+  afterEach(async () => {
+    if (discId) {
+      await deleteDiscussion(discId);
+      discId = '';
+    }
+  });
+
+  test('Admin moves a post from Other to Tips & Tricks and the move round-trips', async () => {
+    // Arrange
+    const created = await createDiscussion(
+      platformDiscussionId,
+      'category-reorg-recategorise',
+      ForumDiscussionCategory.Other,
+      TestUser.GLOBAL_ADMIN
+    );
+    discId = created?.data?.createDiscussion?.id ?? '';
+
+    // Act
+    const updated = await updateDiscussion(discId, TestUser.GLOBAL_ADMIN, {
+      category: TIPS_AND_TRICKS,
+    });
+    const readBack = await getPlatformDiscussionsDataById(discId);
+
+    // Assert
+    expect(updated?.data?.updateDiscussion.category).toEqual(
+      'TIPS_AND_TRICKS'
+    );
+    expect(readBack?.data?.platform?.forum?.discussion?.category).toEqual(
+      'TIPS_AND_TRICKS'
+    );
+  });
+
+  test('Non-admin cannot recategorise a post (unchanged UPDATE privilege)', async () => {
+    // Arrange
+    const created = await createDiscussion(
+      platformDiscussionId,
+      'category-reorg-recategorise-denied',
+      ForumDiscussionCategory.Other,
+      TestUser.GLOBAL_ADMIN
+    );
+    discId = created?.data?.createDiscussion?.id ?? '';
+
+    // Act
+    const updated = await updateDiscussion(discId, TestUser.QA_USER, {
+      category: TIPS_AND_TRICKS,
+    });
+
+    // Assert
+    expect(updated?.error?.errors[0].message).toContain(
+      errorAuthDiscussionUpdate
+    );
+  });
+
+  test('Global admin (holder of PLATFORM_ADMIN) moves a post into Newsletter', async () => {
+    // Arrange
+    const created = await createDiscussion(
+      platformDiscussionId,
+      'category-reorg-recategorise-newsletter',
+      ForumDiscussionCategory.Other,
+      TestUser.GLOBAL_ADMIN
+    );
+    discId = created?.data?.createDiscussion?.id ?? '';
+
+    // Act
+    const updated = await updateDiscussion(discId, TestUser.GLOBAL_ADMIN, {
+      category: NEWSLETTER,
+    });
+
+    // Assert
+    expect(updated?.data?.updateDiscussion.category).toEqual('NEWSLETTER');
+  });
+});
+
+describe('Forum category reorganisation - remove-mutation safe negatives only', () => {
+  // Deliberately never exercises a removal that could succeed: this suite
+  // also runs against shared/acceptance environments and there is no
+  // add-category API to restore a category removed here by accident.
+
+  let fixtureDiscId = '';
+
+  afterEach(async () => {
+    if (fixtureDiscId) {
+      await deleteDiscussion(fixtureDiscId);
+      fixtureDiscId = '';
+    }
+  });
+
+  test('Non-admin cannot call the remove-category mutation, and the active list is unchanged', async () => {
+    // Arrange - guarantee OTHER is non-empty via an owned fixture, so that
+    // even a total authorization-gate bypass still cannot commit the
+    // removal (the NOT_EMPTY guard is the second line of defence here)
+    const created = await createDiscussion(
+      platformDiscussionId,
+      'category-reorg-remove-non-admin-negative',
+      ForumDiscussionCategory.Other,
+      TestUser.GLOBAL_ADMIN
+    );
+    fixtureDiscId = created?.data?.createDiscussion?.id ?? '';
+    expect(fixtureDiscId).not.toEqual('');
+
+    // Pin the baseline to a successful read: `getPlatformForumDiscussionCategories`
+    // resolves to `undefined` when the query fails, and `undefined === undefined`
+    // would make the unchanged-list assertion below pass vacuously.
+    const before = await getPlatformForumDiscussionCategories();
+    expect(before).toContain('OTHER');
+
+    // Act
+    const res = await adminRemoveForumDiscussionCategory(
+      'OTHER',
+      TestUser.QA_USER
+    );
+    const after = await getPlatformForumDiscussionCategories();
+
+    // Assert
+    expect(res?.body?.data?.adminForumRemoveDiscussionCategory).toBeFalsy();
+    expect(res?.body?.errors?.[0]?.extensions?.code).toEqual(
+      'FORBIDDEN_POLICY'
+    );
+    expect(after).toEqual(before);
+  });
+
+  test('Admin cannot remove a category that still holds a post; the count is in the error and the category stays active', async () => {
+    // Arrange - guarantee OTHER is non-empty via an owned fixture
+    const created = await createDiscussion(
+      platformDiscussionId,
+      'category-reorg-remove-non-empty',
+      ForumDiscussionCategory.Other,
+      TestUser.GLOBAL_ADMIN
+    );
+    fixtureDiscId = created?.data?.createDiscussion?.id ?? '';
+    expect(fixtureDiscId).not.toEqual('');
+
+    // Act
+    const res = await adminRemoveForumDiscussionCategory(
+      'OTHER',
+      TestUser.GLOBAL_ADMIN
+    );
+    const categories = await getPlatformForumDiscussionCategories();
+
+    // Assert
+    expect(res?.body?.data?.adminForumRemoveDiscussionCategory).toBeFalsy();
+    expect(res?.body?.errors?.[0]?.extensions?.code).toEqual(
+      'FORUM_DISCUSSION_CATEGORY_NOT_EMPTY'
+    );
+    const message = String(res?.body?.errors?.[0]?.message ?? '');
+    const countMatch = message.match(/\d+/);
+    expect(countMatch).not.toBeNull();
+    expect(Number(countMatch?.[0])).toBeGreaterThanOrEqual(1);
+    expect(categories).toContain('OTHER');
   });
 });
