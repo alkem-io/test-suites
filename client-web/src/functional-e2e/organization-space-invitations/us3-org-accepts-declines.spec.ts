@@ -93,8 +93,15 @@ let orgAS3: OrgFixture; // invited Member on the root Space — declined
 let orgAS4: OrgFixture; // invited Member on the L2 subspace (parents not yet joined)
 let orgAS6: OrgFixture; // invited Member — org opts out AFTER the invite, invite must survive
 let orgAS7: OrgFixture; // invited Member + Lead on the subspace — Lead slots fill before accept
-let orgAS7FillerA: OrgFixture; // granted Lead directly, filling slot 1/2 after orgAS7's invite
-let orgAS7FillerB: OrgFixture; // granted Lead directly, filling slot 2/2 after orgAS7's invite
+// Granted Lead directly, filling EVERY Lead slot after orgAS7's invite. The
+// subspace organization Lead cap is 9, not 2 — see
+// server/src/domain/space/space.defaults/definitions/subspace.community.roles.ts
+// (`RoleName.LEAD` -> organizationPolicyData.maximum). Only the L0 Space caps
+// organizations at 2 (space.community.roles.ts), which is what US1-AS3 covers.
+// This spec previously filled two slots and expected the third accept to be
+// downgraded; with seven slots still free the Lead was granted, correctly.
+const SUBSPACE_ORG_LEAD_CAP = 9;
+let orgAS7Fillers: OrgFixture[] = [];
 let orgAS8: OrgFixture; // invited Member — associate/global-admin denial + admin revoke
 
 const scenarioConfig: TestScenarioConfig = {
@@ -142,18 +149,20 @@ const runSetup = async (): Promise<void> => {
   const subspaceRoleSetId = baseScenario.subspace.community.roleSetId;
   const subsubspaceRoleSetId = baseScenario.subsubspace.community.roleSetId;
 
-  [orgAS1, orgAS2, orgAS3, orgAS4, orgAS6, orgAS7, orgAS7FillerA, orgAS7FillerB, orgAS8] =
-    await Promise.all([
-      createTestOrganization('US3AS1 Empty', runSuffix),
-      createTestOrganization('US3AS2 GateZero', runSuffix),
-      createTestOrganization('US3AS3 Declines', runSuffix),
-      createTestOrganization('US3AS4 Subspace', runSuffix),
-      createTestOrganization('US3AS6 OptsOut', runSuffix),
-      createTestOrganization('US3AS7 LeadRace', runSuffix),
-      createTestOrganization('US3AS7 FillerA', runSuffix),
-      createTestOrganization('US3AS7 FillerB', runSuffix),
-      createTestOrganization('US3AS8 Denial', runSuffix),
-    ]);
+  [orgAS1, orgAS2, orgAS3, orgAS4, orgAS6, orgAS7, orgAS8] = await Promise.all([
+    createTestOrganization('US3AS1 Empty', runSuffix),
+    createTestOrganization('US3AS2 GateZero', runSuffix),
+    createTestOrganization('US3AS3 Declines', runSuffix),
+    createTestOrganization('US3AS4 Subspace', runSuffix),
+    createTestOrganization('US3AS6 OptsOut', runSuffix),
+    createTestOrganization('US3AS7 LeadRace', runSuffix),
+    createTestOrganization('US3AS8 Denial', runSuffix),
+  ]);
+  orgAS7Fillers = await Promise.all(
+    Array.from({ length: SUBSPACE_ORG_LEAD_CAP }, (_, i) =>
+      createTestOrganization(`US3AS7 Filler${i + 1}`, runSuffix)
+    )
+  );
 
   // Gate 0: the SAME org-admin persona administers every org except AS8
   // (which must specifically NOT have this persona on it).
@@ -182,15 +191,17 @@ const runSetup = async (): Promise<void> => {
   await inviteOrganizationViaApi(spaceRoleSetId, orgAS6.id, `US3-AS6 ${runSuffix}`, TestUser.SPACE_ADMIN);
   await setAllowSpaceInvitations(orgAS6.id, false);
 
-  // AS7: Member + Lead, on the SUBSPACE (its own, unused 2-slot Lead
-  // capacity — orgAS7FillerA/B fill both slots via direct grant AFTER the
-  // invite, simulating "the slots filled while the invitation was pending").
+  // AS7: Member + Lead, on the SUBSPACE. Every one of its SUBSPACE_ORG_LEAD_CAP
+  // Lead slots is then filled by direct grant AFTER the invite, simulating "the
+  // slots filled while the invitation was pending". Accepting must then grant
+  // Member only — the extra-role grant fails on the policy limit and is
+  // deliberately swallowed (role.set.service.ts, "do not throw further").
   await inviteWithExtraRole(subspaceRoleSetId, orgAS7.id, `US3-AS7 ${runSuffix}`, [RoleName.Lead]);
   // The fillers must join the PARENT Space first: `assignActorToRole` refuses a
   // subspace grant for an actor that is not a member of the parent role set
   // ("actor is not a member of parent roleSet"). Granting straight on the
   // subspace threw BAD_USER_INPUT and took the whole file down in beforeAll.
-  for (const filler of [orgAS7FillerA, orgAS7FillerB]) {
+  for (const filler of orgAS7Fillers) {
     await assignOrgRole(filler.id, spaceRoleSetId, RoleName.Member);
     await assignOrgRole(filler.id, subspaceRoleSetId, RoleName.Member);
     await assignOrgRole(filler.id, subspaceRoleSetId, RoleName.Lead);
@@ -215,7 +226,12 @@ baseTest.afterAll(async () => {
   // NOT deleted: these two are seeded personas now (see US3_REGISTERED_USER_NAMES),
   // registered once per run by globalSetup and reused, so there is nothing to
   // leak and deleting them would only force a re-registration next run.
-  await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  // beforeAll may have failed before the scenario existed (a browser that will
+  // not launch is enough). cleanUpBaseScenario dereferences the scenario, so
+  // calling it with undefined replaces the real failure with a TypeError.
+  if (baseScenario) {
+    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  }
 });
 
 // ─── Raw helpers not covered by the generated SDK (`@alkemio/tests-lib`
@@ -341,7 +357,9 @@ async function openInvitationsTab(page: Page, org: OrgFixture) {
 async function acceptViaTab(page: Page, spaceDisplayName: string) {
   const row = page.locator('li').filter({ hasText: spaceDisplayName });
   await row.getByRole('button', { name: 'Accept' }).click();
-  await expect(page.getByRole('dialog', { name: 'Accept this invitation?' })).toBeVisible();
+  // role=alertdialog, not dialog: the CRD confirm is a Radix AlertDialog, and
+  // Playwright matches ARIA roles exactly.
+  await expect(page.getByRole('alertdialog', { name: 'Accept this invitation?' })).toBeVisible();
   await page.getByRole('button', { name: 'Accept invitation' }).click();
 }
 
@@ -390,6 +408,10 @@ orgAdminTest.describe('US3-AS3 — declining a pending invitation', () => {
     await expect(row).toBeVisible();
 
     await row.getByRole('button', { name: 'Decline' }).click();
+    // Decline is confirmed as well as accept (the view's Rule #9 note): the row
+    // survives the first click and only goes once the alertdialog is confirmed.
+    await expect(page.getByRole('alertdialog', { name: 'Decline this invitation?' })).toBeVisible();
+    await page.getByRole('button', { name: 'Decline invitation' }).click();
     await expect(page.locator('li').filter({ hasText: spaceDisplayName })).toHaveCount(0);
 
     const members = await organizationsInRole(baseScenario.space.community.roleSetId, RoleName.Member);
@@ -458,9 +480,12 @@ orgAdminTest.describe('US3-AS7 — a granted Lead slot fills while the Lead invi
       const spaceDisplayName = baseScenario.subspace.about.profile.displayName;
 
       const leadsBefore = await organizationsInRole(baseScenario.subspace.community.roleSetId, RoleName.Lead);
-      expect(leadsBefore).toContain(orgAS7FillerA.id);
-      expect(leadsBefore).toContain(orgAS7FillerB.id);
+      for (const filler of orgAS7Fillers) {
+        expect(leadsBefore).toContain(filler.id);
+      }
       expect(leadsBefore).not.toContain(orgAS7.id);
+      // The premise of the scenario: there is genuinely no Lead slot left.
+      expect(leadsBefore.length).toBeGreaterThanOrEqual(SUBSPACE_ORG_LEAD_CAP);
 
       await openInvitationsTab(page, orgAS7);
       const row = page.locator('li').filter({ hasText: spaceDisplayName });

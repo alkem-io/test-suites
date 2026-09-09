@@ -166,7 +166,12 @@ baseTest.afterAll(async () => {
   // Ad-hoc org fixtures first: cleanUpBaseScenario does not know about them,
   // so without this each run leaks every organization this file created.
   await cleanUpTestOrganizations();
-  await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  // beforeAll may have failed before the scenario existed (a browser that will
+  // not launch is enough). cleanUpBaseScenario dereferences the scenario, so
+  // calling it with undefined replaces the real failure with a TypeError.
+  if (baseScenario) {
+    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  }
 });
 
 // ─── Page-level helpers (source-derived selectors — see
@@ -312,8 +317,11 @@ spaceAdminTest.describe('US1-AS2..AS9 — space admin invite walk', () => {
       await expect(page.getByText(/no matching/i)).toBeVisible();
       await expect(page.getByRole('button', { name: orgAS5Member.displayName })).toHaveCount(0);
 
-      // Exact match — see inviteOrganizationViaDialog.
-      await page.getByRole('button', { name: 'Close', exact: true }).click();
+      // The bare "Close" button belongs to the RESULTS view and only exists
+      // after a send. This scenario never sends, so the dialog's own chrome
+      // dismiss control ("Close invite dialog", community.en.json ->
+      // closeAriaLabel) is the only way out.
+      await page.getByRole('button', { name: 'Close invite dialog' }).click();
     }
   );
 
@@ -370,8 +378,11 @@ spaceAdminTest.describe('US1-AS2..AS9 — space admin invite walk', () => {
         page.getByRole('button', { name: orgAS5Invited.displayName })
       ).toHaveCount(0);
 
-      // Exact match — see inviteOrganizationViaDialog.
-      await page.getByRole('button', { name: 'Close', exact: true }).click();
+      // The bare "Close" button belongs to the RESULTS view and only exists
+      // after a send. This scenario never sends, so the dialog's own chrome
+      // dismiss control ("Close invite dialog", community.en.json ->
+      // closeAriaLabel) is the only way out.
+      await page.getByRole('button', { name: 'Close invite dialog' }).click();
 
       // The pre-seeded pending row is still there, exactly once — excluding the
       // organization from the picker must not have disturbed the pending list.
@@ -408,9 +419,14 @@ spaceAdminTest.describe('US1-AS2..AS9 — space admin invite walk', () => {
       expect(alreadyInvited.data?.inviteForEntryRoleOnRoleSet?.[0]?.type).toEqual(
         RoleSetInvitationResultType.AlreadyInvitedToRoleSet
       );
-      expect(
-        alreadyInvited.data?.inviteForEntryRoleOnRoleSet?.[0]?.invitation
-      ).toBeFalsy();
+      // ALREADY_INVITED deliberately echoes the EXISTING invitation so the
+      // client can point the inviter at it (role.set.resolver.mutations.
+      // membership.ts) — unlike ALREADY_MEMBER above, which has no invitation
+      // to point at. "Nothing created" is proven by the unchanged id set
+      // below, not by an absent payload.
+      expect(invitationIdsBefore).toContain(
+        alreadyInvited.data?.inviteForEntryRoleOnRoleSet?.[0]?.invitation?.id
+      );
 
       // No second invitation row for the organization: the open-invitation
       // count on the Space is unchanged.
@@ -436,6 +452,11 @@ spaceAdminTest.describe('US1-AS2..AS9 — space admin invite walk', () => {
       expect(invitationId).toBeTruthy();
 
       await page.getByRole('button', { name: `Revoke invitation to ${orgAS6.displayName}` }).click();
+      // Revoking is destructive, so it is confirmed: the row survives the first
+      // click and only goes once the alertdialog is confirmed.
+      const revokeConfirm = page.getByRole('alertdialog', { name: 'Revoke invitation' });
+      await expect(revokeConfirm).toBeVisible();
+      await revokeConfirm.getByRole('button', { name: 'Confirm' }).click();
       await expect(page.locator('li').filter({ hasText: orgAS6.displayName })).toHaveCount(0);
 
       const afterIds = await getMyCommunityInvitationIds(TestUser.QA_USER);

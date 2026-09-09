@@ -319,7 +319,12 @@ baseTest.afterAll(async () => {
   // Ad-hoc org fixtures first: cleanUpBaseScenario does not know about them,
   // so without this each run leaks every organization this file created.
   await cleanUpTestOrganizations();
-  await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  // beforeAll may have failed before the scenario existed (a browser that will
+  // not launch is enough). cleanUpBaseScenario dereferences the scenario, so
+  // calling it with undefined replaces the real failure with a TypeError.
+  if (baseScenario) {
+    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  }
 });
 
 // ─── Page-level helper (mirrors us1-invite-organization.spec.ts) ─────────
@@ -440,7 +445,12 @@ baseTest(
     await page.goto(baseUrl);
     await page.getByRole('button', { name: 'Notifications' }).click();
 
-    const item = page.getByText(new RegExp(`invited to join ${escapeRegex(baseScenario.space.about.profile.displayName)}`));
+    // Scoped to THIS test's organization, not just the Space. Every other US2
+    // scenario invites a different organization to the SAME Space, so a
+    // Space-only match resolves to one notification per scenario that has
+    // already run and fails Playwright's strict mode. The organization name is
+    // unique per scenario and per run.
+    const item = page.getByText(new RegExp(`Your organisation ${escapeRegex(orgAS2Click.displayName)}`));
     await expect(item).toBeVisible({ timeout: 15_000 });
     await item.click();
 
