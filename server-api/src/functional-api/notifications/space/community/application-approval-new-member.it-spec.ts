@@ -234,9 +234,17 @@ describe('Notifications - approving an application (R35)', () => {
     // ...but the suppression is admin-side ONLY. The member-side welcome is
     // untouched by CommunityMembershipOrigin and must still arrive, otherwise
     // an approved applicant joins in complete silence.
-    const applicantMails = (mails ?? []).filter((mail: any) =>
-      mail.toAddresses?.includes(TestUserManager.users.qaUser.email)
+    // Matched on the welcome template's own subject
+    // (`user.space.community.joined.js`: "<Space> - Welcome to the Community!"),
+    // not merely on the recipient: a count of "any mail to the applicant" would
+    // be satisfied by an unrelated notification and would keep passing if the
+    // welcome itself were suppressed.
+    const applicantWelcomeMails = (mails ?? []).filter(
+      (mail: any) =>
+        mail.toAddresses?.includes(TestUserManager.users.qaUser.email) &&
+        mail.subject ===
+          `${baseScenario.space.about.profile.displayName} - Welcome to the Community!`
     );
-    expect(applicantMails.length).toBeGreaterThanOrEqual(1);
+    expect(applicantWelcomeMails).toHaveLength(1);
   });
 });
