@@ -626,3 +626,32 @@ export const markConversationRead = async (
   }
   return response.body?.data?.markMessageAsReadInRoom ?? false;
 };
+
+/**
+ * `graphqlErrorWrapper` RESOLVES a GraphQL failure as `{ error: { errors } }`;
+ * it only rejects on a transport-level error. So the `.catch(() => undefined)`
+ * that teardown hooks wrap around a cleanup call never fires for the failure
+ * mode that actually matters — the server refusing the mutation — and the hook
+ * reports success while leaving state behind.
+ *
+ * That is not cosmetic here. `nightly` runs `--fileParallelism=false` with
+ * `isolate: false` against ONE database: a leaked invitation makes the next
+ * spec's first invite come back ALREADY_INVITED_TO_ROLE_SET, and a settings
+ * restore that silently failed re-opens exactly the shared-persona corruption
+ * `snapshotNotificationSettings` exists to prevent. Both surface as a cascade of
+ * failures in unrelated files, attributed to the wrong spec.
+ *
+ * Use this to make a cleanup call loud. It still tolerates transport hiccups
+ * (the environment, not the product) by rethrowing them the same way — the
+ * point is that NOTHING is swallowed.
+ */
+export const assertCleanupSucceeded = (
+  label: string,
+  result: { error?: { errors?: unknown } } | undefined
+): void => {
+  const errors = result?.error?.errors;
+  if (errors) {
+    throw new Error(`${label} failed during teardown: ${JSON.stringify(errors)}`);
+  }
+};
+

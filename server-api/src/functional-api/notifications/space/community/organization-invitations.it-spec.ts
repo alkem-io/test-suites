@@ -36,6 +36,7 @@ import {
   deleteOrganization,
 } from '@functional-api/contributor-management/organization/organization.request.params';
 import {
+  assertCleanupSucceeded,
   expectExactMailsAfter,
   notif,
   waitForMailsCountAtLeast,
@@ -245,7 +246,11 @@ describe('Organization Space invitations — organization admins are notified (U
   afterEach(async () => {
     await clearHostOrgFromSpace();
     if (invitationId) {
-      await deleteInvitation(invitationId).catch(() => undefined);
+      // Keep the id until the delete is PROVEN clean: a GraphQL failure
+      // resolves rather than rejects, so clearing it unconditionally drops the
+      // only handle on a leaked invitation (see assertCleanupSucceeded).
+      const deletion = await deleteInvitation(invitationId);
+      assertCleanupSucceeded(`deleteInvitation(${invitationId})`, deletion);
       invitationId = '';
     }
   });
@@ -512,7 +517,11 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
       RoleName.Member
     ).catch(() => undefined);
     if (invitationId) {
-      await deleteInvitation(invitationId).catch(() => undefined);
+      // Keep the id until the delete is PROVEN clean: a GraphQL failure
+      // resolves rather than rejects, so clearing it unconditionally drops the
+      // only handle on a leaked invitation (see assertCleanupSucceeded).
+      const deletion = await deleteInvitation(invitationId);
+      assertCleanupSucceeded(`deleteInvitation(${invitationId})`, deletion);
       invitationId = '';
     }
   });

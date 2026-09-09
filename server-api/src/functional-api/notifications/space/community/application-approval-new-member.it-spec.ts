@@ -21,25 +21,35 @@ import {
 import { eventOnRoleSetApplication } from '@functional-api/roleset/roleset-events.request.params';
 import { removeRoleFromUser } from '@functional-api/roleset/roles-request.params';
 import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
-import { notif, snapshotNotificationSettings } from '../../notification.helpers';
+import {
+  assertCleanupSucceeded,
+  notif,
+  snapshotNotificationSettings,
+} from '../../notification.helpers';
 
 /**
- * Ruling **R31** / FR-020a(c) — the discriminating live test for the one
- * carve-out in the "no double notification on accept" suppression.
+ * Ruling **R35** / FR-020a(c) — the discriminating live test for the
+ * "no double notification" suppression, on its application arm.
  *
- * `CommunityMembershipOrigin` suppresses the generic Space-admin
- * "a new member joined" notification when a membership came from **accepting
- * an invitation**, because FR-020's outcome notification replaces it for every
- * admin. R26 originally extended that to **approved applications** too, taken
- * literally from the product email. There is no application-approved event to
- * replace it (`SPACE_ADMIN_COMMUNITY_APPLICATION` fires at *submission*), so
- * that left every co-admin of the approving admin with nothing at all — a
- * silent, platform-wide regression.
+ * `CommunityMembershipOrigin` suppresses the generic Space-admin "a new member
+ * joined" notification whenever a membership came from an **invitation** or an
+ * **approved application** — the product email scopes that notification to
+ * memberships with *"no invitation or application step"*, and the story AC on
+ * server#4100 repeats it verbatim.
  *
- * This spec pins the corrected behaviour from the outside: a Space with two
- * admins, one approves, the OTHER is still told. It fails against the
- * suppressed build and passes against `develop`'s behaviour, which is exactly
- * what makes it worth its runtime.
+ * R31 had briefly carved applications back out, on the reasoning that no
+ * application-approved event exists to replace the suppressed one
+ * (`SPACE_ADMIN_COMMUNITY_APPLICATION` fires at *submission*), so suppressing
+ * leaves the approving admin's co-admins told nothing. **R35 overrode that**:
+ * the binding instruction wins, and the silence is an accepted consequence
+ * tracked as alkem-io/server#6476.
+ *
+ * This spec pins the shipped behaviour from the outside: a Space with two
+ * admins, one approves, and the OTHER is told **nothing** on the admin side —
+ * while the new member still receives their own welcome, which the suppression
+ * must never touch. It fails against a build that forgot to thread
+ * `CommunityMembershipOrigin.APPLICATION`, which is what makes it worth its
+ * runtime.
  */
 const notificationsOff = {
   notification: {
@@ -150,13 +160,28 @@ afterAll(async () => {
   // silently changes the specs that run next — including
   // `organization-invitations.it-spec.ts`, which asserts exact per-recipient
   // mail counts and sets no notification preconditions of its own.
-  await Promise.all(
-    [...settingsBefore.entries()].map(([userId, settings]) =>
-      updateUserSettings(userId, settings).catch(() => undefined)
-    )
-  );
+  // Restore EVERY persona before reporting: bailing on the first failure would
+  // leave the rest muted, which is the corruption this hook exists to prevent.
+  // Collect, finish, then fail loudly — a silent GraphQL error here re-opens
+  // exactly what `snapshotNotificationSettings` was written to close.
+  const restoreFailures: string[] = [];
+  for (const [userId, settings] of settingsBefore.entries()) {
+    try {
+      const restored = await updateUserSettings(userId, settings);
+      assertCleanupSucceeded(`updateUserSettings(${userId})`, restored);
+    } catch (error) {
+      restoreFailures.push(`${userId}: ${(error as Error).message}`);
+    }
+  }
 
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+
+  if (restoreFailures.length > 0) {
+    throw new Error(
+      `Failed to restore notification settings for ${restoreFailures.length} persona(s); ` +
+        `later specs in this run will see the wrong settings:\n${restoreFailures.join('\n')}`
+    );
+  }
 });
 
 afterEach(async () => {
@@ -171,8 +196,8 @@ afterEach(async () => {
   }
 });
 
-describe('Notifications - approving an application (R31)', () => {
-  test('the admin who did NOT approve is still told "a new member joined"', async () => {
+describe('Notifications - approving an application (R35)', () => {
+  test('the admin who did NOT approve is told nothing; the new member still gets their welcome', async () => {
     const application = await createApplication(
       baseScenario.space.community.roleSetId,
       TestUser.QA_USER
@@ -197,13 +222,21 @@ describe('Notifications - approving an application (R31)', () => {
       mail.toAddresses?.includes(TestUserManager.users.subspaceAdmin.email)
     );
 
-    // The co-admin performed no approval and receives no outcome notification
-    // (there is no application-approved event), so the generic
-    // "a new member joined" is the ONLY thing that can tell them. Suppressing
-    // it here tells them nothing at all — the regression R31 reverses.
-    expect(coAdminMails).toHaveLength(1);
-    expect(coAdminMails[0].subject).toContain(
-      `joined ${baseScenario.space.about.profile.displayName}`
+    // R35: the membership came from an application, so the admin-side
+    // "a new member joined" is suppressed for EVERY Space admin — including
+    // the co-admin who did not approve. This is the accepted consequence
+    // recorded on alkem-io/server#6476: until an application-approved event
+    // exists there is nothing to replace it, and the co-admin hears nothing.
+    // Asserted rather than tolerated, so that reintroducing the notification
+    // (or landing #6476) fails here and forces this file to be revisited.
+    expect(coAdminMails).toHaveLength(0);
+
+    // ...but the suppression is admin-side ONLY. The member-side welcome is
+    // untouched by CommunityMembershipOrigin and must still arrive, otherwise
+    // an approved applicant joins in complete silence.
+    const applicantMails = (mails ?? []).filter((mail: any) =>
+      mail.toAddresses?.includes(TestUserManager.users.qaUser.email)
     );
+    expect(applicantMails.length).toBeGreaterThanOrEqual(1);
   });
 });
