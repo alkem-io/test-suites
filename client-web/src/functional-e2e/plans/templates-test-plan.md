@@ -1871,43 +1871,39 @@ From issue #1738:
 
 ## Appendix: Test Files Structure
 
+> The legacy `templates/` suite was removed on 2026-09-09; `templates-CRD/` is the only template suite and is the one the nightly config runs.
+
 ```
-client-web/src/functional-e2e/templates/
-├── template-types/
-│   ├── callout-tests.spec.ts          # 40+ callout template tests
-│   ├── post-template.spec.ts           # Post template tests
-│   ├── community-guidelines-template.spec.ts  # CG template tests
-│   ├── whiteboard-template.spec.ts     # Whiteboard template tests
-│   ├── forms/
-│   │   ├── template-form.ts            # Base template form
-│   │   ├── template-form.models.ts     # Common models
-│   │   ├── post-template-form.ts
-│   │   ├── community-guidelines-template-form.ts
-│   │   ├── whiteboard-template-form.ts
-│   │   └── callout/
-│   │       ├── callout-template-form.ts
-│   │       ├── callout-template-form.models.ts
-│   │       ├── callout-template-framing.ts
-│   │       └── collection/
-│   │           ├── links-files.ts
-│   │           ├── posts.ts
-│   │           ├── memos.ts
-│   │           ├── whiteboards.ts
-│   │           └── none.ts
-│   ├── usage/
-│   │   ├── callout-template.use.ts     # Main usage verification
-│   │   └── contributions/
-│   │       ├── callout-template.use.contributions.ts
-│   │       ├── callout-template.use.links.ts
-│   │       ├── callout-template.use.posts.ts
-│   │       ├── callout-template.use.memos.ts
-│   │       └── callout-template.use.whiteboards.ts
-│   └── verify/
-│       ├── template-verify.ts           # Base verification
-│       ├── callout-template-verify.ts
-│       ├── post-template-verify.ts
-│       ├── community-guidelines-template-verify.ts
-│       └── whiteboard-template-verify.ts
+client-web/src/functional-e2e/templates-CRD/instructions.md
+client-web/src/functional-e2e/templates-CRD/template-types/callout-tests.spec.ts
+client-web/src/functional-e2e/templates-CRD/template-types/community-guidelines-template.spec.ts
+client-web/src/functional-e2e/templates-CRD/template-types/forms/callout/callout-template-form.models.ts
+client-web/src/functional-e2e/templates-CRD/template-types/forms/callout/callout-template-form.ts
+client-web/src/functional-e2e/templates-CRD/template-types/forms/callout/callout-template-framing.ts
+client-web/src/functional-e2e/templates-CRD/template-types/forms/callout/collection/index.ts
+client-web/src/functional-e2e/templates-CRD/template-types/forms/community-guidelines-template-form.ts
+client-web/src/functional-e2e/templates-CRD/template-types/forms/post-template-form.ts
+client-web/src/functional-e2e/templates-CRD/template-types/forms/rich-text.ts
+client-web/src/functional-e2e/templates-CRD/template-types/forms/template-form.models.ts
+client-web/src/functional-e2e/templates-CRD/template-types/forms/template-form.ts
+client-web/src/functional-e2e/templates-CRD/template-types/forms/whiteboards/whiteboard-dialog.ts
+client-web/src/functional-e2e/templates-CRD/template-types/forms/whiteboard-template-form.ts
+client-web/src/functional-e2e/templates-CRD/template-types/post-template.spec.ts
+client-web/src/functional-e2e/templates-CRD/template-types/section-helpers.ts
+client-web/src/functional-e2e/templates-CRD/template-types/usage/callout-template.use.ts
+client-web/src/functional-e2e/templates-CRD/template-types/usage/contributions/callout-template.use.contributions.ts
+client-web/src/functional-e2e/templates-CRD/template-types/usage/contributions/callout-template.use.links.ts
+client-web/src/functional-e2e/templates-CRD/template-types/usage/contributions/callout-template.use.memos.ts
+client-web/src/functional-e2e/templates-CRD/template-types/usage/contributions/callout-template.use.posts.ts
+client-web/src/functional-e2e/templates-CRD/template-types/usage/contributions/callout-template.use.whiteboards.ts
+client-web/src/functional-e2e/templates-CRD/template-types/verify/callout-template-verify.ts
+client-web/src/functional-e2e/templates-CRD/template-types/verify/community-guidelines-template-verify.ts
+client-web/src/functional-e2e/templates-CRD/template-types/verify/open-template.ts
+client-web/src/functional-e2e/templates-CRD/template-types/verify/post-template-verify.ts
+client-web/src/functional-e2e/templates-CRD/template-types/verify/template-verify.ts
+client-web/src/functional-e2e/templates-CRD/template-types/verify/verify-opened-template.ts
+client-web/src/functional-e2e/templates-CRD/template-types/verify/whiteboard-template-verify.ts
+client-web/src/functional-e2e/templates-CRD/template-types/whiteboard-template.spec.ts
 ```
 
 ---

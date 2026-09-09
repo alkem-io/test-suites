@@ -13,11 +13,15 @@ import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scen
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
 import { TestUserManager } from '@alkemio/tests-lib';
+import { RoleName } from '@alkemio/tests-lib/core/generated/graphql';
+import { assignRoleToVirtualContributor } from '@alkemio/tests-lib/scenario/baseFunctions';
 import { expect } from '@playwright/test';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 import { ContributorsCalloutPage } from './pages';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
+
+const VC_NAME = `Contributors Callout VC ${Date.now()}`;
 
 const scenarioConfig: TestScenarioConfig = {
   name: 'contributors-callout',
@@ -34,6 +38,14 @@ const scenarioConfig: TestScenarioConfig = {
       admins: [TestUser.SPACE_ADMIN],
       members: [TestUser.SPACE_MEMBER, TestUser.SPACE_ADMIN],
     },
+  },
+  // One VC hosted by the scenario organization. It is made a MEMBER of the
+  // space in beforeAll: since feature 025 the collection renders a type tab
+  // only when that type resolves to a non-zero count, so the Virtual
+  // Contributors segment only exists when at least one VC is in the community.
+  virtualContributors: {
+    useBaseOrganization: true,
+    virtualContributors: [{ profileDisplayName: VC_NAME }],
   },
 };
 
@@ -57,6 +69,21 @@ adminFixture.test.describe.serial('Contributors Callout - Admin', () => {
   adminFixture.test.beforeAll(async ({ browser }) => {
     adminFixture.test.setTimeout(60_000);
     baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
+    // Make the scenario VC a space member so the VC segment has a count of 1.
+    const vcId = baseScenario.virtualContributors?.[0]?.id;
+    if (!vcId) {
+      throw new Error('Scenario did not create the virtual contributor');
+    }
+    const assigned = await assignRoleToVirtualContributor(
+      vcId,
+      baseScenario.space.community.roleSetId,
+      RoleName.Member
+    );
+    if (assigned.error) {
+      throw new Error(
+        `Unable to add the VC to the space: ${JSON.stringify(assigned.error)}`
+      );
+    }
     await adminFixture.setupAuthentication(
       browser,
       TestUserManager.users.spaceAdmin.email
@@ -140,10 +167,10 @@ adminFixture.test.describe.serial('Contributors Callout - Admin', () => {
     }
   );
 
-  // AC2/AC7 — switching type scopes the view; the VC segment is list-only and,
-  // with no virtual contributors, shows the empty state (not an error).
+  // AC2/AC7 — switching type scopes the view; the VC segment is list-only and
+  // lists the space's virtual contributor (the scenario VC made a member).
   adminFixture.test(
-    '1.4 Virtual Contributors segment is list-only and shows an empty state',
+    '1.4 Virtual Contributors segment is list-only and lists the member VC',
     async ({ page }) => {
       adminFixture.test.setTimeout(45_000);
       const cc = new ContributorsCalloutPage(page, baseUrl);
@@ -155,10 +182,11 @@ adminFixture.test.describe.serial('Contributors Callout - Admin', () => {
       await col.switchType('People');
       await expect(col.viewToggle('Map')).toBeVisible();
 
-      // The VC segment hides the Map control and (no VCs) shows the empty state.
+      // The VC segment hides the Map control and lists the member VC.
       await col.switchType('Virtual Contributors');
       await expect(col.viewToggle('Map')).toHaveCount(0);
-      await expect(col.emptyState()).toBeVisible();
+      await expect(col.contributorCard(VC_NAME)).toBeVisible();
+      await expect(col.emptyState()).toHaveCount(0);
     }
   );
 

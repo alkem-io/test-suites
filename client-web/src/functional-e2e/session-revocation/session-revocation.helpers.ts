@@ -12,7 +12,7 @@
 // rest on. Never construct a bare `APIRequestContext`: it has no cookies and
 // every assertion below would degrade to "anonymous" and pass vacuously.
 
-import { APIResponse, Browser, BrowserContext, Page } from '@playwright/test';
+import { APIResponse, Browser, BrowserContext, Page, request } from '@playwright/test';
 import axios from 'axios';
 import {
   getUserToken,
@@ -110,6 +110,67 @@ export const probePrivateGraphql = async (
 ): Promise<ProbeResult> =>
   toProbeResult(
     await context.request.post(privateGraphqlUrl, {
+      data: { query },
+      headers: { 'Content-Type': 'application/json' },
+      failOnStatusCode: false,
+    })
+  );
+
+/**
+ * The session cookie of a context, as a `Cookie` request header value.
+ *
+ * Why it exists: on the FIRST request a revoked session makes, the server
+ * answers 401 AND clears the cookie on that response (AuthInterceptor —
+ * otherwise the browser is locked out of `/login`). A Playwright context
+ * honours that clear, so every later probe from the same context is
+ * cookie-less and legitimately ANONYMOUS. The property #6315 fences —
+ * "a stale cookie must never yield an anonymous 200" — can therefore only be
+ * asserted by REPLAYING the captured cookie explicitly, which is what the
+ * `*WithCookie` probes below do.
+ */
+export const captureSessionCookie = async (
+  context: BrowserContext
+): Promise<string> => {
+  const cookie = (await context.cookies()).find(
+    c => c.name === sessionCookieName
+  );
+  if (!cookie) {
+    throw new Error(
+      `captureSessionCookie: no '${sessionCookieName}' cookie in the context`
+    );
+  }
+  return `${cookie.name}=${cookie.value}`;
+};
+
+const probeWithCookie = async (
+  cookieHeader: string,
+  send: (ctx: Awaited<ReturnType<typeof request.newContext>>) => Promise<APIResponse>
+): Promise<ProbeResult> => {
+  const ctx = await request.newContext({
+    extraHTTPHeaders: { cookie: cookieHeader },
+  });
+  try {
+    return await toProbeResult(await send(ctx));
+  } finally {
+    await ctx.dispose();
+  }
+};
+
+/** `GET id-token-hint` replaying a captured (possibly stale) session cookie. */
+export const probeIdTokenHintWithCookie = (
+  cookieHeader: string
+): Promise<ProbeResult> =>
+  probeWithCookie(cookieHeader, ctx =>
+    ctx.get(idTokenHintUrl, { failOnStatusCode: false })
+  );
+
+/** `POST /api/private/graphql` replaying a captured (possibly stale) session cookie. */
+export const probePrivateGraphqlWithCookie = (
+  cookieHeader: string,
+  query: string
+): Promise<ProbeResult> =>
+  probeWithCookie(cookieHeader, ctx =>
+    ctx.post(privateGraphqlUrl, {
       data: { query },
       headers: { 'Content-Type': 'application/json' },
       failOnStatusCode: false,

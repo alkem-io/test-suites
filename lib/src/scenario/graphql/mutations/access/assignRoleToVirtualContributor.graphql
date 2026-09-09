@@ -1,0 +1,11 @@
+mutation assignRoleToVirtualContributor($roleData: AssignRoleOnRoleSetInput!) {
+  assignRoleToVirtualContributor(roleData: $roleData) {
+    id
+    profile {
+      id
+      displayName
+      __typename
+    }
+    __typename
+  }
+}
