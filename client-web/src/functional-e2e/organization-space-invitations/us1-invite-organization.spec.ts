@@ -13,18 +13,19 @@ import {
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
 import {
-  assignOrganizationAdmin,
+  OrgFixture,
+  TestUser,
+  TestUserManager,
   assignOrgRole,
+  assignOrganizationAdmin,
+  cleanUpTestOrganizations,
+  clearHostOrgFromSpace,
   createTestOrganization,
   getMyCommunityInvitationIds,
   getSpaceInvitationIds,
   inviteOrganizationViaApi,
-  OrgFixture,
   runSuffix,
   setAllowSpaceInvitations,
-  TestUser,
-  TestUserManager,
-  cleanUpTestOrganizations,
 } from './organization-space-invitations.helpers';
 
 /**
@@ -99,6 +100,13 @@ baseTest.beforeAll(async () => {
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
   communityUrl = `${baseUrl}/${baseScenario.space.nameId}/settings/community`;
   const roleSetId = baseScenario.space.community.roleSetId;
+
+  // The Space's own hosting organization is granted Member+Lead on creation, so
+  // one of the two Lead-organization slots is occupied before this fixture
+  // starts. The AS3 fixture below fills "both Lead slots" and overflowed on the
+  // second with ROLESET_POLICY_ROLE_LIMITS_VIOLATED. Free them first — the same
+  // thing `organization-invitations.it-spec.ts` has always done.
+  await clearHostOrgFromSpace(baseScenario.organization.id, roleSetId);
 
   [
     orgAS2,
@@ -184,9 +192,13 @@ async function inviteOrganizationViaDialog(
   options: { asLead?: boolean } = {}
 ): Promise<string> {
   await page.getByRole('button', { name: 'Invite Organisation' }).click();
-  await expect(page.getByText(/Invite an organisation to join/)).toBeVisible();
+  // Scoped to the dialog: the Member Organisations SECTION DESCRIPTION behind it
+  // now also reads "…Invite an organisation to join, or add one directly."
+  // (spaceSettings i18n), so an unscoped getByText matches two elements and
+  // fails Playwright strict mode. The dialog's own title carries the Space name.
+  await expect(page.getByRole('dialog').getByText(/Invite an organisation to join/)).toBeVisible();
 
-  const search = page.getByRole('textbox', { name: 'Search for users by name or email' });
+  const search = page.getByRole('textbox', { name: 'Search for organisations by name' });
   await search.fill(org.displayName);
   await page.getByRole('button', { name: org.displayName }).click();
 
@@ -206,6 +218,14 @@ async function inviteOrganizationViaDialog(
   // a background refetch while this dialog is still open), which would
   // otherwise make this locator resolve to more than one element.
   const dialog = page.getByRole('dialog');
+  // Wait for the RESULTS view before reading any <li>. The selection step keeps
+  // its own <li> chip per selected organization — avatar initials + display
+  // name — and it is still mounted while the send is in flight, so reading
+  // straight after the click returned "AFAS2 Fresh Org 31596" (the chip)
+  // instead of the outcome. `Back` exists only in the results view, so its
+  // appearance is the transition signal; `Send` is not usable for this because
+  // it becomes "Sending…", which still substring-matches "Send".
+  await expect(dialog.getByRole('button', { name: 'Back' })).toBeVisible();
   const resultRow = dialog.locator('li').filter({ hasText: org.displayName });
   await expect(resultRow).toBeVisible();
   const resultText = (await resultRow.textContent()) ?? '';
@@ -285,9 +305,9 @@ spaceAdminTest.describe('US1-AS2..AS9 — space admin invite walk', () => {
       // before any test runs, so it is already a current member here.
       await openMemberOrganizationsSection(page);
       await page.getByRole('button', { name: 'Invite Organisation' }).click();
-      await expect(page.getByText(/Invite an organisation to join/)).toBeVisible();
+      await expect(page.getByRole('dialog').getByText(/Invite an organisation to join/)).toBeVisible();
 
-      const search = page.getByRole('textbox', { name: 'Search for users by name or email' });
+      const search = page.getByRole('textbox', { name: 'Search for organisations by name' });
       await search.fill(orgAS5Member.displayName);
       await expect(page.getByText(/no matching/i)).toBeVisible();
       await expect(page.getByRole('button', { name: orgAS5Member.displayName })).toHaveCount(0);
@@ -341,9 +361,9 @@ spaceAdminTest.describe('US1-AS2..AS9 — space admin invite walk', () => {
     async ({ page }) => {
       await openMemberOrganizationsSection(page);
       await page.getByRole('button', { name: 'Invite Organisation' }).click();
-      await expect(page.getByText(/Invite an organisation to join/)).toBeVisible();
+      await expect(page.getByRole('dialog').getByText(/Invite an organisation to join/)).toBeVisible();
 
-      const search = page.getByRole('textbox', { name: 'Search for users by name or email' });
+      const search = page.getByRole('textbox', { name: 'Search for organisations by name' });
       await search.fill(orgAS5Invited.displayName);
       await expect(page.getByText(/no matching/i)).toBeVisible();
       await expect(

@@ -15,7 +15,6 @@
 import { expect, Page, test as baseTest } from '@playwright/test';
 import {
   getUserToken,
-  registerTestUser,
   TestScenarioConfig,
   TestScenarioFactory,
 } from '@alkemio/tests-lib';
@@ -29,9 +28,9 @@ import {
   inviteOrganizationViaApi,
   OrgFixture,
   runSuffix,
+  US3_REGISTERED_USER_NAMES,
   setAllowSpaceInvitations,
   TestUser,
-  cleanUpRegisteredUsers,
   cleanUpTestOrganizations,
 } from './organization-space-invitations.helpers';
 
@@ -55,12 +54,22 @@ import {
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const adminEmail = process.env.AUTH_TEST_HARNESS_EMAIL || 'admin@alkem.io';
 
-// Single source for the two personas this file registers itself, so the
-// beforeAll that creates them and the afterAll that deletes them cannot drift.
-const REGISTERED_USER_NAMES = [
-  `orgadmin-us3-${runSuffix}`,
-  `orgassoc-us3-${runSuffix}`,
-];
+// DETERMINISTIC, and registered by `config/global-setup.ts` — not by this file.
+//
+// These were per-run (`orgadmin-us3-${runSuffix}`) and registered in a hook
+// here, which could never work: every test in this file is declared with a
+// persona type from `createPersonaTest`, whose `storageState` fixture LOGS IN
+// before any hook in the file runs. The login therefore raced ahead of the
+// registration that creates the account, and Kratos rejected credentials for a
+// user that did not exist — which presents as a wrong password. Proven by
+// polling Kratos through a full run: 13 identities (exactly the seeded set),
+// zero `orgadmin-us3-*`, while the fixture retried and timed out three times.
+//
+// globalSetup runs in its OWN process, so a per-run suffix generated in this
+// module would not match what globalSetup registered. Fixed names make the two
+// agree, and make these two ordinary seeded personas rather than throwaways —
+// which is what they always effectively were.
+const REGISTERED_USER_NAMES = US3_REGISTERED_USER_NAMES;
 const orgAdminEmail = `${REGISTERED_USER_NAMES[0]}@alkem.io`;
 const orgAssociateEmail = `${REGISTERED_USER_NAMES[1]}@alkem.io`;
 
@@ -105,14 +114,29 @@ const scenarioConfig: TestScenarioConfig = {
   },
 };
 
-baseTest.beforeAll(async () => {
-  baseTest.setTimeout(240_000);
+/**
+ * One-shot setup for the whole file.
+ *
+ * NOT a `baseTest.beforeAll`. Every test here is declared with a persona test
+ * type from `createPersonaTest`, whose `storageState` fixture LOGS IN before
+ * the hook on the unrelated `baseTest` type gets a chance to run. That ordering
+ * is invisible in the sibling walks, whose personas (`space.admin@`, `admin@`)
+ * are seeded by globalSetup and always exist — but this file registers its own
+ * two personas with a per-run suffix, so they never pre-exist and the login
+ * raced ahead of the registration that creates them. Proven by polling Kratos
+ * through a full run: zero `orgadmin-us3-*` identities while the auth fixture
+ * retried and timed out three times. The file could not pass on any
+ * environment.
+ *
+ * So the hook is registered on each persona type instead, and guarded by a
+ * module-level promise so the three registrations resolve to a single
+ * execution. Teardown stays on `baseTest.afterAll`: it must run once, AFTER
+ * the last persona group, which a per-type hook cannot express.
+ */
+let setupPromise: Promise<void> | undefined;
+const ensureSetupOnce = (): Promise<void> => (setupPromise ??= runSetup());
 
-  // Register the two dynamic personas via the raw Kratos API — no UI, no
-  // mailbox polling; the sign-up FLOW itself is not this story's concern.
-  await registerTestUser(REGISTERED_USER_NAMES[0]);
-  await registerTestUser(REGISTERED_USER_NAMES[1]);
-
+const runSetup = async (): Promise<void> => {
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
   const spaceRoleSetId = baseScenario.space.community.roleSetId;
   const subspaceRoleSetId = baseScenario.subspace.community.roleSetId;
@@ -162,24 +186,35 @@ baseTest.beforeAll(async () => {
   // capacity — orgAS7FillerA/B fill both slots via direct grant AFTER the
   // invite, simulating "the slots filled while the invitation was pending").
   await inviteWithExtraRole(subspaceRoleSetId, orgAS7.id, `US3-AS7 ${runSuffix}`, [RoleName.Lead]);
-  await assignOrgRole(orgAS7FillerA.id, subspaceRoleSetId, RoleName.Member);
-  await assignOrgRole(orgAS7FillerA.id, subspaceRoleSetId, RoleName.Lead);
-  await assignOrgRole(orgAS7FillerB.id, subspaceRoleSetId, RoleName.Member);
-  await assignOrgRole(orgAS7FillerB.id, subspaceRoleSetId, RoleName.Lead);
+  // The fillers must join the PARENT Space first: `assignActorToRole` refuses a
+  // subspace grant for an actor that is not a member of the parent role set
+  // ("actor is not a member of parent roleSet"). Granting straight on the
+  // subspace threw BAD_USER_INPUT and took the whole file down in beforeAll.
+  for (const filler of [orgAS7FillerA, orgAS7FillerB]) {
+    await assignOrgRole(filler.id, spaceRoleSetId, RoleName.Member);
+    await assignOrgRole(filler.id, subspaceRoleSetId, RoleName.Member);
+    await assignOrgRole(filler.id, subspaceRoleSetId, RoleName.Lead);
+  }
 
   // AS8: Member only, root Space — neither the associate nor the global
   // admin may accept; the global admin may revoke.
   await inviteOrganizationViaApi(spaceRoleSetId, orgAS8.id, `US3-AS8 ${runSuffix}`, TestUser.SPACE_ADMIN);
-});
+};
+
+for (const personaTest of [orgAdminTest, orgAssociateTest, platformAdminTest]) {
+  personaTest.beforeAll(async () => {
+    personaTest.setTimeout(240_000);
+    await ensureSetupOnce();
+  });
+}
 
 baseTest.afterAll(async () => {
   // Ad-hoc org fixtures first: cleanUpBaseScenario does not know about them,
   // so without this each run leaks every organization this file created.
   await cleanUpTestOrganizations();
-  // The two personas this file registered itself: cleanUpBaseScenario only
-  // removes the ones IT created, so without this every run leaks two real
-  // platform accounts onto the acceptance environment.
-  await cleanUpRegisteredUsers(REGISTERED_USER_NAMES);
+  // NOT deleted: these two are seeded personas now (see US3_REGISTERED_USER_NAMES),
+  // registered once per run by globalSetup and reused, so there is nothing to
+  // leak and deleting them would only force a re-registration next run.
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 });
 

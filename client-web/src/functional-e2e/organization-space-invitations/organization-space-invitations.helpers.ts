@@ -7,6 +7,7 @@ import {
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
+import { graphqlRequestAuth } from '@alkemio/tests-lib/utils/graphql.request';
 import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
 /**
@@ -48,6 +49,23 @@ const slugifyWithSuffix = (label: string, runSuffix: string) => {
 // setup for everyone on that environment.
 const createdOrganizationIds: string[] = [];
 
+/**
+ * Every (organization, roleSet, role) this file granted, newest first.
+ *
+ * `deleteOrganization` on the server is a NON-TRANSACTIONAL seven-step sequence
+ * (profile → storageAggregator → groups → authorization → verification →
+ * roleSet → actor). An organization that still holds Space standing fails at the
+ * roleSet step — by which point its profile, authorization and verification are
+ * already committed as deleted. The row survives, gutted: unusable through the
+ * API (every read throws EntityNotInitialized / EntityNotFound) AND undeletable
+ * through it, and it aborts the platform-wide authorization reset, which walks
+ * every organization. One aborted fixture left 45 of these behind.
+ *
+ * So teardown strips the Space grants BEFORE deleting, and reports anything it
+ * could not remove instead of swallowing it.
+ */
+const grantedOrgRoles: { organizationID: string; roleSetID: string; role: RoleName }[] = [];
+
 /** Creates a fresh organization for this walk, returning its id/roleSetId. */
 export const createTestOrganization = async (
   label: string,
@@ -77,61 +95,35 @@ export const createTestOrganization = async (
  * fail a green run.
  */
 export const cleanUpTestOrganizations = async (): Promise<void> => {
-  const ids = createdOrganizationIds.splice(0, createdOrganizationIds.length);
-  for (const id of ids) {
-    await deleteOrganization(id).catch(() => undefined);
+  // Strip Space standing first — see `grantedOrgRoles`. Without this the delete
+  // below half-succeeds and leaves an unusable, undeletable organization that
+  // also breaks `authorizationPolicyResetAll`.
+  const grants = grantedOrgRoles.splice(0, grantedOrgRoles.length);
+  for (const g of grants) {
+    await removeOrgRole(g.organizationID, g.roleSetID, g.role);
   }
-};
 
-/**
- * Deletes the platform users a spec registered with `registerTestUser`, by
- * email. Symmetric with `cleanUpTestOrganizations` above, and it exists for the
- * same reason: `cleanUpBaseScenario` only knows about the personas IT created,
- * so a spec that registers its own leaves them behind on the acceptance
- * environment on EVERY run — and with `retries: 2` each retry registers a fresh
- * `runSuffix`, so a flaky run leaks three sets rather than one. Accounts
- * accumulate with profiles, settings and organization credentials.
- *
- * Best-effort per user, like the organization teardown: one failure (already
- * gone, still referenced) must not stop the rest, and teardown must never fail
- * an otherwise green run.
- */
-export const cleanUpRegisteredUsers = async (
-  userNames: string[]
-): Promise<void> => {
-  if (userNames.length === 0) return;
-  const graphqlClient = getGraphqlClient();
-  const wanted = new Set(
-    userNames.map(name => `${name}@alkem.io`.toLowerCase())
-  );
-  try {
-    // Resolved by EMAIL, which is what `registerTestUser` deterministically
-    // derives from the user name. `GetUserByNameId` is not usable here: the
-    // nameID is generated from the first/last name split, not from the name we
-    // passed, so it cannot be reconstructed reliably.
-    const all = await graphqlErrorWrapper(
-      (authToken: string | undefined) =>
-        graphqlClient.getUsersData(
-          {},
-          { authorization: `Bearer ${authToken}` }
-        ),
-      TestUser.GLOBAL_ADMIN
-    );
-    const targets = (all.data?.users ?? []).filter(user =>
-      wanted.has(String(user.email).toLowerCase())
-    );
-    for (const target of targets) {
-      await graphqlErrorWrapper(
-        (authToken: string | undefined) =>
-          graphqlClient.deleteUser(
-            { deleteData: { ID: target.id } },
-            { authorization: `Bearer ${authToken}` }
-          ),
-        TestUser.GLOBAL_ADMIN
-      ).catch(() => undefined);
+  const ids = createdOrganizationIds.splice(0, createdOrganizationIds.length);
+  const undeleted: string[] = [];
+  for (const id of ids) {
+    try {
+      const res = await deleteOrganization(id);
+      // deleteOrganization resolves GraphQL failures as `{ error }` rather than
+      // rejecting, so a bare catch never sees the case that matters.
+      if ((res as { error?: unknown })?.error) undeleted.push(id);
+    } catch {
+      undeleted.push(id);
     }
-  } catch {
-    // Best-effort — see the docblock.
+  }
+
+  if (undeleted.length > 0) {
+    // Loud, but NOT thrown: teardown must not replace a real test failure. A
+    // half-deleted organization is an environment problem an operator has to
+    // clear at the database level, so name the ids.
+    console.error(
+      `[cleanUpTestOrganizations] ${undeleted.length} organization(s) could not be deleted and may now be half-deleted — ` +
+        `they will break authorizationPolicyResetAll until removed: ${undeleted.join(', ')}`
+    );
   }
 };
 
@@ -155,11 +147,53 @@ export const assignOrgRole = async (
       `assignOrgRole(${role}) failed for ${organizationID}: ${JSON.stringify(res.error)}`
     );
   }
+  // Unshift: roles are stripped in reverse grant order at teardown, so LEAD
+  // comes off before the MEMBER entry role it depends on.
+  grantedOrgRoles.unshift({ organizationID, roleSetID, role });
   return res;
 };
 
-/** Toggles the "Allow Spaces to invite this organisation" setting (US5's own switch, used
- * here only as an AS4 fixture — off before the space admin ever invites it). */
+/**
+ * Strips a role from an organization on a role set. The mirror of
+ * `assignOrgRole`, needed because `TestScenarioFactory` grants the Space's own
+ * HOSTING organization Member+Lead on creation — so a Space starts with one of
+ * its two Lead-organization slots already occupied. A fixture that fills "both
+ * Lead slots" without clearing the host first therefore overflows on the second
+ * one with ROLESET_POLICY_ROLE_LIMITS_VIOLATED. `organization-invitations.it-spec.ts`
+ * has always done this (`clearHostOrgFromSpace`); the acceptance walks did not.
+ *
+ * Best-effort by design: removing a role the organization does not hold throws
+ * the min-limit guard, which is not a failure for a "make sure it is not there"
+ * call.
+ */
+export const removeOrgRole = async (
+  organizationID: string,
+  roleSetID: string,
+  role: RoleName,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.RemoveRoleFromOrganization(
+      { roleData: { actorID: organizationID, roleSetID, role } },
+      { authorization: `Bearer ${authToken}` }
+    );
+  return graphqlErrorWrapper(callback, userRole).catch(() => undefined);
+};
+
+/**
+ * Frees both Lead-organization slots on `roleSetID` by removing the hosting
+ * organization's Lead and Member grants. Call before any fixture that seeds
+ * Lead organizations.
+ */
+export const clearHostOrgFromSpace = async (
+  hostOrganizationID: string,
+  roleSetID: string
+): Promise<void> => {
+  await removeOrgRole(hostOrganizationID, roleSetID, RoleName.Lead);
+  await removeOrgRole(hostOrganizationID, roleSetID, RoleName.Member);
+};
+
 export const setAllowSpaceInvitations = async (
   organizationID: string,
   allowSpaceInvitations: boolean,
@@ -238,7 +272,71 @@ export const assignOrganizationAdmin = async (
       `assignOrganizationAdmin failed for ${actorID} on ${organizationRoleSetId}: ${JSON.stringify(res.error)}`
     );
   }
+
+  // Wait for the grant to become VISIBLE before returning. `ActorContext`
+  // caches credentials, and a read issued immediately after a grant can still
+  // see the pre-grant actor — alkem-io/server#6461, an open pre-existing
+  // platform defect that ruling R25 explicitly leaves unpatched by this feature
+  // and tells test flows to poll around ("test flows poll/wait instead").
+  //
+  // Without this the walks failed in two different disguises, neither of which
+  // looks like a cache race:
+  //   * US2 — the invite fired before the ADMIN was visible, the server saw an
+  //     organization with NO admins, and the R3/FR-019 zero-admin escalation
+  //     sent the invitation to support@alkem.io instead. The assertion reported
+  //     only "no mail for organization.admin@alkem.io".
+  //   * US3 — navigating to the org's settings straight after the grant was
+  //     bounced to the public profile, because the route guard had not seen it.
+  await waitUntil(
+    async () => (await getOrganizationAdminIds(organizationRoleSetId)).includes(actorID),
+    `organization admin ${actorID} to become visible on roleSet ${organizationRoleSetId}`
+  );
   return res;
+};
+
+/** The user ids currently holding ADMIN on an organization's own role set. */
+export const getOrganizationAdminIds = async (
+  organizationRoleSetId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+): Promise<string[]> => {
+  const requestParams = {
+    operationName: 'OrgRoleSetAdmins',
+    query: `
+      query OrgRoleSetAdmins($roleSetId: UUID!) {
+        lookup {
+          roleSet(ID: $roleSetId) {
+            id
+            usersInRole(role: ADMIN) { id }
+          }
+        }
+      }
+    `,
+    variables: { roleSetId: organizationRoleSetId },
+  };
+  const response = await graphqlRequestAuth(requestParams, userRole);
+  const users = response.body?.data?.lookup?.roleSet?.usersInRole as
+    | { id: string }[]
+    | undefined;
+  return (users ?? []).map(u => u.id);
+};
+
+/**
+ * Polls `predicate` until true. The blunt instrument R25 prescribes for
+ * server#6461; every use should say which grant it is waiting on.
+ */
+export const waitUntil = async (
+  predicate: () => Promise<boolean>,
+  what: string,
+  { timeoutMs = 20_000, intervalMs = 500 } = {}
+): Promise<void> => {
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    if (await predicate().catch(() => false)) return;
+    if (Date.now() > deadline) {
+      throw new Error(`Timed out after ${timeoutMs}ms waiting for ${what}`);
+    }
+    await new Promise(resolve => setTimeout(resolve, intervalMs));
+  }
 };
 
 /** The ids of every pending invitation visible to `userRole` via `me.communityInvitations` —
@@ -332,4 +430,16 @@ export const unsubscribeFromPushForUser = async (
 };
 
 export const runSuffix = UniqueIDGenerator.getID();
+
+/**
+ * The two personas the US3 walk logs in as: an organization ADMIN and an
+ * organization ASSOCIATE with no pre-existing standing in any Space.
+ *
+ * Registered by `config/global-setup.ts`, NOT by the spec. `createPersonaTest`
+ * drives the login form from a `storageState` fixture, and fixture setup
+ * precedes every hook in a spec file — so a spec cannot register the persona it
+ * logs in as. Names are fixed rather than suffixed with `runSuffix` because
+ * globalSetup runs in its own process and would generate a different suffix.
+ */
+export const US3_REGISTERED_USER_NAMES = ['orgadmin-us3', 'orgassoc-us3'];
 export { TestUserManager, TestUser };
