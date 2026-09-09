@@ -45,23 +45,14 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean };
   Int: { input: number; output: number };
   Float: { input: number; output: number };
-  /** A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format. */
   DateTime: { input: Date; output: Date };
-  /** An Emoji. */
   Emoji: { input: any; output: any };
-  /** A representation of a Lifecycle Definition, based on XState. It is serialized JSON. */
   LifecycleDefinition: { input: any; output: any };
-  /** A markdown string. */
   Markdown: { input: any; output: any };
-  /** An identifier that originates from the underlying messaging platform. */
   MessageID: { input: any; output: any };
-  /** A human readable identifier, 3 <= length <= 28. Used for URL paths in clients. Characters allowed: a-z,A-Z,0-9. */
   NameID: { input: string; output: string };
-  /** Cursor used for paginating search results. */
   SearchCursor: { input: any; output: any };
-  /** A uuid identifier. Length 36 characters. */
   UUID: { input: string; output: string };
-  /** The `Upload` scalar type represents a file upload. */
   Upload: {
     input: import("graphql-upload").FileUpload;
     output: import("graphql-upload").FileUpload;
@@ -3017,6 +3008,7 @@ export enum CredentialType {
   PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
   SpaceAdmin = "SPACE_ADMIN",
   SpaceFeatureMemoMultiUser = "SPACE_FEATURE_MEMO_MULTI_USER",
+  SpaceFeatureMemoSigning = "SPACE_FEATURE_MEMO_SIGNING",
   SpaceFeatureOfficeDocuments = "SPACE_FEATURE_OFFICE_DOCUMENTS",
   SpaceFeatureSaveAsTemplate = "SPACE_FEATURE_SAVE_AS_TEMPLATE",
   SpaceFeatureVirtualContributors = "SPACE_FEATURE_VIRTUAL_CONTRIBUTORS",
@@ -4142,6 +4134,7 @@ export enum LicenseEntitlementType {
   AccountSpacePremium = "ACCOUNT_SPACE_PREMIUM",
   AccountVirtualContributor = "ACCOUNT_VIRTUAL_CONTRIBUTOR",
   SpaceFlagMemoMultiUser = "SPACE_FLAG_MEMO_MULTI_USER",
+  SpaceFlagMemoSigning = "SPACE_FLAG_MEMO_SIGNING",
   SpaceFlagOfficeDocuments = "SPACE_FLAG_OFFICE_DOCUMENTS",
   SpaceFlagSaveAsTemplate = "SPACE_FLAG_SAVE_AS_TEMPLATE",
   SpaceFlagVirtualContributorAccess = "SPACE_FLAG_VIRTUAL_CONTRIBUTOR_ACCESS",
@@ -4224,6 +4217,7 @@ export type Licensing = {
 export enum LicensingCredentialBasedCredentialType {
   AccountLicensePlus = "ACCOUNT_LICENSE_PLUS",
   SpaceFeatureMemoMultiUser = "SPACE_FEATURE_MEMO_MULTI_USER",
+  SpaceFeatureMemoSigning = "SPACE_FEATURE_MEMO_SIGNING",
   SpaceFeatureOfficeDocuments = "SPACE_FEATURE_OFFICE_DOCUMENTS",
   SpaceFeatureSaveAsTemplate = "SPACE_FEATURE_SAVE_AS_TEMPLATE",
   SpaceFeatureVirtualContributors = "SPACE_FEATURE_VIRTUAL_CONTRIBUTORS",
@@ -4922,8 +4916,55 @@ export type Memo = {
   nameID: Scalars["NameID"]["output"];
   /** The Profile for this Memo. */
   profile: Profile;
+  /** Signed copies of this Memo visible to readers of the Memo. */
+  signatures: Array<MemoSignature>;
   /** The date at which the entity was last updated. */
   updatedDate: Scalars["DateTime"]["output"];
+};
+
+export type MemoSignature = {
+  /** The Alkemio user who initiated this signed copy. */
+  actor?: Maybe<User>;
+  /** The date at which the entity was created. */
+  createdDate: Scalars["DateTime"]["output"];
+  /** The immutable PDF produced for this signed copy. */
+  document?: Maybe<Document>;
+  /** The ID of the entity */
+  id: Scalars["UUID"]["output"];
+  /** The terminal outcome of this Memo signing attempt. */
+  status: SigningAttemptStatus;
+  /** The date at which the entity was last updated. */
+  updatedDate: Scalars["DateTime"]["output"];
+};
+
+export enum MemoSignatureVerificationStatus {
+  Invalid = "INVALID",
+  Unavailable = "UNAVAILABLE",
+  Verified = "VERIFIED",
+}
+
+export type MemoSignatureVerifyInput = {
+  /** The signed Memo attempt to verify. */
+  attemptID: Scalars["UUID"]["input"];
+};
+
+export type MemoSigningContinueInput = {
+  /** The prepared signing attempt to start. */
+  attemptID: Scalars["UUID"]["input"];
+};
+
+export type MemoSigningContinueResult = {
+  authorizeUrl: Scalars["String"]["output"];
+};
+
+export type MemoSigningPrepareInput = {
+  /** The Memo to prepare for signing. */
+  memoID: Scalars["UUID"]["input"];
+};
+
+export type MemoSigningPrepareResult = {
+  attemptId: Scalars["UUID"]["output"];
+  previewUrl: Scalars["String"]["output"];
 };
 
 /** A message that was sent in a chat room */
@@ -5200,6 +5241,8 @@ export type Mutation = {
   castPollVote: Poll;
   /** Deletes collections nameID-... */
   cleanupCollections: MigrateEmbeddings;
+  /** Starts signing the prepared Memo copy. */
+  continueMemoSigning: MemoSigningContinueResult;
   /** Move an L1 Space up in the hierarchy, to be a L0 Space. */
   convertSpaceL1ToSpaceL0: Space;
   /** Move an L1 Space down in the hierarchy within the same L0 Space, to be a L2 Space.       Restrictions: the Space L1 must remain within the same L0 Space.       Roles: all user, organization and virtual contributor role assignments are removed, with       the exception of Admin role assignments for Users. */
@@ -5366,6 +5409,8 @@ export type Mutation = {
   moveSpaceL2ToSpaceL1: Space;
   /** Moves a task to another column on its Tasks board. Authorized as MOVE_TASK on the parent Callout, so a board member can move any task. */
   moveTaskToColumn: CalloutContribution;
+  /** Prepares an exact PDF preview for signing the specified Memo. */
+  prepareMemoSigning: MemoSigningPrepareResult;
   /** Refresh the Bodies of Knowledge on All VCs */
   refreshAllBodiesOfKnowledge: Scalars["Boolean"]["output"];
   /** Triggers a request to the backing AI Service to refresh the knowledge that is available to it. */
@@ -5736,6 +5781,10 @@ export type MutationCastPollVoteArgs = {
   voteData: CastPollVoteInput;
 };
 
+export type MutationContinueMemoSigningArgs = {
+  signingData: MemoSigningContinueInput;
+};
+
 export type MutationConvertSpaceL1ToSpaceL0Args = {
   convertData: ConvertSpaceL1ToSpaceL0Input;
 };
@@ -6062,6 +6111,10 @@ export type MutationMoveSpaceL2ToSpaceL1Args = {
 
 export type MutationMoveTaskToColumnArgs = {
   moveData: MoveTaskToColumnInput;
+};
+
+export type MutationPrepareMemoSigningArgs = {
+  signingData: MemoSigningPrepareInput;
 };
 
 export type MutationRefreshVirtualContributorBodyOfKnowledgeArgs = {
@@ -7600,6 +7653,8 @@ export type Query = {
   rolesVirtualContributor: ActorRoles;
   /** Search the platform for terms supplied */
   search: ISearchResults;
+  /** A Memo signing attempt belonging to the current actor. */
+  signingAttempt: MemoSignature;
   /** The Spaces on this platform; If accessed through an Innovation Hub will return ONLY the Spaces defined in it. */
   spaces: Array<Space>;
   /** The Spaces on this platform */
@@ -7620,6 +7675,8 @@ export type Query = {
   usersWithAuthorizationCredential: Array<User>;
   /** Returns the VAPID public key needed by clients to subscribe to push notifications. Returns null if push notifications are not enabled on this server. */
   vapidPublicKey?: Maybe<Scalars["String"]["output"]>;
+  /** Checks the stored integrity of a signed Memo copy. */
+  verifyMemoSignature: MemoSignatureVerificationStatus;
   /** A particular VirtualContributor */
   virtualContributor: VirtualContributor;
   /** The VirtualContributors on this platform; only accessible to platform admins */
@@ -7702,6 +7759,10 @@ export type QuerySearchArgs = {
   searchData: SearchInput;
 };
 
+export type QuerySigningAttemptArgs = {
+  ID: Scalars["UUID"]["input"];
+};
+
 export type QuerySpacesArgs = {
   IDs?: InputMaybe<Array<Scalars["UUID"]["input"]>>;
   filter?: InputMaybe<SpaceFilterInput>;
@@ -7749,6 +7810,10 @@ export type QueryUsersPaginatedArgs = {
 
 export type QueryUsersWithAuthorizationCredentialArgs = {
   credentialsCriteriaData: UsersWithAuthorizationCredentialInput;
+};
+
+export type QueryVerifyMemoSignatureArgs = {
+  verificationData: MemoSignatureVerifyInput;
 };
 
 export type QueryVirtualContributorArgs = {
@@ -8176,6 +8241,10 @@ export type RoleSetInvitationResult = {
   /** The existing open application that blocks this invitation, when the result type is ALREADY_HAS_OPEN_APPLICATION. */
   application?: Maybe<Application>;
   invitation?: Maybe<Invitation>;
+  /** The id of the invited actor this result belongs to, when the invitee was an actor or an email that resolved to an existing user. */
+  invitedActorID?: Maybe<Scalars["UUID"]["output"]>;
+  /** The email address this result belongs to, when the invitee was submitted as an email address. */
+  invitedEmail?: Maybe<Scalars["String"]["output"]>;
   /** An informational addendum to the result, set only alongside a successful invite outcome. */
   notice?: Maybe<RoleSetInvitationResultNotice>;
   platformInvitation?: Maybe<PlatformInvitation>;
@@ -8662,6 +8731,14 @@ export enum SidebarWidget {
   SubspaceLinks = "SUBSPACE_LINKS",
   Updates = "UPDATES",
   VirtualContributors = "VIRTUAL_CONTRIBUTORS",
+}
+
+export enum SigningAttemptStatus {
+  Cancelled = "CANCELLED",
+  Expired = "EXPIRED",
+  Failed = "FAILED",
+  Pending = "PENDING",
+  Signed = "SIGNED",
 }
 
 export type Space = ActorFull & {
@@ -9821,7 +9898,7 @@ export type UpdateOrganizationSettingsMembershipInput = {
   /** Allow Spaces to invite this Organization to join them. */
   allowSpaceInvitations?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** Allow Users with email addresses matching the domain of this Organization to join. */
-  allowUsersMatchingDomainToJoin: Scalars["Boolean"]["input"];
+  allowUsersMatchingDomainToJoin?: InputMaybe<Scalars["Boolean"]["input"]>;
 };
 
 export type UpdateOrganizationSettingsPrivacyInput = {
@@ -12659,6 +12736,18 @@ export type ResolversTypes = {
       profile: ResolversTypes["Profile"];
     }
   >;
+  MemoSignature: ResolverTypeWrapper<
+    Omit<SchemaTypes.MemoSignature, "actor" | "document"> & {
+      actor?: SchemaTypes.Maybe<ResolversTypes["User"]>;
+      document?: SchemaTypes.Maybe<ResolversTypes["Document"]>;
+    }
+  >;
+  MemoSignatureVerificationStatus: SchemaTypes.MemoSignatureVerificationStatus;
+  MemoSignatureVerifyInput: SchemaTypes.MemoSignatureVerifyInput;
+  MemoSigningContinueInput: SchemaTypes.MemoSigningContinueInput;
+  MemoSigningContinueResult: ResolverTypeWrapper<SchemaTypes.MemoSigningContinueResult>;
+  MemoSigningPrepareInput: SchemaTypes.MemoSigningPrepareInput;
+  MemoSigningPrepareResult: ResolverTypeWrapper<SchemaTypes.MemoSigningPrepareResult>;
   Message: ResolverTypeWrapper<
     Omit<SchemaTypes.Message, "sender"> & {
       sender?: SchemaTypes.Maybe<ResolversTypes["Actor"]>;
@@ -13039,6 +13128,7 @@ export type ResolversTypes = {
   SetDefaultCalloutTemplateOnInnovationFlowStateInput: SchemaTypes.SetDefaultCalloutTemplateOnInnovationFlowStateInput;
   SetPlatformWellKnownVirtualContributorInput: SchemaTypes.SetPlatformWellKnownVirtualContributorInput;
   SidebarWidget: SchemaTypes.SidebarWidget;
+  SigningAttemptStatus: SchemaTypes.SigningAttemptStatus;
   Space: ResolverTypeWrapper<
     Omit<
       SchemaTypes.Space,
@@ -14303,6 +14393,15 @@ export type ResolversParentTypes = {
     createdBy?: SchemaTypes.Maybe<ResolversParentTypes["User"]>;
     profile: ResolversParentTypes["Profile"];
   };
+  MemoSignature: Omit<SchemaTypes.MemoSignature, "actor" | "document"> & {
+    actor?: SchemaTypes.Maybe<ResolversParentTypes["User"]>;
+    document?: SchemaTypes.Maybe<ResolversParentTypes["Document"]>;
+  };
+  MemoSignatureVerifyInput: SchemaTypes.MemoSignatureVerifyInput;
+  MemoSigningContinueInput: SchemaTypes.MemoSigningContinueInput;
+  MemoSigningContinueResult: SchemaTypes.MemoSigningContinueResult;
+  MemoSigningPrepareInput: SchemaTypes.MemoSigningPrepareInput;
+  MemoSigningPrepareResult: SchemaTypes.MemoSigningPrepareResult;
   Message: Omit<SchemaTypes.Message, "sender"> & {
     sender?: SchemaTypes.Maybe<ResolversParentTypes["Actor"]>;
   };
@@ -20014,7 +20113,54 @@ export type MemoResolvers<
   >;
   nameID?: Resolver<ResolversTypes["NameID"], ParentType, ContextType>;
   profile?: Resolver<ResolversTypes["Profile"], ParentType, ContextType>;
+  signatures?: Resolver<
+    Array<ResolversTypes["MemoSignature"]>,
+    ParentType,
+    ContextType
+  >;
   updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type MemoSignatureResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["MemoSignature"] = ResolversParentTypes["MemoSignature"]
+> = {
+  actor?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["User"]>,
+    ParentType,
+    ContextType
+  >;
+  createdDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  document?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Document"]>,
+    ParentType,
+    ContextType
+  >;
+  id?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  status?: Resolver<
+    ResolversTypes["SigningAttemptStatus"],
+    ParentType,
+    ContextType
+  >;
+  updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type MemoSigningContinueResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["MemoSigningContinueResult"] = ResolversParentTypes["MemoSigningContinueResult"]
+> = {
+  authorizeUrl?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type MemoSigningPrepareResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["MemoSigningPrepareResult"] = ResolversParentTypes["MemoSigningPrepareResult"]
+> = {
+  attemptId?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  previewUrl?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -20524,6 +20670,12 @@ export type MutationResolvers<
     ResolversTypes["MigrateEmbeddings"],
     ParentType,
     ContextType
+  >;
+  continueMemoSigning?: Resolver<
+    ResolversTypes["MemoSigningContinueResult"],
+    ParentType,
+    ContextType,
+    RequireFields<SchemaTypes.MutationContinueMemoSigningArgs, "signingData">
   >;
   convertSpaceL1ToSpaceL0?: Resolver<
     ResolversTypes["Space"],
@@ -21122,6 +21274,12 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<SchemaTypes.MutationMoveTaskToColumnArgs, "moveData">
+  >;
+  prepareMemoSigning?: Resolver<
+    ResolversTypes["MemoSigningPrepareResult"],
+    ParentType,
+    ContextType,
+    RequireFields<SchemaTypes.MutationPrepareMemoSigningArgs, "signingData">
   >;
   refreshAllBodiesOfKnowledge?: Resolver<
     ResolversTypes["Boolean"],
@@ -23445,6 +23603,12 @@ export type QueryResolvers<
     ContextType,
     RequireFields<SchemaTypes.QuerySearchArgs, "searchData">
   >;
+  signingAttempt?: Resolver<
+    ResolversTypes["MemoSignature"],
+    ParentType,
+    ContextType,
+    RequireFields<SchemaTypes.QuerySigningAttemptArgs, "ID">
+  >;
   spaces?: Resolver<
     Array<ResolversTypes["Space"]>,
     ParentType,
@@ -23506,6 +23670,12 @@ export type QueryResolvers<
     SchemaTypes.Maybe<ResolversTypes["String"]>,
     ParentType,
     ContextType
+  >;
+  verifyMemoSignature?: Resolver<
+    ResolversTypes["MemoSignatureVerificationStatus"],
+    ParentType,
+    ContextType,
+    RequireFields<SchemaTypes.QueryVerifyMemoSignatureArgs, "verificationData">
   >;
   virtualContributor?: Resolver<
     ResolversTypes["VirtualContributor"],
@@ -23896,6 +24066,16 @@ export type RoleSetInvitationResultResolvers<
   >;
   invitation?: Resolver<
     SchemaTypes.Maybe<ResolversTypes["Invitation"]>,
+    ParentType,
+    ContextType
+  >;
+  invitedActorID?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["UUID"]>,
+    ParentType,
+    ContextType
+  >;
+  invitedEmail?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["String"]>,
     ParentType,
     ContextType
   >;
@@ -26694,6 +26874,9 @@ export type Resolvers<ContextType = any> = {
   MeQueryResults?: MeQueryResultsResolvers<ContextType>;
   MediaGallery?: MediaGalleryResolvers<ContextType>;
   Memo?: MemoResolvers<ContextType>;
+  MemoSignature?: MemoSignatureResolvers<ContextType>;
+  MemoSigningContinueResult?: MemoSigningContinueResultResolvers<ContextType>;
+  MemoSigningPrepareResult?: MemoSigningPrepareResultResolvers<ContextType>;
   Message?: MessageResolvers<ContextType>;
   MessageDetails?: MessageDetailsResolvers<ContextType>;
   MessageID?: GraphQLScalarType;

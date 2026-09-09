@@ -319,7 +319,12 @@ baseTest.afterAll(async () => {
   // Ad-hoc org fixtures first: cleanUpBaseScenario does not know about them,
   // so without this each run leaks every organization this file created.
   await cleanUpTestOrganizations();
-  await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  // beforeAll may have failed before the scenario existed (a browser that will
+  // not launch is enough). cleanUpBaseScenario dereferences the scenario, so
+  // calling it with undefined replaces the real failure with a TypeError.
+  if (baseScenario) {
+    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  }
 });
 
 // ─── Page-level helper (mirrors us1-invite-organization.spec.ts) ─────────
@@ -334,9 +339,13 @@ async function inviteOrganizationViaDialog(page: Page, org: OrgFixture, message:
   await expect(toggle).toHaveAttribute('aria-expanded', 'true');
 
   await page.getByRole('button', { name: 'Invite Organisation' }).click();
-  await expect(page.getByText(/Invite an organisation to join/)).toBeVisible();
+  // Scoped to the dialog: the Member Organisations SECTION DESCRIPTION behind it
+  // now also reads "…Invite an organisation to join, or add one directly."
+  // (spaceSettings i18n), so an unscoped getByText matches two elements and
+  // fails Playwright strict mode. The dialog's own title carries the Space name.
+  await expect(page.getByRole('dialog').getByText(/Invite an organisation to join/)).toBeVisible();
 
-  const search = page.getByRole('textbox', { name: 'Search for users by name or email' });
+  const search = page.getByRole('textbox', { name: 'Search for organisations by name' });
   await search.fill(org.displayName);
   await page.getByRole('button', { name: org.displayName }).click();
 
@@ -351,6 +360,14 @@ async function inviteOrganizationViaDialog(page: Page, org: OrgFixture, message:
   // a background refetch while this dialog is still open), which would
   // otherwise make this locator resolve to more than one element.
   const dialog = page.getByRole('dialog');
+  // Wait for the RESULTS view before reading any <li>. The selection step keeps
+  // its own <li> chip per selected organization — avatar initials + display
+  // name — and it is still mounted while the send is in flight, so reading
+  // straight after the click returned "AFAS2 Fresh Org 31596" (the chip)
+  // instead of the outcome. `Back` exists only in the results view, so its
+  // appearance is the transition signal; `Send` is not usable for this because
+  // it becomes "Sending…", which still substring-matches "Send".
+  await expect(dialog.getByRole('button', { name: 'Back' })).toBeVisible();
   const resultRow = dialog.locator('li').filter({ hasText: org.displayName });
   await expect(resultRow).toBeVisible();
   const resultText = (await resultRow.textContent()) ?? '';
@@ -428,7 +445,12 @@ baseTest(
     await page.goto(baseUrl);
     await page.getByRole('button', { name: 'Notifications' }).click();
 
-    const item = page.getByText(new RegExp(`invited to join ${escapeRegex(baseScenario.space.about.profile.displayName)}`));
+    // Scoped to THIS test's organization, not just the Space. Every other US2
+    // scenario invites a different organization to the SAME Space, so a
+    // Space-only match resolves to one notification per scenario that has
+    // already run and fails Playwright's strict mode. The organization name is
+    // unique per scenario and per run.
+    const item = page.getByText(new RegExp(`Your organisation ${escapeRegex(orgAS2Click.displayName)}`));
     await expect(item).toBeVisible({ timeout: 15_000 });
     await item.click();
 
