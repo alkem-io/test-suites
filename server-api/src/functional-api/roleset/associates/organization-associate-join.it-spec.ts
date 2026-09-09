@@ -32,6 +32,7 @@ import {
   updateOrganizationSettings,
 } from '@functional-api/contributor-management/organization/organization.request.params';
 import { getErrorCode, usersInRoles } from '../roleset.request.params';
+import { removeRoleFromUser } from '../roles-request.params';
 
 const uniqueId = UniqueIDGenerator.getID();
 const verifiedDomain = `example${uniqueId}.io`;
@@ -116,6 +117,19 @@ const eligibilityAsEmail = (organizationId: string, email: string) =>
 describe('Organization live join door (US4)', () => {
   test('US4-AS1: verified + domain match + switch on → ELIGIBLE_TO_JOIN, and joining makes the viewer an associate', async () => {
     const { id, email } = await registerDomainUser('as1', verifiedDomain);
+
+    // Registering with a matching domain against a verified, switch-on
+    // organization ALREADY associates the user — that is the registration path
+    // US4-AS5 asserts, and it is unchanged by this feature. So the "Join as an
+    // associate" button is only ever reachable for someone who was NOT
+    // auto-joined: a user who predates the domain/verification/switch, or one
+    // who has since been removed. Reproduce that state explicitly, otherwise
+    // this scenario asserts against a user who is already an associate.
+    await removeRoleFromUser(
+      id,
+      orgVerified.organization.roleSetId,
+      RoleName.Associate
+    );
 
     const eligibility = await eligibilityAsEmail(
       orgVerified.organization.id,

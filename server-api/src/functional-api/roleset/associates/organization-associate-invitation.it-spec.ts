@@ -58,6 +58,10 @@ const scenarioConfig: TestScenarioConfig = {
 
 let roleSetId = '';
 
+/** Organization role caps, from `organization.role.definitions.ts`. */
+const ADMIN_CAP = 6;
+const OWNER_CAP = 3;
+
 beforeAll(async () => {
   baseScenario = await TestScenarioFactory.createBaseScenarioOrganization(
     scenarioConfig
@@ -229,7 +233,13 @@ describe('Organization associate invitations (US1)', () => {
       expect(getSingleInvitationResult(dupInviteRes)?.type).toEqual(
         RoleSetInvitationResultType.AlreadyInvitedToRoleSet
       );
-      expect(getSingleInvitationResult(dupInviteRes)?.invitation).toBeFalsy();
+      // The result carries the EXISTING invitation rather than nothing — shipped
+      // behaviour on both role-set types (server#5088, 061 R36), and the point of
+      // "no second row" is that the id is the first invitation's, not that the
+      // field is empty.
+      expect(getSingleInvitationResult(dupInviteRes)?.invitation?.id).toEqual(
+        firstResult!.invitation!.id
+      );
 
       await deleteInvitation(firstResult!.invitation!.id);
 
@@ -267,115 +277,85 @@ describe('Organization associate invitations (US1)', () => {
   });
 
   test('US1-AS3: the extra-role caps (Admin max 6, Owner max 3) are enforced at invite time counting granted plus pending, and revoking a pending offer frees the next one', async () => {
-    // Baseline granted ADMIN holders before this test: organizationAdmin,
-    // spaceMember, spaceAdmin (3). Baseline granted OWNER holders:
-    // organizationAdmin (1).
-    const admin4 = await newInvitee();
-    const admin5 = await newInvitee();
-    const pendingAdmin6 = await newInvitee();
-    const rejectedAdmin7 = await newInvitee();
-    const admin8 = await newInvitee();
-    const owner2 = await newInvitee();
-    const pendingOwner3 = await newInvitee();
-    const rejectedOwner4 = await newInvitee();
+    // Read the baseline rather than assuming it. The scenario's granted ADMIN
+    // and OWNER holders are set up elsewhere, so a hardcoded count silently
+    // turns a cap assertion into "the cap was already reached before we
+    // started" the moment that setup changes.
+    const baselineRoles = await usersInRoles(
+      roleSetId,
+      [RoleName.Admin, RoleName.Owner],
+      TestUser.GLOBAL_ADMIN
+    );
+    const countFor = (role: RoleName): number =>
+      (
+        baselineRoles?.data?.lookup?.roleSet?.usersInRoles?.find(
+          (r: { role: string }) => r.role === role
+        )?.users ?? []
+      ).length;
+    const baselineAdmins = countFor(RoleName.Admin);
+    const baselineOwners = countFor(RoleName.Owner);
+    // Cap headroom: fill to one short of the cap, so the next offer is the last
+    // that fits and the one after it is refused.
+    const adminsToGrant = Math.max(0, ADMIN_CAP - 1 - baselineAdmins);
+    const ownersToGrant = Math.max(0, OWNER_CAP - 1 - baselineOwners);
+
+    const grantedAdmins = [];
+    for (let i = 0; i < adminsToGrant; i++) grantedAdmins.push(await newInvitee());
+    const grantedOwners = [];
+    for (let i = 0; i < ownersToGrant; i++) grantedOwners.push(await newInvitee());
+    const pendingAdminLast = await newInvitee();
+    const refusedAdmin = await newInvitee();
+    const freedAdmin = await newInvitee();
+    const pendingOwnerLast = await newInvitee();
+    const refusedOwner = await newInvitee();
     const created = [
-      admin4,
-      admin5,
-      pendingAdmin6,
-      rejectedAdmin7,
-      admin8,
-      owner2,
-      pendingOwner3,
-      rejectedOwner4,
+      ...grantedAdmins,
+      ...grantedOwners,
+      pendingAdminLast,
+      refusedAdmin,
+      freedAdmin,
+      pendingOwnerLast,
+      refusedOwner,
     ];
     const invitationIds: string[] = [];
+    const offerAdmin = (userId: string, as = TestUser.SPACE_ADMIN) =>
+      inviteForEntryRoleOnRoleSet(roleSetId, [userId], [], message, [RoleName.Admin], as);
+    const offerOwner = (userId: string, as = TestUser.SPACE_MEMBER) =>
+      inviteForEntryRoleOnRoleSet(roleSetId, [userId], [], message, [RoleName.Owner], as);
     try {
-      await assignRoleToUser(admin4.id, roleSetId, RoleName.Admin);
-      await assignRoleToUser(admin5.id, roleSetId, RoleName.Admin);
-      // 5 granted admins now; invite the 6th (pending) — still within the cap.
-      const sixthAdmin = await inviteForEntryRoleOnRoleSet(
-        roleSetId,
-        [pendingAdmin6.id],
-        [],
-        message,
-        [RoleName.Admin],
-        TestUser.SPACE_ADMIN
-      );
-      const sixthAdminResult = getSingleInvitationResult(sixthAdmin);
-      expect(sixthAdminResult?.type).toEqual(
-        RoleSetInvitationResultType.InvitedToRoleSet
-      );
-      invitationIds.push(sixthAdminResult!.invitation!.id);
+      for (const u of grantedAdmins) await assignRoleToUser(u.id, roleSetId, RoleName.Admin);
 
-      // 5 granted + 1 pending = 6 — a 7th offer is refused, nothing created.
-      const seventhAdmin = await inviteForEntryRoleOnRoleSet(
-        roleSetId,
-        [rejectedAdmin7.id],
-        [],
-        message,
-        [RoleName.Admin],
-        TestUser.SPACE_ADMIN
-      );
-      const seventhAdminResult = getSingleInvitationResult(seventhAdmin);
-      expect(seventhAdminResult?.type).toEqual(
-        RoleSetInvitationResultType.ExtraRoleLimitReached
-      );
-      expect(seventhAdminResult?.invitation).toBeFalsy();
+      // One short of the cap: this offer is the last that fits.
+      const lastAdmin = getSingleInvitationResult(await offerAdmin(pendingAdminLast.id));
+      expect(lastAdmin?.type).toEqual(RoleSetInvitationResultType.InvitedToRoleSet);
+      invitationIds.push(lastAdmin!.invitation!.id);
 
-      // Revoke the pending offer — the next Admin offer now succeeds.
-      await deleteInvitation(sixthAdminResult!.invitation!.id);
-      invitationIds.splice(invitationIds.indexOf(sixthAdminResult!.invitation!.id), 1);
-      const eighthAdmin = await inviteForEntryRoleOnRoleSet(
-        roleSetId,
-        [admin8.id],
-        [],
-        message,
-        [RoleName.Admin],
-        TestUser.SPACE_ADMIN
-      );
-      const eighthAdminResult = getSingleInvitationResult(eighthAdmin);
-      expect(eighthAdminResult?.type).toEqual(
-        RoleSetInvitationResultType.InvitedToRoleSet
-      );
-      invitationIds.push(eighthAdminResult!.invitation!.id);
+      // Granted + pending now reach the cap — the next offer is refused and
+      // creates nothing. This is the assertion that matters: pending offers
+      // count toward the cap, not just granted roles.
+      const overAdmin = getSingleInvitationResult(await offerAdmin(refusedAdmin.id));
+      expect(overAdmin?.type).toEqual(RoleSetInvitationResultType.ExtraRoleLimitReached);
+      expect(overAdmin?.invitation).toBeFalsy();
 
-      // Owner: 1 granted (organizationAdmin) + 1 more granted = 2; the 3rd
-      // (pending) still succeeds; the 4th is refused.
-      await assignRoleToUser(owner2.id, roleSetId, RoleName.Owner);
-      const thirdOwner = await inviteForEntryRoleOnRoleSet(
-        roleSetId,
-        [pendingOwner3.id],
-        [],
-        message,
-        [RoleName.Owner],
-        TestUser.SPACE_MEMBER
-      );
-      const thirdOwnerResult = getSingleInvitationResult(thirdOwner);
-      expect(thirdOwnerResult?.type).toEqual(
-        RoleSetInvitationResultType.InvitedToRoleSet
-      );
-      invitationIds.push(thirdOwnerResult!.invitation!.id);
+      // Revoking the pending offer frees the slot again.
+      await deleteInvitation(lastAdmin!.invitation!.id);
+      invitationIds.splice(invitationIds.indexOf(lastAdmin!.invitation!.id), 1);
+      const freed = getSingleInvitationResult(await offerAdmin(freedAdmin.id));
+      expect(freed?.type).toEqual(RoleSetInvitationResultType.InvitedToRoleSet);
+      invitationIds.push(freed!.invitation!.id);
 
-      const fourthOwner = await inviteForEntryRoleOnRoleSet(
-        roleSetId,
-        [rejectedOwner4.id],
-        [],
-        message,
-        [RoleName.Owner],
-        TestUser.SPACE_MEMBER
-      );
-      const fourthOwnerResult = getSingleInvitationResult(fourthOwner);
-      expect(fourthOwnerResult?.type).toEqual(
-        RoleSetInvitationResultType.ExtraRoleLimitReached
-      );
-      expect(fourthOwnerResult?.invitation).toBeFalsy();
+      // Same shape for OWNER, whose cap is lower.
+      for (const u of grantedOwners) await assignRoleToUser(u.id, roleSetId, RoleName.Owner);
+      const lastOwner = getSingleInvitationResult(await offerOwner(pendingOwnerLast.id));
+      expect(lastOwner?.type).toEqual(RoleSetInvitationResultType.InvitedToRoleSet);
+      invitationIds.push(lastOwner!.invitation!.id);
+
+      const overOwner = getSingleInvitationResult(await offerOwner(refusedOwner.id));
+      expect(overOwner?.type).toEqual(RoleSetInvitationResultType.ExtraRoleLimitReached);
+      expect(overOwner?.invitation).toBeFalsy();
     } finally {
-      for (const id of invitationIds) {
-        await deleteInvitation(id).catch(() => undefined);
-      }
-      for (const user of created) {
-        await deleteUser(user.id).catch(() => undefined);
-      }
+      for (const id of invitationIds) await deleteInvitation(id).catch(() => undefined);
+      for (const u of created) await deleteUser(u.id).catch(() => undefined);
     }
   });
 
@@ -506,13 +486,12 @@ describe('Organization associate invitations — the invitee responds (US2)', ()
   });
 
   test('US2-AS5: accepting [OWNER] after the cap is reached grants ASSOCIATE only and reports the withheld role', async () => {
-    // Fill the Owner cap to 3 with granted holders first.
-    const owner2 = await newInvitee();
-    const owner3 = await newInvitee();
+    // The cap must be reached AFTER the invitation exists, not before: 062 also
+    // validates the cap at invite time, so filling it first refuses the
+    // invitation and the accept-time path can never be reached. Invite while
+    // there is headroom, then consume the remaining slots, then accept.
+    const fillers = [];
     try {
-      await assignRoleToUser(owner2.id, roleSetId, RoleName.Owner);
-      await assignRoleToUser(owner3.id, roleSetId, RoleName.Owner);
-
       const invite = await inviteForEntryRoleOnRoleSet(
         roleSetId,
         [TestUserManager.users.subsubspaceMember.id],
@@ -522,6 +501,22 @@ describe('Organization associate invitations — the invitee responds (US2)', ()
         TestUser.SPACE_ADMIN
       );
       const invitationId = getSingleInvitationResult(invite)!.invitation!.id;
+
+      // Now fill every remaining OWNER slot with granted holders, so the role
+      // can no longer be granted when the invitee accepts.
+      const ownersNow = await usersInRoles(
+        roleSetId,
+        [RoleName.Owner],
+        TestUser.GLOBAL_ADMIN
+      );
+      const grantedOwners = (
+        ownersNow?.data?.lookup?.roleSet?.usersInRoles?.[0]?.users ?? []
+      ).length;
+      for (let i = grantedOwners; i < OWNER_CAP; i++) {
+        const filler = await newInvitee();
+        fillers.push(filler);
+        await assignRoleToUser(filler.id, roleSetId, RoleName.Owner);
+      }
 
       const accepted = await eventOnRoleSetInvitation(
         invitationId,
@@ -555,8 +550,9 @@ describe('Organization associate invitations — the invitee responds (US2)', ()
         roleSetId,
         RoleName.Associate
       ).catch(() => undefined);
-      await deleteUser(owner2.id).catch(() => undefined);
-      await deleteUser(owner3.id).catch(() => undefined);
+      for (const filler of fillers) {
+        await deleteUser(filler.id).catch(() => undefined);
+      }
     }
   });
 

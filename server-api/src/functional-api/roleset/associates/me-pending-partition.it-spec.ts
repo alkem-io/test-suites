@@ -41,8 +41,19 @@ let orgToDelete: OrganizationWithSpaceModel;
 let fullScenario: OrganizationWithSpaceModel; // carries a Space, for the Space invitation leg
 
 beforeAll(async () => {
+  // A bare `{ name }` config creates NO space, leaving
+  // `fullScenario.space.community.roleSetId` undefined and the Space-invitation
+  // leg failing with BAD_USER_INPUT rather than exercising the partition.
   fullScenario = await TestScenarioFactory.createBaseScenario({
     name: `me-partition-${uniqueId}`,
+    space: {
+      collaboration: {
+        addTutorialCallouts: false,
+      },
+      community: {
+        members: [],
+      },
+    },
   });
   orgForInvitation = await TestScenarioFactory.createBaseScenarioOrganization({
     name: `me-partition-inv-${uniqueId}`,
