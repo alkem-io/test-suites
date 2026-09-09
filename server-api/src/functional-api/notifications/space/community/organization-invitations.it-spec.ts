@@ -12,6 +12,7 @@ import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/O
 import {
   RoleName,
   RoleSetInvitationResultNotice,
+  UpdateUserSettingsEntityInput,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { graphqlRequestAuth } from '@alkemio/tests-lib/utils/graphql.request';
 import {
@@ -39,6 +40,7 @@ import {
   assertCleanupSucceeded,
   expectExactMailsAfter,
   notif,
+  snapshotNotificationSettings,
   waitForMailsCountAtLeast,
 } from '../../notification.helpers';
 
@@ -101,10 +103,42 @@ const clearHostOrgFromSpace = async () => {
   ).catch(() => undefined);
 };
 
+// Platform admins hold Space-admin notification rights on EVERY Space, so with
+// their default (all-on) settings they receive a copy of every outcome
+// notification this file asserts exact counts for. `beforeAll` below already
+// shapes the ORGANIZATION's manager set for exactly that reason; the
+// notification settings were the other half and were missing, so the counts
+// here only held on a database where these personas happened to be muted by an
+// earlier run. On a clean environment they cannot. Snapshot-and-restore rather
+// than force-all-on, for the reason `snapshotNotificationSettings` documents.
+//
+// qaUser is deliberately NOT muted: it is the OWNER-not-ADMIN negative case
+// (R17b), and silencing it would make that assertion pass for the wrong reason.
+const PLATFORM_NOISE_PERSONA_IDS = (): string[] => [
+  TestUserManager.users.globalAdmin.id,
+  TestUserManager.users.globalSupportAdmin.id,
+];
+const settingsBefore = new Map<string, UpdateUserSettingsEntityInput>();
+
 beforeAll(async () => {
   await deleteMailSlurperMails();
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
   await clearHostOrgFromSpace();
+
+  for (const userId of PLATFORM_NOISE_PERSONA_IDS()) {
+    settingsBefore.set(userId, await snapshotNotificationSettings(userId));
+    await updateUserSettings(userId, {
+      notification: {
+        space: {
+          admin: {
+            communityInvitationResponse: notif(false),
+            communityNewMember: notif(false),
+          },
+        },
+        organization: { adminSpaceCommunityInvitation: notif(false) },
+      },
+    });
+  }
 
   // createBaseScenario's default actor (GLOBAL_ADMIN) is auto-granted
   // ASSOCIATE+ADMIN on the new organization; strip the ADMIN grant so the
@@ -144,7 +178,27 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  // Restore every persona before reporting; these are globally seeded and
+  // outlive this file, and `nightly` runs single-threaded against one database.
+  const restoreFailures: string[] = [];
+  for (const [userId, settings] of settingsBefore.entries()) {
+    try {
+      assertCleanupSucceeded(
+        `updateUserSettings(${userId})`,
+        await updateUserSettings(userId, settings)
+      );
+    } catch (error) {
+      restoreFailures.push(`${userId}: ${(error as Error).message}`);
+    }
+  }
+
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+
+  if (restoreFailures.length > 0) {
+    throw new Error(
+      `Failed to restore notification settings for ${restoreFailures.length} persona(s):\n${restoreFailures.join('\n')}`
+    );
+  }
 });
 
 const inviteOrgToSpace = async (
@@ -535,6 +589,13 @@ describe('Organization Space invitations — the inviter learns the outcome (US4
     invitationId = result?.invitation?.id ?? '';
     expect(invitationId.length).toEqual(36);
 
+    // The invite's own two "you've been invited" mails to the organization's
+    // ADMINS are dispatched fire-and-forget and can still be in flight. Clearing
+    // the inbox without waiting lets them land AFTER the clear, where the
+    // filters below count them as outcome mail — which is exactly how this test
+    // failed: subspaceAdmin showed 2 mails, the "has joined" welcome plus its
+    // own stale invitation. Same guard the demoted-inviter test below uses.
+    await waitForMailsCountAtLeast(2);
     await deleteMailSlurperMails();
     // 2 mails: one "accepted" outcome to the Space admin, and one "has joined"
     // welcome to the organization's OTHER admin. The organization has exactly
