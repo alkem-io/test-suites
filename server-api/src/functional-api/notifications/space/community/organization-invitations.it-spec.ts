@@ -162,7 +162,15 @@ const inviteOrgToSpace = async (
 
 const createTestOrganization = async (label: string) => {
   const name = `${label}${uniqueId}`;
-  const nameID = name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 24);
+  // The run suffix is what makes a nameID unique across runs, so it must SURVIVE
+  // truncation: trim the LABEL to fit, then append the whole suffix. Slugifying
+  // `label + uniqueId` and cutting the result to 24 instead ate into the suffix
+  // for any longer label, so two runs collided on one nameID and organization
+  // creation failed at fixture setup. Same rule as
+  // `client-web/src/functional-e2e/organization-space-invitations/organization-space-invitations.helpers.ts`.
+  const slug = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const suffix = slug(uniqueId);
+  const nameID = `${slug(label).slice(0, Math.max(0, 24 - suffix.length))}${suffix}`;
   const res = await createOrganization(name, nameID);
   if (!res.data?.createOrganization) {
     throw new Error(
@@ -228,6 +236,20 @@ const inAppNotificationsFor = async (
 };
 
 describe('Organization Space invitations — organization admins are notified (US2)', () => {
+  // Every test here also cleans up at the END of its own body. That is not
+  // enough: a failing assertion skips the rest of the body, so the invitation
+  // and the Member grant survive. The next block's `beforeEach` only strips the
+  // role — it does not delete a leaked invitation — so its first invite comes
+  // back ALREADY_INVITED_TO_ROLE_SET and every test in it fails for a reason
+  // that has nothing to do with what it is testing. Mirrors the US4 hook below.
+  afterEach(async () => {
+    await clearHostOrgFromSpace();
+    if (invitationId) {
+      await deleteInvitation(invitationId).catch(() => undefined);
+      invitationId = '';
+    }
+  });
+
   test('the ADMIN and the ADMIN-not-associate are each notified once; the OWNER-not-admin, a plain ASSOCIATE and the space admin get nothing (R17b)', async () => {
     await deleteMailSlurperMails();
 
