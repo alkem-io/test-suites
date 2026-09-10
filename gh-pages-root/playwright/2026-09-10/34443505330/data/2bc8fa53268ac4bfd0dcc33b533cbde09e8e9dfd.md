@@ -1,0 +1,74 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e5]:
+    - link "Skip to content" [ref=e6] [cursor=pointer]:
+      - /url: "#crd-main-content"
+    - banner [ref=e7]:
+      - generic [ref=e10]:
+        - link "Home" [ref=e12] [cursor=pointer]:
+          - /url: /home
+          - img "Alkemio" [ref=e14]
+        - navigation "Menu" [ref=e20]:
+          - button "Search" [ref=e21] [cursor=pointer]:
+            - img
+          - button "Messages" [ref=e22] [cursor=pointer]:
+            - img
+          - button "Notifications" [ref=e23] [cursor=pointer]:
+            - img
+          - button "Platform navigation" [ref=e24] [cursor=pointer]:
+            - img
+          - link "Log in" [ref=e26] [cursor=pointer]:
+            - /url: /login?returnUrl=https://test-alkem.io/home
+    - main [ref=e27]:
+      - generic [ref=e30]:
+        - generic [ref=e31]:
+          - heading "Explore Spaces" [level=1] [ref=e32]
+          - paragraph [ref=e33]: Discover spaces to collaborate and innovate
+        - generic [ref=e34]:
+          - generic [ref=e36]:
+            - img [ref=e37]
+            - textbox "Search spaces..." [ref=e40]
+          - button "Filters" [ref=e41] [cursor=pointer]:
+            - img
+            - text: Filters
+        - paragraph [ref=e43]: Showing 1 spaces
+        - list "spaces" [ref=e44]:
+          - listitem [ref=e45]:
+            - link [ref=e46] [cursor=pointer]:
+              - /url: https://test-alkem.io/eco1
+              - article [ref=e47]:
+                - generic [ref=e53]:
+                  - img [ref=e54]
+                  - generic [ref=e57]: Private
+                - generic [ref=e58]:
+                  - heading "Default Space" [level=3] [ref=e59]
+                  - paragraph [ref=e60]: An empty space to be populated
+                - generic [ref=e62]:
+                  - generic [ref=e63]: Leads
+                  - generic "Eco1 Host (Organisation)" [ref=e65]
+      - link "Sign Up" [ref=e67] [cursor=pointer]:
+        - /url: /sign_up
+        - img
+        - text: Sign Up
+    - contentinfo [ref=e68]:
+      - generic [ref=e69]:
+        - generic [ref=e70]:
+          - img "Alkemio" [ref=e72]
+          - generic [ref=e78]: © 2026 Alkemio B.V.
+        - navigation "Footer" [ref=e79]:
+          - link "Terms" [ref=e80] [cursor=pointer]:
+            - /url: https://welcome.alkem.io/legal/terms/
+          - link "Privacy" [ref=e81] [cursor=pointer]:
+            - /url: https://welcome.alkem.io/legal/privacy
+          - link "Security" [ref=e82] [cursor=pointer]:
+            - /url: https://welcome.alkem.io/legal/security
+          - button "Support" [ref=e83] [cursor=pointer]
+          - link "About" [ref=e84] [cursor=pointer]:
+            - /url: https://welcome.alkem.io
+        - button "English" [ref=e86] [cursor=pointer]:
+          - img [ref=e87]
+          - generic [ref=e90]: English
+  - region "Notifications alt+T"
+```
