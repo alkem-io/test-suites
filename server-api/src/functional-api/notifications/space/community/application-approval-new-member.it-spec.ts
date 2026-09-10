@@ -28,28 +28,31 @@ import {
 } from '../../notification.helpers';
 
 /**
- * Ruling **R35** / FR-020a(c) — the discriminating live test for the
- * "no double notification" suppression, on its application arm.
+ * Ruling **R40** / FR-020a(c) — the discriminating live test for the boundary
+ * of the "no double notification" suppression, on its application arm.
  *
  * `CommunityMembershipOrigin` suppresses the generic Space-admin "a new member
- * joined" notification whenever a membership came from an **invitation** or an
- * **approved application** — the product email scopes that notification to
- * memberships with *"no invitation or application step"*, and the story AC on
- * server#4100 repeats it verbatim.
+ * joined" notification **only where a replacement notification exists**. An
+ * accepted invitation has one: "X accepted the invitation" reaches every admin
+ * of the invited Space. An approved application does **not** —
+ * `SPACE_ADMIN_COMMUNITY_APPLICATION` fires at *submission*, and there is no
+ * application-approved event — so suppressing there would leave the approving
+ * admin's co-admins told nothing at all, silently regressing a platform flow
+ * `server#4100` does not otherwise touch.
  *
- * R31 had briefly carved applications back out, on the reasoning that no
- * application-approved event exists to replace the suppressed one
- * (`SPACE_ADMIN_COMMUNITY_APPLICATION` fires at *submission*), so suppressing
- * leaves the approving admin's co-admins told nothing. **R35 overrode that**:
- * the binding instruction wins, and the silence is an accepted consequence
- * tracked as alkem-io/server#6476.
+ * R35 had briefly suppressed applications too, on the literal reading of the
+ * product email's *"no invitation or application step"*. **R40 restored R31**:
+ * that sentence was the email pruning a *proposed* notification list for the
+ * user → organization associates flow, and organizations cannot apply to a
+ * Space at all (FR-014/R9), so within this feature the clause has nothing to
+ * attach to. Adding the missing event is alkem-io/server#6476.
  *
- * This spec pins the shipped behaviour from the outside: a Space with two
- * admins, one approves, and the OTHER is told **nothing** on the admin side —
- * while the new member still receives their own welcome, which the suppression
- * must never touch. It fails against a build that forgot to thread
- * `CommunityMembershipOrigin.APPLICATION`, which is what makes it worth its
- * runtime.
+ * This spec pins the boundary from the outside: a Space with two admins, one
+ * approves, and the OTHER **is** told — while the new member still receives
+ * their own welcome. It fails against a build that suppresses the application
+ * arm, which is what makes it worth its runtime. When #6476 lands and the
+ * replacement event exists, this expectation flips and this file is the place
+ * that says so.
  */
 const notificationsOff = {
   notification: {
@@ -95,9 +98,9 @@ const newMemberOnly = {
 };
 
 // The APPLICANT keeps exactly one setting on: the member-side welcome.
-// R35 suppresses the admin-side "a new member joined" for an approved
-// application; the welcome must survive that, or an approved applicant joins in
-// total silence. Asserting it requires the applicant to be able to receive it —
+// The suppression is admin-side only and never applies to the welcome; the
+// welcome must arrive whatever the origin, or a joining member hears nothing
+// about their own membership. Asserting it requires the applicant to be able to receive it —
 // muting `spaceCommunityJoined` here (as `notificationsOff` does for everyone
 // else) would make the assertion pass or fail on this file's own precondition
 // rather than on the product, which is the failure mode this whole file exists
@@ -218,8 +221,8 @@ afterEach(async () => {
   }
 });
 
-describe('Notifications - approving an application (R35)', () => {
-  test('the admin who did NOT approve is told nothing; the new member still gets their welcome', async () => {
+describe('Notifications - approving an application (R40)', () => {
+  test('the admin who did NOT approve is still told; the new member gets their welcome', async () => {
     const application = await createApplication(
       baseScenario.space.community.roleSetId,
       TestUser.QA_USER
@@ -240,18 +243,26 @@ describe('Notifications - approving an application (R35)', () => {
     await delay(3000);
     const [mails] = await getMailsData();
 
-    const coAdminMails = (mails ?? []).filter((mail: any) =>
-      mail.toAddresses?.includes(TestUserManager.users.subspaceAdmin.email)
+    // R40: nothing replaces "a new member joined" for an approved application
+    // — SPACE_ADMIN_COMMUNITY_APPLICATION fired at submission, not here — so
+    // the co-admin who did not approve MUST still be told, exactly as on
+    // `develop`. Matched on the template's own subject
+    // (`space.admin.community.new.member.js`: '<type> "<name>" joined
+    // <space>'), not merely on the recipient: a count of "any mail to the
+    // co-admin" would be satisfied by an unrelated notification and would keep
+    // passing if this one were suppressed — the failure this file exists to
+    // catch. When #6476 adds the application-approved event, this expectation
+    // flips to 0 and the new event is asserted in its place.
+    const coAdminNewMemberMails = (mails ?? []).filter(
+      (mail: any) =>
+        mail.toAddresses?.includes(
+          TestUserManager.users.subspaceAdmin.email
+        ) &&
+        mail.subject?.includes(
+          `joined ${baseScenario.space.about.profile.displayName}`
+        )
     );
-
-    // R35: the membership came from an application, so the admin-side
-    // "a new member joined" is suppressed for EVERY Space admin — including
-    // the co-admin who did not approve. This is the accepted consequence
-    // recorded on alkem-io/server#6476: until an application-approved event
-    // exists there is nothing to replace it, and the co-admin hears nothing.
-    // Asserted rather than tolerated, so that reintroducing the notification
-    // (or landing #6476) fails here and forces this file to be revisited.
-    expect(coAdminMails).toHaveLength(0);
+    expect(coAdminNewMemberMails).toHaveLength(1);
 
     // ...but the suppression is admin-side ONLY. The member-side welcome is
     // untouched by CommunityMembershipOrigin and must still arrive, otherwise
