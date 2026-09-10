@@ -102,7 +102,8 @@ let orgAS7: OrgFixture; // invited Member + Lead on the subspace — Lead slots 
 // downgraded; with seven slots still free the Lead was granted, correctly.
 const SUBSPACE_ORG_LEAD_CAP = 9;
 let orgAS7Fillers: OrgFixture[] = [];
-let orgAS8: OrgFixture; // invited Member — associate/global-admin denial + admin revoke
+let orgAS8: OrgFixture; // invited Member — associate denial + platform-admin revoke
+let orgAS8Accept: OrgFixture; // invited Member — platform admin accepts on the org's behalf
 
 const scenarioConfig: TestScenarioConfig = {
   name: `org-invite-us3-${runSuffix}`,
@@ -149,7 +150,7 @@ const runSetup = async (): Promise<void> => {
   const subspaceRoleSetId = baseScenario.subspace.community.roleSetId;
   const subsubspaceRoleSetId = baseScenario.subsubspace.community.roleSetId;
 
-  [orgAS1, orgAS2, orgAS3, orgAS4, orgAS6, orgAS7, orgAS8] = await Promise.all([
+  [orgAS1, orgAS2, orgAS3, orgAS4, orgAS6, orgAS7, orgAS8, orgAS8Accept] = await Promise.all([
     createTestOrganization('US3AS1 Empty', runSuffix),
     createTestOrganization('US3AS2 GateZero', runSuffix),
     createTestOrganization('US3AS3 Declines', runSuffix),
@@ -157,6 +158,7 @@ const runSetup = async (): Promise<void> => {
     createTestOrganization('US3AS6 OptsOut', runSuffix),
     createTestOrganization('US3AS7 LeadRace', runSuffix),
     createTestOrganization('US3AS8 Denial', runSuffix),
+    createTestOrganization('US3AS8 AdminAccepts', runSuffix),
   ]);
   orgAS7Fillers = await Promise.all(
     Array.from({ length: SUBSPACE_ORG_LEAD_CAP }, (_, i) =>
@@ -210,6 +212,14 @@ const runSetup = async (): Promise<void> => {
   // AS8: Member only, root Space — neither the associate nor the global
   // admin may accept; the global admin may revoke.
   await inviteOrganizationViaApi(spaceRoleSetId, orgAS8.id, `US3-AS8 ${runSuffix}`, TestUser.SPACE_ADMIN);
+  // Accepting consumes the invitation, so the platform-admin accept case needs
+  // its own pending invitation — orgAS8's is spent by the revoke below.
+  await inviteOrganizationViaApi(
+    spaceRoleSetId,
+    orgAS8Accept.id,
+    `US3-AS8 admin-accepts ${runSuffix}`,
+    TestUser.SPACE_ADMIN
+  );
 };
 
 for (const personaTest of [orgAdminTest, orgAssociateTest, platformAdminTest]) {
@@ -310,8 +320,9 @@ async function organizationsInRole(roleSetID: string, role: RoleName): Promise<s
 
 /** Drives `eventOnInvitation(ACCEPT)` for `orgID`'s pending invitation on
  * `roleSetID`, as `actorEmail` — used for the US3-AS8 half the UI cannot
- * exercise (a global admin attempting to accept on the organization's
- * behalf must be rejected, never silently no-op'd — see the fix note above). */
+ * exercise: a platform admin accepting on an organization's behalf. That is
+ * ALLOWED (operator ruling, 2026-09-10); the organization's own Invitations
+ * tab is org-admin-only, so this path has no UI. */
 async function eventOnInvitationRaw(
   orgID: string,
   roleSetID: string,
@@ -513,14 +524,24 @@ orgAssociateTest.describe('US3-AS8 — a plain associate cannot see or act on th
   });
 });
 
-platformAdminTest.describe('US3-AS8 — a global admin cannot accept, but can revoke from Space settings', () => {
-  platformAdminTest('accept is rejected by the API; revoke from Member Organisations succeeds', async ({ page }) => {
-    const result = await eventOnInvitationRaw(orgAS8.id, baseScenario.space.community.roleSetId, 'ACCEPT', adminEmail);
-    expect(result.state).toBeUndefined();
-    expect(result.error).toBeTruthy();
+platformAdminTest.describe('US3-AS8 — a platform admin can accept on the organization\'s behalf, and can revoke from Space settings', () => {
+  platformAdminTest('accept succeeds via the API; revoke from Member Organisations succeeds', async ({ page }) => {
+    // Operator ruling (2026-09-10): a platform admin accepting on an
+    // organization's behalf is intended. The invitation policy inherits the
+    // platform-wide grant, so ROLESET_ENTRY_ROLE_INVITE_ACCEPT is held. This
+    // spec previously asserted the opposite and was the only red case left in
+    // the 061 suite.
+    const result = await eventOnInvitationRaw(
+      orgAS8Accept.id,
+      baseScenario.space.community.roleSetId,
+      'ACCEPT',
+      adminEmail
+    );
+    expect(result.error).toBeFalsy();
+    expect(result.state).toEqual('accepted');
 
-    const membersAfterDeniedAccept = await organizationsInRole(baseScenario.space.community.roleSetId, RoleName.Member);
-    expect(membersAfterDeniedAccept).not.toContain(orgAS8.id);
+    const membersAfterAccept = await organizationsInRole(baseScenario.space.community.roleSetId, RoleName.Member);
+    expect(membersAfterAccept).toContain(orgAS8Accept.id);
 
     await page.goto(`${baseUrl}/${baseScenario.space.nameId}/settings/community`);
     const toggle = page.getByRole('button', { name: /Member Organisations/ });
@@ -529,6 +550,10 @@ platformAdminTest.describe('US3-AS8 — a global admin cannot accept, but can re
     }
     await expect(page.locator('li').filter({ hasText: orgAS8.displayName })).toBeVisible();
     await page.getByRole('button', { name: `Revoke invitation to ${orgAS8.displayName}` }).click();
+    // Revoking is confirmed — same alertdialog as US1-AS6.
+    const revokeConfirm = page.getByRole('alertdialog', { name: 'Revoke invitation' });
+    await expect(revokeConfirm).toBeVisible();
+    await revokeConfirm.getByRole('button', { name: 'Confirm' }).click();
     await expect(page.locator('li').filter({ hasText: orgAS8.displayName })).toHaveCount(0);
   });
 });
