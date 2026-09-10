@@ -311,11 +311,30 @@ baseTest.afterAll(async () => {
   // seeded and outlives this file, so leaving it muted silently mutes every
   // later spec that expects it to receive something — and on an environment
   // that is not wiped between runs, permanently. Restore the platform default.
-  await setAdminSpaceCommunityInvitationSetting(
-    orgAdminMutedId(),
-    { email: true, inApp: true, push: true },
-    TestUser.SUBSPACE_MEMBER
-  ).catch(() => undefined);
+  //
+  // Wrapped in try/catch rather than a trailing `.catch()`: `orgAdminMutedId()`
+  // resolves through `TestUserManager`, which only `createBaseScenario`
+  // populates. When beforeAll aborts before that (a browser that will not launch
+  // is enough) the id lookup throws while the ARGUMENT is being evaluated — so
+  // no promise is ever created and `.catch()` never applies, and the resulting
+  // `TypeError: Cannot read properties of undefined (reading 'get')` replaces
+  // the real failure in the report. Nothing was muted in that case either, so
+  // there is nothing to restore. Behaviour on the normal path is unchanged:
+  // the restore is still attempted and its failures are still non-fatal.
+  try {
+    await setAdminSpaceCommunityInvitationSetting(
+      orgAdminMutedId(),
+      { email: true, inApp: true, push: true },
+      TestUser.SUBSPACE_MEMBER
+    );
+  } catch (e) {
+    // Loud, but NOT thrown: teardown must never replace a real test failure.
+    // Silence here is the one thing that would let a muted shared persona leak
+    // into later specs unnoticed.
+    console.error(
+      `[us2 teardown] could not restore subspace.member notification defaults — ${e instanceof Error ? e.message : e}`
+    );
+  }
   // Ad-hoc org fixtures first: cleanUpBaseScenario does not know about them,
   // so without this each run leaks every organization this file created.
   await cleanUpTestOrganizations();
