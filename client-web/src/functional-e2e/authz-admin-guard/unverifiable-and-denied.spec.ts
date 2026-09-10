@@ -61,16 +61,32 @@ const operationName = (route: Route): string | undefined => {
   }
 };
 
+/**
+ * Rewrite one GraphQL response in place. A reload or navigation can abort an
+ * in-flight request while its handler is still awaiting `route.fetch()`;
+ * fulfilling that route then throws "Route is already handled". That request
+ * is gone anyway, so the error is swallowed rather than failing the test.
+ */
+const rewriteResponse = async (route: Route, mutate: (body: any) => void) => {
+  try {
+    const response = await route.fetch();
+    const body = await response.json();
+    mutate(body);
+    await route.fulfill({ response, json: body });
+  } catch (error) {
+    if (!String(error).includes('already handled')) throw error;
+  }
+};
+
 test('5.1 unverifiable: a role-set read without myPrivileges leaves no admin surface at all', async ({ page }) => {
   // Strip `myPrivileges` from the role set's authorization in the response the
   // Community tab gates on (`RoleSetAuthorization`), leaving everything else intact.
   await page.route(GRAPHQL, async route => {
     if (operationName(route) !== 'RoleSetAuthorization') return route.continue();
-    const response = await route.fetch();
-    const body = await response.json();
-    const roleSet = body?.data?.lookup?.roleSet;
-    if (roleSet?.authorization) delete roleSet.authorization.myPrivileges;
-    await route.fulfill({ response, json: body });
+    await rewriteResponse(route, body => {
+      const roleSet = body?.data?.lookup?.roleSet;
+      if (roleSet?.authorization) delete roleSet.authorization.myPrivileges;
+    });
   });
 
   // Fail-closed all the way down: without a readable privilege set the tab
@@ -93,11 +109,10 @@ test('5.1 unverifiable: a role-set read without myPrivileges leaves no admin sur
 test('5.2 denied by derivation: privileges present but without the assign token gate every control with the tooltip', async ({ page }) => {
   await page.route(GRAPHQL, async route => {
     if (operationName(route) !== 'RoleSetAuthorization') return route.continue();
-    const response = await route.fetch();
-    const body = await response.json();
-    const roleSet = body?.data?.lookup?.roleSet;
-    if (roleSet?.authorization) roleSet.authorization.myPrivileges = ['READ'];
-    await route.fulfill({ response, json: body });
+    await rewriteResponse(route, body => {
+      const roleSet = body?.data?.lookup?.roleSet;
+      if (roleSet?.authorization) roleSet.authorization.myPrivileges = ['READ'];
+    });
   });
 
   await openSpaceCommunityTab(page, baseUrl, baseScenario.space.nameId);
