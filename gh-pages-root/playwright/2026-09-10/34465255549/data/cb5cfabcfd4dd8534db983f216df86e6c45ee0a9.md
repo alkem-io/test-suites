@@ -1,0 +1,774 @@
+# Page snapshot
+
+```yaml
+- generic:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - link:
+            - /url: "#crd-main-content"
+            - text: Skip to content
+          - banner:
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - link:
+                      - /url: /home
+                      - generic:
+                        - img
+                    - generic:
+                      - navigation:
+                        - list:
+                          - listitem:
+                            - generic: L
+                            - link:
+                              - /url: https://test-alkem.io/callout-none-templ-4057a
+                              - text: l0-callout-none-templ-4057a
+                          - listitem:
+                            - img
+                          - listitem:
+                            - link:
+                              - /url: https://test-alkem.io/callout-none-templ-4057a/settings
+                              - text: Settings
+                          - listitem:
+                            - img
+                          - listitem:
+                            - generic: Templates
+                  - navigation:
+                    - button:
+                      - img
+                    - button:
+                      - img
+                    - button:
+                      - img
+                      - generic: 1 unread notifications
+                    - button:
+                      - img
+                    - button:
+                      - generic:
+                        - generic:
+                          - img
+          - main:
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - heading [level=1]:
+                          - link:
+                            - /url: https://test-alkem.io/callout-none-templ-4057a
+                            - text: l0-callout-none-templ-4057a
+                        - paragraph: A home to go from here to there, together!
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - tablist:
+                        - tab:
+                          - img
+                          - generic: About
+                        - tab:
+                          - img
+                          - generic: Layout
+                        - tab:
+                          - img
+                          - generic: Community
+                        - tab:
+                          - img
+                          - generic: Updates
+                        - tab:
+                          - img
+                          - generic: Subspaces
+                        - tab [selected]:
+                          - img
+                          - generic: Templates
+                        - tab:
+                          - img
+                          - generic: Storage
+                        - tab:
+                          - img
+                          - generic: Settings
+                        - tab:
+                          - img
+                          - generic: Account
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - img
+                            - textbox:
+                              - /placeholder: Search templates…
+                          - list:
+                            - listitem:
+                              - generic:
+                                - generic:
+                                  - button [expanded]:
+                                    - generic:
+                                      - img
+                                    - generic:
+                                      - generic:
+                                        - generic: Space templates
+                                        - generic: "0"
+                                      - generic: Structure a space with predefined phases and starter tools.
+                                    - img
+                                  - button:
+                                    - img
+                                    - generic: Add new
+                                    - img
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - img
+                                      - paragraph: No templates yet
+                                      - paragraph: Create one, or import one from the library.
+                            - listitem:
+                              - generic:
+                                - generic:
+                                  - button [expanded]:
+                                    - generic:
+                                      - img
+                                    - generic:
+                                      - generic:
+                                        - generic: Collaboration tools
+                                        - generic: "14"
+                                      - generic: Reusable callouts for workshops, brainstorming and group activities.
+                                    - img
+                                  - button:
+                                    - img
+                                    - generic: Add new
+                                    - img
+                                - generic:
+                                  - generic:
+                                    - list:
+                                      - listitem:
+                                        - generic:
+                                          - button:
+                                            - generic:
+                                              - img
+                                          - generic:
+                                            - generic:
+                                              - heading [level=4]: 1. CTtit a7c712 F:none, R:none, Com:Off
+                                              - generic:
+                                                - paragraph: "Test: 1 Callout Template Description"
+                                                - list:
+                                                  - listitem: "ID: a7c712"
+                                                  - listitem: "AC: none"
+                                                  - listitem: "Comments: Disabled"
+                                                  - listitem: "Response: none"
+                                            - generic:
+                                              - list:
+                                                - listitem:
+                                                  - generic: a7c712
+                                                - listitem:
+                                                  - generic: callout
+                                                - listitem:
+                                                  - generic: template
+                                                - listitem:
+                                                  - generic: none
+                                                - listitem:
+                                                  - generic: comm-off
+                                            - generic:
+                                              - button:
+                                                - img
+                                      - listitem:
+                                        - generic:
+                                          - button:
+                                            - generic:
+                                              - img
+                                          - generic:
+                                            - generic:
+                                              - heading [level=4]: 10. CTtit e344b2 F:none, R:linksFiles, Com:On
+                                              - generic:
+                                                - paragraph: "Test: 10 Callout Template Description"
+                                                - list:
+                                                  - listitem: "ID: e344b2"
+                                                  - listitem: "AC: none"
+                                                  - listitem: "Comments: Enabled"
+                                                  - listitem: "Response: linksFiles"
+                                                  - listitem: "Admins can contribute: true"
+                                                  - listitem: "Members can contribute: true"
+                                                  - listitem: "Comments on contributions: undefined"
+                                            - generic:
+                                              - list:
+                                                - listitem:
+                                                  - generic: e344b2
+                                                - listitem:
+                                                  - generic: callout
+                                                - listitem:
+                                                  - generic: template
+                                                - listitem:
+                                                  - generic: none
+                                                - listitem:
+                                                  - generic: linksFiles
+                                                - listitem:
+                                                  - generic: comm-on
+                                            - generic:
+                                              - button:
+                                                - img
+                                      - listitem:
+                                        - generic:
+                                          - button:
+                                            - generic:
+                                              - img
+                                          - generic:
+                                            - generic:
+                                              - heading [level=4]: 11. CTtit 18ea89 F:whiteboard, R:linksFiles, Com:Off
+                                              - generic:
+                                                - paragraph: "Test: 11 Callout Template Description"
+                                                - list:
+                                                  - listitem: "ID: 18ea89"
+                                                  - listitem: "AC: whiteboard"
+                                                  - listitem: "Comments: Disabled"
+                                                  - listitem: "Response: linksFiles"
+                                                  - listitem: "Admins can contribute: true"
+                                                  - listitem: "Members can contribute: true"
+                                                  - listitem: "Comments on contributions: undefined"
+                                            - generic:
+                                              - list:
+                                                - listitem:
+                                                  - generic: 18ea89
+                                                - listitem:
+                                                  - generic: callout
+                                                - listitem:
+                                                  - generic: template
+                                                - listitem:
+                                                  - generic: whiteboard
+                                                - listitem:
+                                                  - generic: linksFiles
+                                                - listitem:
+                                                  - generic: comm-off
+                                            - generic:
+                                              - button:
+                                                - img
+                                      - listitem:
+                                        - generic:
+                                          - button:
+                                            - generic:
+                                              - img
+                                          - generic:
+                                            - generic:
+                                              - heading [level=4]: 12. CTtit b73246 F:whiteboard, R:linksFiles, Com:On
+                                              - generic:
+                                                - paragraph: "Test: 12 Callout Template Description"
+                                                - list:
+                                                  - listitem: "ID: b73246"
+                                                  - listitem: "AC: whiteboard"
+                                                  - listitem: "Comments: Enabled"
+                                                  - listitem: "Response: linksFiles"
+                                                  - listitem: "Admins can contribute: true"
+                                                  - listitem: "Members can contribute: true"
+                                                  - listitem: "Comments on contributions: undefined"
+                                            - generic:
+                                              - list:
+                                                - listitem:
+                                                  - generic: b73246
+                                                - listitem:
+                                                  - generic: callout
+                                                - listitem:
+                                                  - generic: template
+                                                - listitem:
+                                                  - generic: whiteboard
+                                                - listitem:
+                                                  - generic: linksFiles
+                                                - listitem:
+                                                  - generic: comm-on
+                                            - generic:
+                                              - button:
+                                                - img
+                                      - listitem:
+                                        - generic:
+                                          - button:
+                                            - generic:
+                                              - img
+                                          - generic:
+                                            - generic:
+                                              - heading [level=4]: 2. CTtit 510b7d F:none, R:none, Com:On
+                                              - generic:
+                                                - paragraph: "Test: 2 Callout Template Description"
+                                                - list:
+                                                  - listitem: "ID: 510b7d"
+                                                  - listitem: "AC: none"
+                                                  - listitem: "Comments: Enabled"
+                                                  - listitem: "Response: none"
+                                            - generic:
+                                              - list:
+                                                - listitem:
+                                                  - generic: 510b7d
+                                                - listitem:
+                                                  - generic: callout
+                                                - listitem:
+                                                  - generic: template
+                                                - listitem:
+                                                  - generic: none
+                                                - listitem:
+                                                  - generic: comm-on
+                                            - generic:
+                                              - button:
+                                                - img
+                                      - listitem:
+                                        - generic:
+                                          - button:
+                                            - generic:
+                                              - img
+                                          - generic:
+                                            - generic:
+                                              - heading [level=4]: 3. CTtit e15cd2 F:whiteboard, R:none, Com:Off
+                                              - generic:
+                                                - paragraph: "Test: 3 Callout Template Description"
+                                                - list:
+                                                  - listitem: "ID: e15cd2"
+                                                  - listitem: "AC: whiteboard"
+                                                  - listitem: "Comments: Disabled"
+                                                  - listitem: "Response: none"
+                                            - generic:
+                                              - list:
+                                                - listitem:
+                                                  - generic: e15cd2
+                                                - listitem:
+                                                  - generic: callout
+                                                - listitem:
+                                                  - generic: template
+                                                - listitem:
+                                                  - generic: whiteboard
+                                                - listitem:
+                                                  - generic: none
+                                                - listitem:
+                                                  - generic: comm-off
+                                            - generic:
+                                              - button:
+                                                - img
+                                      - listitem:
+                                        - generic:
+                                          - button:
+                                            - generic:
+                                              - img
+                                          - generic:
+                                            - generic:
+                                              - heading [level=4]: 4. CTtit f7db90 F:whiteboard, R:none, Com:On
+                                              - generic:
+                                                - paragraph: "Test: 4 Callout Template Description"
+                                                - list:
+                                                  - listitem: "ID: f7db90"
+                                                  - listitem: "AC: whiteboard"
+                                                  - listitem: "Comments: Enabled"
+                                                  - listitem: "Response: none"
+                                            - generic:
+                                              - list:
+                                                - listitem:
+                                                  - generic: f7db90
+                                                - listitem:
+                                                  - generic: callout
+                                                - listitem:
+                                                  - generic: template
+                                                - listitem:
+                                                  - generic: whiteboard
+                                                - listitem:
+                                                  - generic: none
+                                                - listitem:
+                                                  - generic: comm-on
+                                            - generic:
+                                              - button:
+                                                - img
+                                      - listitem:
+                                        - generic:
+                                          - button:
+                                            - generic:
+                                              - img
+                                          - generic:
+                                            - generic:
+                                              - heading [level=4]: 5. CTtit 926b27 F:memo, R:none, Com:Off
+                                              - generic:
+                                                - paragraph: "Test: 5 Callout Template Description"
+                                                - list:
+                                                  - listitem: "ID: 926b27"
+                                                  - listitem: "AC: memo"
+                                                  - listitem: "Comments: Disabled"
+                                                  - listitem: "Response: none"
+                                            - generic:
+                                              - list:
+                                                - listitem:
+                                                  - generic: 926b27
+                                                - listitem:
+                                                  - generic: callout
+                                                - listitem:
+                                                  - generic: template
+                                                - listitem:
+                                                  - generic: memo
+                                                - listitem:
+                                                  - generic: none
+                                                - listitem:
+                                                  - generic: comm-off
+                                            - generic:
+                                              - button:
+                                                - img
+                                      - listitem:
+                                        - generic:
+                                          - button:
+                                            - generic:
+                                              - img
+                                          - generic:
+                                            - generic:
+                                              - heading [level=4]: 6. CTtit 4f8159 F:memo, R:none, Com:On
+                                              - generic:
+                                                - paragraph: "Test: 6 Callout Template Description"
+                                                - list:
+                                                  - listitem: "ID: 4f8159"
+                                                  - listitem: "AC: memo"
+                                                  - listitem: "Comments: Enabled"
+                                                  - listitem: "Response: none"
+                                            - generic:
+                                              - list:
+                                                - listitem:
+                                                  - generic: 4f8159
+                                                - listitem:
+                                                  - generic: callout
+                                                - listitem:
+                                                  - generic: template
+                                                - listitem:
+                                                  - generic: memo
+                                                - listitem:
+                                                  - generic: none
+                                                - listitem:
+                                                  - generic: comm-on
+                                            - generic:
+                                              - button:
+                                                - img
+                                      - listitem:
+                                        - generic:
+                                          - button:
+                                            - generic:
+                                              - img
+                                          - generic:
+                                            - generic:
+                                              - heading [level=4]: 7. CTtit 330442 F:callToAction, R:none, Com:Off
+                                              - generic:
+                                                - paragraph: "Test: 7 Callout Template Description"
+                                                - list:
+                                                  - listitem: "ID: 330442"
+                                                  - listitem: "AC: callToAction"
+                                                  - listitem: "Comments: Disabled"
+                                                  - listitem: "Response: none"
+                                            - generic:
+                                              - list:
+                                                - listitem:
+                                                  - generic: "330442"
+                                                - listitem:
+                                                  - generic: callout
+                                                - listitem:
+                                                  - generic: template
+                                                - listitem:
+                                                  - generic: callToAction
+                                                - listitem:
+                                                  - generic: none
+                                                - listitem:
+                                                  - generic: comm-off
+                                            - generic:
+                                              - button:
+                                                - img
+                                      - listitem:
+                                        - generic:
+                                          - button:
+                                            - generic:
+                                              - img
+                                          - generic:
+                                            - generic:
+                                              - heading [level=4]: 8. CTtit e2368a F:callToAction, R:none, Com:On
+                                              - generic:
+                                                - paragraph: "Test: 8 Callout Template Description"
+                                                - list:
+                                                  - listitem: "ID: e2368a"
+                                                  - listitem: "AC: callToAction"
+                                                  - listitem: "Comments: Enabled"
+                                                  - listitem: "Response: none"
+                                            - generic:
+                                              - list:
+                                                - listitem:
+                                                  - generic: e2368a
+                                                - listitem:
+                                                  - generic: callout
+                                                - listitem:
+                                                  - generic: template
+                                                - listitem:
+                                                  - generic: callToAction
+                                                - listitem:
+                                                  - generic: none
+                                                - listitem:
+                                                  - generic: comm-on
+                                            - generic:
+                                              - button:
+                                                - img
+                                      - listitem:
+                                        - generic:
+                                          - button:
+                                            - generic:
+                                              - img
+                                          - generic:
+                                            - generic:
+                                              - heading [level=4]: 9. CTtit 7ffca9 F:none, R:linksFiles, Com:Off
+                                              - generic:
+                                                - paragraph: "Test: 9 Callout Template Description"
+                                                - list:
+                                                  - listitem: "ID: 7ffca9"
+                                                  - listitem: "AC: none"
+                                                  - listitem: "Comments: Disabled"
+                                                  - listitem: "Response: linksFiles"
+                                                  - listitem: "Admins can contribute: true"
+                                                  - listitem: "Members can contribute: true"
+                                                  - listitem: "Comments on contributions: undefined"
+                                            - generic:
+                                              - list:
+                                                - listitem:
+                                                  - generic: 7ffca9
+                                                - listitem:
+                                                  - generic: callout
+                                                - listitem:
+                                                  - generic: template
+                                                - listitem:
+                                                  - generic: none
+                                                - listitem:
+                                                  - generic: linksFiles
+                                                - listitem:
+                                                  - generic: comm-off
+                                            - generic:
+                                              - button:
+                                                - img
+                                      - listitem:
+                                        - generic:
+                                          - button:
+                                            - generic:
+                                              - img
+                                          - generic:
+                                            - generic:
+                                              - heading [level=4]: 9b. CTtit 9c1c87 F:none, R:linksFiles, Com:Off
+                                              - generic:
+                                                - paragraph: "Test: 9b Callout Template Description"
+                                                - list:
+                                                  - listitem: "ID: 9c1c87"
+                                                  - listitem: "AC: none"
+                                                  - listitem: "Comments: Disabled"
+                                                  - listitem: "Response: linksFiles"
+                                                  - listitem: "Admins can contribute: false"
+                                                  - listitem: "Members can contribute: false"
+                                                  - listitem: "Comments on contributions: undefined"
+                                            - generic:
+                                              - list:
+                                                - listitem:
+                                                  - generic: 9c1c87
+                                                - listitem:
+                                                  - generic: callout
+                                                - listitem:
+                                                  - generic: template
+                                                - listitem:
+                                                  - generic: none
+                                                - listitem:
+                                                  - generic: linksFiles
+                                                - listitem:
+                                                  - generic: comm-off
+                                            - generic:
+                                              - button:
+                                                - img
+                                      - listitem:
+                                        - generic:
+                                          - button:
+                                            - generic:
+                                              - img
+                                          - generic:
+                                            - generic:
+                                              - heading [level=4]: 9c. CTtit 503224 F:none, R:linksFiles, Com:Off
+                                              - generic:
+                                                - paragraph: "Test: 9c Callout Template Description"
+                                                - list:
+                                                  - listitem: "ID: 503224"
+                                                  - listitem: "AC: none"
+                                                  - listitem: "Comments: Disabled"
+                                                  - listitem: "Response: linksFiles"
+                                                  - listitem: "Admins can contribute: true"
+                                                  - listitem: "Members can contribute: false"
+                                                  - listitem: "Comments on contributions: undefined"
+                                            - generic:
+                                              - list:
+                                                - listitem:
+                                                  - generic: "503224"
+                                                - listitem:
+                                                  - generic: callout
+                                                - listitem:
+                                                  - generic: template
+                                                - listitem:
+                                                  - generic: none
+                                                - listitem:
+                                                  - generic: linksFiles
+                                                - listitem:
+                                                  - generic: comm-off
+                                            - generic:
+                                              - button:
+                                                - img
+                            - listitem:
+                              - generic:
+                                - generic:
+                                  - button [expanded]:
+                                    - generic:
+                                      - img
+                                    - generic:
+                                      - generic:
+                                        - generic: Whiteboard templates
+                                        - generic: "0"
+                                      - generic: Canvas layouts for visual collaboration.
+                                    - img
+                                  - button:
+                                    - img
+                                    - generic: Add new
+                                    - img
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - img
+                                      - paragraph: No templates yet
+                                      - paragraph: Create one, or import one from the library.
+                            - listitem:
+                              - generic:
+                                - generic:
+                                  - button [expanded]:
+                                    - generic:
+                                      - img
+                                    - generic:
+                                      - generic:
+                                        - generic: Post templates
+                                        - generic: "0"
+                                      - generic: Standardised documents for projects and decisions.
+                                    - img
+                                  - button:
+                                    - img
+                                    - generic: Add new
+                                    - img
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - img
+                                      - paragraph: No templates yet
+                                      - paragraph: Create one, or import one from the library.
+                            - listitem:
+                              - generic:
+                                - generic:
+                                  - button [expanded]:
+                                    - generic:
+                                      - img
+                                    - generic:
+                                      - generic:
+                                        - generic: Classification templates
+                                        - generic: "0"
+                                      - generic: Structured, reusable vocabularies such as SDGs, Language, or Sector.
+                                    - img
+                                  - button:
+                                    - img
+                                    - generic: Add new
+                                    - img
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - img
+                                      - paragraph: No templates yet
+                                      - paragraph: Create one, or import one from the library.
+                            - listitem:
+                              - generic:
+                                - generic:
+                                  - button [expanded]:
+                                    - generic:
+                                      - img
+                                    - generic:
+                                      - generic:
+                                        - generic: Community guidelines templates
+                                        - generic: "0"
+                                      - generic: Rules and expectations for a community.
+                                    - img
+                                  - button:
+                                    - img
+                                    - generic: Add new
+                                    - img
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - img
+                                      - paragraph: No templates yet
+                                      - paragraph: Create one, or import one from the library.
+          - contentinfo:
+            - generic:
+              - generic:
+                - generic:
+                  - img
+                - generic: © 2026 Alkemio B.V.
+              - navigation:
+                - link:
+                  - /url: https://welcome.alkem.io/legal/terms/
+                  - text: Terms
+                - link:
+                  - /url: https://welcome.alkem.io/legal/privacy
+                  - text: Privacy
+                - link:
+                  - /url: https://welcome.alkem.io/legal/security
+                  - text: Security
+                - button: Support
+                - link:
+                  - /url: https://welcome.alkem.io
+                  - text: About
+              - generic:
+                - button:
+                  - img
+                  - generic: English
+    - region "Notifications alt+T"
+    - button:
+      - img
+  - dialog "12. CTtit b73246 F:whiteboard, R:linksFiles, Com:On Collaboration tools" [ref=e2]:
+    - heading "12. CTtit b73246 F:whiteboard, R:linksFiles, Com:On Collaboration tools" [level=2] [ref=e4]:
+      - img [ref=e5]
+      - text: 12. CTtit b73246 F:whiteboard, R:linksFiles, Com:On
+      - generic [ref=e10]: Collaboration tools
+    - generic [ref=e12]:
+      - generic [ref=e13]:
+        - img [ref=e16]
+        - generic [ref=e21]:
+          - paragraph [ref=e22]: "Test: 12 Callout Template Description"
+          - list [ref=e23]:
+            - listitem [ref=e24]: "ID: b73246"
+            - listitem [ref=e25]: "AC: whiteboard"
+            - listitem [ref=e26]: "Comments: Enabled"
+            - listitem [ref=e27]: "Response: linksFiles"
+            - listitem [ref=e28]: "Admins can contribute: true"
+            - listitem [ref=e29]: "Members can contribute: true"
+            - listitem [ref=e30]: "Comments on contributions: undefined"
+      - generic [ref=e33]:
+        - generic [ref=e34]:
+          - generic [ref=e35]:
+            - generic [ref=e36]: Whiteboard
+            - generic [ref=e37]:
+              - img [ref=e38]
+              - text: Comments enabled
+          - heading "CTit b73246 F:whiteboard, R:linksFiles, Com:On" [level=3] [ref=e40]
+          - generic [ref=e41]:
+            - paragraph [ref=e42]: Callout Description
+            - paragraph [ref=e43]: "Test: 12"
+            - paragraph [ref=e44]: Callout Template Description
+            - paragraph [ref=e45]: "- ID: b73246"
+            - paragraph [ref=e46]: "- AC: whiteboard"
+            - paragraph [ref=e47]: "- Comments: Enabled"
+            - paragraph [ref=e48]: "- Response: linksFiles"
+            - paragraph [ref=e49]: "- Admins can contribute: true"
+            - paragraph [ref=e50]: "- Members can contribute: true"
+            - paragraph [ref=e51]: "- Comments on contributions: undefined"
+          - paragraph [ref=e52]: Whiteboard
+        - generic [ref=e53]:
+          - paragraph [ref=e54]: Allowed contributions
+          - list [ref=e55]:
+            - listitem [ref=e56]:
+              - generic [ref=e57]: Links
+    - generic [ref=e58]:
+      - button "Edit template" [active] [ref=e59] [cursor=pointer]:
+        - img
+        - text: Edit template
+      - button "Close" [ref=e60] [cursor=pointer]
+    - button [ref=e61] [cursor=pointer]:
+      - img
+```
