@@ -39,7 +39,7 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
   - Once a user is a member of a space, they can find its direct child subspaces under the `Subspaces` section in the subheader navigation on the space page.
   - **When a Level 0 space is public**, non-members can also see Level 1 subspaces and apply to them directly (see "Public Parent Space" section below).
 - **Membership is NOT Inherited**: Being a member of a space does NOT automatically make you a member of its child spaces (subspaces). Users must apply separately to each level and have their application approved by an admin for that specific space level. For example, being a member of Level 0 (Space) allows you to see Level 1 (Subspace) cards, but you still need to apply and be approved to become a member of Level 1.
-- **L0 Apply Button Location**: The Apply button for Level 0 spaces is available **only on the About page** (`/about`), NOT on the space dashboard. Non-members of a private space are redirected to `/about` automatically. On a public space, the dashboard renders without an Apply button.
+- **L0 Apply Button Location**: The About page (`/about`) always carries the Apply button for a Level 0 space. On a **public** L0 space the dashboard shows exactly one enabled Apply button to a non-member as well (per-tab sidebar widget, client-web#10194, since `0.163.0`). Non-members of a **private** space are redirected to `/about` automatically and never see the dashboard.
 - **Non-Parent-Member Subspace Applications**: When a Level 0 space is public and has `allowSubspaceAdminsToInviteMembers` enabled, users who are NOT members of the parent space can apply directly to Level 1 subspaces. The client trusts the server-granted `ROLESET_ENTRY_ROLE_APPLY` privilege instead of inferring eligibility from parent membership.
 
 ---
@@ -68,7 +68,7 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
 
 **Steps:**
 
-1. Navigate to a **public** Level 0 Space dashboard (use `baseScenario.space.nameId`, NOT `/about`)
+1. Create a dedicated **public** Level 0 space (`publicScenario`, the shared `baseScenario` space is private and would redirect) and navigate to its dashboard (`publicScenario.space.nameId`, NOT `/about`)
 2. Verify exactly one enabled "Apply" button is visible on the dashboard (the sidebar action)
 
 **Expected Results:**
