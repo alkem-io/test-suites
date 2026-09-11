@@ -76,7 +76,7 @@ test.describe('Level 0 Space - Applications', () => {
   });
 
   test.describe('Space Discovery and Applications', () => {
-    test('1.0 Apply button is NOT shown on a public L0 space dashboard', async () => {
+    test('1.0 Apply button is shown to a non-member on a public L0 space dashboard', async () => {
       // Use a dedicated PUBLIC space so the non-member actually lands on the
       // dashboard (private spaces redirect non-members to /about).
       const publicScenarioConfig: TestScenarioConfig = {
@@ -105,10 +105,15 @@ test.describe('Level 0 Space - Applications', () => {
           waitUntil: 'networkidle',
         });
 
-        // Verify no Apply button on the dashboard — per PR #10000,
-        // the Apply button was removed from the L0 dashboard entirely.
-        const applyButton = page.getByRole('button', { name: 'Apply' });
-        await expect(applyButton).not.toBeVisible();
+        // PR #10000 removed the Apply button from the L0 dashboard; the
+        // per-tab sidebar widgets (client-web#10194, shipped in 0.163.0)
+        // brought it back as a sidebar action for non-members. A non-member
+        // landing on a public L0 dashboard must therefore see one enabled
+        // Apply button again.
+        const applyButton = page.getByRole('button', { name: 'Apply', exact: true });
+        await expect(applyButton).toBeVisible();
+        await expect(applyButton).toBeEnabled();
+        await expect(applyButton).toHaveCount(1);
       } finally {
         await TestScenarioFactory.cleanUpBaseScenario(publicScenario);
       }

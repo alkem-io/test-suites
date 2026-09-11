@@ -179,16 +179,18 @@ export const verifyContributionSettings = async (
         )
       ).toBeVisible();
     } else {
-      // Whiteboards defaults: the canvas content can't easily be asserted on,
-      // but the "Default whiteboard" section + its labelled "Edit" button only
-      // mount when a default whiteboard is saved on the response.
+      // Whiteboards defaults: the canvas content can't be asserted on. Since
+      // the whiteboard-draft rework (server#6399 removed `Whiteboard.content`)
+      // an EXISTING default whiteboard is not redrawn in place — the dialog
+      // offers "Choose a template…" (replace from a whiteboard template) and
+      // "Clear default", the latter only when a default whiteboard is saved on
+      // the response. That button is therefore the marker that the default
+      // survived template → callout.
       await expect(
-        defaultsDialog.getByText('Default whiteboard', { exact: true })
+        defaultsDialog.getByRole('button', { name: 'Clear default' })
       ).toBeVisible();
       await expect(
-        defaultsDialog
-          .getByRole('button', { name: 'Edit', exact: true })
-          .last()
+        defaultsDialog.getByRole('button', { name: 'Choose a template…' })
       ).toBeVisible();
     }
 

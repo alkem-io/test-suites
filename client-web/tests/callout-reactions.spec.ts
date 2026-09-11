@@ -70,6 +70,20 @@ const EXPECTED_SLUGS = [
 ] as const;
 
 /** slug → glyph, mirroring client-web src/crd/components/reactions/reactionEmoji.ts. */
+/**
+ * Accessible names of the picker options are the translated labels
+ * (`reactions.en.json` → `emoji.<slug>`), not the slugs.
+ */
+const LABEL: Record<(typeof EXPECTED_SLUGS)[number], string> = {
+  heart: 'Heart',
+  'hugging-face': 'Hugging face',
+  'clapping-hands': 'Clapping hands',
+  'light-bulb': 'Light bulb',
+  bullseye: 'Bullseye',
+  'check-mark': 'Check mark',
+  rocket: 'Rocket',
+};
+
 const GLYPH: Record<(typeof EXPECTED_SLUGS)[number], string> = {
   heart: '❤️',
   'hugging-face': '🤗',
@@ -167,9 +181,15 @@ test.describe('Callout emoji reactions — US1 P1 acceptance walk', { tag: ['@ca
 
   /** The reaction card scope for the seeded callout, keyed off its heading text. */
   function calloutCard(page: Page): Locator {
+    // The innermost <div> around the heading no longer contains the card's
+    // action row: the Release 75 loading rework (client-web#10264) wraps each
+    // feed card in its own Suspense boundary, adding wrappers between the two.
+    // Anchor on the smallest <div> that holds BOTH the heading and the
+    // comments/reactions row.
     return page
       .locator('div')
       .filter({ has: page.getByRole('heading', { name: calloutDisplayName }) })
+      .filter({ has: page.getByRole('button', { name: 'Expand comments' }) })
       .last();
   }
 
@@ -184,7 +204,10 @@ test.describe('Callout emoji reactions — US1 P1 acceptance walk', { tag: ['@ca
 
   /** Opens the restricted picker (opens on hover / focus / tap). */
   async function openPicker(page: Page): Promise<Locator> {
-    await addReactionTrigger(page).hover();
+    // The picker is a Radix Popover that opens on click / keyboard activation
+    // (ReactionEmojiPicker.tsx deliberately has no hover handlers); a hover
+    // only shows the trigger's tooltip.
+    await addReactionTrigger(page).click();
     const picker = page.getByRole('listbox', { name: 'Emoji reaction picker' });
     await expect(picker).toBeVisible();
     return picker;
@@ -204,7 +227,7 @@ test.describe('Callout emoji reactions — US1 P1 acceptance walk', { tag: ['@ca
     await expect(totalPill(authPage)).toHaveCount(0);
 
     const picker = await openPicker(authPage);
-    await picker.getByRole('option', { name: 'heart' }).click();
+    await picker.getByRole('option', { name: LABEL['heart'], exact: true }).click();
 
     // A single combined total appears, tinted as the viewer's own reaction.
     const pill = totalPill(authPage);
@@ -223,7 +246,7 @@ test.describe('Callout emoji reactions — US1 P1 acceptance walk', { tag: ['@ca
     await expect(options).toHaveCount(EXPECTED_SLUGS.length);
 
     for (const slug of EXPECTED_SLUGS) {
-      const option = picker.getByRole('option', { name: slug });
+      const option = picker.getByRole('option', { name: LABEL[slug], exact: true });
       await expect(option).toHaveCount(1);
       await expect(option).toContainText(GLYPH[slug]);
     }
@@ -250,9 +273,19 @@ test.describe('Callout emoji reactions — US1 P1 acceptance walk', { tag: ['@ca
     // The who-reacted list, opened on demand, shows person + emoji + when and
     // carries no per-emoji count / grouped tally (US2-AS2 shares this guarantee).
     await pill.click();
-    const list = authPage.getByRole('list').filter({ hasText: 'admin' });
+    // The list opens inside its own popover dialog. Scope to it: a page-wide
+    // `list` filter also matches the card author line and the space leads list
+    // (both carry the admin's name) since the Release 75 feed rework.
+    const list = authPage.getByRole('dialog').last().getByRole('list');
     await expect(list.getByRole('listitem')).toHaveCount(1);
-    const listDigits = (await list.innerText()).match(/\d+/g) ?? [];
+    // Each row reads "<person> · <relative time> · <emoji>". The relative time
+    // ("5 seconds ago") legitimately carries a number; strip it before asserting
+    // that no per-emoji tally digit is left.
+    const withoutTimes = (await list.innerText()).replace(
+      /\b\d+\s+(second|minute|hour|day|week|month|year)s?\s+ago\b/gi,
+      ''
+    );
+    const listDigits = withoutTimes.match(/\d+/g) ?? [];
     expect(listDigits, 'the who-reacted list must show no numeric tallies').toEqual([]);
   });
 });

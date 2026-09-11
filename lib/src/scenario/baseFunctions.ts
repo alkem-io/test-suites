@@ -79,6 +79,77 @@ export const assignRoleToUser = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
+/**
+ * Assign a role on a role set to a Virtual Contributor (e.g. make a scenario VC
+ * a MEMBER of the scenario space). Same input shape as assignRoleToUser; the
+ * actorID is the VC id.
+ */
+export const assignRoleToVirtualContributor = async (
+  virtualContributorID: string,
+  roleSetID: string,
+  role: RoleName,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.assignRoleToVirtualContributor(
+      {
+        roleData: {
+          actorID: virtualContributorID,
+          roleSetID,
+          role,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      },
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+/** `prepareMemoSigning` — starts a signing attempt for a memo (server#6468). */
+export const prepareMemoSigning = async (
+  memoID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.PrepareMemoSigning(
+      { signingData: { memoID } },
+      { authorization: `Bearer ${authToken}` },
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+/** The framing memo (id + profile) of a callout, via `lookup.callout`. */
+export const getCalloutFramingMemo = async (
+  calloutID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.GetCalloutFramingMemo(
+      { calloutID },
+      { authorization: `Bearer ${authToken}` },
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+/** A space's license entitlements (`type`, `enabled`, `limit`), via `lookup.space`. */
+export const getSpaceLicenseEntitlements = async (
+  spaceID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.GetSpaceLicenseEntitlements(
+      { spaceID },
+      { authorization: `Bearer ${authToken}` },
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
 const uniqueId = UniqueIDGenerator.getID();
 export const getDefaultUserData = () => {
   return {

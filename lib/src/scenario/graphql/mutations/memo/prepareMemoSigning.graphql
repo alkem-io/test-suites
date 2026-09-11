@@ -1,0 +1,6 @@
+mutation PrepareMemoSigning($signingData: MemoSigningPrepareInput!) {
+  prepareMemoSigning(signingData: $signingData) {
+    attemptId
+    previewUrl
+  }
+}
