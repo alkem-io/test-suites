@@ -142,10 +142,27 @@ export const captureSessionCookie = async (
   return `${cookie.name}=${cookie.value}`;
 };
 
+/**
+ * The replayed cookie is a live credential until the revocation lands. It is
+ * only ever sent to `baseUrl`, which must be HTTPS unless it is a loopback
+ * host (the local stack), and the probes never follow redirects — so the
+ * cookie cannot be forwarded to a destination the test did not name.
+ */
+const assertSecureProbeOrigin = (): void => {
+  const { protocol, hostname } = new URL(baseUrl);
+  const loopback = ['localhost', '127.0.0.1', '::1', '[::1]'].includes(hostname);
+  if (protocol !== 'https:' && !loopback) {
+    throw new Error(
+      `Refusing to replay a session cookie over ${protocol} to ${hostname}: ALKEMIO_BASE_URL must be https:// or loopback`
+    );
+  }
+};
+
 const probeWithCookie = async (
   cookieHeader: string,
   send: (ctx: Awaited<ReturnType<typeof request.newContext>>) => Promise<APIResponse>
 ): Promise<ProbeResult> => {
+  assertSecureProbeOrigin();
   const ctx = await request.newContext({
     extraHTTPHeaders: { cookie: cookieHeader },
   });
@@ -161,7 +178,7 @@ export const probeIdTokenHintWithCookie = (
   cookieHeader: string
 ): Promise<ProbeResult> =>
   probeWithCookie(cookieHeader, ctx =>
-    ctx.get(idTokenHintUrl, { failOnStatusCode: false })
+    ctx.get(idTokenHintUrl, { failOnStatusCode: false, maxRedirects: 0 })
   );
 
 /** `POST /api/private/graphql` replaying a captured (possibly stale) session cookie. */
@@ -174,6 +191,7 @@ export const probePrivateGraphqlWithCookie = (
       data: { query },
       headers: { 'Content-Type': 'application/json' },
       failOnStatusCode: false,
+      maxRedirects: 0,
     })
   );
 

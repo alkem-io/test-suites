@@ -133,11 +133,23 @@ describe('Memo signing — SPACE_FLAG_MEMO_SIGNING entitlement (server#6478)', (
   });
 
   afterAll(async () => {
+    // `graphqlErrorWrapper` reports GraphQL failures in `result.error` rather
+    // than throwing: inspect the revoke, still clean the scenario up, then
+    // report every teardown failure together.
+    const failures: string[] = [];
     if (memoSigningPlanId && baseScenario?.space?.id) {
       // Idempotent: leaves the plan revoked whatever the last test did.
-      await revokeLicensePlanFromSpace(baseScenario.space.id, memoSigningPlanId);
+      const revoked = await revokeLicensePlanFromSpace(baseScenario.space.id, memoSigningPlanId);
+      if (revoked?.error) failures.push(`revokeLicensePlanFromSpace: ${JSON.stringify(revoked.error)}`);
     }
-    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+    try {
+      await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+    } catch (error) {
+      failures.push(`cleanUpBaseScenario: ${String(error)}`);
+    }
+    if (failures.length > 0) {
+      throw new Error(`memo-signing-entitlement teardown failed:\n${failures.join('\n')}`);
+    }
   });
 
   test('a new space and its subspace carry the entitlement, disabled', async () => {

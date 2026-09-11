@@ -67,17 +67,28 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
-  const client = getGraphqlClient();
-  const licensingID = (await admin(token => client.GetPlatformLicensePlans({}, { authorization: `Bearer ${token}` }))).data?.platform?.licensingFramework?.id ?? '';
+  // `graphqlErrorWrapper` reports GraphQL failures as `{ error }` rather than
+  // throwing, so the revoke result is inspected; scenario cleanup still runs,
+  // and every teardown failure is reported together afterwards.
+  const failures: string[] = [];
   if (memoSigningPlanId && baseScenario?.space?.id) {
-    await admin(token =>
+    const client = getGraphqlClient();
+    const plans = await admin(token => client.GetPlatformLicensePlans({}, { authorization: `Bearer ${token}` }));
+    const licensingID = plans.data?.platform?.licensingFramework?.id ?? '';
+    const revoked = await admin(token =>
       client.RevokeLicensePlanFromSpace(
         { planData: { spaceID: baseScenario.space.id, licensePlanID: memoSigningPlanId, licensingID } },
         { authorization: `Bearer ${token}` }
       )
     );
+    if (revoked?.error) failures.push(`RevokeLicensePlanFromSpace: ${JSON.stringify(revoked.error)}`);
   }
-  await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  try {
+    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  } catch (error) {
+    failures.push(`cleanUpBaseScenario: ${String(error)}`);
+  }
+  if (failures.length > 0) throw new Error(`memo-sign-action-gate teardown failed:\n${failures.join('\n')}`);
 });
 
 const openMemo = async (page: import('@playwright/test').Page) => {

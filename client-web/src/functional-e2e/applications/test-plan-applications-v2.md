@@ -60,7 +60,7 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
 
 ### 1. Space Discovery and Privacy Indicators
 
-#### 1.0 Apply Button NOT Shown on L0 Space Dashboard
+#### 1.0 Apply Button Shown to a Non-Member on a Public L0 Space Dashboard
 
 **Prerequisites:**
 
@@ -68,20 +68,23 @@ The Alkemio platform provides a multi-level space hierarchy (Space → Subspace 
 
 **Steps:**
 
-1. Navigate to Level 0 Space dashboard (use `baseScenario.space.nameId`, NOT `/about`)
-2. Verify no "Apply" button is visible on the dashboard
+1. Navigate to a **public** Level 0 Space dashboard (use `baseScenario.space.nameId`, NOT `/about`)
+2. Verify exactly one enabled "Apply" button is visible on the dashboard (the sidebar action)
 
 **Expected Results:**
 
-- The dashboard renders (or redirects to `/about` for private spaces)
-- No Apply button is present on the dashboard page
-- Apply is only available via the About page (`/about`)
+- The dashboard renders for the non-member
+- One enabled Apply button is present, rendered by the per-tab sidebar widget
+- The About page (`/about`) keeps its own Apply button — 1.1 below still applies from there
 
 **Notes:**
 
-- Per PR #10000, the Apply button was removed from the L0 space dashboard
-- On a private space, `CrdSpaceProtectedRoutes` redirects non-members to `/about`
-- On a public space, the dashboard renders without an Apply button
+- History: PR #10000 removed the Apply button from the L0 dashboard, and this case originally
+  asserted its absence. client-web#10194 (per-tab sidebar widgets, shipped in `0.163.0`) brought it
+  back as a sidebar action for non-members, so the assertion was inverted on 10.09 during the
+  Release 75 verification. Keep this case in step with the sidebar-widget behaviour, not with #10000.
+- On a private space, `CrdSpaceProtectedRoutes` still redirects non-members to `/about`; that path
+  is not exercised here.
 
 #### 1.1 Submit Application to Level 0 Space
 

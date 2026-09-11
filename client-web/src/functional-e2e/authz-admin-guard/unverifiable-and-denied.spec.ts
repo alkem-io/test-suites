@@ -11,7 +11,7 @@
 // Both faults are injected at the network layer for the SPACE_ADMIN persona,
 // so the product code path is the real one and no privilege is actually
 // removed from anyone.
-import { expect, Route } from '@playwright/test';
+import { expect, Page, Route } from '@playwright/test';
 import { TestUser } from '@alkemio/tests-lib/common/enums/test.user';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
@@ -43,6 +43,7 @@ const scenarioConfig: TestScenarioConfig = {
 
 let baseScenario: OrganizationWithSpaceModel;
 const subject = () => TestUserManager.users.qaUser.displayName;
+const roleSetId = () => baseScenario.space.community.roleSetId;
 const test = createPersonaTest('space.admin@alkem.io');
 test.describe.configure({ mode: 'serial' });
 
@@ -62,31 +63,53 @@ const operationName = (route: Route): string | undefined => {
 };
 
 /**
- * Rewrite one GraphQL response in place. A reload or navigation can abort an
- * in-flight request while its handler is still awaiting `route.fetch()`;
- * fulfilling that route then throws "Route is already handled". That request
- * is gone anyway, so the error is swallowed rather than failing the test.
+ * Apply `mutate` to THIS role set's `authorization` in every GraphQL response
+ * that carries it, whatever the operation. The Community tab reads the role
+ * set through more than one document (`RoleSetAuthorization`,
+ * `CommunityApplicationsInvitations`, …) and Apollo merges them all into the
+ * same `RoleSet:<id>` cache entry, so a fault injected into a single operation
+ * is overwritten by whichever response lands last — the race that turned 5.2
+ * red on the slower Test environment while it stayed green locally.
+ *
+ * A reload or navigation can abort an in-flight request while its handler is
+ * still awaiting `route.fetch()`; fulfilling that route then throws "Route is
+ * already handled". That request is gone anyway, so the error is swallowed
+ * rather than failing the test.
  */
-const rewriteResponse = async (route: Route, mutate: (body: any) => void) => {
-  try {
-    const response = await route.fetch();
-    const body = await response.json();
-    mutate(body);
-    await route.fulfill({ response, json: body });
-  } catch (error) {
-    if (!String(error).includes('already handled')) throw error;
-  }
-};
+const injectRoleSetAuthorizationFault = (
+  page: Page,
+  mutate: (authorization: Record<string, unknown>) => void
+) =>
+  page.route(GRAPHQL, async route => {
+    try {
+      const response = await route.fetch();
+      const body = await response.json();
+      let touched = false;
+      const visit = (node: unknown): void => {
+        if (Array.isArray(node)) {
+          node.forEach(visit);
+          return;
+        }
+        if (!node || typeof node !== 'object') return;
+        const record = node as Record<string, unknown>;
+        if (record.id === roleSetId() && record.authorization && typeof record.authorization === 'object') {
+          mutate(record.authorization as Record<string, unknown>);
+          touched = true;
+        }
+        Object.values(record).forEach(visit);
+      };
+      visit(body?.data);
+      await route.fulfill(touched ? { response, json: body } : { response });
+    } catch (error) {
+      if (!String(error).includes('already handled')) throw error;
+    }
+  });
 
 test('5.1 unverifiable: a role-set read without myPrivileges leaves no admin surface at all', async ({ page }) => {
-  // Strip `myPrivileges` from the role set's authorization in the response the
-  // Community tab gates on (`RoleSetAuthorization`), leaving everything else intact.
-  await page.route(GRAPHQL, async route => {
-    if (operationName(route) !== 'RoleSetAuthorization') return route.continue();
-    await rewriteResponse(route, body => {
-      const roleSet = body?.data?.lookup?.roleSet;
-      if (roleSet?.authorization) delete roleSet.authorization.myPrivileges;
-    });
+  // Strip `myPrivileges` from the role set's authorization wherever the
+  // Community tab reads it, leaving everything else intact.
+  await injectRoleSetAuthorizationFault(page, authorization => {
+    delete authorization.myPrivileges;
   });
 
   // Fail-closed all the way down: without a readable privilege set the tab
@@ -107,20 +130,18 @@ test('5.1 unverifiable: a role-set read without myPrivileges leaves no admin sur
 });
 
 test('5.2 denied by derivation: privileges present but without the assign token gate every control with the tooltip', async ({ page }) => {
-  await page.route(GRAPHQL, async route => {
-    if (operationName(route) !== 'RoleSetAuthorization') return route.continue();
-    await rewriteResponse(route, body => {
-      const roleSet = body?.data?.lookup?.roleSet;
-      if (roleSet?.authorization) roleSet.authorization.myPrivileges = ['READ'];
-    });
+  await injectRoleSetAuthorizationFault(page, authorization => {
+    authorization.myPrivileges = ['READ'];
   });
 
   await openSpaceCommunityTab(page, baseUrl, baseScenario.space.nameId);
   const dialog = await openMemberSettingsDialog(page, subject());
   const { lead, admin, remove } = memberDialogControls(dialog);
+  // Every control the derivation gates carries the same reason (`GatedAction`
+  // wraps all three), so each one is checked for the tooltip, not just Lead.
   await expectGatedWithReason(page, lead, DENIED_TOOLTIP);
-  await expect(admin).toBeDisabled();
-  await expect(remove).toBeDisabled();
+  await expectGatedWithReason(page, admin, DENIED_TOOLTIP);
+  await expectGatedWithReason(page, remove, DENIED_TOOLTIP);
   await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
   await page.unroute(GRAPHQL);
 });

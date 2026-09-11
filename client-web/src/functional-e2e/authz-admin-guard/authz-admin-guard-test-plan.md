@@ -41,8 +41,8 @@ Registered in the nightly config as project **Authz admin guard**.
 | 4.1, 4.2 | Org tabs as GLOBAL_SUPPORT: control is gated off with the tooltip, not offered, or enabled AND honoured — the outcome is recorded as a test annotation | `global.support` | same |
 | 4.1, 4.2 | Platform Global Roles: add / remove a user on `GLOBAL_COMMUNITY_READER`; persists; no denied toast | `admin` | `platform-global-roles.spec.ts` |
 | 4.3 | Platform Global Roles as GLOBAL_SUPPORT: admin area unreachable, or Add gated off with the tooltip | `global.support` | same |
-| 5.1 | Unverifiable: `RoleSetAuthorization` answered without `myPrivileges` → the Community tab lists no members and offers no Actions menu (READ is gone too); a reload without the fault restores it | `space.admin` + route fault | `unverifiable-and-denied.spec.ts` |
-| 5.2 | Denied by derivation: privileges present but without the assign token → Lead/Admin/Remove disabled, tooltip "You don't have permission to change members of this role." | `space.admin` + route fault | same |
+| 5.1 | Unverifiable: every read of this role set's authorization answered without `myPrivileges` → the Community tab lists no members and offers no Actions menu (READ is gone too); a reload without the fault restores it | `space.admin` + route fault | `unverifiable-and-denied.spec.ts` |
+| 5.2 | Denied by derivation: privileges present but without the assign token → Lead/Admin/Remove each disabled with the tooltip "You don't have permission to change members of this role." | `space.admin` + route fault | same |
 | 6.1 | Denied toast: `AssignRoleToUser` answered with FORBIDDEN → "You don't have permission to make this change. The change was not saved."; nothing applied after reload | `space.admin` + route fault | same |
 | 13.1 | Memo dialog with the entitlement off: no "Sign memo", no "Signed copies" | `space.admin` | `memo-sign-action-gate.spec.ts` |
 | 14.1 | Memo dialog with the entitlement granted (license plan assigned via API): still no "Sign memo" — identity gate | `space.admin` | same |
@@ -69,4 +69,9 @@ Registered in the nightly config as project **Authz admin guard**.
   `TestUserManager.populateUserModelMap()` first, and persona emails for `createPersonaTest` must be literals
   (the map is empty at module load).
 - Faults are injected with `page.route` on `**/api/private/graphql` keyed on `operationName`
-  (`RoleSetAuthorization`, `AssignRoleToUser`); always `unroute` before asserting the healthy state.
+  (`AssignRoleToUser`); always `unroute` before asserting the healthy state.
+- The role-set fault must be applied to **every** response carrying `RoleSet:<id>`, not to one
+  operation: the Community tab reads the same role set through `RoleSetAuthorization` and
+  `CommunityApplicationsInvitations`, Apollo merges them, and the last response wins — a
+  single-operation fault is a race (red on Test, green locally). `injectRoleSetAuthorizationFault`
+  walks each response for this role set's id.

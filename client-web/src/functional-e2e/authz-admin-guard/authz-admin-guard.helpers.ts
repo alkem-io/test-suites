@@ -46,5 +46,8 @@ export const expectGatedWithReason = async (page: Page, control: Locator, reason
   await expect(control).toBeDisabled();
   const wrapper = control.locator('xpath=ancestor::span[@tabindex="0"][1]');
   await wrapper.focus();
-  await expect(page.getByRole('tooltip').filter({ hasText: reason })).toBeVisible();
+  // When several gated controls are checked in a row, the previous tooltip is
+  // still in the DOM during its exit animation; the one just opened is
+  // portalled last. Assert on that one rather than on a unique match.
+  await expect(page.getByRole('tooltip').filter({ hasText: reason }).last()).toBeVisible();
 };
