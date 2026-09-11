@@ -25,6 +25,7 @@ import {
   cleanUpTestOrganizations,
   createTestOrganization,
   getAssociateEligibility,
+  getInAppActorIdsForType,
   getInAppNotificationTypes,
   getUserToken,
   inviteUserToOrganizationRaw,
@@ -182,11 +183,22 @@ adminATest.describe('US3-AS2 — every ADMIN is told; the pending table lists th
       })
       .toBe(true);
 
-    const [mails] = await getMailsData();
-    const applicationMails = (mails as Array<{ toAddresses: string[]; subject: string; body: string }>).filter(m =>
-      m.subject.includes(`applied to associate with ${orgO.displayName}`)
-    );
-    expect(applicationMails.length).toBeGreaterThanOrEqual(2);
+    // Same fire-and-forget race as US3-AS8 — poll rather than read once. This
+    // one happens to pass today because the in-app poll above gives the mail
+    // time to arrive, which is luck, not a guarantee.
+    let applicationMails: Array<{ toAddresses: string[]; subject: string; body: string }> = [];
+    await expect
+      .poll(
+        async () => {
+          const [mails] = await getMailsData();
+          applicationMails = (mails as Array<{ toAddresses: string[]; subject: string; body: string }>).filter(m =>
+            m.subject.includes(`applied to associate with ${orgO.displayName}`)
+          );
+          return applicationMails.length;
+        },
+        { timeout: 20_000 }
+      )
+      .toBeGreaterThanOrEqual(2);
     for (const mail of applicationMails) {
       expect(mail.subject).not.toContain(`US3-AS1 application ${runSuffix}`);
       expect(mail.body).toContain(`US3-AS1 application ${runSuffix}`);
@@ -236,8 +248,18 @@ adminATest.describe('US3-AS3 — approving makes the applicant an associate; onl
       .poll(async () => getInAppNotificationTypes(adminOtherEmail), { timeout: 20_000 })
       .toEqual(expect.arrayContaining(['ORGANIZATION_ADMIN_ASSOCIATE_JOINED']));
 
-    const adminATypes = await getInAppNotificationTypes(adminAEmail);
-    expect(adminATypes).not.toContain('ORGANIZATION_ADMIN_ASSOCIATE_JOINED');
+    // Scoped to THIS applicant on THIS organization: adminA already holds
+    // "joined" rows for adminOther, because the fixture assigned that role
+    // directly and a direct assignment does produce "joined" (FR-010). The
+    // claim under test is only that the approver hears nothing about the
+    // person they just approved.
+    const applicantApproveId = await userIdFor(applicantApproveEmail);
+    const adminAJoinedActors = await getInAppActorIdsForType(
+      adminAEmail,
+      'ORGANIZATION_ADMIN_ASSOCIATE_JOINED',
+      orgO.id
+    );
+    expect(adminAJoinedActors).not.toContain(applicantApproveId);
   });
 });
 
@@ -352,17 +374,34 @@ zApplicantTest.describe('US3-AS8 — a zero-ADMIN organization escalates the app
   }) => {
     await applyToAssociateViaUi(page, orgZ.nameID, `US3-AS8 application ${runSuffix}`);
 
-    const [mails] = await getMailsData();
-    const escalation = (mails as Array<{ toAddresses: string[]; subject: string; body: string }>).filter(m =>
-      m.subject.includes(`applied to associate with ${orgZ.displayName}`)
-    );
-    expect(escalation.length).toBe(1);
+    // Notification delivery is fire-and-forget: the apply mutation returns
+    // before the escalation mail is sent, so reading the mailbox once races it.
+    let escalation: Array<{ toAddresses: string[]; subject: string; body: string }> = [];
+    await expect
+      .poll(
+        async () => {
+          const [mails] = await getMailsData();
+          escalation = (mails as Array<{ toAddresses: string[]; subject: string; body: string }>).filter(m =>
+            m.subject.includes(`applied to associate with ${orgZ.displayName}`)
+          );
+          return escalation.length;
+        },
+        { timeout: 20_000 }
+      )
+      .toBe(1);
     expect(escalation[0].body).toMatch(/no administrators/i);
 
     // The owner (GLOBAL_ADMIN kept OWNER when ADMIN was stripped in beforeAll)
     // gets no in-app row for this event.
-    const ownerTypes = await getInAppNotificationTypes(adminEmail);
-    expect(ownerTypes).not.toContain('ORGANIZATION_ADMIN_ASSOCIATE_APPLICATION');
+    // Scoped to orgZ. `adminEmail` is the shared platform admin, who collects
+    // rows of this type from every other organization the suite touches, so an
+    // unscoped "has no row of this type" assertion can only ever fail.
+    const ownerApplicationActors = await getInAppActorIdsForType(
+      adminEmail,
+      'ORGANIZATION_ADMIN_ASSOCIATE_APPLICATION',
+      orgZ.id
+    );
+    expect(ownerApplicationActors).toEqual([]);
   });
 });
 

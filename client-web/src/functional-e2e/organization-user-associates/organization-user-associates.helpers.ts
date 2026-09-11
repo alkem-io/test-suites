@@ -223,6 +223,61 @@ export const getInAppNotificationTypes = async (email: string): Promise<string[]
   return res.body.data!.me.notifications.inAppNotifications.map(n => n.type);
 };
 
+const IN_APP_ASSOCIATE_ACTOR_QUERY = `
+  query GetOrgAssociateActorInAppNotifications($types: [NotificationEvent!]) {
+    me {
+      notifications(filter: { types: $types }) {
+        inAppNotifications {
+          id
+          type
+          payload {
+            type
+            ... on InAppNotificationPayloadOrganizationAssociateActor {
+              actor { id }
+              organization { id }
+            }
+          }
+        }
+      }
+    }
+  }`;
+
+/**
+ * The ids of the actors carried by this persona's in-app rows of `type` for
+ * `organizationId`.
+ *
+ * Scoped on purpose. An admin accumulates rows of the same type from every
+ * DIRECT role assignment made on the organization — including the ones a
+ * fixture performs while setting the walk up (FR-010: a direct assignment DOES
+ * produce "joined"). So "this persona has no row of this type at all" is an
+ * assertion that can only ever fail; the real claim is "no row of this type
+ * for THIS actor".
+ */
+export const getInAppActorIdsForType = async (
+  email: string,
+  type: string,
+  organizationId: string
+): Promise<string[]> => {
+  const bearerToken = await getUserToken(email);
+  const res = await postGraphqlRaw<{
+    me: {
+      notifications: {
+        inAppNotifications: Array<{
+          type: string;
+          payload?: { actor?: { id: string } | null; organization?: { id: string } | null } | null;
+        }>;
+      };
+    };
+  }>(IN_APP_ASSOCIATE_ACTOR_QUERY, { bearerToken, variables: { types: [type] } });
+  if ((res.body.errors ?? []).length > 0) {
+    throw new Error(`getInAppActorIdsForType failed for ${email}: ${JSON.stringify(res.body.errors)}`);
+  }
+  return res.body.data!.me.notifications.inAppNotifications
+    .filter(n => n.payload?.organization?.id === organizationId)
+    .map(n => n.payload?.actor?.id)
+    .filter((id): id is string => Boolean(id));
+};
+
 export const runSuffix = UniqueIDGenerator.getID();
 
 /** Registers a fresh persona via the raw Kratos API (no UI, no mailbox

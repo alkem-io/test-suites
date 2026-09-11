@@ -10,8 +10,17 @@ queue, all reachable from `client-web/.env`.
 
 ```bash
 cd client-web
-UI_HEADLESS=true pnpm exec playwright test src/functional-e2e/organization-user-associates
+UI_HEADLESS=true pnpm exec playwright test --workers=1 src/functional-e2e/organization-user-associates
 ```
+
+**`--workers=1` is not optional.** The three walks each provision around ten
+Kratos identities, and every registration completes by polling one shared
+MailSlurper mailbox for its verification link. Run in parallel they saturate
+that round-trip and the harness's 30 s axios ceiling starts expiring mid-
+`beforeAll`, which surfaces as `timeout of 30000ms exceeded` with a hook that
+fails in 0 ms and takes its whole file down as "did not run" — a failure that
+says nothing about the product. Serially the same specs pass. Any spec here
+that reads the mailbox or registers identities has the same constraint.
 
 These walks are tagged `@forge-acceptance` and require a live stack, so they
 stay out of the repo's default gate commands (there is no CI job that

@@ -56,6 +56,23 @@ async function dismissNewDesignDialog(page: Page): Promise<void> {
  * run when every spec logged in for itself.
  */
 /**
+ * The first/last name a persona's identity gets, derived from the email exactly
+ * as `registerTestUser` derives it from a user name.
+ *
+ * This MUST match, because two paths can create the same identity and whichever
+ * runs first decides the display name for good: a spec's `beforeAll` calling
+ * `registerTestUser`, and this fixture, whose `storageState` login runs BEFORE
+ * any hook in the file. When the two disagreed, a persona provisioned here was
+ * rendered as "us3appapprove3cde8 E2E" while the spec looked for the hyphenated
+ * "us3-app-approve-3cde8" it had asked `registerTestUser` for — so a row that was
+ * plainly on screen never matched.
+ */
+function personaName(email: string): [string, string] {
+  const parts = email.split('@')[0].split('.');
+  return [parts[0], parts.length > 1 ? parts[1] : parts[0]];
+}
+
+/**
  * Registers + verifies `email` in Kratos if no identity exists for it yet.
  *
  * Returns quietly when the identity already exists — Kratos rejects a duplicate
@@ -64,10 +81,9 @@ async function dismissNewDesignDialog(page: Page): Promise<void> {
  * attempt produces the real, more informative error.
  */
 async function ensureIdentityExists(email: string): Promise<void> {
-  const local = email.split('@')[0];
-  const firstName = local.replace(/[^a-zA-Z0-9]/g, '').slice(0, 24) || 'Persona';
+  const [firstName, lastName] = personaName(email);
   try {
-    const { verificationFlowId } = await registerInKratosOrFail(firstName, 'E2E', email);
+    const { verificationFlowId } = await registerInKratosOrFail(firstName, lastName, email);
     await verifyInKratosOrFail(email, verificationFlowId);
     console.info(`[auth] provisioned missing identity ${email}`);
   } catch {

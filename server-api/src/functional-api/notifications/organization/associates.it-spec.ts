@@ -221,16 +221,46 @@ describe('Organization associate invitations — the invitee is told (US2-AS1)',
     expect(row).toBeDefined();
     expect(row?.payload?.invitation?.extraRoles).toEqual([RoleName.Admin]);
 
-    await eventOnRoleSetInvitation(
-      invitationId,
-      'REJECT',
-      TestUser.NON_SPACE_MEMBER
+    // Drain this rejection's own notifications before the test ends. Declining
+    // emails the same three admins asynchronously, and `dispatchNotification`
+    // is fire-and-forget: left unawaited, those three mails arrive AFTER the
+    // next test's `deleteMailSlurperMails()` and are collected as if they were
+    // its own — which is exactly how the ACCEPT test came to assert on a
+    // "declined" subject and fail, taking the two tests after it down with it.
+    await deleteMailSlurperMails();
+    await expectExactMailsAfter(
+      () =>
+        eventOnRoleSetInvitation(
+          invitationId,
+          'REJECT',
+          TestUser.NON_SPACE_MEMBER
+        ),
+      3 // organizationAdmin + subspaceAdmin + spaceMember
     );
   });
 });
 
+/**
+ * Prune the mailbox so that what follows sees only the mail the NEXT action
+ * produces.
+ *
+ * `deleteMailSlurperMails()` on its own is not a barrier: notification
+ * delivery is fire-and-forget, so a mutation returns before its emails are
+ * sent and mail triggered *before* the prune lands *after* it — where the next
+ * assertion counts it as its own. That is what made the ACCEPT case read the
+ * invitation mail as a fourth "acceptance", and the APPROVE case read the
+ * three "applied" mails as the approval's. Wait for the in-flight mail to
+ * arrive, THEN prune. Requires the mailbox to have been pruned before the
+ * action that produced it, since the wait counts the whole mailbox.
+ */
+const pruneAfterInFlight = async (inFlight: number) => {
+  await waitForMailsCountAtLeast(inFlight);
+  await deleteMailSlurperMails();
+};
+
 describe('Organization associate invitations — the response is told to the other admins (US2-AS2/AS3/AS5)', () => {
   test('ACCEPT notifies every admin (never the acceptor) and produces no "joined" for this acceptance', async () => {
+    await deleteMailSlurperMails();
     const invite = await inviteForEntryRoleOnRoleSet(
       baseScenario.organization.roleSetId,
       [TestUserManager.users.nonSpaceMember.id],
@@ -241,7 +271,7 @@ describe('Organization associate invitations — the response is told to the oth
     );
     const invitationId = getSingleInvitationResult(invite)!.invitation!.id;
 
-    await deleteMailSlurperMails();
+    await pruneAfterInFlight(1); // the invitee's own invitation mail
     const [mailItems] = await expectExactMailsAfter(
       () =>
         eventOnRoleSetInvitation(
@@ -297,18 +327,12 @@ describe('Organization associate invitations — the response is told to the oth
       profileData: { displayName: 'Owner Three' },
     });
     try {
-      await assignRoleToUser(
-        owner2.id,
-        baseScenario.organization.roleSetId,
-        RoleName.Owner
-      );
-      await assignRoleToUser(
-        owner3.id,
-        baseScenario.organization.roleSetId,
-        RoleName.Owner
-      );
-      // qaUser + owner2 + owner3 = 3 (the cap).
-
+      // Order matters: the cap must be consumed AFTER the invitation exists.
+      // 062 validates the extra-role cap at invite time too (FR-002), so
+      // filling it first refuses the invitation outright and the accept-time
+      // withheld-role path this test is about can never be reached. Same note
+      // as US2-AS5 in organization-associate-invitation.it-spec.ts.
+      await deleteMailSlurperMails();
       const invite = await inviteForEntryRoleOnRoleSet(
         baseScenario.organization.roleSetId,
         [TestUserManager.users.subsubspaceMember.id],
@@ -319,7 +343,19 @@ describe('Organization associate invitations — the response is told to the oth
       );
       const invitationId = getSingleInvitationResult(invite)!.invitation!.id;
 
-      await deleteMailSlurperMails();
+      await assignRoleToUser(
+        owner2.id,
+        baseScenario.organization.roleSetId,
+        RoleName.Owner
+      );
+      await assignRoleToUser(
+        owner3.id,
+        baseScenario.organization.roleSetId,
+        RoleName.Owner
+      );
+      // qaUser + owner2 + owner3 = 3 (the cap), so Owner cannot be granted on accept.
+
+      await pruneAfterInFlight(1); // the invitee's own invitation mail
       const [mailItems] = await expectExactMailsAfter(
         () =>
           eventOnRoleSetInvitation(
@@ -346,6 +382,7 @@ describe('Organization associate invitations — the response is told to the oth
   });
 
   test('REJECT notifies the admins with "declined"', async () => {
+    await deleteMailSlurperMails();
     const invite = await inviteForEntryRoleOnRoleSet(
       baseScenario.organization.roleSetId,
       [TestUserManager.users.subsubspaceAdmin.id],
@@ -356,7 +393,7 @@ describe('Organization associate invitations — the response is told to the oth
     );
     const invitationId = getSingleInvitationResult(invite)!.invitation!.id;
 
-    await deleteMailSlurperMails();
+    await pruneAfterInFlight(1); // the invitee's own invitation mail
     const [mailItems] = await expectExactMailsAfter(
       () =>
         eventOnRoleSetInvitation(
@@ -409,6 +446,7 @@ describe('Organization associate applications — the admins are told, the appli
   });
 
   test('APPROVE tells the applicant ("approved") and the OTHER admins ("joined", approver excluded); REJECT tells the applicant ("declined")', async () => {
+    await deleteMailSlurperMails();
     const applyApprove = await applyToAssociateWithOrganization(
       baseScenario.organization.roleSetId,
       'note',
@@ -417,7 +455,7 @@ describe('Organization associate applications — the admins are told, the appli
     const approveAppId =
       applyApprove?.data?.applyForEntryRoleOnRoleSet?.id ?? '';
 
-    await deleteMailSlurperMails();
+    await pruneAfterInFlight(3); // the three "applied to associate" admin mails
     const [approveMails] = await expectExactMailsAfter(
       () =>
         eventOnRoleSetApplication(
@@ -452,6 +490,7 @@ describe('Organization associate applications — the admins are told, the appli
       RoleName.Associate
     ).catch(() => undefined);
 
+    await deleteMailSlurperMails();
     const applyReject = await applyToAssociateWithOrganization(
       baseScenario.organization.roleSetId,
       'note',
@@ -460,7 +499,7 @@ describe('Organization associate applications — the admins are told, the appli
     const rejectAppId =
       applyReject?.data?.applyForEntryRoleOnRoleSet?.id ?? '';
 
-    await deleteMailSlurperMails();
+    await pruneAfterInFlight(3); // the three "applied to associate" admin mails
     const [rejectMails] = await expectExactMailsAfter(
       () =>
         eventOnRoleSetApplication(
