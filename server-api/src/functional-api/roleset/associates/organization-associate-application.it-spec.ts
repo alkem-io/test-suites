@@ -18,7 +18,11 @@ import {
   deleteApplication,
 } from '../application/application.request.params';
 import { eventOnRoleSetApplication } from '../roleset-events.request.params';
-import { getErrorCode, getRoleSetApplicationForm } from '../roleset.request.params';
+import {
+  getErrorCode,
+  getRoleSetApplicationForm,
+  usersInRoles,
+} from '../roleset.request.params';
 import { assignRoleToUser, removeRoleFromUser } from '../roles-request.params';
 import {
   getOrganizationAssociateEligibility,
@@ -210,6 +214,30 @@ describe('Organization associate applications (US3)', () => {
     expect(
       eligibilityAfterApprove?.data?.organization.roleSet.myMembershipStatus
     ).toEqual(CommunityMembershipStatus.Member);
+
+    // An application carries NO role (operator ruling R44): approval makes the
+    // applicant a plain ASSOCIATE and an admin changes the role afterwards by
+    // hand. Membership status alone would not catch an approval that also
+    // granted ADMIN or OWNER, so read the roles themselves.
+    const rolesAfterApprove = await usersInRoles(
+      roleSetId,
+      [RoleName.Associate, RoleName.Admin, RoleName.Owner],
+      TestUser.GLOBAL_ADMIN
+    );
+    const idsByRole = new Map<string, string[]>(
+      (rolesAfterApprove?.data?.lookup?.roleSet?.usersInRoles ?? []).map(
+        (r: { role: string; users: { id: string }[] }) => [
+          r.role,
+          r.users.map(u => u.id),
+        ]
+      )
+    );
+    const applicantId = TestUserManager.users.subsubspaceMember.id;
+    expect(idsByRole.get(RoleName.Associate)).toEqual(
+      expect.arrayContaining([applicantId])
+    );
+    expect(idsByRole.get(RoleName.Admin) ?? []).not.toContain(applicantId);
+    expect(idsByRole.get(RoleName.Owner) ?? []).not.toContain(applicantId);
 
     await removeRoleFromUser(
       TestUserManager.users.subsubspaceMember.id,
