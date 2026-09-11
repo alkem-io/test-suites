@@ -79,6 +79,7 @@ let as2Invitee1: Persona; // AS2: invited as Associate; AS7 revokes this exact i
 let as2Invitee2: Persona; // AS2: invited as Associate + Owner
 let as4AlreadyAssociate: Persona; // AS4: already an associate
 let as4AlreadyInvited: Persona; // AS4: already has a pending invitation
+let as4AlreadyInvitedInvitationId: string; // the pre-seeded invitation AS4 re-invites against
 let as4OpenApplication: Persona; // AS4: has an open application
 let as3AdminOverflow: Persona; // AS3: offered Admin once the cap is full
 let as3OwnerOverflow: Persona; // AS3: offered Owner once the cap is full
@@ -92,7 +93,17 @@ let as3OwnerOverflow: Persona; // AS3: offered Owner once the cap is full
  * rationale as us7-pending-lists-integrity.spec.ts / 054-delete-own-account),
  * so every call these personas make goes through `postGraphqlRaw`. */
 const registerPersona = async (email: string, firstName: string): Promise<Persona> => {
-  const { verificationFlowId } = await registerInKratosOrFail(firstName, 'US1E2E', email);
+  // Idempotent: the authenticated-session fixture resolves BEFORE this hook and
+  // provisions any UI persona it has to log in as, so for those three emails the
+  // identity already exists and Kratos answers 400. That is not a failure — the
+  // display name below is read back from the server rather than assumed, so an
+  // identity created either way is equally usable.
+  let verificationFlowId: string | undefined;
+  try {
+    ({ verificationFlowId } = await registerInKratosOrFail(firstName, 'US1E2E', email));
+  } catch {
+    // already registered — fall through to verification, which is also idempotent
+  }
   await verifyInKratosOrFail(email, verificationFlowId);
   const token = await getUserToken(email);
   const meRes = await postGraphqlRaw<{ me: { user: { id: string; profile: { displayName: string } } } }>(
@@ -151,6 +162,27 @@ const assignOrgRole = async (
   }
 };
 
+/** Grants `role` to each filler until the role set's cap refuses the next one,
+ * then stops. The caller only cares that the cap ends up full; the number of
+ * grants that takes depends on who already holds the role (an organization's
+ * creator holds ADMIN from the moment it exists). Any error other than the cap
+ * being reached is re-thrown. */
+const fillRoleToCap = async (
+  roleSetID: string,
+  fillers: Array<{ id: string }>,
+  role: RoleName
+): Promise<void> => {
+  for (const filler of fillers) {
+    await assignOrgRole(roleSetID, filler.id, RoleName.Associate);
+    try {
+      await assignOrgRole(roleSetID, filler.id, role);
+    } catch (error) {
+      if (String(error).includes('ROLESET_POLICY_ROLE_LIMITS_VIOLATED')) return;
+      throw error;
+    }
+  }
+};
+
 /** Invites via the typed mutation as an authorized TestUser persona. Returns
  * the raw wrapper result (never throws on a non-"sent" typed outcome —
  * AS3/AS4/AS6 assert on those). */
@@ -174,6 +206,14 @@ const inviteForRoles = async (
 
 baseTest.beforeAll(async () => {
   baseTest.setTimeout(300_000);
+
+  // `TestUserManager.users` is a per-process map: global-setup runs in its own
+  // process, so a worker starts with it empty. The sibling specs get it filled
+  // as a side effect of `TestScenarioFactory.createBaseScenario`; this file
+  // creates its organizations directly, so it has to populate the map itself —
+  // without it every `graphqlErrorWrapper` call fails with "UserModel with type
+  // ... not found".
+  await TestUserManager.populateUserModelMap();
 
   [orgMain, orgAS3Admin, orgAS3Owner] = await Promise.all([
     createTestOrganization('Main'),
@@ -232,6 +272,8 @@ baseTest.beforeAll(async () => {
       `AS4 pre-seed invitation failed: ${JSON.stringify(preSeededInvite.error ?? preSeededInvite.data)}`
     );
   }
+  as4AlreadyInvitedInvitationId =
+    preSeededInvite.data!.inviteForEntryRoleOnRoleSet![0]!.invitation!.id;
 
   const preSeededApplication = await postGraphqlRaw<{ applyForEntryRoleOnRoleSet: { id: string } }>(
     'mutation($roleSetID: UUID!) { applyForEntryRoleOnRoleSet(applicationData: { roleSetID: $roleSetID, questions: [] }) { id } }',
@@ -252,10 +294,11 @@ baseTest.beforeAll(async () => {
     TestUserManager.users.subsubspaceMember,
     TestUserManager.users.nonSpaceMember,
   ];
-  for (const filler of adminFillers) {
-    await assignOrgRole(orgAS3Admin.roleSetId, filler.id, RoleName.Associate);
-    await assignOrgRole(orgAS3Admin.roleSetId, filler.id, RoleName.Admin);
-  }
+  // Fill until the cap actually bites rather than assuming the organization
+  // starts with zero admins — its creator already holds ADMIN, so granting all
+  // six fillers would ask for a seventh and fail. What AS3 needs is simply that
+  // the cap is FULL; how many grants that took is irrelevant.
+  await fillRoleToCap(orgAS3Admin.roleSetId, adminFillers, RoleName.Admin);
 
   // AS3 owner-cap fixture: three granted OWNER holders on a dedicated
   // organization.
@@ -264,10 +307,7 @@ baseTest.beforeAll(async () => {
     TestUserManager.users.subspaceAdmin,
     TestUserManager.users.subsubspaceAdmin,
   ];
-  for (const filler of ownerFillers) {
-    await assignOrgRole(orgAS3Owner.roleSetId, filler.id, RoleName.Associate);
-    await assignOrgRole(orgAS3Owner.roleSetId, filler.id, RoleName.Owner);
-  }
+  await fillRoleToCap(orgAS3Owner.roleSetId, ownerFillers, RoleName.Owner);
 });
 
 baseTest.afterAll(async () => {
@@ -475,7 +515,14 @@ baseTest.describe('US1-AS4 — pre-existing state produces the typed outcome, ne
     expect(res.data?.inviteForEntryRoleOnRoleSet?.[0]?.type).toEqual(
       RoleSetInvitationResultType.AlreadyInvitedToRoleSet
     );
-    expect(res.data?.inviteForEntryRoleOnRoleSet?.[0]?.invitation).toBeFalsy();
+    // ALREADY_INVITED carries the EXISTING invitation rather than nothing —
+    // shipped behaviour on both role-set types (server#5088, 061 R36). "No
+    // second row" means the id is the original invitation's, not that the field
+    // is empty. The other typed outcomes here really do create nothing, so they
+    // keep asserting falsy.
+    expect(res.data?.inviteForEntryRoleOnRoleSet?.[0]?.invitation?.id).toEqual(
+      as4AlreadyInvitedInvitationId
+    );
   });
 
   baseTest('inviting a user with an open application returns the "has an open application" typed outcome', async () => {

@@ -2,6 +2,7 @@ import { test as base, Browser, BrowserContext, Page } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 import { LoginPage } from '@src/functional-e2e/space/pages';
+import { registerInKratosOrFail, verifyInKratosOrFail } from '@alkemio/tests-lib';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
@@ -54,6 +55,27 @@ async function dismissNewDesignDialog(page: Page): Promise<void> {
  * SPA / login-form render — the exact failure mode that flaked the full-suite
  * run when every spec logged in for itself.
  */
+/**
+ * Registers + verifies `email` in Kratos if no identity exists for it yet.
+ *
+ * Returns quietly when the identity already exists — Kratos rejects a duplicate
+ * registration, which is exactly the signal we want and costs one request.
+ * Never throws: if provisioning fails for any other reason, the caller's login
+ * attempt produces the real, more informative error.
+ */
+async function ensureIdentityExists(email: string): Promise<void> {
+  const local = email.split('@')[0];
+  const firstName = local.replace(/[^a-zA-Z0-9]/g, '').slice(0, 24) || 'Persona';
+  try {
+    const { verificationFlowId } = await registerInKratosOrFail(firstName, 'E2E', email);
+    await verifyInKratosOrFail(email, verificationFlowId);
+    console.info(`[auth] provisioned missing identity ${email}`);
+  } catch {
+    // Already exists (the common case for seeded personas), or Kratos refused
+    // for another reason — either way, let the login attempt speak.
+  }
+}
+
 export async function ensurePersonaState(
   browser: Browser,
   email: string
@@ -78,6 +100,16 @@ export async function ensurePersonaState(
   await fs.promises.mkdir(path.dirname(statePath), { recursive: true });
 
   console.info(`[auth] establishing session for ${email} (first use this run)`);
+
+  // Playwright resolves this `storageState` fixture BEFORE the spec's
+  // `beforeAll` runs, so a persona the spec registers in `beforeAll` does not
+  // exist yet at first login and Kratos answers "invalid credentials". Rather
+  // than reorder every spec, provision the identity on demand — but only when
+  // it genuinely does not exist: registration of an existing identity fails,
+  // and in that case the original login error is the honest one to report
+  // (a wrong password must not be masked by a silent re-registration).
+  await ensureIdentityExists(email);
+
   const maxAttempts = 3;
   let lastError: unknown;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
