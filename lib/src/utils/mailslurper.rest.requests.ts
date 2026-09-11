@@ -23,8 +23,14 @@ export const getMails = async () => {
 
 export const getMailsData = async () => {
   const response = await getMails();
-  const emailsData = response.body.mailItems;
-  const emailsCount = response.body.totalRecords;
+  // MailSlurper omits `mailItems` entirely for an empty inbox rather than
+  // returning []. Every caller treats this as an array (`.filter`, `.find`),
+  // so an inbox that is legitimately empty — precisely the state a negative
+  // "no mail was sent" assertion creates — threw
+  // `Cannot read properties of undefined (reading 'filter')` instead of
+  // asserting. Normalize here, at the single reader, not in each spec.
+  const emailsData = response.body.mailItems ?? [];
+  const emailsCount = response.body.totalRecords ?? 0;
 
   return [emailsData, emailsCount];
 };

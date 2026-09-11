@@ -64,6 +64,12 @@ fragment userSettingsFragment on UserSettings {
         push
         __typename
       }
+      adminSpaceCommunityInvitation {
+        email
+        inApp
+        push
+        __typename
+      }
       __typename
     }
     space {
@@ -75,6 +81,12 @@ fragment userSettingsFragment on UserSettings {
           __typename
         }
         collaborationCalloutContributionCreated {
+          email
+          inApp
+          push
+          __typename
+        }
+        communityInvitationResponse {
           email
           inApp
           push

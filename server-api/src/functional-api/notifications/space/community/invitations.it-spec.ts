@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import { updateSpaceSettings } from '@functional-api/journey/space/space.request.params';
 import {
   delay,
@@ -313,6 +313,10 @@ describe('Notifications - invitations', () => {
         type: 'INVITATION_TO_PARENT_NOT_AUTHORIZED',
         invitation: null,
         platformInvitation: null,
+        // Nullable informational notice on the result (061) — the shared mutation
+        // document selects it, so it is present and null on every outcome that
+        // carries no notice.
+        notice: null,
         __typename: 'RoleSetInvitationResult',
       },
     ]);
