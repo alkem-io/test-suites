@@ -21,8 +21,11 @@ export default defineConfig({
     trace: 'on-first-retry',
     headless: false,
   },
-  timeout: (process.env.ALKEMIO_BASE_URL || '').includes('localhost') ? 30000 : 60000,
-  expect: { timeout: 15000 },
+  // The organization-associates specs register ~10 Kratos personas and 3
+  // organizations in beforeAll; a hook inherits this timeout and 30s is not
+  // close to enough. `baseTest.setTimeout()` inside the hook does not raise it.
+  timeout: 300000,
+  expect: { timeout: 20000 },
   projects: [
     {
       name: 'Chromium (bundled)',
