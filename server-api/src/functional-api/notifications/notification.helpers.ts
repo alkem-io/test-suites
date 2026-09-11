@@ -34,6 +34,31 @@ export const notif = (v: boolean) => ({ email: v, inApp: v });
 export const notifWithPush = (v: boolean) => ({ email: v, inApp: v, push: v });
 
 /**
+ * Mirrors a settings object with every notification channel turned back ON.
+ *
+ * The personas these specs mute are seeded globally and outlive the file that
+ * muted them, so a spec that leaves one muted silently changes the expected
+ * mail counts of every spec that runs after it. Pass the SAME object that was
+ * used to mute, and this returns it with each `{email, inApp, push}` leaf set
+ * true — so the restore cannot drift from the mute.
+ */
+export const allChannelsOn = <T>(settings: T): T => {
+  const walk = (node: unknown): unknown => {
+    if (node === null || typeof node !== 'object') return node;
+    const entries = Object.entries(node as Record<string, unknown>);
+    const isChannelLeaf = entries.every(
+      ([k, v]) =>
+        ['email', 'inApp', 'push'].includes(k) && typeof v === 'boolean'
+    );
+    if (entries.length > 0 && isChannelLeaf) {
+      return Object.fromEntries(entries.map(([k]) => [k, true]));
+    }
+    return Object.fromEntries(entries.map(([k, v]) => [k, walk(v)]));
+  };
+  return walk(settings) as T;
+};
+
+/**
  * Strip the read-only keys (`id`, `__typename`) that come back on a settings
  * QUERY but are rejected by the settings MUTATION input, so a snapshot taken
  * with `getUserData` can be fed straight back to `updateUserSettings`.
