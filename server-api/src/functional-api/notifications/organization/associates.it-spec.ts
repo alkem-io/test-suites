@@ -368,6 +368,11 @@ describe('Organization associate invitations — the response is told to the oth
       const adminMail = mailItems.find((m: any) =>
         m.toAddresses?.includes(TestUserManager.users.organizationAdmin.email)
       );
+      // Assert the discriminating half, not just the role word: the ordinary
+      // acceptance copy also contains "Owner" (it names the offered role), so
+      // `toContain('Owner')` alone passes even if the withheld sentence is
+      // dropped entirely — which is the silent degradation FR-003 forbids.
+      expect(adminMail?.body).toMatch(/could not be granted/i);
       expect(adminMail?.body).toContain('Owner');
 
       await removeRoleFromUser(
