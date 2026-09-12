@@ -27,6 +27,7 @@ import {
   postGraphqlRaw,
   registerPersona,
   runSuffix,
+  TestUserManager,
   type OrgFixture,
 } from './organization-user-associates.helpers';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
@@ -56,6 +57,10 @@ const userIdFor = async (email: string): Promise<string> => {
 };
 
 baseTest.beforeAll(async () => {
+  // createTestOrganization authenticates through TestUserManager; without this
+  // its model map is undefined and the helper throws before anything is created.
+  await TestUserManager.populateUserModelMap();
+
   adminEmail = await registerPersona('us2-admin');
   accepterEmail = await registerPersona('us2-accepter');
   declinerEmail = await registerPersona('us2-decliner');

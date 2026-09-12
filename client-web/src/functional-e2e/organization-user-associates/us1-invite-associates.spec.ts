@@ -407,7 +407,13 @@ orgAdminNotOwnerTest.describe('US1-AS2 → AS7 — invite, list, then revoke (ch
       const row = page.getByRole('row', { name: new RegExp(as2Invitee1.displayName) });
       await expect(row).toBeVisible();
       await row.getByRole('button', { name: 'Delete' }).click();
-      await expect(page.getByRole('row', { name: new RegExp(as2Invitee1.displayName) })).toHaveCount(0);
+      // Revoking destroys a pending invitation, so it is confirmed. Answer the
+      // dialog explicitly: while it is open the table behind it is inert, so a
+      // bare row-count assertion would pass without the revoke ever happening.
+      await page.getByRole('button', { name: 'Revoke invitation' }).click();
+      await expect(page.getByRole('row', { name: new RegExp(as2Invitee1.displayName) })).toHaveCount(0, {
+        timeout: 10_000,
+      });
     }
   );
 

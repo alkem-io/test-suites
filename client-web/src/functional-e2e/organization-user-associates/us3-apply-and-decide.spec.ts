@@ -281,6 +281,8 @@ adminATest.describe('US3-AS4 (decision) — adminA rejects the AS4 applicant', (
     const row = page.getByRole('row', { name: new RegExp(applicantRejectName, 'i') });
     await expect(row).toBeVisible({ timeout: 10_000 });
     await row.getByRole('button', { name: 'Reject' }).click();
+    // Rejecting is confirmed (Golden Rule 9) — answer the dialog.
+    await page.getByRole('button', { name: 'Reject application' }).click();
     await expect(page.getByRole('row', { name: new RegExp(applicantRejectName, 'i') })).toHaveCount(0, {
       timeout: 10_000,
     });
