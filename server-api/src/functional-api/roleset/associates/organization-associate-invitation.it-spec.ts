@@ -601,6 +601,121 @@ describe('Organization associate invitations — the invitee responds (US2)', ()
     await deleteInvitation(secondResult!.invitation!.id);
   });
 
+  test('US2-AS8: an offered role is withheld when the offerer has lost organization-admin standing by accept time (stale-authority re-check)', async () => {
+    // An invitation never expires and the accept path only checks the
+    // invitee's own privilege, so the server re-checks at accept time that
+    // whoever offered the role can still offer it. Offerer: spaceAdmin
+    // (ADMIN + associate). Invite [OWNER] while they administer, strip their
+    // ADMIN, then accept: ASSOCIATE is granted, OWNER is withheld.
+    const offerer = TestUserManager.users.spaceAdmin.id;
+    let invitationId: string | undefined;
+    try {
+      const invite = await inviteForEntryRoleOnRoleSet(
+        roleSetId,
+        [TestUserManager.users.subsubspaceMember.id],
+        [],
+        message,
+        [RoleName.Owner],
+        TestUser.SPACE_ADMIN
+      );
+      invitationId = getSingleInvitationResult(invite)!.invitation!.id;
+
+      const stripped = await removeRoleFromUser(
+        offerer,
+        roleSetId,
+        RoleName.Admin
+      );
+      expect(stripped?.error).toBeUndefined();
+
+      const accepted = await eventOnRoleSetInvitation(
+        invitationId,
+        'ACCEPT',
+        TestUser.SUBSUBSPACE_MEMBER
+      );
+      expect(accepted?.error).toBeUndefined();
+      expect(
+        (accepted?.data as any)?.eventOnInvitation?.extraRolesWithheld
+      ).toEqual([RoleName.Owner]);
+
+      const roles = await usersInRoles(
+        roleSetId,
+        [RoleName.Associate, RoleName.Owner],
+        TestUser.GLOBAL_ADMIN
+      );
+      const byRole = new Map(
+        (roles?.data?.lookup?.roleSet?.usersInRoles ?? []).map((r: any) => [
+          r.role,
+          r.users.map((u: any) => u.id),
+        ])
+      );
+      expect(byRole.get(RoleName.Associate)).toEqual(
+        expect.arrayContaining([TestUserManager.users.subsubspaceMember.id])
+      );
+      expect(byRole.get(RoleName.Owner)).not.toEqual(
+        expect.arrayContaining([TestUserManager.users.subsubspaceMember.id])
+      );
+    } finally {
+      // Restore the offerer's ADMIN first — later tests invite as SPACE_ADMIN.
+      await assignRoleToUser(offerer, roleSetId, RoleName.Admin).catch(
+        () => undefined
+      );
+      await removeRoleFromUser(
+        TestUserManager.users.subsubspaceMember.id,
+        roleSetId,
+        RoleName.Associate
+      ).catch(() => undefined);
+    }
+  });
+
+  test('US2-AS9: an offered role from a platform GLOBAL_SUPPORT offerer (no organization-scoped credential) is granted on accept', async () => {
+    // GLOBAL_ADMIN / GLOBAL_SUPPORT hold ROLESET_ENTRY_ROLE_ASSIGN (and so
+    // INVITE) on every organization without ever being ADMIN/OWNER of it; the
+    // accept-time re-check must count that standing, or every support-issued
+    // invitation silently loses its offered role.
+    const invitee = TestUserManager.users.subsubspaceAdmin.id;
+    try {
+      const invite = await inviteForEntryRoleOnRoleSet(
+        roleSetId,
+        [invitee],
+        [],
+        message,
+        [RoleName.Admin],
+        TestUser.GLOBAL_SUPPORT_ADMIN
+      );
+      const result = getSingleInvitationResult(invite);
+      expect(result?.type).toEqual(
+        RoleSetInvitationResultType.InvitedToRoleSet
+      );
+
+      const accepted = await eventOnRoleSetInvitation(
+        result!.invitation!.id,
+        'ACCEPT',
+        TestUser.SUBSUBSPACE_ADMIN
+      );
+      expect(accepted?.error).toBeUndefined();
+      expect(
+        (accepted?.data as any)?.eventOnInvitation?.extraRolesWithheld
+      ).toEqual([]);
+
+      const roles = await usersInRoles(
+        roleSetId,
+        [RoleName.Admin],
+        TestUser.GLOBAL_ADMIN
+      );
+      const adminIds = (
+        roles?.data?.lookup?.roleSet?.usersInRoles?.[0]?.users ?? []
+      ).map((u: any) => u.id);
+      expect(adminIds).toEqual(expect.arrayContaining([invitee]));
+    } finally {
+      await removeRoleFromUser(invitee, roleSetId, RoleName.Admin).catch(
+        () => undefined
+      );
+      await removeRoleFromUser(invitee, roleSetId, RoleName.Associate).catch(
+        () => undefined
+      );
+    }
+  });
+
   test('an associate-only persona cannot ACCEPT an invitation on someone else\'s behalf', async () => {
     const invite = await inviteForEntryRoleOnRoleSet(
       roleSetId,

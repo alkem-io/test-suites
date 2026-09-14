@@ -15,6 +15,19 @@ import {
 import { getOrganizationRoleSetPending } from '../roleset.request.params';
 import { assignRoleToUser } from '../roles-request.params';
 import {
+  deleteInvitation,
+  inviteForEntryRoleOnRoleSet,
+} from '../invitations/invitation.request.params';
+import { getSingleInvitationResult } from '../roleset.request.params';
+import {
+  applyToAssociateWithOrganization,
+  deleteApplication,
+} from '../application/application.request.params';
+import {
+  createUserDataOrFail,
+  deleteUser,
+} from '@functional-api/contributor-management/user/user.request.params';
+import {
   authorizationPolicyResetOnOrganization,
   getOrganizationAssociateEligibility,
 } from '@functional-api/contributor-management/organization/organization.request.params';
@@ -24,6 +37,14 @@ import { SpacePrivacyMode } from '@alkemio/tests-lib/core/generated/alkemio-sche
 let orgScenario: OrganizationWithSpaceModel;
 let spaceScenario: OrganizationWithSpaceModel;
 let orgResetScenario: OrganizationWithSpaceModel;
+
+// Real pending rows, so the positive assertions below prove the lists are
+// READ (with content), not merely "the field resolved": one application and
+// one invitation on the organization, one invitation on the public Space.
+let orgApplicationId = '';
+let orgInvitationId = '';
+let spaceInvitationId = '';
+let throwawayInviteeId = '';
 
 beforeAll(async () => {
   orgScenario = await TestScenarioFactory.createBaseScenarioOrganization({
@@ -58,13 +79,61 @@ beforeAll(async () => {
   orgResetScenario = await TestScenarioFactory.createBaseScenarioOrganization(
     { name: 'org-authz-reset-loop' }
   );
+
+  // Pending rows. QA_USER applies to the organization (it stays a plain
+  // registered user, which is exactly the persona the refusal tests use);
+  // a throwaway user is invited to the organization and to the Space.
+  const applied = await applyToAssociateWithOrganization(
+    orgScenario.organization.roleSetId,
+    'confidential note',
+    TestUser.QA_USER
+  );
+  orgApplicationId = applied?.data?.applyForEntryRoleOnRoleSet?.id ?? '';
+  expect(orgApplicationId).not.toEqual('');
+
+  const throwaway = await createUserDataOrFail({
+    profileData: { displayName: 'Pending Invitee' },
+  });
+  throwawayInviteeId = throwaway.id;
+  const orgInvite = await inviteForEntryRoleOnRoleSet(
+    orgScenario.organization.roleSetId,
+    [throwawayInviteeId],
+    [],
+    'welcome',
+    [],
+    TestUser.NON_SPACE_MEMBER
+  );
+  orgInvitationId = getSingleInvitationResult(orgInvite)?.invitation?.id ?? '';
+  expect(orgInvitationId).not.toEqual('');
+
+  const spaceInvite = await inviteForEntryRoleOnRoleSet(
+    spaceScenario.space.community.roleSetId,
+    [throwawayInviteeId],
+    [],
+    'welcome',
+    [],
+    TestUser.SPACE_ADMIN
+  );
+  spaceInvitationId =
+    getSingleInvitationResult(spaceInvite)?.invitation?.id ?? '';
+  expect(spaceInvitationId).not.toEqual('');
 });
 
 afterAll(async () => {
+  await deleteInvitation(spaceInvitationId).catch(() => undefined);
+  await deleteInvitation(orgInvitationId).catch(() => undefined);
+  await deleteApplication(orgApplicationId).catch(() => undefined);
+  await deleteUser(throwawayInviteeId).catch(() => undefined);
   await TestScenarioFactory.cleanUpBaseScenario(orgScenario);
   await TestScenarioFactory.cleanUpBaseScenario(spaceScenario);
   await TestScenarioFactory.cleanUpBaseScenario(orgResetScenario);
 });
+
+type PendingResult = Awaited<ReturnType<typeof getOrganizationRoleSetPending>>;
+const applicationIds = (res: PendingResult): string[] =>
+  (res?.data?.lookup?.roleSet?.applications ?? []).map(a => a.id);
+const invitationIds = (res: PendingResult): string[] =>
+  (res?.data?.lookup?.roleSet?.invitations ?? []).map(i => i.id);
 
 describe('Pending-list confidentiality — organizations (US7-AS2, contract §6)', () => {
   test('a plain registered user is refused; ORGANIZATION_ADMIN and ORGANIZATION_OWNER read the pending lists', async () => {
@@ -80,14 +149,25 @@ describe('Pending-list confidentiality — organizations (US7-AS2, contract §6)
       TestUser.NON_SPACE_MEMBER
     );
     expect(asAdmin?.error).toBeUndefined();
-    expect(asAdmin?.data?.lookup?.roleSet?.applications).toBeDefined();
+    expect(applicationIds(asAdmin)).toContain(orgApplicationId);
+    expect(invitationIds(asAdmin)).toContain(orgInvitationId);
 
     const asOwner = await getOrganizationRoleSetPending(
       orgScenario.organization.roleSetId,
       TestUser.GLOBAL_BETA_TESTER
     );
     expect(asOwner?.error).toBeUndefined();
-    expect(asOwner?.data?.lookup?.roleSet?.invitations).toBeDefined();
+    expect(applicationIds(asOwner)).toContain(orgApplicationId);
+    expect(invitationIds(asOwner)).toContain(orgInvitationId);
+  });
+
+  test('the applicant themself (a plain registered user) is still refused — applying grants no read on the lists', async () => {
+    const asApplicant = await getOrganizationRoleSetPending(
+      orgScenario.organization.roleSetId,
+      TestUser.QA_USER
+    );
+    expect(asApplicant?.error?.errors).toBeDefined();
+    expect(asApplicant?.data).toBeUndefined();
   });
 });
 
@@ -108,10 +188,26 @@ describe('Pending-list confidentiality — a PUBLIC Space (US7-AS3, deliberate R
     );
     expect(asSpaceAdmin?.error).toBeUndefined();
     expect(asSpaceAdmin?.data?.lookup?.roleSet?.applications).toBeDefined();
-    expect(asSpaceAdmin?.data?.lookup?.roleSet?.invitations).toBeDefined();
+    expect(invitationIds(asSpaceAdmin)).toContain(spaceInvitationId);
     expect(
       asSpaceAdmin?.data?.lookup?.roleSet?.platformInvitations
     ).toBeDefined();
+  });
+
+  test('an account admin of the hosting organization (cascaded UPDATE, no GRANT) reads the Space pending lists — R46', async () => {
+    // The base scenario's Space is created under its organization's account
+    // and ORGANIZATION_ADMIN administers that organization but is NOT a Space
+    // admin: it holds UPDATE on the Space role set through the account
+    // cascade and never GRANT. Space Settings > Community is gated on UPDATE
+    // and reads these lists, so a GRANT gate would blank it for this persona
+    // (round-2 review finding 1).
+    const asAccountAdmin = await getOrganizationRoleSetPending(
+      spaceScenario.space.community.roleSetId,
+      TestUser.ORGANIZATION_ADMIN
+    );
+    expect(asAccountAdmin?.error).toBeUndefined();
+    expect(invitationIds(asAccountAdmin)).toContain(spaceInvitationId);
+    expect(asAccountAdmin?.data?.lookup?.roleSet?.applications).toBeDefined();
   });
 });
 

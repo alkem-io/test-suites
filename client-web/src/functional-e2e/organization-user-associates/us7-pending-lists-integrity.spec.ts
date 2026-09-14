@@ -38,6 +38,7 @@ import {
   verifyInKratosOrFail,
 } from '@alkemio/tests-lib';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
+import { getInAppActorIdsForType } from './organization-user-associates.helpers';
 import type { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import {
@@ -301,17 +302,27 @@ baseTest.describe('US7-AS1 — the me/roles partition stays exact with organizat
     expect(res.body.errors ?? []).toEqual([]);
     const me = res.body.data!.me;
 
-    // Space rows only, exact count — no over-count from the two org rows.
-    expect(me.communityInvitations.map(i => i.invitation.id)).toEqual([spaceInvitationId]);
-    expect(me.communityApplications).toEqual([]);
-    expect(me.communityInvitationsCount).toBe(1);
+    // SUBSUBSPACE_MEMBER is a globally seeded persona shared with other specs
+    // in the same run, so its lists may already carry unrelated rows: assert
+    // this walk's own fixtures and the partition, never exact totals.
+    const communityInvitationIds = me.communityInvitations.map(i => i.invitation.id);
+    const organizationInvitationIds = me.organizationInvitations.map(i => i.id);
+    const organizationApplicationIds = me.organizationApplications.map(a => a.id);
+
+    // The Space invitation is on the Space field only; the count matches the
+    // Space list (no over-count from the two org rows).
+    expect(communityInvitationIds).toContain(spaceInvitationId);
+    expect(communityInvitationIds).not.toContain(inviteeInvitationId);
+    expect(me.communityApplications.map(a => a.application.id)).not.toContain(inviteeApplicationO2Id);
+    expect(me.communityInvitationsCount).toBe(me.communityInvitations.length);
 
     // The organization rows surface only on their own, separate fields.
-    expect(me.organizationInvitations.map(i => i.id)).toEqual([inviteeInvitationId]);
-    expect(me.organizationInvitations[0].organization.id).toBe(orgO.id);
-    expect(me.organizationApplications.map(a => a.id)).toEqual([inviteeApplicationO2Id]);
-    expect(me.organizationApplications[0].organization.id).toBe(orgO2.id);
-    expect(me.organizationInvitationsCount).toBe(1);
+    expect(organizationInvitationIds).toContain(inviteeInvitationId);
+    expect(organizationInvitationIds).not.toContain(spaceInvitationId);
+    expect(me.organizationInvitations.find(i => i.id === inviteeInvitationId)?.organization.id).toBe(orgO.id);
+    expect(organizationApplicationIds).toContain(inviteeApplicationO2Id);
+    expect(me.organizationApplications.find(a => a.id === inviteeApplicationO2Id)?.organization.id).toBe(orgO2.id);
+    expect(me.organizationInvitationsCount).toBe(me.organizationInvitations.length);
 
     // rolesUser (platform-admin-only view of an arbitrary actor) shows the
     // same Space-only shape — the org invitation must NOT leak in here either.
@@ -392,30 +403,25 @@ baseTest.describe('US7-AS4 — removing an associate deletes their organization 
     // Trigger one "someone applied to associate" event on org O.
     await applyToRoleSet(orgO.roleSetId, TestUser.NON_SPACE_MEMBER);
 
-    const notificationsQuery = async () => {
-      const client = getGraphqlClient();
-      const res = await graphqlErrorWrapper(
-        authToken =>
-          client.MeInAppNotifications(
-            { types: [NotificationEvent.OrganizationAdminAssociateApplication] },
-            { authorization: `Bearer ${authToken}` }
-          ),
-        TestUser.SUBSPACE_ADMIN
-      );
-      if (res.error) {
-        throw new Error(`MeInAppNotifications failed: ${JSON.stringify(res.error)}`);
-      }
-      return res.data!.me.notifications.inAppNotifications;
-    };
+    // SUBSPACE_ADMIN is a globally seeded persona: scope the rows to THIS
+    // organization and THIS applicant (see `getInAppActorIdsForType`), so a
+    // row from another spec can neither satisfy the precondition nor be
+    // required to disappear.
+    const applicantRowsForOrgO = () =>
+      getInAppActorIdsForType(
+        TestUserManager.users.subspaceAdmin.email,
+        NotificationEvent.OrganizationAdminAssociateApplication,
+        orgO.id
+      ).then(ids => ids.filter(id => id === TestUserManager.users.nonSpaceMember.id));
 
-    await expect
-      .poll(async () => (await notificationsQuery()).length, { timeout: 20_000 })
-      .toBeGreaterThan(0);
+    await expect.poll(applicantRowsForOrgO, { timeout: 20_000 }).toEqual([
+      TestUserManager.users.nonSpaceMember.id,
+    ]);
 
     await removeOrgRole(orgO.roleSetId, TestUserManager.users.subspaceAdmin.id, RoleName.Admin);
     await removeOrgRole(orgO.roleSetId, TestUserManager.users.subspaceAdmin.id, RoleName.Associate);
 
-    await expect.poll(async () => (await notificationsQuery()).length, { timeout: 20_000 }).toBe(0);
+    await expect.poll(applicantRowsForOrgO, { timeout: 20_000 }).toEqual([]);
   });
 });
 
