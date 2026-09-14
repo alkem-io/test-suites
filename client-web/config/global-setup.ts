@@ -1,9 +1,11 @@
 import {
   registerAllTestUsers,
+  registerTestUser,
   stringifyConfig,
   testConfiguration,
 } from '@alkemio/tests-lib';
 import dotenv from 'dotenv';
+import { US3_REGISTERED_USER_NAMES } from '../src/functional-e2e/organization-space-invitations/organization-space-invitations.helpers';
 import fs from 'fs';
 import path from 'path';
 
@@ -43,4 +45,16 @@ export default async function globalSetup() {
   );
 
   await registerAllTestUsers();
+
+  // Two extra personas the organization-space-invitations walks need as
+  // ORGANIZATION admins/associates with no pre-existing standing in any Space.
+  // They must exist BEFORE any test's `storageState` fixture drives the login
+  // form: `createPersonaTest` logs in during fixture setup, which precedes
+  // every hook in a spec file, so a spec cannot register its own login persona.
+  // Names are fixed rather than per-run because globalSetup runs in its own
+  // process — a suffix generated in the spec module would not match.
+  // `registerTestUser` is idempotent ("already exists" is a no-op).
+  for (const userName of US3_REGISTERED_USER_NAMES) {
+    await registerTestUser(userName);
+  }
 }

@@ -265,6 +265,19 @@ export default defineConfig({
       timeout: 120_000,
       expect: { timeout: 15_000 },
     },
+    {
+      // Feature 061 (organization space invitations) — US1/US2/US3 acceptance
+      // walks. Each file drives a full SPA invite flow (navigate, expand the
+      // Member Organisations section, open the dialog, search, send, read the
+      // result row) and several also hold a negative mail-window poll
+      // (`assertNoMailTo`) on top of that, so the default 30s/5s budget is
+      // not enough headroom — mirrors Chat avatars/Callout reaction
+      // notifications above.
+      name: 'Organization space invitations',
+      testMatch: ['/organization-space-invitations/*.spec.ts'],
+      timeout: 120_000,
+      expect: { timeout: 15_000 },
+    },
   ],
   // % or number of the available CPUs
   // workers: '100%',
@@ -296,7 +309,12 @@ export default defineConfig({
     channel: 'chrome',
     viewport: { width: 1920, height: 1080 },
 
-    headless: true,
+    /* Honours UI_HEADLESS like every other config in this repo
+     * (playwright.config.ts, .language-offer, .planner). This one hardcoded
+     * `true` while its own docblock above advertised the variable, so
+     * `UI_HEADLESS=false` silently did nothing here — the one config where a
+     * developer most often wants to watch a nightly spec run. */
+    headless: process.env.UI_HEADLESS !== 'false',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-all-retries',
