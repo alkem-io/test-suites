@@ -99,13 +99,30 @@ export const cleanUpTestOrganizations = async (): Promise<void> => {
   // below half-succeeds and leaves an unusable, undeletable organization that
   // also breaks `authorizationPolicyResetAll`.
   const grants = grantedOrgRoles.splice(0, grantedOrgRoles.length);
+  const stillHoldingStanding = new Set<string>();
   for (const g of grants) {
-    await removeOrgRole(g.organizationID, g.roleSetID, g.role);
+    // `removeOrgRole` resolves GraphQL refusals as `{ error }` and transport
+    // failures as `undefined` — neither rejects. Either way the organization
+    // may still hold Space standing, and deleting it in that state is exactly
+    // what produces the half-deleted rows described above. So: skip it.
+    const res = await removeOrgRole(g.organizationID, g.roleSetID, g.role);
+    if (!res || res.error) {
+      stillHoldingStanding.add(g.organizationID);
+      console.error(
+        `[cleanUpTestOrganizations] could not remove ${g.role} from organization ${g.organizationID} on roleSet ${g.roleSetID}: ` +
+          `${JSON.stringify(res?.error ?? 'request failed')}`
+      );
+    }
   }
 
   const ids = createdOrganizationIds.splice(0, createdOrganizationIds.length);
   const undeleted: string[] = [];
+  const skipped: string[] = [];
   for (const id of ids) {
+    if (stillHoldingStanding.has(id)) {
+      skipped.push(id);
+      continue;
+    }
     try {
       const res = await deleteOrganization(id);
       // deleteOrganization resolves GraphQL failures as `{ error }` rather than
@@ -116,6 +133,15 @@ export const cleanUpTestOrganizations = async (): Promise<void> => {
     }
   }
 
+  if (skipped.length > 0) {
+    // Not deleted on purpose: a refused role removal means the organization
+    // still holds Space standing, and deleting it would gut the row. It is
+    // intact and still deletable once its Space roles are removed by hand.
+    console.error(
+      `[cleanUpTestOrganizations] ${skipped.length} organization(s) NOT deleted because a Space role could not be removed first — ` +
+        `remove their Space standing, then delete them: ${skipped.join(', ')}`
+    );
+  }
   if (undeleted.length > 0) {
     // Loud, but NOT thrown: teardown must not replace a real test failure. A
     // half-deleted organization is an environment problem an operator has to

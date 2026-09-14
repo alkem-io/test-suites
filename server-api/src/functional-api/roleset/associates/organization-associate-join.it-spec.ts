@@ -208,7 +208,7 @@ describe('Organization live join door (US4)', () => {
       ).toEqual(false);
       expect(
         eligibility?.data?.organization.myAssociateEligibility.reason
-      ).not.toEqual(OrganizationAssociateEligibilityReason.EligibleToJoin);
+      ).toEqual(OrganizationAssociateEligibilityReason.EligibleToApply);
 
       const join = await callAsEmail(email, (client, auth) =>
         client.joinRoleSet(

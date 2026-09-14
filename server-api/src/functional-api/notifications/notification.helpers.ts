@@ -541,6 +541,37 @@ export const conversationMessageGroupDigestSubject = (
  */
 export const waitForMailsCountAtLeast = async (
   expectedCount: number,
+  options: { timeout?: number; interval?: number } = {}
+): Promise<Awaited<ReturnType<typeof getMailsData>>> =>
+  waitForMailsWhere((_mailItems, total) => total >= expectedCount, options);
+
+/**
+ * Polls Mailslurper until `isSatisfied(mailItems, total)` holds, or the
+ * timeout elapses. Returns the last-observed `[mailItems, total]` tuple either
+ * way — callers assert on it, so a timeout is a normal (informative) test
+ * failure rather than a thrown harness error.
+ *
+ * Two uses, one loop:
+ * - POSITIVE: `isSatisfied` names every expected mail (recipient + subject),
+ *   so the read returns as soon as ALL of them have landed rather than when
+ *   the first `n` of anything did.
+ * - NEGATIVE (quiet period): `isSatisfied` names the mail that must NOT
+ *   arrive. The poll then returns EARLY the moment such a mail appears (the
+ *   caller's `toHaveLength(0)` fails at once), and only runs the full
+ *   `timeout` when the inbox stays clean — so "no mail" means "none within
+ *   the whole delivery bound", never "none yet". `waitForMailsCountAtLeast(1)`
+ *   + `toHaveLength(0)` cannot express that: it passes vacuously when
+ *   nothing at all lands and still returns early on an unrelated mail.
+ */
+export type MailItem = {
+  subject?: string;
+  body?: string;
+  toAddresses?: string[];
+  [key: string]: unknown;
+};
+
+export const waitForMailsWhere = async (
+  isSatisfied: (mailItems: MailItem[], total: number) => boolean,
   {
     timeout = 15_000,
     interval = 1_000,
@@ -549,7 +580,7 @@ export const waitForMailsCountAtLeast = async (
   const start = Date.now();
   let last = await getMailsData();
 
-  while (last[1] < expectedCount && Date.now() - start < timeout) {
+  while (!isSatisfied(last[0] ?? [], last[1]) && Date.now() - start < timeout) {
     await delay(interval);
     last = await getMailsData();
   }

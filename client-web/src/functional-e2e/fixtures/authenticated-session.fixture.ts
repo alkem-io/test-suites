@@ -72,24 +72,42 @@ function personaName(email: string): [string, string] {
   return [parts[0], parts.length > 1 ? parts[1] : parts[0]];
 }
 
+/** Kratos UI message id for "an account with the same identifier exists
+ * already" — the one registration outcome that is NOT a failure here (same id
+ * `registerTestUser` in tests-lib keys on). */
+const KRATOS_IDENTITY_EXISTS_MESSAGE_ID = 4000007;
+
+/** True only for the duplicate-identity refusal. `registerInKratosOrFail`
+ * surfaces Kratos refusals as the raw axios error, whose 400 body carries
+ * `ui.messages[]` with the message id. */
+function isDuplicateIdentityError(error: unknown): boolean {
+  const messages = (
+    error as { response?: { data?: { ui?: { messages?: Array<{ id?: number }> } } } } | undefined
+  )?.response?.data?.ui?.messages;
+  return Array.isArray(messages) && messages.some(m => m?.id === KRATOS_IDENTITY_EXISTS_MESSAGE_ID);
+}
+
 /**
  * Registers + verifies `email` in Kratos if no identity exists for it yet.
  *
- * Returns quietly when the identity already exists — Kratos rejects a duplicate
- * registration, which is exactly the signal we want and costs one request.
- * Never throws: if provisioning fails for any other reason, the caller's login
- * attempt produces the real, more informative error.
+ * Returns quietly ONLY when the identity already exists — Kratos rejects a
+ * duplicate registration, which is exactly the signal we want and costs one
+ * request. Every other registration failure, and every verification failure,
+ * propagates: a persona that was registered but never verified cannot log in,
+ * and the login error that would follow ("invalid credentials") says nothing
+ * about the real cause.
  */
 async function ensureIdentityExists(email: string): Promise<void> {
   const [firstName, lastName] = personaName(email);
+  let verificationFlowId: string | undefined;
   try {
-    const { verificationFlowId } = await registerInKratosOrFail(firstName, lastName, email);
-    await verifyInKratosOrFail(email, verificationFlowId);
-    console.info(`[auth] provisioned missing identity ${email}`);
-  } catch {
-    // Already exists (the common case for seeded personas), or Kratos refused
-    // for another reason — either way, let the login attempt speak.
+    ({ verificationFlowId } = await registerInKratosOrFail(firstName, lastName, email));
+  } catch (error) {
+    if (isDuplicateIdentityError(error)) return; // the common case for seeded personas
+    throw error;
   }
+  await verifyInKratosOrFail(email, verificationFlowId);
+  console.info(`[auth] provisioned missing identity ${email}`);
 }
 
 export async function ensurePersonaState(

@@ -292,11 +292,19 @@ adminATest.describe('US3-AS4 (decision) — adminA rejects the AS4 applicant', (
       .poll(async () => (await getAssociateEligibility(orgO.id, bearerToken)).reason, { timeout: 20_000 })
       .toBe('ELIGIBLE_TO_APPLY');
 
-    const [mails] = await getMailsData();
-    const declined = (mails as Array<{ toAddresses: string[]; subject: string }>).some(
-      m => m.toAddresses.includes(applicantRejectEmail) && m.subject.includes('declined')
-    );
-    expect(declined).toBe(true);
+    // Notification delivery is fire-and-forget: the reject mutation returns
+    // before the mail is sent, so reading the mailbox once races it (AS2/AS8).
+    await expect
+      .poll(
+        async () => {
+          const [mails] = await getMailsData();
+          return (mails as Array<{ toAddresses: string[]; subject: string }>).some(
+            m => m.toAddresses.includes(applicantRejectEmail) && m.subject.includes('declined')
+          );
+        },
+        { timeout: 20_000 }
+      )
+      .toBe(true);
   });
 });
 
@@ -383,8 +391,10 @@ zApplicantTest.describe('US3-AS8 — a zero-ADMIN organization escalates the app
       .poll(
         async () => {
           const [mails] = await getMailsData();
-          escalation = (mails as Array<{ toAddresses: string[]; subject: string; body: string }>).filter(m =>
-            m.subject.includes(`applied to associate with ${orgZ.displayName}`)
+          escalation = (mails as Array<{ toAddresses: string[]; subject: string; body: string }>).filter(
+            m =>
+              m.toAddresses.includes('support@alkem.io') &&
+              m.subject.includes(`applied to associate with ${orgZ.displayName}`)
           );
           return escalation.length;
         },

@@ -57,10 +57,34 @@ export const createTestOrganization = async (label: string, runSuffix: string): 
   };
 };
 
+/**
+ * Deletes every organization `createTestOrganization` made in this process and
+ * empties the registry. Best-effort per organization: one failure must not stop
+ * the rest, and teardown must never fail a green run — but a failure is REPORTED,
+ * never swallowed (same pattern as the 061 sibling helper).
+ */
 export const cleanUpTestOrganizations = async (): Promise<void> => {
   const ids = createdOrganizationIds.splice(0, createdOrganizationIds.length);
+  const undeleted: string[] = [];
   for (const id of ids) {
-    await deleteOrganization(id).catch(() => undefined);
+    try {
+      const res = await deleteOrganization(id);
+      // deleteOrganization resolves GraphQL failures as `{ error }` rather than
+      // rejecting, so a bare catch never sees the case that matters.
+      if ((res as { error?: unknown })?.error) undeleted.push(id);
+    } catch {
+      undeleted.push(id);
+    }
+  }
+
+  if (undeleted.length > 0) {
+    // Loud, but NOT thrown: teardown must not replace a real test failure. A
+    // half-deleted organization is an environment problem an operator has to
+    // clear at the database level, so name the ids.
+    console.error(
+      `[cleanUpTestOrganizations] ${undeleted.length} organization(s) could not be deleted and may now be half-deleted — ` +
+        `they will break authorizationPolicyResetAll until removed: ${undeleted.join(', ')}`
+    );
   }
 };
 
@@ -166,24 +190,44 @@ export const inviteUserToOrganizationRaw = async (
   roleSetID: string,
   invitedActorID: string,
   welcomeMessage: string,
-  bearerToken: string
+  bearerToken: string,
+  extraRoles: RoleName[] = []
 ): Promise<{ type: string; invitationId: string | null }> => {
   const res = await postGraphqlRaw<{
     inviteForEntryRoleOnRoleSet: Array<{ type: string; invitation: { id: string } | null }>;
   }>(
-    `mutation($roleSetID: UUID!, $invitedActorID: UUID!, $welcomeMessage: String!) {
+    `mutation($roleSetID: UUID!, $invitedActorID: UUID!, $welcomeMessage: String!, $extraRoles: [RoleName!]!) {
       inviteForEntryRoleOnRoleSet(invitationData: {
         invitedActorIDs: [$invitedActorID], invitedUserEmails: [], roleSetID: $roleSetID,
-        welcomeMessage: $welcomeMessage, extraRoles: []
+        welcomeMessage: $welcomeMessage, extraRoles: $extraRoles
       }) { type invitation { id } }
     }`,
-    { variables: { roleSetID, invitedActorID, welcomeMessage }, bearerToken }
+    { variables: { roleSetID, invitedActorID, welcomeMessage, extraRoles }, bearerToken }
   );
   if ((res.body.errors ?? []).length > 0) {
     throw new Error(`inviteUserToOrganizationRaw failed: ${JSON.stringify(res.body.errors)}`);
   }
   const outcome = res.body.data!.inviteForEntryRoleOnRoleSet[0];
   return { type: outcome.type, invitationId: outcome.invitation?.id ?? null };
+};
+
+/** The user ids currently holding `role` on a role set (org-side view, as the
+ * platform admin) — used to fill a role to its cap and to prove a withheld
+ * role was NOT granted (US2-AS5). */
+export const getUserIdsInRole = async (
+  roleSetId: string,
+  role: RoleName,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+): Promise<string[]> => {
+  const client = getGraphqlClient();
+  const res = await graphqlErrorWrapper(
+    authToken => client.GetRoleSetUsersInRoles({ roleSetId, roles: [role] }, { authorization: `Bearer ${authToken}` }),
+    userRole
+  );
+  if (res.error) {
+    throw new Error(`getUserIdsInRole(${role}) failed on ${roleSetId}: ${JSON.stringify(res.error)}`);
+  }
+  return (res.data?.lookup.roleSet?.usersInRoles ?? []).flatMap(r => r.users.map(u => u.id));
 };
 
 const ELIGIBILITY_QUERY = `

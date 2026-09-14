@@ -28,6 +28,7 @@ import {
   inviteForEntryRoleOnRoleSet,
 } from '../invitations/invitation.request.params';
 import {
+  getErrorCode,
   getOrganizationRoleSetPending,
   getSingleInvitationResult,
 } from '../roleset.request.params';
@@ -191,7 +192,18 @@ describe('me query partition (US7-AS1, contract §5)', () => {
         )
       ).not.toEqual(expect.arrayContaining([orgApplicationId]));
 
-      await deleteInvitation(spaceInvitationId).catch(() => undefined);
+      // Deleting the user above already removed its pending rows (asserted
+      // for the organization ones just above), so the Space invitation is
+      // normally gone too: tolerate ENTITY_NOT_FOUND explicitly, and surface
+      // any OTHER failure — the wrapper resolves errors, it never rejects.
+      const deletion = await deleteInvitation(spaceInvitationId);
+      if (deletion?.error && getErrorCode(deletion) !== 'ENTITY_NOT_FOUND') {
+        throw new Error(
+          `deleteInvitation(${spaceInvitationId}) failed: ${JSON.stringify(
+            deletion.error.errors
+          )}`
+        );
+      }
     } catch (e) {
       await deleteUser(userId).catch(() => undefined);
       throw e;
@@ -246,38 +258,46 @@ describe('me query partition (US7-AS1, contract §5)', () => {
       );
       const invitationId = getSingleInvitationResult(invite)!.invitation!.id;
 
-      await callAsEmail(email, (client, auth) =>
+      const accepted = await callAsEmail(email, (client, auth) =>
         client.InvitationStateEvent(
           { input: { invitationID: invitationId, eventName: 'ACCEPT' } },
           auth
         )
       );
+      expect(accepted?.error).toBeUndefined();
 
-      const before = await callAsEmail(email, (client, auth) =>
-        client.MeInAppNotifications(
-          { types: [NotificationEvent.UserOrganizationAssociateInvitation] },
-          auth
-        )
-      );
-      expect(
-        (before?.data?.me.notifications.inAppNotifications ?? []).length
-      ).toBeGreaterThan(0);
+      const readInAppRows = async () => {
+        const me = await callAsEmail(email, (client, auth) =>
+          client.MeInAppNotifications(
+            { types: [NotificationEvent.UserOrganizationAssociateInvitation] },
+            auth
+          )
+        );
+        expect(me?.error).toBeUndefined();
+        return me?.data?.me.notifications.inAppNotifications ?? [];
+      };
 
-      await removeRoleFromUser(
+      // The in-app row is written by the notifications service off the
+      // RabbitMQ event the invitation raised, not in the invite mutation's
+      // own transaction — poll rather than read once.
+      await expect
+        .poll(async () => (await readInAppRows()).length, {
+          timeout: 20_000,
+          interval: 1_000,
+        })
+        .toBeGreaterThan(0);
+
+      const removed = await removeRoleFromUser(
         userId,
         orgForInvitation.organization.roleSetId,
         RoleName.Associate
       );
+      expect(removed?.error).toBeUndefined();
 
-      const after = await callAsEmail(email, (client, auth) =>
-        client.MeInAppNotifications(
-          { types: [NotificationEvent.UserOrganizationAssociateInvitation] },
-          auth
-        )
-      );
-      expect(after?.data?.me.notifications.inAppNotifications ?? []).toEqual(
-        []
-      );
+      // Same for the cleanup on removal: poll until the rows are gone.
+      await expect
+        .poll(readInAppRows, { timeout: 20_000, interval: 1_000 })
+        .toEqual([]);
     } finally {
       await deleteUser(userId).catch(() => undefined);
     }

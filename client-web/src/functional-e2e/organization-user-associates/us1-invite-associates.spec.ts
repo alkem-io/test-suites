@@ -311,9 +311,55 @@ baseTest.beforeAll(async () => {
 });
 
 baseTest.afterAll(async () => {
-  await deleteOrganization(orgMain.id).catch(() => undefined);
-  await deleteOrganization(orgAS3Admin.id).catch(() => undefined);
-  await deleteOrganization(orgAS3Owner.id).catch(() => undefined);
+  // Every result is inspected: `deleteOrganization` / `graphqlErrorWrapper`
+  // resolve GraphQL failures as `{ error }` rather than rejecting, so a bare
+  // `.catch(() => undefined)` never sees the case that matters. Failures are
+  // collected and reported after every attempt — loud, but NOT thrown, so
+  // teardown never replaces a real test failure (us7 / 061 helper precedent).
+  const failures: string[] = [];
+
+  // Organizations first: their roleSets carry the personas' roles, invitations
+  // and applications, so the users below are unencumbered once these are gone.
+  for (const org of [orgMain, orgAS3Admin, orgAS3Owner]) {
+    if (!org) continue; // beforeAll failed before creating it
+    try {
+      const res = await deleteOrganization(org.id);
+      if (res?.error) failures.push(`organization ${org.id}: ${JSON.stringify(res.error)}`);
+    } catch (error) {
+      failures.push(`organization ${org.id}: ${(error as Error)?.message ?? error}`);
+    }
+  }
+
+  // All ten run-suffixed identities: the three UI personas and the seven
+  // disposable ones registered in beforeAll.
+  const client = getGraphqlClient();
+  const personas: Array<Persona | undefined> = [
+    orgAdminNotOwner,
+    orgOwnerNotAdmin,
+    plainAssociateAS8,
+    as2Invitee1,
+    as2Invitee2,
+    as4AlreadyAssociate,
+    as4AlreadyInvited,
+    as4OpenApplication,
+    as3AdminOverflow,
+    as3OwnerOverflow,
+  ];
+  for (const persona of personas) {
+    if (!persona) continue; // beforeAll failed before registering it
+    const res = await graphqlErrorWrapper(
+      authToken =>
+        client.deleteUser({ deleteData: { ID: persona.id } }, { authorization: `Bearer ${authToken}` }),
+      TestUser.GLOBAL_ADMIN
+    );
+    if (res.error) failures.push(`user ${persona.email} (${persona.id}): ${JSON.stringify(res.error)}`);
+  }
+
+  if (failures.length > 0) {
+    console.error(
+      `[us1-invite-associates afterAll] ${failures.length} fixture(s) could not be deleted:\n  ${failures.join('\n  ')}`
+    );
+  }
 });
 
 // ─── UI walk (source-derived selectors — see

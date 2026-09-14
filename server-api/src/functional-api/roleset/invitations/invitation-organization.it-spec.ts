@@ -561,8 +561,62 @@ describe('Organization Space invitations — Lead role limit', () => {
   });
 
   afterAll(async () => {
-    await deleteOrganization(orgB.id).catch(() => undefined);
-    await deleteOrganization(orgC.id).catch(() => undefined);
+    // A failed assertion mid-test leaves orgB/orgC holding Member/Lead on the
+    // Space and possibly a pending Lead invitation. Strip whatever is still
+    // held, then delete; inspect EVERY result (the wrapper resolves GraphQL
+    // failures as `{ error }`, it never rejects), keep going, and fail the
+    // hook with everything that went wrong — a silently leaked organization
+    // keeps a Lead slot occupied for the next spec that counts them.
+    const failures: string[] = [];
+    if (pendingInvitationId) {
+      const deletion = await deleteInvitation(pendingInvitationId);
+      if (deletion?.error) {
+        failures.push(
+          `deleteInvitation(${pendingInvitationId}): ${JSON.stringify(deletion.error.errors)}`
+        );
+      }
+      pendingInvitationId = '';
+    }
+    for (const [label, org] of [
+      ['orgB', orgB],
+      ['orgC', orgC],
+    ] as const) {
+      if (!org) {
+        continue;
+      }
+      // `rolesOrganization` reports roles lowercase ('member', 'lead');
+      // compare against the RoleName enum case-insensitively.
+      const held = ((await spaceRolesForOrg(org.id))?.roles ?? []).map(
+        (r: string) => r.toUpperCase()
+      );
+      // Lead before Member: Lead presupposes Member.
+      for (const role of [RoleName.Lead, RoleName.Member]) {
+        if (!held.includes(role)) {
+          continue;
+        }
+        const removal = await removeRoleFromOrganization(
+          org.id,
+          baseScenario.space.community.roleSetId,
+          role
+        );
+        if (removal?.error) {
+          failures.push(
+            `removeRoleFromOrganization(${label}, ${role}): ${JSON.stringify(removal.error.errors)}`
+          );
+        }
+      }
+      const deletion = await deleteOrganization(org.id);
+      if (deletion?.error) {
+        failures.push(
+          `deleteOrganization(${label} ${org.id}): ${JSON.stringify(deletion.error.errors)}`
+        );
+      }
+    }
+    if (failures.length > 0) {
+      throw new Error(
+        `Lead role limit fixtures were not fully torn down:\n${failures.join('\n')}`
+      );
+    }
   });
 
   test('two granted Lead organizations block a third Lead invitation', async () => {

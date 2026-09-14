@@ -190,11 +190,23 @@ export const verifyOrganizationManually = async (
       `verifyOrganizationManually: no verification id for organization ${organizationId}`
     );
   }
-  await eventOnOrganizationVerification(
-    verificationId,
-    'VERIFICATION_REQUEST'
-  );
-  await eventOnOrganizationVerification(verificationId, 'MANUALLY_VERIFY');
+  // The wrapper resolves GraphQL failures as `{ error }` — it never rejects —
+  // so each transition MUST be inspected: an unverified organization keeps
+  // the domain-join door shut and every US4 assertion downstream would fail
+  // far from the cause.
+  for (const eventName of ['VERIFICATION_REQUEST', 'MANUALLY_VERIFY']) {
+    const res = await eventOnOrganizationVerification(
+      verificationId,
+      eventName
+    );
+    if (res?.error) {
+      throw new Error(
+        `verifyOrganizationManually: ${eventName} failed for organization ${organizationId} (verification ${verificationId}): ${JSON.stringify(
+          res.error.errors
+        )}`
+      );
+    }
+  }
 };
 
 // The per-organization authorization reset loop the release runbook binds

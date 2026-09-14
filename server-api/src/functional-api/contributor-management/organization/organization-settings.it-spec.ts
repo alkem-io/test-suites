@@ -350,26 +350,35 @@ describe('Organization settings — allowSpaceInvitations (061)', () => {
   });
 
   test('allowSpaceInvitations round-trips false then true', async () => {
-    const off = await updateOrganizationSettings(
-      baseScenario.organization.id,
-      {
+    // The `true` write below is both the second half of the round-trip AND
+    // the restore of a setting the rest of this file relies on, so it runs in
+    // `finally`: a failure on the `false` half must not leave the shared
+    // organization with invitations switched off for every later test.
+    let on: Awaited<ReturnType<typeof updateOrganizationSettings>> | undefined;
+    try {
+      const off = await updateOrganizationSettings(
+        baseScenario.organization.id,
+        {
+          membership: {
+            allowUsersMatchingDomainToJoin: false,
+            allowSpaceInvitations: false,
+          },
+        }
+      );
+      expect(
+        off?.data?.updateOrganizationSettings.settings.membership
+          .allowSpaceInvitations
+      ).toEqual(false);
+    } finally {
+      on = await updateOrganizationSettings(baseScenario.organization.id, {
         membership: {
           allowUsersMatchingDomainToJoin: false,
-          allowSpaceInvitations: false,
+          allowSpaceInvitations: true,
         },
-      }
-    );
-    expect(
-      off?.data?.updateOrganizationSettings.settings.membership
-        .allowSpaceInvitations
-    ).toEqual(false);
+      });
+      expect(on?.error).toBeUndefined();
+    }
 
-    const on = await updateOrganizationSettings(baseScenario.organization.id, {
-      membership: {
-        allowUsersMatchingDomainToJoin: false,
-        allowSpaceInvitations: true,
-      },
-    });
     expect(
       on?.data?.updateOrganizationSettings.settings.membership
         .allowSpaceInvitations
@@ -377,35 +386,54 @@ describe('Organization settings — allowSpaceInvitations (061)', () => {
   });
 
   test('an update carrying only allowUsersMatchingDomainToJoin leaves allowSpaceInvitations unchanged', async () => {
-    await updateOrganizationSettings(baseScenario.organization.id, {
-      membership: {
-        allowUsersMatchingDomainToJoin: false,
-        allowSpaceInvitations: false,
-      },
-    });
+    try {
+      const off = await updateOrganizationSettings(
+        baseScenario.organization.id,
+        {
+          membership: {
+            allowUsersMatchingDomainToJoin: false,
+            allowSpaceInvitations: false,
+          },
+        }
+      );
+      expect(off?.error).toBeUndefined();
 
-    const res = await updateOrganizationSettings(baseScenario.organization.id, {
-      membership: {
-        allowUsersMatchingDomainToJoin: true,
-      },
-    });
+      const res = await updateOrganizationSettings(
+        baseScenario.organization.id,
+        {
+          membership: {
+            allowUsersMatchingDomainToJoin: true,
+          },
+        }
+      );
 
-    expect(
-      res?.data?.updateOrganizationSettings.settings.membership
-        .allowUsersMatchingDomainToJoin
-    ).toEqual(true);
-    expect(
-      res?.data?.updateOrganizationSettings.settings.membership
-        .allowSpaceInvitations
-    ).toEqual(false);
-
-    // Restore defaults for later tests in this file.
-    await updateOrganizationSettings(baseScenario.organization.id, {
-      membership: {
-        allowUsersMatchingDomainToJoin: false,
-        allowSpaceInvitations: true,
-      },
-    });
+      expect(
+        res?.data?.updateOrganizationSettings.settings.membership
+          .allowUsersMatchingDomainToJoin
+      ).toEqual(true);
+      expect(
+        res?.data?.updateOrganizationSettings.settings.membership
+          .allowSpaceInvitations
+      ).toEqual(false);
+    } finally {
+      // Restore defaults for later tests in this file — in `finally`, and
+      // validated, so a failed assertion above cannot leave the shared
+      // organization with invitations switched off.
+      const restored = await updateOrganizationSettings(
+        baseScenario.organization.id,
+        {
+          membership: {
+            allowUsersMatchingDomainToJoin: false,
+            allowSpaceInvitations: true,
+          },
+        }
+      );
+      expect(restored?.error).toBeUndefined();
+      expect(
+        restored?.data?.updateOrganizationSettings.settings.membership
+          .allowSpaceInvitations
+      ).toEqual(true);
+    }
   });
 
   test('an ASSOCIATE with no manager credential cannot update organization settings', async () => {
@@ -481,26 +509,33 @@ describe('Organization settings — allowApplications (062, US5-AS4/US6-AS1)', (
   });
 
   test('allowApplications round-trips false then true', async () => {
-    const off = await updateOrganizationSettings(
-      baseScenario.organization.id,
-      {
+    // As for allowSpaceInvitations above: the `true` write is also the
+    // restore, so it runs in `finally`.
+    let on: Awaited<ReturnType<typeof updateOrganizationSettings>> | undefined;
+    try {
+      const off = await updateOrganizationSettings(
+        baseScenario.organization.id,
+        {
+          membership: {
+            allowUsersMatchingDomainToJoin: false,
+            allowApplications: false,
+          },
+        }
+      );
+      expect(
+        off?.data?.updateOrganizationSettings.settings.membership
+          .allowApplications
+      ).toEqual(false);
+    } finally {
+      on = await updateOrganizationSettings(baseScenario.organization.id, {
         membership: {
           allowUsersMatchingDomainToJoin: false,
-          allowApplications: false,
+          allowApplications: true,
         },
-      }
-    );
-    expect(
-      off?.data?.updateOrganizationSettings.settings.membership
-        .allowApplications
-    ).toEqual(false);
+      });
+      expect(on?.error).toBeUndefined();
+    }
 
-    const on = await updateOrganizationSettings(baseScenario.organization.id, {
-      membership: {
-        allowUsersMatchingDomainToJoin: false,
-        allowApplications: true,
-      },
-    });
     expect(
       on?.data?.updateOrganizationSettings.settings.membership
         .allowApplications
@@ -508,35 +543,54 @@ describe('Organization settings — allowApplications (062, US5-AS4/US6-AS1)', (
   });
 
   test('an update carrying only allowUsersMatchingDomainToJoin leaves allowApplications unchanged (nullable input)', async () => {
-    await updateOrganizationSettings(baseScenario.organization.id, {
-      membership: {
-        allowUsersMatchingDomainToJoin: false,
-        allowApplications: false,
-      },
-    });
+    try {
+      const off = await updateOrganizationSettings(
+        baseScenario.organization.id,
+        {
+          membership: {
+            allowUsersMatchingDomainToJoin: false,
+            allowApplications: false,
+          },
+        }
+      );
+      expect(off?.error).toBeUndefined();
 
-    const res = await updateOrganizationSettings(baseScenario.organization.id, {
-      membership: {
-        allowUsersMatchingDomainToJoin: true,
-      },
-    });
+      const res = await updateOrganizationSettings(
+        baseScenario.organization.id,
+        {
+          membership: {
+            allowUsersMatchingDomainToJoin: true,
+          },
+        }
+      );
 
-    expect(
-      res?.data?.updateOrganizationSettings.settings.membership
-        .allowUsersMatchingDomainToJoin
-    ).toEqual(true);
-    expect(
-      res?.data?.updateOrganizationSettings.settings.membership
-        .allowApplications
-    ).toEqual(false);
-
-    // Restore defaults for later tests in this file.
-    await updateOrganizationSettings(baseScenario.organization.id, {
-      membership: {
-        allowUsersMatchingDomainToJoin: false,
-        allowApplications: true,
-      },
-    });
+      expect(
+        res?.data?.updateOrganizationSettings.settings.membership
+          .allowUsersMatchingDomainToJoin
+      ).toEqual(true);
+      expect(
+        res?.data?.updateOrganizationSettings.settings.membership
+          .allowApplications
+      ).toEqual(false);
+    } finally {
+      // Restore defaults for later tests in this file — in `finally`, and
+      // validated, so a failed assertion above cannot leave the shared
+      // organization with applications switched off.
+      const restored = await updateOrganizationSettings(
+        baseScenario.organization.id,
+        {
+          membership: {
+            allowUsersMatchingDomainToJoin: false,
+            allowApplications: true,
+          },
+        }
+      );
+      expect(restored?.error).toBeUndefined();
+      expect(
+        restored?.data?.updateOrganizationSettings.settings.membership
+          .allowApplications
+      ).toEqual(true);
+    }
   });
 
   test('an ASSOCIATE with no manager credential cannot update allowApplications (US5-AS4 API half)', async () => {
@@ -631,39 +685,62 @@ describe('User notification settings — the five new associate rows (062, US6-A
   });
 
   test('a user row SQL-stripped of the five keys reads all-on (@AfterLoad backstop, US6-AS3)', async () => {
-    await queryHarnessDb(
-      `UPDATE user_settings
-         SET notification = notification
-           #- '{user,membership,organizationAssociateInvitationReceived}'
-           #- '{user,membership,organizationAssociateApplicationDecided}'
-           #- '{organization,adminAssociateInvitationResponse}'
-           #- '{organization,adminAssociateApplicationReceived}'
-           #- '{organization,adminAssociateJoined}'
-       WHERE id = (SELECT "settingsId" FROM "user" WHERE id = $1)`,
-      [TestUserManager.users.subspaceAdmin.id]
-    );
+    // The SQL strip mutates the persisted JSON of a globally seeded persona;
+    // re-persist the five keys in `finally` — validated — so an assertion
+    // failure cannot leave `subspaceAdmin` relying on the @AfterLoad backstop
+    // for every spec that runs next.
+    try {
+      await queryHarnessDb(
+        `UPDATE user_settings
+           SET notification = notification
+             #- '{user,membership,organizationAssociateInvitationReceived}'
+             #- '{user,membership,organizationAssociateApplicationDecided}'
+             #- '{organization,adminAssociateInvitationResponse}'
+             #- '{organization,adminAssociateApplicationReceived}'
+             #- '{organization,adminAssociateJoined}'
+         WHERE id = (SELECT "settingsId" FROM "user" WHERE id = $1)`,
+        [TestUserManager.users.subspaceAdmin.id]
+      );
 
-    const after = await getUserSettings(TestUserManager.users.subspaceAdmin.id);
-    const notification = after?.data?.user.settings.notification;
-    expect(
-      notification?.user.membership.organizationAssociateInvitationReceived
-    ).toEqual(expect.objectContaining({ email: true, inApp: true, push: true }));
-    expect(
-      notification?.user.membership.organizationAssociateApplicationDecided
-    ).toEqual(expect.objectContaining({ email: true, inApp: true, push: true }));
-    expect(notification?.organization.adminAssociateInvitationResponse).toEqual(
-      expect.objectContaining({ email: true, inApp: true, push: true })
-    );
-    expect(notification?.organization.adminAssociateApplicationReceived).toEqual(
-      expect.objectContaining({ email: true, inApp: true, push: true })
-    );
-    expect(notification?.organization.adminAssociateJoined).toEqual(
-      expect.objectContaining({ email: true, inApp: true, push: true })
-    );
-
-    await updateUserSettings(
-      TestUserManager.users.subspaceAdmin.id,
-      allChannelsOn(fiveRowsAllOn)
-    ).catch(() => undefined);
+      const after = await getUserSettings(
+        TestUserManager.users.subspaceAdmin.id
+      );
+      const notification = after?.data?.user.settings.notification;
+      expect(
+        notification?.user.membership.organizationAssociateInvitationReceived
+      ).toEqual(
+        expect.objectContaining({ email: true, inApp: true, push: true })
+      );
+      expect(
+        notification?.user.membership.organizationAssociateApplicationDecided
+      ).toEqual(
+        expect.objectContaining({ email: true, inApp: true, push: true })
+      );
+      expect(
+        notification?.organization.adminAssociateInvitationResponse
+      ).toEqual(
+        expect.objectContaining({ email: true, inApp: true, push: true })
+      );
+      expect(
+        notification?.organization.adminAssociateApplicationReceived
+      ).toEqual(
+        expect.objectContaining({ email: true, inApp: true, push: true })
+      );
+      expect(notification?.organization.adminAssociateJoined).toEqual(
+        expect.objectContaining({ email: true, inApp: true, push: true })
+      );
+    } finally {
+      const restored = await updateUserSettings(
+        TestUserManager.users.subspaceAdmin.id,
+        allChannelsOn(fiveRowsAllOn)
+      );
+      expect(restored?.error).toBeUndefined();
+      expect(
+        restored?.data?.updateUserSettings.settings.notification.organization
+          .adminAssociateJoined
+      ).toEqual(
+        expect.objectContaining({ email: true, inApp: true, push: true })
+      );
+    }
   });
 });

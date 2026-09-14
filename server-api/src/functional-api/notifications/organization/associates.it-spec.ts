@@ -57,6 +57,7 @@ import {
   notifWithPush,
   PUSH_NOTIFICATIONS_QUEUE,
   waitForMailsCountAtLeast,
+  waitForMailsWhere,
 } from '../notification.helpers';
 
 const uniqueId = UniqueIDGenerator.getID();
@@ -688,16 +689,17 @@ describe('Notification settings mute the right event only (US6-AS2)', () => {
       );
       invitationId = getSingleInvitationResult(res)!.invitation!.id;
 
-      const [mailItems] = await waitForMailsCountAtLeast(1, {
-        timeout: 18_000,
-      });
-      expect(
-        mailItems.filter((m: any) =>
-          m.toAddresses?.includes(
-            TestUserManager.users.subsubspaceMember.email
-          )
-        )
-      ).toHaveLength(0);
+      // Quiet-period assertion: poll for the full delivery bound and return
+      // early the moment an invitee-addressed mail lands, so the `0` below
+      // fails as soon as the suppression breaks — and can only pass when the
+      // inbox stayed clean of such mail for the whole window.
+      const toInvitee = (m: any) =>
+        m.toAddresses?.includes(TestUserManager.users.subsubspaceMember.email);
+      const [mailItems] = await waitForMailsWhere(
+        items => items.some(toInvitee),
+        { timeout: 18_000 }
+      );
+      expect(mailItems.filter(toInvitee)).toHaveLength(0);
     } finally {
       if (invitationId) {
         await deleteInvitation(invitationId).catch(() => undefined);
