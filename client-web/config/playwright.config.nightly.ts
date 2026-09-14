@@ -109,6 +109,19 @@ export default defineConfig({
       ],
     },
     {
+      // workspace#085-authz-admin-guard (client-web#9537, Release 75): the four
+      // admin role surfaces as real personas, the fail-closed/denied paths, and
+      // the memo Sign action gate (#6478 / #10278).
+      name: 'Authz admin guard',
+      testMatch: [
+        '/authz-admin-guard/space-community-role-changes.spec.ts',
+        '/authz-admin-guard/org-associates-authorization.spec.ts',
+        '/authz-admin-guard/platform-global-roles.spec.ts',
+        '/authz-admin-guard/unverifiable-and-denied.spec.ts',
+        '/authz-admin-guard/memo-sign-action-gate.spec.ts',
+      ],
+    },
+    {
       name: 'Applications',
       testMatch: [
         '/applications/space-applications-level-0.spec.ts',

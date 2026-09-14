@@ -32191,7 +32191,6 @@ export type RevokeLicensePlanFromSpaceMutation = {
       name: SchemaTypes.LicensingCredentialBasedCredentialType;
     }>;
     subspaces: Array<{ id: string }>;
-    actor: { id: string };
   };
 };
 
@@ -50120,6 +50119,21 @@ export type AssignRoleToUserExtendedDataMutation = {
           myPrivileges?: Array<SchemaTypes.AuthorizationPrivilege> | undefined;
           credentialRules?: Array<{ name?: string | undefined }> | undefined;
         }
+      | undefined;
+  };
+};
+
+export type AssignRoleToVirtualContributorMutationVariables =
+  SchemaTypes.Exact<{
+    roleData: SchemaTypes.AssignRoleOnRoleSetInput;
+  }>;
+
+export type AssignRoleToVirtualContributorMutation = {
+  assignRoleToVirtualContributor: {
+    __typename: "VirtualContributor";
+    id: string;
+    profile?:
+      | { __typename: "Profile"; id: string; displayName: string }
       | undefined;
   };
 };
@@ -89207,6 +89221,14 @@ export type UpdateInnovationFlowStateMutation = {
   updateInnovationFlowState: { id: string; displayName: string };
 };
 
+export type PrepareMemoSigningMutationVariables = SchemaTypes.Exact<{
+  signingData: SchemaTypes.MemoSigningPrepareInput;
+}>;
+
+export type PrepareMemoSigningMutation = {
+  prepareMemoSigning: { attemptId: string; previewUrl: string };
+};
+
 export type CreateOrganizationMutationVariables = SchemaTypes.Exact<{
   organizationData: SchemaTypes.CreateOrganizationInput;
 }>;
@@ -98684,6 +98706,28 @@ export type GetInnovationFlowStatesWithIdsQuery = {
   };
 };
 
+export type GetSpaceLicenseEntitlementsQueryVariables = SchemaTypes.Exact<{
+  spaceID: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type GetSpaceLicenseEntitlementsQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          license: {
+            id: string;
+            entitlements: Array<{
+              type: SchemaTypes.LicenseEntitlementType;
+              enabled: boolean;
+              limit: number;
+            }>;
+          };
+        }
+      | undefined;
+  };
+};
+
 export type GetSpaceLicenseSubscriptionsQueryVariables = SchemaTypes.Exact<{
   ID: SchemaTypes.Scalars["UUID"]["input"];
 }>;
@@ -98758,6 +98802,29 @@ export type LookupProfileVisualsQuery = {
                 }
               | undefined;
           }>;
+        }
+      | undefined;
+  };
+};
+
+export type GetCalloutFramingMemoQueryVariables = SchemaTypes.Exact<{
+  calloutID: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type GetCalloutFramingMemoQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          framing: {
+            id: string;
+            memo?:
+              | {
+                  id: string;
+                  profile: { id: string; displayName: string; url: string };
+                }
+              | undefined;
+          };
         }
       | undefined;
   };
@@ -118598,9 +118665,6 @@ export const RevokeLicensePlanFromSpaceDocument = gql`
       subspaces {
         id
       }
-      actor {
-        id
-      }
     }
   }
 `;
@@ -118627,6 +118691,21 @@ export const AssignRoleToUserExtendedDataDocument = gql`
     }
   }
   ${UserDataFragmentDoc}
+`;
+export const AssignRoleToVirtualContributorDocument = gql`
+  mutation assignRoleToVirtualContributor(
+    $roleData: AssignRoleOnRoleSetInput!
+  ) {
+    assignRoleToVirtualContributor(roleData: $roleData) {
+      id
+      profile {
+        id
+        displayName
+        __typename
+      }
+      __typename
+    }
+  }
 `;
 export const ApplyForEntryRoleDocument = gql`
   mutation applyForEntryRole(
@@ -119332,6 +119411,14 @@ export const UpdateInnovationFlowStateDocument = gql`
     updateInnovationFlowState(stateData: $stateData) {
       id
       displayName
+    }
+  }
+`;
+export const PrepareMemoSigningDocument = gql`
+  mutation PrepareMemoSigning($signingData: MemoSigningPrepareInput!) {
+    prepareMemoSigning(signingData: $signingData) {
+      attemptId
+      previewUrl
     }
   }
 `;
@@ -120820,6 +120907,23 @@ export const GetInnovationFlowStatesWithIdsDocument = gql`
     }
   }
 `;
+export const GetSpaceLicenseEntitlementsDocument = gql`
+  query GetSpaceLicenseEntitlements($spaceID: UUID!) {
+    lookup {
+      space(ID: $spaceID) {
+        id
+        license {
+          id
+          entitlements {
+            type
+            enabled
+            limit
+          }
+        }
+      }
+    }
+  }
+`;
 export const GetSpaceLicenseSubscriptionsDocument = gql`
   query GetSpaceLicenseSubscriptions($ID: UUID!) {
     lookup {
@@ -120871,6 +120975,26 @@ export const LookupProfileVisualsDocument = gql`
           aspectRatio
           authorization {
             myPrivileges
+          }
+        }
+      }
+    }
+  }
+`;
+export const GetCalloutFramingMemoDocument = gql`
+  query GetCalloutFramingMemo($calloutID: UUID!) {
+    lookup {
+      callout(ID: $calloutID) {
+        id
+        framing {
+          id
+          memo {
+            id
+            profile {
+              id
+              displayName
+              url
+            }
           }
         }
       }
@@ -121854,6 +121978,9 @@ const AssignRoleToUserDocumentString = print(AssignRoleToUserDocument);
 const AssignRoleToUserExtendedDataDocumentString = print(
   AssignRoleToUserExtendedDataDocument
 );
+const AssignRoleToVirtualContributorDocumentString = print(
+  AssignRoleToVirtualContributorDocument
+);
 const ApplyForEntryRoleDocumentString = print(ApplyForEntryRoleDocument);
 const DeleteApplicationDocumentString = print(DeleteApplicationDocument);
 const DeletePlatformInvitationDocumentString = print(
@@ -121977,6 +122104,7 @@ const UpdateInnovationFlowCurrentStateDocumentString = print(
 const UpdateInnovationFlowStateDocumentString = print(
   UpdateInnovationFlowStateDocument
 );
+const PrepareMemoSigningDocumentString = print(PrepareMemoSigningDocument);
 const CreateOrganizationDocumentString = print(CreateOrganizationDocument);
 const DeleteOrganizationDocumentString = print(DeleteOrganizationDocument);
 const UpdateOrganizationDocumentString = print(UpdateOrganizationDocument);
@@ -122125,10 +122253,16 @@ const OrganizationEntitlementsQueryDocumentString = print(
 const GetInnovationFlowStatesWithIdsDocumentString = print(
   GetInnovationFlowStatesWithIdsDocument
 );
+const GetSpaceLicenseEntitlementsDocumentString = print(
+  GetSpaceLicenseEntitlementsDocument
+);
 const GetSpaceLicenseSubscriptionsDocumentString = print(
   GetSpaceLicenseSubscriptionsDocument
 );
 const LookupProfileVisualsDocumentString = print(LookupProfileVisualsDocument);
+const GetCalloutFramingMemoDocumentString = print(
+  GetCalloutFramingMemoDocument
+);
 const GetOrgReferenceUriDocumentString = print(GetOrgReferenceUriDocument);
 const GetOrgVisualUriDocumentString = print(GetOrgVisualUriDocument);
 const GetOrganizationDataDocumentString = print(GetOrganizationDataDocument);
@@ -122351,6 +122485,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "AssignRoleToUserExtendedData",
+        "mutation",
+        variables
+      );
+    },
+    assignRoleToVirtualContributor(
+      variables: SchemaTypes.AssignRoleToVirtualContributorMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AssignRoleToVirtualContributorMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AssignRoleToVirtualContributorMutation>(
+            AssignRoleToVirtualContributorDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "assignRoleToVirtualContributor",
         "mutation",
         variables
       );
@@ -123825,6 +123981,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "UpdateInnovationFlowState",
+        "mutation",
+        variables
+      );
+    },
+    PrepareMemoSigning(
+      variables: SchemaTypes.PrepareMemoSigningMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PrepareMemoSigningMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PrepareMemoSigningMutation>(
+            PrepareMemoSigningDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PrepareMemoSigning",
         "mutation",
         variables
       );
@@ -125457,6 +125635,28 @@ export function getSdk(
         variables
       );
     },
+    GetSpaceLicenseEntitlements(
+      variables: SchemaTypes.GetSpaceLicenseEntitlementsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.GetSpaceLicenseEntitlementsQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.GetSpaceLicenseEntitlementsQuery>(
+            GetSpaceLicenseEntitlementsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "GetSpaceLicenseEntitlements",
+        "query",
+        variables
+      );
+    },
     GetSpaceLicenseSubscriptions(
       variables: SchemaTypes.GetSpaceLicenseSubscriptionsQueryVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -125497,6 +125697,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "lookupProfileVisuals",
+        "query",
+        variables
+      );
+    },
+    GetCalloutFramingMemo(
+      variables: SchemaTypes.GetCalloutFramingMemoQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.GetCalloutFramingMemoQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.GetCalloutFramingMemoQuery>(
+            GetCalloutFramingMemoDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "GetCalloutFramingMemo",
         "query",
         variables
       );

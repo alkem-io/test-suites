@@ -30259,7 +30259,6 @@ export type RevokeLicensePlanFromSpaceMutation = {
       name: LicensingCredentialBasedCredentialType;
     }>;
     subspaces: Array<{ id: string }>;
-    actor: { id: string };
   };
 };
 
@@ -46016,6 +46015,20 @@ export type AssignRoleToUserExtendedDataMutation = {
           myPrivileges?: Array<AuthorizationPrivilege> | undefined;
           credentialRules?: Array<{ name?: string | undefined }> | undefined;
         }
+      | undefined;
+  };
+};
+
+export type AssignRoleToVirtualContributorMutationVariables = Exact<{
+  roleData: AssignRoleOnRoleSetInput;
+}>;
+
+export type AssignRoleToVirtualContributorMutation = {
+  assignRoleToVirtualContributor: {
+    __typename: "VirtualContributor";
+    id: string;
+    profile?:
+      | { __typename: "Profile"; id: string; displayName: string }
       | undefined;
   };
 };
@@ -81463,6 +81476,14 @@ export type UpdateInnovationFlowStateMutation = {
   updateInnovationFlowState: { id: string; displayName: string };
 };
 
+export type PrepareMemoSigningMutationVariables = Exact<{
+  signingData: MemoSigningPrepareInput;
+}>;
+
+export type PrepareMemoSigningMutation = {
+  prepareMemoSigning: { attemptId: string; previewUrl: string };
+};
+
 export type CreateOrganizationMutationVariables = Exact<{
   organizationData: CreateOrganizationInput;
 }>;
@@ -90495,6 +90516,28 @@ export type GetInnovationFlowStatesWithIdsQuery = {
   };
 };
 
+export type GetSpaceLicenseEntitlementsQueryVariables = Exact<{
+  spaceID: Scalars["UUID"]["input"];
+}>;
+
+export type GetSpaceLicenseEntitlementsQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          license: {
+            id: string;
+            entitlements: Array<{
+              type: LicenseEntitlementType;
+              enabled: boolean;
+              limit: number;
+            }>;
+          };
+        }
+      | undefined;
+  };
+};
+
 export type GetSpaceLicenseSubscriptionsQueryVariables = Exact<{
   ID: Scalars["UUID"]["input"];
 }>;
@@ -90557,6 +90600,29 @@ export type LookupProfileVisualsQuery = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           }>;
+        }
+      | undefined;
+  };
+};
+
+export type GetCalloutFramingMemoQueryVariables = Exact<{
+  calloutID: Scalars["UUID"]["input"];
+}>;
+
+export type GetCalloutFramingMemoQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          framing: {
+            id: string;
+            memo?:
+              | {
+                  id: string;
+                  profile: { id: string; displayName: string; url: string };
+                }
+              | undefined;
+          };
         }
       | undefined;
   };
