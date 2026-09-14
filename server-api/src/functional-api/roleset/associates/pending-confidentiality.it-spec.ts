@@ -1,5 +1,5 @@
 // The pending-applications/invitations confidentiality narrowing (READ →
-// UPDATE on both role-set types) and the authorization-reset runbook proof
+// GRANT on both role-set types) and the authorization-reset runbook proof
 // that restores APPLY visibility on a pre-existing organization afterwards.
 import {
   TestScenarioFactory,
@@ -194,20 +194,22 @@ describe('Pending-list confidentiality — a PUBLIC Space (US7-AS3, deliberate R
     ).toBeDefined();
   });
 
-  test('an account admin of the hosting organization (cascaded UPDATE, no GRANT) reads the Space pending lists — R46', async () => {
+  test('an account admin of the hosting organization who is not a Space admin is refused — R46 (live-verified standing)', async () => {
     // The base scenario's Space is created under its organization's account
-    // and ORGANIZATION_ADMIN administers that organization but is NOT a Space
-    // admin: it holds UPDATE on the Space role set through the account
-    // cascade and never GRANT. Space Settings > Community is gated on UPDATE
-    // and reads these lists, so a GRANT gate would blank it for this persona
-    // (round-2 review finding 1).
+    // and ORGANIZATION_ADMIN administers that organization (and so holds the
+    // implicit ACCOUNT_ADMIN credential) but is NOT a Space admin. The account
+    // CRUD cascade never reaches an L0 Space's policy — the Space builds its
+    // own, giving account admins READ_ABOUT/READ_LICENSE only — so this
+    // persona holds neither UPDATE nor GRANT on the Space role set and the
+    // narrowing refuses it exactly like any other non-admin. Recorded so the
+    // round-2 review claim ("account admins hold cascaded UPDATE without
+    // GRANT") cannot be re-asserted without a failing test.
     const asAccountAdmin = await getOrganizationRoleSetPending(
       spaceScenario.space.community.roleSetId,
       TestUser.ORGANIZATION_ADMIN
     );
-    expect(asAccountAdmin?.error).toBeUndefined();
-    expect(invitationIds(asAccountAdmin)).toContain(spaceInvitationId);
-    expect(asAccountAdmin?.data?.lookup?.roleSet?.applications).toBeDefined();
+    expect(asAccountAdmin?.error?.errors).toBeDefined();
+    expect(asAccountAdmin?.data).toBeUndefined();
   });
 });
 
