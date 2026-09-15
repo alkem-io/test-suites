@@ -330,6 +330,23 @@ export const getUserData = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
+export const getUserSettings = async (
+  userId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.GetUserSettings(
+      {
+        userId,
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      }
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
 export const getUserByNameId = async (
   nameId: string,
   userRole: TestUser = TestUser.GLOBAL_ADMIN

@@ -34,6 +34,7 @@ export * from "./scenario/registration/mint-bff-session";
 export * from "./config/test.configuration";
 export * from "./config/alkemio-test-config";
 export * from "./config/create-config-using-envvars";
+export * from "./config/optional-infra";
 export {
   ConversationCreationType,
   ActorType,

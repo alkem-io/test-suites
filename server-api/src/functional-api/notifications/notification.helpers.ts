@@ -8,11 +8,17 @@ import {
   TestUser,
   waitForQueuePublishIncrease,
 } from '@alkemio/tests-lib';
-import { UpdateUserSettingsNotificationUserInput } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import {
+  UpdateUserSettingsEntityInput,
+  UpdateUserSettingsNotificationUserInput,
+} from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { graphqlRequestAuth } from '@alkemio/tests-lib/utils/graphql.request';
 import { sendMessageToRoom } from '@functional-api/communications/communication.params';
 import { createConversation } from '@functional-api/communications/conversations/conversation.request.params';
-import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
+import {
+  getUserData,
+  updateUserSettings,
+} from '@functional-api/contributor-management/user/user.request.params';
 import {
   generateFakePushSubscription,
   getMyPushSubscriptions,
@@ -26,6 +32,82 @@ export const notif = (v: boolean) => ({ email: v, inApp: v });
 
 // Extended helper that includes push channel for PWA push notification tests
 export const notifWithPush = (v: boolean) => ({ email: v, inApp: v, push: v });
+
+/**
+ * Mirrors a settings object with every notification channel turned back ON.
+ *
+ * The personas these specs mute are seeded globally and outlive the file that
+ * muted them, so a spec that leaves one muted silently changes the expected
+ * mail counts of every spec that runs after it. Pass the SAME object that was
+ * used to mute, and this returns it with each `{email, inApp, push}` leaf set
+ * true — so the restore cannot drift from the mute.
+ */
+export const allChannelsOn = <T>(settings: T): T => {
+  const walk = (node: unknown): unknown => {
+    if (node === null || typeof node !== 'object') return node;
+    const entries = Object.entries(node as Record<string, unknown>);
+    const isChannelLeaf = entries.every(
+      ([k, v]) =>
+        ['email', 'inApp', 'push'].includes(k) && typeof v === 'boolean'
+    );
+    if (entries.length > 0 && isChannelLeaf) {
+      return Object.fromEntries(entries.map(([k]) => [k, true]));
+    }
+    return Object.fromEntries(entries.map(([k, v]) => [k, walk(v)]));
+  };
+  return walk(settings) as T;
+};
+
+/**
+ * Strip the read-only keys (`id`, `__typename`) that come back on a settings
+ * QUERY but are rejected by the settings MUTATION input, so a snapshot taken
+ * with `getUserData` can be fed straight back to `updateUserSettings`.
+ */
+const stripReadOnlyKeys = (value: unknown): unknown => {
+  if (Array.isArray(value)) {
+    return value.map(stripReadOnlyKeys);
+  }
+  if (value === null || typeof value !== 'object') {
+    return value;
+  }
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>)
+      .filter(([key]) => key !== '__typename' && key !== 'id')
+      .map(([key, entry]) => [key, stripReadOnlyKeys(entry)])
+  );
+};
+
+/**
+ * Snapshot a persona's CURRENT notification settings so a spec can restore
+ * exactly what it found.
+ *
+ * Specs that mute a **globally seeded** persona (spaceAdmin, globalAdmin,
+ * qaUser…) so their own mail counts mean what they say are borrowing shared
+ * state: the personas outlive the file, and the `nightly` project runs
+ * single-threaded with `isolate: false` against ONE database, so whatever a
+ * spec leaves muted is inherited by every spec that runs after it. Negative
+ * assertions then pass for the wrong reason, and on any environment that is
+ * not wiped between runs it is permanent.
+ *
+ * Restore from this snapshot, never from a blanket "turn everything on":
+ * several notification settings ship with `email: false` by platform default
+ * (the callout and comment ones among them), so an all-on restore does not
+ * hand the persona back — it leaves five shared personas permanently noisier
+ * than the suite seeded them, and the next spec that counts mail sees the
+ * extra messages.
+ */
+export const snapshotNotificationSettings = async (
+  userID: string
+): Promise<UpdateUserSettingsEntityInput> => {
+  const response = await getUserData(userID);
+  const settings = response?.data?.user?.settings;
+  if (!settings) {
+    throw new Error(
+      `Unable to snapshot notification settings for user ${userID}`
+    );
+  }
+  return stripReadOnlyKeys(settings) as UpdateUserSettingsEntityInput;
+};
 
 // Helper for setting push channel independently
 export const notifPush = (emailInApp: boolean, push: boolean) => ({
@@ -459,6 +541,37 @@ export const conversationMessageGroupDigestSubject = (
  */
 export const waitForMailsCountAtLeast = async (
   expectedCount: number,
+  options: { timeout?: number; interval?: number } = {}
+): Promise<Awaited<ReturnType<typeof getMailsData>>> =>
+  waitForMailsWhere((_mailItems, total) => total >= expectedCount, options);
+
+/**
+ * Polls Mailslurper until `isSatisfied(mailItems, total)` holds, or the
+ * timeout elapses. Returns the last-observed `[mailItems, total]` tuple either
+ * way — callers assert on it, so a timeout is a normal (informative) test
+ * failure rather than a thrown harness error.
+ *
+ * Two uses, one loop:
+ * - POSITIVE: `isSatisfied` names every expected mail (recipient + subject),
+ *   so the read returns as soon as ALL of them have landed rather than when
+ *   the first `n` of anything did.
+ * - NEGATIVE (quiet period): `isSatisfied` names the mail that must NOT
+ *   arrive. The poll then returns EARLY the moment such a mail appears (the
+ *   caller's `toHaveLength(0)` fails at once), and only runs the full
+ *   `timeout` when the inbox stays clean — so "no mail" means "none within
+ *   the whole delivery bound", never "none yet". `waitForMailsCountAtLeast(1)`
+ *   + `toHaveLength(0)` cannot express that: it passes vacuously when
+ *   nothing at all lands and still returns early on an unrelated mail.
+ */
+export type MailItem = {
+  subject?: string;
+  body?: string;
+  toAddresses?: string[];
+  [key: string]: unknown;
+};
+
+export const waitForMailsWhere = async (
+  isSatisfied: (mailItems: MailItem[], total: number) => boolean,
   {
     timeout = 15_000,
     interval = 1_000,
@@ -467,7 +580,7 @@ export const waitForMailsCountAtLeast = async (
   const start = Date.now();
   let last = await getMailsData();
 
-  while (last[1] < expectedCount && Date.now() - start < timeout) {
+  while (!isSatisfied(last[0] ?? [], last[1]) && Date.now() - start < timeout) {
     await delay(interval);
     last = await getMailsData();
   }
@@ -569,3 +682,32 @@ export const markConversationRead = async (
   }
   return response.body?.data?.markMessageAsReadInRoom ?? false;
 };
+
+/**
+ * `graphqlErrorWrapper` RESOLVES a GraphQL failure as `{ error: { errors } }`;
+ * it only rejects on a transport-level error. So the `.catch(() => undefined)`
+ * that teardown hooks wrap around a cleanup call never fires for the failure
+ * mode that actually matters — the server refusing the mutation — and the hook
+ * reports success while leaving state behind.
+ *
+ * That is not cosmetic here. `nightly` runs `--fileParallelism=false` with
+ * `isolate: false` against ONE database: a leaked invitation makes the next
+ * spec's first invite come back ALREADY_INVITED_TO_ROLE_SET, and a settings
+ * restore that silently failed re-opens exactly the shared-persona corruption
+ * `snapshotNotificationSettings` exists to prevent. Both surface as a cascade of
+ * failures in unrelated files, attributed to the wrong spec.
+ *
+ * Use this to make a cleanup call loud. It still tolerates transport hiccups
+ * (the environment, not the product) by rethrowing them the same way — the
+ * point is that NOTHING is swallowed.
+ */
+export const assertCleanupSucceeded = (
+  label: string,
+  result: { error?: { errors?: unknown } } | undefined
+): void => {
+  const errors = result?.error?.errors;
+  if (errors) {
+    throw new Error(`${label} failed during teardown: ${JSON.stringify(errors)}`);
+  }
+};
+
