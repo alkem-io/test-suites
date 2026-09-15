@@ -18,6 +18,7 @@ import {
 } from './verify/callout-template-verify';
 import { verifyCalloutTemplateUsage } from './usage/callout-template.use';
 import { acceptCookiesIfVisible } from '@src/functional-e2e/helpers/cookies.helper';
+import { sectionAddNewButton } from './section-helpers';
 
 const { test, setupAuthentication, teardownAuthentication } =
   createAuthenticatedSessionFixture({
@@ -59,7 +60,7 @@ const createAndVerifyCalloutTemplate = async (
   // new" resolved-but-never-clickable until the 30s test timeout. Retry the
   // open -> click -> dialog-appears sequence as a unit: only (re-)open the menu
   // when it is closed, so a flicker is simply re-opened rather than hung on.
-  const addNewButton = page.getByRole('button', { name: 'Add new' }).nth(1);
+  const addNewButton = sectionAddNewButton(page, /^Collaboration tools/);
   const createNewItem = page.getByRole('menuitem', { name: 'Create new' });
   const dialog = page.getByRole('dialog', {
     name: 'Create collaboration-tool template',

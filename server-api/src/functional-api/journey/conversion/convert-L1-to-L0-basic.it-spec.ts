@@ -7,10 +7,13 @@
  *   account host, settings, subspaces, community roleSet members/leads/admins.
  * - Calendar events and community updates are preserved after conversion.
  * - Profile URLs (#6020): about URL points to the promoted L0 root; account host org URL is
- *   unchanged; innovationFlow URL points to the promoted L0 root (skipped — client-web#9481).
+ *   unchanged; innovationFlow URL points to the promoted L0 root.
  * - License (#6022): parent L0 seeded with Plus; promoted L0 has a Free license and does NOT
  *   inherit the parent's Plus license.
- * - Collaboration preserved excluding profile URLs (skipped — client-web#9528).
+ * - Innovation flow states are carried over verbatim from the L1 (names, descriptions, order),
+ *   not reset to the parent L0's platform-default phases (alkem-io/server#6418,
+ *   alkem-io/client-web#9528).
+ * - Collaboration preserved excluding profile URLs.
  * - Authorization: Space Admin / Space Member cannot execute the conversion.
  */
 import {
@@ -85,7 +88,6 @@ const scenarioConfig: TestScenarioConfig = {
 };
 
 let subspaceBefore: Awaited<ReturnType<typeof getSpaceData>>;
-let spaceBefore: Awaited<ReturnType<typeof getSpaceData>>;
 let parentSubscriptionsBefore: LicensingCredentialBasedCredentialType[];
 let convertResult: Awaited<ReturnType<typeof convertSpaceL1ToSpaceL0>>;
 let subspaceAfter:
@@ -125,7 +127,6 @@ beforeAll(async () => {
 
   // Capture state before conversion. License subscriptions are only exposed on L0 spaces,
   // so the Plus license is read from the parent L0 (the space the L1 is promoted out of).
-  spaceBefore = await getSpaceData(baseScenario.space.id);
   subspaceBefore = await getSpaceData(baseScenario.subspace.id);
   const parentLicenseBefore = await getSpaceLicenseSubscriptions(
     baseScenario.space.id
@@ -148,16 +149,20 @@ describe('Convert L1 to L0 - basic', () => {
     expect(subspaceAfter?.level).toEqual(SpaceLevel.L0);
   });
 
-  // Skipped until bug is fixed: BUG: Converted L1 to L0 sets flow states to defaults for Space, instead of moving the flow states from L1#9528
-  test.skip('collaboration is preserved (excluding profile urls)', () => {
+  // alkem-io/server#6418 — broadest regression guard: any future divergence between the
+  // promoted space's collaboration and the L1's pre-conversion collaboration (innovationFlow,
+  // calloutsSet, timeline) trips this, not just a flow-states-specific assertion.
+  test('collaboration is preserved (excluding profile urls)', () => {
     expect(stripProfileUrls(subspaceAfter?.collaboration)).toEqual(
       stripProfileUrls(subspaceBefore.data?.lookup.space?.collaboration)
     );
   });
 
-  test('innovation flow states match L0 template', () => {
+  // alkem-io/server#6418 — the L1's own flow states are carried over verbatim; promotion must
+  // NOT substitute the parent L0's platform-default flow (the original bug).
+  test('innovation flow states are carried over verbatim from the L1', () => {
     expect(subspaceAfter?.collaboration.innovationFlow.states).toEqual(
-      spaceBefore.data?.lookup.space?.collaboration.innovationFlow.states
+      subspaceBefore.data?.lookup.space?.collaboration.innovationFlow.states
     );
   });
 
@@ -171,12 +176,11 @@ describe('Convert L1 to L0 - basic', () => {
     const aboutBefore = subspaceBefore.data?.lookup.space?.about;
 
     // profile: id and displayName preserved, url points to new hierarchy
-    // Skip url check: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
     expect(subspaceAfter?.about.profile).toEqual(
       expect.objectContaining({
         id: aboutBefore?.profile?.id,
         displayName: aboutBefore?.profile?.displayName,
-        // url: `${ALKEMIO_BASE_URL}/${baseScenario.subspace.nameId}`,
+        url: `${ALKEMIO_BASE_URL}/${baseScenario.subspace.nameId}`,
       })
     );
 
@@ -203,9 +207,7 @@ describe('Convert L1 to L0 - basic', () => {
     );
   });
 
-  // alkem-io/client-web#9481 — innovationFlow url is not rebased: it still points to the
-  // old L1 path (.../challenges/<l1nameid>) instead of the promoted L0 root. Unskip when fixed.
-  test.skip('innovationFlow profile url points to the promoted L0 root after promotion', () => {
+  test('innovationFlow profile url points to the promoted L0 root after promotion', () => {
     expect(subspaceAfter?.collaboration.innovationFlow.profile.url).toEqual(
       promotedSpaceUrl()
     );

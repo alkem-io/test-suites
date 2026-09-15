@@ -2,14 +2,6 @@ import { createOrganization } from '@functional-api/contributor-management/organ
 import { UniqueIDGenerator } from '@alkemio/tests-lib';;
 const uniqueId = UniqueIDGenerator.getID();
 import { createInnovationPack } from './innovation_pack.request.params';
-import {
-  whiteboardTemplateValues1,
-  whiteboardTemplateValues2,
-  whiteboardTemplateValues3,
-  whiteboardTemplateValues4,
-  whiteboardTemplateValues5,
-  whiteboardTemplateValues6,
-} from './whiteboard-values-fixed';
 import { createWhiteboardTemplate } from '@functional-api/templates/whiteboard/whiteboard-templates.request.params';
 import { authorizationPolicyResetOnPlatform } from '@functional-api/platform/authorization-platform-mutation';
 
@@ -37,35 +29,17 @@ describe('Organization', () => {
       const templateSetId =
         packData?.data?.createInnovationPack?.templatesSet?.id ?? '';
 
-      await createWhiteboardTemplate(
-        templateSetId,
-        whiteboardTemplateValues1
-      );
+      await createWhiteboardTemplate(templateSetId);
 
-      await createWhiteboardTemplate(
-        templateSetId,
-        whiteboardTemplateValues2
-      );
+      await createWhiteboardTemplate(templateSetId);
 
-      await createWhiteboardTemplate(
-        templateSetId,
-        whiteboardTemplateValues3
-      );
+      await createWhiteboardTemplate(templateSetId);
 
-      await createWhiteboardTemplate(
-        templateSetId,
-        whiteboardTemplateValues4
-      );
+      await createWhiteboardTemplate(templateSetId);
 
-      await createWhiteboardTemplate(
-        templateSetId,
-        whiteboardTemplateValues5
-      );
+      await createWhiteboardTemplate(templateSetId);
 
-      await createWhiteboardTemplate(
-        templateSetId,
-        whiteboardTemplateValues6
-      );
+      await createWhiteboardTemplate(templateSetId);
 
       expect(200).toBe(200);
     });

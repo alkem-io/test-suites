@@ -195,6 +195,18 @@ fragment userSettingsFragment on UserSettings {
         push
         __typename
       }
+      conversationMessageDirect {
+        email
+        inApp
+        push
+        __typename
+      }
+      conversationMessageGroup {
+        email
+        inApp
+        push
+        __typename
+      }
       # copyOfMessageSent {
       #   email
       #   inApp

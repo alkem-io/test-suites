@@ -1,4 +1,8 @@
 name: Nightly Clean Up Environment and Trigger Tests
+# Surface which test code a run actually exercised — dispatches with a
+# test-ref would otherwise be indistinguishable from plain nightlies in the
+# run list.
+run-name: Nightly (tests @ ${{ inputs.test-ref || github.ref_name }})
 
 on:
   schedule:
@@ -6,6 +10,17 @@ on:
   # Allow on-demand runs (verify a fix, reproduce a failure) — same pipeline,
   # including the shared test-cluster deploy lock.
   workflow_dispatch:
+    inputs:
+      test-ref:
+        description: >-
+          Branch or tag in this repo holding the TEST CODE for the e2e job.
+          Dispatch this workflow from develop and point test-ref at a feature
+          branch: the workflow definition — secret exposure, lock handling,
+          runner-group routing — stays develop's, which is what the
+          arc-e2e-linux-x64 runner group's workflow allowlist matches on.
+          Empty = the dispatched ref itself.
+        required: false
+        default: ""
 
 jobs:
   deploy-all-services:
@@ -53,7 +68,34 @@ jobs:
     permissions:
       contents: write
     steps:
+      # test-ref is unreviewed code running on a self-hosted runner with
+      # inherited secrets, so constrain it before checkout: branches and tags
+      # in THIS repo only. refs/pull/*/head resolves in the base repo too,
+      # which would execute an outside fork's PR code here; bare SHAs are
+      # rejected for the same reason (a fork PR head SHA is reachable via the
+      # pull ref). First step in the job — nothing untrusted has run yet.
+      - name: Validate test-ref
+        if: inputs.test-ref != ''
+        env:
+          TEST_REF: ${{ inputs.test-ref }}
+        run: |
+          case "$TEST_REF" in
+            */pull/*|refs/pull/*)
+              echo "::error::test-ref must not be a pull-request ref"; exit 1 ;;
+          esac
+          git ls-remote --exit-code --heads --tags \
+            "https://github.com/${GITHUB_REPOSITORY}.git" "$TEST_REF" \
+            || { echo "::error::test-ref '$TEST_REF' is not a branch or tag in ${GITHUB_REPOSITORY}"; exit 1; }
+
+      # The code under test — honors the test-ref dispatch input so a feature
+      # branch's tests (and their harness scripts, which are inseparable from
+      # them) can run under develop's reviewed workflow definition. The lock
+      # jobs deliberately do NOT honor test-ref: test-cluster-lock.sh always
+      # comes from the dispatched (trusted) ref. `inputs` is empty on schedule
+      # events, so nightlies fall through to their own ref.
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.test-ref || github.ref }}
 
       # Pull the existing GitHub Pages site so we can append this run's report
       # and keep a full history (incremental runs) across deployments.

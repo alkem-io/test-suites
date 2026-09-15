@@ -79,6 +79,77 @@ export const assignRoleToUser = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
+/**
+ * Assign a role on a role set to a Virtual Contributor (e.g. make a scenario VC
+ * a MEMBER of the scenario space). Same input shape as assignRoleToUser; the
+ * actorID is the VC id.
+ */
+export const assignRoleToVirtualContributor = async (
+  virtualContributorID: string,
+  roleSetID: string,
+  role: RoleName,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.assignRoleToVirtualContributor(
+      {
+        roleData: {
+          actorID: virtualContributorID,
+          roleSetID,
+          role,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+      },
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+/** `prepareMemoSigning` — starts a signing attempt for a memo (server#6468). */
+export const prepareMemoSigning = async (
+  memoID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.PrepareMemoSigning(
+      { signingData: { memoID } },
+      { authorization: `Bearer ${authToken}` },
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+/** The framing memo (id + profile) of a callout, via `lookup.callout`. */
+export const getCalloutFramingMemo = async (
+  calloutID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.GetCalloutFramingMemo(
+      { calloutID },
+      { authorization: `Bearer ${authToken}` },
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+/** A space's license entitlements (`type`, `enabled`, `limit`), via `lookup.space`. */
+export const getSpaceLicenseEntitlements = async (
+  spaceID: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.GetSpaceLicenseEntitlements(
+      { spaceID },
+      { authorization: `Bearer ${authToken}` },
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
 const uniqueId = UniqueIDGenerator.getID();
 export const getDefaultUserData = () => {
   return {
@@ -177,10 +248,9 @@ export const defaultWhiteboard = {
     },
     framing: { commentsEnabled: true },
   },
-  contributionDefaults: {
-    whiteboardContent:
-      '{"type":"excalidraw","version":2,"source":"https://excalidraw.com","elements":[],"appState":{"gridSize":null,"viewBackgroundColor":"#ffffff"}}',
-  },
+  // Since server#6399 whiteboardContent is server-internal: contribution
+  // defaults can only be seeded via sourceWhiteboardID / sourceCalloutID,
+  // omission gives an empty default whiteboard.
 };
 
 export const createCalloutOnCalloutsSet = async (
@@ -257,7 +327,8 @@ export const createWhiteboardCalloutOnCalloutsSet = async (
       framing?: { commentsEnabled: true };
     };
     contributionDefaults?: {
-      whiteboardContent?: string;
+      sourceWhiteboardID?: string;
+      sourceCalloutID?: string;
     };
   },
   userRole: TestUser = TestUser.GLOBAL_ADMIN,
@@ -711,7 +782,8 @@ export const createTemplateOnTemplatesSet = async (
     profileDisplayName: string;
     tags?: string[];
     postDefaultDescription?: string;
-    whiteboardContent?: string;
+    /** For TemplateType.Whiteboard: seed content from an existing whiteboard (server#6399 removed inline content). */
+    sourceWhiteboardID?: string;
     // Callout-specific options
     calloutFramingType?: "NONE" | "WHITEBOARD" | "MEMO" | "LINK";
     calloutResponseTypes?: Array<"POST" | "WHITEBOARD" | "MEMO" | "LINK">;
@@ -809,11 +881,9 @@ export const createTemplateOnTemplatesSet = async (
 
     // Add type-specific framing data if needed
     if (framingType === "WHITEBOARD") {
-      framingData.whiteboard = {
-        content:
-          (options as any).calloutWhiteboardFramingContent ||
-          '{"type":"excalidraw","version":2,"source":"https://excalidraw.com","elements":[],"appState":{"gridSize":null,"viewBackgroundColor":"#ffffff"}}',
-      };
+      // Since server#6399 CreateWhiteboardInput has no inline content;
+      // omission creates an empty whiteboard (seed via sourceWhiteboardID).
+      framingData.whiteboard = {};
     } else if (framingType === "MEMO") {
       framingData.memo = {
         profile: { displayName: options.profileDisplayName },
@@ -846,8 +916,6 @@ export const createTemplateOnTemplatesSet = async (
       },
       contributionDefaults: {
         postDescription: "Please describe the knowledge that is relevant.",
-        whiteboardContent:
-          '{"type":"excalidraw","version":2,"source":"https://excalidraw.com","elements":[],"appState":{"gridSize":null,"viewBackgroundColor":"#ffffff"}}',
       },
     };
   }
@@ -864,13 +932,11 @@ export const createTemplateOnTemplatesSet = async (
         ? options.postDefaultDescription ||
           defaultPostTemplate.postTemplate.defaultDescription
         : undefined,
+    // Since server#6399 CreateWhiteboardInput has no inline content — an
+    // empty input creates an empty whiteboard (seed via sourceWhiteboardID).
     whiteboard:
       options.type === TemplateType.Whiteboard
-        ? {
-            content:
-              options.whiteboardContent ||
-              '{"type":"excalidraw","version":2,"source":"https://excalidraw.com","elements":[],"appState":{"gridSize":null,"viewBackgroundColor":"#ffffff"}}',
-          }
+        ? { sourceWhiteboardID: options.sourceWhiteboardID }
         : undefined,
     contentSpaceData:
       options.type === TemplateType.Space ? spaceDefaults : undefined,

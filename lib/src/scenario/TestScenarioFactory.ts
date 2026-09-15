@@ -358,8 +358,8 @@ export class TestScenarioFactory {
           if ("postDefaultDescription" in t && t.postDefaultDescription) {
             templateOptions.postDefaultDescription = t.postDefaultDescription;
           }
-          if ("whiteboardContent" in t && t.whiteboardContent) {
-            templateOptions.whiteboardContent = t.whiteboardContent;
+          if ("sourceWhiteboardID" in t && t.sourceWhiteboardID) {
+            templateOptions.sourceWhiteboardID = t.sourceWhiteboardID;
           }
           // Add callout-specific fields if present
           if ("calloutFramingType" in t && t.calloutFramingType) {

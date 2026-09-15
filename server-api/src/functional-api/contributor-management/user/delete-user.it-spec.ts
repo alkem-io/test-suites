@@ -10,7 +10,11 @@
  * The tests ensure that the user deletion process works as expected,
  * and that the API responses match the expected values.
  */
-import { createUser, deleteUser, getUserData } from './user.request.params';
+import {
+  createUserOrFail,
+  deleteUser,
+  getUserData,
+} from './user.request.params';
 import {
   TestScenarioFactory,
   TestScenarioNoPreCreationConfig,
@@ -32,11 +36,13 @@ beforeEach(async () => {
   const testUniqueId = UniqueIDGenerator.getID();
   userName = `testuser${testUniqueId}`;
 
-  const response = await createUser({
+  // Resilient to the harness's retry-after-commit race on a ~5 s connection
+  // cut (test-suites#563): recovers the committed user by nameID instead of
+  // leaving userId '' and failing later on a misleading GraphQL message.
+  userId = await createUserOrFail({
     nameID: userName,
     email: 'testEmail' + testUniqueId + '@alkemio.io',
   });
-  userId = response?.data?.createUser?.id ?? '';
 });
 afterEach(async () => {
   await deleteUser(userId);

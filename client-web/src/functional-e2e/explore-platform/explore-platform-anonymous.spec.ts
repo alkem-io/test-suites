@@ -5,6 +5,7 @@
 // Flow: Home → Space → Community → Subspaces → Knowledge → Explore Spaces →
 //       Contributors → Forum → Template Library → Sign Up
 
+import { aboutThisSpaceButton } from '../helpers/space-navigation.helper';
 import { test, expect } from '@playwright/test';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
@@ -134,7 +135,7 @@ test.describe('Explore Alkemio Platform - Anonymous User Flow', () => {
     // Verify Sign in to apply button (anonymous user). CRD moved the apply
     // affordance out of the dashboard and into the About dialog; open it to
     // surface the "Sign in to apply" button.
-    await page.getByRole('button', { name: 'About this Space' }).click();
+    await aboutThisSpaceButton(page).click();
     await expect(
       page.getByRole('dialog').getByRole('button', { name: 'Sign in to apply' })
     ).toBeVisible();

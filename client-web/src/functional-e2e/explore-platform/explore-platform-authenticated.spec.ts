@@ -5,6 +5,7 @@
 // Flow: Home → Space → Community → Subspaces → Knowledge → Explore Spaces →
 //       Contributors → Forum → Template Library
 
+import { aboutThisSpaceButton } from '../helpers/space-navigation.helper';
 import { expect } from '@playwright/test';
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
 import { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
@@ -155,7 +156,7 @@ test.describe('Explore Alkemio Platform - Authenticated User Flow', () => {
     // Authenticated user should see apply/join button (not "Sign in to apply").
     // CRD moved the apply affordance out of the dashboard and into the About
     // dialog; open it to surface the apply/join button.
-    await page.getByRole('button', { name: 'About this Space' }).click();
+    await aboutThisSpaceButton(page).click();
     await expect(
       page.getByRole('dialog').getByRole('button', { name: /apply|join/i })
     ).toBeVisible();

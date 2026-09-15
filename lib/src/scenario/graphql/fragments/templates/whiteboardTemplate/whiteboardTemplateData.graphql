@@ -5,6 +5,5 @@ fragment WhiteboardTemplateData on Template {
     profile {
       ...ProfileData
     }
-    content
   }
 }

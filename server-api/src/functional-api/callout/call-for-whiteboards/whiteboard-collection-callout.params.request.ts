@@ -27,10 +27,8 @@ export const createWhiteboardCollectionCallout = async (
               allowedTypes: [CalloutContributionType.Whiteboard],
             },
           },
-          contributionDefaults: {
-            whiteboardContent:
-              '{"type":"excalidraw","version":2,"source":"https://excalidraw.com","elements":[],"appState":{"gridSize":null,"viewBackgroundColor":"#ffffff"}}',
-          },
+          // Since server#6399 whiteboardContent is server-internal; an empty
+          // default whiteboard is created when no source is given.
         },
       },
       {
@@ -52,9 +50,9 @@ export const createWhiteboardOnCallout = async (
         contributionData: {
           calloutID,
           type: CalloutContributionType.Whiteboard,
+          // Since server#6399 CreateWhiteboardInput has no inline content;
+          // an empty whiteboard is created (seed via sourceWhiteboardID).
           whiteboard: {
-            content:
-              '{"type":"excalidraw","version":2,"source":"https://excalidraw.com","elements":[],"appState":{"gridSize":null,"viewBackgroundColor":"#ffffff"}}',
             profile: {
               displayName: '111',
             },

@@ -109,6 +109,19 @@ export default defineConfig({
       ],
     },
     {
+      // workspace#085-authz-admin-guard (client-web#9537, Release 75): the four
+      // admin role surfaces as real personas, the fail-closed/denied paths, and
+      // the memo Sign action gate (#6478 / #10278).
+      name: 'Authz admin guard',
+      testMatch: [
+        '/authz-admin-guard/space-community-role-changes.spec.ts',
+        '/authz-admin-guard/org-associates-authorization.spec.ts',
+        '/authz-admin-guard/platform-global-roles.spec.ts',
+        '/authz-admin-guard/unverifiable-and-denied.spec.ts',
+        '/authz-admin-guard/memo-sign-action-gate.spec.ts',
+      ],
+    },
+    {
       name: 'Applications',
       testMatch: [
         '/applications/space-applications-level-0.spec.ts',
@@ -134,6 +147,123 @@ export default defineConfig({
       // context, so these are valid against the UTC acceptance server.
       name: 'Timeline',
       testMatch: ['/timeline/*.spec.ts'],
+    },
+    {
+      // Feature 029 (detect signup language) — sign-in project for the walks
+      // below. The suite mixes anonymous tests (each needs a virgin cookie jar)
+      // with authenticated ones and drives a different `locale` per file, so
+      // authentication cannot come from a project-wide `storageState`. This
+      // project logs each persona in ONCE and persists the session to `.auth/`;
+      // the specs opt in with `test.use({ storageState })`.
+      // Kept in sync with config/playwright.config.language-offer.ts, the
+      // standalone runner used to develop the suite.
+      name: 'Language offer setup',
+      testMatch: ['/language-offer/auth.setup.ts'],
+      // The Kratos flow occasionally stalls at "Preparing secure sign-in…";
+      // the sign-in needs the same headroom as the walks themselves.
+      timeout: 90_000,
+      expect: { timeout: 15_000 },
+    },
+    {
+      // The detection walks drive Config + session GraphQL through Traefik, so
+      // they need far more headroom than the 30s/5s this config gives everything
+      // else — the offer gate waits on config load plus reconciliation.
+      // Viewport is pinned to the resolution the suite was validated at rather
+      // than inheriting the global 1920×1080.
+      name: 'Language offer',
+      testMatch: ['/language-offer/*.spec.ts'],
+      dependencies: ['Language offer setup'],
+      timeout: 90_000,
+      expect: { timeout: 15_000 },
+      use: { viewport: { width: 1440, height: 900 } },
+    },
+    {
+      // Feature 033 (chat avatars) — the US1/US2/US3 acceptance walks.
+      //
+      // No setup project and no shared persona state: each file registers the
+      // accounts it needs, and deletes every one of them again in afterAll (by
+      // the id captured at registration). A failed run therefore leaves the
+      // environment as it found it, and a retry starts from a clean slate.
+      //
+      // Needs more headroom than the 30s/5s the rest of this config gives:
+      // every scenario is a multi-user round trip through the live chat room —
+      // send on one session, wait for the subscription push on another — and
+      // US2 uploads and crops group photos on top of that.
+      name: 'Chat avatars',
+      testMatch: ['/chat-avatars/*.spec.ts'],
+      timeout: 120_000,
+      expect: { timeout: 15_000 },
+    },
+    {
+      // Story client-web#10178 (space-banner) — the default 10:1 gradient on
+      // bannerless spaces/subspaces and the first-crop-opens-at-10:1 walk.
+      // Self-seeding via TestScenarioFactory + its own session fixture, torn
+      // down in afterAll; no dependencies. The crop walk uploads a generated
+      // 1200×120 PNG and drives the crop dialog, so it gets more headroom
+      // than the global 30s.
+      name: 'Space banner',
+      testMatch: ['/space-banner/*.spec.ts'],
+      timeout: 60_000,
+      expect: { timeout: 15_000 },
+    },
+    {
+      // Story client-web#10107 / workspace#054 (self-service account
+      // deletion) — the portable delta after test-suites#620: TC-14 (the
+      // notification centre survives the removed
+      // InAppNotificationPayloadPlatformUserProfileRemoved fields), TC-15
+      // (a departed user's activity attributes to the "Former member"
+      // sentinel and the feed still loads) and TC-16 (the Delete-account
+      // card is owner-only). Deliberately does NOT depend on any of #620's
+      // loopback-only primitives (no DB/Redis access, no BFF session
+      // minting) — every case is self-seeding (disposable Kratos identities
+      // registered and deleted within the spec) and independent of shared
+      // TestUserManager persona state, so it runs here alongside the other
+      // nightly projects. TC-01/TC-02/TC-05/TC-18 (the API-level portable
+      // cases) live in server-api's `nightly` vitest project instead —
+      // `contributor-management` already covers that glob.
+      name: 'Account deletion',
+      testMatch: [
+        '/account-deletion/profile-removed-notification.spec.ts',
+        '/account-deletion/former-member-activity.spec.ts',
+        '/account-deletion/account-deletion-visibility.spec.ts',
+      ],
+      timeout: 90_000,
+      expect: { timeout: 15_000 },
+    },
+    {
+      // Feature 038 (callout emoji reactions) — persisted P1 acceptance walk.
+      //
+      // The spec file lives outside the default testDir (src/functional-e2e/) in
+      // tests/ because it is machine-generated by forge-verify and must survive
+      // as-is across re-runs without colliding with hand-authored Playwright
+      // suites. The stub ships as a skipped placeholder; forge-verify replaces
+      // the body with the real walk after a green acceptance run.
+      //
+      // Self-seeding: the walk creates its own space + callouts + member account
+      // and tears them down in afterAll, so it can run in isolation or alongside
+      // the other nightly projects without shared state.
+      name: 'Callout reactions',
+      // testMatch alone cannot reach outside the top-level testDir
+      // (src/functional-e2e), so the project needs its own testDir. Without it
+      // this project collected ZERO tests and the nightly silently skipped it.
+      testDir: path.resolve(__dirname, '../tests'),
+      testMatch: ['callout-reactions.spec.ts'],
+      timeout: 60_000,
+      expect: { timeout: 10_000 },
+    },
+    {
+      // Feature 041 (callout reaction NOTIFICATIONS) — persisted P1 acceptance
+      // walk, same forge-verify shape as 038: machine-generated file in tests/,
+      // self-seeding, torn down in afterAll. Needs more headroom than 038: the
+      // negative assertions (AS4 self-suppression, AS2 swap) each hold a
+      // multi-sample settle window on top of the positive 30s poll.
+      name: 'Callout reaction notifications',
+      // testMatch alone cannot reach outside the top-level testDir
+      // (src/functional-e2e), so the project needs its own testDir.
+      testDir: path.resolve(__dirname, '../tests'),
+      testMatch: ['callout-reaction-notifications.spec.ts'],
+      timeout: 120_000,
+      expect: { timeout: 15_000 },
     },
   ],
   // % or number of the available CPUs

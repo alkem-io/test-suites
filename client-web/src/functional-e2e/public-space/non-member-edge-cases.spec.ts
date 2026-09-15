@@ -1,6 +1,7 @@
 // spec: client-web/src/functional-e2e/public-space/public-space-non-member-navigation-test-plan.md
 // seed: client-web/src/functional-e2e/seed-public-space.spec.ts
 
+import { aboutThisSpaceButton } from '../helpers/space-navigation.helper';
 import {
   CommunityMembershipPolicy,
   SpacePrivacyMode,
@@ -122,7 +123,7 @@ test.describe('Edge Cases and Error Handling', () => {
 
     await page.getByRole('tab', { name: 'Home' }).click();
     await expect(
-      page.getByRole('button', { name: 'About this Space' })
+      aboutThisSpaceButton(page)
     ).toBeVisible();
   });
 
@@ -179,7 +180,7 @@ test.describe('Edge Cases and Error Handling', () => {
 
     // Verify space content is accessible while logged in
     await expect(
-      page.getByRole('button', { name: 'About this Space' })
+      aboutThisSpaceButton(page)
     ).toBeVisible();
 
     // Step 2: Simulate session expiry by clearing cookies/storage
@@ -200,7 +201,7 @@ test.describe('Edge Cases and Error Handling', () => {
 
     // Verify space content is still visible
     await expect(
-      page.getByRole('button', { name: 'About this Space' })
+      aboutThisSpaceButton(page)
     ).toBeVisible();
 
     // Step 4: Navigate between tabs after session expiry
@@ -226,7 +227,7 @@ test.describe('Edge Cases and Error Handling', () => {
 
     // CRD moved the apply affordance out of the dashboard and into the About
     // dialog; open it to surface the login-gated apply button.
-    await page.getByRole('button', { name: 'About this Space' }).click();
+    await aboutThisSpaceButton(page).click();
 
     // Check if "Sign in to apply" button appears (indicating login required for private actions)
     await expect(

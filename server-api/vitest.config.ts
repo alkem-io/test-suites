@@ -10,11 +10,17 @@ const resolve = (...segments: string[]) => path.resolve(__dirname, ...segments);
  * - Inherits root config (plugins, environment, globals, timeout, setupFiles, reporters)
  * - Inherits globalSetup from root; the setup file guards against duplicate invocations
  */
-const project = (name: string, include: string[]) => ({
+// `exclude` is deliberately omitted from the returned test config when empty
+// rather than set to `[]` — vitest project config REPLACES (not merges) an
+// inherited `test.exclude`, so setting it unconditionally would silently
+// drop vitest's own default excludes (`**/node_modules/**`, …) on every
+// project that doesn't need one.
+const project = (name: string, include: string[], exclude?: string[]) => ({
   extends: true as const,
   test: {
     name,
     include,
+    ...(exclude && exclude.length > 0 ? { exclude } : {}),
   },
 });
 
@@ -49,6 +55,7 @@ export default defineConfig({
         'src/functional-api/activity-logs/**/*.it-spec.ts',
       ]),
       project('callouts', ['src/functional-api/callout/**/*.it-spec.ts']),
+      project('collabora', ['src/functional-api/collabora/**/*.it-spec.ts']),
       project('communication', [
         'src/functional-api/communications/**/*.it-spec.ts',
       ]),
@@ -87,6 +94,9 @@ export default defineConfig({
       project('notifications-callouts', [
         'src/functional-api/notifications/callouts/**/*.it-spec.ts',
       ]),
+      project('notifications-callout-reactions', [
+        'src/functional-api/notifications/callout-reactions/**/*.it-spec.ts',
+      ]),
       project('notifications-community', [
         'src/functional-api/notifications/community/**/*.it-spec.ts',
       ]),
@@ -108,6 +118,7 @@ export default defineConfig({
         'src/functional-api/subscriptions/**/*.it-spec.ts',
       ]),
       project('templates', ['src/functional-api/templates/**/*.it-spec.ts']),
+      project('visual', ['src/functional-api/visual/**/*.it-spec.ts']),
       project('calendar', ['src/functional-api/calendar/**/*.it-spec.ts']),
       project('push-notifications', [
         'src/functional-api/push-notifications/**/*.it-spec.ts',
@@ -115,6 +126,7 @@ export default defineConfig({
       project('graphql-guard', [
         'src/functional-api/graphql-guard/**/*.it-spec.ts',
       ]),
+      project('language', ['src/functional-api/language/**/*.it-spec.ts']),
       // workspace#027-platform-role-redesign (T005/T008/T009). Both
       // projects read the SAME generated table (role-action-matrix.data.ts)
       // — the `PLATFORM_ROLES_MATRIX_SCOPE` env var each project sets is
@@ -243,9 +255,23 @@ export default defineConfig({
             'src/functional-api/storage/**/*.it-spec.ts',
             'src/functional-api/entitlements/**/*.it-spec.ts',
             'src/functional-api/templates/**/*.it-spec.ts',
+            'src/functional-api/visual/**/*.it-spec.ts',
             'src/functional-api/calendar/**/*.it-spec.ts',
             'src/functional-api/push-notifications/**/*.it-spec.ts',
+            'src/functional-api/language/**/*.it-spec.ts',
             'src/functional-api/platform-roles/**/*.it-spec.ts',
+          ],
+          // 054-delete-own-account: these it-specs need loopback Redis/Postgres
+          // and a matching local/CI `SESSION_SIGNING_KEY`
+          // (`lib/src/scenario/registration/mint-bff-session.ts`,
+          // `lib/src/config/loopback-guard.ts`) that the nightly workflow does
+          // not and must never provide — wiring the shared cluster's session-
+          // signing-key material into a public CI job to make them pass there
+          // would turn a latent impersonation capability into a disclosed one.
+          // Decision: local-compose-stack-only; run via `test:contributormanagement`
+          // locally, never nightly.
+          exclude: [
+            'src/functional-api/contributor-management/user/delete-own-account*.it-spec.ts',
           ],
           env: { PLATFORM_ROLES_MATRIX_SCOPE: 'full' },
           setupFiles: [

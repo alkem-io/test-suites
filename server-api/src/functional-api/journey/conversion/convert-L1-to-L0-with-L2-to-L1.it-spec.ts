@@ -28,8 +28,13 @@ import {
   collectProfileUrls,
 } from '@utils/array.matcher';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- used once alkem-io/client-web#9481 is fixed
 const { ALKEMIO_BASE_URL } = process.env;
+
+// A conversion only rebases urls of entities inside the converted space subtree.
+// Users and organizations referenced from it keep their own urls.
+const isExternalEntityUrl = (url: string) =>
+  url.startsWith(`${ALKEMIO_BASE_URL}/user/`) ||
+  url.startsWith(`${ALKEMIO_BASE_URL}/organization/`);
 
 import { inviteForEntryRoleOnRoleSet } from '@functional-api/roleset/invitations/invitation.request.params';
 import { createApplication } from '@functional-api/roleset/application/application.request.params';
@@ -212,12 +217,11 @@ describe('Convert L1 to L0 with cascading L2 to L1', () => {
     test('about fields are preserved after same-L0 conversion to L0', () => {
       const aboutBefore = subspaceBefore.data?.lookup.space?.about;
 
-      // Skip url check: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
       expect(convertedL0?.about.profile).toEqual(
         expect.objectContaining({
           id: aboutBefore?.profile?.id,
           displayName: aboutBefore?.profile?.displayName,
-          // url: `${ALKEMIO_BASE_URL}/${baseScenario.subspace.nameId}`,
+          url: `${ALKEMIO_BASE_URL}/${baseScenario.subspace.nameId}`,
         })
       );
 
@@ -229,8 +233,7 @@ describe('Convert L1 to L0 with cascading L2 to L1', () => {
       expect(convertedL0?.about.provider).toEqual(aboutBefore?.provider);
     });
 
-    // Skip: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
-    test.skip('all entity profile urls are updated after promotion to L0', () => {
+    test('all entity profile urls are updated after promotion to L0', () => {
       const urlsBefore = collectProfileUrls(subspaceBefore.data?.lookup.space);
       const urlsAfter = collectProfileUrls(convertedL0);
 
@@ -241,10 +244,19 @@ describe('Convert L1 to L0 with cascading L2 to L1', () => {
       expect(urlsAfter.length).toEqual(urlsBefore.length);
 
       for (let i = 0; i < urlsAfter.length; i++) {
-        expect(
-          urlsAfter[i].url,
-          `${urlsAfter[i].path} should differ after conversion`
-        ).not.toEqual(urlsBefore[i].url);
+        const { path, url } = urlsAfter[i];
+        // urls pointing at a user or organization belong to entities the conversion
+        // does not touch (host org, message senders), so they stay identical;
+        // every space-scoped url must rebase onto the new hierarchy
+        if (isExternalEntityUrl(url)) {
+          expect(url, `${path} should be unchanged by conversion`).toEqual(
+            urlsBefore[i].url
+          );
+          continue;
+        }
+        expect(url, `${path} should differ after conversion`).not.toEqual(
+          urlsBefore[i].url
+        );
       }
     });
 
@@ -297,12 +309,11 @@ describe('Convert L1 to L0 with cascading L2 to L1', () => {
     test('about fields are preserved after cascading conversion to L1', () => {
       const aboutBefore = subsubspaceBefore.data?.lookup.space?.about;
 
-      // Skip url check: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
       expect(promotedL1Data?.about.profile).toEqual(
         expect.objectContaining({
           id: aboutBefore?.profile?.id,
           displayName: aboutBefore?.profile?.displayName,
-          // url: `${ALKEMIO_BASE_URL}/${baseScenario.subspace.nameId}/challenges/${baseScenario.subsubspace.nameId}`,
+          url: `${ALKEMIO_BASE_URL}/${baseScenario.subspace.nameId}/challenges/${baseScenario.subsubspace.nameId}`,
         })
       );
 
@@ -314,8 +325,7 @@ describe('Convert L1 to L0 with cascading L2 to L1', () => {
       expect(promotedL1Data?.about.provider).toEqual(aboutBefore?.provider);
     });
 
-    // Skip: Wrong endpoints set for promoted L1 to L0 — alkem-io/client-web#9481
-    test.skip('all entity profile urls are updated after cascading promotion to L1', () => {
+    test('all entity profile urls are updated after cascading promotion to L1', () => {
       const urlsBefore = collectProfileUrls(
         subsubspaceBefore.data?.lookup.space
       );
@@ -328,10 +338,19 @@ describe('Convert L1 to L0 with cascading L2 to L1', () => {
       expect(urlsAfter.length).toEqual(urlsBefore.length);
 
       for (let i = 0; i < urlsAfter.length; i++) {
-        expect(
-          urlsAfter[i].url,
-          `${urlsAfter[i].path} should differ after conversion`
-        ).not.toEqual(urlsBefore[i].url);
+        const { path, url } = urlsAfter[i];
+        // urls pointing at a user or organization belong to entities the conversion
+        // does not touch (host org, message senders), so they stay identical;
+        // every space-scoped url must rebase onto the new hierarchy
+        if (isExternalEntityUrl(url)) {
+          expect(url, `${path} should be unchanged by conversion`).toEqual(
+            urlsBefore[i].url
+          );
+          continue;
+        }
+        expect(url, `${path} should differ after conversion`).not.toEqual(
+          urlsBefore[i].url
+        );
       }
     });
 

@@ -33,9 +33,15 @@ export default defineConfig({
    * default gate) excludes these files at collection exactly as before;
    * setting the flag lifts the ignore so `--grep @forge-acceptance` can then
    * select them by tag, verified to return all three files' tests. */
-  testIgnore: process.env.PLAYWRIGHT_INCLUDE_FORGE_ACCEPTANCE
-    ? undefined
-    : '**/*.forge-acceptance.spec.ts',
+  /* The 029 language-offer acceptance walks need their own runner settings
+     (longer timeouts, per-file locales) and are run via
+     config/playwright.config.language-offer.ts, not this default suite. */
+  testIgnore: [
+    '**/language-offer/**',
+    ...(process.env.PLAYWRIGHT_INCLUDE_FORGE_ACCEPTANCE
+      ? []
+      : ['**/*.forge-acceptance.spec.ts']),
+  ],
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */

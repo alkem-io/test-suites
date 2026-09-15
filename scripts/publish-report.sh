@@ -23,20 +23,26 @@ PAGES_ROOT="out/gh-pages-root"
 SUITE_DIR="$PAGES_ROOT/$SUITE_NAME"
 REPORT_DIR="$SUITE_DIR/$RUN_DATE/$RUN_ID"
 
-# ── Organize report ──────────────────────────────────────────────────────────
-mkdir -p out
-mkdir -p "$REPORT_DIR"
-cp -r "$REPORT_SOURCE"/* "$REPORT_DIR/"
+# Stage the report outside `out` so the resync-and-retry loop below can hard-reset
+# the gh-pages working tree without throwing the report away.
+STAGE_DIR="${RUNNER_TEMP:-/tmp}/publish-report-$SUITE_NAME-$RUN_ID"
+
+PUSH_ATTEMPTS=5
+
+# ── Stage report ─────────────────────────────────────────────────────────────
+rm -rf "$STAGE_DIR"
+mkdir -p "$STAGE_DIR"
+cp -r "$REPORT_SOURCE"/* "$STAGE_DIR/"
 
 # If the report has no index.html (e.g. Vitest uses report_<timestamp>.html),
 # copy the report file as index.html so the directory URL works.
-if [ ! -f "$REPORT_DIR/index.html" ]; then
-  REPORT_HTML=$(find "$REPORT_DIR" -maxdepth 1 -name "*.html" | head -1)
-  [ -n "$REPORT_HTML" ] && cp "$REPORT_HTML" "$REPORT_DIR/index.html"
+if [ ! -f "$STAGE_DIR/index.html" ]; then
+  REPORT_HTML=$(find "$STAGE_DIR" -maxdepth 1 -name "*.html" | head -1)
+  [ -n "$REPORT_HTML" ] && cp "$REPORT_HTML" "$STAGE_DIR/index.html"
 fi
 
 # ── Run metadata ─────────────────────────────────────────────────────────────
-cat > "$REPORT_DIR/runinfo.txt" <<EOF
+cat > "$STAGE_DIR/runinfo.txt" <<EOF
 Run ID: $RUN_ID
 Date: $RUN_DATE
 Branch: $GITHUB_REF
@@ -44,19 +50,22 @@ Commit: $GITHUB_SHA
 $DISPLAY_NAME outcome: ${TEST_OUTCOME:-unknown}
 EOF
 
-echo "$GITHUB_SHA" > "$REPORT_DIR/commit.txt"
-echo "${GITHUB_REF_NAME:-unknown}" > "$REPORT_DIR/branch.txt"
+echo "$GITHUB_SHA" > "$STAGE_DIR/commit.txt"
+echo "${GITHUB_REF_NAME:-unknown}" > "$STAGE_DIR/branch.txt"
 
 if [ "${TEST_OUTCOME:-}" = "success" ]; then
-  echo "passed" > "$REPORT_DIR/status.txt"
+  echo "passed" > "$STAGE_DIR/status.txt"
 else
-  echo "failed" > "$REPORT_DIR/status.txt"
+  echo "failed" > "$STAGE_DIR/status.txt"
 fi
 
-# ── Suite summary index ──────────────────────────────────────────────────────
-INDEX="$SUITE_DIR/index.html"
+# ── Index generation ─────────────────────────────────────────────────────────
+# Rebuilt from whatever is on disk *after* each resync, so a report pushed by
+# another suite's run mid-flight still shows up in the regenerated listing.
+write_indexes() {
+  local INDEX="$SUITE_DIR/index.html"
 
-cat > "$INDEX" <<EOF
+  cat > "$INDEX" <<EOF
 <!DOCTYPE html>
 <html>
   <head>
@@ -75,45 +84,43 @@ cat > "$INDEX" <<EOF
     <p><a href="../">Back to main index</a></p>
 EOF
 
-for dateDir in $(ls -1 "$SUITE_DIR" | sort -r); do
-  [ "$dateDir" = "index.html" ] && continue
-  [ -d "$SUITE_DIR/$dateDir" ] || continue
-  echo "<h2>$dateDir</h2>" >> "$INDEX"
-  echo "<ul>" >> "$INDEX"
+  for dateDir in $(ls -1 "$SUITE_DIR" | sort -r); do
+    [ "$dateDir" = "index.html" ] && continue
+    [ -d "$SUITE_DIR/$dateDir" ] || continue
+    echo "<h2>$dateDir</h2>" >> "$INDEX"
+    echo "<ul>" >> "$INDEX"
 
-  for runDir in $(ls -1 "$SUITE_DIR/$dateDir" | sort -r); do
-    [ -d "$SUITE_DIR/$dateDir/$runDir" ] || continue
+    for runDir in $(ls -1 "$SUITE_DIR/$dateDir" | sort -r); do
+      [ -d "$SUITE_DIR/$dateDir/$runDir" ] || continue
 
-    status="unknown"
-    [ -f "$SUITE_DIR/$dateDir/$runDir/status.txt" ] && \
-      status=$(tr -d '\n\r' < "$SUITE_DIR/$dateDir/$runDir/status.txt")
+      status="unknown"
+      [ -f "$SUITE_DIR/$dateDir/$runDir/status.txt" ] && \
+        status=$(tr -d '\n\r' < "$SUITE_DIR/$dateDir/$runDir/status.txt")
 
-    shaShort="unknown"
-    [ -f "$SUITE_DIR/$dateDir/$runDir/commit.txt" ] && \
-      shaShort=$(tr -d '\n\r' < "$SUITE_DIR/$dateDir/$runDir/commit.txt" | cut -c1-7)
+      shaShort="unknown"
+      [ -f "$SUITE_DIR/$dateDir/$runDir/commit.txt" ] && \
+        shaShort=$(tr -d '\n\r' < "$SUITE_DIR/$dateDir/$runDir/commit.txt" | cut -c1-7)
 
-    branchName="unknown"
-    [ -f "$SUITE_DIR/$dateDir/$runDir/branch.txt" ] && \
-      branchName=$(tr -d '\n\r' < "$SUITE_DIR/$dateDir/$runDir/branch.txt")
+      branchName="unknown"
+      [ -f "$SUITE_DIR/$dateDir/$runDir/branch.txt" ] && \
+        branchName=$(tr -d '\n\r' < "$SUITE_DIR/$dateDir/$runDir/branch.txt")
 
-    icon="❔"
-    [ "$status" = "passed" ] && icon="✅"
-    [ "$status" = "failed" ] && icon="❌"
+      icon="❔"
+      [ "$status" = "passed" ] && icon="✅"
+      [ "$status" = "failed" ] && icon="❌"
 
-    echo "  <li>$icon <a href=\"$dateDir/$runDir/\">test $runDir ($shaShort - $branchName)</a></li>" >> "$INDEX"
+      echo "  <li>$icon <a href=\"$dateDir/$runDir/\">test $runDir ($shaShort - $branchName)</a></li>" >> "$INDEX"
+    done
+
+    echo "</ul>" >> "$INDEX"
   done
 
-  echo "</ul>" >> "$INDEX"
-done
-
-cat >> "$INDEX" << 'EOF'
+  cat >> "$INDEX" << 'EOF'
   </body>
 </html>
 EOF
 
-# ── Top-level index ──────────────────────────────────────────────────────────
-TOP_INDEX="$PAGES_ROOT/index.html"
-cat > "$TOP_INDEX" << 'EOF'
+  cat > "$PAGES_ROOT/index.html" << 'EOF'
 <!DOCTYPE html>
 <html>
   <head>
@@ -135,21 +142,51 @@ cat > "$TOP_INDEX" << 'EOF'
   </body>
 </html>
 EOF
+}
 
-# ── Commit to gh-pages ───────────────────────────────────────────────────────
-cd out
+# ── Prepare gh-pages worktree ────────────────────────────────────────────────
+mkdir -p out
 
-if [ ! -d .git ]; then
-  git init
-  git checkout -b gh-pages
-  git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+if [ ! -d out/.git ]; then
+  git -C out init
+  git -C out checkout -b gh-pages
+  git -C out remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
 else
-  git checkout gh-pages || git checkout -b gh-pages
+  git -C out checkout gh-pages || git -C out checkout -b gh-pages
 fi
 
-git config user.name "github-actions[bot]"
-git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+git -C out config user.name "github-actions[bot]"
+git -C out config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-git add -A
-git commit -m "Update $SUITE_NAME report: ${RUN_DATE}/${RUN_ID}" || echo "No changes to commit"
-git push origin gh-pages
+# ── Commit to gh-pages ───────────────────────────────────────────────────────
+# The gh-pages checkout is taken at job start, but a nightly can run for hours —
+# long enough for the other suite's run to push in the meantime, which made the
+# push a non-fast-forward and lost the whole report (run 34447510124). Resync to
+# the remote tip and rebuild on top of it before every attempt.
+for attempt in $(seq 1 "$PUSH_ATTEMPTS"); do
+  if git -C out fetch --depth=1 origin gh-pages; then
+    git -C out reset --hard FETCH_HEAD
+  else
+    echo "No remote gh-pages branch yet — publishing the first commit."
+  fi
+
+  # Untracked files survive the reset, but re-copy so a partially staged retry
+  # can't leave a half-written report behind.
+  mkdir -p "$REPORT_DIR"
+  cp -r "$STAGE_DIR"/* "$REPORT_DIR/"
+  write_indexes
+
+  git -C out add -A
+  git -C out commit -m "Update $SUITE_NAME report: ${RUN_DATE}/${RUN_ID}" || echo "No changes to commit"
+
+  if git -C out push origin gh-pages; then
+    echo "Published $SUITE_NAME report ${RUN_DATE}/${RUN_ID} to gh-pages (attempt $attempt)."
+    exit 0
+  fi
+
+  echo "Push rejected (attempt $attempt/$PUSH_ATTEMPTS) — resyncing with origin/gh-pages and retrying."
+  sleep $((attempt * 5))
+done
+
+echo "Failed to publish $SUITE_NAME report after $PUSH_ATTEMPTS attempts." >&2
+exit 1

@@ -156,8 +156,8 @@ export interface TestScenarioInnovationPackConfig {
         tags?: string[];
         /** For TemplateType.Post */
         postDefaultDescription?: string;
-        /** For TemplateType.Whiteboard */
-        whiteboardContent?: string;
+        /** For TemplateType.Whiteboard: seed from an existing whiteboard (server#6399 removed inline content) */
+        sourceWhiteboardID?: string;
       }
     | {
         type: TemplateType.Callout;
