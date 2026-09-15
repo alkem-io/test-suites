@@ -39,14 +39,23 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean };
   Int: { input: number; output: number };
   Float: { input: number; output: number };
+  /** A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format. */
   DateTime: { input: Date; output: Date };
+  /** An Emoji. */
   Emoji: { input: any; output: any };
+  /** A representation of a Lifecycle Definition, based on XState. It is serialized JSON. */
   LifecycleDefinition: { input: any; output: any };
+  /** A markdown string. */
   Markdown: { input: any; output: any };
+  /** An identifier that originates from the underlying messaging platform. */
   MessageID: { input: any; output: any };
+  /** A human readable identifier, 3 <= length <= 28. Used for URL paths in clients. Characters allowed: a-z,A-Z,0-9. */
   NameID: { input: string; output: string };
+  /** Cursor used for paginating search results. */
   SearchCursor: { input: any; output: any };
+  /** A uuid identifier. Length 36 characters. */
   UUID: { input: string; output: string };
+  /** The `Upload` scalar type represents a file upload. */
   Upload: {
     input: import("graphql-upload").FileUpload;
     output: import("graphql-upload").FileUpload;
@@ -670,6 +679,17 @@ export type AddVisualToMediaGalleryInput = {
   sortOrder?: InputMaybe<Scalars["Float"]["input"]>;
   /** The type of visual to add (e.g. MEDIA_GALLERY_IMAGE, MEDIA_GALLERY_VIDEO). */
   visualType: VisualType;
+};
+
+export type AdminCommunicationReconcileForumHierarchyInput = {
+  /** Report-only when true (the default): compute drift and write nothing. Set false to apply the two-phase convergence. */
+  dryRun?: Scalars["Boolean"]["input"];
+  /** Cumulative adapter write budget for this invocation. When exceeded mid-pass the remaining parents are reported failed rather than attempted, and a re-invocation converges the rest. */
+  maxOperations?: Scalars["Int"]["input"];
+  /** When applying (dryRun=false), also remove extra edges whose child no longer resolves to any Alkemio room (a deleted discussion’s ghost edge). Never removes a space. */
+  pruneUnknown?: Scalars["Boolean"]["input"];
+  /** Opt-in repair of the room-side m.space.parent pointer on touched children, under its own separate and lower write budget. Off by default: the underlying operation can admin-join the bot into rooms people read. */
+  repairRoomParentPointers?: Scalars["Boolean"]["input"];
 };
 
 export type AdminRevokeMcpApiKeyInput = {
@@ -5162,6 +5182,8 @@ export type Mutation = {
   adminCommunicationEnsureAccessToCommunications: Scalars["Boolean"]["output"];
   /** Create rooms for legacy conversations that were created without one (from lazy room creation era). */
   adminCommunicationMigrateOrphanedConversations: CommunicationAdminMigrateRoomsResult;
+  /** Reconcile the Matrix space hierarchy that mirrors the forum against the current forum/discussion state — report-first (dryRun defaults true), scoped to categories + the forum space, never a delete. Returns a task id; the pass runs asynchronously and the task completes with the summary. */
+  adminCommunicationReconcileForumHierarchy: Scalars["String"]["output"];
   /** Remove an orphaned room from messaging platform. */
   adminCommunicationRemoveOrphanedRoom: Scalars["Boolean"]["output"];
   /** Synchronize all Alkemio spaces into the Matrix space hierarchy. Idempotent — safe to call multiple times. */
@@ -5662,6 +5684,10 @@ export type MutationAddVisualToMediaGalleryArgs = {
 
 export type MutationAdminCommunicationEnsureAccessToCommunicationsArgs = {
   communicationData: CommunicationAdminEnsureAccessInput;
+};
+
+export type MutationAdminCommunicationReconcileForumHierarchyArgs = {
+  reconcileData: AdminCommunicationReconcileForumHierarchyInput;
 };
 
 export type MutationAdminCommunicationRemoveOrphanedRoomArgs = {
@@ -11887,6 +11913,7 @@ export type ResolversTypes = {
   AddPollOptionInput: AddPollOptionInput;
   AddReactionToCalloutInput: AddReactionToCalloutInput;
   AddVisualToMediaGalleryInput: AddVisualToMediaGalleryInput;
+  AdminCommunicationReconcileForumHierarchyInput: AdminCommunicationReconcileForumHierarchyInput;
   AdminRevokeMcpApiKeyInput: AdminRevokeMcpApiKeyInput;
   AdminUserEmailChangeDriftResolveInput: AdminUserEmailChangeDriftResolveInput;
   AdminUserEmailChangeInput: AdminUserEmailChangeInput;
@@ -13578,6 +13605,7 @@ export type ResolversParentTypes = {
   AddPollOptionInput: AddPollOptionInput;
   AddReactionToCalloutInput: AddReactionToCalloutInput;
   AddVisualToMediaGalleryInput: AddVisualToMediaGalleryInput;
+  AdminCommunicationReconcileForumHierarchyInput: AdminCommunicationReconcileForumHierarchyInput;
   AdminRevokeMcpApiKeyInput: AdminRevokeMcpApiKeyInput;
   AdminUserEmailChangeDriftResolveInput: AdminUserEmailChangeDriftResolveInput;
   AdminUserEmailChangeInput: AdminUserEmailChangeInput;
@@ -19838,6 +19866,15 @@ export type MutationResolvers<
     ResolversTypes["CommunicationAdminMigrateRoomsResult"],
     ParentType,
     ContextType
+  >;
+  adminCommunicationReconcileForumHierarchy?: Resolver<
+    ResolversTypes["String"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      MutationAdminCommunicationReconcileForumHierarchyArgs,
+      "reconcileData"
+    >
   >;
   adminCommunicationRemoveOrphanedRoom?: Resolver<
     ResolversTypes["Boolean"],
@@ -30650,7 +30687,6 @@ export type RevokeLicensePlanFromSpaceMutation = {
       name: LicensingCredentialBasedCredentialType;
     }>;
     subspaces: Array<{ id: string }>;
-    actor: { id: string };
   };
 };
 
@@ -46550,6 +46586,20 @@ export type AssignRoleToUserExtendedDataMutation = {
           myPrivileges?: Array<AuthorizationPrivilege> | undefined;
           credentialRules?: Array<{ name?: string | undefined }> | undefined;
         }
+      | undefined;
+  };
+};
+
+export type AssignRoleToVirtualContributorMutationVariables = Exact<{
+  roleData: AssignRoleOnRoleSetInput;
+}>;
+
+export type AssignRoleToVirtualContributorMutation = {
+  assignRoleToVirtualContributor: {
+    __typename: "VirtualContributor";
+    id: string;
+    profile?:
+      | { __typename: "Profile"; id: string; displayName: string }
       | undefined;
   };
 };
@@ -82107,6 +82157,14 @@ export type UpdateInnovationFlowStateMutation = {
   updateInnovationFlowState: { id: string; displayName: string };
 };
 
+export type PrepareMemoSigningMutationVariables = Exact<{
+  signingData: MemoSigningPrepareInput;
+}>;
+
+export type PrepareMemoSigningMutation = {
+  prepareMemoSigning: { attemptId: string; previewUrl: string };
+};
+
 export type AuthorizationPolicyResetOnOrganizationMutationVariables = Exact<{
   organizationID: Scalars["UUID"]["input"];
 }>;
@@ -91318,6 +91376,28 @@ export type GetInnovationFlowStatesWithIdsQuery = {
   };
 };
 
+export type GetSpaceLicenseEntitlementsQueryVariables = Exact<{
+  spaceID: Scalars["UUID"]["input"];
+}>;
+
+export type GetSpaceLicenseEntitlementsQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          license: {
+            id: string;
+            entitlements: Array<{
+              type: LicenseEntitlementType;
+              enabled: boolean;
+              limit: number;
+            }>;
+          };
+        }
+      | undefined;
+  };
+};
+
 export type GetSpaceLicenseSubscriptionsQueryVariables = Exact<{
   ID: Scalars["UUID"]["input"];
 }>;
@@ -91380,6 +91460,29 @@ export type LookupProfileVisualsQuery = {
               | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
               | undefined;
           }>;
+        }
+      | undefined;
+  };
+};
+
+export type GetCalloutFramingMemoQueryVariables = Exact<{
+  calloutID: Scalars["UUID"]["input"];
+}>;
+
+export type GetCalloutFramingMemoQuery = {
+  lookup: {
+    callout?:
+      | {
+          id: string;
+          framing: {
+            id: string;
+            memo?:
+              | {
+                  id: string;
+                  profile: { id: string; displayName: string; url: string };
+                }
+              | undefined;
+          };
         }
       | undefined;
   };

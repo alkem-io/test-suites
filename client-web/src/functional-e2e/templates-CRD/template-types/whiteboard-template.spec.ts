@@ -116,8 +116,11 @@ test.describe.serial('Whiteboard Templates', () => {
     await page.getByRole('menuitem', { name: 'Create new' }).click();
 
     // Wait for the Whiteboard Template creation dialog to appear
+    // Once drawing starts the template is materialised server-side and the same
+    // dialog is retitled "Edit whiteboard template" (client-web#10205, 0.163.0),
+    // so the locator accepts both titles.
     const dialog = page.getByRole('dialog', {
-      name: 'Create whiteboard template',
+      name: /^(Create|Edit) whiteboard template$/,
     });
     await expect(
       dialog.getByRole('heading', { name: 'Create whiteboard template' })
@@ -127,7 +130,7 @@ test.describe.serial('Whiteboard Templates', () => {
     await fillWhiteboardTemplateForm(page, templateData);
 
     // Verify the Save button is enabled
-    const saveButton = dialog.getByRole('button', { name: 'Save' });
+    const saveButton = dialog.getByRole('button', { name: 'Save', exact: true });
     await expect(saveButton).toBeEnabled();
 
     // Click the Save button to save the Whiteboard Template
@@ -135,7 +138,7 @@ test.describe.serial('Whiteboard Templates', () => {
 
     // Verify the dialog closes
     await expect(
-      page.getByRole('heading', { name: 'Create whiteboard template' })
+      page.getByRole('heading', { name: /^(Create|Edit) whiteboard template$/ })
     ).not.toBeVisible();
 
     await verifyWhiteboardTemplate(page, templateData);
@@ -167,7 +170,7 @@ test.describe.serial('Whiteboard Templates', () => {
     await fillWhiteboardTemplateForm(page, templateData);
 
     // Click the Save button to save the changes
-    const saveButton = dialog.getByRole('button', { name: 'Save' });
+    const saveButton = dialog.getByRole('button', { name: 'Save', exact: true });
     await expect(saveButton).toBeEnabled();
     await saveButton.click();
 
@@ -195,8 +198,11 @@ test.describe.serial('Whiteboard Templates', () => {
     await page.getByRole('menuitem', { name: 'Create new' }).click();
 
     // Wait for the Whiteboard Template creation dialog to appear
+    // Once drawing starts the template is materialised server-side and the same
+    // dialog is retitled "Edit whiteboard template" (client-web#10205, 0.163.0),
+    // so the locator accepts both titles.
     const dialog = page.getByRole('dialog', {
-      name: 'Create whiteboard template',
+      name: /^(Create|Edit) whiteboard template$/,
     });
     await expect(
       dialog.getByRole('heading', { name: 'Create whiteboard template' })
@@ -212,9 +218,9 @@ test.describe.serial('Whiteboard Templates', () => {
 
     await fillWhiteboardWithWhiteboardTemplate(page, templateData);
 
-    await dialog.getByRole('button', { name: 'Save' }).click();
+    await dialog.getByRole('button', { name: 'Save', exact: true }).click();
     await expect(
-      page.getByRole('heading', { name: 'Create whiteboard template' })
+      page.getByRole('heading', { name: /^(Create|Edit) whiteboard template$/ })
     ).not.toBeVisible();
 
     await openWhiteboardTemplate(page, testTemplate);
