@@ -9,6 +9,7 @@ import {
   TestUser,
   TestUserManager,
   UniqueIDGenerator,
+  harnessPostgresConfigured,
   queryHarnessDb,
 } from '@alkemio/tests-lib';
 import {
@@ -684,7 +685,8 @@ describe('User notification settings — the five new associate rows (062, US6-A
     }
   });
 
-  test('a user row SQL-stripped of the five keys reads all-on (@AfterLoad backstop, US6-AS3)', async () => {
+  // Loopback Postgres only — see `harnessPostgresConfigured`.
+  test.skipIf(!harnessPostgresConfigured())('a user row SQL-stripped of the five keys reads all-on (@AfterLoad backstop, US6-AS3)', async () => {
     // The SQL strip mutates the persisted JSON of a globally seeded persona;
     // re-persist the five keys in `finally` — validated — so an assertion
     // failure cannot leave `subspaceAdmin` relying on the @AfterLoad backstop

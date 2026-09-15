@@ -6,6 +6,7 @@ import {
   TestScenarioFactory,
   TestUser,
   TestUserManager,
+  harnessPostgresConfigured,
   queryHarnessDb,
 } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
@@ -292,7 +293,9 @@ describe('Organization associate applications (US3)', () => {
     }
   });
 
-  test('US3-AS9: a pre-migration-shaped organization row reads allowApplications === true and the seeded question as optional', async () => {
+  // Loopback Postgres only: the premigration row shape is produced by direct
+  // SQL, which the nightly run (remote cluster, no POSTGRES_* set) cannot reach.
+  test.skipIf(!harnessPostgresConfigured())('US3-AS9: a pre-migration-shaped organization row reads allowApplications === true and the seeded question as optional', async () => {
     await queryHarnessDb(
       "UPDATE organization SET settings = settings #- '{membership,allowApplications}' WHERE id = $1",
       [baseScenario.organization.id]

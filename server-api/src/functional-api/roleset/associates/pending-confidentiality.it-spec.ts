@@ -5,6 +5,7 @@ import {
   TestScenarioFactory,
   TestUser,
   TestUserManager,
+  harnessPostgresConfigured,
   queryHarnessDb,
 } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
@@ -12,7 +13,12 @@ import {
   OrganizationAssociateEligibilityReason,
   RoleName,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
-import { getOrganizationRoleSetPending } from '../roleset.request.params';
+import {
+  getOrganizationRoleSetPending,
+  getRoleSetPendingApplications,
+  getRoleSetPendingInvitations,
+  getRoleSetPendingPlatformInvitations,
+} from '../roleset.request.params';
 import { assignRoleToUser } from '../roles-request.params';
 import {
   deleteInvitation,
@@ -61,19 +67,36 @@ beforeAll(async () => {
     RoleName.Owner
   );
 
+  // The subspace exists for its admin: with the Space's
+  // `allowSubspaceAdminsToInviteMembers` on, a subspace admin may invite to
+  // the Space (and so may read its pending invitations) without being a
+  // Space admin — the one persona that separates the invite gate from the
+  // decide gate on the Space side.
   spaceScenario = await TestScenarioFactory.createBaseScenario({
     name: 'space-pending-confidentiality',
     space: {
       collaboration: { addTutorialCallouts: false },
       community: {
         admins: [TestUser.SPACE_ADMIN],
-        members: [TestUser.SPACE_ADMIN, TestUser.SPACE_MEMBER],
+        members: [
+          TestUser.SPACE_ADMIN,
+          TestUser.SPACE_MEMBER,
+          TestUser.SUBSPACE_ADMIN,
+        ],
+      },
+      subspace: {
+        collaboration: { addTutorialCallouts: false },
+        community: {
+          admins: [TestUser.SUBSPACE_ADMIN],
+          members: [TestUser.SUBSPACE_ADMIN],
+        },
       },
     },
   });
 
   await updateSpaceSettings(spaceScenario.space.id, {
     privacy: { mode: SpacePrivacyMode.Public },
+    membership: { allowSubspaceAdminsToInviteMembers: true },
   });
 
   orgResetScenario = await TestScenarioFactory.createBaseScenarioOrganization(
@@ -169,6 +192,41 @@ describe('Pending-list confidentiality — organizations (US7-AS2, contract §6)
     expect(asApplicant?.error?.errors).toBeDefined();
     expect(asApplicant?.data).toBeUndefined();
   });
+
+  test('GLOBAL_SUPPORT reads the invitation lists (it may invite) but is refused the applications (it does not decide them)', async () => {
+    // The two gates differ on purpose: whoever may create an invitation may
+    // see the pending ones (the invite dialog dedupes on them), while the
+    // applications carry the applicant's answers and are readable only by
+    // those who decide them. Platform support holds the first standing on
+    // organizations, not the second. Read one field per query — the fields
+    // are non-null, so a combined read would null all three on the refusal.
+    const roleSetId = orgScenario.organization.roleSetId;
+
+    const invitations = await getRoleSetPendingInvitations(
+      roleSetId,
+      TestUser.GLOBAL_SUPPORT_ADMIN
+    );
+    expect(invitations?.error).toBeUndefined();
+    expect(
+      (invitations?.data?.lookup?.roleSet?.invitations ?? []).map(i => i.id)
+    ).toContain(orgInvitationId);
+
+    const platformInvitations = await getRoleSetPendingPlatformInvitations(
+      roleSetId,
+      TestUser.GLOBAL_SUPPORT_ADMIN
+    );
+    expect(platformInvitations?.error).toBeUndefined();
+    expect(
+      platformInvitations?.data?.lookup?.roleSet?.platformInvitations
+    ).toBeDefined();
+
+    const applications = await getRoleSetPendingApplications(
+      roleSetId,
+      TestUser.GLOBAL_SUPPORT_ADMIN
+    );
+    expect(applications?.error?.errors).toBeDefined();
+    expect(applications?.data).toBeUndefined();
+  });
 });
 
 describe('Pending-list confidentiality — a PUBLIC Space (US7-AS3, deliberate R3 change)', () => {
@@ -194,6 +252,82 @@ describe('Pending-list confidentiality — a PUBLIC Space (US7-AS3, deliberate R
     ).toBeDefined();
   });
 
+  test('a plain member is refused each of the three lists on its own', async () => {
+    // The combined read above proves the refusal as a whole; these prove
+    // that no single list is quietly open to a member on a public Space.
+    const roleSetId = spaceScenario.space.community.roleSetId;
+    const reads = await Promise.all([
+      getRoleSetPendingApplications(roleSetId, TestUser.SPACE_MEMBER),
+      getRoleSetPendingInvitations(roleSetId, TestUser.SPACE_MEMBER),
+      getRoleSetPendingPlatformInvitations(roleSetId, TestUser.SPACE_MEMBER),
+    ]);
+    for (const read of reads) {
+      expect(read?.error?.errors).toBeDefined();
+      expect(read?.data).toBeUndefined();
+    }
+  });
+
+  test('a Space admin reads each of the three lists on its own', async () => {
+    const roleSetId = spaceScenario.space.community.roleSetId;
+
+    const applications = await getRoleSetPendingApplications(
+      roleSetId,
+      TestUser.SPACE_ADMIN
+    );
+    expect(applications?.error).toBeUndefined();
+    expect(applications?.data?.lookup?.roleSet?.applications).toBeDefined();
+
+    const invitations = await getRoleSetPendingInvitations(
+      roleSetId,
+      TestUser.SPACE_ADMIN
+    );
+    expect(invitations?.error).toBeUndefined();
+    expect(
+      (invitations?.data?.lookup?.roleSet?.invitations ?? []).map(i => i.id)
+    ).toContain(spaceInvitationId);
+
+    const platformInvitations = await getRoleSetPendingPlatformInvitations(
+      roleSetId,
+      TestUser.SPACE_ADMIN
+    );
+    expect(platformInvitations?.error).toBeUndefined();
+    expect(
+      platformInvitations?.data?.lookup?.roleSet?.platformInvitations
+    ).toBeDefined();
+  });
+
+  test('with allowSubspaceAdminsToInviteMembers on, a subspace admin reads the Space invitations but is refused its applications', async () => {
+    // The setting hands subspace admins the standing to invite to the Space,
+    // and with it the pending-invitation lists; it hands them nothing about
+    // deciding applications, so that list stays closed to them.
+    const roleSetId = spaceScenario.space.community.roleSetId;
+
+    const invitations = await getRoleSetPendingInvitations(
+      roleSetId,
+      TestUser.SUBSPACE_ADMIN
+    );
+    expect(invitations?.error).toBeUndefined();
+    expect(
+      (invitations?.data?.lookup?.roleSet?.invitations ?? []).map(i => i.id)
+    ).toContain(spaceInvitationId);
+
+    const platformInvitations = await getRoleSetPendingPlatformInvitations(
+      roleSetId,
+      TestUser.SUBSPACE_ADMIN
+    );
+    expect(platformInvitations?.error).toBeUndefined();
+    expect(
+      platformInvitations?.data?.lookup?.roleSet?.platformInvitations
+    ).toBeDefined();
+
+    const applications = await getRoleSetPendingApplications(
+      roleSetId,
+      TestUser.SUBSPACE_ADMIN
+    );
+    expect(applications?.error?.errors).toBeDefined();
+    expect(applications?.data).toBeUndefined();
+  });
+
   test('an account admin of the hosting organization who is not a Space admin is refused — R46 (live-verified standing)', async () => {
     // The base scenario's Space is created under its organization's account
     // and ORGANIZATION_ADMIN administers that organization (and so holds the
@@ -214,7 +348,9 @@ describe('Pending-list confidentiality — a PUBLIC Space (US7-AS3, deliberate R
 });
 
 describe('Authorization reset runbook (US7-AS6, contract §11, R4)', () => {
-  test('stripping the stored APPLY rule reports APPLY_NOT_GRANTED; the per-organization reset loop restores ELIGIBLE_TO_APPLY', async () => {
+  // Loopback Postgres only: the stored rule is stripped by direct SQL, which
+  // the nightly run (remote cluster, no POSTGRES_* set) cannot reach.
+  test.skipIf(!harnessPostgresConfigured())('stripping the stored APPLY rule reports APPLY_NOT_GRANTED; the per-organization reset loop restores ELIGIBLE_TO_APPLY', async () => {
     const before = await getOrganizationAssociateEligibility(
       orgResetScenario.organization.id,
       TestUser.QA_USER

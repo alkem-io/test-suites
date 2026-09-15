@@ -278,6 +278,21 @@ export default defineConfig({
       timeout: 120_000,
       expect: { timeout: 15_000 },
     },
+    {
+      // Feature 062 (organization user associates) — US1/US2/US3/US5/US7
+      // acceptance walks. Same shape as the 061 entry above: the files drive
+      // full SPA flows (Associates tab, row editor, invite dialog, profile
+      // apply) with in-app / mailbox polls on top, so they need the same
+      // extra headroom. Serial execution is not optional for them — every
+      // file registers several Kratos identities through the shared
+      // MailSlurper mailbox — and comes from this config's global
+      // `workers: 1` / `fullyParallel: false` below plus each file's own
+      // `describe.configure({ mode: 'serial' })`, exactly like the 061 walks.
+      name: 'Organization user associates',
+      testMatch: ['/organization-user-associates/*.spec.ts'],
+      timeout: 120_000,
+      expect: { timeout: 15_000 },
+    },
   ],
   // % or number of the available CPUs
   // workers: '100%',

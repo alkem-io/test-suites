@@ -132,6 +132,51 @@ export const getOrganizationRoleSetPending = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
+// One pending field per read. The three lists are non-null and gated
+// independently (applications on GRANT; invitations and platformInvitations
+// on ROLESET_ENTRY_ROLE_INVITE), so `getOrganizationRoleSetPending` above —
+// which selects all three — nulls the whole role set on the first refusal.
+// A persona that may see one list but not another (global support, a
+// subspace admin allowed to invite) can only be proven through these.
+export const getRoleSetPendingApplications = async (
+  roleSetId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.RoleSetPendingApplications(
+      { roleSetId },
+      { authorization: `Bearer ${authToken}` }
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const getRoleSetPendingInvitations = async (
+  roleSetId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.RoleSetPendingInvitations(
+      { roleSetId },
+      { authorization: `Bearer ${authToken}` }
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
+export const getRoleSetPendingPlatformInvitations = async (
+  roleSetId: string,
+  userRole: TestUser = TestUser.GLOBAL_ADMIN
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.RoleSetPendingPlatformInvitations(
+      { roleSetId },
+      { authorization: `Bearer ${authToken}` }
+    );
+  return graphqlErrorWrapper(callback, userRole);
+};
+
 // The union list this feature ships is ASSOCIATE ∪ ADMIN ∪ OWNER, badged —
 // this is the read that proves an admin who is not an associate is still
 // visible (spec US5-AS2, D-1's discriminating gate).

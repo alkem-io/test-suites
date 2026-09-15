@@ -16,6 +16,7 @@ import {
   TestUser,
   TestUserManager,
   UniqueIDGenerator,
+  rabbitMqManagementConfigured,
   waitForQueuePublishIncrease,
 } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
@@ -178,7 +179,11 @@ const orgAssociatesUrl = () =>
   `/organization/${baseScenario.organization.nameId}/settings/community`;
 
 describe('Organization associate invitations — the invitee is told (US2-AS1)', () => {
-  test('the invitee gets exactly one email, one in-app row and one push emit; the admins get nothing yet', async () => {
+  // The push half reads the RabbitMQ management API, which only a loopback
+  // compose stack exposes (nightly sets no RABBITMQ_MANAGEMENT_*), and its
+  // baseline must be taken before the invite — so the whole case is confined
+  // to stacks that can observe the queue rather than asserting conditionally.
+  test.skipIf(!rabbitMqManagementConfigured())('the invitee gets exactly one email, one in-app row and one push emit; the admins get nothing yet', async () => {
     const message = `Come associate! ${uniqueId}`;
     await deleteMailSlurperMails();
     const pushBaseline = await getPushQueuePublishedTotal();
@@ -206,12 +211,15 @@ describe('Organization associate invitations — the invitee is told (US2-AS1)',
     expect(mail.body).toContain(message);
     expect(mail.body).toContain(orgUrl());
 
-    await waitForQueuePublishIncrease(
+    // `waitForQueuePublishIncrease` returns the last-observed stats without
+    // throwing on timeout — the emit is only proven by asserting on them.
+    const pushStats = await waitForQueuePublishIncrease(
       PUSH_NOTIFICATIONS_QUEUE,
       pushBaseline,
       1,
       { timeout: 15_000 }
     );
+    expect(pushStats.publishedTotal).toBeGreaterThanOrEqual(pushBaseline + 1);
 
     const rows = await inAppNotificationsFor(TestUser.NON_SPACE_MEMBER, [
       NotificationEvent.UserOrganizationAssociateInvitation,
@@ -556,6 +564,24 @@ describe('Organization associate applications — the admins are told, the appli
     expect(supportMail?.body).toContain('Hello,');
     expect(supportMail?.body).toContain('no administrators');
     expect(mailItems).toHaveLength(1);
+
+    // "nobody gets an in-app row": the escalation mail has landed, so the
+    // dispatch that would have written in-app rows has completed. Neither the
+    // remaining owner nor the applicant may hold an application row for THIS
+    // organization (scoped by organization id — both personas collect rows of
+    // this type from other organizations the suite touches).
+    const inAppApplicationRowsFor = async (userRole: TestUser) => {
+      const rows = await inAppNotificationsFor(userRole, [
+        NotificationEvent.OrganizationAdminAssociateApplication,
+      ]);
+      return (rows?.inAppNotifications ?? []).filter(
+        n => n.payload?.organization?.id === org.id
+      );
+    };
+    expect(await inAppApplicationRowsFor(TestUser.QA_USER)).toEqual([]);
+    expect(await inAppApplicationRowsFor(TestUser.SUBSPACE_MEMBER)).toEqual(
+      []
+    );
 
     await deleteOrganization(org.id).catch(() => undefined);
   });

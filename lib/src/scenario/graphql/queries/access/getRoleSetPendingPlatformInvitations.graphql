@@ -1,0 +1,12 @@
+# See getRoleSetPendingApplications.graphql — one gated pending field per query.
+query RoleSetPendingPlatformInvitations($roleSetId: UUID!) {
+  lookup {
+    roleSet(ID: $roleSetId) {
+      id
+      platformInvitations {
+        id
+        email
+      }
+    }
+  }
+}

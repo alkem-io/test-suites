@@ -149,7 +149,7 @@ async function applyToAssociateViaUi(page: Page, orgNameId: string, message: str
   const textboxes = dialog.getByRole('textbox');
   await expect(textboxes).toHaveCount(1);
   await textboxes.first().fill(message);
-  await dialog.getByRole('button', { name: /^Apply$/i }).click();
+  await dialog.getByRole('button', { name: /^Submit application$/i }).click();
   await expect(dialog.getByText('Application submitted')).toBeVisible({ timeout: 10_000 });
 }
 
@@ -241,19 +241,21 @@ adminATest.describe('US3-AS3 — approving makes the applicant an associate; onl
       .poll(async () => getInAppNotificationTypes(applicantApproveEmail), { timeout: 20_000 })
       .toEqual(expect.arrayContaining(['USER_ORGANIZATION_ASSOCIATE_APPLICATION_APPROVED']));
 
-    // FR-010 / 061 R40: "joined" is suppressed only where a replacement exists
-    // — the invitation-accept case. An approved application has none, so the
-    // co-admins still hear it; only the approver is excluded.
-    await expect
-      .poll(async () => getInAppNotificationTypes(adminOtherEmail), { timeout: 20_000 })
-      .toEqual(expect.arrayContaining(['ORGANIZATION_ADMIN_ASSOCIATE_JOINED']));
-
-    // Scoped to THIS applicant on THIS organization: adminA already holds
-    // "joined" rows for adminOther, because the fixture assigned that role
-    // directly and a direct assignment does produce "joined" (FR-010). The
-    // claim under test is only that the approver hears nothing about the
-    // person they just approved.
+    // "joined" is suppressed only where a replacement exists — the
+    // invitation-accept case. An approved application has none, so the
+    // co-admins still hear it; only the approver is excluded. Scoped to THIS
+    // applicant on THIS organization on both sides: the fixture's direct role
+    // assignments already produced "joined" rows for both admins, so an
+    // unscoped "has a row of this type" would be true before approval too.
     const applicantApproveId = await userIdFor(applicantApproveEmail);
+    await expect
+      .poll(async () => getInAppActorIdsForType(adminOtherEmail, 'ORGANIZATION_ADMIN_ASSOCIATE_JOINED', orgO.id), {
+        timeout: 20_000,
+      })
+      .toContain(applicantApproveId);
+
+    // The claim under test on the approver's side is only that they hear
+    // nothing about the person they just approved.
     const adminAJoinedActors = await getInAppActorIdsForType(
       adminAEmail,
       'ORGANIZATION_ADMIN_ASSOCIATE_JOINED',

@@ -29267,21 +29267,6 @@ export type CommunityDataFragment = {
   }>;
   roleSet: {
     id: string;
-    applications: Array<{
-      id: string;
-      state: string;
-      nextEvents: Array<string>;
-      isFinalized: boolean;
-      lifecycle: { id: string };
-      questions: Array<{ id: string }>;
-      actor: {
-        id: string;
-        profile?: { id: string; displayName: string } | undefined;
-      };
-      authorization?:
-        | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-        | undefined;
-    }>;
     memberUsers: Array<{
       id: string;
       nameID: string;
@@ -32037,21 +32022,6 @@ export type SubspaceL1DataFragment = {
       }>;
       roleSet: {
         id: string;
-        applications: Array<{
-          id: string;
-          state: string;
-          nextEvents: Array<string>;
-          isFinalized: boolean;
-          lifecycle: { id: string };
-          questions: Array<{ id: string }>;
-          actor: {
-            id: string;
-            profile?: { id: string; displayName: string } | undefined;
-          };
-          authorization?:
-            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-            | undefined;
-        }>;
         memberUsers: Array<{
           id: string;
           nameID: string;
@@ -33711,21 +33681,6 @@ export type SubspaceL1DataFragment = {
     }>;
     roleSet: {
       id: string;
-      applications: Array<{
-        id: string;
-        state: string;
-        nextEvents: Array<string>;
-        isFinalized: boolean;
-        lifecycle: { id: string };
-        questions: Array<{ id: string }>;
-        actor: {
-          id: string;
-          profile?: { id: string; displayName: string } | undefined;
-        };
-        authorization?:
-          | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-          | undefined;
-      }>;
       memberUsers: Array<{
         id: string;
         nameID: string;
@@ -35406,21 +35361,6 @@ export type SubspaceL2DataFragment = {
       }>;
       roleSet: {
         id: string;
-        applications: Array<{
-          id: string;
-          state: string;
-          nextEvents: Array<string>;
-          isFinalized: boolean;
-          lifecycle: { id: string };
-          questions: Array<{ id: string }>;
-          actor: {
-            id: string;
-            profile?: { id: string; displayName: string } | undefined;
-          };
-          authorization?:
-            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-            | undefined;
-        }>;
         memberUsers: Array<{
           id: string;
           nameID: string;
@@ -37080,21 +37020,6 @@ export type SubspaceL2DataFragment = {
     }>;
     roleSet: {
       id: string;
-      applications: Array<{
-        id: string;
-        state: string;
-        nextEvents: Array<string>;
-        isFinalized: boolean;
-        lifecycle: { id: string };
-        questions: Array<{ id: string }>;
-        actor: {
-          id: string;
-          profile?: { id: string; displayName: string } | undefined;
-        };
-        authorization?:
-          | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-          | undefined;
-      }>;
       memberUsers: Array<{
         id: string;
         nameID: string;
@@ -38348,21 +38273,6 @@ export type SpaceDataFragment = {
     }>;
     roleSet: {
       id: string;
-      applications: Array<{
-        id: string;
-        state: string;
-        nextEvents: Array<string>;
-        isFinalized: boolean;
-        lifecycle: { id: string };
-        questions: Array<{ id: string }>;
-        actor: {
-          id: string;
-          profile?: { id: string; displayName: string } | undefined;
-        };
-        authorization?:
-          | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-          | undefined;
-      }>;
       memberUsers: Array<{
         id: string;
         nameID: string;
@@ -40570,21 +40480,6 @@ export type SpaceDataFragment = {
       }>;
       roleSet: {
         id: string;
-        applications: Array<{
-          id: string;
-          state: string;
-          nextEvents: Array<string>;
-          isFinalized: boolean;
-          lifecycle: { id: string };
-          questions: Array<{ id: string }>;
-          actor: {
-            id: string;
-            profile?: { id: string; displayName: string } | undefined;
-          };
-          authorization?:
-            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-            | undefined;
-        }>;
         memberUsers: Array<{
           id: string;
           nameID: string;
@@ -42829,21 +42724,6 @@ export type SubspaceDataFragment = {
     }>;
     roleSet: {
       id: string;
-      applications: Array<{
-        id: string;
-        state: string;
-        nextEvents: Array<string>;
-        isFinalized: boolean;
-        lifecycle: { id: string };
-        questions: Array<{ id: string }>;
-        actor: {
-          id: string;
-          profile?: { id: string; displayName: string } | undefined;
-        };
-        authorization?:
-          | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-          | undefined;
-      }>;
       memberUsers: Array<{
         id: string;
         nameID: string;
@@ -50272,21 +50152,6 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
       }>;
       roleSet: {
         id: string;
-        applications: Array<{
-          id: string;
-          state: string;
-          nextEvents: Array<string>;
-          isFinalized: boolean;
-          lifecycle: { id: string };
-          questions: Array<{ id: string }>;
-          actor: {
-            id: string;
-            profile?: { id: string; displayName: string } | undefined;
-          };
-          authorization?:
-            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-            | undefined;
-        }>;
         memberUsers: Array<{
           id: string;
           nameID: string;
@@ -52548,21 +52413,6 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
         }>;
         roleSet: {
           id: string;
-          applications: Array<{
-            id: string;
-            state: string;
-            nextEvents: Array<string>;
-            isFinalized: boolean;
-            lifecycle: { id: string };
-            questions: Array<{ id: string }>;
-            actor: {
-              id: string;
-              profile?: { id: string; displayName: string } | undefined;
-            };
-            authorization?:
-              | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-              | undefined;
-          }>;
           memberUsers: Array<{
             id: string;
             nameID: string;
@@ -54449,21 +54299,6 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
       }>;
       roleSet: {
         id: string;
-        applications: Array<{
-          id: string;
-          state: string;
-          nextEvents: Array<string>;
-          isFinalized: boolean;
-          lifecycle: { id: string };
-          questions: Array<{ id: string }>;
-          actor: {
-            id: string;
-            profile?: { id: string; displayName: string } | undefined;
-          };
-          authorization?:
-            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-            | undefined;
-        }>;
         memberUsers: Array<{
           id: string;
           nameID: string;
@@ -56725,21 +56560,6 @@ export type ConvertSpaceL2ToSpaceL1Mutation = {
         }>;
         roleSet: {
           id: string;
-          applications: Array<{
-            id: string;
-            state: string;
-            nextEvents: Array<string>;
-            isFinalized: boolean;
-            lifecycle: { id: string };
-            questions: Array<{ id: string }>;
-            actor: {
-              id: string;
-              profile?: { id: string; displayName: string } | undefined;
-            };
-            authorization?:
-              | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-              | undefined;
-          }>;
           memberUsers: Array<{
             id: string;
             nameID: string;
@@ -58626,21 +58446,6 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
       }>;
       roleSet: {
         id: string;
-        applications: Array<{
-          id: string;
-          state: string;
-          nextEvents: Array<string>;
-          isFinalized: boolean;
-          lifecycle: { id: string };
-          questions: Array<{ id: string }>;
-          actor: {
-            id: string;
-            profile?: { id: string; displayName: string } | undefined;
-          };
-          authorization?:
-            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-            | undefined;
-        }>;
         memberUsers: Array<{
           id: string;
           nameID: string;
@@ -60902,21 +60707,6 @@ export type MoveSpaceL1ToSpaceL0Mutation = {
         }>;
         roleSet: {
           id: string;
-          applications: Array<{
-            id: string;
-            state: string;
-            nextEvents: Array<string>;
-            isFinalized: boolean;
-            lifecycle: { id: string };
-            questions: Array<{ id: string }>;
-            actor: {
-              id: string;
-              profile?: { id: string; displayName: string } | undefined;
-            };
-            authorization?:
-              | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-              | undefined;
-          }>;
           memberUsers: Array<{
             id: string;
             nameID: string;
@@ -62803,21 +62593,6 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
       }>;
       roleSet: {
         id: string;
-        applications: Array<{
-          id: string;
-          state: string;
-          nextEvents: Array<string>;
-          isFinalized: boolean;
-          lifecycle: { id: string };
-          questions: Array<{ id: string }>;
-          actor: {
-            id: string;
-            profile?: { id: string; displayName: string } | undefined;
-          };
-          authorization?:
-            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-            | undefined;
-        }>;
         memberUsers: Array<{
           id: string;
           nameID: string;
@@ -65079,21 +64854,6 @@ export type MoveSpaceL1ToSpaceL2Mutation = {
         }>;
         roleSet: {
           id: string;
-          applications: Array<{
-            id: string;
-            state: string;
-            nextEvents: Array<string>;
-            isFinalized: boolean;
-            lifecycle: { id: string };
-            questions: Array<{ id: string }>;
-            actor: {
-              id: string;
-              profile?: { id: string; displayName: string } | undefined;
-            };
-            authorization?:
-              | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-              | undefined;
-          }>;
           memberUsers: Array<{
             id: string;
             nameID: string;
@@ -66980,21 +66740,6 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
       }>;
       roleSet: {
         id: string;
-        applications: Array<{
-          id: string;
-          state: string;
-          nextEvents: Array<string>;
-          isFinalized: boolean;
-          lifecycle: { id: string };
-          questions: Array<{ id: string }>;
-          actor: {
-            id: string;
-            profile?: { id: string; displayName: string } | undefined;
-          };
-          authorization?:
-            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-            | undefined;
-        }>;
         memberUsers: Array<{
           id: string;
           nameID: string;
@@ -69256,21 +69001,6 @@ export type MoveSpaceL2ToSpaceL1Mutation = {
         }>;
         roleSet: {
           id: string;
-          applications: Array<{
-            id: string;
-            state: string;
-            nextEvents: Array<string>;
-            isFinalized: boolean;
-            lifecycle: { id: string };
-            questions: Array<{ id: string }>;
-            actor: {
-              id: string;
-              profile?: { id: string; displayName: string } | undefined;
-            };
-            authorization?:
-              | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-              | undefined;
-          }>;
           memberUsers: Array<{
             id: string;
             nameID: string;
@@ -71175,21 +70905,6 @@ export type UpdateSpaceMutation = {
       }>;
       roleSet: {
         id: string;
-        applications: Array<{
-          id: string;
-          state: string;
-          nextEvents: Array<string>;
-          isFinalized: boolean;
-          lifecycle: { id: string };
-          questions: Array<{ id: string }>;
-          actor: {
-            id: string;
-            profile?: { id: string; displayName: string } | undefined;
-          };
-          authorization?:
-            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-            | undefined;
-        }>;
         memberUsers: Array<{
           id: string;
           nameID: string;
@@ -73451,21 +73166,6 @@ export type UpdateSpaceMutation = {
         }>;
         roleSet: {
           id: string;
-          applications: Array<{
-            id: string;
-            state: string;
-            nextEvents: Array<string>;
-            isFinalized: boolean;
-            lifecycle: { id: string };
-            questions: Array<{ id: string }>;
-            actor: {
-              id: string;
-              profile?: { id: string; displayName: string } | undefined;
-            };
-            authorization?:
-              | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-              | undefined;
-          }>;
           memberUsers: Array<{
             id: string;
             nameID: string;
@@ -75841,21 +75541,6 @@ export type CreateSubspaceMutation = {
         }>;
         roleSet: {
           id: string;
-          applications: Array<{
-            id: string;
-            state: string;
-            nextEvents: Array<string>;
-            isFinalized: boolean;
-            lifecycle: { id: string };
-            questions: Array<{ id: string }>;
-            actor: {
-              id: string;
-              profile?: { id: string; displayName: string } | undefined;
-            };
-            authorization?:
-              | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-              | undefined;
-          }>;
           memberUsers: Array<{
             id: string;
             nameID: string;
@@ -77595,21 +77280,6 @@ export type CreateSubspaceMutation = {
       }>;
       roleSet: {
         id: string;
-        applications: Array<{
-          id: string;
-          state: string;
-          nextEvents: Array<string>;
-          isFinalized: boolean;
-          lifecycle: { id: string };
-          questions: Array<{ id: string }>;
-          actor: {
-            id: string;
-            profile?: { id: string; displayName: string } | undefined;
-          };
-          authorization?:
-            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-            | undefined;
-        }>;
         memberUsers: Array<{
           id: string;
           nameID: string;
@@ -79332,21 +79002,6 @@ export type UpdateSubspaceMutation = {
         }>;
         roleSet: {
           id: string;
-          applications: Array<{
-            id: string;
-            state: string;
-            nextEvents: Array<string>;
-            isFinalized: boolean;
-            lifecycle: { id: string };
-            questions: Array<{ id: string }>;
-            actor: {
-              id: string;
-              profile?: { id: string; displayName: string } | undefined;
-            };
-            authorization?:
-              | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-              | undefined;
-          }>;
           memberUsers: Array<{
             id: string;
             nameID: string;
@@ -81086,21 +80741,6 @@ export type UpdateSubspaceMutation = {
       }>;
       roleSet: {
         id: string;
-        applications: Array<{
-          id: string;
-          state: string;
-          nextEvents: Array<string>;
-          isFinalized: boolean;
-          lifecycle: { id: string };
-          questions: Array<{ id: string }>;
-          actor: {
-            id: string;
-            profile?: { id: string; displayName: string } | undefined;
-          };
-          authorization?:
-            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-            | undefined;
-        }>;
         memberUsers: Array<{
           id: string;
           nameID: string;
@@ -84748,6 +84388,45 @@ export type CommunityMemberVirtualContributorFragment = {
   id: string;
   nameID: string;
   profile?: { id: string; displayName: string } | undefined;
+};
+
+export type RoleSetPendingApplicationsQueryVariables = Exact<{
+  roleSetId: Scalars["UUID"]["input"];
+}>;
+
+export type RoleSetPendingApplicationsQuery = {
+  lookup: {
+    roleSet?:
+      | { id: string; applications: Array<{ id: string; state: string }> }
+      | undefined;
+  };
+};
+
+export type RoleSetPendingInvitationsQueryVariables = Exact<{
+  roleSetId: Scalars["UUID"]["input"];
+}>;
+
+export type RoleSetPendingInvitationsQuery = {
+  lookup: {
+    roleSet?:
+      | { id: string; invitations: Array<{ id: string; state: string }> }
+      | undefined;
+  };
+};
+
+export type RoleSetPendingPlatformInvitationsQueryVariables = Exact<{
+  roleSetId: Scalars["UUID"]["input"];
+}>;
+
+export type RoleSetPendingPlatformInvitationsQuery = {
+  lookup: {
+    roleSet?:
+      | {
+          id: string;
+          platformInvitations: Array<{ id: string; email: string }>;
+        }
+      | undefined;
+  };
 };
 
 export type RoleSetUserPrivilegesQueryVariables = Exact<{
@@ -93304,21 +92983,6 @@ export type GetSpaceDataQuery = {
             }>;
             roleSet: {
               id: string;
-              applications: Array<{
-                id: string;
-                state: string;
-                nextEvents: Array<string>;
-                isFinalized: boolean;
-                lifecycle: { id: string };
-                questions: Array<{ id: string }>;
-                actor: {
-                  id: string;
-                  profile?: { id: string; displayName: string } | undefined;
-                };
-                authorization?:
-                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-                  | undefined;
-              }>;
               memberUsers: Array<{
                 id: string;
                 nameID: string;
@@ -95779,25 +95443,6 @@ export type GetSpaceDataQuery = {
               }>;
               roleSet: {
                 id: string;
-                applications: Array<{
-                  id: string;
-                  state: string;
-                  nextEvents: Array<string>;
-                  isFinalized: boolean;
-                  lifecycle: { id: string };
-                  questions: Array<{ id: string }>;
-                  actor: {
-                    id: string;
-                    profile?: { id: string; displayName: string } | undefined;
-                  };
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                }>;
                 memberUsers: Array<{
                   id: string;
                   nameID: string;
@@ -98351,25 +97996,6 @@ export type GetSubspacePageQuery = {
               }>;
               roleSet: {
                 id: string;
-                applications: Array<{
-                  id: string;
-                  state: string;
-                  nextEvents: Array<string>;
-                  isFinalized: boolean;
-                  lifecycle: { id: string };
-                  questions: Array<{ id: string }>;
-                  actor: {
-                    id: string;
-                    profile?: { id: string; displayName: string } | undefined;
-                  };
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                }>;
                 memberUsers: Array<{
                   id: string;
                   nameID: string;
@@ -100256,21 +99882,6 @@ export type GetSubspacePageQuery = {
             }>;
             roleSet: {
               id: string;
-              applications: Array<{
-                id: string;
-                state: string;
-                nextEvents: Array<string>;
-                isFinalized: boolean;
-                lifecycle: { id: string };
-                questions: Array<{ id: string }>;
-                actor: {
-                  id: string;
-                  profile?: { id: string; displayName: string } | undefined;
-                };
-                authorization?:
-                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-                  | undefined;
-              }>;
               memberUsers: Array<{
                 id: string;
                 nameID: string;
@@ -102145,21 +101756,6 @@ export type GetSpaceAboutDetailsQuery = {
             }>;
             roleSet: {
               id: string;
-              applications: Array<{
-                id: string;
-                state: string;
-                nextEvents: Array<string>;
-                isFinalized: boolean;
-                lifecycle: { id: string };
-                questions: Array<{ id: string }>;
-                actor: {
-                  id: string;
-                  profile?: { id: string; displayName: string } | undefined;
-                };
-                authorization?:
-                  | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
-                  | undefined;
-              }>;
               memberUsers: Array<{
                 id: string;
                 nameID: string;
@@ -104067,25 +103663,6 @@ export type GetSubspacesDataQuery = {
                 }>;
                 roleSet: {
                   id: string;
-                  applications: Array<{
-                    id: string;
-                    state: string;
-                    nextEvents: Array<string>;
-                    isFinalized: boolean;
-                    lifecycle: { id: string };
-                    questions: Array<{ id: string }>;
-                    actor: {
-                      id: string;
-                      profile?: { id: string; displayName: string } | undefined;
-                    };
-                    authorization?:
-                      | {
-                          myPrivileges?:
-                            | Array<AuthorizationPrivilege>
-                            | undefined;
-                        }
-                      | undefined;
-                  }>;
                   memberUsers: Array<{
                     id: string;
                     nameID: string;
@@ -105991,25 +105568,6 @@ export type GetSubspacesDataQuery = {
               }>;
               roleSet: {
                 id: string;
-                applications: Array<{
-                  id: string;
-                  state: string;
-                  nextEvents: Array<string>;
-                  isFinalized: boolean;
-                  lifecycle: { id: string };
-                  questions: Array<{ id: string }>;
-                  actor: {
-                    id: string;
-                    profile?: { id: string; displayName: string } | undefined;
-                  };
-                  authorization?:
-                    | {
-                        myPrivileges?:
-                          | Array<AuthorizationPrivilege>
-                          | undefined;
-                      }
-                    | undefined;
-                }>;
                 memberUsers: Array<{
                   id: string;
                   nameID: string;
