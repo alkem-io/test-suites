@@ -57,6 +57,8 @@ import {
   notif,
   notifWithPush,
   PUSH_NOTIFICATIONS_QUEUE,
+  subscribeRecipientsToPush,
+  unsubscribeRecipientsFromPush,
   waitForMailsCountAtLeast,
   waitForMailsWhere,
 } from '../notification.helpers';
@@ -186,9 +188,16 @@ describe('Organization associate invitations — the invitee is told (US2-AS1)',
   test.skipIf(!rabbitMqManagementConfigured())('the invitee gets exactly one email, one in-app row and one push emit; the admins get nothing yet', async () => {
     const message = `Come associate! ${uniqueId}`;
     await deleteMailSlurperMails();
+    // The push adapter publishes nothing for a recipient without an active push
+    // subscription, so the invitee needs a (fake, non-delivering) one before the
+    // queue counter can move — see `subscribeRecipientsToPush`.
+    const pushHandles = await subscribeRecipientsToPush([
+      { userRole: TestUser.NON_SPACE_MEMBER, label: `assoc-invitee-${uniqueId}` },
+    ]);
     const pushBaseline = await getPushQueuePublishedTotal();
 
     let invitationId = '';
+    try {
     const [mailItems] = await expectExactMailsAfter(async () => {
       const res = await inviteForEntryRoleOnRoleSet(
         baseScenario.organization.roleSetId,
@@ -246,6 +255,9 @@ describe('Organization associate invitations — the invitee is told (US2-AS1)',
         ),
       3 // organizationAdmin + subspaceAdmin + spaceMember
     );
+    } finally {
+      await unsubscribeRecipientsFromPush(pushHandles);
+    }
   });
 });
 
