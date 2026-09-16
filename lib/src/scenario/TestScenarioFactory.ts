@@ -997,7 +997,7 @@ export class TestScenarioFactory {
         settings: {
           framing: { commentsEnabled: true },
           contribution: {
-            allowedTypes: [CalloutContributionType.Link],
+            allowedTypes: [CalloutContributionType.Post],
             canAddContributions: CalloutAllowedActors.Members,
             enabled: true,
             commentsEnabled: true,

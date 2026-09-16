@@ -21,10 +21,16 @@ let platformDiscussionId = '';
 let discussionId = '';
 let discussionCommentsId = '';
 let messageId = '';
+// 027-platform-role-redesign (A15, T049): forum discussion update/delete are
+// gated on PLATFORM_FORUM_MANAGE, not on ordinary UPDATE/DELETE. The privilege
+// has to be its own non-CRUD one, otherwise the root content cascade would let
+// `platform-content-full-access` reach the forum — a role the spec explicitly
+// denies it to. The DENIAL these cases assert is unchanged; only the privilege
+// named in the message moved.
 const errorAuthDiscussionUpdate =
-  "Authorization: unable to grant 'update' privilege: Update discussion: ";
+  "Authorization: unable to grant 'platform-forum-manage' privilege: Update discussion: ";
 const errorAuthDiscussionDelete =
-  "Authorization: unable to grant 'delete' privilege: delete discussion: ";
+  "Authorization: unable to grant 'platform-forum-manage' privilege: delete discussion: ";
 const errorAuthDiscussionMessageDelete =
   "Authorization: unable to grant 'delete' privilege: room remove message: ";
 

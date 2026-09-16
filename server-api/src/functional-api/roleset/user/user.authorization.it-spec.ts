@@ -2,6 +2,7 @@ import { getRoleSetUserPrivilege } from '../../journey/space/space.request.param
 import {
   sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC,
   sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization,
+  sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization_noContentFullAccess,
   sorted__create_read_update_delete_grant_addMember_invite_addVC_accessVC_assignOrganization,
   sorted__create_read_update_delete_grant_apply_invite_addVC_accessVC,
   sorted__create_read_update_delete_grant_apply_invite_addVC_accessVC_assignOrganization,
@@ -94,7 +95,7 @@ describe('Verify ROLESET_ENTRY_ROLE_ASSIGN privilege', () => {
     test.each`
       user                             | myPrivileges
       ${TestUser.GLOBAL_ADMIN}         | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization}
-      ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization}
+      ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization_noContentFullAccess}
       ${TestUser.SPACE_ADMIN}          | ${sorted__create_read_update_delete_grant_apply_invite_addVC_accessVC}
       ${TestUser.GLOBAL_BETA_TESTER}   | ${sorted__create_read_update_delete_grant_apply_invite_addVC_accessVC_assignOrganization}
       ${TestUser.NON_SPACE_MEMBER}     | ${sorted__read_applyToRoleSet}
@@ -124,7 +125,7 @@ describe('Verify ROLESET_ENTRY_ROLE_ASSIGN privilege', () => {
     test.each`
       user                             | myPrivileges
       ${TestUser.GLOBAL_ADMIN}         | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization}
-      ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization}
+      ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization_noContentFullAccess}
       ${TestUser.SPACE_ADMIN}          | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC}
       ${TestUser.SPACE_MEMBER}         | ${['ROLESET_ENTRY_ROLE_APPLY']}
       ${TestUser.SUBSPACE_ADMIN}       | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC}

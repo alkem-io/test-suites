@@ -1,0 +1,3 @@
+mutation adminIdentityDeleteKratosIdentity($kratosIdentityId: UUID!) {
+  adminIdentityDeleteKratosIdentity(kratosIdentityId: $kratosIdentityId)
+}

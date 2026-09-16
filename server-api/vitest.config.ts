@@ -127,37 +127,160 @@ export default defineConfig({
         'src/functional-api/graphql-guard/**/*.it-spec.ts',
       ]),
       project('language', ['src/functional-api/language/**/*.it-spec.ts']),
-      project(
-        'nightly',
-        [
-          'src/functional-api/account/**/*.it-spec.ts',
-          'src/functional-api/roleset/**/*.it-spec.ts',
-          'src/functional-api/contributor-management/**/*.it-spec.ts',
-          'src/functional-api/callout/**/*.it-spec.ts',
-          'src/functional-api/communications/**/*.it-spec.ts',
-          'src/functional-api/activity-logs/**/*.it-spec.ts',
-          'src/functional-api/journey/**/*.it-spec.ts',
-          'src/functional-api/storage/**/*.it-spec.ts',
-          'src/functional-api/entitlements/**/*.it-spec.ts',
-          'src/functional-api/templates/**/*.it-spec.ts',
-          'src/functional-api/visual/**/*.it-spec.ts',
-          'src/functional-api/calendar/**/*.it-spec.ts',
-          'src/functional-api/push-notifications/**/*.it-spec.ts',
-          'src/functional-api/language/**/*.it-spec.ts',
-        ],
-        // 054-delete-own-account: these it-specs need loopback Redis/Postgres
-        // and a matching local/CI `SESSION_SIGNING_KEY`
-        // (`lib/src/scenario/registration/mint-bff-session.ts`,
-        // `lib/src/config/loopback-guard.ts`) that the nightly workflow does
-        // not and must never provide — wiring the shared cluster's session-
-        // signing-key material into a public CI job to make them pass there
-        // would turn a latent impersonation capability into a disclosed one.
-        // Decision: local-compose-stack-only; run via `test:contributormanagement`
-        // locally, never nightly.
-        [
-          'src/functional-api/contributor-management/user/delete-own-account*.it-spec.ts',
-        ]
-      ),
+      // workspace#027-platform-role-redesign (T005/T008/T009). Both
+      // projects read the SAME generated table (role-action-matrix.data.ts)
+      // — the `PLATFORM_ROLES_MATRIX_SCOPE` env var each project sets is
+      // what `role-action-matrix.it-spec.ts` reads to pick
+      // `buildCanonicalMatrix` (one surface per live A-row — the
+      // PR-feedback inner loop) vs. `buildMatrix` (the full cross-product —
+      // the Slice B release-train gate). A second table would be the defect
+      // this shape avoids; a second env var name would be too, so it lives
+      // nowhere else.
+      //
+      // qual-ts-15 (2026-07-30 fix wave): the two projects' `include` globs
+      // are DELIBERATELY DIFFERENT — `role-action-matrix.it-spec.ts` is the
+      // ONLY file that reads `PLATFORM_ROLES_MATRIX_SCOPE`
+      // (`role-action-matrix.data.ts`'s `activeMatrixScope()`), so it is the
+      // only file whose behaviour differs between the two projects. Every
+      // other spec in the directory (assignment-rules, audit-coverage,
+      // grantability, immediacy, matrix-completeness, mirror-integrity,
+      // the three `flows/` files) previously ran identically in BOTH
+      // projects — eight `buildMatrixFixtures()` builds (~35 live API
+      // writes each) plus eight platform-wide `authorizationPlatformRolesAccessReset`
+      // calls, entirely redundant. `platform-roles-canonical` now covers
+      // only the scope-sensitive file; `platform-roles` still covers the
+      // whole directory as the Slice B release-train gate.
+      {
+        extends: true as const,
+        test: {
+          name: 'platform-roles-canonical',
+          // spec-ts-14/qual-ts-18 fix: `matrix-completeness.it-spec.ts` is
+          // back in this include list — it is what T017c documents as
+          // needing to "run and fail even when the matrix body is filtered
+          // down", i.e. exactly the canonical scope. It is cheap (one live
+          // role-set query plus file/inventory checks), unlike the eight
+          // OTHER non-matrix files (assignment-rules, grantability,
+          // immediacy, the three flows/, audit-coverage, mirror-integrity)
+          // this project still deliberately excludes per qual-ts-15's
+          // redundant-fixture-build reasoning — see the new
+          // `platform-roles-rules` project below for those.
+          include: [
+            'src/functional-api/platform-roles/role-action-matrix.it-spec.ts',
+            'src/functional-api/platform-roles/matrix-completeness.it-spec.ts',
+          ],
+          env: { PLATFORM_ROLES_MATRIX_SCOPE: 'canonical' },
+          setupFiles: [
+            './src/functional-api/platform-roles/platform-roles.setup.ts',
+          ],
+          // corr-ts-5/qual-ts-6 (2026-07-30 fix wave): every file here
+          // shares mutable state through the SAME shared TestUser fixtures
+          // (`fixtures.ts`'s `targetUserId`/`rolesProbeUserId` resolve to
+          // fixed identities, and `platform-roles-admin`'s holder count is
+          // read/written across files) — running spec files in parallel
+          // races those mutations. Every other integration project in this
+          // repo is invoked with `--fileParallelism=false` for the same
+          // reason; this sets it in the project config itself so it applies
+          // regardless of how the project is invoked.
+          fileParallelism: false,
+        },
+      },
+      {
+        extends: true as const,
+        test: {
+          name: 'platform-roles',
+          include: ['src/functional-api/platform-roles/**/*.it-spec.ts'],
+          env: { PLATFORM_ROLES_MATRIX_SCOPE: 'full' },
+          setupFiles: [
+            './src/functional-api/platform-roles/platform-roles.setup.ts',
+          ],
+          fileParallelism: false,
+        },
+      },
+      // sec-test-suites-10 fix (2026-07-30 corrective wave): after the
+      // qual-ts-15 split above, `platform-roles-canonical` covered ONLY
+      // `role-action-matrix.it-spec.ts` — leaving the eight files that
+      // exercise the separation-of-duties RULE ENGINE itself (self-
+      // assignment, last-Roles-Admin protection, audit-reader exclusion,
+      // the service-profile marker, FR-031 revocation immediacy, the three
+      // stateful `flows/` specs, the audit-coverage and completeness/
+      // mirror-integrity guards) with NO Slice-A gate executing them at
+      // all — a live check written and shipped in this very feature, never
+      // run before release. This project runs every file in the directory
+      // EXCEPT the scope-sensitive matrix spec (which stays owned by
+      // `platform-roles-canonical`/`platform-roles` above, per qual-ts-15),
+      // exactly once, as a Slice A verification track.
+      {
+        extends: true as const,
+        test: {
+          name: 'platform-roles-rules',
+          include: ['src/functional-api/platform-roles/**/*.it-spec.ts'],
+          exclude: [
+            'src/functional-api/platform-roles/role-action-matrix.it-spec.ts',
+          ],
+          setupFiles: [
+            './src/functional-api/platform-roles/platform-roles.setup.ts',
+          ],
+          fileParallelism: false,
+        },
+      },
+      // workspace#027-platform-role-redesign: the nightly is written out as a
+      // full project rather than via `project()` because the platform-role
+      // specs cannot run on include alone — they need
+      // `platform-roles.setup.ts` (which seeds the 13 single-role fixtures)
+      // and `PLATFORM_ROLES_MATRIX_SCOPE`, neither of which the helper
+      // carries. Declaring them here keeps `--project nightly` sufficient:
+      // one project, no extra CLI flags, and CI's existing `test:nightly`
+      // invocation picks up the role coverage unchanged.
+      //
+      // `setupFiles` RE-LISTS the root `setupTests.ts`: a project-level
+      // `setupFiles` REPLACES the inherited value rather than merging, so
+      // omitting it would silently drop the shared setup from all 104
+      // pre-existing nightly files.
+      //
+      // Scope is `full` — the complete matrix cross-product. The nightly is
+      // where that belongs; the cheap canonical scope stays with the
+      // `platform-roles-canonical` PR inner loop.
+      {
+        extends: true as const,
+        test: {
+          name: 'nightly',
+          include: [
+            'src/functional-api/account/**/*.it-spec.ts',
+            'src/functional-api/roleset/**/*.it-spec.ts',
+            'src/functional-api/contributor-management/**/*.it-spec.ts',
+            'src/functional-api/callout/**/*.it-spec.ts',
+            'src/functional-api/communications/**/*.it-spec.ts',
+            'src/functional-api/activity-logs/**/*.it-spec.ts',
+            'src/functional-api/journey/**/*.it-spec.ts',
+            'src/functional-api/storage/**/*.it-spec.ts',
+            'src/functional-api/entitlements/**/*.it-spec.ts',
+            'src/functional-api/templates/**/*.it-spec.ts',
+            'src/functional-api/visual/**/*.it-spec.ts',
+            'src/functional-api/calendar/**/*.it-spec.ts',
+            'src/functional-api/push-notifications/**/*.it-spec.ts',
+            'src/functional-api/language/**/*.it-spec.ts',
+            'src/functional-api/platform-roles/**/*.it-spec.ts',
+          ],
+          // 054-delete-own-account: these it-specs need loopback Redis/Postgres
+          // and a matching local/CI `SESSION_SIGNING_KEY`
+          // (`lib/src/scenario/registration/mint-bff-session.ts`,
+          // `lib/src/config/loopback-guard.ts`) that the nightly workflow does
+          // not and must never provide — wiring the shared cluster's session-
+          // signing-key material into a public CI job to make them pass there
+          // would turn a latent impersonation capability into a disclosed one.
+          // Decision: local-compose-stack-only; run via `test:contributormanagement`
+          // locally, never nightly.
+          exclude: [
+            'src/functional-api/contributor-management/user/delete-own-account*.it-spec.ts',
+          ],
+          env: { PLATFORM_ROLES_MATRIX_SCOPE: 'full' },
+          setupFiles: [
+            './src/setupTests.ts',
+            './src/functional-api/platform-roles/platform-roles.setup.ts',
+          ],
+          fileParallelism: false,
+        },
+      },
     ],
   },
 });

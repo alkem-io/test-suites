@@ -1,0 +1,6 @@
+mutation migrateLegacyWhiteboardContent {
+  migrateLegacyWhiteboardContent {
+    total
+    migrated
+  }
+}

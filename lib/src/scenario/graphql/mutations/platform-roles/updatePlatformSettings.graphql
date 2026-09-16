@@ -1,0 +1,7 @@
+mutation updatePlatformSettings($settingsData: UpdatePlatformSettingsInput!) {
+  updatePlatformSettings(settingsData: $settingsData) {
+    integration {
+      iframeAllowedUrls
+    }
+  }
+}

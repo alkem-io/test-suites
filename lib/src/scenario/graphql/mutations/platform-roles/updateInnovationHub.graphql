@@ -1,0 +1,5 @@
+mutation updateInnovationHub($updateData: UpdateInnovationHubInput!) {
+  updateInnovationHub(updateData: $updateData) {
+    id
+  }
+}

@@ -1,7 +1,0 @@
-# mutation createSpace($spaceData: CreateSpaceInput!) {
-#   createSpace(spaceData: $spaceData) {
-#     space {
-#       ...SpaceData
-#     }
-#   }
-# }
