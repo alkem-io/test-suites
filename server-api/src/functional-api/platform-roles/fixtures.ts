@@ -985,24 +985,20 @@ export async function buildMatrixFixtures(): Promise<MatrixFixtures> {
   );
   const discussionId = discussionResult.data?.createDiscussion.id;
 
-  // corr-ts-36 (2026-07-31): `discussionId` was stored as `discussionId ?? ''`
-  // with no signal, and `createDiscussion` fails on EVERY fixture build
-  // (7/7 observed) against a server without alkem-io/server#6321 — a null
-  // `user.profile` makes the forum-discussion notification payload throw at
-  // `notification.external.adapter.ts:1255`, and the mutation returns that
-  // as a GraphQL error. A15's target was therefore the empty string in every
-  // run of every spec in this directory.
+  // corr-ts-36 (2026-07-31, closed 2026-09-16): `discussionId` used to be
+  // stored as `discussionId ?? ''` with no signal, and `createDiscussion`
+  // failed on EVERY fixture build (7/7 observed) against a server without
+  // alkem-io/server#6321 — a null `user.profile` made the forum-discussion
+  // notification payload throw, and the mutation returned that as a GraphQL
+  // error. A15's target was therefore the empty string in every run.
   //
-  // Not thrown, deliberately: today that would red nine currently-green spec
-  // files for a defect that is neither theirs nor this feature's, and which
-  // #6321 already fixes on `develop`. Warn loudly instead, so the fixture
-  // stops being silent about handing out an id that cannot resolve. **Turn
-  // this into a throw once #6321 has merged** — at that point a failure here
-  // is a real regression, and `?? ''` is exactly the "wrong kind of id past
-  // the gate" class this suite keeps rediscovering.
+  // #6321 merged on 2026-08-03, so the failure is now a real regression and
+  // this THROWS: `?? ''` is exactly the "wrong kind of id past the gate"
+  // class this suite keeps rediscovering, and a silent '' is
+  // indistinguishable from a real id until something dereferences it.
   if (!discussionId) {
-    console.error(
-      `[platform-roles fixtures] createDiscussion FAILED — A15's forum target will be an empty id, so any A15 cell that dereferences it fails POST-GATE and looks like an authorization result. Cause (expected until alkem-io/server#6321 lands): ${JSON.stringify(
+    throw new Error(
+      `[platform-roles fixtures] createDiscussion FAILED — A15's forum target would be an empty id, so any A15 cell that dereferences it fails POST-GATE and looks like an authorization result. alkem-io/server#6321 is merged, so this is a regression, not the known develop crash: ${JSON.stringify(
         discussionResult.error?.errors ?? discussionResult.error ?? 'unknown'
       )}`
     );
@@ -1102,7 +1098,7 @@ export async function buildMatrixFixtures(): Promise<MatrixFixtures> {
     licensePlanId: licensePlanId ?? '',
     a12AccountLicensePlanId,
     forumId: forumId ?? '',
-    discussionId: discussionId ?? '',
+    discussionId,
     targetUserId: targetUser.id,
     targetUserEmail: targetUser.email,
     kratosIdentityIdPlaceholder: '00000000-0000-4000-8000-000000000000',
