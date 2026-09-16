@@ -14,7 +14,7 @@
 // the exact defect surface `@AfterLoad` must default on read.
 
 import { expect, Page, test as baseTest } from '@playwright/test';
-import { registerTestUser, TestScenarioFactory } from '@alkemio/tests-lib';
+import { harnessPostgresConfigured, registerTestUser, TestScenarioFactory } from '@alkemio/tests-lib';
 import type { TestScenarioConfig } from '@alkemio/tests-lib/scenario/config/test-scenario-config';
 import type { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
@@ -127,8 +127,9 @@ baseTest.beforeAll(async () => {
   await setOrganizationMembershipSettings(orgQ.id, { allowApplications: false });
 
   // org P: simulates a row that predates this feature — the settings jsonb
-  // never got the `allowApplications` key (US3-AS9).
-  await stripAllowApplicationsSetting(orgP.id);
+  // never got the `allowApplications` key (US3-AS9). Loopback Postgres only —
+  // nightly targets a remote cluster, where AS9 is skipped below.
+  if (harnessPostgresConfigured()) await stripAllowApplicationsSetting(orgP.id);
 });
 
 baseTest.afterAll(async () => {
@@ -432,6 +433,7 @@ platformAdminTest.describe('US3-AS8 (decision) — the remaining owner decides f
 // ─── US3-AS9 ────────────────────────────────────────────────────────────
 
 viewerTest.describe('US3-AS9 — a pre-migration organization reads as accepting applications', () => {
+  viewerTest.skip(!harnessPostgresConfigured(), 'needs loopback Postgres to strip the settings key');
   viewerTest('the profile offers Apply and the form still shows exactly one optional message field', async ({ page }) => {
     await page.goto(`${baseUrl}/organization/${orgP.nameID}`);
     await page.waitForLoadState('networkidle');

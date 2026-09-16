@@ -241,7 +241,11 @@ listAccepterTest.describe('US2-AS4 — the personal pending list keeps organizat
 
       const list = page.getByRole('dialog');
       await expect(list).toBeVisible({ timeout: 15_000 });
-      await expect(list.getByText(/Organisation invitations/i)).toBeVisible({ timeout: 15_000 });
+      // "Associate Invitations", NOT the 061 "Organisation Invitations" section (which is
+       // about Spaces inviting an organisation this user administers). The two sections sit
+       // in the same dialog, so the title has to identify one of them unambiguously.
+      await expect(list.getByText(/Associate invitations/i)).toBeVisible({ timeout: 15_000 });
+      await expect(list.getByText('Organisation Invitations', { exact: true })).toHaveCount(0);
       // The card is a button whose accessible name carries the organisation name.
       const orgCard = list.getByRole('button', { name: orgO.displayName });
       await expect(orgCard).toBeVisible();
