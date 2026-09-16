@@ -1,0 +1,72 @@
+name: Bug Triage Page Refresh
+
+# Rebuilds https://alkem-io.github.io/test-suites/bug-triage/ from GitHub issues.
+# State (fetched issues, timelines) lives on gh-pages under gh-pages-root/bug-triage/state,
+# so every run after the first is incremental (issues API `since=`), ~1 min.
+# Only public repositories are scanned — see scripts/bug-triage/config.json.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC
+  workflow_dispatch:
+    inputs:
+      full:
+        description: "Discard the cached state and refetch everything"
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: gh-pages-publish
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      STATE: out/gh-pages-root/bug-triage/state
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Checkout existing GitHub Pages content (gh-pages)
+        continue-on-error: true
+        uses: actions/checkout@v7
+        with:
+          ref: gh-pages
+          path: out
+          fetch-depth: 1
+
+      - name: Sync issues from GitHub
+        run: |
+          mkdir -p "$STATE"
+          python3 scripts/bug-triage/bug_triage.py sync --state "$STATE" ${{ inputs.full && '--full' || '' }}
+
+      - name: Build the page
+        run: |
+          python3 scripts/bug-triage/bug_triage.py build --state "$STATE" --out out/gh-pages-root/bug-triage/index.html | tee out/gh-pages-root/bug-triage/summary.json
+
+      - name: Commit to gh-pages
+        run: |
+          cd out
+          if [ ! -d .git ]; then
+            git init
+            git checkout -b gh-pages
+            git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          else
+            git checkout gh-pages || git checkout -b gh-pages
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A gh-pages-root/bug-triage
+          git commit -m "Refresh bug triage page: $(date -u +%Y-%m-%dT%H:%MZ) (run ${{ github.run_id }})" || echo "No changes to commit"
+          git push origin gh-pages
+
+  deploy-pages:
+    needs: refresh
+    uses: ./.github/workflows/deploy-github-pages.yml
+    with:
+      ref: gh-pages
+      path: gh-pages-root

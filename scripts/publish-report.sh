@@ -138,6 +138,7 @@ EOF
     <ul>
       <li><a href="playwright/index.html">Playwright nightly results</a></li>
       <li><a href="server-api/index.html">Server API results</a></li>
+      <li><a href="bug-triage/">Open bug triage (refreshed Mondays)</a></li>
     </ul>
   </body>
 </html>
