@@ -33,6 +33,24 @@ prints that list under Releases and in the footer. Their bugs are tracked on
 the delivery board only. (The workflow's `GITHUB_TOKEN` could not read them
 anyway.)
 
+## Board membership needs a token with Projects read
+
+The workflow's built-in `GITHUB_TOKEN` cannot see delivery-board events
+(`added_to_project_v2`), so out of the box the page shows **no** board
+membership, the "on the delivery board" tile reads "not readable by this
+token", and the last planning bucket is "no PR, epic or release signal"
+rather than "no signal anywhere". To turn board membership on:
+
+1. Create a **fine-grained personal access token** for the `alkem-io`
+   organization: Repository access → *Public repositories*; Organization
+   permissions → **Projects: Read-only**. Nothing else. Set an expiry and put
+   it in the team password store.
+2. Add it to this repository as the Actions secret **`BUG_TRIAGE_TOKEN`**.
+3. Run the workflow once with *full* ticked so every timeline is refetched.
+
+The page detects the change on its own. The same scope would also let a
+future version read each bug's release iteration from the board.
+
 ## Running it locally
 
 ```bash
@@ -99,8 +117,8 @@ Each open bug is in exactly one bucket, checked in this order:
 | Fix PR open | An open pull request cross-references the issue or names it in its title, body or branch. | Issue timeline + open PRs |
 | Fix merged, issue still open | A merged PR cross-references the issue but nobody closed it. Review these: partial fix, or just forgotten. | Issue timeline |
 | Named in a release story | A `Release NN` / `Patch` story in `alkem-io/alkemio` cross-references the issue. | Issue timeline |
-| On the board, no fix yet | Added to the delivery board (projects/50) or a sub-issue of an epic, with none of the above. | Issue timeline |
-| No signal anywhere | Not on the board, no PR, no release story, no epic. Nobody has picked it up. | — |
+| On the board, no fix yet | Added to the delivery board (projects/50) or a sub-issue of an epic, with none of the above. Without `BUG_TRIAGE_TOKEN` only the epic part is visible and the bucket is labelled "Sub-issue of an epic, no fix yet". | Issue timeline |
+| No signal anywhere | Not on the board, no PR, no release story, no epic. Nobody has picked it up. Without `BUG_TRIAGE_TOKEN` this reads "No PR, epic or release signal" and may still include board items. | — |
 
 The first tile, **on the delivery board**, is a plain count and overlaps the
 buckets. "Planned for Release NN" cannot be shown: that lives in the board's
