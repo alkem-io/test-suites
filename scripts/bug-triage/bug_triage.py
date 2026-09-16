@@ -203,6 +203,7 @@ def build(args):
     meta = json.load(open(META)); snapshot = meta['synced_at'][:10]
     snapshot_t = meta['synced_at'].replace('T', ' ')[:16] + ' UTC'
     tls = json.load(open(TIMELINES)) if TIMELINES.exists() else {}
+    board_ok = any(e['e'] == 'added_to_project_v2' for v in tls.values() for e in v.get('events', []))
     prs = [json.loads(l) for l in open(PRS)] if PRS.exists() else []
     stories = json.load(open(STORIES)) if STORIES.exists() else []
     tags = [l.rstrip('\n').split('\t') for l in open(RELEASES)] if RELEASES.exists() else []
@@ -242,6 +243,13 @@ def build(args):
                 r['po'].append({'repo': p['repo'], 'n': p['n'], 't': p['t'], 'u': p['url'], 'd': p['draft']})
     for r in rows:
         r['pl'] = 'pr_open' if r['po'] else 'pr_merged' if r['pm'] else 'release' if r['rl'] else 'board' if (r['bd'] or r['ep']) else 'none'
+    L = ({'board_tile': f'<div><b>{sum(r["bd"] for r in rows)}</b><span>on the delivery board</span></div>',
+          'board_opt': 'On the board, no fix yet', 'none_opt': 'No signal anywhere', 'none_tile': 'no signal anywhere',
+          'board_note': 'whether it sits on the board, whether a fix PR is open or already merged, and whether a release story cross-references it.'}
+         if board_ok else
+         {'board_tile': '<div><b>–</b><span>board membership: not readable by this token</span></div>',
+          'board_opt': 'Sub-issue of an epic, no fix yet', 'none_opt': 'No PR, epic or release signal', 'none_tile': 'no PR, epic or release signal',
+          'board_note': 'whether a fix PR is open or already merged, whether it is a sub-issue of an epic, and whether a release story cross-references it. Board membership is <em>not</em> shown: the token used for this refresh cannot read project events, so "no signal" here may still be on the board.'})
     SEV = ['High', 'Medium', 'Low']
     rows.sort(key=lambda r: (SEV.index(r['s']), r['a'], -r['d']))
     cnt = collections.Counter(r['pl'] for r in rows)
@@ -331,7 +339,7 @@ def build(args):
   <div><div class="scroll"><table class="matrix rel"><thead><tr><th>Release</th><th>Shipped</th><th>server</th><th>client</th><th>notif.</th><th class="num">Raised</th><th class="num">Closed</th></tr></thead><tbody>{reltab}</tbody></table></div>
   <p class="note">Shipped = the story's release date (or its close date). Versions are the newest non-prerelease tag published on or before that date. "Raised" and "Closed" count bug issues opened or closed between the previous row's date and this one, across all repositories — a cadence proxy, not the story's declared scope.</p></div>
   <div class="stack">
-   <div class="callout"><b>Why there is no "planned for Release NN" column.</b> The delivery board keeps release targeting in its iteration field, and the GitHub token in use lacks the <span class="mono">read:project</span> scope, so that field cannot be read. Repository milestones are not used for releases. What <em>is</em> shown per bug is everything the issue itself records: whether it sits on the board, whether a fix PR is open or already merged, and whether a release story cross-references it.</div>
+   <div class="callout"><b>Why there is no "planned for Release NN" column.</b> The delivery board keeps release targeting in its iteration field, and the GitHub token in use lacks the <span class="mono">read:project</span> scope, so that field cannot be read. Repository milestones are not used for releases. What <em>is</em> shown per bug is everything the issue itself records: {L['board_note']}</div>
    <div class="callout" style="border-left-color:var(--ink3)"><b>Repositories not on this page.</b> {excl_html} These are private repositories; this page is published on a public site, so their issue titles and bodies would become public. Their bugs are tracked on the delivery board only.</div>
    <div><h3 style="font-size:15px;margin:14px 0 6px">Release stories still open</h3><p class="oa">{', '.join(f'<a href="{w["url"]}" target="_blank" rel="noopener">{E(w["t"])}</a>' for w in open_rel) or 'none'}</p></div>
    <div><h3 style="font-size:15px;margin:14px 0 6px">Fix merged, issue still open</h3><p class="oa">{cnt['pr_merged']} open bugs have a merged pull request cross-referencing them. Some are partial fixes, some were simply never closed. Use the Planning filter below to review them; each row links the PR.</p></div>
@@ -345,11 +353,11 @@ def build(args):
  <div class="totals"><div class="h"><b>{sum(r['s']=='High' for r in rows)}</b>High</div><div class="m"><b>{sum(r['s']=='Medium' for r in rows)}</b>Medium</div><div class="l"><b>{sum(r['s']=='Low' for r in rows)}</b>Low</div><div><b>{len(rows)}</b>Total</div></div>
 </header>'''
     kpis = f'''<div class="kpis">
- <div><b>{onboard}</b><span>on the delivery board</span></div>
+ {L['board_tile']}
  <div class="go"><b>{cnt['pr_open']}</b><span>fix PR open</span></div>
  <div class="warn"><b>{cnt['pr_merged']}</b><span>fix merged, issue still open</span></div>
  <div><b>{cnt['release']}</b><span>named in a release story</span></div>
- <div class="bad"><b>{cnt['none']}</b><span>no signal anywhere</span></div>
+ <div class="bad"><b>{cnt['none']}</b><span>{L['none_tile']}</span></div>
 </div>'''
     opt = lambda vals: ''.join(f'<option value="{E(x)}">{E(x)}</option>' for x in vals)
     listsec = f'''<section>
@@ -360,7 +368,7 @@ def build(args):
   <label>Repository<select id="f-repo"><option value="">All</option>{opt(repos_)}</select></label>
   <label>Age<select id="f-age"><option value="">All</option>{opt(AB)}</select></label>
   <label>Flag<select id="f-flag"><option value="">All</option><option value="prod">Production-labelled</option><option value="unl">No bug label</option><option value="unassigned">Unassigned</option></select></label>
-  <label>Planning<select id="f-plan"><option value="">All</option><option value="pr_open">Fix PR open</option><option value="pr_merged">Fix merged, issue still open</option><option value="release">Named in a release story</option><option value="board">On the board, no fix yet</option><option value="none">No signal anywhere</option></select></label>
+  <label>Planning<select id="f-plan"><option value="">All</option><option value="pr_open">Fix PR open</option><option value="pr_merged">Fix merged, issue still open</option><option value="release">Named in a release story</option><option value="board">{L['board_opt']}</option><option value="none">{L['none_opt']}</option></select></label>
   <label>Search<input id="f-q" type="search" placeholder="title or number"></label>
   <button class="reset" id="f-reset" type="button">Clear</button>
   <span class="count" id="count"></span>
@@ -371,12 +379,12 @@ def build(args):
     tpl = open(HERE / 'template.html').read()
     page = (tpl.replace('{{HEADER}}', header).replace('{{KPIS}}', kpis).replace('{{MATRIX}}', matrix).replace('{{RELEASES}}', releases)
             .replace('{{TIME}}', time_sec).replace('{{LIST}}', listsec).replace('{{FOOTER}}', footer)
-            .replace('{{ROWS}}', json.dumps(rows, ensure_ascii=False).replace('</script>', '<\\/script>')).replace('{{TREND}}', json.dumps(trend)))
+            .replace('{{ROWS}}', json.dumps(rows, ensure_ascii=False).replace('</script>', '<\\/script>')).replace('{{TREND}}', json.dumps(trend)).replace('{{BOARD_OK}}', 'true' if board_ok else 'false'))
     out = Path(args.out) if args.out else STATE / 'page.html'
     out.write_text(page)
     print(json.dumps({'out': str(out), 'snapshot': snapshot, 'open': len(rows), 'high': sum(r['s']=='High' for r in rows),
                       'medium': sum(r['s']=='Medium' for r in rows), 'low': sum(r['s']=='Low' for r in rows), 'closed_history': len(closed),
-                      'planning': dict(cnt), 'on_board': onboard, 'kb': len(page) // 1024}, indent=1))
+                      'planning': dict(cnt), 'on_board': onboard if board_ok else None, 'board_readable': board_ok, 'kb': len(page) // 1024}, indent=1))
 
 def status(args):
     if not META.exists(): print('no state yet:', STATE); return

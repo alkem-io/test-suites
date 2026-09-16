@@ -26,7 +26,10 @@ jobs:
     permissions:
       contents: write
     env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # BUG_TRIAGE_TOKEN (optional): a fine-grained PAT with Organization → Projects: read,
+      # so per-bug board membership is visible. Without it the sync runs on GITHUB_TOKEN,
+      # which cannot see project events, and the page says so. See scripts/bug-triage/README.md.
+      GH_TOKEN: ${{ secrets.BUG_TRIAGE_TOKEN || secrets.GITHUB_TOKEN }}
       STATE: out/gh-pages-root/bug-triage/state
     steps:
       - uses: actions/checkout@v7
@@ -54,7 +57,7 @@ jobs:
           if [ ! -d .git ]; then
             git init
             git checkout -b gh-pages
-            git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+            git remote add origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git"
           else
             git checkout gh-pages || git checkout -b gh-pages
           fi

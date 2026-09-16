@@ -129,6 +129,7 @@ td.st{white-space:nowrap;max-width:260px}
 <script>
 const ROWS={{ROWS}};
 const TREND={{TREND}};
+const BOARD_OK={{BOARD_OK}};
 const DEF={High:'Blocks a flow, crashes, loses data, or touches auth/security',Medium:'Functional defect with a workaround or limited reach',Low:'Cosmetic or wording'};
 const $=s=>document.querySelector(s);
 const F={sev:$('#f-sev'),area:$('#f-area'),repo:$('#f-repo'),age:$('#f-age'),flag:$('#f-flag'),plan:$('#f-plan'),q:$('#f-q')};
@@ -141,7 +142,7 @@ function chips(r){
   for(const p of r.rl) h+=`<a class="chip rel" href="${p.u}" target="_blank" rel="noopener">${esc(p.t)}</a>`;
   if(r.ep) h+='<span class="chip epic" title="Sub-issue of an epic">epic</span>';
   if(r.bd) h+='<span class="chip" title="On the delivery board">board</span>';
-  if(!h) h='<span class="chip none" title="Not on the board, no PR, no release story">no signal</span>';
+  if(!h) h=BOARD_OK?'<span class="chip none" title="Not on the board, no PR, no release story">no signal</span>':'<span class="chip none" title="No PR, epic or release story; board membership not readable">no signal</span>';
   return h;
 }
 function render(){
