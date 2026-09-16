@@ -1,5 +1,0 @@
-mutation adminUploadFilesFromContentToStorageBucket {
-  adminUploadFilesFromContentToStorageBucket {
-    results
-  }
-}

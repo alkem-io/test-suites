@@ -126,6 +126,16 @@ export const A_ROW_DELTA: Partial<
   // rather than an authorization policy". Do NOT re-attribute
   // MOVE_CONTRIBUTION here: that belongs to A10 above.
   [RoleName.FeatureBetaTester]: { platform: [], roleSet: [] },
+  // Feature VC Campaign — the later-added 14th target role (server
+  // `AddFeatureVcCampaignRole1785600000000`). Like A12 it owns NO
+  // authorization-policy privilege on any tree: it gates a client-side
+  // dashboard offer, and on grant the server ALSO writes the
+  // ACCOUNT_LICENSE_PLUS entitlement (parity with the legacy
+  // `platform-vc-campaign` it succeeds). Empty on both platform policies.
+  // NOT measured live — transcribed from the server source on 2026-09-16
+  // (the server grants it no credential rule anywhere); re-measure if the
+  // delta spec ever reds here.
+  [RoleName.FeatureVcCampaign]: { platform: [], roleSet: [] },
 };
 
 /**
@@ -151,7 +161,7 @@ export const mustContainOn = (
 ): readonly string[] => A_ROW_DELTA[role]?.[policy] ?? [];
 
 /**
- * The twelve roles a human can be granted. `PlatformSpacesReader` is absent by
+ * The thirteen roles a human can be granted. `PlatformSpacesReader` is absent by
  * construction — it is the keys of {@link A_ROW_DELTA}, not a second list that
  * could drift out of step with it.
  */

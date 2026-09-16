@@ -3,7 +3,7 @@
 //
 // Durable regression cover for the manual US3 grantability / assigner-filtering
 // acceptance walk (FR-012, FR-002, FR-032, Slice A exit condition): the
-// 13-role admin UI offers the full role set to the seeded break-glass Platform
+// 14-role admin UI offers the full role set to the seeded break-glass Platform
 // Roles Admin, and only the 3 `Feature …` roles to an operator holding ONLY
 // Platform Users Admin. `getOfferedPlatformRoles` in client-web
 // (src/domain/access/RoleSetManager/useRoleSetManager.ts) derives the offered
@@ -46,9 +46,10 @@ const ROLES_ADMIN_EMAIL = process.env.AUTH_ADMIN_EMAIL || 'admin@alkem.io';
 const USERS_ADMIN_EMAIL = 'platform.usersadmin@alkem.io';
 const ASSIGNMENT_TARGET_EMAIL = 'qa.user@alkem.io';
 
-// The 13 target roles of the Slice A exit condition — the 10 `Platform …`
-// administration roles plus the 3 `Feature …` roles (spec.md "Target global
-// role model" table).
+// The 14 target roles of the Slice A exit condition — the 10 `Platform …`
+// administration roles plus the 4 `Feature …` roles (spec.md "Target global
+// role model" table; `FEATURE_VC_CAMPAIGN` is the later-added successor of
+// the legacy `PLATFORM_VC_CAMPAIGN`, both honoured until Slice B).
 const PLATFORM_ADMIN_ROLES = [
   'PLATFORM_ROLES_ADMIN',
   'PLATFORM_CONTENT_FULL_ACCESS',
@@ -65,8 +66,9 @@ const FEATURE_ROLES = [
   'FEATURE_BETA_TESTER',
   'FEATURE_VIRTUAL_ASSISTANT',
   'FEATURE_ORGANIZATION_CREATOR',
+  'FEATURE_VC_CAMPAIGN',
 ];
-const ALL_13_ROLES = [...PLATFORM_ADMIN_ROLES, ...FEATURE_ROLES];
+const ALL_14_ROLES = [...PLATFORM_ADMIN_ROLES, ...FEATURE_ROLES];
 
 async function loginNonInteractive(
   request: APIRequestContext,
@@ -103,7 +105,7 @@ async function graphql(
 // ONLY client-side authorization decision this feature makes (FR-012).
 function getOfferedPlatformRoles(myPrivileges: string[]): string[] {
   if (myPrivileges.includes('GRANT_GLOBAL_ADMINS')) {
-    return ALL_13_ROLES;
+    return ALL_14_ROLES;
   }
   if (myPrivileges.includes('FEATURE_ROLE_ASSIGN')) {
     return FEATURE_ROLES;
@@ -112,10 +114,10 @@ function getOfferedPlatformRoles(myPrivileges: string[]): string[] {
 }
 
 test.describe(
-  'US3 — grantability of all 13 roles, and assigner-filtering by capability',
+  'US3 — grantability of all 14 roles, and assigner-filtering by capability',
   { tag: '@forge-acceptance' },
   () => {
-    test('grantability-all-13: the break-glass Platform Roles Admin can be offered every one of the 13 target roles', async ({
+    test('grantability-all-14: the break-glass Platform Roles Admin can be offered every one of the 14 target roles', async ({
       request,
     }) => {
       const token = await loginNonInteractive(
@@ -143,18 +145,18 @@ test.describe(
       const roleNames: string[] = result.data.platform.roleSet.roleNames;
 
       // When: the admin roles page decides which roles to offer (FR-012) —
-      // Then: all 13 target roles are offered and exist on the platform
+      // Then: all 14 target roles are offered and exist on the platform
       // role-set — the Slice A exit condition.
       const offered = getOfferedPlatformRoles(myPrivileges);
-      expect(offered.sort()).toEqual([...ALL_13_ROLES].sort());
-      for (const role of ALL_13_ROLES) {
+      expect(offered.sort()).toEqual([...ALL_14_ROLES].sort());
+      for (const role of ALL_14_ROLES) {
         expect(roleNames, `platform role-set is missing ${role}`).toContain(
           role
         );
       }
     });
 
-    test('assigner-filtering: a Platform Users Admin is offered only the 3 Feature roles, and an out-of-scope grant is rejected with a visible error', async ({
+    test('assigner-filtering: a Platform Users Admin is offered only the 4 Feature roles, and an out-of-scope grant is rejected with a visible error', async ({
       request,
     }) => {
       const usersAdminToken = await loginNonInteractive(
@@ -175,7 +177,7 @@ test.describe(
       expect(myPrivileges).not.toContain('GRANT_GLOBAL_ADMINS');
       expect(myPrivileges).toContain('FEATURE_ROLE_ASSIGN');
 
-      // When: that user opens the same admin roles page — Then: only the 3
+      // When: that user opens the same admin roles page — Then: only the 4
       // Feature roles are offered; the 10 Platform roles are absent.
       const offered = getOfferedPlatformRoles(myPrivileges);
       expect(offered.sort()).toEqual([...FEATURE_ROLES].sort());

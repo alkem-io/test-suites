@@ -45,6 +45,7 @@ export const ROLE_CREDENTIAL_MAP: Partial<Record<RoleName, AuthorizationCredenti
   [RoleName.FeatureBetaTester]: AuthorizationCredential.FeatureBetaTester,
   [RoleName.FeatureVirtualAssistant]: AuthorizationCredential.FeatureVirtualAssistant,
   [RoleName.FeatureOrganizationCreator]: AuthorizationCredential.FeatureOrganizationCreator,
+  [RoleName.FeatureVcCampaign]: AuthorizationCredential.FeatureVcCampaign,
 };
 
 /**

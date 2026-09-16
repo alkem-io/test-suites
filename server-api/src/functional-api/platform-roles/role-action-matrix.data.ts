@@ -40,8 +40,10 @@ export interface MatrixCell {
 }
 
 /**
- * The 13 target platform-role-set roles this feature's matrix iterates
- * (research C12: 10 `Platform …` + 3 `Feature …`). Adding a role to the
+ * The 14 target platform-role-set roles this feature's matrix iterates
+ * (research C12: 10 `Platform …` + 3 `Feature …`, plus the later-added
+ * `Feature VC Campaign`, which owns NO A-row surface — it gates a
+ * client-side dashboard offer — so it contributes DENY cells only). Adding a role to the
  * target model is a one-line edit here — that is the point of the
  * generator shape (spec.md: "resist any expansion that turns a row into a
  * hand-written spec").
@@ -60,6 +62,7 @@ export const TARGET_ROLES: readonly RoleName[] = [
   RoleName.FeatureBetaTester,
   RoleName.FeatureOrganizationCreator,
   RoleName.FeatureVirtualAssistant,
+  RoleName.FeatureVcCampaign,
 ];
 
 /**
@@ -83,13 +86,14 @@ const TEST_USER_FOR_ROLE: Partial<Record<RoleName, TestUser>> = {
   [RoleName.FeatureBetaTester]: TestUser.FEATURE_BETA_TESTER,
   [RoleName.FeatureOrganizationCreator]: TestUser.FEATURE_ORGANIZATION_CREATOR,
   [RoleName.FeatureVirtualAssistant]: TestUser.FEATURE_VIRTUAL_ASSISTANT,
+  [RoleName.FeatureVcCampaign]: TestUser.FEATURE_VC_CAMPAIGN,
 };
 
 export function testUserFor(role: RoleName): TestUser {
   const user = TEST_USER_FOR_ROLE[role];
   if (!user) {
     throw new Error(
-      `role-action-matrix: no single-role fixture registered for RoleName "${role}" — T003/T004 is stale or this role is not yet part of the 13-role target model.`
+      `role-action-matrix: no single-role fixture registered for RoleName "${role}" — T003/T004 is stale or this role is not yet part of the 14-role target model.`
     );
   }
   return user;
@@ -199,7 +203,7 @@ export function canonicalSurfaceByRow(
  * legacy reachers to the surface's reach set does not change whether THIS
  * credential reaches it. `reachers()` only ever ADDS legacy credentials at
  * stage A (`GLOBAL_ADMIN`/`GLOBAL_SUPPORT` and the two legacy cascades) —
- * none of which is ever one of our 13 target roles' own credential
+ * none of which is ever one of our 14 target roles' own credential
  * (`credentialFor`) — so for the overwhelming majority of cells this is
  * true and the denial is NOT "meaningless before Slice B" (D18): it is
  * simply early. The only way it can be false is a surface whose OWN
@@ -223,7 +227,7 @@ export function denyIsStageInvariant(
  * ~102x13 in shape once every surface is live (T008's own doc comment: never
  * assert a literal count copied from a task description — derive it).
  *
- * corr-ts-16 (2026-07-30 fix wave): within EACH surface's 13-role slice, DENY
+ * corr-ts-16 (2026-07-30 fix wave): within EACH surface's 14-role slice, DENY
  * cells are ordered BEFORE ALLOW cells (a stable partition — TARGET_ROLES
  * order is preserved within each half). `role-action-matrix.it-spec.ts`
  * registers `it()`s in array order and they execute in that order, so

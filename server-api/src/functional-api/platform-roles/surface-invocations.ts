@@ -11,6 +11,7 @@ import { SpaceVisibility } from '@alkemio/tests-lib/core/generated/alkemio-schem
 import { LicensingCredentialBasedCredentialType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { VirtualContributorWellKnown } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { CredentialType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { ForumDiscussionCategory } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { AuthorizationCredential } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { AuthorizationPrivilege } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { TemplateType as GeneratedTemplateType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
@@ -376,7 +377,7 @@ export function buildSurfaceInvocations(
     // (`{credential: GA}`) rather than the rule engine. `RoleName.GlobalAdmin`
     // is not in `RULE_ENGINE_GOVERNED_ROLES`
     // (`platform.role.assignment.rules.service.ts`), so this always lands on
-    // the pinned branch. None of the 13 single-role fixtures hold the literal
+    // the pinned branch. None of the 14 single-role fixtures hold the literal
     // `GLOBAL_ADMIN` credential, so every cell here is a denial in both
     // slices (declared reach = `{GA}` at stage A, `{}` at stage B) and the
     // call never actually mutates `fx.targetUserId` — safe to reuse the
@@ -411,11 +412,11 @@ export function buildSurfaceInvocations(
       ),
     // --- sec-server-9 fix (corr-ts-27/spec-ts-19 re-sync): the generic,
     // un-censused actor-credential bypass. `CredentialType.AssistantAccess`
-    // is deliberately NOT one of the 13 platform-*/feature-* role
+    // is deliberately NOT one of the 14 platform-*/feature-* role
     // credentials — the resolver rejects those outright before its
     // (legacy-only) `PLATFORM_ADMIN` check runs, which would produce a
     // green denial for the WRONG reason (a validation rejection, not an
-    // authorization one). None of the 13 single-role fixtures holds
+    // authorization one). None of the 14 single-role fixtures holds
     // GLOBAL_ADMIN/GLOBAL_SUPPORT/GLOBAL_LICENSE_MANAGER, so every cell on
     // this surface is a real authorization denial in both slices — targets
     // the disposable `fx.rolesProbeUserId`, never the shared fixture.
@@ -659,7 +660,7 @@ export function buildSurfaceInvocations(
     // --- Legacy-admin pin (spec-ts-8) — the SAME `deleteUser` mutation A5
     // exercises for real (against `fx.deletableUserId`), but here declared
     // as A4's `{credential: GA}` pin: its derived reach is `{GA}` at stage A,
-    // `{}` at stage B, and none of the 13 single-role fixtures hold the
+    // `{}` at stage B, and none of the 14 single-role fixtures hold the
     // literal `GLOBAL_ADMIN` credential — so every cell is a denial and the
     // real lookup-then-deny never mutates its target. Reuses the shared
     // `fx.targetUserId` (a real, existing user, so the call reaches the
@@ -719,6 +720,32 @@ export function buildSurfaceInvocations(
         token =>
           client().adminUserAccountDelete(
             { userID: fx.accountDeleteTargetUserId },
+            bearer(token)
+          ),
+        caller
+      ),
+    // workspace#038's two MCP API-key admin surfaces (re-anchored onto this
+    // family 2026-09-15). Read, then idempotent revoke of the one fixture
+    // key — see `MatrixFixtures.mcpApiKeyId`.
+    caller =>
+      invoke(
+        token =>
+          client().platformAdminMcpApiKeys(
+            { userID: fx.mcpApiKeyOwnerUserId },
+            bearer(token)
+          ),
+        caller
+      ),
+    caller =>
+      invoke(
+        token =>
+          client().adminRevokeMcpApiKey(
+            {
+              revokeData: {
+                keyID: fx.mcpApiKeyId,
+                userID: fx.mcpApiKeyOwnerUserId,
+              },
+            },
             bearer(token)
           ),
         caller
@@ -1272,9 +1299,14 @@ export function buildSurfaceInvocations(
         token => client().AdminSearchIngestFromScratch({}, bearer(token)),
         caller
       ),
+    // develop's two collaboration-migration mutations replace the deleted
+    // admin-whiteboard upload (mirrored from the server census, 2026-09-15).
+    // Both are idempotent: repeated calls process only unmigrated documents.
+    caller =>
+      invoke(token => client().migrateLegacyMemoContent({}, bearer(token)), caller),
     caller =>
       invoke(
-        token => client().adminUploadFilesFromContentToStorageBucket({}, bearer(token)),
+        token => client().migrateLegacyWhiteboardContent({}, bearer(token)),
         caller
       ),
     caller =>
@@ -1527,7 +1559,7 @@ export function buildSurfaceInvocations(
   // condition is set — content-full-access's root cascade does not include
   // GRANT (`cascade.model.ts`'s `ROOT_CASCADE.privileges`), and
   // spaces-reader's own grant is READ alone — so GRANT is the one privilege
-  // the condition exclusively confers among our 13 fixtures. The probe
+  // the condition exclusively confers among our 14 fixtures. The probe
   // still only requires reaching READ_ABOUT to run (so it never fails for
   // an unrelated reason); the ALLOW/DENY split is computed from the
   // returned privilege list itself, converting an absent GRANT into a
@@ -1556,7 +1588,7 @@ export function buildSurfaceInvocations(
           {
             code: 'FORBIDDEN',
             message:
-              'A15 probe: caller reaches the space (READ_ABOUT) but holds no GRANT privilege there — GRANT is the one privilege allowPlatformSupportAsAdmin exclusively confers among this matrix\'s 13 fixtures, so no in-space support/admin capability is actually reachable.',
+              'A15 probe: caller reaches the space (READ_ABOUT) but holds no GRANT privilege there — GRANT is the one privilege allowPlatformSupportAsAdmin exclusively confers among this matrix\'s 14 fixtures, so no in-space support/admin capability is actually reachable.',
           },
         ],
       };
@@ -1579,6 +1611,31 @@ export function buildSurfaceInvocations(
           ),
         caller
       ),
+    // workspace#060's category removal (re-anchored onto PLATFORM_FORUM_MANAGE
+    // 2026-09-15). The mutation is idempotent for a category ABSENT from the
+    // forum's active list and refuses one that still has discussions, so the
+    // invocation removes a category that is not active — a no-op the gate
+    // still fully exercises — and never mutates the shared forum. If every
+    // category is active it falls back to the last enum member; that ALLOW
+    // cell would then red only if that category carries discussions.
+    async caller => {
+      const active = await graphqlErrorWrapper(
+        token => client().platformForumDiscussionCategories({}, bearer(token)),
+        TestUser.GLOBAL_ADMIN
+      );
+      const activeList: ForumDiscussionCategory[] =
+        active.data?.platform.forum.discussionCategories ?? [];
+      const all = Object.values(ForumDiscussionCategory);
+      const category = all.find(c => !activeList.includes(c)) ?? all[all.length - 1];
+      return invoke(
+        token =>
+          client().adminForumRemoveDiscussionCategory(
+            { removeData: { category } },
+            bearer(token)
+          ),
+        caller
+      );
+    },
   ]);
 
   // ===== A16 — read across spaces (1) =====

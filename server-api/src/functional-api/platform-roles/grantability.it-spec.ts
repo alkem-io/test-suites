@@ -57,10 +57,11 @@ const FEATURE_ROLES: readonly RoleName[] = [
   RoleName.FeatureBetaTester,
   RoleName.FeatureOrganizationCreator,
   RoleName.FeatureVirtualAssistant,
+  RoleName.FeatureVcCampaign,
 ];
 
 describe('grantability (T012, SC-009) — every target role is grantable + revocable through the platform surface', () => {
-  it('every one of the 13 target roles round-trips: grant -> holder list shows it -> revoke -> holder list no longer shows it', async () => {
+  it('every one of the 14 target roles round-trips: grant -> holder list shows it -> revoke -> holder list no longer shows it', async () => {
     const rolesAdminToken = TestUserManager.getUserModelByType(
       TestUser.PLATFORM_ROLES_ADMIN
     ).authToken;
@@ -71,7 +72,7 @@ describe('grantability (T012, SC-009) — every target role is grantable + revoc
     // identity 68+ other spec files across this project run authenticate
     // as, several asserting it is DENIED various privileges). The FIRST
     // role in `TARGET_ROLES` is `platform-roles-admin` — the authority to
-    // grant every one of the 13 platform roles to anybody — so a thrown
+    // grant every one of the 14 platform roles to anybody — so a thrown
     // assertion (a flaky holder-list read, live-verification's documented
     // grant/read propagation lag) between grant and revoke must never be
     // able to leave that on the shared fixture.

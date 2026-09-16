@@ -12,7 +12,7 @@ import type { Reported } from './privileges';
  * the assertion was satisfied by something unrelated.
  *
  * Any negative assertion in this tree must therefore state, INSIDE the test,
- * that its actor holds exactly one of the thirteen and no legacy credential.
+ * that its actor holds exactly one of the fourteen and no legacy credential.
  * That is what this asserts, and it is why it takes the already-read
  * {@link Reported} rather than fetching: the same read that produced the
  * privileges under assertion must be the one that proves the actor's shape.
@@ -30,7 +30,7 @@ export const assertSingleRoleActor = (
   role: RoleName
 ): void => {
   // `REGISTERED` is the baseline every authenticated user carries — it is not
-  // one of the thirteen and is subtracted, not asserted against.
+  // one of the fourteen and is subtracted, not asserted against.
   const platformRoles = reported.myRoles.filter(r => r !== 'REGISTERED');
 
   expect(

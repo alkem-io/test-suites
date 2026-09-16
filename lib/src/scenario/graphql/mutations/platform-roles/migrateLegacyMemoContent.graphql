@@ -1,0 +1,6 @@
+mutation migrateLegacyMemoContent {
+  migrateLegacyMemoContent {
+    total
+    migrated
+  }
+}

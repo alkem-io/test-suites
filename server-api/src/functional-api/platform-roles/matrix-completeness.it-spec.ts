@@ -53,7 +53,7 @@ describe('matrix-completeness (T017a) — every platform role-set role is covere
     const liveRoles = new Set(live.data?.platform.roleSet.roleNames ?? []);
     const coveredRoles = new Set(TARGET_ROLES);
 
-    // Every TARGET role (this feature's 13-role model) MUST be reported by
+    // Every TARGET role (this feature's 14-role model) MUST be reported by
     // the live role-set — a role in our table the server no longer knows
     // about is a stale generator, not a completeness gap.
     for (const role of coveredRoles) {
@@ -68,7 +68,7 @@ describe('matrix-completeness (T017a) — every platform role-set role is covere
     // be added untested" half. Legacy (`GLOBAL_*`) and pre-027 platform
     // roles (`PLATFORM_OPERATIONS_ADMIN` is covered; `PLATFORM_BETA_TESTER`,
     // `PLATFORM_ASSISTANT_ACCESS`, `PLATFORM_VC_CAMPAIGN` are NOT part of
-    // this feature's 13-role target model and are declared exempt here by
+    // this feature's 14-role target model and are declared exempt here by
     // name, not silently absorbed by a broad allowlist) are excluded.
     const KNOWN_UNCOVERED_LEGACY_OR_UNRELATED_ROLES = new Set([
       'GLOBAL_ADMIN',
@@ -94,7 +94,7 @@ describe('matrix-completeness (T017a) — every platform role-set role is covere
       if (coveredRoles.has(role)) continue;
       expect(
         KNOWN_UNCOVERED_LEGACY_OR_UNRELATED_ROLES.has(role),
-        `live platform role-set reports role "${role}" which is neither in the matrix's 13-role target model nor in the declared legacy/unrelated exemption list — a role with no covering permission test`
+        `live platform role-set reports role "${role}" which is neither in the matrix's 14-role target model nor in the declared legacy/unrelated exemption list — a role with no covering permission test`
       ).toBe(true);
     }
   });

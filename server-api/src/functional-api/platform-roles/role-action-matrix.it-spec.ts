@@ -166,7 +166,7 @@ describe(`role-action-matrix (T008/T009) — scope=${activeMatrixScope()} stage=
       // qual-ts-4 (2026-07-30 fix wave) proposed executing a stage-A DENY
       // cell early whenever `denyIsStageInvariant` shows the credential's
       // reach is identical at both stages — legitimate in THEORY (D18's
-      // legacy grants never widen one of our 13 roles' own reach), but
+      // legacy grants never widen one of our 14 roles' own reach), but
       // **live-verification found it unsafe for DESTRUCTIVE, single-use
       // surfaces** (A5's `deleteUser`, A8's deletes, A13's
       // `DeleteLicensePlan`): every DENY cell for a surface shares ONE

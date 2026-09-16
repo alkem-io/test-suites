@@ -11,7 +11,7 @@
 //
 // Also covers the documented, signed-off UI gap (repos.yaml Slice A human
 // gates): Platform Audit Reader holds the API-level PLATFORM_ROLE_HOLDERS_READ
-// capability over all 13 lists but has NO admin-roles UI page, because
+// capability over all 14 lists but has NO admin-roles UI page, because
 // client-web filters the offered role sets by ASSIGNER capability and Audit
 // Reader assigns nothing. Absence of that UI is EXPECTED, not a defect.
 //
@@ -202,7 +202,7 @@ test.describe(
       );
     });
 
-    test('SC-017 (UI): Platform Roles Admin sees all 13 role tabs with readable, partitioned holder lists', async ({
+    test('SC-017 (UI): Platform Roles Admin sees all 14 role tabs with readable, partitioned holder lists', async ({
       page,
     }) => {
       await loginViaCrd(page, ROLES_ADMIN_EMAIL, testHarnessPassword);
@@ -219,7 +219,7 @@ test.describe(
       await expect(
         roleNav.getByRole('button', { name: 'Feature Beta Tester' })
       ).toBeVisible();
-      await expect(roleNav.getByRole('button')).toHaveCount(13);
+      await expect(roleNav.getByRole('button')).toHaveCount(14);
 
       // The current tab's holder list is readable (not blocked/hidden).
       await expect(
@@ -227,7 +227,7 @@ test.describe(
       ).toBeVisible();
     });
 
-    test('SC-017 (UI): Platform Users Admin sees ONLY the 3 Feature… tabs — Platform… holder lists stay closed to it', async ({
+    test('SC-017 (UI): Platform Users Admin sees ONLY the 4 Feature… tabs — Platform… holder lists stay closed to it', async ({
       page,
     }) => {
       await loginViaCrd(page, USERS_ADMIN_EMAIL, testHarnessPassword);
@@ -235,7 +235,7 @@ test.describe(
 
       const roleNav = page.getByRole('navigation', { name: 'Role' });
       await expect(roleNav).toBeVisible();
-      await expect(roleNav.getByRole('button')).toHaveCount(3);
+      await expect(roleNav.getByRole('button')).toHaveCount(4);
       await expect(
         roleNav.getByRole('button', { name: 'Feature Beta Tester' })
       ).toBeVisible();
@@ -244,6 +244,9 @@ test.describe(
       ).toBeVisible();
       await expect(
         roleNav.getByRole('button', { name: 'Feature Organization Creator' })
+      ).toBeVisible();
+      await expect(
+        roleNav.getByRole('button', { name: 'Feature VC Campaign' })
       ).toBeVisible();
       await expect(
         roleNav.getByRole('button', { name: 'Platform Roles Admin' })

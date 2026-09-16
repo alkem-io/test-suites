@@ -16,6 +16,7 @@ import {
   LicensingCredentialBasedPlanType,
   TemplateType as GeneratedTemplateType,
   VirtualContributorWellKnown,
+  McpApiKeyOperation,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { createOrganization } from '@functional-api/contributor-management/organization/organization.request.params';
 import {
@@ -246,6 +247,15 @@ export interface MatrixFixtures {
    * guess. */
   readonly emailChangeTargetUserEmail: string;
   readonly accountDeleteTargetUserId: string;
+  /** A5's MCP API-key surfaces (workspace#038, re-anchored onto
+   * PLATFORM_USERS_ADMIN 2026-09-15). ONE key, minted by the global admin
+   * for its own account: `adminRevokeMcpApiKey` is idempotent on an
+   * already-inactive key, so every ALLOW cell succeeds against the same
+   * key and nothing needs re-provisioning; `platformAdmin.mcpApiKeys` is a
+   * read. The owner is the global admin (a stable, never-deleted fixture
+   * user) — never `targetUserId`, whose keys no cell mints. */
+  readonly mcpApiKeyId: string;
+  readonly mcpApiKeyOwnerUserId: string;
   /** A8's five disposable delete targets — distinct from every resource
    * A7/A9/A12/A13 depend on, so an A8 ALLOW cell's REAL deletion cannot
    * corrupt the A-rows that run after it in the same file (corr-ts-1,
@@ -270,7 +280,7 @@ export interface MatrixFixtures {
   readonly a13DeletableLicensePlanId: string;
   /** A13's `UpdateLicensePlan` target — a SECOND, separate disposable plan,
    * distinct from `a13DeletableLicensePlanId`: within one matrix run every
-   * cell of `DeleteLicensePlan` (all 13 roles) executes before any cell of
+   * cell of `DeleteLicensePlan` (all 14 roles) executes before any cell of
    * `UpdateLicensePlan` (census/array order), so if the two rows shared one
    * plan, the real ALLOW-caller deletion in the first pass would leave
    * nothing for the second pass's ALLOW caller to update. */
@@ -613,6 +623,24 @@ export async function buildMatrixFixtures(): Promise<MatrixFixtures> {
     `matrixacctdel${runId}`,
     `target${runId}`
   );
+
+  // A5 — one MCP API key owned by the global admin (see MatrixFixtures doc).
+  const mintResult = await getGraphqlClient().mintMcpApiKey(
+    {
+      mintData: {
+        name: 'platform-roles matrix A5 fixture',
+        operations: [McpApiKeyOperation.Read],
+      },
+    },
+    { authorization: `Bearer ${TestUserManager.users.globalAdmin.authToken}` }
+  );
+  const mcpApiKeyId = mintResult.data?.mintMcpApiKey.key.id;
+  if (!mcpApiKeyId) {
+    throw new Error(
+      `platform-roles fixtures: could not mint the A5 MCP API key: ${JSON.stringify(mintResult.errors ?? mintResult)}`
+    );
+  }
+  const mcpApiKeyOwnerUserId = TestUserManager.users.globalAdmin.id;
 
   const innovationHubResult = await createInnovationHub(
     base.organization.accountId
@@ -1086,6 +1114,8 @@ export async function buildMatrixFixtures(): Promise<MatrixFixtures> {
     emailChangeTargetUserId,
     emailChangeTargetUserEmail,
     accountDeleteTargetUserId,
+    mcpApiKeyId,
+    mcpApiKeyOwnerUserId,
     a8DeletableSpaceId,
     a8DeletableCalloutId,
     a8DeletableContributionId,

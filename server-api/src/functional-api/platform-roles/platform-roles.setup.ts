@@ -11,7 +11,7 @@ import { reportedForUser } from './helpers/privileges';
  * workspace#027-platform-role-redesign (qual-ts-14, 2026-07-30 fix wave) —
  * project-scoped `setupFiles` entry, wired ONLY into the `platform-roles`
  * and `platform-roles-canonical` vitest projects (`vitest.config.ts`), never
- * the shared root `globalTestsSetup.ts`. Seeding these 13 single-role
+ * the shared root `globalTestsSetup.ts`. Seeding these 14 single-role
  * fixtures is this feature's own concern; running it from the shared
  * root setup meant an unrelated project (e.g. `callouts`, `storage`) could
  * be hard-failed by a fixture this feature owns, and ran ahead of the
@@ -35,13 +35,15 @@ import { reportedForUser } from './helpers/privileges';
  */
 let seeded = false;
 
-/** P1 — the five migrations this feature ships. */
+/** P1 — the six migrations this feature ships (the sixth,
+ * `AddFeatureVcCampaignRole…`, adds the later `Feature VC Campaign` role). */
 const REQUIRED_MIGRATIONS: readonly string[] = [
   'AddPlatformRolesRedesign1784999999999',
   'AlterPlatformAuditEntrySubject1785000000001',
   'AddPlatformAuditCategories1785000000002',
   'AddPlatformAuditOutcomes1785000000003',
   'ExtendPlatformAuditInitiatorRole1785000000004',
+  'AddFeatureVcCampaignRole1785600000000',
 ];
 
 const assertMigrationsApplied = (): void => {
@@ -58,8 +60,8 @@ const assertMigrationsApplied = (): void => {
 
   const applied = new Set(appliedMigrations());
   // NOTE: `AddUserLanguagePreference1785000000000` sits inside this timestamp
-  // range and is UNRELATED to this feature. It is not a sixth migration; do
-  // not add it here when the list "looks like it is missing one".
+  // range and is UNRELATED to this feature. It is not one of ours; do not
+  // add it here when the list "looks like it is missing one".
   const missing = REQUIRED_MIGRATIONS.filter(name => !applied.has(name));
 
   if (missing.length > 0) {

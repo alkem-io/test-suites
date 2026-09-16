@@ -134,7 +134,7 @@ describe('assignment rules (T010) — the five rules, each with its own distinct
     // regression that let this grant SUCCEED would leave the shared fixture
     // holding TWO roles, silently poisoning every other cell/spec that
     // authenticates as it (no revoke-on-success, no residue cleanup covers
-    // the 13 role fixtures). Grant the prerequisite role to the disposable
+    // the 14 role fixtures). Grant the prerequisite role to the disposable
     // `rolesProbeUserId` for the DURATION of this test only, mirroring
     // `flows/rejection-audited.it-spec.ts`'s identical rule-4 test.
     const rolesAdminToken = TestUserManager.getUserModelByType(

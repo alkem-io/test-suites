@@ -22,7 +22,7 @@ import type { DisposableSubject } from './helpers/disposable-subject';
  * in the assignment surface never has to be chased through two files:
  *
  *  * `grantability.it-spec.ts` owns SC-009: grant + revoke round-trip for all
- *    13 roles, verified through the HOLDER LIST, as the GRANTER. That is the
+ *    14 roles, verified through the HOLDER LIST, as the GRANTER. That is the
  *    "can it be assigned at all" property, and it stays there.
  *  * THIS file owns the three things asserted nowhere else:
  *      B2 — `platform.roleSet.myRoles` read AS THE SUBJECT across a grant
@@ -62,9 +62,10 @@ import type { DisposableSubject } from './helpers/disposable-subject';
  * `spaces-reader-service-account`). That is handover case D2 and
  * `assignment-rules.it-spec.ts` owns it.
  *
- * `FeatureBetaTester` has a side effect beyond the platform credential — it
- * also grants the subject's ACCOUNT an `ACCOUNT_LICENSE_PLUS` credential and
- * resets the account license. Every assertion here is deliberately scoped to
+ * `FeatureBetaTester` (and its entitlement twin `FeatureVcCampaign`) has a
+ * side effect beyond the platform credential — it also grants the subject's
+ * ACCOUNT an `ACCOUNT_LICENSE_PLUS` credential and resets the account
+ * license. Every assertion here is deliberately scoped to
  * the two PLATFORM policies; do not reach for account-scoped state or that
  * iteration goes red for a reason this file is not about.
  */

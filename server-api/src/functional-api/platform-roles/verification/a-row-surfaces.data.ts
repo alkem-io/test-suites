@@ -337,7 +337,7 @@ export const A_ROW_SURFACES: Record<ARowId, readonly SurfaceRef[]> = {
       legacyReachers: [GA],
     },
     // --- sec-server-9 fix: the generic, un-censused actor-credential
-    // mutations became grantable/revokable for all 13 platform-*/feature-*
+    // mutations became grantable/revokable for all 14 platform-*/feature-*
     // role credentials the moment they joined the shared
     // `AuthorizationCredential`/`CredentialType` enums — a complete bypass
     // of the six-rule assignment engine and its audit trail. Both mutations
@@ -620,6 +620,26 @@ export const A_ROW_SURFACES: Record<ARowId, readonly SurfaceRef[]> = {
     {
       file: 'src/platform-admin/domain/user/admin.users.resolver.mutations.ts',
       member: 'adminUserAccountDelete',
+      kind: 'graphql-mutation',
+      tree: 'platform',
+      gate: { requires: AuthorizationPrivilege.PlatformUsersAdmin },
+      intendedOwners: [AuthorizationCredential.PlatformUsersAdmin],
+      legacyReachers: [GA, GS, GLM, GPM],
+    },
+    // workspace#038's MCP API-key admin surfaces, re-anchored onto this
+    // family 2026-09-15 (server census comment has the rationale).
+    {
+      file: 'src/platform-admin/domain/mcp-api-key/admin.mcp.api.key.resolver.fields.ts',
+      member: 'mcpApiKeys',
+      kind: 'graphql-field',
+      tree: 'platform',
+      gate: { requires: AuthorizationPrivilege.PlatformUsersAdmin },
+      intendedOwners: [AuthorizationCredential.PlatformUsersAdmin],
+      legacyReachers: [GA, GS, GLM, GPM],
+    },
+    {
+      file: 'src/platform-admin/domain/mcp-api-key/admin.mcp.api.key.resolver.mutations.ts',
+      member: 'adminRevokeMcpApiKey',
       kind: 'graphql-mutation',
       tree: 'platform',
       gate: { requires: AuthorizationPrivilege.PlatformUsersAdmin },
@@ -1013,9 +1033,17 @@ export const A_ROW_SURFACES: Record<ARowId, readonly SurfaceRef[]> = {
         'adminSearchIngestFromScratch',
         'platform',
       ],
+      // develop (2026-08) deleted the obsolete admin-whiteboard module and
+      // added the two collaboration-migration mutations in its place —
+      // mirrored from the server census after the 2026-09-15 merge.
       [
-        'src/platform-admin/domain/whiteboard/admin.whiteboard.resolver.mutations.ts',
-        'adminUploadFilesFromContentToStorageBucket',
+        'src/services/collaboration-integration/migration/collaboration-migration.resolver.mutations.ts',
+        'migrateLegacyMemoContent',
+        'platform',
+      ],
+      [
+        'src/services/collaboration-integration/migration/collaboration-migration.resolver.mutations.ts',
+        'migrateLegacyWhiteboardContent',
         'platform',
       ],
       [
@@ -1221,6 +1249,17 @@ export const A_ROW_SURFACES: Record<ARowId, readonly SurfaceRef[]> = {
       member: 'deleteDiscussion',
       kind: 'graphql-mutation',
       tree: 'forum',
+      gate: { requires: AuthorizationPrivilege.PlatformForumManage },
+      intendedOwners: [AuthorizationCredential.PlatformSupport],
+      legacyReachers: [GA, GS],
+    },
+    // workspace#060's category removal, re-anchored onto this family
+    // 2026-09-15 (server census comment has the rationale).
+    {
+      file: 'src/platform/forum/forum.resolver.mutations.ts',
+      member: 'adminForumRemoveDiscussionCategory',
+      kind: 'graphql-mutation',
+      tree: 'platform',
       gate: { requires: AuthorizationPrivilege.PlatformForumManage },
       intendedOwners: [AuthorizationCredential.PlatformSupport],
       legacyReachers: [GA, GS],

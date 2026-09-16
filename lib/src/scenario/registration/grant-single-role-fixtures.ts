@@ -30,6 +30,7 @@ const SINGLE_ROLE_TARGETS: ReadonlyArray<readonly [TestUser, RoleName]> = [
   [TestUser.PLATFORM_CONTENT_FULL_ACCESS, RoleName.PlatformContentFullAccess],
   [TestUser.FEATURE_BETA_TESTER, RoleName.FeatureBetaTester],
   [TestUser.FEATURE_ORGANIZATION_CREATOR, RoleName.FeatureOrganizationCreator],
+  [TestUser.FEATURE_VC_CAMPAIGN, RoleName.FeatureVcCampaign],
   [TestUser.FEATURE_VIRTUAL_ASSISTANT, RoleName.FeatureVirtualAssistant],
 ];
 
@@ -74,7 +75,7 @@ const ALL_TARGETS: ReadonlyArray<readonly [TestUser, RoleName]> = [
  * original header comment claimed existed downstream ("the completeness
  * check downstream (server-api T017) is what actually catches a missing
  * grant") but does not: `matrix-completeness.it-spec.ts` only set-differences
- * the live role-set's role NAMES against the 13-role target model — it never
+ * the live role-set's role NAMES against the 14-role target model — it never
  * inspects fixture HOLDINGS, so a seeding gap surfaces as up to ~76 red
  * ALLOW cells that read as an enforcement defect in `server` rather than a
  * seeding bug here.

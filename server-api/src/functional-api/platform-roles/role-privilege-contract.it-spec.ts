@@ -18,7 +18,7 @@ import {
  * that blind spot produced three defects in one afternoon, all client-side,
  * all the same shape:
  *
- *   - the admin nav entry never appeared for any of the thirteen roles
+ *   - the admin nav entry never appeared for any of the fourteen roles
  *   - no role label rendered under a new-role holder's name
  *   - all nine admin sections were offered to a role that can operate one
  *
@@ -42,7 +42,7 @@ import {
  * CROSS-CONTAMINATION assertions, both of which are meaningful today. What
  * this file does NOT do is assert that a role is denied something the legacy
  * credentials still reach — at Slice A that passes for the wrong reason. The
- * fixtures here hold exactly ONE of the thirteen and no legacy `GLOBAL_*`
+ * fixtures here hold exactly ONE of the fourteen and no legacy `GLOBAL_*`
  * credential, which is what makes the negative assertions below sound.
  */
 
@@ -134,9 +134,10 @@ const SHARED_PRIVILEGES = new Set([
  *    by `assignPlatformRoleToUser` (server T040a). It is here for a different
  *    reason from the other two, and `MOVE_CONTRIBUTION` is NOT its privilege.
  *
- * Measured live 2026-08-05 — not derived. Pinned because it is a live trap,
- * not a curiosity: any UI that gates on platform-level privileges alone is
- * structurally blind to these three, which is exactly how the admin section
+ * Measured live 2026-08-05 — not derived (`FeatureVcCampaign` added
+ * 2026-09-16 from the server source, not yet measured). Pinned because it is
+ * a live trap, not a curiosity: any UI that gates on platform-level
+ * privileges alone is structurally blind to these roles, which is exactly how the admin section
  * mapping came to offer Resource Admin a tab keyed on a privilege the platform
  * query never returns.
  */
@@ -144,6 +145,9 @@ const NO_PLATFORM_LEVEL_PRIVILEGE: readonly RoleName[] = [
   RoleName.PlatformResourceAdmin,
   RoleName.PlatformLicenseManager,
   RoleName.FeatureBetaTester,
+  // The later-added 14th role: no authorization-policy privilege anywhere,
+  // same entitlement-only shape as A12 (ACCOUNT_LICENSE_PLUS on grant).
+  RoleName.FeatureVcCampaign,
 ];
 
 /**
@@ -166,7 +170,7 @@ const PLATFORM_POLICY_ONLY_ROLES: readonly RoleName[] = [
   RoleName.FeatureOrganizationCreator,
 ];
 
-const ALL_THIRTEEN: readonly RoleName[] = [
+const ALL_FOURTEEN: readonly RoleName[] = [
   RoleName.PlatformRolesAdmin,
   RoleName.PlatformUsersAdmin,
   RoleName.PlatformSupport,
@@ -180,6 +184,7 @@ const ALL_THIRTEEN: readonly RoleName[] = [
   RoleName.FeatureBetaTester,
   RoleName.FeatureOrganizationCreator,
   RoleName.FeatureVirtualAssistant,
+  RoleName.FeatureVcCampaign,
 ];
 
 const PRIVILEGES_QUERY = {
@@ -224,7 +229,7 @@ const reportedFor = async (user: TestUser): Promise<Reported> => {
 const reported = new Map<RoleName, Reported>();
 
 /**
- * A live ordinary registered user, holding none of the thirteen — the ONLY
+ * A live ordinary registered user, holding none of the fourteen — the ONLY
  * honest baseline for "this role adds nothing here".
  *
  * Measured 2026-08-05: platform = ['ACCESS_INTERACTIVE_GUIDANCE',
@@ -254,7 +259,7 @@ const assertBaselineFixtureIsOrdinary = () => {
 };
 
 beforeAll(async () => {
-  for (const role of ALL_THIRTEEN) {
+  for (const role of ALL_FOURTEEN) {
     reported.set(role, await reportedFor(testUserFor(role)));
   }
   ordinaryBaseline = await reportedFor(TestUser.NON_SPACE_MEMBER);
@@ -262,13 +267,13 @@ beforeAll(async () => {
 
 describe('role privilege contract — what each role SEES, per policy', () => {
   describe('fixture integrity — these assertions are only sound on single-role users', () => {
-    it.each(ALL_THIRTEEN)(
+    it.each(ALL_FOURTEEN)(
       '%s holds exactly that role and no legacy credential',
       role => {
         const held = reported.get(role)!.myRoles;
 
         // `REGISTERED` is the baseline every authenticated user carries — it is
-        // not one of the thirteen and is subtracted, not asserted against.
+        // not one of the fourteen and is subtracted, not asserted against.
         // Verified live 2026-08-05: the subject account reported
         // `myRoles=['REGISTERED']` before any grant.
         const platformRoles = held.filter(r => r !== 'REGISTERED');
@@ -317,7 +322,7 @@ describe('role privilege contract — what each role SEES, per policy', () => {
 
   describe('RED — no role reports a privilege that belongs to another role', () => {
     for (const [privilege, owner] of Object.entries(EXCLUSIVE_PRIVILEGES)) {
-      const others = ALL_THIRTEEN.filter(r => r !== owner);
+      const others = ALL_FOURTEEN.filter(r => r !== owner);
 
       it.each(others)(`${privilege} is not reported for %s`, role => {
         // CURRENTLY DEAD, and deliberately kept: no member of
@@ -342,7 +347,7 @@ describe('role privilege contract — what each role SEES, per policy', () => {
     // The whole point of the feature. If a new role picked this up, it would
     // be a re-badged Global Admin and every per-family privilege below it
     // would be decoration.
-    it.each(ALL_THIRTEEN)('%s does not report PLATFORM_ADMIN', role => {
+    it.each(ALL_FOURTEEN)('%s does not report PLATFORM_ADMIN', role => {
       const { platform, roleSet } = reported.get(role)!;
 
       expect(
@@ -539,7 +544,7 @@ describe('role privilege contract — what each role SEES, per policy', () => {
       const union = new Set([...legacy.platform, ...legacy.roleSet]);
 
       const missing: string[] = [];
-      for (const role of ALL_THIRTEEN) {
+      for (const role of ALL_FOURTEEN) {
         const { platform, roleSet } = reported.get(role)!;
         for (const privilege of [...platform, ...roleSet]) {
           if (!union.has(privilege)) {
@@ -563,7 +568,7 @@ describe('role privilege contract — what each role SEES, per policy', () => {
     });
   });
 
-  describe('EDGE — a user holding none of the thirteen reports none of their privileges', () => {
+  describe('EDGE — a user holding none of the fourteen reports none of their privileges', () => {
     it('an ordinary registered user has no platform-admin privilege at all', async () => {
       const ordinary = await reportedFor(TestUser.NON_SPACE_MEMBER);
       const union = [...ordinary.platform, ...ordinary.roleSet];

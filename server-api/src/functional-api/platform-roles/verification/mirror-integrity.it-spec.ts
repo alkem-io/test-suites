@@ -91,8 +91,8 @@ describe('mirror-integrity (T007a) — the mirrored census matches its own docum
     expect(LIVE_ROW_IDS).not.toContain('A18');
   });
 
-  it('the census file holds 113 entries total (corr-ts-27/spec-ts-19/qual-ts-24 re-sync count against server c7610d6fa — every planning document that still says ~76/~80/99/102/106 is stale)', () => {
-    expect(ALL_ENTRIES.length).toBe(113);
+  it('the census file holds 117 entries total (113 at the corr-ts-27/spec-ts-19/qual-ts-24 re-sync against server c7610d6fa; +2 A5 MCP-key surfaces, +1 A15 category removal, A11 −1 +2 after the 2026-09-15 develop merge — every planning document that still says ~76/~80/99/102/106/113 is stale)', () => {
+    expect(ALL_ENTRIES.length).toBe(117);
   });
 
   it('exactly 4 entries carry {retiredIn: "B"} — A1s FR-022 credential mutations', () => {
@@ -109,9 +109,9 @@ describe('mirror-integrity (T007a) — the mirrored census matches its own docum
     }
   });
 
-  it('107 entries multiply at stage A; 109 at stage B (113 total minus the 4 non-multiplying retiredIn entries, minus A17s 2 deferred-until-B entries at stage A only)', () => {
-    expect(multiplyingAt('A').length).toBe(107);
-    expect(multiplyingAt('B').length).toBe(109);
+  it('111 entries multiply at stage A; 113 at stage B (117 total minus the 4 non-multiplying retiredIn entries, minus A17s 2 deferred-until-B entries at stage A only)', () => {
+    expect(multiplyingAt('A').length).toBe(111);
+    expect(multiplyingAt('B').length).toBe(113);
   });
 
   it('per-row surface counts match the documented census table (stage-A declared count)', () => {
@@ -120,17 +120,17 @@ describe('mirror-integrity (T007a) — the mirrored census matches its own docum
       A2: 4,
       A3: 10,
       A4: 3,
-      A5: 3,
+      A5: 5,
       A6: 2,
       A7: 8,
       A8: 6,
       A9: 13,
       A10: 6,
-      A11: 13,
+      A11: 14,
       A12: 6,
       A13: 5,
       A14: 1,
-      A15: 3,
+      A15: 4,
       A16: 1,
       A17: 2,
       A18: 0,
