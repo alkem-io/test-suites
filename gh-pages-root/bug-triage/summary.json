@@ -13,6 +13,7 @@
   "release": 1,
   "pr_open": 5
  },
- "on_board": 0,
+ "on_board": null,
+ "board_readable": false,
  "kb": 821
 }
