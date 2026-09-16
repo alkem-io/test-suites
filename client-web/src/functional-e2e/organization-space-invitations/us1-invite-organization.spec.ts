@@ -244,15 +244,17 @@ async function inviteOrganizationViaDialog(
 
 spaceAdminTest.describe('US1-AS1 — permission gating (space admin half)', () => {
   spaceAdminTest(
-    'a Space admin who is not a platform admin can Invite Organisation; Add Organisation is present but disabled',
+    'a Space admin who is not a platform admin can Invite Organisation; Add Organisation is not rendered at all',
     async ({ page }) => {
       await openMemberOrganizationsSection(page);
       await expect(page.getByRole('button', { name: 'Invite Organisation' })).toBeEnabled();
-      // Gated, not hidden: the platform-wide convention (workspace#085) renders
-      // an unavailable action disabled with a reason tooltip rather than
-      // concealing that it exists. `GatedAction` sets the native disabled
-      // attribute, so the control is genuinely inert.
-      await expect(page.getByRole('button', { name: 'Add Organisation' })).toBeDisabled();
+      // HIDDEN, not gated (client-web#10292, which reverses this file's original
+      // expectation): direct add needs a platform-role privilege a Space admin can never
+      // obtain, so the control is not rendered rather than disabled with a tooltip
+      // explaining an unobtainable capability. Its sibling Invite Organisation stays
+      // gated-not-hidden, asserted above — the two controls use different conventions on
+      // purpose, because every Space admin can eventually invite.
+      await expect(page.getByRole('button', { name: 'Add Organisation' })).not.toBeVisible();
     }
   );
 });
