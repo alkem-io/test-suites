@@ -1,0 +1,19 @@
+{
+ "last_sync": {
+  "alkemio": "2026-09-16T15:01:10Z",
+  "server": "2026-09-16T15:01:10Z",
+  "client-web": "2026-09-16T15:01:10Z",
+  "notifications": "2026-09-16T15:01:10Z",
+  "documentation": "2026-09-16T15:01:10Z",
+  "kratos-webhooks": "2026-09-16T15:01:10Z",
+  "oidc-service": "2026-09-16T15:01:10Z",
+  "matrix-adapter": "2026-09-16T15:01:10Z",
+  "file-service": "2026-09-16T15:01:10Z",
+  "collaborative-document-service": "2026-09-16T15:01:10Z",
+  "whiteboard-collaboration-service": "2026-09-16T15:01:10Z",
+  "virtual-contributor": "2026-09-16T15:01:10Z",
+  "ecosystem-analytics": "2026-09-16T15:01:10Z",
+  "test-suites": "2026-09-16T15:01:10Z"
+ },
+ "synced_at": "2026-09-16T15:06:10Z"
+}
