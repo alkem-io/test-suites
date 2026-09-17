@@ -66,6 +66,26 @@ import {
 const uniqueId = UniqueIDGenerator.getID();
 const supportEmail = 'support@alkem.io';
 
+/**
+ * A negative in-app read that has to HOLD, not merely be true at one instant:
+ * fan-out is asynchronous, so sample the read over a short settle window and
+ * require it empty every time.
+ */
+/** Recipient + subject of every mail, for assertion messages. */
+const mailboxSummary = (mails: any[]): string =>
+  JSON.stringify(mails.map(m => [m.toAddresses, m.subject]));
+
+const expectStaysEmpty = async (
+  read: () => Promise<unknown[]>,
+  samples = 3,
+  intervalMs = 1_500
+): Promise<void> => {
+  for (let i = 0; i < samples; i++) {
+    expect(await read()).toEqual([]);
+    if (i < samples - 1) await new Promise(r => setTimeout(r, intervalMs));
+  }
+};
+
 let baseScenario: OrganizationWithSpaceModel;
 const scenarioConfig: TestScenarioConfig = {
   name: `org-associate-notify-${uniqueId}`,
@@ -181,20 +201,23 @@ const orgAssociatesUrl = () =>
   `/organization/${baseScenario.organization.nameId}/settings/community`;
 
 describe('Organization associate invitations — the invitee is told (US2-AS1)', () => {
-  // The push half reads the RabbitMQ management API, which only a loopback
-  // compose stack exposes (nightly sets no RABBITMQ_MANAGEMENT_*), and its
-  // baseline must be taken before the invite — so the whole case is confined
-  // to stacks that can observe the queue rather than asserting conditionally.
-  test.skipIf(!rabbitMqManagementConfigured())('the invitee gets exactly one email, one in-app row and one push emit; the admins get nothing yet', async () => {
+  // Only the PUSH half reads the RabbitMQ management API, which a loopback
+  // compose stack exposes and the nightly target does not. The email and
+  // in-app halves are asserted everywhere — gating the whole case behind the
+  // queue left the nightly with no test that the invitation email is sent at all.
+  test('the invitee gets exactly one email, one in-app row and (where the queue is observable) one push emit; the admins get nothing yet', async () => {
     const message = `Come associate! ${uniqueId}`;
+    const checkPush = rabbitMqManagementConfigured();
     await deleteMailSlurperMails();
     // The push adapter publishes nothing for a recipient without an active push
     // subscription, so the invitee needs a (fake, non-delivering) one before the
     // queue counter can move — see `subscribeRecipientsToPush`.
-    const pushHandles = await subscribeRecipientsToPush([
-      { userRole: TestUser.NON_SPACE_MEMBER, label: `assoc-invitee-${uniqueId}` },
-    ]);
-    const pushBaseline = await getPushQueuePublishedTotal();
+    const pushHandles = checkPush
+      ? await subscribeRecipientsToPush([
+          { userRole: TestUser.NON_SPACE_MEMBER, label: `assoc-invitee-${uniqueId}` },
+        ])
+      : [];
+    const pushBaseline = checkPush ? await getPushQueuePublishedTotal() : 0;
 
     let invitationId = '';
     try {
@@ -210,25 +233,35 @@ describe('Organization associate invitations — the invitee is told (US2-AS1)',
       invitationId = getSingleInvitationResult(res)!.invitation!.id;
     }, 1);
 
-    const mail = mailItems.find((m: any) =>
-      m.toAddresses?.includes(TestUserManager.users.nonSpaceMember.email)
+    // Exactly one mail FOR THIS INVITATION, to the invitee: "the admins get
+    // nothing yet" is a count, not a title. Scoped to the event's subject —
+    // the shared mailbox can still carry a straggler from an earlier test,
+    // and `expectExactMailsAfter` only waits for >= 1.
+    const invitationMails = mailItems.filter((m: any) =>
+      m.subject?.includes(baseScenario.organization.profile.displayName)
     );
-    expect(mail).toBeDefined();
+    expect(invitationMails, mailboxSummary(mailItems)).toHaveLength(1);
+    const mail = invitationMails[0];
+    expect(mail.toAddresses).toContain(TestUserManager.users.nonSpaceMember.email);
     expect(mail.subject).toContain(
       baseScenario.organization.profile.displayName
     );
+    // The message is body-only — never in a subject line (US2-AS1).
+    expect(mail.subject).not.toContain(message);
     expect(mail.body).toContain(message);
     expect(mail.body).toContain(orgUrl());
 
-    // `waitForQueuePublishIncrease` returns the last-observed stats without
-    // throwing on timeout — the emit is only proven by asserting on them.
-    const pushStats = await waitForQueuePublishIncrease(
-      PUSH_NOTIFICATIONS_QUEUE,
-      pushBaseline,
-      1,
-      { timeout: 15_000 }
-    );
-    expect(pushStats.publishedTotal).toBeGreaterThanOrEqual(pushBaseline + 1);
+    if (checkPush) {
+      // `waitForQueuePublishIncrease` returns the last-observed stats without
+      // throwing on timeout — the emit is only proven by asserting on them.
+      const pushStats = await waitForQueuePublishIncrease(
+        PUSH_NOTIFICATIONS_QUEUE,
+        pushBaseline,
+        1,
+        { timeout: 15_000 }
+      );
+      expect(pushStats.publishedTotal).toBeGreaterThanOrEqual(pushBaseline + 1);
+    }
 
     const rows = await inAppNotificationsFor(TestUser.NON_SPACE_MEMBER, [
       NotificationEvent.UserOrganizationAssociateInvitation,
@@ -302,16 +335,28 @@ describe('Organization associate invitations — the response is told to the oth
         ),
       3 // organizationAdmin + subspaceAdmin + spaceMember
     );
+    // Exactly three "accepted" mails, one per admin, and no "joined" at all:
+    // a leaked "joined" or a mail to the acceptor would show up here, which
+    // `expectExactMailsAfter` (>= 3) alone would never notice. Scoped to the
+    // event's subject so a straggler from an earlier test cannot fail it.
+    const acceptedMails = mailItems.filter((m: any) =>
+      /accepted/i.test(m.subject ?? '')
+    );
+    expect(acceptedMails, mailboxSummary(mailItems)).toHaveLength(3);
     for (const admin of [
       TestUserManager.users.organizationAdmin,
       TestUserManager.users.subspaceAdmin,
       TestUserManager.users.spaceMember,
     ]) {
-      const mail = mailItems.find((m: any) =>
-        m.toAddresses?.includes(admin.email)
-      );
-      expect(mail?.subject).toContain('accepted');
+      expect(
+        acceptedMails.filter((m: any) => m.toAddresses?.includes(admin.email)),
+        `accepted mail for ${admin.email}`
+      ).toHaveLength(1);
     }
+    expect(
+      mailItems.filter((m: any) => /joined/i.test(m.subject ?? '')),
+      mailboxSummary(mailItems)
+    ).toHaveLength(0);
     expect(
       mailItems.filter((m: any) =>
         m.toAddresses?.includes(TestUserManager.users.nonSpaceMember.email)
@@ -324,14 +369,16 @@ describe('Organization associate invitations — the response is told to the oth
     ).toHaveLength(0);
 
     // No "joined" for an acceptance — the response notification replaces it.
-    const joinedRows = await inAppNotificationsFor(TestUser.ORGANIZATION_ADMIN, [
-      NotificationEvent.OrganizationAdminAssociateJoined,
-    ]);
-    expect(
-      joinedRows?.inAppNotifications.find(
-        n => n.payload?.actor?.id === TestUserManager.users.nonSpaceMember.id
-      )
-    ).toBeUndefined();
+    // A negative that has to HOLD: sample it over a settle window rather than
+    // reading once while the fan-out may still be in flight.
+    await expectStaysEmpty(async () => {
+      const joinedRows = await inAppNotificationsFor(TestUser.ORGANIZATION_ADMIN, [
+        NotificationEvent.OrganizationAdminAssociateJoined,
+      ]);
+      return (joinedRows?.inAppNotifications ?? [])
+        .filter(n => n.payload?.actor?.id === TestUserManager.users.nonSpaceMember.id)
+        .map(n => n.id);
+    });
 
     await removeRoleFromUser(
       TestUserManager.users.nonSpaceMember.id,
@@ -429,10 +476,27 @@ describe('Organization associate invitations — the response is told to the oth
         ),
       3
     );
-    const mail = mailItems.find((m: any) =>
-      m.toAddresses?.includes(TestUserManager.users.organizationAdmin.email)
+    // "Every other admin": exactly three "declined" mails, one per admin,
+    // none to the invitee. Scoped to the event's subject (see ACCEPT above).
+    const declinedMails = mailItems.filter((m: any) =>
+      /declined/i.test(m.subject ?? '')
     );
-    expect(mail?.subject).toContain('declined');
+    expect(declinedMails, mailboxSummary(mailItems)).toHaveLength(3);
+    for (const admin of [
+      TestUserManager.users.organizationAdmin,
+      TestUserManager.users.subspaceAdmin,
+      TestUserManager.users.spaceMember,
+    ]) {
+      expect(
+        declinedMails.filter((m: any) => m.toAddresses?.includes(admin.email)),
+        `declined mail for ${admin.email}`
+      ).toHaveLength(1);
+    }
+    expect(
+      declinedMails.filter((m: any) =>
+        m.toAddresses?.includes(TestUserManager.users.subsubspaceAdmin.email)
+      )
+    ).toHaveLength(0);
   });
 });
 
@@ -501,14 +565,31 @@ describe('Organization associate applications — the admins are told, the appli
     expect(applicantMail?.subject).toContain('approved');
     expect(applicantMail?.body).toContain(orgUrl());
 
-    const approverMail = approveMails.find((m: any) =>
-      m.toAddresses?.includes(TestUserManager.users.organizationAdmin.email)
+    // Exactly one "approved" (the applicant) and exactly two "joined" — "every
+    // admin of O other than A", once each, never the approver. Scoped to the
+    // events' subjects so a straggler from the "applied" fan-out cannot fail it.
+    expect(
+      approveMails.filter((m: any) => /approved/i.test(m.subject ?? '')),
+      mailboxSummary(approveMails)
+    ).toHaveLength(1);
+    const joinedMails = approveMails.filter((m: any) =>
+      /joined/i.test(m.subject ?? '')
     );
-    expect(approverMail).toBeUndefined();
-    const otherAdminMail = approveMails.find((m: any) =>
-      m.toAddresses?.includes(TestUserManager.users.subspaceAdmin.email)
-    );
-    expect(otherAdminMail?.subject).toContain('joined');
+    expect(joinedMails, mailboxSummary(approveMails)).toHaveLength(2);
+    expect(
+      joinedMails.filter((m: any) =>
+        m.toAddresses?.includes(TestUserManager.users.organizationAdmin.email)
+      )
+    ).toHaveLength(0);
+    for (const otherAdmin of [
+      TestUserManager.users.subspaceAdmin,
+      TestUserManager.users.spaceMember,
+    ]) {
+      expect(
+        joinedMails.filter((m: any) => m.toAddresses?.includes(otherAdmin.email)),
+        `joined mail for ${otherAdmin.email}`
+      ).toHaveLength(1);
+    }
 
     await removeRoleFromUser(
       TestUserManager.users.betaTester.id,
@@ -535,10 +616,15 @@ describe('Organization associate applications — the admins are told, the appli
         ),
       1
     );
-    const declinedMail = rejectMails.find((m: any) =>
-      m.toAddresses?.includes(TestUserManager.users.subsubspaceMember.email)
+    // Only the applicant hears about a rejection — exactly one "declined",
+    // and it is theirs.
+    const rejectDeclined = rejectMails.filter((m: any) =>
+      /declined/i.test(m.subject ?? '')
     );
-    expect(declinedMail?.subject).toContain('declined');
+    expect(rejectDeclined, mailboxSummary(rejectMails)).toHaveLength(1);
+    expect(rejectDeclined[0].toAddresses).toContain(
+      TestUserManager.users.subsubspaceMember.email
+    );
   });
 
   test('US3-AS8: a zero-admin organization escalates to support; nobody gets an in-app row', async () => {
@@ -675,6 +761,22 @@ describe('Notification settings mute the right event only (US6-AS2)', () => {
           ),
         2 // organizationAdmin + subspaceAdmin; spaceMember is muted
       );
+      // The positive control: without it, a pipeline that sends NOTHING passes
+      // both negatives below on an empty mailbox. Exactly two "applied" mails,
+      // one per unmuted admin.
+      const appliedMails = mailItems.filter((m: any) =>
+        /applied to associate/i.test(m.subject ?? '')
+      );
+      expect(appliedMails, mailboxSummary(mailItems)).toHaveLength(2);
+      for (const admin of [
+        TestUserManager.users.organizationAdmin,
+        TestUserManager.users.subspaceAdmin,
+      ]) {
+        expect(
+          appliedMails.filter((m: any) => m.toAddresses?.includes(admin.email)),
+          `applied mail for ${admin.email}`
+        ).toHaveLength(1);
+      }
       expect(
         mailItems.filter((m: any) =>
           m.toAddresses?.includes(TestUserManager.users.spaceMember.email)

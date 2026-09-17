@@ -470,10 +470,12 @@ orgAdminNotOwnerTest.describe('US1-AS2 → AS7 — invite, list, then revoke (ch
         'query { me { organizationInvitations { organization { id } } } }',
         { bearerToken: as2Invitee1.token }
       );
-      const stillPending = (res.body.data?.me.organizationInvitations ?? []).some(
-        i => i.organization.id === orgMain.id
-      );
-      expect(stillPending).toBe(false);
+      // A failed read (field renamed, expired token) must not read as "gone":
+      // the query has to succeed and return the list before its contents count.
+      expect(res.body.errors ?? []).toEqual([]);
+      const invitations = res.body.data?.me.organizationInvitations;
+      expect(Array.isArray(invitations)).toBe(true);
+      expect(invitations!.some(i => i.organization.id === orgMain.id)).toBe(false);
     }
   );
 });

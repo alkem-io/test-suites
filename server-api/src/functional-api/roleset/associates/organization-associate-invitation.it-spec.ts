@@ -33,6 +33,7 @@ import {
   inviteForEntryRoleOnRoleSet,
 } from '../invitations/invitation.request.params';
 import {
+  getRoleSetPendingInvitations,
   getSingleInvitationResult,
   usersInRoles,
 } from '../roleset.request.params';
@@ -154,6 +155,17 @@ describe('Organization associate invitations (US1)', () => {
       expect(result?.invitation?.id.length).toEqual(36);
       expect(result?.invitation?.extraRoles).toEqual([]);
 
+      // "Listed under the organization pending section": read the
+      // organization's own pending invitations as its admin and find the row.
+      const pending = await getRoleSetPendingInvitations(
+        roleSetId,
+        TestUser.SPACE_ADMIN
+      );
+      expect(pending?.error).toBeUndefined();
+      expect(
+        (pending?.data?.lookup?.roleSet?.invitations ?? []).map(i => i.id)
+      ).toContain(result!.invitation!.id);
+
       await deleteInvitation(result!.invitation!.id);
     } finally {
       await deleteUser(invitee.id);
@@ -209,7 +221,9 @@ describe('Organization associate invitations (US1)', () => {
       [],
       TestUser.SPACE_ADMIN
     );
-    expect(res?.error?.errors).toBeDefined();
+    // A validation refusal with the product's own message — not an
+    // authorization error, not a 500.
+    expect(res?.error?.errors?.[0]?.message).toMatch(/existing Alkemio users/i);
     expect(res?.data?.inviteForEntryRoleOnRoleSet).toBeUndefined();
   });
 
@@ -421,31 +435,16 @@ describe('Organization associate invitations (US1)', () => {
         [],
         TestUser.GLOBAL_BETA_TESTER
       );
-      expect(res?.error?.errors).toBeDefined();
+      expect(res?.error?.errors?.[0]?.message).toMatch(
+        /Authorization: unable to grant/
+      );
       expect(res?.data?.inviteForEntryRoleOnRoleSet).toBeUndefined();
     } finally {
       await deleteUser(invitee.id);
     }
   });
-
-  test('every organization-invitation mutation above returns 200 (no Space lookup reachable on an ORGANIZATION role set — contract §7)', async () => {
-    const invitee = await newInvitee();
-    try {
-      const res = await inviteForEntryRoleOnRoleSet(
-        roleSetId,
-        [invitee.id],
-        [],
-        message,
-        [],
-        TestUser.SPACE_ADMIN
-      );
-      expect(res?.error).toBeUndefined();
-      const invitationId = getSingleInvitationResult(res)!.invitation!.id;
-      await deleteInvitation(invitationId);
-    } finally {
-      await deleteUser(invitee.id);
-    }
-  });
+  // (The former "every mutation above returns 200" case was a strict subset
+  // of US1-AS2 and could not fail on anything US1-AS2 would not; removed.)
 });
 
 describe('Organization associate invitations — the invitee responds (US2)', () => {
@@ -765,7 +764,9 @@ describe('Organization associate invitations — the invitee responds (US2)', ()
         'ACCEPT',
         TestUser.GLOBAL_BETA_TESTER
       );
-      expect(res?.error?.errors).toBeDefined();
+      expect(res?.error?.errors?.[0]?.message).toMatch(
+        /Authorization: unable to grant/
+      );
     } catch (error) {
       testError = error;
     }

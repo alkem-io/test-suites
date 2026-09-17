@@ -234,6 +234,20 @@ describe('me query partition (US7-AS1, contract §5)', () => {
 
       const deleted = await deleteOrganization(orgToDelete.organization.id);
       expect(deleted?.error).toBeUndefined();
+
+      // "The pending rows are removed": the applicant's own pending list must
+      // no longer carry an application for the deleted organization, and the
+      // read itself must still succeed (no dangling reference).
+      const after = await callAsEmail(email, (client, auth) =>
+        client.MeOrganizationPending({}, auth)
+      );
+      expect(after?.error).toBeUndefined();
+      expect(
+        (after?.data?.me?.organizationApplications ?? []).filter(
+          (a: { organization?: { id?: string } }) =>
+            a.organization?.id === orgToDelete.organization.id
+        )
+      ).toEqual([]);
     } finally {
       await deleteUser(userId).catch(() => undefined);
     }

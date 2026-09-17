@@ -71,6 +71,7 @@ const actorEmail = `${actorLabel}-${runSuffix}@alkem.io`;
 const actorTest = createPersonaTest(actorEmail);
 
 const seventhAdminLabel = 'us5-seventh-admin';
+const adminOnlyLabel = 'us5-admin-only'; // US5-AS2: an ADMIN who is NOT an associate
 const fourthOwnerLabel = 'us5-fourth-owner';
 const soleOwnerLabel = 'us5-sole-owner';
 
@@ -82,6 +83,7 @@ let actorId: string; // the UI actor — ASSOCIATE + ADMIN on all three
 let seventhAdminId: string; // plain associate on orgAdminCap
 let fourthOwnerId: string; // plain associate on orgOwnerCap
 let soleOwnerId: string; // ASSOCIATE + OWNER on orgSoleOwner
+let adminOnlyId: string; // ADMIN only (no ASSOCIATE) on orgOwnerCap
 
 // Every run-suffixed identity this file registers, for teardown. Ids are filled
 // in as `beforeAll` resolves them; an entry left without one means `beforeAll`
@@ -91,6 +93,7 @@ const personas: Array<{ label: string; email: string; id?: string }> = [];
 const seventhAdminName = `${seventhAdminLabel}-${runSuffix}`;
 const fourthOwnerName = `${fourthOwnerLabel}-${runSuffix}`;
 const soleOwnerName = `${soleOwnerLabel}-${runSuffix}`;
+const adminOnlyName = `${adminOnlyLabel}-${runSuffix}`;
 
 // ─── Fixture helpers ───────────────────────────────────────────────────────
 
@@ -149,6 +152,8 @@ baseTest.beforeAll(async () => {
   personas.push({ label: fourthOwnerLabel, email: fourthOwnerEmail });
   const soleOwnerEmail = await registerPersona(soleOwnerLabel);
   personas.push({ label: soleOwnerLabel, email: soleOwnerEmail });
+  const adminOnlyEmail = await registerPersona(adminOnlyLabel);
+  personas.push({ label: adminOnlyLabel, email: adminOnlyEmail });
 
   [orgAdminCap, orgOwnerCap, orgSoleOwner] = await Promise.all([
     createTestOrganization('US5AdminCap', runSuffix),
@@ -157,16 +162,18 @@ baseTest.beforeAll(async () => {
   ]);
 
   actorId = await userIdFor(actorEmail);
-  [seventhAdminId, fourthOwnerId, soleOwnerId] = await Promise.all([
+  [seventhAdminId, fourthOwnerId, soleOwnerId, adminOnlyId] = await Promise.all([
     userIdFor(seventhAdminEmail),
     userIdFor(fourthOwnerEmail),
     userIdFor(soleOwnerEmail),
+    userIdFor(adminOnlyEmail),
   ]);
   for (const [label, id] of [
     [actorLabel, actorId],
     [seventhAdminLabel, seventhAdminId],
     [fourthOwnerLabel, fourthOwnerId],
     [soleOwnerLabel, soleOwnerId],
+    [adminOnlyLabel, adminOnlyId],
   ] as const) {
     personas.find(p => p.label === label)!.id = id;
   }
@@ -181,8 +188,10 @@ baseTest.beforeAll(async () => {
   await fillRoleToCap(orgAdminCap.roleSetId, RoleName.Admin, ADMIN_CAP);
   await assignUserRoleOnOrganization(orgAdminCap.roleSetId, seventhAdminId, RoleName.Associate);
 
-  // (b) three Owners granted; the fourth is a plain associate.
+  // (b) three Owners granted; the fourth is a plain associate. Plus one ADMIN
+  // who holds NO associate role — the row US5-AS2 says must still be listed.
   await fillRoleToCap(orgOwnerCap.roleSetId, RoleName.Owner, OWNER_CAP);
+  await assignUserRoleOnOrganization(orgOwnerCap.roleSetId, adminOnlyId, RoleName.Admin);
   await assignUserRoleOnOrganization(orgOwnerCap.roleSetId, fourthOwnerId, RoleName.Associate);
 
   // (c) exactly one Owner. The creating platform admin is granted OWNER on
@@ -262,6 +271,35 @@ actorTest.describe('US5-AS1 — the retired Authorization URL lands on the Assoc
     });
     await expect(page.getByRole('heading', { name: 'Associates' })).toBeVisible({ timeout: 15_000 });
     await expect(page.getByRole('heading', { name: 'Pending applications & invitations' })).toBeVisible();
+  });
+
+  actorTest('the tab strip is Profile / Account / Associates / Invitations / Settings — no Authorisation tab', async ({ page }) => {
+    await page.goto(`${baseUrl}/organization/${orgAdminCap.nameID}/settings/community`);
+    await expect(page.getByRole('heading', { name: 'Associates' })).toBeVisible({ timeout: 15_000 });
+    // shell.tabs.org in contributorSettings.en.json; the strip renders each
+    // entry as role="tab" (the breadcrumb above it also links "Settings", so
+    // the role matters).
+    const tabs = page.getByRole('tab');
+    await expect(tabs).toHaveCount(5);
+    for (const label of ['Profile', 'Account', 'Associates', 'Invitations', 'Settings']) {
+      await expect(page.getByRole('tab', { name: label, exact: true })).toBeVisible();
+    }
+    for (const retired of ['Authorisation', 'Authorization', 'Community']) {
+      await expect(page.getByRole('tab', { name: retired, exact: true })).toHaveCount(0);
+    }
+  });
+});
+
+// ─── US5-AS2 ────────────────────────────────────────────────────────────
+
+actorTest.describe('US5-AS2 — the list is the badged union of associates, admins and owners', () => {
+  actorTest('an ADMIN who is not an associate is listed with an Admin badge and no Associate badge', async ({ page }) => {
+    await openAssociatesTab(page, orgOwnerCap.nameID);
+    const row = page.getByRole('listitem').filter({ hasText: new RegExp(adminOnlyName, 'i') });
+    await expect(row).toBeVisible({ timeout: 15_000 });
+    await expect(row.getByText('Admin', { exact: true })).toBeVisible();
+    await expect(row.getByText('Associate', { exact: true })).toHaveCount(0);
+    await expect(row.getByText('Owner', { exact: true })).toHaveCount(0);
   });
 });
 

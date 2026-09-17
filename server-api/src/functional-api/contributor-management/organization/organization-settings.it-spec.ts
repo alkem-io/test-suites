@@ -629,15 +629,45 @@ describe('User notification settings — the five new associate rows (062, US6-A
     },
   };
 
+  /** The five rows, as paths into a `notification` settings object. */
+  type ChannelRow = { email: boolean; inApp: boolean; push: boolean };
+  // Structural view of the generated settings type: only the five rows.
+  type NotificationSettings = {
+    user: {
+      membership: {
+        organizationAssociateInvitationReceived: ChannelRow;
+        organizationAssociateApplicationDecided: ChannelRow;
+      };
+    };
+    organization: {
+      adminAssociateInvitationResponse: ChannelRow;
+      adminAssociateApplicationReceived: ChannelRow;
+      adminAssociateJoined: ChannelRow;
+    };
+  };
+  const fiveRows = (n: NotificationSettings | undefined) => ({
+    organizationAssociateInvitationReceived:
+      n?.user?.membership?.organizationAssociateInvitationReceived,
+    organizationAssociateApplicationDecided:
+      n?.user?.membership?.organizationAssociateApplicationDecided,
+    adminAssociateInvitationResponse:
+      n?.organization?.adminAssociateInvitationResponse,
+    adminAssociateApplicationReceived:
+      n?.organization?.adminAssociateApplicationReceived,
+    adminAssociateJoined: n?.organization?.adminAssociateJoined,
+  });
+  const allChannels = (value: boolean) =>
+    expect.objectContaining({ email: value, inApp: value, push: value });
+
   test('the five rows read on by default and round-trip off then on', async () => {
     const before = await getUserSettings(TestUserManager.users.spaceMember.id);
-    const beforeNotification = before?.data?.user.settings.notification;
-    expect(
-      beforeNotification?.user.membership.organizationAssociateInvitationReceived
-    ).toEqual(expect.objectContaining({ email: true, inApp: true, push: true }));
-    expect(
-      beforeNotification?.organization.adminAssociateJoined
-    ).toEqual(expect.objectContaining({ email: true, inApp: true, push: true }));
+    // All FIVE rows, not a sample of two: a row the client never renders
+    // would otherwise go unnoticed here.
+    for (const [row, value] of Object.entries(
+      fiveRows(before?.data?.user.settings.notification)
+    )) {
+      expect(value, `${row} default`).toEqual(allChannels(true));
+    }
 
     const off = {
       notification: {
@@ -660,28 +690,21 @@ describe('User notification settings — the five new associate rows (062, US6-A
         TestUserManager.users.spaceMember.id,
         off
       );
-      const offNotification =
-        offRes?.data?.updateUserSettings.settings.notification;
-      expect(
-        offNotification?.user.membership
-          .organizationAssociateInvitationReceived
-      ).toEqual(
-        expect.objectContaining({ email: false, inApp: false, push: false })
-      );
-      expect(offNotification?.organization.adminAssociateJoined).toEqual(
-        expect.objectContaining({ email: false, inApp: false, push: false })
-      );
+      for (const [row, value] of Object.entries(
+        fiveRows(offRes?.data?.updateUserSettings.settings.notification)
+      )) {
+        expect(value, `${row} off`).toEqual(allChannels(false));
+      }
     } finally {
       const onRes = await updateUserSettings(
         TestUserManager.users.spaceMember.id,
         fiveRowsAllOn
       ).catch(() => undefined);
-      expect(
-        onRes?.data?.updateUserSettings.settings.notification.organization
-          .adminAssociateJoined
-      ).toEqual(
-        expect.objectContaining({ email: true, inApp: true, push: true })
-      );
+      for (const [row, value] of Object.entries(
+        fiveRows(onRes?.data?.updateUserSettings.settings.notification)
+      )) {
+        expect(value, `${row} restored`).toEqual(allChannels(true));
+      }
     }
   });
 

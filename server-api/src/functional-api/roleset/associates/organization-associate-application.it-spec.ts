@@ -260,7 +260,9 @@ describe('Organization associate applications (US3)', () => {
         'APPROVE',
         TestUser.GLOBAL_BETA_TESTER
       );
-      expect(res?.error?.errors).toBeDefined();
+      expect(res?.error?.errors?.[0]?.message).toMatch(
+        /Authorization: unable to grant/
+      );
     } finally {
       await deleteApplication(applicationId!).catch(() => undefined);
     }
@@ -331,26 +333,6 @@ describe('Organization associate applications (US3)', () => {
     }
   });
 
-  test('every application mutation above returns 200 on an organization role set (no Space lookup reachable — contract §7)', async () => {
-    const applyRes = await applyToAssociateWithOrganization(
-      roleSetId,
-      note,
-      TestUser.QA_USER
-    );
-    expect(applyRes?.error).toBeUndefined();
-    const applicationId = applyRes?.data?.applyForEntryRoleOnRoleSet?.id;
-
-    const approve = await eventOnRoleSetApplication(
-      applicationId!,
-      'APPROVE',
-      TestUser.SPACE_ADMIN
-    );
-    expect(approve?.error).toBeUndefined();
-
-    await removeRoleFromUser(
-      TestUserManager.users.qaUser.id,
-      roleSetId,
-      RoleName.Associate
-    ).catch(() => undefined);
-  });
+  // (The former "every mutation above returns 200" case was a strict subset
+  // of US3-AS1 + US3-AS3 and could not fail on anything they would not; removed.)
 });

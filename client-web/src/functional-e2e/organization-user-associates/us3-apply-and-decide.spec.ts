@@ -41,6 +41,19 @@ import {
 baseTest.describe.configure({ mode: 'serial' });
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
+
+/**
+ * A negative in-app read that has to HOLD, not merely be true at one instant.
+ * Notification fan-out is asynchronous, so a single read taken right after the
+ * positive sibling arrived can pass before a wrong row lands. Sample the read
+ * over a short settle window and require it empty every time.
+ */
+async function expectStaysEmpty(read: () => Promise<string[]>, samples = 3, intervalMs = 1_500): Promise<void> {
+  for (let i = 0; i < samples; i++) {
+    expect(await read()).toEqual([]);
+    if (i < samples - 1) await new Promise(r => setTimeout(r, intervalMs));
+  }
+}
 const adminEmail = process.env.AUTH_TEST_HARNESS_EMAIL || 'admin@alkem.io';
 const harnessPassword = process.env.AUTH_TEST_HARNESS_PASSWORD!;
 
@@ -187,19 +200,27 @@ adminATest.describe('US3-AS2 — every ADMIN is told; the pending table lists th
     // Same fire-and-forget race as US3-AS8 — poll rather than read once. This
     // one happens to pass today because the in-app poll above gives the mail
     // time to arrive, which is luck, not a guarantee.
-    let applicationMails: Array<{ toAddresses: string[]; subject: string; body: string }> = [];
+    // "Every ADMIN of O": org O has three — adminA, adminOther and the creating
+    // platform admin (auto OWNER+ADMIN+ASSOCIATE). Each must get exactly one
+    // mail for THIS application; a bare count could not tell one skipped admin
+    // from one doubled up.
+    const orgOAdmins = [adminAEmail, adminOtherEmail, adminEmail];
+    type Mail = { toAddresses: string[]; subject: string; body: string };
+    const isThisApplication = (m: Mail) => m.subject.includes(`applied to associate with ${orgO.displayName}`);
+    let applicationMails: Mail[] = [];
     await expect
       .poll(
         async () => {
           const [mails] = await getMailsData();
-          applicationMails = (mails as Array<{ toAddresses: string[]; subject: string; body: string }>).filter(m =>
-            m.subject.includes(`applied to associate with ${orgO.displayName}`)
-          );
-          return applicationMails.length;
+          applicationMails = (mails as Mail[]).filter(isThisApplication);
+          return orgOAdmins.filter(admin => applicationMails.some(m => m.toAddresses?.includes(admin))).length;
         },
         { timeout: 20_000 }
       )
-      .toBeGreaterThanOrEqual(2);
+      .toBe(orgOAdmins.length);
+    for (const admin of orgOAdmins) {
+      expect(applicationMails.filter(m => m.toAddresses?.includes(admin))).toHaveLength(1);
+    }
     for (const mail of applicationMails) {
       expect(mail.subject).not.toContain(`US3-AS1 application ${runSuffix}`);
       expect(mail.body).toContain(`US3-AS1 application ${runSuffix}`);
@@ -256,13 +277,13 @@ adminATest.describe('US3-AS3 — approving makes the applicant an associate; onl
       .toContain(applicantApproveId);
 
     // The claim under test on the approver's side is only that they hear
-    // nothing about the person they just approved.
-    const adminAJoinedActors = await getInAppActorIdsForType(
-      adminAEmail,
-      'ORGANIZATION_ADMIN_ASSOCIATE_JOINED',
-      orgO.id
+    // nothing about the person they just approved — and that has to hold
+    // through a settle window, not just at the instant adminOther's row landed.
+    await expectStaysEmpty(async () =>
+      (await getInAppActorIdsForType(adminAEmail, 'ORGANIZATION_ADMIN_ASSOCIATE_JOINED', orgO.id)).filter(
+        id => id === applicantApproveId
+      )
     );
-    expect(adminAJoinedActors).not.toContain(applicantApproveId);
   });
 });
 
@@ -411,22 +432,26 @@ zApplicantTest.describe('US3-AS8 — a zero-ADMIN organization escalates the app
     // Scoped to orgZ. `adminEmail` is the shared platform admin, who collects
     // rows of this type from every other organization the suite touches, so an
     // unscoped "has no row of this type" assertion can only ever fail.
-    const ownerApplicationActors = await getInAppActorIdsForType(
-      adminEmail,
-      'ORGANIZATION_ADMIN_ASSOCIATE_APPLICATION',
-      orgZ.id
-    );
-    expect(ownerApplicationActors).toEqual([]);
+    await expectStaysEmpty(() => getInAppActorIdsForType(adminEmail, 'ORGANIZATION_ADMIN_ASSOCIATE_APPLICATION', orgZ.id));
   });
 });
 
 platformAdminTest.describe('US3-AS8 (decision) — the remaining owner decides from the Associates tab', () => {
-  platformAdminTest('the pending application is visible and decidable to the owner', async ({ page }) => {
+  platformAdminTest('the pending application is visible to the owner, and the owner can approve it', async ({ page }) => {
     await openAssociatesTab(page, orgZ.nameID);
     const row = page.getByRole('row', { name: new RegExp(zApplicantName, 'i') });
     await expect(row).toBeVisible({ timeout: 10_000 });
-    await expect(row.getByRole('button', { name: 'Approve' })).toBeVisible();
     await expect(row.getByRole('button', { name: 'Reject' })).toBeVisible();
+    // "Decidable" means a decision actually lands: approve, and the applicant
+    // becomes an associate of the admin-less organization.
+    await row.getByRole('button', { name: 'Approve' }).click();
+    await expect(page.getByRole('row', { name: new RegExp(zApplicantName, 'i') })).toHaveCount(0, {
+      timeout: 10_000,
+    });
+    const bearerToken = await getUserToken(zApplicantEmail);
+    await expect
+      .poll(async () => (await getAssociateEligibility(orgZ.id, bearerToken)).reason, { timeout: 20_000 })
+      .toBe('ALREADY_ASSOCIATE');
   });
 });
 

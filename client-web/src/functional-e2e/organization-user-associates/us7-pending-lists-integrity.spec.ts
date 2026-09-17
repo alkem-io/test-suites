@@ -195,6 +195,21 @@ const ORGANIZATION_ROLESET_PENDING_QUERY = `
     }
   }`;
 
+// One pending field per query. The three lists are non-null and gated
+// independently, so the combined query above nulls the whole role set on the
+// FIRST refusal and proves only that at least one field is gated. Each field's
+// gate is proven on its own here.
+const ORGANIZATION_PENDING_FIELD_QUERIES: Record<string, string> = {
+  applications: 'query($id: UUID!) { organization(ID: $id) { roleSet { applications { id } } } }',
+  invitations: 'query($id: UUID!) { organization(ID: $id) { roleSet { invitations { id } } } }',
+  platformInvitations: 'query($id: UUID!) { organization(ID: $id) { roleSet { platformInvitations { id } } } }',
+};
+const SPACE_PENDING_FIELD_QUERIES: Record<string, string> = {
+  applications: 'query($id: UUID!) { lookup { roleSet(ID: $id) { applications { id } } } }',
+  invitations: 'query($id: UUID!) { lookup { roleSet(ID: $id) { invitations { id } } } }',
+  platformInvitations: 'query($id: UUID!) { lookup { roleSet(ID: $id) { platformInvitations { id } } } }',
+};
+
 const ORGANIZATION_ROLESET_AUTHORIZATION_ID_QUERY = `
   query($id: UUID!) {
     organization(ID: $id) {
@@ -347,16 +362,27 @@ baseTest.describe('US7-AS2 — organization pending lists require ADMIN/OWNER st
       variables: { id: orgO.id },
     });
     expect(denied.body.errors?.[0]?.extensions).toMatchObject({ code: 'FORBIDDEN_POLICY' });
+    for (const [field, query] of Object.entries(ORGANIZATION_PENDING_FIELD_QUERIES)) {
+      const deniedField = await postGraphqlRaw(query, {
+        bearerToken: bearerFor(TestUser.NON_SPACE_MEMBER),
+        variables: { id: orgO.id },
+      });
+      expect(deniedField.body.errors?.[0]?.extensions, `${field} must be refused on its own`).toMatchObject({
+        code: 'FORBIDDEN_POLICY',
+      });
+    }
 
     for (const persona of [TestUser.GLOBAL_BETA_TESTER, TestUser.QA_USER]) {
       const allowed = await postGraphqlRaw<{
-        organization: { roleSet: { applications: unknown[]; invitations: unknown[]; platformInvitations: unknown[] } };
+        organization: {
+          roleSet: { applications: unknown[]; invitations: Array<{ id: string }>; platformInvitations: unknown[] };
+        };
       }>(ORGANIZATION_ROLESET_PENDING_QUERY, {
         bearerToken: bearerFor(persona),
         variables: { id: orgO.id },
       });
       expect(allowed.body.errors ?? []).toEqual([]);
-      expect(allowed.body.data!.organization.roleSet.invitations.length).toBeGreaterThan(0);
+      expect(allowed.body.data!.organization.roleSet.invitations.map(i => i.id)).toContain(inviteeInvitationId);
     }
   });
 });
@@ -382,6 +408,15 @@ baseTest.describe('US7-AS3 — the same GRANT gate applies to a public Space (de
       variables: { id: spaceRoleSetId },
     });
     expect(deniedSpace.body.errors?.[0]?.extensions).toMatchObject({ code: 'FORBIDDEN_POLICY' });
+    for (const [field, query] of Object.entries(SPACE_PENDING_FIELD_QUERIES)) {
+      const deniedField = await postGraphqlRaw(query, {
+        bearerToken: bearerFor(TestUser.NON_SPACE_MEMBER),
+        variables: { id: spaceRoleSetId },
+      });
+      expect(deniedField.body.errors?.[0]?.extensions, `Space ${field} must be refused on its own`).toMatchObject({
+        code: 'FORBIDDEN_POLICY',
+      });
+    }
 
     const allowedSpace = await postGraphqlRaw<{
       lookup: { roleSet: { invitations: Array<{ id: string }> } };

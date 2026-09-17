@@ -69,6 +69,7 @@ const withheldTest = createPersonaTest(`us2-withheld-${runSuffix}@alkem.io`);
  */
 const grantedRoles: Array<{ actorID: string; role: RoleName; who: string }> = [];
 const trackGrant = (actorID: string, role: RoleName, who: string) => grantedRoles.unshift({ actorID, role, who });
+let adminDisplayName = ''; // the inviter, as the respond dialog names them (US2-AS2)
 
 const userIdFor = async (email: string): Promise<string> => {
   const bearerToken = await getUserToken(email);
@@ -102,18 +103,31 @@ baseTest.beforeAll(async () => {
   await assignUserRoleOnOrganization(orgO.roleSetId, adminId, RoleName.Admin);
 
   const adminToken = await getUserToken(adminEmail);
+  const adminMe = await postGraphqlRaw<{ me: { user: { profile: { displayName: string } } } }>(
+    'query { me { user { profile { displayName } } } }',
+    { bearerToken: adminToken }
+  );
+  adminDisplayName = adminMe.body.data?.me.user.profile.displayName ?? '';
+  if (!adminDisplayName) throw new Error(`no display name for ${adminEmail}: ${adminMe.raw}`);
   [accepterId, listAccepterId, withheldId] = await Promise.all([
     userIdFor(accepterEmail),
     userIdFor(listAccepterEmail),
     userIdFor(withheldEmail),
   ]);
-  for (const invitee of [accepterEmail, declinerEmail, listAccepterEmail]) {
+  // US2-AS2 is the Associate + Admin path of the spec, so the accepter is
+  // offered Admin; the decliner and the list accepter are plain Associate.
+  for (const [invitee, extraRoles] of [
+    [accepterEmail, [RoleName.Admin]],
+    [declinerEmail, []],
+    [listAccepterEmail, []],
+  ] as const) {
     const inviteeId = await userIdFor(invitee);
     await inviteUserToOrganizationRaw(
       orgO.roleSetId,
       inviteeId,
       `US2 welcome ${runSuffix}`,
-      adminToken
+      adminToken,
+      [...extraRoles]
     );
   }
 
@@ -172,7 +186,7 @@ const expectAssociateViaApi = async (email: string) => {
 
 accepterTest.describe('US2-AS2 — the invitee answers from the organization profile', () => {
   accepterTest(
-    'the hero offers Respond to invitation, the dialog names the organization and the message, and accepting makes the invitee an associate',
+    'the hero offers Respond to invitation; the dialog names the organization, the offered role (Associate + Admin), the inviter and the message; accepting grants both roles and the Associates tab badges them',
     async ({ page }) => {
       await openOrganizationProfile(page);
 
@@ -186,6 +200,11 @@ accepterTest.describe('US2-AS2 — the invitee answers from the organization pro
       await expect(dialog).toBeVisible();
       await expect(dialog).toContainText(orgO.displayName);
       await expect(dialog).toContainText(`US2 welcome ${runSuffix}`);
+      // The offered role and the inviter are the two facts the invitee decides
+      // on (spec US2-AS2); copy from profilePages.en.json `respondDialog`.
+      await expect(dialog).toContainText('Offered role');
+      await expect(dialog).toContainText('Associate + Admin');
+      await expect(dialog).toContainText(`Invited by ${adminDisplayName}`);
 
       await dialog.getByRole('button', { name: 'Accept' }).click();
 
@@ -195,8 +214,24 @@ accepterTest.describe('US2-AS2 — the invitee answers from the organization pro
       });
       await expect(page.getByRole('button', { name: 'Apply to associate' })).toHaveCount(0);
 
+      // Admin is tracked AFTER Associate so teardown removes it first.
       trackGrant(accepterId, RoleName.Associate, accepterEmail);
+      trackGrant(accepterId, RoleName.Admin, accepterEmail);
       await expectAssociateViaApi(accepterEmail);
+      // The offered Admin role was granted with the entry role, not withheld.
+      await expect
+        .poll(() => getUserIdsInRole(orgO.roleSetId, RoleName.Admin), { timeout: 15_000 })
+        .toContain(accepterId);
+
+      // Now an admin, the accepter can open the Associates tab and sees their
+      // own row carrying both badges (org.associates.badge.*).
+      await page.goto(`${baseUrl}/organization/${orgO.nameID}/settings/community`);
+      const ownRow = page
+        .getByRole('listitem')
+        .filter({ hasText: new RegExp(accepterEmail.replace('@alkem.io', ''), 'i') });
+      await expect(ownRow).toBeVisible({ timeout: 15_000 });
+      await expect(ownRow.getByText('Associate', { exact: true })).toBeVisible();
+      await expect(ownRow.getByText('Admin', { exact: true })).toBeVisible();
     }
   );
 });
@@ -249,6 +284,10 @@ listAccepterTest.describe('US2-AS4 — the personal pending list keeps organizat
       // The card is a button whose accessible name carries the organisation name.
       const orgCard = list.getByRole('button', { name: orgO.displayName });
       await expect(orgCard).toBeVisible();
+      // Visually distinct from a Space invitation: the card carries the offered
+      // role and the "Organisation" badge (dashboard.en.json `orgAssociateCard`).
+      await expect(orgCard).toContainText('Associate');
+      await expect(orgCard).toContainText('Organisation');
 
       // Opening the card swaps the list for the organisation's own detail
       // dialog (not the Space one), which carries the welcome message.
