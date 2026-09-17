@@ -609,7 +609,8 @@ export const A_ROW_SURFACES: Record<ARowId, readonly SurfaceRef[]> = {
   // ===== A7 — edit an org-owned pack/hub + CRUD its templates =====
   // Contract's "~5" corrected to 8 by grepping the tree (T040b instruction):
   // update{InnovationPack,InnovationHub} + create/update/delete of
-  // templates across three template resolver files.
+  // templates across three template resolver files — 9 since server T102
+  // added `updateCallout` for template content.
   A7: (
     [
       [
@@ -643,6 +644,16 @@ export const A_ROW_SURFACES: Record<ARowId, readonly SurfaceRef[]> = {
       [
         'src/domain/template/template/template.resolver.mutations.ts',
         'deleteTemplate',
+      ],
+      // Server T102 (2026-09-16, R-F.2 sandbox walk; mirrored at T029): a
+      // CALLOUT template's content is edited through the generic
+      // `updateCallout`, whose gate now takes A7's dual path scoped to
+      // `callout.isTemplate`. The generated cell for this member MUST target a
+      // TEMPLATE callout inside an organization's pack — a space callout
+      // fixture would assert the wrong thing.
+      [
+        'src/domain/collaboration/callout/callout.resolver.mutations.ts',
+        'updateCallout',
       ],
     ] as const
   ).map(

@@ -243,6 +243,7 @@ export type ManagedPrivilege =
   | AuthorizationPrivilege.PlatformContentFullAccess
   | AuthorizationPrivilege.PlatformUsersAdmin
   | AuthorizationPrivilege.PlatformSupportOrgResources
+  | AuthorizationPrivilege.PlatformSupportListsRead
   | AuthorizationPrivilege.PlatformForumManage
   | AuthorizationPrivilege.DeleteOrganization
   | AuthorizationPrivilege.PlatformAuditRead
@@ -367,6 +368,15 @@ export const PRIVILEGE_GRANTS: Record<ManagedPrivilege, PrivilegeGrant> = {
   // does not extend to CREATE/UPDATE/DELETE, so there is no legacy reacher.
   [AuthorizationPrivilege.PlatformSupportOrgResources]: {
     anchor: 'account',
+    owningCredentials: [AuthorizationCredential.PlatformSupport],
+    legacyCredentials: [],
+  },
+  // --- R-F.2 (2026-09-16, D29; mirrored at T029). Platform-anchored READ for
+  // the three console lists (organizations / packs / hubs). No A-row, no
+  // census surface — the privilege names no gate by design. Slice B: the
+  // legacy pair that reached the lists via PLATFORM_ADMIN is gone.
+  [AuthorizationPrivilege.PlatformSupportListsRead]: {
+    anchor: 'platform',
     owningCredentials: [AuthorizationCredential.PlatformSupport],
     legacyCredentials: [],
   },
