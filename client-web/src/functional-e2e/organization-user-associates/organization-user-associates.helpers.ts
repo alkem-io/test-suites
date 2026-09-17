@@ -59,9 +59,11 @@ export const createTestOrganization = async (label: string, runSuffix: string): 
 
 /**
  * Deletes every organization `createTestOrganization` made in this process and
- * empties the registry. Best-effort per organization: one failure must not stop
- * the rest, and teardown must never fail a green run — but a failure is REPORTED,
- * never swallowed (same pattern as the 061 sibling helper).
+ * empties the registry. Every organization is attempted — one failure must not
+ * stop the rest — and anything left behind FAILS the calling `afterAll` (same
+ * contract as the 061 sibling helper): the failed id has already left the
+ * registry, so no later cleanup can retry it, and a green run that leaks an
+ * organization hands a stale fixture to the next walk.
  */
 export const cleanUpTestOrganizations = async (): Promise<void> => {
   const ids = createdOrganizationIds.splice(0, createdOrganizationIds.length);
@@ -78,14 +80,49 @@ export const cleanUpTestOrganizations = async (): Promise<void> => {
   }
 
   if (undeleted.length > 0) {
-    // Loud, but NOT thrown: teardown must not replace a real test failure. A
-    // half-deleted organization is an environment problem an operator has to
-    // clear at the database level, so name the ids.
-    console.error(
+    // Thrown from the caller's `afterAll`. Playwright reports a hook failure
+    // alongside — never instead of — the file's own test results, so an earlier
+    // real test failure is preserved. A half-deleted organization is an
+    // environment problem an operator has to clear, so name the ids.
+    throw new Error(
       `[cleanUpTestOrganizations] ${undeleted.length} organization(s) could not be deleted and may now be half-deleted — ` +
         `they will break authorizationPolicyResetAll until removed: ${undeleted.join(', ')}`
     );
   }
+};
+
+/**
+ * Deletes the run-suffixed identities a walk registered, by email, and returns
+ * one line per failure (empty when clean). No later run reuses these emails,
+ * so without this every run leaves its user + profile rows in the shared
+ * database. An email that never finished registering resolves to no id and is
+ * skipped; every deletion result is inspected, because `graphqlErrorWrapper`
+ * resolves GraphQL failures as `{ error }` instead of rejecting.
+ */
+export const deletePersonasByEmail = async (emails: string[]): Promise<string[]> => {
+  const failures: string[] = [];
+  const client = getGraphqlClient();
+  for (const email of emails) {
+    if (!email) continue; // beforeAll failed before registering it
+    let id: string | undefined;
+    try {
+      const bearerToken = await getUserToken(email);
+      const me = await postGraphqlRaw<{ me: { user: { id: string } } }>('query { me { user { id } } }', {
+        bearerToken,
+      });
+      id = me.body.data?.me.user.id;
+    } catch {
+      // never registered (or already gone) — nothing to delete
+    }
+    if (!id) continue;
+    const userId = id;
+    const res = await graphqlErrorWrapper(
+      authToken => client.deleteUser({ deleteData: { ID: userId } }, { authorization: `Bearer ${authToken}` }),
+      TestUser.GLOBAL_ADMIN
+    );
+    if (res.error) failures.push(`user ${email} (${userId}): ${JSON.stringify(res.error)}`);
+  }
+  return failures;
 };
 
 /** Grants `role` to a USER on an organization's own roleset (org-admin/owner/

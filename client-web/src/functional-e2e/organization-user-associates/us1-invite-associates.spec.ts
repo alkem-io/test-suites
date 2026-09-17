@@ -356,7 +356,10 @@ baseTest.afterAll(async () => {
   }
 
   if (failures.length > 0) {
-    console.error(
+    // Thrown, not logged: a hook that only logs lets CI report green while
+    // organizations or users stay behind in the shared stack. Playwright
+    // reports the hook failure alongside any earlier test failure.
+    throw new Error(
       `[us1-invite-associates afterAll] ${failures.length} fixture(s) could not be deleted:\n  ${failures.join('\n  ')}`
     );
   }

@@ -22,6 +22,7 @@ import {
   assignUserRoleOnOrganization,
   cleanUpTestOrganizations,
   createTestOrganization,
+  deletePersonasByEmail,
   getAssociateEligibility,
   getUserIdsInRole,
   getUserToken,
@@ -162,10 +163,22 @@ baseTest.afterAll(async () => {
       failures.push(`${g.role} from ${g.who}: ${message}`);
     }
   }
-  if (failures.length > 0) {
-    console.error(`[us2-invitee-responds afterAll] ${failures.length} role(s) could not be released:\n  ${failures.join('\n  ')}`);
+  // Organizations next, then the five run-suffixed identities. Everything is
+  // attempted before anything is reported, and the hook then FAILS with the
+  // lot — a teardown that only logs leaves fixtures behind a green run.
+  try {
+    await cleanUpTestOrganizations();
+  } catch (error) {
+    failures.push((error as Error)?.message ?? String(error));
   }
-  await cleanUpTestOrganizations();
+  failures.push(
+    ...(await deletePersonasByEmail([adminEmail, accepterEmail, declinerEmail, listAccepterEmail, withheldEmail]))
+  );
+  if (failures.length > 0) {
+    throw new Error(
+      `[us2-invitee-responds afterAll] ${failures.length} fixture(s) could not be torn down:\n  ${failures.join('\n  ')}`
+    );
+  }
 });
 
 const openOrganizationProfile = async (page: Page) => {

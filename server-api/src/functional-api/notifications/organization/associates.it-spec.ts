@@ -632,56 +632,69 @@ describe('Organization associate applications — the admins are told, the appli
     const nameId = orgName.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 24);
     const orgRes = await createOrganization(orgName, nameId);
     const org = orgRes.data!.createOrganization!;
-    await removeRoleFromUser(
-      TestUserManager.users.globalAdmin.id,
-      org.roleSet.id,
-      RoleName.Admin
-    );
-    // Keep an OWNER so the organization is not orphaned — owners are
-    // irrelevant to the zero-ADMIN count.
-    await assignRoleToUser(
-      TestUserManager.users.qaUser.id,
-      org.roleSet.id,
-      RoleName.Owner
-    );
-
-    await deleteMailSlurperMails();
-    const [mailItems] = await expectExactMailsAfter(
-      () =>
-        applyToAssociateWithOrganization(
-          org.roleSet.id,
-          'note',
-          TestUser.SUBSPACE_MEMBER
-        ),
-      1
-    );
-    const supportMail = mailItems.find((m: any) =>
-      m.toAddresses?.includes(supportEmail)
-    );
-    expect(supportMail).toBeDefined();
-    expect(supportMail?.body).toContain('Hello,');
-    expect(supportMail?.body).toContain('no administrators');
-    expect(mailItems).toHaveLength(1);
-
-    // "nobody gets an in-app row": the escalation mail has landed, so the
-    // dispatch that would have written in-app rows has completed. Neither the
-    // remaining owner nor the applicant may hold an application row for THIS
-    // organization (scoped by organization id — both personas collect rows of
-    // this type from other organizations the suite touches).
-    const inAppApplicationRowsFor = async (userRole: TestUser) => {
-      const rows = await inAppNotificationsFor(userRole, [
-        NotificationEvent.OrganizationAdminAssociateApplication,
-      ]);
-      return (rows?.inAppNotifications ?? []).filter(
-        n => n.payload?.organization?.id === org.id
+    // The organization must go whatever happens below, and `deleteOrganization`
+    // resolves GraphQL failures as `{ error }` — so the body runs in try/catch,
+    // the deletion result is inspected, and the test's own error wins.
+    let testError: unknown;
+    try {
+      await removeRoleFromUser(
+        TestUserManager.users.globalAdmin.id,
+        org.roleSet.id,
+        RoleName.Admin
       );
-    };
-    expect(await inAppApplicationRowsFor(TestUser.QA_USER)).toEqual([]);
-    expect(await inAppApplicationRowsFor(TestUser.SUBSPACE_MEMBER)).toEqual(
-      []
-    );
+      // Keep an OWNER so the organization is not orphaned — owners are
+      // irrelevant to the zero-ADMIN count.
+      await assignRoleToUser(
+        TestUserManager.users.qaUser.id,
+        org.roleSet.id,
+        RoleName.Owner
+      );
 
-    await deleteOrganization(org.id).catch(() => undefined);
+      await deleteMailSlurperMails();
+      const [mailItems] = await expectExactMailsAfter(
+        () =>
+          applyToAssociateWithOrganization(
+            org.roleSet.id,
+            'note',
+            TestUser.SUBSPACE_MEMBER
+          ),
+        1
+      );
+      const supportMail = mailItems.find((m: any) =>
+        m.toAddresses?.includes(supportEmail)
+      );
+      expect(supportMail).toBeDefined();
+      expect(supportMail?.body).toContain('Hello,');
+      expect(supportMail?.body).toContain('no administrators');
+      expect(mailItems).toHaveLength(1);
+
+      // "nobody gets an in-app row": the escalation mail has landed, so the
+      // dispatch that would have written in-app rows has completed. Neither the
+      // remaining owner nor the applicant may hold an application row for THIS
+      // organization (scoped by organization id — both personas collect rows of
+      // this type from other organizations the suite touches).
+      const inAppApplicationRowsFor = async (userRole: TestUser) => {
+        const rows = await inAppNotificationsFor(userRole, [
+          NotificationEvent.OrganizationAdminAssociateApplication,
+        ]);
+        return (rows?.inAppNotifications ?? []).filter(
+          n => n.payload?.organization?.id === org.id
+        );
+      };
+      expect(await inAppApplicationRowsFor(TestUser.QA_USER)).toEqual([]);
+      expect(await inAppApplicationRowsFor(TestUser.SUBSPACE_MEMBER)).toEqual(
+        []
+      );
+    } catch (error) {
+      testError = error;
+    }
+    const deletion = await deleteOrganization(org.id);
+    if (testError) throw testError;
+    if (deletion?.error) {
+      throw new Error(
+        `zero-admin organization ${org.id} was not torn down: ${JSON.stringify(deletion.error)}`
+      );
+    }
   });
 });
 

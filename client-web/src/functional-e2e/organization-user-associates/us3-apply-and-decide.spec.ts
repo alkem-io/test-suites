@@ -24,6 +24,7 @@ import {
   assignUserRoleOnOrganization,
   cleanUpTestOrganizations,
   createTestOrganization,
+  deletePersonasByEmail,
   getAssociateEligibility,
   getInAppActorIdsForType,
   getInAppNotificationTypes,
@@ -146,8 +147,36 @@ baseTest.beforeAll(async () => {
 });
 
 baseTest.afterAll(async () => {
-  await cleanUpTestOrganizations();
-  await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  // Organizations, the base scenario, then the seven run-suffixed identities.
+  // Everything is attempted before anything is reported; the hook then fails
+  // with the lot rather than leaving fixtures behind a green run.
+  const failures: string[] = [];
+  try {
+    await cleanUpTestOrganizations();
+  } catch (error) {
+    failures.push((error as Error)?.message ?? String(error));
+  }
+  try {
+    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  } catch (error) {
+    failures.push(`base scenario: ${(error as Error)?.message ?? error}`);
+  }
+  failures.push(
+    ...(await deletePersonasByEmail([
+      adminAEmail,
+      adminOtherEmail,
+      applicantApproveEmail,
+      applicantRejectEmail,
+      applicantOpenEmail,
+      viewerEmail,
+      zApplicantEmail,
+    ]))
+  );
+  if (failures.length > 0) {
+    throw new Error(
+      `[us3-apply-and-decide afterAll] ${failures.length} fixture(s) could not be torn down:\n  ${failures.join('\n  ')}`
+    );
+  }
 });
 
 // ─── Page-level helpers ───────────────────────────────────────────────────

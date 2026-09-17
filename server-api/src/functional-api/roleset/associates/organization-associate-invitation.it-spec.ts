@@ -459,55 +459,72 @@ describe('Organization associate invitations — the invitee responds (US2)', ()
     );
     const invitationId = getSingleInvitationResult(invite)!.invitation!.id;
 
-    const accepted = await eventOnRoleSetInvitation(
-      invitationId,
-      'ACCEPT',
-      TestUser.SUBSPACE_ADMIN
-    );
-    expect((accepted?.data as any)?.eventOnInvitation?.extraRolesWithheld).toEqual(
-      []
-    );
+    // The accepting persona is shared (subspaceAdmin): whatever happens in the
+    // body, the roles it was granted must come off again, and each removal's
+    // resolved `{ error }` is inspected — see `teardownOrFail`.
+    let testError: unknown;
+    try {
+      const accepted = await eventOnRoleSetInvitation(
+        invitationId,
+        'ACCEPT',
+        TestUser.SUBSPACE_ADMIN
+      );
+      expect((accepted?.data as any)?.eventOnInvitation?.extraRolesWithheld).toEqual(
+        []
+      );
 
-    const roles = await usersInRoles(
-      roleSetId,
-      [RoleName.Associate, RoleName.Admin],
-      TestUser.GLOBAL_ADMIN
-    );
-    const byRole = new Map(
-      (roles?.data?.lookup?.roleSet?.usersInRoles ?? []).map((r: any) => [
-        r.role,
-        r.users.map((u: any) => u.id),
-      ])
-    );
-    expect(byRole.get(RoleName.Associate)).toEqual(
-      expect.arrayContaining([TestUserManager.users.subspaceAdmin.id])
-    );
-    expect(byRole.get(RoleName.Admin)).toEqual(
-      expect.arrayContaining([TestUserManager.users.subspaceAdmin.id])
-    );
+      const roles = await usersInRoles(
+        roleSetId,
+        [RoleName.Associate, RoleName.Admin],
+        TestUser.GLOBAL_ADMIN
+      );
+      const byRole = new Map(
+        (roles?.data?.lookup?.roleSet?.usersInRoles ?? []).map((r: any) => [
+          r.role,
+          r.users.map((u: any) => u.id),
+        ])
+      );
+      expect(byRole.get(RoleName.Associate)).toEqual(
+        expect.arrayContaining([TestUserManager.users.subspaceAdmin.id])
+      );
+      expect(byRole.get(RoleName.Admin)).toEqual(
+        expect.arrayContaining([TestUserManager.users.subspaceAdmin.id])
+      );
 
-    // Account-admin standing: `myRolesImplicit` for the accepting persona
-    // includes ACCOUNT_ADMIN on this organization's role set — a documented,
-    // accepted consequence of granting ADMIN/OWNER through an invitation,
-    // not mitigated by any inviter-role ceiling.
-    const eligibility = await getOrganizationAssociateEligibility(
-      baseScenario.organization.id,
-      TestUser.SUBSPACE_ADMIN
-    );
-    expect(eligibility?.data?.organization.roleSet.myRolesImplicit).toEqual(
-      expect.arrayContaining(['ACCOUNT_ADMIN'])
-    );
-
-    await removeRoleFromUser(
-      TestUserManager.users.subspaceAdmin.id,
-      roleSetId,
-      RoleName.Admin
-    ).catch(() => undefined);
-    await removeRoleFromUser(
-      TestUserManager.users.subspaceAdmin.id,
-      roleSetId,
-      RoleName.Associate
-    ).catch(() => undefined);
+      // Account-admin standing: `myRolesImplicit` for the accepting persona
+      // includes ACCOUNT_ADMIN on this organization's role set — a documented,
+      // accepted consequence of granting ADMIN/OWNER through an invitation,
+      // not mitigated by any inviter-role ceiling.
+      const eligibility = await getOrganizationAssociateEligibility(
+        baseScenario.organization.id,
+        TestUser.SUBSPACE_ADMIN
+      );
+      expect(eligibility?.data?.organization.roleSet.myRolesImplicit).toEqual(
+        expect.arrayContaining(['ACCOUNT_ADMIN'])
+      );
+    } catch (error) {
+      testError = error;
+    }
+    await teardownOrFail(testError, [
+      [
+        'remove ADMIN from subspaceAdmin',
+        () =>
+          removeRoleFromUser(
+            TestUserManager.users.subspaceAdmin.id,
+            roleSetId,
+            RoleName.Admin
+          ),
+      ],
+      [
+        'remove ASSOCIATE from subspaceAdmin',
+        () =>
+          removeRoleFromUser(
+            TestUserManager.users.subspaceAdmin.id,
+            roleSetId,
+            RoleName.Associate
+          ),
+      ],
+    ]);
   });
 
   test('US2-AS5: accepting [OWNER] after the cap is reached grants ASSOCIATE only and reports the withheld role', async () => {

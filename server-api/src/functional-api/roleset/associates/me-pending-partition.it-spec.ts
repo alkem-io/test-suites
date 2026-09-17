@@ -72,7 +72,18 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(fullScenario);
   await TestScenarioFactory.cleanUpBaseScenario(orgForInvitation);
   await TestScenarioFactory.cleanUpBaseScenario(orgForApplication);
-  // orgToDelete is torn down by its own test.
+  // orgToDelete is normally deleted by the US7-AS5 test itself, but that test
+  // can be skipped, focused out or fail before it gets there — so the suite
+  // owns the cleanup too. `deleteOrganization` resolves GraphQL failures as
+  // `{ error }`; "not found" is the expected outcome after a green run and
+  // anything else fails the hook.
+  if (orgToDelete?.organization?.id) {
+    const res = await deleteOrganization(orgToDelete.organization.id);
+    const message = JSON.stringify(res?.error ?? '');
+    if (res?.error && !/not.?found|unable to find|ENTITY_NOT_FOUND/i.test(message)) {
+      throw new Error(`orgToDelete was not torn down: ${message}`);
+    }
+  }
 });
 
 const callAsEmail = async <TData>(
