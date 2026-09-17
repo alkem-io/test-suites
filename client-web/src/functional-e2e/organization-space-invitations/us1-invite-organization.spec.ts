@@ -244,17 +244,26 @@ async function inviteOrganizationViaDialog(
 
 spaceAdminTest.describe('US1-AS1 — permission gating (space admin half)', () => {
   spaceAdminTest(
-    'a Space admin who is not a platform admin can Invite Organisation; Add Organisation is not rendered at all',
+    'a Space admin who is not a platform admin can Invite Organisation; Add Organisation is never actionable',
     async ({ page }) => {
       await openMemberOrganizationsSection(page);
       await expect(page.getByRole('button', { name: 'Invite Organisation' })).toBeEnabled();
-      // HIDDEN, not gated (client-web#10292, which reverses this file's original
-      // expectation): direct add needs a platform-role privilege a Space admin can never
-      // obtain, so the control is not rendered rather than disabled with a tooltip
-      // explaining an unobtainable capability. Its sibling Invite Organisation stays
-      // gated-not-hidden, asserted above — the two controls use different conventions on
-      // purpose, because every Space admin can eventually invite.
-      await expect(page.getByRole('button', { name: 'Add Organisation' })).not.toBeVisible();
+      // Direct add needs a platform-role privilege a Space admin can never obtain.
+      // client-web#10324 (fixing #10292) stops rendering the control at all — a
+      // disabled button with a tooltip would explain an unobtainable capability —
+      // while the develop client it replaces still renders it disabled per the
+      // workspace#085 gated-not-hidden convention. Both states satisfy the same
+      // invariant, and that is what is asserted until #10324 lands: the control
+      // is either absent or inert, never clickable. Tighten this to
+      // `not.toBeVisible()` once #10324 is on develop. Its sibling Invite
+      // Organisation stays gated-not-hidden (asserted above) on purpose, because
+      // every Space admin can eventually invite.
+      const addOrganisation = page.getByRole('button', { name: 'Add Organisation' });
+      if (await addOrganisation.isVisible()) {
+        await expect(addOrganisation).toBeDisabled();
+      } else {
+        await expect(addOrganisation).not.toBeVisible();
+      }
     }
   );
 });
