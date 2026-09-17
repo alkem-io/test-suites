@@ -589,6 +589,58 @@ export const waitForMailsWhere = async (
 };
 
 /**
+ * Drop-in replacement for the old `await delay(N); await getMailsData()` read.
+ *
+ * Delivery is fire-and-forget, so a fixed sleep either reads too early (the
+ * count comes up short, and the late mails then land in the NEXT test's
+ * mailbox) or wastes time. This polls instead:
+ *  - `expectedCount > 0`: wait until that many in-scope mails have landed (or
+ *    the delivery bound elapses), then settle briefly and re-read, so a leaked
+ *    extra mail still shows up and fails an exact-count assertion;
+ *  - `expectedCount === 0`: hold a quiet window, returning early the moment an
+ *    in-scope mail appears — "none" means "none within the window", not
+ *    "none yet".
+ *
+ * `scope` narrows the mailbox to the mails a spec is about. Specs that assert
+ * a mailbox TOTAL silently assume nobody else in the database is subscribed
+ * to the event; on a shared stack that is false (every leftover registered
+ * user has the platform-wide notifications on by default), so such specs scope
+ * to the seeded personas instead.
+ *
+ * Returns the same `[mailItems, total]` tuple as `getMailsData`, restricted to
+ * the in-scope mails, so existing assertions keep working unchanged.
+ */
+export const getMailsDataSettled = async (
+  expectedCount: number,
+  {
+    scope,
+    timeout = 15_000,
+    quietMs = 5_000,
+    settleMs = 1_500,
+  }: {
+    scope?: (mail: MailItem) => boolean;
+    timeout?: number;
+    quietMs?: number;
+    settleMs?: number;
+  } = {}
+): Promise<[MailItem[], number]> => {
+  const inScope = (items: MailItem[]) => (scope ? items.filter(scope) : items);
+  if (expectedCount > 0) {
+    await waitForMailsWhere(items => inScope(items).length >= expectedCount, {
+      timeout,
+    });
+    await delay(settleMs);
+  } else {
+    await waitForMailsWhere(items => inScope(items).length > 0, {
+      timeout: quietMs,
+    });
+  }
+  const [all] = await getMailsData();
+  const scoped = inScope((all ?? []) as MailItem[]);
+  return [scoped, scoped.length];
+};
+
+/**
  * Runs `action`, waits for at least `expectedCount` mails to land (via
  * `waitForMailsCountAtLeast`), then settles a little longer and re-reads
  * before returning — the email-channel counterpart of `expectPushEmitAfter`'s
