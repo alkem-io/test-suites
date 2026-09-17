@@ -10,10 +10,13 @@ import { TestUser } from '@alkemio/tests-lib';
 
 import {
   createPostOnCallout,
+  createPostOnCalloutWithNotification,
   deletePost,
 } from '@functional-api/callout/post/post.request.params';
 import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
+import { getActivityLogOnCollaboration } from '@functional-api/activity-logs/activity-log-params';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import { ActivityEventType } from '@alkemio/client-lib/dist/types/alkemio-schema';
 import { notif, getMailsDataSettled } from '../../notification.helpers';
 
 const uniqueId = UniqueIDGenerator.getID();
@@ -461,5 +464,164 @@ describe('Notifications - post', () => {
     const mails = await getMailsDataSettled(0);
 
     expect(mails[1]).toEqual(0);
+  });
+});
+
+describe('070 contribution notify switch', () => {
+  let notifySwitchPostId = '';
+  let notifySwitchPostNameID = '';
+  let notifySwitchPostDisplayName = '';
+  const notifySwitchSubjectMember = `${baseScenario.space.about.profile.displayName}: New post contribution created by admin, have a look!`;
+
+  beforeEach(async () => {
+    await deleteMailSlurperMails();
+
+    notifySwitchPostNameID = `nsw-name-id-${uniqueId}`;
+    notifySwitchPostDisplayName = `nsw-d-name-${uniqueId}`;
+  });
+
+  afterEach(async () => {
+    await deletePost(notifySwitchPostId);
+  });
+
+  test('sendNotification false suppresses the member AND the admin contribution notification — the admin channel is suppressed by design, not drift', async () => {
+    // Act
+    const res = await createPostOnCalloutWithNotification(
+      baseScenario.space.collaboration.calloutPostCollectionId,
+      { displayName: notifySwitchPostDisplayName },
+      false,
+      notifySwitchPostNameID,
+      TestUser.GLOBAL_ADMIN
+    );
+    notifySwitchPostId =
+      res.data?.createContributionOnCallout.post?.id ?? '';
+
+    // Assert — nothing arrives at all, on either channel
+    const mails = await getMailsDataSettled(0);
+    expect(mails[1]).toEqual(0);
+
+    // A member who explicitly opted in to contribution notifications still
+    // receives nothing: the sender's suppression is never overridden by a
+    // recipient preference.
+    expect(mails[0]).not.toEqual(
+      await templateMemberResult(
+        notifySwitchSubjectMember,
+        TestUserManager.users.spaceMember.email
+      )
+    );
+
+    // The space-admin contribution notification is suppressed too — one
+    // flag suppresses both channels, deliberately.
+    expect(mails[0]).not.toEqual(
+      await templateMemberResult(
+        notifySwitchSubjectMember,
+        TestUserManager.users.spaceAdmin.email
+      )
+    );
+  });
+
+  test('sendNotification true notifies exactly as today — same recipients, same content as the omitted-flag path', async () => {
+    // Act
+    const res = await createPostOnCalloutWithNotification(
+      baseScenario.space.collaboration.calloutPostCollectionId,
+      { displayName: notifySwitchPostDisplayName },
+      true,
+      notifySwitchPostNameID,
+      TestUser.GLOBAL_ADMIN
+    );
+    notifySwitchPostId =
+      res.data?.createContributionOnCallout.post?.id ?? '';
+
+    // Assert — the same six recipients as the neighbouring GA-created-post
+    // case above, proving explicit-true is indistinguishable from today.
+    const mails = await getMailsDataSettled(6);
+    expect(mails[1]).toEqual(6);
+    expect(mails[0]).toEqual(
+      await templateMemberResult(
+        notifySwitchSubjectMember,
+        TestUserManager.users.spaceAdmin.email
+      )
+    );
+    expect(mails[0]).toEqual(
+      await templateMemberResult(
+        notifySwitchSubjectMember,
+        TestUserManager.users.spaceMember.email
+      )
+    );
+    expect(mails[0]).toEqual(
+      await templateMemberResult(
+        notifySwitchSubjectMember,
+        TestUserManager.users.subspaceAdmin.email
+      )
+    );
+    expect(mails[0]).toEqual(
+      await templateMemberResult(
+        notifySwitchSubjectMember,
+        TestUserManager.users.subspaceMember.email
+      )
+    );
+    expect(mails[0]).toEqual(
+      await templateMemberResult(
+        notifySwitchSubjectMember,
+        TestUserManager.users.subsubspaceAdmin.email
+      )
+    );
+    expect(mails[0]).toEqual(
+      await templateMemberResult(
+        notifySwitchSubjectMember,
+        TestUserManager.users.subsubspaceMember.email
+      )
+    );
+  });
+
+  test('omitting sendNotification on the flag-aware mutation still notifies everyone — the wire default stays notify, pinned independently of the untouched legacy helper', async () => {
+    // Act — call through the new flag-aware operation but never set the
+    // argument, exercising GraphQL's own default-value substitution rather
+    // than the legacy helper that never had a flag to omit.
+    const res = await createPostOnCalloutWithNotification(
+      baseScenario.space.collaboration.calloutPostCollectionId,
+      { displayName: notifySwitchPostDisplayName },
+      undefined,
+      notifySwitchPostNameID,
+      TestUser.GLOBAL_ADMIN
+    );
+    notifySwitchPostId =
+      res.data?.createContributionOnCallout.post?.id ?? '';
+
+    // Assert — mail arrives exactly as it does for the pre-existing
+    // omitted-flag helper case above.
+    const mails = await getMailsDataSettled(6);
+    expect(mails[1]).toEqual(6);
+  });
+
+  test('the activity log entry for the contribution is written even though sendNotification is false', async () => {
+    // Act
+    const res = await createPostOnCalloutWithNotification(
+      baseScenario.space.collaboration.calloutPostCollectionId,
+      { displayName: notifySwitchPostDisplayName },
+      false,
+      notifySwitchPostNameID,
+      TestUser.GLOBAL_ADMIN
+    );
+    notifySwitchPostId =
+      res.data?.createContributionOnCallout.post?.id ?? '';
+
+    // Drain the (empty) mail expectation first so the activity read below
+    // isn't racing the same async work.
+    await getMailsDataSettled(0);
+
+    // Assert — the activity log entry for this contribution is present
+    // regardless of the suppressed notification.
+    const activity = await getActivityLogOnCollaboration(
+      baseScenario.space.collaboration.id,
+      30
+    );
+    const entries = activity?.data?.activityLogOnCollaboration ?? [];
+    const postCreatedEntry = entries.find(
+      entry =>
+        entry.type === ActivityEventType.CalloutPostCreated &&
+        (entry.description ?? '').includes(notifySwitchPostDisplayName)
+    );
+    expect(postCreatedEntry).toBeDefined();
   });
 });
