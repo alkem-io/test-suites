@@ -12,7 +12,7 @@
 // rest on. Never construct a bare `APIRequestContext`: it has no cookies and
 // every assertion below would degrade to "anonymous" and pass vacuously.
 
-import { APIResponse, Browser, BrowserContext, Page } from '@playwright/test';
+import { APIResponse, Browser, BrowserContext, Page, request } from '@playwright/test';
 import axios from 'axios';
 import {
   getUserToken,
@@ -113,6 +113,85 @@ export const probePrivateGraphql = async (
       data: { query },
       headers: { 'Content-Type': 'application/json' },
       failOnStatusCode: false,
+    })
+  );
+
+/**
+ * The session cookie of a context, as a `Cookie` request header value.
+ *
+ * Why it exists: on the FIRST request a revoked session makes, the server
+ * answers 401 AND clears the cookie on that response (AuthInterceptor —
+ * otherwise the browser is locked out of `/login`). A Playwright context
+ * honours that clear, so every later probe from the same context is
+ * cookie-less and legitimately ANONYMOUS. The property #6315 fences —
+ * "a stale cookie must never yield an anonymous 200" — can therefore only be
+ * asserted by REPLAYING the captured cookie explicitly, which is what the
+ * `*WithCookie` probes below do.
+ */
+export const captureSessionCookie = async (
+  context: BrowserContext
+): Promise<string> => {
+  const cookie = (await context.cookies()).find(
+    c => c.name === sessionCookieName
+  );
+  if (!cookie) {
+    throw new Error(
+      `captureSessionCookie: no '${sessionCookieName}' cookie in the context`
+    );
+  }
+  return `${cookie.name}=${cookie.value}`;
+};
+
+/**
+ * The replayed cookie is a live credential until the revocation lands. It is
+ * only ever sent to `baseUrl`, which must be HTTPS unless it is a loopback
+ * host (the local stack), and the probes never follow redirects — so the
+ * cookie cannot be forwarded to a destination the test did not name.
+ */
+const assertSecureProbeOrigin = (): void => {
+  const { protocol, hostname } = new URL(baseUrl);
+  const loopback = ['localhost', '127.0.0.1', '::1', '[::1]'].includes(hostname);
+  if (protocol !== 'https:' && !loopback) {
+    throw new Error(
+      `Refusing to replay a session cookie over ${protocol} to ${hostname}: ALKEMIO_BASE_URL must be https:// or loopback`
+    );
+  }
+};
+
+const probeWithCookie = async (
+  cookieHeader: string,
+  send: (ctx: Awaited<ReturnType<typeof request.newContext>>) => Promise<APIResponse>
+): Promise<ProbeResult> => {
+  assertSecureProbeOrigin();
+  const ctx = await request.newContext({
+    extraHTTPHeaders: { cookie: cookieHeader },
+  });
+  try {
+    return await toProbeResult(await send(ctx));
+  } finally {
+    await ctx.dispose();
+  }
+};
+
+/** `GET id-token-hint` replaying a captured (possibly stale) session cookie. */
+export const probeIdTokenHintWithCookie = (
+  cookieHeader: string
+): Promise<ProbeResult> =>
+  probeWithCookie(cookieHeader, ctx =>
+    ctx.get(idTokenHintUrl, { failOnStatusCode: false, maxRedirects: 0 })
+  );
+
+/** `POST /api/private/graphql` replaying a captured (possibly stale) session cookie. */
+export const probePrivateGraphqlWithCookie = (
+  cookieHeader: string,
+  query: string
+): Promise<ProbeResult> =>
+  probeWithCookie(cookieHeader, ctx =>
+    ctx.post(privateGraphqlUrl, {
+      data: { query },
+      headers: { 'Content-Type': 'application/json' },
+      failOnStatusCode: false,
+      maxRedirects: 0,
     })
   );
 

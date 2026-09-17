@@ -1,0 +1,9 @@
+mutation AuthorizationPolicyResetOnOrganization(
+  $organizationID: UUID!
+) {
+  authorizationPolicyResetOnOrganization(
+    authorizationResetData: { organizationID: $organizationID }
+  ) {
+    id
+  }
+}

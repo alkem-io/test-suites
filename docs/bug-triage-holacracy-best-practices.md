@@ -18,6 +18,16 @@
 
 ---
 
+## 📊 Live triage page
+
+The current open-bug picture across the public alkem-io repositories — severity × area,
+per-bug planning status, release cadence and two-year trends — is published at
+**https://alkem-io.github.io/test-suites/bug-triage/** and refreshed every Monday
+06:00 UTC by the `bug-triage-refresh` workflow. How it is built, what each section
+means and how to refresh it by hand: [`scripts/bug-triage/README.md`](../scripts/bug-triage/README.md).
+
+---
+
 ## 📋 Overview
 
 This document outlines best practices for implementing bug triage processes within organizations using Holacracy governance. It combines industry-standard bug management practices with the unique structural elements of self-organizing teams.

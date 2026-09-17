@@ -1,0 +1,18 @@
+query GetCalloutFramingMemo($calloutID: UUID!) {
+  lookup {
+    callout(ID: $calloutID) {
+      id
+      framing {
+        id
+        memo {
+          id
+          profile {
+            id
+            displayName
+            url
+          }
+        }
+      }
+    }
+  }
+}

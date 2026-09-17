@@ -334,20 +334,20 @@ test.describe('Subspace Navigation for Non-Members', () => {
       page.getByText(baseScenario.subspace.about.profile.tagline)
     ).toBeVisible();
 
-    // Verify action affordances are visible. CRD renames/reshapes these:
-    // the subspace About is a sidebar button ("About this Subspace"), the
-    // video call is a header link ("Start video call"), and recent activity
-    // / share are header buttons.
+    // Verify action affordances are visible. CRD accessible names (unchanged
+    // since the April space-page rework, identical in 0.163.0): the subspace
+    // About is a sidebar button ("About this Subspace"); the header row
+    // carries the "Activity" button, the "Video Call" link and "Share".
     await expect(
       page.getByRole('button', { name: 'About this Subspace' })
     ).toBeVisible();
+    // "Activity" (header) collides with the "Recent Activity" quick action;
+    // pin the header affordance with an exact match.
     await expect(
-      page.getByRole('link', { name: 'Start video call' })
+      page.getByRole('button', { name: 'Activity', exact: true })
     ).toBeVisible();
-    // "Recent activity" (header) collides with the "Recent Activity" quick
-    // action; pin the header affordance with an exact match.
     await expect(
-      page.getByRole('button', { name: 'Recent activity', exact: true })
+      page.getByRole('link', { name: 'Video Call', exact: true })
     ).toBeVisible();
     await expect(page.getByRole('button', { name: 'Share' })).toBeVisible();
 

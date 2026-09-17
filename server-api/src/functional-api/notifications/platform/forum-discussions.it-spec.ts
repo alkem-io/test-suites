@@ -1,10 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 
 import { ForumDiscussionCategory } from '@alkemio/client-lib';
 import {
-  delay,
   deleteMailSlurperMails,
-  getMailsData,
   TestScenarioFactory,
   TestScenarioNoPreCreationConfig,
   TestUserManager,
@@ -19,7 +17,7 @@ import {
 } from '@functional-api/communications/communication.params';
 import { sendMessageReplyToRoom } from '@functional-api/communications/replies/reply.request.params';
 import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
-import { notif } from '../notification.helpers';
+import { notif, getMailsDataSettled, MailItem } from '../notification.helpers';
 const uniqueId = UniqueIDGenerator.getID();
 
 // Notification settings objects using proper NotificationSettingInput shape
@@ -197,6 +195,21 @@ const scenarioConfig: TestScenarioNoPreCreationConfig = {
   name: 'notifications-forum-discussion',
 };
 
+
+/**
+ * Forum notifications are platform-wide and ON by default, so every other
+ * registered user on the stack (run-suffixed walk personas, manual accounts)
+ * receives them too. Asserting the mailbox TOTAL therefore only ever passed on
+ * a database holding nothing but the seeded personas. These cases are about
+ * which SEEDED persona is notified, so the mailbox is scoped to them.
+ */
+const toSeededPersona = (mail: MailItem): boolean => {
+  const seeded = new Set(
+    Object.values(TestUserManager.users).map(user => user.email)
+  );
+  return (mail.toAddresses ?? []).some(address => seeded.has(address));
+};
+
 beforeAll(async () => {
   await TestScenarioFactory.createBaseScenarioEmpty(scenarioConfig);
 
@@ -245,8 +258,7 @@ describe('Notifications - forum discussions', () => {
     const res = await createDiscussion(platformCommunicationId, discussionName);
     discussionId = res?.data?.createDiscussion.id ?? '';
 
-    await delay(1000);
-    const getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsDataSettled(4, { scope: toSeededPersona });
 
     // Assert
     expect(getEmailsData[1]).toEqual(4);
@@ -282,8 +294,7 @@ describe('Notifications - forum discussions', () => {
     );
     discussionId = res?.data?.createDiscussion.id ?? '';
 
-    await delay(1000);
-    const getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsDataSettled(4, { scope: toSeededPersona });
 
     // Assert
     expect(getEmailsData[1]).toEqual(4);
@@ -346,8 +357,7 @@ describe('Notifications - forum discussions comment', () => {
 
     await sendMessageToRoom(discussionCommentId);
 
-    await delay(1000);
-    const getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsDataSettled(0, { scope: toSeededPersona });
 
     // Assert
     expect(getEmailsData[1]).toEqual(0);
@@ -375,8 +385,7 @@ describe('Notifications - forum discussions comment', () => {
 
     await sendMessageToRoom(discussionCommentId);
 
-    await delay(1000);
-    const getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsDataSettled(1, { scope: toSeededPersona });
 
     // Assert
     expect(getEmailsData[1]).toEqual(1);
@@ -404,8 +413,7 @@ describe('Notifications - forum discussions comment', () => {
 
     await sendMessageToRoom(discussionCommentId, undefined, TestUser.QA_USER);
 
-    await delay(1000);
-    const getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsDataSettled(0, { scope: toSeededPersona });
 
     // Assert
     expect(getEmailsData[1]).toEqual(0);
@@ -431,8 +439,7 @@ describe('Notifications - forum discussions comment', () => {
 
     await sendMessageToRoom(discussionCommentId, undefined, TestUser.QA_USER);
 
-    await delay(1000);
-    const getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsDataSettled(1, { scope: toSeededPersona });
 
     // Assert
     expect(getEmailsData[1]).toEqual(1);
@@ -500,8 +507,7 @@ describe('Notifications - forum discussions comments reply', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    await delay(1000);
-    const getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsDataSettled(0, { scope: toSeededPersona });
 
     // Assert
     expect(getEmailsData[1]).toEqual(0);
@@ -543,8 +549,7 @@ describe('Notifications - forum discussions comments reply', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    await delay(1000);
-    const getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsDataSettled(1, { scope: toSeededPersona });
 
     // Assert
     expect(getEmailsData[1]).toEqual(1);
@@ -586,8 +591,7 @@ describe('Notifications - forum discussions comments reply', () => {
       TestUser.QA_USER
     );
 
-    await delay(1000);
-    const getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsDataSettled(0, { scope: toSeededPersona });
 
     // Assert
     expect(getEmailsData[1]).toEqual(0);
@@ -627,8 +631,7 @@ describe('Notifications - forum discussions comments reply', () => {
       TestUser.QA_USER
     );
 
-    await delay(1000);
-    const getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsDataSettled(1, { scope: toSeededPersona });
 
     // Assert
     expect(getEmailsData[1]).toEqual(1);
@@ -682,8 +685,7 @@ describe('Notifications - no notifications triggered', () => {
     );
     discussionId = res?.data?.createDiscussion.id ?? '';
 
-    await delay(1000);
-    const getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsDataSettled(0, { scope: toSeededPersona });
 
     // Assert
     expect(getEmailsData[1]).toEqual(0);
@@ -699,8 +701,7 @@ describe('Notifications - no notifications triggered', () => {
     );
     discussionId = res?.data?.createDiscussion.id ?? '';
 
-    await delay(1000);
-    const getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsDataSettled(0, { scope: toSeededPersona });
 
     // Assert
     expect(getEmailsData[1]).toEqual(0);
@@ -718,8 +719,7 @@ describe('Notifications - no notifications triggered', () => {
 
     await sendMessageToRoom(discussionCommentId);
 
-    await delay(1000);
-    const getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsDataSettled(0, { scope: toSeededPersona });
 
     // Assert
     expect(getEmailsData[1]).toEqual(0);
@@ -739,8 +739,7 @@ describe('Notifications - no notifications triggered', () => {
 
     await sendMessageToRoom(discussionCommentId);
 
-    await delay(1000);
-    const getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsDataSettled(0, { scope: toSeededPersona });
 
     // Assert
     expect(getEmailsData[1]).toEqual(0);
@@ -767,8 +766,7 @@ describe('Notifications - no notifications triggered', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    await delay(1000);
-    const getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsDataSettled(0, { scope: toSeededPersona });
 
     // Assert
     expect(getEmailsData[1]).toEqual(0);
@@ -801,8 +799,7 @@ describe('Notifications - no notifications triggered', () => {
       TestUser.GLOBAL_ADMIN
     );
 
-    await delay(1000);
-    const getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsDataSettled(0, { scope: toSeededPersona });
 
     // Assert
     expect(getEmailsData[1]).toEqual(0);

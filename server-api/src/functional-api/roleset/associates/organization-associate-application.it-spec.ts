@@ -1,0 +1,338 @@
+// A registered user applies to associate with an organization, the
+// organization decides, and the shared `allowApplications` switch /
+// entry-role normalization contracts this feature depends on.
+import {
+  TestScenarioConfig,
+  TestScenarioFactory,
+  TestUser,
+  TestUserManager,
+  harnessPostgresConfigured,
+  queryHarnessDb,
+} from '@alkemio/tests-lib';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import {
+  CommunityMembershipStatus,
+  RoleName,
+} from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import {
+  applyToAssociateWithOrganization,
+  deleteApplication,
+} from '../application/application.request.params';
+import { eventOnRoleSetApplication } from '../roleset-events.request.params';
+import {
+  getErrorCode,
+  getRoleSetApplicationForm,
+  usersInRoles,
+} from '../roleset.request.params';
+import { assignRoleToUser, removeRoleFromUser } from '../roles-request.params';
+import {
+  getOrganizationAssociateEligibility,
+  updateOrganizationSettings,
+} from '@functional-api/contributor-management/organization/organization.request.params';
+import { inviteForEntryRoleOnRoleSet } from '../invitations/invitation.request.params';
+import { getSingleInvitationResult } from '../roleset.request.params';
+import { RoleSetInvitationResultType } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+
+const note = 'note';
+
+let baseScenario: OrganizationWithSpaceModel;
+const scenarioConfig: TestScenarioConfig = {
+  name: 'org-associate-apply',
+};
+let roleSetId = '';
+
+beforeAll(async () => {
+  baseScenario = await TestScenarioFactory.createBaseScenarioOrganization(
+    scenarioConfig
+  );
+  roleSetId = baseScenario.organization.roleSetId;
+
+  // An ADMIN able to approve/reject, distinct from the applicant personas.
+  await assignRoleToUser(
+    TestUserManager.users.spaceAdmin.id,
+    roleSetId,
+    RoleName.Associate
+  );
+  await assignRoleToUser(
+    TestUserManager.users.spaceAdmin.id,
+    roleSetId,
+    RoleName.Admin
+  );
+  // Associate-only, for the "cannot APPROVE" refusal.
+  await assignRoleToUser(
+    TestUserManager.users.betaTester.id,
+    roleSetId,
+    RoleName.Associate
+  );
+});
+
+afterAll(async () => {
+  await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+});
+
+describe('Organization associate applications (US3)', () => {
+  test('US3-AS1: a registered user applies with a note — application created', async () => {
+    const res = await applyToAssociateWithOrganization(
+      roleSetId,
+      note,
+      TestUser.QA_USER
+    );
+    expect(res?.error).toBeUndefined();
+    const applicationId = res?.data?.applyForEntryRoleOnRoleSet?.id;
+    expect(applicationId?.length).toEqual(36);
+
+    // Applying again while the first is still pending — typed refusal, no
+    // second row.
+    const dup = await applyToAssociateWithOrganization(
+      roleSetId,
+      note,
+      TestUser.QA_USER
+    );
+    expect(getErrorCode(dup)).toEqual('ROLESET_OPEN_APPLICATION_EXISTS');
+
+    await deleteApplication(applicationId!);
+  });
+
+  test('contract §4 (discriminating): an existing ORGANIZATION_ASSOCIATE reads myMembershipStatus === MEMBER and is refused a duplicate application with ROLESET_ALREADY_MEMBER', async () => {
+    await assignRoleToUser(
+      TestUserManager.users.subspaceMember.id,
+      roleSetId,
+      RoleName.Associate
+    );
+    try {
+      const eligibility = await getOrganizationAssociateEligibility(
+        baseScenario.organization.id,
+        TestUser.SUBSPACE_MEMBER
+      );
+      expect(eligibility?.data?.organization.roleSet.myMembershipStatus).toEqual(
+        CommunityMembershipStatus.Member
+      );
+
+      const res = await applyToAssociateWithOrganization(
+        roleSetId,
+        note,
+        TestUser.SUBSPACE_MEMBER
+      );
+      expect(getErrorCode(res)).toEqual('ROLESET_ALREADY_MEMBER');
+      expect(res?.data?.applyForEntryRoleOnRoleSet).toBeUndefined();
+    } finally {
+      await removeRoleFromUser(
+        TestUserManager.users.subspaceMember.id,
+        roleSetId,
+        RoleName.Associate
+      ).catch(() => undefined);
+    }
+  });
+
+  test('US3-AS5: switching allowApplications off refuses new applications (typed error, zero rows) but leaves an earlier pending application listed and approvable', async () => {
+    const earlier = await applyToAssociateWithOrganization(
+      roleSetId,
+      note,
+      TestUser.NON_SPACE_MEMBER
+    );
+    const earlierId = earlier?.data?.applyForEntryRoleOnRoleSet?.id;
+    expect(earlierId?.length).toEqual(36);
+
+    await updateOrganizationSettings(baseScenario.organization.id, {
+      membership: {
+        allowUsersMatchingDomainToJoin: false,
+        allowApplications: false,
+      },
+    });
+    try {
+      const blocked = await applyToAssociateWithOrganization(
+        roleSetId,
+        note,
+        TestUser.SUBSPACE_ADMIN
+      );
+      expect(getErrorCode(blocked)).toEqual('ROLESET_APPLICATIONS_NOT_ACCEPTED');
+      expect(blocked?.data?.applyForEntryRoleOnRoleSet).toBeUndefined();
+
+      // The earlier application is unaffected — still there and decidable.
+      const approved = await eventOnRoleSetApplication(
+        earlierId!,
+        'APPROVE',
+        TestUser.SPACE_ADMIN
+      );
+      expect(approved?.data?.eventOnApplication?.state).toEqual('approved');
+    } finally {
+      await updateOrganizationSettings(baseScenario.organization.id, {
+        membership: {
+          allowUsersMatchingDomainToJoin: false,
+          allowApplications: true,
+        },
+      });
+      await removeRoleFromUser(
+        TestUserManager.users.nonSpaceMember.id,
+        roleSetId,
+        RoleName.Associate
+      ).catch(() => undefined);
+    }
+  });
+
+  test('US3-AS3/AS4: APPROVE grants ASSOCIATE, REJECT does not and the applicant may apply again', async () => {
+    const applyRes = await applyToAssociateWithOrganization(
+      roleSetId,
+      note,
+      TestUser.SUBSUBSPACE_MEMBER
+    );
+    const applicationId = applyRes?.data?.applyForEntryRoleOnRoleSet?.id;
+
+    const rejected = await eventOnRoleSetApplication(
+      applicationId!,
+      'REJECT',
+      TestUser.SPACE_ADMIN
+    );
+    expect(rejected?.data?.eventOnApplication?.state).toEqual('rejected');
+
+    const eligibilityAfterReject = await getOrganizationAssociateEligibility(
+      baseScenario.organization.id,
+      TestUser.SUBSUBSPACE_MEMBER
+    );
+    expect(
+      eligibilityAfterReject?.data?.organization.roleSet.myMembershipStatus
+    ).not.toEqual(CommunityMembershipStatus.Member);
+
+    const reapply = await applyToAssociateWithOrganization(
+      roleSetId,
+      note,
+      TestUser.SUBSUBSPACE_MEMBER
+    );
+    const secondApplicationId = reapply?.data?.applyForEntryRoleOnRoleSet?.id;
+    expect(secondApplicationId?.length).toEqual(36);
+
+    const approved = await eventOnRoleSetApplication(
+      secondApplicationId!,
+      'APPROVE',
+      TestUser.SPACE_ADMIN
+    );
+    expect(approved?.data?.eventOnApplication?.state).toEqual('approved');
+
+    const eligibilityAfterApprove = await getOrganizationAssociateEligibility(
+      baseScenario.organization.id,
+      TestUser.SUBSUBSPACE_MEMBER
+    );
+    expect(
+      eligibilityAfterApprove?.data?.organization.roleSet.myMembershipStatus
+    ).toEqual(CommunityMembershipStatus.Member);
+
+    // An application carries NO role (operator ruling R44): approval makes the
+    // applicant a plain ASSOCIATE and an admin changes the role afterwards by
+    // hand. Membership status alone would not catch an approval that also
+    // granted ADMIN or OWNER, so read the roles themselves.
+    const rolesAfterApprove = await usersInRoles(
+      roleSetId,
+      [RoleName.Associate, RoleName.Admin, RoleName.Owner],
+      TestUser.GLOBAL_ADMIN
+    );
+    const idsByRole = new Map<string, string[]>(
+      (rolesAfterApprove?.data?.lookup?.roleSet?.usersInRoles ?? []).map(
+        (r: { role: string; users: { id: string }[] }) => [
+          r.role,
+          r.users.map(u => u.id),
+        ]
+      )
+    );
+    const applicantId = TestUserManager.users.subsubspaceMember.id;
+    expect(idsByRole.get(RoleName.Associate)).toEqual(
+      expect.arrayContaining([applicantId])
+    );
+    expect(idsByRole.get(RoleName.Admin) ?? []).not.toContain(applicantId);
+    expect(idsByRole.get(RoleName.Owner) ?? []).not.toContain(applicantId);
+
+    await removeRoleFromUser(
+      TestUserManager.users.subsubspaceMember.id,
+      roleSetId,
+      RoleName.Associate
+    ).catch(() => undefined);
+  });
+
+  test('an associate-only persona cannot APPROVE an application', async () => {
+    const applyRes = await applyToAssociateWithOrganization(
+      roleSetId,
+      note,
+      TestUser.SUBSUBSPACE_ADMIN
+    );
+    const applicationId = applyRes?.data?.applyForEntryRoleOnRoleSet?.id;
+    try {
+      const res = await eventOnRoleSetApplication(
+        applicationId!,
+        'APPROVE',
+        TestUser.GLOBAL_BETA_TESTER
+      );
+      expect(res?.error?.errors?.[0]?.message).toMatch(
+        /Authorization: unable to grant/
+      );
+    } finally {
+      await deleteApplication(applicationId!).catch(() => undefined);
+    }
+  });
+
+  test('US3-AS6: inviting an applicant with an open application is refused (ALREADY_HAS_OPEN_APPLICATION)', async () => {
+    const applyRes = await applyToAssociateWithOrganization(
+      roleSetId,
+      note,
+      TestUser.GLOBAL_SUPPORT_ADMIN
+    );
+    const applicationId = applyRes?.data?.applyForEntryRoleOnRoleSet?.id;
+    expect(applicationId?.length).toEqual(36);
+    try {
+      const invite = await inviteForEntryRoleOnRoleSet(
+        roleSetId,
+        [TestUserManager.users.globalSupportAdmin.id],
+        [],
+        'welcome',
+        [],
+        TestUser.SPACE_ADMIN
+      );
+      const result = getSingleInvitationResult(invite);
+      expect(result?.type).toEqual(
+        RoleSetInvitationResultType.AlreadyHasOpenApplication
+      );
+      expect(result?.invitation).toBeFalsy();
+    } finally {
+      await deleteApplication(applicationId!).catch(() => undefined);
+    }
+  });
+
+  // Loopback Postgres only: the premigration row shape is produced by direct
+  // SQL, which the nightly run (remote cluster, no POSTGRES_* set) cannot reach.
+  test.skipIf(!harnessPostgresConfigured())('US3-AS9: a pre-migration-shaped organization row reads allowApplications === true and the seeded question as optional', async () => {
+    await queryHarnessDb(
+      "UPDATE organization SET settings = settings #- '{membership,allowApplications}' WHERE id = $1",
+      [baseScenario.organization.id]
+    );
+    try {
+      const eligibility = await getOrganizationAssociateEligibility(
+        baseScenario.organization.id,
+        TestUser.GLOBAL_ADMIN
+      );
+      // The @AfterLoad backstop heals the missing key on read, independent
+      // of the eligibility signal's own reason — assert through the settings
+      // round trip too via updateOrganizationSettings' echo (no-op update).
+      const settingsRes = await updateOrganizationSettings(
+        baseScenario.organization.id,
+        { membership: { allowUsersMatchingDomainToJoin: false } }
+      );
+      expect(
+        settingsRes?.data?.updateOrganizationSettings.settings.membership
+          .allowApplications
+      ).toEqual(true);
+      expect(eligibility?.error).toBeUndefined();
+
+      const form = await getRoleSetApplicationForm(roleSetId);
+      const questions = form?.data?.lookup?.roleSet?.applicationForm?.questions ?? [];
+      expect(questions[0]?.required).toEqual(false);
+    } finally {
+      await updateOrganizationSettings(baseScenario.organization.id, {
+        membership: {
+          allowUsersMatchingDomainToJoin: false,
+          allowApplications: true,
+        },
+      });
+    }
+  });
+
+  // (The former "every mutation above returns 200" case was a strict subset
+  // of US3-AS1 + US3-AS3 and could not fail on anything they would not; removed.)
+});

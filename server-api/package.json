@@ -58,6 +58,7 @@
     "test:language": "vitest run --project language --fileParallelism=false",
     "test:subscriptions": "vitest run --project subscriptions --fileParallelism=false",
     "test:templates": "vitest run --project templates --fileParallelism=false",
+    "test:visual": "vitest run --project visual --fileParallelism=false",
     "test:innovation": "vitest run --project innovation --fileParallelism=false",
     "test:documents": "vitest run --project documents --fileParallelism=false",
     "test:configuration": "vitest run --project configuration --fileParallelism=false",

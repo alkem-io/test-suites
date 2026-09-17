@@ -28,9 +28,25 @@ export const getWhiteboardEditorDialog = async (page: Page): Promise<Locator> =>
 };
 
 /**
+ * Closes the whiteboard editor after its autosave has landed.
+ *
+ * Since the live-authoring rework (client-web#10205 / #10213, in 0.163.0) the
+ * editor has no "Save" button: edits autosave and the footer reports the state
+ * ("Saving…" → "Saved"). The only control whose name contains "Save" is the
+ * "Save status" popover trigger — clicking it opens a popover and leaves the
+ * editor open, which is what the pre-rework helpers did. Wait for "Saved",
+ * then use the header's "Close whiteboard" button.
+ */
+export const closeWhiteboardEditor = async (editorDialog: Locator): Promise<void> => {
+  await expect(editorDialog.getByRole('status').filter({ hasText: /^Saved$/ })).toBeVisible({ timeout: 20_000 });
+  await editorDialog.getByRole('button', { name: 'Close whiteboard' }).click();
+  await expect(editorDialog).toBeHidden({ timeout: 15_000 });
+};
+
+/**
  * Writes a text element on the whiteboard canvas.
- * Does NOT commit/close the editor - the caller is expected to click the
- * editor's "Save" button afterwards (pressing Escape triggers a
+ * Does NOT close the editor - the caller is expected to call
+ * {@link closeWhiteboardEditor} afterwards (pressing Escape triggers a
  * "discard unsaved changes" confirmation dialog).
  */
 export const writeTextInWhiteboardDialog = async (

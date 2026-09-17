@@ -1,0 +1,559 @@
+// User Story 3: "Organization admin accepts or declines on behalf of the organization".
+// server-api coverage: server-api/src/functional-api/roleset/invitations/invitation-organization.it-spec.ts
+//   (Gate 0 — the organization admin's ACCOUNT_ADMIN-derived accept privilege —
+//   is also proven there against a mocked-then-live authorization graph.)
+//
+// forge-verify note (2026-09-04): every scenario below was independently walked
+// live via the GraphQL API against the running forge-061 stack in this same
+// session — including a fix verification pass for three defects landed
+// immediately before this spec was written (organization-invited email/in-app
+// crash — missing `profile` relation; the subspace organization Lead cap
+// silently defaulting to 9 instead of 2; and `eventOnInvitation(ACCEPT)`
+// checking only the generic UPDATE privilege instead of the ACCEPT-specific
+// one). This spec is the durable, UI-driven form of that same walk.
+
+import { expect, Page, test as baseTest } from '@playwright/test';
+import {
+  getUserToken,
+  TestScenarioConfig,
+  TestScenarioFactory,
+} from '@alkemio/tests-lib';
+import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
+import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
+import {
+  assignOrganizationAdmin,
+  assignOrgRole,
+  createTestOrganization,
+  inviteOrganizationViaApi,
+  OrgFixture,
+  runSuffix,
+  US3_REGISTERED_USER_NAMES,
+  setAllowSpaceInvitations,
+  TestUser,
+  cleanUpTestOrganizations,
+} from './organization-space-invitations.helpers';
+
+/**
+ * @forge-acceptance
+ *
+ * Live acceptance walk for User Story 3 ("Organization admin accepts or
+ * declines on behalf of the organization", P1) — scenarios AS1..AS8.
+ *
+ * One dynamically-registered organization-admin persona (`orgAdminTest`)
+ * administers every org fixture used by AS1/AS2/AS3/AS4/AS6/AS7 — this
+ * mirrors production (one person can administer several organizations) and
+ * keeps the walk to a single Gate-0 login instead of nine. AS8 needs two more
+ * personas that must NOT hold admin standing on the org under test: a plain
+ * associate (`orgAssociateTest`) and the platform admin (`platformAdminTest`,
+ * shared with US1). Every persona is registered via the raw Kratos API
+ * (`registerTestUser`, no UI) — the UI sign-up flow itself is not this
+ * story's concern.
+ */
+
+const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
+const adminEmail = process.env.AUTH_TEST_HARNESS_EMAIL || 'admin@alkem.io';
+
+// DETERMINISTIC, and registered by `config/global-setup.ts` — not by this file.
+//
+// These were per-run (`orgadmin-us3-${runSuffix}`) and registered in a hook
+// here, which could never work: every test in this file is declared with a
+// persona type from `createPersonaTest`, whose `storageState` fixture LOGS IN
+// before any hook in the file runs. The login therefore raced ahead of the
+// registration that creates the account, and Kratos rejected credentials for a
+// user that did not exist — which presents as a wrong password. Proven by
+// polling Kratos through a full run: 13 identities (exactly the seeded set),
+// zero `orgadmin-us3-*`, while the fixture retried and timed out three times.
+//
+// globalSetup runs in its OWN process, so a per-run suffix generated in this
+// module would not match what globalSetup registered. Fixed names make the two
+// agree, and make these two ordinary seeded personas rather than throwaways —
+// which is what they always effectively were.
+const REGISTERED_USER_NAMES = US3_REGISTERED_USER_NAMES;
+const orgAdminEmail = `${REGISTERED_USER_NAMES[0]}@alkem.io`;
+const orgAssociateEmail = `${REGISTERED_USER_NAMES[1]}@alkem.io`;
+
+const orgAdminTest = createPersonaTest(orgAdminEmail);
+const orgAssociateTest = createPersonaTest(orgAssociateEmail);
+const platformAdminTest = createPersonaTest(adminEmail);
+
+// This file's `describe` blocks share one beforeAll-created scenario (and its
+// own set of purpose-built organization fixtures) so force one worker:
+// `fullyParallel` running two of them in separate workers would trigger
+// `beforeAll` twice (two independent scenarios) and race `afterAll`'s
+// cleanup of the first.
+baseTest.describe.configure({ mode: 'serial' });
+
+let baseScenario: OrganizationWithSpaceModel;
+
+// One organization fixture per scenario that needs one.
+let orgAS1: OrgFixture; // never invited — empty state
+let orgAS2: OrgFixture; // invited Member + Lead on the root Space
+let orgAS3: OrgFixture; // invited Member on the root Space — declined
+let orgAS4: OrgFixture; // invited Member on the L2 subspace (parents not yet joined)
+let orgAS6: OrgFixture; // invited Member — org opts out AFTER the invite, invite must survive
+let orgAS7: OrgFixture; // invited Member + Lead on the subspace — Lead slots fill before accept
+// Granted Lead directly, filling EVERY Lead slot after orgAS7's invite. The
+// subspace organization Lead cap is 9, not 2 — see
+// server/src/domain/space/space.defaults/definitions/subspace.community.roles.ts
+// (`RoleName.LEAD` -> organizationPolicyData.maximum). Only the L0 Space caps
+// organizations at 2 (space.community.roles.ts), which is what US1-AS3 covers.
+// This spec previously filled two slots and expected the third accept to be
+// downgraded; with seven slots still free the Lead was granted, correctly.
+const SUBSPACE_ORG_LEAD_CAP = 9;
+let orgAS7Fillers: OrgFixture[] = [];
+let orgAS8: OrgFixture; // invited Member — associate denial + platform-admin revoke
+let orgAS8Accept: OrgFixture; // invited Member — platform admin accepts on the org's behalf
+
+const scenarioConfig: TestScenarioConfig = {
+  name: `org-invite-us3-${runSuffix}`,
+  space: {
+    collaboration: { addTutorialCallouts: false },
+    community: {
+      admins: [TestUser.SPACE_ADMIN],
+      members: [TestUser.SPACE_ADMIN],
+    },
+    subspace: {
+      collaboration: { addTutorialCallouts: false },
+      subspace: {
+        collaboration: { addTutorialCallouts: false },
+      },
+    },
+  },
+};
+
+/**
+ * One-shot setup for the whole file.
+ *
+ * NOT a `baseTest.beforeAll`. Every test here is declared with a persona test
+ * type from `createPersonaTest`, whose `storageState` fixture LOGS IN before
+ * the hook on the unrelated `baseTest` type gets a chance to run. That ordering
+ * is invisible in the sibling walks, whose personas (`space.admin@`, `admin@`)
+ * are seeded by globalSetup and always exist — but this file registers its own
+ * two personas with a per-run suffix, so they never pre-exist and the login
+ * raced ahead of the registration that creates them. Proven by polling Kratos
+ * through a full run: zero `orgadmin-us3-*` identities while the auth fixture
+ * retried and timed out three times. The file could not pass on any
+ * environment.
+ *
+ * So the hook is registered on each persona type instead, and guarded by a
+ * module-level promise so the three registrations resolve to a single
+ * execution. Teardown stays on `baseTest.afterAll`: it must run once, AFTER
+ * the last persona group, which a per-type hook cannot express.
+ */
+let setupPromise: Promise<void> | undefined;
+const ensureSetupOnce = (): Promise<void> => (setupPromise ??= runSetup());
+
+const runSetup = async (): Promise<void> => {
+  baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
+  const spaceRoleSetId = baseScenario.space.community.roleSetId;
+  const subspaceRoleSetId = baseScenario.subspace.community.roleSetId;
+  const subsubspaceRoleSetId = baseScenario.subsubspace.community.roleSetId;
+
+  [orgAS1, orgAS2, orgAS3, orgAS4, orgAS6, orgAS7, orgAS8, orgAS8Accept] = await Promise.all([
+    createTestOrganization('US3AS1 Empty', runSuffix),
+    createTestOrganization('US3AS2 GateZero', runSuffix),
+    createTestOrganization('US3AS3 Declines', runSuffix),
+    createTestOrganization('US3AS4 Subspace', runSuffix),
+    createTestOrganization('US3AS6 OptsOut', runSuffix),
+    createTestOrganization('US3AS7 LeadRace', runSuffix),
+    createTestOrganization('US3AS8 Denial', runSuffix),
+    createTestOrganization('US3AS8 AdminAccepts', runSuffix),
+  ]);
+  orgAS7Fillers = await Promise.all(
+    Array.from({ length: SUBSPACE_ORG_LEAD_CAP }, (_, i) =>
+      createTestOrganization(`US3AS7 Filler${i + 1}`, runSuffix)
+    )
+  );
+
+  // Gate 0: the SAME org-admin persona administers every org except AS8
+  // (which must specifically NOT have this persona on it).
+  const orgAdminUserID = await getUserIdFor(orgAdminEmail);
+  await Promise.all(
+    [orgAS1, orgAS2, orgAS3, orgAS4, orgAS6, orgAS7].map(org =>
+      assignOrganizationAdmin(org.roleSetId, orgAdminUserID)
+    )
+  );
+
+  // AS8's associate persona — ASSOCIATE only, never ADMIN, on orgAS8.
+  const orgAssociateUserID = await getUserIdFor(orgAssociateEmail);
+  await assignOrgRoleOnOwnOrg(orgAS8.roleSetId, orgAssociateUserID, RoleName.Associate);
+
+  // AS2: Member + Lead, on the root Space.
+  await inviteWithExtraRole(spaceRoleSetId, orgAS2.id, `US3-AS2 ${runSuffix}`, [RoleName.Lead]);
+
+  // AS3: Member only, root Space — declined in the walk below.
+  await inviteOrganizationViaApi(spaceRoleSetId, orgAS3.id, `US3-AS3 ${runSuffix}`, TestUser.SPACE_ADMIN);
+
+  // AS4: Member only, on the L2 subspace — orgAS4 is not yet a member of the
+  // root Space or the L1 subspace, so accepting must join all three.
+  await inviteOrganizationViaApi(subsubspaceRoleSetId, orgAS4.id, `US3-AS4 ${runSuffix}`, TestUser.SPACE_ADMIN);
+
+  // AS6: Member only, root Space — invited, THEN the org opts out (below).
+  await inviteOrganizationViaApi(spaceRoleSetId, orgAS6.id, `US3-AS6 ${runSuffix}`, TestUser.SPACE_ADMIN);
+  await setAllowSpaceInvitations(orgAS6.id, false);
+
+  // AS7: Member + Lead, on the SUBSPACE. Every one of its SUBSPACE_ORG_LEAD_CAP
+  // Lead slots is then filled by direct grant AFTER the invite, simulating "the
+  // slots filled while the invitation was pending". Accepting must then grant
+  // Member only — the extra-role grant fails on the policy limit and is
+  // deliberately swallowed (role.set.service.ts, "do not throw further").
+  await inviteWithExtraRole(subspaceRoleSetId, orgAS7.id, `US3-AS7 ${runSuffix}`, [RoleName.Lead]);
+  // The fillers must join the PARENT Space first: `assignActorToRole` refuses a
+  // subspace grant for an actor that is not a member of the parent role set
+  // ("actor is not a member of parent roleSet"). Granting straight on the
+  // subspace threw BAD_USER_INPUT and took the whole file down in beforeAll.
+  for (const filler of orgAS7Fillers) {
+    await assignOrgRole(filler.id, spaceRoleSetId, RoleName.Member);
+    await assignOrgRole(filler.id, subspaceRoleSetId, RoleName.Member);
+    await assignOrgRole(filler.id, subspaceRoleSetId, RoleName.Lead);
+  }
+
+  // AS8: Member only, root Space — neither the associate nor the global
+  // admin may accept; the global admin may revoke.
+  await inviteOrganizationViaApi(spaceRoleSetId, orgAS8.id, `US3-AS8 ${runSuffix}`, TestUser.SPACE_ADMIN);
+  // Accepting consumes the invitation, so the platform-admin accept case needs
+  // its own pending invitation — orgAS8's is spent by the revoke below.
+  await inviteOrganizationViaApi(
+    spaceRoleSetId,
+    orgAS8Accept.id,
+    `US3-AS8 admin-accepts ${runSuffix}`,
+    TestUser.SPACE_ADMIN
+  );
+};
+
+for (const personaTest of [orgAdminTest, orgAssociateTest, platformAdminTest]) {
+  personaTest.beforeAll(async () => {
+    personaTest.setTimeout(240_000);
+    await ensureSetupOnce();
+  });
+}
+
+baseTest.afterAll(async () => {
+  // Ad-hoc org fixtures first: cleanUpBaseScenario does not know about them,
+  // so without this each run leaks every organization this file created.
+  await cleanUpTestOrganizations();
+  // NOT deleted: these two are seeded personas now (see US3_REGISTERED_USER_NAMES),
+  // registered once per run by globalSetup and reused, so there is nothing to
+  // leak and deleting them would only force a re-registration next run.
+  // beforeAll may have failed before the scenario existed (a browser that will
+  // not launch is enough). cleanUpBaseScenario dereferences the scenario, so
+  // calling it with undefined replaces the real failure with a TypeError.
+  if (baseScenario) {
+    await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
+  }
+});
+
+// ─── Raw helpers not covered by the generated SDK (`@alkemio/tests-lib`
+// exposes `createOrganization`/role mutations but not `me.user.id` lookup by
+// email, `assignRoleToUser` on an organization's OWN roleset, an invite that
+// carries `extraRoles`, or `organizationsInRoles` — plain `fetch` against the
+// same private GraphQL endpoint the generated SDK targets, using
+// `getUserToken` for the bearer, same convention as `graphqlErrorWrapper`). ───
+
+const gqlEndpoint = process.env.ALKEMIO_SERVER || 'http://localhost:3000/api/private/non-interactive/graphql';
+
+async function rawGql<T>(query: string, variables: Record<string, unknown>, token: string): Promise<T> {
+  const res = await fetch(gqlEndpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ query, variables }),
+  });
+  const body = await res.json();
+  if (body.errors) throw new Error(`GraphQL error: ${JSON.stringify(body.errors)}`);
+  return body.data as T;
+}
+
+async function getUserIdFor(email: string): Promise<string> {
+  const token = await getUserToken(email);
+  const data = await rawGql<{ me: { user: { id: string } } }>('query { me { user { id } } }', {}, token);
+  return data.me.user.id;
+}
+
+async function assignOrgRoleOnOwnOrg(orgOwnRoleSetId: string, actorID: string, role: RoleName): Promise<void> {
+  const adminToken = await getUserToken(adminEmail);
+  await rawGql(
+    `mutation($roleSetID: UUID!, $actorID: UUID!, $role: RoleName!) {
+      assignRoleToUser(roleData: { roleSetID: $roleSetID, actorID: $actorID, role: $role }) { id }
+    }`,
+    { roleSetID: orgOwnRoleSetId, actorID, role },
+    adminToken
+  );
+}
+
+/** Invites `orgID` on `roleSetID` with `extraRoles` and a welcome message — the
+ * shared `inviteOrganizationViaApi` (US1) never offers `extraRoles`, and
+ * US3's Member+Lead fixtures (AS2, AS7) need one. */
+async function inviteWithExtraRole(
+  roleSetID: string,
+  orgID: string,
+  welcomeMessage: string,
+  extraRoles: RoleName[]
+): Promise<void> {
+  const adminToken = await getUserToken(adminEmail);
+  await rawGql(
+    `mutation($roleSetID: UUID!, $orgID: UUID!, $welcomeMessage: String!, $extraRoles: [RoleName!]!) {
+      inviteForEntryRoleOnRoleSet(invitationData: {
+        roleSetID: $roleSetID, invitedActorIDs: [$orgID], invitedUserEmails: [],
+        welcomeMessage: $welcomeMessage, extraRoles: $extraRoles
+      }) { invitation { id } }
+    }`,
+    { roleSetID, orgID, welcomeMessage, extraRoles },
+    adminToken
+  );
+}
+
+async function organizationsInRole(roleSetID: string, role: RoleName): Promise<string[]> {
+  const adminToken = await getUserToken(adminEmail);
+  const data = await rawGql<{
+    lookup: { roleSet: { organizationsInRoles: Array<{ role: string; organizations: Array<{ id: string }> }> } };
+  }>(
+    `query($id: UUID!, $roles: [RoleName!]!) {
+      lookup { roleSet(ID: $id) { organizationsInRoles(roles: $roles) { role organizations { id } } } }
+    }`,
+    { id: roleSetID, roles: [role] },
+    adminToken
+  );
+  const entry = data.lookup.roleSet.organizationsInRoles.find(r => r.role === role);
+  return entry ? entry.organizations.map(o => o.id) : [];
+}
+
+/** Drives `eventOnInvitation(ACCEPT)` for `orgID`'s pending invitation on
+ * `roleSetID`, as `actorEmail` — used for the US3-AS8 half the UI cannot
+ * exercise: a platform admin accepting on an organization's behalf. That is
+ * ALLOWED (operator ruling, 2026-09-10); the organization's own Invitations
+ * tab is org-admin-only, so this path has no UI. */
+async function eventOnInvitationRaw(
+  orgID: string,
+  roleSetID: string,
+  eventName: 'ACCEPT',
+  actorEmail: string
+): Promise<{ state?: string; error?: string }> {
+  const token = await getUserToken(actorEmail);
+  const adminToken = await getUserToken(adminEmail);
+  // `Invitation` exposes the invited actor as the `actor` relation, not a raw
+  // `invitedActorID` scalar — selecting the latter fails the whole query.
+  const data = await rawGql<{
+    lookup: { roleSet: { invitations: Array<{ id: string; actor: { id: string } }> } };
+  }>(
+    'query($id: UUID!) { lookup { roleSet(ID: $id) { invitations { id actor { id } } } } }',
+    { id: roleSetID },
+    adminToken
+  );
+  const invitationID = data.lookup.roleSet.invitations.find(inv => inv.actor.id === orgID)?.id;
+  if (!invitationID) throw new Error(`No pending invitation for org ${orgID} on roleSet ${roleSetID}`);
+  try {
+    const result = await rawGql<{ eventOnInvitation: { id: string; state: string } }>(
+      `mutation($invitationID: UUID!, $eventName: String!) {
+        eventOnInvitation(eventData: { invitationID: $invitationID, eventName: $eventName }) { id state }
+      }`,
+      { invitationID, eventName },
+      token
+    );
+    return { state: result.eventOnInvitation.state };
+  } catch (e: unknown) {
+    return { error: String(e) };
+  }
+}
+
+// ─── Page-level helpers (source-derived selectors — see
+// client-web/src/main/crdPages/topLevelPages/organizationPages/settings/invitations/
+// and client-web/src/crd/components/organization/settings/OrgInvitationsTabView.tsx) ───
+
+async function openInvitationsTab(page: Page, org: OrgFixture) {
+  await page.goto(`${baseUrl}/organization/${org.nameID}/settings/invitations`);
+  await expect(page.getByRole('heading', { name: 'Space Invitations' })).toBeVisible();
+}
+
+async function acceptViaTab(page: Page, spaceDisplayName: string) {
+  const row = page.locator('li').filter({ hasText: spaceDisplayName });
+  await row.getByRole('button', { name: 'Accept' }).click();
+  // role=alertdialog, not dialog: the CRD confirm is a Radix AlertDialog, and
+  // Playwright matches ARIA roles exactly.
+  await expect(page.getByRole('alertdialog', { name: 'Accept this invitation?' })).toBeVisible();
+  await page.getByRole('button', { name: 'Accept invitation' }).click();
+}
+
+orgAdminTest.describe('US3-AS1 — Invitations tab always present, empty state when none', () => {
+  orgAdminTest('an org admin with zero pending invitations sees the explanatory empty state', async ({ page }) => {
+    await openInvitationsTab(page, orgAS1);
+    await expect(page.getByText('No pending Space invitations.')).toBeVisible();
+  });
+});
+
+orgAdminTest.describe('US3-AS2 — Gate 0: org admin views and accepts a Member + Lead invitation', () => {
+  orgAdminTest(
+    'the row shows Space, invited-by, role "Member + Lead" and the message; accepting grants both roles',
+    async ({ page }) => {
+      await openInvitationsTab(page, orgAS2);
+      const spaceDisplayName = baseScenario.space.about.profile.displayName;
+      const row = page.locator('li').filter({ hasText: spaceDisplayName });
+      await expect(row).toBeVisible();
+      await expect(row).toContainText('Member + Lead');
+      await expect(row).toContainText(`US3-AS2 ${runSuffix}`);
+      // `profile.url` is absolute (endpoint cluster + '/' + nameID), so match the
+      // suffix rather than a root-relative path.
+      await expect(row.getByRole('link', { name: spaceDisplayName })).toHaveAttribute(
+        'href',
+        new RegExp(`/${baseScenario.space.nameId}$`)
+      );
+
+      await acceptViaTab(page, spaceDisplayName);
+      await expect(page.locator('li').filter({ hasText: spaceDisplayName })).toHaveCount(0);
+
+      const [members, leads] = await Promise.all([
+        organizationsInRole(baseScenario.space.community.roleSetId, RoleName.Member),
+        organizationsInRole(baseScenario.space.community.roleSetId, RoleName.Lead),
+      ]);
+      expect(members).toContain(orgAS2.id);
+      expect(leads).toContain(orgAS2.id);
+    }
+  );
+});
+
+orgAdminTest.describe('US3-AS3 — declining a pending invitation', () => {
+  orgAdminTest('declining removes the row and the organization never becomes a member', async ({ page }) => {
+    const spaceDisplayName = baseScenario.space.about.profile.displayName;
+    await openInvitationsTab(page, orgAS3);
+    const row = page.locator('li').filter({ hasText: spaceDisplayName });
+    await expect(row).toBeVisible();
+
+    await row.getByRole('button', { name: 'Decline' }).click();
+    // Decline is confirmed as well as accept (the view's Rule #9 note): the row
+    // survives the first click and only goes once the alertdialog is confirmed.
+    await expect(page.getByRole('alertdialog', { name: 'Decline this invitation?' })).toBeVisible();
+    await page.getByRole('button', { name: 'Decline invitation' }).click();
+    await expect(page.locator('li').filter({ hasText: spaceDisplayName })).toHaveCount(0);
+
+    const members = await organizationsInRole(baseScenario.space.community.roleSetId, RoleName.Member);
+    expect(members).not.toContain(orgAS3.id);
+  });
+});
+
+orgAdminTest.describe('US3-AS4 — subspace invitation enumerates every Space that will be joined', () => {
+  orgAdminTest(
+    'the row lists the root Space and every intermediate Space; accepting joins exactly that set',
+    async ({ page }) => {
+      const l0 = baseScenario.space.about.profile.displayName;
+      const l1 = baseScenario.subspace.about.profile.displayName;
+      const l2 = baseScenario.subsubspace.about.profile.displayName;
+
+      await openInvitationsTab(page, orgAS4);
+      const row = page.locator('li').filter({ hasText: l2 });
+      await expect(row).toBeVisible();
+      // "Accepting joins", not "Accepting also joins": the list includes the
+      // invited Space itself, so "also" mislabelled the target as something
+      // additionally joined.
+      await expect(row).toContainText('Accepting joins:');
+      await expect(row).toContainText(l0);
+      await expect(row).toContainText(l1);
+      await expect(row).toContainText(l2);
+
+      await acceptViaTab(page, l2);
+      await expect(page.locator('li').filter({ hasText: l2 })).toHaveCount(0);
+
+      const [membersL0, membersL1, membersL2] = await Promise.all([
+        organizationsInRole(baseScenario.space.community.roleSetId, RoleName.Member),
+        organizationsInRole(baseScenario.subspace.community.roleSetId, RoleName.Member),
+        organizationsInRole(baseScenario.subsubspace.community.roleSetId, RoleName.Member),
+      ]);
+      expect(membersL0).toContain(orgAS4.id);
+      expect(membersL1).toContain(orgAS4.id);
+      expect(membersL2).toContain(orgAS4.id);
+    }
+  );
+});
+
+orgAdminTest.describe('US3-AS6 — opting out never hides or blocks a pending invitation', () => {
+  orgAdminTest(
+    'after switching "Allow Spaces to invite this organisation" off, the pending row stays listed and actionable',
+    async ({ page }) => {
+      const spaceDisplayName = baseScenario.space.about.profile.displayName;
+
+      await page.goto(`${baseUrl}/organization/${orgAS6.nameID}/settings/settings`);
+      const toggle = page.getByRole('switch', { name: 'Allow Spaces to invite this organisation' });
+      await expect(toggle).toBeVisible();
+      await expect(toggle).toHaveAttribute('aria-checked', 'false'); // set off in beforeAll
+
+      await openInvitationsTab(page, orgAS6);
+      const row = page.locator('li').filter({ hasText: spaceDisplayName });
+      await expect(row).toBeVisible();
+      await expect(row.getByRole('button', { name: 'Accept' })).toBeEnabled();
+      await expect(row.getByRole('button', { name: 'Decline' })).toBeEnabled();
+    }
+  );
+});
+
+orgAdminTest.describe('US3-AS7 — a granted Lead slot fills while the Lead invitation is pending', () => {
+  orgAdminTest(
+    'accepting after both Lead slots are taken silently downgrades the organization to Member only',
+    async ({ page }) => {
+      const spaceDisplayName = baseScenario.subspace.about.profile.displayName;
+
+      const leadsBefore = await organizationsInRole(baseScenario.subspace.community.roleSetId, RoleName.Lead);
+      for (const filler of orgAS7Fillers) {
+        expect(leadsBefore).toContain(filler.id);
+      }
+      expect(leadsBefore).not.toContain(orgAS7.id);
+      // The premise of the scenario: there is genuinely no Lead slot left.
+      expect(leadsBefore.length).toBeGreaterThanOrEqual(SUBSPACE_ORG_LEAD_CAP);
+
+      await openInvitationsTab(page, orgAS7);
+      const row = page.locator('li').filter({ hasText: spaceDisplayName });
+      await expect(row).toBeVisible();
+      await expect(row).toContainText('Member + Lead');
+
+      await acceptViaTab(page, spaceDisplayName);
+      await expect(page.locator('li').filter({ hasText: spaceDisplayName })).toHaveCount(0);
+
+      const [membersAfter, leadsAfter] = await Promise.all([
+        organizationsInRole(baseScenario.subspace.community.roleSetId, RoleName.Member),
+        organizationsInRole(baseScenario.subspace.community.roleSetId, RoleName.Lead),
+      ]);
+      expect(membersAfter).toContain(orgAS7.id);
+      expect(leadsAfter).not.toContain(orgAS7.id);
+    }
+  );
+});
+
+orgAssociateTest.describe('US3-AS8 — a plain associate cannot see or act on the invitation', () => {
+  orgAssociateTest('navigating to the Invitations tab redirects away from Settings entirely', async ({ page }) => {
+    await page.goto(`${baseUrl}/organization/${orgAS8.nameID}/settings/invitations`);
+    await page.waitForLoadState('networkidle');
+    expect(page.url()).not.toContain('/settings/invitations');
+  });
+});
+
+platformAdminTest.describe('US3-AS8 — a platform admin can accept on the organization\'s behalf, and can revoke from Space settings', () => {
+  platformAdminTest('accept succeeds via the API; revoke from Member Organisations succeeds', async ({ page }) => {
+    // Operator ruling (2026-09-10): a platform admin accepting on an
+    // organization's behalf is intended. The invitation policy inherits the
+    // platform-wide grant, so ROLESET_ENTRY_ROLE_INVITE_ACCEPT is held. This
+    // spec previously asserted the opposite and was the only red case left in
+    // the 061 suite.
+    const result = await eventOnInvitationRaw(
+      orgAS8Accept.id,
+      baseScenario.space.community.roleSetId,
+      'ACCEPT',
+      adminEmail
+    );
+    expect(result.error).toBeFalsy();
+    expect(result.state).toEqual('accepted');
+
+    const membersAfterAccept = await organizationsInRole(baseScenario.space.community.roleSetId, RoleName.Member);
+    expect(membersAfterAccept).toContain(orgAS8Accept.id);
+
+    await page.goto(`${baseUrl}/${baseScenario.space.nameId}/settings/community`);
+    const toggle = page.getByRole('button', { name: /Member Organisations/ });
+    if ((await toggle.getAttribute('aria-expanded')) !== 'true') {
+      await toggle.click();
+    }
+    await expect(page.locator('li').filter({ hasText: orgAS8.displayName })).toBeVisible();
+    await page.getByRole('button', { name: `Revoke invitation to ${orgAS8.displayName}` }).click();
+    // Revoking is confirmed — same alertdialog as US1-AS6.
+    const revokeConfirm = page.getByRole('alertdialog', { name: 'Revoke invitation' });
+    await expect(revokeConfirm).toBeVisible();
+    await revokeConfirm.getByRole('button', { name: 'Confirm' }).click();
+    await expect(page.locator('li').filter({ hasText: orgAS8.displayName })).toHaveCount(0);
+  });
+});

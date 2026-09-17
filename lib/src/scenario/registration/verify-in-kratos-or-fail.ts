@@ -20,6 +20,9 @@ import { getMails } from '../../utils/mailslurper.rest.requests';
  *   When provided, skips creating a new flow and triggering a new email —
  *   uses the link Kratos already sent during registration.
  */
+const VERIFICATION_MAIL_ATTEMPTS = 20;
+const VERIFICATION_MAIL_DELAY_MS = 1000;
+
 export const verifyInKratosOrFail = async (
   email: string,
   existingFlowId?: string
@@ -78,14 +81,22 @@ export const verifyInKratosOrFail = async (
     }
   }
 
-  // Fetch the verification email from mail slurper
-  await delay(1100);
-
-  const verificationLink = await getVerificationLink(email);
+  // Fetch the verification email from mail slurper. Kratos's courier delivers
+  // asynchronously and, on a loaded stack, later than the single fetch after a
+  // fixed 1.1 s wait this used to allow — the source of the
+  // "Unable to fetch verification link" flakes. Poll instead.
+  let verificationLink = '';
+  for (let attempt = 1; attempt <= VERIFICATION_MAIL_ATTEMPTS; attempt++) {
+    await delay(VERIFICATION_MAIL_DELAY_MS);
+    verificationLink = await getVerificationLink(email);
+    if (verificationLink) break;
+  }
 
   if (!verificationLink) {
     throw new Error(
-      `Unable to fetch verification link for user '${email}'`
+      `Unable to fetch verification link for user '${email}' within ${
+        (VERIFICATION_MAIL_ATTEMPTS * VERIFICATION_MAIL_DELAY_MS) / 1000
+      } s`
     );
   }
 

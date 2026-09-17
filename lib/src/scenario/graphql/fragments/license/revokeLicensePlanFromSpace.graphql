@@ -12,8 +12,5 @@ mutation RevokeLicensePlanFromSpace($planData: RevokeLicensePlanFromSpace!) {
     subspaces {
       id
     }
-    actor {
-      id
-    }
   }
 }

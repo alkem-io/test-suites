@@ -9,6 +9,7 @@
 import { Locator, Page, expect } from '@playwright/test';
 import { CalloutTemplateFraming } from './callout-template-form.models';
 import {
+  closeWhiteboardEditor,
   getWhiteboardEditorDialog,
   writeTextInWhiteboardDialog,
 } from '../whiteboards/whiteboard-dialog';
@@ -39,8 +40,7 @@ export const selectAndFillCalloutTemplateFraming = async (
         .click();
       const editorDialog = await getWhiteboardEditorDialog(page);
       await writeTextInWhiteboardDialog(editorDialog, framing.textInWhiteboard);
-      await editorDialog.getByRole('button', { name: 'Save' }).click();
-      await expect(editorDialog).not.toBeVisible();
+      await closeWhiteboardEditor(editorDialog);
       return;
     }
 
