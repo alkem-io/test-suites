@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  delay,
   deleteMailSlurperMails,
-  getMailsData,
   TestScenarioFactory,
   TestScenarioNoPreCreationConfig,
   TestUserManager,
@@ -10,7 +8,7 @@ import {
 import { TestUser } from '@alkemio/tests-lib';
 import { sendMessageToUser } from '@functional-api/communications/communication.params';
 import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
-import { notif } from '../notification.helpers';
+import { notif, getMailsDataSettled } from '../notification.helpers';
 
 let sender_userDisplayName = '';
 let usersList: any[] = [];
@@ -30,6 +28,12 @@ const communicationMessageNotificationSettings = {
   },
   communication: {
     allowOtherUsersToSendMessages: true,
+    // `sendMessageToUsers` is the EMAIL-contact transport and gates on this
+    // consent flag, which is off by default. Without it the mutation throws
+    // MessagingNotEnabledException and no notification is ever emitted — so
+    // these cases would measure the consent gate, not the notification
+    // preference they exist to prove.
+    allowOtherUsersToContactViaEmail: true,
   },
   notification: {
     user: {
@@ -50,6 +54,10 @@ const disabledCommunicationMessageNotificationSettings = {
   },
   communication: {
     allowOtherUsersToSendMessages: false,
+    // Consent stays ON here on purpose: the "pref:false" cases are about the
+    // notification PREFERENCE (`messageReceived`). With consent off the
+    // mutation would throw on this receiver instead of skipping their mail.
+    allowOtherUsersToContactViaEmail: true,
   },
   notification: {
     user: {
@@ -91,6 +99,16 @@ beforeAll(async () => {
 });
 
 describe('Notifications - user to user messages', () => {
+  afterAll(async () => {
+    // These are globally seeded personas: leave the email-contact consent as
+    // the platform default (off) so later suites do not inherit an opt-in.
+    for (const user of usersList) {
+      await updateUserSettings(user, {
+        communication: { allowOtherUsersToContactViaEmail: false },
+      });
+    }
+  });
+
   beforeAll(async () => {
     for (const user of usersList) {
       await enableCommunicationMessageNotifications(user);
@@ -108,9 +126,7 @@ describe('Notifications - user to user messages', () => {
       'Test message',
       TestUser.NON_SPACE_MEMBER
     );
-    await delay(1000);
-
-    const getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsDataSettled(1);
 
     // Assert
     expect(getEmailsData[1]).toEqual(1);
@@ -131,9 +147,7 @@ describe('Notifications - user to user messages', () => {
       'Test message',
       TestUser.NON_SPACE_MEMBER
     );
-    await delay(1000);
-
-    const getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsDataSettled(2);
 
     // Assert
     expect(getEmailsData[1]).toEqual(2);
@@ -163,9 +177,7 @@ describe('Notifications - user to user messages', () => {
       'Test message',
       TestUser.NON_SPACE_MEMBER
     );
-    await delay(1000);
-
-    const getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsDataSettled(1);
 
     // Assert
     expect(getEmailsData[1]).toEqual(1);
@@ -198,9 +210,7 @@ describe('Notifications - user to user messages', () => {
       'Test message',
       TestUser.NON_SPACE_MEMBER
     );
-    await delay(1000);
-
-    const getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsDataSettled(0);
 
     // Assert
     expect(getEmailsData[1]).toEqual(0);
@@ -222,9 +232,7 @@ describe('Notifications - user to user messages', () => {
       'Test message',
       TestUser.NON_SPACE_MEMBER
     );
-    await delay(1000);
-
-    const getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsDataSettled(1);
 
     // Assert
     expect(getEmailsData[1]).toEqual(1);

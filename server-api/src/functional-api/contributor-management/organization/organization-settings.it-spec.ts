@@ -9,12 +9,21 @@ import {
   TestUser,
   TestUserManager,
   UniqueIDGenerator,
+  harnessPostgresConfigured,
+  queryHarnessDb,
 } from '@alkemio/tests-lib';
-import { deleteUser, registerVerifiedUser } from '../user/user.request.params';
+import {
+  deleteUser,
+  getUserSettings,
+  registerVerifiedUser,
+  updateUserSettings,
+} from '../user/user.request.params';
+import { allChannelsOn } from '@functional-api/notifications/notification.helpers';
 import { eventOnOrganizationVerification } from './organization-verification.events.request.params';
 import { assignRoleToUser } from '@functional-api/roleset/roles-request.params';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
+import { notifWithPush } from '@functional-api/notifications/notification.helpers';
 
 const uniqueId = UniqueIDGenerator.getID();
 let userId: string;
@@ -38,6 +47,13 @@ beforeAll(async () => {
     TestUserManager.users.spaceMember.id,
     baseScenario.organization.roleSetId,
     RoleName.Admin
+  );
+
+  // A plain associate — no manager credential — for the US5-AS3 rejection case.
+  await assignRoleToUser(
+    TestUserManager.users.nonSpaceMember.id,
+    baseScenario.organization.roleSetId,
+    RoleName.Associate
   );
 });
 
@@ -125,8 +141,9 @@ describe('Organization settings', () => {
         organizationData?.data?.organization.roleSet.usersInRole;
 
       // Assert
-      // The users are 2 because in the initialization we assign 2 users to org
-      expect(organizationMembers).toHaveLength(2);
+      // The org has 3 members after setup: the creator (auto-associate), the
+      // explicit Admin, and the explicit Associate assigned in beforeAll.
+      expect(organizationMembers).toHaveLength(3);
       expect(organizationMembers).not.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -156,8 +173,9 @@ describe('Organization settings', () => {
         organizationData?.data?.organization.roleSet.usersInRole;
 
       // Assert
-      // The users are 2 because in the initialization we assign 2 users to org
-      expect(organizationMembers).toHaveLength(2);
+      // The org has 3 members after setup: the creator (auto-associate), the
+      // explicit Admin, and the explicit Associate assigned in beforeAll.
+      expect(organizationMembers).toHaveLength(3);
       expect(organizationMembers).not.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -187,8 +205,9 @@ describe('Organization settings', () => {
         organizationData?.data?.organization.roleSet.usersInRole;
 
       // Assert
-      // The users are 2 because in the initialization we assign 2 users to orgs
-      expect(organizationMembers).toHaveLength(2);
+      // The org has 3 members after setup: the creator (auto-associate), the
+      // explicit Admin, and the explicit Associate assigned in beforeAll.
+      expect(organizationMembers).toHaveLength(3);
       expect(organizationMembers).not.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -274,7 +293,9 @@ describe('Organization settings', () => {
         organizationData?.data?.organization.roleSet.usersInRole;
 
       // Assert
-      expect(organizationMembers).toHaveLength(2);
+      // The org has 3 members after setup: the creator (auto-associate), the
+      // explicit Admin, and the explicit Associate assigned in beforeAll.
+      expect(organizationMembers).toHaveLength(3);
       expect(organizationMembers).not.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -304,8 +325,9 @@ describe('Organization settings', () => {
         organizationData?.data?.organization.roleSet.usersInRole;
 
       // Assert
-      // The users are 2 because in the initialization we assign 2 users to org
-      expect(organizationMembers).toHaveLength(2);
+      // The org has 3 members after setup: the creator (auto-associate), the
+      // explicit Admin, and the explicit Associate assigned in beforeAll.
+      expect(organizationMembers).toHaveLength(3);
       expect(organizationMembers).not.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -314,5 +336,436 @@ describe('Organization settings', () => {
         ])
       );
     });
+  });
+});
+
+describe('Organization settings — allowSpaceInvitations (061)', () => {
+  test('a fresh organization reads allowSpaceInvitations as true by default', async () => {
+    const organizationData = await getOrganizationData(
+      baseScenario.organization.id
+    );
+    expect(
+      organizationData?.data?.organization.settings.membership
+        .allowSpaceInvitations
+    ).toEqual(true);
+  });
+
+  test('allowSpaceInvitations round-trips false then true', async () => {
+    // The `true` write below is both the second half of the round-trip AND
+    // the restore of a setting the rest of this file relies on, so it runs in
+    // `finally`: a failure on the `false` half must not leave the shared
+    // organization with invitations switched off for every later test.
+    let on: Awaited<ReturnType<typeof updateOrganizationSettings>> | undefined;
+    try {
+      const off = await updateOrganizationSettings(
+        baseScenario.organization.id,
+        {
+          membership: {
+            allowUsersMatchingDomainToJoin: false,
+            allowSpaceInvitations: false,
+          },
+        }
+      );
+      expect(
+        off?.data?.updateOrganizationSettings.settings.membership
+          .allowSpaceInvitations
+      ).toEqual(false);
+    } finally {
+      on = await updateOrganizationSettings(baseScenario.organization.id, {
+        membership: {
+          allowUsersMatchingDomainToJoin: false,
+          allowSpaceInvitations: true,
+        },
+      });
+      expect(on?.error).toBeUndefined();
+    }
+
+    expect(
+      on?.data?.updateOrganizationSettings.settings.membership
+        .allowSpaceInvitations
+    ).toEqual(true);
+  });
+
+  test('an update carrying only allowUsersMatchingDomainToJoin leaves allowSpaceInvitations unchanged', async () => {
+    try {
+      const off = await updateOrganizationSettings(
+        baseScenario.organization.id,
+        {
+          membership: {
+            allowUsersMatchingDomainToJoin: false,
+            allowSpaceInvitations: false,
+          },
+        }
+      );
+      expect(off?.error).toBeUndefined();
+
+      const res = await updateOrganizationSettings(
+        baseScenario.organization.id,
+        {
+          membership: {
+            allowUsersMatchingDomainToJoin: true,
+          },
+        }
+      );
+
+      expect(
+        res?.data?.updateOrganizationSettings.settings.membership
+          .allowUsersMatchingDomainToJoin
+      ).toEqual(true);
+      expect(
+        res?.data?.updateOrganizationSettings.settings.membership
+          .allowSpaceInvitations
+      ).toEqual(false);
+    } finally {
+      // Restore defaults for later tests in this file — in `finally`, and
+      // validated, so a failed assertion above cannot leave the shared
+      // organization with invitations switched off.
+      const restored = await updateOrganizationSettings(
+        baseScenario.organization.id,
+        {
+          membership: {
+            allowUsersMatchingDomainToJoin: false,
+            allowSpaceInvitations: true,
+          },
+        }
+      );
+      expect(restored?.error).toBeUndefined();
+      expect(
+        restored?.data?.updateOrganizationSettings.settings.membership
+          .allowSpaceInvitations
+      ).toEqual(true);
+    }
+  });
+
+  test('an ASSOCIATE with no manager credential cannot update organization settings', async () => {
+    const res = await updateOrganizationSettings(
+      baseScenario.organization.id,
+      {
+        membership: {
+          allowUsersMatchingDomainToJoin: false,
+          allowSpaceInvitations: false,
+        },
+      },
+      TestUser.NON_SPACE_MEMBER
+    );
+
+    expect(res?.error?.errors?.[0]?.message).toContain(
+      "Authorization: unable to grant 'update' privilege: organization settings update:"
+    );
+  });
+});
+
+describe('User notification settings — organisation invited to a Space (US2-AS6)', () => {
+  test('adminSpaceCommunityInvitation round-trips off then on', async () => {
+    const off = await updateUserSettings(
+      TestUserManager.users.spaceMember.id,
+      {
+        notification: {
+          organization: {
+            adminSpaceCommunityInvitation: notifWithPush(false),
+          },
+        },
+      }
+    );
+    // Restore in `finally`, never after the assertion: `spaceMember` is a
+    // globally seeded persona and `nightly` runs single-threaded against one
+    // database, so a failure here — a `push` regression is precisely what this
+    // test exists to catch — would otherwise skip the restore and leave the
+    // persona muted for every spec that runs next. The restore itself does not
+    // assert, so it can never mask the failure that triggered it.
+    let on: Awaited<ReturnType<typeof updateUserSettings>> | undefined;
+    try {
+      expect(
+        off?.data?.updateUserSettings.settings.notification.organization
+          .adminSpaceCommunityInvitation
+      ).toEqual(
+        expect.objectContaining({ email: false, inApp: false, push: false })
+      );
+    } finally {
+      on = await updateUserSettings(TestUserManager.users.spaceMember.id, {
+        notification: {
+          organization: { adminSpaceCommunityInvitation: notifWithPush(true) },
+        },
+      }).catch(() => undefined);
+    }
+
+    expect(
+      on?.data?.updateUserSettings.settings.notification.organization
+        .adminSpaceCommunityInvitation
+    ).toEqual(
+      expect.objectContaining({ email: true, inApp: true, push: true })
+    );
+  });
+});
+
+describe('Organization settings — allowApplications (062, US5-AS4/US6-AS1)', () => {
+  test('a fresh organization reads allowApplications as true by default', async () => {
+    const organizationData = await getOrganizationData(
+      baseScenario.organization.id
+    );
+    expect(
+      organizationData?.data?.organization.settings.membership
+        .allowApplications
+    ).toEqual(true);
+  });
+
+  test('allowApplications round-trips false then true', async () => {
+    // As for allowSpaceInvitations above: the `true` write is also the
+    // restore, so it runs in `finally`.
+    let on: Awaited<ReturnType<typeof updateOrganizationSettings>> | undefined;
+    try {
+      const off = await updateOrganizationSettings(
+        baseScenario.organization.id,
+        {
+          membership: {
+            allowUsersMatchingDomainToJoin: false,
+            allowApplications: false,
+          },
+        }
+      );
+      expect(
+        off?.data?.updateOrganizationSettings.settings.membership
+          .allowApplications
+      ).toEqual(false);
+    } finally {
+      on = await updateOrganizationSettings(baseScenario.organization.id, {
+        membership: {
+          allowUsersMatchingDomainToJoin: false,
+          allowApplications: true,
+        },
+      });
+      expect(on?.error).toBeUndefined();
+    }
+
+    expect(
+      on?.data?.updateOrganizationSettings.settings.membership
+        .allowApplications
+    ).toEqual(true);
+  });
+
+  test('an update carrying only allowUsersMatchingDomainToJoin leaves allowApplications unchanged (nullable input)', async () => {
+    try {
+      const off = await updateOrganizationSettings(
+        baseScenario.organization.id,
+        {
+          membership: {
+            allowUsersMatchingDomainToJoin: false,
+            allowApplications: false,
+          },
+        }
+      );
+      expect(off?.error).toBeUndefined();
+
+      const res = await updateOrganizationSettings(
+        baseScenario.organization.id,
+        {
+          membership: {
+            allowUsersMatchingDomainToJoin: true,
+          },
+        }
+      );
+
+      expect(
+        res?.data?.updateOrganizationSettings.settings.membership
+          .allowUsersMatchingDomainToJoin
+      ).toEqual(true);
+      expect(
+        res?.data?.updateOrganizationSettings.settings.membership
+          .allowApplications
+      ).toEqual(false);
+    } finally {
+      // Restore defaults for later tests in this file — in `finally`, and
+      // validated, so a failed assertion above cannot leave the shared
+      // organization with applications switched off.
+      const restored = await updateOrganizationSettings(
+        baseScenario.organization.id,
+        {
+          membership: {
+            allowUsersMatchingDomainToJoin: false,
+            allowApplications: true,
+          },
+        }
+      );
+      expect(restored?.error).toBeUndefined();
+      expect(
+        restored?.data?.updateOrganizationSettings.settings.membership
+          .allowApplications
+      ).toEqual(true);
+    }
+  });
+
+  test('an ASSOCIATE with no manager credential cannot update allowApplications (US5-AS4 API half)', async () => {
+    const res = await updateOrganizationSettings(
+      baseScenario.organization.id,
+      {
+        membership: {
+          allowUsersMatchingDomainToJoin: false,
+          allowApplications: false,
+        },
+      },
+      TestUser.NON_SPACE_MEMBER
+    );
+
+    expect(res?.error?.errors?.[0]?.message).toContain(
+      "Authorization: unable to grant 'update' privilege: organization settings update:"
+    );
+  });
+});
+
+describe('User notification settings — the five new associate rows (062, US6-AS1/AS3)', () => {
+  const fiveRowsAllOn = {
+    notification: {
+      user: {
+        membership: {
+          organizationAssociateInvitationReceived: notifWithPush(true),
+          organizationAssociateApplicationDecided: notifWithPush(true),
+        },
+      },
+      organization: {
+        adminAssociateInvitationResponse: notifWithPush(true),
+        adminAssociateApplicationReceived: notifWithPush(true),
+        adminAssociateJoined: notifWithPush(true),
+      },
+    },
+  };
+
+  /** The five rows, as paths into a `notification` settings object. */
+  type ChannelRow = { email: boolean; inApp: boolean; push: boolean };
+  // Structural view of the generated settings type: only the five rows.
+  type NotificationSettings = {
+    user: {
+      membership: {
+        organizationAssociateInvitationReceived: ChannelRow;
+        organizationAssociateApplicationDecided: ChannelRow;
+      };
+    };
+    organization: {
+      adminAssociateInvitationResponse: ChannelRow;
+      adminAssociateApplicationReceived: ChannelRow;
+      adminAssociateJoined: ChannelRow;
+    };
+  };
+  const fiveRows = (n: NotificationSettings | undefined) => ({
+    organizationAssociateInvitationReceived:
+      n?.user?.membership?.organizationAssociateInvitationReceived,
+    organizationAssociateApplicationDecided:
+      n?.user?.membership?.organizationAssociateApplicationDecided,
+    adminAssociateInvitationResponse:
+      n?.organization?.adminAssociateInvitationResponse,
+    adminAssociateApplicationReceived:
+      n?.organization?.adminAssociateApplicationReceived,
+    adminAssociateJoined: n?.organization?.adminAssociateJoined,
+  });
+  const allChannels = (value: boolean) =>
+    expect.objectContaining({ email: value, inApp: value, push: value });
+
+  test('the five rows read on by default and round-trip off then on', async () => {
+    const before = await getUserSettings(TestUserManager.users.spaceMember.id);
+    // All FIVE rows, not a sample of two: a row the client never renders
+    // would otherwise go unnoticed here.
+    for (const [row, value] of Object.entries(
+      fiveRows(before?.data?.user.settings.notification)
+    )) {
+      expect(value, `${row} default`).toEqual(allChannels(true));
+    }
+
+    const off = {
+      notification: {
+        user: {
+          membership: {
+            organizationAssociateInvitationReceived: notifWithPush(false),
+            organizationAssociateApplicationDecided: notifWithPush(false),
+          },
+        },
+        organization: {
+          adminAssociateInvitationResponse: notifWithPush(false),
+          adminAssociateApplicationReceived: notifWithPush(false),
+          adminAssociateJoined: notifWithPush(false),
+        },
+      },
+    };
+
+    try {
+      const offRes = await updateUserSettings(
+        TestUserManager.users.spaceMember.id,
+        off
+      );
+      for (const [row, value] of Object.entries(
+        fiveRows(offRes?.data?.updateUserSettings.settings.notification)
+      )) {
+        expect(value, `${row} off`).toEqual(allChannels(false));
+      }
+    } finally {
+      const onRes = await updateUserSettings(
+        TestUserManager.users.spaceMember.id,
+        fiveRowsAllOn
+      ).catch(() => undefined);
+      for (const [row, value] of Object.entries(
+        fiveRows(onRes?.data?.updateUserSettings.settings.notification)
+      )) {
+        expect(value, `${row} restored`).toEqual(allChannels(true));
+      }
+    }
+  });
+
+  // Loopback Postgres only — see `harnessPostgresConfigured`.
+  test.skipIf(!harnessPostgresConfigured())('a user row SQL-stripped of the five keys reads all-on (@AfterLoad backstop, US6-AS3)', async () => {
+    // The SQL strip mutates the persisted JSON of a globally seeded persona;
+    // re-persist the five keys in `finally` — validated — so an assertion
+    // failure cannot leave `subspaceAdmin` relying on the @AfterLoad backstop
+    // for every spec that runs next.
+    try {
+      await queryHarnessDb(
+        `UPDATE user_settings
+           SET notification = notification
+             #- '{user,membership,organizationAssociateInvitationReceived}'
+             #- '{user,membership,organizationAssociateApplicationDecided}'
+             #- '{organization,adminAssociateInvitationResponse}'
+             #- '{organization,adminAssociateApplicationReceived}'
+             #- '{organization,adminAssociateJoined}'
+         WHERE id = (SELECT "settingsId" FROM "user" WHERE id = $1)`,
+        [TestUserManager.users.subspaceAdmin.id]
+      );
+
+      const after = await getUserSettings(
+        TestUserManager.users.subspaceAdmin.id
+      );
+      const notification = after?.data?.user.settings.notification;
+      expect(
+        notification?.user.membership.organizationAssociateInvitationReceived
+      ).toEqual(
+        expect.objectContaining({ email: true, inApp: true, push: true })
+      );
+      expect(
+        notification?.user.membership.organizationAssociateApplicationDecided
+      ).toEqual(
+        expect.objectContaining({ email: true, inApp: true, push: true })
+      );
+      expect(
+        notification?.organization.adminAssociateInvitationResponse
+      ).toEqual(
+        expect.objectContaining({ email: true, inApp: true, push: true })
+      );
+      expect(
+        notification?.organization.adminAssociateApplicationReceived
+      ).toEqual(
+        expect.objectContaining({ email: true, inApp: true, push: true })
+      );
+      expect(notification?.organization.adminAssociateJoined).toEqual(
+        expect.objectContaining({ email: true, inApp: true, push: true })
+      );
+    } finally {
+      const restored = await updateUserSettings(
+        TestUserManager.users.subspaceAdmin.id,
+        allChannelsOn(fiveRowsAllOn)
+      );
+      expect(restored?.error).toBeUndefined();
+      expect(
+        restored?.data?.updateUserSettings.settings.notification.organization
+          .adminAssociateJoined
+      ).toEqual(
+        expect.objectContaining({ email: true, inApp: true, push: true })
+      );
+    }
   });
 });

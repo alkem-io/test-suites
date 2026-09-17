@@ -109,6 +109,19 @@ export default defineConfig({
       ],
     },
     {
+      // workspace#085-authz-admin-guard (client-web#9537, Release 75): the four
+      // admin role surfaces as real personas, the fail-closed/denied paths, and
+      // the memo Sign action gate (#6478 / #10278).
+      name: 'Authz admin guard',
+      testMatch: [
+        '/authz-admin-guard/space-community-role-changes.spec.ts',
+        '/authz-admin-guard/org-associates-authorization.spec.ts',
+        '/authz-admin-guard/platform-global-roles.spec.ts',
+        '/authz-admin-guard/unverifiable-and-denied.spec.ts',
+        '/authz-admin-guard/memo-sign-action-gate.spec.ts',
+      ],
+    },
+    {
       name: 'Applications',
       testMatch: [
         '/applications/space-applications-level-0.spec.ts',
@@ -182,6 +195,42 @@ export default defineConfig({
       expect: { timeout: 15_000 },
     },
     {
+      // Story client-web#10178 (space-banner) — the default 10:1 gradient on
+      // bannerless spaces/subspaces and the first-crop-opens-at-10:1 walk.
+      // Self-seeding via TestScenarioFactory + its own session fixture, torn
+      // down in afterAll; no dependencies. The crop walk uploads a generated
+      // 1200×120 PNG and drives the crop dialog, so it gets more headroom
+      // than the global 30s.
+      name: 'Space banner',
+      testMatch: ['/space-banner/*.spec.ts'],
+      timeout: 60_000,
+      expect: { timeout: 15_000 },
+    },
+    {
+      // Story client-web#10107 / workspace#054 (self-service account
+      // deletion) — the portable delta after test-suites#620: TC-14 (the
+      // notification centre survives the removed
+      // InAppNotificationPayloadPlatformUserProfileRemoved fields), TC-15
+      // (a departed user's activity attributes to the "Former member"
+      // sentinel and the feed still loads) and TC-16 (the Delete-account
+      // card is owner-only). Deliberately does NOT depend on any of #620's
+      // loopback-only primitives (no DB/Redis access, no BFF session
+      // minting) — every case is self-seeding (disposable Kratos identities
+      // registered and deleted within the spec) and independent of shared
+      // TestUserManager persona state, so it runs here alongside the other
+      // nightly projects. TC-01/TC-02/TC-05/TC-18 (the API-level portable
+      // cases) live in server-api's `nightly` vitest project instead —
+      // `contributor-management` already covers that glob.
+      name: 'Account deletion',
+      testMatch: [
+        '/account-deletion/profile-removed-notification.spec.ts',
+        '/account-deletion/former-member-activity.spec.ts',
+        '/account-deletion/account-deletion-visibility.spec.ts',
+      ],
+      timeout: 90_000,
+      expect: { timeout: 15_000 },
+    },
+    {
       // Feature 038 (callout emoji reactions) — persisted P1 acceptance walk.
       //
       // The spec file lives outside the default testDir (src/functional-e2e/) in
@@ -216,6 +265,34 @@ export default defineConfig({
       timeout: 120_000,
       expect: { timeout: 15_000 },
     },
+    {
+      // Feature 061 (organization space invitations) — US1/US2/US3 acceptance
+      // walks. Each file drives a full SPA invite flow (navigate, expand the
+      // Member Organisations section, open the dialog, search, send, read the
+      // result row) and several also hold a negative mail-window poll
+      // (`assertNoMailTo`) on top of that, so the default 30s/5s budget is
+      // not enough headroom — mirrors Chat avatars/Callout reaction
+      // notifications above.
+      name: 'Organization space invitations',
+      testMatch: ['/organization-space-invitations/*.spec.ts'],
+      timeout: 120_000,
+      expect: { timeout: 15_000 },
+    },
+    {
+      // Feature 062 (organization user associates) — US1/US2/US3/US5/US7
+      // acceptance walks. Same shape as the 061 entry above: the files drive
+      // full SPA flows (Associates tab, row editor, invite dialog, profile
+      // apply) with in-app / mailbox polls on top, so they need the same
+      // extra headroom. Serial execution is not optional for them — every
+      // file registers several Kratos identities through the shared
+      // MailSlurper mailbox — and comes from this config's global
+      // `workers: 1` / `fullyParallel: false` below plus each file's own
+      // `describe.configure({ mode: 'serial' })`, exactly like the 061 walks.
+      name: 'Organization user associates',
+      testMatch: ['/organization-user-associates/*.spec.ts'],
+      timeout: 120_000,
+      expect: { timeout: 15_000 },
+    },
   ],
   // % or number of the available CPUs
   // workers: '100%',
@@ -247,7 +324,12 @@ export default defineConfig({
     channel: 'chrome',
     viewport: { width: 1920, height: 1080 },
 
-    headless: true,
+    /* Honours UI_HEADLESS like every other config in this repo
+     * (playwright.config.ts, .language-offer, .planner). This one hardcoded
+     * `true` while its own docblock above advertised the variable, so
+     * `UI_HEADLESS=false` silently did nothing here — the one config where a
+     * developer most often wants to watch a nightly spec run. */
+    headless: process.env.UI_HEADLESS !== 'false',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-all-retries',

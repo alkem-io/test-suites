@@ -60,15 +60,23 @@ test.describe('Session revocation — blast radius and boundaries (server#6315)'
       });
       expect(deletion.body?.data?.deleteUser?.id).toBe(victim.userId);
 
-      // The victim is gone — asserted on both paths. `id-token-hint` observes
-      // the per-session tombstone (its payload's `id_token` is blanked);
-      // only the GraphQL gate runs `CookieSessionStrategy`, and therefore only
-      // it observes the subject-level revocation marker. Both must refuse.
+      // The victim is gone. The FIRST request the revoked session makes is
+      // refused with 401 — and, by design, the interceptor clears the session
+      // cookie on that very response (otherwise the browser is locked out of
+      // `/login`; see auth.interceptor.ts). Every later request from the same
+      // context therefore carries no cookie and is served as ANONYMOUS, not
+      // 401. Assert the first probe strictly, and the second as "not the
+      // victim": either 401 or an anonymous actor with no user attached.
       expect((await probeIdTokenHint(victimSession.context)).status).toBe(401);
-      expect(
-        (await probePrivateGraphql(victimSession.context, '{ me { id } }'))
-          .status
-      ).toBe(401);
+      const victimMe = await probePrivateGraphql(
+        victimSession.context,
+        '{ me { id user { id } } }'
+      );
+      expect([200, 401]).toContain(victimMe.status);
+      if (victimMe.status === 200) {
+        expect(victimMe.json?.data?.me?.id).toBe('me-');
+        expect(victimMe.json?.data?.me?.user).toBeNull();
+      }
 
       // …and the bystander is not disturbed in any way. FR-005/SC-007: the
       // blast radius is exactly one account. The index is read per-subject, so

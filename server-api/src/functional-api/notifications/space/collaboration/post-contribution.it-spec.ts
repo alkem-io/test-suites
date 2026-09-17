@@ -1,7 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import {
   deleteMailSlurperMails,
-  getMailsData,
   TestScenarioConfig,
   TestScenarioFactory,
   TestUserManager,
@@ -9,14 +8,13 @@ import {
 } from '@alkemio/tests-lib';
 import { TestUser } from '@alkemio/tests-lib';
 
-import { delay } from '@alkemio/tests-lib';
 import {
   createPostOnCallout,
   deletePost,
 } from '@functional-api/callout/post/post.request.params';
 import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { notif } from '../../notification.helpers';
+import { notif, getMailsDataSettled } from '../../notification.helpers';
 
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -197,8 +195,7 @@ describe('Notifications - post', () => {
     spacePostId =
       resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
 
-    await delay(1000);
-    const mails = await getMailsData();
+    const mails = await getMailsDataSettled(6);
     expect(mails[1]).toEqual(6);
     expect(mails[0]).not.toEqual(
       await templateMemberResult(
@@ -258,8 +255,7 @@ describe('Notifications - post', () => {
     spacePostId =
       resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
 
-    await delay(1000);
-    const mails = await getMailsData();
+    const mails = await getMailsDataSettled(6);
     expect(mails[1]).toEqual(6);
 
     expect(mails[0]).toEqual(
@@ -319,8 +315,7 @@ describe('Notifications - post', () => {
     subspacePostId =
       resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
 
-    await delay(1000);
-    const mails = await getMailsData();
+    const mails = await getMailsDataSettled(5);
     expect(mails[1]).toEqual(5);
     expect(mails[0]).toEqual(
       await templateMemberResult(
@@ -376,8 +371,7 @@ describe('Notifications - post', () => {
     subsubspacePostId =
       resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
 
-    await delay(1000);
-    const mails = await getMailsData();
+    const mails = await getMailsDataSettled(2);
     expect(mails[1]).toEqual(2);
     expect(mails[0]).toEqual(
       await templateMemberResult(
@@ -464,8 +458,7 @@ describe('Notifications - post', () => {
       resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
 
     // Assert
-    await delay(1500);
-    const mails = await getMailsData();
+    const mails = await getMailsDataSettled(0);
 
     expect(mails[1]).toEqual(0);
   });

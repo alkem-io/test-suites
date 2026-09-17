@@ -1,0 +1,8 @@
+query GetUserSettings($userId: UUID!) {
+  user(ID: $userId) {
+    id
+    settings {
+      ...userSettingsFragment
+    }
+  }
+}

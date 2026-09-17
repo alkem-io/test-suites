@@ -1,17 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   deleteMailSlurperMails,
-  getMailsData,
   TestScenarioConfig,
   TestScenarioFactory,
   TestUser,
   TestUserManager,
 } from '@alkemio/tests-lib';
-import { delay } from '@alkemio/tests-lib';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
 import { sendMessageToRoom } from '@functional-api/communications/communication.params';
-import { notif } from '../../notification.helpers';
+import { notif, getMailsDataSettled } from '../../notification.helpers';
 
 // Notification settings for discussion comment events
 const discussionCommentNotificationSettings = {
@@ -92,7 +90,7 @@ let discussionCommentUsersConfig: string[] = [];
 const expectedDataSpace = async (toAddresses: any[]) => {
   return expect.arrayContaining([
     expect.objectContaining({
-      subject: `${baseScenario.space.about.profile.displayName} - New comment received on your Post \u0026#34;discussion-comments-notification - post\u0026#34; by admin, have a look!`,
+      subject: `${baseScenario.space.about.profile.displayName} - New comment received on the Post \u0026#34;discussion-comments-notification - post\u0026#34; by admin, have a look!`,
       toAddresses,
     }),
   ]);
@@ -101,7 +99,7 @@ const expectedDataSpace = async (toAddresses: any[]) => {
 const expectedDataSpace2 = async (toAddresses: any[]) => {
   return expect.arrayContaining([
     expect.objectContaining({
-      subject: `${baseScenario.space.about.profile.displayName} - New comment received on your Post \u0026#34;discussion-comments-notification - post\u0026#34; by space, have a look!`,
+      subject: `${baseScenario.space.about.profile.displayName} - New comment received on the Post \u0026#34;discussion-comments-notification - post\u0026#34; by space, have a look!`,
       toAddresses,
     }),
   ]);
@@ -110,7 +108,7 @@ const expectedDataSpace2 = async (toAddresses: any[]) => {
 const expectedDataChal = async (toAddresses: any[]) => {
   return expect.arrayContaining([
     expect.objectContaining({
-      subject: `${baseScenario.subspace.about.profile.displayName} - New comment received on your Post &#34;l1-discussion-comments-notification - post&#34; by space, have a look!`,
+      subject: `${baseScenario.subspace.about.profile.displayName} - New comment received on the Post &#34;l1-discussion-comments-notification - post&#34; by space, have a look!`,
       toAddresses,
     }),
   ]);
@@ -119,7 +117,7 @@ const expectedDataChal = async (toAddresses: any[]) => {
 const expectedDataOpp = async (toAddresses: any[]) => {
   return expect.arrayContaining([
     expect.objectContaining({
-      subject: `${baseScenario.subsubspace.about.profile.displayName} - New comment received on your Post &#34;l2-discussion-comments-notification - post&#34; by subsubspace, have a look!`,
+      subject: `${baseScenario.subsubspace.about.profile.displayName} - New comment received on the Post &#34;l2-discussion-comments-notification - post&#34; by subsubspace, have a look!`,
       toAddresses,
     }),
   ]);
@@ -214,8 +212,7 @@ describe('Notifications - callout comments', () => {
       'comment on discussion callout',
       TestUser.GLOBAL_ADMIN
     );
-    await delay(1000);
-    const mails = await getMailsData();
+    const mails = await getMailsDataSettled(6);
 
     expect(mails[1]).toEqual(6);
 
@@ -247,8 +244,7 @@ describe('Notifications - callout comments', () => {
       TestUser.SPACE_ADMIN
     );
 
-    await delay(1000);
-    const mails = await getMailsData();
+    const mails = await getMailsDataSettled(6);
 
     expect(mails[1]).toEqual(6);
     expect(mails[0]).toEqual(
@@ -279,8 +275,7 @@ describe('Notifications - callout comments', () => {
       TestUser.SPACE_ADMIN
     );
 
-    await delay(1000);
-    const mails = await getMailsData();
+    const mails = await getMailsDataSettled(5);
 
     expect(mails[1]).toEqual(5);
 
@@ -318,8 +313,7 @@ describe('Notifications - callout comments', () => {
       TestUser.SUBSUBSPACE_MEMBER
     );
 
-    await delay(1000);
-    const mails = await getMailsData();
+    const mails = await getMailsDataSettled(2);
 
     expect(mails[1]).toEqual(2);
     expect(mails[0]).toEqual(
@@ -357,8 +351,7 @@ describe('Notifications - callout comments', () => {
     );
 
     // Assert
-    await delay(1500);
-    const mails = await getMailsData();
+    const mails = await getMailsDataSettled(0);
 
     expect(mails[1]).toEqual(0);
   });
