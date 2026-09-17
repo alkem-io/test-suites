@@ -244,15 +244,30 @@ async function inviteOrganizationViaDialog(
 
 spaceAdminTest.describe('US1-AS1 — permission gating (space admin half)', () => {
   spaceAdminTest(
-    'a Space admin who is not a platform admin can Invite Organisation; Add Organisation is present but disabled',
+    'a Space admin who is not a platform admin can Invite Organisation; Add Organisation is never actionable',
     async ({ page }) => {
       await openMemberOrganizationsSection(page);
       await expect(page.getByRole('button', { name: 'Invite Organisation' })).toBeEnabled();
-      // Gated, not hidden: the platform-wide convention (workspace#085) renders
-      // an unavailable action disabled with a reason tooltip rather than
-      // concealing that it exists. `GatedAction` sets the native disabled
-      // attribute, so the control is genuinely inert.
-      await expect(page.getByRole('button', { name: 'Add Organisation' })).toBeDisabled();
+      // Direct add needs a platform-role privilege a Space admin can never obtain.
+      // client-web#10324 (fixing #10292) stops rendering the control at all — a
+      // disabled button with a tooltip would explain an unobtainable capability —
+      // while the develop client it replaces still renders it disabled per the
+      // workspace#085 gated-not-hidden convention. Both states satisfy the same
+      // invariant, and that is what is asserted until #10324 lands: the control
+      // is either absent or inert, never clickable. Drop the disabled branch
+      // once #10324 is on develop. Its sibling Invite Organisation stays
+      // gated-not-hidden (asserted above) on purpose, because every Space admin
+      // can eventually invite.
+      const addOrganisation = page.getByRole('button', { name: 'Add Organisation' });
+      if (await addOrganisation.isVisible()) {
+        await expect(addOrganisation).toBeDisabled();
+      } else {
+        // Absent from the DOM, not merely hidden: `not.toBeVisible()` would also
+        // pass for a display:none button that is still rendered.
+        await expect(
+          page.getByRole('button', { name: 'Add Organisation', includeHidden: true })
+        ).toHaveCount(0);
+      }
     }
   );
 });

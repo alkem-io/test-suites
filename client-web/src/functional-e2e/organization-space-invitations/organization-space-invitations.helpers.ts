@@ -66,6 +66,12 @@ const createdOrganizationIds: string[] = [];
  */
 const grantedOrgRoles: { organizationID: string; roleSetID: string; role: RoleName }[] = [];
 
+// Role removal is retried a few times before an organization is declared to
+// still hold Space standing: the failure teardown most often sees is a transient
+// one (a 30 s axios ceiling or a Traefik hiccup), not a refusal.
+const ROLE_REMOVAL_ATTEMPTS = 3;
+const ROLE_REMOVAL_BACKOFF_MS = 1_500;
+
 /** Creates a fresh organization for this walk, returning its id/roleSetId. */
 export const createTestOrganization = async (
   label: string,
@@ -90,22 +96,46 @@ export const createTestOrganization = async (
 
 /**
  * Deletes every organization `createTestOrganization` made in this process and
- * empties the registry. Best-effort per organization: one failure (already
- * deleted, still referenced) must not stop the rest, and teardown must never
- * fail a green run.
+ * empties the registry. Every organization is attempted — one failure (already
+ * deleted, still referenced) must not stop the rest — and anything left behind
+ * fails the calling `afterAll`: a live organization or role grant that survives
+ * a green run is exactly what makes a later serial walk hit a Lead/Owner cap or
+ * reuse a stale fixture while CI reports success.
  */
 export const cleanUpTestOrganizations = async (): Promise<void> => {
   // Strip Space standing first — see `grantedOrgRoles`. Without this the delete
   // below half-succeeds and leaves an unusable, undeletable organization that
   // also breaks `authorizationPolicyResetAll`.
   const grants = grantedOrgRoles.splice(0, grantedOrgRoles.length);
+  const stillHoldingStanding = new Set<string>();
+  const roleFailures: string[] = [];
   for (const g of grants) {
-    await removeOrgRole(g.organizationID, g.roleSetID, g.role);
+    // `removeOrgRole` resolves GraphQL refusals as `{ error }` and transport
+    // failures as `undefined` — neither rejects. A transient failure gets a
+    // few bounded retries; a persistent one means the organization may still
+    // hold Space standing, and deleting it in that state is exactly what
+    // produces the half-deleted rows described above. So: skip it, and report.
+    let res = await removeOrgRole(g.organizationID, g.roleSetID, g.role);
+    for (let attempt = 2; (!res || res.error) && attempt <= ROLE_REMOVAL_ATTEMPTS; attempt++) {
+      await new Promise(r => setTimeout(r, ROLE_REMOVAL_BACKOFF_MS * (attempt - 1)));
+      res = await removeOrgRole(g.organizationID, g.roleSetID, g.role);
+    }
+    if (!res || res.error) {
+      stillHoldingStanding.add(g.organizationID);
+      roleFailures.push(
+        `${g.role} on organization ${g.organizationID} (roleSet ${g.roleSetID}): ${JSON.stringify(res?.error ?? 'request failed')}`
+      );
+    }
   }
 
   const ids = createdOrganizationIds.splice(0, createdOrganizationIds.length);
   const undeleted: string[] = [];
+  const skipped: string[] = [];
   for (const id of ids) {
+    if (stillHoldingStanding.has(id)) {
+      skipped.push(id);
+      continue;
+    }
     try {
       const res = await deleteOrganization(id);
       // deleteOrganization resolves GraphQL failures as `{ error }` rather than
@@ -116,14 +146,35 @@ export const cleanUpTestOrganizations = async (): Promise<void> => {
     }
   }
 
+  const problems: string[] = [];
+  if (roleFailures.length > 0) {
+    problems.push(
+      `${roleFailures.length} Space role(s) could not be removed after ${ROLE_REMOVAL_ATTEMPTS} attempts:\n  ${roleFailures.join('\n  ')}`
+    );
+  }
+  if (skipped.length > 0) {
+    // Not deleted on purpose: a refused role removal means the organization
+    // still holds Space standing, and deleting it would gut the row. It is
+    // intact and still deletable once its Space roles are removed by hand.
+    problems.push(
+      `${skipped.length} organization(s) NOT deleted because a Space role could not be removed first — ` +
+        `remove their Space standing, then delete them: ${skipped.join(', ')}`
+    );
+  }
   if (undeleted.length > 0) {
-    // Loud, but NOT thrown: teardown must not replace a real test failure. A
-    // half-deleted organization is an environment problem an operator has to
+    // A half-deleted organization is an environment problem an operator has to
     // clear at the database level, so name the ids.
-    console.error(
-      `[cleanUpTestOrganizations] ${undeleted.length} organization(s) could not be deleted and may now be half-deleted — ` +
+    problems.push(
+      `${undeleted.length} organization(s) could not be deleted and may now be half-deleted — ` +
         `they will break authorizationPolicyResetAll until removed: ${undeleted.join(', ')}`
     );
+  }
+  if (problems.length > 0) {
+    // Thrown from the caller's `afterAll`. Playwright reports a hook failure
+    // alongside — never instead of — the file's own test results, so a real
+    // test failure earlier in the file is preserved and a leaked fixture can no
+    // longer hide behind a green run.
+    throw new Error(`[cleanUpTestOrganizations] ${problems.join('\n')}`);
   }
 };
 

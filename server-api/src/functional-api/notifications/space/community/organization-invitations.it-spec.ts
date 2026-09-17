@@ -42,6 +42,7 @@ import {
   notif,
   snapshotNotificationSettings,
   waitForMailsCountAtLeast,
+  waitForMailsWhere,
 } from '../../notification.helpers';
 
 const uniqueId = UniqueIDGenerator.getID();
@@ -81,6 +82,19 @@ const scenarioConfig: TestScenarioConfig = {
 };
 
 let invitationId = '';
+
+// Test-local fixtures (organizations created inside a test body, and the
+// invitations addressed to them) are registered here and torn down from
+// `afterAll`, so an assertion failure mid-test cannot leak them — a leaked
+// invitation makes the next run's invite come back ALREADY_INVITED_TO_ROLE_SET.
+const fixtureInvitationIds: string[] = [];
+const fixtureOrganizations: Array<{ label: string; id: string }> = [];
+const trackFixtureInvitation = (id: string) => {
+  if (id) {
+    fixtureInvitationIds.push(id);
+  }
+  return id;
+};
 
 /**
  * baseScenario.organization is the Space's own hosting organization, and the
@@ -192,11 +206,34 @@ afterAll(async () => {
     }
   }
 
+  // Fixture invitations first (they target the scenario Space), then the
+  // organizations they were addressed to. Inspect every result — the wrapper
+  // resolves GraphQL failures as `{ error }`, it never rejects — keep going,
+  // and report everything at the end.
+  const cleanupFailures: string[] = [];
+  for (const id of fixtureInvitationIds.splice(0)) {
+    const deletion = await deleteInvitation(id);
+    if (deletion?.error) {
+      cleanupFailures.push(
+        `deleteInvitation(${id}): ${JSON.stringify(deletion.error.errors)}`
+      );
+    }
+  }
+  for (const { label, id } of fixtureOrganizations.splice(0)) {
+    const deletion = await deleteOrganization(id);
+    if (deletion?.error) {
+      cleanupFailures.push(
+        `deleteOrganization(${label} ${id}): ${JSON.stringify(deletion.error.errors)}`
+      );
+    }
+  }
+
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
 
-  if (restoreFailures.length > 0) {
+  const failures = [...restoreFailures, ...cleanupFailures];
+  if (failures.length > 0) {
     throw new Error(
-      `Failed to restore notification settings for ${restoreFailures.length} persona(s):\n${restoreFailures.join('\n')}`
+      `afterAll: ${restoreFailures.length} persona setting restore(s) and ${cleanupFailures.length} fixture deletion(s) failed:\n${failures.join('\n')}`
     );
   }
 });
@@ -232,6 +269,7 @@ const createTestOrganization = async (label: string) => {
       `Failed to create organization "${label}": ${JSON.stringify(res.error)}`
     );
   }
+  fixtureOrganizations.push({ label, id: res.data.createOrganization.id });
   return {
     id: res.data.createOrganization.id,
     roleSetId: res.data.createOrganization.roleSet.id,
@@ -430,7 +468,7 @@ describe('Organization Space invitations — organization admins are notified (U
         orgE.id
       );
       const result = getSingleInvitationResult(invitationData);
-      const invId = result?.invitation?.id ?? '';
+      const invId = trackFixtureInvitation(result?.invitation?.id ?? '');
       expect(invId.length).toEqual(36);
 
       // Negative assertion: poll up to a generous bound for anything to land
@@ -443,8 +481,6 @@ describe('Organization Space invitations — organization admins are notified (U
         timeout: 18_000,
       });
       expect(mailItems).toHaveLength(0);
-
-      await deleteInvitation(invId);
     } finally {
       await updateUserSettings(TestUserManager.users.organizationAdmin.id, {
         notification: {
@@ -452,7 +488,7 @@ describe('Organization Space invitations — organization admins are notified (U
         },
       });
     }
-    await deleteOrganization(orgE.id);
+    // invId and orgE are torn down from afterAll (tracked fixtures).
   });
 
   test('an organization with no admins or owners escalates to the support address; nobody gets an in-app row', async () => {
@@ -472,7 +508,7 @@ describe('Organization Space invitations — organization admins are notified (U
     expect(result?.notice).toEqual(
       RoleSetInvitationResultNotice.OrganizationHasNoAdministrators
     );
-    const invId = result?.invitation?.id ?? '';
+    const invId = trackFixtureInvitation(result?.invitation?.id ?? '');
     expect(invId.length).toEqual(36);
 
     const [mailItems] = await expectExactMailsAfter(async () => undefined, 1);
@@ -482,9 +518,7 @@ describe('Organization Space invitations — organization admins are notified (U
     expect(supportMail).toBeDefined();
     expect(supportMail?.body).toContain('Hello,');
     expect(mailItems).toHaveLength(1);
-
-    await deleteInvitation(invId);
-    await deleteOrganization(orgF.id);
+    // invId and orgF are torn down from afterAll (tracked fixtures).
   });
 
   test('an invitation to L2 lists every ancestor Space in the email body', async () => {
@@ -537,10 +571,12 @@ describe('Organization Space invitations — organization admins are notified (U
       baseScenario.subsubspace.id,
     ]);
 
-    const [mailItems] = await waitForMailsCountAtLeast(1);
-    const mail = mailItems.find((m: any) =>
-      m.toAddresses?.includes(TestUserManager.users.organizationAdmin.email)
-    );
+    // Wait for THE org-admin-addressed mail, not for "any one mail": the
+    // inviter-side copy can land first and a count-based wait returns on it.
+    const toOrgAdmin = (m: any) =>
+      m.toAddresses?.includes(TestUserManager.users.organizationAdmin.email);
+    const [mailItems] = await waitForMailsWhere(items => items.some(toOrgAdmin));
+    const mail = mailItems.find(toOrgAdmin);
     expect(mail).toBeDefined();
     expect(mail.body).toContain(baseScenario.space.about.profile.displayName);
     expect(mail.body).toContain(
@@ -552,7 +588,7 @@ describe('Organization Space invitations — organization admins are notified (U
 
     await deleteInvitation(invitationId);
     invitationId = '';
-    await deleteOrganization(orgAncestors.id).catch(() => undefined);
+    // orgAncestors is torn down from afterAll (tracked fixture).
   });
 });
 

@@ -23,6 +23,7 @@ import {
   deleteMailSlurperMails,
   getMailsData,
   getQueueStats,
+  rabbitMqManagementConfigured,
   testConfiguration,
   TestScenarioConfig,
   TestScenarioFactory,
@@ -405,7 +406,10 @@ spaceAdminTest.describe('US2-AS1/AS2 — org admin A (default settings) is notif
     'US2-AS1/AS2: A receives an email (inviter/org/Space/role/message, CTA to Invitations tab), an in-app notification with the same facts, and a push is emitted',
     async ({ page }) => {
       const message = `US2-AS1 message ${runSuffix} <b>bold</b> "quoted"`;
-      const pushBaseline = (await getQueueStats(PUSH_NOTIFICATIONS_QUEUE)).publishedTotal;
+      // Push is checked via the RabbitMQ management API, which only a local/CI stack
+      // exposes; nightly still runs the email and in-app checks.
+      const checkPush = rabbitMqManagementConfigured();
+      const pushBaseline = checkPush ? (await getQueueStats(PUSH_NOTIFICATIONS_QUEUE)).publishedTotal : 0;
 
       const resultText = await inviteOrganizationViaDialog(page, orgAS1, message);
       expect(resultText).toContain('Invitation sent');
@@ -435,8 +439,10 @@ spaceAdminTest.describe('US2-AS1/AS2 — org admin A (default settings) is notif
 
       // AS2 — push, emit-level (034/041 convention: publish confirmed via
       // the RabbitMQ management API, never real browser delivery).
-      const stats = await waitForQueuePublishIncrease(PUSH_NOTIFICATIONS_QUEUE, pushBaseline, 1, { timeout: 20_000 });
-      expect(stats.publishedTotal).toBeGreaterThanOrEqual(pushBaseline + 1);
+      if (checkPush) {
+        const stats = await waitForQueuePublishIncrease(PUSH_NOTIFICATIONS_QUEUE, pushBaseline, 1, { timeout: 20_000 });
+        expect(stats.publishedTotal).toBeGreaterThanOrEqual(pushBaseline + 1);
+      }
     }
   );
 });

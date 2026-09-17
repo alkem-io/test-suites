@@ -143,6 +143,14 @@ export default defineConfig({
           'src/functional-api/notifications/space/community/organization-invitations.it-spec.ts',
           'src/functional-api/notifications/space/community/application-approval-new-member.it-spec.ts',
           'src/functional-api/notifications/space/community/invitations.it-spec.ts',
+          // This organization-associates notification spec, same rationale as
+          // above. Its one push-emit case skips itself where the RabbitMQ
+          // management API is not configured (`rabbitMqManagementConfigured`),
+          // and the loopback-Postgres cases under `roleset/associates/**` and
+          // `contributor-management/organization/**` do the same on
+          // `harnessPostgresConfigured` — so these files run nightly minus
+          // exactly the cases the remote cluster cannot serve.
+          'src/functional-api/notifications/organization/associates.it-spec.ts',
           'src/functional-api/contributor-management/**/*.it-spec.ts',
           'src/functional-api/callout/**/*.it-spec.ts',
           'src/functional-api/communications/**/*.it-spec.ts',

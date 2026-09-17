@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  delay,
   deleteMailSlurperMails,
-  getMailsData,
   TestScenarioConfig,
   TestScenarioFactory,
   TestUser,
@@ -25,6 +23,7 @@ import {
   assertCleanupSucceeded,
   notif,
   snapshotNotificationSettings,
+  waitForMailsWhere,
 } from '../../notification.helpers';
 
 /**
@@ -240,8 +239,25 @@ describe('Notifications - approving an application (R40)', () => {
     );
     expect(approval?.error).toBeUndefined();
 
-    await delay(3000);
-    const [mails] = await getMailsData();
+    const isCoAdminNewMemberMail = (mail: any) =>
+      mail.toAddresses?.includes(TestUserManager.users.subspaceAdmin.email) &&
+      mail.subject?.includes(
+        `joined ${baseScenario.space.about.profile.displayName}`
+      );
+    const isApplicantWelcomeMail = (mail: any) =>
+      mail.toAddresses?.includes(TestUserManager.users.qaUser.email) &&
+      mail.subject ===
+        `${baseScenario.space.about.profile.displayName} - Welcome to the Community!`;
+
+    // Poll until BOTH expected mails have landed (or the delivery bound
+    // elapses), rather than sleeping a fixed 3s and reading once: the
+    // approval fans out through the notifications-service RabbitMQ consumer,
+    // and the two mails need not land together.
+    const [mails] = await waitForMailsWhere(
+      items =>
+        items.some(isCoAdminNewMemberMail) && items.some(isApplicantWelcomeMail),
+      { timeout: 18_000 }
+    );
 
     // R40: nothing replaces "a new member joined" for an approved application
     // — SPACE_ADMIN_COMMUNITY_APPLICATION fired at submission, not here — so
@@ -253,15 +269,7 @@ describe('Notifications - approving an application (R40)', () => {
     // passing if this one were suppressed — the failure this file exists to
     // catch. When #6476 adds the application-approved event, this expectation
     // flips to 0 and the new event is asserted in its place.
-    const coAdminNewMemberMails = (mails ?? []).filter(
-      (mail: any) =>
-        mail.toAddresses?.includes(
-          TestUserManager.users.subspaceAdmin.email
-        ) &&
-        mail.subject?.includes(
-          `joined ${baseScenario.space.about.profile.displayName}`
-        )
-    );
+    const coAdminNewMemberMails = (mails ?? []).filter(isCoAdminNewMemberMail);
     expect(coAdminNewMemberMails).toHaveLength(1);
 
     // ...but the suppression is admin-side ONLY. The member-side welcome is
@@ -272,12 +280,7 @@ describe('Notifications - approving an application (R40)', () => {
     // not merely on the recipient: a count of "any mail to the applicant" would
     // be satisfied by an unrelated notification and would keep passing if the
     // welcome itself were suppressed.
-    const applicantWelcomeMails = (mails ?? []).filter(
-      (mail: any) =>
-        mail.toAddresses?.includes(TestUserManager.users.qaUser.email) &&
-        mail.subject ===
-          `${baseScenario.space.about.profile.displayName} - Welcome to the Community!`
-    );
+    const applicantWelcomeMails = (mails ?? []).filter(isApplicantWelcomeMail);
     expect(applicantWelcomeMails).toHaveLength(1);
   });
 });

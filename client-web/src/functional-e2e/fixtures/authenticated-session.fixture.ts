@@ -2,6 +2,7 @@ import { test as base, Browser, BrowserContext, Page } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 import { LoginPage } from '@src/functional-e2e/space/pages';
+import { registerInKratosOrFail, verifyInKratosOrFail } from '@alkemio/tests-lib';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
@@ -54,6 +55,61 @@ async function dismissNewDesignDialog(page: Page): Promise<void> {
  * SPA / login-form render — the exact failure mode that flaked the full-suite
  * run when every spec logged in for itself.
  */
+/**
+ * The first/last name a persona's identity gets, derived from the email exactly
+ * as `registerTestUser` derives it from a user name.
+ *
+ * This MUST match, because two paths can create the same identity and whichever
+ * runs first decides the display name for good: a spec's `beforeAll` calling
+ * `registerTestUser`, and this fixture, whose `storageState` login runs BEFORE
+ * any hook in the file. When the two disagreed, a persona provisioned here was
+ * rendered as "us3appapprove3cde8 E2E" while the spec looked for the hyphenated
+ * "us3-app-approve-3cde8" it had asked `registerTestUser` for — so a row that was
+ * plainly on screen never matched.
+ */
+function personaName(email: string): [string, string] {
+  const parts = email.split('@')[0].split('.');
+  return [parts[0], parts.length > 1 ? parts[1] : parts[0]];
+}
+
+/** Kratos UI message id for "an account with the same identifier exists
+ * already" — the one registration outcome that is NOT a failure here (same id
+ * `registerTestUser` in tests-lib keys on). */
+const KRATOS_IDENTITY_EXISTS_MESSAGE_ID = 4000007;
+
+/** True only for the duplicate-identity refusal. `registerInKratosOrFail`
+ * surfaces Kratos refusals as the raw axios error, whose 400 body carries
+ * `ui.messages[]` with the message id. */
+function isDuplicateIdentityError(error: unknown): boolean {
+  const messages = (
+    error as { response?: { data?: { ui?: { messages?: Array<{ id?: number }> } } } } | undefined
+  )?.response?.data?.ui?.messages;
+  return Array.isArray(messages) && messages.some(m => m?.id === KRATOS_IDENTITY_EXISTS_MESSAGE_ID);
+}
+
+/**
+ * Registers + verifies `email` in Kratos if no identity exists for it yet.
+ *
+ * Returns quietly ONLY when the identity already exists — Kratos rejects a
+ * duplicate registration, which is exactly the signal we want and costs one
+ * request. Every other registration failure, and every verification failure,
+ * propagates: a persona that was registered but never verified cannot log in,
+ * and the login error that would follow ("invalid credentials") says nothing
+ * about the real cause.
+ */
+async function ensureIdentityExists(email: string): Promise<void> {
+  const [firstName, lastName] = personaName(email);
+  let verificationFlowId: string | undefined;
+  try {
+    ({ verificationFlowId } = await registerInKratosOrFail(firstName, lastName, email));
+  } catch (error) {
+    if (isDuplicateIdentityError(error)) return; // the common case for seeded personas
+    throw error;
+  }
+  await verifyInKratosOrFail(email, verificationFlowId);
+  console.info(`[auth] provisioned missing identity ${email}`);
+}
+
 export async function ensurePersonaState(
   browser: Browser,
   email: string
@@ -78,6 +134,16 @@ export async function ensurePersonaState(
   await fs.promises.mkdir(path.dirname(statePath), { recursive: true });
 
   console.info(`[auth] establishing session for ${email} (first use this run)`);
+
+  // Playwright resolves this `storageState` fixture BEFORE the spec's
+  // `beforeAll` runs, so a persona the spec registers in `beforeAll` does not
+  // exist yet at first login and Kratos answers "invalid credentials". Rather
+  // than reorder every spec, provision the identity on demand — but only when
+  // it genuinely does not exist: registration of an existing identity fails,
+  // and in that case the original login error is the honest one to report
+  // (a wrong password must not be masked by a silent re-registration).
+  await ensureIdentityExists(email);
+
   const maxAttempts = 3;
   let lastError: unknown;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {

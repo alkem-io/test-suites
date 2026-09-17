@@ -34,6 +34,31 @@ export const notif = (v: boolean) => ({ email: v, inApp: v });
 export const notifWithPush = (v: boolean) => ({ email: v, inApp: v, push: v });
 
 /**
+ * Mirrors a settings object with every notification channel turned back ON.
+ *
+ * The personas these specs mute are seeded globally and outlive the file that
+ * muted them, so a spec that leaves one muted silently changes the expected
+ * mail counts of every spec that runs after it. Pass the SAME object that was
+ * used to mute, and this returns it with each `{email, inApp, push}` leaf set
+ * true — so the restore cannot drift from the mute.
+ */
+export const allChannelsOn = <T>(settings: T): T => {
+  const walk = (node: unknown): unknown => {
+    if (node === null || typeof node !== 'object') return node;
+    const entries = Object.entries(node as Record<string, unknown>);
+    const isChannelLeaf = entries.every(
+      ([k, v]) =>
+        ['email', 'inApp', 'push'].includes(k) && typeof v === 'boolean'
+    );
+    if (entries.length > 0 && isChannelLeaf) {
+      return Object.fromEntries(entries.map(([k]) => [k, true]));
+    }
+    return Object.fromEntries(entries.map(([k, v]) => [k, walk(v)]));
+  };
+  return walk(settings) as T;
+};
+
+/**
  * Strip the read-only keys (`id`, `__typename`) that come back on a settings
  * QUERY but are rejected by the settings MUTATION input, so a snapshot taken
  * with `getUserData` can be fed straight back to `updateUserSettings`.
@@ -516,6 +541,37 @@ export const conversationMessageGroupDigestSubject = (
  */
 export const waitForMailsCountAtLeast = async (
   expectedCount: number,
+  options: { timeout?: number; interval?: number } = {}
+): Promise<Awaited<ReturnType<typeof getMailsData>>> =>
+  waitForMailsWhere((_mailItems, total) => total >= expectedCount, options);
+
+/**
+ * Polls Mailslurper until `isSatisfied(mailItems, total)` holds, or the
+ * timeout elapses. Returns the last-observed `[mailItems, total]` tuple either
+ * way — callers assert on it, so a timeout is a normal (informative) test
+ * failure rather than a thrown harness error.
+ *
+ * Two uses, one loop:
+ * - POSITIVE: `isSatisfied` names every expected mail (recipient + subject),
+ *   so the read returns as soon as ALL of them have landed rather than when
+ *   the first `n` of anything did.
+ * - NEGATIVE (quiet period): `isSatisfied` names the mail that must NOT
+ *   arrive. The poll then returns EARLY the moment such a mail appears (the
+ *   caller's `toHaveLength(0)` fails at once), and only runs the full
+ *   `timeout` when the inbox stays clean — so "no mail" means "none within
+ *   the whole delivery bound", never "none yet". `waitForMailsCountAtLeast(1)`
+ *   + `toHaveLength(0)` cannot express that: it passes vacuously when
+ *   nothing at all lands and still returns early on an unrelated mail.
+ */
+export type MailItem = {
+  subject?: string;
+  body?: string;
+  toAddresses?: string[];
+  [key: string]: unknown;
+};
+
+export const waitForMailsWhere = async (
+  isSatisfied: (mailItems: MailItem[], total: number) => boolean,
   {
     timeout = 15_000,
     interval = 1_000,
@@ -524,12 +580,64 @@ export const waitForMailsCountAtLeast = async (
   const start = Date.now();
   let last = await getMailsData();
 
-  while (last[1] < expectedCount && Date.now() - start < timeout) {
+  while (!isSatisfied(last[0] ?? [], last[1]) && Date.now() - start < timeout) {
     await delay(interval);
     last = await getMailsData();
   }
 
   return last;
+};
+
+/**
+ * Drop-in replacement for the old `await delay(N); await getMailsData()` read.
+ *
+ * Delivery is fire-and-forget, so a fixed sleep either reads too early (the
+ * count comes up short, and the late mails then land in the NEXT test's
+ * mailbox) or wastes time. This polls instead:
+ *  - `expectedCount > 0`: wait until that many in-scope mails have landed (or
+ *    the delivery bound elapses), then settle briefly and re-read, so a leaked
+ *    extra mail still shows up and fails an exact-count assertion;
+ *  - `expectedCount === 0`: hold a quiet window, returning early the moment an
+ *    in-scope mail appears — "none" means "none within the window", not
+ *    "none yet".
+ *
+ * `scope` narrows the mailbox to the mails a spec is about. Specs that assert
+ * a mailbox TOTAL silently assume nobody else in the database is subscribed
+ * to the event; on a shared stack that is false (every leftover registered
+ * user has the platform-wide notifications on by default), so such specs scope
+ * to the seeded personas instead.
+ *
+ * Returns the same `[mailItems, total]` tuple as `getMailsData`, restricted to
+ * the in-scope mails, so existing assertions keep working unchanged.
+ */
+export const getMailsDataSettled = async (
+  expectedCount: number,
+  {
+    scope,
+    timeout = 15_000,
+    quietMs = 5_000,
+    settleMs = 1_500,
+  }: {
+    scope?: (mail: MailItem) => boolean;
+    timeout?: number;
+    quietMs?: number;
+    settleMs?: number;
+  } = {}
+): Promise<[MailItem[], number]> => {
+  const inScope = (items: MailItem[]) => (scope ? items.filter(scope) : items);
+  if (expectedCount > 0) {
+    await waitForMailsWhere(items => inScope(items).length >= expectedCount, {
+      timeout,
+    });
+    await delay(settleMs);
+  } else {
+    await waitForMailsWhere(items => inScope(items).length > 0, {
+      timeout: quietMs,
+    });
+  }
+  const [all] = await getMailsData();
+  const scoped = inScope((all ?? []) as MailItem[]);
+  return [scoped, scoped.length];
 };
 
 /**

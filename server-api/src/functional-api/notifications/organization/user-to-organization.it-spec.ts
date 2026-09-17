@@ -1,8 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import {
-  delay,
   deleteMailSlurperMails,
-  getMailsData,
   TestScenarioConfig,
   TestScenarioFactory,
   TestUserManager,
@@ -13,7 +11,7 @@ import { updateUserSettings } from '@functional-api/contributor-management/user/
 import { assignRoleToUser } from '@functional-api/roleset/roles-request.params';
 import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
-import { notif } from '../notification.helpers';
+import { notif, getMailsDataSettled } from '../notification.helpers';
 
 // Settings objects now match UpdateUserSettingsEntityInput expected shape
 const organizationMessageNotificationSettings = {
@@ -117,9 +115,7 @@ describe('Notifications - user to organization messages', () => {
       'Test message',
       TestUser.NON_SPACE_MEMBER
     );
-    await delay(1000);
-
-    const getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsDataSettled(3);
 
     // Assert
     expect(getEmailsData[1]).toEqual(3);
@@ -153,9 +149,7 @@ describe('Notifications - user to organization messages', () => {
       'Test message',
       TestUser.NON_SPACE_MEMBER
     );
-    await delay(1000);
-
-    const getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsDataSettled(2);
 
     // Assert
     expect(getEmailsData[1]).toEqual(2);
@@ -195,9 +189,7 @@ describe('Notifications - user to organization messages', () => {
       'Test message',
       TestUser.NON_SPACE_MEMBER
     );
-    await delay(1000);
-
-    const getEmailsData = await getMailsData();
+    const getEmailsData = await getMailsDataSettled(3);
 
     // Assert
     expect(getEmailsData[1]).toEqual(3);

@@ -1,0 +1,15 @@
+query GetRoleSetApplicationForm($roleSetId: UUID!) {
+  lookup {
+    roleSet(ID: $roleSetId) {
+      id
+      applicationForm {
+        id
+        questions {
+          question
+          required
+          sortOrder
+        }
+      }
+    }
+  }
+}
