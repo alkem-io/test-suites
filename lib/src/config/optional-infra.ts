@@ -15,7 +15,7 @@ import dotenv from "dotenv";
  */
 const targetsLoopbackServer = (): boolean => {
   const target =
-    process.env.ALKEMIO_SERVER ?? process.env.ALKEMIO_BASE_URL ?? "";
+    process.env.ALKEMIO_SERVER || process.env.ALKEMIO_BASE_URL || "";
   return target === "" || /\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(target);
 };
 

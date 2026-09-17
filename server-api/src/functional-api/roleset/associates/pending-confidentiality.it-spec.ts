@@ -143,13 +143,34 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await deleteInvitation(spaceInvitationId).catch(() => undefined);
-  await deleteInvitation(orgInvitationId).catch(() => undefined);
-  await deleteApplication(orgApplicationId).catch(() => undefined);
-  await deleteUser(throwawayInviteeId).catch(() => undefined);
+  // Every wrapper here resolves a GraphQL refusal as `{ error }` and never
+  // rejects, so `.catch()` would see nothing. Attempt every deletion, then the
+  // scenario teardowns, and only then fail the hook with everything that was
+  // left behind — a pending record or throwaway user that survives keeps
+  // showing up in the next run's pending lists.
+  const failures: string[] = [];
+  const deletions: Array<[string, () => Promise<{ error?: unknown } | undefined>]> = [
+    ['space invitation', () => deleteInvitation(spaceInvitationId)],
+    ['organization invitation', () => deleteInvitation(orgInvitationId)],
+    ['organization application', () => deleteApplication(orgApplicationId)],
+    ['throwaway invitee', () => deleteUser(throwawayInviteeId)],
+  ];
+  for (const [label, run] of deletions) {
+    try {
+      const res = await run();
+      if (res?.error) failures.push(`${label}: ${JSON.stringify(res.error)}`);
+    } catch (error) {
+      failures.push(`${label}: ${(error as Error)?.message ?? error}`);
+    }
+  }
   await TestScenarioFactory.cleanUpBaseScenario(orgScenario);
   await TestScenarioFactory.cleanUpBaseScenario(spaceScenario);
   await TestScenarioFactory.cleanUpBaseScenario(orgResetScenario);
+  if (failures.length > 0) {
+    throw new Error(
+      `pending-confidentiality fixtures were not fully torn down:\n${failures.join('\n')}`
+    );
+  }
 });
 
 type PendingResult = Awaited<ReturnType<typeof getOrganizationRoleSetPending>>;

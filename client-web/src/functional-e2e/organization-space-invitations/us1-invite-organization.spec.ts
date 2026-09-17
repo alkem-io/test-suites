@@ -254,15 +254,19 @@ spaceAdminTest.describe('US1-AS1 — permission gating (space admin half)', () =
       // while the develop client it replaces still renders it disabled per the
       // workspace#085 gated-not-hidden convention. Both states satisfy the same
       // invariant, and that is what is asserted until #10324 lands: the control
-      // is either absent or inert, never clickable. Tighten this to
-      // `not.toBeVisible()` once #10324 is on develop. Its sibling Invite
-      // Organisation stays gated-not-hidden (asserted above) on purpose, because
-      // every Space admin can eventually invite.
+      // is either absent or inert, never clickable. Drop the disabled branch
+      // once #10324 is on develop. Its sibling Invite Organisation stays
+      // gated-not-hidden (asserted above) on purpose, because every Space admin
+      // can eventually invite.
       const addOrganisation = page.getByRole('button', { name: 'Add Organisation' });
       if (await addOrganisation.isVisible()) {
         await expect(addOrganisation).toBeDisabled();
       } else {
-        await expect(addOrganisation).not.toBeVisible();
+        // Absent from the DOM, not merely hidden: `not.toBeVisible()` would also
+        // pass for a display:none button that is still rendered.
+        await expect(
+          page.getByRole('button', { name: 'Add Organisation', includeHidden: true })
+        ).toHaveCount(0);
       }
     }
   );

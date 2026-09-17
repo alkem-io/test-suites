@@ -39,8 +39,11 @@ import {
   registerPersona,
   removeUserRoleOnOrganization,
   runSuffix,
+  TestUser,
   TestUserManager,
 } from './organization-user-associates.helpers';
+import { getGraphqlClient } from '@alkemio/tests-lib';
+import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 
 baseTest.describe.configure({ mode: 'serial' });
 
@@ -75,9 +78,15 @@ let orgAdminCap: OrgFixture; // AS3 (a): six Admins granted
 let orgOwnerCap: OrgFixture; // AS3 (b): three Owners granted
 let orgSoleOwner: OrgFixture; // AS3 (c): exactly one Owner — the row under edit
 
+let actorId: string; // the UI actor — ASSOCIATE + ADMIN on all three
 let seventhAdminId: string; // plain associate on orgAdminCap
 let fourthOwnerId: string; // plain associate on orgOwnerCap
 let soleOwnerId: string; // ASSOCIATE + OWNER on orgSoleOwner
+
+// Every run-suffixed identity this file registers, for teardown. Ids are filled
+// in as `beforeAll` resolves them; an entry left without one means `beforeAll`
+// failed before it got that far and there is nothing to delete.
+const personas: Array<{ label: string; email: string; id?: string }> = [];
 
 const seventhAdminName = `${seventhAdminLabel}-${runSuffix}`;
 const fourthOwnerName = `${fourthOwnerLabel}-${runSuffix}`;
@@ -133,10 +142,13 @@ baseTest.beforeAll(async () => {
 
   // Sequential — parallel Kratos registration flows collide (registerTestUser's
   // own doc comment / 061 walk precedent).
-  await registerPersona(actorLabel);
+  personas.push({ label: actorLabel, email: await registerPersona(actorLabel) });
   const seventhAdminEmail = await registerPersona(seventhAdminLabel);
+  personas.push({ label: seventhAdminLabel, email: seventhAdminEmail });
   const fourthOwnerEmail = await registerPersona(fourthOwnerLabel);
+  personas.push({ label: fourthOwnerLabel, email: fourthOwnerEmail });
   const soleOwnerEmail = await registerPersona(soleOwnerLabel);
+  personas.push({ label: soleOwnerLabel, email: soleOwnerEmail });
 
   [orgAdminCap, orgOwnerCap, orgSoleOwner] = await Promise.all([
     createTestOrganization('US5AdminCap', runSuffix),
@@ -144,12 +156,20 @@ baseTest.beforeAll(async () => {
     createTestOrganization('US5SoleOwner', runSuffix),
   ]);
 
-  const actorId = await userIdFor(actorEmail);
+  actorId = await userIdFor(actorEmail);
   [seventhAdminId, fourthOwnerId, soleOwnerId] = await Promise.all([
     userIdFor(seventhAdminEmail),
     userIdFor(fourthOwnerEmail),
     userIdFor(soleOwnerEmail),
   ]);
+  for (const [label, id] of [
+    [actorLabel, actorId],
+    [seventhAdminLabel, seventhAdminId],
+    [fourthOwnerLabel, fourthOwnerId],
+    [soleOwnerLabel, soleOwnerId],
+  ] as const) {
+    personas.find(p => p.label === label)!.id = id;
+  }
 
   // The actor manages all three organizations as ASSOCIATE + ADMIN.
   for (const org of [orgAdminCap, orgOwnerCap, orgSoleOwner]) {
@@ -179,9 +199,39 @@ baseTest.beforeAll(async () => {
 });
 
 baseTest.afterAll(async () => {
-  // Organizations carry every role this walk granted; the run-suffixed
-  // identities are left to the shared harness cleanup like the us3 walk's.
-  await cleanUpTestOrganizations();
+  // Organizations first — they carry every role this walk granted, and a user
+  // still holding one cannot be deleted cleanly. `cleanUpTestOrganizations`
+  // throws on anything it could not remove; let that surface, but only after
+  // the identities have been attempted too.
+  let organizationsError: unknown;
+  try {
+    await cleanUpTestOrganizations();
+  } catch (error) {
+    organizationsError = error;
+  }
+
+  // The four run-suffixed identities: no later run reuses these emails, so
+  // without this every run leaves four user + profile rows in the shared
+  // database (same pattern as us1-invite-associates). `graphqlErrorWrapper`
+  // resolves GraphQL failures as `{ error }`, so each result is inspected.
+  const client = getGraphqlClient();
+  const failures: string[] = [];
+  for (const persona of personas.splice(0, personas.length)) {
+    if (!persona.id) continue; // beforeAll failed before resolving it
+    const res = await graphqlErrorWrapper(
+      authToken =>
+        client.deleteUser({ deleteData: { ID: persona.id! } }, { authorization: `Bearer ${authToken}` }),
+      TestUser.GLOBAL_ADMIN
+    );
+    if (res.error) failures.push(`user ${persona.email} (${persona.id}): ${JSON.stringify(res.error)}`);
+  }
+
+  if (organizationsError) throw organizationsError;
+  if (failures.length > 0) {
+    throw new Error(
+      `[us5-associates-editor afterAll] ${failures.length} persona(s) could not be deleted:\n  ${failures.join('\n  ')}`
+    );
+  }
 });
 
 // ─── Page-level helpers ────────────────────────────────────────────────────

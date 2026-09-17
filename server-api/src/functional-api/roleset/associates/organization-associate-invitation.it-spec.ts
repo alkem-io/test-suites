@@ -109,6 +109,32 @@ afterAll(async () => {
 const newInvitee = async () =>
   createUserDataOrFail({ profileData: { displayName: 'Org Invitee' } });
 
+/**
+ * Runs every teardown step, inspecting each RESOLVED result — the request
+ * wrappers resolve GraphQL refusals as `{ error }` and never reject, so a
+ * `.catch()` would see nothing — and only then fails with everything that
+ * went wrong. A failure from the test body itself (`testError`) always wins
+ * over a teardown failure, so a real assertion never gets masked.
+ */
+const teardownOrFail = async (
+  testError: unknown,
+  steps: Array<[string, () => Promise<{ error?: unknown } | undefined>]>
+): Promise<void> => {
+  const failures: string[] = [];
+  for (const [label, run] of steps) {
+    try {
+      const res = await run();
+      if (res?.error) failures.push(`${label}: ${JSON.stringify(res.error)}`);
+    } catch (error) {
+      failures.push(`${label}: ${(error as Error)?.message ?? error}`);
+    }
+  }
+  if (testError) throw testError;
+  if (failures.length > 0) {
+    throw new Error(`teardown left fixtures behind:\n${failures.join('\n')}`);
+  }
+};
+
 describe('Organization associate invitations (US1)', () => {
   test('US1-AS2: ADMIN invites [ASSOCIATE] → INVITED_TO_ROLE_SET, listed under the organization pending section', async () => {
     const invitee = await newInvitee();
@@ -609,6 +635,7 @@ describe('Organization associate invitations — the invitee responds (US2)', ()
     // ADMIN, then accept: ASSOCIATE is granted, OWNER is withheld.
     const offerer = TestUserManager.users.spaceAdmin.id;
     let invitationId: string | undefined;
+    let testError: unknown;
     try {
       const invite = await inviteForEntryRoleOnRoleSet(
         roleSetId,
@@ -654,17 +681,22 @@ describe('Organization associate invitations — the invitee responds (US2)', ()
       expect(byRole.get(RoleName.Owner)).not.toEqual(
         expect.arrayContaining([TestUserManager.users.subsubspaceMember.id])
       );
-    } finally {
-      // Restore the offerer's ADMIN first — later tests invite as SPACE_ADMIN.
-      await assignRoleToUser(offerer, roleSetId, RoleName.Admin).catch(
-        () => undefined
-      );
-      await removeRoleFromUser(
-        TestUserManager.users.subsubspaceMember.id,
-        roleSetId,
-        RoleName.Associate
-      ).catch(() => undefined);
+    } catch (error) {
+      testError = error;
     }
+    await teardownOrFail(testError, [
+      // Restore the offerer's ADMIN first — later tests invite as SPACE_ADMIN.
+      ['restore ADMIN on offerer', () => assignRoleToUser(offerer, roleSetId, RoleName.Admin)],
+      [
+        'remove ASSOCIATE from subsubspaceMember',
+        () =>
+          removeRoleFromUser(
+            TestUserManager.users.subsubspaceMember.id,
+            roleSetId,
+            RoleName.Associate
+          ),
+      ],
+    ]);
   });
 
   test('US2-AS9: an offered role from a platform GLOBAL_SUPPORT offerer (no organization-scoped credential) is granted on accept', async () => {
@@ -673,6 +705,7 @@ describe('Organization associate invitations — the invitee responds (US2)', ()
     // accept-time re-check must count that standing, or every support-issued
     // invitation silently loses its offered role.
     const invitee = TestUserManager.users.subsubspaceAdmin.id;
+    let testError: unknown;
     try {
       const invite = await inviteForEntryRoleOnRoleSet(
         roleSetId,
@@ -706,14 +739,13 @@ describe('Organization associate invitations — the invitee responds (US2)', ()
         roles?.data?.lookup?.roleSet?.usersInRoles?.[0]?.users ?? []
       ).map((u: any) => u.id);
       expect(adminIds).toEqual(expect.arrayContaining([invitee]));
-    } finally {
-      await removeRoleFromUser(invitee, roleSetId, RoleName.Admin).catch(
-        () => undefined
-      );
-      await removeRoleFromUser(invitee, roleSetId, RoleName.Associate).catch(
-        () => undefined
-      );
+    } catch (error) {
+      testError = error;
     }
+    await teardownOrFail(testError, [
+      ['remove ADMIN from invitee', () => removeRoleFromUser(invitee, roleSetId, RoleName.Admin)],
+      ['remove ASSOCIATE from invitee', () => removeRoleFromUser(invitee, roleSetId, RoleName.Associate)],
+    ]);
   });
 
   test('an associate-only persona cannot ACCEPT an invitation on someone else\'s behalf', async () => {
@@ -726,6 +758,7 @@ describe('Organization associate invitations — the invitee responds (US2)', ()
       TestUser.SPACE_ADMIN
     );
     const invitationId = getSingleInvitationResult(invite)!.invitation!.id;
+    let testError: unknown;
     try {
       const res = await eventOnRoleSetInvitation(
         invitationId,
@@ -733,8 +766,11 @@ describe('Organization associate invitations — the invitee responds (US2)', ()
         TestUser.GLOBAL_BETA_TESTER
       );
       expect(res?.error?.errors).toBeDefined();
-    } finally {
-      await deleteInvitation(invitationId).catch(() => undefined);
+    } catch (error) {
+      testError = error;
     }
+    await teardownOrFail(testError, [
+      ['delete invitation', () => deleteInvitation(invitationId)],
+    ]);
   });
 });
