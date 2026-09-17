@@ -371,48 +371,18 @@ export function buildSurfaceInvocations(
           ),
         caller
       ),
-    // --- Legacy-role branch pin (spec-ts-8) — the SAME two resolver
-    // mutations, invoked with a LEGACY (non-rule-engine-governed) role
-    // payload so the call actually reaches `legacyGlobalAdminPolicy`
-    // (`{credential: GA}`) rather than the rule engine. `RoleName.GlobalAdmin`
-    // is not in `RULE_ENGINE_GOVERNED_ROLES`
-    // (`platform.role.assignment.rules.service.ts`), so this always lands on
-    // the pinned branch. None of the 14 single-role fixtures hold the literal
-    // `GLOBAL_ADMIN` credential, so every cell here is a denial in both
-    // slices (declared reach = `{GA}` at stage A, `{}` at stage B) and the
-    // call never actually mutates `fx.targetUserId` — safe to reuse the
-    // shared fixture.
-    caller =>
-      invoke(
-        token =>
-          client().assignPlatformRoleToUser(
-            {
-              roleData: {
-                actorID: fx.targetUserId,
-                role: RoleName.GlobalAdmin,
-              },
-            },
-            bearer(token)
-          ),
-        caller
-      ),
-    caller =>
-      invoke(
-        token =>
-          client().removePlatformRoleFromUser(
-            {
-              roleData: {
-                actorID: fx.targetUserId,
-                role: RoleName.GlobalAdmin,
-              },
-            },
-            bearer(token)
-          ),
-        caller
-      ),
+    // --- Legacy-role branch pin (spec-ts-8) — REMOVED at T022a (Slice B).
+    // Two helpers stood here, invoking the assignment mutations with a LEGACY role
+    // payload so the call landed on the server's `legacyGlobalAdminPolicy`
+    // (`{credential: GA}`) rather than the rule engine. `RoleName.GlobalAdmin` is
+    // gone, the pin is gone (server T077), and after T077 EVERY platform role is
+    // rule-engine governed — the resolver now rejects a non-platform role name
+    // outright instead of authorizing it, so there is no legacy branch to probe.
     // --- sec-server-9 fix (corr-ts-27/spec-ts-19 re-sync): the generic,
-    // un-censused actor-credential bypass. `CredentialType.AssistantAccess`
-    // is deliberately NOT one of the 14 platform-*/feature-* role
+    // un-censused actor-credential bypass. `CredentialType.OrganizationAdmin`
+    // T020 (Slice B): the probe credential was `AssistantAccess`, retired with the
+    // legacy vocabulary. `OrganizationAdmin` replaces it and satisfies the same
+    // requirement — it is deliberately NOT one of the 13 platform-*/feature-* role
     // credentials — the resolver rejects those outright before its
     // (legacy-only) `PLATFORM_ADMIN` check runs, which would produce a
     // green denial for the WRONG reason (a validation rejection, not an
@@ -426,7 +396,7 @@ export function buildSurfaceInvocations(
           client().grantCredentialToActor(
             {
               actorID: fx.rolesProbeUserId,
-              credentialType: CredentialType.AssistantAccess,
+              credentialType: CredentialType.OrganizationAdmin,
             },
             bearer(token)
           ),
@@ -438,7 +408,7 @@ export function buildSurfaceInvocations(
           client().revokeCredentialFromActor(
             {
               actorID: fx.rolesProbeUserId,
-              credentialType: CredentialType.AssistantAccess,
+              credentialType: CredentialType.OrganizationAdmin,
             },
             bearer(token)
           ),
@@ -1358,15 +1328,9 @@ export function buildSurfaceInvocations(
 
   // ===== A12 — assign/revoke license plans (6) =====
   registerRow('A12', [
-    caller =>
-      invoke(
-        token =>
-          client().createWingbackAccount(
-            { accountID: fx.organizationAccountId },
-            bearer(token)
-          ),
-        caller
-      ),
+    // T020 (Slice B, FR-021): the `createWingbackAccount` helper is gone with the
+    // mutation — Wingback was removed as an unused attack surface, not re-gated,
+    // so A12 loses one census entry rather than flipping one cell.
     caller =>
       invoke(
         token =>
@@ -1621,7 +1585,7 @@ export function buildSurfaceInvocations(
     async caller => {
       const active = await graphqlErrorWrapper(
         token => client().platformForumDiscussionCategories({}, bearer(token)),
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       const activeList: ForumDiscussionCategory[] =
         active.data?.platform.forum.discussionCategories ?? [];

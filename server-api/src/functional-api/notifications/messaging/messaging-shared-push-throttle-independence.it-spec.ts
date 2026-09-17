@@ -107,7 +107,7 @@ describe('Messaging digests never decrement the shared push throttle (US4-AS2, F
     async () => {
       const res = await createDirectConversation(
         recipient().agentId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       roomId = res?.data?.createConversation?.room?.id ?? '';
       expect(roomId).toBeTruthy();
@@ -119,7 +119,7 @@ describe('Messaging digests never decrement the shared push throttle (US4-AS2, F
       const drainId = await sendConversationMessage(
         roomId,
         'Shared-throttle baseline drain',
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       await markConversationRead(roomId, drainId, RECIPIENT_ROLE);
       await delay(directPush.maxDelayGraceMs);
@@ -135,7 +135,7 @@ describe('Messaging digests never decrement the shared push throttle (US4-AS2, F
       await sendConversationMessage(
         roomId,
         'Message that produces a digest push',
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       // Wait for the DIGEST, not for the message: grace covers `push:direct`
@@ -154,7 +154,7 @@ describe('Messaging digests never decrement the shared push throttle (US4-AS2, F
       await sendMessageToUser(
         [recipient().id],
         'Non-messaging notification for the same user',
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       await delay(directPush.settleMs);
 

@@ -1,8 +1,12 @@
+# 027-platform-role-redesign (T020, Slice B, FR-020/FR-023, A14): renamed from
+# `updateSpacePlatformSettings`. The operation NAME is kept so every existing
+# caller keeps compiling — the server-side change is the mutation it targets and
+# the fact that `visibility` is now required rather than optional.
 mutation UpdateSpaceVisibilityPlatformSettings(
   $spaceId: UUID!
   $visibility: SpaceVisibility!
 ) {
-  updateSpacePlatformSettings(
+  adminUpdateSpaceVisibility(
     updateData: { spaceID: $spaceId, visibility: $visibility }
   ) {
     id

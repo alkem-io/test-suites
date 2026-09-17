@@ -8,7 +8,7 @@ export const inviteForEntryRoleOnRoleSet = async (
   invitedUserEmails: string[],
   welcomeMessage: string,
   extraRoles: RoleName[],
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -29,7 +29,7 @@ export const inviteForEntryRoleOnRoleSet = async (
 
 export const deleteInvitation = async (
   invitationId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -48,7 +48,7 @@ export const deleteInvitation = async (
 
 export const deleteExternalInvitation = async (
   invitationId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -65,7 +65,7 @@ export const deleteExternalInvitation = async (
 
 export const getSpaceInvitation = async (
   spaceId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>

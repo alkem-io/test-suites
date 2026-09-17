@@ -3,7 +3,7 @@ import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 
 export const GetTemplateById = async (
   templateId: string,
-  role = TestUser.GLOBAL_ADMIN
+  role = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -24,7 +24,7 @@ export const updateWhiteboardTemplate = async (
   defaultDescription = 'Default post template description - Update',
   displayName = 'Default post template title - Update',
   description = 'Default post template info description - Update',
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -47,7 +47,7 @@ export const updateWhiteboardTemplate = async (
 
 export const deleteTemplate = async (
   templateId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>

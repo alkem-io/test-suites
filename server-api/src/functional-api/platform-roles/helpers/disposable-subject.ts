@@ -56,7 +56,7 @@ export const createDisposableSubject = async (
  */
 export const destroyDisposableSubject = async (id: string): Promise<void> => {
   try {
-    // `deleteUser`'s default actor is TestUser.GLOBAL_ADMIN.
+    // `deleteUser`'s default actor is TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN.
     await deleteUser(id);
   } catch {
     // intentionally ignored — see above.

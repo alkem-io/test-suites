@@ -68,7 +68,7 @@ describe('Create subspace subscription', () => {
       variables: { spaceID: baseScenario.space.id },
     };
 
-    await subscription1.subscribe(utilizedQuery, TestUser.GLOBAL_ADMIN);
+    await subscription1.subscribe(utilizedQuery, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
     await subscription2.subscribe(utilizedQuery, TestUser.SPACE_ADMIN);
     await subscription3.subscribe(utilizedQuery, TestUser.SPACE_MEMBER);
   });

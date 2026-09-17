@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import {
   TestScenarioConfig,
   TestScenarioFactory,
@@ -64,7 +64,7 @@ beforeAll(async () => {
     vcName,
     baseScenario.organization.accountId,
     vcSpaceId,
-    TestUser.GLOBAL_ADMIN
+    TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
   );
 
   vcId = vcData?.data?.createVirtualContributor?.id ?? '';
@@ -78,7 +78,7 @@ describe('Virtual Contributor Model Card', () => {
     expect(vcId).toBeDefined();
 
     // Query the VC data to get AI Persona ID
-    const vcDataQuery = await queryVCData(vcId, TestUser.GLOBAL_ADMIN);
+    const vcDataQuery = await queryVCData(vcId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
     const aiPersonaId = vcDataQuery?.data?.lookup.virtualContributor?.id;
     expect(aiPersonaId).toBeDefined();
 

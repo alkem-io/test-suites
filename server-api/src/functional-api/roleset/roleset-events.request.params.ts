@@ -4,7 +4,7 @@ import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 export const eventOnRoleSetApplication = async (
   applicationID: string,
   eventName: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -25,7 +25,7 @@ export const eventOnRoleSetApplication = async (
 export const eventOnRoleSetInvitation = async (
   invitationID: string,
   eventName: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>

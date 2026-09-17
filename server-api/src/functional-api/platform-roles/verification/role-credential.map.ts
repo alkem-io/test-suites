@@ -21,17 +21,13 @@ import {
  * role) — server's full map additionally carries MEMBER/LEAD/ADMIN/
  * ASSOCIATE/OWNER, irrelevant here.
  */
+// T022a (Slice B): the nine legacy rows are gone with their enum members. The
+// two C1 defect rows went with them — `GlobalSpacesReader` and
+// `GlobalCommunityReader` mapped to credential strings the seed never stored,
+// which is the silent void this feature exists to close. Nothing here maps to a
+// retired credential any more.
 export const ROLE_CREDENTIAL_MAP: Partial<Record<RoleName, AuthorizationCredential>> = {
-  [RoleName.GlobalAdmin]: AuthorizationCredential.GlobalAdmin,
-  [RoleName.GlobalSupport]: AuthorizationCredential.GlobalSupport,
-  [RoleName.GlobalLicenseManager]: AuthorizationCredential.GlobalLicenseManager,
-  [RoleName.GlobalCommunityReader]: AuthorizationCredential.GlobalCommunityRead,
-  [RoleName.GlobalSpacesReader]: AuthorizationCredential.GlobalSpacesReader,
-  [RoleName.GlobalPlatformManager]: AuthorizationCredential.GlobalPlatformManager,
-  [RoleName.GlobalSupportManager]: AuthorizationCredential.GlobalSupportManager,
   [RoleName.PlatformOperationsAdmin]: AuthorizationCredential.PlatformOperationsAdmin,
-  [RoleName.PlatformBetaTester]: AuthorizationCredential.BetaTester,
-  [RoleName.PlatformAssistantAccess]: AuthorizationCredential.AssistantAccess,
   // --- 027-platform-role-redesign: target role model (identical strings, D2) ---
   [RoleName.PlatformRolesAdmin]: AuthorizationCredential.PlatformRolesAdmin,
   [RoleName.PlatformContentFullAccess]: AuthorizationCredential.PlatformContentFullAccess,

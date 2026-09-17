@@ -78,7 +78,7 @@ describe('Invitations', () => {
     // Arrange
     const getInvBefore = await getRoleSetInvitationsApplications(
       baseScenario.space.community.roleSetId,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     // Act
@@ -88,7 +88,7 @@ describe('Invitations', () => {
       [emailExternalUser],
       message,
       [RoleName.Member],
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     const invitationResult = getSingleInvitationResult(invitationData);
     if (invitationResult && invitationResult.platformInvitation) {
@@ -103,7 +103,7 @@ describe('Invitations', () => {
 
     const getInvAfter = await getRoleSetInvitationsApplications(
       baseScenario.space.community.roleSetId,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     // Assert
@@ -121,7 +121,7 @@ describe('Invitations', () => {
 
     const getInvBefore = await getRoleSetInvitationsApplications(
       baseScenario.space.community.roleSetId,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     const invitationData = await inviteForEntryRoleOnRoleSet(
@@ -130,7 +130,7 @@ describe('Invitations', () => {
       [userEmail],
       message,
       [RoleName.Member],
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     const invitationResult = getSingleInvitationResult(invitationData);
@@ -145,7 +145,7 @@ describe('Invitations', () => {
       [userEmail],
       message,
       [RoleName.Member],
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     const invitationResult2 = getSingleInvitationResult(invitationMutation2);
 
@@ -157,7 +157,7 @@ describe('Invitations', () => {
 
     const getInvAfter = await getRoleSetInvitationsApplications(
       baseScenario.space.community.roleSetId,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     // Assert
@@ -182,7 +182,7 @@ describe('Invitations', () => {
       [userEmail],
       message,
       [RoleName.Member],
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     const invitationResult = getSingleInvitationResult(invitationData);
@@ -192,7 +192,7 @@ describe('Invitations', () => {
 
     const invData = await getRoleSetInvitationsApplications(
       baseScenario.space.community.roleSetId,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     // Act
@@ -204,7 +204,7 @@ describe('Invitations', () => {
       [userEmail],
       message,
       [RoleName.Member],
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     const invitationResult2 = getSingleInvitationResult(invitationData2);
@@ -220,7 +220,7 @@ describe('Invitations', () => {
 
     const invData2 = await getRoleSetInvitationsApplications(
       baseScenario.space.community.roleSetId,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     // Assert
@@ -252,7 +252,7 @@ describe('Invitations', () => {
       [userEmail],
       message,
       [RoleName.Member],
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     const invitationResult = getSingleInvitationResult(invitationData);
@@ -267,7 +267,7 @@ describe('Invitations', () => {
       [userEmail],
       message,
       [RoleName.Member],
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     userId = await registerVerifiedUser(
@@ -278,12 +278,12 @@ describe('Invitations', () => {
 
     const invSpace1 = await getRoleSetInvitationsApplications(
       baseScenario.space.community.roleSetId,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     const invSpace2 = await getRoleSetInvitationsApplications(
       secondSpaceRoleSetId,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     // Assert

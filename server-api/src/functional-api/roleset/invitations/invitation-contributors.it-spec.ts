@@ -100,7 +100,7 @@ describe('Invitations', () => {
       [],
       'welcome',
       [RoleName.Member],
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     const invitationResult = getSingleInvitationResult(invitationData);
@@ -111,7 +111,7 @@ describe('Invitations', () => {
 
     const getInv = await getSpaceInvitation(
       baseScenario.space.id,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     const data = getInv?.data?.lookup?.space?.community?.roleSet.invitations;
 
@@ -127,7 +127,7 @@ describe('Invitations', () => {
       [],
       'welcome',
       [RoleName.Member],
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     const invitationResult = getSingleInvitationResult(invitationData);
@@ -148,7 +148,7 @@ describe('Invitations', () => {
       [],
       'welcome',
       [RoleName.Member],
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     let invitationId2 = 'invitationId2NotRetrieved';
@@ -185,7 +185,7 @@ describe('Invitations', () => {
       [],
       'welcome',
       [RoleName.Member],
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     invitationId = 'invitationIdNotRetrieved';
     const invitationResult = getSingleInvitationResult(invitationData);
@@ -212,7 +212,7 @@ describe('Invitations', () => {
       [],
       'welcome',
       [RoleName.Member],
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     invitationId = 'invitationIdNotRetrieved';
     const invitationResult2 = getSingleInvitationResult(invitation2Data);
@@ -246,7 +246,7 @@ describe('Invitations', () => {
       [],
       'welcome',
       [RoleName.Member],
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     invitationId = 'invitationIdNotRetrieved';
@@ -263,7 +263,7 @@ describe('Invitations', () => {
       [],
       'welcome',
       [RoleName.Member],
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     const invitationResult2 = getSingleInvitationResult(invitationData2);
     if (invitationResult2 && invitationResult2.invitation) {
@@ -284,7 +284,7 @@ describe('Invitations', () => {
       [],
       'welcome',
       [RoleName.Member],
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     invitationId = 'invitationIdNotRetrieved';
@@ -330,7 +330,7 @@ describe('Invitations-flows', () => {
       [],
       'welcome',
       [RoleName.Admin, RoleName.Lead],
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     invitationId = 'invitationIdNotRetrieved';
@@ -379,7 +379,7 @@ describe('Invitations-flows', () => {
       [],
       'welcome',
       [RoleName.Member],
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     invitationId = 'invitationIdNotRetrieved';
     const invitationResult = getSingleInvitationResult(invitationData);
@@ -421,7 +421,7 @@ describe('Invitations-flows', () => {
       [],
       'welcome',
       [RoleName.Member],
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     invitationId = 'invitationIdNotRetrieved';
     const invitationResult = getSingleInvitationResult(invitationData);
@@ -469,7 +469,7 @@ describe('Invitations-flows', () => {
       [],
       'welcome',
       [RoleName.Member],
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     // Assert — inviting an existing member no longer throws; it returns a
@@ -500,7 +500,7 @@ describe('Invitations-flows', () => {
       [],
       'welcome',
       [RoleName.Member],
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     // Assert — invite is blocked by the open application; it now returns a
@@ -523,7 +523,7 @@ describe('Invitations-flows', () => {
       [],
       'welcome',
       [RoleName.Member],
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     const userDataOrig = await meQuery(TestUser.NON_SPACE_MEMBER);
@@ -581,8 +581,8 @@ describe('Invitations - Authorization', () => {
     test.each`
       user                             | text
       ${TestUser.NON_SPACE_MEMBER}     | ${accepted}
-      ${TestUser.GLOBAL_ADMIN}         | ${invited}
-      ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${invited}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}         | ${invited}
+      ${TestUser.PLATFORM_SUPPORT} | ${invited}
       ${TestUser.SPACE_ADMIN}          | ${invited}
     `(
       'User: "$user", should get: "$text" to update invitation of another user',
@@ -593,7 +593,7 @@ describe('Invitations - Authorization', () => {
           [],
           'welcome',
           [RoleName.Member],
-          TestUser.GLOBAL_ADMIN
+          TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
         );
         invitationId = 'invitationIdNotRetrieved';
         const invitationResult = getSingleInvitationResult(invitationData);
@@ -626,7 +626,7 @@ describe('Invitations - Authorization', () => {
           [],
           'welcome',
           [RoleName.Member],
-          TestUser.GLOBAL_ADMIN
+          TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
         );
         invitationId = 'invitationIdNotRetrieved';
         const invitationResult = getSingleInvitationResult(invitationData);
@@ -657,8 +657,8 @@ describe('Invitations - Authorization', () => {
     // Arrange
     test.each`
       user                             | state
-      ${TestUser.GLOBAL_ADMIN}         | ${invited}
-      ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${invited}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}         | ${invited}
+      ${TestUser.PLATFORM_SUPPORT} | ${invited}
       ${TestUser.SPACE_ADMIN}          | ${invited}
     `(
       'User: "$user", should get: "$text" to create invitation to another user',
@@ -691,7 +691,7 @@ describe('Invitations - Authorization', () => {
     //
     test.each`
       user                             | text
-      ${TestUser.GLOBAL_LICENSE_ADMIN} | ${authErrorCreateInvitationMessage}
+      ${TestUser.PLATFORM_LICENSE_MANAGER} | ${authErrorCreateInvitationMessage}
       ${TestUser.SPACE_MEMBER}         | ${authErrorCreateInvitationMessage}
       ${TestUser.QA_USER}              | ${authErrorCreateInvitationMessage}
       ${TestUser.NON_SPACE_MEMBER}     | ${authErrorCreateInvitationMessage}

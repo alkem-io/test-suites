@@ -43,7 +43,7 @@ describe('Push Subscriptions - Input Validation', () => {
       'https://fcm.googleapis.com/fcm/send/valid-oversized-test',
       oversizedKey,
       'tBHItJI5svbpC7htN',
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     console.log(res);
 
@@ -57,7 +57,7 @@ describe('Push Subscriptions - Input Validation', () => {
       sub.endpoint,
       sub.p256dh,
       oversizedAuth,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     console.log(res.body);
 
@@ -71,7 +71,7 @@ describe('Push Subscriptions - Input Validation', () => {
       'https://fcm.googleapis.com/fcm/send/empty-key-test',
       '',
       'validAuth',
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     console.log(res.body);
 
@@ -84,7 +84,7 @@ describe('Push Subscriptions - Input Validation', () => {
       'https://fcm.googleapis.com/fcm/send/empty-auth-test',
       'validP256dhKey',
       '',
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     console.log(res.body);
 
@@ -95,7 +95,7 @@ describe('Push Subscriptions - Input Validation', () => {
   test('should reject non-UUID subscriptionID on unsubscribe', async () => {
     const res = await unsubscribeFromPushNotifications(
       'not-a-valid-uuid',
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     expect(res.body.errors).toBeDefined();
@@ -104,7 +104,7 @@ describe('Push Subscriptions - Input Validation', () => {
   test('should reject SQL injection attempt in subscriptionID', async () => {
     const res = await unsubscribeFromPushNotifications(
       "'; DROP TABLE push_subscription; --",
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     console.log(res.body);
     expect(res.body.errors).toBeDefined();
@@ -116,7 +116,7 @@ describe('Push Subscriptions - Input Validation', () => {
       '<script>alert("xss")</script>',
       'validP256dhKey',
       'validAuth',
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     console.log(res.body);
 
@@ -133,7 +133,7 @@ describe.skip('Push Subscriptions - SSRF / Endpoint Validation', () => {
       'http://localhost:8080/internal-service',
       'validP256dhKey',
       'validAuth',
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     console.log(res.body);
     expect(res.body.errors).toBeDefined();
@@ -144,7 +144,7 @@ describe.skip('Push Subscriptions - SSRF / Endpoint Validation', () => {
       'http://169.254.169.254/latest/meta-data/',
       'validP256dhKey',
       'validAuth',
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     console.log(res.body);
     expect(res.body.errors).toBeDefined();
@@ -155,7 +155,7 @@ describe.skip('Push Subscriptions - SSRF / Endpoint Validation', () => {
       'http://10.0.0.1:3000/api',
       'validP256dhKey',
       'validAuth',
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     console.log(res.body);
 
@@ -167,7 +167,7 @@ describe.skip('Push Subscriptions - SSRF / Endpoint Validation', () => {
       'http://push.example.com/subscription',
       'validP256dhKey',
       'validAuth',
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     console.log(res.body);
     expect(res.body.errors).toBeDefined();
@@ -178,7 +178,7 @@ describe.skip('Push Subscriptions - SSRF / Endpoint Validation', () => {
       'file:///etc/passwd',
       'validP256dhKey',
       'validAuth',
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     console.log(res.body);
 
@@ -188,7 +188,7 @@ describe.skip('Push Subscriptions - SSRF / Endpoint Validation', () => {
 
 describe('Push Subscriptions - VAPID Key Security', () => {
   test('should return a valid base64url-encoded VAPID public key', async () => {
-    const res = await getVapidPublicKey(TestUser.GLOBAL_ADMIN);
+    const res = await getVapidPublicKey(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
     const key = res.body.data?.vapidPublicKey;
 
     expect(key).toBeDefined();
@@ -199,7 +199,7 @@ describe('Push Subscriptions - VAPID Key Security', () => {
   });
 
   test('should not expose VAPID private key in public key query', async () => {
-    const res = await getVapidPublicKey(TestUser.GLOBAL_ADMIN);
+    const res = await getVapidPublicKey(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
 
     // Verify query succeeded with no errors
     expect(res.body.errors ?? []).toHaveLength(0);
@@ -229,13 +229,13 @@ describe('Push Subscriptions - Authorization Edge Cases', () => {
       sub.endpoint,
       sub.p256dh,
       sub.auth,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     const createData = createRes.body.data?.subscribeToPushNotifications;
     expect(createData).toBeDefined();
     expect(createData.id).toBeDefined();
     const realId = createData.id;
-    pendingCleanup.push({ id: realId, user: TestUser.GLOBAL_ADMIN });
+    pendingCleanup.push({ id: realId, user: TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN });
 
     // Try to unsubscribe as different user
     const wrongUserRes = await unsubscribeFromPushNotifications(
@@ -264,15 +264,15 @@ describe('Push Subscriptions - Authorization Edge Cases', () => {
       sub.endpoint,
       sub.p256dh,
       sub.auth,
-      TestUser.GLOBAL_ADMIN,
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
       'Leak Test Browser'
     );
     expect(createRes.body.errors ?? []).toHaveLength(0);
     const subId = createRes.body.data?.subscribeToPushNotifications.id;
     expect(subId).toBeDefined();
-    pendingCleanup.push({ id: subId, user: TestUser.GLOBAL_ADMIN });
+    pendingCleanup.push({ id: subId, user: TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN });
 
-    const listRes = await getMyPushSubscriptions(TestUser.GLOBAL_ADMIN);
+    const listRes = await getMyPushSubscriptions(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
     const found = listRes.body.data?.myPushSubscriptions.find(
       (s: any) => s.id === subId
     );
@@ -344,7 +344,7 @@ describe('Push Subscriptions - Cross-User Endpoint Hijack', () => {
       sub.endpoint,
       sub.p256dh,
       sub.auth,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     const idA = resA.body.data?.subscribeToPushNotifications.id;
 
@@ -358,7 +358,7 @@ describe('Push Subscriptions - Cross-User Endpoint Hijack', () => {
 
     // After B subscribes, A should no longer have this subscription
     // (the endpoint should belong to only one user at a time)
-    const listA = await getMyPushSubscriptions(TestUser.GLOBAL_ADMIN);
+    const listA = await getMyPushSubscriptions(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
     const aHasEndpoint = listA.body.data?.myPushSubscriptions.some(
       (s: any) => s.id === idA
     );
@@ -386,7 +386,7 @@ describe('Push Subscriptions - Cross-User Endpoint Hijack', () => {
 
     // Cleanup A's subscription if it still exists
     if (aHasEndpoint) {
-      await unsubscribeFromPushNotifications(idA, TestUser.GLOBAL_ADMIN);
+      await unsubscribeFromPushNotifications(idA, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
     }
   });
 });

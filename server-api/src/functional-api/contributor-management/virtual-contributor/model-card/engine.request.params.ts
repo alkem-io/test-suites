@@ -10,7 +10,7 @@ export const createVirtualContributorWithEngineType = async (
   accountID: string,
   bodyOfKnowledgeID: string,
   engineType: AiPersonaEngine,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -40,7 +40,7 @@ export const createExternalVirtualContributorWithEngineType = async (
   displayName: string,
   accountID: string,
   engineType: AiPersonaEngine,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>

@@ -111,7 +111,7 @@ describe('Public Space - visual on profile', () => {
       );
       const getDocId = await getProfileDocuments(
         baseScenario.space.about.profile.id,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       documentId =
         getDocId.data?.lookup?.profile?.storageBucket?.documents[0].id ?? '';
@@ -121,7 +121,7 @@ describe('Public Space - visual on profile', () => {
     test.each`
       userRole                     | privileges                                 | expectedStatus
       ${undefined}                 | ${readPrivilege}                           | ${200}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_globalAdmin} | ${200}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}     | ${sorted__create_read_update_delete_grant_globalAdmin} | ${200}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant} | ${200}
       ${TestUser.NON_SPACE_MEMBER} | ${readPrivilege}                           | ${200}
       ${TestUser.SPACE_MEMBER}     | ${readPrivilege}                           | ${200}
@@ -145,7 +145,7 @@ describe('Public Space - visual on profile', () => {
     test.each`
       userRole                     | privileges                                                | parentEntityType
       ${undefined}                 | ${readPrivilege}                                          | ${'SPACE_ABOUT'}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_globalAdmin} | ${'SPACE_ABOUT'}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_globalAdmin} | ${'SPACE_ABOUT'}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${'SPACE_ABOUT'}
       ${TestUser.NON_SPACE_MEMBER} | ${readPrivilege}                                          | ${'SPACE_ABOUT'}
       ${TestUser.SPACE_MEMBER}     | ${readPrivilege}                                          | ${'SPACE_ABOUT'}
@@ -180,7 +180,7 @@ describe('Public Space - visual on profile', () => {
 
       const getDocId = await getProfileDocuments(
         baseScenario.space.about.profile.id,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       documentId =
         getDocId.data?.lookup?.profile?.storageBucket?.documents[0].id ?? '';
@@ -190,7 +190,7 @@ describe('Public Space - visual on profile', () => {
     test.each`
       userRole                     | privileges                                 | expectedStatus
       ${undefined}                 | ${readPrivilege}                           | ${200}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_globalAdmin} | ${200}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}     | ${sorted__create_read_update_delete_grant_globalAdmin} | ${200}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant} | ${200}
       ${TestUser.NON_SPACE_MEMBER} | ${readPrivilege}                           | ${200}
       ${TestUser.SPACE_MEMBER}     | ${readPrivilege}                           | ${200}
@@ -215,7 +215,7 @@ describe('Public Space - visual on profile', () => {
     test.each`
       userRole                     | privileges                                                | parentEntityType
       ${undefined}                 | ${readPrivilege}                                          | ${'SPACE_ABOUT'}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_globalAdmin} | ${'SPACE_ABOUT'}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_globalAdmin} | ${'SPACE_ABOUT'}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${'SPACE_ABOUT'}
       ${TestUser.NON_SPACE_MEMBER} | ${readPrivilege}                                          | ${'SPACE_ABOUT'}
       ${TestUser.SPACE_MEMBER}     | ${readPrivilege}                                          | ${'SPACE_ABOUT'}
@@ -242,7 +242,7 @@ describe('Public Space - visual on profile', () => {
     beforeAll(async () => {
       const getSpaceStorageId = await getProfileDocuments(
         baseScenario.space.about.profile.id,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       const spaceStorageId =
@@ -255,7 +255,7 @@ describe('Public Space - visual on profile', () => {
 
       const getDocId = await getProfileDocuments(
         baseScenario.space.about.profile.id,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       documentId =
@@ -266,7 +266,7 @@ describe('Public Space - visual on profile', () => {
     test.each`
       userRole                     | privileges                                 | expectedStatus
       ${undefined}                 | ${readPrivilege}                           | ${200}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_globalAdmin} | ${200}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}     | ${sorted__create_read_update_delete_grant_globalAdmin} | ${200}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant} | ${200}
       ${TestUser.NON_SPACE_MEMBER} | ${readPrivilege}                           | ${200}
       ${TestUser.SPACE_MEMBER}     | ${readPrivilege}                           | ${200}
@@ -291,7 +291,7 @@ describe('Public Space - visual on profile', () => {
     test.each`
       userRole                     | privileges                                                | parentEntityType
       ${undefined}                 | ${readPrivilege}                                          | ${'SPACE_ABOUT'}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_globalAdmin} | ${'SPACE_ABOUT'}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_globalAdmin} | ${'SPACE_ABOUT'}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel} | ${'SPACE_ABOUT'}
       ${TestUser.NON_SPACE_MEMBER} | ${readPrivilege}                                          | ${'SPACE_ABOUT'}
       ${TestUser.SPACE_MEMBER}     | ${readPrivilege}                                          | ${'SPACE_ABOUT'}
@@ -320,7 +320,7 @@ describe('Public Space - visual on profile', () => {
         baseScenario.space.collaboration.calloutsSetId,
         'link11',
         'Link collection Callout1',
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       calloutId = hu.data?.createCalloutOnCalloutsSet?.id ?? '';
 
@@ -333,7 +333,7 @@ describe('Public Space - visual on profile', () => {
 
       const res = await calloutLinkContributionStorageConfig(
         calloutId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       documentId =
@@ -346,7 +346,7 @@ describe('Public Space - visual on profile', () => {
     test.each`
       userRole                     | privileges                                            | expectedStatus
       ${undefined}                 | ${['READ']}                                           | ${200}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_globalAdmin} | ${200}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_globalAdmin} | ${200}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute} | ${200}
       ${TestUser.NON_SPACE_MEMBER} | ${['READ']}                                           | ${200}
       ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'READ']}                             | ${200}
@@ -371,7 +371,7 @@ describe('Public Space - visual on profile', () => {
     test.each`
       userRole                     | privileges                                                           | parentEntityType
       ${undefined}                 | ${['READ']}                                                          | ${'CALLOUT_FRAMING'}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_globalAdmin} | ${'CALLOUT_FRAMING'}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_globalAdmin} | ${'CALLOUT_FRAMING'}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${'CALLOUT_FRAMING'}
       ${TestUser.NON_SPACE_MEMBER} | ${['READ']}                                                          | ${'CALLOUT_FRAMING'}
       ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${'CALLOUT_FRAMING'}
@@ -398,7 +398,7 @@ describe('Public Space - visual on profile', () => {
         baseScenario.space.collaboration.calloutsSetId,
         'post11',
         'Post collection Callout1',
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       calloutId = callout.data?.createCalloutOnCalloutsSet?.id ?? '';
@@ -414,7 +414,7 @@ describe('Public Space - visual on profile', () => {
 
       const res = await calloutPostCardStorageConfig(
         calloutId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       documentId =
@@ -426,7 +426,7 @@ describe('Public Space - visual on profile', () => {
     test.each`
       userRole                     | privileges                                            | expectedStatus
       ${undefined}                 | ${['READ']}                                           | ${200}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_globalAdmin} | ${200}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_globalAdmin} | ${200}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute} | ${200}
       ${TestUser.NON_SPACE_MEMBER} | ${['READ']}                                           | ${200}
       ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'READ']}                             | ${200}
@@ -449,7 +449,7 @@ describe('Public Space - visual on profile', () => {
     test.each`
       userRole                     | privileges                                                           | parentEntityType
       ${undefined}                 | ${['READ']}                                                          | ${'POST'}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_globalAdmin} | ${'POST'}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_globalAdmin} | ${'POST'}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${'POST'}
       ${TestUser.NON_SPACE_MEMBER} | ${['READ']}                                                          | ${'POST'}
       ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${'POST'}
@@ -479,7 +479,7 @@ describe('Public Space - visual on profile', () => {
         baseScenario.space.collaboration.calloutsSetId,
         'post12',
         'Post collection Callout12',
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       calloutId = hu.data?.createCalloutOnCalloutsSet?.id ?? '';
 
@@ -497,7 +497,7 @@ describe('Public Space - visual on profile', () => {
 
       const res = await calloutPostCardStorageConfig(
         calloutId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       documentId =
@@ -509,7 +509,7 @@ describe('Public Space - visual on profile', () => {
     test.each`
       userRole                     | privileges                                            | expectedStatus
       ${undefined}                 | ${['READ']}                                           | ${200}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_globalAdmin} | ${200}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_globalAdmin} | ${200}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute} | ${200}
       ${TestUser.NON_SPACE_MEMBER} | ${['READ']}                                           | ${200}
       ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'READ']}                             | ${200}
@@ -531,7 +531,7 @@ describe('Public Space - visual on profile', () => {
     test.each`
       userRole                     | privileges                                                           | parentEntityType
       ${undefined}                 | ${['READ']}                                                          | ${'POST'}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_globalAdmin} | ${'POST'}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_globalAdmin} | ${'POST'}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${'POST'}
       ${TestUser.NON_SPACE_MEMBER} | ${['READ']}                                                          | ${'POST'}
       ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${'POST'}
@@ -562,7 +562,7 @@ describe('Public Space - visual on profile', () => {
         baseScenario.space.collaboration.calloutsSetId,
         'whiteboard11',
         'Whiteboard collection Callout1',
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       calloutId = hu.data?.createCalloutOnCalloutsSet?.id ?? '';
@@ -581,7 +581,7 @@ describe('Public Space - visual on profile', () => {
       const res = await calloutWhiteboardStorageConfig(
         whiteboardCardId,
         calloutId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       documentId =
@@ -593,7 +593,7 @@ describe('Public Space - visual on profile', () => {
     test.each`
       userRole                     | privileges                                                          | expectedStatus
       ${undefined}                 | ${['READ']}                                                         | ${200}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_updateContent_globalAdmin} | ${200}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_updateContent_globalAdmin} | ${200}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute}               | ${200}
       ${TestUser.NON_SPACE_MEMBER} | ${['READ']}                                                         | ${200}
       ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'READ']}                                           | ${200}
@@ -620,7 +620,7 @@ describe('Public Space - visual on profile', () => {
     test.each`
       userRole                     | privileges                                                                         | parentEntityType
       ${undefined}                 | ${['READ']}                                                                        | ${'WHITEBOARD'}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent_globalAdmin} | ${'WHITEBOARD'}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent_globalAdmin} | ${'WHITEBOARD'}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute}               | ${'WHITEBOARD'}
       ${TestUser.NON_SPACE_MEMBER} | ${['READ']}                                                                        | ${'WHITEBOARD'}
       ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                                           | ${'WHITEBOARD'}
@@ -654,7 +654,7 @@ describe('Public Space - visual on profile', () => {
         baseScenario.space.collaboration.calloutsSetId,
         'post3',
         'Post collection Callout3',
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       const calloutData = callout?.data?.createCalloutOnCalloutsSet;
       calloutId = calloutData?.id ?? '';
@@ -670,7 +670,7 @@ describe('Public Space - visual on profile', () => {
 
       const getDocId = await calloutStorageConfig(
         calloutId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       documentId =
@@ -682,7 +682,7 @@ describe('Public Space - visual on profile', () => {
     test.each`
       userRole                     | privileges                                            | expectedStatus
       ${undefined}                 | ${['READ']}                                           | ${200}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_globalAdmin} | ${200}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_globalAdmin} | ${200}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute} | ${200}
       ${TestUser.NON_SPACE_MEMBER} | ${['READ']}                                           | ${200}
       ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'READ']}                             | ${200}
@@ -705,7 +705,7 @@ describe('Public Space - visual on profile', () => {
     test.each`
       userRole                     | privileges                                                           | parentEntityType
       ${undefined}                 | ${['READ']}                                                          | ${'CALLOUT_FRAMING'}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_globalAdmin} | ${'CALLOUT_FRAMING'}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_globalAdmin} | ${'CALLOUT_FRAMING'}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${'CALLOUT_FRAMING'}
       ${TestUser.NON_SPACE_MEMBER} | ${['READ']}                                                          | ${'CALLOUT_FRAMING'}
       ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${'CALLOUT_FRAMING'}
@@ -732,7 +732,7 @@ describe('Public Space - visual on profile', () => {
         baseScenario.space.collaboration.calloutsSetId,
         'post4',
         'Post collection Callout4',
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       const calloutData = callout?.data?.createCalloutOnCalloutsSet;
@@ -747,7 +747,7 @@ describe('Public Space - visual on profile', () => {
 
       const getDocId = await calloutStorageConfig(
         calloutId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       documentId =
@@ -759,7 +759,7 @@ describe('Public Space - visual on profile', () => {
     test.each`
       userRole                     | privileges                                            | expectedStatus
       ${undefined}                 | ${['READ']}                                           | ${200}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_globalAdmin} | ${200}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_globalAdmin} | ${200}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute} | ${200}
       ${TestUser.NON_SPACE_MEMBER} | ${['READ']}                                           | ${200}
       ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'READ']}                             | ${200}
@@ -781,7 +781,7 @@ describe('Public Space - visual on profile', () => {
     test.each`
       userRole                     | privileges                                                           | parentEntityType
       ${undefined}                 | ${['READ']}                                                          | ${'CALLOUT_FRAMING'}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_globalAdmin} | ${'CALLOUT_FRAMING'}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_globalAdmin} | ${'CALLOUT_FRAMING'}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute} | ${'CALLOUT_FRAMING'}
       ${TestUser.NON_SPACE_MEMBER} | ${['READ']}                                                          | ${'CALLOUT_FRAMING'}
       ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                             | ${'CALLOUT_FRAMING'}
@@ -808,7 +808,7 @@ describe('Public Space - visual on profile', () => {
         baseScenario.space.collaboration.calloutsSetId,
         'whiteboard1',
         'Whiteboard Callout1',
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       const calloutData = callout?.data?.createCalloutOnCalloutsSet;
@@ -823,7 +823,7 @@ describe('Public Space - visual on profile', () => {
 
       const getDocId = await whiteboardCalloutStorageConfig(
         calloutId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       documentId =
@@ -835,7 +835,7 @@ describe('Public Space - visual on profile', () => {
     test.each`
       userRole                     | privileges                                                          | expectedStatus
       ${undefined}                 | ${['READ']}                                                         | ${200}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_updateContent_globalAdmin} | ${200}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_updateContent_globalAdmin} | ${200}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute}               | ${200}
       ${TestUser.NON_SPACE_MEMBER} | ${['READ']}                                                         | ${200}
       ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'READ']}                                           | ${200}
@@ -857,7 +857,7 @@ describe('Public Space - visual on profile', () => {
     test.each`
       userRole                     | privileges                                                                         | parentEntityType
       ${undefined}                 | ${['READ']}                                                                        | ${'WHITEBOARD'}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent_globalAdmin} | ${'WHITEBOARD'}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent_globalAdmin} | ${'WHITEBOARD'}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute}               | ${'WHITEBOARD'}
       ${TestUser.NON_SPACE_MEMBER} | ${['READ']}                                                                        | ${'WHITEBOARD'}
       ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                                           | ${'WHITEBOARD'}
@@ -885,7 +885,7 @@ describe('Public Space - visual on profile', () => {
         baseScenario.space.collaboration.calloutsSetId,
         'whiteboard2',
         'Whiteboard Callout2',
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       const calloutData = callout?.data?.createCalloutOnCalloutsSet;
@@ -900,7 +900,7 @@ describe('Public Space - visual on profile', () => {
 
       const getDocId = await whiteboardCalloutStorageConfig(
         calloutId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       documentId =
@@ -912,7 +912,7 @@ describe('Public Space - visual on profile', () => {
     test.each`
       userRole                     | privileges                                                          | expectedStatus
       ${undefined}                 | ${['READ']}                                                         | ${200}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_updateContent_globalAdmin} | ${200}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}     | ${sorted__create_read_update_delete_grant_contribute_updateContent_globalAdmin} | ${200}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_contribute}               | ${200}
       ${TestUser.NON_SPACE_MEMBER} | ${['READ']}                                                         | ${200}
       ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'READ']}                                           | ${200}
@@ -934,7 +934,7 @@ describe('Public Space - visual on profile', () => {
     test.each`
       userRole                     | privileges                                                                         | parentEntityType
       ${undefined}                 | ${['READ']}                                                                        | ${'WHITEBOARD'}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent_globalAdmin} | ${'WHITEBOARD'}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute_updateContent_globalAdmin} | ${'WHITEBOARD'}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_update_delete_grant_fileUp_fileDel_contribute}               | ${'WHITEBOARD'}
       ${TestUser.NON_SPACE_MEMBER} | ${['READ']}                                                                        | ${'WHITEBOARD'}
       ${TestUser.SPACE_MEMBER}     | ${['CONTRIBUTE', 'FILE_UPLOAD', 'READ']}                                           | ${'WHITEBOARD'}

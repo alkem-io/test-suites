@@ -67,7 +67,7 @@ beforeAll(async () => {
     [],
     'welcome',
     [RoleName.Member],
-    TestUser.GLOBAL_ADMIN
+    TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
   );
 
   const invitationResult = getSingleInvitationResult(invitationData);

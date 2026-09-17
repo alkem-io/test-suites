@@ -59,7 +59,7 @@ const USER_SETTINGS_WITH_PUSH_FRAGMENT = `
 export const updateUserSettingsWithPush = async (
   userID: string,
   settings: any,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const requestParams = {
     operationName: 'UpdateUserSettingsWithPush',
@@ -88,7 +88,7 @@ export const subscribeToPushNotifications = async (
   endpoint: string,
   p256dh: string,
   auth: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
   userAgent?: string
 ) => {
   const requestParams = {
@@ -118,7 +118,7 @@ export const subscribeToPushNotifications = async (
 
 export const unsubscribeFromPushNotifications = async (
   subscriptionID: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const requestParams = {
     operationName: 'UnsubscribeFromPushNotifications',
@@ -140,7 +140,7 @@ export const unsubscribeFromPushNotifications = async (
 };
 
 export const getVapidPublicKey = async (
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const requestParams = {
     operationName: 'VapidPublicKey',
@@ -155,7 +155,7 @@ export const getVapidPublicKey = async (
 };
 
 export const getMyPushSubscriptions = async (
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const requestParams = {
     operationName: 'MyPushSubscriptions',

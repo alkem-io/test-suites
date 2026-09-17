@@ -5,7 +5,7 @@ import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 export const sendMessageToRoom = async (
   roomID: string,
   message = 'This is my message. :)',
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -27,7 +27,7 @@ export const sendMessageToRoom = async (
 export const sendMessageToUser = async (
   receiverIds: string[],
   message = 'This is my message. :)',
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -49,7 +49,7 @@ export const sendMessageToUser = async (
 export const sendMessageToOrganization = async (
   organizationId: string,
   message = 'This is my message. :)',
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -71,7 +71,7 @@ export const sendMessageToOrganization = async (
 export const sendMessageToCommunityLeads = async (
   communityId: string,
   message = 'This is my message. :)',
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -93,7 +93,7 @@ export const sendMessageToCommunityLeads = async (
 export const removeMessageOnRoom = async (
   roomID: string,
   messageID: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -113,7 +113,7 @@ export const removeMessageOnRoom = async (
 };
 
 export const getPlatformForumData = async (
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -128,7 +128,7 @@ export const getPlatformForumData = async (
 };
 
 export const getPlatformDiscussionsData = async (
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -144,7 +144,7 @@ export const getPlatformDiscussionsData = async (
 
 export const getPlatformDiscussionsDataById = async (
   discussionId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -173,7 +173,7 @@ export const getPlatformDiscussionsDataByTitle = async (title: string) => {
 
 export const deleteDiscussion = async (
   ID: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -195,7 +195,7 @@ export const createDiscussion = async (
   forumID: string,
   title = 'Default title',
   category: ForumDiscussionCategory = ForumDiscussionCategory.PlatformFunctionalities,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -219,7 +219,7 @@ export const createDiscussion = async (
 
 export const updateDiscussion = async (
   ID: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
   options?: {
     profileData?: {
       displayName?: string;

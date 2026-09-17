@@ -70,7 +70,7 @@ describe('GraphQL Guard - Public/Private Space Access', () => {
 
     test.each`
       user                         | spaceMyPrivileges
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notifications_notificationsAdmin_globalAdmin}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}     | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notifications_notificationsAdmin_globalAdmin}
       ${TestUser.SPACE_ADMIN}      | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_readLicense_notifications_notificationsAdmin}
       ${TestUser.SPACE_MEMBER}     | ${sorted_read_readAbout_readLicense_notifications}
       ${TestUser.NON_SPACE_MEMBER} | ${sorted_read_readAbout_readLicense}

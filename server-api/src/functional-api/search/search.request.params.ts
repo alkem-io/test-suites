@@ -7,7 +7,7 @@ import {
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 
 export const adminSearchIngestFromScratch = async (
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = await getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -22,7 +22,7 @@ export const adminSearchIngestFromScratch = async (
 
 export const searchSpaces = async (
   terms: any,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
   searchInSpaceFilter?: string
 ) => {
   const graphqlClient = await getGraphqlClient();
@@ -52,7 +52,7 @@ export const searchSpaces = async (
 
 export const searchResponses = async (
   terms: any,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
   searchInSpaceFilter?: string
 ) => {
   const graphqlClient = await getGraphqlClient();
@@ -82,7 +82,7 @@ export const searchResponses = async (
 
 export const searchContributors = async (
   terms: any,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
   searchInSpaceFilter?: string
 ) => {
   const graphqlClient = await getGraphqlClient();

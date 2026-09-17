@@ -59,13 +59,13 @@ describe('Functional tests - VC', () => {
     const vcs = spaceData.data?.lookup.account?.virtualContributors;
     for (const vc of vcs || []) {
       const vcId = vc.id;
-      await deleteVirtualContributorOnAccount(vcId, TestUser.GLOBAL_ADMIN);
+      await deleteVirtualContributorOnAccount(vcId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
     }
 
     const spaces = spaceData.data?.lookup.account?.spaces;
     for (const space of spaces || []) {
       const spaceId = space.id;
-      await deleteSpace(spaceId, TestUser.GLOBAL_ADMIN);
+      await deleteSpace(spaceId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
     }
   });
   describe('VC Campaign user vc creation', () => {
@@ -73,7 +73,7 @@ describe('Functional tests - VC', () => {
       await TestScenarioFactory.createBaseScenarioEmpty(scenarioConfig);
       await assignPlatformRole(
         TestUserManager.users.nonSpaceMember.id,
-        RoleName.PlatformVcCampaign
+        RoleName.FeatureBetaTester
       );
     });
     const allPrivileges = [
@@ -94,7 +94,7 @@ describe('Functional tests - VC', () => {
     afterAll(async () => {
       await removePlatformRole(
         TestUserManager.users.nonSpaceMember.id,
-        RoleName.PlatformVcCampaign
+        RoleName.FeatureBetaTester
       );
     });
 

@@ -63,7 +63,7 @@ export const createDisposableSelfUser = async (
   prefix = 'delete-own-account'
 ): Promise<DisposableSelfUser> => {
   const disposable = await createDisposableVerifiedUser(prefix);
-  const userData = await getUserData(disposable.userId, TestUser.GLOBAL_ADMIN);
+  const userData = await getUserData(disposable.userId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
   const accountId = userData?.data?.user?.account?.id;
   if (!accountId) {
     throw new Error(
@@ -237,7 +237,7 @@ export const getOrganizationOwnerIds = async (
   organizationId: string
 ): Promise<string[]> => {
   const bearerToken = TestUserManager.getUserModelByType(
-    TestUser.GLOBAL_ADMIN
+    TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
   ).authToken;
   const query = `
     query DeleteOwnAccountOrganizationOwners($organizationId: UUID!) {

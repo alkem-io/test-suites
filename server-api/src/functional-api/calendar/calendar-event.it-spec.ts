@@ -345,7 +345,7 @@ describe('Calendar Events - ICS Download', () => {
   // cookie support which is not yet available in the test framework.
 
   test.skip('should redirect when accessed with Bearer token (session auth required)', async () => {
-    const response = await downloadIcsFile(eventId, TestUser.GLOBAL_ADMIN);
+    const response = await downloadIcsFile(eventId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
 
     expect(response.status).toBe(302);
     expect(response.redirectUrl).toBeDefined();

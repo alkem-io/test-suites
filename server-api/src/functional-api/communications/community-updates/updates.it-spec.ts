@@ -81,7 +81,7 @@ describe('Communities', () => {
       // Act
       const spaceDataSender = await getSpaceCommunication(
         baseScenario.space.id,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       const retrievedMessage =
         spaceDataSender?.data?.lookup?.space?.community?.communication?.updates
@@ -139,7 +139,7 @@ describe('Communities', () => {
       // Act
       const spaceDataSender = await getSpaceCommunication(
         baseScenario.space.id,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       const retrievedMessage =
         spaceDataSender?.data?.lookup?.space?.community?.communication?.updates

@@ -2,7 +2,7 @@ import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 
 export const getLicensePlans = async (
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -18,7 +18,7 @@ export const getLicensePlans = async (
 
 export const getSpaceLicenseSubscriptions = async (
   ID: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -49,7 +49,7 @@ export const getLicensePlanByName = async (licenseCredential: string) => {
 export const assignLicensePlanToSpace = async (
   spaceID: string,
   licensePlanID: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -71,7 +71,7 @@ export const assignLicensePlanToSpace = async (
 export const revokeLicensePlanFromSpace = async (
   spaceID: string,
   licensePlanID: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const res = await getLicensePlans();
   const licensingID = res.data?.platform.licensingFramework.id ?? '';
@@ -90,7 +90,7 @@ export const revokeLicensePlanFromSpace = async (
 export const assignLicensePlanToAccount = async (
   accountId: string,
   licensePlanId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const res = await getLicensePlans();
   const licensingId = res.data?.platform.licensingFramework.id ?? '';
@@ -113,7 +113,7 @@ export const assignLicensePlanToAccount = async (
 export const revokeLicensePlanFromAccount = async (
   accountId: string,
   licensePlanId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const res = await getLicensePlans();
   const licensingId = res.data?.platform.licensingFramework.id ?? '';

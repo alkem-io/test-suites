@@ -204,7 +204,7 @@ beforeAll(async () => {
         },
         { authorization: `Bearer ${authToken}` }
       ),
-    TestUser.GLOBAL_ADMIN
+    TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
   );
   templateId = createTmpl?.data?.createTemplate?.id ?? '';
   templateCalloutId = createTmpl?.data?.createTemplate?.callout?.id ?? '';
@@ -223,7 +223,7 @@ afterAll(async () => {
           { templateId },
           { authorization: `Bearer ${authToken}` }
         ),
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     ).catch(() => undefined);
   }
   await Promise.all([
@@ -271,7 +271,7 @@ describe('US1 — React to a callout with a predefined emoji', () => {
 
     const summaryRes = await getCalloutReactionsSummary(
       publishedCalloutId,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     const summary = summaryRes?.data?.lookup?.callout?.reactionsSummary;
     expect(summary!.total).toBe(2);
@@ -311,7 +311,7 @@ describe('US1 — React to a callout with a predefined emoji', () => {
   test('reaction-allow-list contract — allowedEmojis returns exactly the 7 predefined slugs', async () => {
     const summaryRes = await getCalloutReactionsSummary(
       publishedCalloutId,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     const allowedEmojis =
       summaryRes?.data?.lookup?.callout?.reactionsSummary?.allowedEmojis ?? [];
@@ -381,7 +381,7 @@ describe('US2 — See who reacted and when', () => {
   test('US2-AS1 — 3 reactors: who-reacted list returns name-resolvable users, emoji slugs, updatedDate, most recent first', async () => {
     const res = await getCalloutReactions(
       publishedCalloutId,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     const reactions = res?.data?.lookup?.callout?.reactions ?? [];
     expect(reactions).toHaveLength(3);
@@ -405,13 +405,13 @@ describe('US2 — See who reacted and when', () => {
   test('US2-AS4 — read-only viewer (global admin, no CONTRIBUTE needed for reads) can query summary and who-reacted list', async () => {
     const summaryRes = await getCalloutReactionsSummary(
       publishedCalloutId,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     expect(summaryRes?.data?.lookup?.callout?.reactionsSummary?.total).toBe(3);
 
     const reactionsRes = await getCalloutReactions(
       publishedCalloutId,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     expect(reactionsRes?.data?.lookup?.callout?.reactions).toHaveLength(3);
   });
@@ -424,7 +424,7 @@ describe('US2 — See who reacted and when', () => {
   test('US2-AS3 (structure) — bounded list field never exceeds 100 entries', async () => {
     const res = await getCalloutReactions(
       publishedCalloutId,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     expect((res?.data?.lookup?.callout?.reactions?.length ?? 0)).toBeLessThanOrEqual(100);
   });
@@ -556,7 +556,7 @@ describe('US4 — Lifecycle + authorization edges', () => {
     await addReactionToCallout(deletionTestCalloutId, 'heart', TestUser.SPACE_MEMBER);
     const beforeSummary = await getCalloutReactionsSummary(
       deletionTestCalloutId,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     expect(beforeSummary?.data?.lookup?.callout?.reactionsSummary?.total).toBe(1);
 
@@ -573,7 +573,7 @@ describe('US4 — Lifecycle + authorization edges', () => {
     // no orphan reaction rows are observable through the summary.
     const afterSummary = await getCalloutReactionsSummary(
       deletedCalloutId,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     expect(afterSummary?.data).toBeUndefined();
     expect(afterSummary?.error?.errors?.[0]?.code).toEqual('ENTITY_NOT_FOUND');

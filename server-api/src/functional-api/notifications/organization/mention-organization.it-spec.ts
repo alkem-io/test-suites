@@ -141,7 +141,7 @@
 //           baseScenario.organization.profile.displayName,
 //           baseScenario.organization.nameId
 //         )} comment on discussion callout`,
-//         TestUser.GLOBAL_ADMIN
+//         TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 //       );
 //       await delay(3000);
 
@@ -213,7 +213,7 @@
 //           baseScenario.organization.profile.displayName,
 //           baseScenario.organization.nameId
 //         )} comment on discussion callout`,
-//         TestUser.GLOBAL_ADMIN
+//         TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 //       );
 //       await delay(3000);
 
@@ -250,7 +250,7 @@
 //           baseScenario.organization.profile.displayName,
 //           baseScenario.organization.nameId
 //         )} comment on discussion callout`,
-//         TestUser.GLOBAL_ADMIN
+//         TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 //       );
 //       await delay(3000);
 
@@ -288,7 +288,7 @@
 //         baseScenario.space.collaboration.calloutPostCollectionId,
 //         { displayName: postDisplayName },
 //         postNameID,
-//         TestUser.GLOBAL_ADMIN
+//         TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 //       );
 //       postCommentsIdSpace =
 //         resPostonSpace.data?.createContributionOnCallout.post?.comments.id ??

@@ -10,7 +10,7 @@ import {
 
 export const getUserCommunityPrivilege = async (
   roleSetId: string,
-  role = TestUser.GLOBAL_ADMIN
+  role = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -28,7 +28,7 @@ export const getUserCommunityPrivilege = async (
 
 export const getRoleSetAvailableUsers = async (
   roleSetId: string,
-  role = TestUser.GLOBAL_ADMIN
+  role = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -47,7 +47,7 @@ export const getRoleSetAvailableUsers = async (
 
 export const getRoleSetMembersList = async (
   roleSetId: string,
-  role = TestUser.GLOBAL_ADMIN
+  role = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -65,7 +65,7 @@ export const getRoleSetMembersList = async (
 
 export const getCommunityApplicationsInvitations = async (
   roleSetId: string,
-  role = TestUser.GLOBAL_ADMIN
+  role = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>

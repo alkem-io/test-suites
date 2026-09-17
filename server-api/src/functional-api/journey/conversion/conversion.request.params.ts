@@ -3,7 +3,7 @@ import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 
 export const convertSpaceL1ToSpaceL0 = async (
   spaceL1ID: string,
-  role = TestUser.GLOBAL_ADMIN
+  role = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -23,7 +23,7 @@ export const convertSpaceL1ToSpaceL0 = async (
 
 export const convertSpaceL2ToSpaceL1 = async (
   spaceL2ID: string,
-  role = TestUser.GLOBAL_ADMIN
+  role = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -48,7 +48,7 @@ export const moveSpaceL1ToSpaceL0 = async (
     autoInvite?: boolean;
     invitationMessage?: string;
   },
-  role = TestUser.GLOBAL_ADMIN
+  role = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -80,7 +80,7 @@ export const moveSpaceL1ToSpaceL2 = async (
     autoInvite?: boolean;
     invitationMessage?: string;
   },
-  role = TestUser.GLOBAL_ADMIN
+  role = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -112,7 +112,7 @@ export const moveSpaceL2ToSpaceL1 = async (
     autoInvite?: boolean;
     invitationMessage?: string;
   },
-  role = TestUser.GLOBAL_ADMIN
+  role = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>

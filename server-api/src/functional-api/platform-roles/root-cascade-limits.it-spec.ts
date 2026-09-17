@@ -80,7 +80,7 @@ describe('root-cascade limits (E5, A5/FR-004/SC-004)', () => {
       // ...and it took no effect. Read back as GLOBAL_ADMIN, never as the
       // Content Full Access actor: that actor's own root READ would make this
       // read succeed for a reason unrelated to the delete.
-      const readBack = await getUserData(victim.id, TestUser.GLOBAL_ADMIN);
+      const readBack = await getUserData(victim.id, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
       expect(
         readBack.data?.user?.id,
         'the refused deleteUser still removed the user'

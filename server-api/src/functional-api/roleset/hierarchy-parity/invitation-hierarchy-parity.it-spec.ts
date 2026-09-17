@@ -69,7 +69,7 @@ const inviteAndAccept = async (roleSetId: string) => {
     [],
     message,
     [RoleName.Member],
-    TestUser.GLOBAL_ADMIN
+    TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
   );
   const invitationResult = getSingleInvitationResult(invitationData);
   const invitationId = invitationResult?.invitation?.id;

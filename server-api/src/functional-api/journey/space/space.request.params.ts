@@ -22,7 +22,7 @@ export const createSpaceBasicData = async (
   spaceNameId: string,
   accountID: string,
   addTutorialCallouts = true,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const spaceData: CreateSpaceOnAccountInput = {
@@ -79,7 +79,7 @@ export const createSpaceBasicDataOrFail = async (
   spaceNameId: string,
   accountID: string,
   addTutorialCallouts = true,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ): Promise<string> => {
   // Preflight for provenance: if the nameID is already on the account BEFORE we
   // create, a later `already taken` is a GENUINE duplicate — not our own
@@ -159,7 +159,7 @@ export const createSpaceAndGetData = async (
   spaceName: string,
   spaceNameId: string,
   accountID: string,
-  role = TestUser.GLOBAL_ADMIN
+  role = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const response = await createSpaceBasicData(
     spaceName,
@@ -188,7 +188,7 @@ export const getSpacesCount = async () => {
 
 export const getSpaceData = async (
   spaceId = spaceNameId,
-  role = TestUser.GLOBAL_ADMIN
+  role = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -206,7 +206,7 @@ export const getSpaceData = async (
 
 export const getSpaceCommunication = async (
   spaceId = spaceNameId,
-  role = TestUser.GLOBAL_ADMIN
+  role = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -222,7 +222,7 @@ export const getSpaceCommunication = async (
   return graphqlErrorWrapper(callback, role);
 };
 
-export const getSpacesData = async (role = TestUser.GLOBAL_ADMIN) => {
+export const getSpacesData = async (role = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
     graphqlClient.GetSpacesData(
@@ -237,7 +237,7 @@ export const getSpacesData = async (role = TestUser.GLOBAL_ADMIN) => {
 
 export const getRoleSetUserPrivilege = async (
   roleSetId: string,
-  role = TestUser.GLOBAL_ADMIN
+  role = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -253,7 +253,7 @@ export const getRoleSetUserPrivilege = async (
 
 export const getPrivateSpaceData = async (
   nameId = spaceNameId,
-  role = TestUser.GLOBAL_ADMIN
+  role = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -278,7 +278,7 @@ export const spaceId = async (): Promise<any> => {
 
 export const deleteSpace = async (
   spaceId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -300,15 +300,20 @@ export const updateSpacePlatformSettings = async (
   spaceId: string,
   nameId: any,
   visibility: SpaceVisibility,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
+    // T020 (Slice B, FR-020): `updateSpacePlatformSettings` split into a
+    // visibility mutation (A14, License Manager) and a protected `nameID` update
+    // (A17, `UPDATE_NAMEID`, no global role). This helper keeps its signature and
+    // performs the rename half; callers that also need the visibility change call
+    // `updateSpaceVisibility`. One call can no longer do both — deliberately, since
+    // one of the two may be refused while the other succeeds.
     graphqlClient.UpdateSpacePlatformSettings(
       {
         spaceId,
         nameId,
-        visibility,
       },
       {
         authorization: `Bearer ${authToken}`,
@@ -342,7 +347,7 @@ export const updateSpaceSettings = async (
     sortMode?: SpaceSortMode;
   },
 
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   if (!spaceID) {
     throw new Error('Space ID is required');
@@ -401,7 +406,7 @@ export const updateSpaceLocation = async (
   spaceId: string,
   country?: string,
   city?: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = await getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -429,7 +434,7 @@ export const updateSpaceContext = async (
     why?: string | 'Updated Why';
     who?: string | 'Updated Who';
   },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = await getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -453,7 +458,7 @@ export const updateSpaceContext = async (
 
 export const getSpacesFilteredByVisibilityWithAccess = async (
   spaceId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -478,7 +483,7 @@ export const getSpacesFilteredByVisibilityWithAccess = async (
 
 export const getSpacesFilteredByVisibilityNoAccess = async (
   spaceId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -504,7 +509,7 @@ export const getSpacesFilteredByVisibilityNoAccess = async (
 export const getUserRoleSpacesVisibility = async (
   actorID: string,
   visibility: SpaceVisibility,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   if (actorID.length !== 36) {
     throw new Error(`Invalid actor ID: ${actorID}`);

@@ -225,50 +225,20 @@ describe('mirror-integrity (T007a) — the mirrored census matches its own docum
  */
 describe('mirror-integrity (T007a) — the structural-diff guard: derived reachability matches its own documented exceptions', () => {
   const stageA = 'A' as const;
+  const stageB = 'B' as const;
 
-  it('the DECLARED legacyReachers fields the T070m race left stale are exactly as wide as server (A4, A7, A14, A16)', () => {
-    // A4 — the shared PLATFORM_USERS_ADMIN credential rule's legacy list is
-    // undifferentiated across A4/A5, so GLOBAL_PLATFORM_MANAGER (added for
-    // A5) reaches A4 too. Scoped to the `requires`/`anyOf` surfaces only —
-    // A4 also carries the `deleteUser` legacy-admin CREDENTIAL PIN
-    // (spec-ts-8), whose `legacyReachers` is deliberately `[GA]` alone (the
-    // pin's whole point is that it is NOT reached via the shared privilege's
-    // wider legacy list).
-    for (const surface of A_ROW_SURFACES.A4) {
-      if (!isRequiresGate(surface.gate) && !isAnyOfGate(surface.gate)) {
-        continue;
-      }
-      expect(surface.legacyReachers).toEqual(
-        expect.arrayContaining([AuthorizationCredential.GlobalPlatformManager])
-      );
-    }
-    // A7 — global-admin reaches the account-tree UPDATE branch of every A7
-    // dual-path gate via the Slice-A-only legacy CRUD+GRANT cascade.
-    for (const surface of A_ROW_SURFACES.A7) {
-      expect(surface.legacyReachers).toEqual(
-        expect.arrayContaining([AuthorizationCredential.GlobalAdmin])
-      );
-    }
-    // A14 — global-license-manager already holds ACCOUNT_LICENSE_MANAGE
-    // today, pre-dating this feature's additive extension.
-    for (const surface of A_ROW_SURFACES.A14) {
-      expect(surface.legacyReachers).toEqual(
-        expect.arrayContaining([AuthorizationCredential.GlobalLicenseManager])
-      );
-    }
-    // A16 — the legacy root cascade grants plain READ on the space tree to
-    // global-admin today, alongside the void global-spaces-reader row.
-    // global-support is deliberately ABSENT (sec-server-3/corr-server-2
-    // fix, spec-ts-7): its cross-space READ came ONLY from the root rule's
-    // now-removed GLOBAL_SUPPORT membership — re-pinning it here would be
-    // asserting the exact divergence this guard exists to catch.
-    for (const surface of A_ROW_SURFACES.A16) {
-      expect(surface.legacyReachers).toEqual(
-        expect.arrayContaining([AuthorizationCredential.GlobalAdmin])
-      );
-      expect(surface.legacyReachers).not.toContain(
-        AuthorizationCredential.GlobalSupport
-      );
+  // T022a (Slice B): INVERTED. This pinned each row's declared `legacyReachers`
+  // to be at least as wide as server's — A4 ⊇ {global-platform-manager}, A7 and
+  // A16 ⊇ {global-admin}, A14 ⊇ {global-license-manager}. Every one of those
+  // credentials left `AuthorizationCredential` with T077.
+  //
+  // The replacement is one assertion over the WHOLE census rather than four
+  // per-row ones, and it is strictly stronger: it is FR-007(d) itself — each
+  // privilege held by its owning role alone. It also fails if a future re-sync
+  // reintroduces a legacy declaration anywhere, which the per-row form could not.
+  it('NO census surface declares a legacy reacher — FR-007(d), the whole point of Slice B', () => {
+    for (const surface of ALL_ENTRIES) {
+      expect(surface.legacyReachers).toEqual([]);
     }
   });
 
@@ -290,26 +260,26 @@ describe('mirror-integrity (T007a) — the structural-diff guard: derived reacha
     }
   });
 
-  it('A16: derived reachers include BOTH the explicit READ grant (owner + legacy) and the root-cascade extra reachers', () => {
-    // Without a ManagedPrivilege entry for bare READ, the explicit-grant
-    // half (platform-spaces-reader / global-spaces-reader) silently drops
-    // out, leaving only the root-cascade credentials — A16 would then look
-    // like its OWN owner cannot reach it.
+  // T022a (Slice B): the "+ legacy" half is gone with `global-spaces-read` and
+  // `global-admin`. The load-bearing half is unchanged and is why this test exists:
+  // without a `ManagedPrivilege` entry for bare READ, the EXPLICIT-grant half drops
+  // out and A16 looks like its own owner cannot reach it — leaving only the
+  // root-cascade credential, which is a false green for the row's whole point.
+  it('A16: derived reachers include BOTH the explicit READ grant and the root-cascade extra reacher', () => {
     const [a16] = A_ROW_SURFACES.A16;
-    const reached = reachers(a16, stageA);
+    const reached = reachers(a16, stageB);
     expect(reached).toEqual(
       expect.arrayContaining([
         AuthorizationCredential.PlatformSpacesReader,
-        AuthorizationCredential.GlobalSpacesReader,
         AuthorizationCredential.PlatformContentFullAccess,
-        AuthorizationCredential.GlobalAdmin,
       ])
     );
-    // spec-ts-7: global-support must NOT be a derived reacher any more —
-    // sec-server-3/corr-server-2 removed its only path (the root rule's
-    // credential list). Re-appearing here would mean the mirror (or the
-    // server) regressed the fix.
-    expect(reached).not.toContain(AuthorizationCredential.GlobalSupport);
+    // FR-010's single declared exception is Content Full Access reaching A16
+    // through the root rule's cascading READ (an `acceptedExtraReachers` entry).
+    // Nothing else may: `platform-support`'s cross-space read came ONLY from the
+    // root rule's now-removed legacy credential list (sec-server-3/corr-server-2),
+    // and its per-space reach is flag-gated, never platform-wide.
+    expect(reached).not.toContain(AuthorizationCredential.PlatformSupport);
   });
 
   it('A12/A13: the tree-scoped grants reach their owning role at stage A (licensing-framework)', () => {
@@ -353,27 +323,33 @@ describe('mirror-integrity (T007a) — the structural-diff guard: derived reacha
     }
   });
 
-  it('A9: transferCallout reaches platform-resource-admin via the callouts-set tree-scoped grant, with global-support-manager (not global-support) as its legacy reacher', () => {
-    // corr-server-9 fix (corr-ts-20/qual-ts-17 re-sync): transferCallout's
-    // OWN authorization tree is `callouts-set`, distinct from the `account`
-    // tree the other four A9 transfer mutations share.
+  // T022a (Slice B): the "with global-support-manager as its legacy reacher" half
+  // is gone with the credential. The load-bearing half survives and is why this
+  // test exists at all (corr-server-9): `transferCallout`'s OWN authorization tree
+  // is `callouts-set`, distinct from the `account` tree the other four A9 transfer
+  // mutations share, so a tree-scoped grant lookup that ignored `tree` would
+  // silently derive an empty reacher set for it.
+  it('A9: transferCallout reaches platform-resource-admin via its OWN callouts-set tree-scoped grant', () => {
     const [transferCallout] = A_ROW_SURFACES.A9.filter(
       s => s.tree === 'callouts-set'
     );
     expect(transferCallout).toBeDefined();
     const reached = reachers(transferCallout, stageA);
     expect(reached).toContain(AuthorizationCredential.PlatformResourceAdmin);
-    expect(reached).toContain(AuthorizationCredential.GlobalSupportManager);
-    expect(reached).not.toContain(AuthorizationCredential.GlobalSupport);
   });
 
-  it('A13: global-admin is a derived legacy reacher at stage A', () => {
-    // corr-server-7/corr-server-10 fix (corr-ts-20/qual-ts-17 re-sync): the
-    // resolver-local synthetic policy explicitly includes GLOBAL_ADMIN.
+  // T022a (Slice B): INVERTED. This asserted that `global-admin` was a DERIVED
+  // legacy reacher of every A13 surface, because the resolver-local synthetic
+  // policy explicitly listed it (corr-server-7/corr-server-10). T076 removed it
+  // from that policy, so the assertion becomes its own negation — and this is the
+  // sharpest place to make it, since A13's reach came from a hand-written
+  // synthetic policy rather than a cascade, which is exactly the shape that
+  // survives a careless narrowing.
+  it('A13: license-plan definition is derived-reachable by settings-admin ALONE — no legacy reacher survives', () => {
     for (const surface of A_ROW_SURFACES.A13) {
-      expect(reachers(surface, stageA)).toContain(
-        AuthorizationCredential.GlobalAdmin
-      );
+      const reached = reachers(surface, stageB);
+      expect(reached).toContain(AuthorizationCredential.PlatformSettingsAdmin);
+      expect(reached).toEqual([AuthorizationCredential.PlatformSettingsAdmin]);
     }
   });
 });

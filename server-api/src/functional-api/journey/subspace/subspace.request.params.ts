@@ -7,7 +7,7 @@ export const subspaceNameId = `chalNaId${uniqueId}`;
 
 export const getSubspaceData = async (
   subspaceId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -35,14 +35,14 @@ export const getSubspacesData = async (spaceId: string) => {
       }
     );
 
-  return graphqlErrorWrapper(callback, TestUser.GLOBAL_ADMIN);
+  return graphqlErrorWrapper(callback, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
 };
 
 export const createSubspace = async (
   subspaceName: string,
   subspaceNameId: string,
   parentId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -110,7 +110,7 @@ export const createSubspaceOrFail = async (
   subspaceName: string,
   subspaceNameId: string,
   parentId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ): Promise<string> => {
   // Preflight for provenance: if the nameID already exists under the parent
   // BEFORE we create, a later `already taken` is a GENUINE duplicate — not our
@@ -221,7 +221,7 @@ export const updateSubspacePinned = async (
   spaceID: string,
   subspaceID: string,
   pinned: boolean,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -244,7 +244,7 @@ export const updateSubspacePinned = async (
 export const updateSubspacesSortOrder = async (
   spaceID: string,
   subspaceIDs: string[],
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>

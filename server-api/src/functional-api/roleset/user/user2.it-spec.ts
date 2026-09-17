@@ -180,7 +180,7 @@ describe('User roles', () => {
         subspaceName + '1',
         subspaceName + '1',
         spaceId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       const chResData = chRes?.data?.createSubspace;
@@ -191,7 +191,7 @@ describe('User roles', () => {
         subspaceName + '2',
         subspaceName + '2',
         spaceId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       const chRes2Data = chRes2?.data?.createSubspace;
       chId2 = chRes2Data?.id ?? '';

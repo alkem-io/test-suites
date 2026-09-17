@@ -142,7 +142,7 @@ describe('Post comments subscription', () => {
         baseScenario.space.collaboration.calloutPostId,
         { displayName: postDisplayName },
         postNameID,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       postCommentsIdSpace =
         resPostonSpace.data?.createContributionOnCallout.post?.comments.id ??
@@ -158,7 +158,7 @@ describe('Post comments subscription', () => {
         variables: { roomID: postCommentsIdSpace },
       };
 
-      await subscription1.subscribe(utilizedQuery, TestUser.GLOBAL_ADMIN);
+      await subscription1.subscribe(utilizedQuery, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
       await subscription2.subscribe(utilizedQuery, TestUser.SPACE_ADMIN);
       await subscription3.subscribe(utilizedQuery, TestUser.SPACE_MEMBER);
     });
@@ -174,7 +174,7 @@ describe('Post comments subscription', () => {
       const messageGA = await sendMessageToRoom(
         postCommentsIdSpace,
         messageGAText,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       messageGaId = messageGA?.data?.sendMessageToRoom.id;
 
@@ -222,7 +222,7 @@ describe('Post comments subscription', () => {
         baseScenario.subspace.collaboration.calloutPostId,
         { displayName: postDisplayName + 'ch' },
         postNameID + 'ch',
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       postCommentsIdSubspace =
         resPostonSubspace.data?.createContributionOnCallout.post?.comments.id ??
@@ -238,7 +238,7 @@ describe('Post comments subscription', () => {
         variables: { roomID: postCommentsIdSubspace },
       };
 
-      await subscription1.subscribe(utilizedQuery, TestUser.GLOBAL_ADMIN);
+      await subscription1.subscribe(utilizedQuery, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
       await subscription2.subscribe(utilizedQuery, TestUser.SPACE_ADMIN);
       await subscription3.subscribe(utilizedQuery, TestUser.SPACE_MEMBER);
     });
@@ -253,7 +253,7 @@ describe('Post comments subscription', () => {
       const messageGA = await sendMessageToRoom(
         postCommentsIdSubspace,
         messageGAText,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       messageGaId = messageGA?.data?.sendMessageToRoom.id;
 
@@ -302,7 +302,7 @@ describe('Post comments subscription', () => {
         baseScenario.subsubspace.collaboration.calloutPostId,
         { displayName: postDisplayName + 'opp' },
         postNameID + 'opp',
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       postCommentsIdSubsubspace =
@@ -319,7 +319,7 @@ describe('Post comments subscription', () => {
         variables: { roomID: postCommentsIdSubsubspace },
       };
 
-      await subscription1.subscribe(utilizedQuery, TestUser.GLOBAL_ADMIN);
+      await subscription1.subscribe(utilizedQuery, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
       await subscription2.subscribe(utilizedQuery, TestUser.SPACE_ADMIN);
       await subscription3.subscribe(utilizedQuery, TestUser.SPACE_MEMBER);
     });
@@ -334,7 +334,7 @@ describe('Post comments subscription', () => {
       const messageGA = await sendMessageToRoom(
         postCommentsIdSubsubspace,
         messageGAText,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       messageGaId = messageGA?.data?.sendMessageToRoom.id;
 

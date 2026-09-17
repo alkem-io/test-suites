@@ -80,7 +80,7 @@ describe('Space entity', () => {
 
     // Assert
     expect(response.status).toBe(200);
-    expect(response.data?.updateSpacePlatformSettings?.nameID).toEqual(
+    expect(response.data?.updateSpace?.nameID).toEqual(
       spaceNameId + 'b'
     );
   });

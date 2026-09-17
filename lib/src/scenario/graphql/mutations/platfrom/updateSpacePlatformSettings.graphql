@@ -1,14 +1,17 @@
-mutation UpdateSpacePlatformSettings(
-  $spaceId: UUID!
-  $nameId: NameID!
-  $visibility: SpaceVisibility!
-) {
-  updateSpacePlatformSettings(
-    updateData: { spaceID: $spaceId, nameID: $nameId, visibility: $visibility }
-  ) {
+# 027-platform-role-redesign (T020, Slice B, FR-020): the single
+# `updateSpacePlatformSettings` mutation took `nameID` AND `visibility`. The
+# server split them because they are owned by different roles — visibility is
+# Platform License Manager's (A14), while renaming is the space admin's and no
+# global role reaches it (A17, `UPDATE_NAMEID`).
+#
+# The operation name is kept so callers keep compiling, but it now performs the
+# RENAME half only. Callers that also changed visibility must additionally call
+# `UpdateSpaceVisibilityPlatformSettings`; a single call can no longer do both,
+# and that is the point — one of the two may be refused while the other succeeds.
+mutation UpdateSpacePlatformSettings($spaceId: UUID!, $nameId: NameID!) {
+  updateSpace(spaceData: { ID: $spaceId, nameID: $nameId }) {
     id
     nameID
-    visibility
     __typename
   }
 }

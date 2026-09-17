@@ -454,7 +454,7 @@ export async function buildMatrixFixtures(): Promise<MatrixFixtures> {
     `matrix-a9-convert-vc-${runId}`,
     base.organization.accountId,
     base.space.id,
-    TestUser.GLOBAL_ADMIN
+    TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
   );
   const a9ConvertVcSourceId =
     a9ConvertVcResult.data?.createVirtualContributor.id ?? '';
@@ -948,7 +948,7 @@ export async function buildMatrixFixtures(): Promise<MatrixFixtures> {
   await updateSpaceSettings(
     a15ConditionSpaceId,
     { privacy: { mode: SpacePrivacyMode.Private, allowPlatformSupportAsAdmin: true } },
-    TestUser.GLOBAL_ADMIN
+    TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
   );
 
   // A16: PRIVATE, no condition set — isolates plain READ reached only
@@ -962,7 +962,7 @@ export async function buildMatrixFixtures(): Promise<MatrixFixtures> {
   await updateSpaceSettings(
     a16PrivateSpaceId,
     { privacy: { mode: SpacePrivacyMode.Private, allowPlatformSupportAsAdmin: false } },
-    TestUser.GLOBAL_ADMIN
+    TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
   );
 
   // A16's `platform-spaces-reader` READ grant is computed into each space's
@@ -1048,7 +1048,7 @@ export async function buildMatrixFixtures(): Promise<MatrixFixtures> {
         query:
           'query { platform { wellKnownVirtualContributors { mappings { wellKnown virtualContributorID } } } }',
       },
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     const mappings =
       wellKnownResponse.body?.data?.platform?.wellKnownVirtualContributors

@@ -65,7 +65,7 @@ describe('User - documents', () => {
       userRole                     | privileges                                                                         | expectedStatus
       ${undefined}                 | ${['READ']} | ${200}
       ${TestUser.NON_SPACE_MEMBER} | ${['READ']} | ${200}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_readUserPii_globalAdmin} | ${200}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}     | ${sorted__create_read_update_delete_grant_readUserPii_globalAdmin} | ${200}
       ${TestUser.QA_USER}          | ${sorted__create_read_update_delete_readUserPii} | ${200}
     `(
       'User: "$userRole" has this privileges: "$privileges" to user profile visual document',
@@ -88,7 +88,7 @@ describe('User - documents', () => {
       userRole                     | privileges                                                                   | parentEntityType
       ${undefined}                 | ${['READ']}                                                                  | ${'USER'}
       ${TestUser.NON_SPACE_MEMBER} | ${['READ']}                                                                  | ${'USER'}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii_globalAdmin} | ${'USER'}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii_globalAdmin} | ${'USER'}
       ${TestUser.QA_USER}          | ${sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii}       | ${'USER'}
     `(
       'User: "$userRole" has this privileges: "$privileges" to user profile storage bucket',
@@ -124,7 +124,7 @@ describe('User - documents', () => {
 
       const getDocId = await getProfileDocuments(
         TestUserManager.users.qaUser.profileId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       documentId =
         getDocId.data?.lookup?.profile?.storageBucket?.documents[0].id ?? '';
@@ -136,7 +136,7 @@ describe('User - documents', () => {
       userRole                     | privileges                                                                         | expectedStatus
       ${undefined}                 | ${['READ']} | ${200}
       ${TestUser.NON_SPACE_MEMBER} | ${['READ']} | ${200}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_readUserPii_globalAdmin} | ${200}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}     | ${sorted__create_read_update_delete_grant_readUserPii_globalAdmin} | ${200}
       ${TestUser.QA_USER}          | ${sorted__create_read_update_delete_readUserPii} | ${200}
     `(
       'User: "$userRole" has this privileges: "$privileges" to user reference document',
@@ -159,7 +159,7 @@ describe('User - documents', () => {
       userRole                     | privileges                                                                   | parentEntityType
       ${undefined}                 | ${['READ']}                                                                  | ${'USER'}
       ${TestUser.NON_SPACE_MEMBER} | ${['READ']}                                                                  | ${'USER'}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii_globalAdmin} | ${'USER'}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii_globalAdmin} | ${'USER'}
       ${TestUser.QA_USER}          | ${sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii}       | ${'USER'}
     `(
       'User: "$userRole" has this privileges: "$privileges" to user profile reference storage bucket',
@@ -184,7 +184,7 @@ describe('User - documents', () => {
     beforeAll(async () => {
       const getSpaceStorageId = await getProfileDocuments(
         TestUserManager.users.qaUser.profileId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       const storageId =
@@ -198,7 +198,7 @@ describe('User - documents', () => {
 
       const getDocId = await getProfileDocuments(
         TestUserManager.users.qaUser.profileId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       documentId =
@@ -212,7 +212,7 @@ describe('User - documents', () => {
       userRole                     | privileges                                                                         | expectedStatus
       ${undefined}                 | ${['READ']} | ${200}
       ${TestUser.NON_SPACE_MEMBER} | ${['READ']} | ${200}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_readUserPii_globalAdmin} | ${200}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}     | ${sorted__create_read_update_delete_grant_readUserPii_globalAdmin} | ${200}
       ${TestUser.QA_USER}          | ${sorted__create_read_update_delete_readUserPii} | ${200}
     `(
       'User: "$userRole" has this privileges: "$privileges" to user description visual document',
@@ -235,7 +235,7 @@ describe('User - documents', () => {
       userRole                     | privileges                                                                   | parentEntityType
       ${undefined}                 | ${['READ']}                                                                  | ${'USER'}
       ${TestUser.NON_SPACE_MEMBER} | ${['READ']}                                                                  | ${'USER'}
-      ${TestUser.GLOBAL_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii_globalAdmin} | ${'USER'}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUpload_fileDelete_readUserPii_globalAdmin} | ${'USER'}
       ${TestUser.QA_USER}          | ${sorted__create_read_update_delete_fileUpload_fileDelete_readUserPii}       | ${'USER'}
     `(
       'User: "$userRole" has this privileges: "$privileges" to user description (storageBucket) document',

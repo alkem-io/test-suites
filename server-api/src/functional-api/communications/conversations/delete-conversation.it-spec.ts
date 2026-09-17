@@ -48,22 +48,22 @@ describe('Delete Conversation', () => {
         [memberActorId],
         ConversationCreationType.Group,
         { displayName: 'Implicit Delete Test' },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       const conversationId = res?.data?.createConversation?.id ?? '';
       expect(conversationId).toBeTruthy();
 
       // Act — both members leave
       await leaveConversation(conversationId, TestUser.SPACE_MEMBER);
-      await leaveConversation(conversationId, TestUser.GLOBAL_ADMIN);
+      await leaveConversation(conversationId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
 
       // Assert — conversation no longer appears for either user
       await waitForCondition(async () => {
-        const meRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
+        const meRes = await getMeConversations(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
         const conversations = meRes?.data?.me.conversations.conversations ?? [];
         return !conversations.some(c => c.id === conversationId);
       });
-      const adminRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
+      const adminRes = await getMeConversations(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
       const adminConversations =
         adminRes?.data?.me.conversations.conversations ?? [];
       expect(adminConversations.some(c => c.id === conversationId)).toBe(false);
@@ -90,7 +90,7 @@ describe('Delete Conversation', () => {
         [member1ActorId, member2ActorId],
         ConversationCreationType.Group,
         { displayName: 'Last Member Leave Test' },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       const conversationId = res?.data?.createConversation?.id ?? '';
       expect(conversationId).toBeTruthy();
@@ -98,15 +98,15 @@ describe('Delete Conversation', () => {
       // Act — all 3 members leave sequentially
       await leaveConversation(conversationId, TestUser.SPACE_MEMBER);
       await leaveConversation(conversationId, TestUser.SPACE_ADMIN);
-      await leaveConversation(conversationId, TestUser.GLOBAL_ADMIN);
+      await leaveConversation(conversationId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
 
       // Assert — gone for all users
       await waitForCondition(async () => {
-        const meRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
+        const meRes = await getMeConversations(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
         const conversations = meRes?.data?.me.conversations.conversations ?? [];
         return !conversations.some(c => c.id === conversationId);
       });
-      const meRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
+      const meRes = await getMeConversations(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
       const conversations = meRes?.data?.me.conversations.conversations ?? [];
       expect(conversations.some(c => c.id === conversationId)).toBe(false);
     });
@@ -120,7 +120,7 @@ describe('Delete Conversation', () => {
         [memberActorId],
         ConversationCreationType.Group,
         { displayName: 'Delete Auth Test' },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       const conversationId = res?.data?.createConversation?.id ?? '';
       expect(conversationId).toBeTruthy();
@@ -128,7 +128,7 @@ describe('Delete Conversation', () => {
       // Act
       const deleteRes = await deleteConversation(
         conversationId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       console.log('Delete response:', deleteRes.error?.errors);
 
@@ -136,7 +136,7 @@ describe('Delete Conversation', () => {
       expect(deleteRes?.error?.errors?.length).toBeGreaterThan(0);
 
       // Cleanup
-      await leaveConversation(conversationId, TestUser.GLOBAL_ADMIN).catch(
+      await leaveConversation(conversationId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN).catch(
         () => {}
       );
     });
@@ -148,7 +148,7 @@ describe('Delete Conversation', () => {
         [memberActorId],
         ConversationCreationType.Group,
         { displayName: 'Non-member Delete Test' },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       const conversationId = res?.data?.createConversation?.id ?? '';
       expect(conversationId).toBeTruthy();
@@ -163,12 +163,12 @@ describe('Delete Conversation', () => {
       expect(deleteRes?.error?.errors?.length).toBeGreaterThan(0);
 
       // Assert — conversation still exists for the creator
-      const meRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
+      const meRes = await getMeConversations(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
       const conversations = meRes?.data?.me.conversations.conversations ?? [];
       expect(conversations.some(c => c.id === conversationId)).toBe(true);
 
       // Cleanup
-      await leaveConversation(conversationId, TestUser.GLOBAL_ADMIN).catch(
+      await leaveConversation(conversationId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN).catch(
         () => {}
       );
     });
@@ -180,7 +180,7 @@ describe('Delete Conversation', () => {
         [memberActorId],
         ConversationCreationType.Group,
         { displayName: 'Unauth Delete Test' },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       const conversationId = res?.data?.createConversation?.id ?? '';
       expect(conversationId).toBeTruthy();
@@ -195,7 +195,7 @@ describe('Delete Conversation', () => {
       expect(deleteRes?.error?.errors?.length).toBeGreaterThan(0);
 
       // Cleanup
-      await leaveConversation(conversationId, TestUser.GLOBAL_ADMIN).catch(
+      await leaveConversation(conversationId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN).catch(
         () => {}
       );
     });
@@ -204,7 +204,7 @@ describe('Delete Conversation', () => {
       // Act
       const res = await deleteConversation(
         '00000000-0000-0000-0000-000000000000',
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       // Assert

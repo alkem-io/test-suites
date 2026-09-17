@@ -6,7 +6,7 @@ import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 export const assignPlatformRole = async (
   actorID: string,
   roleName: RoleName,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -25,7 +25,7 @@ export const assignPlatformRole = async (
 export const removePlatformRole = async (
   actorID: string,
   roleName: RoleName,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -42,7 +42,7 @@ export const removePlatformRole = async (
 };
 
 export const authorizationPolicyResetOnPlatform = async (
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const requestParams = {
     operationName: null,

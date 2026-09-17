@@ -239,7 +239,7 @@ describe('Subspace sorting and pinning', () => {
         baseScenario.space.id,
         subspaceAId,
         true,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       // Assert

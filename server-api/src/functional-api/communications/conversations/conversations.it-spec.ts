@@ -71,7 +71,7 @@ describe('Create Conversation', () => {
         [memberActorId],
         ConversationCreationType.Direct,
         undefined,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       // Assert
@@ -84,7 +84,7 @@ describe('Create Conversation', () => {
       if (conversation?.id) {
         conversationsToCleanup.push({
           id: conversation.id,
-          user: TestUser.GLOBAL_ADMIN,
+          user: TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
         });
       }
     });
@@ -98,13 +98,13 @@ describe('Create Conversation', () => {
         [memberActorId],
         ConversationCreationType.Direct,
         undefined,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       const res2 = await createConversation(
         [memberActorId],
         ConversationCreationType.Direct,
         undefined,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       // Assert — should return the same conversation
@@ -116,7 +116,7 @@ describe('Create Conversation', () => {
       if (conv1?.id) {
         conversationsToCleanup.push({
           id: conv1.id,
-          user: TestUser.GLOBAL_ADMIN,
+          user: TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
         });
       }
     });
@@ -131,7 +131,7 @@ describe('Create Conversation', () => {
         [memberActorId],
         ConversationCreationType.Direct,
         undefined,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       // Assert
@@ -140,7 +140,7 @@ describe('Create Conversation', () => {
       expect(conversation?.id).toBeDefined();
 
       // Verify members via query (createConversation may return before members are synced)
-      const meRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
+      const meRes = await getMeConversations(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
       const conversations = meRes?.data?.me.conversations.conversations ?? [];
       const conv = conversations.find(c => c.id === conversation?.id);
       expect(conv).toBeDefined();
@@ -152,7 +152,7 @@ describe('Create Conversation', () => {
       if (conversation?.id) {
         conversationsToCleanup.push({
           id: conversation.id,
-          user: TestUser.GLOBAL_ADMIN,
+          user: TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
         });
       }
     });
@@ -166,7 +166,7 @@ describe('Create Conversation', () => {
         [memberActorId],
         ConversationCreationType.Direct,
         undefined,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       // Assert
@@ -179,7 +179,7 @@ describe('Create Conversation', () => {
       if (res?.data?.createConversation?.id) {
         conversationsToCleanup.push({
           id: res.data.createConversation.id,
-          user: TestUser.GLOBAL_ADMIN,
+          user: TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
         });
       }
     });
@@ -196,7 +196,7 @@ describe('Create Conversation', () => {
         [member1ActorId, member2ActorId],
         ConversationCreationType.Group,
         { displayName: 'Test Group Chat' },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       // Assert
@@ -209,7 +209,7 @@ describe('Create Conversation', () => {
       if (conversation?.id) {
         conversationsToCleanup.push({
           id: conversation.id,
-          user: TestUser.GLOBAL_ADMIN,
+          user: TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
         });
       }
     });
@@ -225,7 +225,7 @@ describe('Create Conversation', () => {
         [memberActorId],
         ConversationCreationType.Group,
         { displayName, avatarUrl },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       // Assert
@@ -236,7 +236,7 @@ describe('Create Conversation', () => {
       if (conversation?.id) {
         conversationsToCleanup.push({
           id: conversation.id,
-          user: TestUser.GLOBAL_ADMIN,
+          user: TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
         });
       }
     });
@@ -252,13 +252,13 @@ describe('Create Conversation', () => {
         [memberActorId],
         ConversationCreationType.Group,
         { displayName: displayName1 },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       const res2 = await createConversation(
         [memberActorId],
         ConversationCreationType.Group,
         { displayName: displayName2 },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       // Assert — should create two separate conversations
@@ -271,13 +271,13 @@ describe('Create Conversation', () => {
       if (conv1?.id) {
         conversationsToCleanup.push({
           id: conv1.id,
-          user: TestUser.GLOBAL_ADMIN,
+          user: TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
         });
       }
       if (conv2?.id) {
         conversationsToCleanup.push({
           id: conv2.id,
-          user: TestUser.GLOBAL_ADMIN,
+          user: TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
         });
       }
     });
@@ -292,7 +292,7 @@ describe('Create Conversation', () => {
         [memberActorId],
         ConversationCreationType.Group,
         { displayName: 'Creator Auto-Include' },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       // Assert
@@ -305,7 +305,7 @@ describe('Create Conversation', () => {
       if (res?.data?.createConversation?.id) {
         conversationsToCleanup.push({
           id: res.data.createConversation.id,
-          user: TestUser.GLOBAL_ADMIN,
+          user: TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
         });
       }
     });
@@ -318,7 +318,7 @@ describe('Create Conversation', () => {
         [],
         ConversationCreationType.Direct,
         undefined,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       // Assert
@@ -331,7 +331,7 @@ describe('Create Conversation', () => {
         ['00000000-0000-0000-0000-000000000000'],
         ConversationCreationType.Direct,
         undefined,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       // Assert
@@ -365,14 +365,14 @@ describe('Update Conversation', () => {
       [memberActorId],
       ConversationCreationType.Group,
       { displayName: 'Update Test Group' },
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     groupConversationId = res?.data?.createConversation?.id ?? '';
   });
 
   afterAll(async () => {
     if (groupConversationId) {
-      await leaveConversation(groupConversationId, TestUser.GLOBAL_ADMIN).catch(
+      await leaveConversation(groupConversationId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN).catch(
         () => {}
       );
     }
@@ -386,7 +386,7 @@ describe('Update Conversation', () => {
     const res = await updateConversation(
       groupConversationId,
       { displayName: newDisplayName },
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     // Assert — mutation returns true
@@ -394,14 +394,14 @@ describe('Update Conversation', () => {
 
     // Assert — query confirms the change persisted (eventual consistency)
     await waitForCondition(async () => {
-      const meRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
+      const meRes = await getMeConversations(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
       const conv = (meRes?.data?.me.conversations.conversations ?? []).find(
         c => c.id === groupConversationId
       );
       return conv?.room?.displayName === newDisplayName;
     });
 
-    const meRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
+    const meRes = await getMeConversations(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
     const conv = (meRes?.data?.me.conversations.conversations ?? []).find(
       c => c.id === groupConversationId
     );
@@ -417,7 +417,7 @@ describe('Update Conversation', () => {
     const res = await updateConversation(
       groupConversationId,
       { avatarUrl: newAvatarUrl },
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     // Assert — mutation returns true
@@ -425,14 +425,14 @@ describe('Update Conversation', () => {
 
     // Assert — query confirms the change persisted (eventual consistency)
     await waitForCondition(async () => {
-      const meRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
+      const meRes = await getMeConversations(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
       const conv = (meRes?.data?.me.conversations.conversations ?? []).find(
         c => c.id === groupConversationId
       );
       return conv?.room?.avatarUrl === newAvatarUrl;
     });
 
-    const meRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
+    const meRes = await getMeConversations(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
     const conv = (meRes?.data?.me.conversations.conversations ?? []).find(
       c => c.id === groupConversationId
     );
@@ -449,7 +449,7 @@ describe('Update Conversation', () => {
     const res = await updateConversation(
       groupConversationId,
       { displayName: newDisplayName, avatarUrl: newAvatarUrl },
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     // Assert — mutation returns true
@@ -457,7 +457,7 @@ describe('Update Conversation', () => {
 
     // Assert — query confirms both changes persisted (eventual consistency)
     await waitForCondition(async () => {
-      const meRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
+      const meRes = await getMeConversations(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
       const conv = (meRes?.data?.me.conversations.conversations ?? []).find(
         c => c.id === groupConversationId
       );
@@ -467,7 +467,7 @@ describe('Update Conversation', () => {
       );
     });
 
-    const meRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
+    const meRes = await getMeConversations(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
     const conv = (meRes?.data?.me.conversations.conversations ?? []).find(
       c => c.id === groupConversationId
     );
@@ -478,7 +478,7 @@ describe('Update Conversation', () => {
 
   test('should fail to update conversation by non-member', async () => {
     // Arrange — capture current state
-    const beforeRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
+    const beforeRes = await getMeConversations(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
     const beforeConv = (
       beforeRes?.data?.me.conversations.conversations ?? []
     ).find(c => c.id === groupConversationId);
@@ -495,7 +495,7 @@ describe('Update Conversation', () => {
     expect(res?.error?.errors?.length).toBeGreaterThan(0);
 
     // Assert — query confirms the name was NOT changed
-    const afterRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
+    const afterRes = await getMeConversations(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
     const afterConv = (
       afterRes?.data?.me.conversations.conversations ?? []
     ).find(c => c.id === groupConversationId);
@@ -540,7 +540,7 @@ describe('Leave Conversation', () => {
 
     // Assert — remaining member still sees the conversation without the leaving user
     await waitForCondition(async () => {
-      const otherRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
+      const otherRes = await getMeConversations(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
       const otherConv = (
         otherRes?.data?.me.conversations.conversations ?? []
       ).find(c => c.id === conversationId);
@@ -548,7 +548,7 @@ describe('Leave Conversation', () => {
       return !memberIds.includes(creatorActorId);
     });
 
-    const otherRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
+    const otherRes = await getMeConversations(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
     const otherConversations =
       otherRes?.data?.me.conversations.conversations ?? [];
     const otherConv = otherConversations.find(c => c.id === conversationId);
@@ -561,7 +561,7 @@ describe('Leave Conversation', () => {
     // Act
     const res = await leaveConversation(
       '00000000-0000-0000-0000-000000000000',
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     // Assert
@@ -580,14 +580,14 @@ describe('Remove Conversation Member', () => {
       [member1, member2],
       ConversationCreationType.Group,
       { displayName: 'Remove Member Test' },
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     groupConversationId = res?.data?.createConversation?.id ?? '';
   });
 
   afterAll(async () => {
     if (groupConversationId) {
-      await leaveConversation(groupConversationId, TestUser.GLOBAL_ADMIN).catch(
+      await leaveConversation(groupConversationId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN).catch(
         () => {}
       );
     }
@@ -596,7 +596,7 @@ describe('Remove Conversation Member', () => {
   // skipped until this one is fixed: BUG: [Conversation] When user try to leave group chat, the conversation remains in the list#9543
   test.skip('should remove a member from a GROUP conversation', async () => {
     // Arrange — verify member is present before removal
-    const meResBefore = await getMeConversations(TestUser.GLOBAL_ADMIN);
+    const meResBefore = await getMeConversations(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
     const convBefore = (
       meResBefore?.data?.me.conversations.conversations ?? []
     ).find(c => c.id === groupConversationId);
@@ -607,7 +607,7 @@ describe('Remove Conversation Member', () => {
     const res = await removeConversationMember(
       groupConversationId,
       memberToRemoveActorId(),
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     // Assert — mutation returns true
@@ -616,7 +616,7 @@ describe('Remove Conversation Member', () => {
     // Assert — member no longer in conversation
     // (eventual consistency: membership change arrives via Matrix event)
     await waitForCondition(async () => {
-      const meRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
+      const meRes = await getMeConversations(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
       const conv = (meRes?.data?.me.conversations.conversations ?? []).find(
         c => c.id === groupConversationId
       );
@@ -624,7 +624,7 @@ describe('Remove Conversation Member', () => {
       return !memberIds.includes(memberToRemoveActorId());
     });
 
-    const meResAfter = await getMeConversations(TestUser.GLOBAL_ADMIN);
+    const meResAfter = await getMeConversations(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
     const convAfter = (
       meResAfter?.data?.me.conversations.conversations ?? []
     ).find(c => c.id === groupConversationId);
@@ -637,7 +637,7 @@ describe('Remove Conversation Member', () => {
     const res = await removeConversationMember(
       '00000000-0000-0000-0000-000000000000',
       memberToRemoveActorId(),
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     // Assert
@@ -651,7 +651,7 @@ describe('Remove Conversation Member', () => {
       [member],
       ConversationCreationType.Group,
       { displayName: 'Auth Test Group' },
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     const convId = res?.data?.createConversation?.id ?? '';
 
@@ -666,7 +666,7 @@ describe('Remove Conversation Member', () => {
     expect(removeRes?.error?.errors?.length).toBeGreaterThan(0);
 
     // Assert — member is still in the conversation
-    const meRes = await getMeConversations(TestUser.GLOBAL_ADMIN);
+    const meRes = await getMeConversations(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
     const conv = (meRes?.data?.me.conversations.conversations ?? []).find(
       c => c.id === convId
     );
@@ -675,7 +675,7 @@ describe('Remove Conversation Member', () => {
 
     // Cleanup
     if (convId) {
-      await leaveConversation(convId, TestUser.GLOBAL_ADMIN).catch(() => {});
+      await leaveConversation(convId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN).catch(() => {});
     }
   });
 });
@@ -690,7 +690,7 @@ describe('Query Conversations', () => {
       [TestUserManager.users.subspaceMember.agentId],
       ConversationCreationType.Direct,
       undefined,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     directConversationId = directRes?.data?.createConversation?.id ?? '';
 
@@ -702,7 +702,7 @@ describe('Query Conversations', () => {
       ],
       ConversationCreationType.Group,
       { displayName: 'Query Test Group' },
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     groupConversationId = groupRes?.data?.createConversation?.id ?? '';
   });
@@ -711,11 +711,11 @@ describe('Query Conversations', () => {
     if (directConversationId) {
       await leaveConversation(
         directConversationId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       ).catch(() => {});
     }
     if (groupConversationId) {
-      await leaveConversation(groupConversationId, TestUser.GLOBAL_ADMIN).catch(
+      await leaveConversation(groupConversationId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN).catch(
         () => {}
       );
     }
@@ -723,7 +723,7 @@ describe('Query Conversations', () => {
 
   test('should return a flat list of all conversations', async () => {
     // Act
-    const res = await getMeConversations(TestUser.GLOBAL_ADMIN);
+    const res = await getMeConversations(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
 
     // Assert
     const conversations = res?.data?.me.conversations.conversations;
@@ -734,7 +734,7 @@ describe('Query Conversations', () => {
 
   test('should include both DIRECT and GROUP conversations in flat list', async () => {
     // Act
-    const res = await getMeConversations(TestUser.GLOBAL_ADMIN);
+    const res = await getMeConversations(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
 
     // Assert
     const conversations = res?.data?.me.conversations.conversations ?? [];
@@ -745,7 +745,7 @@ describe('Query Conversations', () => {
 
   test('should return conversation members as Actor array', async () => {
     // Act
-    const res = await getMeConversations(TestUser.GLOBAL_ADMIN);
+    const res = await getMeConversations(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
 
     // Assert
     const conversations = res?.data?.me.conversations.conversations ?? [];
@@ -764,7 +764,7 @@ describe('Query Conversations', () => {
 
   test('should return conversation room with correct fields', async () => {
     // Act
-    const res = await getMeConversations(TestUser.GLOBAL_ADMIN);
+    const res = await getMeConversations(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
 
     // Assert
     const conversations = res?.data?.me.conversations.conversations ?? [];
@@ -797,7 +797,7 @@ describe('Messaging in Conversations', () => {
       [TestUserManager.users.spaceMember.agentId],
       ConversationCreationType.Group,
       { displayName: 'Messaging Test Group' },
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     conversationId = res?.data?.createConversation?.id ?? '';
     conversationRoomId = res?.data?.createConversation?.room?.id ?? '';
@@ -805,7 +805,7 @@ describe('Messaging in Conversations', () => {
 
   afterAll(async () => {
     if (conversationId) {
-      await leaveConversation(conversationId, TestUser.GLOBAL_ADMIN).catch(
+      await leaveConversation(conversationId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN).catch(
         () => {}
       );
     }
@@ -816,7 +816,7 @@ describe('Messaging in Conversations', () => {
     const res = await sendMessageToRoom(
       conversationRoomId,
       'Hello group!',
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     // Assert
@@ -830,11 +830,11 @@ describe('Messaging in Conversations', () => {
     await sendMessageToRoom(
       conversationRoomId,
       'Another message',
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     // Act — query conversations
-    const res = await getMeConversations(TestUser.GLOBAL_ADMIN);
+    const res = await getMeConversations(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
 
     // Assert
     const conversations = res?.data?.me.conversations.conversations ?? [];

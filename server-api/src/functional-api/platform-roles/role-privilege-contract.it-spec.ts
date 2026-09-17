@@ -99,7 +99,7 @@ const ROLE_SET_POLICY_CONTRACT = contractFor('roleSet');
  * reacher of that policy a privilege only one role should own.
  */
 const EXCLUSIVE_PRIVILEGES: Record<string, RoleName> = {
-  GRANT_GLOBAL_ADMINS: RoleName.PlatformRolesAdmin,
+  PLATFORM_ROLES_ASSIGN: RoleName.PlatformRolesAdmin,
   SET_SERVICE_PROFILE: RoleName.PlatformRolesAdmin,
   PLATFORM_USERS_ADMIN: RoleName.PlatformUsersAdmin,
   FEATURE_ROLE_HOLDERS_READ: RoleName.PlatformUsersAdmin,
@@ -418,11 +418,11 @@ describe('role privilege contract — what each role SEES, per policy', () => {
     it('assignment privileges appear on the ROLE SET policy, never on the platform policy', () => {
       const rolesAdmin = reported.get(RoleName.PlatformRolesAdmin)!;
 
-      expect(rolesAdmin.roleSet).toContain('GRANT_GLOBAL_ADMINS');
+      expect(rolesAdmin.roleSet).toContain('PLATFORM_ROLES_ASSIGN');
       expect(
         rolesAdmin.platform,
-        'GRANT_GLOBAL_ADMINS moved onto the platform policy — every consumer that unions both is now over-broad'
-      ).not.toContain('GRANT_GLOBAL_ADMINS');
+        'PLATFORM_ROLES_ASSIGN moved onto the platform policy — every consumer that unions both is now over-broad'
+      ).not.toContain('PLATFORM_ROLES_ASSIGN');
     });
 
     it('SET_SERVICE_PROFILE appears on the platform policy, never on the role set', () => {
@@ -506,8 +506,8 @@ describe('role privilege contract — what each role SEES, per policy', () => {
       expect(roleSet).toContain('FEATURE_ROLE_ASSIGN');
       expect(
         roleSet,
-        'Platform Users Admin reports GRANT_GLOBAL_ADMINS — FR-003 makes the relationship one-way'
-      ).not.toContain('GRANT_GLOBAL_ADMINS');
+        'Platform Users Admin reports PLATFORM_ROLES_ASSIGN — FR-003 makes the relationship one-way'
+      ).not.toContain('PLATFORM_ROLES_ASSIGN');
     });
 
     it('Platform Users Admin can read Feature holder lists but not Platform ones', () => {
@@ -531,7 +531,7 @@ describe('role privilege contract — what each role SEES, per policy', () => {
     it('the Audit Reader cannot assign roles', () => {
       const { roleSet } = reported.get(RoleName.PlatformAuditReader)!;
 
-      expect(roleSet).not.toContain('GRANT_GLOBAL_ADMINS');
+      expect(roleSet).not.toContain('PLATFORM_ROLES_ASSIGN');
       expect(roleSet).not.toContain('FEATURE_ROLE_ASSIGN');
       // It DOES read platform holder lists — needed to interpret the trail.
       expect(roleSet).toContain('PLATFORM_ROLE_HOLDERS_READ');
@@ -540,7 +540,7 @@ describe('role privilege contract — what each role SEES, per policy', () => {
 
   describe('EDGE — Slice A is additive: the legacy admin still sees everything', () => {
     it('GLOBAL_ADMIN reports a superset of every new role platform privilege', async () => {
-      const legacy = await reportedFor(TestUser.GLOBAL_ADMIN);
+      const legacy = await reportedFor(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
       const union = new Set([...legacy.platform, ...legacy.roleSet]);
 
       const missing: string[] = [];
@@ -562,7 +562,7 @@ describe('role privilege contract — what each role SEES, per policy', () => {
     it('GLOBAL_ADMIN still reports the PLATFORM_ADMIN catch-all', () => {
       // Its removal is Slice B (T074). Seeing it gone in a Slice A build means
       // subtractive work leaked into the additive slice.
-      return reportedFor(TestUser.GLOBAL_ADMIN).then(legacy => {
+      return reportedFor(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN).then(legacy => {
         expect(legacy.platform).toContain('PLATFORM_ADMIN');
       });
     });

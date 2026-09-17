@@ -127,7 +127,7 @@ describe('Callouts - Close State', () => {
     );
     calloutId = res.data?.createCalloutOnCalloutsSet.id ?? '';
 
-    await updateCallout(calloutId, TestUser.GLOBAL_ADMIN, {
+    await updateCallout(calloutId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN, {
       settings: { contribution: { enabled: false } },
     });
 
@@ -159,7 +159,7 @@ describe('Callouts - Close State', () => {
 
     await updateCalloutVisibility(calloutId, CalloutVisibility.Published);
 
-    await updateCallout(calloutId, TestUser.GLOBAL_ADMIN, {
+    await updateCallout(calloutId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN, {
       settings: { contribution: { enabled: false } },
     });
 
@@ -202,7 +202,7 @@ describe('Callout - Close State - User Privileges Posts', () => {
         resPostonSpace.data?.createContributionOnCallout.post;
       const postCommentsId = postDataCreate?.comments.id ?? '';
 
-      await updateCallout(calloutId, TestUser.GLOBAL_ADMIN, {
+      await updateCallout(calloutId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN, {
         settings: {
           framing: {
             commentsEnabled: true,
@@ -361,7 +361,7 @@ describe.skip('Callout - Close State - User Privileges Discussions', () => {
 
   beforeAll(async () => {
     const preconditions = async (calloutId: string) => {
-      await updateCallout(calloutId, TestUser.GLOBAL_ADMIN, {
+      await updateCallout(calloutId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN, {
         framing: { type: CalloutFramingType.None },
         settings: {
           framing: {

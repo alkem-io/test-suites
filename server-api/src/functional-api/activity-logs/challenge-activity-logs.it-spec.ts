@@ -175,7 +175,7 @@ describe('Activity logs - Subspace', () => {
       calloutId,
       { displayName: postDisplayName },
       postNameID,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     const postDataCreate =
       resPostonSpace?.data?.createContributionOnCallout.post;
@@ -184,7 +184,7 @@ describe('Activity logs - Subspace', () => {
     await sendMessageToRoom(
       postCommentsIdSpace,
       'test message on space post',
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     const resDiscussion = await createCalloutOnCalloutsSet(
@@ -335,7 +335,7 @@ describe('Access to Activity logs - Subspace', () => {
     // Arrange
     test.each`
       userRole
-      ${TestUser.GLOBAL_ADMIN}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}
       ${TestUser.SPACE_ADMIN}
       ${TestUser.SPACE_MEMBER}
     `(
@@ -386,7 +386,7 @@ describe('Access to Activity logs - Subspace', () => {
     // Arrange
     test.each`
       userRole
-      ${TestUser.GLOBAL_ADMIN}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}
       ${TestUser.SPACE_ADMIN}
       ${TestUser.SPACE_MEMBER}
       ${TestUser.NON_SPACE_MEMBER}

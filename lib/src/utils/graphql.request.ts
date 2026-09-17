@@ -63,7 +63,7 @@ export const graphqlRequestAuth = async (
 export const mutation = async (
   mutationData: string,
   variablesData: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const requestParams = {
     operationName: null,

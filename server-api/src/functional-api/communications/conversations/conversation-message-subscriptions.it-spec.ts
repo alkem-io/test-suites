@@ -59,7 +59,7 @@ describe('Conversation Message Subscriptions', () => {
         [memberActorId],
         ConversationCreationType.Group,
         { displayName: 'Sub Message Received Test' },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       groupConversationId =
         res?.data?.createConversation?.id ?? '';
@@ -73,7 +73,7 @@ describe('Conversation Message Subscriptions', () => {
           query: subscriptionConversationEvents,
           variables: {},
         },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
     });
 
@@ -82,7 +82,7 @@ describe('Conversation Message Subscriptions', () => {
       if (groupConversationId) {
         await leaveConversation(
           groupConversationId,
-          TestUser.GLOBAL_ADMIN
+          TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
         ).catch(() => {});
       }
     });
@@ -92,7 +92,7 @@ describe('Conversation Message Subscriptions', () => {
       await sendMessageToRoom(
         conversationRoomId,
         'Hello subscription!',
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       // Assert
@@ -127,7 +127,7 @@ describe('Conversation Message Subscriptions', () => {
       await sendMessageToRoom(
         conversationRoomId,
         'Message from admin',
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       // Assert — member should receive the event
@@ -158,7 +158,7 @@ describe('Conversation Message Subscriptions', () => {
         [memberActorId],
         ConversationCreationType.Group,
         { displayName: 'Sub Message Removed Test' },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       const conversationId =
         res?.data?.createConversation?.id ?? '';
@@ -168,7 +168,7 @@ describe('Conversation Message Subscriptions', () => {
       const msgRes = await sendMessageToRoom(
         roomId,
         'Message to delete',
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       const messageId =
         msgRes?.data?.sendMessageToRoom?.id ?? '';
@@ -181,11 +181,11 @@ describe('Conversation Message Subscriptions', () => {
           query: subscriptionConversationEvents,
           variables: {},
         },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       // Act
-      await removeMessageOnRoom(roomId, messageId, TestUser.GLOBAL_ADMIN);
+      await removeMessageOnRoom(roomId, messageId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
 
       // Assert
       await delay(3000);
@@ -206,7 +206,7 @@ describe('Conversation Message Subscriptions', () => {
       // Cleanup
       await leaveConversation(
         conversationId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       ).catch(() => {});
     });
   });

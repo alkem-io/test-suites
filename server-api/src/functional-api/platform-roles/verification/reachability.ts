@@ -35,7 +35,7 @@ import type {
   AuthorizationCredential,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import type { SurfaceRef } from './a-row-surfaces.data';
-import { LEGACY_CASCADES, ROOT_CASCADE, type TreeId } from './cascade-and-grants.data';
+import { ROOT_CASCADE, type TreeId } from './cascade-and-grants.data';
 import {
   isAnyOfGate,
   isConditionGate,
@@ -74,7 +74,8 @@ import {
  *   the surface's own declared fields: the union, over every named
  *   privilege, of (a) the credentials `privilege.grants.ts` says hold that
  *   privilege in this slice, and (b) the credentials reached via a cascade
- *   (`ROOT_CASCADE`, plus the two Slice-A-only `LEGACY_CASCADES`) that both
+ *   (`ROOT_CASCADE`; the two Slice-A-only `LEGACY_CASCADES` are deleted at
+ *   T022a) that both
  *   names the privilege AND reaches the surface's `tree`. This is the ONLY
  *   branch with independent verification value — it is what makes "does
  *   the derived set equal the declared intent" a real question rather than
@@ -148,24 +149,13 @@ export function reachers(
         }
       }
 
-      // The two Slice-A-only legacy cascades. Absent entirely at Slice B —
-      // both are deleted outright (T072, T073), not merely narrowed.
-      if (slice === 'A') {
-        const { globalAdminRootCrud, globalSupportPlatformSubtree } =
-          LEGACY_CASCADES;
-        if (
-          globalAdminRootCrud.privileges.includes(privilege) &&
-          reachesTree(globalAdminRootCrud.trees, surface.tree)
-        ) {
-          result.add(globalAdminRootCrud.credential);
-        }
-        if (
-          globalSupportPlatformSubtree.privileges.includes(privilege) &&
-          reachesTree(globalSupportPlatformSubtree.trees, surface.tree)
-        ) {
-          result.add(globalSupportPlatformSubtree.credential);
-        }
-      }
+      // T022a (Slice B): the two legacy-cascade branches that stood here are gone
+      // with `LEGACY_CASCADES` — both cascades were deleted server-side (T072,
+      // T073) and both credentials left the enum (T077), so there is nothing left
+      // for a `slice === 'A'` branch to add. `slice` survives as a parameter
+      // because the matrix still speaks in stages, but the two now derive the
+      // same set — which is exactly why every legacy "allow" cell flips to a
+      // denial.
     }
 
     return dedupe([...result]);

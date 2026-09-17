@@ -131,7 +131,7 @@ describe('Conversation-message notifications — debounce & digest (R4)', () => 
     beforeAll(async () => {
       const res = await createDirectConversation(
         recipient().agentId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       roomId = res?.data?.createConversation?.room?.id ?? '';
       expect(roomId).toBeTruthy();
@@ -143,7 +143,7 @@ describe('Conversation-message notifications — debounce & digest (R4)', () => 
       await sendInto(
         roomId,
         'Digest spec baseline drain',
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       await drainRecipientUnread();
     }, directEmail.testTimeoutMs + groupEmail.maxDelayGraceMs);
@@ -166,7 +166,7 @@ describe('Conversation-message notifications — debounce & digest (R4)', () => 
           await sendInto(
             roomId,
             `Digest burst message ${i}`,
-            TestUser.GLOBAL_ADMIN
+            TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
           );
         }
 
@@ -222,7 +222,7 @@ describe('Conversation-message notifications — debounce & digest (R4)', () => 
     beforeAll(async () => {
       const resA = await createDirectConversation(
         recipient().agentId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       roomAId = resA?.data?.createConversation?.room?.id ?? '';
       // A DIFFERENT sender makes this a genuinely distinct actor pair, hence a
@@ -238,7 +238,7 @@ describe('Conversation-message notifications — debounce & digest (R4)', () => 
       await sendInto(
         roomAId,
         'Aggregation baseline drain A',
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       await sendInto(
         roomCId,
@@ -260,7 +260,7 @@ describe('Conversation-message notifications — debounce & digest (R4)', () => 
         // Act — 2 messages from A and 3 from C, all inside one quiet period.
         const burstStartedAtMs = Date.now();
         for (let i = 1; i <= 2; i++) {
-          await sendInto(roomAId, `From A ${i}`, TestUser.GLOBAL_ADMIN);
+          await sendInto(roomAId, `From A ${i}`, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
         }
         for (let i = 1; i <= 3; i++) {
           await sendInto(roomCId, `From C ${i}`, TestUser.SPACE_ADMIN);
@@ -319,12 +319,12 @@ describe('Conversation-message notifications — debounce & digest (R4)', () => 
       const res1 = await createGroupConversation(
         [recipient().agentId, TestUserManager.users.spaceMember.agentId],
         group1Name,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       const res2 = await createGroupConversation(
         [recipient().agentId, TestUserManager.users.spaceMember.agentId],
         group2Name,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       group1RoomId = res1?.data?.createConversation?.room?.id ?? '';
       group2RoomId = res2?.data?.createConversation?.room?.id ?? '';
@@ -340,7 +340,7 @@ describe('Conversation-message notifications — debounce & digest (R4)', () => 
       await drainRecipientUnread();
       for (const id of groupIds) {
         if (id)
-          await leaveConversation(id, TestUser.GLOBAL_ADMIN).catch(() => {});
+          await leaveConversation(id, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN).catch(() => {});
       }
     }, groupEmail.maxDelayGraceMs + 60_000);
 
@@ -353,13 +353,13 @@ describe('Conversation-message notifications — debounce & digest (R4)', () => 
         await sendInto(
           group1RoomId,
           'Group one message',
-          TestUser.GLOBAL_ADMIN
+          TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
         );
         for (let i = 1; i <= 2; i++) {
           await sendInto(
             group2RoomId,
             `Group two message ${i}`,
-            TestUser.GLOBAL_ADMIN
+            TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
           );
         }
 
@@ -407,7 +407,7 @@ describe('Conversation-message notifications — debounce & digest (R4)', () => 
       const groupRes = await createGroupConversation(
         [recipient().agentId, TestUserManager.users.spaceMember.agentId],
         groupName,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       groupRoomId = groupRes?.data?.createConversation?.room?.id ?? '';
       groupId = groupRes?.data?.createConversation?.id ?? '';
@@ -425,7 +425,7 @@ describe('Conversation-message notifications — debounce & digest (R4)', () => 
     afterAll(async () => {
       await drainRecipientUnread();
       if (groupId) {
-        await leaveConversation(groupId, TestUser.GLOBAL_ADMIN).catch(() => {});
+        await leaveConversation(groupId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN).catch(() => {});
       }
     }, groupEmail.maxDelayGraceMs + 60_000);
 
@@ -443,7 +443,7 @@ describe('Conversation-message notifications — debounce & digest (R4)', () => 
         await sendInto(
           groupRoomId,
           'Independence group message',
-          TestUser.GLOBAL_ADMIN
+          TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
         );
         await sendInto(
           directRoomId,

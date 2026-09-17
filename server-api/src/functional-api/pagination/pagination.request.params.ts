@@ -10,7 +10,7 @@ export const paginatedUser = async (
     after?: string | undefined;
     filter?: UserFilterInput | undefined;
   },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -33,7 +33,7 @@ export const paginatedOrganization = async (
     after?: string | undefined;
     filter?: OrganizationFilterInput | undefined;
   },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>

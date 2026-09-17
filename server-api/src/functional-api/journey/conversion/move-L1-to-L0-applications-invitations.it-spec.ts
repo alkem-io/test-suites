@@ -70,7 +70,7 @@ beforeAll(async () => {
     [],
     'welcome before move',
     [RoleName.Member],
-    TestUser.GLOBAL_ADMIN
+    TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
   );
   const invitationResult = getSingleInvitationResult(invitationData);
   invitationId = invitationResult?.invitation?.id ?? '';
@@ -133,7 +133,7 @@ describe('Move L1 to L0 - pre-existing applications and invitations', () => {
       [],
       'welcome after move',
       [RoleName.Member],
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     const result = getSingleInvitationResult(newInvitation);

@@ -75,7 +75,7 @@ export const createUser = async (
       description?: string;
     };
   },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -143,7 +143,7 @@ export const createUserDataOrFail = async (
       description?: string;
     };
   } = {},
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ): Promise<CreatedUserData> => {
   // A caller-supplied nameID is the recovery key; otherwise mint one per call
   // (getDefaultUserData reuses one module-level id for every call).
@@ -247,7 +247,7 @@ const waitForUserReady = async (
 /** Id-only convenience over `createUserDataOrFail`. */
 export const createUserOrFail = async (
   options: Parameters<typeof createUserDataOrFail>[0] & { nameID: string },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ): Promise<string> => (await createUserDataOrFail(options, userRole)).id;
 
 export const updateUser = async (
@@ -257,7 +257,7 @@ export const updateUser = async (
     location?: { country?: string; city?: string };
     description?: string;
   },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -279,7 +279,7 @@ export const updateUser = async (
 
 export const deleteUser = async (
   userId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -300,7 +300,7 @@ export const deleteUser = async (
 
 export const getUsersData = async (
   userID: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -315,7 +315,7 @@ export const getUsersData = async (
 
 export const getUserData = async (
   userId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -332,7 +332,7 @@ export const getUserData = async (
 
 export const getUserByNameId = async (
   nameId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -350,7 +350,7 @@ export const getUserByNameId = async (
 export const getUserPendingMemberships = async (
   fetchDetails: boolean,
   spaceId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -367,7 +367,7 @@ export const getUserPendingMemberships = async (
 //   userID: string,
 //   type: PreferenceType = PreferenceType.NotificationUserSignUp,
 //   value: string,
-//   userRole: TestUser = TestUser.GLOBAL_ADMIN
+//   userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 // ) => {
 //   const graphqlClient = getGraphqlClient();
 //   const callback = (authToken: string | undefined) =>
@@ -390,7 +390,7 @@ export const getUserPendingMemberships = async (
 export const updateUserSettings = async (
   userID: string,
   settings: UpdateUserSettingsEntityInput,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -412,7 +412,7 @@ export const updateUserSettings = async (
 // export const updateUserSettingCommunicationMessage = async (
 //   userID: string,
 //   value: boolean,
-//   userRole: TestUser = TestUser.GLOBAL_ADMIN
+//   userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 // ) => {
 //   return updateUserSettings(
 //     userID,

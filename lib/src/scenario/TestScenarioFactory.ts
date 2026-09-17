@@ -575,17 +575,17 @@ export class TestScenarioFactory {
   private static async populateGlobalRoles(): Promise<void> {
     await this.checkAndAssignRoleNameToUser(
       TestUserManager.users.globalLicenseAdmin,
-      RoleName.GlobalLicenseManager,
+      RoleName.PlatformLicenseManager,
     );
 
     await this.checkAndAssignRoleNameToUser(
       TestUserManager.users.globalSupportAdmin,
-      RoleName.GlobalSupport,
+      RoleName.PlatformSupport,
     );
 
     await this.checkAndAssignRoleNameToUser(
       TestUserManager.users.betaTester,
-      RoleName.PlatformBetaTester,
+      RoleName.FeatureBetaTester,
     );
   }
 
@@ -1109,7 +1109,7 @@ export class TestScenarioFactory {
             visibility: CalloutVisibility.Published,
           },
         },
-        TestUser.GLOBAL_ADMIN,
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
       );
 
     spaceModel.collaboration.calloutWhiteboardCollectionId =
@@ -1142,7 +1142,7 @@ export class TestScenarioFactory {
           visibility: CalloutVisibility.Published,
         },
       },
-      TestUser.GLOBAL_ADMIN,
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
     );
 
     spaceModel.collaboration.calloutWhiteboardId =
@@ -1165,7 +1165,7 @@ export class TestScenarioFactory {
       displayName,
       `l1nameid${uniqueId}`,
       parentSpaceID,
-      TestUser.GLOBAL_ADMIN,
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
       tagline,
       // Honour the per-subspace config (previously the config value was
       // silently ignored — subspaces were hardcoded OFF with no opt-in path).
@@ -1223,7 +1223,7 @@ export class TestScenarioFactory {
     spaceNameId: string,
     accountID: string,
     addTutorialCallouts: boolean,
-    role = TestUser.GLOBAL_ADMIN,
+    role = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
   ) {
     const response = await createSpaceBasicData(
       spaceName,

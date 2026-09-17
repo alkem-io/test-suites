@@ -11,7 +11,7 @@ import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 
 export const createInnovationHub = async (
   accountID: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const uniqueId = UniqueIDGenerator.getID();
   const graphqlClient = getGraphqlClient();
@@ -39,7 +39,7 @@ export const createInnovationHub = async (
 
 export const deleteInnovationHub = async (
   ID: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>

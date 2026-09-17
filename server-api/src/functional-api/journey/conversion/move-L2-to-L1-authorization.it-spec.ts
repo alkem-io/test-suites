@@ -174,7 +174,7 @@ describe('Move L2 to L1 - platform-admin gate (FR-012 / S9)', () => {
       sourceScenario.subsubspace.id,
       targetScenario.subspace.id,
       undefined,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     expect(res.data?.moveSpaceL2ToSpaceL1).toBeDefined();

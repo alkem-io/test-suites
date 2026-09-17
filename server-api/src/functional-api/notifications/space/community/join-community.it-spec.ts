@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import {
   delay,
   deleteMailSlurperMails,
@@ -263,7 +263,7 @@ describe('Notifications - member join community', () => {
       TestUserManager.users.qaUser.id,
       baseScenario.space.community.roleSetId,
       RoleName.Member,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     await delay(1000);

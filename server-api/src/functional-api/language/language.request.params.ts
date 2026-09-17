@@ -48,7 +48,7 @@ export type InviteWithLanguageOptions = {
 /** `inviteForEntryRoleOnRoleSet`, optionally carrying a suggested language. */
 export const inviteWithSuggestedLanguage = async (
   options: InviteWithLanguageOptions,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const invitationData: Record<string, unknown> = {
     roleSetID: options.roleSetID,
@@ -82,7 +82,7 @@ export const inviteWithSuggestedLanguage = async (
 /** All invitations + platform invitations on a role set, with their languages. */
 export const getRoleSetInvitationLanguages = async (
   roleSetID: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) =>
   graphqlRequestAuth(
     {
@@ -103,7 +103,7 @@ export const getRoleSetInvitationLanguages = async (
 /** A user's language settings — the per-user store the story is about. */
 export const getUserLanguageSettings = async (
   userID: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) =>
   graphqlRequestAuth(
     {
@@ -120,7 +120,7 @@ export const getUserLanguageSettings = async (
 export const updateUserLanguageSettings = async (
   userID: string,
   settings: { language?: string | null; languageOfferAnswered?: boolean },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) =>
   graphqlRequestAuth(
     {
@@ -137,7 +137,7 @@ export const updateUserLanguageSettings = async (
   );
 
 /** Platform language configuration — the eligible set every other rule derives from. */
-export const getLanguageConfig = async (userRole: TestUser = TestUser.GLOBAL_ADMIN) =>
+export const getLanguageConfig = async (userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN) =>
   graphqlRequestAuth(
     {
       operationName: 'PlatformLanguageConfig',
@@ -150,7 +150,7 @@ export const getLanguageConfig = async (userRole: TestUser = TestUser.GLOBAL_ADM
 
 export const deletePlatformInvitationById = async (
   ID: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) =>
   graphqlRequestAuth(
     {
@@ -169,7 +169,7 @@ export const createUserWithEmail = async (
   email: string,
   firstName: string,
   lastName: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) =>
   graphqlRequestAuth(
     {

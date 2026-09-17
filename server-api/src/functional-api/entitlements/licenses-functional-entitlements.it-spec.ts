@@ -50,16 +50,16 @@ beforeAll(async () => {
   await TestScenarioFactory.createBaseScenarioEmpty(scenarioConfig);
   await assignPlatformRole(
     TestUserManager.users.nonSpaceMember.id,
-    RoleName.PlatformVcCampaign
+    RoleName.FeatureBetaTester
   );
 });
 
 afterAll(async () => {
   await removePlatformRole(
     TestUserManager.users.nonSpaceMember.id,
-    RoleName.PlatformVcCampaign
+    RoleName.FeatureBetaTester
   );
-  await deleteSpace(spaceId, TestUser.GLOBAL_ADMIN);
+  await deleteSpace(spaceId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
 });
 
 describe('Functional tests - licenses updates', () => {
@@ -92,7 +92,7 @@ describe('Functional tests - licenses updates', () => {
       await revokeLicensePlanFromSpace(
         spaceId,
         licensePlanIdSpacePlus,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       const responseAfterRevokePlus = await getMyEntitlementsQuery(
         TestUser.NON_SPACE_MEMBER

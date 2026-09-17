@@ -136,19 +136,19 @@ beforeAll(async () => {
     baseScenario.space.id,
     country,
     city,
-    TestUser.GLOBAL_ADMIN
+    TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
   );
   await updateSpaceLocation(
     baseScenario.subspace.id,
     country,
     city,
-    TestUser.GLOBAL_ADMIN
+    TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
   );
   await updateSpaceLocation(
     baseScenario.subsubspace.id,
     country,
     city,
-    TestUser.GLOBAL_ADMIN
+    TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
   );
 
   const responseCreateOrganization = await createOrganization(
@@ -612,7 +612,7 @@ describe('Search', () => {
       // Act
       const responseSearchData = await searchSpaces(
         [secondSpaceName],
-        TestUser.GLOBAL_ADMIN,
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
         baseScenario.space.id
       );
       const resultJourney =
@@ -643,7 +643,7 @@ describe('Search', () => {
       // Act
       const responseSearchData = await searchSpaces(
         termWord,
-        TestUser.GLOBAL_ADMIN,
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
         secondSpaceId
       );
       const resultJourney =
@@ -712,7 +712,7 @@ describe('Search', () => {
       const responseSearchData = await searchSpaces(
         termLocation,
 
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       const resultJourney =
         responseSearchData.data?.search.spaceResults.results;

@@ -100,7 +100,7 @@ describe('GraphQL Guard - Nested Query Data Integrity', () => {
     test('GetSpaceData returns complete nested hierarchy for global admin', async () => {
       const response = await getSpaceData(
         baseScenario.space.id,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       const space = response?.data?.lookup?.space;
 
@@ -227,7 +227,7 @@ describe('GraphQL Guard - Nested Query Data Integrity', () => {
       // since the full GetSpaceData query requests nested fields (community
       // groups, roleSet, applications) that non-admin users cannot access.
       const [adminRes, memberRes, nonMemberRes] = await Promise.all([
-        getSpaceData(baseScenario.space.id, TestUser.GLOBAL_ADMIN),
+        getSpaceData(baseScenario.space.id, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN),
         getPrivateSpaceData(baseScenario.space.id, TestUser.SPACE_MEMBER),
         getPrivateSpaceData(baseScenario.space.id, TestUser.NON_SPACE_MEMBER),
       ]);
@@ -257,7 +257,7 @@ describe('GraphQL Guard - Nested Query Data Integrity', () => {
       // levels to verify parallel requests return correct, distinct data.
       const [subspaceAdmin, globalAdmin] = await Promise.all([
         getSubspaceData(baseScenario.subspace.id, TestUser.SUBSPACE_ADMIN),
-        getSubspaceData(baseScenario.subspace.id, TestUser.GLOBAL_ADMIN),
+        getSubspaceData(baseScenario.subspace.id, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN),
       ]);
 
       const subspaceAdminData = subspaceAdmin?.data?.lookup?.space;
@@ -303,7 +303,7 @@ describe('GraphQL Guard - Nested Query Data Integrity', () => {
     test('Every level in the hierarchy returns correct IDs and authorization', async () => {
       const response = await getSpaceData(
         baseScenario.space.id,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       const space = response?.data?.lookup?.space;
 
@@ -347,7 +347,7 @@ describe('GraphQL Guard - Nested Query Data Integrity', () => {
 
   describe('Spaces list query with guard on multiple top-level items', () => {
     test('GetSpacesData returns a list of spaces without errors', async () => {
-      const response = await getSpacesData(TestUser.GLOBAL_ADMIN);
+      const response = await getSpacesData(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
 
       expect(response?.data?.spaces).toBeDefined();
       expect(Array.isArray(response?.data?.spaces)).toBe(true);

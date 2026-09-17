@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 
 import { ForumDiscussionCategory } from '@alkemio/client-lib';
 import {
@@ -497,7 +497,7 @@ describe('Notifications - forum discussions comments reply', () => {
       messageId,
       discussionCommentId,
       'test reply',
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     await delay(1000);
@@ -540,7 +540,7 @@ describe('Notifications - forum discussions comments reply', () => {
       messageId,
       discussionCommentId,
       'test reply',
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     await delay(1000);
@@ -614,7 +614,7 @@ describe('Notifications - forum discussions comments reply', () => {
     const res = await sendMessageToRoom(
       discussionCommentId,
       'test',
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     const resComment = res?.data?.sendMessageToRoom;
     messageId = resComment?.id;
@@ -764,7 +764,7 @@ describe('Notifications - no notifications triggered', () => {
       messageId,
       discussionCommentId,
       'test reply',
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     await delay(1000);
@@ -798,7 +798,7 @@ describe('Notifications - no notifications triggered', () => {
       messageId,
       discussionCommentId,
       'test reply',
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     await delay(1000);

@@ -34,7 +34,7 @@ describe('Space BANNER visual constraints (10178)', () => {
   test('TC-01 — BANNER visual reports minWidth 1200 / minHeight 120', async () => {
     const res = await lookupProfileVisuals(
       baseScenario.space.about.profile.id,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     const visuals = res.data?.lookup.profile?.visuals ?? [];
@@ -63,7 +63,7 @@ describe('Space BANNER visual constraints (10178)', () => {
   test('TC-02 — 1200×120 upload accepted; 1199×120 rejected', async () => {
     const res = await lookupProfileVisuals(
       baseScenario.space.about.profile.id,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     const visuals = res.data?.lookup.profile?.visuals ?? [];
     const bannerVisualId = visuals.find(visual => visual.name === 'BANNER')?.id;
@@ -80,7 +80,7 @@ describe('Space BANNER visual constraints (10178)', () => {
     const accepted = await uploadImageOnVisual(
       onBoundary,
       bannerVisualId as string,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     expect(accepted.errors, JSON.stringify(accepted.errors)).toBeUndefined();
     const uploadedUri = accepted.data?.uploadImageOnVisual?.uri;
@@ -93,7 +93,7 @@ describe('Space BANNER visual constraints (10178)', () => {
     const rejected = await uploadImageOnVisual(
       belowBoundary,
       bannerVisualId as string,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     expect(rejected.errors?.length).toBeGreaterThan(0);
     // Assert only that the minimum appears in the message — it is server

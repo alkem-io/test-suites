@@ -50,7 +50,7 @@ describe('Organization settings', () => {
     // Arrange
     test.each`
       userRole
-      ${TestUser.GLOBAL_ADMIN}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}
       ${TestUser.SPACE_MEMBER}
       ${TestUser.ORGANIZATION_ADMIN}
     `(

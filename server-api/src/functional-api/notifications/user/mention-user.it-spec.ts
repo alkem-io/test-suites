@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import {
   delay,
   deleteMailSlurperMails,
@@ -169,7 +169,7 @@ describe('Notifications - Mention User', () => {
           TestUserManager.users.spaceMember.displayName,
           TestUserManager.users.spaceMember.nameId
         )} comment on discussion callout`,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       await delay(1000);
       const getEmailsData = await getMailsData();
@@ -271,7 +271,7 @@ describe('Notifications - Mention User', () => {
           TestUserManager.users.spaceMember.displayName,
           TestUserManager.users.spaceMember.nameId
         )} comment on discussion callout`,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       await delay(1000);
 
@@ -298,7 +298,7 @@ describe('Notifications - Mention User', () => {
           TestUserManager.users.spaceMember.displayName,
           TestUserManager.users.spaceMember.nameId
         )} comment on discussion callout`,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       await delay(1000);
 
@@ -326,7 +326,7 @@ describe('Notifications - Mention User', () => {
         baseScenario.space.collaboration.calloutPostCollectionId,
         { displayName: postDisplayName },
         postNameID,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       postCommentsIdSpace =
         resPostonSpace.data?.createContributionOnCallout.post?.comments.id ??

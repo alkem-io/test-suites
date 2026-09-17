@@ -108,7 +108,7 @@ describe('Upload document', () => {
   describe('DDT upload all file types', () => {
     afterEach(async () => {
       if (documentId && documentId.length === 36) {
-        await deleteDocument(documentId, TestUser.GLOBAL_ADMIN);
+        await deleteDocument(documentId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
         documentId = '';
       }
     });
@@ -181,8 +181,8 @@ describe('Upload document', () => {
     documentEndPoint = res.data?.uploadFileOnReference?.uri || 'not found';
     documentId = getLastPartOfUrl(documentEndPoint);
 
-    await deleteDocument(documentId, TestUser.GLOBAL_ADMIN);
-    const resDelete = await deleteDocument(documentId, TestUser.GLOBAL_ADMIN);
+    await deleteDocument(documentId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
+    const resDelete = await deleteDocument(documentId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
 
     expect(resDelete.error?.errors[0].message).toContain(
       'Not able to locate document with the specified ID'
@@ -201,7 +201,7 @@ describe('Upload document', () => {
 
       const documentAccess = await getAuthDocument(
         documentId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       expect(documentAccess.status).toEqual(200);
     });
@@ -214,10 +214,10 @@ describe('Upload document', () => {
       documentEndPoint = res.data?.uploadFileOnReference?.uri || 'not found';
       documentId = getLastPartOfUrl(documentEndPoint);
 
-      await deleteDocument(documentId, TestUser.GLOBAL_ADMIN);
+      await deleteDocument(documentId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
       const documentAccess = await getAuthDocument(
         documentId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       expect(documentAccess.status).toEqual(404);
     });
@@ -237,7 +237,7 @@ describe('Upload document', () => {
       await deleteReferenceOnProfile(refId2);
       const documentAccess = await getAuthDocument(
         documentId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       expect(documentAccess.status).toEqual(200);
     });
@@ -253,7 +253,7 @@ describe('Upload document', () => {
 
       const documentAccess = await getAuthDocument(
         documentId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       expect(documentAccess.status).toEqual(200);
     });
@@ -266,10 +266,10 @@ describe('Upload document', () => {
       documentEndPoint = res.data?.uploadFileOnReference?.uri || 'not found';
       documentId = getLastPartOfUrl(documentEndPoint);
 
-      await deleteDocument(documentId, TestUser.GLOBAL_ADMIN);
+      await deleteDocument(documentId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
       const documentAccess = await getAuthDocument(
         documentId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       expect(documentAccess.status).toEqual(404);
     });
@@ -289,7 +289,7 @@ describe('Upload document', () => {
       await deleteReferenceOnProfile(refId2);
       const documentAccess = await getAuthDocument(
         documentId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       expect(documentAccess.status).toEqual(200);
     });
@@ -334,7 +334,7 @@ describe('Upload document', () => {
     await deleteReferenceOnProfile(refId);
     refId = '';
 
-    const resDelete = await deleteDocument(documentId, TestUser.GLOBAL_ADMIN);
+    const resDelete = await deleteDocument(documentId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
 
     expect(resDelete?.data?.deleteDocument.id).toEqual(documentId);
     documentId = '';
@@ -350,7 +350,7 @@ describe('Upload visual tests', () => {
   });
   afterEach(async () => {
     if (documentId && documentId.length === 36) {
-      await deleteDocument(documentId, TestUser.GLOBAL_ADMIN);
+      await deleteDocument(documentId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
       documentId = '';
     }
   });
@@ -407,14 +407,14 @@ describe('Upload visual tests', () => {
       const res = await uploadImageOnVisual(
         path.join(__dirname, 'files-to-upload', '200-square.jpg'),
         visualId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       documentEndPoint = res.data?.uploadImageOnVisual?.uri;
       documentId = getLastPartOfUrl(documentEndPoint);
 
       const documentAccess = await getAuthDocument(
         documentId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       expect(documentAccess.status).toEqual(200);
     });
@@ -423,14 +423,14 @@ describe('Upload visual tests', () => {
       const res = await uploadImageOnVisual(
         path.join(__dirname, 'files-to-upload', '200-square.jpg'),
         visualId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       documentEndPoint = res.data?.uploadImageOnVisual?.uri;
       documentId = getLastPartOfUrl(documentEndPoint);
 
       const documentAccess = await getAuthDocument(
         documentId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       expect(documentAccess.status).toEqual(200);
     });
@@ -464,7 +464,7 @@ describe('Upload visual to innovation space', () => {
   });
 
   afterEach(async () => {
-    await deleteDocument(documentId, TestUser.GLOBAL_ADMIN);
+    await deleteDocument(documentId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
   });
 
   test('upload visual', async () => {

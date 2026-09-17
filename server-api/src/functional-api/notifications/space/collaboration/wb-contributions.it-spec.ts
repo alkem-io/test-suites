@@ -163,7 +163,7 @@ beforeAll(async () => {
         },
       },
     },
-    TestUser.GLOBAL_ADMIN
+    TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
   );
   whiteboardCollectionSpaceCalloutId =
     resSpace?.data?.createCalloutOnCalloutsSet.id ?? '';
@@ -189,7 +189,7 @@ beforeAll(async () => {
         },
       },
     },
-    TestUser.GLOBAL_ADMIN
+    TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
   );
   whiteboardCollectionSubspaceCalloutId =
     resSubspace?.data?.createCalloutOnCalloutsSet.id ?? '';
@@ -215,7 +215,7 @@ beforeAll(async () => {
         },
       },
     },
-    TestUser.GLOBAL_ADMIN
+    TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
   );
   whiteboardCollectionSubsubspaceCalloutId =
     resSubsubspace?.data?.createCalloutOnCalloutsSet.id ?? '';
@@ -273,7 +273,7 @@ describe('Notifications - whiteboard', () => {
     // Act
     const res = await createWhiteboardOnCallout(
       whiteboardCollectionSpaceCalloutId,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     spaceWhiteboardId =
       res?.data?.createContributionOnCallout?.whiteboard?.id ?? '';

@@ -31,7 +31,7 @@ export const getSpaceTemplatesCountForSpace = async (spaceId: string) => {
 
 export const getSpaceTemplatesCountByTemplateSetId = async (
   templateSetId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -59,7 +59,7 @@ export const createTemplateFromSpace = async (
   spaceId: string,
   templatesSetId: string,
   displayName: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -79,7 +79,7 @@ export const createTemplateFromSpace = async (
 export const updateSpaceTemplate = async (
   templateId: string,
   profile: any = templateDefaultInfo,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -98,7 +98,7 @@ export const updateSpaceTemplate = async (
 export const updateCollaborationFromSpaceTemplate = async (
   collaborationID: string,
   spaceTemplateID: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>

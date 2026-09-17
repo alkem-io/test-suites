@@ -6,14 +6,13 @@ export const updateSpacePlatformSettings = async (
   spaceID: string,
   visibility: SpaceVisibility,
   nameID: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
     graphqlClient.UpdateSpacePlatformSettings(
       {
         spaceId: spaceID,
-        visibility,
         nameId: nameID,
       },
       {

@@ -273,7 +273,7 @@ describe('MCP API key containment (US3, workspace#038-mcp-api-key-management)', 
         query: ADMIN_LIST_QUERY,
         variables: { userID: ownerId },
       },
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     expect(response.body.errors).toBeUndefined();
@@ -298,7 +298,7 @@ describe('MCP API key containment (US3, workspace#038-mcp-api-key-management)', 
         query: ADMIN_REVOKE_MUTATION,
         variables: { revokeData: { userID: ownerId, keyID: leakedKeyId } },
       },
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     expect(revokeResponse.body.errors).toBeUndefined();
@@ -349,7 +349,7 @@ describe('MCP API key containment (US3, workspace#038-mcp-api-key-management)', 
         query: ADMIN_LIST_QUERY,
         variables: { userID: nonUserSubject },
       },
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     expect(listResponse.body.errors).toBeUndefined();
     expect(listResponse.body.data.platformAdmin.mcpApiKeys).toEqual([]);
@@ -365,7 +365,7 @@ describe('MCP API key containment (US3, workspace#038-mcp-api-key-management)', 
           },
         },
       },
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     expect(revokeResponse.body.data?.adminRevokeMcpApiKey).toBeFalsy();
     expect(revokeResponse.body.errors?.[0]?.extensions?.code).toBe(
@@ -375,7 +375,7 @@ describe('MCP API key containment (US3, workspace#038-mcp-api-key-management)', 
 
   test("US3-AS7: an ordinary user cannot list or revoke another user's keys", async () => {
     const target = await mintKeyAs(
-      TestUser.GLOBAL_ADMIN,
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
       'containment-it-spec-as7-target-key'
     );
 
@@ -414,7 +414,7 @@ describe('MCP API key containment (US3, workspace#038-mcp-api-key-management)', 
           query: ME_LIST_QUERY,
           variables: {},
         },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       const stillActive = targetOwnerList.body.data.me.mcpApiKeys.find(
         (k: { id: string }) => k.id === target.keyId
@@ -427,7 +427,7 @@ describe('MCP API key containment (US3, workspace#038-mcp-api-key-management)', 
           query: REVOKE_MUTATION,
           variables: { revokeData: { keyID: target.keyId } },
         },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       assertCleanupSucceeded(cleanup, target.keyId);
     }

@@ -8,7 +8,7 @@ export const createPostTemplate = async (
   defaultDescription = 'Default post template description',
   displayName = 'Default post template title',
   description = 'Default post template info description',
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -36,7 +36,7 @@ export const updatePostTemplate = async (
   displayName: string,
   description: string,
   postDefaultDescription: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>

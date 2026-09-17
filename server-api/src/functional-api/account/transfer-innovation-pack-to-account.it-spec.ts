@@ -92,7 +92,7 @@ describe('Transfer innovation pack to Account', () => {
       packName,
       packNameId,
       TestUserManager.users.betaTester.accountId,
-      TestUser.GLOBAL_BETA_TESTER
+      TestUser.FEATURE_BETA_TESTER
     );
     innovationPackId = packData?.data?.createInnovationPack?.id ?? '';
 
@@ -100,7 +100,7 @@ describe('Transfer innovation pack to Account', () => {
     const transferData = await transferInnovationPackToAccount(
       innovationPackId,
       TestUserManager.users.qaUser.accountId,
-      TestUser.GLOBAL_SUPPORT_ADMIN
+      TestUser.PLATFORM_SUPPORT
     );
 
     const transferedData = transferData.data?.transferInnovationPackToAccount;
@@ -130,7 +130,7 @@ describe('Transfer innovation pack to Account', () => {
       packName,
       packNameId,
       TestUserManager.users.betaTester.accountId,
-      TestUser.GLOBAL_BETA_TESTER
+      TestUser.FEATURE_BETA_TESTER
     );
     innovationPackId = packData?.data?.createInnovationPack?.id ?? '';
 
@@ -138,7 +138,7 @@ describe('Transfer innovation pack to Account', () => {
     const transferData = await transferInnovationPackToAccount(
       innovationPackId,
       TestUserManager.users.qaUser.accountId,
-      TestUser.GLOBAL_BETA_TESTER
+      TestUser.FEATURE_BETA_TESTER
     );
 
     const transferedData = transferData.data?.transferInnovationPackToAccount;
@@ -169,13 +169,13 @@ describe('Transfer innovation pack to Account', () => {
     // Arrange
     await assignPlatformRole(
       TestUserManager.users.nonSpaceMember.id,
-      RoleName.PlatformVcCampaign
+      RoleName.FeatureBetaTester
     );
     const packData = await createInnovationPack(
       packName,
       packNameId,
       TestUserManager.users.betaTester.accountId,
-      TestUser.GLOBAL_BETA_TESTER
+      TestUser.FEATURE_BETA_TESTER
     );
     innovationPackId = packData?.data?.createInnovationPack?.id ?? '';
 
@@ -183,7 +183,7 @@ describe('Transfer innovation pack to Account', () => {
     const transferData = await transferInnovationPackToAccount(
       innovationPackId,
       TestUserManager.users.nonSpaceMember.accountId,
-      TestUser.GLOBAL_BETA_TESTER
+      TestUser.FEATURE_BETA_TESTER
     );
 
     const transferedData = transferData.data?.transferInnovationPackToAccount;
@@ -210,7 +210,7 @@ describe('Transfer innovation pack to Account', () => {
     );
     await removePlatformRole(
       TestUserManager.users.nonSpaceMember.id,
-      RoleName.PlatformVcCampaign
+      RoleName.FeatureBetaTester
     );
   });
 
@@ -220,7 +220,7 @@ describe('Transfer innovation pack to Account', () => {
       packName,
       packNameId,
       TestUserManager.users.betaTester.accountId,
-      TestUser.GLOBAL_BETA_TESTER
+      TestUser.FEATURE_BETA_TESTER
     );
     innovationPackId = packData?.data?.createInnovationPack?.id ?? '';
 

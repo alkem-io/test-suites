@@ -23,7 +23,7 @@ import { getUserToken } from './get-user-token';
 // spread across privilege levels is expected to authenticate; if any of these
 // can't, the env is broken and every scenario would cascade — abort now.
 const CRITICAL_USERS: TestUser[] = [
-  TestUser.GLOBAL_ADMIN,
+  TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
   TestUser.SPACE_ADMIN,
   TestUser.SPACE_MEMBER,
   TestUser.NON_SPACE_MEMBER,

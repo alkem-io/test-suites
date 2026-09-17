@@ -50,14 +50,14 @@ const generateCalloutActivity = async (calloutsSetId: string, name: string) => {
     calloutId,
     { displayName: `post-${name}` },
     `post-${name}`,
-    TestUser.GLOBAL_ADMIN
+    TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
   );
   return calloutId;
 };
 
 const readActivity = async (
   collaborationId: string,
-  role: TestUser = TestUser.GLOBAL_ADMIN
+  role: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const res = await getActivityLogOnCollaboration(collaborationId, 30, role);
   return {

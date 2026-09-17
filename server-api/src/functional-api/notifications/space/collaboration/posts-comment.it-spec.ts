@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import {
   deleteMailSlurperMails,
   getMailsData,
@@ -210,7 +210,7 @@ describe('Notifications - post comments', () => {
     await removeMessageOnRoom(
       postCommentsIdSpace,
       messageId,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
   });
   describe('GA create post on space  ', () => {
@@ -219,7 +219,7 @@ describe('Notifications - post comments', () => {
         baseScenario.space.collaboration.calloutPostCollectionId,
         { displayName: postDisplayName },
         postNameID,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       spacePostId =
         resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
@@ -236,7 +236,7 @@ describe('Notifications - post comments', () => {
       const messageRes = await sendMessageToRoom(
         postCommentsIdSpace,
         'test message on space post',
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       messageId = messageRes?.data?.sendMessageToRoom.id ?? '';
 

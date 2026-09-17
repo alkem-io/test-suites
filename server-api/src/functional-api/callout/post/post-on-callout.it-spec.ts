@@ -192,7 +192,7 @@ describe('Posts - Create', () => {
     subsubspacePostId =
       resPostonSubsubspace.data?.createContributionOnCallout.post?.id ?? '';
 
-    const post = await getPostData(subsubspacePostId, TestUser.GLOBAL_ADMIN);
+    const post = await getPostData(subsubspacePostId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
 
     // Assert
     expect(post.data?.lookup.post).toEqual(postDataCreate);
@@ -271,7 +271,7 @@ describe('Posts - Update', () => {
       spacePostId,
       postNameID,
       { profileData: { displayName: postDisplayName + 'GA update' } },
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     const postDataUpdate = resPostonSpace.data?.updatePost;
 
@@ -393,7 +393,7 @@ describe('Posts - Delete', () => {
       resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';
 
     // Act
-    await deletePost(spacePostId, TestUser.GLOBAL_ADMIN);
+    await deletePost(spacePostId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
     const postsData = await postDataPerSpaceCallout(
       baseScenario.space.id,
       baseScenario.space.collaboration.calloutPostCollectionId
@@ -548,13 +548,13 @@ describe('Posts - Delete', () => {
       baseScenario.subsubspace.collaboration.calloutPostCollectionId,
       { displayName: postDisplayName + 'ch' },
       postNameID + 'op',
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     subsubspacePostId =
       resPostonSubsubspace.data?.createContributionOnCallout.post?.id ?? '';
 
     // Act
-    await deletePost(subsubspacePostId, TestUser.GLOBAL_ADMIN);
+    await deletePost(subsubspacePostId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
     const data = await getPostData(subsubspacePostId);
 
     // Assert
@@ -600,7 +600,7 @@ describe('Posts - Messages', () => {
 
     afterEach(async () => {
       await delay(1000);
-      await removeMessageOnRoom(roomIdSpace, messageId, TestUser.GLOBAL_ADMIN);
+      await removeMessageOnRoom(roomIdSpace, messageId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
     });
 
     test('ChA should send comment on post created on subspace callout from GA', async () => {
@@ -678,7 +678,7 @@ describe('Posts - Messages', () => {
         const messageRes = await sendMessageToRoom(
           roomIdSpace,
           'test message',
-          TestUser.GLOBAL_ADMIN
+          TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
         );
         messageId = messageRes?.data?.sendMessageToRoom.id;
         await delay(1000);
@@ -704,7 +704,7 @@ describe('Posts - Messages', () => {
         await removeMessageOnRoom(
           roomIdSpace,
           messageId,
-          TestUser.GLOBAL_ADMIN
+          TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
         );
         const postsData = await getPostData(spacePostId);
 
@@ -730,7 +730,7 @@ describe('Posts - Messages', () => {
       const messageRes = await sendMessageToRoom(
         roomIdSpace,
         'test message',
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       messageId = messageRes?.data?.sendMessageToRoom.id;
@@ -771,7 +771,7 @@ describe('Posts - Messages', () => {
 
     test('GA should remove comment sent from GA', async () => {
       // Act
-      await removeMessageOnRoom(roomIdSpace, messageId, TestUser.GLOBAL_ADMIN);
+      await removeMessageOnRoom(roomIdSpace, messageId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
       const postsData = await getPostData(spacePostId);
 
       // Assert

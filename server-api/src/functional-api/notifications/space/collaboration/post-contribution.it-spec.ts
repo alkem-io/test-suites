@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import {
   deleteMailSlurperMails,
   getMailsData,
@@ -192,7 +192,7 @@ describe('Notifications - post', () => {
       baseScenario.space.collaboration.calloutPostCollectionId,
       { displayName: postDisplayName },
       postNameID,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     spacePostId =
       resPostonSpace.data?.createContributionOnCallout.post?.id ?? '';

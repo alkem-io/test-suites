@@ -100,7 +100,7 @@ describe('Platform discussions - CRUD operations', () => {
     discussionCommentsId = discussionData?.comments.id ?? '';
 
     // Act
-    const update = await updateDiscussion(discussionId, TestUser.GLOBAL_ADMIN, {
+    const update = await updateDiscussion(discussionId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN, {
       profileData: {
         displayName: 'Updated',
         description: 'Test',
@@ -201,8 +201,8 @@ describe('Authorization - Discussion / Messages', () => {
       // Arrange
       test.each`
         userRoleCreate           | userRoleUpdate           | messageUpdate
-        ${TestUser.GLOBAL_ADMIN} | ${TestUser.GLOBAL_ADMIN} | ${'Updated1'}
-        ${TestUser.QA_USER}      | ${TestUser.GLOBAL_ADMIN} | ${'Updated2'}
+        ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN} | ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN} | ${'Updated1'}
+        ${TestUser.QA_USER}      | ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN} | ${'Updated2'}
       `(
         'User: "$userRoleUpdate" get message: "$messageUpdate", who intend to update discussion created from "$userRoleCreate',
         async ({ userRoleCreate, userRoleUpdate, messageUpdate }) => {
@@ -231,7 +231,7 @@ describe('Authorization - Discussion / Messages', () => {
       test.each`
         userRoleCreate           | userRoleUpdate      | messageUpdate
         ${TestUser.QA_USER}      | ${TestUser.QA_USER} | ${errorAuthDiscussionUpdate}
-        ${TestUser.GLOBAL_ADMIN} | ${TestUser.QA_USER} | ${errorAuthDiscussionUpdate}
+        ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN} | ${TestUser.QA_USER} | ${errorAuthDiscussionUpdate}
       `(
         'User: "$userRoleUpdate" get ERROR message: "$messageUpdate", who intend to update discussion created from "$userRoleCreate',
         async ({ userRoleCreate, userRoleUpdate, messageUpdate }) => {
@@ -263,8 +263,8 @@ describe('Authorization - Discussion / Messages', () => {
       // Arrange
       test.each`
         userRoleCreate           | userRoleDelete
-        ${TestUser.GLOBAL_ADMIN} | ${TestUser.GLOBAL_ADMIN}
-        ${TestUser.QA_USER}      | ${TestUser.GLOBAL_ADMIN}
+        ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN} | ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}
+        ${TestUser.QA_USER}      | ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}
       `(
         'User: "$userRoleUpdate" get message: "$messageDelete", who intend to delete discussion created from "$userRoleCreate',
         async ({ userRoleCreate, userRoleDelete }) => {
@@ -288,7 +288,7 @@ describe('Authorization - Discussion / Messages', () => {
       test.each`
         userRoleCreate           | userRoleDelete      | messageDelete
         ${TestUser.QA_USER}      | ${TestUser.QA_USER} | ${errorAuthDiscussionDelete}
-        ${TestUser.GLOBAL_ADMIN} | ${TestUser.QA_USER} | ${errorAuthDiscussionDelete}
+        ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN} | ${TestUser.QA_USER} | ${errorAuthDiscussionDelete}
       `(
         'User: "$userRoleUpdate" get message: "$messageDelete", who intend to delete discussion created from "$userRoleCreate',
         async ({ userRoleCreate, userRoleDelete, messageDelete }) => {
@@ -319,8 +319,8 @@ describe('Authorization - Discussion / Messages', () => {
       // Arrange
       test.each`
         userRoleCreate           | userRoleDelete
-        ${TestUser.GLOBAL_ADMIN} | ${TestUser.GLOBAL_ADMIN}
-        ${TestUser.QA_USER}      | ${TestUser.GLOBAL_ADMIN}
+        ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN} | ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}
+        ${TestUser.QA_USER}      | ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}
         ${TestUser.QA_USER}      | ${TestUser.QA_USER}
       `(
         'User: "$userRoleDelete" get message: "$messageDelete", who intend to delete message created from "$userRoleCreate',
@@ -330,7 +330,7 @@ describe('Authorization - Discussion / Messages', () => {
             platformDiscussionId,
             'test',
             ForumDiscussionCategory.PlatformFunctionalities,
-            TestUser.GLOBAL_ADMIN
+            TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
           );
           const discussionData = res?.data?.createDiscussion;
           discussionId = discussionData?.id ?? '';
@@ -359,7 +359,7 @@ describe('Authorization - Discussion / Messages', () => {
 
       test.each`
         userRoleCreate           | userRoleDelete      | messageDelete
-        ${TestUser.GLOBAL_ADMIN} | ${TestUser.QA_USER} | ${errorAuthDiscussionMessageDelete}
+        ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN} | ${TestUser.QA_USER} | ${errorAuthDiscussionMessageDelete}
       `(
         'User: "$userRoleDelete" get ERROR message: "$messageDelete", who intend to delete message created from "$userRoleCreate',
         async ({ userRoleCreate, userRoleDelete, messageDelete }) => {
@@ -368,7 +368,7 @@ describe('Authorization - Discussion / Messages', () => {
             platformDiscussionId,
             'test',
             ForumDiscussionCategory.PlatformFunctionalities,
-            TestUser.GLOBAL_ADMIN
+            TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
           );
           const discussionData = res?.data?.createDiscussion;
           discussionId = discussionData?.id ?? '';
@@ -404,8 +404,8 @@ describe('Authorization - Discussion / Messages', () => {
       // Arrange
       test.each`
         userRoleCreate           | userRoleDelete
-        ${TestUser.GLOBAL_ADMIN} | ${TestUser.GLOBAL_ADMIN}
-        ${TestUser.QA_USER}      | ${TestUser.GLOBAL_ADMIN}
+        ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN} | ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}
+        ${TestUser.QA_USER}      | ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}
         ${TestUser.QA_USER}      | ${TestUser.QA_USER}
       `(
         'User: "$userRoleDelete" get message: "$messageDelete", who intend to delete message created from "$userRoleCreate',
@@ -444,7 +444,7 @@ describe('Authorization - Discussion / Messages', () => {
 
       test.each`
         userRoleCreate           | userRoleDelete      | messageDelete
-        ${TestUser.GLOBAL_ADMIN} | ${TestUser.QA_USER} | ${errorAuthDiscussionMessageDelete}
+        ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN} | ${TestUser.QA_USER} | ${errorAuthDiscussionMessageDelete}
       `(
         'User: "$userRoleDelete" get ERROR message: "$messageDelete", who intend to delete message created from "$userRoleCreate',
         async ({ userRoleCreate, userRoleDelete, messageDelete }) => {

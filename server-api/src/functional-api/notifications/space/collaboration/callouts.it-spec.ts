@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import {
   deleteMailSlurperMails,
   getMailsData,
@@ -197,7 +197,7 @@ describe('Notifications - post', () => {
           type: CalloutFramingType.None,
         },
       },
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     calloutId = res.data?.createCalloutOnCalloutsSet.id ?? '';
 
@@ -258,14 +258,14 @@ describe('Notifications - post', () => {
     const res = await createCalloutOnCalloutsSet(
       baseScenario.space.collaboration.calloutsSetId,
       { framing: { profile: { displayName: calloutDisplayName } } },
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     calloutId = res.data?.createCalloutOnCalloutsSet.id ?? '';
 
     await updateCalloutVisibility(
       calloutId,
       CalloutVisibility.Published,
-      TestUser.GLOBAL_ADMIN,
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
       false
     );
 
@@ -282,7 +282,7 @@ describe('Notifications - post', () => {
       baseScenario.space.collaboration.calloutsSetId,
       { framing: { profile: { displayName: calloutDisplayName } } },
 
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     calloutId = res.data?.createCalloutOnCalloutsSet.id ?? '';

@@ -116,7 +116,7 @@ describe('Callouts - CRUD', () => {
       );
       calloutId = res?.data?.createCalloutOnCalloutsSet.id ?? '';
 
-      const resUpdate = await updateCallout(calloutId, TestUser.GLOBAL_ADMIN, {
+      const resUpdate = await updateCallout(calloutId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN, {
         framing: {
           profile: {
             displayName: calloutDisplayName + 'update',
@@ -231,7 +231,7 @@ describe('Callouts - AUTH Space', () => {
     // Arrange
     test.each`
       userRole                 | message
-      ${TestUser.GLOBAL_ADMIN} | ${'"data":{"createCalloutOnCalloutsSet"'}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN} | ${'"data":{"createCalloutOnCalloutsSet"'}
       ${TestUser.SPACE_ADMIN}  | ${'"data":{"createCalloutOnCalloutsSet"'}
     `(
       'User: "$userRole" get message: "$message", who intend to create callout',
@@ -280,7 +280,7 @@ describe('Callouts - AUTH Space', () => {
     });
     test.each`
       userRole                     | message
-      ${TestUser.GLOBAL_ADMIN}     | ${'"data":{"updateCallout"'}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}     | ${'"data":{"updateCallout"'}
       ${TestUser.SPACE_ADMIN}      | ${'"data":{"updateCallout"'}
       ${TestUser.SPACE_MEMBER}     | ${'errors'}
       ${TestUser.NON_SPACE_MEMBER} | ${'errors'}
@@ -314,7 +314,7 @@ describe('Callouts - AUTH Space', () => {
     });
     test.each`
       userRole                     | message
-      ${TestUser.GLOBAL_ADMIN}     | ${'"data":{"deleteCallout"'}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}     | ${'"data":{"deleteCallout"'}
       ${TestUser.SPACE_ADMIN}      | ${'"data":{"deleteCallout"'}
       ${TestUser.SPACE_MEMBER}     | ${'errors'}
       ${TestUser.NON_SPACE_MEMBER} | ${'errors'}

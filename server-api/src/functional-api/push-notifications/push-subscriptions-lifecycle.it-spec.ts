@@ -34,7 +34,7 @@ afterEach(async () => {
 
 describe('Push Subscriptions - VAPID Public Key', () => {
   test('should return a VAPID public key for authenticated user', async () => {
-    const res = await getVapidPublicKey(TestUser.GLOBAL_ADMIN);
+    const res = await getVapidPublicKey(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
 
     expect(res.body.data?.vapidPublicKey).toBeDefined();
     expect(typeof res.body.data?.vapidPublicKey).toBe('string');
@@ -42,7 +42,7 @@ describe('Push Subscriptions - VAPID Public Key', () => {
   });
 
   test('should return the same VAPID key for different users', async () => {
-    const res1 = await getVapidPublicKey(TestUser.GLOBAL_ADMIN);
+    const res1 = await getVapidPublicKey(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
     const res2 = await getVapidPublicKey(TestUser.SPACE_ADMIN);
 
     expect(res1.body.data?.vapidPublicKey).toEqual(
@@ -64,12 +64,12 @@ describe('Push Subscriptions - Subscribe', () => {
       sub.endpoint,
       sub.p256dh,
       sub.auth,
-      TestUser.GLOBAL_ADMIN,
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
       'Mozilla/5.0 Test Browser'
     );
 
     const data = res.body.data?.subscribeToPushNotifications;
-    pendingCleanup.push({ id: data?.id, user: TestUser.GLOBAL_ADMIN });
+    pendingCleanup.push({ id: data?.id, user: TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN });
 
     expect(data).toBeDefined();
     expect(data.id).toBeDefined();
@@ -85,18 +85,18 @@ describe('Push Subscriptions - Subscribe', () => {
       sub.endpoint,
       sub.p256dh,
       sub.auth,
-      TestUser.GLOBAL_ADMIN,
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
       'Browser v1'
     );
     const firstId = res1.body.data?.subscribeToPushNotifications.id;
-    pendingCleanup.push({ id: firstId, user: TestUser.GLOBAL_ADMIN });
+    pendingCleanup.push({ id: firstId, user: TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN });
 
     // Re-subscribe with same endpoint
     const res2 = await subscribeToPushNotifications(
       sub.endpoint,
       sub.p256dh,
       sub.auth,
-      TestUser.GLOBAL_ADMIN,
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
       'Browser v2'
     );
     const secondId = res2.body.data?.subscribeToPushNotifications.id;
@@ -111,7 +111,7 @@ describe('Push Subscriptions - Subscribe', () => {
       '', // empty endpoint
       'some-key',
       'some-auth',
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     console.log(res);
 
@@ -126,14 +126,14 @@ describe('Push Subscriptions - Unsubscribe', () => {
       sub.endpoint,
       sub.p256dh,
       sub.auth,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     const subscriptionId = createRes.body.data?.subscribeToPushNotifications.id;
-    pendingCleanup.push({ id: subscriptionId, user: TestUser.GLOBAL_ADMIN });
+    pendingCleanup.push({ id: subscriptionId, user: TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN });
 
     const res = await unsubscribeFromPushNotifications(
       subscriptionId,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     expect(res.body.data?.unsubscribeFromPushNotifications).toBeDefined();
@@ -145,7 +145,7 @@ describe('Push Subscriptions - Unsubscribe', () => {
   test('should fail when unsubscribing with invalid subscription ID', async () => {
     const res = await unsubscribeFromPushNotifications(
       '00000000-0000-0000-0000-000000000000',
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     expect(res.body.errors).toBeDefined();
@@ -157,10 +157,10 @@ describe('Push Subscriptions - Unsubscribe', () => {
       sub.endpoint,
       sub.p256dh,
       sub.auth,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     const subscriptionId = createRes.body.data?.subscribeToPushNotifications.id;
-    pendingCleanup.push({ id: subscriptionId, user: TestUser.GLOBAL_ADMIN });
+    pendingCleanup.push({ id: subscriptionId, user: TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN });
 
     // Try to unsubscribe as a different user
     const res = await unsubscribeFromPushNotifications(
@@ -188,25 +188,25 @@ describe('Push Subscriptions - List (myPushSubscriptions)', () => {
       sub1.endpoint,
       sub1.p256dh,
       sub1.auth,
-      TestUser.GLOBAL_ADMIN,
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
       'Chrome on Windows'
     );
     const res2 = await subscribeToPushNotifications(
       sub2.endpoint,
       sub2.p256dh,
       sub2.auth,
-      TestUser.GLOBAL_ADMIN,
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
       'Firefox on Linux'
     );
 
     const id1 = res1.body.data?.subscribeToPushNotifications.id;
     const id2 = res2.body.data?.subscribeToPushNotifications.id;
     pendingCleanup.push(
-      { id: id1, user: TestUser.GLOBAL_ADMIN },
-      { id: id2, user: TestUser.GLOBAL_ADMIN }
+      { id: id1, user: TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN },
+      { id: id2, user: TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN }
     );
 
-    const listRes = await getMyPushSubscriptions(TestUser.GLOBAL_ADMIN);
+    const listRes = await getMyPushSubscriptions(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
     const subs = listRes.body.data?.myPushSubscriptions;
 
     expect(subs.length).toBeGreaterThanOrEqual(2);
@@ -222,11 +222,11 @@ describe('Push Subscriptions - List (myPushSubscriptions)', () => {
       sub.endpoint,
       sub.p256dh,
       sub.auth,
-      TestUser.GLOBAL_ADMIN,
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
       'GA Browser'
     );
     const subId = createRes.body.data?.subscribeToPushNotifications.id;
-    pendingCleanup.push({ id: subId, user: TestUser.GLOBAL_ADMIN });
+    pendingCleanup.push({ id: subId, user: TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN });
 
     // Query as a different user
     const listRes = await getMyPushSubscriptions(TestUser.SPACE_ADMIN);
@@ -242,15 +242,15 @@ describe('Push Subscriptions - List (myPushSubscriptions)', () => {
       sub.endpoint,
       sub.p256dh,
       sub.auth,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     const subId = createRes.body.data?.subscribeToPushNotifications.id;
 
     // Unsubscribe
-    await unsubscribeFromPushNotifications(subId, TestUser.GLOBAL_ADMIN);
+    await unsubscribeFromPushNotifications(subId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
 
     // Verify it is no longer listed
-    const listRes = await getMyPushSubscriptions(TestUser.GLOBAL_ADMIN);
+    const listRes = await getMyPushSubscriptions(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
     const ids =
       listRes.body.data?.myPushSubscriptions.map((s: any) => s.id) ?? [];
     expect(ids).not.toContain(subId);
@@ -312,14 +312,14 @@ describe('Push Subscriptions - Subscription fields', () => {
       sub.endpoint,
       sub.p256dh,
       sub.auth,
-      TestUser.GLOBAL_ADMIN,
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
       'Chrome/120 on macOS'
     );
 
     const subscription = res.body.data?.subscribeToPushNotifications;
     pendingCleanup.push({
       id: subscription?.id,
-      user: TestUser.GLOBAL_ADMIN,
+      user: TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
     });
 
     expect(subscription).toBeDefined();
@@ -335,13 +335,13 @@ describe('Push Subscriptions - Subscription fields', () => {
       sub.endpoint,
       sub.p256dh,
       sub.auth,
-      TestUser.GLOBAL_ADMIN,
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
       'Safari/17 on iOS'
     );
     const subId = createRes.body.data?.subscribeToPushNotifications.id;
-    pendingCleanup.push({ id: subId, user: TestUser.GLOBAL_ADMIN });
+    pendingCleanup.push({ id: subId, user: TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN });
 
-    const listRes = await getMyPushSubscriptions(TestUser.GLOBAL_ADMIN);
+    const listRes = await getMyPushSubscriptions(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
     const found = listRes.body.data?.myPushSubscriptions.find(
       (s: any) => s.id === subId
     );

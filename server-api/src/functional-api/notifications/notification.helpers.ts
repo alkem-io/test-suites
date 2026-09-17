@@ -50,7 +50,7 @@ export const PUSH_NOTIFICATIONS_QUEUE = 'alkemio-push-notifications';
 /** Create a DIRECT (1:1) conversation between the caller and `otherMemberActorID`. */
 export const createDirectConversation = async (
   otherMemberActorID: string,
-  creatorRole: TestUser = TestUser.GLOBAL_ADMIN
+  creatorRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) =>
   createConversation(
     [otherMemberActorID],
@@ -63,7 +63,7 @@ export const createDirectConversation = async (
 export const createGroupConversation = async (
   memberActorIDs: string[],
   displayName: string,
-  creatorRole: TestUser = TestUser.GLOBAL_ADMIN
+  creatorRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) =>
   createConversation(
     memberActorIDs,
@@ -89,7 +89,7 @@ export const updateConversationMessagingSettings = async (
     direct?: NotificationSettingChannels;
     group?: NotificationSettingChannels;
   },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const notificationUserInput: UpdateUserSettingsNotificationUserInput = {};
   if (overrides.direct) {
@@ -513,7 +513,7 @@ export const expectExactMailsAfter = async (
 export const sendConversationMessage = async (
   roomID: string,
   message: string,
-  senderRole: TestUser = TestUser.GLOBAL_ADMIN
+  senderRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ): Promise<string> => {
   const res = (await sendMessageToRoom(roomID, message, senderRole)) as {
     data?: { sendMessageToRoom?: { id?: string } };

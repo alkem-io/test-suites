@@ -91,7 +91,7 @@ const createMemoCallout = async (calloutsSetID: string, label: string) => {
         },
         { authorization: `Bearer ${authToken}` }
       ),
-    TestUser.GLOBAL_ADMIN
+    TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
   );
   const calloutId = res.data?.createCalloutOnCalloutsSet?.id;
   if (!calloutId) {

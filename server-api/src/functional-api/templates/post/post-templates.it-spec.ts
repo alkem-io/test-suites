@@ -364,7 +364,7 @@ describe('Post templates - CRUD Authorization', () => {
       });
       test.each`
         userRole
-        ${TestUser.GLOBAL_ADMIN}
+        ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}
         ${TestUser.SPACE_ADMIN}
       `(
         'User: "$userRole" get message: "$message", when intend to create space post template ',
@@ -425,7 +425,7 @@ describe('Post templates - CRUD Authorization', () => {
 
       test.each`
         userRole
-        ${TestUser.GLOBAL_ADMIN}
+        ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}
         ${TestUser.SPACE_ADMIN}
       `(
         'User: "$userRole" get message: "$message", when intend to update space post template ',
@@ -479,7 +479,7 @@ describe('Post templates - CRUD Authorization', () => {
       });
       test.each`
         userRole
-        ${TestUser.GLOBAL_ADMIN}
+        ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}
         ${TestUser.SPACE_ADMIN}
       `(
         'User: "$userRole" get message: "$message", whe intend to remova space post template ',

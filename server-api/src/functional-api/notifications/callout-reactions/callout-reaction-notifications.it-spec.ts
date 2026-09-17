@@ -149,7 +149,7 @@ const CALLOUT_REACTION_SETTINGS_FRAGMENT = `
 const updateCalloutReactionSettings = async (
   userID: string,
   settings: { email?: boolean; inApp?: boolean; push?: boolean },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ): Promise<any> => {
   const requestParams = {
     operationName: 'UpdateCalloutReactionSettings',
@@ -191,7 +191,7 @@ const updateCalloutReactionSettings = async (
 /** Read the collaborationCalloutReaction triple via getUserData equivalent. */
 const getCalloutReactionSettings = async (
   userID: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ): Promise<{ email: boolean; inApp: boolean; push: boolean } | undefined> => {
   const requestParams = {
     operationName: 'GetCalloutReactionSettings',
@@ -242,7 +242,7 @@ let pushSubscriptions: PushSubscriptionHandle[] = [];
 
 // The publisher for all emission invariant tests is GLOBAL_ADMIN (who
 // creates the callout via the default helpers, so publishedBy == their ID).
-const PUBLISHER = TestUser.GLOBAL_ADMIN;
+const PUBLISHER = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN;
 const REACTOR_A = TestUser.SPACE_MEMBER;
 const REACTOR_B = TestUser.QA_USER;
 
@@ -286,7 +286,7 @@ beforeAll(async () => {
   await updateCalloutReactionSettings(
     TestUserManager.users.globalAdmin.id,
     { email: true, inApp: true, push: true },
-    TestUser.GLOBAL_ADMIN
+    TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
   );
 });
 
@@ -297,7 +297,7 @@ afterAll(async () => {
   await updateCalloutReactionSettings(
     TestUserManager.users.globalAdmin.id,
     { email: false, inApp: true, push: true },
-    TestUser.GLOBAL_ADMIN
+    TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
   ).catch(() => {});
 
   if (publishedCalloutId) {
@@ -574,7 +574,7 @@ describe('Settings gating (US2)', () => {
     await updateCalloutReactionSettings(
       TestUserManager.users.globalAdmin.id,
       { email: true, inApp: true, push: true },
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
   });
 
@@ -583,7 +583,7 @@ describe('Settings gating (US2)', () => {
     async () => {
       const settings = await getCalloutReactionSettings(
         TestUserManager.users.globalAdmin.id,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       expect(settings).toBeDefined();
       // The beforeAll set email=true for tests; check inApp and push defaults.
@@ -616,7 +616,7 @@ describe('Settings gating (US2)', () => {
       await updateCalloutReactionSettings(
         TestUserManager.users.globalAdmin.id,
         { email: false, inApp: false },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       const countBefore = await getCalloutReactionInAppCount(PUBLISHER);
@@ -638,7 +638,7 @@ describe('Settings gating (US2)', () => {
       await updateCalloutReactionSettings(
         TestUserManager.users.globalAdmin.id,
         { email: true, inApp: true, push: true },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       await deleteMailSlurperMails();
 
@@ -669,7 +669,7 @@ describe('Settings gating (US2)', () => {
       await updateCalloutReactionSettings(
         TestUserManager.users.globalAdmin.id,
         { email: false, inApp: false, push: false },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       const countBefore = await getCalloutReactionInAppCount(PUBLISHER);
@@ -716,7 +716,7 @@ describe('Settings gating (US2)', () => {
       // cannot be exercised from a black-box harness without DB access.
       const settings = await getCalloutReactionSettings(
         TestUserManager.users.globalAdmin.id,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       expect(settings).toBeDefined();
       expect(typeof settings?.email).toBe('boolean');
@@ -829,7 +829,7 @@ describe('Volume control — email suppression (US3)', () => {
     await updateCalloutReactionSettings(
       TestUserManager.users.globalAdmin.id,
       { email: true, inApp: true, push: true },
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     await deleteMailSlurperMails();
   });
@@ -1131,7 +1131,7 @@ describe('Bounded redelivery (R-2 mitigation)', () => {
       await updateCalloutReactionSettings(
         TestUserManager.users.globalAdmin.id,
         { email: true, inApp: true, push: true },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       await deleteMailSlurperMails();
 

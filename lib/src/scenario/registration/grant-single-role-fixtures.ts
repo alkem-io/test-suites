@@ -131,7 +131,7 @@ const verifyFixtureHoldings = async (adminToken: string): Promise<string[]> => {
  * cells that read as a `server` enforcement defect rather than a seeding bug.
  */
 export const grantSingleRoleFixtures = async (): Promise<void> => {
-  const adminToken = await getUserToken(emailFor(TestUser.GLOBAL_ADMIN));
+  const adminToken = await getUserToken(emailFor(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN));
   const failures: string[] = [];
 
   for (const [testUser, role] of SINGLE_ROLE_TARGETS) {

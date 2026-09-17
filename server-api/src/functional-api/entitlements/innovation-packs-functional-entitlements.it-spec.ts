@@ -55,7 +55,7 @@ describe('Functional tests - Innovation Pack', () => {
     const packs = accountData.data?.lookup.account?.innovationPacks;
     for (const pack of packs || []) {
       const packId = pack.id;
-      await deleteInnovationPack(packId, TestUser.GLOBAL_ADMIN);
+      await deleteInnovationPack(packId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
     }
   });
   describe('VC Campaign user innovation pack creation', () => {
@@ -63,7 +63,7 @@ describe('Functional tests - Innovation Pack', () => {
       await TestScenarioFactory.createBaseScenarioEmpty(scenarioConfig);
       await assignPlatformRole(
         TestUserManager.users.nonSpaceMember.id,
-        RoleName.PlatformVcCampaign
+        RoleName.FeatureBetaTester
       );
     });
     const allPrivileges = [
@@ -83,7 +83,7 @@ describe('Functional tests - Innovation Pack', () => {
     afterAll(async () => {
       await removePlatformRole(
         TestUserManager.users.nonSpaceMember.id,
-        RoleName.PlatformVcCampaign
+        RoleName.FeatureBetaTester
       );
     });
 

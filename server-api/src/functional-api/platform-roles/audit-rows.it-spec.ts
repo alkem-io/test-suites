@@ -319,7 +319,7 @@ describe.skipIf(auditDbOptedOut)(
             },
             { authorization: `Bearer ${token}` }
           ),
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       expect(rejected.error?.errors?.[0]?.message).toContain(

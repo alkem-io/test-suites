@@ -70,7 +70,7 @@ describe('Move L1 to L0 - authorization', () => {
       sourceScenario.subspace.id,
       targetScenario.space.id,
       undefined,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     expect(res.data?.moveSpaceL1ToSpaceL0).toBeDefined();

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import {
   deleteMailSlurperMails,
   getMailsData,
@@ -218,7 +218,7 @@ describe('Notifications - invitations', () => {
         [emailExternalUser],
         message,
         [RoleName.Member],
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
     invitationId = currentInvitationId;

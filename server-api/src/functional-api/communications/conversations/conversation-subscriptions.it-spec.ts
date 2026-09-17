@@ -72,7 +72,7 @@ describe('Conversation Event Subscriptions', () => {
         [memberActorId],
         ConversationCreationType.Group,
         { displayName: 'Sub Member Add Test' },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       groupConversationId = res?.data?.createConversation?.id ?? '';
 
@@ -84,7 +84,7 @@ describe('Conversation Event Subscriptions', () => {
           query: subscriptionConversationEvents,
           variables: {},
         },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
     });
 
@@ -93,7 +93,7 @@ describe('Conversation Event Subscriptions', () => {
       if (groupConversationId) {
         await leaveConversation(
           groupConversationId,
-          TestUser.GLOBAL_ADMIN
+          TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
         ).catch(() => {});
       }
     });
@@ -106,7 +106,7 @@ describe('Conversation Event Subscriptions', () => {
       await assignConversationMember(
         groupConversationId,
         newMemberActorId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       // Assert — wait for subscription event
@@ -141,7 +141,7 @@ describe('Conversation Event Subscriptions', () => {
         [memberActorId, memberToRemoveActorId],
         ConversationCreationType.Group,
         { displayName: 'Sub Member Remove Test' },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       groupConversationId = res?.data?.createConversation?.id ?? '';
 
@@ -153,7 +153,7 @@ describe('Conversation Event Subscriptions', () => {
           query: subscriptionConversationEvents,
           variables: {},
         },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
     });
 
@@ -162,7 +162,7 @@ describe('Conversation Event Subscriptions', () => {
       if (groupConversationId) {
         await leaveConversation(
           groupConversationId,
-          TestUser.GLOBAL_ADMIN
+          TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
         ).catch(() => {});
       }
     });
@@ -172,7 +172,7 @@ describe('Conversation Event Subscriptions', () => {
       await removeConversationMember(
         groupConversationId,
         memberToRemoveActorId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       // Assert — wait for subscription event
@@ -198,7 +198,7 @@ describe('Conversation Event Subscriptions', () => {
         [leavingMemberActorId],
         ConversationCreationType.Group,
         { displayName: 'Sub Leave Test' },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       const convId = res?.data?.createConversation?.id ?? '';
 
@@ -210,7 +210,7 @@ describe('Conversation Event Subscriptions', () => {
           query: subscriptionConversationEvents,
           variables: {},
         },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       // Act
@@ -231,7 +231,7 @@ describe('Conversation Event Subscriptions', () => {
       sub.terminate();
 
       // Cleanup
-      await leaveConversation(convId, TestUser.GLOBAL_ADMIN).catch(() => {});
+      await leaveConversation(convId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN).catch(() => {});
     });
   });
 
@@ -245,7 +245,7 @@ describe('Conversation Event Subscriptions', () => {
         [memberActorId],
         ConversationCreationType.Group,
         { displayName: 'Sub Update Test' },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       groupConversationId = res?.data?.createConversation?.id ?? '';
 
@@ -256,7 +256,7 @@ describe('Conversation Event Subscriptions', () => {
           query: subscriptionConversationEvents,
           variables: {},
         },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
     });
 
@@ -265,7 +265,7 @@ describe('Conversation Event Subscriptions', () => {
       if (groupConversationId) {
         await leaveConversation(
           groupConversationId,
-          TestUser.GLOBAL_ADMIN
+          TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
         ).catch(() => {});
       }
     });
@@ -275,7 +275,7 @@ describe('Conversation Event Subscriptions', () => {
       await updateConversation(
         groupConversationId,
         { displayName: 'Updated Via Sub Test' },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       // Assert
@@ -302,14 +302,14 @@ describe('Conversation Event Subscriptions', () => {
           query: subscriptionConversationEvents,
           variables: {},
         },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       // Act
       await updateConversation(
         groupConversationId,
         { avatarUrl: 'https://example.com/sub-avatar.png' },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       // Assert
@@ -337,7 +337,7 @@ describe('Conversation Event Subscriptions', () => {
           query: subscriptionConversationEvents,
           variables: {},
         },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       const memberActorId = TestUserManager.users.spaceMember.agentId;
@@ -345,14 +345,14 @@ describe('Conversation Event Subscriptions', () => {
         [memberActorId],
         ConversationCreationType.Group,
         { displayName: 'Sub Delete Test' },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       const conversationId = res?.data?.createConversation?.id ?? '';
       expect(conversationId).toBeTruthy();
 
       // Act — all members leave, triggering implicit deletion
       await leaveConversation(conversationId, TestUser.SPACE_MEMBER);
-      await leaveConversation(conversationId, TestUser.GLOBAL_ADMIN);
+      await leaveConversation(conversationId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
 
       // Assert
       await delay(5000);
@@ -388,12 +388,12 @@ describe('Conversation Event Subscriptions', () => {
         [memberActorId],
         ConversationCreationType.Group,
         { displayName: 'Sub Delete Notify Test' },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       const conversationId = res?.data?.createConversation?.id ?? '';
 
       // Act — creator leaves first, then member leaves (triggers deletion)
-      await leaveConversation(conversationId, TestUser.GLOBAL_ADMIN);
+      await leaveConversation(conversationId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
 
       // Assert — member should receive MEMBER_REMOVED for the creator
       await delay(5000);

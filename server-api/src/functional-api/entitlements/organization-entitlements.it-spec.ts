@@ -167,9 +167,9 @@ describe('Get Organization Account Authorization and License privileges ', () =>
 
   describe('Account license plus cleanup', () => {
     afterAll(async () => {
-      await deleteSpace(spaceId, TestUser.GLOBAL_ADMIN);
-      await deleteVirtualContributorOnAccount(vcId, TestUser.GLOBAL_ADMIN);
-      await deleteInnovationPack(innovationPackId, TestUser.GLOBAL_ADMIN);
+      await deleteSpace(spaceId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
+      await deleteVirtualContributorOnAccount(vcId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
+      await deleteInnovationPack(innovationPackId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
       await revokeLicensePlanFromAccount(orgAccountId, accountLicensePlusId);
     });
     test('User admin of Organization with accountLicensesPlus assigned and created Space, VC and Innovation Pack', async () => {

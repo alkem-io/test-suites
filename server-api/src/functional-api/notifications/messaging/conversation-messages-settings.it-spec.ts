@@ -86,7 +86,7 @@ describe('Conversation-message notification settings (US3)', () => {
       expect(newUserId).toBeTruthy();
 
       // Act
-      const res = await getUserData(newUserId, TestUser.GLOBAL_ADMIN);
+      const res = await getUserData(newUserId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
 
       // Assert
       const { direct, group } = getUserMessagingSettings(res);
@@ -109,7 +109,7 @@ describe('Conversation-message notification settings (US3)', () => {
       await updateConversationMessagingSettings(
         TestUserManager.users.qaUser.id,
         { direct: { email: false } },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
     });
 
@@ -117,7 +117,7 @@ describe('Conversation-message notification settings (US3)', () => {
       // Arrange — capture the group row before the update
       const before = await getUserData(
         TestUserManager.users.qaUser.id,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       const groupBefore = getUserMessagingSettings(before).group;
 
@@ -125,13 +125,13 @@ describe('Conversation-message notification settings (US3)', () => {
       await updateConversationMessagingSettings(
         TestUserManager.users.qaUser.id,
         { direct: { email: true } },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       // Assert
       const after = await getUserData(
         TestUserManager.users.qaUser.id,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       const { direct, group } = getUserMessagingSettings(after);
       expect(direct?.email).toBe(true);
@@ -144,7 +144,7 @@ describe('Conversation-message notification settings (US3)', () => {
 
     afterAll(async () => {
       for (const id of conversationsToCleanup) {
-        await leaveConversation(id, TestUser.GLOBAL_ADMIN).catch(() => {});
+        await leaveConversation(id, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN).catch(() => {});
       }
       // Restore the mandated default regardless of test outcome.
       await updateConversationMessagingSettings(
@@ -174,7 +174,7 @@ describe('Conversation-message notification settings (US3)', () => {
 
         const conversationRes = await createDirectConversation(
           TestUserManager.users.spaceMember.agentId,
-          TestUser.GLOBAL_ADMIN
+          TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
         );
         const conversationId = conversationRes?.data?.createConversation?.id;
         const roomId = conversationRes?.data?.createConversation?.room?.id;
@@ -186,7 +186,7 @@ describe('Conversation-message notification settings (US3)', () => {
         await sendMessageToRoom(
           roomId as string,
           'Hello!',
-          TestUser.GLOBAL_ADMIN
+          TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
         );
 
         // The intent of this assertion is unchanged by R4 — in-app is never

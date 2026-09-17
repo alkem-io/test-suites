@@ -109,7 +109,7 @@ export const createCalloutOnCalloutsSet = async (
       }[];
     };
   },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -132,7 +132,7 @@ export const createCalloutOnCalloutsSet = async (
 export const getCalloutsData = async (
   calloutsSetId: string,
   tags?: string[] | undefined,
-  role = TestUser.GLOBAL_ADMIN
+  role = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -156,7 +156,7 @@ export const getCalloutsData = async (
 
 export const getCalloutDetails = async (
   calloutId: string,
-  role = TestUser.GLOBAL_ADMIN
+  role = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -198,7 +198,7 @@ export const createWhiteboardCalloutOnCalloutsSet = async (
       sourceCalloutID?: string;
     };
   },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -229,7 +229,7 @@ export const createWhiteboardCalloutOnCalloutsSet = async (
 
 export const updateCallout = async (
   ID: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
   options?: {
     framing?: {
       profile?: {
@@ -281,7 +281,7 @@ export const updateCallout = async (
 export const updateCalloutVisibility = async (
   calloutID: string,
   visibility: CalloutVisibility = CalloutVisibility.Draft,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
   sendNotification?: boolean
 ) => {
   const graphqlClient = getGraphqlClient();
@@ -304,7 +304,7 @@ export const updateCalloutVisibility = async (
 
 export const deleteCallout = async (
   calloutId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -323,7 +323,7 @@ export const deleteCallout = async (
 export const transferCallout = async (
   calloutID: string,
   targetCalloutsSetID: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>

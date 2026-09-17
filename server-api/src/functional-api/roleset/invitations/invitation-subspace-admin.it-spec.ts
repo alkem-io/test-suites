@@ -111,7 +111,7 @@ describe('Subspace admin invitations - allowSubspaceAdminsToInviteMembers', () =
 
       const getInvAfter = await getRoleSetInvitationsApplications(
         baseScenario.space.community.roleSetId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       // Assert
@@ -139,7 +139,7 @@ describe('Subspace admin invitations - allowSubspaceAdminsToInviteMembers', () =
 
       const getInv = await getSpaceInvitation(
         baseScenario.space.id,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       const invitations =
         getInv?.data?.lookup?.space?.community?.roleSet.invitations;
@@ -176,7 +176,7 @@ describe('Subspace admin invitations - allowSubspaceAdminsToInviteMembers', () =
 
       const getInvAfter = await getRoleSetInvitationsApplications(
         baseScenario.space.community.roleSetId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       // Assert
@@ -206,7 +206,7 @@ describe('Subspace admin invitations - allowSubspaceAdminsToInviteMembers', () =
 
       const getInv = await getSpaceInvitation(
         baseScenario.space.id,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       const invitations =
         getInv?.data?.lookup?.space?.community?.roleSet.invitations;

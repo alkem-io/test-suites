@@ -25,7 +25,7 @@ beforeAll(async () => {
 
 describe('Platform configuration — BANNER visual constraints (10178)', () => {
   test('TC-03 — defaultVisualTypeConstraints(BANNER) = 1200/120/6/6/10', async () => {
-    const res = await bannerVisualConstraints(TestUser.GLOBAL_ADMIN);
+    const res = await bannerVisualConstraints(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
 
     const constraints = res.data?.platform.configuration.defaultVisualTypeConstraints;
 

@@ -84,19 +84,19 @@ beforeAll(async () => {
     baseScenario.organization.accountId,
     vcSpaceId,
     AiPersonaEngine.LibraFlow,
-    TestUser.GLOBAL_ADMIN
+    TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
   );
 
   libraFlowVcId = libraFlowVcData?.data?.createVirtualContributor?.id ?? '';
   await updateVirtualContributor(
     libraFlowVcId,
     SearchVisibility.Public,
-    TestUser.GLOBAL_ADMIN
+    TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
   );
   await updateVirtualContributorSettings(
     libraFlowVcId,
     true,
-    TestUser.GLOBAL_ADMIN
+    TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
   );
 
   const expertVcData = await createVirtualContributorWithEngineType(
@@ -104,18 +104,18 @@ beforeAll(async () => {
     baseScenario.organization.accountId,
     vcSpaceId,
     AiPersonaEngine.Expert,
-    TestUser.GLOBAL_ADMIN
+    TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
   );
   expertVcId = expertVcData?.data?.createVirtualContributor?.id ?? '';
   await updateVirtualContributor(
     expertVcId,
     SearchVisibility.Public,
-    TestUser.GLOBAL_ADMIN
+    TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
   );
   await updateVirtualContributorSettings(
     expertVcId,
     true,
-    TestUser.GLOBAL_ADMIN
+    TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
   );
 
   // Create a knowledge-based VC with OpenAI engine
@@ -124,19 +124,19 @@ beforeAll(async () => {
       genericOpenAiVcName,
       baseScenario.organization.accountId,
       AiPersonaEngine.GenericOpenai,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
   genericOpenAiVcId =
     genericOpenAiVcData?.data?.createVirtualContributor?.id ?? '';
   await updateVirtualContributor(
     genericOpenAiVcId,
     SearchVisibility.Public,
-    TestUser.GLOBAL_ADMIN
+    TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
   );
   await updateVirtualContributorSettings(
     genericOpenAiVcId,
     true,
-    TestUser.GLOBAL_ADMIN
+    TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
   );
 
   // Create a knowledge-based VC with Guidance engine
@@ -144,18 +144,18 @@ beforeAll(async () => {
     guidanceVcName,
     baseScenario.organization.accountId,
     AiPersonaEngine.Guidance,
-    TestUser.GLOBAL_ADMIN
+    TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
   );
   guidanceVcId = guidanceVcData?.data?.createVirtualContributor?.id ?? '';
   await updateVirtualContributor(
     guidanceVcId,
     SearchVisibility.Public,
-    TestUser.GLOBAL_ADMIN
+    TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
   );
   await updateVirtualContributorSettings(
     guidanceVcId,
     true,
-    TestUser.GLOBAL_ADMIN
+    TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
   );
 });
 
@@ -180,10 +180,10 @@ describe('Virtual Contributor Engine Types Model Card', () => {
   test('should have correct engine type in each model card', async () => {
     const [libraFlowData, expertData, genericOpenAiData, guidanceData] =
       await Promise.all([
-        queryVCData(libraFlowVcId, TestUser.GLOBAL_ADMIN),
-        queryVCData(expertVcId, TestUser.GLOBAL_ADMIN),
-        queryVCData(genericOpenAiVcId, TestUser.GLOBAL_ADMIN),
-        queryVCData(guidanceVcId, TestUser.GLOBAL_ADMIN),
+        queryVCData(libraFlowVcId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN),
+        queryVCData(expertVcId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN),
+        queryVCData(genericOpenAiVcId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN),
+        queryVCData(guidanceVcId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN),
       ]);
 
     // Verify engine types

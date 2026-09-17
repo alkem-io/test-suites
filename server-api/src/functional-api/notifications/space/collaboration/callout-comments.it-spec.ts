@@ -212,7 +212,7 @@ describe('Notifications - callout comments', () => {
     await sendMessageToRoom(
       baseScenario.space.collaboration.calloutPostCommentsId,
       'comment on discussion callout',
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     await delay(1000);
     const mails = await getMailsData();

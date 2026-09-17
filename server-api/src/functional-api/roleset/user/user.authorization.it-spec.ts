@@ -28,11 +28,11 @@ const scenarioConfig: TestScenarioConfig = {
   name: 'access-user-authorizations',
   space: {
     community: {
-      admins: [TestUser.SPACE_ADMIN, TestUser.GLOBAL_BETA_TESTER],
+      admins: [TestUser.SPACE_ADMIN, TestUser.FEATURE_BETA_TESTER],
       members: [
         TestUser.SPACE_MEMBER,
         TestUser.SPACE_ADMIN,
-        TestUser.GLOBAL_BETA_TESTER,
+        TestUser.FEATURE_BETA_TESTER,
         TestUser.SUBSPACE_MEMBER,
         TestUser.SUBSPACE_ADMIN,
         TestUser.SUBSUBSPACE_MEMBER,
@@ -75,7 +75,7 @@ beforeAll(async () => {
   baseScenario = await TestScenarioFactory.createBaseScenario(scenarioConfig);
   await assignPlatformRole(
     TestUser.NON_SPACE_MEMBER,
-    RoleName.PlatformBetaTester
+    RoleName.FeatureBetaTester
   );
 });
 
@@ -83,7 +83,7 @@ afterAll(async () => {
   await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
   await removePlatformRole(
     TestUser.NON_SPACE_MEMBER,
-    RoleName.PlatformBetaTester
+    RoleName.FeatureBetaTester
   );
 });
 
@@ -94,10 +94,10 @@ describe('Verify ROLESET_ENTRY_ROLE_ASSIGN privilege', () => {
     // Arrange
     test.each`
       user                             | myPrivileges
-      ${TestUser.GLOBAL_ADMIN}         | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization}
-      ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization_noContentFullAccess}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}         | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization}
+      ${TestUser.PLATFORM_SUPPORT} | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization_noContentFullAccess}
       ${TestUser.SPACE_ADMIN}          | ${sorted__create_read_update_delete_grant_apply_invite_addVC_accessVC}
-      ${TestUser.GLOBAL_BETA_TESTER}   | ${sorted__create_read_update_delete_grant_apply_invite_addVC_accessVC_assignOrganization}
+      ${TestUser.FEATURE_BETA_TESTER}   | ${sorted__create_read_update_delete_grant_apply_invite_addVC_accessVC_assignOrganization}
       ${TestUser.NON_SPACE_MEMBER}     | ${sorted__read_applyToRoleSet}
       ${TestUser.SPACE_MEMBER}         | ${sorted__read_applyToRoleSet}
       ${TestUser.SUBSPACE_ADMIN}       | ${sorted__read_applyToRoleSet_invite_addVC}
@@ -124,8 +124,8 @@ describe('Verify ROLESET_ENTRY_ROLE_ASSIGN privilege', () => {
     // Arrange
     test.each`
       user                             | myPrivileges
-      ${TestUser.GLOBAL_ADMIN}         | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization}
-      ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization_noContentFullAccess}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}         | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization}
+      ${TestUser.PLATFORM_SUPPORT} | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization_noContentFullAccess}
       ${TestUser.SPACE_ADMIN}          | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC}
       ${TestUser.SPACE_MEMBER}         | ${['ROLESET_ENTRY_ROLE_APPLY']}
       ${TestUser.SUBSPACE_ADMIN}       | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC}
@@ -162,8 +162,8 @@ describe('Verify ROLESET_ENTRY_ROLE_ASSIGN privilege', () => {
     //  - SPACE_MEMBER (grandparent member only) no longer sees APPLY.
     test.each`
       user                             | myPrivileges
-      ${TestUser.GLOBAL_ADMIN}         | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization}
-      ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${sorted__create_read_update_delete_grant_addMember_invite_addVC_accessVC_assignOrganization}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}         | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC_assignOrganization}
+      ${TestUser.PLATFORM_SUPPORT} | ${sorted__create_read_update_delete_grant_addMember_invite_addVC_accessVC_assignOrganization}
       ${TestUser.SPACE_MEMBER}         | ${[]}
       ${TestUser.SUBSPACE_ADMIN}       | ${sorted__create_read_update_delete_grant_addMember_apply_invite_addVC_accessVC}
       ${TestUser.SUBSPACE_MEMBER}      | ${['ROLESET_ENTRY_ROLE_APPLY']}

@@ -4,7 +4,7 @@ import { UpdateInnovationFlowStateSettingsInput } from '@alkemio/tests-lib/core/
 
 export const getInnovationFlowStatesWithIds = async (
   spaceId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -23,7 +23,7 @@ export const updateInnovationFlowState = async (
   displayName?: string,
   description?: string,
   settings?: UpdateInnovationFlowStateSettingsInput,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -47,7 +47,7 @@ export const updateInnovationFlowState = async (
 export const updateInnovationFlowCurrentState = async (
   innovationFlowId: string,
   currentStateID: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>

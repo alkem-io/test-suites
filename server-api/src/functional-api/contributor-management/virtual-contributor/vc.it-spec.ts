@@ -115,7 +115,7 @@ beforeAll(async () => {
     vcName,
     vcSpaceAccountId,
     l1VCId,
-    TestUser.GLOBAL_BETA_TESTER
+    TestUser.FEATURE_BETA_TESTER
   );
   vcId = vcData?.data?.createVirtualContributor?.id ?? '';
 
@@ -169,7 +169,7 @@ describe('Virtual Contributor', () => {
       [],
       'welcome',
       [RoleName.Member],
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     const invitationResult = getSingleInvitationResult(invitationData);
@@ -197,7 +197,7 @@ describe('Virtual Contributor', () => {
       vcName,
       vcSpaceAccountId,
       l1VCId,
-      TestUser.GLOBAL_BETA_TESTER
+      TestUser.FEATURE_BETA_TESTER
     );
     vcId = vcData?.data?.createVirtualContributor?.id ?? '';
 

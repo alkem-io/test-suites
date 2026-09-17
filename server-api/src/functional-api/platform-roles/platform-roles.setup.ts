@@ -92,7 +92,7 @@ const assertSliceAIsAdditive = async (): Promise<void> => {
   // AND the legacy credential — which is exactly why §8 forbids using it as
   // the actor in any denial case, and exactly what makes it the right probe
   // for additivity.
-  const legacy = await reportedForUser(TestUser.GLOBAL_ADMIN);
+  const legacy = await reportedForUser(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
 
   if (
     !legacy.roleSet.includes('GRANT_GLOBAL_ADMINS') ||

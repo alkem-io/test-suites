@@ -35,7 +35,7 @@ import { graphqlRequestAuth } from '@alkemio/tests-lib/utils/graphql.request';
 /** Bounds for a visual TYPE, from the platform config (the constants). */
 export const getVisualTypeConstraints = async (
   visualType: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   return graphqlRequestAuth(
     {
@@ -64,7 +64,7 @@ export const getVisualTypeConstraints = async (
 /** A Space's BANNER visual as STORED (the row the upload validator reads). */
 export const getSpaceBannerVisual = async (
   spaceId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   return graphqlRequestAuth(
     {
@@ -107,7 +107,7 @@ export const updateVisualAspectRatio = async (
   visualID: string,
   aspectRatio: number,
   uri: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   return graphqlRequestAuth(
     {
@@ -171,7 +171,7 @@ export const getExploreSpaces = async (userRole?: TestUser, limit = 30) => {
 export const updateCalloutMapView = async (
   calloutID: string,
   mapView: { longitude: number; latitude: number; zoom: number } | null,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   return graphqlRequestAuth(
     {
@@ -203,7 +203,7 @@ export const updateCalloutMapView = async (
 /** Read back a callout's stored contributors map camera. */
 export const getCalloutMapView = async (
   calloutID: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   return graphqlRequestAuth(
     {
@@ -238,7 +238,7 @@ export const getCalloutMapView = async (
 export const createContributorsCallout = async (
   calloutsSetID: string,
   displayName: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   return graphqlRequestAuth(
     {

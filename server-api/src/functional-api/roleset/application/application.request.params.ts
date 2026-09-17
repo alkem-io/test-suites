@@ -25,7 +25,7 @@ export const createApplication = async (
 
 export const deleteApplication = async (
   applicationId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -44,7 +44,7 @@ export const deleteApplication = async (
 
 export const getRoleSetInvitationsApplications = async (
   roleSetId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -62,7 +62,7 @@ export const getRoleSetInvitationsApplications = async (
 export const getSubspaceApplications = async (
   spaceId: string,
   subspaceId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -77,7 +77,7 @@ export const getSubspaceApplications = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
-export const meQuery = async (userRole: TestUser = TestUser.GLOBAL_ADMIN) => {
+export const meQuery = async (userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
     graphqlClient.MeQuery(

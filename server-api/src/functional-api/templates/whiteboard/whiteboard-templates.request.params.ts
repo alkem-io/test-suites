@@ -5,7 +5,7 @@ import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 
 export const getWhiteboardTemplatesCountByTemplateSetId = async (
   templateSetId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -37,7 +37,7 @@ export const createWhiteboardTemplate = async (
   // Parameter kept so existing callers compile; it is no longer sent.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _content: string = whiteboardTemplateValuesEmpty,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -68,7 +68,7 @@ export const updateTemplate = async (
   templateId: string,
   displayName = 'Default post template title - Update',
   description = 'Default post template info description - Update',
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>

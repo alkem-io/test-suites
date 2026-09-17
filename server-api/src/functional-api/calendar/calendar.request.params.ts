@@ -103,7 +103,7 @@ const GET_CALENDAR_EVENT_BY_ID = loadQuery('queries/calendar/getCalendarEventByI
 
 export const getSpaceCalendarId = async (
   spaceId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const callback = (authToken: string | undefined) =>
     graphqlClient.rawRequest<GetSpaceCalendarIdResponse>(
@@ -117,7 +117,7 @@ export const getSpaceCalendarId = async (
 
 export const getCalendarEvents = async (
   spaceId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const callback = (authToken: string | undefined) =>
     graphqlClient.rawRequest<GetCalendarEventsResponse>(
@@ -131,7 +131,7 @@ export const getCalendarEvents = async (
 
 export const getCalendarEventById = async (
   eventId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const callback = (authToken: string | undefined) =>
     graphqlClient.rawRequest<GetCalendarEventByIdResponse>(
@@ -160,7 +160,7 @@ export const createCalendarEventOnCalendar = async (
     tags?: string[];
     location?: { city?: string; country?: string };
   },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const eventData = {
     calendarID,
@@ -204,7 +204,7 @@ export const updateCalendarEvent = async (
     nameID?: string;
     location?: { city?: string; country?: string };
   },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const eventData: Record<string, unknown> = {
     ID: eventId,
@@ -241,7 +241,7 @@ export const updateCalendarEvent = async (
 
 export const deleteCalendarEvent = async (
   eventId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const callback = (authToken: string | undefined) =>
     graphqlClient.rawRequest<DeleteCalendarEventResponse>(

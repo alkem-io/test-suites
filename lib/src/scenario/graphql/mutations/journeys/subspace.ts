@@ -9,7 +9,7 @@ export const createSubspace = async (
   subspaceName: string,
   subspaceNameId: string,
   parentId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN,
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN,
   tagline?: string,
   // Tutorial callouts are expensive (one Matrix room round-trip per callout)
   // and almost no suite asserts them — default OFF; opt in per scenario.

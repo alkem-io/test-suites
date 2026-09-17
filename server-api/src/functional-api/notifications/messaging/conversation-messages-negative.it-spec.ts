@@ -137,7 +137,7 @@ describe('Conversation-message notifications — negative matrix', () => {
 
     afterAll(async () => {
       if (conversationId) {
-        await leaveConversation(conversationId, TestUser.GLOBAL_ADMIN).catch(
+        await leaveConversation(conversationId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN).catch(
           () => {}
         );
       }
@@ -173,7 +173,7 @@ describe('Conversation-message notifications — negative matrix', () => {
         const conversationRes = await createGroupConversation(
           [TestUserManager.users.spaceMember.agentId],
           'Negative Matrix - Non-Member',
-          TestUser.GLOBAL_ADMIN
+          TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
         );
         conversationId = conversationRes?.data?.createConversation?.id ?? '';
         const roomId = conversationRes?.data?.createConversation?.room?.id;
@@ -191,7 +191,7 @@ describe('Conversation-message notifications — negative matrix', () => {
             sendMessageToRoom(
               roomId as string,
               'Hello group',
-              TestUser.GLOBAL_ADMIN
+              TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
             ),
           1,
           {
@@ -218,7 +218,7 @@ describe('Conversation-message notifications — negative matrix', () => {
 
     afterAll(async () => {
       if (conversationId) {
-        await leaveConversation(conversationId, TestUser.GLOBAL_ADMIN).catch(
+        await leaveConversation(conversationId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN).catch(
           () => {}
         );
       }
@@ -265,7 +265,7 @@ describe('Conversation-message notifications — negative matrix', () => {
             TestUserManager.users.spaceAdmin.agentId,
           ],
           'Negative Matrix - Removed Member',
-          TestUser.GLOBAL_ADMIN
+          TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
         );
         conversationId = conversationRes?.data?.createConversation?.id ?? '';
         const roomId = conversationRes?.data?.createConversation?.room?.id;
@@ -277,7 +277,7 @@ describe('Conversation-message notifications — negative matrix', () => {
         await sendMessageToRoom(
           roomId as string,
           'Message while C is a member',
-          TestUser.GLOBAL_ADMIN
+          TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
         );
         const [, totalWhileMember] = await waitForMailsCountAtLeast(1, {
           timeout: groupEmail.quietGraceMs,
@@ -294,7 +294,7 @@ describe('Conversation-message notifications — negative matrix', () => {
         await removeConversationMember(
           conversationId,
           TestUserManager.users.spaceAdmin.agentId,
-          TestUser.GLOBAL_ADMIN
+          TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
         );
         await waitForRemovalToLand(conversationId, TestUser.SPACE_ADMIN);
 
@@ -310,7 +310,7 @@ describe('Conversation-message notifications — negative matrix', () => {
             sendMessageToRoom(
               roomId as string,
               'Message after C left',
-              TestUser.GLOBAL_ADMIN
+              TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
             ),
           // Grace covers `push:group` at its MAX-DELAY bound. A push for C
           // would be debounced before it ever reached the queue, so anything
@@ -349,14 +349,14 @@ describe('Conversation-message notifications — negative matrix', () => {
 
     afterAll(async () => {
       if (conversationId) {
-        await leaveConversation(conversationId, TestUser.GLOBAL_ADMIN).catch(
+        await leaveConversation(conversationId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN).catch(
           () => {}
         );
       }
       await updateConversationMessagingSettings(
         TestUserManager.users.globalAdmin.id,
         { direct: { email: false } },
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       await updateConversationMessagingSettings(
         TestUserManager.users.subspaceAdmin.id,
@@ -375,7 +375,7 @@ describe('Conversation-message notifications — negative matrix', () => {
         await updateConversationMessagingSettings(
           TestUserManager.users.globalAdmin.id,
           { direct: { email: true } },
-          TestUser.GLOBAL_ADMIN
+          TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
         );
         await updateConversationMessagingSettings(
           TestUserManager.users.subspaceAdmin.id,
@@ -385,7 +385,7 @@ describe('Conversation-message notifications — negative matrix', () => {
 
         const conversationRes = await createDirectConversation(
           TestUserManager.users.subspaceAdmin.agentId,
-          TestUser.GLOBAL_ADMIN
+          TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
         );
         conversationId = conversationRes?.data?.createConversation?.id ?? '';
         const roomId = conversationRes?.data?.createConversation?.room?.id;
@@ -401,7 +401,7 @@ describe('Conversation-message notifications — negative matrix', () => {
             sendMessageToRoom(
               roomId as string,
               'Hello!',
-              TestUser.GLOBAL_ADMIN
+              TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
             ),
           1,
           {
@@ -428,7 +428,7 @@ describe('Conversation-message notifications — negative matrix', () => {
 
     afterAll(async () => {
       if (conversationId) {
-        await leaveConversation(conversationId, TestUser.GLOBAL_ADMIN).catch(
+        await leaveConversation(conversationId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN).catch(
           () => {}
         );
       }
@@ -455,7 +455,7 @@ describe('Conversation-message notifications — negative matrix', () => {
             TestUserManager.users.spaceAdmin.agentId,
           ],
           'Negative Matrix - Disabled Push',
-          TestUser.GLOBAL_ADMIN
+          TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
         );
         conversationId = conversationRes?.data?.createConversation?.id ?? '';
         const roomId = conversationRes?.data?.createConversation?.room?.id;
@@ -473,7 +473,7 @@ describe('Conversation-message notifications — negative matrix', () => {
             sendMessageToRoom(
               roomId as string,
               'Hello group',
-              TestUser.GLOBAL_ADMIN
+              TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
             ),
           1,
           {

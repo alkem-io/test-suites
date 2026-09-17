@@ -68,7 +68,7 @@ describe('Organization - documents', () => {
       );
       const getDocId = await getProfileDocuments(
         baseScenario.organization.profile.id,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       documentId =
         getDocId.data?.lookup?.profile?.storageBucket?.documents[0].id ?? '';
@@ -79,7 +79,7 @@ describe('Organization - documents', () => {
       userRole                       | privileges                                                                  | expectedStatus
       ${undefined}                   | ${['READ']}                                                                 | ${200}
       ${TestUser.NON_SPACE_MEMBER}   | ${['READ']}                                                                 | ${200}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_notificationsAdmin_globalAdmin} | ${200}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_notificationsAdmin_globalAdmin} | ${200}
       ${TestUser.ORGANIZATION_ADMIN} | ${sorted__create_read_update_delete_grant_notificationsAdmin}               | ${200}
       ${TestUser.SUBSPACE_ADMIN}     | ${sorted__create_read_update_delete_grant_notificationsAdmin}               | ${200}
       ${TestUser.SPACE_MEMBER}       | ${['READ']}                                                                 | ${200}
@@ -104,7 +104,7 @@ describe('Organization - documents', () => {
       userRole                       | privileges                                                                                 | parentEntityType
       ${undefined}                   | ${['READ']}                                                                                | ${'ORGANIZATION'}
       ${TestUser.NON_SPACE_MEMBER}   | ${['READ']}                                                                                | ${'ORGANIZATION'}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel_platformAdmin_notificationsAdmin_globalAdmin} | ${'ORGANIZATION'}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel_platformAdmin_notificationsAdmin_globalAdmin} | ${'ORGANIZATION'}
       ${TestUser.ORGANIZATION_ADMIN} | ${sorted__create_read_update_delete_grant_fileUp_fileDel_notificationsAdmin}               | ${'ORGANIZATION'}
       ${TestUser.SUBSPACE_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_notificationsAdmin}               | ${'ORGANIZATION'}
       ${TestUser.SPACE_MEMBER}       | ${['READ']}                                                                                | ${'ORGANIZATION'}
@@ -139,7 +139,7 @@ describe('Organization - documents', () => {
 
       const getDocId = await getProfileDocuments(
         baseScenario.organization.profile.id,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       documentId =
         getDocId.data?.lookup?.profile?.storageBucket?.documents[0].id ?? '';
@@ -150,7 +150,7 @@ describe('Organization - documents', () => {
       userRole                       | privileges                                                                  | expectedStatus
       ${undefined}                   | ${['READ']}                                                                 | ${200}
       ${TestUser.NON_SPACE_MEMBER}   | ${['READ']}                                                                 | ${200}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_notificationsAdmin_globalAdmin} | ${200}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_notificationsAdmin_globalAdmin} | ${200}
       ${TestUser.ORGANIZATION_ADMIN} | ${sorted__create_read_update_delete_grant_notificationsAdmin}               | ${200}
       ${TestUser.SUBSPACE_ADMIN}     | ${sorted__create_read_update_delete_grant_notificationsAdmin}               | ${200}
       ${TestUser.SPACE_MEMBER}       | ${['READ']}                                                                 | ${200}
@@ -175,7 +175,7 @@ describe('Organization - documents', () => {
       userRole                       | privileges                                                                                 | parentEntityType
       ${undefined}                   | ${['READ']}                                                                                | ${'ORGANIZATION'}
       ${TestUser.NON_SPACE_MEMBER}   | ${['READ']}                                                                                | ${'ORGANIZATION'}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel_platformAdmin_notificationsAdmin_globalAdmin} | ${'ORGANIZATION'}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel_platformAdmin_notificationsAdmin_globalAdmin} | ${'ORGANIZATION'}
       ${TestUser.ORGANIZATION_ADMIN} | ${sorted__create_read_update_delete_grant_fileUp_fileDel_notificationsAdmin}               | ${'ORGANIZATION'}
       ${TestUser.SUBSPACE_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_notificationsAdmin}               | ${'ORGANIZATION'}
       ${TestUser.SPACE_MEMBER}       | ${['READ']}                                                                                | ${'ORGANIZATION'}
@@ -201,7 +201,7 @@ describe('Organization - documents', () => {
     beforeAll(async () => {
       const getSpaceStorageId = await getProfileDocuments(
         baseScenario.organization.profile.id,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       const storageId =
@@ -214,7 +214,7 @@ describe('Organization - documents', () => {
 
       const getDocId = await getProfileDocuments(
         baseScenario.organization.profile.id,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       documentId =
@@ -226,7 +226,7 @@ describe('Organization - documents', () => {
       userRole                       | privileges                                                                  | expectedStatus
       ${undefined}                   | ${['READ']}                                                                 | ${200}
       ${TestUser.NON_SPACE_MEMBER}   | ${['READ']}                                                                 | ${200}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_notificationsAdmin_globalAdmin} | ${200}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}       | ${sorted__create_read_update_delete_grant_platformAdmin_notificationsAdmin_globalAdmin} | ${200}
       ${TestUser.ORGANIZATION_ADMIN} | ${sorted__create_read_update_delete_grant_notificationsAdmin}               | ${200}
       ${TestUser.SUBSPACE_ADMIN}     | ${sorted__create_read_update_delete_grant_notificationsAdmin}               | ${200}
       ${TestUser.SPACE_MEMBER}       | ${['READ']}                                                                 | ${200}
@@ -251,7 +251,7 @@ describe('Organization - documents', () => {
       userRole                       | privileges                                                                                 | parentEntityType
       ${undefined}                   | ${['READ']}                                                                                | ${'ORGANIZATION'}
       ${TestUser.NON_SPACE_MEMBER}   | ${['READ']}                                                                                | ${'ORGANIZATION'}
-      ${TestUser.GLOBAL_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel_platformAdmin_notificationsAdmin_globalAdmin} | ${'ORGANIZATION'}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}       | ${sorted__create_read_update_delete_grant_fileUp_fileDel_platformAdmin_notificationsAdmin_globalAdmin} | ${'ORGANIZATION'}
       ${TestUser.ORGANIZATION_ADMIN} | ${sorted__create_read_update_delete_grant_fileUp_fileDel_notificationsAdmin}               | ${'ORGANIZATION'}
       ${TestUser.SUBSPACE_ADMIN}     | ${sorted__create_read_update_delete_grant_fileUp_fileDel_notificationsAdmin}               | ${'ORGANIZATION'}
       ${TestUser.SPACE_MEMBER}       | ${['READ']}                                                                                | ${'ORGANIZATION'}

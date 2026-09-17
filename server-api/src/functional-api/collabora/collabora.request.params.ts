@@ -60,7 +60,7 @@ const EDITOR_URL_QUERY = `query CollaboraEditorUrl($collaboraDocumentID: UUID!) 
  */
 export const getCollaboraEditorUrl = async (
   collaboraDocumentID: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ): Promise<TimedEditorUrl> => {
   const startedAt = Date.now();
   const response = await graphqlRequestAuth(
@@ -108,7 +108,7 @@ export const getCollaboraEditorUrlNoAuth = async (
  */
 export const getCollaboraServiceAvailable = async (
   collaboraDocumentID: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) =>
   graphqlRequestAuth(
     {
@@ -131,7 +131,7 @@ export const createCollaboraFramingCallout = async (
   calloutsSetID: string,
   displayName: string,
   documentType: CollaboraDocumentType = CollaboraDocumentType.Wordprocessing,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) =>
   graphqlRequestAuth(
     {
@@ -173,7 +173,7 @@ export const createCollaboraContributionCallout = async (
   calloutsSetID: string,
   displayName: string,
   documentType: CollaboraDocumentType = CollaboraDocumentType.Wordprocessing,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) =>
   graphqlRequestAuth(
     {
@@ -220,7 +220,7 @@ export const createCollaboraContributionCallout = async (
 /** Read back both attachment paths for a callout. */
 export const getCalloutCollaboraDocuments = async (
   calloutID: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) =>
   graphqlRequestAuth(
     {
@@ -242,7 +242,7 @@ export const getCalloutCollaboraDocuments = async (
 /** The callouts set of a Virtual Contributor's knowledge base (type KNOWLEDGE_BASE). */
 export const getVirtualContributorKnowledgeBaseCalloutsSet = async (
   virtualContributorID: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) =>
   graphqlRequestAuth(
     {
@@ -335,7 +335,7 @@ export const importCollaboraDocument = async (
   path: PathLike,
   calloutID: string,
   displayName?: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const uploadData: Record<string, unknown> = { calloutID };
   // Absent and null are different inputs; omit entirely to exercise the
@@ -360,7 +360,7 @@ export const replaceCollaboraDocument = async (
   path: PathLike,
   collaboraDocumentID: string,
   displayName?: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const replaceData: Record<string, unknown> = { ID: collaboraDocumentID };
   if (displayName !== undefined) replaceData.displayName = displayName;

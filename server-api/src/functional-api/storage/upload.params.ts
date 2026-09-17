@@ -144,7 +144,7 @@ async function graphqlUpload(
 export const uploadFileOnRef = async (
   path: PathLike,
   refId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   return graphqlUpload(
     UPLOAD_FILE_ON_REFERENCE,
@@ -157,7 +157,7 @@ export const uploadFileOnRef = async (
 export const uploadFileOnLink = async (
   path: PathLike,
   linkId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   return graphqlUpload(
     UPLOAD_FILE_ON_LINK,
@@ -170,7 +170,7 @@ export const uploadFileOnLink = async (
 export const uploadImageOnVisual = async (
   path: PathLike,
   visualId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   return graphqlUpload(
     UPLOAD_IMAGE_ON_VISUAL,
@@ -183,7 +183,7 @@ export const uploadImageOnVisual = async (
 export const uploadFileOnStorageBucket = async (
   path: PathLike,
   storageBucketId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   return graphqlUpload(
     UPLOAD_FILE_ON_STORAGE_BUCKET,

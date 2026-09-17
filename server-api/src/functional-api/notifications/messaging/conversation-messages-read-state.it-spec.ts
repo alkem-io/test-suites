@@ -68,7 +68,7 @@ const directAnyChannelGraceMs = Math.max(
 );
 
 const recipient = () => TestUserManager.users.betaTester;
-const RECIPIENT_ROLE = TestUser.GLOBAL_BETA_TESTER;
+const RECIPIENT_ROLE = TestUser.FEATURE_BETA_TESTER;
 
 let pushSubscriptions: PushSubscriptionHandle[] = [];
 
@@ -107,7 +107,7 @@ describe('Conversation-message notifications — read state cancels the digest (
       async () => {
         const res = await createDirectConversation(
           recipient().agentId,
-          TestUser.GLOBAL_ADMIN
+          TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
         );
         roomId = res?.data?.createConversation?.room?.id ?? '';
         expect(roomId).toBeTruthy();
@@ -120,7 +120,7 @@ describe('Conversation-message notifications — read state cancels the digest (
         const drainId = await sendConversationMessage(
           roomId,
           'Read-state baseline drain',
-          TestUser.GLOBAL_ADMIN
+          TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
         );
         await markConversationRead(roomId, drainId, RECIPIENT_ROLE);
         await delay(directAnyChannelGraceMs);
@@ -138,7 +138,7 @@ describe('Conversation-message notifications — read state cancels the digest (
         const messageId = await sendConversationMessage(
           roomId,
           'US1-AS6 message that B reads before the timer fires',
-          TestUser.GLOBAL_ADMIN
+          TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
         );
 
         // Act 2 — B reads it BEFORE either quiet period elapses. The probe
@@ -189,7 +189,7 @@ describe('Conversation-message notifications — read state cancels the digest (
         const res = await createGroupConversation(
           [recipient().agentId, TestUserManager.users.spaceMember.agentId],
           name,
-          TestUser.GLOBAL_ADMIN
+          TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
         );
         const roomId = res?.data?.createConversation?.room?.id ?? '';
         expect(roomId).toBeTruthy();
@@ -201,7 +201,7 @@ describe('Conversation-message notifications — read state cancels the digest (
     afterAll(async () => {
       for (const id of groupIds) {
         if (id)
-          await leaveConversation(id, TestUser.GLOBAL_ADMIN).catch(() => {});
+          await leaveConversation(id, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN).catch(() => {});
       }
     }, 120_000);
 
@@ -217,7 +217,7 @@ describe('Conversation-message notifications — read state cancels the digest (
             await sendConversationMessage(
               roomId,
               `Message in ${name}`,
-              TestUser.GLOBAL_ADMIN
+              TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
             )
           );
         }
@@ -271,7 +271,7 @@ describe('Conversation-message notifications — read state cancels the digest (
       const res = await createGroupConversation(
         [recipient().agentId, TestUserManager.users.spaceMember.agentId],
         groupName,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       roomId = res?.data?.createConversation?.room?.id ?? '';
       groupId = res?.data?.createConversation?.id ?? '';
@@ -280,7 +280,7 @@ describe('Conversation-message notifications — read state cancels the digest (
 
     afterAll(async () => {
       if (groupId) {
-        await leaveConversation(groupId, TestUser.GLOBAL_ADMIN).catch(() => {});
+        await leaveConversation(groupId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN).catch(() => {});
       }
     }, 120_000);
 
@@ -293,7 +293,7 @@ describe('Conversation-message notifications — read state cancels the digest (
         const firstMessageId = await sendConversationMessage(
           roomId,
           'US5-AS3 message while B is away',
-          TestUser.GLOBAL_ADMIN
+          TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
         );
         const [, firstTotal] = await waitForMailsCountAtLeast(1, {
           timeout: groupEmail.quietGraceMs,
@@ -312,7 +312,7 @@ describe('Conversation-message notifications — read state cancels the digest (
         await sendConversationMessage(
           roomId,
           'US5-AS3 message after B caught up',
-          TestUser.GLOBAL_ADMIN
+          TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
         );
         const [mailItems, secondTotal] = await waitForMailsCountAtLeast(2, {
           timeout: groupEmail.quietGraceMs,

@@ -110,7 +110,7 @@ describe('Update user', () => {
     );
     const usersData = await getUsersData(
       TestUserManager.users.spaceAdmin.id,
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
 
     // Assert;

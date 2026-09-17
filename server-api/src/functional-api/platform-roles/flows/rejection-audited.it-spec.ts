@@ -314,10 +314,10 @@ describe('flow 5 — every rejection is distinctly attributable and takes no eff
       // identity than the target — rule 6 (self-assignment) is evaluated
       // FIRST and unconditionally blocks a self-revoke with its own,
       // distinct message, which shadowed rule 5 here identically to
-      // `assignment-rules.it-spec.ts`. `GLOBAL_ADMIN` is the right actor and
-      // is still sound after the strip: `GRANT_GLOBAL_ADMINS` is granted to
-      // [GLOBAL_ADMIN, PLATFORM_ROLES_ADMIN], so `admin@` still passes rule 1
-      // from its LEGACY credential even having just lost the new role.
+      // `assignment-rules.it-spec.ts`. `GLOBAL_ADMIN` already performs
+      // every other admin action in this test (the restore loops above/
+      // below) and still reaches `PLATFORM_ROLES_ASSIGN` via A1's legacy
+      // cascade at Slice A.
       const res = await asUser(
         token =>
           getGraphqlClient().removePlatformRoleFromUser(
@@ -329,7 +329,7 @@ describe('flow 5 — every rejection is distinctly attributable and takes no eff
             },
             { authorization: `Bearer ${token}` }
           ),
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
 
       expect(res.error?.errors?.[0]?.message).toContain(

@@ -242,7 +242,7 @@ export const createDisposableVerifiedUser = async (
 export const deleteUserWithOptions = async (
   userId: string,
   options: { deleteIdentity: boolean },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>

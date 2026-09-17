@@ -92,7 +92,7 @@ describe('Conversation-message notifications — positive matrix', () => {
 
     afterEach(async () => {
       if (conversationId) {
-        await leaveConversation(conversationId, TestUser.GLOBAL_ADMIN).catch(
+        await leaveConversation(conversationId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN).catch(
           () => {}
         );
         conversationId = '';
@@ -104,7 +104,7 @@ describe('Conversation-message notifications — positive matrix', () => {
       async () => {
         const conversationRes = await createDirectConversation(
           TestUserManager.users.spaceMember.agentId,
-          TestUser.GLOBAL_ADMIN
+          TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
         );
         conversationId = conversationRes?.data?.createConversation?.id ?? '';
         const roomId = conversationRes?.data?.createConversation?.room?.id;
@@ -118,7 +118,7 @@ describe('Conversation-message notifications — positive matrix', () => {
             sendMessageToRoom(
               roomId as string,
               'Hello!',
-              TestUser.GLOBAL_ADMIN
+              TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
             ),
           1,
           { timeout: directPush.quietGraceMs, settleMs: directPush.settleMs }
@@ -145,7 +145,7 @@ describe('Conversation-message notifications — positive matrix', () => {
             TestUserManager.users.spaceAdmin.agentId,
           ],
           'Positive Matrix - Group Defaults',
-          TestUser.GLOBAL_ADMIN
+          TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
         );
         conversationId = conversationRes?.data?.createConversation?.id ?? '';
         const roomId = conversationRes?.data?.createConversation?.room?.id;
@@ -159,7 +159,7 @@ describe('Conversation-message notifications — positive matrix', () => {
             sendMessageToRoom(
               roomId as string,
               'Hello group!',
-              TestUser.GLOBAL_ADMIN
+              TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
             ),
           2,
           { timeout: groupPush.quietGraceMs, settleMs: groupPush.settleMs }
@@ -181,7 +181,7 @@ describe('Conversation-message notifications — positive matrix', () => {
 
     afterEach(async () => {
       if (conversationId) {
-        await leaveConversation(conversationId, TestUser.GLOBAL_ADMIN).catch(
+        await leaveConversation(conversationId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN).catch(
           () => {}
         );
         conversationId = '';
@@ -204,7 +204,7 @@ describe('Conversation-message notifications — positive matrix', () => {
 
         const conversationRes = await createDirectConversation(
           TestUserManager.users.spaceMember.agentId,
-          TestUser.GLOBAL_ADMIN
+          TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
         );
         conversationId = conversationRes?.data?.createConversation?.id ?? '';
         const roomId = conversationRes?.data?.createConversation?.room?.id;
@@ -221,7 +221,7 @@ describe('Conversation-message notifications — positive matrix', () => {
         const drainId = await sendConversationMessage(
           roomId as string,
           'US1-AS2 baseline drain',
-          TestUser.GLOBAL_ADMIN
+          TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
         );
         await markConversationRead(
           roomId as string,
@@ -243,7 +243,7 @@ describe('Conversation-message notifications — positive matrix', () => {
             sendMessageToRoom(
               roomId as string,
               'Hello, opted-in!',
-              TestUser.GLOBAL_ADMIN
+              TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
             ),
           1,
           {
@@ -290,7 +290,7 @@ describe('Conversation-message notifications — positive matrix', () => {
             TestUserManager.users.spaceAdmin.agentId,
           ],
           groupName,
-          TestUser.GLOBAL_ADMIN
+          TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
         );
         conversationId = conversationRes?.data?.createConversation?.id ?? '';
         const roomId = conversationRes?.data?.createConversation?.room?.id;
@@ -305,7 +305,7 @@ describe('Conversation-message notifications — positive matrix', () => {
             sendMessageToRoom(
               roomId as string,
               'Hello group, opted-in!',
-              TestUser.GLOBAL_ADMIN
+              TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
             ),
           1,
           {
@@ -357,7 +357,7 @@ describe('Conversation-message notifications — positive matrix', () => {
 
     afterEach(async () => {
       if (conversationId) {
-        await leaveConversation(conversationId, TestUser.GLOBAL_ADMIN).catch(
+        await leaveConversation(conversationId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN).catch(
           () => {}
         );
         conversationId = '';
@@ -380,7 +380,7 @@ describe('Conversation-message notifications — positive matrix', () => {
 
         const conversationRes = await createDirectConversation(
           TestUserManager.users.subspaceMember.agentId,
-          TestUser.GLOBAL_ADMIN
+          TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
         );
         conversationId = conversationRes?.data?.createConversation?.id ?? '';
         const roomId = conversationRes?.data?.createConversation?.room?.id;
@@ -390,7 +390,7 @@ describe('Conversation-message notifications — positive matrix', () => {
         const drainId = await sendConversationMessage(
           roomId as string,
           'US1-AS5 baseline drain',
-          TestUser.GLOBAL_ADMIN
+          TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
         );
         await markConversationRead(
           roomId as string,
@@ -406,7 +406,7 @@ describe('Conversation-message notifications — positive matrix', () => {
             sendMessageToRoom(
               roomId as string,
               hostileMessage,
-              TestUser.GLOBAL_ADMIN
+              TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
             ),
           1,
           {

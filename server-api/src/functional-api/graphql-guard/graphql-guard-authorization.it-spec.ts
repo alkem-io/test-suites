@@ -95,8 +95,8 @@ describe('GraphQL Guard - Synchronous Authorization', () => {
   describe('Space-level authorization privileges', () => {
     test.each`
       user                             | spaceMyPrivileges
-      ${TestUser.GLOBAL_ADMIN}         | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notifications_notificationsAdmin_globalAdmin}
-      ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notificationsAdmin}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}         | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notifications_notificationsAdmin_globalAdmin}
+      ${TestUser.PLATFORM_SUPPORT} | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notificationsAdmin}
       ${TestUser.SPACE_ADMIN}          | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_readLicense_notifications_notificationsAdmin}
       ${TestUser.SPACE_MEMBER}         | ${sorted_read_readAbout_readLicense_notifications}
       ${TestUser.NON_SPACE_MEMBER}     | ${readAboutPrivilege}
@@ -118,7 +118,7 @@ describe('GraphQL Guard - Synchronous Authorization', () => {
       // Use the full GetSpaceData query to verify nested data structure
       const response = await getSpaceData(
         baseScenario.space.id,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       const space = response?.data?.lookup?.space;
 
@@ -294,9 +294,9 @@ describe('GraphQL Guard - Synchronous Authorization', () => {
   describe('Cross-level authorization consistency', () => {
     test('Global admin has consistent elevated access across all levels', async () => {
       const [spaceRes, subspaceRes, subsubspaceRes] = await Promise.all([
-        getPrivateSpaceData(baseScenario.space.id, TestUser.GLOBAL_ADMIN),
-        getPrivateSpaceData(baseScenario.subspace.id, TestUser.GLOBAL_ADMIN),
-        getPrivateSpaceData(baseScenario.subsubspace.id, TestUser.GLOBAL_ADMIN),
+        getPrivateSpaceData(baseScenario.space.id, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN),
+        getPrivateSpaceData(baseScenario.subspace.id, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN),
+        getPrivateSpaceData(baseScenario.subsubspace.id, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN),
       ]);
 
       const expectedPrivileges =
@@ -347,7 +347,7 @@ describe('GraphQL Guard - Synchronous Authorization', () => {
       const fakeSpaceId = '00000000-0000-0000-0000-000000000000';
       const response = await getPrivateSpaceData(
         fakeSpaceId,
-        TestUser.GLOBAL_ADMIN
+        TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
       );
       // Non-existent space should result in an error response
       expect(response?.data?.lookup?.space).toBeUndefined();

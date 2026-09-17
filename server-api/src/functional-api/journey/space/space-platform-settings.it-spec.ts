@@ -145,9 +145,9 @@ describe('Update space platform settings', () => {
       // Arrange
       test.each`
         user                             | spaceMyPrivileges
-        ${TestUser.GLOBAL_ADMIN}         | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notifications_notificationsAdmin_globalAdmin}
-        ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notificationsAdmin}
-        ${TestUser.GLOBAL_LICENSE_ADMIN} | ${readAboutPrivilege_readLicense}
+        ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}         | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notifications_notificationsAdmin_globalAdmin}
+        ${TestUser.PLATFORM_SUPPORT} | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notificationsAdmin}
+        ${TestUser.PLATFORM_LICENSE_MANAGER} | ${readAboutPrivilege_readLicense}
         ${TestUser.SPACE_ADMIN}          | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_readLicense_notifications_notificationsAdmin}
         ${TestUser.SPACE_MEMBER}         | ${sorted_read_readAbout_readLicense_notifications}
         ${TestUser.NON_SPACE_MEMBER}     | ${readAboutPrivilege}
@@ -184,9 +184,9 @@ describe('Update space platform settings', () => {
 
       test.each`
         user                             | spaceMyPrivileges
-        ${TestUser.GLOBAL_ADMIN}         | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notifications_notificationsAdmin_globalAdmin}
-        ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notificationsAdmin}
-        ${TestUser.GLOBAL_LICENSE_ADMIN} | ${sorted_read_readAbout_readLicense}
+        ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}         | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notifications_notificationsAdmin_globalAdmin}
+        ${TestUser.PLATFORM_SUPPORT} | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_accountLicenseManage_readLicense_notificationsAdmin}
+        ${TestUser.PLATFORM_LICENSE_MANAGER} | ${sorted_read_readAbout_readLicense}
         ${TestUser.SPACE_ADMIN}          | ${sorted__create_read_readAbout_update_delete_grant_createSubspace_readLicense_notifications_notificationsAdmin}
         ${TestUser.SPACE_MEMBER}         | ${sorted_read_readAbout_readLicense_notifications}
         ${TestUser.NON_SPACE_MEMBER}     | ${sorted_read_readAbout_readLicense}
@@ -227,9 +227,9 @@ describe('Update space platform settings', () => {
 
     test.each`
       user                             | communicationMyPrivileges                                                                  | subspacesCount | opportunitiesCount
-      ${TestUser.GLOBAL_ADMIN}         | ${sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin} | ${1}           | ${1}
-      ${TestUser.GLOBAL_LICENSE_ADMIN} | ${sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin} | ${1}           | ${1}
-      ${TestUser.GLOBAL_SUPPORT_ADMIN} | ${readPrivilege}                                                                           | ${1}           | ${1}
+      ${TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN}         | ${sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin} | ${1}           | ${1}
+      ${TestUser.PLATFORM_LICENSE_MANAGER} | ${sorted__create_read_update_delete_grant_authorizationReset_createSubspace_platformAdmin} | ${1}           | ${1}
+      ${TestUser.PLATFORM_SUPPORT} | ${readPrivilege}                                                                           | ${1}           | ${1}
     `(
       'User role: "$user", have access to public archived Space',
       async ({ user, communicationMyPrivileges, subspacesCount }) => {

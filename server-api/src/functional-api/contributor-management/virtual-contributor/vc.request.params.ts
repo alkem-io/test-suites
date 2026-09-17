@@ -13,7 +13,7 @@ export const createVirtualContributorOnAccountSpaceBased = async (
   displayName: string,
   accountID: string,
   bodyOfKnowledgeID: string,
-  userRole: TestUser = TestUser.GLOBAL_BETA_TESTER
+  userRole: TestUser = TestUser.FEATURE_BETA_TESTER
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -40,7 +40,7 @@ export const createVirtualContributorOnAccountSpaceBased = async (
 export const createVirtualContributorOnAccountKnowledgeBased = async (
   displayName: string,
   accountID: string,
-  userRole: TestUser = TestUser.GLOBAL_BETA_TESTER
+  userRole: TestUser = TestUser.FEATURE_BETA_TESTER
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -70,7 +70,7 @@ export const createVirtualContributorOnAccountKnowledgeBasedWithCallout =
   async (
     displayName: string,
     accountID: string,
-    userRole: TestUser = TestUser.GLOBAL_BETA_TESTER
+    userRole: TestUser = TestUser.FEATURE_BETA_TESTER
   ) => {
     const createVC = await createVirtualContributorOnAccountKnowledgeBased(
       displayName,
@@ -102,7 +102,7 @@ export const createVirtualContributorOnAccountKnowledgeBasedWithCallout =
 export const updateVirtualContributor = async (
   ID: string,
   searchVisibility: SearchVisibility,
-  userRole: TestUser = TestUser.GLOBAL_BETA_TESTER
+  userRole: TestUser = TestUser.FEATURE_BETA_TESTER
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -123,7 +123,7 @@ export const updateVirtualContributor = async (
 export const updateVirtualContributorSettings = async (
   virtualContributorID: string,
   knowledgeBaseContentVisible: boolean,
-  userRole: TestUser = TestUser.GLOBAL_BETA_TESTER
+  userRole: TestUser = TestUser.FEATURE_BETA_TESTER
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -147,7 +147,7 @@ export const updateVirtualContributorSettings = async (
 
 export const deleteVirtualContributorOnAccount = async (
   ID: string,
-  userRole: TestUser = TestUser.GLOBAL_BETA_TESTER
+  userRole: TestUser = TestUser.FEATURE_BETA_TESTER
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -167,7 +167,7 @@ export const deleteVirtualContributorOnAccount = async (
 export const removeVirtualContributorFromRoleSet = async (
   roleSetId: string,
   virtualContributorId: string,
-  userRole: TestUser = TestUser.GLOBAL_BETA_TESTER
+  userRole: TestUser = TestUser.FEATURE_BETA_TESTER
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -185,7 +185,7 @@ export const removeVirtualContributorFromRoleSet = async (
 
 export const queryVCData = async (
   id: string,
-  userRole: TestUser = TestUser.GLOBAL_BETA_TESTER
+  userRole: TestUser = TestUser.FEATURE_BETA_TESTER
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -202,7 +202,7 @@ export const queryVCData = async (
 
 export const queryVCKnowledgeBase = async (
   id: string,
-  userRole: TestUser = TestUser.GLOBAL_BETA_TESTER
+  userRole: TestUser = TestUser.FEATURE_BETA_TESTER
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -219,7 +219,7 @@ export const queryVCKnowledgeBase = async (
 
 export const queryVCKnowledgePrivileges = async (
   id: string,
-  userRole: TestUser = TestUser.GLOBAL_BETA_TESTER
+  userRole: TestUser = TestUser.FEATURE_BETA_TESTER
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -236,7 +236,7 @@ export const queryVCKnowledgePrivileges = async (
 
 export const queryVCStorageConfig = async (
   virtualContributorId: string,
-  userRole: TestUser = TestUser.GLOBAL_BETA_TESTER
+  userRole: TestUser = TestUser.FEATURE_BETA_TESTER
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -253,7 +253,7 @@ export const queryVCStorageConfig = async (
 
 export const queryVCKnowledgeStorageConfig = async (
   virtualContributorId: string,
-  userRole: TestUser = TestUser.GLOBAL_BETA_TESTER
+  userRole: TestUser = TestUser.FEATURE_BETA_TESTER
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>

@@ -15,7 +15,7 @@ export const fullConfiguration = async () => {
 // `configuration.it-spec.ts`: that file carries a `test.only`, so a sibling
 // test there would never run. See `visual/banner-visual-constraints.it-spec.ts`.
 export const bannerVisualConstraints = async (
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>

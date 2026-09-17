@@ -276,7 +276,7 @@ describe('assignment rules (T010) — the five rules, each with its own distinct
     // target — rule 6 (self-assignment, ninth clarification pass) is
     // evaluated FIRST and unconditionally blocks a self-revoke with its own
     // distinct message, which shadowed rule 5 entirely when the fixture
-    // removed its own role. `GLOBAL_ADMIN` still reaches `GRANT_GLOBAL_ADMINS`
+    // removed its own role. `GLOBAL_ADMIN` still reaches `PLATFORM_ROLES_ASSIGN`
     // via A1's legacy cascade at Slice A, so it can act here without being
     // the target.
     const res = await asUser(
@@ -290,7 +290,7 @@ describe('assignment rules (T010) — the five rules, each with its own distinct
           },
           { authorization: `Bearer ${token}` }
         ),
-      TestUser.GLOBAL_ADMIN
+      TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
     );
     try {
       if (isSoleHolder) {

@@ -181,86 +181,23 @@ export const ROOT_CASCADE: {
   credentialsBySlice: {
     A: [
       AuthorizationCredential.PlatformContentFullAccess,
-      AuthorizationCredential.GlobalAdmin,
     ],
     B: [AuthorizationCredential.PlatformContentFullAccess],
   },
 };
 
 /**
- * The two legacy cascades that exist ONLY in Slice A — both deleted at
- * Slice B (T072 for the root's CRUD+GRANT half, T073 for the platform
- * subtree), which is why there is no `credentialsBySlice` field here: at
- * Slice B, neither credential reaches anything through EITHER cascade (the
- * rows are dropped outright at T076/T077, not merely narrowed).
+ * workspace#027-platform-role-redesign (T022a, Slice B): `LEGACY_CASCADES` is
+ * DELETED, mirroring server T083a.
+ *
+ * It modelled the two cascades that existed only while the feature ran additively
+ * — `global-admin`'s root CRUD+GRANT god mode (removed at T072) and
+ * `global-support`'s platform-subtree CRUD (removed at T073) — so that
+ * `reachers()` could derive each surface's Slice A reacher set. Both cascades and
+ * both credentials are gone, so the model is no longer expressible. Every census
+ * surface now declares `legacyReachers: []` and `reachers()` derives the same
+ * empty set from `ROOT_CASCADE` alone.
  */
-export const LEGACY_CASCADES: {
-  /** `global-admin`'s root CRUD+GRANT god-mode rule
-   * (`platform.authorization.policy.service.ts`, deleted at T072). */
-  readonly globalAdminRootCrud: {
-    readonly credential: AuthorizationCredential;
-    readonly privileges: readonly AuthorizationPrivilege[];
-    readonly trees: readonly TreeId[];
-  };
-  /** `global-support`'s platform-SUBTREE CRUD cascade
-   * (`platform.service.authorization.ts`'s `globalSupportPlatformAdmin`
-   * rule, deleted at T073). Reaches `platform` itself and everything that
-   * hangs off it (research C2) — NOT the other six root-inheritors (user /
-   * organization / account / space / virtual-contributor /
-   * virtual-assistant), which `global-support` reaches only via the ROOT
-   * cascade above, not this one. */
-  readonly globalSupportPlatformSubtree: {
-    readonly credential: AuthorizationCredential;
-    readonly privileges: readonly AuthorizationPrivilege[];
-    readonly trees: readonly TreeId[];
-  };
-} = {
-  // `licensing-framework` / `license-policy` added (corr-ts-27/spec-ts-19
-  // re-sync, corr-server-12 fix): `platform.service.authorization.ts` passes
-  // `platform.authorization` as the PARENT of `licensing.authorization`
-  // (`inheritParentAuthorization(licensing.authorization,
-  // platform.authorization)`), so this cascade DOES reach the licensing
-  // tree too — the model previously under-reported it.
-  globalAdminRootCrud: {
-    credential: AuthorizationCredential.GlobalAdmin,
-    privileges: [
-      AuthorizationPrivilege.Create,
-      AuthorizationPrivilege.Read,
-      AuthorizationPrivilege.Update,
-      AuthorizationPrivilege.Delete,
-      AuthorizationPrivilege.Grant,
-    ],
-    trees: [
-      'platform',
-      'user',
-      'organization',
-      'account',
-      'space',
-      'virtual-contributor',
-      'virtual-assistant',
-    ],
-  },
-  globalSupportPlatformSubtree: {
-    credential: AuthorizationCredential.GlobalSupport,
-    privileges: [
-      AuthorizationPrivilege.Create,
-      AuthorizationPrivilege.Read,
-      AuthorizationPrivilege.Update,
-      AuthorizationPrivilege.Delete,
-    ],
-    trees: [
-      'platform',
-      'forum',
-      'library',
-      'templates-manager',
-      'role-set',
-      'storage',
-      'messaging',
-      'licensing-framework',
-      'license-policy',
-    ],
-  },
-};
 
 
 // ============================================================
@@ -280,14 +217,14 @@ export const LEGACY_CASCADES: {
  * derived from the census, this one is the mirror of a fixed set of
  * authoring tasks (T034-T040a) and has no runtime source to derive it from.
  *
- * It MUST include `GRANT_GLOBAL_ADMINS` even though it is not one of D4's
+ * It MUST include `PLATFORM_ROLES_ASSIGN` even though it is not one of D4's
  * eleven NEW privileges (`authorization.privilege.ts`) — T034 widens its
  * grant set to include `platform-roles-admin`, it gates all six A1 surfaces
  * (the two `*PlatformRole*` mutations plus the four FR-022 credential
  * mutations pinned away from it by T034a), and a union restricted to "this
  * feature's new privileges" is exactly the mistake that left it out of
  * every closed inventory for twelve analyze passes (fifteenth pass, closing
- * C1). Do NOT narrow this back to `D4Privilege | 'GRANT_GLOBAL_ADMINS'` —
+ * C1). Do NOT narrow this back to `D4Privilege | 'PLATFORM_ROLES_ASSIGN'` —
  * that is the same hand-appended-union defect at smaller scale.
  *
  * `MOVE_POST` is deliberately ABSENT: `post.service.authorization.ts` grants
@@ -299,7 +236,7 @@ export const LEGACY_CASCADES: {
  * only its enum value; its rule and surface arrive at T078 (Slice B).
  */
 export type ManagedPrivilege =
-  | AuthorizationPrivilege.GrantGlobalAdmins
+  | AuthorizationPrivilege.PlatformRolesAssign
   | AuthorizationPrivilege.FeatureRoleAssign
   | AuthorizationPrivilege.PlatformRoleHoldersRead
   | AuthorizationPrivilege.FeatureRoleHoldersRead
@@ -330,7 +267,7 @@ export type ManagedPrivilege =
   // privileges 032 authored (not this feature), but which gate A3/A11's
   // census rows and therefore need a mirror here too, exactly the same
   // "re-scoped/pre-existing but still censused" argument that keeps
-  // GRANT_GLOBAL_ADMINS in this union. Slice A does not touch their grant
+  // PLATFORM_ROLES_ASSIGN in this union. Slice A does not touch their grant
   // set at all (research: A3/A11 comments); Slice B's owning-alone half is
   // therefore identical to today's `platform-operations-admin` cell, and
   // `owningCredentials` below is what Slice B still reads.
@@ -363,11 +300,11 @@ export interface PrivilegeGrant {
 }
 
 export const PRIVILEGE_GRANTS: Record<ManagedPrivilege, PrivilegeGrant> = {
-  // --- A1 (T034) — GRANT_GLOBAL_ADMINS is pre-existing, re-scoped, not new.
-  [AuthorizationPrivilege.GrantGlobalAdmins]: {
+  // --- A1 (T034) — PLATFORM_ROLES_ASSIGN is pre-existing, re-scoped, not new.
+  [AuthorizationPrivilege.PlatformRolesAssign]: {
     anchor: 'role-set',
     owningCredentials: [AuthorizationCredential.PlatformRolesAdmin],
-    legacyCredentials: [AuthorizationCredential.GlobalAdmin],
+    legacyCredentials: [],
   },
   // --- A2 (T034) — wholly new privilege, no legacy predecessor.
   [AuthorizationPrivilege.FeatureRoleAssign]: {
@@ -388,9 +325,6 @@ export const PRIVILEGE_GRANTS: Record<ManagedPrivilege, PrivilegeGrant> = {
       AuthorizationCredential.PlatformAuditReader,
     ],
     legacyCredentials: [
-      AuthorizationCredential.GlobalAdmin,
-      AuthorizationCredential.GlobalSupport,
-      AuthorizationCredential.GlobalLicenseManager,
     ],
   },
   // --- A20b (T034). NOT granted to Roles Admin / Audit Reader here — they
@@ -400,9 +334,6 @@ export const PRIVILEGE_GRANTS: Record<ManagedPrivilege, PrivilegeGrant> = {
     anchor: 'role-set',
     owningCredentials: [AuthorizationCredential.PlatformUsersAdmin],
     legacyCredentials: [
-      AuthorizationCredential.GlobalAdmin,
-      AuthorizationCredential.GlobalSupport,
-      AuthorizationCredential.GlobalLicenseManager,
     ],
   },
   // --- A7/A8's platform-side branch, and the root rule's own replacement
@@ -420,7 +351,7 @@ export const PRIVILEGE_GRANTS: Record<ManagedPrivilege, PrivilegeGrant> = {
   [AuthorizationPrivilege.PlatformContentFullAccess]: {
     anchor: 'root',
     owningCredentials: [AuthorizationCredential.PlatformContentFullAccess],
-    legacyCredentials: [AuthorizationCredential.GlobalAdmin],
+    legacyCredentials: [],
   },
   // --- A4/A5 (T035, T061/T062). Grant set is the UNION of A4's legacy
   // reachers (today's PLATFORM_ADMIN: GA/GS/GLM) and A5's (today's
@@ -429,10 +360,6 @@ export const PRIVILEGE_GRANTS: Record<ManagedPrivilege, PrivilegeGrant> = {
     anchor: 'platform',
     owningCredentials: [AuthorizationCredential.PlatformUsersAdmin],
     legacyCredentials: [
-      AuthorizationCredential.GlobalAdmin,
-      AuthorizationCredential.GlobalSupport,
-      AuthorizationCredential.GlobalLicenseManager,
-      AuthorizationCredential.GlobalPlatformManager,
     ],
   },
   // --- A7 (T037). Wholly new capability (research C2) — the only
@@ -449,8 +376,6 @@ export const PRIVILEGE_GRANTS: Record<ManagedPrivilege, PrivilegeGrant> = {
     anchor: 'platform',
     owningCredentials: [AuthorizationCredential.PlatformSupport],
     legacyCredentials: [
-      AuthorizationCredential.GlobalAdmin,
-      AuthorizationCredential.GlobalSupport,
     ],
   },
   // --- A6 delete half (T039).
@@ -458,8 +383,6 @@ export const PRIVILEGE_GRANTS: Record<ManagedPrivilege, PrivilegeGrant> = {
     anchor: 'organization',
     owningCredentials: [AuthorizationCredential.PlatformSupport],
     legacyCredentials: [
-      AuthorizationCredential.GlobalAdmin,
-      AuthorizationCredential.GlobalSupport,
     ],
   },
   // --- A19 (T035). Read-only, held by no other role.
@@ -467,9 +390,6 @@ export const PRIVILEGE_GRANTS: Record<ManagedPrivilege, PrivilegeGrant> = {
     anchor: 'platform',
     owningCredentials: [AuthorizationCredential.PlatformAuditReader],
     legacyCredentials: [
-      AuthorizationCredential.GlobalAdmin,
-      AuthorizationCredential.GlobalSupport,
-      AuthorizationCredential.GlobalLicenseManager,
     ],
   },
   // --- A21 (T035).
@@ -477,9 +397,6 @@ export const PRIVILEGE_GRANTS: Record<ManagedPrivilege, PrivilegeGrant> = {
     anchor: 'platform',
     owningCredentials: [AuthorizationCredential.PlatformRolesAdmin],
     legacyCredentials: [
-      AuthorizationCredential.GlobalAdmin,
-      AuthorizationCredential.GlobalSupport,
-      AuthorizationCredential.GlobalLicenseManager,
     ],
   },
   // --- A10 (T035/T045) + A13 definition half (T040) share this privilege
@@ -494,10 +411,6 @@ export const PRIVILEGE_GRANTS: Record<ManagedPrivilege, PrivilegeGrant> = {
     anchor: 'platform',
     owningCredentials: [AuthorizationCredential.PlatformSettingsAdmin],
     legacyCredentials: [
-      AuthorizationCredential.GlobalAdmin,
-      AuthorizationCredential.GlobalPlatformManager,
-      AuthorizationCredential.GlobalSupport,
-      AuthorizationCredential.GlobalLicenseManager,
     ],
   },
   // --- A9 (T038). `callout.contribution.service.authorization.ts` grants
@@ -512,15 +425,13 @@ export const PRIVILEGE_GRANTS: Record<ManagedPrivilege, PrivilegeGrant> = {
   [AuthorizationPrivilege.MoveContribution]: {
     anchor: 'space',
     owningCredentials: [AuthorizationCredential.PlatformResourceAdmin],
-    legacyCredentials: [AuthorizationCredential.GlobalAdmin],
+    legacyCredentials: [],
   },
   // --- A8 publisher surface (T038).
   [AuthorizationPrivilege.UpdateCalloutPublisher]: {
     anchor: 'space',
     owningCredentials: [AuthorizationCredential.PlatformContentFullAccess],
     legacyCredentials: [
-      AuthorizationCredential.GlobalAdmin,
-      AuthorizationCredential.GlobalSupport,
     ],
   },
   // --- A12 usage half (T037/T046).
@@ -528,8 +439,6 @@ export const PRIVILEGE_GRANTS: Record<ManagedPrivilege, PrivilegeGrant> = {
     anchor: 'account',
     owningCredentials: [AuthorizationCredential.PlatformLicenseManager],
     legacyCredentials: [
-      AuthorizationCredential.GlobalAdmin,
-      AuthorizationCredential.GlobalLicenseManager,
     ],
   },
   // --- A6 create half (T035). `feature-organization-creator` is an
@@ -543,9 +452,6 @@ export const PRIVILEGE_GRANTS: Record<ManagedPrivilege, PrivilegeGrant> = {
       AuthorizationCredential.FeatureOrganizationCreator,
     ],
     legacyCredentials: [
-      AuthorizationCredential.GlobalAdmin,
-      AuthorizationCredential.GlobalSupport,
-      AuthorizationCredential.BetaTester,
     ],
   },
   // --- No A-row of its own (not one of A1-A21) — included for
@@ -556,8 +462,6 @@ export const PRIVILEGE_GRANTS: Record<ManagedPrivilege, PrivilegeGrant> = {
     anchor: 'platform',
     owningCredentials: [AuthorizationCredential.FeatureVirtualAssistant],
     legacyCredentials: [
-      AuthorizationCredential.GlobalAdmin,
-      AuthorizationCredential.AssistantAccess,
     ],
   },
 
@@ -570,27 +474,18 @@ export const PRIVILEGE_GRANTS: Record<ManagedPrivilege, PrivilegeGrant> = {
     anchor: 'platform',
     owningCredentials: [AuthorizationCredential.PlatformOperationsAdmin],
     legacyCredentials: [
-      AuthorizationCredential.GlobalAdmin,
-      AuthorizationCredential.GlobalSupport,
-      AuthorizationCredential.GlobalLicenseManager,
     ],
   },
   [AuthorizationPrivilege.LicenseReset]: {
     anchor: 'account',
     owningCredentials: [AuthorizationCredential.PlatformOperationsAdmin],
     legacyCredentials: [
-      AuthorizationCredential.GlobalAdmin,
-      AuthorizationCredential.GlobalSupport,
-      AuthorizationCredential.GlobalLicenseManager,
     ],
   },
   [AuthorizationPrivilege.PlatformOperationsAdmin]: {
     anchor: 'platform',
     owningCredentials: [AuthorizationCredential.PlatformOperationsAdmin],
     legacyCredentials: [
-      AuthorizationCredential.GlobalAdmin,
-      AuthorizationCredential.GlobalSupport,
-      AuthorizationCredential.GlobalLicenseManager,
     ],
   },
 
@@ -599,7 +494,7 @@ export const PRIVILEGE_GRANTS: Record<ManagedPrivilege, PrivilegeGrant> = {
   [AuthorizationPrivilege.Read]: {
     anchor: 'space',
     owningCredentials: [AuthorizationCredential.PlatformSpacesReader],
-    legacyCredentials: [AuthorizationCredential.GlobalSpacesReader],
+    legacyCredentials: [],
   },
 };
 
@@ -635,15 +530,12 @@ export const TREE_SCOPED_PRIVILEGE_GRANTS: {
   // reused far too promiscuously elsewhere in the codebase (~24 files) to
   // manage as a flat, tree-independent entry.
   platform: {
-    [AuthorizationPrivilege.PlatformAdmin]: {
-      anchor: 'platform',
-      owningCredentials: [],
-      legacyCredentials: [
-        AuthorizationCredential.GlobalAdmin,
-        AuthorizationCredential.GlobalSupport,
-        AuthorizationCredential.GlobalLicenseManager,
-      ],
-    },
+    // T022a (Slice B): the tree-scoped `PLATFORM_ADMIN` entry is gone with the
+    // privilege. Its two surfaces — `grantCredentialToActor` /
+    // `revokeCredentialFromActor` — are re-gated on `PLATFORM_ROLES_ASSIGN`, whose
+    // grant is declared once in the flat `PRIVILEGE_GRANTS` and needs no
+    // tree-scoped override: unlike the catch-all, it means the same thing on every
+    // policy that carries it.
   },
   'licensing-framework': {
     // A12 — assign/revoke license plans (admin.licensing.resolver.mutations.ts).
@@ -651,9 +543,6 @@ export const TREE_SCOPED_PRIVILEGE_GRANTS: {
       anchor: 'licensing-framework',
       owningCredentials: [AuthorizationCredential.PlatformLicenseManager],
       legacyCredentials: [
-        AuthorizationCredential.GlobalAdmin,
-        AuthorizationCredential.GlobalLicenseManager,
-        AuthorizationCredential.GlobalPlatformManager,
       ],
     },
     // A13 — license-plan / license-policy CRUD, re-anchored (in intent,
@@ -672,30 +561,18 @@ export const TREE_SCOPED_PRIVILEGE_GRANTS: {
       anchor: 'licensing-framework',
       owningCredentials: [AuthorizationCredential.PlatformSettingsAdmin],
       legacyCredentials: [
-        AuthorizationCredential.GlobalAdmin,
-        AuthorizationCredential.GlobalSupport,
-        AuthorizationCredential.GlobalLicenseManager,
-        AuthorizationCredential.GlobalPlatformManager,
       ],
     },
     [AuthorizationPrivilege.Update]: {
       anchor: 'licensing-framework',
       owningCredentials: [AuthorizationCredential.PlatformSettingsAdmin],
       legacyCredentials: [
-        AuthorizationCredential.GlobalAdmin,
-        AuthorizationCredential.GlobalSupport,
-        AuthorizationCredential.GlobalLicenseManager,
-        AuthorizationCredential.GlobalPlatformManager,
       ],
     },
     [AuthorizationPrivilege.Delete]: {
       anchor: 'licensing-framework',
       owningCredentials: [AuthorizationCredential.PlatformSettingsAdmin],
       legacyCredentials: [
-        AuthorizationCredential.GlobalAdmin,
-        AuthorizationCredential.GlobalSupport,
-        AuthorizationCredential.GlobalLicenseManager,
-        AuthorizationCredential.GlobalPlatformManager,
       ],
     },
   },
@@ -704,10 +581,10 @@ export const TREE_SCOPED_PRIVILEGE_GRANTS: {
     // (`conversion.resolver.mutations.ts`) checked against the LEGACY
     // `PLATFORM_ADMIN` privilege, not the platform-wide grant set of the
     // same name (they are unrelated despite the shared literal).
-    [AuthorizationPrivilege.PlatformAdmin]: {
+    [AuthorizationPrivilege.TransferResourceOffer]: {
       anchor: 'conversion-admin-synthetic',
       owningCredentials: [AuthorizationCredential.PlatformResourceAdmin],
-      legacyCredentials: [AuthorizationCredential.GlobalAdmin],
+      legacyCredentials: [],
     },
   },
   // A9 — the four account-tree resource transfers
@@ -723,16 +600,12 @@ export const TREE_SCOPED_PRIVILEGE_GRANTS: {
       anchor: 'account',
       owningCredentials: [AuthorizationCredential.PlatformResourceAdmin],
       legacyCredentials: [
-        AuthorizationCredential.GlobalAdmin,
-        AuthorizationCredential.GlobalSupport,
       ],
     },
     [AuthorizationPrivilege.TransferResourceAccept]: {
       anchor: 'account',
       owningCredentials: [AuthorizationCredential.PlatformResourceAdmin],
       legacyCredentials: [
-        AuthorizationCredential.GlobalAdmin,
-        AuthorizationCredential.GlobalSupport,
       ],
     },
   },
@@ -749,16 +622,12 @@ export const TREE_SCOPED_PRIVILEGE_GRANTS: {
       anchor: 'callouts-set',
       owningCredentials: [AuthorizationCredential.PlatformResourceAdmin],
       legacyCredentials: [
-        AuthorizationCredential.GlobalAdmin,
-        AuthorizationCredential.GlobalSupportManager,
       ],
     },
     [AuthorizationPrivilege.TransferResourceAccept]: {
       anchor: 'callouts-set',
       owningCredentials: [AuthorizationCredential.PlatformResourceAdmin],
       legacyCredentials: [
-        AuthorizationCredential.GlobalAdmin,
-        AuthorizationCredential.GlobalSupportManager,
       ],
     },
   },

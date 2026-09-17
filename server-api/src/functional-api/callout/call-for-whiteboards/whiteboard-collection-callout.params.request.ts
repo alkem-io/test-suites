@@ -6,7 +6,7 @@ export const createWhiteboardCollectionCallout = async (
   calloutsSetID: string,
   nameID: string,
   displayName: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -41,7 +41,7 @@ export const createWhiteboardCollectionCallout = async (
 
 export const createWhiteboardOnCallout = async (
   calloutID: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>

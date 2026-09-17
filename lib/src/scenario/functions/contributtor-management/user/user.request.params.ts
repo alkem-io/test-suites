@@ -44,7 +44,7 @@ export const createUser = async (
       description?: string;
     };
   },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -69,7 +69,7 @@ export const updateUser = async (
     location?: { country?: string; city?: string };
     description?: string;
   },
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -91,7 +91,7 @@ export const updateUser = async (
 
 export const deleteUser = async (
   userId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -111,7 +111,7 @@ export const deleteUser = async (
 };
 
 export const getUsersData = async (
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -126,7 +126,7 @@ export const getUsersData = async (
 
 export const getUserData = async (
   userId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -143,7 +143,7 @@ export const getUserData = async (
 
 export const getUserByNameId = async (
   nameId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -161,7 +161,7 @@ export const getUserByNameId = async (
 export const getUserPendingMemberships = async (
   fetchDetails: boolean,
   spaceId: string,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -177,7 +177,7 @@ export const getUserPendingMemberships = async (
 export const updateUserSettings = async (
   userID: string,
   settings: UpdateUserSettingsEntityInput,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   const graphqlClient = getGraphqlClient();
   const callback = (authToken: string | undefined) =>
@@ -199,7 +199,7 @@ export const updateUserSettings = async (
 // export const updateUserSettings = async (
 //   userID: string,
 //   settings: UpdateUserSettingsEntityInput,
-//   userRole: TestUser = TestUser.GLOBAL_ADMIN
+//   userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 // ) => {
 //   const graphqlClient = getGraphqlClient();
 //   const callback = (authToken: string | undefined) =>
@@ -219,7 +219,7 @@ export const updateUserSettings = async (
 export const updateUserSettingCommunicationMessage = async (
   userID: string,
   value: boolean,
-  userRole: TestUser = TestUser.GLOBAL_ADMIN
+  userRole: TestUser = TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
 ) => {
   return updateUserSettings(
     userID,

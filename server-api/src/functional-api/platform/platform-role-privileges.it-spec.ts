@@ -87,7 +87,7 @@ const assignOpsRole = async (actorID: string) =>
         id
       }
     }`,
-    TestUser.GLOBAL_ADMIN
+    TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
   );
 
 const removeOpsRole = async (actorID: string) =>
@@ -97,7 +97,7 @@ const removeOpsRole = async (actorID: string) =>
         id
       }
     }`,
-    TestUser.GLOBAL_ADMIN
+    TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN
   );
 
 const errorMessages = (response: GraphqlResponse): string =>
@@ -164,7 +164,7 @@ describe('Platform role grant → platform privilege (no auth reset)', () => {
   });
 
   test('global admin holds the operations privilege on the platform policy', async () => {
-    const privileges = await platformMyPrivileges(TestUser.GLOBAL_ADMIN);
+    const privileges = await platformMyPrivileges(TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
 
     expect(privileges).toContain(OPS_PRIVILEGE);
   });

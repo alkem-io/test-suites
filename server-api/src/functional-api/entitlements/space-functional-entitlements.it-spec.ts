@@ -58,7 +58,7 @@ describe('Functional tests - Space', () => {
       await TestScenarioFactory.createBaseScenarioEmpty(scenarioConfig);
       await assignPlatformRole(
         TestUserManager.users.nonSpaceMember.id,
-        RoleName.PlatformVcCampaign
+        RoleName.FeatureBetaTester
       );
     });
     const allPrivileges = [
@@ -83,12 +83,12 @@ describe('Functional tests - Space', () => {
       const spaces = accountData.data?.lookup.account?.spaces;
       for (const space of spaces || []) {
         const spaceId = space.id;
-        await deleteSpace(spaceId, TestUser.GLOBAL_ADMIN);
+        await deleteSpace(spaceId, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
       }
 
       await removePlatformRole(
         TestUserManager.users.nonSpaceMember.id,
-        RoleName.PlatformVcCampaign
+        RoleName.FeatureBetaTester
       );
     });
 
@@ -160,7 +160,7 @@ describe('Functional tests - Space', () => {
       );
       const spaceId0 = response.data?.lookup.account?.spaces?.[0].id ?? '';
       // Act
-      await deleteSpace(spaceId0, TestUser.GLOBAL_ADMIN);
+      await deleteSpace(spaceId0, TestUser.BOOTSTRAP_PLATFORM_ROLES_ADMIN);
       const responseAfter = await getMyEntitlementsQuery(
         TestUser.NON_SPACE_MEMBER
       );
