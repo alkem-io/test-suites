@@ -1,0 +1,60 @@
+{
+  "_comment": "Repositories scanned for the Alkemio Open Bug Triage page. Only public repositories: the page is published on a public GitHub Pages site, so issue titles and bodies become public. Edit `excluded` to document why a repository is left out; the page prints this list.",
+  "org": "alkem-io",
+  "repos": [
+    "alkemio",
+    "server",
+    "client-web",
+    "notifications",
+    "documentation",
+    "kratos-webhooks",
+    "oidc-service",
+    "matrix-adapter",
+    "file-service",
+    "collaborative-document-service",
+    "whiteboard-collaboration-service",
+    "virtual-contributor",
+    "ecosystem-analytics",
+    "test-suites"
+  ],
+  "excluded": [
+    {
+      "repo": "platform",
+      "reason": "private repository"
+    },
+    {
+      "repo": "organisation",
+      "reason": "private repository"
+    },
+    {
+      "repo": "synapse-migrator",
+      "reason": "private repository"
+    },
+    {
+      "repo": "virtual-contributor-engine-libra-flow",
+      "reason": "private repository"
+    },
+    {
+      "repo": "assistant-service",
+      "reason": "private repository"
+    },
+    {
+      "repo": "infrastructure-provisioning",
+      "reason": "private repository; its issues describe infrastructure and security details"
+    },
+    {
+      "repo": "infrastructure-operations",
+      "reason": "private repository; its issues describe infrastructure and security details"
+    },
+    {
+      "repo": "dev-orchestration",
+      "reason": "private repository"
+    },
+    {
+      "repo": "reporting-orchestration",
+      "reason": "private repository"
+    }
+  ],
+  "page_url": "https://alkem-io.github.io/test-suites/bug-triage/",
+  "schedule": "Mondays 06:00 UTC (workflow bug-triage-refresh.yml)"
+}
