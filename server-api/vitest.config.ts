@@ -132,6 +132,17 @@ export default defineConfig({
         [
           'src/functional-api/account/**/*.it-spec.ts',
           'src/functional-api/roleset/**/*.it-spec.ts',
+          // Feature 061's own notification specs ONLY. The whole
+          // `notifications/**` tree is 29 it-specs: four of them need
+          // RABBITMQ_MANAGEMENT_* env that no workflow sets, and the
+          // `messaging/**` ones fall back to PRODUCTION digest windows when
+          // their nine env vars are unset — a single negative assertion there
+          // costs ~61 minutes (see test-suites/CLAUDE.md). Widening the glob
+          // to the tree would have made nightly red and hours long for
+          // reasons unrelated to this feature.
+          'src/functional-api/notifications/space/community/organization-invitations.it-spec.ts',
+          'src/functional-api/notifications/space/community/application-approval-new-member.it-spec.ts',
+          'src/functional-api/notifications/space/community/invitations.it-spec.ts',
           'src/functional-api/contributor-management/**/*.it-spec.ts',
           'src/functional-api/callout/**/*.it-spec.ts',
           'src/functional-api/communications/**/*.it-spec.ts',

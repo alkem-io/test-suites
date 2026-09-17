@@ -41,6 +41,7 @@ fragment OrganizationData on Organization {
     }
     membership {
       allowUsersMatchingDomainToJoin
+      allowSpaceInvitations
     }
   }
   authorization {
