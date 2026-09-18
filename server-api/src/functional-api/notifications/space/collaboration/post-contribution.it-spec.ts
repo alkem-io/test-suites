@@ -471,10 +471,38 @@ describe('070 contribution notify switch', () => {
   let notifySwitchPostId = '';
   let notifySwitchPostNameID = '';
   let notifySwitchPostDisplayName = '';
-  const notifySwitchSubjectMember = `${baseScenario.space.about.profile.displayName}: New post contribution created by admin, have a look!`;
+  // Built in beforeEach, not at describe scope: baseScenario is only populated
+  // by the suite's beforeAll, so reading it during collection throws and takes
+  // the whole file (including the pre-existing cases) down with it.
+  let notifySwitchSubjectMember = '';
+
+  beforeAll(async () => {
+    // This describe is a SIBLING of 'Notifications - post', so it does not
+    // inherit that block's beforeAll. Worse, the last test there deliberately
+    // disables post notifications for every role -- so without re-enabling
+    // them here the "mails arrive" cases below see zero mail, and the
+    // suppression case passes VACUOUSLY (it would pass even if the product
+    // notified). Mirror the same enable list so each assertion is real.
+    await disablePostNotifications([
+      TestUserManager.users.globalSupportAdmin.id,
+    ]);
+
+    await enablePostNotifications([
+      TestUserManager.users.globalAdmin.id,
+      TestUserManager.users.spaceMember.id,
+      TestUserManager.users.subspaceMember.id,
+      TestUserManager.users.subsubspaceMember.id,
+      TestUserManager.users.spaceAdmin.id,
+      TestUserManager.users.subspaceAdmin.id,
+      TestUserManager.users.subsubspaceAdmin.id,
+      TestUserManager.users.nonSpaceMember.id,
+    ]);
+  });
 
   beforeEach(async () => {
     await deleteMailSlurperMails();
+
+    notifySwitchSubjectMember = `${baseScenario.space.about.profile.displayName}: New post contribution created by admin, have a look!`;
 
     notifySwitchPostNameID = `nsw-name-id-${uniqueId}`;
     notifySwitchPostDisplayName = `nsw-d-name-${uniqueId}`;
