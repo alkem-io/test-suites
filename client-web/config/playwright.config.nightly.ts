@@ -298,9 +298,12 @@ export default defineConfig({
       // walk, same forge-verify shape as 038/041: machine-generated file in
       // tests/, self-seeding (its own org + space + response callout),
       // torn down in afterAll. Asserts at the RabbitMQ notifications-queue
-      // publish counter rather than MailSlurper, so it needs the same
-      // RABBITMQ_MANAGEMENT_ENDPOINT/_USER/_PASSWORD env this repo already
-      // wires for other EMIT-level walks.
+      // publish counter rather than MailSlurper, guarded by
+      // rabbitMqManagementConfigured() (the same checkPush pattern
+      // organization-space-invitations/us2-org-admins-notified.spec.ts
+      // uses) — this workflow sets no RABBITMQ_MANAGEMENT_* env, so nightly
+      // skips the queue-counter checks and still runs the switch/UI/activity
+      // assertions.
       name: 'Contribution notify switch',
       // testMatch alone cannot reach outside the top-level testDir
       // (src/functional-e2e), so the project needs its own testDir.

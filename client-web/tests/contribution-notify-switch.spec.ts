@@ -34,7 +34,14 @@
  * MailSlurper: the queue counter reflects the server-side gate directly and
  * is immune to any recipient-resolution/mail-delivery environment wiring
  * (dev-stack topology, SMTP relay, etc.) that a downstream mailbox check
- * would depend on.
+ * would depend on. The queue checks are gated on `rabbitMqManagementConfigured()`
+ * (same guard as `us2-org-admins-notified.spec.ts`'s `checkPush`): the
+ * nightly run targets a remote cluster and sets none of
+ * `RABBITMQ_MANAGEMENT_*`, so on nightly those assertions are skipped and
+ * only the switch/UI/activity checks run. AS2 additionally serves as a
+ * positive control for AS3/AS5's negative assertions — it submits with the
+ * switch ON and asserts the queue counter DOES move, so an absent/dead
+ * queue cannot make the negative checks pass for the wrong reason.
  *
  * Scope note on US1-AS6 (sender-off short-circuits a recipient's opt-IN):
  * not duplicated as a separate browser walk. The AS3 RabbitMQ assertion
@@ -70,6 +77,8 @@ import {
   createCalloutOnCalloutsSet,
   delay,
   getQueueStats,
+  rabbitMqManagementConfigured,
+  waitForQueuePublishIncrease,
 } from '@alkemio/tests-lib';
 import {
   CalloutAllowedActors,
@@ -94,6 +103,15 @@ const ADMIN_EMAIL = 'admin@alkem.io';
  * for "did a notification event fire", independent of recipient resolution
  * or mail delivery. */
 const NOTIFICATIONS_QUEUE = 'alkemio-notifications';
+
+/** Whether the RabbitMQ management API is reachable from this harness run
+ * (local/CI compose stack). The nightly run targets a remote cluster and
+ * sets neither `RABBITMQ_MANAGEMENT_*` variable nor a loopback server target
+ * (`lib/src/config/optional-infra.ts`), so the queue-counter assertions
+ * below are gated on this — nightly still runs the switch/UI/activity
+ * checks, matching `organization-space-invitations/us2-org-admins-notified
+ * .spec.ts`'s `checkPush` guard for the identical reason. */
+const checkQueueEmission = rabbitMqManagementConfigured();
 
 /** Grace window for a NEGATIVE assertion: long enough for the fire-and-forget
  * adapter call (if it were wrongly invoked) to reach RabbitMQ, short enough
@@ -302,6 +320,16 @@ test.describe(
     test('US1-AS2: the switch is never remembered — OFF again even after a prior ON submission', async () => {
       await loadSpacePage(authPage);
 
+      // Positive control for AS3/AS5's negative "counter did not move"
+      // assertions below: this submission has the switch ON, so it MUST
+      // move the queue counter. Without this, a dead/absent queue would
+      // make every negative assertion in this file pass for the wrong
+      // reason (getQueueStats maps a 404 — no such queue — to
+      // publishedTotal: 0, indistinguishable from "nothing was emitted").
+      const positiveControlBaseline = checkQueueEmission
+        ? await waitForQueueQuiet(NOTIFICATIONS_QUEUE)
+        : 0;
+
       // First submission: explicitly turn the switch ON.
       await responseCalloutCard(authPage)
         .getByRole('button', { name: 'Add Post' })
@@ -318,6 +346,21 @@ test.describe(
       ).toHaveAttribute('aria-checked', 'true');
       await dialog.getByRole('button', { name: 'Post', exact: true }).click();
       await expect(dialog).toBeHidden();
+
+      if (checkQueueEmission) {
+        const stats = await waitForQueuePublishIncrease(
+          NOTIFICATIONS_QUEUE,
+          positiveControlBaseline,
+          1,
+          { timeout: 20_000 }
+        );
+        expect(
+          stats.publishedTotal,
+          'switch ON must publish to the notifications queue — proves the ' +
+            'queue counter genuinely reflects emission, so AS3/AS5 reading ' +
+            'it unchanged below is a real negative, not a dead queue'
+        ).toBeGreaterThanOrEqual(positiveControlBaseline + 1);
+      }
 
       // Reopen on the same callout: the switch must start OFF again — the
       // choice is per-action, never persisted (FR-002).
@@ -337,8 +380,13 @@ test.describe(
     test('US1-AS3/AS4: switch OFF emits zero notification events, and the response appears in the callout + activity feed', async () => {
       // Anchor on a quiet queue, not an immediate read — US1-AS2 just
       // submitted a response with the switch ON, and its fire-and-forget
-      // notification dispatch can still be in flight.
-      const baseline = await waitForQueueQuiet(NOTIFICATIONS_QUEUE);
+      // notification dispatch can still be in flight. Skipped when the
+      // RabbitMQ management API isn't reachable (nightly, remote cluster) —
+      // see `checkQueueEmission` above; the UI/activity assertions below
+      // still run unconditionally.
+      const baseline = checkQueueEmission
+        ? await waitForQueueQuiet(NOTIFICATIONS_QUEUE)
+        : 0;
 
       const title = `AS3 zero-notify response ${Date.now()}`;
       await loadSpacePage(authPage);
@@ -357,12 +405,15 @@ test.describe(
       // AS3 + the D-OP2/R-1 pin: NEITHER the space-member NOR the
       // space-admin contribution notification is emitted — one flag
       // suppresses both channels together (no member-only variant).
-      await delay(NO_EMISSION_GRACE_MS);
-      const after = (await getQueueStats(NOTIFICATIONS_QUEUE)).publishedTotal;
-      expect(
-        after,
-        'switch OFF must emit zero notification events on the shared queue'
-      ).toBe(baseline);
+      if (checkQueueEmission) {
+        await delay(NO_EMISSION_GRACE_MS);
+        const after = (await getQueueStats(NOTIFICATIONS_QUEUE))
+          .publishedTotal;
+        expect(
+          after,
+          'switch OFF must emit zero notification events on the shared queue'
+        ).toBe(baseline);
+      }
 
       // AS4 (FR-007): the contribution is fully created and visible in the
       // callout regardless — activity is unconditional.
@@ -400,7 +451,9 @@ test.describe(
       const board = taskBoardCard(authPage);
       await expect(board).toBeVisible();
 
-      const baseline = await waitForQueueQuiet(NOTIFICATIONS_QUEUE);
+      const baseline = checkQueueEmission
+        ? await waitForQueueQuiet(NOTIFICATIONS_QUEUE)
+        : 0;
 
       const taskTitle = `AS5 zero-notify task ${Date.now()}`;
       await board.getByRole('button', { name: 'Add task' }).first().click(); // "To Do" column
@@ -418,12 +471,15 @@ test.describe(
       await expect(taskDialog).toBeHidden();
 
       // AS3/AS4 hold identically for the task: zero notification events…
-      await delay(NO_EMISSION_GRACE_MS);
-      const after = (await getQueueStats(NOTIFICATIONS_QUEUE)).publishedTotal;
-      expect(
-        after,
-        'a task created with the switch OFF must emit zero notification events'
-      ).toBe(baseline);
+      if (checkQueueEmission) {
+        await delay(NO_EMISSION_GRACE_MS);
+        const after = (await getQueueStats(NOTIFICATIONS_QUEUE))
+          .publishedTotal;
+        expect(
+          after,
+          'a task created with the switch OFF must emit zero notification events'
+        ).toBe(baseline);
+      }
 
       // …and the task is fully visible on the board and in the activity feed.
       await loadSpacePage(authPage);
