@@ -511,19 +511,25 @@ describe('070 contribution notify switch', () => {
   // subject (no ", have a look!"), matching the notifications service's
   // space.admin.collaboration.callout.contribution template.
   let notifySwitchSubjectAdmin = '';
-
-  const notifySwitchPersonaIds = [
-    TestUserManager.users.globalAdmin.id,
-    TestUserManager.users.spaceMember.id,
-    TestUserManager.users.subspaceMember.id,
-    TestUserManager.users.subsubspaceMember.id,
-    TestUserManager.users.spaceAdmin.id,
-    TestUserManager.users.subspaceAdmin.id,
-    TestUserManager.users.subsubspaceAdmin.id,
-    TestUserManager.users.nonSpaceMember.id,
-  ];
+  // Built in beforeAll, not at describe scope: like baseScenario above,
+  // TestUserManager.users is only populated by the root beforeAll (via
+  // TestScenarioFactory.createBaseScenario), which has not run yet when
+  // describe callbacks are collected. Reading it here would throw during
+  // collection and take the whole file down with it.
+  let notifySwitchPersonaIds: string[] = [];
 
   beforeAll(async () => {
+    notifySwitchPersonaIds = [
+      TestUserManager.users.globalAdmin.id,
+      TestUserManager.users.spaceMember.id,
+      TestUserManager.users.subspaceMember.id,
+      TestUserManager.users.subsubspaceMember.id,
+      TestUserManager.users.spaceAdmin.id,
+      TestUserManager.users.subspaceAdmin.id,
+      TestUserManager.users.subsubspaceAdmin.id,
+      TestUserManager.users.nonSpaceMember.id,
+    ];
+
     // This describe is a SIBLING of 'Notifications - post', so it does not
     // inherit that block's beforeAll. Worse, the last test there deliberately
     // disables post notifications for every role -- so without re-enabling
