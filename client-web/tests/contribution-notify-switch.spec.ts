@@ -98,8 +98,53 @@ const NOTIFICATIONS_QUEUE = 'alkemio-notifications';
 /** Grace window for a NEGATIVE assertion: long enough for the fire-and-forget
  * adapter call (if it were wrongly invoked) to reach RabbitMQ, short enough
  * to keep the suite fast. The suppression gate is synchronous in the
- * resolver, so a real emission would show up within one HTTP round trip. */
-const NO_EMISSION_GRACE_MS = 4_000;
+ * resolver, so a real emission would show up within one HTTP round trip.
+ * Set to (quiet window used by `waitForQueueQuiet` below) + buffer, so a
+ * genuinely leaked publish has at least as long to surface here as a
+ * straggler gets to settle before a baseline is taken. */
+const NO_EMISSION_GRACE_MS = 6_000;
+
+/**
+ * Polls `queueName`'s cumulative publish counter until it has not moved for
+ * `quietMs`, then returns that stable total. This suite runs
+ * `mode: 'serial'`, and the preceding test (US1-AS2) deliberately submits a
+ * response with the switch ON — a fire-and-forget dispatch that publishes to
+ * this same queue and can still be in flight when the next test starts.
+ * Reading `publishedTotal` immediately would risk folding that straggler
+ * into THIS test's baseline, silently absorbing it as "already there" rather
+ * than counting it as an emission the test caused. Mirrors
+ * `waitForPushQueueQuiet` in server-api's `notification.helpers.ts`,
+ * generalised over the queue name.
+ */
+const waitForQueueQuiet = async (
+  queueName: string,
+  {
+    quietMs = 3_000,
+    timeout = 30_000,
+  }: { quietMs?: number; timeout?: number } = {}
+): Promise<number> => {
+  const deadline = Date.now() + timeout;
+  let last = (await getQueueStats(queueName)).publishedTotal;
+  let stableSince = Date.now();
+
+  for (;;) {
+    await delay(500);
+    const current = (await getQueueStats(queueName)).publishedTotal;
+    if (current !== last) {
+      last = current;
+      stableSince = Date.now();
+    } else if (Date.now() - stableSince >= quietMs) {
+      return current;
+    }
+    if (Date.now() > deadline) {
+      // Deliberately non-fatal, mirroring the server-api helper: a queue
+      // that never goes quiet is reported by the assertion that follows (as
+      // an unexpected delta), with the actual numbers, rather than as an
+      // opaque timeout here.
+      return current;
+    }
+  }
+};
 
 test.describe.configure({ mode: 'serial' });
 
@@ -290,8 +335,10 @@ test.describe(
     // ── US1-AS3 / US1-AS4 ────────────────────────────────────────────────
 
     test('US1-AS3/AS4: switch OFF emits zero notification events, and the response appears in the callout + activity feed', async () => {
-      const baseline = (await getQueueStats(NOTIFICATIONS_QUEUE))
-        .publishedTotal;
+      // Anchor on a quiet queue, not an immediate read — US1-AS2 just
+      // submitted a response with the switch ON, and its fire-and-forget
+      // notification dispatch can still be in flight.
+      const baseline = await waitForQueueQuiet(NOTIFICATIONS_QUEUE);
 
       const title = `AS3 zero-notify response ${Date.now()}`;
       await loadSpacePage(authPage);
@@ -353,8 +400,7 @@ test.describe(
       const board = taskBoardCard(authPage);
       await expect(board).toBeVisible();
 
-      const baseline = (await getQueueStats(NOTIFICATIONS_QUEUE))
-        .publishedTotal;
+      const baseline = await waitForQueueQuiet(NOTIFICATIONS_QUEUE);
 
       const taskTitle = `AS5 zero-notify task ${Date.now()}`;
       await board.getByRole('button', { name: 'Add task' }).first().click(); // "To Do" column

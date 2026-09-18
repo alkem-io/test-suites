@@ -70,6 +70,38 @@ const enablePostNotifications = async (userIds: string[]) => {
   );
 };
 
+// Same as postNotificationSettings, except the space-admin channel is ALSO
+// switched on. The '070 contribution notify switch' describe below uses this
+// (never postNotificationSettings) so its admin-suppression pin is real: with
+// the admin channel left off (postNotificationSettings' default), "no admin
+// mail arrives" would be vacuously true regardless of whether the
+// sendNotification flag suppressed it.
+const notifySwitchNotificationSettings = {
+  notification: {
+    space: {
+      admin: {
+        communityApplicationReceived: notif(false),
+        communityNewMember: notif(false),
+        collaborationCalloutContributionCreated: notif(true),
+        communicationMessageReceived: notif(false),
+      },
+      collaborationCalloutPublished: notif(false),
+      communicationUpdates: notif(false),
+      collaborationCalloutPostContributionComment: notif(false),
+      collaborationCalloutContributionCreated: notif(true),
+      collaborationCalloutComment: notif(false),
+    },
+  },
+};
+
+const enableNotifySwitchNotifications = async (userIds: string[]) => {
+  await Promise.all(
+    userIds.map(userId =>
+      updateUserSettings(userId, notifySwitchNotificationSettings)
+    )
+  );
+};
+
 const disablePostNotifications = async (userIds: string[]) => {
   await Promise.all(
     userIds.map(userId =>
@@ -475,6 +507,21 @@ describe('070 contribution notify switch', () => {
   // by the suite's beforeAll, so reading it during collection throws and takes
   // the whole file (including the pre-existing cases) down with it.
   let notifySwitchSubjectMember = '';
+  // The space-admin channel's own subject — distinct from the member
+  // subject (no ", have a look!"), matching the notifications service's
+  // space.admin.collaboration.callout.contribution template.
+  let notifySwitchSubjectAdmin = '';
+
+  const notifySwitchPersonaIds = [
+    TestUserManager.users.globalAdmin.id,
+    TestUserManager.users.spaceMember.id,
+    TestUserManager.users.subspaceMember.id,
+    TestUserManager.users.subsubspaceMember.id,
+    TestUserManager.users.spaceAdmin.id,
+    TestUserManager.users.subspaceAdmin.id,
+    TestUserManager.users.subsubspaceAdmin.id,
+    TestUserManager.users.nonSpaceMember.id,
+  ];
 
   beforeAll(async () => {
     // This describe is a SIBLING of 'Notifications - post', so it does not
@@ -482,27 +529,31 @@ describe('070 contribution notify switch', () => {
     // disables post notifications for every role -- so without re-enabling
     // them here the "mails arrive" cases below see zero mail, and the
     // suppression case passes VACUOUSLY (it would pass even if the product
-    // notified). Mirror the same enable list so each assertion is real.
+    // notified). Mirror the same enable list so each assertion is real, but
+    // with the space-admin channel ALSO switched on
+    // (notifySwitchNotificationSettings, not postNotificationSettings) so
+    // the admin-suppression pin below observes a real admin-channel
+    // emission being present or absent, not a channel that was already off.
     await disablePostNotifications([
       TestUserManager.users.globalSupportAdmin.id,
     ]);
 
-    await enablePostNotifications([
-      TestUserManager.users.globalAdmin.id,
-      TestUserManager.users.spaceMember.id,
-      TestUserManager.users.subspaceMember.id,
-      TestUserManager.users.subsubspaceMember.id,
-      TestUserManager.users.spaceAdmin.id,
-      TestUserManager.users.subspaceAdmin.id,
-      TestUserManager.users.subsubspaceAdmin.id,
-      TestUserManager.users.nonSpaceMember.id,
-    ]);
+    await enableNotifySwitchNotifications(notifySwitchPersonaIds);
+  });
+
+  afterAll(async () => {
+    // Hand the shared personas back in the state this file found them in
+    // (disabled — see the last test of 'Notifications - post' above), so a
+    // later spec in this single-threaded, single-database run does not
+    // inherit an unexpectedly-enabled contribution notification.
+    await disablePostNotifications(notifySwitchPersonaIds);
   });
 
   beforeEach(async () => {
     await deleteMailSlurperMails();
 
     notifySwitchSubjectMember = `${baseScenario.space.about.profile.displayName}: New post contribution created by admin, have a look!`;
+    notifySwitchSubjectAdmin = `${baseScenario.space.about.profile.displayName}: New post contribution created by admin`;
 
     notifySwitchPostNameID = `nsw-name-id-${uniqueId}`;
     notifySwitchPostDisplayName = `nsw-d-name-${uniqueId}`;
@@ -539,10 +590,15 @@ describe('070 contribution notify switch', () => {
     );
 
     // The space-admin contribution notification is suppressed too — one
-    // flag suppresses both channels, deliberately.
+    // flag suppresses both channels, deliberately. The admin channel is
+    // enabled at the settings level for this describe
+    // (notifySwitchNotificationSettings, applied in beforeAll), so this is a
+    // real pin: were the sendNotification flag to suppress only the member
+    // channel, the admin subject below would show up as the 1 mail that
+    // arrived instead of 0.
     expect(mails[0]).not.toEqual(
       await templateMemberResult(
-        notifySwitchSubjectMember,
+        notifySwitchSubjectAdmin,
         TestUserManager.users.spaceAdmin.email
       )
     );
@@ -560,10 +616,18 @@ describe('070 contribution notify switch', () => {
     notifySwitchPostId =
       res.data?.createContributionOnCallout.post?.id ?? '';
 
-    // Assert — the same six recipients as the neighbouring GA-created-post
-    // case above, proving explicit-true is indistinguishable from today.
-    const mails = await getMailsDataSettled(6);
-    expect(mails[1]).toEqual(6);
+    // Assert — the same six member-channel recipients as the neighbouring
+    // GA-created-post case above (proving explicit-true is indistinguishable
+    // from today), PLUS a 7th, distinct admin-channel mail to the space
+    // admin — the enabled counterpart of the OFF case's admin pin above.
+    const mails = await getMailsDataSettled(7);
+    expect(mails[1]).toEqual(7);
+    expect(mails[0]).toEqual(
+      await templateMemberResult(
+        notifySwitchSubjectAdmin,
+        TestUserManager.users.spaceAdmin.email
+      )
+    );
     expect(mails[0]).toEqual(
       await templateMemberResult(
         notifySwitchSubjectMember,
@@ -616,10 +680,10 @@ describe('070 contribution notify switch', () => {
     notifySwitchPostId =
       res.data?.createContributionOnCallout.post?.id ?? '';
 
-    // Assert — mail arrives exactly as it does for the pre-existing
-    // omitted-flag helper case above.
-    const mails = await getMailsDataSettled(6);
-    expect(mails[1]).toEqual(6);
+    // Assert — mail arrives exactly as it does for the explicit-true case
+    // above: the six member-channel mails plus the admin-channel mail.
+    const mails = await getMailsDataSettled(7);
+    expect(mails[1]).toEqual(7);
   });
 
   test('the activity log entry for the contribution is written even though sendNotification is false', async () => {
