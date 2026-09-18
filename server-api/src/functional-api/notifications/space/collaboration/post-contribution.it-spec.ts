@@ -17,7 +17,12 @@ import { updateUserSettings } from '@functional-api/contributor-management/user/
 import { getActivityLogOnCollaboration } from '@functional-api/activity-logs/activity-log-params';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { ActivityEventType } from '@alkemio/client-lib/dist/types/alkemio-schema';
-import { notif, getMailsDataSettled } from '../../notification.helpers';
+import {
+  notif,
+  getMailsDataSettled,
+  snapshotNotificationSettings,
+  assertCleanupSucceeded,
+} from '../../notification.helpers';
 
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -517,6 +522,12 @@ describe('070 contribution notify switch', () => {
   // describe callbacks are collected. Reading it here would throw during
   // collection and take the whole file down with it.
   let notifySwitchPersonaIds: string[] = [];
+  // Captured BEFORE this describe mutates the shared personas, so afterAll can
+  // hand each one back exactly as it was found. An unconditional
+  // disablePostNotifications() would be wrong for any persona that arrived
+  // enabled -- the shared-persona corruption snapshotNotificationSettings
+  // exists to prevent (see notification.helpers).
+  const notifySwitchSettingsBefore = new Map<string, unknown>();
 
   beforeAll(async () => {
     notifySwitchPersonaIds = [
@@ -540,6 +551,16 @@ describe('070 contribution notify switch', () => {
     // (notifySwitchNotificationSettings, not postNotificationSettings) so
     // the admin-suppression pin below observes a real admin-channel
     // emission being present or absent, not a channel that was already off.
+    for (const userId of [
+      ...notifySwitchPersonaIds,
+      TestUserManager.users.globalSupportAdmin.id,
+    ]) {
+      notifySwitchSettingsBefore.set(
+        userId,
+        await snapshotNotificationSettings(userId)
+      );
+    }
+
     await disablePostNotifications([
       TestUserManager.users.globalSupportAdmin.id,
     ]);
@@ -548,11 +569,21 @@ describe('070 contribution notify switch', () => {
   });
 
   afterAll(async () => {
-    // Hand the shared personas back in the state this file found them in
-    // (disabled — see the last test of 'Notifications - post' above), so a
-    // later spec in this single-threaded, single-database run does not
-    // inherit an unexpectedly-enabled contribution notification.
-    await disablePostNotifications(notifySwitchPersonaIds);
+    // Restore each persona to its captured state rather than assuming they all
+    // arrived disabled. nightly runs --fileParallelism=false against ONE
+    // database, so a persona left noisier than the suite seeded it makes an
+    // unrelated later spec fail with mail counts attributed to the wrong file.
+    // assertCleanupSucceeded keeps a silently-rejected restore from passing.
+    for (const [userId, settings] of notifySwitchSettingsBefore) {
+      const result = await updateUserSettings(
+        userId,
+        settings as Parameters<typeof updateUserSettings>[1]
+      );
+      assertCleanupSucceeded(
+        `restore notification settings for ${userId}`,
+        result
+      );
+    }
   });
 
   beforeEach(async () => {
@@ -563,10 +594,20 @@ describe('070 contribution notify switch', () => {
 
     notifySwitchPostNameID = `nsw-name-id-${uniqueId}`;
     notifySwitchPostDisplayName = `nsw-d-name-${uniqueId}`;
+    // Reset per test: a test that throws before assigning would otherwise leave
+    // the previous (already-deleted) id in place for afterEach.
+    notifySwitchPostId = '';
   });
 
   afterEach(async () => {
-    await deletePost(notifySwitchPostId);
+    // Capture and clear before deleting, so a failed delete cannot be retried
+    // against the same id by a later afterEach, and so an unset id is skipped
+    // rather than sent to deletePost('').
+    const createdId = notifySwitchPostId;
+    notifySwitchPostId = '';
+    if (createdId) {
+      await deletePost(createdId);
+    }
   });
 
   test('sendNotification false suppresses the member AND the admin contribution notification — the admin channel is suppressed by design, not drift', async () => {
@@ -704,22 +745,31 @@ describe('070 contribution notify switch', () => {
     notifySwitchPostId =
       res.data?.createContributionOnCallout.post?.id ?? '';
 
-    // Drain the (empty) mail expectation first so the activity read below
-    // isn't racing the same async work.
-    await getMailsDataSettled(0);
+    // Poll the activity log itself rather than using a mail settle as a proxy
+    // barrier: mail and activity are written by different async paths, so
+    // "no mail arrived" says nothing about whether the activity row has landed
+    // yet. Bounded so a genuinely missing entry fails instead of hanging.
+    const findPostCreatedEntry = async () => {
+      const activity = await getActivityLogOnCollaboration(
+        baseScenario.space.collaboration.id,
+        30
+      );
+      const entries = activity?.data?.activityLogOnCollaboration ?? [];
+      return entries.find(
+        entry =>
+          entry.type === ActivityEventType.CalloutPostCreated &&
+          (entry.description ?? '').includes(notifySwitchPostDisplayName)
+      );
+    };
+
+    let postCreatedEntry = await findPostCreatedEntry();
+    for (let attempt = 0; attempt < 20 && !postCreatedEntry; attempt++) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      postCreatedEntry = await findPostCreatedEntry();
+    }
 
     // Assert — the activity log entry for this contribution is present
     // regardless of the suppressed notification.
-    const activity = await getActivityLogOnCollaboration(
-      baseScenario.space.collaboration.id,
-      30
-    );
-    const entries = activity?.data?.activityLogOnCollaboration ?? [];
-    const postCreatedEntry = entries.find(
-      entry =>
-        entry.type === ActivityEventType.CalloutPostCreated &&
-        (entry.description ?? '').includes(notifySwitchPostDisplayName)
-    );
     expect(postCreatedEntry).toBeDefined();
   });
 });
