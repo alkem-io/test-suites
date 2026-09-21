@@ -1,0 +1,23 @@
+query GetProxySurfaceUsage($usageData: ProxySurfaceUsageInput!) {
+  platformAdmin {
+    communication {
+      proxySurfaceUsage(usageData: $usageData) {
+        from
+        to
+        days {
+          day
+          livenessMinutes
+          expectedMinutes
+          rows {
+            surface
+            disposition
+            callerClass
+            roomType
+            media
+            count
+          }
+        }
+      }
+    }
+  }
+}

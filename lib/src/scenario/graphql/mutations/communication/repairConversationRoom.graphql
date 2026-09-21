@@ -1,0 +1,24 @@
+mutation RepairConversationRoom($repairData: RepairConversationRoomInput!) {
+  repairConversationRoom(repairData: $repairData) {
+    outcome
+    membersAdded
+    membersRemoved
+    detail
+    readiness {
+      state
+      reason
+      detail
+      updatedDate
+    }
+    conversation {
+      id
+      room {
+        id
+        readiness {
+          state
+          reason
+        }
+      }
+    }
+  }
+}

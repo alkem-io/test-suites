@@ -25,6 +25,35 @@ export const sendMessageToRoom = async (
   return graphqlErrorWrapper(callback, userRole);
 };
 
+/**
+ * Same as `sendMessageToRoom`, with extra request headers — used to exercise
+ * the advisory `x-alkemio-messaging-transport` declaration the usage ledger
+ * reads for web callers.
+ */
+export const sendMessageToRoomWithHeaders = async (
+  roomID: string,
+  message: string,
+  userRole: TestUser,
+  headers: Record<string, string>
+) => {
+  const graphqlClient = getGraphqlClient();
+  const callback = (authToken: string | undefined) =>
+    graphqlClient.SendMessageToRoom(
+      {
+        messageData: {
+          roomID,
+          message,
+        },
+      },
+      {
+        authorization: `Bearer ${authToken}`,
+        ...headers,
+      }
+    );
+
+  return graphqlErrorWrapper(callback, userRole);
+};
+
 export const sendMessageToUser = async (
   receiverIds: string[],
   message = 'This is my message. :)',

@@ -1,0 +1,34 @@
+subscription ConversationGovernanceEvents {
+  conversationGovernanceEvents {
+    eventType
+    conversationID
+    conversation {
+      id
+      members {
+        id
+        type
+      }
+      room {
+        id
+        displayName
+        avatarUrl
+        type
+        readiness {
+          state
+          reason
+        }
+      }
+    }
+    member {
+      id
+      type
+    }
+    memberID
+    readiness {
+      state
+      reason
+      detail
+      updatedDate
+    }
+  }
+}
