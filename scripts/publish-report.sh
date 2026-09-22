@@ -41,12 +41,34 @@ cp -r "$REPORT_SOURCE"/* "$STAGE_DIR/"
 # fill(), so a spec that drives an authenticated login (e.g. the harness
 # global admin) leaves the typed credentials inside it. This report is
 # published to the world-readable GitHub Pages site and kept in the public
-# gh-pages branch history indefinitely, so drop only the trace archives
-# before staging; screenshots (.png) and videos (.webm) carry no typed
-# argument values and stay, along with the rest of the HTML report. Other
-# report sources (Vitest) have no such directory; the removal is a no-op
-# for them.
+# gh-pages branch history indefinitely, so drop the trace archives before
+# staging. Other report sources (Vitest) have no such directory; the
+# removal is a no-op for them.
+#
+# This is belt only, not belt-and-braces: the HTML report's own embedded
+# step data (e.g. a `Fill "<value>" getByLabel('Password *')` step title)
+# carries the same typed argument, and that lives in index.html itself, not
+# under data/*.zip. The scan below is the brace — see "Fail-closed secret
+# scan".
 rm -f "$STAGE_DIR"/data/*.zip
+
+# ── Fail-closed secret scan ─────────────────────────────────────────────────
+# Belt-and-braces for the trace-archive removal above: rather than track every
+# current and future place a typed credential can end up in the report (step
+# titles, embedded JSON blobs, a trace/video the strip above missed), scan the
+# ENTIRE staged directory for the raw value of every credential this harness
+# can type into a form, and refuse to publish on a hit. `-a` forces a text
+# search even inside files grep would otherwise skip as binary (the HTML
+# report's embedded data blob, or an unstripped trace/video). Add a secret's
+# env var name here the moment a spec starts typing it into a page.
+SECRET_ENV_VARS_TO_SCAN=(AUTH_TEST_HARNESS_PASSWORD)
+for secret_var in "${SECRET_ENV_VARS_TO_SCAN[@]}"; do
+  secret_value="${!secret_var:-}"
+  if [ -n "$secret_value" ] && grep -R -a -q -F -- "$secret_value" "$STAGE_DIR"; then
+    echo "Refusing to publish $SUITE_NAME report: the staged report contains the value of \$$secret_var. This usually means a spec typed a real credential into a page inside a traced/recorded test context. Fix the spec (reuse a pre-authenticated session instead of filling the credential) rather than widening this filter." >&2
+    exit 1
+  fi
+done
 
 # If the report has no index.html (e.g. Vitest uses report_<timestamp>.html),
 # copy the report file as index.html so the directory URL works.
