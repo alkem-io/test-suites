@@ -161,6 +161,17 @@ const ETA_WHAT = makeText(65568);
 const ETA_WHY = makeText(32784);
 const ETA_WHO = makeText(32784);
 
+/** Regression case: 16,000 '*' + 'x' + 16,000 '*' — 32,001 chars of nested
+ * inline emphasis, inside the Why save-time limit. Before
+ * `clampExcerptSource` bounded the excerpt parser's input by length (not
+ * just nesting depth), this froze the host page for ~15s and then threw a
+ * RangeError that unmounted the whole app. Bounded to the first 2,000
+ * chars, this parses as a `thematicBreak` (a bare run of `*` on its own
+ * line) — a node with no visible text — so `hasVisibleExcerptText`
+ * correctly reports it empty and the Why section (and its label) is
+ * omitted as an empty field would be, never crashing. */
+const THETA_WHY = '*'.repeat(16000) + 'x' + '*'.repeat(16000);
+
 type Fixture = {
   spaceId: string;
   spaceNameId: string;
@@ -251,9 +262,9 @@ test.describe(
       const spaceId = space.createSpace.id;
       const calloutsSetId = space.createSpace.collaboration.calloutsSet.id;
 
-      // Alphabetical order matters: the initial "Show 3" window must land Eta
-      // and Zeta behind "Show more" so the max-length test's "activates Show
-      // more" premise is real, not incidental (Alpha, Beta, Delta, Eta, Zeta).
+      // Alphabetical order matters: the initial "Show 3" window must land Eta,
+      // Theta and Zeta behind "Show more" so the max-length test's "activates Show
+      // more" premise is real, not incidental (Alpha, Beta, Delta, Eta, Theta, Zeta).
       const subspaceIds = [
         await createSubspace(
           spaceId,
@@ -273,6 +284,14 @@ test.describe(
           DELTA_WHO
         ),
         await createSubspace(spaceId, 'e', 'Eta', ETA_WHAT, ETA_WHY, ETA_WHO),
+        await createSubspace(
+          spaceId,
+          't',
+          'Theta',
+          'Theta has a What section so the card is not all-empty.',
+          THETA_WHY,
+          ''
+        ),
         await createSubspace(
           spaceId,
           'z',
@@ -550,6 +569,11 @@ test.describe(
     test('US3-AS7: max-length fields stay clamped and area-matched; search still narrows the list within 2s', async ({
       page,
     }) => {
+      // Regression guard: Theta's 32,001-char nested-inline-emphasis Why must
+      // never crash the page (see the THETA_WHY comment above).
+      const pageErrors: string[] = [];
+      page.on('pageerror', err => pageErrors.push(err.message));
+
       await page.setViewportSize({ width: 1280, height: 1000 });
       await gotoFixtureSpace(page);
 
@@ -559,9 +583,23 @@ test.describe(
 
       const eta = await findArticleByName(page, 'Eta');
       const alpha = await findArticleByName(page, 'Alpha');
+      const theta = await findArticleByName(page, 'Theta');
       expect(eta).not.toBeNull();
       expect(alpha).not.toBeNull();
+      expect(theta).not.toBeNull();
       await eta!.scrollIntoViewIfNeeded();
+
+      // Theta renders intact: its What section shows, no page error was
+      // thrown, and the pathological Why — which bounds to a bare
+      // thematicBreak with no visible text once clamped — correctly shows
+      // no "WHY" label rather than crashing or leaving a dangling one.
+      await theta!.scrollIntoViewIfNeeded();
+      const thetaText = await theta!.innerText();
+      expect(thetaText).toContain(
+        'Theta has a What section so the card is not all-empty.'
+      );
+      expect(thetaText).not.toMatch(/\bWHY\b/);
+      expect(pageErrors).toEqual([]);
 
       const measureArea = (article: Locator) =>
         article.evaluate(el => {
@@ -607,6 +645,9 @@ test.describe(
         clientWidth: document.documentElement.clientWidth,
       }));
       expect(doc.scrollWidth).toBeLessThanOrEqual(doc.clientWidth + 1);
+
+      // Re-assert after every interaction above: Theta never threw.
+      expect(pageErrors).toEqual([]);
     });
   }
 );
