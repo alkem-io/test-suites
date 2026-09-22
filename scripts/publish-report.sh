@@ -35,18 +35,16 @@ mkdir -p "$STAGE_DIR"
 cp -r "$REPORT_SOURCE"/* "$STAGE_DIR/"
 
 # The Playwright HTML report embeds failure attachments (trace archives,
-# videos, screenshots) under data/, keyed by content hash. A trace archive
-# (stored as a .zip) captures the full DOM and every recorded action's
-# network request/response payload, including the arguments passed to
-# fill(), so a spec that drives an authenticated login (e.g. the harness
-# global admin) leaves the typed credentials inside it. This report is
-# published to the world-readable GitHub Pages site and kept in the public
-# gh-pages branch history indefinitely, so drop only the trace archives
-# before staging; screenshots (.png) and videos (.webm) carry no typed
-# argument values and stay, along with the rest of the HTML report. Other
-# report sources (Vitest) have no such directory; the removal is a no-op
-# for them.
-rm -f "$STAGE_DIR"/data/*.zip
+# videos, screenshots) under data/, keyed by content hash. A trace captures
+# the full DOM and network request/response payload of every recorded
+# action, so a spec that drives an authenticated login (e.g. the harness
+# global admin) leaves credentials and session content inside these
+# attachments. This report is published to the world-readable GitHub Pages
+# site and kept in the public gh-pages branch history indefinitely, so drop
+# the attachment payloads before staging and keep only the HTML summary that
+# makes the report useful. Other report sources (Vitest) have no such
+# directory; the removal is a no-op for them.
+rm -rf "$STAGE_DIR/data"
 
 # If the report has no index.html (e.g. Vitest uses report_<timestamp>.html),
 # copy the report file as index.html so the directory URL works.
