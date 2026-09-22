@@ -13,16 +13,16 @@ post a space's Community tab shows) to the spec files that cover them.
 
 Workspace spec: `agents-hq/specs/077-richer-contributor-cards/spec.md`. Each
 user story below persists to its own spec file once its acceptance walk
-passes (`forge-verify`, tagged `@forge-acceptance`); none of the five exists
-yet as of this task — this row is filled in as each one lands.
+passes (`forge-verify`, tagged `@forge-acceptance`); US2's walk has not landed
+yet — that row is filled in once it does.
 
 | User story | Spec file | Notes |
 |---|---|---|
-| US1 — Recognise a contributor from the card (tagline, tags, location, bottom line, equal heights) | `us1-card-content.spec.ts` | Highest risk after US2; walked third. |
-| US2 — Everything else keeps working (search, filter, paging, counts, map, privacy, all-values-absent card) | `us2-nothing-else-changes.spec.ts` | Walked first — the regression risk the feature is most likely to introduce. |
-| US3 — Act from the card: View Profile / Message | `us3-card-menu.spec.ts` | Walked fourth. |
-| US4 — See when a person joined this space | `us4-joined-this-space.spec.ts` | **Removable** — human gate G-1 (spec.md) drops this file, its request selection, its text key and the story itself if the acceptance-database join-date distribution check finds import-clustered dates. Walked third, after US5. |
-| US5 — Visit an organisation's website from its card | `us5-organisation-website.spec.ts` | Carries the feature's only content-injection risk (a hostile stored website); walked second, right after US2. |
+| US1 — Recognise a contributor from the card (tagline, tags, location, bottom line, equal heights) | `us1-card-content.spec.ts` | Landed. Highest risk after US2; walked third. |
+| US2 — Everything else keeps working (search, filter, paging, counts, map, privacy, all-values-absent card) | `us2-nothing-else-changes.spec.ts` | Not yet landed. Walked first — the regression risk the feature is most likely to introduce. |
+| US3 — Act from the card: View Profile / Message | `us3-card-menu.spec.ts` | Landed. Walked fourth. |
+| US4 — See when a person joined this space | `us4-joined-this-space.spec.ts` | Landed. **Removable** — human gate G-1 (spec.md) drops this file, its request selection, its text key and the story itself if the acceptance-database join-date distribution check finds import-clustered dates. Walked third, after US5. |
+| US5 — Visit an organisation's website from its card | `us5-organisation-website.spec.ts` | Landed. Carries the feature's only content-injection risk (a hostile stored website); walked second, right after US2. |
 
 Durable, non-acceptance coverage for the same contract:
 
