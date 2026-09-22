@@ -552,7 +552,7 @@ test.describe(
             s => (s as HTMLElement).innerText
           ),
           hasContentPanel: !!a.querySelector('.flex-1.min-w-0'),
-          hasCta: /OPEN SUBSPACE/.test(a.innerText),
+          hasCta: /OPEN SUBSPACE/.test((a as HTMLElement).innerText),
         };
       });
       expect(m.width).toBe(300);
@@ -575,7 +575,7 @@ test.describe(
           ariaLabel: x.getAttribute('aria-label'),
           href: x.getAttribute('href'),
         })),
-        readMore: /read more/i.test(a.innerText),
+        readMore: /read more/i.test((a as HTMLElement).innerText),
         buttonsOutsideTagRow: Array.from(a.querySelectorAll('button')).filter(
           b => !b.closest('.relative.z-10')
         ).length,
