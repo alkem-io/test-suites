@@ -29,17 +29,24 @@
 // block, since every Subspaces callout gets the block materialized at
 // creation.
 
-import { test, expect, type Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 import {
   getUserToken,
   harnessPostgresConfigured,
   queryHarnessDb,
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
+import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const adminEmail = process.env.AUTH_TEST_HARNESS_EMAIL || 'admin@alkem.io';
-const adminPassword = process.env.AUTH_TEST_HARNESS_PASSWORD || 'change_me';
+// A pre-authenticated persona session (storageState), not a UI login: the
+// harness password is typed at most once per run, outside any traced/
+// videoed test context — see authenticated-session.fixture.ts. Filling it
+// directly in each test's own page (the prior approach here) recorded it as
+// a Playwright step argument and, on retry, into the trace/video archive
+// that this suite publishes to the public gh-pages branch.
+const test = createPersonaTest(adminEmail);
 // The non-interactive-login bearer (HS256) is only accepted on the private
 // non-interactive endpoint — same convention as every other raw-GraphQL
 // fixture setup in this suite (see subspaces-callout/us3-excerpt-safety.spec.ts).
@@ -154,28 +161,6 @@ async function readCalloutSettings(calloutId: string) {
   );
 }
 
-async function signIn(page: Page) {
-  await page.goto(baseUrl);
-  const cookieBtn = page.getByRole('button', { name: 'Accept All Cookies' });
-  if (await cookieBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
-    await cookieBtn.click();
-  }
-  const loginLink = page.getByRole('link', { name: 'Log in', exact: true });
-  await loginLink.waitFor({ state: 'visible', timeout: 30_000 });
-  await loginLink.click();
-  await page.waitForURL(/.*login.*/, { timeout: 15_000 });
-  await page.getByRole('textbox', { name: 'E-Mail' }).fill(adminEmail);
-  await page.getByRole('textbox', { name: 'Password' }).fill(adminPassword);
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await page.waitForURL(/.*home.*/, { timeout: 30_000 });
-  const switchToNewDesign = page.getByRole('button', {
-    name: /take me to the new design/i,
-  });
-  if (await switchToNewDesign.isVisible({ timeout: 5000 }).catch(() => false)) {
-    await switchToNewDesign.click().catch(() => {});
-  }
-}
-
 async function gotoFixtureSpace(page: Page) {
   await page.goto(`${baseUrl}/${fixture.spaceNameId}`, {
     waitUntil: 'networkidle',
@@ -222,8 +207,8 @@ test.describe(
     // `beforeAll`. Serial mode avoids `beforeAll` re-running per test under this
     // repo's `fullyParallel: true` default (see us3-excerpt-safety.spec.ts's
     // identical note). The explicit timeout matches the beforeAll fixture's own
-    // 120s allowance — a full UI sign-in plus edit-dialog round trips does not
-    // fit the default config's 30s per-test budget.
+    // 120s allowance — the edit-dialog round trips do not fit the default
+    // config's 30s per-test budget.
     test.describe.configure({ mode: 'serial', timeout: 120_000 });
 
     test.beforeAll(async () => {
@@ -293,7 +278,6 @@ test.describe(
     test('US2-AS1: the Expanded card switch sits after the whole Manual selection block, off by default, with the verbatim description', async ({
       page,
     }) => {
-      await signIn(page);
       await gotoFixtureSpace(page);
       const dialog = await openAddPostDialog(page);
       await dialog.getByText('Subspaces', { exact: true }).click();
@@ -350,7 +334,6 @@ test.describe(
       page,
       browser,
     }) => {
-      await signIn(page);
       await gotoFixtureSpace(page);
       const title = `US2 AS2 Expanded ${runSuffix}`;
       const dialog = await openAddPostDialog(page);
@@ -391,7 +374,6 @@ test.describe(
         framing: { spaces: { cardVariant: 'EXPANDED' } },
       });
 
-      await signIn(page);
       await gotoFixtureSpace(page);
       // A page-scoped marker that only survives if the SPA never does a full
       // navigation across the edit-save round trip.
@@ -457,7 +439,6 @@ test.describe(
         },
       });
 
-      await signIn(page);
       await gotoFixtureSpace(page);
       const dialog = await openEditDialog(page, title);
       await expect(
@@ -501,7 +482,6 @@ test.describe(
     test('US2-AS5: no "Expanded card" switch is offered for any other attachment, or for none', async ({
       page,
     }) => {
-      await signIn(page);
       await gotoFixtureSpace(page);
       const dialog = await openAddPostDialog(page);
 
@@ -537,7 +517,6 @@ test.describe(
       const settings = await readCalloutSettings(calloutId);
       expect(settings.lookup.callout.settings.framing.spaces).toBeNull();
 
-      await signIn(page);
       const responsePromise = page.waitForResponse(
         res =>
           res.url().includes('/graphql') &&
@@ -582,7 +561,6 @@ test.describe(
         framing: { spaces: { cardVariant: 'EXPANDED' } },
       });
 
-      await signIn(page);
       await gotoFixtureSpace(page);
       const dialog = await openEditDialog(page, title);
       await dialog.getByRole('textbox', { name: 'Title' }).fill(newTitle);
