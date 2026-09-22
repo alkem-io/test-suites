@@ -226,7 +226,10 @@ test.describe(
     // One shared fixture is created once in `beforeAll` and read by every test
     // below — serial mode is what makes that safe under this repo's
     // `fullyParallel: true` default (see the identical note in us4-narrow-layout.spec.ts).
-    test.describe.configure({ mode: 'serial' });
+    // The explicit timeout raises the per-test budget to match the beforeAll
+    // fixture's own 240s allowance — the default config's 30s test timeout
+    // otherwise applies regardless of a longer hook timeout.
+    test.describe.configure({ mode: 'serial', timeout: 240_000 });
 
     test.beforeAll(async () => {
       test.setTimeout(240_000);

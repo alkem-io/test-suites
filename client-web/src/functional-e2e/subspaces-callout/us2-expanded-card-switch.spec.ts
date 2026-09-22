@@ -191,8 +191,10 @@ test.describe('Turn "Expanded card" on or off in the post form (US2)', { tag: '@
   // One shared fixture (Space + Alpha/Beta subspaces) is created once in
   // `beforeAll`. Serial mode avoids `beforeAll` re-running per test under this
   // repo's `fullyParallel: true` default (see us3-excerpt-safety.spec.ts's
-  // identical note).
-  test.describe.configure({ mode: 'serial' });
+  // identical note). The explicit timeout matches the beforeAll fixture's own
+  // 120s allowance — a full UI sign-in plus edit-dialog round trips does not
+  // fit the default config's 30s per-test budget.
+  test.describe.configure({ mode: 'serial', timeout: 120_000 });
 
   test.beforeAll(async () => {
     test.setTimeout(120_000);

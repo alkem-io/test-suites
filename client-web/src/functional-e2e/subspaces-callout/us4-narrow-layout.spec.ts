@@ -103,8 +103,11 @@ test.describe('Read expanded cards on a phone (US4)', { tag: '@forge-acceptance'
   // One shared fixture (one Space + five Subspaces + one EXPANDED post) is
   // created once in `beforeAll` and read by every test below — serial mode
   // is what makes that safe under this repo's `fullyParallel: true` default
-  // (see the identical note in us3-excerpt-safety.spec.ts).
-  test.describe.configure({ mode: 'serial' });
+  // (see the identical note in us3-excerpt-safety.spec.ts). The explicit
+  // timeout matches the beforeAll fixture's own 180s allowance, since the
+  // default config's 30s test timeout applies regardless of a longer hook
+  // timeout.
+  test.describe.configure({ mode: 'serial', timeout: 180_000 });
 
   test.beforeAll(async () => {
     test.setTimeout(180_000);

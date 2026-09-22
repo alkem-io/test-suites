@@ -169,8 +169,11 @@ test.describe('Subspace content cannot break the host page (US3)', { tag: '@forg
   // repo's `fullyParallel: true` default, an un-serialized describe block can
   // have `beforeAll` re-invoked once per test rather than once per file (see
   // the identical fix in organization-space-invitations/us3-org-accepts-declines.spec.ts) —
-  // serial mode is what makes "one fixture, seven read-only tests" safe.
-  test.describe.configure({ mode: 'serial' });
+  // serial mode is what makes "one fixture, seven read-only tests" safe. The
+  // explicit timeout matches the beforeAll fixture's own 180s allowance,
+  // since the default config's 30s test timeout applies regardless of a
+  // longer hook timeout.
+  test.describe.configure({ mode: 'serial', timeout: 180_000 });
 
   test.beforeAll(async () => {
     test.setTimeout(180_000);

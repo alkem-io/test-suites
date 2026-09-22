@@ -293,6 +293,19 @@ export default defineConfig({
       timeout: 120_000,
       expect: { timeout: 15_000 },
     },
+    {
+      // Feature 076 (expanded subspace cards) — US1/US2/US3/US4 acceptance
+      // walks. Each file seeds its own Space/Subspaces + EXPANDED-variant
+      // callout via the GraphQL API in `beforeAll` and drives a full SPA
+      // read (US1/US3/US4) or edit (US2) flow against it. The 240s project
+      // timeout covers US1's beforeAll fixture, the slowest of the four;
+      // each file's own `describe.configure({ timeout })` sets the tighter
+      // per-file bound.
+      name: 'Subspaces callout',
+      testMatch: ['/subspaces-callout/*.spec.ts'],
+      timeout: 240_000,
+      expect: { timeout: 15_000 },
+    },
   ],
   // % or number of the available CPUs
   // workers: '100%',
