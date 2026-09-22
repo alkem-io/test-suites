@@ -294,17 +294,43 @@ export default defineConfig({
       expect: { timeout: 15_000 },
     },
     {
-      // Feature 076 (expanded subspace cards) — US1/US2/US3/US4 acceptance
+      // Feature 076 (expanded subspace cards) — US1/US3/US4 acceptance
       // walks. Each file seeds its own Space/Subspaces + EXPANDED-variant
       // callout via the GraphQL API in `beforeAll` and drives a full SPA
-      // read (US1/US3/US4) or edit (US2) flow against it. The 240s project
-      // timeout covers US1's beforeAll fixture, the slowest of the four;
-      // each file's own `describe.configure({ timeout })` sets the tighter
+      // read flow against it as an anonymous browser context (any admin
+      // token they use comes from `getUserToken`, a Node-side API call for
+      // fixture seeding, never a browser session). US2 is excluded here and
+      // captured by its own project below, because it alone drives an
+      // authenticated (admin) browser context. The 240s project timeout
+      // covers US1's beforeAll fixture, the slowest of the three; each
+      // file's own `describe.configure({ timeout })` sets the tighter
       // per-file bound.
       name: 'Subspaces callout',
-      testMatch: ['/subspaces-callout/*.spec.ts'],
+      testMatch: [
+        '/subspaces-callout/us1-*.spec.ts',
+        '/subspaces-callout/us3-*.spec.ts',
+        '/subspaces-callout/us4-*.spec.ts',
+      ],
       timeout: 240_000,
       expect: { timeout: 15_000 },
+    },
+    {
+      // Feature 076, US2 only — the "Expanded card" switch walk. This is the
+      // one file in the 076 suite that drives an authenticated admin browser
+      // context (`createPersonaTest`, a persisted Kratos session), so it runs
+      // as its own project with trace/video capture off: this repo is
+      // public, its nightly report (traces and videos included) publishes to
+      // the world-readable gh-pages branch, and a Playwright trace's HAR
+      // recorder embeds request cookies verbatim regardless of whether the
+      // spec types the password — a retried run would otherwise publish a
+      // live admin@alkem.io acceptance session cookie. Screenshot-on-failure
+      // (no request/response bodies) stays, as the safe minimum for triage,
+      // matching the sec-test-suites-16 precedent for this same repo.
+      name: 'Subspaces callout (authenticated)',
+      testMatch: ['/subspaces-callout/us2-*.spec.ts'],
+      timeout: 240_000,
+      expect: { timeout: 15_000 },
+      use: { trace: 'off', video: 'off' },
     },
   ],
   // % or number of the available CPUs
