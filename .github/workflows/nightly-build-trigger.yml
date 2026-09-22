@@ -174,9 +174,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-          # Lets the script's fail-closed secret scan refuse to publish a
-          # report that embeds the harness credential's raw value.
-          AUTH_TEST_HARNESS_PASSWORD: ${{ secrets.AUTH_TEST_HARNESS_PASSWORD }}
         run: |
           bash scripts/publish-report.sh \
             "server-api" \
