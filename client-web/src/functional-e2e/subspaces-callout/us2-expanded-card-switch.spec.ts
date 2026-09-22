@@ -30,7 +30,7 @@
 // creation.
 
 import { test, expect, type Page } from '@playwright/test';
-import { getUserToken, queryHarnessDb, UniqueIDGenerator } from '@alkemio/tests-lib';
+import { getUserToken, harnessPostgresConfigured, queryHarnessDb, UniqueIDGenerator } from '@alkemio/tests-lib';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const adminEmail = process.env.AUTH_TEST_HARNESS_EMAIL || 'admin@alkem.io';
@@ -420,6 +420,8 @@ test.describe('Turn "Expanded card" on or off in the post form (US2)', { tag: '@
   test('US2-AS6: a legacy-shaped Subspaces post (stripped `framing.spaces`) reads as compact without error, and fetches no `who`/`description`', async ({
     page,
   }) => {
+    test.skip(!harnessPostgresConfigured(), 'needs loopback Postgres to strip the stored framing.spaces block');
+
     const title = `US2 AS6 Legacy ${runSuffix}`;
     const calloutId = await createSubspacesPost(title);
 
