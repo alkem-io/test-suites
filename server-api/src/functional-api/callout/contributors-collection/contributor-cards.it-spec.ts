@@ -107,6 +107,13 @@ const orgs: Record<string, any> = {};
 
 const associateUserIds: string[] = [];
 const ASSOCIATE_COUNT = 3;
+// `createOrganization` grants the CREATING user (the harness admin) an
+// ASSOCIATE role on every new organisation, so every org's platform-wide
+// `associates` metric starts at 1, not 0. Captured right after each org is
+// created (before this suite's own associate assignments), so the parity
+// assertions below derive their expectations from the API instead of a
+// literal that assumes a zero baseline.
+const orgAssociatesBaseline: Record<string, number> = {};
 
 const monthStartUtcIso = (d: Date): string =>
   new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1)).toISOString();
@@ -191,6 +198,15 @@ beforeAll(async () => {
       spaceRoleSetID,
       RoleName.Member
     );
+
+    const baselineRes = await getOrganizationAssociatesMetric(orgs[key].id);
+    const baselineMetrics = baselineRes.body.data?.organization?.metrics ?? [];
+    const baselineMetric = baselineMetrics.find(
+      (m: { name: string; value: string }) => m.name === 'associates'
+    );
+    orgAssociatesBaseline[key] = baselineMetric
+      ? Number(baselineMetric.value)
+      : 0;
   }
 
   // Three throwaway associate users on the first organization (ruling R4 /
@@ -258,7 +274,19 @@ describe('Contributor card enrichment — content', () => {
       expect(item.associatesCount).toBeNull();
     }
 
-    expect(organizations.length).toBe(5);
+    // `TestScenarioFactory.createBaseScenario` seeds its own host organization
+    // as a space member alongside this suite's five fixture organizations, so
+    // the callout's ORGANIZATION segment carries six items, not five. Filter
+    // to the five this suite created rather than asserting the raw total.
+    const fixtureOrgIds = new Set(
+      [ORG_VALID, ORG_BARE, ORG_HOSTILE, ORG_SCHEMELESS, ORG_SPACEY].map(
+        key => orgs[key].id
+      )
+    );
+    const fixtureOrganizations = organizations.filter(item =>
+      fixtureOrgIds.has(item.id)
+    );
+    expect(fixtureOrganizations.length).toBe(5);
     for (const item of organizations) {
       expect(item.joinedDate).toBeNull();
       expect(typeof item.associatesCount).toBe('number');
@@ -362,7 +390,20 @@ describe('Contributor card enrichment — associates parity', () => {
       expect(byId(key).associatesCount).toBe(expected);
     }
 
-    expect(byId(ORG_VALID).associatesCount).toBe(ASSOCIATE_COUNT);
-    expect(byId(ORG_BARE).associatesCount).toBe(0);
+    // Derived from each org's own post-creation baseline (see
+    // `orgAssociatesBaseline`), not a literal that assumes a zero start.
+    expect(byId(ORG_VALID).associatesCount).toBe(
+      orgAssociatesBaseline[ORG_VALID] + ASSOCIATE_COUNT
+    );
+    expect(byId(ORG_BARE).associatesCount).toBe(
+      orgAssociatesBaseline[ORG_BARE]
+    );
+    // Explicit discriminator kept alongside the parity check above: assigning
+    // ASSOCIATE_COUNT associates to ORG_VALID must move it exactly
+    // ASSOCIATE_COUNT above ORG_BARE, so this still fails a row-counting
+    // implementation that drifts from the metric it should mirror.
+    expect(
+      byId(ORG_VALID).associatesCount! - byId(ORG_BARE).associatesCount!
+    ).toBe(ASSOCIATE_COUNT);
   });
 });
