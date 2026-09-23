@@ -37,6 +37,11 @@ import {
   UniqueIDGenerator,
 } from '@alkemio/tests-lib';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
+import {
+  EXCERPT_SELECTOR,
+  findArticleByName,
+  subspacesListOfPost,
+} from './subspaces-callout.helpers';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const adminEmail = process.env.AUTH_TEST_HARNESS_EMAIL || 'admin@alkem.io';
@@ -47,6 +52,16 @@ const adminEmail = process.env.AUTH_TEST_HARNESS_EMAIL || 'admin@alkem.io';
 // a Playwright step argument and, on retry, into the trace/video archive
 // that this suite publishes to the public gh-pages branch.
 const test = createPersonaTest(adminEmail);
+
+// This is the one file in the 076 suite that drives an authenticated admin
+// browser context (`createPersonaTest`, a persisted Kratos session). This repo
+// is public and its nightly report — traces and videos included — publishes to
+// the world-readable gh-pages branch, and a Playwright trace's HAR recorder
+// embeds request cookies verbatim regardless of whether the spec types the
+// password, so a retried run would otherwise publish a live admin session
+// cookie. Capture is therefore off for this file; screenshot-on-failure (no
+// request/response bodies) stays as the safe minimum for triage.
+test.use({ trace: 'off', video: 'off' });
 // The non-interactive-login bearer (HS256) is only accepted on the private
 // non-interactive endpoint — same convention as every other raw-GraphQL
 // fixture setup in this suite (see subspaces-callout/us3-excerpt-safety.spec.ts).
@@ -468,15 +483,17 @@ test.describe(
         new Set(settings.lookup.callout.settings.framing.selection.selectedIds)
       ).toEqual(new Set([fixture.alphaId, fixture.betaId]));
 
-      // Rendered: only the two curated subspaces, as expanded cards.
+      // Rendered: only the two curated subspaces, as expanded cards — asserted
+      // inside THIS post's list, so the sidebar's subspace links and other
+      // posts' cards cannot satisfy it.
       const heading = page.getByText(title, { exact: true });
       await heading.scrollIntoViewIfNeeded();
-      await expect(
-        page.getByRole('link', { name: 'Alpha' }).first()
-      ).toBeVisible();
-      await expect(
-        page.getByRole('link', { name: 'Beta' }).first()
-      ).toBeVisible();
+      const list = subspacesListOfPost(page, title);
+      await expect(list.locator('article')).toHaveCount(2);
+      for (const name of ['Alpha', 'Beta']) {
+        const card = await findArticleByName(list, name);
+        await expect(card.locator(EXCERPT_SELECTOR.what)).toBeVisible();
+      }
     });
 
     test('US2-AS5: no "Expanded card" switch is offered for any other attachment, or for none', async ({
@@ -537,9 +554,10 @@ test.describe(
 
       const heading = page.getByText(title, { exact: true });
       await heading.scrollIntoViewIfNeeded();
-      await expect(
-        page.getByRole('link', { name: 'Alpha' }).first()
-      ).toBeVisible();
+      // Compact cards in THIS post's list: the card exists and carries no excerpt.
+      const list = subspacesListOfPost(page, title);
+      const alpha = await findArticleByName(list, 'Alpha');
+      await expect(alpha.locator(EXCERPT_SELECTOR.what)).toHaveCount(0);
 
       // Edit form shows the switch off — and this test never saves, so the
       // legacy shape survives for any later assertion. Edit mode DOES have a

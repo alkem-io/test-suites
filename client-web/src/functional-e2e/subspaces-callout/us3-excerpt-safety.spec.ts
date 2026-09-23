@@ -16,6 +16,10 @@
 // and tears it down in `afterAll`.
 
 import { test, expect, type Locator, type Page } from '@playwright/test';
+import {
+  findArticleByName,
+  gotoSpaceAndWaitForCards,
+} from './subspaces-callout.helpers';
 import { getUserToken, UniqueIDGenerator } from '@alkemio/tests-lib';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
@@ -354,26 +358,10 @@ test.describe(
     });
 
     async function gotoFixtureSpace(page: Page) {
-      await page.goto(`${baseUrl}/${fixture.spaceNameId}`, {
-        waitUntil: 'networkidle',
-      });
+      await gotoSpaceAndWaitForCards(page, `${baseUrl}/${fixture.spaceNameId}`);
     }
 
-    async function findArticleByName(
-      page: Page,
-      name: string
-    ): Promise<Locator | null> {
-      const articles = page.locator('article');
-      const count = await articles.count();
-      for (let i = 0; i < count; i++) {
-        const t = await articles.nth(i).innerText();
-        if (t.includes(`\n${name}\n`)) return articles.nth(i);
-      }
-      return null;
-    }
-
-    /** Reads the three clamped excerpt containers (What = .line-clamp-3, first
-     * of two .line-clamp-2 = Why, last = Who) plus the safety-relevant DOM
+    /** Reads the three excerpt bodies (by section test id) plus the safety-relevant DOM
      * facts `ExpandedSpaceCard`/`InlineMarkdown` (card-safe mode) are meant to
      * guarantee — see client-web src/crd/components/space/ExpandedSpaceCard.tsx
      * and src/crd/components/common/InlineMarkdown.tsx. */
@@ -392,11 +380,15 @@ test.describe(
           n => getComputedStyle(n).position === 'fixed'
         ).length;
 
-        const clamped2 = Array.from(el.querySelectorAll('.line-clamp-2'));
-        const clamped3 = Array.from(el.querySelectorAll('.line-clamp-3'));
-        const whatEl = clamped3[0] as HTMLElement | undefined;
-        const whyEl = clamped2[0] as HTMLElement | undefined;
-        const whoEl = clamped2[clamped2.length - 1] as HTMLElement | undefined;
+        // Address each excerpt by its section, never by clamp class alone: the
+        // identity block's tagline is a `.line-clamp-2` that precedes the panel.
+        const body = (selector: string) =>
+          (el.querySelector(
+            `${selector} [class*="line-clamp"]`
+          ) as HTMLElement | null) ?? undefined;
+        const whatEl = body('[data-testid="excerpt-what"]');
+        const whyEl = body('[data-testid="excerpt-why"]');
+        const whoEl = body('[data-testid="excerpt-who"]');
 
         const sectionInfo = (
           elm: HTMLElement | undefined,
@@ -445,10 +437,9 @@ test.describe(
 
       await gotoFixtureSpace(page);
       const delta = await findArticleByName(page, 'Delta');
-      expect(delta).not.toBeNull();
-      await delta!.scrollIntoViewIfNeeded();
+      await delta.scrollIntoViewIfNeeded();
 
-      const safety = await readCardSafety(delta!);
+      const safety = await readCardSafety(delta);
       expect(safety.imgs.some(src => src.includes('__076_probe'))).toBe(false);
       expect(safety.iframes).toBe(0);
       expect(safety.text).toContain(
@@ -465,13 +456,12 @@ test.describe(
     }) => {
       await gotoFixtureSpace(page);
       const delta = await findArticleByName(page, 'Delta');
-      expect(delta).not.toBeNull();
-      await delta!.scrollIntoViewIfNeeded();
+      await delta.scrollIntoViewIfNeeded();
 
       const bodyText = await page.evaluate(() => document.body.innerText);
       expect(bodyText).not.toContain('PWNED');
 
-      const safety = await readCardSafety(delta!);
+      const safety = await readCardSafety(delta);
       expect(safety.fixedEls).toBe(0);
       expect(safety.text).toContain(
         'This sentence should still be visible in the excerpt after the hostile HTML block is neutralized.'
@@ -489,10 +479,9 @@ test.describe(
     }) => {
       await gotoFixtureSpace(page);
       const delta = await findArticleByName(page, 'Delta');
-      expect(delta).not.toBeNull();
-      await delta!.scrollIntoViewIfNeeded();
+      await delta.scrollIntoViewIfNeeded();
 
-      const safety = await readCardSafety(delta!);
+      const safety = await readCardSafety(delta);
       expect(safety.who).not.toBeNull();
       expect(safety.who!.height).toBeLessThanOrEqual(safety.who!.maxAllowed);
       expect(safety.h1FontSize).toBe(safety.whoExcerptFontSize); // heading not heading-sized
@@ -506,10 +495,9 @@ test.describe(
     }) => {
       await gotoFixtureSpace(page);
       const delta = await findArticleByName(page, 'Delta');
-      expect(delta).not.toBeNull();
-      await delta!.scrollIntoViewIfNeeded();
+      await delta.scrollIntoViewIfNeeded();
 
-      const safety = await readCardSafety(delta!);
+      const safety = await readCardSafety(delta);
       expect(safety.anchors).toHaveLength(1);
       expect(
         safety.anchors.some(a => (a.text || '').includes('Example Link'))
@@ -522,12 +510,12 @@ test.describe(
     }) => {
       await gotoFixtureSpace(page);
       const showMore = page.getByRole('button', { name: /show \d+ more/i });
-      if (await showMore.count()) await showMore.first().click();
+      await expect(showMore).toBeVisible();
+      await showMore.click();
 
       const zeta = await findArticleByName(page, 'Zeta');
-      expect(zeta).not.toBeNull();
-      await zeta!.scrollIntoViewIfNeeded();
-      const zetaText = await zeta!.innerText();
+      await zeta.scrollIntoViewIfNeeded();
+      const zetaText = await zeta.innerText();
       expect(zetaText).toMatch(/\bWHAT\b/);
       expect(zetaText).not.toMatch(/\bWHY\b/);
       expect(zetaText).not.toMatch(/\bWHO\b/);
@@ -539,10 +527,9 @@ test.describe(
       await page.setViewportSize({ width: 1280, height: 1000 });
       await gotoFixtureSpace(page);
       let delta = await findArticleByName(page, 'Delta');
-      expect(delta).not.toBeNull();
-      await delta!.scrollIntoViewIfNeeded();
+      await delta.scrollIntoViewIfNeeded();
 
-      let safety = await readCardSafety(delta!);
+      let safety = await readCardSafety(delta);
       expect(safety.who!.scrollWidth).toBeLessThanOrEqual(
         safety.who!.clientWidth + 1
       );
@@ -554,8 +541,7 @@ test.describe(
 
       await page.setViewportSize({ width: 390, height: 800 });
       delta = await findArticleByName(page, 'Delta');
-      expect(delta).not.toBeNull();
-      safety = await readCardSafety(delta!);
+      safety = await readCardSafety(delta);
       expect(safety.who!.scrollWidth).toBeLessThanOrEqual(
         safety.who!.clientWidth + 1
       );
@@ -584,17 +570,14 @@ test.describe(
       const eta = await findArticleByName(page, 'Eta');
       const alpha = await findArticleByName(page, 'Alpha');
       const theta = await findArticleByName(page, 'Theta');
-      expect(eta).not.toBeNull();
-      expect(alpha).not.toBeNull();
-      expect(theta).not.toBeNull();
-      await eta!.scrollIntoViewIfNeeded();
+      await eta.scrollIntoViewIfNeeded();
 
       // Theta renders intact: its What section shows, no page error was
       // thrown, and the pathological Why — which bounds to a bare
       // thematicBreak with no visible text once clamped — correctly shows
       // no "WHY" label rather than crashing or leaving a dangling one.
-      await theta!.scrollIntoViewIfNeeded();
-      const thetaText = await theta!.innerText();
+      await theta.scrollIntoViewIfNeeded();
+      const thetaText = await theta.innerText();
       expect(thetaText).toContain(
         'Theta has a What section so the card is not all-empty.'
       );
@@ -610,14 +593,14 @@ test.describe(
           return rect ? rect.height : null;
         });
 
-      const etaSafety = await readCardSafety(eta!);
+      const etaSafety = await readCardSafety(eta);
       for (const section of [etaSafety.what, etaSafety.why, etaSafety.who]) {
         if (section)
           expect(section.height).toBeLessThanOrEqual(section.maxAllowed);
       }
 
-      const etaAreaHeight = await measureArea(eta!);
-      const alphaAreaHeight = await measureArea(alpha!);
+      const etaAreaHeight = await measureArea(eta);
+      const alphaAreaHeight = await measureArea(alpha);
       expect(etaAreaHeight).not.toBeNull();
       expect(alphaAreaHeight).not.toBeNull();
       expect(
@@ -638,6 +621,10 @@ test.describe(
         { timeout: 5000 }
       );
       const elapsedMs = Date.now() - t0;
+      // Recorded so a reviewer can judge the margin, not only pass/fail.
+      await test
+        .info()
+        .attach('search-narrowing-elapsed-ms', { body: String(elapsedMs) });
       expect(elapsedMs).toBeLessThan(2000);
 
       const doc = await page.evaluate(() => ({

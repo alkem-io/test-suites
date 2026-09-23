@@ -17,6 +17,12 @@
 // it down in `afterAll`.
 
 import { test, expect, type Locator, type Page } from '@playwright/test';
+import {
+  EXCERPT_SELECTOR,
+  findArticleByName,
+  gotoSpaceAndWaitForCards,
+  readExcerptClamps,
+} from './subspaces-callout.helpers';
 import { getUserToken, UniqueIDGenerator } from '@alkemio/tests-lib';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
@@ -246,67 +252,29 @@ test.describe(
     });
 
     async function gotoFixtureSpace(page: Page) {
-      await page.goto(`${baseUrl}/${fixture.spaceNameId}`, {
-        waitUntil: 'networkidle',
-      });
+      await gotoSpaceAndWaitForCards(page, `${baseUrl}/${fixture.spaceNameId}`);
       await expect(
         page.getByText(POST_TITLE, { exact: true }).first()
       ).toBeVisible();
     }
 
-    async function findArticleByName(
-      scope: Page | Locator,
-      name: string
-    ): Promise<Locator | null> {
-      const articles = scope.locator('article');
-      const count = await articles.count();
-      for (let i = 0; i < count; i++) {
-        const t = await articles.nth(i).innerText();
-        if (t.includes(`\n${name}\n`)) return articles.nth(i);
-      }
-      return null;
-    }
-
-    /** side-by-side ⇔ the What excerpt (`.line-clamp-3`) sits well to the right
-     * of the article's own left edge (past the ~300px identity column); stacked
-     * ⇔ it sits at roughly the article's own left edge, below the identity
-     * block. Mirrors the DOM contract `ExpandedSpaceCard.tsx` builds. */
+    /** side-by-side ⇔ the What excerpt sits well to the right of the article's
+     * own left edge (past the ~300px identity column); stacked ⇔ it sits at
+     * roughly the article's own left edge, below the identity block. Mirrors
+     * the DOM contract `ExpandedSpaceCard.tsx` builds. */
     async function getArrangement(
       article: Locator
     ): Promise<'side-by-side' | 'stacked' | 'unknown'> {
-      return article.evaluate(el => {
+      return article.evaluate((el, selector) => {
         const rect = el.getBoundingClientRect();
-        const what = el.querySelector('.line-clamp-3');
+        const what = el.querySelector(selector);
         if (!what) return 'unknown';
         const whatRect = (what as HTMLElement).getBoundingClientRect();
         return whatRect.left - rect.left > 150 ? 'side-by-side' : 'stacked';
-      });
+      }, EXCERPT_SELECTOR.what);
     }
 
-    async function getClampInfo(article: Locator) {
-      return article.evaluate(el => {
-        const clamped2 = Array.from(el.querySelectorAll('.line-clamp-2'));
-        const clamped3 = Array.from(el.querySelectorAll('.line-clamp-3'));
-        const info = (elm: Element | undefined, lines: number) => {
-          if (!elm) return null;
-          const rect = (elm as HTMLElement).getBoundingClientRect();
-          const lh = parseFloat(
-            getComputedStyle(elm as HTMLElement).lineHeight
-          );
-          return {
-            height: rect.height,
-            maxAllowed: lines * lh + 2,
-            top: rect.top,
-            left: rect.left,
-          };
-        };
-        return {
-          what: info(clamped3[0], 3),
-          why: info(clamped2[0], 2),
-          who: info(clamped2[clamped2.length - 1], 2),
-        };
-      });
-    }
+    const getClampInfo = readExcerptClamps;
 
     test('US4-AS1: phone width (390px) — every card stacks (identity, then What/Why/Who, then footer), no horizontal scroll, same clamps', async ({
       page,
@@ -315,12 +283,11 @@ test.describe(
       await gotoFixtureSpace(page);
 
       const card = await findArticleByName(page, 'CardAlpha');
-      expect(card).not.toBeNull();
-      await card!.scrollIntoViewIfNeeded();
+      await card.scrollIntoViewIfNeeded();
 
-      expect(await getArrangement(card!)).toBe('stacked');
+      expect(await getArrangement(card)).toBe('stacked');
 
-      const clamp = await getClampInfo(card!);
+      const clamp = await getClampInfo(card);
       expect(clamp.what).not.toBeNull();
       expect(clamp.why).not.toBeNull();
       expect(clamp.who).not.toBeNull();
@@ -336,7 +303,7 @@ test.describe(
       // DOM text is "Leads" — the ALL-CAPS look is a CSS `.uppercase` transform,
       // which `getByText` does not apply when matching, so the match is
       // case-insensitive against the real casing.
-      const leadsRow = card!.getByText(/^leads$/i);
+      const leadsRow = card.getByText(/^leads$/i);
       await expect(leadsRow).toBeVisible();
       const leadsBox = await leadsRow.boundingBox();
       expect(leadsBox).not.toBeNull();
@@ -356,10 +323,9 @@ test.describe(
       await gotoFixtureSpace(page);
 
       const feedCard = await findArticleByName(page, 'CardAlpha');
-      expect(feedCard).not.toBeNull();
-      await feedCard!.scrollIntoViewIfNeeded();
-      expect(await getArrangement(feedCard!)).toBe('side-by-side');
-      const feedBox = await feedCard!.boundingBox();
+      await feedCard.scrollIntoViewIfNeeded();
+      expect(await getArrangement(feedCard)).toBe('side-by-side');
+      const feedBox = await feedCard.boundingBox();
       expect(feedBox).not.toBeNull();
 
       const openLink = page.getByRole('link', { name: `Open ${POST_TITLE}` });
@@ -371,9 +337,8 @@ test.describe(
       await expect(dialog).toBeVisible();
 
       const dialogCard = await findArticleByName(dialog, 'CardAlpha');
-      expect(dialogCard).not.toBeNull();
-      expect(await getArrangement(dialogCard!)).toBe('side-by-side');
-      const dialogBox = await dialogCard!.boundingBox();
+      expect(await getArrangement(dialogCard)).toBe('side-by-side');
+      const dialogBox = await dialogCard.boundingBox();
       expect(dialogBox).not.toBeNull();
 
       // The discriminating assertion: the feed and the dialog render the SAME
@@ -403,8 +368,7 @@ test.describe(
       await expect(showLess).toBeVisible();
 
       let card = await findArticleByName(page, 'CardEta'); // the 5th card, behind the initial "Show 3"
-      expect(card).not.toBeNull();
-      expect(await getArrangement(card!)).toBe('side-by-side');
+      expect(await getArrangement(card)).toBe('side-by-side');
 
       // Resize down across the ~520px card-width stacking threshold.
       await page.setViewportSize({ width: 420, height: 1000 });
@@ -412,10 +376,9 @@ test.describe(
       await expect(searchBox).toHaveValue('Card');
       await expect(showLess).toBeVisible();
       card = await findArticleByName(page, 'CardEta');
-      expect(card).not.toBeNull();
-      await card!.scrollIntoViewIfNeeded();
+      await card.scrollIntoViewIfNeeded();
       await expect
-        .poll(async () => getArrangement(card!), { timeout: 5000 })
+        .poll(async () => getArrangement(card), { timeout: 5000 })
         .toBe('stacked');
 
       // Resize back up across the threshold — both states still survive.
@@ -423,10 +386,9 @@ test.describe(
       await expect(searchBox).toHaveValue('Card');
       await expect(showLess).toBeVisible();
       card = await findArticleByName(page, 'CardEta');
-      expect(card).not.toBeNull();
-      await card!.scrollIntoViewIfNeeded();
+      await card.scrollIntoViewIfNeeded();
       await expect
-        .poll(async () => getArrangement(card!), { timeout: 5000 })
+        .poll(async () => getArrangement(card), { timeout: 5000 })
         .toBe('side-by-side');
     });
   }

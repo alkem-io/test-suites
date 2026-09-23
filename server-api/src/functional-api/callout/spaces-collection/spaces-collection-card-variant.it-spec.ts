@@ -124,9 +124,9 @@ describe('US2 — card-variant setting round-trips through the public API', () =
         settings: { framing: { commentsEnabled: false } },
       });
       expect(res.error).toBeUndefined();
-      expect(res?.data?.updateCallout?.settings?.framing?.spaces?.cardVariant).toBe(
-        SpaceCollectionCardVariant.Expanded
-      );
+      expect(
+        res?.data?.updateCallout?.settings?.framing?.spaces?.cardVariant
+      ).toBe(SpaceCollectionCardVariant.Expanded);
     });
 
     test('updating with spaces: {} leaves cardVariant EXPANDED and carries no GraphQL error (S2 / R-9)', async () => {
@@ -135,9 +135,15 @@ describe('US2 — card-variant setting round-trips through the public API', () =
         settings: { framing: { spaces: {} } },
       });
       expect(res.error).toBeUndefined();
-      expect(res?.data?.updateCallout?.settings?.framing?.spaces?.cardVariant).toBe(
-        SpaceCollectionCardVariant.Expanded
-      );
+      expect(
+        res?.data?.updateCallout?.settings?.framing?.spaces?.cardVariant
+      ).toBe(SpaceCollectionCardVariant.Expanded);
+      // The mutation answers with the entity it just saved; only a fresh read
+      // proves what the row holds.
+      const reread = await getCalloutSpacesSettings(calloutId);
+      expect(
+        reread?.data?.lookup?.callout?.settings?.framing?.spaces?.cardVariant
+      ).toBe(SpaceCollectionCardVariant.Expanded);
     });
   });
 
@@ -157,14 +163,24 @@ describe('US2 — card-variant setting round-trips through the public API', () =
     const updated = await updateCalloutSpacesSettings({
       ID: calloutId,
       settings: {
-        framing: { spaces: { cardVariant: SpaceCollectionCardVariant.Compact } },
+        framing: {
+          spaces: { cardVariant: SpaceCollectionCardVariant.Compact },
+        },
       },
     });
     expect(updated.error).toBeUndefined();
-    expect(updated?.data?.updateCallout?.settings?.framing?.spaces?.cardVariant).toBe(
-      SpaceCollectionCardVariant.Compact
-    );
+    expect(
+      updated?.data?.updateCallout?.settings?.framing?.spaces?.cardVariant
+    ).toBe(SpaceCollectionCardVariant.Compact);
     expect(updated?.data?.updateCallout?.settings?.framing?.selection).toEqual(
+      beforeSelection
+    );
+
+    const reread = await getCalloutSpacesSettings(calloutId);
+    expect(
+      reread?.data?.lookup?.callout?.settings?.framing?.spaces?.cardVariant
+    ).toBe(SpaceCollectionCardVariant.Compact);
+    expect(reread?.data?.lookup?.callout?.settings?.framing?.selection).toEqual(
       beforeSelection
     );
   });
@@ -178,7 +194,9 @@ describe('US2 — card-variant setting round-trips through the public API', () =
           profile: { displayName: `spaces-none-reject-${uniqueId}` },
         },
         settings: {
-          framing: { spaces: { cardVariant: SpaceCollectionCardVariant.Expanded } },
+          framing: {
+            spaces: { cardVariant: SpaceCollectionCardVariant.Expanded },
+          },
         },
       });
       expect(res.error).toBeDefined();
@@ -218,7 +236,9 @@ describe('US2 — card-variant setting round-trips through the public API', () =
       const updated = await updateCalloutSpacesSettings({
         ID: calloutId,
         settings: {
-          framing: { spaces: { cardVariant: SpaceCollectionCardVariant.Expanded } },
+          framing: {
+            spaces: { cardVariant: SpaceCollectionCardVariant.Expanded },
+          },
         },
       });
       expect(updated.error).toBeDefined();
