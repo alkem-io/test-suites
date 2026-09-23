@@ -23,10 +23,14 @@
 // Persona sign-in (nomad / Ada) uses the fixture's shared throwaway
 // password, read from `CARDS_FIXTURE_PERSONA_PASSWORD` — never hardcoded
 // here, since quickstart.md generates a fresh one per provisioning run and
-// records it in the (gitignored) `.forge/fixture.json`. Admin sign-in reuses
-// the repo-standard `AUTH_ADMIN_PASSWORD` / `AUTH_TEST_HARNESS_PASSWORD`
-// convention (falls back to `change_me`, matching `login.helper.ts`'s own
-// default — set the real value via env in CI/local runs).
+// records it in the (gitignored) `.forge/fixture.json`. Their emails are
+// likewise resolved live in `beforeAll` via `resolveFixturePersonaEmail`/
+// `resolveFixturePersonaEmailContaining` — quickstart.md pins neither a
+// persona's surname nor its email, and each provisioning run generates its
+// own of both. Admin sign-in reuses the repo-standard `AUTH_ADMIN_PASSWORD` /
+// `AUTH_TEST_HARNESS_PASSWORD` convention (falls back to `change_me`,
+// matching `login.helper.ts`'s own default — set the real value via env in
+// CI/local runs) and the platform's fixed `admin@alkem.io` seed identity.
 //
 // US2-AS4's first clause ("the shipped end-to-end flows ... still pass") is
 // the pre-existing suites in this directory (`0.1contributors-callout.spec.ts`
@@ -41,6 +45,8 @@ import { loginViaCrd } from '../helpers/login.helper';
 import {
   resolveFixturePersonaName,
   resolveFixturePersonaNameContaining,
+  resolveFixturePersonaEmail,
+  resolveFixturePersonaEmailContaining,
 } from './fixture-personas';
 
 const BASE_URL = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
@@ -74,8 +80,15 @@ let MEMBER_THREE_NAME: string;
 let MEMBER_FOUR_NAME: string;
 const GFL_NAME = 'Green Future Labs';
 
-const NOMAD_EMAIL = 'nomad@cards-fixture.example';
-const ADA_EMAIL = 'ada@cards-fixture.example';
+// Like the *_NAME personas above, nomad's and Ada's emails are not pinned by
+// quickstart.md — each provisioning run generates its own — so they are
+// resolved live from the fixture in `beforeAll` rather than hardcoded here.
+// admin@alkem.io is the one fixed exception: it is the platform's own seed
+// identity, not part of Cards fixture provisioning, and is used verbatim the
+// same way across unrelated spec files (e.g. user-profile/access-user-
+// profile-from-dashboard.spec.ts).
+let NOMAD_EMAIL: string;
+let ADA_EMAIL: string;
 const ADMIN_EMAIL = 'admin@alkem.io';
 const PERSONA_PASSWORD =
   process.env.CARDS_FIXTURE_PERSONA_PASSWORD || 'change_me';
@@ -161,6 +174,10 @@ async function resolveCardsFixture(): Promise<void> {
     resolveFixturePersonaNameContaining('member-02'),
     resolveFixturePersonaNameContaining('member-03'),
     resolveFixturePersonaNameContaining('member-04'),
+  ]);
+  [NOMAD_EMAIL, ADA_EMAIL] = await Promise.all([
+    resolveFixturePersonaEmailContaining('nomad'),
+    resolveFixturePersonaEmail('Ada'),
   ]);
   PEOPLE_NAMES = [
     ADMIN_NAME,

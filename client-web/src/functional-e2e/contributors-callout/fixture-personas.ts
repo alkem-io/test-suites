@@ -1,54 +1,74 @@
-// Resolves a "Cards" fixture persona's exact profile display name from the
-// first name quickstart.md §2 actually pins (e.g. "Ada"), instead of a full
-// name hardcoded in the spec files.
+// Resolves a "Cards" fixture persona's exact profile display name and/or
+// email from the first name quickstart.md §2 actually pins (e.g. "Ada"),
+// instead of a full name or email hardcoded in the spec files.
 //
-// quickstart.md pins only first names and emails/roles, never surnames — each
-// fixture-provisioning run is free to pick its own, and has in practice
-// picked different ones across runs (e.g. "Ada Ardent" vs. "Ada Rivera"). A
-// spec that hardcodes a full name is tied to one particular run and goes red
-// against a correctly re-seeded fixture. Resolving the surname here, once,
-// keeps every us*-*.spec.ts file agreeing with whatever fixture is actually
-// live, without assuming an email convention quickstart.md never documents
-// either.
+// quickstart.md pins only first names and roles, never surnames or emails —
+// each fixture-provisioning run is free to pick its own of either, and has
+// in practice picked different ones across runs (e.g. "Ada Ardent" vs. "Ada
+// Rivera", or a "nomad@cards-fixture.example" placeholder vs. the real
+// "cards-nomad@alkem.io" a run actually provisions). A spec that hardcodes a
+// full name or an email is tied to one particular run and goes red against a
+// correctly re-seeded fixture. Resolving both here, once, keeps every
+// us*-*.spec.ts file agreeing with whatever fixture is actually live,
+// without assuming a naming/email convention quickstart.md never documents.
 
 import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 
+interface FixturePersonaCandidate {
+  displayName: string;
+  email?: string;
+}
+
 /**
- * Looks up the one "Cards" fixture user whose profile display name starts
- * with `${firstName} ` and returns that full display name. Throws (rather
- * than returning an unresolved/ambiguous value) when the fixture does not
- * have exactly one such user, so a stale assumption fails loudly in
- * `beforeAll` instead of producing a downstream card-lookup timeout.
+ * Runs the shared `UsersPaginated` lookup (as admin, which can read email)
+ * filtered by `filterValue`, then keeps only the users whose profile display
+ * name satisfies `matches`, deduplicated by display name.
  */
-export async function resolveFixturePersonaName(
-  firstName: string
-): Promise<string> {
+async function findFixturePersonaCandidates(
+  filterValue: string,
+  matches: (displayName: string) => boolean
+): Promise<FixturePersonaCandidate[]> {
   const res = await graphqlErrorWrapper(
     authToken =>
       getGraphqlClient().UsersPaginated(
-        { first: 25, filter: { displayName: firstName } },
+        { first: 25, filter: { displayName: filterValue } },
         { authorization: `Bearer ${authToken}` }
       ),
     TestUser.GLOBAL_ADMIN
   );
   if (res.error) {
     throw new Error(
-      `resolveFixturePersonaName("${firstName}") failed: ${JSON.stringify(res.error)}`
+      `Fixture persona lookup ("${filterValue}") failed: ${JSON.stringify(res.error)}`
     );
   }
-  const candidates = Array.from(
-    new Set(
-      (res.data?.usersPaginated.users ?? [])
-        .map(u => u.profile?.displayName)
-        .filter((name): name is string => !!name && name.startsWith(`${firstName} `))
-    )
-  );
+  const seen = new Map<string, FixturePersonaCandidate>();
+  for (const u of res.data?.usersPaginated.users ?? []) {
+    const displayName = u.profile?.displayName;
+    if (displayName && matches(displayName)) {
+      seen.set(displayName, { displayName, email: u.email ?? undefined });
+    }
+  }
+  return Array.from(seen.values());
+}
+
+/**
+ * Throws (rather than returning an unresolved/ambiguous value) when
+ * `candidates` does not have exactly one entry, so a stale fixture
+ * assumption fails loudly in `beforeAll` instead of producing a downstream
+ * card-lookup or sign-in timeout.
+ */
+function requireExactlyOneCandidate(
+  candidates: FixturePersonaCandidate[],
+  description: string
+): FixturePersonaCandidate {
   if (candidates.length !== 1) {
     throw new Error(
       'Fixture precondition failed: expected exactly one "Cards" fixture user whose ' +
-        `displayName starts with "${firstName} ", found ${candidates.length}` +
-        (candidates.length ? ` (${candidates.join(', ')})` : '') +
+        `${description}, found ${candidates.length}` +
+        (candidates.length
+          ? ` (${candidates.map(c => c.displayName).join(', ')})`
+          : '') +
         ". Re-check the Cards fixture (the workspace feature's quickstart.md §2)."
     );
   }
@@ -56,45 +76,85 @@ export async function resolveFixturePersonaName(
 }
 
 /**
+ * Looks up the one "Cards" fixture user whose profile display name starts
+ * with `${firstName} ` and returns that full display name.
+ */
+export async function resolveFixturePersonaName(
+  firstName: string
+): Promise<string> {
+  const candidates = await findFixturePersonaCandidates(firstName, name =>
+    name.startsWith(`${firstName} `)
+  );
+  return requireExactlyOneCandidate(
+    candidates,
+    `displayName starts with "${firstName} "`
+  ).displayName;
+}
+
+/**
  * Looks up the one "Cards" fixture user whose profile display name contains
  * `token` and returns that full display name. For personas whose pinned
  * quickstart.md text is not "<FirstName> <Surname>" shaped — e.g. "Quiet
- * Quinn", "Tag-heavy Tess", "member-01" — `resolveFixturePersonaName`'s
+ * Quinn", "Tag-heavy Tess", "member-01", "nomad" — `resolveFixturePersonaName`'s
  * `${firstName} ` prefix match doesn't apply, so this resolves by a stable
  * substring instead (still never a hardcoded full name in a spec file).
- * Throws under the same "found != 1" precondition as
- * `resolveFixturePersonaName`.
  */
 export async function resolveFixturePersonaNameContaining(
   token: string
 ): Promise<string> {
-  const res = await graphqlErrorWrapper(
-    authToken =>
-      getGraphqlClient().UsersPaginated(
-        { first: 25, filter: { displayName: token } },
-        { authorization: `Bearer ${authToken}` }
-      ),
-    TestUser.GLOBAL_ADMIN
+  const candidates = await findFixturePersonaCandidates(token, name =>
+    name.includes(token)
   );
-  if (res.error) {
+  return requireExactlyOneCandidate(
+    candidates,
+    `displayName contains "${token}"`
+  ).displayName;
+}
+
+/**
+ * Looks up the one "Cards" fixture user whose profile display name starts
+ * with `${firstName} ` and returns that user's email — resolved live from
+ * the platform the same way `resolveFixturePersonaName` resolves the
+ * display name, since quickstart.md pins neither a persona's surname nor
+ * its email and each fixture-provisioning run is free to generate its own.
+ */
+export async function resolveFixturePersonaEmail(
+  firstName: string
+): Promise<string> {
+  const candidates = await findFixturePersonaCandidates(firstName, name =>
+    name.startsWith(`${firstName} `)
+  );
+  const match = requireExactlyOneCandidate(
+    candidates,
+    `displayName starts with "${firstName} "`
+  );
+  if (!match.email) {
     throw new Error(
-      `resolveFixturePersonaNameContaining("${token}") failed: ${JSON.stringify(res.error)}`
+      `resolveFixturePersonaEmail("${firstName}") found "${match.displayName}" but the platform returned no email for it.`
     );
   }
-  const candidates = Array.from(
-    new Set(
-      (res.data?.usersPaginated.users ?? [])
-        .map(u => u.profile?.displayName)
-        .filter((name): name is string => !!name && name.includes(token))
-    )
+  return match.email;
+}
+
+/**
+ * Same as `resolveFixturePersonaEmail`, for personas resolved by substring
+ * (e.g. "nomad", which — like "Quiet Quinn" or "member-01" — is not a
+ * "<FirstName> <Surname>" shaped display name).
+ */
+export async function resolveFixturePersonaEmailContaining(
+  token: string
+): Promise<string> {
+  const candidates = await findFixturePersonaCandidates(token, name =>
+    name.includes(token)
   );
-  if (candidates.length !== 1) {
+  const match = requireExactlyOneCandidate(
+    candidates,
+    `displayName contains "${token}"`
+  );
+  if (!match.email) {
     throw new Error(
-      'Fixture precondition failed: expected exactly one "Cards" fixture user whose ' +
-        `displayName contains "${token}", found ${candidates.length}` +
-        (candidates.length ? ` (${candidates.join(', ')})` : '') +
-        ". Re-check the Cards fixture (the workspace feature's quickstart.md §2)."
+      `resolveFixturePersonaEmailContaining("${token}") found "${match.displayName}" but the platform returned no email for it.`
     );
   }
-  return candidates[0];
+  return match.email;
 }
