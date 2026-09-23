@@ -93,16 +93,22 @@ export function subspacesListOfPost(page: Page, title: string): Locator {
 }
 
 /**
- * The card whose single link is named `name` (the card's stretched name link
- * carries `aria-label` = the subspace name). Web-first: retries until visible.
+ * The card whose name heading is `name`. Both card kinds carry it as a heading
+ * (the compact card is wrapped in its link; the expanded card's name heading
+ * holds a stretched link), so the heading — not a link — is what both share.
+ * Web-first: retries until visible.
  */
 export async function findArticleByName(
   scope: Page | Locator,
   name: string
 ): Promise<Locator> {
+  // The `has` locator is evaluated relative to each candidate article, so it
+  // must be built from the page, never from `scope`: a locator chained off a
+  // dialog would look for that dialog inside the card and never match.
+  const root = 'page' in scope ? scope.page() : scope;
   const article = scope
     .locator('article')
-    .filter({ has: scope.getByRole('link', { name, exact: true }) })
+    .filter({ has: root.getByRole('heading', { name, exact: true }) })
     .first();
   await expect(article).toBeVisible({ timeout: 20_000 });
   return article;
