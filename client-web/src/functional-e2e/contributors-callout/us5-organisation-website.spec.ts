@@ -233,12 +233,22 @@ adminFixture.test.describe.serial(
         // Activating it opens the address in a new tab, isolated from the
         // originating page (guaranteed by target=_blank + rel=noopener —
         // asserted above — which is exactly what prevents `window.opener`
-        // access; Playwright confirms the navigation target here).
+        // access). `greenfuture.example` is a reserved TLD (RFC 2606) and
+        // never resolves, so the popup's COMMITTED url ends up on the
+        // browser's own error page — asserting on it would never pass. The
+        // outgoing navigation request is the real signal: it is issued
+        // (and observable) whether or not the host resolves, and its origin
+        // proves the click actually targeted the stored address rather than
+        // being swallowed or redirected elsewhere.
         const [popup] = await Promise.all([
           page.waitForEvent('popup'),
           website.click(),
         ]);
-        expect(popup.url()).toBe(VALID_WEBSITE);
+        const request = await popup.waitForRequest(
+          req => new URL(req.url()).origin === new URL(VALID_WEBSITE).origin,
+          { timeout: 15_000 }
+        );
+        expect(new URL(request.url()).origin).toBe(new URL(VALID_WEBSITE).origin);
         await popup.close();
 
         // Exactly one profile link remains on this card (the name).
