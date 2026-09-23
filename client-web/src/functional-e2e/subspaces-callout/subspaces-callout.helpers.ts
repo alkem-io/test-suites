@@ -15,6 +15,50 @@ import { expect, type Locator, type Page } from '@playwright/test';
  *   never by clamp class alone.
  */
 
+/**
+ * The entities a walk creates on the stack, recorded as they are created so
+ * the teardown has a complete list even when `beforeAll` failed halfway.
+ */
+export type FixtureTree = {
+  spaceId?: string;
+  subspaceIds: string[];
+};
+
+export function newFixtureTree(): FixtureTree {
+  return { subspaceIds: [] };
+}
+
+/**
+ * Delete a fixture tree leaves-first (the platform refuses to delete a
+ * level-0 Space that still contains subspaces), attempting every entity even
+ * after a failure, then throw once listing everything that could not be
+ * removed. A swallowed teardown error orphans a public fixture tree on the
+ * shared stack — with nightly retries, up to three per file per night — so the
+ * leak must surface in the report, not disappear.
+ */
+export async function deleteFixtureTree(
+  tree: FixtureTree,
+  deleteSpace: (id: string) => Promise<unknown>
+): Promise<void> {
+  const failures: string[] = [];
+  const attempt = async (id: string) => {
+    try {
+      await deleteSpace(id);
+    } catch (error) {
+      failures.push(
+        `${id}: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  };
+  for (const id of tree.subspaceIds) await attempt(id);
+  if (tree.spaceId) await attempt(tree.spaceId);
+  if (failures.length > 0) {
+    throw new Error(
+      `fixture teardown left entities behind:\n${failures.join('\n')}`
+    );
+  }
+}
+
 export const EXCERPT_SELECTOR = {
   what: '[data-testid="excerpt-what"]',
   why: '[data-testid="excerpt-why"]',

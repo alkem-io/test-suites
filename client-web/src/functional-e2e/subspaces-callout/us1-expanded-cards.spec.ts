@@ -24,6 +24,7 @@
 // rights must see no more on the card than on the About panel).
 
 import { test, expect, type Locator, type Page } from '@playwright/test';
+import { deleteFixtureTree, newFixtureTree } from './subspaces-callout.helpers';
 import { getUserToken, UniqueIDGenerator } from '@alkemio/tests-lib';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
@@ -141,6 +142,9 @@ type Fixture = {
 };
 
 let fixture: Fixture;
+// Everything created on the stack, recorded the moment it exists, so a
+// `beforeAll` that fails halfway still leaves a complete deletion list.
+const tree = newFixtureTree();
 let adminToken: string;
 
 const shortId = (label: string) => `${label}${runSuffix}`.slice(0, 24);
@@ -195,6 +199,7 @@ async function createSubspace(
       adminToken
     );
   }
+  tree.subspaceIds.push(data.createSubspace.id);
   return data.createSubspace;
 }
 
@@ -264,6 +269,7 @@ test.describe(
         adminToken
       );
       const spaceId = space.createSpace.id;
+      tree.spaceId = spaceId;
       const calloutsSetId = space.createSpace.collaboration.calloutsSet.id;
 
       const subspaceIds: string[] = [];
@@ -291,25 +297,17 @@ test.describe(
     });
 
     test.afterAll(async () => {
-      if (!fixture) return;
-      // deleteSpace refuses a level-0 Space that still contains subspaces, so
-      // leaves and root must be deleted in that order.
-      for (const id of fixture.subspaceIds) {
-        await rawGql(
+      // Leaves then root (deleteSpace refuses a level-0 Space that still
+      // contains subspaces), and every failure is reported rather than
+      // swallowed: a public fixture tree left behind on the shared stack is
+      // a defect of this file, not noise.
+      await deleteFixtureTree(tree, id =>
+        rawGql(
           'mutation ($spaceID: UUID!) { deleteSpace(deleteData: { ID: $spaceID }) { id } }',
-          {
-            spaceID: id,
-          },
+          { spaceID: id },
           adminToken
-        ).catch(() => undefined);
-      }
-      await rawGql(
-        'mutation ($spaceID: UUID!) { deleteSpace(deleteData: { ID: $spaceID }) { id } }',
-        {
-          spaceID: fixture.spaceId,
-        },
-        adminToken
-      ).catch(() => undefined);
+        )
+      );
     });
 
     async function acceptCookiesIfVisible(page: Page) {

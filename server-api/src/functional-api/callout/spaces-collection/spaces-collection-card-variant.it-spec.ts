@@ -28,7 +28,7 @@ import {
   SpaceCollectionCardVariant,
 } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 
-import { deleteCallout } from '../callouts.request.params';
+import { deleteCallout, getCalloutsData } from '../callouts.request.params';
 import {
   createSpacesCollectionCallout,
   createSpacesCollectionCalloutWithVariant,
@@ -186,12 +186,35 @@ describe('US2 — card-variant setting round-trips through the public API', () =
   });
 
   describe('case 5 — rejected off-kind (S3)', () => {
+    // The wrapper also returns `error` on a connection failure, so a rejection
+    // is only proven by its reason — and "persists nothing" only by listing the
+    // callouts set afterwards and finding no callout under that name.
+    const REJECTION_REASON =
+      'Card-variant settings can only be set when framing.type = SPACES.';
+
+    const expectRejectedAndAbsent = async (
+      res: Awaited<ReturnType<typeof createSpacesCollectionCallout>>,
+      displayName: string
+    ) => {
+      expect(res.error).toBeDefined();
+      expect(JSON.stringify(res.error?.errors)).toContain(REJECTION_REASON);
+      expect(res?.data?.createCalloutOnCalloutsSet?.id).toBeUndefined();
+
+      const listed = await getCalloutsData(calloutsSetId);
+      expect(listed.error).toBeUndefined();
+      const names = (listed.data?.lookup.calloutsSet?.callouts ?? []).map(
+        c => c.framing.profile.displayName
+      );
+      expect(names).not.toContain(displayName);
+    };
+
     test('create NONE callout supplying spaces is rejected; no callout created', async () => {
+      const displayName = `spaces-none-reject-${uniqueId}`;
       const res = await createSpacesCollectionCallout({
         calloutsSetID: calloutsSetId,
         framing: {
           type: CalloutFramingType.None,
-          profile: { displayName: `spaces-none-reject-${uniqueId}` },
+          profile: { displayName },
         },
         settings: {
           framing: {
@@ -199,16 +222,16 @@ describe('US2 — card-variant setting round-trips through the public API', () =
           },
         },
       });
-      expect(res.error).toBeDefined();
-      expect(res?.data?.createCalloutOnCalloutsSet?.id).toBeUndefined();
+      await expectRejectedAndAbsent(res, displayName);
     });
 
     test('create CONTRIBUTORS callout (with a valid contributors block) supplying spaces is rejected; no callout created', async () => {
+      const displayName = `spaces-contributors-reject-${uniqueId}`;
       const res = await createSpacesCollectionCallout({
         calloutsSetID: calloutsSetId,
         framing: {
           type: CalloutFramingType.Contributors,
-          profile: { displayName: `spaces-contributors-reject-${uniqueId}` },
+          profile: { displayName },
         },
         settings: {
           framing: {
@@ -217,8 +240,7 @@ describe('US2 — card-variant setting round-trips through the public API', () =
           },
         },
       });
-      expect(res.error).toBeDefined();
-      expect(res?.data?.createCalloutOnCalloutsSet?.id).toBeUndefined();
+      await expectRejectedAndAbsent(res, displayName);
     });
 
     test('update an existing NONE callout with spaces is rejected; re-read shows settings.framing.spaces null/undefined', async () => {
@@ -242,6 +264,9 @@ describe('US2 — card-variant setting round-trips through the public API', () =
         },
       });
       expect(updated.error).toBeDefined();
+      expect(JSON.stringify(updated.error?.errors)).toContain(
+        'Card-variant settings can only be set when framing.type = SPACES.'
+      );
 
       const reread = await getCalloutSpacesSettings(calloutId);
       expect(reread.error).toBeUndefined();

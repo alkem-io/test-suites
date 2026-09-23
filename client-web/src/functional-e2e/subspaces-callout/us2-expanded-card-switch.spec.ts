@@ -41,6 +41,8 @@ import {
   EXCERPT_SELECTOR,
   findArticleByName,
   subspacesListOfPost,
+  deleteFixtureTree,
+  newFixtureTree,
 } from './subspaces-callout.helpers';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
@@ -103,6 +105,9 @@ type Fixture = {
 };
 
 let fixture: Fixture;
+// Everything created on the stack, recorded the moment it exists, so a
+// `beforeAll` that fails halfway still leaves a complete deletion list.
+const tree = newFixtureTree();
 let adminToken: string;
 
 async function createSubspace(
@@ -130,6 +135,7 @@ async function createSubspace(
     },
     adminToken
   );
+  tree.subspaceIds.push(data.createSubspace.id);
   return data.createSubspace.id;
 }
 
@@ -264,6 +270,7 @@ test.describe(
       );
 
       const spaceId = space.createSpace.id;
+      tree.spaceId = spaceId;
       const calloutsSetId = space.createSpace.collaboration.calloutsSet.id;
       const alphaId = await createSubspace(spaceId, 'a', 'Alpha');
       const betaId = await createSubspace(spaceId, 'b', 'Beta');
@@ -272,22 +279,17 @@ test.describe(
     });
 
     test.afterAll(async () => {
-      if (!fixture) return;
-      // deleteSpace refuses a level-0 Space that still contains subspaces —
-      // leaves then root, same order as us3/us4's teardown. Callouts cascade
-      // with the space; no separate cleanup needed for the posts this file creates.
-      for (const id of [fixture.alphaId, fixture.betaId]) {
-        await rawGql(
+      // Leaves then root (deleteSpace refuses a level-0 Space that still
+      // contains subspaces), and every failure is reported rather than
+      // swallowed: a public fixture tree left behind on the shared stack is
+      // a defect of this file, not noise.
+      await deleteFixtureTree(tree, id =>
+        rawGql(
           'mutation ($spaceID: UUID!) { deleteSpace(deleteData: { ID: $spaceID }) { id } }',
           { spaceID: id },
           adminToken
-        ).catch(() => undefined);
-      }
-      await rawGql(
-        'mutation ($spaceID: UUID!) { deleteSpace(deleteData: { ID: $spaceID }) { id } }',
-        { spaceID: fixture.spaceId },
-        adminToken
-      ).catch(() => undefined);
+        )
+      );
     });
 
     test('US2-AS1: the Expanded card switch sits after the whole Manual selection block, off by default, with the verbatim description', async ({
