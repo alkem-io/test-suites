@@ -23,7 +23,7 @@ import { RoleName } from '@alkemio/tests-lib/core/generated/graphql';
 import { assignRoleToVirtualContributor } from '@alkemio/tests-lib/scenario/baseFunctions';
 import { graphqlRequestAuth } from '@alkemio/tests-lib/utils/graphql.request';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
-import { expect, test as base } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { createAuthenticatedSessionFixture } from '../fixtures/authenticated-session.fixture';
 import { ContributorsCalloutPage } from './pages';
 
@@ -88,9 +88,6 @@ const adminFixture = createAuthenticatedSessionFixture({
   storageStateName: 'us3-card-menu-admin.json',
   cleanupAfterTests: process.env.cleanupAfterTests === 'true',
 });
-
-/** A fresh, unauthenticated context/page — used only for the signed-out half of AS5. */
-const anonTest = base;
 
 adminFixture.test.describe(
   'US3 — Act from the card (view profile / message)',
@@ -456,38 +453,45 @@ adminFixture.test.describe(
         await page.keyboard.press('Escape');
       }
     );
-  }
-);
 
-// AS5 (signed-out half) — a signed-out visitor never sees "Message" on
-// any card. Runs unauthenticated — deliberately outside the admin fixture's
-// shared session/context.
-anonTest(
-  'US3-AS5 A signed-out visitor never sees Message on any card',
-  async ({ page }) => {
-    anonTest.setTimeout(30_000);
-    // baseScenario is populated by the serial block's beforeAll, which
-    // Playwright runs before any test in the file (top-level tests run after
-    // every describe block in the same file has executed its beforeAll); the
-    // Contributors post is on a public space, so an anonymous visitor can
-    // read it.
-    const cc = new ContributorsCalloutPage(page, baseUrl);
-    await cc.navigateToSpace(baseScenario.space.nameId);
-    const col = cc.collection(TITLE);
-    await expect(col.region).toBeVisible({ timeout: 15_000 });
-    await col.switchType('People');
+    // AS5 (signed-out half) — a signed-out visitor never sees "Message" on
+    // any card. Kept inside this serial block (rather than as a top-level
+    // test) so it shares the block's beforeAll/afterAll lifecycle — a
+    // top-level test in this file would either run in its own worker with
+    // `baseScenario` never set (`fullyParallel: true`), or, on a single
+    // worker, run after this block's afterAll has already deleted the
+    // scenario. A fresh, unauthenticated `browser.newContext()` keeps it
+    // signed-out despite running alongside the admin-session tests above —
+    // the same pattern as us2-nothing-else-changes.spec.ts's AS2a.
+    adminFixture.test(
+      'US3-AS5 A signed-out visitor never sees Message on any card',
+      async ({ browser }) => {
+        adminFixture.test.setTimeout(30_000);
+        const context = await browser.newContext();
+        const page = await context.newPage();
+        // The Contributors post is on a public space, so an anonymous
+        // visitor can read it.
+        const cc = new ContributorsCalloutPage(page, baseUrl);
+        await cc.navigateToSpace(baseScenario.space.nameId);
+        const col = cc.collection(TITLE);
+        await expect(col.region).toBeVisible({ timeout: 15_000 });
+        await col.switchType('People');
 
-    const memberName = TestUserManager.users.spaceMember.displayName;
-    await col.actionsButton(memberName).click();
-    await expect(col.menuItem('View Profile')).toBeVisible();
-    await expect(col.menuItem('Message')).toHaveCount(0);
-    await page.keyboard.press('Escape');
+        const memberName = TestUserManager.users.spaceMember.displayName;
+        await col.actionsButton(memberName).click();
+        await expect(col.menuItem('View Profile')).toBeVisible();
+        await expect(col.menuItem('Message')).toHaveCount(0);
+        await page.keyboard.press('Escape');
 
-    await col.switchType('Organizations');
-    const orgName = baseScenario.organization.profile.displayName;
-    await col.actionsButton(orgName).click();
-    await expect(col.menuItem('View Profile')).toBeVisible();
-    await expect(col.menuItem('Message')).toHaveCount(0);
-    await page.keyboard.press('Escape');
+        await col.switchType('Organizations');
+        const orgName = baseScenario.organization.profile.displayName;
+        await col.actionsButton(orgName).click();
+        await expect(col.menuItem('View Profile')).toBeVisible();
+        await expect(col.menuItem('Message')).toHaveCount(0);
+        await page.keyboard.press('Escape');
+
+        await context.close();
+      }
+    );
   }
 );
