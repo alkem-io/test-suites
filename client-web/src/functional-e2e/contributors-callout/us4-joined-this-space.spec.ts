@@ -19,12 +19,19 @@
 //
 // Precondition: the "Cards" fixture exists, INCLUDING "Cards Subspace" with
 // its own Contributors post carrying Ada as a member/lead (quickstart.md §2
-// row 2). `beforeAll` resolves both spaces by their exact profile display
-// name — the fixture's nameIDs are not pinned by quickstart.md — and
-// idempotently (re-)applies quickstart's SQL step (a)/(b): Ada's Cards Space
-// membership backdated to 2023-10-31T23:30Z, plus a later duplicate row
-// proving "earliest wins" (D-MIN). No other SQL step from quickstart.md is
-// required for this story.
+// row 2), and Ada's Cards Space membership already backdated across a month
+// boundary per quickstart.md §2's own SQL steps (a)/(b) — provisioned once,
+// out of band, never by this file. This file holds NO SQL and no direct
+// database access: every expected label is derived from the API's own
+// `joinedDate` on the parent callout's USER contributors (month-precision
+// UTC — the contract's D-UTC rule: naive local-time formatting of a
+// near-month-boundary instant would read as the next month to a viewer east
+// of UTC, which is exactly what AS2 below guards against), so this walk
+// never depends on a wall-clock date literal. The one-time backdating and
+// the earliest-wins/duplicate-row proof (D-MIN) live in
+// `forge.verification` → `gql-live`, not here. `beforeAll` resolves both
+// spaces by their exact profile display name — the fixture's nameIDs are
+// not pinned by quickstart.md.
 //
 // Anonymous throughout — deliberately. AS1 says "any viewer", and the
 // spec's Edge Cases record that anonymous visitors of a public space see
@@ -32,7 +39,6 @@
 // there). Using no session avoids depending on any persona's credentials.
 
 import { test, expect, type Page, type Locator } from '@playwright/test';
-import { queryHarnessDb } from '@alkemio/tests-lib';
 
 const BASE_URL = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const SPACE_DISPLAY_NAME = 'Cards Space';
@@ -40,21 +46,13 @@ const SUBSPACE_DISPLAY_NAME = 'Cards Subspace';
 const CALLOUT_DISPLAY_NAME = 'Contributors';
 const ADA_NAME = 'Ada Ardent';
 
-// Fixed, historical instant quickstart.md §2 "SQL steps" (a) backdates Ada's
-// Cards Space membership to — a month boundary is not involved (23:30 UTC on
-// the last day of the month), which is exactly the case D-UTC exists for:
-// naive local-time formatting of this instant reads as the *next* month to
-// every viewer east of UTC (AS2's "never Nov 2023" half).
-const ADA_BACKDATE_ISO = '2023-10-31T23:30:00Z';
-// quickstart.md §2 "SQL steps" (b) — a later duplicate row; the earliest one
-// (the backdated row above) must still win (D-MIN).
-const ADA_DUPLICATE_LATER_ISO = '2024-02-10T10:00:00Z';
-const EXPECTED_PARENT_MONTH_LABEL = 'Oct 2023';
-
 let spaceId: string;
 let spaceNameId: string;
 let parentCalloutId: string;
 let subspaceCalloutId: string;
+// Derived in beforeAll from the API's joinedDate for Ada on the PARENT
+// callout — never a literal (see the file-header note).
+let expectedParentMonthLabel: string;
 
 async function gql<T>(query: string, variables: Record<string, unknown>): Promise<T> {
   const res = await fetch(`${BASE_URL}/graphql`, {
@@ -146,19 +144,19 @@ async function resolveCardsFixture(): Promise<void> {
   subspaceCalloutId = await resolveContributorsCalloutId(subspace.id);
 }
 
-/** A USER contributor's actor id (== `credential.actorId`) off a given
- * Contributors callout's contributors(USER) list — never guessed from an
- * email, since the fixture may hold more than one "Ada"-named identity
- * across repeated runs. Also doubles as the "is this person actually a
- * member of this post's space" precondition check (used against the
- * subspace callout below, so a missing fixture fails with a clear message
- * instead of a UI timeout). */
-async function resolveContributorActorId(calloutId: string, displayName: string): Promise<string> {
+/** A USER contributor's `joinedDate` (month-precision UTC, per the API
+ * contract) off a given Contributors callout's contributors(USER) list,
+ * resolved by display name — never guessed from an email, since the fixture
+ * may hold more than one "Ada"-named identity across repeated runs. Also
+ * doubles as the "is this person actually a member of this post's space"
+ * precondition check (used against the subspace callout below, so a missing
+ * fixture fails with a clear message instead of a UI timeout). */
+async function resolveContributorJoinedDate(calloutId: string, displayName: string): Promise<string> {
   const data = await gql<{
-    lookup: { callout: { framing: { contributors: { id: string; displayName: string }[] } } };
+    lookup: { callout: { framing: { contributors: { displayName: string; joinedDate: string | null }[] } } };
   }>(
     `query($id: UUID!, $type: ActorType!) {
-      lookup { callout(ID: $id) { framing { contributors(type: $type) { id displayName } } } }
+      lookup { callout(ID: $id) { framing { contributors(type: $type) { displayName joinedDate } } } }
     }`,
     { id: calloutId, type: 'USER' }
   );
@@ -168,35 +166,24 @@ async function resolveContributorActorId(calloutId: string, displayName: string)
       `Fixture precondition failed: no USER contributor named "${displayName}" on Contributors callout ${calloutId}.`
     );
   }
-  return match.id;
+  if (!match.joinedDate) {
+    throw new Error(
+      `Fixture precondition failed: "${displayName}"'s joinedDate is null on Contributors callout ${calloutId} — ` +
+        'is she really a member of this space?'
+    );
+  }
+  return match.joinedDate;
 }
 
-/** Idempotently (re-)applies quickstart.md §2 "SQL steps" (a) and (b) against
- * the forge compose project's Postgres — never a developer database (see
- * `queryHarnessDb`'s own loopback guard). Safe to run on every spec execution:
- * the earliest row is always reset to the fixed historical instant, and a
- * later duplicate is inserted at most once. */
-async function ensureAdaBackdatedMembership(actorId: string): Promise<void> {
-  const rows = await queryHarnessDb<{ id: string }>(
-    'SELECT id FROM credential WHERE type = \'space-member\' AND "resourceID" = $1 AND "actorId" = $2 ORDER BY "createdDate" ASC',
-    [spaceId, actorId]
-  );
-  if (rows.length === 0) {
-    throw new Error(
-      `Fixture precondition failed: no space-member credential for "${ADA_NAME}" on "${SPACE_DISPLAY_NAME}" — is she a member?`
-    );
-  }
-  await queryHarnessDb('UPDATE credential SET "createdDate" = $1 WHERE id = $2', [
-    ADA_BACKDATE_ISO,
-    rows[0].id,
-  ]);
-  if (rows.length < 2) {
-    await queryHarnessDb(
-      `INSERT INTO credential (id, "createdDate", "updatedDate", version, "resourceID", type, "actorId")
-       VALUES (gen_random_uuid(), $1, now(), 1, $2, 'space-member', $3)`,
-      [ADA_DUPLICATE_LATER_ISO, spaceId, actorId]
-    );
-  }
+/** Formats an ISO `joinedDate` as the UI's "<Mon> <yyyy>" bottom-line label,
+ * from its UTC year/month — the API's own value, never the wall clock and
+ * never a hardcoded literal. */
+function monthYearLabel(isoDate: string): string {
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(new Date(isoDate));
 }
 
 // ---- locators (scoped to the Contributors post's `region`, `hasText`-based
@@ -236,27 +223,27 @@ async function gotoParentCommunity(page: Page) {
 test.describe.serial('US4 — See when a person joined this space', () => {
   test.beforeAll(async () => {
     await resolveCardsFixture();
-    const adaActorId = await resolveContributorActorId(parentCalloutId, ADA_NAME);
-    await ensureAdaBackdatedMembership(adaActorId);
+    const parentJoinedDate = await resolveContributorJoinedDate(parentCalloutId, ADA_NAME);
+    expectedParentMonthLabel = monthYearLabel(parentJoinedDate);
     // Precondition check: Ada is also a USER contributor on the subspace's
     // Contributors callout — fail fast here with a clear message rather than
     // a UI timeout deep inside AS3.
-    await resolveContributorActorId(subspaceCalloutId, ADA_NAME);
+    await resolveContributorJoinedDate(subspaceCalloutId, ADA_NAME);
   });
 
   test.beforeEach(async ({ page }) => {
     await gotoParentCommunity(page);
   });
 
-  test('US4-AS1 — Ada\'s bottom line reads exactly "Joined this space Oct 2023", with no icon', async ({
+  test('US4-AS1 — Ada\'s bottom line reads exactly "Joined this space <the API\'s month>", with no icon', async ({
     page,
   }) => {
     const bottomLine = bottomLineOf(page, ADA_NAME);
-    await expect(bottomLine).toHaveText(`Joined this space ${EXPECTED_PARENT_MONTH_LABEL}`);
+    await expect(bottomLine).toHaveText(`Joined this space ${expectedParentMonthLabel}`);
     await expect(bottomLine.locator('svg')).toHaveCount(0);
   });
 
-  test('US4-AS2 — both a UTC-8 and a UTC+14 device read "Oct 2023", never "Sep 2023" or "Nov 2023" (R-4)', async ({
+  test('US4-AS2 — both a UTC-8 and a UTC+14 device read the same month as the API, never a neighbouring one (R-4)', async ({
     browser,
   }) => {
     for (const timezoneId of ['America/Los_Angeles', 'Pacific/Kiritimati']) {
@@ -264,12 +251,12 @@ test.describe.serial('US4 — See when a person joined this space', () => {
       const page = await context.newPage();
       await gotoParentCommunity(page);
       const bottomLine = bottomLineOf(page, ADA_NAME);
-      await expect(bottomLine).toHaveText(`Joined this space ${EXPECTED_PARENT_MONTH_LABEL}`);
+      await expect(bottomLine).toHaveText(`Joined this space ${expectedParentMonthLabel}`);
       await context.close();
     }
   });
 
-  test('US4-AS3 — parent, then subspace, then back to parent (no reload): Ada reads "Oct 2023" in the parent and a different month in the subspace, every time (D-CACHE / R-15)', async ({
+  test('US4-AS3 — parent, then subspace, then back to parent (no reload): Ada reads the parent\'s month in the parent and a different month in the subspace, every time (D-CACHE / R-15)', async ({
     page,
   }) => {
     // A window-scoped marker that only a full document (re)load would clear —
@@ -282,7 +269,7 @@ test.describe.serial('US4 — See when a person joined this space', () => {
 
     // Step 1 — parent (first visit, already navigated in this walk's own goto above).
     await expect(bottomLineOf(page, ADA_NAME)).toHaveText(
-      `Joined this space ${EXPECTED_PARENT_MONTH_LABEL}`
+      `Joined this space ${expectedParentMonthLabel}`
     );
 
     // Step 2 — SPA navigation into the subspace: Subspaces tab -> the subspace card.
@@ -305,7 +292,7 @@ test.describe.serial('US4 — See when a person joined this space', () => {
     // The whole point of D-CACHE: the subspace's month must never equal the
     // parent's — a shared cache entry keyed by contributor id alone (rather
     // than post + contributor) would otherwise show the same value in both.
-    expect(subspaceText).not.toBe(`Joined this space ${EXPECTED_PARENT_MONTH_LABEL}`);
+    expect(subspaceText).not.toBe(`Joined this space ${expectedParentMonthLabel}`);
 
     // Step 3 — back to the parent, then its Community tab. Deliberately the
     // browser Back action, not the breadcrumb link: verified live that the
@@ -322,7 +309,7 @@ test.describe.serial('US4 — See when a person joined this space', () => {
     await communityTab.waitFor({ state: 'visible', timeout: 10000 });
     await communityTab.click();
     await expect(bottomLineOf(page, ADA_NAME)).toHaveText(
-      `Joined this space ${EXPECTED_PARENT_MONTH_LABEL}`,
+      `Joined this space ${expectedParentMonthLabel}`,
       { timeout: 15000 }
     );
 
@@ -342,7 +329,7 @@ test.describe.serial('US4 — See when a person joined this space', () => {
 
     await page.getByRole('button', { name: 'English' }).click();
     await page.getByRole('menuitem', { name: 'Nederlands' }).click();
-    await expect(bottomLineOf(page, ADA_NAME)).toHaveText(/^Lid geworden van deze Space okt\.? 2023$/, {
+    await expect(bottomLineOf(page, ADA_NAME)).toHaveText(/^Lid geworden van deze Space [a-z]{3}\.? \d{4}$/, {
       timeout: 10000,
     });
     // The platform term "Space" stays in English inside the Dutch sentence.
@@ -351,7 +338,7 @@ test.describe.serial('US4 — See when a person joined this space', () => {
     await page.getByRole('button', { name: 'Nederlands' }).click();
     await page.getByRole('menuitem', { name: 'English' }).click();
     await expect(bottomLineOf(page, ADA_NAME)).toHaveText(
-      `Joined this space ${EXPECTED_PARENT_MONTH_LABEL}`,
+      `Joined this space ${expectedParentMonthLabel}`,
       { timeout: 10000 }
     );
     // Every already-loaded People card re-labels too, not just Ada's.
@@ -381,8 +368,8 @@ test.describe.serial('US4 — See when a person joined this space', () => {
     await expect(region(page).getByText(/Joined this space/)).toHaveCount(0);
 
     // API half of the same acceptance criterion: every ORGANIZATION and
-    // VIRTUAL_CONTRIBUTOR item's joinedDate is null , not merely
-    // hidden by the card.
+    // VIRTUAL_CONTRIBUTOR item's joinedDate is null, not merely hidden by
+    // the card.
     const joinedDatesFor = async (type: 'ORGANIZATION' | 'VIRTUAL_CONTRIBUTOR') => {
       const result = await gql<{
         lookup: { callout: { framing: { contributors: { joinedDate: string | null }[] } } };
