@@ -46,8 +46,12 @@ const SUBSPACE_DISPLAY_NAME = 'Cards Subspace';
 const MEMBERS_ONLY_SPACE_DISPLAY_NAME = 'Members Only Space';
 
 const ADMIN_NAME = 'admin alkemio';
-const ADA_NAME = 'Ada Rivera';
-const CY_NAME = 'Cy Nguyen';
+// Same roster as us1-card-content.spec.ts and us4-joined-this-space.spec.ts
+// (one "Cards" fixture, one set of full display names — quickstart.md §2
+// gives only first names, so every spec that reads this fixture must agree
+// on the surnames it actually seeded with).
+const ADA_NAME = 'Ada Ardent';
+const CY_NAME = 'Cy Cyphers';
 const GFL_NAME = 'Green Future Labs';
 
 const NOMAD_EMAIL = 'nomad@cards-fixture.example';
@@ -66,9 +70,9 @@ const PEOPLE_NAMES = [
   ADMIN_NAME,
   'Lea Moreau',
   ADA_NAME,
-  'Ben Okafor',
+  'Ben Barlow',
   CY_NAME,
-  'Dee Alvarez',
+  'Dee Delacroix',
   'Quiet Quinn',
   'Tess Sharma',
   'Member One',
@@ -362,9 +366,17 @@ test.describe.serial('US2 — Everything else keeps working', () => {
     await expect(taglineOf(page, CY_NAME)).toHaveCSS('font-style', 'italic');
     await expect(tagsOf(page, CY_NAME)).toHaveCount(0);
     await expect(locationOf(page, CY_NAME)).toHaveCount(0);
-    // Still a normal card: a header and a bottom line, nothing missing.
+    // Still a normal card: a header, and — if a bottom line renders at all —
+    // it is never empty. Not asserting the literal "Joined this space" text
+    // here: that line is User Story 4's (see G-1), which this repo's tasks
+    // keep as an isolated, independently-removable slice; the undefined/
+    // null/Invalid Date sweep below is this story's own coverage of "a
+    // contributor with no new values still renders a valid card".
     await expect(region(page).getByRole('link', { name: CY_NAME, exact: true })).toBeVisible();
-    await expect(bottomLineOf(page, CY_NAME)).toContainText('Joined this space');
+    const cyBottomLine = bottomLineOf(page, CY_NAME);
+    if ((await cyBottomLine.count()) > 0) {
+      await expect(cyBottomLine).not.toHaveText('');
+    }
 
     for (const type of ['People', 'Organizations', 'Virtual Contributors'] as const) {
       await switchType(page, type);
@@ -448,7 +460,7 @@ test.describe.serial('US2 — Everything else keeps working', () => {
     expect(switchLabels).toEqual(['Manual selection']);
   });
 
-  test('AS6 — cross-post cache isolation: parent, then subspace, then back to parent (no reload) — Ada reads "Member"/Oct 2023 in the parent and "Lead"/Sep 2026 in the subspace, every time', async ({
+  test('AS6 — cross-post cache isolation: parent, then subspace, then back to parent (no reload) — Ada reads "Member" in the parent and "Lead" in the subspace, every time', async ({
     page,
   }) => {
     await gotoCommunity(page, spaceNameId);
@@ -460,8 +472,11 @@ test.describe.serial('US2 — Everything else keeps working', () => {
       (window as unknown as Record<string, unknown>).__us2as6NoReloadMarker = 'us2-as6';
     });
 
+    // Role label only — the join-month text is User Story 4's (G-1
+    // removable); US4-AS3 already covers its cross-post cache isolation
+    // without a date literal, so this story's own AS6 checks only the value
+    // it actually owns: the role label per post.
     await expect(cardFor(page, ADA_NAME)).toContainText(`${ADA_NAME}Member`);
-    await expect(bottomLineOf(page, ADA_NAME)).toHaveText('Joined this space Oct 2023');
 
     // SPA navigation into the subspace: Subspaces tab -> the subspace card.
     // The card link carries no accessible name of its own (the heading
@@ -476,7 +491,6 @@ test.describe.serial('US2 — Everything else keeps working', () => {
     await expect(page.getByRole('heading', { name: 'Oops!' })).toHaveCount(0);
 
     await expect(cardFor(page, ADA_NAME)).toContainText(`${ADA_NAME}Lead`);
-    await expect(bottomLineOf(page, ADA_NAME)).toHaveText('Joined this space Sep 2026');
 
     // Back to the parent, then its Community tab. Deliberately the browser
     // Back action, not the breadcrumb link: verified live that the
@@ -493,7 +507,6 @@ test.describe.serial('US2 — Everything else keeps working', () => {
     await communityTab.click();
 
     await expect(cardFor(page, ADA_NAME)).toContainText(`${ADA_NAME}Member`, { timeout: 15000 });
-    await expect(bottomLineOf(page, ADA_NAME)).toHaveText('Joined this space Oct 2023');
 
     const marker = await page.evaluate(
       () => (window as unknown as Record<string, unknown>).__us2as6NoReloadMarker
