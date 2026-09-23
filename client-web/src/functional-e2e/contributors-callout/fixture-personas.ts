@@ -54,3 +54,47 @@ export async function resolveFixturePersonaName(
   }
   return candidates[0];
 }
+
+/**
+ * Looks up the one "Cards" fixture user whose profile display name contains
+ * `token` and returns that full display name. For personas whose pinned
+ * quickstart.md text is not "<FirstName> <Surname>" shaped — e.g. "Quiet
+ * Quinn", "Tag-heavy Tess", "member-01" — `resolveFixturePersonaName`'s
+ * `${firstName} ` prefix match doesn't apply, so this resolves by a stable
+ * substring instead (still never a hardcoded full name in a spec file).
+ * Throws under the same "found != 1" precondition as
+ * `resolveFixturePersonaName`.
+ */
+export async function resolveFixturePersonaNameContaining(
+  token: string
+): Promise<string> {
+  const res = await graphqlErrorWrapper(
+    authToken =>
+      getGraphqlClient().UsersPaginated(
+        { first: 25, filter: { displayName: token } },
+        { authorization: `Bearer ${authToken}` }
+      ),
+    TestUser.GLOBAL_ADMIN
+  );
+  if (res.error) {
+    throw new Error(
+      `resolveFixturePersonaNameContaining("${token}") failed: ${JSON.stringify(res.error)}`
+    );
+  }
+  const candidates = Array.from(
+    new Set(
+      (res.data?.usersPaginated.users ?? [])
+        .map(u => u.profile?.displayName)
+        .filter((name): name is string => !!name && name.includes(token))
+    )
+  );
+  if (candidates.length !== 1) {
+    throw new Error(
+      'Fixture precondition failed: expected exactly one "Cards" fixture user whose ' +
+        `displayName contains "${token}", found ${candidates.length}` +
+        (candidates.length ? ` (${candidates.join(', ')})` : '') +
+        ". Re-check the Cards fixture (the workspace feature's quickstart.md §2)."
+    );
+  }
+  return candidates[0];
+}

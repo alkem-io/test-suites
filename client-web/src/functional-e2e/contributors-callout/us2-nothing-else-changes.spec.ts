@@ -38,7 +38,10 @@
 import { test, expect, type Page, type Locator } from '@playwright/test';
 import { TestUserManager } from '@alkemio/tests-lib';
 import { loginViaCrd } from '../helpers/login.helper';
-import { resolveFixturePersonaName } from './fixture-personas';
+import {
+  resolveFixturePersonaName,
+  resolveFixturePersonaNameContaining,
+} from './fixture-personas';
 
 const BASE_URL = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const CALLOUT_DISPLAY_NAME = 'Contributors';
@@ -54,10 +57,21 @@ const ADMIN_NAME = 'admin alkemio';
 // pinned and has been observed to differ run to run — so every spec that
 // reads this fixture resolves the full display name from the live fixture
 // via `resolveFixturePersonaName` (`beforeAll`) rather than hardcoding it.
+// Quiet Quinn, Tag-heavy Tess, and member-01..04 are not "<FirstName>
+// <Surname>" shaped, so they are resolved via
+// `resolveFixturePersonaNameContaining` instead — same rule, same live
+// lookup, never a hardcoded full name.
 let ADA_NAME: string;
 let BEN_NAME: string;
 let CY_NAME: string;
 let DEE_NAME: string;
+let LEA_NAME: string;
+let TESS_NAME: string;
+let QUINN_NAME: string;
+let MEMBER_ONE_NAME: string;
+let MEMBER_TWO_NAME: string;
+let MEMBER_THREE_NAME: string;
+let MEMBER_FOUR_NAME: string;
 const GFL_NAME = 'Green Future Labs';
 
 const NOMAD_EMAIL = 'nomad@cards-fixture.example';
@@ -123,25 +137,44 @@ async function resolveSpaceNameId(displayName: string): Promise<string> {
 async function resolveCardsFixture(): Promise<void> {
   spaceNameId = await resolveSpaceNameId(SPACE_DISPLAY_NAME);
   membersOnlySpaceNameId = await resolveSpaceNameId(MEMBERS_ONLY_SPACE_DISPLAY_NAME);
-  [ADA_NAME, BEN_NAME, CY_NAME, DEE_NAME] = await Promise.all([
-    resolveFixturePersonaName('Ada'),
-    resolveFixturePersonaName('Ben'),
-    resolveFixturePersonaName('Cy'),
-    resolveFixturePersonaName('Dee'),
-  ]);
-  PEOPLE_NAMES = [
-    ADMIN_NAME,
-    'Lea Moreau',
+  [
     ADA_NAME,
     BEN_NAME,
     CY_NAME,
     DEE_NAME,
-    'Quiet Quinn',
-    'Tess Sharma',
-    'Member One',
-    'Member Two',
-    'Member Three',
-    'Member Four',
+    LEA_NAME,
+    TESS_NAME,
+    QUINN_NAME,
+    MEMBER_ONE_NAME,
+    MEMBER_TWO_NAME,
+    MEMBER_THREE_NAME,
+    MEMBER_FOUR_NAME,
+  ] = await Promise.all([
+    resolveFixturePersonaName('Ada'),
+    resolveFixturePersonaName('Ben'),
+    resolveFixturePersonaName('Cy'),
+    resolveFixturePersonaName('Dee'),
+    resolveFixturePersonaName('Lea'),
+    resolveFixturePersonaNameContaining('Tess'),
+    resolveFixturePersonaNameContaining('Quinn'),
+    resolveFixturePersonaNameContaining('member-01'),
+    resolveFixturePersonaNameContaining('member-02'),
+    resolveFixturePersonaNameContaining('member-03'),
+    resolveFixturePersonaNameContaining('member-04'),
+  ]);
+  PEOPLE_NAMES = [
+    ADMIN_NAME,
+    LEA_NAME,
+    ADA_NAME,
+    BEN_NAME,
+    CY_NAME,
+    DEE_NAME,
+    QUINN_NAME,
+    TESS_NAME,
+    MEMBER_ONE_NAME,
+    MEMBER_TWO_NAME,
+    MEMBER_THREE_NAME,
+    MEMBER_FOUR_NAME,
   ];
 }
 
@@ -223,13 +256,13 @@ test.describe.serial('US2 — Everything else keeps working', () => {
       await page.getByRole('tab', { name: /^Lead/ }).click();
       const leadCards = region(page).locator('li');
       await expect(leadCards).toHaveCount(2);
-      await expect(leadCards.filter({ hasText: 'Lea Moreau' })).toBeVisible();
+      await expect(leadCards.filter({ hasText: LEA_NAME })).toBeVisible();
       await expect(leadCards.filter({ hasText: ADA_NAME })).toHaveCount(0);
 
       await page.getByRole('tab', { name: /^Member/ }).click();
       // Member is also paginated (10 members, page size 9) — Lea (a lead)
       // never appears on either page.
-      await expect(region(page).locator('li').filter({ hasText: 'Lea Moreau' })).toHaveCount(0);
+      await expect(region(page).locator('li').filter({ hasText: LEA_NAME })).toHaveCount(0);
     });
 
     test('AS1b — paging past nine contributors: page 1 shows 9, "Next" reveals the remaining 3, none repeated', async ({
