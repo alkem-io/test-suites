@@ -189,7 +189,7 @@ adminFixture.test.describe.serial(
 
     adminFixture.test(
       'US5-AS1 — a valid https website renders an external-link control immediately before "…", opening an isolated new tab',
-      async ({ page }) => {
+      async ({ page, context }) => {
         adminFixture.test.setTimeout(60_000);
         const cc = new ContributorsCalloutPage(page, baseUrl);
         await cc.navigateToSpace(baseScenario.space.nameId);
@@ -240,14 +240,26 @@ adminFixture.test.describe.serial(
         // (and observable) whether or not the host resolves, and its origin
         // proves the click actually targeted the stored address rather than
         // being swallowed or redirected elsewhere.
-        const [popup] = await Promise.all([
+        //
+        // The listener MUST be armed at context level before the click:
+        // Playwright only surfaces the `popup` page object once it has
+        // already navigated to its first url, by which point the popup's
+        // very first request has already been issued (and, for a
+        // never-resolving host, already failed) — a `popup.waitForRequest`
+        // registered after `waitForEvent('popup')` resolves is listening
+        // for a second request that never comes and always times out.
+        // `context.waitForEvent('request', ...)` has no such ordering
+        // requirement against the click.
+        const requestPromise = context.waitForEvent('request', {
+          predicate: req =>
+            new URL(req.url()).origin === new URL(VALID_WEBSITE).origin,
+          timeout: 15_000,
+        });
+        const [popup, , request] = await Promise.all([
           page.waitForEvent('popup'),
           website.click(),
+          requestPromise,
         ]);
-        const request = await popup.waitForRequest(
-          req => new URL(req.url()).origin === new URL(VALID_WEBSITE).origin,
-          { timeout: 15_000 }
-        );
         expect(new URL(request.url()).origin).toBe(new URL(VALID_WEBSITE).origin);
         await popup.close();
 
