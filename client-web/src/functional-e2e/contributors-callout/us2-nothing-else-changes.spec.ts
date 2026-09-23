@@ -409,25 +409,44 @@ test.describe.serial('US2 — Everything else keeps working', () => {
     // dependent) the contract does not pin — verify structurally instead:
     // every name visible on page 1 resolves to exactly one link, page 2's
     // names are disjoint from page 1's, and their union is the full roster.
-    const page1Names = await region(page).locator('li').allTextContents();
-    expect(page1Names).toHaveLength(9);
-    for (const name of PEOPLE_NAMES.filter(n => page1Names.some(t => t.startsWith(n)))) {
-      await expect(region(page).getByRole('link', { name, exact: true })).toHaveCount(1);
+    //
+    // Presence is decided by role, never by `li` text: each card's first
+    // text node is the Radix AvatarFallback initial, shown until the
+    // external ui-avatars image loads (i.e. always, on an offline CI
+    // runner), so a `li.textContent.startsWith(name)` check fails on a
+    // correct page. The avatar is an aria-hidden link, excluded from the
+    // accessibility tree, so a name-scoped `getByRole('link', { name,
+    // exact: true })` cannot be confused by the fallback initial.
+    await expect(region(page).locator('li')).toHaveCount(9);
+    const page1Present = new Set<string>();
+    for (const name of PEOPLE_NAMES) {
+      const count = await region(page).getByRole('link', { name, exact: true }).count();
+      expect(count, `unexpected link count for "${name}" on page 1`).toBeLessThanOrEqual(1);
+      if (count === 1) {
+        page1Present.add(name);
+      }
     }
 
     await page.getByRole('button', { name: /next page|next/i }).click();
     await expect(page.getByText('Page 2 of 2')).toBeVisible();
-    const page2Names = await region(page).locator('li').allTextContents();
-    expect(page2Names).toHaveLength(3);
-    const page2Roster = PEOPLE_NAMES.filter(n => page2Names.some(t => t.startsWith(n)));
-    for (const name of page2Roster) {
-      await expect(region(page).getByRole('link', { name, exact: true })).toHaveCount(1);
+    await expect(region(page).locator('li')).toHaveCount(3);
+    const page2Present = new Set<string>();
+    for (const name of PEOPLE_NAMES) {
+      const count = await region(page).getByRole('link', { name, exact: true }).count();
+      expect(count, `unexpected link count for "${name}" on page 2`).toBeLessThanOrEqual(1);
+      if (count === 1) {
+        page2Present.add(name);
+      }
     }
-    // Every fixture person was seen exactly once, across the two pages.
-    const seenCount = PEOPLE_NAMES.filter(
-      n => page1Names.some(t => t.startsWith(n)) || page2Names.some(t => t.startsWith(n))
-    ).length;
-    expect(seenCount).toBe(PEOPLE_NAMES.length);
+
+    // Every fixture person appears exactly once — on exactly one of the two
+    // pages, never both, never neither.
+    for (const name of PEOPLE_NAMES) {
+      const onPage1 = page1Present.has(name);
+      const onPage2 = page2Present.has(name);
+      expect(onPage1 !== onPage2, `"${name}" must appear on exactly one page`).toBe(true);
+    }
+    expect(page1Present.size + page2Present.size).toBe(PEOPLE_NAMES.length);
 
     await switchType(page, 'Organizations');
     for (const name of ORGANIZATION_NAMES) {

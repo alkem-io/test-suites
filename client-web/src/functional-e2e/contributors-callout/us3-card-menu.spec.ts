@@ -20,7 +20,11 @@ import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/O
 import { TestScenarioFactory } from '@alkemio/tests-lib/scenario/TestScenarioFactory';
 import { TestUserManager, getGraphqlClient } from '@alkemio/tests-lib';
 import { RoleName } from '@alkemio/tests-lib/core/generated/graphql';
-import { assignRoleToVirtualContributor } from '@alkemio/tests-lib/scenario/baseFunctions';
+import {
+  assignRoleToVirtualContributor,
+  assignRoleToUser,
+  createUser,
+} from '@alkemio/tests-lib/scenario/baseFunctions';
 import { graphqlRequestAuth } from '@alkemio/tests-lib/utils/graphql.request';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import { expect } from '@playwright/test';
@@ -45,9 +49,11 @@ const scenarioConfig: TestScenarioConfig = {
     },
     community: {
       admins: [TestUser.SPACE_ADMIN],
-      // SPACE_MEMBER stands in for "Ben" (the profile/message target); QA_USER
-      // stands in for "Quiet Quinn" (messaging turned off in beforeAll below).
-      members: [TestUser.SPACE_MEMBER, TestUser.QA_USER],
+      // SPACE_MEMBER stands in for "Ben" (the profile/message target).
+      // "Quiet Quinn" is NOT a shared global persona — it is a throwaway
+      // user this scenario creates and owns itself (see beforeAll below), so
+      // it never has to touch a persona another suite relies on.
+      members: [TestUser.SPACE_MEMBER],
     },
   },
   virtualContributors: {
@@ -82,7 +88,35 @@ const assignRoleToOrganization = async (
   }
 };
 
+/** Deletes the scenario-owned throwaway user created for "Quiet Quinn".
+ * `@alkemio/tests-lib/scenario/baseFunctions` has no `deleteUser` export, so
+ * this calls the generated SDK client directly — same
+ * `graphqlErrorWrapper`/`getGraphqlClient` pattern as
+ * `assignRoleToOrganization` above. */
+const deleteQuietPersona = async (userId: string) => {
+  const client = getGraphqlClient();
+  const res = await graphqlErrorWrapper(
+    authToken =>
+      client.deleteUser(
+        { deleteData: { ID: userId, deleteIdentity: false } },
+        { authorization: `Bearer ${authToken}` }
+      ),
+    TestUser.GLOBAL_ADMIN
+  );
+  if (res.error) {
+    throw new Error(
+      `deleteUser failed for ${userId}: ${JSON.stringify(res.error)}`
+    );
+  }
+};
+
 let baseScenario: OrganizationWithSpaceModel;
+// Scenario-owned throwaway persona standing in for "Quiet Quinn" (messaging
+// turned off in beforeAll below). Created and deleted by this file — never
+// the shared global `TestUserManager.users.qaUser`, which other suites on
+// the same stack depend on being contactable.
+let quietPersonaId: string;
+const QUIET_NAME = `Quiet Quinn ${uniqueId}`;
 
 const adminFixture = createAuthenticatedSessionFixture({
   storageStateName: 'us3-card-menu-admin.json',
@@ -125,13 +159,40 @@ adminFixture.test.describe(
         );
       }
 
-      // "Quiet Quinn" — turn off receiving messages (AS6 precondition).
-      // Inlined (rather than importing the tests-lib helper of the same
-      // name) because that helper's module resolves its own internal
-      // `@src/*` imports against ITS package's tsconfig; pulled into
-      // client-web's compilation it collides with client-web's own `@src/*`
-      // alias. Same `graphqlRequestAuth` pattern as the website mutation
-      // below.
+      // "Quiet Quinn" — a scenario-owned throwaway user, member of this
+      // scenario's space, with messaging turned off (AS6 precondition).
+      // `createUser`/`assignRoleToUser` come from the same
+      // `@alkemio/tests-lib/scenario/baseFunctions` module already imported
+      // above for the VC role assignment — plain relative imports, so
+      // (unlike the tests-lib helper of the same name as the settings
+      // mutation below) they don't collide with client-web's own `@src/*`
+      // alias.
+      const createdQuiet = await createUser({
+        profileData: { displayName: QUIET_NAME },
+      });
+      if (createdQuiet.error) {
+        throw new Error(
+          `Unable to create the quiet persona: ${JSON.stringify(createdQuiet.error)}`
+        );
+      }
+      quietPersonaId = createdQuiet.data!.createUser.id;
+
+      const quietAssigned = await assignRoleToUser(
+        quietPersonaId,
+        spaceRoleSetID,
+        RoleName.Member
+      );
+      if (quietAssigned.error) {
+        throw new Error(
+          `Unable to add the quiet persona to the space: ${JSON.stringify(quietAssigned.error)}`
+        );
+      }
+
+      // Turn off receiving messages. Inlined (rather than importing the
+      // tests-lib helper of the same name) because that helper's module
+      // resolves its own internal `@src/*` imports against ITS package's
+      // tsconfig; pulled into client-web's compilation it collides with
+      // client-web's own `@src/*` alias.
       const settingsResult = await graphqlRequestAuth(
         {
           operationName: 'DisableMessagingForUs3',
@@ -143,7 +204,7 @@ adminFixture.test.describe(
           }`,
           variables: {
             settingsData: {
-              userID: TestUserManager.users.qaUser.id,
+              userID: quietPersonaId,
               settings: { communication: { allowOtherUsersToSendMessages: false } },
             },
           },
@@ -192,6 +253,11 @@ adminFixture.test.describe(
     adminFixture.test.afterAll(async () => {
       adminFixture.test.setTimeout(30_000);
       await adminFixture.teardownAuthentication();
+      if (quietPersonaId) {
+        // Best-effort: a failed delete here must never mask a real test
+        // failure, and never touches any persona other suites depend on.
+        await deleteQuietPersona(quietPersonaId).catch(() => {});
+      }
       if (baseScenario) {
         await TestScenarioFactory.cleanUpBaseScenario(baseScenario);
       }
@@ -361,7 +427,7 @@ adminFixture.test.describe(
         const col = cc.collection(TITLE);
         await col.switchType('People');
 
-        const quietName = TestUserManager.users.qaUser.displayName;
+        const quietName = QUIET_NAME;
         await col.actionsButton(quietName).click();
         await col.menuItem('Message').click();
 
