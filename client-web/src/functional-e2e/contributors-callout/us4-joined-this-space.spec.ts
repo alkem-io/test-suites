@@ -44,7 +44,11 @@ const BASE_URL = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const SPACE_DISPLAY_NAME = 'Cards Space';
 const SUBSPACE_DISPLAY_NAME = 'Cards Subspace';
 const CALLOUT_DISPLAY_NAME = 'Contributors';
-const ADA_NAME = 'Ada Ardent';
+// quickstart.md §2 pins only Ada's first name — the surname a given
+// provisioning run picks is not pinned and has been observed to differ run
+// to run, so it is resolved from the live fixture in `beforeAll`
+// (`resolveContributorDisplayName`) rather than hardcoded here.
+let ADA_NAME: string;
 
 let spaceId: string;
 let spaceNameId: string;
@@ -175,6 +179,43 @@ async function resolveContributorJoinedDate(calloutId: string, displayName: stri
   return match.joinedDate;
 }
 
+/** Resolves a USER contributor's exact display name on a given Contributors
+ * callout from the first name quickstart.md §2 actually pins (e.g. "Ada"),
+ * via the same public `lookup.callout(...).framing.contributors` query
+ * `resolveContributorJoinedDate` uses — anonymous, like the rest of this
+ * file. Requires exactly one match, so a fixture seeded without that persona
+ * (or, implausibly, with two) fails loudly here instead of a UI timeout
+ * deep inside a test. */
+async function resolveContributorDisplayName(
+  calloutId: string,
+  firstName: string
+): Promise<string> {
+  const data = await gql<{
+    lookup: { callout: { framing: { contributors: { displayName: string }[] } } };
+  }>(
+    `query($id: UUID!, $type: ActorType!) {
+      lookup { callout(ID: $id) { framing { contributors(type: $type) { displayName } } } }
+    }`,
+    { id: calloutId, type: 'USER' }
+  );
+  const candidates = Array.from(
+    new Set(
+      data.lookup.callout.framing.contributors
+        .map(c => c.displayName)
+        .filter(name => name.startsWith(`${firstName} `))
+    )
+  );
+  if (candidates.length !== 1) {
+    throw new Error(
+      'Fixture precondition failed: expected exactly one USER contributor whose displayName ' +
+        `starts with "${firstName} " on Contributors callout ${calloutId}, found ${candidates.length}` +
+        (candidates.length ? ` (${candidates.join(', ')})` : '') +
+        '.'
+    );
+  }
+  return candidates[0];
+}
+
 /** Formats an ISO `joinedDate` as the UI's "<Mon> <yyyy>" bottom-line label,
  * from its UTC year/month — the API's own value, never the wall clock and
  * never a hardcoded literal. */
@@ -223,6 +264,7 @@ async function gotoParentCommunity(page: Page) {
 test.describe.serial('US4 — See when a person joined this space', () => {
   test.beforeAll(async () => {
     await resolveCardsFixture();
+    ADA_NAME = await resolveContributorDisplayName(parentCalloutId, 'Ada');
     const parentJoinedDate = await resolveContributorJoinedDate(parentCalloutId, ADA_NAME);
     expectedParentMonthLabel = monthYearLabel(parentJoinedDate);
     // Precondition check: Ada is also a USER contributor on the subspace's

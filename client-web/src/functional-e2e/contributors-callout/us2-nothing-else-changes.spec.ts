@@ -37,6 +37,7 @@
 
 import { test, expect, type Page, type Locator } from '@playwright/test';
 import { loginViaCrd } from '../helpers/login.helper';
+import { resolveFixturePersonaName } from './fixture-personas';
 
 const BASE_URL = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const CALLOUT_DISPLAY_NAME = 'Contributors';
@@ -47,11 +48,15 @@ const MEMBERS_ONLY_SPACE_DISPLAY_NAME = 'Members Only Space';
 
 const ADMIN_NAME = 'admin alkemio';
 // Same roster as us1-card-content.spec.ts and us4-joined-this-space.spec.ts
-// (one "Cards" fixture, one set of full display names — quickstart.md §2
-// gives only first names, so every spec that reads this fixture must agree
-// on the surnames it actually seeded with).
-const ADA_NAME = 'Ada Ardent';
-const CY_NAME = 'Cy Cyphers';
+// (one "Cards" fixture, one set of full display names). quickstart.md §2
+// pins only first names — the surname a given provisioning run picks is not
+// pinned and has been observed to differ run to run — so every spec that
+// reads this fixture resolves the full display name from the live fixture
+// via `resolveFixturePersonaName` (`beforeAll`) rather than hardcoding it.
+let ADA_NAME: string;
+let BEN_NAME: string;
+let CY_NAME: string;
+let DEE_NAME: string;
 const GFL_NAME = 'Green Future Labs';
 
 const NOMAD_EMAIL = 'nomad@cards-fixture.example';
@@ -65,21 +70,9 @@ const ADMIN_PASSWORD =
   'change_me';
 
 // Full fixture roster (quickstart.md §2) — used only by AS4's per-contributor
-// link-uniqueness sweep.
-const PEOPLE_NAMES = [
-  ADMIN_NAME,
-  'Lea Moreau',
-  ADA_NAME,
-  'Ben Barlow',
-  CY_NAME,
-  'Dee Delacroix',
-  'Quiet Quinn',
-  'Tess Sharma',
-  'Member One',
-  'Member Two',
-  'Member Three',
-  'Member Four',
-];
+// link-uniqueness sweep. Populated in `beforeAll`, once ADA_NAME/BEN_NAME/
+// CY_NAME/DEE_NAME are resolved from the live fixture.
+let PEOPLE_NAMES: string[];
 const ORGANIZATION_NAMES = [
   GFL_NAME,
   'Solo Org',
@@ -129,6 +122,26 @@ async function resolveSpaceNameId(displayName: string): Promise<string> {
 async function resolveCardsFixture(): Promise<void> {
   spaceNameId = await resolveSpaceNameId(SPACE_DISPLAY_NAME);
   membersOnlySpaceNameId = await resolveSpaceNameId(MEMBERS_ONLY_SPACE_DISPLAY_NAME);
+  [ADA_NAME, BEN_NAME, CY_NAME, DEE_NAME] = await Promise.all([
+    resolveFixturePersonaName('Ada'),
+    resolveFixturePersonaName('Ben'),
+    resolveFixturePersonaName('Cy'),
+    resolveFixturePersonaName('Dee'),
+  ]);
+  PEOPLE_NAMES = [
+    ADMIN_NAME,
+    'Lea Moreau',
+    ADA_NAME,
+    BEN_NAME,
+    CY_NAME,
+    DEE_NAME,
+    'Quiet Quinn',
+    'Tess Sharma',
+    'Member One',
+    'Member Two',
+    'Member Three',
+    'Member Four',
+  ];
 }
 
 // ---- locators (scoped to the Contributors post's `region`, `hasText`-based

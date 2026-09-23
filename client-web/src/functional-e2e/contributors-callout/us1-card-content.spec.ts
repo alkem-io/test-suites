@@ -35,12 +35,21 @@
 // unaffected).
 
 import { test, expect, type Page, type Locator } from '@playwright/test';
+import { resolveFixturePersonaName } from './fixture-personas';
 
 const BASE_URL = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const SPACE_DISPLAY_NAME = 'Cards Space';
 const CALLOUT_DISPLAY_NAME = 'Contributors';
 
 let spaceNameId: string;
+// The fixture's surnames are not pinned by quickstart.md and vary per
+// provisioning run — resolved once in `beforeAll` from the pinned first
+// names, and shared with us2-nothing-else-changes.spec.ts and
+// us4-joined-this-space.spec.ts via the same helper.
+let ADA_NAME: string;
+let BEN_NAME: string;
+let CY_NAME: string;
+let DEE_NAME: string;
 
 /** Resolves the Cards Space's nameID via the public schema, by exact profile
  * display name — the fixture's nameID is not pinned by quickstart.md. */
@@ -73,10 +82,10 @@ function region(page: Page): Locator {
 }
 /** The `<li>` card for a contributor, matched by its exact visible name. Note
  * `hasText` is a substring match, so callers pass full display names that are
- * not substrings of one another within this fixture (verified: Ada Ardent,
- * Ben Barlow, Cy Cyphers, Dee Delacroix, admin alkemio, Green Future Labs,
- * Solo Org, Capable Org, Bare Org, Helper VC, Quiet VC — none is a substring
- * of another). */
+ * not substrings of one another within this fixture (verified against every
+ * name currently in this fixture, whatever surnames the live provisioning
+ * run picked: the People, Organization and Virtual Contributor names are all
+ * distinct and none is a substring of another). */
 function cardFor(page: Page, name: string): Locator {
   return region(page)
     .locator('li')
@@ -116,6 +125,12 @@ async function settleLayout(page: Page) {
 test.describe.serial('US1 — Recognise a contributor from the card', () => {
   test.beforeAll(async () => {
     spaceNameId = await resolveCardsSpaceNameId();
+    [ADA_NAME, BEN_NAME, CY_NAME, DEE_NAME] = await Promise.all([
+      resolveFixturePersonaName('Ada'),
+      resolveFixturePersonaName('Ben'),
+      resolveFixturePersonaName('Cy'),
+      resolveFixturePersonaName('Dee'),
+    ]);
   });
 
   test.beforeEach(async ({ page }) => {
@@ -131,22 +146,22 @@ test.describe.serial('US1 — Recognise a contributor from the card', () => {
   test('US1-AS1 — Ada: two-line tagline, exactly two skill pills, one location row', async ({
     page,
   }) => {
-    const card = cardFor(page, 'Ada Ardent');
+    const card = cardFor(page, ADA_NAME);
     await expect(card).toBeVisible();
 
-    const tagline = taglineOf(page, 'Ada Ardent');
+    const tagline = taglineOf(page, ADA_NAME);
     const lineHeight = await tagline.evaluate(el => parseFloat(getComputedStyle(el).lineHeight));
     const box = await tagline.boundingBox();
     expect(box).not.toBeNull();
     expect(box!.height).toBeLessThanOrEqual(lineHeight * 2 + 2);
 
-    const tags = tagsOf(page, 'Ada Ardent');
+    const tags = tagsOf(page, ADA_NAME);
     await expect(tags).toHaveCount(2);
     await expect(tags.nth(0)).toHaveText('Urban Planning');
     await expect(tags.nth(1)).toHaveText('Sustainability');
     await expect(card).not.toContainText(/\+\d/);
 
-    const location = locationOf(page, 'Ada Ardent');
+    const location = locationOf(page, ADA_NAME);
     await expect(location).toHaveText('Barcelona, ES');
     await expect(location.locator('.lucide-map-pin')).toHaveCount(1);
   });
@@ -154,12 +169,12 @@ test.describe.serial('US1 — Recognise a contributor from the card', () => {
   test('US1-AS2 — Cy gets the italic fallback and no rows; Bare Org / Quiet VC get no row at all', async ({
     page,
   }) => {
-    await expect(taglineOf(page, 'Cy Cyphers')).toHaveText(
+    await expect(taglineOf(page, CY_NAME)).toHaveText(
       'User has not filled in their tagline.'
     );
-    await expect(taglineOf(page, 'Cy Cyphers')).toHaveCSS('font-style', 'italic');
-    await expect(tagsOf(page, 'Cy Cyphers')).toHaveCount(0);
-    await expect(locationOf(page, 'Cy Cyphers')).toHaveCount(0);
+    await expect(taglineOf(page, CY_NAME)).toHaveCSS('font-style', 'italic');
+    await expect(tagsOf(page, CY_NAME)).toHaveCount(0);
+    await expect(locationOf(page, CY_NAME)).toHaveCount(0);
 
     await switchType(page, 'Organizations');
     await expect(cardFor(page, 'Bare Org')).toBeVisible();
@@ -173,7 +188,7 @@ test.describe.serial('US1 — Recognise a contributor from the card', () => {
   test('US1-AS3 — one tag list per card, never mixed: skills win over keywords for Ada, keywords used for Ben, capabilities for Capable Org', async ({
     page,
   }) => {
-    const benTags = tagsOf(page, 'Ben Barlow');
+    const benTags = tagsOf(page, BEN_NAME);
     await expect(benTags).toHaveCount(2);
     await expect(benTags.nth(0)).toHaveText('Policy');
     await expect(benTags.nth(1)).toHaveText('Energy');
@@ -184,7 +199,7 @@ test.describe.serial('US1 — Recognise a contributor from the card', () => {
     await expect(capableTags.nth(0)).toHaveText('Funding');
 
     await switchType(page, 'People');
-    const adaTags = tagsOf(page, 'Ada Ardent');
+    const adaTags = tagsOf(page, ADA_NAME);
     await expect(adaTags).toHaveCount(2);
     await expect(adaTags.nth(0)).toHaveText('Urban Planning');
     await expect(adaTags.nth(1)).toHaveText('Sustainability');
@@ -271,10 +286,10 @@ test.describe.serial('US1 — Recognise a contributor from the card', () => {
       await page.setViewportSize({ width, height: 900 });
       await settleLayout(page);
 
-      const card = cardFor(page, 'Dee Delacroix');
+      const card = cardFor(page, DEE_NAME);
       await expect(card).toBeVisible();
 
-      const tagline = taglineOf(page, 'Dee Delacroix');
+      const tagline = taglineOf(page, DEE_NAME);
       const lineHeight = await tagline.evaluate(el =>
         parseFloat(getComputedStyle(el).lineHeight)
       );
@@ -282,7 +297,7 @@ test.describe.serial('US1 — Recognise a contributor from the card', () => {
       expect(tlBox).not.toBeNull();
       expect(tlBox!.height).toBeLessThanOrEqual(lineHeight * 2 + 2);
 
-      const firstPill = tagsOf(page, 'Dee Delacroix').first();
+      const firstPill = tagsOf(page, DEE_NAME).first();
       const title = await firstPill.getAttribute('title');
       expect(title).toHaveLength(60);
       const pillBox = await firstPill.boundingBox();
@@ -310,11 +325,11 @@ test.describe.serial('US1 — Recognise a contributor from the card', () => {
     const dialogRegion = dialog.getByRole('region', { name: 'Contributors', exact: true });
     await expect(dialogRegion).toBeVisible();
 
-    const dialogAdaCard = dialogRegion.locator('li').filter({ hasText: 'Ada Ardent' });
+    const dialogAdaCard = dialogRegion.locator('li').filter({ hasText: ADA_NAME });
     await expect(dialogAdaCard).toBeVisible();
     await expect(dialogAdaCard.locator('.line-clamp-2')).not.toHaveCount(0);
     await expect(
-      dialog.getByRole('button', { name: /^Actions for Ada Ardent/ })
+      dialog.getByRole('button', { name: new RegExp(`^Actions for ${ADA_NAME}`) })
     ).toBeVisible();
 
     const mapButton = dialog.getByRole('button', { name: 'Map', exact: true });
@@ -326,7 +341,7 @@ test.describe.serial('US1 — Recognise a contributor from the card', () => {
     // city/country was never geocoded), so the whole People set — including
     // Cy, who has no rows at all — lists under "No location data" with the
     // same card markup as the feed.
-    const cyInMap = dialogRegion.locator('li').filter({ hasText: 'Cy Cyphers' });
+    const cyInMap = dialogRegion.locator('li').filter({ hasText: CY_NAME });
     await expect(cyInMap).toBeVisible();
   });
 });
