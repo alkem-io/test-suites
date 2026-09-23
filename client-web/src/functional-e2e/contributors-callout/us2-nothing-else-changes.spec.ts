@@ -36,6 +36,7 @@
 // across every type segment and every page of People.
 
 import { test, expect, type Page, type Locator } from '@playwright/test';
+import { TestUserManager } from '@alkemio/tests-lib';
 import { loginViaCrd } from '../helpers/login.helper';
 import { resolveFixturePersonaName } from './fixture-personas';
 
@@ -194,6 +195,12 @@ async function switchType(
 
 test.describe.serial('US2 — Everything else keeps working', () => {
   test.beforeAll(async () => {
+    // `TestUserManager.users` is a per-process map: global-setup runs in its
+    // own process, so a worker starts with it empty. This file resolves
+    // fixture personas directly (no `TestScenarioFactory.createBaseScenario`
+    // to populate it as a side effect), so it has to populate the map itself
+    // before the first `resolveFixturePersonaName` call.
+    await TestUserManager.populateUserModelMap();
     await resolveCardsFixture();
   });
 

@@ -35,6 +35,7 @@
 // unaffected).
 
 import { test, expect, type Page, type Locator } from '@playwright/test';
+import { TestUserManager } from '@alkemio/tests-lib';
 import { resolveFixturePersonaName } from './fixture-personas';
 
 const BASE_URL = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
@@ -124,6 +125,12 @@ async function settleLayout(page: Page) {
 
 test.describe.serial('US1 — Recognise a contributor from the card', () => {
   test.beforeAll(async () => {
+    // `TestUserManager.users` is a per-process map: global-setup runs in its
+    // own process, so a worker starts with it empty. This file resolves
+    // fixture personas directly (no `TestScenarioFactory.createBaseScenario`
+    // to populate it as a side effect), so it has to populate the map itself
+    // before the first `resolveFixturePersonaName` call.
+    await TestUserManager.populateUserModelMap();
     spaceNameId = await resolveCardsSpaceNameId();
     [ADA_NAME, BEN_NAME, CY_NAME, DEE_NAME] = await Promise.all([
       resolveFixturePersonaName('Ada'),
