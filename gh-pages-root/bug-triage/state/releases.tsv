@@ -1210,6 +1210,7 @@ oidc-service	v0.7.0	2025-12-07	false
 oidc-service	v0.6.5	2025-11-21	false
 oidc-service	v0.6.0	2025-11-05	false
 oidc-service	v0.5.0	2025-10-31	false
+matrix-adapter	v0.8.21	2026-09-22	false
 matrix-adapter	v0.8.20	2026-09-20	false
 matrix-adapter	v0.8.19	2026-09-17	false
 matrix-adapter	v0.8.17	2026-05-29	false
@@ -1239,6 +1240,8 @@ matrix-adapter	v0.8.3	2025-12-17	false
 matrix-adapter	v0.8.2	2025-12-16	false
 matrix-adapter	v0.8.1	2025-12-15	false
 matrix-adapter	v0.8.0	2025-12-11	false
+file-service	v0.3.1	2026-09-22	false
+file-service	v0.3.0	2026-09-22	false
 file-service	v0.2.6	2026-08-25	false
 file-service	v0.2.5	2026-08-17	false
 file-service	v0.2.4	2026-08-10	false
