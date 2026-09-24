@@ -316,45 +316,51 @@ test.describe(
         await btn.click().catch(() => undefined);
     }
 
-    /** The subspaces list `<section>` that belongs to the post titled `title`
-     * (each post's list owns exactly one "Search subspaces..." box). Posts mount
-     * lazily as the feed scrolls, so scroll until the post is in the DOM. */
+    /** The subspaces list `<section>` that belongs to the post titled `title`.
+     * The post is anchored by its own "Open <title>" link and `<title>` h3
+     * heading: the smallest element holding both is the post, and its list is
+     * the search-box section inside it. Posts and their lists mount lazily as
+     * the feed scrolls, so retry (scrolling) until that list exists — never
+     * falling back to another post's list that happened to mount first. The
+     * match is pinned by a marker attribute so the returned locator cannot
+     * drift if another post's list mounts above it later. */
     async function listOfPost(page: Page, title: string): Promise<Locator> {
-      for (let i = 0; i < 20; i++) {
-        const present = await page.evaluate(
-          t => document.body.innerText.includes(`Open ${t}`),
-          title
-        );
-        if (present) break;
-        await page.mouse.wheel(0, 1000);
-        await page.waitForTimeout(250);
-      }
-      const sections = page
-        .locator('section')
-        .filter({ has: page.locator(SEARCH_BOX) });
       await expect
-        .poll(async () => sections.count(), { timeout: 30_000 })
-        .toBeGreaterThan(0);
-      const n = await sections.count();
-      for (let i = 0; i < n; i++) {
-        const s = sections.nth(i);
-        const owns = await s.evaluate((el, t) => {
-          let node = el.parentElement;
-          while (node) {
-            if ((node.innerText || '').includes(`Open ${t}`)) {
-              return (
-                node.querySelectorAll(
-                  'input[placeholder="Search subspaces..."]'
-                ).length === 1
-              );
-            }
-            node = node.parentElement;
+        .poll(
+          async () => {
+            const found = await page.evaluate(
+              ({ t, box }) => {
+                const link = Array.from(document.querySelectorAll('a')).find(
+                  a => (a.textContent || '').trim() === `Open ${t}`
+                );
+                let post: HTMLElement | null = link?.parentElement ?? null;
+                while (
+                  post &&
+                  !Array.from(post.querySelectorAll('h3')).some(
+                    h => (h.textContent || '').trim() === t
+                  )
+                ) {
+                  post = post.parentElement;
+                }
+                const section = Array.from(
+                  post?.querySelectorAll('section') ?? []
+                ).find(s => s.querySelector(box));
+                if (!section) return false;
+                section.setAttribute('data-e2e-list-of', t);
+                return true;
+              },
+              { t: title, box: SEARCH_BOX }
+            );
+            if (!found) await page.mouse.wheel(0, 1000);
+            return found;
+          },
+          {
+            timeout: 30_000,
+            message: `subspaces list for post "${title}" not found`,
           }
-          return false;
-        }, title);
-        if (owns) return s;
-      }
-      throw new Error(`subspaces list for post "${title}" not found`);
+        )
+        .toBe(true);
+      return page.locator(`section[data-e2e-list-of="${title}"]`);
     }
 
     async function gotoFixtureSpace(
@@ -702,9 +708,13 @@ test.describe(
 
       // Anonymous browser: the card shows Epsilon's About text exactly where the
       // About panel shows it, and the compact post lists Epsilon iff the expanded one does.
+      // Explicit `storageState: undefined`: never inherit a session from a
+      // fixture/config storageState — this leg must be genuinely anonymous.
       const context = await browser.newContext({
+        storageState: undefined,
         viewport: { width: 1280, height: 900 },
       });
+      expect(await context.cookies()).toHaveLength(0);
       const page = await context.newPage();
       try {
         const list = await gotoFixtureSpace(page);

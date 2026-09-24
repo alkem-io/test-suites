@@ -3,11 +3,13 @@
  * card-variant setting (contract graphql-spaces-card-variant, S1-S5).
  *
  * Covers: EXPANDED on create, COMPACT default, partial-update independence
- * (S4 / risk R-9), toggling, and off-kind rejection (S3) for both NONE and
+ * (S4 / risk R-9), variant-only writes (toggle, `spaces: null`,
+ * `selection: null`, `selection: { selectedIds: null }`) preserving a stored
+ * CUSTOM selection in order, and off-kind rejection (S3) for both NONE and
  * CONTRIBUTORS framing types.
  *
  * These tests run against a live API stack. They are self-seeding: every
- * required entity (space, callouts) is created in beforeAll/per-test and
+ * required entity (space, subspaces, callouts) is created in beforeAll/per-test and
  * removed in afterAll. No pre-existing data is assumed.
  *
  * Execution: pnpm --filter @alkemio/test-suite-server-api exec vitest run
@@ -35,6 +37,8 @@ import {
   getCalloutSpacesSettings,
   updateCalloutSpacesSettings,
 } from './spaces-collection.request.params';
+import { createSubspaceOrFail } from '@functional-api/journey/subspace/subspace.request.params';
+import { deleteSpace } from '@functional-api/journey/space/space.request.params';
 
 const uniqueId = UniqueIDGenerator.getID();
 
@@ -147,42 +151,173 @@ describe('US2 — card-variant setting round-trips through the public API', () =
     });
   });
 
-  test('case 4 — toggle: EXPANDED updated to COMPACT reads back COMPACT; selection unchanged (S5)', async () => {
-    const created = await createSpacesCollectionCalloutWithVariant(
-      calloutsSetId,
-      `spaces-toggle-${uniqueId}`,
-      SpaceCollectionCardVariant.Expanded
-    );
-    const calloutId = created?.data?.createCalloutOnCalloutsSet?.id ?? '';
-    expect(calloutId).toBeTruthy();
-    createdCalloutIds.push(calloutId);
+  describe('case 4 — variant-only writes preserve a stored CUSTOM selection (S5)', () => {
+    // A default {AUTO, []} selection is exactly what the server's normalizer
+    // rebuilds whenever the block is missing, so asserting "unchanged" against
+    // it cannot tell a preserved selection from a wiped one. Every case here
+    // therefore seeds a CUSTOM selection over two real DIRECT subspaces of the
+    // host space (the write-time host-scope guard rejects anything else), in
+    // an order that differs from creation order, and asserts the list comes
+    // back identical IN ORDER (array equality, not set equality).
+    let subspaceAId = '';
+    let subspaceBId = '';
+    let seededIds: string[] = [];
 
-    const beforeSelection =
-      created?.data?.createCalloutOnCalloutsSet?.settings?.framing?.selection;
+    // An explicit GraphQL `null` on the wire. The generated `InputMaybe<T>` is
+    // `T | undefined`, but `undefined` is dropped by JSON serialization (the
+    // field is then simply omitted) — only a real `null` exercises the
+    // server's explicit-null handling, so the type is bent here on purpose.
+    const EXPLICIT_NULL = null as unknown as undefined;
 
-    const updated = await updateCalloutSpacesSettings({
-      ID: calloutId,
-      settings: {
-        framing: {
-          spaces: { cardVariant: SpaceCollectionCardVariant.Compact },
-        },
-      },
+    beforeAll(async () => {
+      const hostSpaceId = baseScenario.space.id;
+      subspaceAId = await createSubspaceOrFail(
+        `ccv-a-${uniqueId}`,
+        `ccv-a-${uniqueId}`,
+        hostSpaceId
+      );
+      subspaceBId = await createSubspaceOrFail(
+        `ccv-b-${uniqueId}`,
+        `ccv-b-${uniqueId}`,
+        hostSpaceId
+      );
+      // Reverse of creation order, so an order-losing store is observable.
+      seededIds = [subspaceBId, subspaceAId];
     });
-    expect(updated.error).toBeUndefined();
-    expect(
-      updated?.data?.updateCallout?.settings?.framing?.spaces?.cardVariant
-    ).toBe(SpaceCollectionCardVariant.Compact);
-    expect(updated?.data?.updateCallout?.settings?.framing?.selection).toEqual(
-      beforeSelection
-    );
 
-    const reread = await getCalloutSpacesSettings(calloutId);
-    expect(
-      reread?.data?.lookup?.callout?.settings?.framing?.spaces?.cardVariant
-    ).toBe(SpaceCollectionCardVariant.Compact);
-    expect(reread?.data?.lookup?.callout?.settings?.framing?.selection).toEqual(
-      beforeSelection
-    );
+    afterAll(async () => {
+      // Runs before the file-level afterAll, so the subspaces go before
+      // cleanUpBaseScenario deletes the host space. Each delete is independent:
+      // one failure never strands the other.
+      await Promise.all(
+        [subspaceAId, subspaceBId]
+          .filter(id => id.length > 0)
+          .map(id => deleteSpace(id).catch(() => undefined))
+      );
+    });
+
+    /** Creates an EXPANDED SPACES callout seeded with a CUSTOM selection [B, A]. */
+    const createExpandedCustomCallout = async (label: string) => {
+      const res = await createSpacesCollectionCallout({
+        calloutsSetID: calloutsSetId,
+        framing: {
+          type: CalloutFramingType.Spaces,
+          profile: { displayName: `spaces-${label}-${uniqueId}` },
+        },
+        settings: {
+          framing: {
+            spaces: { cardVariant: SpaceCollectionCardVariant.Expanded },
+            selection: {
+              mode: CalloutSelectionMode.Custom,
+              selectedIds: seededIds,
+            },
+          },
+        },
+      });
+      expect(res.error).toBeUndefined();
+      const callout = res?.data?.createCalloutOnCalloutsSet;
+      const calloutId = callout?.id ?? '';
+      expect(calloutId).toBeTruthy();
+      createdCalloutIds.push(calloutId);
+      // Precondition: the seed really is CUSTOM [B, A], not a normalized default.
+      expect(callout?.settings?.framing?.spaces?.cardVariant).toBe(
+        SpaceCollectionCardVariant.Expanded
+      );
+      expect(callout?.settings?.framing?.selection?.mode).toBe(
+        CalloutSelectionMode.Custom
+      );
+      expect(callout?.settings?.framing?.selection?.selectedIds).toEqual(
+        seededIds
+      );
+      return calloutId;
+    };
+
+    /** The mutation response AND a fresh re-read both carry the seeded CUSTOM selection. */
+    const expectCustomSelectionKept = async (
+      updated: Awaited<ReturnType<typeof updateCalloutSpacesSettings>>,
+      calloutId: string,
+      expectedVariant: SpaceCollectionCardVariant
+    ) => {
+      expect(updated.error).toBeUndefined();
+      const fromMutation = updated?.data?.updateCallout?.settings?.framing;
+      expect(fromMutation?.spaces?.cardVariant).toBe(expectedVariant);
+      expect(fromMutation?.selection?.mode).toBe(CalloutSelectionMode.Custom);
+      expect(fromMutation?.selection?.selectedIds).toEqual(seededIds);
+
+      // The mutation answers with the entity it just saved; only a fresh read
+      // proves what the row holds.
+      const reread = await getCalloutSpacesSettings(calloutId);
+      expect(reread.error).toBeUndefined();
+      const stored = reread?.data?.lookup?.callout?.settings?.framing;
+      expect(stored?.spaces?.cardVariant).toBe(expectedVariant);
+      expect(stored?.selection?.mode).toBe(CalloutSelectionMode.Custom);
+      expect(stored?.selection?.selectedIds).toEqual(seededIds);
+    };
+
+    test('toggle: EXPANDED updated to COMPACT reads back COMPACT; CUSTOM selection kept in order', async () => {
+      const calloutId = await createExpandedCustomCallout('toggle');
+
+      const updated = await updateCalloutSpacesSettings({
+        ID: calloutId,
+        settings: {
+          framing: {
+            spaces: { cardVariant: SpaceCollectionCardVariant.Compact },
+          },
+        },
+      });
+      await expectCustomSelectionKept(
+        updated,
+        calloutId,
+        SpaceCollectionCardVariant.Compact
+      );
+    });
+
+    test('settings.framing.spaces: null leaves cardVariant EXPANDED and the CUSTOM selection intact', async () => {
+      const calloutId = await createExpandedCustomCallout('spaces-null');
+
+      const updated = await updateCalloutSpacesSettings({
+        ID: calloutId,
+        settings: { framing: { spaces: EXPLICIT_NULL } },
+      });
+      await expectCustomSelectionKept(
+        updated,
+        calloutId,
+        SpaceCollectionCardVariant.Expanded
+      );
+    });
+
+    test('settings.framing.selection: null leaves the CUSTOM selection intact', async () => {
+      const calloutId = await createExpandedCustomCallout('selection-null');
+
+      const updated = await updateCalloutSpacesSettings({
+        ID: calloutId,
+        settings: { framing: { selection: EXPLICIT_NULL } },
+      });
+      await expectCustomSelectionKept(
+        updated,
+        calloutId,
+        SpaceCollectionCardVariant.Expanded
+      );
+    });
+
+    test('selection: { selectedIds: null } with a variant change succeeds and keeps the stored list', async () => {
+      const calloutId = await createExpandedCustomCallout('selectedids-null');
+
+      const updated = await updateCalloutSpacesSettings({
+        ID: calloutId,
+        settings: {
+          framing: {
+            spaces: { cardVariant: SpaceCollectionCardVariant.Compact },
+            selection: { selectedIds: EXPLICIT_NULL },
+          },
+        },
+      });
+      await expectCustomSelectionKept(
+        updated,
+        calloutId,
+        SpaceCollectionCardVariant.Compact
+      );
+    });
   });
 
   describe('case 5 — rejected off-kind (S3)', () => {

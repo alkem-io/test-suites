@@ -368,8 +368,14 @@ test.describe(
         page.getByText('What', { exact: true }).first()
       ).toBeVisible();
 
-      // Anonymous viewer, fresh context — no session cookie.
-      const anonContext = await browser.newContext();
+      // Anonymous viewer, fresh context — no session cookie. `test` comes from
+      // createPersonaTest(admin), which overrides the storageState fixture, and
+      // Playwright's _setupArtifacts copies every _combinedContextOptions key
+      // (storageState included) into a browser.newContext() call that does not
+      // name it — so a bare newContext() here would run as admin. An explicit
+      // `storageState: undefined` key is kept (`key in options`) and wins.
+      const anonContext = await browser.newContext({ storageState: undefined });
+      expect(await anonContext.cookies()).toHaveLength(0);
       const anonPage = await anonContext.newPage();
       await anonPage.goto(`${baseUrl}/${fixture.spaceNameId}`, {
         waitUntil: 'networkidle',
