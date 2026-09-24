@@ -36,7 +36,7 @@ const gqlEndpoint =
   process.env.ALKEMIO_SERVER ||
   'http://localhost:3000/api/private/non-interactive/graphql';
 // The public endpoint, hit with no credentials at all — the anonymous viewer.
-const publicGqlEndpoint = `${baseUrl}/graphql`;
+const publicGqlEndpoint = `${baseUrl}/api/public/graphql`;
 
 async function rawGql<T>(
   query: string,
