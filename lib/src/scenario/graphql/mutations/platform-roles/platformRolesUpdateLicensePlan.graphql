@@ -1,0 +1,5 @@
+mutation PlatformRolesUpdateLicensePlan($updateData: UpdateLicensePlanInput!) {
+  updateLicensePlan(updateData: $updateData) {
+    id
+  }
+}

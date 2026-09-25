@@ -45,23 +45,14 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean };
   Int: { input: number; output: number };
   Float: { input: number; output: number };
-  /** A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format. */
   DateTime: { input: Date; output: Date };
-  /** An Emoji. */
   Emoji: { input: any; output: any };
-  /** A representation of a Lifecycle Definition, based on XState. It is serialized JSON. */
   LifecycleDefinition: { input: any; output: any };
-  /** A markdown string. */
   Markdown: { input: any; output: any };
-  /** An identifier that originates from the underlying messaging platform. */
   MessageID: { input: any; output: any };
-  /** A human readable identifier, 3 <= length <= 28. Used for URL paths in clients. Characters allowed: a-z,A-Z,0-9. */
   NameID: { input: string; output: string };
-  /** Cursor used for paginating search results. */
   SearchCursor: { input: any; output: any };
-  /** A uuid identifier. Length 36 characters. */
   UUID: { input: string; output: string };
-  /** The `Upload` scalar type represents a file upload. */
   Upload: {
     input: import("graphql-upload").FileUpload;
     output: import("graphql-upload").FileUpload;
@@ -937,6 +928,10 @@ export enum AuthorizationCredential {
   AccountAdmin = "ACCOUNT_ADMIN",
   AssistantAccess = "ASSISTANT_ACCESS",
   BetaTester = "BETA_TESTER",
+  FeatureBetaTester = "FEATURE_BETA_TESTER",
+  FeatureOrganizationCreator = "FEATURE_ORGANIZATION_CREATOR",
+  FeatureVcCampaign = "FEATURE_VC_CAMPAIGN",
+  FeatureVirtualAssistant = "FEATURE_VIRTUAL_ASSISTANT",
   GlobalAdmin = "GLOBAL_ADMIN",
   GlobalAnonymous = "GLOBAL_ANONYMOUS",
   GlobalCommunityRead = "GLOBAL_COMMUNITY_READ",
@@ -950,7 +945,16 @@ export enum AuthorizationCredential {
   OrganizationAdmin = "ORGANIZATION_ADMIN",
   OrganizationAssociate = "ORGANIZATION_ASSOCIATE",
   OrganizationOwner = "ORGANIZATION_OWNER",
+  PlatformAuditReader = "PLATFORM_AUDIT_READER",
+  PlatformContentFullAccess = "PLATFORM_CONTENT_FULL_ACCESS",
+  PlatformLicenseManager = "PLATFORM_LICENSE_MANAGER",
   PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
+  PlatformResourceAdmin = "PLATFORM_RESOURCE_ADMIN",
+  PlatformRolesAdmin = "PLATFORM_ROLES_ADMIN",
+  PlatformSettingsAdmin = "PLATFORM_SETTINGS_ADMIN",
+  PlatformSpacesReader = "PLATFORM_SPACES_READER",
+  PlatformSupport = "PLATFORM_SUPPORT",
+  PlatformUsersAdmin = "PLATFORM_USERS_ADMIN",
   SpaceAdmin = "SPACE_ADMIN",
   SpaceLead = "SPACE_LEAD",
   SpaceMember = "SPACE_MEMBER",
@@ -1063,6 +1067,9 @@ export enum AuthorizationPrivilege {
   CreateVirtual = "CREATE_VIRTUAL",
   CreateWhiteboard = "CREATE_WHITEBOARD",
   Delete = "DELETE",
+  DeleteOrganization = "DELETE_ORGANIZATION",
+  FeatureRoleAssign = "FEATURE_ROLE_ASSIGN",
+  FeatureRoleHoldersRead = "FEATURE_ROLE_HOLDERS_READ",
   FileDelete = "FILE_DELETE",
   FileUpload = "FILE_UPLOAD",
   Grant = "GRANT",
@@ -1072,8 +1079,15 @@ export enum AuthorizationPrivilege {
   MovePost = "MOVE_POST",
   MoveTask = "MOVE_TASK",
   PlatformAdmin = "PLATFORM_ADMIN",
+  PlatformAuditRead = "PLATFORM_AUDIT_READ",
+  PlatformContentFullAccess = "PLATFORM_CONTENT_FULL_ACCESS",
+  PlatformForumManage = "PLATFORM_FORUM_MANAGE",
   PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
+  PlatformRoleHoldersRead = "PLATFORM_ROLE_HOLDERS_READ",
   PlatformSettingsAdmin = "PLATFORM_SETTINGS_ADMIN",
+  PlatformSupportListsRead = "PLATFORM_SUPPORT_LISTS_READ",
+  PlatformSupportOrgResources = "PLATFORM_SUPPORT_ORG_RESOURCES",
+  PlatformUsersAdmin = "PLATFORM_USERS_ADMIN",
   PublicShare = "PUBLIC_SHARE",
   Read = "READ",
   ReadAbout = "READ_ABOUT",
@@ -1092,12 +1106,14 @@ export enum AuthorizationPrivilege {
   RolesetEntryRoleInvite = "ROLESET_ENTRY_ROLE_INVITE",
   RolesetEntryRoleInviteAccept = "ROLESET_ENTRY_ROLE_INVITE_ACCEPT",
   RolesetEntryRoleJoin = "ROLESET_ENTRY_ROLE_JOIN",
+  SetServiceProfile = "SET_SERVICE_PROFILE",
   TransferResourceAccept = "TRANSFER_RESOURCE_ACCEPT",
   TransferResourceOffer = "TRANSFER_RESOURCE_OFFER",
   Update = "UPDATE",
   UpdateCalloutPublisher = "UPDATE_CALLOUT_PUBLISHER",
   UpdateContent = "UPDATE_CONTENT",
   UpdateInnovationFlow = "UPDATE_INNOVATION_FLOW",
+  UpdateNameid = "UPDATE_NAMEID",
 }
 
 export type Calendar = {
@@ -3012,6 +3028,10 @@ export enum CredentialType {
   AccountLicensePlus = "ACCOUNT_LICENSE_PLUS",
   AssistantAccess = "ASSISTANT_ACCESS",
   BetaTester = "BETA_TESTER",
+  FeatureBetaTester = "FEATURE_BETA_TESTER",
+  FeatureOrganizationCreator = "FEATURE_ORGANIZATION_CREATOR",
+  FeatureVcCampaign = "FEATURE_VC_CAMPAIGN",
+  FeatureVirtualAssistant = "FEATURE_VIRTUAL_ASSISTANT",
   GlobalAdmin = "GLOBAL_ADMIN",
   GlobalAnonymous = "GLOBAL_ANONYMOUS",
   GlobalCommunityRead = "GLOBAL_COMMUNITY_READ",
@@ -3025,7 +3045,16 @@ export enum CredentialType {
   OrganizationAdmin = "ORGANIZATION_ADMIN",
   OrganizationAssociate = "ORGANIZATION_ASSOCIATE",
   OrganizationOwner = "ORGANIZATION_OWNER",
+  PlatformAuditReader = "PLATFORM_AUDIT_READER",
+  PlatformContentFullAccess = "PLATFORM_CONTENT_FULL_ACCESS",
+  PlatformLicenseManager = "PLATFORM_LICENSE_MANAGER",
   PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
+  PlatformResourceAdmin = "PLATFORM_RESOURCE_ADMIN",
+  PlatformRolesAdmin = "PLATFORM_ROLES_ADMIN",
+  PlatformSettingsAdmin = "PLATFORM_SETTINGS_ADMIN",
+  PlatformSpacesReader = "PLATFORM_SPACES_READER",
+  PlatformSupport = "PLATFORM_SUPPORT",
+  PlatformUsersAdmin = "PLATFORM_USERS_ADMIN",
   SpaceAdmin = "SPACE_ADMIN",
   SpaceFeatureMemoMultiUser = "SPACE_FEATURE_MEMO_MULTI_USER",
   SpaceFeatureMemoSigning = "SPACE_FEATURE_MEMO_SIGNING",
@@ -5196,7 +5225,7 @@ export type Mutation = {
   adminCommunicationSyncSpaceHierarchy: Scalars["Boolean"]["output"];
   /** Allow updating the state flags of a particular rule. */
   adminCommunicationUpdateRoomState: Scalars["Boolean"]["output"];
-  /** Removes one category from the platform Forum's active discussionCategories list. Refuses while any Discussion still carries the category. Idempotent for an already-absent category. The enum member is never removed. Requires PLATFORM_ADMIN. Audited (PLATFORM_OPERATIONS). */
+  /** Removes one category from the platform Forum's active discussionCategories list. Refuses while any Discussion still carries the category. Idempotent for an already-absent category. The enum member is never removed. Requires PLATFORM_FORUM_MANAGE. Audited (PLATFORM_OPERATIONS). */
   adminForumRemoveDiscussionCategory: Forum;
   /** Delete a Kratos identity by ID. */
   adminIdentityDeleteKratosIdentity: Scalars["Boolean"]["output"];
@@ -5208,7 +5237,7 @@ export type Mutation = {
   adminLicensePolicyDeleteCredentialRule: LicensingCredentialBasedPolicyCredentialRule;
   /** Updates a CredentialRule on the LicensePolicy. */
   adminLicensePolicyUpdateCredentialRule: LicensingCredentialBasedPolicyCredentialRule;
-  /** Platform admin: revoke a named user's MCP API key. Idempotent. */
+  /** Platform Users Admin: revoke a named user's MCP API key. Idempotent. */
   adminRevokeMcpApiKey: McpApiKey;
   /** Ingests new data into Elasticsearch from scratch. This will delete all existing data and ingest new data from the source. This is an admin only operation. */
   adminSearchIngestFromScratch: Scalars["String"]["output"];
@@ -5218,9 +5247,9 @@ export type Mutation = {
   adminUpdateGeoLocationData: Scalars["Boolean"]["output"];
   /** Remove the Kratos account associated with the specified User. Note: the Users profile on the platform is not deleted. */
   adminUserAccountDelete: User;
-  /** Change a user's login email synchronously, acting as a platform administrator. The admin is responsible for verifying the subject user's identity out-of-band — the platform does NOT send a confirmation message to the new mailbox and does NOT require the new mailbox to prove ownership. Validates uniqueness, commits Kratos → Alkemio with bounded retry, invalidates the subject's existing sessions, and sends a security-signal notification to the old address. Requires PLATFORM_ADMIN. */
+  /** Change a user's login email synchronously, acting as a platform administrator. The admin is responsible for verifying the subject user's identity out-of-band — the platform does NOT send a confirmation message to the new mailbox and does NOT require the new mailbox to prove ownership. Validates uniqueness, commits Kratos → Alkemio with bounded retry, invalidates the subject's existing sessions, and sends a security-signal notification to the old address. Requires PLATFORM_USERS_ADMIN. */
   adminUserEmailChange: UserEmailChangeResult;
-  /** Reconcile an outstanding drift-detected state for a subject user by force-aligning Alkemio and Kratos to a canonical email chosen by the admin. Requires PLATFORM_ADMIN. */
+  /** Reconcile an outstanding drift-detected state for a subject user by force-aligning Alkemio and Kratos to a canonical email chosen by the admin. Requires PLATFORM_USERS_ADMIN. */
   adminUserEmailChangeDriftResolve: UserEmailChangeResult;
   /** Create a test customer on wingback. */
   adminWingbackCreateTestCustomer: Scalars["String"]["output"];
@@ -5242,6 +5271,8 @@ export type Mutation = {
   assignLicensePlanToAccount: Account;
   /** Assign the specified LicensePlan to a Space. */
   assignLicensePlanToSpace: Space;
+  /** Assigns an Organization to a role on the Platform. */
+  assignPlatformRoleToOrganization: Organization;
   /** Assigns a User to a role on the Platform. */
   assignPlatformRoleToUser: User;
   /** Assigns an Actor (User, Organization, or Virtual Contributor) to a role in the specified RoleSet. */
@@ -5458,6 +5489,8 @@ export type Mutation = {
   removeMessageOnRoom: Scalars["MessageID"]["output"];
   /** Removes an email address from the platform notification blacklist */
   removeNotificationEmailFromBlacklist: Array<Scalars["String"]["output"]>;
+  /** Removes an Organization from a Role on the Platform. */
+  removePlatformRoleFromOrganization: Organization;
   /** Removes a User from a Role on the Platform. */
   removePlatformRoleFromUser: User;
   /** Remove an option from a Poll. Requires UPDATE privilege. Poll must retain at least 2 options. Votes that selected this option are deleted and affected voters are notified. */
@@ -5774,6 +5807,10 @@ export type MutationAssignLicensePlanToAccountArgs = {
 
 export type MutationAssignLicensePlanToSpaceArgs = {
   planData: AssignLicensePlanToSpace;
+};
+
+export type MutationAssignPlatformRoleToOrganizationArgs = {
+  roleData: AssignPlatformRoleInput;
 };
 
 export type MutationAssignPlatformRoleToUserArgs = {
@@ -6182,6 +6219,10 @@ export type MutationRemoveMessageOnRoomArgs = {
 
 export type MutationRemoveNotificationEmailFromBlacklistArgs = {
   input: NotificationEmailAddressInput;
+};
+
+export type MutationRemovePlatformRoleFromOrganizationArgs = {
+  roleData: RemovePlatformRoleInput;
 };
 
 export type MutationRemovePlatformRoleFromUserArgs = {
@@ -7084,7 +7125,7 @@ export type PlatformAdminQueryResults = {
   innovationPacks: Array<InnovationPack>;
   /** The most recent email-change audit entry for the named subject user. Returns null if no audit entry exists. */
   latestUserEmailChangeAuditEntry?: Maybe<UserEmailChangeAuditEntry>;
-  /** MCP API keys belonging to the named user. Platform admins only. Keys bound to a system actor are never returned. */
+  /** MCP API keys belonging to the named user. Platform Users Admin only. Keys bound to a system actor are never returned. */
   mcpApiKeys: Array<McpApiKey>;
   /** Retrieve all Organizations on the Platform. This is only available to Platform Admins. */
   organizations: PaginatedOrganization;
@@ -8139,6 +8180,10 @@ export enum RoleName {
   Admin = "ADMIN",
   Anonymous = "ANONYMOUS",
   Associate = "ASSOCIATE",
+  FeatureBetaTester = "FEATURE_BETA_TESTER",
+  FeatureOrganizationCreator = "FEATURE_ORGANIZATION_CREATOR",
+  FeatureVcCampaign = "FEATURE_VC_CAMPAIGN",
+  FeatureVirtualAssistant = "FEATURE_VIRTUAL_ASSISTANT",
   GlobalAdmin = "GLOBAL_ADMIN",
   GlobalCommunityReader = "GLOBAL_COMMUNITY_READER",
   GlobalLicenseManager = "GLOBAL_LICENSE_MANAGER",
@@ -8151,8 +8196,17 @@ export enum RoleName {
   Member = "MEMBER",
   Owner = "OWNER",
   PlatformAssistantAccess = "PLATFORM_ASSISTANT_ACCESS",
+  PlatformAuditReader = "PLATFORM_AUDIT_READER",
   PlatformBetaTester = "PLATFORM_BETA_TESTER",
+  PlatformContentFullAccess = "PLATFORM_CONTENT_FULL_ACCESS",
+  PlatformLicenseManager = "PLATFORM_LICENSE_MANAGER",
   PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
+  PlatformResourceAdmin = "PLATFORM_RESOURCE_ADMIN",
+  PlatformRolesAdmin = "PLATFORM_ROLES_ADMIN",
+  PlatformSettingsAdmin = "PLATFORM_SETTINGS_ADMIN",
+  PlatformSpacesReader = "PLATFORM_SPACES_READER",
+  PlatformSupport = "PLATFORM_SUPPORT",
+  PlatformUsersAdmin = "PLATFORM_USERS_ADMIN",
   PlatformVcCampaign = "PLATFORM_VC_CAMPAIGN",
   Registered = "REGISTERED",
 }
@@ -20631,6 +20685,15 @@ export type MutationResolvers<
     ContextType,
     RequireFields<SchemaTypes.MutationAssignLicensePlanToSpaceArgs, "planData">
   >;
+  assignPlatformRoleToOrganization?: Resolver<
+    ResolversTypes["Organization"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationAssignPlatformRoleToOrganizationArgs,
+      "roleData"
+    >
+  >;
   assignPlatformRoleToUser?: Resolver<
     ResolversTypes["User"],
     ParentType,
@@ -21405,6 +21468,15 @@ export type MutationResolvers<
     RequireFields<
       SchemaTypes.MutationRemoveNotificationEmailFromBlacklistArgs,
       "input"
+    >
+  >;
+  removePlatformRoleFromOrganization?: Resolver<
+    ResolversTypes["Organization"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationRemovePlatformRoleFromOrganizationArgs,
+      "roleData"
     >
   >;
   removePlatformRoleFromUser?: Resolver<
@@ -58847,6 +58919,18 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
   };
 };
 
+export type ConvertSpaceL1ToSpaceL2MutationVariables = SchemaTypes.Exact<{
+  convertData: SchemaTypes.ConvertSpaceL1ToSpaceL2Input;
+}>;
+
+export type ConvertSpaceL1ToSpaceL2Mutation = {
+  convertSpaceL1ToSpaceL2: {
+    id: string;
+    nameID: string;
+    level: SchemaTypes.SpaceLevel;
+  };
+};
+
 export type ConvertSpaceL2ToSpaceL1MutationVariables = SchemaTypes.Exact<{
   convertData: SchemaTypes.ConvertSpaceL2ToSpaceL1Input;
 }>;
@@ -90020,6 +90104,717 @@ export type UpdateOrganizationSettingsMutation = {
   };
 };
 
+export type AddIframeAllowedUrlMutationVariables = SchemaTypes.Exact<{
+  whitelistedURL: SchemaTypes.Scalars["String"]["input"];
+}>;
+
+export type AddIframeAllowedUrlMutation = {
+  addIframeAllowedURL: Array<string>;
+};
+
+export type AddNotificationEmailToBlacklistMutationVariables =
+  SchemaTypes.Exact<{
+    input: SchemaTypes.NotificationEmailAddressInput;
+  }>;
+
+export type AddNotificationEmailToBlacklistMutation = {
+  addNotificationEmailToBlacklist: Array<string>;
+};
+
+export type AdminCommunicationEnsureAccessToCommunicationsMutationVariables =
+  SchemaTypes.Exact<{
+    communicationData: SchemaTypes.CommunicationAdminEnsureAccessInput;
+  }>;
+
+export type AdminCommunicationEnsureAccessToCommunicationsMutation = {
+  adminCommunicationEnsureAccessToCommunications: boolean;
+};
+
+export type AdminCommunicationMigrateOrphanedConversationsMutationVariables =
+  SchemaTypes.Exact<{ [key: string]: never }>;
+
+export type AdminCommunicationMigrateOrphanedConversationsMutation = {
+  adminCommunicationMigrateOrphanedConversations: { migrated: number };
+};
+
+export type AdminCommunicationRemoveOrphanedRoomMutationVariables =
+  SchemaTypes.Exact<{
+    orphanedRoomData: SchemaTypes.CommunicationAdminRemoveOrphanedRoomInput;
+  }>;
+
+export type AdminCommunicationRemoveOrphanedRoomMutation = {
+  adminCommunicationRemoveOrphanedRoom: boolean;
+};
+
+export type AdminCommunicationSyncSpaceHierarchyMutationVariables =
+  SchemaTypes.Exact<{ [key: string]: never }>;
+
+export type AdminCommunicationSyncSpaceHierarchyMutation = {
+  adminCommunicationSyncSpaceHierarchy: boolean;
+};
+
+export type AdminCommunicationUpdateRoomStateMutationVariables =
+  SchemaTypes.Exact<{
+    roomStateData: SchemaTypes.CommunicationAdminUpdateRoomStateInput;
+  }>;
+
+export type AdminCommunicationUpdateRoomStateMutation = {
+  adminCommunicationUpdateRoomState: boolean;
+};
+
+export type AdminForumRemoveDiscussionCategoryMutationVariables =
+  SchemaTypes.Exact<{
+    removeData: SchemaTypes.ForumRemoveDiscussionCategoryInput;
+  }>;
+
+export type AdminForumRemoveDiscussionCategoryMutation = {
+  adminForumRemoveDiscussionCategory: {
+    id: string;
+    discussionCategories: Array<SchemaTypes.ForumDiscussionCategory>;
+  };
+};
+
+export type AdminIdentityDeleteKratosIdentityMutationVariables =
+  SchemaTypes.Exact<{
+    kratosIdentityId: SchemaTypes.Scalars["UUID"]["input"];
+  }>;
+
+export type AdminIdentityDeleteKratosIdentityMutation = {
+  adminIdentityDeleteKratosIdentity: boolean;
+};
+
+export type AdminInAppNotificationsPruneMutationVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type AdminInAppNotificationsPruneMutation = {
+  adminInAppNotificationsPrune: { removedCountExceedingUserLimit: number };
+};
+
+export type AdminLicensePolicyCreateCredentialRuleMutationVariables =
+  SchemaTypes.Exact<{
+    createData: SchemaTypes.CreateLicensePolicyCredentialRuleInput;
+  }>;
+
+export type AdminLicensePolicyCreateCredentialRuleMutation = {
+  adminLicensePolicyCreateCredentialRule: { id: string };
+};
+
+export type AdminLicensePolicyDeleteCredentialRuleMutationVariables =
+  SchemaTypes.Exact<{
+    deleteData: SchemaTypes.DeleteLicensePolicyCredentialRuleInput;
+  }>;
+
+export type AdminLicensePolicyDeleteCredentialRuleMutation = {
+  adminLicensePolicyDeleteCredentialRule: { id: string };
+};
+
+export type AdminLicensePolicyUpdateCredentialRuleMutationVariables =
+  SchemaTypes.Exact<{
+    updateData: SchemaTypes.UpdateLicensePolicyCredentialRuleInput;
+  }>;
+
+export type AdminLicensePolicyUpdateCredentialRuleMutation = {
+  adminLicensePolicyUpdateCredentialRule: { id: string };
+};
+
+export type AdminRevokeMcpApiKeyMutationVariables = SchemaTypes.Exact<{
+  revokeData: SchemaTypes.AdminRevokeMcpApiKeyInput;
+}>;
+
+export type AdminRevokeMcpApiKeyMutation = {
+  adminRevokeMcpApiKey: { id: string };
+};
+
+export type AdminUpdateContributorAvatarsMutationVariables = SchemaTypes.Exact<{
+  profileID: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type AdminUpdateContributorAvatarsMutation = {
+  adminUpdateContributorAvatars: { id: string };
+};
+
+export type AdminUpdateGeoLocationDataMutationVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type AdminUpdateGeoLocationDataMutation = {
+  adminUpdateGeoLocationData: boolean;
+};
+
+export type AdminUserAccountDeleteMutationVariables = SchemaTypes.Exact<{
+  userID: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type AdminUserAccountDeleteMutation = {
+  adminUserAccountDelete: { id: string };
+};
+
+export type AdminUserEmailChangeMutationVariables = SchemaTypes.Exact<{
+  adminUserEmailChangeData: SchemaTypes.AdminUserEmailChangeInput;
+}>;
+
+export type AdminUserEmailChangeMutation = {
+  adminUserEmailChange: { success: boolean };
+};
+
+export type AdminUserEmailChangeDriftResolveMutationVariables =
+  SchemaTypes.Exact<{
+    adminUserEmailChangeDriftResolveData: SchemaTypes.AdminUserEmailChangeDriftResolveInput;
+  }>;
+
+export type AdminUserEmailChangeDriftResolveMutation = {
+  adminUserEmailChangeDriftResolve: { success: boolean };
+};
+
+export type AiServerAuthorizationPolicyResetMutationVariables =
+  SchemaTypes.Exact<{ [key: string]: never }>;
+
+export type AiServerAuthorizationPolicyResetMutation = {
+  aiServerAuthorizationPolicyReset: { id: string };
+};
+
+export type AssignPlatformRoleToOrganizationMutationVariables =
+  SchemaTypes.Exact<{
+    roleData: SchemaTypes.AssignPlatformRoleInput;
+  }>;
+
+export type AssignPlatformRoleToOrganizationMutation = {
+  assignPlatformRoleToOrganization: { id: string };
+};
+
+export type AuthorizationPlatformRolesAccessResetMutationVariables =
+  SchemaTypes.Exact<{ [key: string]: never }>;
+
+export type AuthorizationPlatformRolesAccessResetMutation = {
+  authorizationPlatformRolesAccessReset: boolean;
+};
+
+export type AuthorizationPolicyResetAllMutationVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type AuthorizationPolicyResetAllMutation = {
+  authorizationPolicyResetAll: string;
+};
+
+export type AuthorizationPolicyResetOnAccountMutationVariables =
+  SchemaTypes.Exact<{
+    authorizationResetData: SchemaTypes.AccountAuthorizationResetInput;
+  }>;
+
+export type AuthorizationPolicyResetOnAccountMutation = {
+  authorizationPolicyResetOnAccount: { id: string };
+};
+
+export type AuthorizationPolicyResetOnPlatformMutationVariables =
+  SchemaTypes.Exact<{ [key: string]: never }>;
+
+export type AuthorizationPolicyResetOnPlatformMutation = {
+  authorizationPolicyResetOnPlatform: { id: string };
+};
+
+export type AuthorizationPolicyResetOnUserMutationVariables =
+  SchemaTypes.Exact<{
+    authorizationResetData: SchemaTypes.UserAuthorizationResetInput;
+  }>;
+
+export type AuthorizationPolicyResetOnUserMutation = {
+  authorizationPolicyResetOnUser: { id: string };
+};
+
+export type AuthorizationPolicyResetToGlobalAdminsAccessMutationVariables =
+  SchemaTypes.Exact<{
+    authorizationID: SchemaTypes.Scalars["String"]["input"];
+  }>;
+
+export type AuthorizationPolicyResetToGlobalAdminsAccessMutation = {
+  authorizationPolicyResetToGlobalAdminsAccess: { id: string };
+};
+
+export type CleanupCollectionsMutationVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type CleanupCollectionsMutation = {
+  cleanupCollections: { success: boolean };
+};
+
+export type CreateContributionOnCalloutIdMutationVariables = SchemaTypes.Exact<{
+  contributionData: SchemaTypes.CreateContributionOnCalloutInput;
+}>;
+
+export type CreateContributionOnCalloutIdMutation = {
+  createContributionOnCallout: { id: string };
+};
+
+export type CreateTemplateFromContentSpaceMutationVariables =
+  SchemaTypes.Exact<{
+    templateData: SchemaTypes.CreateTemplateFromContentSpaceOnTemplatesSetInput;
+  }>;
+
+export type CreateTemplateFromContentSpaceMutation = {
+  createTemplateFromContentSpace: { id: string };
+};
+
+export type CreateWingbackAccountMutationVariables = SchemaTypes.Exact<{
+  accountID: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type CreateWingbackAccountMutation = { createWingbackAccount: string };
+
+export type DeleteContributionMutationVariables = SchemaTypes.Exact<{
+  deleteData: SchemaTypes.DeleteContributionInput;
+}>;
+
+export type DeleteContributionMutation = { deleteContribution: { id: string } };
+
+export type GrantCredentialToActorMutationVariables = SchemaTypes.Exact<{
+  actorID: SchemaTypes.Scalars["UUID"]["input"];
+  credentialType: SchemaTypes.CredentialType;
+  resourceID?: SchemaTypes.InputMaybe<SchemaTypes.Scalars["UUID"]["input"]>;
+}>;
+
+export type GrantCredentialToActorMutation = {
+  grantCredentialToActor: { id: string };
+};
+
+export type GrantCredentialToOrganizationMutationVariables = SchemaTypes.Exact<{
+  grantCredentialData: SchemaTypes.GrantOrganizationAuthorizationCredentialInput;
+}>;
+
+export type GrantCredentialToOrganizationMutation = {
+  grantCredentialToOrganization: { id: string };
+};
+
+export type GrantCredentialToUserMutationVariables = SchemaTypes.Exact<{
+  grantCredentialData: SchemaTypes.GrantAuthorizationCredentialInput;
+}>;
+
+export type GrantCredentialToUserMutation = {
+  grantCredentialToUser: { id: string };
+};
+
+export type LicenseResetOnAccountMutationVariables = SchemaTypes.Exact<{
+  resetData: SchemaTypes.AccountLicenseResetInput;
+}>;
+
+export type LicenseResetOnAccountMutation = {
+  licenseResetOnAccount: { id: string };
+};
+
+export type MigrateLegacyMemoContentMutationVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type MigrateLegacyMemoContentMutation = {
+  migrateLegacyMemoContent: { total: number; migrated: number };
+};
+
+export type MigrateLegacyWhiteboardContentMutationVariables =
+  SchemaTypes.Exact<{ [key: string]: never }>;
+
+export type MigrateLegacyWhiteboardContentMutation = {
+  migrateLegacyWhiteboardContent: { total: number; migrated: number };
+};
+
+export type MintMcpApiKeyMutationVariables = SchemaTypes.Exact<{
+  mintData: SchemaTypes.MintMcpApiKeyInput;
+}>;
+
+export type MintMcpApiKeyMutation = { mintMcpApiKey: { key: { id: string } } };
+
+export type MoveContributionToCalloutMutationVariables = SchemaTypes.Exact<{
+  moveContributionData: SchemaTypes.MoveCalloutContributionInput;
+}>;
+
+export type MoveContributionToCalloutMutation = {
+  moveContributionToCallout: { id: string };
+};
+
+export type PlatformRolesAssignLicensePlanToAccountMutationVariables =
+  SchemaTypes.Exact<{
+    planData: SchemaTypes.AssignLicensePlanToAccount;
+  }>;
+
+export type PlatformRolesAssignLicensePlanToAccountMutation = {
+  assignLicensePlanToAccount: { id: string };
+};
+
+export type PlatformRolesAssignLicensePlanToSpaceMutationVariables =
+  SchemaTypes.Exact<{
+    planData: SchemaTypes.AssignLicensePlanToSpace;
+  }>;
+
+export type PlatformRolesAssignLicensePlanToSpaceMutation = {
+  assignLicensePlanToSpace: { id: string };
+};
+
+export type PlatformRolesAssignRoleToUserMutationVariables = SchemaTypes.Exact<{
+  roleData: SchemaTypes.AssignPlatformRoleInput;
+}>;
+
+export type PlatformRolesAssignRoleToUserMutation = {
+  assignPlatformRoleToUser: { id: string };
+};
+
+export type PlatformRolesConvertSpaceL1ToSpaceL0MutationVariables =
+  SchemaTypes.Exact<{
+    convertData: SchemaTypes.ConvertSpaceL1ToSpaceL0Input;
+  }>;
+
+export type PlatformRolesConvertSpaceL1ToSpaceL0Mutation = {
+  convertSpaceL1ToSpaceL0: { id: string };
+};
+
+export type PlatformRolesConvertSpaceL2ToSpaceL1MutationVariables =
+  SchemaTypes.Exact<{
+    convertData: SchemaTypes.ConvertSpaceL2ToSpaceL1Input;
+  }>;
+
+export type PlatformRolesConvertSpaceL2ToSpaceL1Mutation = {
+  convertSpaceL2ToSpaceL1: { id: string };
+};
+
+export type PlatformRolesConvertVirtualContributorToUseKnowledgeBaseMutationVariables =
+  SchemaTypes.Exact<{
+    conversionData: SchemaTypes.ConversionVcSpaceToVcKnowledgeBaseInput;
+  }>;
+
+export type PlatformRolesConvertVirtualContributorToUseKnowledgeBaseMutation = {
+  convertVirtualContributorToUseKnowledgeBase: { id: string };
+};
+
+export type PlatformRolesCreateLicensePlanMutationVariables =
+  SchemaTypes.Exact<{
+    planData: SchemaTypes.CreateLicensePlanOnLicensingFrameworkInput;
+  }>;
+
+export type PlatformRolesCreateLicensePlanMutation = {
+  createLicensePlan: { id: string };
+};
+
+export type PlatformRolesCreateOrganizationMutationVariables =
+  SchemaTypes.Exact<{
+    organizationData: SchemaTypes.CreateOrganizationInput;
+  }>;
+
+export type PlatformRolesCreateOrganizationMutation = {
+  createOrganization: { id: string };
+};
+
+export type PlatformRolesCreateTemplateMutationVariables = SchemaTypes.Exact<{
+  templateData: SchemaTypes.CreateTemplateOnTemplatesSetInput;
+}>;
+
+export type PlatformRolesCreateTemplateMutation = {
+  createTemplate: { id: string };
+};
+
+export type PlatformRolesCreateTemplateFromSpaceMutationVariables =
+  SchemaTypes.Exact<{
+    templateData: SchemaTypes.CreateTemplateFromSpaceOnTemplatesSetInput;
+  }>;
+
+export type PlatformRolesCreateTemplateFromSpaceMutation = {
+  createTemplateFromSpace: { id: string };
+};
+
+export type PlatformRolesDeleteDiscussionMutationVariables = SchemaTypes.Exact<{
+  deleteData: SchemaTypes.DeleteDiscussionInput;
+}>;
+
+export type PlatformRolesDeleteDiscussionMutation = {
+  deleteDiscussion: { id: string };
+};
+
+export type PlatformRolesDeleteLicensePlanMutationVariables =
+  SchemaTypes.Exact<{
+    deleteData: SchemaTypes.DeleteLicensePlanInput;
+  }>;
+
+export type PlatformRolesDeleteLicensePlanMutation = {
+  deleteLicensePlan: { id: string };
+};
+
+export type PlatformRolesMoveSpaceL1ToSpaceL0MutationVariables =
+  SchemaTypes.Exact<{
+    moveData: SchemaTypes.MoveSpaceL1ToSpaceL0Input;
+  }>;
+
+export type PlatformRolesMoveSpaceL1ToSpaceL0Mutation = {
+  moveSpaceL1ToSpaceL0: { id: string };
+};
+
+export type PlatformRolesMoveSpaceL1ToSpaceL2MutationVariables =
+  SchemaTypes.Exact<{
+    moveData: SchemaTypes.MoveSpaceL1ToSpaceL2Input;
+  }>;
+
+export type PlatformRolesMoveSpaceL1ToSpaceL2Mutation = {
+  moveSpaceL1ToSpaceL2: { id: string };
+};
+
+export type PlatformRolesMoveSpaceL2ToSpaceL1MutationVariables =
+  SchemaTypes.Exact<{
+    moveData: SchemaTypes.MoveSpaceL2ToSpaceL1Input;
+  }>;
+
+export type PlatformRolesMoveSpaceL2ToSpaceL1Mutation = {
+  moveSpaceL2ToSpaceL1: { id: string };
+};
+
+export type PlatformRolesRemoveRoleFromUserMutationVariables =
+  SchemaTypes.Exact<{
+    roleData: SchemaTypes.RemovePlatformRoleInput;
+  }>;
+
+export type PlatformRolesRemoveRoleFromUserMutation = {
+  removePlatformRoleFromUser: { id: string };
+};
+
+export type PlatformRolesRevokeLicensePlanFromAccountMutationVariables =
+  SchemaTypes.Exact<{
+    planData: SchemaTypes.RevokeLicensePlanFromAccount;
+  }>;
+
+export type PlatformRolesRevokeLicensePlanFromAccountMutation = {
+  revokeLicensePlanFromAccount: { id: string };
+};
+
+export type PlatformRolesRevokeLicensePlanFromSpaceMutationVariables =
+  SchemaTypes.Exact<{
+    planData: SchemaTypes.RevokeLicensePlanFromSpace;
+  }>;
+
+export type PlatformRolesRevokeLicensePlanFromSpaceMutation = {
+  revokeLicensePlanFromSpace: { id: string };
+};
+
+export type PlatformRolesTransferCalloutMutationVariables = SchemaTypes.Exact<{
+  transferData: SchemaTypes.TransferCalloutInput;
+}>;
+
+export type PlatformRolesTransferCalloutMutation = {
+  transferCallout: { id: string };
+};
+
+export type PlatformRolesTransferInnovationHubToAccountMutationVariables =
+  SchemaTypes.Exact<{
+    transferData: SchemaTypes.TransferAccountInnovationHubInput;
+  }>;
+
+export type PlatformRolesTransferInnovationHubToAccountMutation = {
+  transferInnovationHubToAccount: { id: string };
+};
+
+export type PlatformRolesTransferInnovationPackToAccountMutationVariables =
+  SchemaTypes.Exact<{
+    transferData: SchemaTypes.TransferAccountInnovationPackInput;
+  }>;
+
+export type PlatformRolesTransferInnovationPackToAccountMutation = {
+  transferInnovationPackToAccount: { id: string };
+};
+
+export type PlatformRolesTransferSpaceToAccountMutationVariables =
+  SchemaTypes.Exact<{
+    transferData: SchemaTypes.TransferAccountSpaceInput;
+  }>;
+
+export type PlatformRolesTransferSpaceToAccountMutation = {
+  transferSpaceToAccount: { id: string };
+};
+
+export type PlatformRolesTransferVirtualContributorToAccountMutationVariables =
+  SchemaTypes.Exact<{
+    transferData: SchemaTypes.TransferAccountVirtualContributorInput;
+  }>;
+
+export type PlatformRolesTransferVirtualContributorToAccountMutation = {
+  transferVirtualContributorToAccount: { id: string };
+};
+
+export type PlatformRolesUpdateCalloutMutationVariables = SchemaTypes.Exact<{
+  calloutData: SchemaTypes.UpdateCalloutEntityInput;
+}>;
+
+export type PlatformRolesUpdateCalloutMutation = {
+  updateCallout: { id: string };
+};
+
+export type PlatformRolesUpdateDiscussionMutationVariables = SchemaTypes.Exact<{
+  updateData: SchemaTypes.UpdateDiscussionInput;
+}>;
+
+export type PlatformRolesUpdateDiscussionMutation = {
+  updateDiscussion: { id: string };
+};
+
+export type PlatformRolesUpdateLicensePlanMutationVariables =
+  SchemaTypes.Exact<{
+    updateData: SchemaTypes.UpdateLicensePlanInput;
+  }>;
+
+export type PlatformRolesUpdateLicensePlanMutation = {
+  updateLicensePlan: { id: string };
+};
+
+export type PlatformRolesUpdateSpaceVisibilityMutationVariables =
+  SchemaTypes.Exact<{
+    updateData: SchemaTypes.UpdateSpacePlatformSettingsInput;
+  }>;
+
+export type PlatformRolesUpdateSpaceVisibilityMutation = {
+  updateSpacePlatformSettings: { id: string };
+};
+
+export type PlatformRolesUpdateTemplateMutationVariables = SchemaTypes.Exact<{
+  updateData: SchemaTypes.UpdateTemplateInput;
+}>;
+
+export type PlatformRolesUpdateTemplateMutation = {
+  updateTemplate: { id: string };
+};
+
+export type RefreshAllBodiesOfKnowledgeMutationVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type RefreshAllBodiesOfKnowledgeMutation = {
+  refreshAllBodiesOfKnowledge: boolean;
+};
+
+export type RemoveIframeAllowedUrlMutationVariables = SchemaTypes.Exact<{
+  whitelistedURL: SchemaTypes.Scalars["String"]["input"];
+}>;
+
+export type RemoveIframeAllowedUrlMutation = {
+  removeIframeAllowedURL: Array<string>;
+};
+
+export type RemoveNotificationEmailFromBlacklistMutationVariables =
+  SchemaTypes.Exact<{
+    input: SchemaTypes.NotificationEmailAddressInput;
+  }>;
+
+export type RemoveNotificationEmailFromBlacklistMutation = {
+  removeNotificationEmailFromBlacklist: Array<string>;
+};
+
+export type RemovePlatformRoleFromOrganizationMutationVariables =
+  SchemaTypes.Exact<{
+    roleData: SchemaTypes.RemovePlatformRoleInput;
+  }>;
+
+export type RemovePlatformRoleFromOrganizationMutation = {
+  removePlatformRoleFromOrganization: { id: string };
+};
+
+export type ResetLicenseOnAccountsMutationVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type ResetLicenseOnAccountsMutation = {
+  resetLicenseOnAccounts: boolean;
+};
+
+export type RevokeCredentialFromActorMutationVariables = SchemaTypes.Exact<{
+  actorID: SchemaTypes.Scalars["UUID"]["input"];
+  credentialType: SchemaTypes.CredentialType;
+  resourceID?: SchemaTypes.InputMaybe<SchemaTypes.Scalars["UUID"]["input"]>;
+}>;
+
+export type RevokeCredentialFromActorMutation = {
+  revokeCredentialFromActor: boolean;
+};
+
+export type RevokeCredentialFromOrganizationMutationVariables =
+  SchemaTypes.Exact<{
+    revokeCredentialData: SchemaTypes.RevokeOrganizationAuthorizationCredentialInput;
+  }>;
+
+export type RevokeCredentialFromOrganizationMutation = {
+  revokeCredentialFromOrganization: { id: string };
+};
+
+export type RevokeCredentialFromUserMutationVariables = SchemaTypes.Exact<{
+  revokeCredentialData: SchemaTypes.RevokeAuthorizationCredentialInput;
+}>;
+
+export type RevokeCredentialFromUserMutation = {
+  revokeCredentialFromUser: { id: string };
+};
+
+export type SetPlatformWellKnownVirtualContributorMutationVariables =
+  SchemaTypes.Exact<{
+    mappingData: SchemaTypes.SetPlatformWellKnownVirtualContributorInput;
+  }>;
+
+export type SetPlatformWellKnownVirtualContributorMutation = {
+  setPlatformWellKnownVirtualContributor: {
+    mappings: Array<{ wellKnown: SchemaTypes.VirtualContributorWellKnown }>;
+  };
+};
+
+export type UpdateAssistantActorCapabilitiesMutationVariables =
+  SchemaTypes.Exact<{
+    grantData: SchemaTypes.GrantAssistantActorCapabilitiesInput;
+  }>;
+
+export type UpdateAssistantActorCapabilitiesMutation = {
+  updateAssistantActorCapabilities: { id: string };
+};
+
+export type UpdateBaselineLicensePlanOnAccountMutationVariables =
+  SchemaTypes.Exact<{
+    updateData: SchemaTypes.UpdateBaselineLicensePlanOnAccount;
+  }>;
+
+export type UpdateBaselineLicensePlanOnAccountMutation = {
+  updateBaselineLicensePlanOnAccount: { id: string };
+};
+
+export type UpdateCalloutPublishInfoMutationVariables = SchemaTypes.Exact<{
+  calloutData: SchemaTypes.UpdateCalloutPublishInfoInput;
+}>;
+
+export type UpdateCalloutPublishInfoMutation = {
+  updateCalloutPublishInfo: { id: string };
+};
+
+export type UpdateInnovationHubMutationVariables = SchemaTypes.Exact<{
+  updateData: SchemaTypes.UpdateInnovationHubInput;
+}>;
+
+export type UpdateInnovationHubMutation = {
+  updateInnovationHub: { id: string };
+};
+
+export type UpdateInnovationPackMutationVariables = SchemaTypes.Exact<{
+  innovationPackData: SchemaTypes.UpdateInnovationPackInput;
+}>;
+
+export type UpdateInnovationPackMutation = {
+  updateInnovationPack: { id: string };
+};
+
+export type UpdatePlatformSettingsMutationVariables = SchemaTypes.Exact<{
+  settingsData: SchemaTypes.UpdatePlatformSettingsInput;
+}>;
+
+export type UpdatePlatformSettingsMutation = {
+  updatePlatformSettings: { integration: { iframeAllowedUrls: Array<string> } };
+};
+
+export type UpdateTemplateFromSpaceMutationVariables = SchemaTypes.Exact<{
+  updateData: SchemaTypes.UpdateTemplateFromSpaceInput;
+}>;
+
+export type UpdateTemplateFromSpaceMutation = {
+  updateTemplateFromSpace: { id: string };
+};
+
 export type AssignPlatformRoleToUserMutationVariables = SchemaTypes.Exact<{
   roleData: SchemaTypes.AssignPlatformRoleInput;
 }>;
@@ -90123,6 +90918,20 @@ export type UpdateSpacePlatformSettingsMutation = {
     __typename: "Space";
     id: string;
     nameID: string;
+    visibility: SchemaTypes.SpaceVisibility;
+  };
+};
+
+export type UpdateSpaceVisibilityPlatformSettingsMutationVariables =
+  SchemaTypes.Exact<{
+    spaceId: SchemaTypes.Scalars["UUID"]["input"];
+    visibility: SchemaTypes.SpaceVisibility;
+  }>;
+
+export type UpdateSpaceVisibilityPlatformSettingsMutation = {
+  updateSpacePlatformSettings: {
+    __typename: "Space";
+    id: string;
     visibility: SchemaTypes.SpaceVisibility;
   };
 };
@@ -100623,6 +101432,202 @@ export type UsersPaginatedQuery = {
       hasPreviousPage: boolean;
     };
   };
+};
+
+export type ActorsWithCredentialQueryVariables = SchemaTypes.Exact<{
+  credentialType: SchemaTypes.CredentialType;
+  resourceID?: SchemaTypes.InputMaybe<SchemaTypes.Scalars["UUID"]["input"]>;
+}>;
+
+export type ActorsWithCredentialQuery = {
+  actorsWithCredential: Array<
+    | { id: string }
+    | { id: string }
+    | { id: string }
+    | { id: string }
+    | { id: string }
+    | { id: string }
+    | { id: string }
+  >;
+};
+
+export type LatestUserEmailChangeAuditEntryQueryVariables = SchemaTypes.Exact<{
+  userID: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type LatestUserEmailChangeAuditEntryQuery = {
+  platformAdmin: {
+    latestUserEmailChangeAuditEntry?:
+      | { id: string; outcome: SchemaTypes.UserEmailChangeAuditOutcome }
+      | undefined;
+  };
+};
+
+export type PlatformAdminMcpApiKeysQueryVariables = SchemaTypes.Exact<{
+  userID: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type PlatformAdminMcpApiKeysQuery = {
+  platformAdmin: { mcpApiKeys: Array<{ id: string }> };
+};
+
+export type PlatformAdminVirtualAssistantQueryVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type PlatformAdminVirtualAssistantQuery = {
+  platformAdmin: { virtualAssistant: { id: string } };
+};
+
+export type PlatformForumDiscussionCategoriesQueryVariables =
+  SchemaTypes.Exact<{ [key: string]: never }>;
+
+export type PlatformForumDiscussionCategoriesQuery = {
+  platform: {
+    forum: {
+      id: string;
+      discussionCategories: Array<SchemaTypes.ForumDiscussionCategory>;
+    };
+  };
+};
+
+export type PlatformRoleSetOrganizationsInRoleQueryVariables =
+  SchemaTypes.Exact<{
+    role: SchemaTypes.RoleName;
+  }>;
+
+export type PlatformRoleSetOrganizationsInRoleQuery = {
+  platform: { roleSet: { organizationsInRole: Array<{ id: string }> } };
+};
+
+export type PlatformRoleSetOrganizationsInRolesQueryVariables =
+  SchemaTypes.Exact<{
+    roles: Array<SchemaTypes.RoleName> | SchemaTypes.RoleName;
+  }>;
+
+export type PlatformRoleSetOrganizationsInRolesQuery = {
+  platform: {
+    roleSet: {
+      organizationsInRoles: Array<{
+        role: SchemaTypes.RoleName;
+        organizations: Array<{ id: string }>;
+      }>;
+    };
+  };
+};
+
+export type PlatformRoleSetRoleNamesQueryVariables = SchemaTypes.Exact<{
+  [key: string]: never;
+}>;
+
+export type PlatformRoleSetRoleNamesQuery = {
+  platform: { roleSet: { roleNames: Array<SchemaTypes.RoleName> } };
+};
+
+export type PlatformRoleSetUsersInRoleQueryVariables = SchemaTypes.Exact<{
+  role: SchemaTypes.RoleName;
+}>;
+
+export type PlatformRoleSetUsersInRoleQuery = {
+  platform: { roleSet: { usersInRole: Array<{ id: string }> } };
+};
+
+export type PlatformRoleSetUsersInRolesQueryVariables = SchemaTypes.Exact<{
+  roles: Array<SchemaTypes.RoleName> | SchemaTypes.RoleName;
+}>;
+
+export type PlatformRoleSetUsersInRolesQuery = {
+  platform: {
+    roleSet: {
+      usersInRoles: Array<{
+        role: SchemaTypes.RoleName;
+        users: Array<{ id: string }>;
+      }>;
+    };
+  };
+};
+
+export type PlatformRolesSpaceApplicationsProbeQueryVariables =
+  SchemaTypes.Exact<{
+    spaceId: SchemaTypes.Scalars["UUID"]["input"];
+  }>;
+
+export type PlatformRolesSpaceApplicationsProbeQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          community: { roleSet: { applications: Array<{ id: string }> } };
+        }
+      | undefined;
+  };
+};
+
+export type SpaceCollaborationReadProbeQueryVariables = SchemaTypes.Exact<{
+  spaceId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type SpaceCollaborationReadProbeQuery = {
+  lookup: { space?: { id: string; collaboration: { id: string } } | undefined };
+};
+
+export type SpaceReadProbeQueryVariables = SchemaTypes.Exact<{
+  spaceId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type SpaceReadProbeQuery = {
+  lookup: { space?: { id: string } | undefined };
+};
+
+export type SpaceSupportAdminPrivilegeProbeQueryVariables = SchemaTypes.Exact<{
+  spaceId: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type SpaceSupportAdminPrivilegeProbeQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          authorization?:
+            | {
+                myPrivileges?:
+                  | Array<SchemaTypes.AuthorizationPrivilege>
+                  | undefined;
+              }
+            | undefined;
+        }
+      | undefined;
+  };
+};
+
+export type UpdateUserServiceProfileMutationVariables = SchemaTypes.Exact<{
+  userData: SchemaTypes.UpdateUserInput;
+}>;
+
+export type UpdateUserServiceProfileMutation = { updateUser: { id: string } };
+
+export type UserEmailChangeAuditEntriesQueryVariables = SchemaTypes.Exact<{
+  userID: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type UserEmailChangeAuditEntriesQuery = {
+  platformAdmin: {
+    userEmailChangeAuditEntries: {
+      total: number;
+      auditEntries: Array<{
+        id: string;
+        outcome: SchemaTypes.UserEmailChangeAuditOutcome;
+      }>;
+    };
+  };
+};
+
+export type UsersWithAuthorizationCredentialQueryVariables = SchemaTypes.Exact<{
+  credentialsCriteriaData: SchemaTypes.UsersWithAuthorizationCredentialInput;
+}>;
+
+export type UsersWithAuthorizationCredentialQuery = {
+  usersWithAuthorizationCredential: Array<{ id: string }>;
 };
 
 export type GetOrgVisualUriInnovationHubQueryVariables = SchemaTypes.Exact<{
@@ -120035,6 +121040,17 @@ export const ConvertSpaceL1ToSpaceL0Document = gql`
   }
   ${SpaceDataFragmentDoc}
 `;
+export const ConvertSpaceL1ToSpaceL2Document = gql`
+  mutation ConvertSpaceL1ToSpaceL2(
+    $convertData: ConvertSpaceL1ToSpaceL2Input!
+  ) {
+    convertSpaceL1ToSpaceL2(convertData: $convertData) {
+      id
+      nameID
+      level
+    }
+  }
+`;
 export const ConvertSpaceL2ToSpaceL1Document = gql`
   mutation ConvertSpaceL2ToSpaceL1(
     $convertData: ConvertSpaceL2ToSpaceL1Input!
@@ -120269,6 +121285,701 @@ export const UpdateOrganizationSettingsDocument = gql`
     }
   }
 `;
+export const AddIframeAllowedUrlDocument = gql`
+  mutation addIframeAllowedURL($whitelistedURL: String!) {
+    addIframeAllowedURL(whitelistedURL: $whitelistedURL)
+  }
+`;
+export const AddNotificationEmailToBlacklistDocument = gql`
+  mutation addNotificationEmailToBlacklist(
+    $input: NotificationEmailAddressInput!
+  ) {
+    addNotificationEmailToBlacklist(input: $input)
+  }
+`;
+export const AdminCommunicationEnsureAccessToCommunicationsDocument = gql`
+  mutation adminCommunicationEnsureAccessToCommunications(
+    $communicationData: CommunicationAdminEnsureAccessInput!
+  ) {
+    adminCommunicationEnsureAccessToCommunications(
+      communicationData: $communicationData
+    )
+  }
+`;
+export const AdminCommunicationMigrateOrphanedConversationsDocument = gql`
+  mutation adminCommunicationMigrateOrphanedConversations {
+    adminCommunicationMigrateOrphanedConversations {
+      migrated
+    }
+  }
+`;
+export const AdminCommunicationRemoveOrphanedRoomDocument = gql`
+  mutation adminCommunicationRemoveOrphanedRoom(
+    $orphanedRoomData: CommunicationAdminRemoveOrphanedRoomInput!
+  ) {
+    adminCommunicationRemoveOrphanedRoom(orphanedRoomData: $orphanedRoomData)
+  }
+`;
+export const AdminCommunicationSyncSpaceHierarchyDocument = gql`
+  mutation adminCommunicationSyncSpaceHierarchy {
+    adminCommunicationSyncSpaceHierarchy
+  }
+`;
+export const AdminCommunicationUpdateRoomStateDocument = gql`
+  mutation adminCommunicationUpdateRoomState(
+    $roomStateData: CommunicationAdminUpdateRoomStateInput!
+  ) {
+    adminCommunicationUpdateRoomState(roomStateData: $roomStateData)
+  }
+`;
+export const AdminForumRemoveDiscussionCategoryDocument = gql`
+  mutation adminForumRemoveDiscussionCategory(
+    $removeData: ForumRemoveDiscussionCategoryInput!
+  ) {
+    adminForumRemoveDiscussionCategory(removeData: $removeData) {
+      id
+      discussionCategories
+    }
+  }
+`;
+export const AdminIdentityDeleteKratosIdentityDocument = gql`
+  mutation adminIdentityDeleteKratosIdentity($kratosIdentityId: UUID!) {
+    adminIdentityDeleteKratosIdentity(kratosIdentityId: $kratosIdentityId)
+  }
+`;
+export const AdminInAppNotificationsPruneDocument = gql`
+  mutation adminInAppNotificationsPrune {
+    adminInAppNotificationsPrune {
+      removedCountExceedingUserLimit
+    }
+  }
+`;
+export const AdminLicensePolicyCreateCredentialRuleDocument = gql`
+  mutation adminLicensePolicyCreateCredentialRule(
+    $createData: CreateLicensePolicyCredentialRuleInput!
+  ) {
+    adminLicensePolicyCreateCredentialRule(createData: $createData) {
+      id
+    }
+  }
+`;
+export const AdminLicensePolicyDeleteCredentialRuleDocument = gql`
+  mutation adminLicensePolicyDeleteCredentialRule(
+    $deleteData: DeleteLicensePolicyCredentialRuleInput!
+  ) {
+    adminLicensePolicyDeleteCredentialRule(deleteData: $deleteData) {
+      id
+    }
+  }
+`;
+export const AdminLicensePolicyUpdateCredentialRuleDocument = gql`
+  mutation adminLicensePolicyUpdateCredentialRule(
+    $updateData: UpdateLicensePolicyCredentialRuleInput!
+  ) {
+    adminLicensePolicyUpdateCredentialRule(updateData: $updateData) {
+      id
+    }
+  }
+`;
+export const AdminRevokeMcpApiKeyDocument = gql`
+  mutation adminRevokeMcpApiKey($revokeData: AdminRevokeMcpApiKeyInput!) {
+    adminRevokeMcpApiKey(revokeData: $revokeData) {
+      id
+    }
+  }
+`;
+export const AdminUpdateContributorAvatarsDocument = gql`
+  mutation adminUpdateContributorAvatars($profileID: UUID!) {
+    adminUpdateContributorAvatars(profileID: $profileID) {
+      id
+    }
+  }
+`;
+export const AdminUpdateGeoLocationDataDocument = gql`
+  mutation adminUpdateGeoLocationData {
+    adminUpdateGeoLocationData
+  }
+`;
+export const AdminUserAccountDeleteDocument = gql`
+  mutation adminUserAccountDelete($userID: UUID!) {
+    adminUserAccountDelete(userID: $userID) {
+      id
+    }
+  }
+`;
+export const AdminUserEmailChangeDocument = gql`
+  mutation adminUserEmailChange(
+    $adminUserEmailChangeData: AdminUserEmailChangeInput!
+  ) {
+    adminUserEmailChange(adminUserEmailChangeData: $adminUserEmailChangeData) {
+      success
+    }
+  }
+`;
+export const AdminUserEmailChangeDriftResolveDocument = gql`
+  mutation adminUserEmailChangeDriftResolve(
+    $adminUserEmailChangeDriftResolveData: AdminUserEmailChangeDriftResolveInput!
+  ) {
+    adminUserEmailChangeDriftResolve(
+      adminUserEmailChangeDriftResolveData: $adminUserEmailChangeDriftResolveData
+    ) {
+      success
+    }
+  }
+`;
+export const AiServerAuthorizationPolicyResetDocument = gql`
+  mutation aiServerAuthorizationPolicyReset {
+    aiServerAuthorizationPolicyReset {
+      id
+    }
+  }
+`;
+export const AssignPlatformRoleToOrganizationDocument = gql`
+  mutation assignPlatformRoleToOrganization(
+    $roleData: AssignPlatformRoleInput!
+  ) {
+    assignPlatformRoleToOrganization(roleData: $roleData) {
+      id
+    }
+  }
+`;
+export const AuthorizationPlatformRolesAccessResetDocument = gql`
+  mutation authorizationPlatformRolesAccessReset {
+    authorizationPlatformRolesAccessReset
+  }
+`;
+export const AuthorizationPolicyResetAllDocument = gql`
+  mutation authorizationPolicyResetAll {
+    authorizationPolicyResetAll
+  }
+`;
+export const AuthorizationPolicyResetOnAccountDocument = gql`
+  mutation authorizationPolicyResetOnAccount(
+    $authorizationResetData: AccountAuthorizationResetInput!
+  ) {
+    authorizationPolicyResetOnAccount(
+      authorizationResetData: $authorizationResetData
+    ) {
+      id
+    }
+  }
+`;
+export const AuthorizationPolicyResetOnPlatformDocument = gql`
+  mutation authorizationPolicyResetOnPlatform {
+    authorizationPolicyResetOnPlatform {
+      id
+    }
+  }
+`;
+export const AuthorizationPolicyResetOnUserDocument = gql`
+  mutation authorizationPolicyResetOnUser(
+    $authorizationResetData: UserAuthorizationResetInput!
+  ) {
+    authorizationPolicyResetOnUser(
+      authorizationResetData: $authorizationResetData
+    ) {
+      id
+    }
+  }
+`;
+export const AuthorizationPolicyResetToGlobalAdminsAccessDocument = gql`
+  mutation authorizationPolicyResetToGlobalAdminsAccess(
+    $authorizationID: String!
+  ) {
+    authorizationPolicyResetToGlobalAdminsAccess(
+      authorizationID: $authorizationID
+    ) {
+      id
+    }
+  }
+`;
+export const CleanupCollectionsDocument = gql`
+  mutation cleanupCollections {
+    cleanupCollections {
+      success
+    }
+  }
+`;
+export const CreateContributionOnCalloutIdDocument = gql`
+  mutation createContributionOnCalloutId(
+    $contributionData: CreateContributionOnCalloutInput!
+  ) {
+    createContributionOnCallout(contributionData: $contributionData) {
+      id
+    }
+  }
+`;
+export const CreateTemplateFromContentSpaceDocument = gql`
+  mutation createTemplateFromContentSpace(
+    $templateData: CreateTemplateFromContentSpaceOnTemplatesSetInput!
+  ) {
+    createTemplateFromContentSpace(templateData: $templateData) {
+      id
+    }
+  }
+`;
+export const CreateWingbackAccountDocument = gql`
+  mutation createWingbackAccount($accountID: UUID!) {
+    createWingbackAccount(accountID: $accountID)
+  }
+`;
+export const DeleteContributionDocument = gql`
+  mutation deleteContribution($deleteData: DeleteContributionInput!) {
+    deleteContribution(deleteData: $deleteData) {
+      id
+    }
+  }
+`;
+export const GrantCredentialToActorDocument = gql`
+  mutation grantCredentialToActor(
+    $actorID: UUID!
+    $credentialType: CredentialType!
+    $resourceID: UUID
+  ) {
+    grantCredentialToActor(
+      actorID: $actorID
+      credentialType: $credentialType
+      resourceID: $resourceID
+    ) {
+      id
+    }
+  }
+`;
+export const GrantCredentialToOrganizationDocument = gql`
+  mutation grantCredentialToOrganization(
+    $grantCredentialData: GrantOrganizationAuthorizationCredentialInput!
+  ) {
+    grantCredentialToOrganization(grantCredentialData: $grantCredentialData) {
+      id
+    }
+  }
+`;
+export const GrantCredentialToUserDocument = gql`
+  mutation grantCredentialToUser(
+    $grantCredentialData: GrantAuthorizationCredentialInput!
+  ) {
+    grantCredentialToUser(grantCredentialData: $grantCredentialData) {
+      id
+    }
+  }
+`;
+export const LicenseResetOnAccountDocument = gql`
+  mutation licenseResetOnAccount($resetData: AccountLicenseResetInput!) {
+    licenseResetOnAccount(resetData: $resetData) {
+      id
+    }
+  }
+`;
+export const MigrateLegacyMemoContentDocument = gql`
+  mutation migrateLegacyMemoContent {
+    migrateLegacyMemoContent {
+      total
+      migrated
+    }
+  }
+`;
+export const MigrateLegacyWhiteboardContentDocument = gql`
+  mutation migrateLegacyWhiteboardContent {
+    migrateLegacyWhiteboardContent {
+      total
+      migrated
+    }
+  }
+`;
+export const MintMcpApiKeyDocument = gql`
+  mutation mintMcpApiKey($mintData: MintMcpApiKeyInput!) {
+    mintMcpApiKey(mintData: $mintData) {
+      key {
+        id
+      }
+    }
+  }
+`;
+export const MoveContributionToCalloutDocument = gql`
+  mutation moveContributionToCallout(
+    $moveContributionData: MoveCalloutContributionInput!
+  ) {
+    moveContributionToCallout(moveContributionData: $moveContributionData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesAssignLicensePlanToAccountDocument = gql`
+  mutation PlatformRolesAssignLicensePlanToAccount(
+    $planData: AssignLicensePlanToAccount!
+  ) {
+    assignLicensePlanToAccount(planData: $planData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesAssignLicensePlanToSpaceDocument = gql`
+  mutation PlatformRolesAssignLicensePlanToSpace(
+    $planData: AssignLicensePlanToSpace!
+  ) {
+    assignLicensePlanToSpace(planData: $planData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesAssignRoleToUserDocument = gql`
+  mutation PlatformRolesAssignRoleToUser($roleData: AssignPlatformRoleInput!) {
+    assignPlatformRoleToUser(roleData: $roleData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesConvertSpaceL1ToSpaceL0Document = gql`
+  mutation PlatformRolesConvertSpaceL1ToSpaceL0(
+    $convertData: ConvertSpaceL1ToSpaceL0Input!
+  ) {
+    convertSpaceL1ToSpaceL0(convertData: $convertData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesConvertSpaceL2ToSpaceL1Document = gql`
+  mutation PlatformRolesConvertSpaceL2ToSpaceL1(
+    $convertData: ConvertSpaceL2ToSpaceL1Input!
+  ) {
+    convertSpaceL2ToSpaceL1(convertData: $convertData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesConvertVirtualContributorToUseKnowledgeBaseDocument = gql`
+  mutation PlatformRolesConvertVirtualContributorToUseKnowledgeBase(
+    $conversionData: ConversionVcSpaceToVcKnowledgeBaseInput!
+  ) {
+    convertVirtualContributorToUseKnowledgeBase(
+      conversionData: $conversionData
+    ) {
+      id
+    }
+  }
+`;
+export const PlatformRolesCreateLicensePlanDocument = gql`
+  mutation PlatformRolesCreateLicensePlan(
+    $planData: CreateLicensePlanOnLicensingFrameworkInput!
+  ) {
+    createLicensePlan(planData: $planData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesCreateOrganizationDocument = gql`
+  mutation PlatformRolesCreateOrganization(
+    $organizationData: CreateOrganizationInput!
+  ) {
+    createOrganization(organizationData: $organizationData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesCreateTemplateDocument = gql`
+  mutation PlatformRolesCreateTemplate(
+    $templateData: CreateTemplateOnTemplatesSetInput!
+  ) {
+    createTemplate(templateData: $templateData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesCreateTemplateFromSpaceDocument = gql`
+  mutation PlatformRolesCreateTemplateFromSpace(
+    $templateData: CreateTemplateFromSpaceOnTemplatesSetInput!
+  ) {
+    createTemplateFromSpace(templateData: $templateData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesDeleteDiscussionDocument = gql`
+  mutation PlatformRolesDeleteDiscussion($deleteData: DeleteDiscussionInput!) {
+    deleteDiscussion(deleteData: $deleteData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesDeleteLicensePlanDocument = gql`
+  mutation PlatformRolesDeleteLicensePlan(
+    $deleteData: DeleteLicensePlanInput!
+  ) {
+    deleteLicensePlan(deleteData: $deleteData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesMoveSpaceL1ToSpaceL0Document = gql`
+  mutation PlatformRolesMoveSpaceL1ToSpaceL0(
+    $moveData: MoveSpaceL1ToSpaceL0Input!
+  ) {
+    moveSpaceL1ToSpaceL0(moveData: $moveData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesMoveSpaceL1ToSpaceL2Document = gql`
+  mutation PlatformRolesMoveSpaceL1ToSpaceL2(
+    $moveData: MoveSpaceL1ToSpaceL2Input!
+  ) {
+    moveSpaceL1ToSpaceL2(moveData: $moveData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesMoveSpaceL2ToSpaceL1Document = gql`
+  mutation PlatformRolesMoveSpaceL2ToSpaceL1(
+    $moveData: MoveSpaceL2ToSpaceL1Input!
+  ) {
+    moveSpaceL2ToSpaceL1(moveData: $moveData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesRemoveRoleFromUserDocument = gql`
+  mutation PlatformRolesRemoveRoleFromUser(
+    $roleData: RemovePlatformRoleInput!
+  ) {
+    removePlatformRoleFromUser(roleData: $roleData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesRevokeLicensePlanFromAccountDocument = gql`
+  mutation PlatformRolesRevokeLicensePlanFromAccount(
+    $planData: RevokeLicensePlanFromAccount!
+  ) {
+    revokeLicensePlanFromAccount(planData: $planData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesRevokeLicensePlanFromSpaceDocument = gql`
+  mutation PlatformRolesRevokeLicensePlanFromSpace(
+    $planData: RevokeLicensePlanFromSpace!
+  ) {
+    revokeLicensePlanFromSpace(planData: $planData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesTransferCalloutDocument = gql`
+  mutation PlatformRolesTransferCallout($transferData: TransferCalloutInput!) {
+    transferCallout(transferData: $transferData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesTransferInnovationHubToAccountDocument = gql`
+  mutation PlatformRolesTransferInnovationHubToAccount(
+    $transferData: TransferAccountInnovationHubInput!
+  ) {
+    transferInnovationHubToAccount(transferData: $transferData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesTransferInnovationPackToAccountDocument = gql`
+  mutation PlatformRolesTransferInnovationPackToAccount(
+    $transferData: TransferAccountInnovationPackInput!
+  ) {
+    transferInnovationPackToAccount(transferData: $transferData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesTransferSpaceToAccountDocument = gql`
+  mutation PlatformRolesTransferSpaceToAccount(
+    $transferData: TransferAccountSpaceInput!
+  ) {
+    transferSpaceToAccount(transferData: $transferData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesTransferVirtualContributorToAccountDocument = gql`
+  mutation PlatformRolesTransferVirtualContributorToAccount(
+    $transferData: TransferAccountVirtualContributorInput!
+  ) {
+    transferVirtualContributorToAccount(transferData: $transferData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesUpdateCalloutDocument = gql`
+  mutation PlatformRolesUpdateCallout($calloutData: UpdateCalloutEntityInput!) {
+    updateCallout(calloutData: $calloutData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesUpdateDiscussionDocument = gql`
+  mutation PlatformRolesUpdateDiscussion($updateData: UpdateDiscussionInput!) {
+    updateDiscussion(updateData: $updateData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesUpdateLicensePlanDocument = gql`
+  mutation PlatformRolesUpdateLicensePlan(
+    $updateData: UpdateLicensePlanInput!
+  ) {
+    updateLicensePlan(updateData: $updateData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesUpdateSpaceVisibilityDocument = gql`
+  mutation PlatformRolesUpdateSpaceVisibility(
+    $updateData: UpdateSpacePlatformSettingsInput!
+  ) {
+    updateSpacePlatformSettings(updateData: $updateData) {
+      id
+    }
+  }
+`;
+export const PlatformRolesUpdateTemplateDocument = gql`
+  mutation PlatformRolesUpdateTemplate($updateData: UpdateTemplateInput!) {
+    updateTemplate(updateData: $updateData) {
+      id
+    }
+  }
+`;
+export const RefreshAllBodiesOfKnowledgeDocument = gql`
+  mutation refreshAllBodiesOfKnowledge {
+    refreshAllBodiesOfKnowledge
+  }
+`;
+export const RemoveIframeAllowedUrlDocument = gql`
+  mutation removeIframeAllowedURL($whitelistedURL: String!) {
+    removeIframeAllowedURL(whitelistedURL: $whitelistedURL)
+  }
+`;
+export const RemoveNotificationEmailFromBlacklistDocument = gql`
+  mutation removeNotificationEmailFromBlacklist(
+    $input: NotificationEmailAddressInput!
+  ) {
+    removeNotificationEmailFromBlacklist(input: $input)
+  }
+`;
+export const RemovePlatformRoleFromOrganizationDocument = gql`
+  mutation removePlatformRoleFromOrganization(
+    $roleData: RemovePlatformRoleInput!
+  ) {
+    removePlatformRoleFromOrganization(roleData: $roleData) {
+      id
+    }
+  }
+`;
+export const ResetLicenseOnAccountsDocument = gql`
+  mutation resetLicenseOnAccounts {
+    resetLicenseOnAccounts
+  }
+`;
+export const RevokeCredentialFromActorDocument = gql`
+  mutation revokeCredentialFromActor(
+    $actorID: UUID!
+    $credentialType: CredentialType!
+    $resourceID: UUID
+  ) {
+    revokeCredentialFromActor(
+      actorID: $actorID
+      credentialType: $credentialType
+      resourceID: $resourceID
+    )
+  }
+`;
+export const RevokeCredentialFromOrganizationDocument = gql`
+  mutation revokeCredentialFromOrganization(
+    $revokeCredentialData: RevokeOrganizationAuthorizationCredentialInput!
+  ) {
+    revokeCredentialFromOrganization(
+      revokeCredentialData: $revokeCredentialData
+    ) {
+      id
+    }
+  }
+`;
+export const RevokeCredentialFromUserDocument = gql`
+  mutation revokeCredentialFromUser(
+    $revokeCredentialData: RevokeAuthorizationCredentialInput!
+  ) {
+    revokeCredentialFromUser(revokeCredentialData: $revokeCredentialData) {
+      id
+    }
+  }
+`;
+export const SetPlatformWellKnownVirtualContributorDocument = gql`
+  mutation setPlatformWellKnownVirtualContributor(
+    $mappingData: SetPlatformWellKnownVirtualContributorInput!
+  ) {
+    setPlatformWellKnownVirtualContributor(mappingData: $mappingData) {
+      mappings {
+        wellKnown
+      }
+    }
+  }
+`;
+export const UpdateAssistantActorCapabilitiesDocument = gql`
+  mutation updateAssistantActorCapabilities(
+    $grantData: GrantAssistantActorCapabilitiesInput!
+  ) {
+    updateAssistantActorCapabilities(grantData: $grantData) {
+      id
+    }
+  }
+`;
+export const UpdateBaselineLicensePlanOnAccountDocument = gql`
+  mutation updateBaselineLicensePlanOnAccount(
+    $updateData: UpdateBaselineLicensePlanOnAccount!
+  ) {
+    updateBaselineLicensePlanOnAccount(updateData: $updateData) {
+      id
+    }
+  }
+`;
+export const UpdateCalloutPublishInfoDocument = gql`
+  mutation updateCalloutPublishInfo(
+    $calloutData: UpdateCalloutPublishInfoInput!
+  ) {
+    updateCalloutPublishInfo(calloutData: $calloutData) {
+      id
+    }
+  }
+`;
+export const UpdateInnovationHubDocument = gql`
+  mutation updateInnovationHub($updateData: UpdateInnovationHubInput!) {
+    updateInnovationHub(updateData: $updateData) {
+      id
+    }
+  }
+`;
+export const UpdateInnovationPackDocument = gql`
+  mutation updateInnovationPack(
+    $innovationPackData: UpdateInnovationPackInput!
+  ) {
+    updateInnovationPack(innovationPackData: $innovationPackData) {
+      id
+    }
+  }
+`;
+export const UpdatePlatformSettingsDocument = gql`
+  mutation updatePlatformSettings($settingsData: UpdatePlatformSettingsInput!) {
+    updatePlatformSettings(settingsData: $settingsData) {
+      integration {
+        iframeAllowedUrls
+      }
+    }
+  }
+`;
+export const UpdateTemplateFromSpaceDocument = gql`
+  mutation updateTemplateFromSpace($updateData: UpdateTemplateFromSpaceInput!) {
+    updateTemplateFromSpace(updateData: $updateData) {
+      id
+    }
+  }
+`;
 export const AssignPlatformRoleToUserDocument = gql`
   mutation assignPlatformRoleToUser($roleData: AssignPlatformRoleInput!) {
     assignPlatformRoleToUser(roleData: $roleData) {
@@ -120363,6 +122074,20 @@ export const UpdateSpacePlatformSettingsDocument = gql`
     ) {
       id
       nameID
+      visibility
+      __typename
+    }
+  }
+`;
+export const UpdateSpaceVisibilityPlatformSettingsDocument = gql`
+  mutation UpdateSpaceVisibilityPlatformSettings(
+    $spaceId: UUID!
+    $visibility: SpaceVisibility!
+  ) {
+    updateSpacePlatformSettings(
+      updateData: { spaceID: $spaceId, visibility: $visibility }
+    ) {
+      id
       visibility
       __typename
     }
@@ -122045,6 +123770,196 @@ export const UsersPaginatedDocument = gql`
   }
   ${UserDataFragmentDoc}
 `;
+export const ActorsWithCredentialDocument = gql`
+  query actorsWithCredential(
+    $credentialType: CredentialType!
+    $resourceID: UUID
+  ) {
+    actorsWithCredential(
+      credentialType: $credentialType
+      resourceID: $resourceID
+    ) {
+      id
+    }
+  }
+`;
+export const LatestUserEmailChangeAuditEntryDocument = gql`
+  query latestUserEmailChangeAuditEntry($userID: UUID!) {
+    platformAdmin {
+      latestUserEmailChangeAuditEntry(userID: $userID) {
+        id
+        outcome
+      }
+    }
+  }
+`;
+export const PlatformAdminMcpApiKeysDocument = gql`
+  query platformAdminMcpApiKeys($userID: UUID!) {
+    platformAdmin {
+      mcpApiKeys(userID: $userID) {
+        id
+      }
+    }
+  }
+`;
+export const PlatformAdminVirtualAssistantDocument = gql`
+  query platformAdminVirtualAssistant {
+    platformAdmin {
+      virtualAssistant {
+        id
+      }
+    }
+  }
+`;
+export const PlatformForumDiscussionCategoriesDocument = gql`
+  query platformForumDiscussionCategories {
+    platform {
+      forum {
+        id
+        discussionCategories
+      }
+    }
+  }
+`;
+export const PlatformRoleSetOrganizationsInRoleDocument = gql`
+  query platformRoleSetOrganizationsInRole($role: RoleName!) {
+    platform {
+      roleSet {
+        organizationsInRole(role: $role) {
+          id
+        }
+      }
+    }
+  }
+`;
+export const PlatformRoleSetOrganizationsInRolesDocument = gql`
+  query platformRoleSetOrganizationsInRoles($roles: [RoleName!]!) {
+    platform {
+      roleSet {
+        organizationsInRoles(roles: $roles) {
+          role
+          organizations {
+            id
+          }
+        }
+      }
+    }
+  }
+`;
+export const PlatformRoleSetRoleNamesDocument = gql`
+  query platformRoleSetRoleNames {
+    platform {
+      roleSet {
+        roleNames
+      }
+    }
+  }
+`;
+export const PlatformRoleSetUsersInRoleDocument = gql`
+  query platformRoleSetUsersInRole($role: RoleName!) {
+    platform {
+      roleSet {
+        usersInRole(role: $role) {
+          id
+        }
+      }
+    }
+  }
+`;
+export const PlatformRoleSetUsersInRolesDocument = gql`
+  query platformRoleSetUsersInRoles($roles: [RoleName!]!) {
+    platform {
+      roleSet {
+        usersInRoles(roles: $roles) {
+          role
+          users {
+            id
+          }
+        }
+      }
+    }
+  }
+`;
+export const PlatformRolesSpaceApplicationsProbeDocument = gql`
+  query PlatformRolesSpaceApplicationsProbe($spaceId: UUID!) {
+    lookup {
+      space(ID: $spaceId) {
+        id
+        community {
+          roleSet {
+            applications {
+              id
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+export const SpaceCollaborationReadProbeDocument = gql`
+  query spaceCollaborationReadProbe($spaceId: UUID!) {
+    lookup {
+      space(ID: $spaceId) {
+        id
+        collaboration {
+          id
+        }
+      }
+    }
+  }
+`;
+export const SpaceReadProbeDocument = gql`
+  query spaceReadProbe($spaceId: UUID!) {
+    lookup {
+      space(ID: $spaceId) {
+        id
+      }
+    }
+  }
+`;
+export const SpaceSupportAdminPrivilegeProbeDocument = gql`
+  query spaceSupportAdminPrivilegeProbe($spaceId: UUID!) {
+    lookup {
+      space(ID: $spaceId) {
+        id
+        authorization {
+          myPrivileges
+        }
+      }
+    }
+  }
+`;
+export const UpdateUserServiceProfileDocument = gql`
+  mutation updateUserServiceProfile($userData: UpdateUserInput!) {
+    updateUser(userData: $userData) {
+      id
+    }
+  }
+`;
+export const UserEmailChangeAuditEntriesDocument = gql`
+  query userEmailChangeAuditEntries($userID: UUID!) {
+    platformAdmin {
+      userEmailChangeAuditEntries(userID: $userID) {
+        total
+        auditEntries {
+          id
+          outcome
+        }
+      }
+    }
+  }
+`;
+export const UsersWithAuthorizationCredentialDocument = gql`
+  query usersWithAuthorizationCredential(
+    $credentialsCriteriaData: UsersWithAuthorizationCredentialInput!
+  ) {
+    usersWithAuthorizationCredential(
+      credentialsCriteriaData: $credentialsCriteriaData
+    ) {
+      id
+    }
+  }
+`;
 export const GetOrgVisualUriInnovationHubDocument = gql`
   query GetOrgVisualUriInnovationHub($ID: UUID!) {
     platform {
@@ -123060,6 +124975,9 @@ const UpdatePostDocumentString = print(UpdatePostDocument);
 const ConvertSpaceL1ToSpaceL0DocumentString = print(
   ConvertSpaceL1ToSpaceL0Document
 );
+const ConvertSpaceL1ToSpaceL2DocumentString = print(
+  ConvertSpaceL1ToSpaceL2Document
+);
 const ConvertSpaceL2ToSpaceL1DocumentString = print(
   ConvertSpaceL2ToSpaceL1Document
 );
@@ -123098,6 +125016,241 @@ const UpdateOrganizationDocumentString = print(UpdateOrganizationDocument);
 const UpdateOrganizationSettingsDocumentString = print(
   UpdateOrganizationSettingsDocument
 );
+const AddIframeAllowedUrlDocumentString = print(AddIframeAllowedUrlDocument);
+const AddNotificationEmailToBlacklistDocumentString = print(
+  AddNotificationEmailToBlacklistDocument
+);
+const AdminCommunicationEnsureAccessToCommunicationsDocumentString = print(
+  AdminCommunicationEnsureAccessToCommunicationsDocument
+);
+const AdminCommunicationMigrateOrphanedConversationsDocumentString = print(
+  AdminCommunicationMigrateOrphanedConversationsDocument
+);
+const AdminCommunicationRemoveOrphanedRoomDocumentString = print(
+  AdminCommunicationRemoveOrphanedRoomDocument
+);
+const AdminCommunicationSyncSpaceHierarchyDocumentString = print(
+  AdminCommunicationSyncSpaceHierarchyDocument
+);
+const AdminCommunicationUpdateRoomStateDocumentString = print(
+  AdminCommunicationUpdateRoomStateDocument
+);
+const AdminForumRemoveDiscussionCategoryDocumentString = print(
+  AdminForumRemoveDiscussionCategoryDocument
+);
+const AdminIdentityDeleteKratosIdentityDocumentString = print(
+  AdminIdentityDeleteKratosIdentityDocument
+);
+const AdminInAppNotificationsPruneDocumentString = print(
+  AdminInAppNotificationsPruneDocument
+);
+const AdminLicensePolicyCreateCredentialRuleDocumentString = print(
+  AdminLicensePolicyCreateCredentialRuleDocument
+);
+const AdminLicensePolicyDeleteCredentialRuleDocumentString = print(
+  AdminLicensePolicyDeleteCredentialRuleDocument
+);
+const AdminLicensePolicyUpdateCredentialRuleDocumentString = print(
+  AdminLicensePolicyUpdateCredentialRuleDocument
+);
+const AdminRevokeMcpApiKeyDocumentString = print(AdminRevokeMcpApiKeyDocument);
+const AdminUpdateContributorAvatarsDocumentString = print(
+  AdminUpdateContributorAvatarsDocument
+);
+const AdminUpdateGeoLocationDataDocumentString = print(
+  AdminUpdateGeoLocationDataDocument
+);
+const AdminUserAccountDeleteDocumentString = print(
+  AdminUserAccountDeleteDocument
+);
+const AdminUserEmailChangeDocumentString = print(AdminUserEmailChangeDocument);
+const AdminUserEmailChangeDriftResolveDocumentString = print(
+  AdminUserEmailChangeDriftResolveDocument
+);
+const AiServerAuthorizationPolicyResetDocumentString = print(
+  AiServerAuthorizationPolicyResetDocument
+);
+const AssignPlatformRoleToOrganizationDocumentString = print(
+  AssignPlatformRoleToOrganizationDocument
+);
+const AuthorizationPlatformRolesAccessResetDocumentString = print(
+  AuthorizationPlatformRolesAccessResetDocument
+);
+const AuthorizationPolicyResetAllDocumentString = print(
+  AuthorizationPolicyResetAllDocument
+);
+const AuthorizationPolicyResetOnAccountDocumentString = print(
+  AuthorizationPolicyResetOnAccountDocument
+);
+const AuthorizationPolicyResetOnPlatformDocumentString = print(
+  AuthorizationPolicyResetOnPlatformDocument
+);
+const AuthorizationPolicyResetOnUserDocumentString = print(
+  AuthorizationPolicyResetOnUserDocument
+);
+const AuthorizationPolicyResetToGlobalAdminsAccessDocumentString = print(
+  AuthorizationPolicyResetToGlobalAdminsAccessDocument
+);
+const CleanupCollectionsDocumentString = print(CleanupCollectionsDocument);
+const CreateContributionOnCalloutIdDocumentString = print(
+  CreateContributionOnCalloutIdDocument
+);
+const CreateTemplateFromContentSpaceDocumentString = print(
+  CreateTemplateFromContentSpaceDocument
+);
+const CreateWingbackAccountDocumentString = print(
+  CreateWingbackAccountDocument
+);
+const DeleteContributionDocumentString = print(DeleteContributionDocument);
+const GrantCredentialToActorDocumentString = print(
+  GrantCredentialToActorDocument
+);
+const GrantCredentialToOrganizationDocumentString = print(
+  GrantCredentialToOrganizationDocument
+);
+const GrantCredentialToUserDocumentString = print(
+  GrantCredentialToUserDocument
+);
+const LicenseResetOnAccountDocumentString = print(
+  LicenseResetOnAccountDocument
+);
+const MigrateLegacyMemoContentDocumentString = print(
+  MigrateLegacyMemoContentDocument
+);
+const MigrateLegacyWhiteboardContentDocumentString = print(
+  MigrateLegacyWhiteboardContentDocument
+);
+const MintMcpApiKeyDocumentString = print(MintMcpApiKeyDocument);
+const MoveContributionToCalloutDocumentString = print(
+  MoveContributionToCalloutDocument
+);
+const PlatformRolesAssignLicensePlanToAccountDocumentString = print(
+  PlatformRolesAssignLicensePlanToAccountDocument
+);
+const PlatformRolesAssignLicensePlanToSpaceDocumentString = print(
+  PlatformRolesAssignLicensePlanToSpaceDocument
+);
+const PlatformRolesAssignRoleToUserDocumentString = print(
+  PlatformRolesAssignRoleToUserDocument
+);
+const PlatformRolesConvertSpaceL1ToSpaceL0DocumentString = print(
+  PlatformRolesConvertSpaceL1ToSpaceL0Document
+);
+const PlatformRolesConvertSpaceL2ToSpaceL1DocumentString = print(
+  PlatformRolesConvertSpaceL2ToSpaceL1Document
+);
+const PlatformRolesConvertVirtualContributorToUseKnowledgeBaseDocumentString =
+  print(PlatformRolesConvertVirtualContributorToUseKnowledgeBaseDocument);
+const PlatformRolesCreateLicensePlanDocumentString = print(
+  PlatformRolesCreateLicensePlanDocument
+);
+const PlatformRolesCreateOrganizationDocumentString = print(
+  PlatformRolesCreateOrganizationDocument
+);
+const PlatformRolesCreateTemplateDocumentString = print(
+  PlatformRolesCreateTemplateDocument
+);
+const PlatformRolesCreateTemplateFromSpaceDocumentString = print(
+  PlatformRolesCreateTemplateFromSpaceDocument
+);
+const PlatformRolesDeleteDiscussionDocumentString = print(
+  PlatformRolesDeleteDiscussionDocument
+);
+const PlatformRolesDeleteLicensePlanDocumentString = print(
+  PlatformRolesDeleteLicensePlanDocument
+);
+const PlatformRolesMoveSpaceL1ToSpaceL0DocumentString = print(
+  PlatformRolesMoveSpaceL1ToSpaceL0Document
+);
+const PlatformRolesMoveSpaceL1ToSpaceL2DocumentString = print(
+  PlatformRolesMoveSpaceL1ToSpaceL2Document
+);
+const PlatformRolesMoveSpaceL2ToSpaceL1DocumentString = print(
+  PlatformRolesMoveSpaceL2ToSpaceL1Document
+);
+const PlatformRolesRemoveRoleFromUserDocumentString = print(
+  PlatformRolesRemoveRoleFromUserDocument
+);
+const PlatformRolesRevokeLicensePlanFromAccountDocumentString = print(
+  PlatformRolesRevokeLicensePlanFromAccountDocument
+);
+const PlatformRolesRevokeLicensePlanFromSpaceDocumentString = print(
+  PlatformRolesRevokeLicensePlanFromSpaceDocument
+);
+const PlatformRolesTransferCalloutDocumentString = print(
+  PlatformRolesTransferCalloutDocument
+);
+const PlatformRolesTransferInnovationHubToAccountDocumentString = print(
+  PlatformRolesTransferInnovationHubToAccountDocument
+);
+const PlatformRolesTransferInnovationPackToAccountDocumentString = print(
+  PlatformRolesTransferInnovationPackToAccountDocument
+);
+const PlatformRolesTransferSpaceToAccountDocumentString = print(
+  PlatformRolesTransferSpaceToAccountDocument
+);
+const PlatformRolesTransferVirtualContributorToAccountDocumentString = print(
+  PlatformRolesTransferVirtualContributorToAccountDocument
+);
+const PlatformRolesUpdateCalloutDocumentString = print(
+  PlatformRolesUpdateCalloutDocument
+);
+const PlatformRolesUpdateDiscussionDocumentString = print(
+  PlatformRolesUpdateDiscussionDocument
+);
+const PlatformRolesUpdateLicensePlanDocumentString = print(
+  PlatformRolesUpdateLicensePlanDocument
+);
+const PlatformRolesUpdateSpaceVisibilityDocumentString = print(
+  PlatformRolesUpdateSpaceVisibilityDocument
+);
+const PlatformRolesUpdateTemplateDocumentString = print(
+  PlatformRolesUpdateTemplateDocument
+);
+const RefreshAllBodiesOfKnowledgeDocumentString = print(
+  RefreshAllBodiesOfKnowledgeDocument
+);
+const RemoveIframeAllowedUrlDocumentString = print(
+  RemoveIframeAllowedUrlDocument
+);
+const RemoveNotificationEmailFromBlacklistDocumentString = print(
+  RemoveNotificationEmailFromBlacklistDocument
+);
+const RemovePlatformRoleFromOrganizationDocumentString = print(
+  RemovePlatformRoleFromOrganizationDocument
+);
+const ResetLicenseOnAccountsDocumentString = print(
+  ResetLicenseOnAccountsDocument
+);
+const RevokeCredentialFromActorDocumentString = print(
+  RevokeCredentialFromActorDocument
+);
+const RevokeCredentialFromOrganizationDocumentString = print(
+  RevokeCredentialFromOrganizationDocument
+);
+const RevokeCredentialFromUserDocumentString = print(
+  RevokeCredentialFromUserDocument
+);
+const SetPlatformWellKnownVirtualContributorDocumentString = print(
+  SetPlatformWellKnownVirtualContributorDocument
+);
+const UpdateAssistantActorCapabilitiesDocumentString = print(
+  UpdateAssistantActorCapabilitiesDocument
+);
+const UpdateBaselineLicensePlanOnAccountDocumentString = print(
+  UpdateBaselineLicensePlanOnAccountDocument
+);
+const UpdateCalloutPublishInfoDocumentString = print(
+  UpdateCalloutPublishInfoDocument
+);
+const UpdateInnovationHubDocumentString = print(UpdateInnovationHubDocument);
+const UpdateInnovationPackDocumentString = print(UpdateInnovationPackDocument);
+const UpdatePlatformSettingsDocumentString = print(
+  UpdatePlatformSettingsDocument
+);
+const UpdateTemplateFromSpaceDocumentString = print(
+  UpdateTemplateFromSpaceDocument
+);
 const AssignPlatformRoleToUserDocumentString = print(
   AssignPlatformRoleToUserDocument
 );
@@ -123110,6 +125263,9 @@ const DeleteInnovationHubDocumentString = print(DeleteInnovationHubDocument);
 const DeleteInnovationPackDocumentString = print(DeleteInnovationPackDocument);
 const UpdateSpacePlatformSettingsDocumentString = print(
   UpdateSpacePlatformSettingsDocument
+);
+const UpdateSpaceVisibilityPlatformSettingsDocumentString = print(
+  UpdateSpaceVisibilityPlatformSettingsDocument
 );
 const SubscribeToPushNotificationsDocumentString = print(
   SubscribeToPushNotificationsDocument
@@ -123280,6 +125436,53 @@ const OrganizationsPaginatedDocumentString = print(
   OrganizationsPaginatedDocument
 );
 const UsersPaginatedDocumentString = print(UsersPaginatedDocument);
+const ActorsWithCredentialDocumentString = print(ActorsWithCredentialDocument);
+const LatestUserEmailChangeAuditEntryDocumentString = print(
+  LatestUserEmailChangeAuditEntryDocument
+);
+const PlatformAdminMcpApiKeysDocumentString = print(
+  PlatformAdminMcpApiKeysDocument
+);
+const PlatformAdminVirtualAssistantDocumentString = print(
+  PlatformAdminVirtualAssistantDocument
+);
+const PlatformForumDiscussionCategoriesDocumentString = print(
+  PlatformForumDiscussionCategoriesDocument
+);
+const PlatformRoleSetOrganizationsInRoleDocumentString = print(
+  PlatformRoleSetOrganizationsInRoleDocument
+);
+const PlatformRoleSetOrganizationsInRolesDocumentString = print(
+  PlatformRoleSetOrganizationsInRolesDocument
+);
+const PlatformRoleSetRoleNamesDocumentString = print(
+  PlatformRoleSetRoleNamesDocument
+);
+const PlatformRoleSetUsersInRoleDocumentString = print(
+  PlatformRoleSetUsersInRoleDocument
+);
+const PlatformRoleSetUsersInRolesDocumentString = print(
+  PlatformRoleSetUsersInRolesDocument
+);
+const PlatformRolesSpaceApplicationsProbeDocumentString = print(
+  PlatformRolesSpaceApplicationsProbeDocument
+);
+const SpaceCollaborationReadProbeDocumentString = print(
+  SpaceCollaborationReadProbeDocument
+);
+const SpaceReadProbeDocumentString = print(SpaceReadProbeDocument);
+const SpaceSupportAdminPrivilegeProbeDocumentString = print(
+  SpaceSupportAdminPrivilegeProbeDocument
+);
+const UpdateUserServiceProfileDocumentString = print(
+  UpdateUserServiceProfileDocument
+);
+const UserEmailChangeAuditEntriesDocumentString = print(
+  UserEmailChangeAuditEntriesDocument
+);
+const UsersWithAuthorizationCredentialDocumentString = print(
+  UsersWithAuthorizationCredentialDocument
+);
 const GetOrgVisualUriInnovationHubDocumentString = print(
   GetOrgVisualUriInnovationHubDocument
 );
@@ -124602,6 +126805,28 @@ export function getSdk(
         variables
       );
     },
+    ConvertSpaceL1ToSpaceL2(
+      variables: SchemaTypes.ConvertSpaceL1ToSpaceL2MutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ConvertSpaceL1ToSpaceL2Mutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ConvertSpaceL1ToSpaceL2Mutation>(
+            ConvertSpaceL1ToSpaceL2DocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ConvertSpaceL1ToSpaceL2",
+        "mutation",
+        variables
+      );
+    },
     ConvertSpaceL2ToSpaceL1(
       variables: SchemaTypes.ConvertSpaceL2ToSpaceL1MutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -125130,6 +127355,1854 @@ export function getSdk(
         variables
       );
     },
+    addIframeAllowedURL(
+      variables: SchemaTypes.AddIframeAllowedUrlMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AddIframeAllowedUrlMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AddIframeAllowedUrlMutation>(
+            AddIframeAllowedUrlDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "addIframeAllowedURL",
+        "mutation",
+        variables
+      );
+    },
+    addNotificationEmailToBlacklist(
+      variables: SchemaTypes.AddNotificationEmailToBlacklistMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AddNotificationEmailToBlacklistMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AddNotificationEmailToBlacklistMutation>(
+            AddNotificationEmailToBlacklistDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "addNotificationEmailToBlacklist",
+        "mutation",
+        variables
+      );
+    },
+    adminCommunicationEnsureAccessToCommunications(
+      variables: SchemaTypes.AdminCommunicationEnsureAccessToCommunicationsMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminCommunicationEnsureAccessToCommunicationsMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminCommunicationEnsureAccessToCommunicationsMutation>(
+            AdminCommunicationEnsureAccessToCommunicationsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminCommunicationEnsureAccessToCommunications",
+        "mutation",
+        variables
+      );
+    },
+    adminCommunicationMigrateOrphanedConversations(
+      variables?: SchemaTypes.AdminCommunicationMigrateOrphanedConversationsMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminCommunicationMigrateOrphanedConversationsMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminCommunicationMigrateOrphanedConversationsMutation>(
+            AdminCommunicationMigrateOrphanedConversationsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminCommunicationMigrateOrphanedConversations",
+        "mutation",
+        variables
+      );
+    },
+    adminCommunicationRemoveOrphanedRoom(
+      variables: SchemaTypes.AdminCommunicationRemoveOrphanedRoomMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminCommunicationRemoveOrphanedRoomMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminCommunicationRemoveOrphanedRoomMutation>(
+            AdminCommunicationRemoveOrphanedRoomDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminCommunicationRemoveOrphanedRoom",
+        "mutation",
+        variables
+      );
+    },
+    adminCommunicationSyncSpaceHierarchy(
+      variables?: SchemaTypes.AdminCommunicationSyncSpaceHierarchyMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminCommunicationSyncSpaceHierarchyMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminCommunicationSyncSpaceHierarchyMutation>(
+            AdminCommunicationSyncSpaceHierarchyDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminCommunicationSyncSpaceHierarchy",
+        "mutation",
+        variables
+      );
+    },
+    adminCommunicationUpdateRoomState(
+      variables: SchemaTypes.AdminCommunicationUpdateRoomStateMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminCommunicationUpdateRoomStateMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminCommunicationUpdateRoomStateMutation>(
+            AdminCommunicationUpdateRoomStateDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminCommunicationUpdateRoomState",
+        "mutation",
+        variables
+      );
+    },
+    adminForumRemoveDiscussionCategory(
+      variables: SchemaTypes.AdminForumRemoveDiscussionCategoryMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminForumRemoveDiscussionCategoryMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminForumRemoveDiscussionCategoryMutation>(
+            AdminForumRemoveDiscussionCategoryDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminForumRemoveDiscussionCategory",
+        "mutation",
+        variables
+      );
+    },
+    adminIdentityDeleteKratosIdentity(
+      variables: SchemaTypes.AdminIdentityDeleteKratosIdentityMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminIdentityDeleteKratosIdentityMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminIdentityDeleteKratosIdentityMutation>(
+            AdminIdentityDeleteKratosIdentityDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminIdentityDeleteKratosIdentity",
+        "mutation",
+        variables
+      );
+    },
+    adminInAppNotificationsPrune(
+      variables?: SchemaTypes.AdminInAppNotificationsPruneMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminInAppNotificationsPruneMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminInAppNotificationsPruneMutation>(
+            AdminInAppNotificationsPruneDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminInAppNotificationsPrune",
+        "mutation",
+        variables
+      );
+    },
+    adminLicensePolicyCreateCredentialRule(
+      variables: SchemaTypes.AdminLicensePolicyCreateCredentialRuleMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminLicensePolicyCreateCredentialRuleMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminLicensePolicyCreateCredentialRuleMutation>(
+            AdminLicensePolicyCreateCredentialRuleDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminLicensePolicyCreateCredentialRule",
+        "mutation",
+        variables
+      );
+    },
+    adminLicensePolicyDeleteCredentialRule(
+      variables: SchemaTypes.AdminLicensePolicyDeleteCredentialRuleMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminLicensePolicyDeleteCredentialRuleMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminLicensePolicyDeleteCredentialRuleMutation>(
+            AdminLicensePolicyDeleteCredentialRuleDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminLicensePolicyDeleteCredentialRule",
+        "mutation",
+        variables
+      );
+    },
+    adminLicensePolicyUpdateCredentialRule(
+      variables: SchemaTypes.AdminLicensePolicyUpdateCredentialRuleMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminLicensePolicyUpdateCredentialRuleMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminLicensePolicyUpdateCredentialRuleMutation>(
+            AdminLicensePolicyUpdateCredentialRuleDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminLicensePolicyUpdateCredentialRule",
+        "mutation",
+        variables
+      );
+    },
+    adminRevokeMcpApiKey(
+      variables: SchemaTypes.AdminRevokeMcpApiKeyMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminRevokeMcpApiKeyMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminRevokeMcpApiKeyMutation>(
+            AdminRevokeMcpApiKeyDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminRevokeMcpApiKey",
+        "mutation",
+        variables
+      );
+    },
+    adminUpdateContributorAvatars(
+      variables: SchemaTypes.AdminUpdateContributorAvatarsMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminUpdateContributorAvatarsMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminUpdateContributorAvatarsMutation>(
+            AdminUpdateContributorAvatarsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminUpdateContributorAvatars",
+        "mutation",
+        variables
+      );
+    },
+    adminUpdateGeoLocationData(
+      variables?: SchemaTypes.AdminUpdateGeoLocationDataMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminUpdateGeoLocationDataMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminUpdateGeoLocationDataMutation>(
+            AdminUpdateGeoLocationDataDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminUpdateGeoLocationData",
+        "mutation",
+        variables
+      );
+    },
+    adminUserAccountDelete(
+      variables: SchemaTypes.AdminUserAccountDeleteMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminUserAccountDeleteMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminUserAccountDeleteMutation>(
+            AdminUserAccountDeleteDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminUserAccountDelete",
+        "mutation",
+        variables
+      );
+    },
+    adminUserEmailChange(
+      variables: SchemaTypes.AdminUserEmailChangeMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminUserEmailChangeMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminUserEmailChangeMutation>(
+            AdminUserEmailChangeDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminUserEmailChange",
+        "mutation",
+        variables
+      );
+    },
+    adminUserEmailChangeDriftResolve(
+      variables: SchemaTypes.AdminUserEmailChangeDriftResolveMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminUserEmailChangeDriftResolveMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminUserEmailChangeDriftResolveMutation>(
+            AdminUserEmailChangeDriftResolveDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "adminUserEmailChangeDriftResolve",
+        "mutation",
+        variables
+      );
+    },
+    aiServerAuthorizationPolicyReset(
+      variables?: SchemaTypes.AiServerAuthorizationPolicyResetMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AiServerAuthorizationPolicyResetMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AiServerAuthorizationPolicyResetMutation>(
+            AiServerAuthorizationPolicyResetDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "aiServerAuthorizationPolicyReset",
+        "mutation",
+        variables
+      );
+    },
+    assignPlatformRoleToOrganization(
+      variables: SchemaTypes.AssignPlatformRoleToOrganizationMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AssignPlatformRoleToOrganizationMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AssignPlatformRoleToOrganizationMutation>(
+            AssignPlatformRoleToOrganizationDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "assignPlatformRoleToOrganization",
+        "mutation",
+        variables
+      );
+    },
+    authorizationPlatformRolesAccessReset(
+      variables?: SchemaTypes.AuthorizationPlatformRolesAccessResetMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AuthorizationPlatformRolesAccessResetMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AuthorizationPlatformRolesAccessResetMutation>(
+            AuthorizationPlatformRolesAccessResetDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "authorizationPlatformRolesAccessReset",
+        "mutation",
+        variables
+      );
+    },
+    authorizationPolicyResetAll(
+      variables?: SchemaTypes.AuthorizationPolicyResetAllMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AuthorizationPolicyResetAllMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AuthorizationPolicyResetAllMutation>(
+            AuthorizationPolicyResetAllDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "authorizationPolicyResetAll",
+        "mutation",
+        variables
+      );
+    },
+    authorizationPolicyResetOnAccount(
+      variables: SchemaTypes.AuthorizationPolicyResetOnAccountMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AuthorizationPolicyResetOnAccountMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AuthorizationPolicyResetOnAccountMutation>(
+            AuthorizationPolicyResetOnAccountDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "authorizationPolicyResetOnAccount",
+        "mutation",
+        variables
+      );
+    },
+    authorizationPolicyResetOnPlatform(
+      variables?: SchemaTypes.AuthorizationPolicyResetOnPlatformMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AuthorizationPolicyResetOnPlatformMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AuthorizationPolicyResetOnPlatformMutation>(
+            AuthorizationPolicyResetOnPlatformDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "authorizationPolicyResetOnPlatform",
+        "mutation",
+        variables
+      );
+    },
+    authorizationPolicyResetOnUser(
+      variables: SchemaTypes.AuthorizationPolicyResetOnUserMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AuthorizationPolicyResetOnUserMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AuthorizationPolicyResetOnUserMutation>(
+            AuthorizationPolicyResetOnUserDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "authorizationPolicyResetOnUser",
+        "mutation",
+        variables
+      );
+    },
+    authorizationPolicyResetToGlobalAdminsAccess(
+      variables: SchemaTypes.AuthorizationPolicyResetToGlobalAdminsAccessMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AuthorizationPolicyResetToGlobalAdminsAccessMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AuthorizationPolicyResetToGlobalAdminsAccessMutation>(
+            AuthorizationPolicyResetToGlobalAdminsAccessDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "authorizationPolicyResetToGlobalAdminsAccess",
+        "mutation",
+        variables
+      );
+    },
+    cleanupCollections(
+      variables?: SchemaTypes.CleanupCollectionsMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.CleanupCollectionsMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.CleanupCollectionsMutation>(
+            CleanupCollectionsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "cleanupCollections",
+        "mutation",
+        variables
+      );
+    },
+    createContributionOnCalloutId(
+      variables: SchemaTypes.CreateContributionOnCalloutIdMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.CreateContributionOnCalloutIdMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.CreateContributionOnCalloutIdMutation>(
+            CreateContributionOnCalloutIdDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "createContributionOnCalloutId",
+        "mutation",
+        variables
+      );
+    },
+    createTemplateFromContentSpace(
+      variables: SchemaTypes.CreateTemplateFromContentSpaceMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.CreateTemplateFromContentSpaceMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.CreateTemplateFromContentSpaceMutation>(
+            CreateTemplateFromContentSpaceDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "createTemplateFromContentSpace",
+        "mutation",
+        variables
+      );
+    },
+    createWingbackAccount(
+      variables: SchemaTypes.CreateWingbackAccountMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.CreateWingbackAccountMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.CreateWingbackAccountMutation>(
+            CreateWingbackAccountDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "createWingbackAccount",
+        "mutation",
+        variables
+      );
+    },
+    deleteContribution(
+      variables: SchemaTypes.DeleteContributionMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.DeleteContributionMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.DeleteContributionMutation>(
+            DeleteContributionDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "deleteContribution",
+        "mutation",
+        variables
+      );
+    },
+    grantCredentialToActor(
+      variables: SchemaTypes.GrantCredentialToActorMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.GrantCredentialToActorMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.GrantCredentialToActorMutation>(
+            GrantCredentialToActorDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "grantCredentialToActor",
+        "mutation",
+        variables
+      );
+    },
+    grantCredentialToOrganization(
+      variables: SchemaTypes.GrantCredentialToOrganizationMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.GrantCredentialToOrganizationMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.GrantCredentialToOrganizationMutation>(
+            GrantCredentialToOrganizationDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "grantCredentialToOrganization",
+        "mutation",
+        variables
+      );
+    },
+    grantCredentialToUser(
+      variables: SchemaTypes.GrantCredentialToUserMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.GrantCredentialToUserMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.GrantCredentialToUserMutation>(
+            GrantCredentialToUserDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "grantCredentialToUser",
+        "mutation",
+        variables
+      );
+    },
+    licenseResetOnAccount(
+      variables: SchemaTypes.LicenseResetOnAccountMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.LicenseResetOnAccountMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.LicenseResetOnAccountMutation>(
+            LicenseResetOnAccountDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "licenseResetOnAccount",
+        "mutation",
+        variables
+      );
+    },
+    migrateLegacyMemoContent(
+      variables?: SchemaTypes.MigrateLegacyMemoContentMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.MigrateLegacyMemoContentMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.MigrateLegacyMemoContentMutation>(
+            MigrateLegacyMemoContentDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "migrateLegacyMemoContent",
+        "mutation",
+        variables
+      );
+    },
+    migrateLegacyWhiteboardContent(
+      variables?: SchemaTypes.MigrateLegacyWhiteboardContentMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.MigrateLegacyWhiteboardContentMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.MigrateLegacyWhiteboardContentMutation>(
+            MigrateLegacyWhiteboardContentDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "migrateLegacyWhiteboardContent",
+        "mutation",
+        variables
+      );
+    },
+    mintMcpApiKey(
+      variables: SchemaTypes.MintMcpApiKeyMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.MintMcpApiKeyMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.MintMcpApiKeyMutation>(
+            MintMcpApiKeyDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "mintMcpApiKey",
+        "mutation",
+        variables
+      );
+    },
+    moveContributionToCallout(
+      variables: SchemaTypes.MoveContributionToCalloutMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.MoveContributionToCalloutMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.MoveContributionToCalloutMutation>(
+            MoveContributionToCalloutDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "moveContributionToCallout",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesAssignLicensePlanToAccount(
+      variables: SchemaTypes.PlatformRolesAssignLicensePlanToAccountMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesAssignLicensePlanToAccountMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesAssignLicensePlanToAccountMutation>(
+            PlatformRolesAssignLicensePlanToAccountDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesAssignLicensePlanToAccount",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesAssignLicensePlanToSpace(
+      variables: SchemaTypes.PlatformRolesAssignLicensePlanToSpaceMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesAssignLicensePlanToSpaceMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesAssignLicensePlanToSpaceMutation>(
+            PlatformRolesAssignLicensePlanToSpaceDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesAssignLicensePlanToSpace",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesAssignRoleToUser(
+      variables: SchemaTypes.PlatformRolesAssignRoleToUserMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesAssignRoleToUserMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesAssignRoleToUserMutation>(
+            PlatformRolesAssignRoleToUserDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesAssignRoleToUser",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesConvertSpaceL1ToSpaceL0(
+      variables: SchemaTypes.PlatformRolesConvertSpaceL1ToSpaceL0MutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesConvertSpaceL1ToSpaceL0Mutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesConvertSpaceL1ToSpaceL0Mutation>(
+            PlatformRolesConvertSpaceL1ToSpaceL0DocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesConvertSpaceL1ToSpaceL0",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesConvertSpaceL2ToSpaceL1(
+      variables: SchemaTypes.PlatformRolesConvertSpaceL2ToSpaceL1MutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesConvertSpaceL2ToSpaceL1Mutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesConvertSpaceL2ToSpaceL1Mutation>(
+            PlatformRolesConvertSpaceL2ToSpaceL1DocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesConvertSpaceL2ToSpaceL1",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesConvertVirtualContributorToUseKnowledgeBase(
+      variables: SchemaTypes.PlatformRolesConvertVirtualContributorToUseKnowledgeBaseMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesConvertVirtualContributorToUseKnowledgeBaseMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesConvertVirtualContributorToUseKnowledgeBaseMutation>(
+            PlatformRolesConvertVirtualContributorToUseKnowledgeBaseDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesConvertVirtualContributorToUseKnowledgeBase",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesCreateLicensePlan(
+      variables: SchemaTypes.PlatformRolesCreateLicensePlanMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesCreateLicensePlanMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesCreateLicensePlanMutation>(
+            PlatformRolesCreateLicensePlanDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesCreateLicensePlan",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesCreateOrganization(
+      variables: SchemaTypes.PlatformRolesCreateOrganizationMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesCreateOrganizationMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesCreateOrganizationMutation>(
+            PlatformRolesCreateOrganizationDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesCreateOrganization",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesCreateTemplate(
+      variables: SchemaTypes.PlatformRolesCreateTemplateMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesCreateTemplateMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesCreateTemplateMutation>(
+            PlatformRolesCreateTemplateDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesCreateTemplate",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesCreateTemplateFromSpace(
+      variables: SchemaTypes.PlatformRolesCreateTemplateFromSpaceMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesCreateTemplateFromSpaceMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesCreateTemplateFromSpaceMutation>(
+            PlatformRolesCreateTemplateFromSpaceDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesCreateTemplateFromSpace",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesDeleteDiscussion(
+      variables: SchemaTypes.PlatformRolesDeleteDiscussionMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesDeleteDiscussionMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesDeleteDiscussionMutation>(
+            PlatformRolesDeleteDiscussionDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesDeleteDiscussion",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesDeleteLicensePlan(
+      variables: SchemaTypes.PlatformRolesDeleteLicensePlanMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesDeleteLicensePlanMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesDeleteLicensePlanMutation>(
+            PlatformRolesDeleteLicensePlanDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesDeleteLicensePlan",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesMoveSpaceL1ToSpaceL0(
+      variables: SchemaTypes.PlatformRolesMoveSpaceL1ToSpaceL0MutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesMoveSpaceL1ToSpaceL0Mutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesMoveSpaceL1ToSpaceL0Mutation>(
+            PlatformRolesMoveSpaceL1ToSpaceL0DocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesMoveSpaceL1ToSpaceL0",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesMoveSpaceL1ToSpaceL2(
+      variables: SchemaTypes.PlatformRolesMoveSpaceL1ToSpaceL2MutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesMoveSpaceL1ToSpaceL2Mutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesMoveSpaceL1ToSpaceL2Mutation>(
+            PlatformRolesMoveSpaceL1ToSpaceL2DocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesMoveSpaceL1ToSpaceL2",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesMoveSpaceL2ToSpaceL1(
+      variables: SchemaTypes.PlatformRolesMoveSpaceL2ToSpaceL1MutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesMoveSpaceL2ToSpaceL1Mutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesMoveSpaceL2ToSpaceL1Mutation>(
+            PlatformRolesMoveSpaceL2ToSpaceL1DocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesMoveSpaceL2ToSpaceL1",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesRemoveRoleFromUser(
+      variables: SchemaTypes.PlatformRolesRemoveRoleFromUserMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesRemoveRoleFromUserMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesRemoveRoleFromUserMutation>(
+            PlatformRolesRemoveRoleFromUserDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesRemoveRoleFromUser",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesRevokeLicensePlanFromAccount(
+      variables: SchemaTypes.PlatformRolesRevokeLicensePlanFromAccountMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesRevokeLicensePlanFromAccountMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesRevokeLicensePlanFromAccountMutation>(
+            PlatformRolesRevokeLicensePlanFromAccountDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesRevokeLicensePlanFromAccount",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesRevokeLicensePlanFromSpace(
+      variables: SchemaTypes.PlatformRolesRevokeLicensePlanFromSpaceMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesRevokeLicensePlanFromSpaceMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesRevokeLicensePlanFromSpaceMutation>(
+            PlatformRolesRevokeLicensePlanFromSpaceDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesRevokeLicensePlanFromSpace",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesTransferCallout(
+      variables: SchemaTypes.PlatformRolesTransferCalloutMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesTransferCalloutMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesTransferCalloutMutation>(
+            PlatformRolesTransferCalloutDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesTransferCallout",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesTransferInnovationHubToAccount(
+      variables: SchemaTypes.PlatformRolesTransferInnovationHubToAccountMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesTransferInnovationHubToAccountMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesTransferInnovationHubToAccountMutation>(
+            PlatformRolesTransferInnovationHubToAccountDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesTransferInnovationHubToAccount",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesTransferInnovationPackToAccount(
+      variables: SchemaTypes.PlatformRolesTransferInnovationPackToAccountMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesTransferInnovationPackToAccountMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesTransferInnovationPackToAccountMutation>(
+            PlatformRolesTransferInnovationPackToAccountDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesTransferInnovationPackToAccount",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesTransferSpaceToAccount(
+      variables: SchemaTypes.PlatformRolesTransferSpaceToAccountMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesTransferSpaceToAccountMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesTransferSpaceToAccountMutation>(
+            PlatformRolesTransferSpaceToAccountDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesTransferSpaceToAccount",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesTransferVirtualContributorToAccount(
+      variables: SchemaTypes.PlatformRolesTransferVirtualContributorToAccountMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesTransferVirtualContributorToAccountMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesTransferVirtualContributorToAccountMutation>(
+            PlatformRolesTransferVirtualContributorToAccountDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesTransferVirtualContributorToAccount",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesUpdateCallout(
+      variables: SchemaTypes.PlatformRolesUpdateCalloutMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesUpdateCalloutMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesUpdateCalloutMutation>(
+            PlatformRolesUpdateCalloutDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesUpdateCallout",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesUpdateDiscussion(
+      variables: SchemaTypes.PlatformRolesUpdateDiscussionMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesUpdateDiscussionMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesUpdateDiscussionMutation>(
+            PlatformRolesUpdateDiscussionDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesUpdateDiscussion",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesUpdateLicensePlan(
+      variables: SchemaTypes.PlatformRolesUpdateLicensePlanMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesUpdateLicensePlanMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesUpdateLicensePlanMutation>(
+            PlatformRolesUpdateLicensePlanDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesUpdateLicensePlan",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesUpdateSpaceVisibility(
+      variables: SchemaTypes.PlatformRolesUpdateSpaceVisibilityMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesUpdateSpaceVisibilityMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesUpdateSpaceVisibilityMutation>(
+            PlatformRolesUpdateSpaceVisibilityDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesUpdateSpaceVisibility",
+        "mutation",
+        variables
+      );
+    },
+    PlatformRolesUpdateTemplate(
+      variables: SchemaTypes.PlatformRolesUpdateTemplateMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesUpdateTemplateMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesUpdateTemplateMutation>(
+            PlatformRolesUpdateTemplateDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesUpdateTemplate",
+        "mutation",
+        variables
+      );
+    },
+    refreshAllBodiesOfKnowledge(
+      variables?: SchemaTypes.RefreshAllBodiesOfKnowledgeMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.RefreshAllBodiesOfKnowledgeMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.RefreshAllBodiesOfKnowledgeMutation>(
+            RefreshAllBodiesOfKnowledgeDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "refreshAllBodiesOfKnowledge",
+        "mutation",
+        variables
+      );
+    },
+    removeIframeAllowedURL(
+      variables: SchemaTypes.RemoveIframeAllowedUrlMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.RemoveIframeAllowedUrlMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.RemoveIframeAllowedUrlMutation>(
+            RemoveIframeAllowedUrlDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "removeIframeAllowedURL",
+        "mutation",
+        variables
+      );
+    },
+    removeNotificationEmailFromBlacklist(
+      variables: SchemaTypes.RemoveNotificationEmailFromBlacklistMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.RemoveNotificationEmailFromBlacklistMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.RemoveNotificationEmailFromBlacklistMutation>(
+            RemoveNotificationEmailFromBlacklistDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "removeNotificationEmailFromBlacklist",
+        "mutation",
+        variables
+      );
+    },
+    removePlatformRoleFromOrganization(
+      variables: SchemaTypes.RemovePlatformRoleFromOrganizationMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.RemovePlatformRoleFromOrganizationMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.RemovePlatformRoleFromOrganizationMutation>(
+            RemovePlatformRoleFromOrganizationDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "removePlatformRoleFromOrganization",
+        "mutation",
+        variables
+      );
+    },
+    resetLicenseOnAccounts(
+      variables?: SchemaTypes.ResetLicenseOnAccountsMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ResetLicenseOnAccountsMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ResetLicenseOnAccountsMutation>(
+            ResetLicenseOnAccountsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "resetLicenseOnAccounts",
+        "mutation",
+        variables
+      );
+    },
+    revokeCredentialFromActor(
+      variables: SchemaTypes.RevokeCredentialFromActorMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.RevokeCredentialFromActorMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.RevokeCredentialFromActorMutation>(
+            RevokeCredentialFromActorDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "revokeCredentialFromActor",
+        "mutation",
+        variables
+      );
+    },
+    revokeCredentialFromOrganization(
+      variables: SchemaTypes.RevokeCredentialFromOrganizationMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.RevokeCredentialFromOrganizationMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.RevokeCredentialFromOrganizationMutation>(
+            RevokeCredentialFromOrganizationDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "revokeCredentialFromOrganization",
+        "mutation",
+        variables
+      );
+    },
+    revokeCredentialFromUser(
+      variables: SchemaTypes.RevokeCredentialFromUserMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.RevokeCredentialFromUserMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.RevokeCredentialFromUserMutation>(
+            RevokeCredentialFromUserDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "revokeCredentialFromUser",
+        "mutation",
+        variables
+      );
+    },
+    setPlatformWellKnownVirtualContributor(
+      variables: SchemaTypes.SetPlatformWellKnownVirtualContributorMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.SetPlatformWellKnownVirtualContributorMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.SetPlatformWellKnownVirtualContributorMutation>(
+            SetPlatformWellKnownVirtualContributorDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "setPlatformWellKnownVirtualContributor",
+        "mutation",
+        variables
+      );
+    },
+    updateAssistantActorCapabilities(
+      variables: SchemaTypes.UpdateAssistantActorCapabilitiesMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateAssistantActorCapabilitiesMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateAssistantActorCapabilitiesMutation>(
+            UpdateAssistantActorCapabilitiesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "updateAssistantActorCapabilities",
+        "mutation",
+        variables
+      );
+    },
+    updateBaselineLicensePlanOnAccount(
+      variables: SchemaTypes.UpdateBaselineLicensePlanOnAccountMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateBaselineLicensePlanOnAccountMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateBaselineLicensePlanOnAccountMutation>(
+            UpdateBaselineLicensePlanOnAccountDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "updateBaselineLicensePlanOnAccount",
+        "mutation",
+        variables
+      );
+    },
+    updateCalloutPublishInfo(
+      variables: SchemaTypes.UpdateCalloutPublishInfoMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateCalloutPublishInfoMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateCalloutPublishInfoMutation>(
+            UpdateCalloutPublishInfoDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "updateCalloutPublishInfo",
+        "mutation",
+        variables
+      );
+    },
+    updateInnovationHub(
+      variables: SchemaTypes.UpdateInnovationHubMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateInnovationHubMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateInnovationHubMutation>(
+            UpdateInnovationHubDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "updateInnovationHub",
+        "mutation",
+        variables
+      );
+    },
+    updateInnovationPack(
+      variables: SchemaTypes.UpdateInnovationPackMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateInnovationPackMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateInnovationPackMutation>(
+            UpdateInnovationPackDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "updateInnovationPack",
+        "mutation",
+        variables
+      );
+    },
+    updatePlatformSettings(
+      variables: SchemaTypes.UpdatePlatformSettingsMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdatePlatformSettingsMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdatePlatformSettingsMutation>(
+            UpdatePlatformSettingsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "updatePlatformSettings",
+        "mutation",
+        variables
+      );
+    },
+    updateTemplateFromSpace(
+      variables: SchemaTypes.UpdateTemplateFromSpaceMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateTemplateFromSpaceMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateTemplateFromSpaceMutation>(
+            UpdateTemplateFromSpaceDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "updateTemplateFromSpace",
+        "mutation",
+        variables
+      );
+    },
     assignPlatformRoleToUser(
       variables: SchemaTypes.AssignPlatformRoleToUserMutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -125280,6 +129353,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "UpdateSpacePlatformSettings",
+        "mutation",
+        variables
+      );
+    },
+    UpdateSpaceVisibilityPlatformSettings(
+      variables: SchemaTypes.UpdateSpaceVisibilityPlatformSettingsMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateSpaceVisibilityPlatformSettingsMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateSpaceVisibilityPlatformSettingsMutation>(
+            UpdateSpaceVisibilityPlatformSettingsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "UpdateSpaceVisibilityPlatformSettings",
         "mutation",
         variables
       );
@@ -127062,6 +131157,380 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "UsersPaginated",
+        "query",
+        variables
+      );
+    },
+    actorsWithCredential(
+      variables: SchemaTypes.ActorsWithCredentialQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ActorsWithCredentialQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ActorsWithCredentialQuery>(
+            ActorsWithCredentialDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "actorsWithCredential",
+        "query",
+        variables
+      );
+    },
+    latestUserEmailChangeAuditEntry(
+      variables: SchemaTypes.LatestUserEmailChangeAuditEntryQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.LatestUserEmailChangeAuditEntryQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.LatestUserEmailChangeAuditEntryQuery>(
+            LatestUserEmailChangeAuditEntryDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "latestUserEmailChangeAuditEntry",
+        "query",
+        variables
+      );
+    },
+    platformAdminMcpApiKeys(
+      variables: SchemaTypes.PlatformAdminMcpApiKeysQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformAdminMcpApiKeysQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformAdminMcpApiKeysQuery>(
+            PlatformAdminMcpApiKeysDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "platformAdminMcpApiKeys",
+        "query",
+        variables
+      );
+    },
+    platformAdminVirtualAssistant(
+      variables?: SchemaTypes.PlatformAdminVirtualAssistantQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformAdminVirtualAssistantQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformAdminVirtualAssistantQuery>(
+            PlatformAdminVirtualAssistantDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "platformAdminVirtualAssistant",
+        "query",
+        variables
+      );
+    },
+    platformForumDiscussionCategories(
+      variables?: SchemaTypes.PlatformForumDiscussionCategoriesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformForumDiscussionCategoriesQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformForumDiscussionCategoriesQuery>(
+            PlatformForumDiscussionCategoriesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "platformForumDiscussionCategories",
+        "query",
+        variables
+      );
+    },
+    platformRoleSetOrganizationsInRole(
+      variables: SchemaTypes.PlatformRoleSetOrganizationsInRoleQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRoleSetOrganizationsInRoleQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRoleSetOrganizationsInRoleQuery>(
+            PlatformRoleSetOrganizationsInRoleDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "platformRoleSetOrganizationsInRole",
+        "query",
+        variables
+      );
+    },
+    platformRoleSetOrganizationsInRoles(
+      variables: SchemaTypes.PlatformRoleSetOrganizationsInRolesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRoleSetOrganizationsInRolesQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRoleSetOrganizationsInRolesQuery>(
+            PlatformRoleSetOrganizationsInRolesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "platformRoleSetOrganizationsInRoles",
+        "query",
+        variables
+      );
+    },
+    platformRoleSetRoleNames(
+      variables?: SchemaTypes.PlatformRoleSetRoleNamesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRoleSetRoleNamesQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRoleSetRoleNamesQuery>(
+            PlatformRoleSetRoleNamesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "platformRoleSetRoleNames",
+        "query",
+        variables
+      );
+    },
+    platformRoleSetUsersInRole(
+      variables: SchemaTypes.PlatformRoleSetUsersInRoleQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRoleSetUsersInRoleQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRoleSetUsersInRoleQuery>(
+            PlatformRoleSetUsersInRoleDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "platformRoleSetUsersInRole",
+        "query",
+        variables
+      );
+    },
+    platformRoleSetUsersInRoles(
+      variables: SchemaTypes.PlatformRoleSetUsersInRolesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRoleSetUsersInRolesQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRoleSetUsersInRolesQuery>(
+            PlatformRoleSetUsersInRolesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "platformRoleSetUsersInRoles",
+        "query",
+        variables
+      );
+    },
+    PlatformRolesSpaceApplicationsProbe(
+      variables: SchemaTypes.PlatformRolesSpaceApplicationsProbeQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.PlatformRolesSpaceApplicationsProbeQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.PlatformRolesSpaceApplicationsProbeQuery>(
+            PlatformRolesSpaceApplicationsProbeDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "PlatformRolesSpaceApplicationsProbe",
+        "query",
+        variables
+      );
+    },
+    spaceCollaborationReadProbe(
+      variables: SchemaTypes.SpaceCollaborationReadProbeQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.SpaceCollaborationReadProbeQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.SpaceCollaborationReadProbeQuery>(
+            SpaceCollaborationReadProbeDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "spaceCollaborationReadProbe",
+        "query",
+        variables
+      );
+    },
+    spaceReadProbe(
+      variables: SchemaTypes.SpaceReadProbeQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.SpaceReadProbeQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.SpaceReadProbeQuery>(
+            SpaceReadProbeDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "spaceReadProbe",
+        "query",
+        variables
+      );
+    },
+    spaceSupportAdminPrivilegeProbe(
+      variables: SchemaTypes.SpaceSupportAdminPrivilegeProbeQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.SpaceSupportAdminPrivilegeProbeQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.SpaceSupportAdminPrivilegeProbeQuery>(
+            SpaceSupportAdminPrivilegeProbeDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "spaceSupportAdminPrivilegeProbe",
+        "query",
+        variables
+      );
+    },
+    updateUserServiceProfile(
+      variables: SchemaTypes.UpdateUserServiceProfileMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UpdateUserServiceProfileMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UpdateUserServiceProfileMutation>(
+            UpdateUserServiceProfileDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "updateUserServiceProfile",
+        "mutation",
+        variables
+      );
+    },
+    userEmailChangeAuditEntries(
+      variables: SchemaTypes.UserEmailChangeAuditEntriesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UserEmailChangeAuditEntriesQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UserEmailChangeAuditEntriesQuery>(
+            UserEmailChangeAuditEntriesDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "userEmailChangeAuditEntries",
+        "query",
+        variables
+      );
+    },
+    usersWithAuthorizationCredential(
+      variables: SchemaTypes.UsersWithAuthorizationCredentialQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.UsersWithAuthorizationCredentialQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.UsersWithAuthorizationCredentialQuery>(
+            UsersWithAuthorizationCredentialDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "usersWithAuthorizationCredential",
         "query",
         variables
       );

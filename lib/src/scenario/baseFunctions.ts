@@ -620,7 +620,7 @@ export const updateSpaceSettings = async (
             privacy: {
               mode: settings?.privacy?.mode,
               allowPlatformSupportAsAdmin:
-                settings?.privacy?.allowPlatformSupportAsAdmin || true,
+                settings?.privacy?.allowPlatformSupportAsAdmin ?? true,
             },
             membership: {
               allowSubspaceAdminsToInviteMembers:
