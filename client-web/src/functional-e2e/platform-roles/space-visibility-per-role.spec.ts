@@ -18,6 +18,11 @@ import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 let scenario: OrganizationWithSpaceModel;
 
+// ONE worker for the whole file: the License Manager block changes the very
+// visibility the Content Full Access test asserts is unchanged, and under
+// `fullyParallel` the two persona test objects would otherwise race.
+base.describe.configure({ mode: 'serial' });
+
 base.beforeAll(async () => {
   base.setTimeout(120_000);
   await TestUserManager.populateUserModelMap();

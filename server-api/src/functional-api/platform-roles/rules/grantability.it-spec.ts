@@ -177,7 +177,7 @@ afterAll(async () => {
       revokeAllRoles(ctx.bootstrapToken, subject)
     );
     await attempt('delete the subject', () =>
-      deleteSubjects(ctx.tokens.PLATFORM_USERS_ADMIN, [subject])
+      deleteSubjects([subject])
     );
   }
   if (residue.length > 0) {

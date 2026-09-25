@@ -27,9 +27,8 @@ export const createSubject = async (tag: string): Promise<Subject> => {
   return { id, email, token };
 };
 
-/** Returns the subjects to the pool, normalised. */
+/** Returns the subjects to the pool, normalised — as Platform Roles Admin, who owns roles and the marker. */
 export const deleteSubjects = async (
-  _usersAdminToken: string,
   subjects: readonly Subject[]
 ): Promise<void> => {
   await releasePoolUsers(

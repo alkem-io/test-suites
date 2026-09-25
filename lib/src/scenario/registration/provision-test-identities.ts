@@ -20,7 +20,8 @@ import { LogManager } from '../LogManager';
  *
  * `TestUser` stays the single source of the user list — no duplicated list in
  * the pipeline (that would reintroduce the exact drift class this hardening
- * closes).
+ * closes). A suite with users of its own (the platform-roles single-role
+ * users) passes its own list, so the CI path provisions them the same way.
  */
 
 const IDENTITY_SCHEMA_ID = 'default';
@@ -34,7 +35,9 @@ const parseUserName = (userName: string): [string, string] => {
   return [first, last];
 };
 
-export const provisionTestIdentities = async (): Promise<void> => {
+export const provisionTestIdentities = async (
+  userNames: readonly string[] = Object.values(TestUser)
+): Promise<void> => {
   const logger = LogManager.getLogger();
   const adminBaseUrl = testConfiguration.endPoints.kratos.admin;
   const password = testConfiguration.identities.admin.password;
@@ -51,7 +54,7 @@ export const provisionTestIdentities = async (): Promise<void> => {
 
   let created = 0;
   let updated = 0;
-  for (const userName of Object.values(TestUser)) {
+  for (const userName of userNames) {
     const email = `${userName}@alkem.io`;
     const [first, last] = parseUserName(userName);
     const traits = {

@@ -1,5 +1,6 @@
 import {
   getUserToken,
+  provisionTestIdentities,
   registerTestUser,
   testConfiguration,
 } from '@alkemio/tests-lib';
@@ -34,10 +35,11 @@ let organizationAdmin: Promise<{ token: string; id: string }> | undefined;
 
 export const organizationAdminOf = (): Promise<{ token: string; id: string }> =>
   (organizationAdmin ??= (async () => {
-    if (
-      testConfiguration.registerUsers &&
-      !testConfiguration.endPoints.kratos.admin
-    ) {
+    // Same two paths as `seedPlatformRoleUsers`: the Kratos ADMIN API where it
+    // is reachable (CI), self-service registration otherwise.
+    if (testConfiguration.endPoints.kratos.admin) {
+      await provisionTestIdentities([ORGANIZATION_ADMIN_USER]);
+    } else if (testConfiguration.registerUsers) {
       await registerTestUser(ORGANIZATION_ADMIN_USER);
     }
     const token = await getUserToken(`${ORGANIZATION_ADMIN_USER}@alkem.io`);

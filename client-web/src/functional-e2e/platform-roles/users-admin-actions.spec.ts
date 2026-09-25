@@ -5,15 +5,18 @@
 // keys is API-only by design — no admin UI exists for it.)
 import { expect, test as base, type Page } from '@playwright/test';
 import {
+  getUserToken,
   platformRoleEmail,
   registerTestUser,
   seedPlatformRoleUsers,
+  testConfiguration,
   TestUserManager,
 } from '@alkemio/tests-lib';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
 
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 const victim = `pr-usersadmin-${Math.random().toString(36).slice(2, 7)}`;
+const victimEmail = `${victim}@alkem.io`;
 const newEmail = `${victim}-renamed@alkem.io`;
 
 base.beforeAll(async () => {
@@ -21,6 +24,36 @@ base.beforeAll(async () => {
   await TestUserManager.populateUserModelMap();
   await seedPlatformRoleUsers();
   await registerTestUser(victim);
+});
+
+const gql = async <T>(token: string, query: string, variables: Record<string, unknown> = {}): Promise<T> => {
+  const response = await fetch(testConfiguration.endPoints.graphql.private, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', authorization: `Bearer ${token}` },
+    body: JSON.stringify({ query, variables }),
+  });
+  const body = await response.json();
+  if (!body.data) throw new Error(`request failed: ${JSON.stringify(body.errors ?? body).slice(0, 300)}`);
+  return body.data as T;
+};
+
+// The victim is registered for THIS run: remove it through the API whatever the
+// tests above managed — its login email may already have moved to `newEmail`,
+// and the delete test is expected to fail before the list settles.
+base.afterAll(async () => {
+  const { tokens } = await seedPlatformRoleUsers();
+  for (const email of [victimEmail, newEmail]) {
+    const token = await getUserToken(email).catch(() => undefined);
+    if (!token) continue;
+    const { me } = await gql<{ me: { user: { id: string } | null } }>(token, 'query { me { user { id } } }');
+    if (!me.user) continue;
+    await gql(
+      tokens.PLATFORM_USERS_ADMIN,
+      'mutation($id: UUID!) { deleteUser(deleteData: { ID: $id, deleteIdentity: true }) { id } }',
+      { id: me.user.id }
+    );
+    return;
+  }
 });
 
 const search = async (page: Page, term: string) => {

@@ -159,7 +159,7 @@ afterAll(async () => {
     );
   }
   await attempt('delete the subjects', () =>
-    deleteSubjects(usersAdmin, subjects())
+    deleteSubjects(subjects())
   );
   if (residue.length > 0) {
     throw new Error(`assignment-rules left residue — ${residue.join(' | ')}`);

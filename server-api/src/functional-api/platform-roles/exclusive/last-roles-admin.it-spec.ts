@@ -83,7 +83,7 @@ afterAll(async () => {
     'revoke the fixture',
     removeRole(ctx.bootstrapToken, ROLE, last.id)
   );
-  await deleteSubjects(ctx.tokens.PLATFORM_USERS_ADMIN, [last]);
+  await deleteSubjects([last]);
 }, 180_000);
 
 describe('R5.last-roles-admin', () => {

@@ -11,14 +11,16 @@ import path from 'path';
 // of the nightly, exactly like the language-offer walks: on any other stack
 // every one of them would fail at seeding.
 //
-// No project-wide globalSetup: each spec seeds the 14 single-role users through
-// the shared `seedPlatformRoleUsers()` (tests-lib) — idempotent, ~15 sign-ins
-// once seeded — so the UI suite never depends on the API suite having run first.
-// Each role logs in ONCE per worker via the persona fixture.
+// No registration in globalSetup: each spec seeds the 14 single-role users
+// through the shared `seedPlatformRoleUsers()` (tests-lib) — idempotent, ~15
+// sign-ins once seeded — so the UI suite never depends on the API suite having
+// run first. Each role logs in ONCE per worker via the persona fixture; the
+// globalSetup below only clears the previous run's cached persona sessions.
 dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 
 export default defineConfig({
   testDir: path.resolve(__dirname, '..', 'src', 'functional-e2e'),
+  globalSetup: './global-setup.platform-roles.ts',
   // The rewritten authz-admin-guard spec exercises the same Authorization page
   // and shares the 027 precondition, so it runs here too.
   testMatch: ['**/platform-roles/**/*.spec.ts', '**/authz-admin-guard/platform-global-roles.spec.ts'],

@@ -3,6 +3,7 @@ import { testConfiguration } from "../../config/test.configuration";
 import { RoleName } from "../../core/generated/alkemio-schema";
 import { getGraphqlClient } from "../../utils/graphqlClient";
 import { getUserToken } from "../registration/get-user-token";
+import { provisionTestIdentities } from "../registration/provision-test-identities";
 import { registerTestUser } from "../registration/register-test-user";
 
 /**
@@ -107,10 +108,12 @@ export const seedPlatformRoleUsers =
   async (): Promise<SeededPlatformRoleUsers> => {
     const sdk = getGraphqlClient();
 
-    if (
-      testConfiguration.registerUsers &&
-      !testConfiguration.endPoints.kratos.admin
-    ) {
+    // Same two paths as the root setup: the Kratos ADMIN API where it is
+    // reachable (CI), self-service registration otherwise. The root setup
+    // provisions only the shared `TestUser` enum, so these 14 are ours to do.
+    if (testConfiguration.endPoints.kratos.admin) {
+      await provisionTestIdentities(Object.values(PLATFORM_ROLE_USERS));
+    } else if (testConfiguration.registerUsers) {
       for (const userName of Object.values(PLATFORM_ROLE_USERS)) {
         await registerTestUser(userName);
       }

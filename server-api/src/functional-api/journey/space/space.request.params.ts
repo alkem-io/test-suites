@@ -359,7 +359,7 @@ export const updateSpaceSettings = async (
               // mode: settings?.privacy?.mode || SpacePrivacyMode.Private, // todo
               mode: settings?.privacy?.mode, // todo
               allowPlatformSupportAsAdmin:
-                settings?.privacy?.allowPlatformSupportAsAdmin || true,
+                settings?.privacy?.allowPlatformSupportAsAdmin ?? true,
             },
             membership: {
               allowSubspaceAdminsToInviteMembers:

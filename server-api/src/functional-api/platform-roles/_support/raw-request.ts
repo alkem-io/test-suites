@@ -31,15 +31,32 @@ export const rawRequest = async <T = Record<string, unknown>>(
     }
   );
 
-  if (typeof response.data !== 'object' || response.data === null) {
+  // A GraphQL answer carries `data` and/or `errors`. Anything else — the
+  // server's own HTTP 401 `{ statusCode, message }` from the auth interceptor,
+  // a 429 / 503 body, an HTML error page — is a transport-level failure and
+  // must never be read as "no data, no errors", which `rawOutcome` would judge
+  // an `ok`.
+  const body = response.data as
+    | { data?: T | null; errors?: GqlError[] }
+    | null
+    | string;
+  if (
+    typeof body !== 'object' ||
+    body === null ||
+    !('data' in body || 'errors' in body)
+  ) {
     throw new Error(
-      `rawRequest: non-GraphQL response (HTTP ${response.status}): ${String(response.data).slice(0, 200)}`
+      `rawRequest: non-GraphQL response (HTTP ${response.status}): ${(typeof body ===
+      'string'
+        ? body
+        : JSON.stringify(body)
+      ).slice(0, 200)}`
     );
   }
 
   return {
-    data: (response.data.data ?? null) as T | null,
-    errors: (response.data.errors ?? []) as GqlError[],
+    data: (body.data ?? null) as T | null,
+    errors: (body.errors ?? []) as GqlError[],
   };
 };
 

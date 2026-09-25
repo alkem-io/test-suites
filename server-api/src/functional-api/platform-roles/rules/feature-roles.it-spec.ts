@@ -50,7 +50,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await revokeAllRoles(ctx.bootstrapToken, subject);
-  await deleteSubjects(usersAdmin, [subject]);
+  await deleteSubjects([subject]);
 }, 120_000);
 
 const grantedThenRevoked = async (

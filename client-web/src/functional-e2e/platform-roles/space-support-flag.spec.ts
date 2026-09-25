@@ -18,6 +18,11 @@ import { SpacePrivacyMode } from '@alkemio/tests-lib/core/generated/alkemio-sche
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { createPersonaTest } from '../fixtures/authenticated-session.fixture';
 
+// ONE worker for the whole file: the Resource Admin test below flips the very
+// flag the Support block asserts on, and under `fullyParallel` the two persona
+// test objects would otherwise land in different workers and race.
+base.describe.configure({ mode: 'serial' });
+
 const baseUrl = process.env.ALKEMIO_BASE_URL || 'http://localhost:3000';
 
 let scenario: OrganizationWithSpaceModel;

@@ -56,7 +56,7 @@ afterAll(async () => {
   for (const subject of [marked, fresh]) {
     await revokeAllRoles(ctx.bootstrapToken, subject);
   }
-  await deleteSubjects(ctx.tokens.PLATFORM_USERS_ADMIN, [marked, fresh]);
+  await deleteSubjects([marked, fresh]);
 }, 120_000);
 
 describe('S1.marker-owned-by-roles-admin', () => {

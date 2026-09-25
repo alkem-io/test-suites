@@ -3,6 +3,8 @@ import { RoleName } from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import type { PlatformRole } from '../capabilities.data';
 import { classify, describeOutcome } from './outcome';
 import type { GqlError, Outcome } from './outcome';
+import { readPrivileges } from './privileges';
+import type { Privileges } from './privileges';
 import { rawRead } from './raw-request';
 import { bearer } from './types';
 
@@ -107,30 +109,19 @@ export const holdersOf = async (
   return data.platform.roleSet[field].map(holder => holder.id);
 };
 
-/** What `token` holds and may do, on BOTH platform policies, in one request. */
-export type Access = {
-  platform: string[];
-  roleSet: string[];
-  myRoles: string[];
-};
+/**
+ * What `token` holds and may do, on BOTH platform policies, in one request —
+ * `readPrivileges` (the one read-only probe of I1/O1), with every list sorted
+ * so two snapshots can be compared with `toEqual`.
+ */
+export type Access = Privileges;
 
 export const accessOf = async (token: string): Promise<Access> => {
-  const { platform } = await rawRead<{
-    platform: {
-      authorization: { myPrivileges: string[] };
-      roleSet: { myRoles: string[]; authorization: { myPrivileges: string[] } };
-    };
-  }>(
-    token,
-    `query { platform {
-      authorization { myPrivileges }
-      roleSet { myRoles authorization { myPrivileges } }
-    } }`
-  );
+  const { platform, roleSet, myRoles } = await readPrivileges(token);
   return {
-    platform: [...platform.authorization.myPrivileges].sort(),
-    roleSet: [...platform.roleSet.authorization.myPrivileges].sort(),
-    myRoles: [...platform.roleSet.myRoles].sort(),
+    platform: [...platform].sort(),
+    roleSet: [...roleSet].sort(),
+    myRoles: [...myRoles].sort(),
   };
 };
 

@@ -1,4 +1,5 @@
-import { rawRead, rawRequest } from './raw-request';
+import { userExists } from './groups/disposable-user';
+import { rawRead } from './raw-request';
 import type { RunContext } from './types';
 import { registerUser } from './users';
 
@@ -30,7 +31,6 @@ const UPDATE_PRIVACY =
 const HOSTED_SPACES = 'query { me { user { account { spaces { id } } } } }';
 const DELETE_SPACE =
   'mutation($id: UUID!) { deleteSpace(deleteData: { ID: $id }) { id } }';
-const USER_EXISTS = 'query($id: UUID!) { lookup { user(ID: $id) { id } } }';
 const DELETE_USER =
   'mutation($id: UUID!) { deleteUser(deleteData: { ID: $id, deleteIdentity: true }) { id } }';
 
@@ -124,10 +124,9 @@ export const removeDisposableUser = async (
   user: DisposableUser
 ): Promise<void> => {
   const usersAdmin = ctx.tokens.PLATFORM_USERS_ADMIN;
-  const { data } = await rawRequest<{
-    lookup: { user: { id: string } | null };
-  }>(usersAdmin, USER_EXISTS, { id: user.id });
-  if (!data?.lookup?.user?.id) return;
+  // `false` only on the server's own not-found — any other error is thrown,
+  // so a user that could not be READ is never mistaken for one already gone.
+  if (!(await userExists(usersAdmin, user.id))) return;
 
   const { me } = await rawRead<{
     me: { user: { account: { spaces: { id: string }[] } } };
