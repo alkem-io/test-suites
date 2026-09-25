@@ -1,0 +1,7 @@
+query spaceReadProbe($spaceId: UUID!) {
+  lookup {
+    space(ID: $spaceId) {
+      id
+    }
+  }
+}

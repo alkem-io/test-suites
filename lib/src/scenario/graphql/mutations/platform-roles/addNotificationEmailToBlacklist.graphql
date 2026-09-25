@@ -1,0 +1,3 @@
+mutation addNotificationEmailToBlacklist($input: NotificationEmailAddressInput!) {
+  addNotificationEmailToBlacklist(input: $input)
+}

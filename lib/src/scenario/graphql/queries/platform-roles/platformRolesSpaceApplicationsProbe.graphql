@@ -1,0 +1,14 @@
+query PlatformRolesSpaceApplicationsProbe($spaceId: UUID!) {
+  lookup {
+    space(ID: $spaceId) {
+      id
+      community {
+        roleSet {
+          applications {
+            id
+          }
+        }
+      }
+    }
+  }
+}

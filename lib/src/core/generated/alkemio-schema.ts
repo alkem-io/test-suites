@@ -39,23 +39,14 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean };
   Int: { input: number; output: number };
   Float: { input: number; output: number };
-  /** A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format. */
   DateTime: { input: Date; output: Date };
-  /** An Emoji. */
   Emoji: { input: any; output: any };
-  /** A representation of a Lifecycle Definition, based on XState. It is serialized JSON. */
   LifecycleDefinition: { input: any; output: any };
-  /** A markdown string. */
   Markdown: { input: any; output: any };
-  /** An identifier that originates from the underlying messaging platform. */
   MessageID: { input: any; output: any };
-  /** A human readable identifier, 3 <= length <= 28. Used for URL paths in clients. Characters allowed: a-z,A-Z,0-9. */
   NameID: { input: string; output: string };
-  /** Cursor used for paginating search results. */
   SearchCursor: { input: any; output: any };
-  /** A uuid identifier. Length 36 characters. */
   UUID: { input: string; output: string };
-  /** The `Upload` scalar type represents a file upload. */
   Upload: {
     input: import("graphql-upload").FileUpload;
     output: import("graphql-upload").FileUpload;
@@ -931,6 +922,10 @@ export enum AuthorizationCredential {
   AccountAdmin = "ACCOUNT_ADMIN",
   AssistantAccess = "ASSISTANT_ACCESS",
   BetaTester = "BETA_TESTER",
+  FeatureBetaTester = "FEATURE_BETA_TESTER",
+  FeatureOrganizationCreator = "FEATURE_ORGANIZATION_CREATOR",
+  FeatureVcCampaign = "FEATURE_VC_CAMPAIGN",
+  FeatureVirtualAssistant = "FEATURE_VIRTUAL_ASSISTANT",
   GlobalAdmin = "GLOBAL_ADMIN",
   GlobalAnonymous = "GLOBAL_ANONYMOUS",
   GlobalCommunityRead = "GLOBAL_COMMUNITY_READ",
@@ -944,7 +939,16 @@ export enum AuthorizationCredential {
   OrganizationAdmin = "ORGANIZATION_ADMIN",
   OrganizationAssociate = "ORGANIZATION_ASSOCIATE",
   OrganizationOwner = "ORGANIZATION_OWNER",
+  PlatformAuditReader = "PLATFORM_AUDIT_READER",
+  PlatformContentFullAccess = "PLATFORM_CONTENT_FULL_ACCESS",
+  PlatformLicenseManager = "PLATFORM_LICENSE_MANAGER",
   PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
+  PlatformResourceAdmin = "PLATFORM_RESOURCE_ADMIN",
+  PlatformRolesAdmin = "PLATFORM_ROLES_ADMIN",
+  PlatformSettingsAdmin = "PLATFORM_SETTINGS_ADMIN",
+  PlatformSpacesReader = "PLATFORM_SPACES_READER",
+  PlatformSupport = "PLATFORM_SUPPORT",
+  PlatformUsersAdmin = "PLATFORM_USERS_ADMIN",
   SpaceAdmin = "SPACE_ADMIN",
   SpaceLead = "SPACE_LEAD",
   SpaceMember = "SPACE_MEMBER",
@@ -1057,6 +1061,9 @@ export enum AuthorizationPrivilege {
   CreateVirtual = "CREATE_VIRTUAL",
   CreateWhiteboard = "CREATE_WHITEBOARD",
   Delete = "DELETE",
+  DeleteOrganization = "DELETE_ORGANIZATION",
+  FeatureRoleAssign = "FEATURE_ROLE_ASSIGN",
+  FeatureRoleHoldersRead = "FEATURE_ROLE_HOLDERS_READ",
   FileDelete = "FILE_DELETE",
   FileUpload = "FILE_UPLOAD",
   Grant = "GRANT",
@@ -1066,8 +1073,15 @@ export enum AuthorizationPrivilege {
   MovePost = "MOVE_POST",
   MoveTask = "MOVE_TASK",
   PlatformAdmin = "PLATFORM_ADMIN",
+  PlatformAuditRead = "PLATFORM_AUDIT_READ",
+  PlatformContentFullAccess = "PLATFORM_CONTENT_FULL_ACCESS",
+  PlatformForumManage = "PLATFORM_FORUM_MANAGE",
   PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
+  PlatformRoleHoldersRead = "PLATFORM_ROLE_HOLDERS_READ",
   PlatformSettingsAdmin = "PLATFORM_SETTINGS_ADMIN",
+  PlatformSupportListsRead = "PLATFORM_SUPPORT_LISTS_READ",
+  PlatformSupportOrgResources = "PLATFORM_SUPPORT_ORG_RESOURCES",
+  PlatformUsersAdmin = "PLATFORM_USERS_ADMIN",
   PublicShare = "PUBLIC_SHARE",
   Read = "READ",
   ReadAbout = "READ_ABOUT",
@@ -1086,12 +1100,14 @@ export enum AuthorizationPrivilege {
   RolesetEntryRoleInvite = "ROLESET_ENTRY_ROLE_INVITE",
   RolesetEntryRoleInviteAccept = "ROLESET_ENTRY_ROLE_INVITE_ACCEPT",
   RolesetEntryRoleJoin = "ROLESET_ENTRY_ROLE_JOIN",
+  SetServiceProfile = "SET_SERVICE_PROFILE",
   TransferResourceAccept = "TRANSFER_RESOURCE_ACCEPT",
   TransferResourceOffer = "TRANSFER_RESOURCE_OFFER",
   Update = "UPDATE",
   UpdateCalloutPublisher = "UPDATE_CALLOUT_PUBLISHER",
   UpdateContent = "UPDATE_CONTENT",
   UpdateInnovationFlow = "UPDATE_INNOVATION_FLOW",
+  UpdateNameid = "UPDATE_NAMEID",
 }
 
 export type Calendar = {
@@ -3006,6 +3022,10 @@ export enum CredentialType {
   AccountLicensePlus = "ACCOUNT_LICENSE_PLUS",
   AssistantAccess = "ASSISTANT_ACCESS",
   BetaTester = "BETA_TESTER",
+  FeatureBetaTester = "FEATURE_BETA_TESTER",
+  FeatureOrganizationCreator = "FEATURE_ORGANIZATION_CREATOR",
+  FeatureVcCampaign = "FEATURE_VC_CAMPAIGN",
+  FeatureVirtualAssistant = "FEATURE_VIRTUAL_ASSISTANT",
   GlobalAdmin = "GLOBAL_ADMIN",
   GlobalAnonymous = "GLOBAL_ANONYMOUS",
   GlobalCommunityRead = "GLOBAL_COMMUNITY_READ",
@@ -3019,7 +3039,16 @@ export enum CredentialType {
   OrganizationAdmin = "ORGANIZATION_ADMIN",
   OrganizationAssociate = "ORGANIZATION_ASSOCIATE",
   OrganizationOwner = "ORGANIZATION_OWNER",
+  PlatformAuditReader = "PLATFORM_AUDIT_READER",
+  PlatformContentFullAccess = "PLATFORM_CONTENT_FULL_ACCESS",
+  PlatformLicenseManager = "PLATFORM_LICENSE_MANAGER",
   PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
+  PlatformResourceAdmin = "PLATFORM_RESOURCE_ADMIN",
+  PlatformRolesAdmin = "PLATFORM_ROLES_ADMIN",
+  PlatformSettingsAdmin = "PLATFORM_SETTINGS_ADMIN",
+  PlatformSpacesReader = "PLATFORM_SPACES_READER",
+  PlatformSupport = "PLATFORM_SUPPORT",
+  PlatformUsersAdmin = "PLATFORM_USERS_ADMIN",
   SpaceAdmin = "SPACE_ADMIN",
   SpaceFeatureMemoMultiUser = "SPACE_FEATURE_MEMO_MULTI_USER",
   SpaceFeatureMemoSigning = "SPACE_FEATURE_MEMO_SIGNING",
@@ -5190,7 +5219,7 @@ export type Mutation = {
   adminCommunicationSyncSpaceHierarchy: Scalars["Boolean"]["output"];
   /** Allow updating the state flags of a particular rule. */
   adminCommunicationUpdateRoomState: Scalars["Boolean"]["output"];
-  /** Removes one category from the platform Forum's active discussionCategories list. Refuses while any Discussion still carries the category. Idempotent for an already-absent category. The enum member is never removed. Requires PLATFORM_ADMIN. Audited (PLATFORM_OPERATIONS). */
+  /** Removes one category from the platform Forum's active discussionCategories list. Refuses while any Discussion still carries the category. Idempotent for an already-absent category. The enum member is never removed. Requires PLATFORM_FORUM_MANAGE. Audited (PLATFORM_OPERATIONS). */
   adminForumRemoveDiscussionCategory: Forum;
   /** Delete a Kratos identity by ID. */
   adminIdentityDeleteKratosIdentity: Scalars["Boolean"]["output"];
@@ -5202,7 +5231,7 @@ export type Mutation = {
   adminLicensePolicyDeleteCredentialRule: LicensingCredentialBasedPolicyCredentialRule;
   /** Updates a CredentialRule on the LicensePolicy. */
   adminLicensePolicyUpdateCredentialRule: LicensingCredentialBasedPolicyCredentialRule;
-  /** Platform admin: revoke a named user's MCP API key. Idempotent. */
+  /** Platform Users Admin: revoke a named user's MCP API key. Idempotent. */
   adminRevokeMcpApiKey: McpApiKey;
   /** Ingests new data into Elasticsearch from scratch. This will delete all existing data and ingest new data from the source. This is an admin only operation. */
   adminSearchIngestFromScratch: Scalars["String"]["output"];
@@ -5212,9 +5241,9 @@ export type Mutation = {
   adminUpdateGeoLocationData: Scalars["Boolean"]["output"];
   /** Remove the Kratos account associated with the specified User. Note: the Users profile on the platform is not deleted. */
   adminUserAccountDelete: User;
-  /** Change a user's login email synchronously, acting as a platform administrator. The admin is responsible for verifying the subject user's identity out-of-band — the platform does NOT send a confirmation message to the new mailbox and does NOT require the new mailbox to prove ownership. Validates uniqueness, commits Kratos → Alkemio with bounded retry, invalidates the subject's existing sessions, and sends a security-signal notification to the old address. Requires PLATFORM_ADMIN. */
+  /** Change a user's login email synchronously, acting as a platform administrator. The admin is responsible for verifying the subject user's identity out-of-band — the platform does NOT send a confirmation message to the new mailbox and does NOT require the new mailbox to prove ownership. Validates uniqueness, commits Kratos → Alkemio with bounded retry, invalidates the subject's existing sessions, and sends a security-signal notification to the old address. Requires PLATFORM_USERS_ADMIN. */
   adminUserEmailChange: UserEmailChangeResult;
-  /** Reconcile an outstanding drift-detected state for a subject user by force-aligning Alkemio and Kratos to a canonical email chosen by the admin. Requires PLATFORM_ADMIN. */
+  /** Reconcile an outstanding drift-detected state for a subject user by force-aligning Alkemio and Kratos to a canonical email chosen by the admin. Requires PLATFORM_USERS_ADMIN. */
   adminUserEmailChangeDriftResolve: UserEmailChangeResult;
   /** Create a test customer on wingback. */
   adminWingbackCreateTestCustomer: Scalars["String"]["output"];
@@ -5236,6 +5265,8 @@ export type Mutation = {
   assignLicensePlanToAccount: Account;
   /** Assign the specified LicensePlan to a Space. */
   assignLicensePlanToSpace: Space;
+  /** Assigns an Organization to a role on the Platform. */
+  assignPlatformRoleToOrganization: Organization;
   /** Assigns a User to a role on the Platform. */
   assignPlatformRoleToUser: User;
   /** Assigns an Actor (User, Organization, or Virtual Contributor) to a role in the specified RoleSet. */
@@ -5452,6 +5483,8 @@ export type Mutation = {
   removeMessageOnRoom: Scalars["MessageID"]["output"];
   /** Removes an email address from the platform notification blacklist */
   removeNotificationEmailFromBlacklist: Array<Scalars["String"]["output"]>;
+  /** Removes an Organization from a Role on the Platform. */
+  removePlatformRoleFromOrganization: Organization;
   /** Removes a User from a Role on the Platform. */
   removePlatformRoleFromUser: User;
   /** Remove an option from a Poll. Requires UPDATE privilege. Poll must retain at least 2 options. Votes that selected this option are deleted and affected voters are notified. */
@@ -5768,6 +5801,10 @@ export type MutationAssignLicensePlanToAccountArgs = {
 
 export type MutationAssignLicensePlanToSpaceArgs = {
   planData: AssignLicensePlanToSpace;
+};
+
+export type MutationAssignPlatformRoleToOrganizationArgs = {
+  roleData: AssignPlatformRoleInput;
 };
 
 export type MutationAssignPlatformRoleToUserArgs = {
@@ -6176,6 +6213,10 @@ export type MutationRemoveMessageOnRoomArgs = {
 
 export type MutationRemoveNotificationEmailFromBlacklistArgs = {
   input: NotificationEmailAddressInput;
+};
+
+export type MutationRemovePlatformRoleFromOrganizationArgs = {
+  roleData: RemovePlatformRoleInput;
 };
 
 export type MutationRemovePlatformRoleFromUserArgs = {
@@ -7078,7 +7119,7 @@ export type PlatformAdminQueryResults = {
   innovationPacks: Array<InnovationPack>;
   /** The most recent email-change audit entry for the named subject user. Returns null if no audit entry exists. */
   latestUserEmailChangeAuditEntry?: Maybe<UserEmailChangeAuditEntry>;
-  /** MCP API keys belonging to the named user. Platform admins only. Keys bound to a system actor are never returned. */
+  /** MCP API keys belonging to the named user. Platform Users Admin only. Keys bound to a system actor are never returned. */
   mcpApiKeys: Array<McpApiKey>;
   /** Retrieve all Organizations on the Platform. This is only available to Platform Admins. */
   organizations: PaginatedOrganization;
@@ -8133,6 +8174,10 @@ export enum RoleName {
   Admin = "ADMIN",
   Anonymous = "ANONYMOUS",
   Associate = "ASSOCIATE",
+  FeatureBetaTester = "FEATURE_BETA_TESTER",
+  FeatureOrganizationCreator = "FEATURE_ORGANIZATION_CREATOR",
+  FeatureVcCampaign = "FEATURE_VC_CAMPAIGN",
+  FeatureVirtualAssistant = "FEATURE_VIRTUAL_ASSISTANT",
   GlobalAdmin = "GLOBAL_ADMIN",
   GlobalCommunityReader = "GLOBAL_COMMUNITY_READER",
   GlobalLicenseManager = "GLOBAL_LICENSE_MANAGER",
@@ -8145,8 +8190,17 @@ export enum RoleName {
   Member = "MEMBER",
   Owner = "OWNER",
   PlatformAssistantAccess = "PLATFORM_ASSISTANT_ACCESS",
+  PlatformAuditReader = "PLATFORM_AUDIT_READER",
   PlatformBetaTester = "PLATFORM_BETA_TESTER",
+  PlatformContentFullAccess = "PLATFORM_CONTENT_FULL_ACCESS",
+  PlatformLicenseManager = "PLATFORM_LICENSE_MANAGER",
   PlatformOperationsAdmin = "PLATFORM_OPERATIONS_ADMIN",
+  PlatformResourceAdmin = "PLATFORM_RESOURCE_ADMIN",
+  PlatformRolesAdmin = "PLATFORM_ROLES_ADMIN",
+  PlatformSettingsAdmin = "PLATFORM_SETTINGS_ADMIN",
+  PlatformSpacesReader = "PLATFORM_SPACES_READER",
+  PlatformSupport = "PLATFORM_SUPPORT",
+  PlatformUsersAdmin = "PLATFORM_USERS_ADMIN",
   PlatformVcCampaign = "PLATFORM_VC_CAMPAIGN",
   Registered = "REGISTERED",
 }
@@ -20050,6 +20104,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationAssignLicensePlanToSpaceArgs, "planData">
   >;
+  assignPlatformRoleToOrganization?: Resolver<
+    ResolversTypes["Organization"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationAssignPlatformRoleToOrganizationArgs, "roleData">
+  >;
   assignPlatformRoleToUser?: Resolver<
     ResolversTypes["User"],
     ParentType,
@@ -20723,6 +20783,12 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationRemoveNotificationEmailFromBlacklistArgs, "input">
+  >;
+  removePlatformRoleFromOrganization?: Resolver<
+    ResolversTypes["Organization"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationRemovePlatformRoleFromOrganizationArgs, "roleData">
   >;
   removePlatformRoleFromUser?: Resolver<
     ResolversTypes["User"],
@@ -54004,6 +54070,14 @@ export type ConvertSpaceL1ToSpaceL0Mutation = {
   };
 };
 
+export type ConvertSpaceL1ToSpaceL2MutationVariables = Exact<{
+  convertData: ConvertSpaceL1ToSpaceL2Input;
+}>;
+
+export type ConvertSpaceL1ToSpaceL2Mutation = {
+  convertSpaceL1ToSpaceL2: { id: string; nameID: string; level: SpaceLevel };
+};
+
 export type ConvertSpaceL2ToSpaceL1MutationVariables = Exact<{
   convertData: ConvertSpaceL2ToSpaceL1Input;
 }>;
@@ -82275,6 +82349,686 @@ export type UpdateOrganizationSettingsMutation = {
   };
 };
 
+export type AddIframeAllowedUrlMutationVariables = Exact<{
+  whitelistedURL: Scalars["String"]["input"];
+}>;
+
+export type AddIframeAllowedUrlMutation = {
+  addIframeAllowedURL: Array<string>;
+};
+
+export type AddNotificationEmailToBlacklistMutationVariables = Exact<{
+  input: NotificationEmailAddressInput;
+}>;
+
+export type AddNotificationEmailToBlacklistMutation = {
+  addNotificationEmailToBlacklist: Array<string>;
+};
+
+export type AdminCommunicationEnsureAccessToCommunicationsMutationVariables =
+  Exact<{
+    communicationData: CommunicationAdminEnsureAccessInput;
+  }>;
+
+export type AdminCommunicationEnsureAccessToCommunicationsMutation = {
+  adminCommunicationEnsureAccessToCommunications: boolean;
+};
+
+export type AdminCommunicationMigrateOrphanedConversationsMutationVariables =
+  Exact<{ [key: string]: never }>;
+
+export type AdminCommunicationMigrateOrphanedConversationsMutation = {
+  adminCommunicationMigrateOrphanedConversations: { migrated: number };
+};
+
+export type AdminCommunicationRemoveOrphanedRoomMutationVariables = Exact<{
+  orphanedRoomData: CommunicationAdminRemoveOrphanedRoomInput;
+}>;
+
+export type AdminCommunicationRemoveOrphanedRoomMutation = {
+  adminCommunicationRemoveOrphanedRoom: boolean;
+};
+
+export type AdminCommunicationSyncSpaceHierarchyMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type AdminCommunicationSyncSpaceHierarchyMutation = {
+  adminCommunicationSyncSpaceHierarchy: boolean;
+};
+
+export type AdminCommunicationUpdateRoomStateMutationVariables = Exact<{
+  roomStateData: CommunicationAdminUpdateRoomStateInput;
+}>;
+
+export type AdminCommunicationUpdateRoomStateMutation = {
+  adminCommunicationUpdateRoomState: boolean;
+};
+
+export type AdminForumRemoveDiscussionCategoryMutationVariables = Exact<{
+  removeData: ForumRemoveDiscussionCategoryInput;
+}>;
+
+export type AdminForumRemoveDiscussionCategoryMutation = {
+  adminForumRemoveDiscussionCategory: {
+    id: string;
+    discussionCategories: Array<ForumDiscussionCategory>;
+  };
+};
+
+export type AdminIdentityDeleteKratosIdentityMutationVariables = Exact<{
+  kratosIdentityId: Scalars["UUID"]["input"];
+}>;
+
+export type AdminIdentityDeleteKratosIdentityMutation = {
+  adminIdentityDeleteKratosIdentity: boolean;
+};
+
+export type AdminInAppNotificationsPruneMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type AdminInAppNotificationsPruneMutation = {
+  adminInAppNotificationsPrune: { removedCountExceedingUserLimit: number };
+};
+
+export type AdminLicensePolicyCreateCredentialRuleMutationVariables = Exact<{
+  createData: CreateLicensePolicyCredentialRuleInput;
+}>;
+
+export type AdminLicensePolicyCreateCredentialRuleMutation = {
+  adminLicensePolicyCreateCredentialRule: { id: string };
+};
+
+export type AdminLicensePolicyDeleteCredentialRuleMutationVariables = Exact<{
+  deleteData: DeleteLicensePolicyCredentialRuleInput;
+}>;
+
+export type AdminLicensePolicyDeleteCredentialRuleMutation = {
+  adminLicensePolicyDeleteCredentialRule: { id: string };
+};
+
+export type AdminLicensePolicyUpdateCredentialRuleMutationVariables = Exact<{
+  updateData: UpdateLicensePolicyCredentialRuleInput;
+}>;
+
+export type AdminLicensePolicyUpdateCredentialRuleMutation = {
+  adminLicensePolicyUpdateCredentialRule: { id: string };
+};
+
+export type AdminRevokeMcpApiKeyMutationVariables = Exact<{
+  revokeData: AdminRevokeMcpApiKeyInput;
+}>;
+
+export type AdminRevokeMcpApiKeyMutation = {
+  adminRevokeMcpApiKey: { id: string };
+};
+
+export type AdminUpdateContributorAvatarsMutationVariables = Exact<{
+  profileID: Scalars["UUID"]["input"];
+}>;
+
+export type AdminUpdateContributorAvatarsMutation = {
+  adminUpdateContributorAvatars: { id: string };
+};
+
+export type AdminUpdateGeoLocationDataMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type AdminUpdateGeoLocationDataMutation = {
+  adminUpdateGeoLocationData: boolean;
+};
+
+export type AdminUserAccountDeleteMutationVariables = Exact<{
+  userID: Scalars["UUID"]["input"];
+}>;
+
+export type AdminUserAccountDeleteMutation = {
+  adminUserAccountDelete: { id: string };
+};
+
+export type AdminUserEmailChangeMutationVariables = Exact<{
+  adminUserEmailChangeData: AdminUserEmailChangeInput;
+}>;
+
+export type AdminUserEmailChangeMutation = {
+  adminUserEmailChange: { success: boolean };
+};
+
+export type AdminUserEmailChangeDriftResolveMutationVariables = Exact<{
+  adminUserEmailChangeDriftResolveData: AdminUserEmailChangeDriftResolveInput;
+}>;
+
+export type AdminUserEmailChangeDriftResolveMutation = {
+  adminUserEmailChangeDriftResolve: { success: boolean };
+};
+
+export type AiServerAuthorizationPolicyResetMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type AiServerAuthorizationPolicyResetMutation = {
+  aiServerAuthorizationPolicyReset: { id: string };
+};
+
+export type AssignPlatformRoleToOrganizationMutationVariables = Exact<{
+  roleData: AssignPlatformRoleInput;
+}>;
+
+export type AssignPlatformRoleToOrganizationMutation = {
+  assignPlatformRoleToOrganization: { id: string };
+};
+
+export type AuthorizationPlatformRolesAccessResetMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type AuthorizationPlatformRolesAccessResetMutation = {
+  authorizationPlatformRolesAccessReset: boolean;
+};
+
+export type AuthorizationPolicyResetAllMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type AuthorizationPolicyResetAllMutation = {
+  authorizationPolicyResetAll: string;
+};
+
+export type AuthorizationPolicyResetOnAccountMutationVariables = Exact<{
+  authorizationResetData: AccountAuthorizationResetInput;
+}>;
+
+export type AuthorizationPolicyResetOnAccountMutation = {
+  authorizationPolicyResetOnAccount: { id: string };
+};
+
+export type AuthorizationPolicyResetOnPlatformMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type AuthorizationPolicyResetOnPlatformMutation = {
+  authorizationPolicyResetOnPlatform: { id: string };
+};
+
+export type AuthorizationPolicyResetOnUserMutationVariables = Exact<{
+  authorizationResetData: UserAuthorizationResetInput;
+}>;
+
+export type AuthorizationPolicyResetOnUserMutation = {
+  authorizationPolicyResetOnUser: { id: string };
+};
+
+export type AuthorizationPolicyResetToGlobalAdminsAccessMutationVariables =
+  Exact<{
+    authorizationID: Scalars["String"]["input"];
+  }>;
+
+export type AuthorizationPolicyResetToGlobalAdminsAccessMutation = {
+  authorizationPolicyResetToGlobalAdminsAccess: { id: string };
+};
+
+export type CleanupCollectionsMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type CleanupCollectionsMutation = {
+  cleanupCollections: { success: boolean };
+};
+
+export type CreateContributionOnCalloutIdMutationVariables = Exact<{
+  contributionData: CreateContributionOnCalloutInput;
+}>;
+
+export type CreateContributionOnCalloutIdMutation = {
+  createContributionOnCallout: { id: string };
+};
+
+export type CreateTemplateFromContentSpaceMutationVariables = Exact<{
+  templateData: CreateTemplateFromContentSpaceOnTemplatesSetInput;
+}>;
+
+export type CreateTemplateFromContentSpaceMutation = {
+  createTemplateFromContentSpace: { id: string };
+};
+
+export type CreateWingbackAccountMutationVariables = Exact<{
+  accountID: Scalars["UUID"]["input"];
+}>;
+
+export type CreateWingbackAccountMutation = { createWingbackAccount: string };
+
+export type DeleteContributionMutationVariables = Exact<{
+  deleteData: DeleteContributionInput;
+}>;
+
+export type DeleteContributionMutation = { deleteContribution: { id: string } };
+
+export type GrantCredentialToActorMutationVariables = Exact<{
+  actorID: Scalars["UUID"]["input"];
+  credentialType: CredentialType;
+  resourceID?: InputMaybe<Scalars["UUID"]["input"]>;
+}>;
+
+export type GrantCredentialToActorMutation = {
+  grantCredentialToActor: { id: string };
+};
+
+export type GrantCredentialToOrganizationMutationVariables = Exact<{
+  grantCredentialData: GrantOrganizationAuthorizationCredentialInput;
+}>;
+
+export type GrantCredentialToOrganizationMutation = {
+  grantCredentialToOrganization: { id: string };
+};
+
+export type GrantCredentialToUserMutationVariables = Exact<{
+  grantCredentialData: GrantAuthorizationCredentialInput;
+}>;
+
+export type GrantCredentialToUserMutation = {
+  grantCredentialToUser: { id: string };
+};
+
+export type LicenseResetOnAccountMutationVariables = Exact<{
+  resetData: AccountLicenseResetInput;
+}>;
+
+export type LicenseResetOnAccountMutation = {
+  licenseResetOnAccount: { id: string };
+};
+
+export type MigrateLegacyMemoContentMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type MigrateLegacyMemoContentMutation = {
+  migrateLegacyMemoContent: { total: number; migrated: number };
+};
+
+export type MigrateLegacyWhiteboardContentMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type MigrateLegacyWhiteboardContentMutation = {
+  migrateLegacyWhiteboardContent: { total: number; migrated: number };
+};
+
+export type MintMcpApiKeyMutationVariables = Exact<{
+  mintData: MintMcpApiKeyInput;
+}>;
+
+export type MintMcpApiKeyMutation = { mintMcpApiKey: { key: { id: string } } };
+
+export type MoveContributionToCalloutMutationVariables = Exact<{
+  moveContributionData: MoveCalloutContributionInput;
+}>;
+
+export type MoveContributionToCalloutMutation = {
+  moveContributionToCallout: { id: string };
+};
+
+export type PlatformRolesAssignLicensePlanToAccountMutationVariables = Exact<{
+  planData: AssignLicensePlanToAccount;
+}>;
+
+export type PlatformRolesAssignLicensePlanToAccountMutation = {
+  assignLicensePlanToAccount: { id: string };
+};
+
+export type PlatformRolesAssignLicensePlanToSpaceMutationVariables = Exact<{
+  planData: AssignLicensePlanToSpace;
+}>;
+
+export type PlatformRolesAssignLicensePlanToSpaceMutation = {
+  assignLicensePlanToSpace: { id: string };
+};
+
+export type PlatformRolesAssignRoleToUserMutationVariables = Exact<{
+  roleData: AssignPlatformRoleInput;
+}>;
+
+export type PlatformRolesAssignRoleToUserMutation = {
+  assignPlatformRoleToUser: { id: string };
+};
+
+export type PlatformRolesConvertSpaceL1ToSpaceL0MutationVariables = Exact<{
+  convertData: ConvertSpaceL1ToSpaceL0Input;
+}>;
+
+export type PlatformRolesConvertSpaceL1ToSpaceL0Mutation = {
+  convertSpaceL1ToSpaceL0: { id: string };
+};
+
+export type PlatformRolesConvertSpaceL2ToSpaceL1MutationVariables = Exact<{
+  convertData: ConvertSpaceL2ToSpaceL1Input;
+}>;
+
+export type PlatformRolesConvertSpaceL2ToSpaceL1Mutation = {
+  convertSpaceL2ToSpaceL1: { id: string };
+};
+
+export type PlatformRolesConvertVirtualContributorToUseKnowledgeBaseMutationVariables =
+  Exact<{
+    conversionData: ConversionVcSpaceToVcKnowledgeBaseInput;
+  }>;
+
+export type PlatformRolesConvertVirtualContributorToUseKnowledgeBaseMutation = {
+  convertVirtualContributorToUseKnowledgeBase: { id: string };
+};
+
+export type PlatformRolesCreateLicensePlanMutationVariables = Exact<{
+  planData: CreateLicensePlanOnLicensingFrameworkInput;
+}>;
+
+export type PlatformRolesCreateLicensePlanMutation = {
+  createLicensePlan: { id: string };
+};
+
+export type PlatformRolesCreateOrganizationMutationVariables = Exact<{
+  organizationData: CreateOrganizationInput;
+}>;
+
+export type PlatformRolesCreateOrganizationMutation = {
+  createOrganization: { id: string };
+};
+
+export type PlatformRolesCreateTemplateMutationVariables = Exact<{
+  templateData: CreateTemplateOnTemplatesSetInput;
+}>;
+
+export type PlatformRolesCreateTemplateMutation = {
+  createTemplate: { id: string };
+};
+
+export type PlatformRolesCreateTemplateFromSpaceMutationVariables = Exact<{
+  templateData: CreateTemplateFromSpaceOnTemplatesSetInput;
+}>;
+
+export type PlatformRolesCreateTemplateFromSpaceMutation = {
+  createTemplateFromSpace: { id: string };
+};
+
+export type PlatformRolesDeleteDiscussionMutationVariables = Exact<{
+  deleteData: DeleteDiscussionInput;
+}>;
+
+export type PlatformRolesDeleteDiscussionMutation = {
+  deleteDiscussion: { id: string };
+};
+
+export type PlatformRolesDeleteLicensePlanMutationVariables = Exact<{
+  deleteData: DeleteLicensePlanInput;
+}>;
+
+export type PlatformRolesDeleteLicensePlanMutation = {
+  deleteLicensePlan: { id: string };
+};
+
+export type PlatformRolesMoveSpaceL1ToSpaceL0MutationVariables = Exact<{
+  moveData: MoveSpaceL1ToSpaceL0Input;
+}>;
+
+export type PlatformRolesMoveSpaceL1ToSpaceL0Mutation = {
+  moveSpaceL1ToSpaceL0: { id: string };
+};
+
+export type PlatformRolesMoveSpaceL1ToSpaceL2MutationVariables = Exact<{
+  moveData: MoveSpaceL1ToSpaceL2Input;
+}>;
+
+export type PlatformRolesMoveSpaceL1ToSpaceL2Mutation = {
+  moveSpaceL1ToSpaceL2: { id: string };
+};
+
+export type PlatformRolesMoveSpaceL2ToSpaceL1MutationVariables = Exact<{
+  moveData: MoveSpaceL2ToSpaceL1Input;
+}>;
+
+export type PlatformRolesMoveSpaceL2ToSpaceL1Mutation = {
+  moveSpaceL2ToSpaceL1: { id: string };
+};
+
+export type PlatformRolesRemoveRoleFromUserMutationVariables = Exact<{
+  roleData: RemovePlatformRoleInput;
+}>;
+
+export type PlatformRolesRemoveRoleFromUserMutation = {
+  removePlatformRoleFromUser: { id: string };
+};
+
+export type PlatformRolesRevokeLicensePlanFromAccountMutationVariables = Exact<{
+  planData: RevokeLicensePlanFromAccount;
+}>;
+
+export type PlatformRolesRevokeLicensePlanFromAccountMutation = {
+  revokeLicensePlanFromAccount: { id: string };
+};
+
+export type PlatformRolesRevokeLicensePlanFromSpaceMutationVariables = Exact<{
+  planData: RevokeLicensePlanFromSpace;
+}>;
+
+export type PlatformRolesRevokeLicensePlanFromSpaceMutation = {
+  revokeLicensePlanFromSpace: { id: string };
+};
+
+export type PlatformRolesTransferCalloutMutationVariables = Exact<{
+  transferData: TransferCalloutInput;
+}>;
+
+export type PlatformRolesTransferCalloutMutation = {
+  transferCallout: { id: string };
+};
+
+export type PlatformRolesTransferInnovationHubToAccountMutationVariables =
+  Exact<{
+    transferData: TransferAccountInnovationHubInput;
+  }>;
+
+export type PlatformRolesTransferInnovationHubToAccountMutation = {
+  transferInnovationHubToAccount: { id: string };
+};
+
+export type PlatformRolesTransferInnovationPackToAccountMutationVariables =
+  Exact<{
+    transferData: TransferAccountInnovationPackInput;
+  }>;
+
+export type PlatformRolesTransferInnovationPackToAccountMutation = {
+  transferInnovationPackToAccount: { id: string };
+};
+
+export type PlatformRolesTransferSpaceToAccountMutationVariables = Exact<{
+  transferData: TransferAccountSpaceInput;
+}>;
+
+export type PlatformRolesTransferSpaceToAccountMutation = {
+  transferSpaceToAccount: { id: string };
+};
+
+export type PlatformRolesTransferVirtualContributorToAccountMutationVariables =
+  Exact<{
+    transferData: TransferAccountVirtualContributorInput;
+  }>;
+
+export type PlatformRolesTransferVirtualContributorToAccountMutation = {
+  transferVirtualContributorToAccount: { id: string };
+};
+
+export type PlatformRolesUpdateCalloutMutationVariables = Exact<{
+  calloutData: UpdateCalloutEntityInput;
+}>;
+
+export type PlatformRolesUpdateCalloutMutation = {
+  updateCallout: { id: string };
+};
+
+export type PlatformRolesUpdateDiscussionMutationVariables = Exact<{
+  updateData: UpdateDiscussionInput;
+}>;
+
+export type PlatformRolesUpdateDiscussionMutation = {
+  updateDiscussion: { id: string };
+};
+
+export type PlatformRolesUpdateLicensePlanMutationVariables = Exact<{
+  updateData: UpdateLicensePlanInput;
+}>;
+
+export type PlatformRolesUpdateLicensePlanMutation = {
+  updateLicensePlan: { id: string };
+};
+
+export type PlatformRolesUpdateSpaceVisibilityMutationVariables = Exact<{
+  updateData: UpdateSpacePlatformSettingsInput;
+}>;
+
+export type PlatformRolesUpdateSpaceVisibilityMutation = {
+  updateSpacePlatformSettings: { id: string };
+};
+
+export type PlatformRolesUpdateTemplateMutationVariables = Exact<{
+  updateData: UpdateTemplateInput;
+}>;
+
+export type PlatformRolesUpdateTemplateMutation = {
+  updateTemplate: { id: string };
+};
+
+export type RefreshAllBodiesOfKnowledgeMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type RefreshAllBodiesOfKnowledgeMutation = {
+  refreshAllBodiesOfKnowledge: boolean;
+};
+
+export type RemoveIframeAllowedUrlMutationVariables = Exact<{
+  whitelistedURL: Scalars["String"]["input"];
+}>;
+
+export type RemoveIframeAllowedUrlMutation = {
+  removeIframeAllowedURL: Array<string>;
+};
+
+export type RemoveNotificationEmailFromBlacklistMutationVariables = Exact<{
+  input: NotificationEmailAddressInput;
+}>;
+
+export type RemoveNotificationEmailFromBlacklistMutation = {
+  removeNotificationEmailFromBlacklist: Array<string>;
+};
+
+export type RemovePlatformRoleFromOrganizationMutationVariables = Exact<{
+  roleData: RemovePlatformRoleInput;
+}>;
+
+export type RemovePlatformRoleFromOrganizationMutation = {
+  removePlatformRoleFromOrganization: { id: string };
+};
+
+export type ResetLicenseOnAccountsMutationVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type ResetLicenseOnAccountsMutation = {
+  resetLicenseOnAccounts: boolean;
+};
+
+export type RevokeCredentialFromActorMutationVariables = Exact<{
+  actorID: Scalars["UUID"]["input"];
+  credentialType: CredentialType;
+  resourceID?: InputMaybe<Scalars["UUID"]["input"]>;
+}>;
+
+export type RevokeCredentialFromActorMutation = {
+  revokeCredentialFromActor: boolean;
+};
+
+export type RevokeCredentialFromOrganizationMutationVariables = Exact<{
+  revokeCredentialData: RevokeOrganizationAuthorizationCredentialInput;
+}>;
+
+export type RevokeCredentialFromOrganizationMutation = {
+  revokeCredentialFromOrganization: { id: string };
+};
+
+export type RevokeCredentialFromUserMutationVariables = Exact<{
+  revokeCredentialData: RevokeAuthorizationCredentialInput;
+}>;
+
+export type RevokeCredentialFromUserMutation = {
+  revokeCredentialFromUser: { id: string };
+};
+
+export type SetPlatformWellKnownVirtualContributorMutationVariables = Exact<{
+  mappingData: SetPlatformWellKnownVirtualContributorInput;
+}>;
+
+export type SetPlatformWellKnownVirtualContributorMutation = {
+  setPlatformWellKnownVirtualContributor: {
+    mappings: Array<{ wellKnown: VirtualContributorWellKnown }>;
+  };
+};
+
+export type UpdateAssistantActorCapabilitiesMutationVariables = Exact<{
+  grantData: GrantAssistantActorCapabilitiesInput;
+}>;
+
+export type UpdateAssistantActorCapabilitiesMutation = {
+  updateAssistantActorCapabilities: { id: string };
+};
+
+export type UpdateBaselineLicensePlanOnAccountMutationVariables = Exact<{
+  updateData: UpdateBaselineLicensePlanOnAccount;
+}>;
+
+export type UpdateBaselineLicensePlanOnAccountMutation = {
+  updateBaselineLicensePlanOnAccount: { id: string };
+};
+
+export type UpdateCalloutPublishInfoMutationVariables = Exact<{
+  calloutData: UpdateCalloutPublishInfoInput;
+}>;
+
+export type UpdateCalloutPublishInfoMutation = {
+  updateCalloutPublishInfo: { id: string };
+};
+
+export type UpdateInnovationHubMutationVariables = Exact<{
+  updateData: UpdateInnovationHubInput;
+}>;
+
+export type UpdateInnovationHubMutation = {
+  updateInnovationHub: { id: string };
+};
+
+export type UpdateInnovationPackMutationVariables = Exact<{
+  innovationPackData: UpdateInnovationPackInput;
+}>;
+
+export type UpdateInnovationPackMutation = {
+  updateInnovationPack: { id: string };
+};
+
+export type UpdatePlatformSettingsMutationVariables = Exact<{
+  settingsData: UpdatePlatformSettingsInput;
+}>;
+
+export type UpdatePlatformSettingsMutation = {
+  updatePlatformSettings: { integration: { iframeAllowedUrls: Array<string> } };
+};
+
+export type UpdateTemplateFromSpaceMutationVariables = Exact<{
+  updateData: UpdateTemplateFromSpaceInput;
+}>;
+
+export type UpdateTemplateFromSpaceMutation = {
+  updateTemplateFromSpace: { id: string };
+};
+
 export type AssignPlatformRoleToUserMutationVariables = Exact<{
   roleData: AssignPlatformRoleInput;
 }>;
@@ -82378,6 +83132,19 @@ export type UpdateSpacePlatformSettingsMutation = {
     __typename: "Space";
     id: string;
     nameID: string;
+    visibility: SpaceVisibility;
+  };
+};
+
+export type UpdateSpaceVisibilityPlatformSettingsMutationVariables = Exact<{
+  spaceId: Scalars["UUID"]["input"];
+  visibility: SpaceVisibility;
+}>;
+
+export type UpdateSpaceVisibilityPlatformSettingsMutation = {
+  updateSpacePlatformSettings: {
+    __typename: "Space";
+    id: string;
     visibility: SpaceVisibility;
   };
 };
@@ -92357,6 +93124,187 @@ export type UsersPaginatedQuery = {
       hasPreviousPage: boolean;
     };
   };
+};
+
+export type ActorsWithCredentialQueryVariables = Exact<{
+  credentialType: CredentialType;
+  resourceID?: InputMaybe<Scalars["UUID"]["input"]>;
+}>;
+
+export type ActorsWithCredentialQuery = {
+  actorsWithCredential: Array<
+    | { id: string }
+    | { id: string }
+    | { id: string }
+    | { id: string }
+    | { id: string }
+    | { id: string }
+    | { id: string }
+  >;
+};
+
+export type LatestUserEmailChangeAuditEntryQueryVariables = Exact<{
+  userID: Scalars["UUID"]["input"];
+}>;
+
+export type LatestUserEmailChangeAuditEntryQuery = {
+  platformAdmin: {
+    latestUserEmailChangeAuditEntry?:
+      | { id: string; outcome: UserEmailChangeAuditOutcome }
+      | undefined;
+  };
+};
+
+export type PlatformAdminMcpApiKeysQueryVariables = Exact<{
+  userID: Scalars["UUID"]["input"];
+}>;
+
+export type PlatformAdminMcpApiKeysQuery = {
+  platformAdmin: { mcpApiKeys: Array<{ id: string }> };
+};
+
+export type PlatformAdminVirtualAssistantQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type PlatformAdminVirtualAssistantQuery = {
+  platformAdmin: { virtualAssistant: { id: string } };
+};
+
+export type PlatformForumDiscussionCategoriesQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type PlatformForumDiscussionCategoriesQuery = {
+  platform: {
+    forum: { id: string; discussionCategories: Array<ForumDiscussionCategory> };
+  };
+};
+
+export type PlatformRoleSetOrganizationsInRoleQueryVariables = Exact<{
+  role: RoleName;
+}>;
+
+export type PlatformRoleSetOrganizationsInRoleQuery = {
+  platform: { roleSet: { organizationsInRole: Array<{ id: string }> } };
+};
+
+export type PlatformRoleSetOrganizationsInRolesQueryVariables = Exact<{
+  roles: Array<RoleName> | RoleName;
+}>;
+
+export type PlatformRoleSetOrganizationsInRolesQuery = {
+  platform: {
+    roleSet: {
+      organizationsInRoles: Array<{
+        role: RoleName;
+        organizations: Array<{ id: string }>;
+      }>;
+    };
+  };
+};
+
+export type PlatformRoleSetRoleNamesQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type PlatformRoleSetRoleNamesQuery = {
+  platform: { roleSet: { roleNames: Array<RoleName> } };
+};
+
+export type PlatformRoleSetUsersInRoleQueryVariables = Exact<{
+  role: RoleName;
+}>;
+
+export type PlatformRoleSetUsersInRoleQuery = {
+  platform: { roleSet: { usersInRole: Array<{ id: string }> } };
+};
+
+export type PlatformRoleSetUsersInRolesQueryVariables = Exact<{
+  roles: Array<RoleName> | RoleName;
+}>;
+
+export type PlatformRoleSetUsersInRolesQuery = {
+  platform: {
+    roleSet: {
+      usersInRoles: Array<{ role: RoleName; users: Array<{ id: string }> }>;
+    };
+  };
+};
+
+export type PlatformRolesSpaceApplicationsProbeQueryVariables = Exact<{
+  spaceId: Scalars["UUID"]["input"];
+}>;
+
+export type PlatformRolesSpaceApplicationsProbeQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          community: { roleSet: { applications: Array<{ id: string }> } };
+        }
+      | undefined;
+  };
+};
+
+export type SpaceCollaborationReadProbeQueryVariables = Exact<{
+  spaceId: Scalars["UUID"]["input"];
+}>;
+
+export type SpaceCollaborationReadProbeQuery = {
+  lookup: { space?: { id: string; collaboration: { id: string } } | undefined };
+};
+
+export type SpaceReadProbeQueryVariables = Exact<{
+  spaceId: Scalars["UUID"]["input"];
+}>;
+
+export type SpaceReadProbeQuery = {
+  lookup: { space?: { id: string } | undefined };
+};
+
+export type SpaceSupportAdminPrivilegeProbeQueryVariables = Exact<{
+  spaceId: Scalars["UUID"]["input"];
+}>;
+
+export type SpaceSupportAdminPrivilegeProbeQuery = {
+  lookup: {
+    space?:
+      | {
+          id: string;
+          authorization?:
+            | { myPrivileges?: Array<AuthorizationPrivilege> | undefined }
+            | undefined;
+        }
+      | undefined;
+  };
+};
+
+export type UpdateUserServiceProfileMutationVariables = Exact<{
+  userData: UpdateUserInput;
+}>;
+
+export type UpdateUserServiceProfileMutation = { updateUser: { id: string } };
+
+export type UserEmailChangeAuditEntriesQueryVariables = Exact<{
+  userID: Scalars["UUID"]["input"];
+}>;
+
+export type UserEmailChangeAuditEntriesQuery = {
+  platformAdmin: {
+    userEmailChangeAuditEntries: {
+      total: number;
+      auditEntries: Array<{ id: string; outcome: UserEmailChangeAuditOutcome }>;
+    };
+  };
+};
+
+export type UsersWithAuthorizationCredentialQueryVariables = Exact<{
+  credentialsCriteriaData: UsersWithAuthorizationCredentialInput;
+}>;
+
+export type UsersWithAuthorizationCredentialQuery = {
+  usersWithAuthorizationCredential: Array<{ id: string }>;
 };
 
 export type GetOrgVisualUriInnovationHubQueryVariables = Exact<{

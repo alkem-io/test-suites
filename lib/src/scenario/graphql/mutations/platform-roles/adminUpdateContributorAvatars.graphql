@@ -1,0 +1,5 @@
+mutation adminUpdateContributorAvatars($profileID: UUID!) {
+  adminUpdateContributorAvatars(profileID: $profileID) {
+    id
+  }
+}

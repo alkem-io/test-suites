@@ -1,0 +1,3 @@
+mutation addIframeAllowedURL($whitelistedURL: String!) {
+  addIframeAllowedURL(whitelistedURL: $whitelistedURL)
+}

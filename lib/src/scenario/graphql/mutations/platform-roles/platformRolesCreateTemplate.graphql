@@ -1,0 +1,8 @@
+# Minimal selection ON PURPOSE: the shared `CreateTemplate` document selects the
+# profile visuals and the callout framing, which a role allowed to create a
+# template need not be allowed to read.
+mutation PlatformRolesCreateTemplate($templateData: CreateTemplateOnTemplatesSetInput!) {
+  createTemplate(templateData: $templateData) {
+    id
+  }
+}

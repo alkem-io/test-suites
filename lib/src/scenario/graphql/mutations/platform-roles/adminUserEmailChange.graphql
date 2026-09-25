@@ -1,0 +1,5 @@
+mutation adminUserEmailChange($adminUserEmailChangeData: AdminUserEmailChangeInput!) {
+  adminUserEmailChange(adminUserEmailChangeData: $adminUserEmailChangeData) {
+    success
+  }
+}

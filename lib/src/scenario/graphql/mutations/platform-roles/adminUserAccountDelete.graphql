@@ -1,0 +1,5 @@
+mutation adminUserAccountDelete($userID: UUID!) {
+  adminUserAccountDelete(userID: $userID) {
+    id
+  }
+}

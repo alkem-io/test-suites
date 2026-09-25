@@ -1,0 +1,7 @@
+query platformRoleSetRoleNames {
+  platform {
+    roleSet {
+      roleNames
+    }
+  }
+}
