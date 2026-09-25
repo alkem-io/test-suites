@@ -1,0 +1,17 @@
+mutation UpdateCalloutSpacesSettings($calloutData: UpdateCalloutEntityInput!) {
+  updateCallout(calloutData: $calloutData) {
+    id
+    settings {
+      framing {
+        commentsEnabled
+        spaces {
+          cardVariant
+        }
+        selection {
+          mode
+          selectedIds
+        }
+      }
+    }
+  }
+}

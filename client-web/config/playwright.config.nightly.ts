@@ -293,6 +293,23 @@ export default defineConfig({
       timeout: 120_000,
       expect: { timeout: 15_000 },
     },
+    {
+      // Feature 076 (expanded subspace cards) acceptance walks. Each file seeds
+      // its own Space/Subspaces + EXPANDED-variant callout via the GraphQL API
+      // in `beforeAll` and drives a full SPA read flow against it. US1/US3/US4
+      // run as anonymous browser contexts (any admin token they use comes from
+      // `getUserToken`, a Node-side API call for fixture seeding, never a
+      // browser session). US2 alone drives an authenticated admin browser
+      // context and turns trace/video capture off for itself with a file-level
+      // `test.use` — see the note at the top of that spec. The 240s project
+      // timeout covers US1's beforeAll fixture, the slowest of the four; each
+      // file's own `describe.configure({ timeout })` sets the tighter
+      // per-file bound.
+      name: 'Subspaces callout',
+      testMatch: ['/subspaces-callout/*.spec.ts'],
+      timeout: 240_000,
+      expect: { timeout: 15_000 },
+    },
   ],
   // % or number of the available CPUs
   // workers: '100%',
