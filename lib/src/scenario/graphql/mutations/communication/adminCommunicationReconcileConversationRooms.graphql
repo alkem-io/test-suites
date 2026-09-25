@@ -1,0 +1,10 @@
+mutation AdminCommunicationReconcileConversationRooms(
+  $reconcileData: CommunicationAdminReconcileConversationRoomsInput!
+) {
+  adminCommunicationReconcileConversationRooms(reconcileData: $reconcileData) {
+    id
+    status
+    created
+    start
+  }
+}

@@ -1,0 +1,11 @@
+query GetTask($id: UUID!) {
+  task(id: $id) {
+    id
+    status
+    created
+    start
+    end
+    results
+    errors
+  }
+}

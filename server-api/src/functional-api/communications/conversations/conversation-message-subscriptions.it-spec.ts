@@ -12,7 +12,10 @@ import {
 } from '@alkemio/tests-lib';
 
 const subscriptionConversationEvents = readFileSync(
-  resolve(__dirname, '../../../../../lib/src/scenario/graphql/subscriptions/communication/conversationEvents.graphql'),
+  resolve(
+    __dirname,
+    '../../../../../lib/src/scenario/graphql/subscriptions/communication/conversationEvents.graphql'
+  ),
   'utf-8'
 );
 import {
@@ -53,18 +56,15 @@ describe('Conversation Message Subscriptions', () => {
     let conversationRoomId: string;
 
     beforeAll(async () => {
-      const memberActorId =
-        TestUserManager.users.spaceMember.agentId;
+      const memberActorId = TestUserManager.users.spaceMember.agentId;
       const res = await createConversation(
         [memberActorId],
         ConversationCreationType.Group,
         { displayName: 'Sub Message Received Test' },
         TestUser.GLOBAL_ADMIN
       );
-      groupConversationId =
-        res?.data?.createConversation?.id ?? '';
-      conversationRoomId =
-        res?.data?.createConversation?.room?.id ?? '';
+      groupConversationId = res?.data?.createConversation?.id ?? '';
+      conversationRoomId = res?.data?.createConversation?.room?.id ?? '';
 
       subscription = new SubscriptionClient();
       await subscription.subscribe(
@@ -100,8 +100,8 @@ describe('Conversation Message Subscriptions', () => {
       const messages = subscription.getMessages();
       const messageEvent = messages.find(
         (m: SubscriptionMessage) =>
-          (m as ConversationEventMessage)?.conversationEvents
-            ?.eventType === 'MESSAGE_RECEIVED'
+          (m as ConversationEventMessage)?.conversationEvents?.eventType ===
+          'MESSAGE_RECEIVED'
       );
 
       expect(messageEvent).toBeDefined();
@@ -135,10 +135,10 @@ describe('Conversation Message Subscriptions', () => {
       const messages = memberSub.getMessages();
       const messageEvent = messages.find(
         (m: SubscriptionMessage) =>
-          (m as ConversationEventMessage)?.conversationEvents
-            ?.eventType === 'MESSAGE_RECEIVED' &&
-          (m as ConversationEventMessage)?.conversationEvents
-            ?.messageReceived?.roomId === conversationRoomId
+          (m as ConversationEventMessage)?.conversationEvents?.eventType ===
+            'MESSAGE_RECEIVED' &&
+          (m as ConversationEventMessage)?.conversationEvents?.messageReceived
+            ?.roomId === conversationRoomId
       );
 
       expect(messageEvent).toBeDefined();
@@ -152,26 +152,22 @@ describe('Conversation Message Subscriptions', () => {
   describe('MESSAGE_REMOVED event', () => {
     test('should receive MESSAGE_REMOVED event when a message is deleted', async () => {
       // Arrange — create conversation, send a message, subscribe
-      const memberActorId =
-        TestUserManager.users.spaceMember.agentId;
+      const memberActorId = TestUserManager.users.spaceMember.agentId;
       const res = await createConversation(
         [memberActorId],
         ConversationCreationType.Group,
         { displayName: 'Sub Message Removed Test' },
         TestUser.GLOBAL_ADMIN
       );
-      const conversationId =
-        res?.data?.createConversation?.id ?? '';
-      const roomId =
-        res?.data?.createConversation?.room?.id ?? '';
+      const conversationId = res?.data?.createConversation?.id ?? '';
+      const roomId = res?.data?.createConversation?.room?.id ?? '';
 
       const msgRes = await sendMessageToRoom(
         roomId,
         'Message to delete',
         TestUser.GLOBAL_ADMIN
       );
-      const messageId =
-        msgRes?.data?.sendMessageToRoom?.id ?? '';
+      const messageId = msgRes?.data?.sendMessageToRoom?.id ?? '';
       expect(messageId).toBeTruthy();
 
       const subscription = new SubscriptionClient();
@@ -192,8 +188,8 @@ describe('Conversation Message Subscriptions', () => {
       const messages = subscription.getMessages();
       const removedEvent = messages.find(
         (m: SubscriptionMessage) =>
-          (m as ConversationEventMessage)?.conversationEvents
-            ?.eventType === 'MESSAGE_REMOVED'
+          (m as ConversationEventMessage)?.conversationEvents?.eventType ===
+          'MESSAGE_REMOVED'
       );
 
       expect(removedEvent).toBeDefined();
@@ -204,10 +200,9 @@ describe('Conversation Message Subscriptions', () => {
       subscription.terminate();
 
       // Cleanup
-      await leaveConversation(
-        conversationId,
-        TestUser.GLOBAL_ADMIN
-      ).catch(() => {});
+      await leaveConversation(conversationId, TestUser.GLOBAL_ADMIN).catch(
+        () => {}
+      );
     });
   });
 });

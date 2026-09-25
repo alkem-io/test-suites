@@ -1665,6 +1665,13 @@ export type CommunicationAdminOrphanedUsageResult = {
   rooms: Array<CommunicationAdminRoomResult>;
 };
 
+export type CommunicationAdminReconcileConversationRoomsInput = {
+  /** Probe every room, including rooms already recorded READY. By default only rooms whose readiness is not READY are probed. */
+  includeReady?: Scalars["Boolean"]["input"];
+  /** Also repair conversation rooms the backend does not have (re-create under the same room id and converge membership). Rooms of other kinds are only marked. */
+  repair?: Scalars["Boolean"]["input"];
+};
+
 export type CommunicationAdminRemoveOrphanedRoomInput = {
   roomID: Scalars["String"]["input"];
 };
@@ -1988,6 +1995,32 @@ export enum ConversationEventType {
   ReadReceiptUpdated = "READ_RECEIPT_UPDATED",
 }
 
+/** A governance outcome about one of the subscriber’s conversations: lifecycle, membership or room readiness. Carries no message, reaction or read-receipt data by construction — room events are read from the messaging backend directly. */
+export type ConversationGovernanceEvent = {
+  /** The conversation after the change. Null only for CONVERSATION_DELETED. */
+  conversation?: Maybe<Conversation>;
+  /** The conversation the outcome is about. */
+  conversationID: Scalars["UUID"]["output"];
+  /** The kind of governance outcome. */
+  eventType: ConversationGovernanceEventType;
+  /** The actor that was added. Present for MEMBER_ADDED. */
+  member?: Maybe<Actor>;
+  /** The actor affected by a membership change. Present for MEMBER_ADDED and MEMBER_REMOVED (the removed member may no longer be resolvable). */
+  memberID?: Maybe<Scalars["UUID"]["output"]>;
+  /** The new readiness of the conversation room. Present for ROOM_READINESS_CHANGED. */
+  readiness?: Maybe<RoomReadiness>;
+};
+
+/** The kind of governance outcome delivered on conversationGovernanceEvents. */
+export enum ConversationGovernanceEventType {
+  ConversationCreated = "CONVERSATION_CREATED",
+  ConversationDeleted = "CONVERSATION_DELETED",
+  ConversationUpdated = "CONVERSATION_UPDATED",
+  MemberAdded = "MEMBER_ADDED",
+  MemberRemoved = "MEMBER_REMOVED",
+  RoomReadinessChanged = "ROOM_READINESS_CHANGED",
+}
+
 /** Event fired when a member is added to a group conversation. */
 export type ConversationMemberAddedEvent = {
   /** The actor that was added as a member. */
@@ -2026,6 +2059,30 @@ export type ConversationReadReceiptUpdatedEvent = {
   lastReadEventId: Scalars["MessageID"]["output"];
   /** The room ID where the read receipt was updated. */
   roomId: Scalars["UUID"]["output"];
+};
+
+/** The outcome of repairing a conversation room: created, verified unchanged, membership converged, or failed. */
+export enum ConversationRoomRepairOutcome {
+  Failed = "FAILED",
+  MembershipConverged = "MEMBERSHIP_CONVERGED",
+  RoomCreated = "ROOM_CREATED",
+  RoomVerified = "ROOM_VERIFIED",
+}
+
+/** Result of an idempotent conversation room repair: the room is ensured to exist and its backend membership converged to the platform membership. */
+export type ConversationRoomRepairResult = {
+  /** The repaired conversation. */
+  conversation: Conversation;
+  /** Sanitized detail of at most 200 characters, naming the step that failed. Never a raw backend payload. */
+  detail?: Maybe<Scalars["String"]["output"]>;
+  /** Members added to the backend room. */
+  membersAdded: Scalars["Int"]["output"];
+  /** Members removed from the backend room. */
+  membersRemoved: Scalars["Int"]["output"];
+  /** What the repair found and did. */
+  outcome: ConversationRoomRepairOutcome;
+  /** The readiness of the conversation room after the repair. */
+  readiness: RoomReadiness;
 };
 
 /** Event fired when a conversation is updated (displayName, avatarUrl). */
@@ -2430,6 +2487,8 @@ export type CreateContributionOnCalloutInput = {
   link?: InputMaybe<CreateLinkInput>;
   memo?: InputMaybe<CreateMemoInput>;
   post?: InputMaybe<CreatePostInput>;
+  /** Send the space-member and space-admin contribution notifications. Defaults to true; only an explicit false suppresses. The activity log entry is written regardless. */
+  sendNotification?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** The sort order to assign to this Contribution. */
   sortOrder?: InputMaybe<Scalars["Float"]["input"]>;
   /** The Tasks board column this task starts in. Only valid when the parent Callout is a Tasks board; defaults to the first column. */
@@ -3178,6 +3237,23 @@ export type DeleteVisualFromMediaGalleryInput = {
 export type DeleteWhiteboardInput = {
   ID: Scalars["UUID"]["input"];
 };
+
+/** The direct conversation with one recipient, resolved or created without sending any message. A provisioning failure of the room yields CREATED with the conversation room readiness FAILED — the conversation exists and is repairable. */
+export type DirectConversationResolutionResult = {
+  /** The direct conversation with the recipient; null for BLOCKED_NO_CONSENT and FAILED. */
+  conversation?: Maybe<Conversation>;
+  /** The recipient this result is about. */
+  memberID: Scalars["UUID"]["output"];
+  status: DirectConversationResolutionStatus;
+};
+
+/** Per-recipient outcome of resolving a direct conversation: newly CREATED, an existing one RESOLVED, BLOCKED_NO_CONSENT when the recipient does not accept messages, FAILED when the recipient could not be resolved at all. */
+export enum DirectConversationResolutionStatus {
+  BlockedNoConsent = "BLOCKED_NO_CONSENT",
+  Created = "CREATED",
+  Failed = "FAILED",
+  Resolved = "RESOLVED",
+}
 
 export type DirectMessageDeliveryResult = {
   /** Set when status = SENT — the (existing or newly created) 1:1 conversation the message was delivered to. */
@@ -5186,8 +5262,13 @@ export type Mutation = {
   addVisualToMediaGallery: Visual;
   /** Ensure all community members are registered for communications. */
   adminCommunicationEnsureAccessToCommunications: Scalars["Boolean"]["output"];
-  /** Create rooms for legacy conversations that were created without one (from lazy room creation era). */
+  /**
+   * Create rooms for legacy conversations that were created without one (from lazy room creation era).
+   * @deprecated REMOVE_AFTER=2026-12-20 | Dead since roomId became NOT NULL; replaced by adminCommunicationReconcileConversationRooms (readiness-based reconciliation).
+   */
   adminCommunicationMigrateOrphanedConversations: CommunicationAdminMigrateRoomsResult;
+  /** Reconcile recorded room readiness with the messaging backend: probes every room whose readiness is not READY (or every room with includeReady), records READY or FAILED/ROOM_MISSING — retiring UNKNOWN — and, with repair, re-creates missing conversation rooms under their existing id and converges membership. Runs as a background task; the returned Task completes with a JSON summary line {scanned, ready, failed, repaired, repairFailed, unknownRemaining} readable through the task query. Idempotent — safe to re-run. */
+  adminCommunicationReconcileConversationRooms: Task;
   /** Reconcile the Matrix space hierarchy that mirrors the forum against the current forum/discussion state — report-first (dryRun defaults true), scoped to categories + the forum space, never a delete. Returns a task id; the pass runs asynchronously and the task completes with the summary. */
   adminCommunicationReconcileForumHierarchy: Scalars["String"]["output"];
   /** Remove an orphaned room from messaging platform. */
@@ -5236,7 +5317,7 @@ export type Mutation = {
   aiServerUpdateAiPersona: AiPersona;
   /** Apply to join the specified RoleSet in the entry Role. */
   applyForEntryRoleOnRoleSet: Application;
-  /** Assign a member to a group conversation. Returns true when the RPC is sent. Actual membership change arrives via MEMBER_ADDED subscription event. */
+  /** Assign a member to a group conversation. Returns true once the messaging backend accepted the join; the membership row is written when the backend join event arrives — observe MEMBER_ADDED on conversationGovernanceEvents (or conversationEvents) for completion. Not a group, member cap reached, or caller not a member → VALIDATION; invitee blocks messages → MESSAGING_NOT_ENABLED; not permitted → FORBIDDEN_POLICY; backend unreachable → COMMUNICATION_ADAPTER_UNAVAILABLE; backend rejected → FORBIDDEN. Divergence between platform and backend membership is repairable with repairConversationRoom. */
   assignConversationMember: Scalars["Boolean"]["output"];
   /** Assign the specified LicensePlan to an Account. */
   assignLicensePlanToAccount: Account;
@@ -5414,7 +5495,7 @@ export type Mutation = {
   inviteForEntryRoleOnRoleSet: Array<RoleSetInvitationResult>;
   /** Join the specified RoleSet using the entry Role, without going through an approval process. */
   joinRoleSet: RoleSet;
-  /** Leave a group conversation. Awaits the Matrix kick rather than reporting success merely because the RPC was sent: true means the kick was accepted, and the membership is then removed asynchronously — observe MEMBER_REMOVED for completion. If Matrix rejects the kick this still returns true, because Alkemio is authoritative for its own membership and applies the removal locally instead; on that path the Matrix-side room membership may diverge until an operator reconciles it. If the last member leaves, the conversation is auto-deleted and a CONVERSATION_DELETED event follows. */
+  /** Leave a group conversation. Awaits the Matrix kick rather than reporting success merely because the RPC was sent: true means the kick was accepted, and the membership is then removed asynchronously — observe MEMBER_REMOVED on conversationGovernanceEvents (or conversationEvents) for completion. If Matrix rejects the kick this still returns true, because Alkemio is authoritative for its own membership and applies the removal locally instead; on that path the Matrix-side room membership may diverge — the divergence is repairable with repairConversationRoom. If the last member leaves, the conversation is auto-deleted and a CONVERSATION_DELETED event follows. */
   leaveConversation: Scalars["Boolean"]["output"];
   /** Reset the License with Entitlements on the specified Account. */
   licenseResetOnAccount: Account;
@@ -5448,7 +5529,7 @@ export type Mutation = {
   refreshVirtualContributorBodyOfKnowledge: Scalars["Boolean"]["output"];
   /** Empties the CommunityGuidelines. */
   removeCommunityGuidelinesContent: CommunityGuidelines;
-  /** Remove a member from a group conversation. Awaits the Matrix kick rather than reporting success merely because the RPC was sent: true means the kick was accepted, and the membership is then removed asynchronously — observe MEMBER_REMOVED for completion. If Matrix rejects the kick (e.g. insufficient permissions) this still returns true, because Alkemio is authoritative for its own membership and applies the removal locally instead; on that path the Matrix-side room membership may diverge until an operator reconciles it. */
+  /** Remove a member from a group conversation. Awaits the Matrix kick rather than reporting success merely because the RPC was sent: true means the kick was accepted, and the membership is then removed asynchronously — observe MEMBER_REMOVED on conversationGovernanceEvents (or conversationEvents) for completion. If Matrix rejects the kick (e.g. insufficient permissions) this still returns true, because Alkemio is authoritative for its own membership and applies the removal locally instead; on that path the Matrix-side room membership may diverge — the divergence is repairable with repairConversationRoom. Backend unreachable → COMMUNICATION_ADAPTER_UNAVAILABLE. */
   removeConversationMember: Scalars["Boolean"]["output"];
   /** Remove the default callout template from an InnovationFlowState. */
   removeDefaultCalloutTemplateOnInnovationFlowState: InnovationFlowState;
@@ -5480,6 +5561,8 @@ export type Mutation = {
   removeUserFromGroup: UserGroup;
   /** Reorder Poll options. Requires UPDATE privilege. The provided list must contain exactly the same option IDs as the current poll options. */
   reorderPollOptions: Poll;
+  /** Repair the messaging room of a Conversation the caller can read: ensures the backend room exists (an existing room is reused, never duplicated), converges backend membership to the platform membership, records readiness and reports a typed outcome with counts. Idempotent — repairing a READY room verifies it and changes nothing. Non-members receive FORBIDDEN_POLICY before any backend call; a backend that cannot be reached yields outcome FAILED with readiness FAILED, never an authorization error. */
+  repairConversationRoom: ConversationRoomRepairResult;
   /** Replace the backing file of an existing CollaboraDocument in place, preserving its identity. Requires UPDATE on the document. The replacement must be an allowed OfficeDocs format, within the size cap, and the SAME document type as the current file. Refused while the document is being edited. */
   replaceCollaboraDocument: CollaboraDocument;
   /** Replace a Whiteboard from another Whiteboard through the live collaboration room. Content and media are copied server-side; snapshot bytes never pass through GraphQL. */
@@ -5488,6 +5571,8 @@ export type Mutation = {
   resetConversationVc: Conversation;
   /** Reset all license plans on Accounts */
   resetLicenseOnAccounts: Scalars["Boolean"]["output"];
+  /** Resolve — reuse or create — the direct Conversation with each of the given recipients, without sending any message. Per recipient: CREATED with the new conversation, RESOLVED with the existing one, BLOCKED_NO_CONSENT when the recipient does not accept messages from other users, FAILED when the recipient could not be resolved. Same authorization and consent rules as createConversation; concurrent calls for the same pair converge on one conversation. More than 100 recipients is rejected before any recipient is processed. */
+  resolveDirectConversations: Array<DirectConversationResolutionResult>;
   /** Revoke a credential from an Actor. */
   revokeCredentialFromActor: Scalars["Boolean"]["output"];
   /** Removes an authorization credential from an Organization. */
@@ -5562,7 +5647,7 @@ export type Mutation = {
   updateCommunityGuidelines: CommunityGuidelines;
   /** Update the sortOrder field of the Contributions of s Callout. */
   updateContributionsSortOrder: Array<CalloutContribution>;
-  /** Update a group conversation (display name, avatar). Returns true when the RPC is sent. Actual changes arrive via CONVERSATION_UPDATED subscription events. When both fields are provided, clients may receive separate update events for each. */
+  /** Update a group conversation (display name, avatar). Returns true once the metadata is persisted and the messaging backend accepted the update — observe CONVERSATION_UPDATED on conversationGovernanceEvents (or conversationEvents) for completion; when both fields are provided, clients may receive separate update events for each. Not a group → VALIDATION; not permitted → FORBIDDEN_POLICY; backend unreachable → COMMUNICATION_ADAPTER_UNAVAILABLE. */
   updateConversation: Scalars["Boolean"]["output"];
   /** Updates the specified Discussion. */
   updateDiscussion: Discussion;
@@ -5690,6 +5775,10 @@ export type MutationAddVisualToMediaGalleryArgs = {
 
 export type MutationAdminCommunicationEnsureAccessToCommunicationsArgs = {
   communicationData: CommunicationAdminEnsureAccessInput;
+};
+
+export type MutationAdminCommunicationReconcileConversationRoomsArgs = {
+  reconcileData: CommunicationAdminReconcileConversationRoomsInput;
 };
 
 export type MutationAdminCommunicationReconcileForumHierarchyArgs = {
@@ -6228,6 +6317,10 @@ export type MutationReorderPollOptionsArgs = {
   optionData: ReorderPollOptionsInput;
 };
 
+export type MutationRepairConversationRoomArgs = {
+  repairData: RepairConversationRoomInput;
+};
+
 export type MutationReplaceCollaboraDocumentArgs = {
   file: Scalars["Upload"]["input"];
   replaceData: ReplaceCollaboraDocumentInput;
@@ -6239,6 +6332,10 @@ export type MutationReplaceWhiteboardContentFromSourceArgs = {
 
 export type MutationResetConversationVcArgs = {
   input: ConversationVcResetInput;
+};
+
+export type MutationResolveDirectConversationsArgs = {
+  resolutionData: ResolveDirectConversationsInput;
 };
 
 export type MutationRevokeCredentialFromActorArgs = {
@@ -7055,12 +7152,18 @@ export type PlatformAdminCommunicationQueryResults = {
   adminCommunicationMembership: CommunicationAdminMembershipResult;
   /** Usage of the messaging platform that are not tied to the domain model. */
   adminCommunicationOrphanedUsage: CommunicationAdminOrphanedUsageResult;
+  /** Per-UTC-day usage of the message proxy surfaces (send, reply, reactions, remove, mark read, direct send, room message reads, room and conversation event subscriptions), split by disposition, caller class, room kind and media flag, with the liveness heartbeat beside it. Days with no ledger data are omitted — never reported as zero. Operators only. */
+  proxySurfaceUsage: ProxySurfaceUsageResult;
 };
 
 export type PlatformAdminCommunicationQueryResultsAdminCommunicationMembershipArgs =
   {
     communicationData: CommunicationAdminMembershipInput;
   };
+
+export type PlatformAdminCommunicationQueryResultsProxySurfaceUsageArgs = {
+  usageData: ProxySurfaceUsageInput;
+};
 
 export type PlatformAdminIdentityQueryResults = {
   /** Get identities from Kratos with optional filtering. */
@@ -7609,6 +7712,64 @@ export type PromptGraphNodeInput = {
   system: Scalars["Boolean"]["input"];
 };
 
+/** How the caller of a proxy surface was admitted: web (declaring direct backend transport or not), API bearer, service login, MCP key, or anonymous. */
+export enum ProxyCallerClass {
+  Anonymous = "ANONYMOUS",
+  Api = "API",
+  Mcp = "MCP",
+  Service = "SERVICE",
+  WebGraphql = "WEB_GRAPHQL",
+  WebMatrix = "WEB_MATRIX",
+}
+
+/** Where a message-related API surface ends up as browsers read the messaging backend directly. */
+export enum ProxySurfaceDisposition {
+  LaterMatrixRoomScope = "LATER_MATRIX_ROOM_SCOPE",
+  MigratedBrowserDataPlane = "MIGRATED_BROWSER_DATA_PLANE",
+  RetainedBackendIntegration = "RETAINED_BACKEND_INTEGRATION",
+  RetainedControlPlane = "RETAINED_CONTROL_PLANE",
+  RetainedMediaSeam = "RETAINED_MEDIA_SEAM",
+}
+
+/** One UTC day of the proxy usage ledger. A day with no ledger data at all is absent from the result, never reported as zero. */
+export type ProxySurfaceUsageDay = {
+  /** UTC day, YYYY-MM-DD. */
+  day: Scalars["String"]["output"];
+  /** Minutes the platform was expected to be up: 1440 for a past day, the elapsed UTC minutes for today. */
+  expectedMinutes: Scalars["Int"]["output"];
+  /** Minutes of the day in which at least one server instance flushed the ledger — the liveness heartbeat, independent of traffic and replica count. */
+  livenessMinutes: Scalars["Int"]["output"];
+  rows: Array<ProxySurfaceUsageRow>;
+};
+
+export type ProxySurfaceUsageInput = {
+  /** Number of UTC days to read, ending today (1..45 — the ledger retention). */
+  days: Scalars["Int"]["input"];
+};
+
+/** Proxy surface usage per UTC day for the requested window. */
+export type ProxySurfaceUsageResult = {
+  /** Days with ledger data, oldest first. Silent days are omitted. */
+  days: Array<ProxySurfaceUsageDay>;
+  /** First UTC day of the window (inclusive). */
+  from: Scalars["String"]["output"];
+  /** Last UTC day of the window (today, inclusive). */
+  to: Scalars["String"]["output"];
+};
+
+/** Calls on one proxy surface for one day, by disposition, caller class, room kind and media flag. Counts only — no user identifiers, no content. */
+export type ProxySurfaceUsageRow = {
+  callerClass: ProxyCallerClass;
+  count: Scalars["Int"]["output"];
+  disposition: ProxySurfaceDisposition;
+  /** Whether the call carried attachments (the media seam). */
+  media: Scalars["Boolean"]["output"];
+  /** The kind of room the call targeted; null for surfaces without a room (the legacy conversation channel). */
+  roomType?: Maybe<RoomType>;
+  /** The surface identifier, e.g. Mutation.sendMessageToRoom. */
+  surface: Scalars["String"]["output"];
+};
+
 export type PruneInAppNotificationAdminResult = {
   /** The number of InAppNotifications that were removed due to exceeding the maximum allowed per user. */
   removedCountExceedingUserLimit: Scalars["Int"]["output"];
@@ -8058,6 +8219,11 @@ export type ReorderPollOptionsInput = {
   pollID: Scalars["UUID"]["input"];
 };
 
+export type RepairConversationRoomInput = {
+  /** The ID of the conversation whose room should be repaired. */
+  conversationID: Scalars["UUID"]["input"];
+};
+
 export type ReplaceCollaboraDocumentInput = {
   /** The ID of the CollaboraDocument whose backing file is being replaced. */
   ID: Scalars["UUID"]["input"];
@@ -8070,6 +8236,11 @@ export type ReplaceWhiteboardContentFromSourceInput = {
   sourceWhiteboardID: Scalars["UUID"]["input"];
   /** The Whiteboard whose content is replaced. */
   targetWhiteboardID: Scalars["UUID"]["input"];
+};
+
+export type ResolveDirectConversationsInput = {
+  /** Actor IDs of the recipients to resolve a direct conversation with (1..100). Duplicates and the caller are dropped. */
+  memberIDs: Array<Scalars["UUID"]["input"]>;
 };
 
 export type RevokeAuthorizationCredentialInput = {
@@ -8400,6 +8571,8 @@ export type Room = {
   messages: Array<Message>;
   /** The number of messages in the Room. */
   messagesCount: Scalars["Int"]["output"];
+  /** Whether the messaging backend room behind this Room is known to exist, and why. Read from the platform record; never a backend round trip. UNKNOWN means not yet verified — treat as usable and offer repair on failure. */
+  readiness: RoomReadiness;
   /** The type of room (e.g., post, callout, conversation_direct, conversation_group). */
   type: RoomType;
   /** Simple unread message count for the current user. Use unreadCounts for per-thread breakdown. */
@@ -8463,6 +8636,40 @@ export type RoomMessageReactionEventSubscriptionResult = {
   /** The type of event. */
   type: MutationType;
 };
+
+/** The recorded provisioning readiness of the messaging backend room behind a Room. Served from the platform record — never a backend round trip. */
+export type RoomReadiness = {
+  /** A sanitized, member-visible summary of at most 200 characters. Never a raw backend payload, hostname, backend identifier or stack trace. */
+  detail?: Maybe<Scalars["String"]["output"]>;
+  /** How the state was established, or the failure class. */
+  reason: RoomReadinessReason;
+  /** Whether the backend room is known to exist. */
+  state: RoomReadinessState;
+  /** When the readiness was last written. */
+  updatedDate: Scalars["DateTime"]["output"];
+};
+
+/** Why a Room is in its readiness state: the verification that established it, or the class of failure recorded. */
+export enum RoomReadinessReason {
+  AdapterRejected = "ADAPTER_REJECTED",
+  AdapterTimeout = "ADAPTER_TIMEOUT",
+  AdapterUnavailable = "ADAPTER_UNAVAILABLE",
+  AwaitingConfirmation = "AWAITING_CONFIRMATION",
+  Confirmed = "CONFIRMED",
+  LegacyUnverified = "LEGACY_UNVERIFIED",
+  Provisioned = "PROVISIONED",
+  RoomMissing = "ROOM_MISSING",
+  Unknown = "UNKNOWN",
+  Verified = "VERIFIED",
+}
+
+/** Whether the messaging backend room behind this Room is known to exist. UNKNOWN marks rooms created before readiness was recorded. */
+export enum RoomReadinessState {
+  Failed = "FAILED",
+  Pending = "PENDING",
+  Ready = "READY",
+  Unknown = "UNKNOWN",
+}
 
 export type RoomRemoveMessageInput = {
   /** The message id that should be removed */
@@ -9145,6 +9352,8 @@ export type Subscription = {
   calloutPostCreated: CalloutPostCreated;
   /** Receive conversation events for the authenticated user. Includes conversation lifecycle (created, updated, deleted), messages (received, removed), membership changes (member added, removed), and read receipts. */
   conversationEvents: ConversationEventSubscriptionResult;
+  /** Receive governance outcomes for the conversations the authenticated user is a member of: created, updated, deleted, member added, member removed, room readiness changed. Carries no message, reaction or read-receipt data — room events are read from the messaging backend directly. Delivered to the members of the affected conversation (a removed member receives their own removal once). */
+  conversationGovernanceEvents: ConversationGovernanceEvent;
   /** Receive updates on Discussions */
   forumDiscussionUpdated: Discussion;
   /** New in-app notification received for the currently authenticated user. */
@@ -12075,6 +12284,7 @@ export type ResolversTypes = {
   CommunicationAdminMembershipResult: ResolverTypeWrapper<SchemaTypes.CommunicationAdminMembershipResult>;
   CommunicationAdminMigrateRoomsResult: ResolverTypeWrapper<SchemaTypes.CommunicationAdminMigrateRoomsResult>;
   CommunicationAdminOrphanedUsageResult: ResolverTypeWrapper<SchemaTypes.CommunicationAdminOrphanedUsageResult>;
+  CommunicationAdminReconcileConversationRoomsInput: SchemaTypes.CommunicationAdminReconcileConversationRoomsInput;
   CommunicationAdminRemoveOrphanedRoomInput: SchemaTypes.CommunicationAdminRemoveOrphanedRoomInput;
   CommunicationAdminRoomMembershipResult: ResolverTypeWrapper<SchemaTypes.CommunicationAdminRoomMembershipResult>;
   CommunicationAdminRoomResult: ResolverTypeWrapper<SchemaTypes.CommunicationAdminRoomResult>;
@@ -12174,6 +12384,13 @@ export type ResolversTypes = {
     }
   >;
   ConversationEventType: SchemaTypes.ConversationEventType;
+  ConversationGovernanceEvent: ResolverTypeWrapper<
+    Omit<SchemaTypes.ConversationGovernanceEvent, "conversation" | "member"> & {
+      conversation?: SchemaTypes.Maybe<ResolversTypes["Conversation"]>;
+      member?: SchemaTypes.Maybe<ResolversTypes["Actor"]>;
+    }
+  >;
+  ConversationGovernanceEventType: SchemaTypes.ConversationGovernanceEventType;
   ConversationMemberAddedEvent: ResolverTypeWrapper<
     Omit<
       SchemaTypes.ConversationMemberAddedEvent,
@@ -12191,6 +12408,12 @@ export type ResolversTypes = {
   ConversationMessageReceivedEvent: ResolverTypeWrapper<SchemaTypes.ConversationMessageReceivedEvent>;
   ConversationMessageRemovedEvent: ResolverTypeWrapper<SchemaTypes.ConversationMessageRemovedEvent>;
   ConversationReadReceiptUpdatedEvent: ResolverTypeWrapper<SchemaTypes.ConversationReadReceiptUpdatedEvent>;
+  ConversationRoomRepairOutcome: SchemaTypes.ConversationRoomRepairOutcome;
+  ConversationRoomRepairResult: ResolverTypeWrapper<
+    Omit<SchemaTypes.ConversationRoomRepairResult, "conversation"> & {
+      conversation: ResolversTypes["Conversation"];
+    }
+  >;
   ConversationUpdatedEvent: ResolverTypeWrapper<
     Omit<SchemaTypes.ConversationUpdatedEvent, "conversation"> & {
       conversation: ResolversTypes["Conversation"];
@@ -12333,6 +12556,12 @@ export type ResolversTypes = {
   DeleteVirtualContributorInput: SchemaTypes.DeleteVirtualContributorInput;
   DeleteVisualFromMediaGalleryInput: SchemaTypes.DeleteVisualFromMediaGalleryInput;
   DeleteWhiteboardInput: SchemaTypes.DeleteWhiteboardInput;
+  DirectConversationResolutionResult: ResolverTypeWrapper<
+    Omit<SchemaTypes.DirectConversationResolutionResult, "conversation"> & {
+      conversation?: SchemaTypes.Maybe<ResolversTypes["Conversation"]>;
+    }
+  >;
+  DirectConversationResolutionStatus: SchemaTypes.DirectConversationResolutionStatus;
   DirectMessageDeliveryResult: ResolverTypeWrapper<SchemaTypes.DirectMessageDeliveryResult>;
   DirectMessageDeliveryStatus: SchemaTypes.DirectMessageDeliveryStatus;
   Discussion: ResolverTypeWrapper<
@@ -13008,6 +13237,12 @@ export type ResolversTypes = {
   PromptGraphInput: SchemaTypes.PromptGraphInput;
   PromptGraphNode: ResolverTypeWrapper<SchemaTypes.PromptGraphNode>;
   PromptGraphNodeInput: SchemaTypes.PromptGraphNodeInput;
+  ProxyCallerClass: SchemaTypes.ProxyCallerClass;
+  ProxySurfaceDisposition: SchemaTypes.ProxySurfaceDisposition;
+  ProxySurfaceUsageDay: ResolverTypeWrapper<SchemaTypes.ProxySurfaceUsageDay>;
+  ProxySurfaceUsageInput: SchemaTypes.ProxySurfaceUsageInput;
+  ProxySurfaceUsageResult: ResolverTypeWrapper<SchemaTypes.ProxySurfaceUsageResult>;
+  ProxySurfaceUsageRow: ResolverTypeWrapper<SchemaTypes.ProxySurfaceUsageRow>;
   PruneInAppNotificationAdminResult: ResolverTypeWrapper<SchemaTypes.PruneInAppNotificationAdminResult>;
   PushSubscription: ResolverTypeWrapper<SchemaTypes.PushSubscription>;
   PushSubscriptionStatus: SchemaTypes.PushSubscriptionStatus;
@@ -13062,8 +13297,10 @@ export type ResolversTypes = {
   RemoveRoleOnRoleSetInput: SchemaTypes.RemoveRoleOnRoleSetInput;
   RemoveUserGroupMemberInput: SchemaTypes.RemoveUserGroupMemberInput;
   ReorderPollOptionsInput: SchemaTypes.ReorderPollOptionsInput;
+  RepairConversationRoomInput: SchemaTypes.RepairConversationRoomInput;
   ReplaceCollaboraDocumentInput: SchemaTypes.ReplaceCollaboraDocumentInput;
   ReplaceWhiteboardContentFromSourceInput: SchemaTypes.ReplaceWhiteboardContentFromSourceInput;
+  ResolveDirectConversationsInput: SchemaTypes.ResolveDirectConversationsInput;
   RevokeAuthorizationCredentialInput: SchemaTypes.RevokeAuthorizationCredentialInput;
   RevokeLicensePlanFromAccount: SchemaTypes.RevokeLicensePlanFromAccount;
   RevokeLicensePlanFromSpace: SchemaTypes.RevokeLicensePlanFromSpace;
@@ -13099,6 +13336,9 @@ export type ResolversTypes = {
   RoomMarkMessageReadInput: SchemaTypes.RoomMarkMessageReadInput;
   RoomMessageEventSubscriptionResult: ResolverTypeWrapper<SchemaTypes.RoomMessageEventSubscriptionResult>;
   RoomMessageReactionEventSubscriptionResult: ResolverTypeWrapper<SchemaTypes.RoomMessageReactionEventSubscriptionResult>;
+  RoomReadiness: ResolverTypeWrapper<SchemaTypes.RoomReadiness>;
+  RoomReadinessReason: SchemaTypes.RoomReadinessReason;
+  RoomReadinessState: SchemaTypes.RoomReadinessState;
   RoomRemoveMessageInput: SchemaTypes.RoomRemoveMessageInput;
   RoomRemoveReactionToMessageInput: SchemaTypes.RoomRemoveReactionToMessageInput;
   RoomSendMessageInput: SchemaTypes.RoomSendMessageInput;
@@ -13828,6 +14068,7 @@ export type ResolversParentTypes = {
   CommunicationAdminMembershipResult: SchemaTypes.CommunicationAdminMembershipResult;
   CommunicationAdminMigrateRoomsResult: SchemaTypes.CommunicationAdminMigrateRoomsResult;
   CommunicationAdminOrphanedUsageResult: SchemaTypes.CommunicationAdminOrphanedUsageResult;
+  CommunicationAdminReconcileConversationRoomsInput: SchemaTypes.CommunicationAdminReconcileConversationRoomsInput;
   CommunicationAdminRemoveOrphanedRoomInput: SchemaTypes.CommunicationAdminRemoveOrphanedRoomInput;
   CommunicationAdminRoomMembershipResult: SchemaTypes.CommunicationAdminRoomMembershipResult;
   CommunicationAdminRoomResult: SchemaTypes.CommunicationAdminRoomResult;
@@ -13904,6 +14145,13 @@ export type ResolversParentTypes = {
       ResolversParentTypes["ConversationMemberRemovedEvent"]
     >;
   };
+  ConversationGovernanceEvent: Omit<
+    SchemaTypes.ConversationGovernanceEvent,
+    "conversation" | "member"
+  > & {
+    conversation?: SchemaTypes.Maybe<ResolversParentTypes["Conversation"]>;
+    member?: SchemaTypes.Maybe<ResolversParentTypes["Actor"]>;
+  };
   ConversationMemberAddedEvent: Omit<
     SchemaTypes.ConversationMemberAddedEvent,
     "addedMember" | "conversation"
@@ -13918,6 +14166,10 @@ export type ResolversParentTypes = {
   ConversationMessageReceivedEvent: SchemaTypes.ConversationMessageReceivedEvent;
   ConversationMessageRemovedEvent: SchemaTypes.ConversationMessageRemovedEvent;
   ConversationReadReceiptUpdatedEvent: SchemaTypes.ConversationReadReceiptUpdatedEvent;
+  ConversationRoomRepairResult: Omit<
+    SchemaTypes.ConversationRoomRepairResult,
+    "conversation"
+  > & { conversation: ResolversParentTypes["Conversation"] };
   ConversationUpdatedEvent: Omit<
     SchemaTypes.ConversationUpdatedEvent,
     "conversation"
@@ -14058,6 +14310,12 @@ export type ResolversParentTypes = {
   DeleteVirtualContributorInput: SchemaTypes.DeleteVirtualContributorInput;
   DeleteVisualFromMediaGalleryInput: SchemaTypes.DeleteVisualFromMediaGalleryInput;
   DeleteWhiteboardInput: SchemaTypes.DeleteWhiteboardInput;
+  DirectConversationResolutionResult: Omit<
+    SchemaTypes.DirectConversationResolutionResult,
+    "conversation"
+  > & {
+    conversation?: SchemaTypes.Maybe<ResolversParentTypes["Conversation"]>;
+  };
   DirectMessageDeliveryResult: SchemaTypes.DirectMessageDeliveryResult;
   Discussion: Omit<SchemaTypes.Discussion, "profile"> & {
     profile: ResolversParentTypes["Profile"];
@@ -14623,6 +14881,10 @@ export type ResolversParentTypes = {
   PromptGraphInput: SchemaTypes.PromptGraphInput;
   PromptGraphNode: SchemaTypes.PromptGraphNode;
   PromptGraphNodeInput: SchemaTypes.PromptGraphNodeInput;
+  ProxySurfaceUsageDay: SchemaTypes.ProxySurfaceUsageDay;
+  ProxySurfaceUsageInput: SchemaTypes.ProxySurfaceUsageInput;
+  ProxySurfaceUsageResult: SchemaTypes.ProxySurfaceUsageResult;
+  ProxySurfaceUsageRow: SchemaTypes.ProxySurfaceUsageRow;
   PruneInAppNotificationAdminResult: SchemaTypes.PruneInAppNotificationAdminResult;
   PushSubscription: SchemaTypes.PushSubscription;
   Query: {};
@@ -14670,8 +14932,10 @@ export type ResolversParentTypes = {
   RemoveRoleOnRoleSetInput: SchemaTypes.RemoveRoleOnRoleSetInput;
   RemoveUserGroupMemberInput: SchemaTypes.RemoveUserGroupMemberInput;
   ReorderPollOptionsInput: SchemaTypes.ReorderPollOptionsInput;
+  RepairConversationRoomInput: SchemaTypes.RepairConversationRoomInput;
   ReplaceCollaboraDocumentInput: SchemaTypes.ReplaceCollaboraDocumentInput;
   ReplaceWhiteboardContentFromSourceInput: SchemaTypes.ReplaceWhiteboardContentFromSourceInput;
+  ResolveDirectConversationsInput: SchemaTypes.ResolveDirectConversationsInput;
   RevokeAuthorizationCredentialInput: SchemaTypes.RevokeAuthorizationCredentialInput;
   RevokeLicensePlanFromAccount: SchemaTypes.RevokeLicensePlanFromAccount;
   RevokeLicensePlanFromSpace: SchemaTypes.RevokeLicensePlanFromSpace;
@@ -14700,6 +14964,7 @@ export type ResolversParentTypes = {
   RoomMarkMessageReadInput: SchemaTypes.RoomMarkMessageReadInput;
   RoomMessageEventSubscriptionResult: SchemaTypes.RoomMessageEventSubscriptionResult;
   RoomMessageReactionEventSubscriptionResult: SchemaTypes.RoomMessageReactionEventSubscriptionResult;
+  RoomReadiness: SchemaTypes.RoomReadiness;
   RoomRemoveMessageInput: SchemaTypes.RoomRemoveMessageInput;
   RoomRemoveReactionToMessageInput: SchemaTypes.RoomRemoveReactionToMessageInput;
   RoomSendMessageInput: SchemaTypes.RoomSendMessageInput;
@@ -17107,6 +17372,39 @@ export type ConversationEventSubscriptionResultResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type ConversationGovernanceEventResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["ConversationGovernanceEvent"] = ResolversParentTypes["ConversationGovernanceEvent"]
+> = {
+  conversation?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Conversation"]>,
+    ParentType,
+    ContextType
+  >;
+  conversationID?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  eventType?: Resolver<
+    ResolversTypes["ConversationGovernanceEventType"],
+    ParentType,
+    ContextType
+  >;
+  member?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Actor"]>,
+    ParentType,
+    ContextType
+  >;
+  memberID?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["UUID"]>,
+    ParentType,
+    ContextType
+  >;
+  readiness?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["RoomReadiness"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type ConversationMemberAddedEventResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes["ConversationMemberAddedEvent"] = ResolversParentTypes["ConversationMemberAddedEvent"]
@@ -17161,6 +17459,35 @@ export type ConversationReadReceiptUpdatedEventResolvers<
     ContextType
   >;
   roomId?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type ConversationRoomRepairResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["ConversationRoomRepairResult"] = ResolversParentTypes["ConversationRoomRepairResult"]
+> = {
+  conversation?: Resolver<
+    ResolversTypes["Conversation"],
+    ParentType,
+    ContextType
+  >;
+  detail?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
+  membersAdded?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  membersRemoved?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  outcome?: Resolver<
+    ResolversTypes["ConversationRoomRepairOutcome"],
+    ParentType,
+    ContextType
+  >;
+  readiness?: Resolver<
+    ResolversTypes["RoomReadiness"],
+    ParentType,
+    ContextType
+  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -17906,6 +18233,24 @@ export interface DateTimeScalarConfig
   extends GraphQLScalarTypeConfig<ResolversTypes["DateTime"], any> {
   name: "DateTime";
 }
+
+export type DirectConversationResolutionResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["DirectConversationResolutionResult"] = ResolversParentTypes["DirectConversationResolutionResult"]
+> = {
+  conversation?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["Conversation"]>,
+    ParentType,
+    ContextType
+  >;
+  memberID?: Resolver<ResolversTypes["UUID"], ParentType, ContextType>;
+  status?: Resolver<
+    ResolversTypes["DirectConversationResolutionStatus"],
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
 
 export type DirectMessageDeliveryResultResolvers<
   ContextType = any,
@@ -20424,6 +20769,15 @@ export type MutationResolvers<
     ParentType,
     ContextType
   >;
+  adminCommunicationReconcileConversationRooms?: Resolver<
+    ResolversTypes["Task"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationAdminCommunicationReconcileConversationRoomsArgs,
+      "reconcileData"
+    >
+  >;
   adminCommunicationReconcileForumHierarchy?: Resolver<
     ResolversTypes["String"],
     ParentType,
@@ -21488,6 +21842,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<SchemaTypes.MutationReorderPollOptionsArgs, "optionData">
   >;
+  repairConversationRoom?: Resolver<
+    ResolversTypes["ConversationRoomRepairResult"],
+    ParentType,
+    ContextType,
+    RequireFields<SchemaTypes.MutationRepairConversationRoomArgs, "repairData">
+  >;
   replaceCollaboraDocument?: Resolver<
     ResolversTypes["CollaboraDocument"],
     ParentType,
@@ -21516,6 +21876,15 @@ export type MutationResolvers<
     ResolversTypes["Boolean"],
     ParentType,
     ContextType
+  >;
+  resolveDirectConversations?: Resolver<
+    Array<ResolversTypes["DirectConversationResolutionResult"]>,
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.MutationResolveDirectConversationsArgs,
+      "resolutionData"
+    >
   >;
   revokeCredentialFromActor?: Resolver<
     ResolversTypes["Boolean"],
@@ -22700,6 +23069,15 @@ export type PlatformAdminCommunicationQueryResultsResolvers<
     ParentType,
     ContextType
   >;
+  proxySurfaceUsage?: Resolver<
+    ResolversTypes["ProxySurfaceUsageResult"],
+    ParentType,
+    ContextType,
+    RequireFields<
+      SchemaTypes.PlatformAdminCommunicationQueryResultsProxySurfaceUsageArgs,
+      "usageData"
+    >
+  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -23471,6 +23849,60 @@ export type PromptGraphNodeResolvers<
     ContextType
   >;
   system?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type ProxySurfaceUsageDayResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["ProxySurfaceUsageDay"] = ResolversParentTypes["ProxySurfaceUsageDay"]
+> = {
+  day?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  expectedMinutes?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  livenessMinutes?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  rows?: Resolver<
+    Array<ResolversTypes["ProxySurfaceUsageRow"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type ProxySurfaceUsageResultResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["ProxySurfaceUsageResult"] = ResolversParentTypes["ProxySurfaceUsageResult"]
+> = {
+  days?: Resolver<
+    Array<ResolversTypes["ProxySurfaceUsageDay"]>,
+    ParentType,
+    ContextType
+  >;
+  from?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  to?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type ProxySurfaceUsageRowResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["ProxySurfaceUsageRow"] = ResolversParentTypes["ProxySurfaceUsageRow"]
+> = {
+  callerClass?: Resolver<
+    ResolversTypes["ProxyCallerClass"],
+    ParentType,
+    ContextType
+  >;
+  count?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  disposition?: Resolver<
+    ResolversTypes["ProxySurfaceDisposition"],
+    ParentType,
+    ContextType
+  >;
+  media?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  roomType?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["RoomType"]>,
+    ParentType,
+    ContextType
+  >;
+  surface?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -24249,6 +24681,11 @@ export type RoomResolvers<
     ContextType
   >;
   messagesCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  readiness?: Resolver<
+    ResolversTypes["RoomReadiness"],
+    ParentType,
+    ContextType
+  >;
   type?: Resolver<ResolversTypes["RoomType"], ParentType, ContextType>;
   unreadCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   unreadCounts?: Resolver<
@@ -24307,6 +24744,29 @@ export type RoomMessageReactionEventSubscriptionResultResolvers<
     ContextType
   >;
   type?: Resolver<ResolversTypes["MutationType"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type RoomReadinessResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes["RoomReadiness"] = ResolversParentTypes["RoomReadiness"]
+> = {
+  detail?: Resolver<
+    SchemaTypes.Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
+  reason?: Resolver<
+    ResolversTypes["RoomReadinessReason"],
+    ParentType,
+    ContextType
+  >;
+  state?: Resolver<
+    ResolversTypes["RoomReadinessState"],
+    ParentType,
+    ContextType
+  >;
+  updatedDate?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -24994,6 +25454,12 @@ export type SubscriptionResolvers<
   conversationEvents?: SubscriptionResolver<
     ResolversTypes["ConversationEventSubscriptionResult"],
     "conversationEvents",
+    ParentType,
+    ContextType
+  >;
+  conversationGovernanceEvents?: SubscriptionResolver<
+    ResolversTypes["ConversationGovernanceEvent"],
+    "conversationGovernanceEvents",
     ParentType,
     ContextType
   >;
@@ -26818,11 +27284,13 @@ export type Resolvers<ContextType = any> = {
   ConversationCreatedEvent?: ConversationCreatedEventResolvers<ContextType>;
   ConversationDeletedEvent?: ConversationDeletedEventResolvers<ContextType>;
   ConversationEventSubscriptionResult?: ConversationEventSubscriptionResultResolvers<ContextType>;
+  ConversationGovernanceEvent?: ConversationGovernanceEventResolvers<ContextType>;
   ConversationMemberAddedEvent?: ConversationMemberAddedEventResolvers<ContextType>;
   ConversationMemberRemovedEvent?: ConversationMemberRemovedEventResolvers<ContextType>;
   ConversationMessageReceivedEvent?: ConversationMessageReceivedEventResolvers<ContextType>;
   ConversationMessageRemovedEvent?: ConversationMessageRemovedEventResolvers<ContextType>;
   ConversationReadReceiptUpdatedEvent?: ConversationReadReceiptUpdatedEventResolvers<ContextType>;
+  ConversationRoomRepairResult?: ConversationRoomRepairResultResolvers<ContextType>;
   ConversationUpdatedEvent?: ConversationUpdatedEventResolvers<ContextType>;
   CreateCalloutContributionData?: CreateCalloutContributionDataResolvers<ContextType>;
   CreateCalloutContributionDefaultsData?: CreateCalloutContributionDefaultsDataResolvers<ContextType>;
@@ -26857,6 +27325,7 @@ export type Resolvers<ContextType = any> = {
   Credential?: CredentialResolvers<ContextType>;
   CredentialDefinition?: CredentialDefinitionResolvers<ContextType>;
   DateTime?: GraphQLScalarType;
+  DirectConversationResolutionResult?: DirectConversationResolutionResultResolvers<ContextType>;
   DirectMessageDeliveryResult?: DirectMessageDeliveryResultResolvers<ContextType>;
   Discussion?: DiscussionResolvers<ContextType>;
   DiscussionDetails?: DiscussionDetailsResolvers<ContextType>;
@@ -27003,6 +27472,9 @@ export type Resolvers<ContextType = any> = {
   PromptGraphDefinitionNode?: PromptGraphDefinitionNodeResolvers<ContextType>;
   PromptGraphEdge?: PromptGraphEdgeResolvers<ContextType>;
   PromptGraphNode?: PromptGraphNodeResolvers<ContextType>;
+  ProxySurfaceUsageDay?: ProxySurfaceUsageDayResolvers<ContextType>;
+  ProxySurfaceUsageResult?: ProxySurfaceUsageResultResolvers<ContextType>;
+  ProxySurfaceUsageRow?: ProxySurfaceUsageRowResolvers<ContextType>;
   PruneInAppNotificationAdminResult?: PruneInAppNotificationAdminResultResolvers<ContextType>;
   PushSubscription?: PushSubscriptionResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
@@ -27023,6 +27495,7 @@ export type Resolvers<ContextType = any> = {
   RoomEventSubscriptionResult?: RoomEventSubscriptionResultResolvers<ContextType>;
   RoomMessageEventSubscriptionResult?: RoomMessageEventSubscriptionResultResolvers<ContextType>;
   RoomMessageReactionEventSubscriptionResult?: RoomMessageReactionEventSubscriptionResultResolvers<ContextType>;
+  RoomReadiness?: RoomReadinessResolvers<ContextType>;
   RoomThreadUnreadCount?: RoomThreadUnreadCountResolvers<ContextType>;
   RoomUnreadCounts?: RoomUnreadCountsResolvers<ContextType>;
   SearchCursor?: GraphQLScalarType;
@@ -53824,6 +54297,20 @@ export type AddReactionToMessageInRoomMutation = {
   };
 };
 
+export type AdminCommunicationReconcileConversationRoomsMutationVariables =
+  SchemaTypes.Exact<{
+    reconcileData: SchemaTypes.CommunicationAdminReconcileConversationRoomsInput;
+  }>;
+
+export type AdminCommunicationReconcileConversationRoomsMutation = {
+  adminCommunicationReconcileConversationRooms: {
+    id: string;
+    status: SchemaTypes.TaskStatus;
+    created: number;
+    start: number;
+  };
+};
+
 export type AssignConversationMemberMutationVariables = SchemaTypes.Exact<{
   memberData: SchemaTypes.AssignConversationMemberInput;
 }>;
@@ -53967,6 +54454,59 @@ export type RemoveReactionToMessageInRoomMutationVariables = SchemaTypes.Exact<{
 
 export type RemoveReactionToMessageInRoomMutation = {
   removeReactionToMessageInRoom: boolean;
+};
+
+export type RepairConversationRoomMutationVariables = SchemaTypes.Exact<{
+  repairData: SchemaTypes.RepairConversationRoomInput;
+}>;
+
+export type RepairConversationRoomMutation = {
+  repairConversationRoom: {
+    outcome: SchemaTypes.ConversationRoomRepairOutcome;
+    membersAdded: number;
+    membersRemoved: number;
+    detail?: string | undefined;
+    readiness: {
+      state: SchemaTypes.RoomReadinessState;
+      reason: SchemaTypes.RoomReadinessReason;
+      detail?: string | undefined;
+      updatedDate: Date;
+    };
+    conversation: {
+      id: string;
+      room: {
+        id: string;
+        readiness: {
+          state: SchemaTypes.RoomReadinessState;
+          reason: SchemaTypes.RoomReadinessReason;
+        };
+      };
+    };
+  };
+};
+
+export type ResolveDirectConversationsMutationVariables = SchemaTypes.Exact<{
+  resolutionData: SchemaTypes.ResolveDirectConversationsInput;
+}>;
+
+export type ResolveDirectConversationsMutation = {
+  resolveDirectConversations: Array<{
+    memberID: string;
+    status: SchemaTypes.DirectConversationResolutionStatus;
+    conversation?:
+      | {
+          id: string;
+          room: {
+            id: string;
+            messagesCount: number;
+            readiness: {
+              state: SchemaTypes.RoomReadinessState;
+              reason: SchemaTypes.RoomReadinessReason;
+            };
+          };
+        }
+      | undefined;
+  }>;
 };
 
 export type SendMessageReplyToRoomMutationVariables = SchemaTypes.Exact<{
@@ -94411,6 +94951,30 @@ export type GetCalloutReactionsSummaryQuery = {
   };
 };
 
+export type GetConversationReadinessQueryVariables = SchemaTypes.Exact<{
+  conversationID: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type GetConversationReadinessQuery = {
+  lookup: {
+    conversation?:
+      | {
+          id: string;
+          room: {
+            id: string;
+            type: SchemaTypes.RoomType;
+            readiness: {
+              state: SchemaTypes.RoomReadinessState;
+              reason: SchemaTypes.RoomReadinessReason;
+              detail?: string | undefined;
+              updatedDate: Date;
+            };
+          };
+        }
+      | undefined;
+  };
+};
+
 export type GetMeConversationsQueryVariables = SchemaTypes.Exact<{
   [key: string]: never;
 }>;
@@ -94641,6 +95205,34 @@ export type GetPlatformForumDataQuery = {
             };
           }>
         | undefined;
+    };
+  };
+};
+
+export type GetProxySurfaceUsageQueryVariables = SchemaTypes.Exact<{
+  usageData: SchemaTypes.ProxySurfaceUsageInput;
+}>;
+
+export type GetProxySurfaceUsageQuery = {
+  platformAdmin: {
+    communication: {
+      proxySurfaceUsage: {
+        from: string;
+        to: string;
+        days: Array<{
+          day: string;
+          livenessMinutes: number;
+          expectedMinutes: number;
+          rows: Array<{
+            surface: string;
+            disposition: SchemaTypes.ProxySurfaceDisposition;
+            callerClass: SchemaTypes.ProxyCallerClass;
+            roomType?: SchemaTypes.RoomType | undefined;
+            media: boolean;
+            count: number;
+          }>;
+        }>;
+      };
     };
   };
 };
@@ -115416,6 +116008,22 @@ export type GetUserRolesQuery = {
   };
 };
 
+export type GetTaskQueryVariables = SchemaTypes.Exact<{
+  id: SchemaTypes.Scalars["UUID"]["input"];
+}>;
+
+export type GetTaskQuery = {
+  task: {
+    id: string;
+    status: SchemaTypes.TaskStatus;
+    created: number;
+    start: number;
+    end?: number | undefined;
+    results?: Array<string> | undefined;
+    errors?: Array<string> | undefined;
+  };
+};
+
 export type GetSpaceTemplatesCountByTemplateSetIdQueryVariables =
   SchemaTypes.Exact<{
     templateSetId: SchemaTypes.Scalars["UUID"]["input"];
@@ -117410,6 +118018,42 @@ export type ConversationEventsSubscription = {
       | undefined;
     messageRemoved?: { roomId: string; messageId: any } | undefined;
     readReceiptUpdated?: { roomId: string; lastReadEventId: any } | undefined;
+  };
+};
+
+export type ConversationGovernanceEventsSubscriptionVariables =
+  SchemaTypes.Exact<{ [key: string]: never }>;
+
+export type ConversationGovernanceEventsSubscription = {
+  conversationGovernanceEvents: {
+    eventType: SchemaTypes.ConversationGovernanceEventType;
+    conversationID: string;
+    memberID?: string | undefined;
+    conversation?:
+      | {
+          id: string;
+          members: Array<{ id: string; type: SchemaTypes.ActorType }>;
+          room: {
+            id: string;
+            displayName: string;
+            avatarUrl?: string | undefined;
+            type: SchemaTypes.RoomType;
+            readiness: {
+              state: SchemaTypes.RoomReadinessState;
+              reason: SchemaTypes.RoomReadinessReason;
+            };
+          };
+        }
+      | undefined;
+    member?: { id: string; type: SchemaTypes.ActorType } | undefined;
+    readiness?:
+      | {
+          state: SchemaTypes.RoomReadinessState;
+          reason: SchemaTypes.RoomReadinessReason;
+          detail?: string | undefined;
+          updatedDate: Date;
+        }
+      | undefined;
   };
 };
 
@@ -119890,6 +120534,20 @@ export const AddReactionToMessageInRoomDocument = gql`
     }
   }
 `;
+export const AdminCommunicationReconcileConversationRoomsDocument = gql`
+  mutation AdminCommunicationReconcileConversationRooms(
+    $reconcileData: CommunicationAdminReconcileConversationRoomsInput!
+  ) {
+    adminCommunicationReconcileConversationRooms(
+      reconcileData: $reconcileData
+    ) {
+      id
+      status
+      created
+      start
+    }
+  }
+`;
 export const AssignConversationMemberDocument = gql`
   mutation AssignConversationMember(
     $memberData: AssignConversationMemberInput!
@@ -119965,6 +120623,53 @@ export const RemoveReactionToMessageInRoomDocument = gql`
     $reactionData: RoomRemoveReactionToMessageInput!
   ) {
     removeReactionToMessageInRoom(reactionData: $reactionData)
+  }
+`;
+export const RepairConversationRoomDocument = gql`
+  mutation RepairConversationRoom($repairData: RepairConversationRoomInput!) {
+    repairConversationRoom(repairData: $repairData) {
+      outcome
+      membersAdded
+      membersRemoved
+      detail
+      readiness {
+        state
+        reason
+        detail
+        updatedDate
+      }
+      conversation {
+        id
+        room {
+          id
+          readiness {
+            state
+            reason
+          }
+        }
+      }
+    }
+  }
+`;
+export const ResolveDirectConversationsDocument = gql`
+  mutation ResolveDirectConversations(
+    $resolutionData: ResolveDirectConversationsInput!
+  ) {
+    resolveDirectConversations(resolutionData: $resolutionData) {
+      memberID
+      status
+      conversation {
+        id
+        room {
+          id
+          messagesCount
+          readiness {
+            state
+            reason
+          }
+        }
+      }
+    }
   }
 `;
 export const SendMessageReplyToRoomDocument = gql`
@@ -121364,6 +122069,25 @@ export const GetCalloutReactionsSummaryDocument = gql`
     }
   }
 `;
+export const GetConversationReadinessDocument = gql`
+  query GetConversationReadiness($conversationID: UUID!) {
+    lookup {
+      conversation(ID: $conversationID) {
+        id
+        room {
+          id
+          type
+          readiness {
+            state
+            reason
+            detail
+            updatedDate
+          }
+        }
+      }
+    }
+  }
+`;
 export const GetMeConversationsDocument = gql`
   query GetMeConversations {
     me {
@@ -121441,6 +122165,31 @@ export const GetPlatformForumDataDocument = gql`
                   email
                 }
               }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+export const GetProxySurfaceUsageDocument = gql`
+  query GetProxySurfaceUsage($usageData: ProxySurfaceUsageInput!) {
+    platformAdmin {
+      communication {
+        proxySurfaceUsage(usageData: $usageData) {
+          from
+          to
+          days {
+            day
+            livenessMinutes
+            expectedMinutes
+            rows {
+              surface
+              disposition
+              callerClass
+              roomType
+              media
+              count
             }
           }
         }
@@ -122268,6 +123017,19 @@ export const GetUserRolesDocument = gql`
     }
   }
 `;
+export const GetTaskDocument = gql`
+  query GetTask($id: UUID!) {
+    task(id: $id) {
+      id
+      status
+      created
+      start
+      end
+      results
+      errors
+    }
+  }
+`;
 export const GetSpaceTemplatesCountByTemplateSetIdDocument = gql`
   query GetSpaceTemplatesCountByTemplateSetId($templateSetId: UUID!) {
     lookup {
@@ -122929,6 +123691,42 @@ export const ConversationEventsDocument = gql`
     }
   }
 `;
+export const ConversationGovernanceEventsDocument = gql`
+  subscription ConversationGovernanceEvents {
+    conversationGovernanceEvents {
+      eventType
+      conversationID
+      conversation {
+        id
+        members {
+          id
+          type
+        }
+        room {
+          id
+          displayName
+          avatarUrl
+          type
+          readiness {
+            state
+            reason
+          }
+        }
+      }
+      member {
+        id
+        type
+      }
+      memberID
+      readiness {
+        state
+        reason
+        detail
+        updatedDate
+      }
+    }
+  }
+`;
 
 export type SdkFunctionWrapper = <T>(
   action: (requestHeaders?: Record<string, string>) => Promise<T>,
@@ -123028,6 +123826,9 @@ const UpdateCollaborationFromSpaceTemplateDocumentString = print(
 const AddReactionToMessageInRoomDocumentString = print(
   AddReactionToMessageInRoomDocument
 );
+const AdminCommunicationReconcileConversationRoomsDocumentString = print(
+  AdminCommunicationReconcileConversationRoomsDocument
+);
 const AssignConversationMemberDocumentString = print(
   AssignConversationMemberDocument
 );
@@ -123042,6 +123843,12 @@ const RemoveConversationMemberDocumentString = print(
 const RemoveMessageOnRoomDocumentString = print(RemoveMessageOnRoomDocument);
 const RemoveReactionToMessageInRoomDocumentString = print(
   RemoveReactionToMessageInRoomDocument
+);
+const RepairConversationRoomDocumentString = print(
+  RepairConversationRoomDocument
+);
+const ResolveDirectConversationsDocumentString = print(
+  ResolveDirectConversationsDocument
 );
 const SendMessageReplyToRoomDocumentString = print(
   SendMessageReplyToRoomDocument
@@ -123221,6 +124028,9 @@ const GetCalloutReactionsDocumentString = print(GetCalloutReactionsDocument);
 const GetCalloutReactionsSummaryDocumentString = print(
   GetCalloutReactionsSummaryDocument
 );
+const GetConversationReadinessDocumentString = print(
+  GetConversationReadinessDocument
+);
 const GetMeConversationsDocumentString = print(GetMeConversationsDocument);
 const GetPlatformDiscussionsDataDocumentString = print(
   GetPlatformDiscussionsDataDocument
@@ -123229,6 +124039,7 @@ const GetPlatformDiscussionsDataByIdDocumentString = print(
   GetPlatformDiscussionsDataByIdDocument
 );
 const GetPlatformForumDataDocumentString = print(GetPlatformForumDataDocument);
+const GetProxySurfaceUsageDocumentString = print(GetProxySurfaceUsageDocument);
 const GetSpaceCommunicationDocumentString = print(
   GetSpaceCommunicationDocument
 );
@@ -123300,6 +124111,7 @@ const GetSubspacePageDocumentString = print(GetSubspacePageDocument);
 const GetSpaceAboutDetailsDocumentString = print(GetSpaceAboutDetailsDocument);
 const GetSubspacesDataDocumentString = print(GetSubspacesDataDocument);
 const GetUserRolesDocumentString = print(GetUserRolesDocument);
+const GetTaskDocumentString = print(GetTaskDocument);
 const GetSpaceTemplatesCountByTemplateSetIdDocumentString = print(
   GetSpaceTemplatesCountByTemplateSetIdDocument
 );
@@ -123343,6 +124155,9 @@ const VirtualContributorStorageConfigDocumentString = print(
   VirtualContributorStorageConfigDocument
 );
 const ConversationEventsDocumentString = print(ConversationEventsDocument);
+const ConversationGovernanceEventsDocumentString = print(
+  ConversationGovernanceEventsDocument
+);
 export function getSdk(
   client: GraphQLClient,
   withWrapper: SdkFunctionWrapper = defaultWrapper
@@ -124206,6 +125021,28 @@ export function getSdk(
         variables
       );
     },
+    AdminCommunicationReconcileConversationRooms(
+      variables: SchemaTypes.AdminCommunicationReconcileConversationRoomsMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.AdminCommunicationReconcileConversationRoomsMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.AdminCommunicationReconcileConversationRoomsMutation>(
+            AdminCommunicationReconcileConversationRoomsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "AdminCommunicationReconcileConversationRooms",
+        "mutation",
+        variables
+      );
+    },
     AssignConversationMember(
       variables: SchemaTypes.AssignConversationMemberMutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -124400,6 +125237,50 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "RemoveReactionToMessageInRoom",
+        "mutation",
+        variables
+      );
+    },
+    RepairConversationRoom(
+      variables: SchemaTypes.RepairConversationRoomMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.RepairConversationRoomMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.RepairConversationRoomMutation>(
+            RepairConversationRoomDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "RepairConversationRoom",
+        "mutation",
+        variables
+      );
+    },
+    ResolveDirectConversations(
+      variables: SchemaTypes.ResolveDirectConversationsMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ResolveDirectConversationsMutation;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ResolveDirectConversationsMutation>(
+            ResolveDirectConversationsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ResolveDirectConversations",
         "mutation",
         variables
       );
@@ -126428,6 +127309,28 @@ export function getSdk(
         variables
       );
     },
+    GetConversationReadiness(
+      variables: SchemaTypes.GetConversationReadinessQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.GetConversationReadinessQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.GetConversationReadinessQuery>(
+            GetConversationReadinessDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "GetConversationReadiness",
+        "query",
+        variables
+      );
+    },
     GetMeConversations(
       variables?: SchemaTypes.GetMeConversationsQueryVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -126512,6 +127415,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "GetPlatformForumData",
+        "query",
+        variables
+      );
+    },
+    GetProxySurfaceUsage(
+      variables: SchemaTypes.GetProxySurfaceUsageQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.GetProxySurfaceUsageQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.GetProxySurfaceUsageQuery>(
+            GetProxySurfaceUsageDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "GetProxySurfaceUsage",
         "query",
         variables
       );
@@ -127374,6 +128299,28 @@ export function getSdk(
         variables
       );
     },
+    GetTask(
+      variables: SchemaTypes.GetTaskQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.GetTaskQuery;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.GetTaskQuery>(
+            GetTaskDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "GetTask",
+        "query",
+        variables
+      );
+    },
     GetSpaceTemplatesCountByTemplateSetId(
       variables: SchemaTypes.GetSpaceTemplatesCountByTemplateSetIdQueryVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -127876,6 +128823,28 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "ConversationEvents",
+        "subscription",
+        variables
+      );
+    },
+    ConversationGovernanceEvents(
+      variables?: SchemaTypes.ConversationGovernanceEventsSubscriptionVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<{
+      data: SchemaTypes.ConversationGovernanceEventsSubscription;
+      errors?: GraphQLError[];
+      extensions?: any;
+      headers: Headers;
+      status: number;
+    }> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.rawRequest<SchemaTypes.ConversationGovernanceEventsSubscription>(
+            ConversationGovernanceEventsDocumentString,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "ConversationGovernanceEvents",
         "subscription",
         variables
       );

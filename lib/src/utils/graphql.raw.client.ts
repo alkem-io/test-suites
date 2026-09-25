@@ -33,11 +33,14 @@ export const postGraphqlRaw = async <TData>(
     /** Sent verbatim as the `Cookie` header — e.g.
      * `<cookieName>=s:<sid>.<hmac>` from `mintBffSession`. */
     cookieHeader?: string;
+    /** Additional request headers, sent as given. */
+    headers?: Record<string, string>;
   }
 ): Promise<RawGraphqlResponse<TData>> => {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     Accept: 'application/json',
+    ...options?.headers,
   };
   if (options?.bearerToken) {
     headers.Authorization = `Bearer ${options.bearerToken}`;

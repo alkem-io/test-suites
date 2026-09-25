@@ -1,5 +1,9 @@
 import { ForumDiscussionCategory } from '@alkemio/client-lib/dist/types/alkemio-schema';
-import { getGraphqlClient, TestUser } from '@alkemio/tests-lib';
+import {
+  getGraphqlClient,
+  postGraphqlRaw,
+  TestUser,
+} from '@alkemio/tests-lib';
 import { graphqlErrorWrapper } from '@alkemio/tests-lib/utils/graphql.wrapper';
 import { graphqlRequestAuth } from '@alkemio/tests-lib/utils/graphql.request';
 
@@ -24,6 +28,25 @@ export const sendMessageToRoom = async (
 
   return graphqlErrorWrapper(callback, userRole);
 };
+
+/**
+ * Sends a message to a room as a browser would: over a BFF cookie session
+ * (from `mintBffSessionForUser`), optionally with extra request headers such
+ * as the advisory `x-alkemio-messaging-transport` declaration. The bearer
+ * helpers above authenticate as a non-interactive service caller instead.
+ */
+export const sendMessageToRoomAsWebSession = async (
+  roomID: string,
+  message: string,
+  cookieHeader: string,
+  headers?: Record<string, string>
+) =>
+  postGraphqlRaw<{ sendMessageToRoom: { id: string } }>(
+    `mutation SendMessageToRoom($messageData: RoomSendMessageInput!) {
+      sendMessageToRoom(messageData: $messageData) { id }
+    }`,
+    { variables: { messageData: { roomID, message } }, cookieHeader, headers }
+  );
 
 export const sendMessageToUser = async (
   receiverIds: string[],

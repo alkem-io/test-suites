@@ -1,0 +1,17 @@
+query GetConversationReadiness($conversationID: UUID!) {
+  lookup {
+    conversation(ID: $conversationID) {
+      id
+      room {
+        id
+        type
+        readiness {
+          state
+          reason
+          detail
+          updatedDate
+        }
+      }
+    }
+  }
+}

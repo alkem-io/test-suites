@@ -1,0 +1,19 @@
+mutation ResolveDirectConversations(
+  $resolutionData: ResolveDirectConversationsInput!
+) {
+  resolveDirectConversations(resolutionData: $resolutionData) {
+    memberID
+    status
+    conversation {
+      id
+      room {
+        id
+        messagesCount
+        readiness {
+          state
+          reason
+        }
+      }
+    }
+  }
+}
