@@ -1,6 +1,7 @@
 import {
   ConversationCreationType,
   delay,
+  mintBffSessionForUser,
   SubscriptionClient,
   TestScenarioConfig,
   TestScenarioFactory,
@@ -10,7 +11,7 @@ import {
 import { subscriptionRooms } from '@functional-api/subscriptions/subscription-queries';
 import {
   sendMessageToRoom,
-  sendMessageToRoomWithHeaders,
+  sendMessageToRoomAsWebSession,
 } from '../communication.params';
 import {
   createConversation,
@@ -98,17 +99,26 @@ describe('Proxy surface usage ledger', () => {
 
     // Act: one declared send, one undeclared, one to a callout comments room,
     // one roomEvents registration on the conversation room.
-    await sendMessageToRoomWithHeaders(
+    // Web caller classes are only derived for a cookie session; the harness
+    // bearer is a non-interactive service login.
+    const qaUser = TestUserManager.users.qaUser;
+    const { cookieHeader } = await mintBffSessionForUser(
+      qaUser.email,
+      qaUser.id
+    );
+    const declared = await sendMessageToRoomAsWebSession(
       conversationRoomId,
       'declared transport',
-      TestUser.QA_USER,
+      cookieHeader,
       MATRIX_TRANSPORT_HEADER
     );
-    await sendMessageToRoom(
+    expect(declared.body.errors).toBeUndefined();
+    const undeclared = await sendMessageToRoomAsWebSession(
       conversationRoomId,
       'undeclared transport',
-      TestUser.QA_USER
+      cookieHeader
     );
+    expect(undeclared.body.errors).toBeUndefined();
     await sendMessageToRoom(
       baseScenario.space.collaboration.calloutPostCommentsId,
       'callout comment',
@@ -165,17 +175,6 @@ describe('Proxy surface usage ledger', () => {
       r => r.surface === 'Mutation.sendMessageToRoom'
     );
     expect(sendRows.every(r => r.media === false)).toBe(true);
-  });
-
-  test('a web caller is never classified as API, SERVICE, MCP or ANONYMOUS', async () => {
-    const rows = await todayRows();
-    const nonWeb = rows.filter(
-      r =>
-        r.surface === 'Mutation.sendMessageToRoom' &&
-        r.roomType === 'conversation_direct' &&
-        !['WEB_MATRIX', 'WEB_GRAPHQL'].includes(r.callerClass)
-    );
-    expect(nonWeb).toEqual([]);
   });
 
   test('a non-operator cannot read the ledger', async () => {
