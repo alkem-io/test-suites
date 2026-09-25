@@ -88,9 +88,9 @@ type CardDef = {
 const CARDS: CardDef[] = [
   {
     label: 'Alpha',
-    what: longText('Alpha', 5),
-    why: longText('Alpha why', 3),
-    who: longText('Alpha who', 3),
+    what: longText('Alpha', 8),
+    why: longText('Alpha why', 8),
+    who: longText('Alpha who', 8),
     tags: [
       'innovation',
       'sustainability',
@@ -109,8 +109,8 @@ const CARDS: CardDef[] = [
   {
     label: 'Delta',
     what: longText('Delta', 4),
-    why: longText('Delta why', 3),
-    who: longText('Delta who', 3),
+    why: longText('Delta why', 8),
+    who: longText('Delta who', 8),
   },
   {
     label: 'Epsilon',
@@ -122,14 +122,14 @@ const CARDS: CardDef[] = [
   {
     label: 'Eta',
     what: longText('Eta', 4),
-    why: longText('Eta why', 3),
-    who: longText('Eta who', 3),
+    why: longText('Eta why', 8),
+    who: longText('Eta who', 8),
   },
   {
     label: 'Zeta',
     what: longText('Zeta', 4),
-    why: longText('Zeta why', 3),
-    who: longText('Zeta who', 3),
+    why: longText('Zeta why', 8),
+    who: longText('Zeta who', 8),
   },
 ];
 
@@ -200,6 +200,22 @@ async function createSubspace(
     );
   }
   tree.subspaceIds.push(data.createSubspace.id);
+  // createSubspace fills an omitted (or empty) Why, Who and description from the
+  // subspace template (`input || template`), whose defaults are placeholder text
+  // such as "Fill out the why here". A card meant to leave a section empty must
+  // clear it afterwards — the update path keeps an explicit empty string.
+  const cleared = {
+    ...(c.why ? {} : { why: '' }),
+    ...(c.who ? {} : { who: '' }),
+    ...(c.what ? {} : { profile: { description: '' } }),
+  };
+  if (Object.keys(cleared).length > 0) {
+    await rawGql(
+      'mutation ($spaceData: UpdateSpaceInput!) { updateSpace(spaceData: $spaceData) { id } }',
+      { spaceData: { ID: data.createSubspace.id, about: cleared } },
+      adminToken
+    );
+  }
   return data.createSubspace;
 }
 
@@ -390,7 +406,7 @@ test.describe(
     const showMoreOf = (list: Locator) =>
       list.locator('button', { hasText: /^Show \d+ more$/ });
 
-    test('US1-AS1: one card per row; identity block left; What (≤3 lines) then Why/Who (≤2 lines) right with ellipsis; full-width leads footer', async ({
+    test('US1-AS1: one card per row; identity block left; What, Why and Who (≤5 lines each) right with ellipsis; one label style; leads and the Open subspace cue at the foot of the identity block', async ({
       page,
     }) => {
       await page.setViewportSize({ width: 1280, height: 900 });
@@ -415,7 +431,7 @@ test.describe(
       const m = await alpha.evaluate(a => {
         const r = a.getBoundingClientRect();
         const identity = a.querySelector(
-          '.w-\\[300px\\]'
+          '.w-\\[320px\\]'
         ) as HTMLElement | null;
         const panel = a.querySelector('.flex-1.min-w-0') as HTMLElement;
         const clamp = (e: Element | null, lines: number) => {
@@ -431,15 +447,15 @@ test.describe(
             lineClamp: cs.webkitLineClamp,
           };
         };
-        const c2 = panel.querySelectorAll('.line-clamp-2');
+        const c5 = panel.querySelectorAll('.line-clamp-5');
         const labels = Array.from(a.querySelectorAll('span.uppercase')).map(
           s => (s as HTMLElement).innerText
         );
-        const whatLabel = a.querySelector('span.uppercase') as HTMLElement;
+        const whatLabel = panel.querySelector('span.uppercase') as HTMLElement;
         const whyLabel = Array.from(
-          a.querySelectorAll('span.uppercase')
+          panel.querySelectorAll('span.uppercase')
         )[1] as HTMLElement;
-        const footer = a.querySelector('.border-t') as HTMLElement;
+        const footer = identity?.querySelector('.border-t') as HTMLElement;
         return {
           width: r.width,
           identity: identity && {
@@ -447,11 +463,18 @@ test.describe(
             left: identity.getBoundingClientRect().left - r.left,
           },
           labels,
-          what: clamp(panel.querySelector('.line-clamp-3'), 3),
-          why: clamp(c2[0], 2),
-          who: clamp(c2[1], 2),
+          what: clamp(c5[0], 5),
+          why: clamp(c5[1], 5),
+          who: clamp(c5[2], 5),
           whatLabelPx: parseFloat(getComputedStyle(whatLabel).fontSize),
           whyLabelPx: parseFloat(getComputedStyle(whyLabel).fontSize),
+          whoLabelPx: parseFloat(
+            getComputedStyle(
+              Array.from(
+                panel.querySelectorAll('span.uppercase')
+              )[2] as HTMLElement
+            ).fontSize
+          ),
           footer: {
             width: footer.getBoundingClientRect().width,
             text: footer.innerText,
@@ -460,25 +483,31 @@ test.describe(
         };
       });
       expect(m.identity).not.toBeNull();
-      expect(m.identity!.width).toBe(300);
+      expect(m.identity!.width).toBe(320);
       expect(m.identity!.left).toBeLessThanOrEqual(2);
-      expect(m.labels).toEqual(['WHAT', 'WHY', 'WHO', 'LEADS']);
+      expect(m.labels).toEqual(['LEADS', 'WHAT', 'WHY', 'WHO']);
       for (const [sec, lines] of [
-        [m.what, 3],
-        [m.why, 2],
-        [m.who, 2],
+        [m.what, 5],
+        [m.why, 5],
+        [m.who, 5],
       ] as const) {
         expect(sec).not.toBeNull();
         expect(sec!.lineClamp).toBe(String(lines));
         expect(sec!.height).toBeLessThanOrEqual(sec!.maxAllowed);
         expect(sec!.overflows).toBe(true); // text really is cut, i.e. the ellipsis is exercised
       }
-      expect(m.what!.left).toBeGreaterThan(300); // content sits right of the identity block
+      expect(m.what!.left).toBeGreaterThan(320); // content sits right of the identity block
       expect(m.what!.top).toBeLessThan(m.why!.top);
       expect(m.why!.top).toBeLessThan(m.who!.top);
-      expect(m.whatLabelPx).toBeGreaterThan(m.whyLabelPx); // What is primary
-      expect(Math.abs(m.footer.width - m.width)).toBeLessThanOrEqual(4); // full-width footer
+      // One label style for What, Why and Who (design source).
+      expect(m.whyLabelPx).toBe(m.whatLabelPx);
+      expect(m.whoLabelPx).toBe(m.whatLabelPx);
+      // Leads and the cue close the identity column, not the whole card.
+      expect(Math.abs(m.footer.width - m.identity!.width)).toBeLessThanOrEqual(
+        2
+      );
       expect(m.footer.text).toMatch(/LEADS/);
+      expect(m.footer.text).toMatch(/OPEN SUBSPACE/i);
       expect(m.footer.avatars).toBeGreaterThanOrEqual(1);
     });
 
@@ -495,14 +524,12 @@ test.describe(
             s => (s as HTMLElement).innerText
           ),
           sections: panel.children.length,
-          clamp3: panel.querySelectorAll('.line-clamp-3').length,
-          clamp2: panel.querySelectorAll('.line-clamp-2').length,
+          clamped: panel.querySelectorAll('.line-clamp-5').length,
         };
       });
-      expect(m.labels).toEqual(['WHAT', 'LEADS']);
+      expect(m.labels).toEqual(['LEADS', 'WHAT']);
       expect(m.sections).toBe(1);
-      expect(m.clamp3).toBe(1);
-      expect(m.clamp2).toBe(0);
+      expect(m.clamped).toBe(1);
     });
 
     test('US1-AS5: expanded shows exactly 3 then "Show 4 more" → all seven + "Show less"; the compact post shows 6 then "Show 1 more"', async ({
@@ -562,7 +589,7 @@ test.describe(
           hasCta: /OPEN SUBSPACE/.test((a as HTMLElement).innerText),
         };
       });
-      expect(m.width).toBe(300);
+      expect(m.width).toBe(320);
       expect(m.ownRow).toBe(true);
       expect(m.labels).toEqual([]); // no What/Why/Who — and no LEADS label without leads
       expect(m.hasContentPanel).toBe(false);
@@ -624,7 +651,7 @@ test.describe(
       // Centre the card so the excerpt cannot sit under the sticky page header.
       await alpha.evaluate(el => el.scrollIntoView({ block: 'center' }));
       await page.waitForTimeout(300);
-      const box = await alpha.locator('.line-clamp-3').boundingBox();
+      const box = await alpha.locator('.line-clamp-5').first().boundingBox();
       expect(box).not.toBeNull();
       await page.mouse.click(box!.x + box!.width / 2, box!.y + box!.height / 2);
       await page.waitForURL(new RegExp(fixture.subspaceNameIds.Alpha), {

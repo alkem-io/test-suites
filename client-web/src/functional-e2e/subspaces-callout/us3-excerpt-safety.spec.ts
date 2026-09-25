@@ -100,11 +100,11 @@ const ZETA_WHY =
 const ZETA_WHO = '<div>only html</div>';
 
 const ALPHA_WHAT =
-  'Alpha is the fully-filled reference subspace for this fixture. Its What section carries several lines of ordinary prose so the excerpt clamp is exercised at its full three lines, giving a stable baseline to compare against other cards in the list. The text keeps going a little further to be sure it overflows any three-line clamp at common card widths, describing goals, scope and a short roadmap for this space.';
+  'Alpha is the fully-filled reference subspace for this fixture. Its What section carries several lines of ordinary prose so the excerpt clamp is exercised at its full five lines, giving a stable baseline to compare against other cards in the list. The text keeps going a little further to be sure it overflows any five-line clamp at common card widths, describing goals, scope and a short roadmap for this space. It then adds a second paragraph of context about milestones, partners and the way progress is reported back to the community, so that even the widest desktop card still runs out of room well before the text does.';
 const ALPHA_WHY =
-  "Alpha's Why section explains the motivation behind this subspace in a few sentences, long enough to overflow the two-line clamp reliably across common desktop and mobile card widths used in this walkthrough.";
+  "Alpha's Why section explains the motivation behind this subspace in a few sentences, long enough to overflow the five-line clamp reliably across common desktop and mobile card widths used in this walkthrough. It goes on to describe the problem the subspace addresses, why existing approaches fall short, and what changes when the community works on it together, adding enough further prose that the excerpt is always cut rather than shown in full.";
 const ALPHA_WHO =
-  "Alpha's Who section lists the people and organisations behind this subspace, along with a short description of their roles, long enough on its own to overflow the two-line clamp used for this excerpt.";
+  "Alpha's Who section lists the people and organisations behind this subspace, along with a short description of their roles, long enough on its own to overflow the five-line clamp used for this excerpt. It also explains who is welcome to join, what kind of expertise helps most, how newcomers are onboarded, and who to contact with questions, so the section always runs past its clamp at every card width in this walkthrough.";
 
 const BETA_WHAT =
   'Beta has only a What section filled, two lines of plain prose describing a small workstream for this fixture.';
@@ -413,9 +413,9 @@ test.describe(
           anchors,
           fixedEls,
           text: el.textContent,
-          what: sectionInfo(whatEl, 3),
-          why: sectionInfo(whyEl, 2),
-          who: sectionInfo(whoEl, 2),
+          what: sectionInfo(whatEl, 5),
+          why: sectionInfo(whyEl, 5),
+          who: sectionInfo(whoEl, 5),
           h1FontSize: h1 ? getComputedStyle(h1).fontSize : null,
           whoExcerptFontSize: whoEl ? getComputedStyle(whoEl).fontSize : null,
           tableDisplay: table ? getComputedStyle(table).display : null,
@@ -471,7 +471,7 @@ test.describe(
       await page.mouse.click(5, 5);
     });
 
-    test('US3-AS3: Who excerpt is one compact run — no heading size, no bullets, no table, within the 2-line clamp', async ({
+    test('US3-AS3: Who excerpt is one compact run — no heading size, no bullets, no table, within the 5-line clamp', async ({
       page,
     }) => {
       await gotoFixtureSpace(page);

@@ -152,9 +152,9 @@ export async function readExcerptClamps(article: Locator): Promise<{
       };
     };
     return {
-      what: info(selectors.what, 3),
-      why: info(selectors.why, 2),
-      who: info(selectors.who, 2),
+      what: info(selectors.what, 5),
+      why: info(selectors.why, 5),
+      who: info(selectors.who, 5),
     };
   }, EXCERPT_SELECTOR);
 }

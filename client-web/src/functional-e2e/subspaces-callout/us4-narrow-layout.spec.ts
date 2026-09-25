@@ -81,32 +81,32 @@ const CARDS: CardDef[] = [
   {
     label: 'CardAlpha',
     what: longText('CardAlpha', 4),
-    why: longText('CardAlpha why', 3),
-    who: longText('CardAlpha who', 3),
+    why: longText('CardAlpha why', 8),
+    who: longText('CardAlpha who', 8),
   },
   {
     label: 'CardBeta',
     what: longText('CardBeta', 4),
-    why: longText('CardBeta why', 3),
-    who: longText('CardBeta who', 3),
+    why: longText('CardBeta why', 8),
+    who: longText('CardBeta who', 8),
   },
   {
     label: 'CardGamma',
     what: longText('CardGamma', 4),
-    why: longText('CardGamma why', 3),
-    who: longText('CardGamma who', 3),
+    why: longText('CardGamma why', 8),
+    who: longText('CardGamma who', 8),
   },
   {
     label: 'CardDelta',
     what: longText('CardDelta', 4),
-    why: longText('CardDelta why', 3),
-    who: longText('CardDelta who', 3),
+    why: longText('CardDelta why', 8),
+    who: longText('CardDelta who', 8),
   },
   {
     label: 'CardEta',
     what: longText('CardEta', 4),
-    why: longText('CardEta why', 3),
-    who: longText('CardEta who', 3),
+    why: longText('CardEta why', 8),
+    who: longText('CardEta who', 8),
   },
 ];
 
@@ -258,7 +258,7 @@ test.describe(
     }
 
     /** side-by-side ⇔ the What excerpt sits well to the right of the article's
-     * own left edge (past the ~300px identity column); stacked ⇔ it sits at
+     * own left edge (past the ~320px identity column); stacked ⇔ it sits at
      * roughly the article's own left edge, below the identity block. Mirrors
      * the DOM contract `ExpandedSpaceCard.tsx` builds. */
     async function getArrangement(
@@ -275,7 +275,7 @@ test.describe(
 
     const getClampInfo = readExcerptClamps;
 
-    test('US4-AS1: phone width (390px) — every card stacks (identity, then What/Why/Who, then footer), no horizontal scroll, same clamps', async ({
+    test('US4-AS1: phone width (390px) — every card stacks (identity with its leads and cue, then What/Why/Who), no horizontal scroll, same clamps', async ({
       page,
     }) => {
       await page.setViewportSize({ width: 390, height: 844 });
@@ -306,7 +306,8 @@ test.describe(
       await expect(leadsRow).toBeVisible();
       const leadsBox = await leadsRow.boundingBox();
       expect(leadsBox).not.toBeNull();
-      expect(leadsBox!.y).toBeGreaterThan(clamp.who!.top); // footer is last
+      // Leads close the identity block, which stacks above the excerpts.
+      expect(leadsBox!.y).toBeLessThan(clamp.what!.top);
 
       const doc = await page.evaluate(() => ({
         scrollWidth: document.documentElement.scrollWidth,
