@@ -26,6 +26,8 @@
  *            (FR-007 — the activity log entry is unconditional).
  *   US1-AS5  the same OFF-by-default / zero-emission / activity-present
  *            behaviour holds identically for a task added to a Tasks board.
+ *   US2-AS1  (task path) a task added with the switch ON DOES emit — and the
+ *            switch is OFF again on reopen. Local/CI only (queue-gated).
  *
  * Emission is asserted at the RabbitMQ `alkemio-notifications` queue's
  * cumulative publish counter (EMIT-level — mirrors the `PUSH_NOTIFICATIONS_QUEUE`
@@ -298,6 +300,19 @@ test.describe(
       return dialog;
     }
 
+    /** The CRD dialog's corner close button renders `aria-label={closeLabel}`
+     * and ActivityDialog passes no closeLabel, so that button has NO
+     * accessible name — `getByRole('button', { name: 'Close' })` never
+     * matches. Dismiss via Escape (Radix Dialog's documented close path)
+     * and assert the dialog is gone. */
+    async function closeRecentActivity(
+      page: Page,
+      dialog: Locator
+    ): Promise<void> {
+      await page.keyboard.press('Escape');
+      await expect(dialog).toBeHidden();
+    }
+
     // ── US1-AS1 / US1-AS2 ────────────────────────────────────────────────
 
     test('US1-AS1: the response dialog shows "Notify space members" OFF by default', async () => {
@@ -407,8 +422,7 @@ test.describe(
       // suppresses both channels together (no member-only variant).
       if (checkQueueEmission) {
         await delay(NO_EMISSION_GRACE_MS);
-        const after = (await getQueueStats(NOTIFICATIONS_QUEUE))
-          .publishedTotal;
+        const after = (await getQueueStats(NOTIFICATIONS_QUEUE)).publishedTotal;
         expect(
           after,
           'switch OFF must emit zero notification events on the shared queue'
@@ -425,7 +439,7 @@ test.describe(
       // ...and in the space's Recent Activity feed, exactly like a notified one.
       const activity = await openRecentActivity(authPage);
       await expect(activity.getByText(title)).toBeVisible();
-      await activity.getByRole('button', { name: 'Close' }).click();
+      await closeRecentActivity(authPage, activity);
     });
 
     // ── US1-AS5 ──────────────────────────────────────────────────────────
@@ -473,8 +487,7 @@ test.describe(
       // AS3/AS4 hold identically for the task: zero notification events…
       if (checkQueueEmission) {
         await delay(NO_EMISSION_GRACE_MS);
-        const after = (await getQueueStats(NOTIFICATIONS_QUEUE))
-          .publishedTotal;
+        const after = (await getQueueStats(NOTIFICATIONS_QUEUE)).publishedTotal;
         expect(
           after,
           'a task created with the switch OFF must emit zero notification events'
@@ -486,7 +499,64 @@ test.describe(
       await expect(taskBoardCard(authPage).getByText(taskTitle)).toBeVisible();
       const activity = await openRecentActivity(authPage);
       await expect(activity.getByText(taskTitle)).toBeVisible();
-      await activity.getByRole('button', { name: 'Close' }).click();
+      await closeRecentActivity(authPage, activity);
+    });
+
+    // ── US2-AS1 (task path) ──────────────────────────────────────────────
+
+    test('US2-AS1: a Tasks board task with the switch ON emits notification events — the ON path holds for tasks as it does for responses', async () => {
+      // Skipped where the queue counter is unreachable (nightly): without it
+      // this test would only re-prove the switch toggles, which AS5 covers.
+      test.skip(
+        !checkQueueEmission,
+        'RabbitMQ management API not configured — emission cannot be observed'
+      );
+
+      await loadSpacePage(authPage);
+      const board = taskBoardCard(authPage);
+      await expect(board).toBeVisible();
+
+      const baseline = await waitForQueueQuiet(NOTIFICATIONS_QUEUE);
+
+      const taskTitle = `US2 notify task ${Date.now()}`;
+      await board.getByRole('button', { name: 'Add task' }).first().click();
+      const taskDialog = taskCreateDialog(authPage);
+      await expect(taskDialog).toBeVisible();
+      await taskDialog.getByRole('textbox', { name: 'Title' }).fill(taskTitle);
+      await taskDialog
+        .getByRole('textbox', { name: 'Write your Post...' })
+        .fill('US2 acceptance-walk task body (switch ON).');
+      const notifySwitch = taskDialog.getByRole('switch', {
+        name: 'Notify space members',
+      });
+      await expect(notifySwitch).toHaveAttribute('aria-checked', 'false');
+      await notifySwitch.click();
+      await expect(notifySwitch).toHaveAttribute('aria-checked', 'true');
+      await taskDialog.getByRole('button', { name: 'Create task' }).click();
+      await expect(taskDialog).toBeHidden();
+
+      const stats = await waitForQueuePublishIncrease(
+        NOTIFICATIONS_QUEUE,
+        baseline,
+        1,
+        { timeout: 20_000 }
+      );
+      expect(
+        stats.publishedTotal,
+        'a task created with the switch ON must publish to the notifications queue'
+      ).toBeGreaterThanOrEqual(baseline + 1);
+
+      // Reopening the dialog starts OFF again — never remembered, for tasks too.
+      await loadSpacePage(authPage);
+      await taskBoardCard(authPage)
+        .getByRole('button', { name: 'Add task' })
+        .first()
+        .click();
+      const reopened = taskCreateDialog(authPage);
+      await expect(
+        reopened.getByRole('switch', { name: 'Notify space members' })
+      ).toHaveAttribute('aria-checked', 'false');
+      await reopened.getByRole('button', { name: 'Cancel' }).click();
     });
   }
 );

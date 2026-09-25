@@ -1,4 +1,3 @@
- 
 import {
   deleteMailSlurperMails,
   TestScenarioConfig,
@@ -15,6 +14,17 @@ import {
 } from '@functional-api/callout/post/post.request.params';
 import { updateUserSettings } from '@functional-api/contributor-management/user/user.request.params';
 import { getActivityLogOnCollaboration } from '@functional-api/activity-logs/activity-log-params';
+import {
+  createCalloutOnCalloutsSet,
+  deleteCallout,
+} from '@functional-api/callout/callouts.request.params';
+import { createWhiteboardOnCalloutWithNotification } from '@functional-api/callout/call-for-whiteboards/whiteboard-collection-callout.params.request';
+import {
+  CalloutAllowedActors,
+  CalloutContributionType,
+  CalloutVisibility,
+  NotificationEvent,
+} from '@alkemio/tests-lib/core/generated/alkemio-schema';
 import { OrganizationWithSpaceModel } from '@alkemio/tests-lib/scenario/models/OrganizationWithSpaceModel';
 import { ActivityEventType } from '@alkemio/client-lib/dist/types/alkemio-schema';
 import {
@@ -22,6 +32,7 @@ import {
   getMailsDataSettled,
   snapshotNotificationSettings,
   assertCleanupSucceeded,
+  getInAppNotificationsCount,
 } from '../../notification.helpers';
 
 const uniqueId = UniqueIDGenerator.getID();
@@ -611,6 +622,18 @@ describe('070 contribution notify switch', () => {
   });
 
   test('sendNotification false suppresses the member AND the admin contribution notification — the admin channel is suppressed by design, not drift', async () => {
+    // In-app baselines (AC3 says "on any channel", not only email). Taken
+    // before the act so earlier cases' in-app rows in the same run don't
+    // count against this one.
+    const memberInAppBefore = await getInAppNotificationsCount(
+      TestUser.SPACE_MEMBER,
+      [NotificationEvent.SpaceCollaborationCalloutContribution]
+    );
+    const adminInAppBefore = await getInAppNotificationsCount(
+      TestUser.SPACE_ADMIN,
+      [NotificationEvent.SpaceAdminCollaborationCalloutContribution]
+    );
+
     // Act
     const res = await createPostOnCalloutWithNotification(
       baseScenario.space.collaboration.calloutPostCollectionId,
@@ -619,8 +642,7 @@ describe('070 contribution notify switch', () => {
       notifySwitchPostNameID,
       TestUser.GLOBAL_ADMIN
     );
-    notifySwitchPostId =
-      res.data?.createContributionOnCallout.post?.id ?? '';
+    notifySwitchPostId = res.data?.createContributionOnCallout.post?.id ?? '';
 
     // Assert — nothing arrives at all, on either channel
     const mails = await getMailsDataSettled(0);
@@ -649,9 +671,30 @@ describe('070 contribution notify switch', () => {
         TestUserManager.users.spaceAdmin.email
       )
     );
+
+    // The in-app channel is silent too, for the member AND the admin event.
+    // (mails settled above, so the in-app row — written on the same event —
+    // would be there by now if it were ever produced.)
+    expect(
+      await getInAppNotificationsCount(TestUser.SPACE_MEMBER, [
+        NotificationEvent.SpaceCollaborationCalloutContribution,
+      ]),
+      'switch OFF must not produce a member in-app notification'
+    ).toBe(memberInAppBefore);
+    expect(
+      await getInAppNotificationsCount(TestUser.SPACE_ADMIN, [
+        NotificationEvent.SpaceAdminCollaborationCalloutContribution,
+      ]),
+      'switch OFF must not produce a space-admin in-app notification'
+    ).toBe(adminInAppBefore);
   });
 
   test('sendNotification true notifies exactly as today — same recipients, same content as the omitted-flag path', async () => {
+    const memberInAppBefore = await getInAppNotificationsCount(
+      TestUser.SPACE_MEMBER,
+      [NotificationEvent.SpaceCollaborationCalloutContribution]
+    );
+
     // Act
     const res = await createPostOnCalloutWithNotification(
       baseScenario.space.collaboration.calloutPostCollectionId,
@@ -660,8 +703,7 @@ describe('070 contribution notify switch', () => {
       notifySwitchPostNameID,
       TestUser.GLOBAL_ADMIN
     );
-    notifySwitchPostId =
-      res.data?.createContributionOnCallout.post?.id ?? '';
+    notifySwitchPostId = res.data?.createContributionOnCallout.post?.id ?? '';
 
     // Assert — the same six member-channel recipients as the neighbouring
     // GA-created-post case above (proving explicit-true is indistinguishable
@@ -711,6 +753,16 @@ describe('070 contribution notify switch', () => {
         TestUserManager.users.subsubspaceMember.email
       )
     );
+
+    // Positive control for the OFF case's in-app assertion: with the switch
+    // ON the member's in-app count DOES move, so "unchanged" above is a real
+    // negative and not a channel that never writes.
+    expect(
+      await getInAppNotificationsCount(TestUser.SPACE_MEMBER, [
+        NotificationEvent.SpaceCollaborationCalloutContribution,
+      ]),
+      'switch ON must produce the member in-app notification'
+    ).toBe(memberInAppBefore + 1);
   });
 
   test('omitting sendNotification on the flag-aware mutation still notifies everyone — the wire default stays notify, pinned independently of the untouched legacy helper', async () => {
@@ -724,8 +776,7 @@ describe('070 contribution notify switch', () => {
       notifySwitchPostNameID,
       TestUser.GLOBAL_ADMIN
     );
-    notifySwitchPostId =
-      res.data?.createContributionOnCallout.post?.id ?? '';
+    notifySwitchPostId = res.data?.createContributionOnCallout.post?.id ?? '';
 
     // Assert — mail arrives exactly as it does for the explicit-true case
     // above: the six member-channel mails plus the admin-channel mail.
@@ -742,8 +793,7 @@ describe('070 contribution notify switch', () => {
       notifySwitchPostNameID,
       TestUser.GLOBAL_ADMIN
     );
-    notifySwitchPostId =
-      res.data?.createContributionOnCallout.post?.id ?? '';
+    notifySwitchPostId = res.data?.createContributionOnCallout.post?.id ?? '';
 
     // Poll the activity log itself rather than using a mail settle as a proxy
     // barrier: mail and activity are written by different async paths, so
@@ -771,5 +821,130 @@ describe('070 contribution notify switch', () => {
     // Assert — the activity log entry for this contribution is present
     // regardless of the suppressed notification.
     expect(postCreatedEntry).toBeDefined();
+  });
+
+  test('US2-AS2: sendNotification true on a DRAFT callout still notifies nobody — the publication rule outranks the switch', async () => {
+    const draft = await createCalloutOnCalloutsSet(
+      baseScenario.space.collaboration.calloutsSetId,
+      {
+        framing: { profile: { displayName: `nsw-draft-callout-${uniqueId}` } },
+        settings: {
+          visibility: CalloutVisibility.Draft,
+          contribution: {
+            enabled: true,
+            allowedTypes: [CalloutContributionType.Post],
+            canAddContributions: CalloutAllowedActors.Members,
+          },
+        },
+      }
+    );
+    const draftCalloutId = draft.data?.createCalloutOnCalloutsSet?.id ?? '';
+    expect(draftCalloutId, 'seed: draft callout').toBeTruthy();
+
+    try {
+      // Act — explicit ON, on a callout nobody has been told about yet.
+      const res = await createPostOnCalloutWithNotification(
+        draftCalloutId,
+        { displayName: notifySwitchPostDisplayName },
+        true,
+        notifySwitchPostNameID,
+        TestUser.GLOBAL_ADMIN
+      );
+      expect(
+        res.data?.createContributionOnCallout.post?.id,
+        'the contribution itself is created on the draft callout'
+      ).toBeTruthy();
+
+      // Assert — draft outranks the switch: nothing on any channel.
+      const mails = await getMailsDataSettled(0);
+      expect(mails[1]).toEqual(0);
+    } finally {
+      // The post goes with its callout; keep afterEach from a second delete.
+      notifySwitchPostId = '';
+      await deleteCallout(draftCalloutId);
+    }
+  });
+
+  test('US2-AS3: sendNotification true never overrides a recipient opt-out — the opted-out member gets nothing, everyone else is notified as today', async () => {
+    const optedOut = TestUserManager.users.subsubspaceMember;
+    await disablePostNotifications([optedOut.id]);
+
+    try {
+      // Act
+      const res = await createPostOnCalloutWithNotification(
+        baseScenario.space.collaboration.calloutPostCollectionId,
+        { displayName: notifySwitchPostDisplayName },
+        true,
+        notifySwitchPostNameID,
+        TestUser.GLOBAL_ADMIN
+      );
+      notifySwitchPostId = res.data?.createContributionOnCallout.post?.id ?? '';
+
+      // Assert — 7 minus the opted-out member: sender ON AND recipient
+      // preference compose as AND (FR-008).
+      const mails = await getMailsDataSettled(6);
+      expect(mails[1]).toEqual(6);
+      expect(mails[0]).not.toEqual(
+        await templateMemberResult(notifySwitchSubjectMember, optedOut.email)
+      );
+      expect(mails[0]).toEqual(
+        await templateMemberResult(
+          notifySwitchSubjectMember,
+          TestUserManager.users.spaceMember.email
+        )
+      );
+      expect(mails[0]).toEqual(
+        await templateMemberResult(
+          notifySwitchSubjectAdmin,
+          TestUserManager.users.spaceAdmin.email
+        )
+      );
+    } finally {
+      // Back to this describe's baseline (afterAll restores the true
+      // pre-suite snapshot); a later case in this describe expects 7 again.
+      await enableNotifySwitchNotifications([optedOut.id]);
+    }
+  });
+
+  test('FR-006: sendNotification false suppresses a WHITEBOARD contribution too — the gate is uniform across contribution types, not Post-only', async () => {
+    const wbCallout = await createCalloutOnCalloutsSet(
+      baseScenario.space.collaboration.calloutsSetId,
+      {
+        framing: { profile: { displayName: `nsw-wb-callout-${uniqueId}` } },
+        settings: {
+          visibility: CalloutVisibility.Published,
+          contribution: {
+            enabled: true,
+            allowedTypes: [CalloutContributionType.Whiteboard],
+            canAddContributions: CalloutAllowedActors.Members,
+          },
+        },
+      }
+    );
+    const wbCalloutId = wbCallout.data?.createCalloutOnCalloutsSet?.id ?? '';
+    expect(wbCalloutId, 'seed: published whiteboard callout').toBeTruthy();
+    // Creating a published callout notifies (calloutPublished is off for
+    // these personas, but don't let any straggler count against the act).
+    await getMailsDataSettled(0);
+    await deleteMailSlurperMails();
+
+    try {
+      // Act
+      const res = await createWhiteboardOnCalloutWithNotification(
+        wbCalloutId,
+        false,
+        TestUser.GLOBAL_ADMIN
+      );
+      expect(
+        res.data?.createContributionOnCallout.whiteboard?.id,
+        'the whiteboard contribution is created'
+      ).toBeTruthy();
+
+      // Assert — nothing, on either channel, for a non-Post contribution.
+      const mails = await getMailsDataSettled(0);
+      expect(mails[1]).toEqual(0);
+    } finally {
+      await deleteCallout(wbCalloutId);
+    }
   });
 });
