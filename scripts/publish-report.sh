@@ -41,6 +41,19 @@ if [ ! -f "$STAGE_DIR/index.html" ]; then
   [ -n "$REPORT_HTML" ] && cp "$REPORT_HTML" "$STAGE_DIR/index.html"
 fi
 
+# ── Strip credential-bearing attachments ─────────────────────────────────────
+# gh-pages is PUBLIC. Playwright traces record every network request body (the
+# Kratos sign-in POST carries the harness password in clear) and DOM snapshots
+# (the password input's value), and videos show the sign-in form — verified by
+# opening a trace of a nightly-style login. None of that may be published,
+# whichever project produced it. Screenshots stay: password inputs render
+# masked. The full report, traces included, is kept as a private workflow
+# artifact by the calling workflow instead.
+if [ -d "$STAGE_DIR/data" ]; then
+  STRIPPED=$(find "$STAGE_DIR/data" -type f \( -name '*.zip' -o -name '*.webm' \) -print -delete | wc -l)
+  echo "Stripped $STRIPPED trace/video attachment(s) from the report before publishing"
+fi
+
 # ── Run metadata ─────────────────────────────────────────────────────────────
 cat > "$STAGE_DIR/runinfo.txt" <<EOF
 Run ID: $RUN_ID
